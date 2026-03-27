@@ -19,7 +19,7 @@ interface TimelineProps {
 export default function Timeline({ tag, title1, title2, items }: TimelineProps) {
   return (
     <div
-      className="bg-[var(--ink)] text-[var(--paper)] -mx-6 px-4 sm:px-6 py-14 sm:py-20 border-t-8 border-b-8 border-[var(--red)]"
+      className="bg-[var(--ink)] text-[var(--paper)] -mx-3 sm:-mx-6 px-3 sm:px-6 py-12 sm:py-20 border-t-8 border-b-8 border-[var(--red)]"
       style={{ position: 'relative', zIndex: 1 }}
     >
       <div className="sec-tag" style={{ borderColor: 'var(--yellow)', color: 'var(--yellow)' }}>
@@ -49,9 +49,9 @@ export default function Timeline({ tag, title1, title2, items }: TimelineProps) 
         {items.map((item, i) => (
           <div
             key={i}
-            className="grid gap-3 sm:gap-5 py-5 sm:py-6 transition-all duration-200 hover:pl-3"
+            className="grid gap-2 sm:gap-5 py-4 sm:py-6 transition-all duration-200 sm:hover:pl-3 min-w-0"
             style={{
-              gridTemplateColumns: 'clamp(55px, 12vw, 100px) 3px 1fr',
+              gridTemplateColumns: 'clamp(48px, 14vw, 100px) 3px minmax(0, 1fr)',
               borderBottom: i < items.length - 1 ? '2px dashed rgba(232,220,200,0.08)' : 'none',
             }}
           >

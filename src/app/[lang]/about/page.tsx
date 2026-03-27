@@ -11,7 +11,7 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
 
   return (
     <div className="lined min-h-screen">
-      <section className="px-6 py-20 border-b-[5px] border-[var(--ink)]">
+      <section className="px-3 sm:px-6 py-12 sm:py-20 border-b-[5px] border-[var(--ink)]">
         <div className="sec-tag">ABOUT</div>
         <h1 className="sec-title">
           {dict.about.title}
@@ -20,19 +20,19 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
         </h1>
       </section>
 
-      <section className="px-6 py-16 max-w-[800px]">
+      <section className="px-3 sm:px-6 py-10 sm:py-16 max-w-[800px]">
         {/* Description */}
-        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '19px', lineHeight: 1.8, marginBottom: '40px' }}>
+        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 'clamp(16px, 4vw, 19px)', lineHeight: 1.8, marginBottom: 'clamp(24px, 6vw, 40px)' }}>
           {dict.about.description}
         </p>
 
         {/* Manifesto block */}
-        <div className="bg-[var(--ink)] text-[var(--paper)] p-10 relative border-4 border-[var(--ink)]">
+        <div className="bg-[var(--ink)] text-[var(--paper)] p-4 sm:p-10 relative border-4 border-[var(--ink)]">
           <div
             className="absolute -top-[6px] left-[30px] w-[80px] h-[20px]"
             style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }}
           />
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '28px', color: 'var(--yellow)', marginBottom: '15px' }}>
+          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(20px, 5vw, 28px)', color: 'var(--yellow)', marginBottom: '15px' }}>
             {lang === 'es' ? '¿POR QUÉ?' : 'WHY?'}
           </div>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8, color: 'rgba(232,220,200,0.7)' }}>

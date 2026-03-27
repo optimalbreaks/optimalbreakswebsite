@@ -1,5 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Artist Ransom Card
+// Responsive borders handled by parent grid
 // ============================================
 
 interface ArtistCardProps {
@@ -11,10 +12,10 @@ interface ArtistCardProps {
 
 export default function ArtistCard({ num, name, genres, desc }: ArtistCardProps) {
   return (
-    <div className="p-[22px_30px] border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group last:border-b-0 max-md:!border-r-0">
+    <div className="p-5 sm:p-[22px_30px] border-b-[3px] sm:border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group">
       <div
         className="leading-none"
-        style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '36px', color: 'var(--red)' }}
+        style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)' }}
       >
         #{num}
       </div>
@@ -23,7 +24,7 @@ export default function ArtistCard({ num, name, genres, desc }: ArtistCardProps)
         style={{
           fontFamily: "'Unbounded', sans-serif",
           fontWeight: 900,
-          fontSize: '20px',
+          fontSize: 'clamp(16px, 3vw, 20px)',
           textTransform: 'uppercase',
           letterSpacing: '-0.5px',
         }}

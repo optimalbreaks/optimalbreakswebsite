@@ -164,23 +164,27 @@ body::before {
 .sec-tag {
   font-family: 'Courier Prime', monospace;
   font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 3px;
+  font-size: clamp(9px, 2.4vw, 11px);
+  letter-spacing: clamp(2px, 0.6vw, 3px);
   text-transform: uppercase;
   display: inline-block;
   border: 3px solid var(--ink);
-  padding: 4px 14px;
-  margin-bottom: 18px;
+  padding: 4px clamp(10px, 3vw, 14px);
+  margin-bottom: clamp(12px, 3vw, 18px);
 }
 
 .sec-title {
   font-family: 'Unbounded', sans-serif;
   font-weight: 900;
-  font-size: clamp(40px, 8vw, 80px);
-  line-height: 0.9;
+  font-size: clamp(26px, 7.5vw, 80px);
+  line-height: 0.95;
   text-transform: uppercase;
-  margin-bottom: 40px;
-  letter-spacing: -2px;
+  margin-bottom: clamp(20px, 5vw, 40px);
+  letter-spacing: clamp(-1.5px, -0.35vw, -2px);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .hl {
@@ -211,6 +215,84 @@ body::before {
   transform: rotate(2deg);
 }
 
+/* === Blog article prose === */
+.prose-ob h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  text-transform: uppercase;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  letter-spacing: -0.5px;
+}
+
+.prose-ob h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  text-transform: uppercase;
+  margin-top: 1.5em;
+  margin-bottom: 0.4em;
+}
+
+.prose-ob p {
+  margin-bottom: 1.2em;
+}
+
+.prose-ob strong {
+  text-decoration: underline;
+  text-decoration-color: var(--red);
+  text-underline-offset: 3px;
+}
+
+.prose-ob mark {
+  background: var(--yellow);
+  padding: 0 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose-ob a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+.prose-ob a:hover {
+  color: var(--uv);
+}
+
+.prose-ob blockquote {
+  border-left: 4px solid var(--red);
+  padding-left: 20px;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--dim);
+}
+
+.prose-ob ul, .prose-ob ol {
+  padding-left: 24px;
+  margin-bottom: 1.2em;
+}
+
+.prose-ob li {
+  margin-bottom: 0.4em;
+}
+
+.prose-ob img {
+  max-width: 100%;
+  height: auto;
+  border: 3px solid var(--ink);
+  margin: 1.5em 0;
+}
+
+.prose-ob hr {
+  border: none;
+  border-top: 3px dashed var(--ink);
+  margin: 2em 0;
+  opacity: 0.2;
+}
+
 /* === Scrollbar === */
 ::-webkit-scrollbar {
   width: 8px;
@@ -229,4 +311,15 @@ body::before {
 ::selection {
   background: var(--red);
   color: white;
+}
+
+/* === Focus for accessibility === */
+*:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* === Smooth transitions for page changes === */
+main {
+  min-height: 60vh;
 }

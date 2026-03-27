@@ -37,10 +37,10 @@ export default function Header({ dict, lang }: HeaderProps) {
       {/* Logo */}
       <Link
         href={`/${lang}`}
-        className="flex items-center gap-2 px-[18px] py-3 bg-[var(--red)] text-white whitespace-nowrap no-underline"
+        className="flex items-center gap-1 sm:gap-2 shrink-0 px-2.5 sm:px-[18px] py-2.5 sm:py-3 bg-[var(--red)] text-white whitespace-nowrap no-underline max-[380px]:tracking-tight"
         style={{
           fontFamily: "'Permanent Marker', cursive",
-          fontSize: '22px',
+          fontSize: 'clamp(12px, 3.8vw, 22px)',
           textShadow: '1px 1px 0 rgba(0,0,0,0.3)',
         }}
       >

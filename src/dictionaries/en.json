@@ -146,7 +146,13 @@
   },
   "artists": {
     "title": "Artists",
-    "subtitle": "The people who made the break",
+    "subtitle": "The people and crews who pushed breakbeat, from sampled funk to UK bass — a curated map, not a closed canon.",
+    "timeline_tag": "TIMELINE",
+    "timeline_title": "15 names per half-decade",
+    "timeline_intro": "This timeline condenses the working doc \"Historia del break\": from funk breaks and hip hop to UK rave, nu skool, resilient latency and today’s Breaks / Breakbeat / UK Bass umbrella. A compass to dig deeper, not an official roll call.",
+    "timeline_footer": "1970s: breaks are born · 1980s: technique & language · 1990s: UK rave culture · 2000s: global nu skool · 2010s: loses the centre, not the sound · 2020s: mutates with UK bass.",
+    "featured_title": "Booth picks",
+    "featured_subtitle": "Linked cards for bios and discographies (content growing).",
     "filters": {
       "all": "All",
       "pioneers": "Pioneers",

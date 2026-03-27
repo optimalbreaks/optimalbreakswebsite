@@ -29,7 +29,7 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
 
   return (
     <div className="lined min-h-screen">
-      <section className="px-6 py-20 border-b-[5px] border-[var(--ink)]">
+      <section className="px-3 sm:px-6 py-12 sm:py-20 border-b-[5px] border-[var(--ink)]">
         <div className="sec-tag">HISTORY</div>
         <h1 className="sec-title">
           {history.title}
@@ -39,7 +39,7 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
         <p
           style={{
             fontFamily: "'Special Elite', monospace",
-            fontSize: '17px',
+            fontSize: 'clamp(15px, 3.6vw, 17px)',
             lineHeight: 1.8,
             maxWidth: '820px',
             color: 'var(--dim)',
@@ -49,7 +49,7 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
         </p>
       </section>
 
-      <section className="px-6 py-12 max-w-[900px]">
+      <section className="px-3 sm:px-6 py-10 sm:py-12 max-w-[900px]">
         {SECTION_ORDER.map(({ key, year, color }) => {
           const block = history.sections?.[key]
           if (!block) return null
@@ -71,7 +71,7 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
                   {year}
                 </span>
                 <h2
-                  className="flex-1 min-w-[200px]"
+                  className="flex-1 min-w-0"
                   style={{
                     fontFamily: "'Unbounded', sans-serif",
                     fontWeight: 900,

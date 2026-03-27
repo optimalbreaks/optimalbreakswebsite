@@ -146,7 +146,13 @@
   },
   "artists": {
     "title": "Artistas",
-    "subtitle": "Las personas que crearon el break",
+    "subtitle": "Las personas y colectivos que empujaron el breakbeat, del funk sampleado al UK bass — mapa curado, no canon cerrado.",
+    "timeline_tag": "CRONOLOGÍA",
+    "timeline_title": "15 nombres por lustro",
+    "timeline_intro": "Esta línea temporal resume el documento de trabajo «Historia del break»: de los breaks de funk y el hip hop a la rave UK, el nu skool, la latencia resistida y el paraguas actual Breaks / Breakbeat / UK Bass. Es una brújula para profundizar, no una lista oficial.",
+    "timeline_footer": "1970s: nacen los breaks · 1980s: técnica y lenguaje · 1990s: UK cultura rave · 2000s: nu skool global · 2010s: pierde el centro, no desaparece · 2020s: muta con UK bass.",
+    "featured_title": "Selección de cabina",
+    "featured_subtitle": "Fichas enlazables para ampliar biografía y discografía (contenido en expansión).",
     "filters": {
       "all": "Todos",
       "pioneers": "Pioneros",
