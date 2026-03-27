@@ -1,0 +1,57 @@
+// ============================================
+// OPTIMAL BREAKS — Event Flyer Card
+// ============================================
+
+interface EventFlyerProps {
+  date: string
+  name: string
+  location: string
+  type: string
+}
+
+export default function EventFlyer({ date, name, location, type }: EventFlyerProps) {
+  return (
+    <div className="border-[3px] border-[var(--ink)] p-7 relative transition-all duration-150 bg-[var(--paper)] hover:rotate-[-1deg] hover:shadow-[6px_6px_0_var(--ink)]">
+      {/* Tape */}
+      <div
+        className="absolute -top-[6px] right-[25px] w-[60px] h-[18px]"
+        style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }}
+      />
+
+      <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '16px', color: 'var(--red)' }}>
+        {date}
+      </div>
+      <div
+        className="mt-2 leading-none"
+        style={{
+          fontFamily: "'Unbounded', sans-serif",
+          fontWeight: 900,
+          fontSize: '24px',
+          textTransform: 'uppercase',
+          letterSpacing: '-0.5px',
+        }}
+      >
+        {name}
+      </div>
+      <div className="mt-2" style={{ fontSize: '14px', color: 'rgba(26,26,26,0.45)' }}>
+        {location}
+      </div>
+
+      {/* Sticker */}
+      <div
+        className="absolute bottom-3 right-3 bg-[var(--red)] text-white"
+        style={{
+          fontFamily: "'Courier Prime', monospace",
+          fontWeight: 700,
+          fontSize: '9px',
+          letterSpacing: '2px',
+          textTransform: 'uppercase',
+          padding: '3px 10px',
+          transform: 'rotate(3deg)',
+        }}
+      >
+        {type}
+      </div>
+    </div>
+  )
+}

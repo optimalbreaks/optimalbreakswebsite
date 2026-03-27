@@ -1,0 +1,208 @@
+{
+  "nav": {
+    "home": "Home",
+    "history": "History",
+    "artists": "Artists",
+    "labels": "Labels",
+    "events": "Events",
+    "scenes": "Scenes",
+    "blog": "Blog",
+    "mixes": "Mixes",
+    "about": "About"
+  },
+  "home": {
+    "hero_subtitle": "The Breakbeat Bible",
+    "live": "LIVE",
+    "deck_brand": "OB-2026",
+    "deck_model": "OPTIMAL BREAKS CONTROLLER MK1",
+    "deck_a": "DECK A",
+    "deck_b": "DECK B",
+    "play": "PLAY",
+    "stop": "STOP",
+    "mixer": "MIXER",
+    "crossfader": "CROSSFADER",
+    "bpm": "BPM",
+    "marquee": ["BREAK THE BEAT", "BREAK THE RULES", "BREAK THE SILENCE", "BREAK EVERYTHING"],
+    "section_what": {
+      "tag": "01 — THE GENRE",
+      "title_1": "WHAT THE HELL IS",
+      "title_2": "BREAKBEAT?",
+      "p1": "Electronic music with <strong>syncopated, broken rhythms</strong>. No predictable four-on-the-floor. Here drum loops are chopped, twisted and rearranged into an <u>organic groove</u> that hooks you viscerally.",
+      "p2": "Born in the <strong>70s in the Bronx</strong>. DJs like Kool Herc isolated the breaks — those sections where only the drums played — from funk and soul records. Those seconds of pure percussion became the seed of hip-hop, jungle, drum and bass and a whole universe of subgenres that keeps mutating."
+    },
+    "section_history": {
+      "tag": "02 — TIMELINE",
+      "title_1": "HISTORY OF",
+      "title_2": "THE BREAK",
+      "items": [
+        { "year": "1970", "title": "THE ORIGINS", "desc": "Kool Herc, the Bronx, block parties. The 'merry-go-round' technique over funk breaks plants the seed of hip-hop and electronic breakbeat." },
+        { "year": "1986", "title": "AMEN BREAK", "desc": "6 seconds of drums from The Winstons. The most sampled loop in history. The foundation of jungle, DnB and half the internet." },
+        { "year": "1990", "title": "UK RAVE CULTURE", "desc": "Illegal warehouses, pirate radios. Breakbeat conquers the British rave scene without asking anyone's permission." },
+        { "year": "1997", "title": "BIG BEAT EXPLODES", "desc": "The Prodigy, Chemical Brothers, Fatboy Slim. Breaks fill stadiums, MTV and charts worldwide. The golden era." },
+        { "year": "2003", "title": "NU SKOOL ERA", "desc": "Stanton Warriors, Plump DJs, Freq Nasty. The break gets polished: cleaner, fatter, built to destroy dancefloors." },
+        { "year": "NOW", "title": "THE RESURGENCE", "desc": "Fusion with UK garage, tech house, bass music. New producers, new labels. The break was never dead, it was just reloading." }
+      ]
+    },
+    "section_artists": {
+      "tag": "03 — KEY FIGURES",
+      "title_1": "KEY",
+      "title_2": "ARTISTS"
+    },
+    "section_events": {
+      "tag": "04 — CALENDAR",
+      "title_1": "UPCOMING",
+      "title_2": "EVENTS"
+    },
+    "cta": {
+      "title_1": "BREAK",
+      "title_2": "THE BEAT",
+      "button": "ENTER NOW"
+    },
+    "footer": {
+      "copy": "MADE WITH BREAKS & NOISE"
+    },
+    "facts": {
+      "origin": "ORIGIN",
+      "amen": "AMEN BREAK",
+      "bpm": "BPM",
+      "subgenres": "SUBGENRES"
+    },
+    "genres": ["Big Beat", "Nu Skool", "Jungle", "DnB", "Acid Breaks", "Progressive", "Breakstep"]
+  },
+  "history": {
+    "title": "History",
+    "subtitle": "From the Bronx to dancefloors worldwide: origins, national scenes, crisis, resilience and the digital life of breakbeat.",
+    "sections": {
+      "origins": {
+        "title": "Origins: funk, soul and the birth of the break",
+        "paragraphs": [
+          "Breakbeat is, at heart, dance music built on broken or staggered rhythms: drums feel chopped and syncopated, with more rhythmic play, compared to the straight pulse of much techno or house.",
+          "The name comes from drum \"breaks\" in funk, soul and early hip hop — moments where the percussion stands bare. DJs began isolating, looping, sampling and reshaping those fragments, and entire ways of making music grew from that.",
+          "In the Bronx in the early 1970s, DJ Kool Herc stretched those moments using two copies of the same record — the merry-go-round technique. That practice is the seed of modern hip hop and, later, of club breakbeat as we know it.",
+          "The same family tree includes the Amen break: a few seconds of drums from The Winstons that became one of history’s most sampled loops, underpinning jungle, drum & bass and huge swathes of online culture.",
+          "At this stage there is still no single \"breakbeat\" club genre — there are breaks as material, as technique and as sampling culture, ready to mutate into full genres."
+        ]
+      },
+      "uk_breakbeat": {
+        "title": "United Kingdom: rave, hardcore and the break as backbone",
+        "paragraphs": [
+          "In the late 1980s acid house and American techno hit the UK, but they did not stay \"pure\": they collided with hip hop, electro, Jamaican dub and soundsystem culture, synth-pop, EBM and new beat. From that storm came breakbeat hardcore, early jungle and illegal rave culture — warehouses, pirates, fields.",
+          "London concentrated record shops, pirate radio and clubs, but British rave was not London-only: Manchester, Bristol, Sheffield and other cities mattered equally. The Prodigy, for example, did not appear from nowhere — they emerged from a broth where club kicks, chopped breaks, ragga samples, rave pianos and almost-punk attitude already mingled.",
+          "Names worth pulling on: Shut Up and Dance, SL2, Altern-8, N-Joi, The Ragga Twins, 808 State, Renegade Soundwave, The KLF, Acen; toward jungle and rougher sonics, 4hero, Goldie a little later, Reinforced Records as a hub.",
+          "Historically the US supplied many languages (house, techno, hip hop); Jamaica supplied bass culture and mixing philosophy; the UK acted as a huge amplifier — reinterpreting, radicalising and turning dance electronics into mass scenes. That is why breakbeat weighs so heavily in British identity: not because \"everything\" in England is breakbeat, but because broken rhythm occupies far more narrative space than in the classic US club story.",
+          "From that wave came big beat, nu skool breaks and the worldwide export of a sound tied to dancefloor energy, bass and drums less straight than four-on-the-floor."
+        ]
+      },
+      "us_breaks": {
+        "title": "United States: breaks on a different map",
+        "paragraphs": [
+          "The practice of the break is shared — Bronx, funk, sampling — but the US club story unfolded differently: the dominant arc organised more clearly around house and techno on a 4x4 grid, while breakbeat took regional, less \"central\" paths in mainstream press.",
+          "Strong scenes always existed: electro, Miami bass, Florida breaks (Miami / south Florida), funky breaks, West Coast flavours — music with breaks, bass and local rave energy, but more fragmented than the UK arc from hardcore to jungle to DnB.",
+          "The lesson for reading maps: \"British breakbeat\" and \"American breaks\" are not two species born apart, but two ways the same germ grew in different ecosystems."
+        ]
+      },
+      "andalusian": {
+        "title": "Andalusia: a mass phenomenon and living memory",
+        "paragraphs": [
+          "In Andalusia breakbeat was not just another scene: from roughly 1992 to 2002 it swelled into a highly visible social and generational wave — radio, mega-parties, promoters, weekend identity. Documentaries and cultural journalism have framed it as unusual in southern Europe for a genre that elsewhere often lived as a niche.",
+          "The film \"Break Nation: The electronics that danced Andalusia\" (2023, David Pareja) traces that cycle of euphoria and fracture; it is a solid editorial anchor for treating Andalusia as its own chapter in global breakbeat history.",
+          "The turning point often cited is the night at the Martín Carpena arena in Málaga (2 March 2002): overcrowding, crushing and, most seriously, fatalities reported in the press in connection with substance use. Afterward the sound and scene were heavily stigmatised; events were cancelled and many institutions turned away from that culture.",
+          "It is vital to nuance: it was not a total blackout. The scene went latent — DJs, producers, memories, smaller circuits — until the symbolic \"resurrection\" headlines and works like the film above can describe today.",
+          "In parallel, breakbeat’s fall as the club’s \"headline\" genre was global: in Andalusia a brutal local shock coincided with a wider shift toward other bass and electronic sounds."
+        ],
+        "links": [
+          { "label": "Break Nation on FilmAffinity", "href": "https://www.filmaffinity.com/es/film126766.html" }
+        ]
+      },
+      "australian": {
+        "title": "Australia: continuity, festivals and diaspora",
+        "paragraphs": [
+          "Beyond the UK and US, Australia is one territory you can cite with confidence: its own scene, recurring events and artists who later leap into the international circuit.",
+          "A paradigm case: Breakfest in Perth, active for decades as a meeting point for breakbeat, drum & bass, hip hop and related electronics — proof that breaks there were infrastructure, not a footnote.",
+          "Pendulum formed in Perth before relocating to London: a sign that the Australian broth produced musicians who could project globally. The Australian scene is usually described as solid and continuous, unlike the almost \"total pop\" peak Andalusian breakbeat reached."
+        ]
+      },
+      "rise_decline_revival": {
+        "title": "Peak, loss of centre and resistance",
+        "paragraphs": [
+          "From the mid-2000s into the early 2010s breakbeat stopped being club mainstream’s central umbrella: electro house, dubstep, house/techno branches and other bass styles took space. Rather than vanishing, the genre left the centre of the room.",
+          "In London, awards and institutions such as Breakspoll (International Breakbeat Awards) passed through Fabric in the 2000s and later other venues and cities — a sign of a living scene but also of relocation and less uniform media focus.",
+          "Producers and DJs document the transition — for example shifts toward electro-house in releases of the era. At the same time, figures such as Krafty Kuts or Lady Waks kept the flame through sets, radio, podcasts and online presence: culture survived as a network of booths and communities, not only as commercial charts.",
+          "Telling the story fairly means separating those who stayed in breaks; those who moved stylistically inside electronic music; and those whose production quietened for years without leaving the scene entirely."
+        ]
+      },
+      "digital_era": {
+        "title": "Digital era: record shops then and platforms now",
+        "paragraphs": [
+          "Before Beatport and algorithms, finding breaks meant specialist shops, promos and anonymous white labels, dubplates and radio — pirate or legal — that turned a promo into a \"hot\" tune. Camden, labels such as Finger Lickin’, Bar Vinyl culture and London’s shop ecosystem belong to that infrastructure memory, not only to star artists.",
+          "Today platforms such as Beatport keep categories like \"Breaks / Breakbeat / UK Bass\": proof of commercial and DJ continuity, even if the umbrella now bundles sensibilities that once felt more separate — continuity with change, not a sealed museum.",
+          "YouTube, Mixcloud and SoundCloud inherited part of radio and mixtape culture: breakbeat remains niche culture with real searches, new charts and producers remixing the language with UK bass and current hybrids."
+        ],
+        "links": [
+          { "label": "Breaks / Breakbeat / UK Bass on Beatport", "href": "https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9" }
+        ]
+      }
+    }
+  },
+  "artists": {
+    "title": "Artists",
+    "subtitle": "The people who made the break",
+    "filters": {
+      "all": "All",
+      "pioneers": "Pioneers",
+      "uk": "UK Legends",
+      "us": "US Artists",
+      "andalusia": "Andalusian",
+      "current": "Current"
+    }
+  },
+  "labels": {
+    "title": "Labels",
+    "subtitle": "The record labels that shaped the sound"
+  },
+  "events": {
+    "title": "Events",
+    "subtitle": "Past, present and future of breakbeat events",
+    "filters": {
+      "all": "All",
+      "festival": "Festivals",
+      "club": "Club Nights",
+      "past": "Past Iconic",
+      "upcoming": "Upcoming"
+    }
+  },
+  "scenes": {
+    "title": "Scenes",
+    "subtitle": "How breakbeat changed across territories"
+  },
+  "blog": {
+    "title": "Blog",
+    "subtitle": "Articles, opinions, rankings, retrospectives"
+  },
+  "mixes": {
+    "title": "Mixes & Sets",
+    "subtitle": "Essential mixes, classic sets, radio shows"
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "What is Optimal Breaks",
+    "description": "Optimal Breaks is an archive, magazine, guide, agenda and scene memory. A project dedicated to preserving and celebrating breakbeat culture.",
+    "contact": "Contact",
+    "collaborate": "Collaborate",
+    "submit_event": "Submit an Event",
+    "suggest_artist": "Suggest an Artist"
+  },
+  "common": {
+    "read_more": "Read more",
+    "view_all": "View all",
+    "back": "Back",
+    "loading": "Loading...",
+    "no_results": "No results found",
+    "search": "Search",
+    "since": "Since 2026"
+  },
+  "footer": {
+    "copy": "Optimal Breaks — breakbeat culture archive",
+    "funding": "Website funded by the Ministry of Turlisms"
+  }
+}

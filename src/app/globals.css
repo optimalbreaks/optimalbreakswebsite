@@ -1,0 +1,232 @@
+/* ============================================
+   OPTIMAL BREAKS — Global Styles
+   Fanzine Club Edition
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&family=Darker+Grotesque:wght@400;700;900&family=Permanent+Marker&family=Special+Elite&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === CSS Variables === */
+:root {
+  --paper: #e8dcc8;
+  --paper-dark: #d9ccb4;
+  --ink: #1a1a1a;
+  --red: #d62828;
+  --acid: #8db600;
+  --uv: #7b2ff7;
+  --pink: #e91e8c;
+  --cyan: #0891b2;
+  --orange: #e85d04;
+  --yellow: #f7e733;
+  --blue: #1d4ed8;
+  --dim: #888;
+  --tape: rgba(247, 231, 51, 0.5);
+  --warn-stripe: repeating-linear-gradient(
+    -45deg,
+    var(--ink),
+    var(--ink) 8px,
+    var(--yellow) 8px,
+    var(--yellow) 16px
+  );
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Special Elite', monospace;
+  background: var(--paper);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* Paper grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Lined paper background */
+.lined {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 28px,
+    rgba(0, 0, 0, 0.04) 28px,
+    rgba(0, 0, 0, 0.04) 29px
+  );
+}
+
+/* === Animations === */
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes marqueeX {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  48% { opacity: 1; }
+  50% { opacity: 0.5; }
+  52% { opacity: 1; }
+}
+
+@keyframes vuBounce {
+  0%, 100% { height: var(--min); }
+  50% { height: var(--max); }
+}
+
+@keyframes bpmPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes stamp {
+  from { transform: scale(2.5) rotate(-12deg); opacity: 0; }
+  to { transform: scale(1) rotate(-12deg); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-0.5deg); }
+  75% { transform: rotate(0.5deg); }
+}
+
+/* === Utility Classes === */
+.animate-spin-vinyl {
+  animation: spin 2s linear infinite;
+}
+
+.animate-marquee {
+  animation: marqueeX 12s linear infinite;
+}
+
+.animate-flicker {
+  animation: flicker 2s infinite;
+}
+
+.animate-bpm-pulse {
+  animation: bpmPulse 1s ease-in-out infinite;
+}
+
+.animate-stamp {
+  animation: stamp 0.5s ease-out;
+}
+
+/* === Cut-out label system === */
+.cutout {
+  display: inline-block;
+  padding: 4px 12px;
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 3px 2px;
+  transition: transform 0.1s;
+}
+.cutout:hover {
+  transform: rotate(-2deg) scale(1.05);
+}
+.cutout.fill { background: var(--ink); color: var(--paper); }
+.cutout.red { background: var(--red); color: white; }
+.cutout.acid { background: var(--acid); color: white; }
+.cutout.uv { background: var(--uv); color: white; }
+.cutout.pink { background: var(--pink); color: white; }
+.cutout.blue { background: var(--blue); color: white; }
+.cutout.outline { border: 2px solid var(--ink); }
+
+/* === Danger bar === */
+.danger-bar {
+  height: 14px;
+  background: var(--warn-stripe);
+}
+
+/* === Section shared === */
+.sec-tag {
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  display: inline-block;
+  border: 3px solid var(--ink);
+  padding: 4px 14px;
+  margin-bottom: 18px;
+}
+
+.sec-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(40px, 8vw, 80px);
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin-bottom: 40px;
+  letter-spacing: -2px;
+}
+
+.hl {
+  position: relative;
+  display: inline;
+}
+.hl::before {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: -4px;
+  right: -4px;
+  height: 30%;
+  background: var(--yellow);
+  z-index: -1;
+  transform: rotate(-0.3deg);
+}
+
+/* === Tape decorator === */
+.tape::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 25px;
+  width: 60px;
+  height: 18px;
+  background: var(--tape);
+  transform: rotate(2deg);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--red);
+}
+
+/* === Selection === */
+::selection {
+  background: var(--red);
+  color: white;
+}

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPTIMALBREAKS — Fanzine Club Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&family=Darker+Grotesque:wght@400;700;900&family=Permanent+Marker&family=Special+Elite&display=swap');
+
+:root {
+  --paper: #e8dcc8;
+  --paper-dark: #d9ccb4;
+  --ink: #1a1a1a;
+  --red: #d62828;
+  --acid: #8db600;
+  --uv: #7b2ff7;
+  --pink: #e91e8c;
+  --cyan: #0891b2;
+  --orange: #e85d04;
+  --yellow: #f7e733;
+  --blue: #1d4ed8;
+  --dim: #888;
+  --tape: rgba(247,231,51,0.5);
+  --warn-stripe: repeating-linear-gradient(-45deg, var(--ink), var(--ink) 8px, var(--yellow) 8px, var(--yellow) 16px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Special Elite', monospace;
+  background: var(--paper);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* Paper grain */
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* Lined paper bg */
+.lined { background-image: repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.04) 28px, rgba(0,0,0,0.04) 29px); }
+
+@keyframes spin { from{transform:rotate(0)}to{transform:rotate(360deg)} }
+@keyframes marqueeX { from{transform:translateX(0)}to{transform:translateX(-50%)} }
+@keyframes flicker { 0%,100%{opacity:1}48%{opacity:1}50%{opacity:0.5}52%{opacity:1} }
+@keyframes vuBounce { 0%,100%{height:var(--min)}50%{height:var(--max)} }
+@keyframes bpmPulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.02)} }
+@keyframes stamp { from{transform:scale(2.5) rotate(-12deg);opacity:0}to{transform:scale(1) rotate(-12deg);opacity:1} }
+@keyframes shake { 0%,100%{transform:rotate(0)}25%{transform:rotate(-0.5deg)}75%{transform:rotate(0.5deg)} }
+
+/* === HEADER === */
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: stretch;
+  background: var(--paper); border-bottom: 4px solid var(--ink);
+}
+.nav-logo {
+  font-family: 'Permanent Marker', cursive; font-size: 22px;
+  padding: 12px 18px; background: var(--red); color: white;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.h-nav { display: flex; margin-left: auto; }
+.h-nav a {
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+  padding: 12px 16px; text-decoration: none; color: var(--ink);
+  border-left: 3px solid var(--ink); transition: all 0.1s;
+  display: flex; align-items: center;
+}
+.h-nav a:hover { background: var(--red); color: white; }
+
+/* === DANGER BAR === */
+.danger-bar { height: 14px; background: var(--warn-stripe); }
+
+/* === CUT-OUT LABELS === */
+.cutout {
+  display: inline-block; padding: 4px 12px;
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  margin: 3px 2px; transition: transform 0.1s;
+}
+.cutout:hover { transform: rotate(-2deg) scale(1.05); }
+.cutout.fill { background: var(--ink); color: var(--paper); }
+.cutout.red { background: var(--red); color: white; }
+.cutout.acid { background: var(--acid); color: white; }
+.cutout.uv { background: var(--uv); color: white; }
+.cutout.pink { background: var(--pink); color: white; }
+.cutout.blue { background: var(--blue); color: white; }
+.cutout.outline { border: 2px solid var(--ink); }
+
+/* =============================================
+   HERO — FANZINE DJ DECK
+   ============================================= */
+.hero {
+  padding: 40px 25px 30px; position: relative;
+  border-bottom: 5px solid var(--ink);
+}
+
+.hero-stamp {
+  position: absolute; top: 25px; right: 35px;
+  font-family: 'Permanent Marker', cursive; font-size: 16px;
+  color: var(--red); border: 4px solid var(--red);
+  padding: 6px 18px; transform: rotate(-12deg);
+  animation: stamp 0.5s ease-out;
+  letter-spacing: 2px; text-transform: uppercase;
+  z-index: 5;
+}
+
+.hero-title {
+  text-align: center; margin-bottom: 25px; position: relative; z-index: 2;
+}
+.hero-title h1 {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: clamp(40px, 8vw, 90px); text-transform: uppercase;
+  letter-spacing: -2px; line-height: 0.9;
+}
+.hero-title h1 .hl {
+  position: relative; display: inline;
+}
+.hero-title h1 .hl::before {
+  content: ''; position: absolute; bottom: 3px; left: -4px; right: -4px;
+  height: 35%; background: var(--yellow); z-index: -1; transform: rotate(-0.5deg);
+}
+.hero-title h1 .stroke {
+  -webkit-text-stroke: 3px var(--ink); -webkit-text-fill-color: transparent;
+}
+.hero-subtitle {
+  font-family: 'Special Elite', monospace; font-size: 14px;
+  letter-spacing: 3px; color: var(--dim); margin-top: 10px;
+}
+.hero-subtitle .live {
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 10px; background: var(--red); color: white;
+  padding: 2px 8px; letter-spacing: 2px;
+  animation: flicker 2s infinite;
+}
+
+/* === DJ DECK — PAPER / XEROX FEEL === */
+.deck-container {
+  position: relative; z-index: 2;
+  max-width: 880px; margin: 0 auto;
+  background: var(--ink);
+  border: 4px solid var(--ink);
+  padding: 20px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
+  position: relative;
+}
+/* Tape on top */
+.deck-container::before {
+  content: ''; position: absolute; top: -8px; left: 50%;
+  transform: translateX(-50%); width: 100px; height: 22px;
+  background: var(--tape); z-index: 10;
+}
+
+.deck-top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 15px; padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(255,255,255,0.1);
+}
+.deck-brand {
+  font-family: 'Permanent Marker', cursive; font-size: 14px;
+  color: var(--yellow); letter-spacing: 3px;
+}
+.deck-model {
+  font-family: 'Courier Prime', monospace; font-size: 9px;
+  letter-spacing: 2px; color: rgba(255,255,255,0.3);
+}
+
+.deck-layout {
+  display: grid; grid-template-columns: 1fr 170px 1fr;
+  gap: 12px; align-items: center;
+}
+
+/* === TURNTABLE === */
+.turntable {
+  position: relative; aspect-ratio: 1; display: flex;
+  align-items: center; justify-content: center;
+  background: #0e0e12; border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+
+.platter {
+  width: 82%; aspect-ratio: 1; border-radius: 50%;
+  position: relative; cursor: grab;
+}
+.platter.spinning { animation: spin 2s linear infinite; }
+.platter.stopped { animation: none; }
+
+.platter::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-radial-gradient(circle at center,
+    rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px,
+    transparent 1px, transparent 4px);
+  border: 2px solid rgba(255,255,255,0.08);
+}
+
+.vinyl-label {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 34%; aspect-ratio: 1; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+.vinyl-label-inner {
+  width: 100%; height: 100%; border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.vl-title {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: 7px; letter-spacing: 2px; text-transform: uppercase;
+}
+.vl-track {
+  font-family: 'Courier Prime', monospace; font-size: 5.5px;
+  letter-spacing: 1px; margin-top: 2px; opacity: 0.7;
+}
+
+.deck-left .vinyl-label-inner {
+  background: radial-gradient(circle, var(--red) 0%, #8b0000 100%); color: white;
+}
+.deck-right .vinyl-label-inner {
+  background: radial-gradient(circle, var(--yellow) 0%, #b8a800 100%); color: var(--ink);
+}
+
+.vinyl-label::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #0e0e12; border: 1px solid rgba(255,255,255,0.15);
+}
+
+.tonearm {
+  position: absolute; top: 6px; right: 10px; z-index: 5;
+  width: 3px; height: 50%; background: linear-gradient(180deg, #666, #444);
+  border-radius: 2px; transform-origin: top center; transform: rotate(-15deg);
+  transition: transform 0.5s ease;
+}
+.tonearm.playing { transform: rotate(8deg); }
+.tonearm::after {
+  content: ''; position: absolute; bottom: -3px; left: -2px;
+  width: 7px; height: 10px; background: #777; border-radius: 1px;
+}
+.tonearm::before {
+  content: ''; position: absolute; top: -3px; left: -3px;
+  width: 9px; height: 9px; border-radius: 50%; background: #555;
+}
+
+.deck-label {
+  font-family: 'Courier Prime', monospace; font-size: 9px;
+  letter-spacing: 3px; text-align: center; margin-top: 8px;
+  color: rgba(255,255,255,0.3);
+}
+
+.play-btn { display: flex; justify-content: center; margin-top: 8px; }
+.play-btn button {
+  background: transparent; border: 2px solid rgba(255,255,255,0.15);
+  color: var(--yellow); padding: 5px 18px; cursor: pointer;
+  font-family: 'Courier Prime', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase; transition: all 0.1s;
+}
+.play-btn button:hover { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.play-btn button.active { background: var(--red); color: white; border-color: var(--red); }
+
+/* === MIXER === */
+.mixer {
+  background: #0a0a0e; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px; padding: 12px 10px;
+  display: flex; flex-direction: column; gap: 10px; align-items: center;
+}
+.mixer-label {
+  font-family: 'Courier Prime', monospace; font-size: 7px;
+  letter-spacing: 3px; color: rgba(255,255,255,0.25); text-transform: uppercase;
+}
+
+.vu-meters {
+  display: flex; gap: 5px; height: 70px; align-items: end;
+  padding: 6px; background: #070709; border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.vu-bar {
+  width: 7px; border-radius: 2px;
+  animation: vuBounce 0.8s ease-in-out infinite;
+}
+.vu-bar:nth-child(1) { background: var(--acid); --min:8px; --max:50px; animation-delay:0s; }
+.vu-bar:nth-child(2) { background: var(--acid); --min:12px; --max:60px; animation-delay:0.1s; }
+.vu-bar:nth-child(3) { background: var(--yellow); --min:6px; --max:45px; animation-delay:0.2s; }
+.vu-bar:nth-child(4) { background: var(--orange); --min:10px; --max:55px; animation-delay:0.15s; }
+.vu-bar:nth-child(5) { background: var(--red); --min:5px; --max:40px; animation-delay:0.25s; }
+.vu-bar:nth-child(6) { background: var(--red); --min:8px; --max:35px; animation-delay:0.05s; }
+
+.knobs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+.knob-group { text-align: center; }
+.knob-group label {
+  font-family: 'Courier Prime', monospace; font-size: 7px;
+  letter-spacing: 2px; color: rgba(255,255,255,0.25); display: block; margin-bottom: 3px;
+}
+.knob {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: conic-gradient(from 220deg, #333, #555, #333);
+  border: 2px solid #555; margin: 0 auto; position: relative;
+  cursor: pointer; transition: transform 0.2s;
+}
+.knob::after {
+  content: ''; position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 8px; border-radius: 1px;
+}
+.knob.hi::after { background: var(--acid); }
+.knob.mid::after { background: var(--uv); }
+.knob.low::after { background: var(--pink); }
+.knob.fx::after { background: var(--cyan); }
+.knob:hover { transform: rotate(30deg); }
+
+.bpm-display {
+  background: #070709; border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 3px; padding: 6px; text-align: center; width: 100%;
+  animation: bpmPulse 1s ease-in-out infinite;
+}
+.bpm-num {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: 24px; color: var(--yellow);
+  text-shadow: 0 0 8px rgba(247,231,51,0.3);
+}
+.bpm-label { font-family: 'Courier Prime', monospace; font-size: 7px; letter-spacing: 3px; color: var(--red); }
+
+.crossfader-wrap {
+  width: 100%; padding: 6px; background: #070709;
+  border-radius: 3px; border: 1px solid rgba(255,255,255,0.04);
+}
+.crossfader-input {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; background: #222; border-radius: 3px; cursor: pointer;
+}
+.crossfader-input::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 14px;
+  background: linear-gradient(180deg, #777, #444);
+  border: 1px solid #999; border-radius: 2px; cursor: grab;
+}
+.cf-labels { display: flex; justify-content: space-between; margin-top: 3px; }
+.cf-labels span { font-family: 'Courier Prime', monospace; font-size: 7px; color: rgba(255,255,255,0.2); }
+
+/* === MARQUEE TAPE === */
+.tape-strip {
+  overflow: hidden; padding: 12px 0;
+  background: var(--ink);
+  border-top: 4px dashed var(--red); border-bottom: 4px dashed var(--red);
+}
+.tape-inner {
+  display: flex; animation: marqueeX 12s linear infinite; white-space: nowrap;
+}
+.tape-inner span {
+  font-family: 'Permanent Marker', cursive; font-size: 20px;
+  color: var(--yellow); padding: 0 30px;
+}
+
+/* =============================================
+   CONTENT SECTIONS
+   ============================================= */
+section { padding: 80px 25px; position: relative; z-index: 1; }
+
+.sec-tag {
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  display: inline-block; border: 3px solid var(--ink); padding: 4px 14px;
+  margin-bottom: 18px;
+}
+
+.sec-title {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: clamp(40px, 8vw, 80px); line-height: 0.9;
+  text-transform: uppercase; margin-bottom: 40px; letter-spacing: -2px;
+}
+.sec-title .hl { position: relative; display: inline; }
+.sec-title .hl::before {
+  content: ''; position: absolute; bottom: 3px; left: -4px; right: -4px;
+  height: 30%; background: var(--yellow); z-index: -1; transform: rotate(-0.3deg);
+}
+
+/* === QUÉ ES === */
+.what-collage { display: grid; grid-template-columns: 1fr 1fr; gap: 0; position: relative; }
+.what-collage::after {
+  content: '!!!'; position: absolute; top: -25px; right: 25px;
+  font-family: 'Permanent Marker', cursive; font-size: 55px;
+  color: var(--red); transform: rotate(10deg);
+}
+
+.what-text { padding: 30px; border: 3px solid var(--ink); }
+.what-text p { font-size: 17px; line-height: 1.8; margin-bottom: 12px; }
+.what-text p strong { text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 3px; }
+.what-text p mark { background: var(--yellow); padding: 0 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+.what-side {
+  padding: 30px; background: var(--ink); color: var(--paper);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  position: relative;
+}
+/* Tape on corner */
+.what-side::before {
+  content: ''; position: absolute; top: -6px; left: 20px;
+  width: 70px; height: 20px; background: var(--tape); transform: rotate(-3deg);
+}
+.what-bpm {
+  font-family: 'Permanent Marker', cursive; font-size: 100px; line-height: 1;
+  color: var(--red);
+}
+.what-bpm-label {
+  font-family: 'Courier Prime', monospace; font-size: 10px;
+  letter-spacing: 5px; color: var(--dim);
+}
+.what-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 25px; justify-content: center; }
+
+.facts-row {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 40px;
+}
+.fact {
+  padding: 25px; border: 3px solid var(--ink); margin: -1.5px 0 0 -1.5px;
+  text-align: center; transition: all 0.1s;
+}
+.fact:hover { background: var(--yellow); animation: shake 0.3s; }
+.fact-num { font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 42px; line-height: 1; }
+.fact-label { font-family: 'Courier Prime', monospace; font-size: 9px; letter-spacing: 2px; color: var(--dim); margin-top: 5px; }
+
+/* === HISTORY — dark section === */
+.hist-section {
+  background: var(--ink); color: var(--paper);
+  margin: 0 -25px; padding: 80px 25px;
+  border-top: 8px solid var(--red); border-bottom: 8px solid var(--red);
+}
+.hist-section .sec-tag { border-color: var(--yellow); color: var(--yellow); }
+.hist-section .sec-title { color: var(--paper); }
+.hist-section .sec-title .hl::before { background: var(--red); }
+
+.hist-items { margin-top: 40px; }
+.hi {
+  display: grid; grid-template-columns: 100px 3px 1fr; gap: 20px;
+  padding: 25px 0; transition: all 0.2s;
+}
+.hi:not(:last-child) { border-bottom: 2px dashed rgba(232,220,200,0.08); }
+.hi:hover { padding-left: 12px; }
+.hi-year {
+  font-family: 'Permanent Marker', cursive; font-size: 40px;
+  color: var(--yellow); text-align: right; line-height: 1;
+}
+.hi-line { background: var(--red); border-radius: 2px; }
+.hi-title {
+  font-family: 'Unbounded', sans-serif; font-weight: 700;
+  font-size: 20px; text-transform: uppercase;
+}
+.hi-desc { font-size: 15px; line-height: 1.7; color: rgba(232,220,200,0.45); margin-top: 5px; }
+
+/* === ARTISTS — ransom note cards === */
+.artist-ransom {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 0;
+  margin-top: 40px; border: 4px solid var(--ink);
+}
+.ar-card {
+  padding: 30px 22px; border-right: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink); transition: all 0.15s;
+}
+.ar-card:nth-child(3n) { border-right: none; }
+.ar-card:nth-child(n+4) { border-bottom: none; }
+.ar-card:hover { background: var(--yellow); }
+
+.ar-num { font-family: 'Permanent Marker', cursive; font-size: 36px; color: var(--red); line-height: 1; }
+.ar-name {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: 20px; text-transform: uppercase; margin-top: 8px; letter-spacing: -0.5px;
+}
+.ar-genre { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.ar-genre span {
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  background: var(--ink); color: var(--paper); padding: 2px 7px;
+}
+.ar-card:hover .ar-genre span { background: var(--red); color: white; }
+.ar-desc { font-size: 14px; line-height: 1.6; color: rgba(26,26,26,0.5); margin-top: 10px; }
+
+/* === EVENTS — flyers with tape === */
+.events-board { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; margin-top: 40px; }
+
+.flyer {
+  border: 3px solid var(--ink); padding: 28px; position: relative;
+  transition: all 0.15s; background: var(--paper);
+}
+.flyer::before {
+  content: ''; position: absolute; top: -6px; right: 25px;
+  width: 60px; height: 18px; background: var(--tape); transform: rotate(2deg);
+}
+.flyer:hover { transform: rotate(-1deg); box-shadow: 6px 6px 0 var(--ink); }
+.flyer-date { font-family: 'Permanent Marker', cursive; font-size: 16px; color: var(--red); }
+.flyer-name {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: 24px; text-transform: uppercase; margin-top: 8px;
+  letter-spacing: -0.5px; line-height: 1;
+}
+.flyer-loc { font-size: 14px; color: rgba(26,26,26,0.45); margin-top: 8px; }
+.flyer-sticker {
+  position: absolute; bottom: 12px; right: 12px;
+  font-family: 'Courier Prime', monospace; font-weight: 700;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  background: var(--red); color: white; padding: 3px 10px; transform: rotate(3deg);
+}
+
+/* === CTA === */
+.cta-section {
+  text-align: center; padding: 100px 25px;
+  background: var(--red); color: white; margin: 0 -25px;
+  border-top: 8px solid var(--ink); border-bottom: 8px solid var(--ink);
+}
+.cta-section h2 {
+  font-family: 'Unbounded', sans-serif; font-weight: 900;
+  font-size: clamp(44px, 9vw, 110px); text-transform: uppercase;
+  line-height: 0.85; letter-spacing: -2px;
+}
+.cta-section h2 .outline {
+  -webkit-text-stroke: 3px white; -webkit-text-fill-color: transparent;
+}
+.cta-btn {
+  display: inline-block; margin-top: 30px; padding: 14px 50px;
+  background: white; color: var(--red); border: 4px solid white;
+  font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 16px;
+  text-transform: uppercase; letter-spacing: 2px; text-decoration: none; transition: all 0.1s;
+}
+.cta-btn:hover { background: transparent; color: white; }
+
+footer {
+  display: flex; justify-content: space-between; padding: 20px 25px;
+  border-top: 4px solid var(--ink);
+  font-family: 'Courier Prime', monospace; font-size: 10px;
+  letter-spacing: 2px; color: var(--dim);
+}
+footer .flogo { font-family: 'Permanent Marker', cursive; font-size: 16px; color: var(--red); }
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+  .deck-layout { grid-template-columns: 1fr 140px 1fr; gap: 8px; }
+}
+@media (max-width: 768px) {
+  .deck-layout { grid-template-columns: 1fr 1fr; }
+  .mixer { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 15px; }
+  .what-collage, .facts-row, .artist-ransom, .events-board { grid-template-columns: 1fr; }
+  .ar-card { border-right: none !important; border-bottom: 3px solid var(--ink) !important; }
+  .ar-card:last-child { border-bottom: none !important; }
+  .hi { grid-template-columns: 70px 2px 1fr; gap: 12px; }
+  .hi-year { font-size: 28px; }
+  .h-nav { display: none; }
+  .hero-stamp { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-logo">OPTIMAL//BREAKS</div>
+  <div class="h-nav">
+    <a href="#que-es">QUÉ ES</a>
+    <a href="#historia">HISTORIA</a>
+    <a href="#artistas">ARTISTAS</a>
+    <a href="#eventos">EVENTOS</a>
+  </div>
+</header>
+
+<div class="danger-bar"></div>
+
+<!-- ============ HERO ============ -->
+<section class="hero lined">
+  <div class="hero-stamp">Since 2026</div>
+  <div class="hero-title">
+    <h1><span class="stroke">OPTIMAL</span> <span class="hl">BREAKS</span></h1>
+    <p class="hero-subtitle">La biblia del breakbeat <span class="live">● LIVE</span></p>
+  </div>
+
+  <div class="deck-container">
+    <div class="deck-top-bar">
+      <div class="deck-brand">OB-2026</div>
+      <div class="deck-model">OPTIMAL BREAKS CONTROLLER MK1</div>
+    </div>
+    <div class="deck-layout">
+      <div class="deck-left">
+        <div class="turntable">
+          <div class="platter spinning" id="platter-left">
+            <div class="vinyl-label"><div class="vinyl-label-inner">
+              <div class="vl-title">PRODIGY</div><div class="vl-track">FIRESTARTER</div>
+            </div></div>
+          </div>
+          <div class="tonearm playing" id="arm-left"></div>
+        </div>
+        <div class="deck-label">DECK A</div>
+        <div class="play-btn"><button id="btn-left" class="active" onclick="toggleDeck('left')">▶ PLAY</button></div>
+      </div>
+
+      <div class="mixer">
+        <div class="mixer-label">MIXER</div>
+        <div class="vu-meters">
+          <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+          <div class="vu-bar"></div><div class="vu-bar"></div><div class="vu-bar"></div>
+        </div>
+        <div class="knobs-row">
+          <div class="knob-group"><label>HI</label><div class="knob hi"></div></div>
+          <div class="knob-group"><label>MID</label><div class="knob mid"></div></div>
+        </div>
+        <div class="knobs-row">
+          <div class="knob-group"><label>LOW</label><div class="knob low"></div></div>
+          <div class="knob-group"><label>FX</label><div class="knob fx"></div></div>
+        </div>
+        <div class="bpm-display">
+          <div class="bpm-num">135</div>
+          <div class="bpm-label">BPM</div>
+        </div>
+        <div class="crossfader-wrap">
+          <div class="mixer-label" style="margin-bottom:3px;">CROSSFADER</div>
+          <input type="range" min="0" max="100" value="50" class="crossfader-input" id="crossfader">
+          <div class="cf-labels"><span>A</span><span>B</span></div>
+        </div>
+      </div>
+
+      <div class="deck-right">
+        <div class="turntable">
+          <div class="platter spinning" id="platter-right">
+            <div class="vinyl-label"><div class="vinyl-label-inner">
+              <div class="vl-title">FATBOY SLIM</div><div class="vl-track">RIGHT HERE</div>
+            </div></div>
+          </div>
+          <div class="tonearm playing" id="arm-right"></div>
+        </div>
+        <div class="deck-label">DECK B</div>
+        <div class="play-btn"><button id="btn-right" class="active" onclick="toggleDeck('right')">▶ PLAY</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px; text-align:center;">
+    <span class="cutout fill">BREAKBEAT</span>
+    <span class="cutout red">BIG BEAT</span>
+    <span class="cutout blue">NU SKOOL</span>
+    <span class="cutout fill">JUNGLE</span>
+    <span class="cutout pink">DnB</span>
+    <span class="cutout acid">ACID BREAKS</span>
+    <span class="cutout uv">PROGRESSIVE</span>
+  </div>
+</section>
+
+<div class="tape-strip"><div class="tape-inner">
+  <span>★ BREAK THE BEAT ★</span><span>★ BREAK THE RULES ★</span>
+  <span>★ BREAK THE SILENCE ★</span><span>★ BREAK EVERYTHING ★</span>
+  <span>★ BREAK THE BEAT ★</span><span>★ BREAK THE RULES ★</span>
+  <span>★ BREAK THE SILENCE ★</span><span>★ BREAK EVERYTHING ★</span>
+</div></div>
+
+<!-- ============ QUÉ ES ============ -->
+<section id="que-es" class="lined">
+  <div class="sec-tag">01 — EL GÉNERO</div>
+  <h2 class="sec-title">¿QUÉ COÑO ES<br>EL <span class="hl">BREAKBEAT</span>?</h2>
+  <div class="what-collage">
+    <div class="what-text">
+      <p>El breakbeat es <strong>música electrónica</strong> que rompe el compás. Nada de four-on-the-floor predecible. Aquí los loops de batería se cortan, se tuercen y se reorganizan hasta crear un <mark>groove sincopado</mark> que te mueve de otra forma.</p>
+      <p>Nació en los <strong>70s en el Bronx</strong>. DJs como Kool Herc aislaban los "breaks" de discos de funk y soul. Esos segundos de percusión pura se convirtieron en la semilla del hip-hop, del jungle, del drum and bass y de todo un universo de subgéneros que no para de mutar.</p>
+      <p>El breakbeat no es un estilo, es una <mark>actitud</mark>: romper lo establecido para encontrar el ritmo perfecto.</p>
+    </div>
+    <div class="what-side">
+      <div class="what-bpm">135</div>
+      <div class="what-bpm-label">BEATS PER MINUTE</div>
+      <div class="what-tags">
+        <span class="cutout red">Big Beat</span>
+        <span class="cutout acid">Nu Skool</span>
+        <span class="cutout fill" style="background:var(--paper);color:var(--ink);">Jungle</span>
+        <span class="cutout pink">DnB</span>
+        <span class="cutout uv">Acid</span>
+        <span class="cutout blue">Progressive</span>
+      </div>
+    </div>
+  </div>
+  <div class="facts-row">
+    <div class="fact"><div class="fact-num">1970</div><div class="fact-label">ORIGEN</div></div>
+    <div class="fact"><div class="fact-num">6"</div><div class="fact-label">AMEN BREAK</div></div>
+    <div class="fact"><div class="fact-num">135</div><div class="fact-label">BPM</div></div>
+    <div class="fact"><div class="fact-num">∞</div><div class="fact-label">SUBGÉNEROS</div></div>
+  </div>
+</section>
+
+<!-- ============ HISTORIA ============ -->
+<div class="hist-section" id="historia">
+  <div class="sec-tag">02 — TIMELINE</div>
+  <h2 class="sec-title">HISTORIA<br>DEL <span class="hl">BREAK</span></h2>
+  <div class="hist-items">
+    <div class="hi"><div class="hi-year">1970</div><div class="hi-line"></div><div><div class="hi-title">LOS ORÍGENES</div><p class="hi-desc">Kool Herc, Bronx, block parties. La técnica del "merry-go-round" sobre breaks de funk crea la semilla del hip-hop y del breakbeat electrónico.</p></div></div>
+    <div class="hi"><div class="hi-year">1986</div><div class="hi-line"></div><div><div class="hi-title">AMEN BREAK</div><p class="hi-desc">6 segundos de batería de The Winstons. El loop más sampleado de la historia. La base del jungle, del DnB y de medio internet.</p></div></div>
+    <div class="hi"><div class="hi-year">1990</div><div class="hi-line"></div><div><div class="hi-title">UK RAVE CULTURE</div><p class="hi-desc">Warehouses ilegales, piratas radiofónicas. El breakbeat conquista la escena rave británica sin pedir permiso a nadie.</p></div></div>
+    <div class="hi"><div class="hi-year">1997</div><div class="hi-line"></div><div><div class="hi-title">BIG BEAT EXPLODES</div><p class="hi-desc">The Prodigy, Chemical Brothers, Fatboy Slim. El break llena estadios, MTV y las listas de todo el mundo. La era dorada.</p></div></div>
+    <div class="hi"><div class="hi-year">2003</div><div class="hi-line"></div><div><div class="hi-title">NU SKOOL ERA</div><p class="hi-desc">Stanton Warriors, Plump DJs, Freq Nasty. El break se pule: más limpio, más gordo, más orientado a reventar pistas.</p></div></div>
+    <div class="hi"><div class="hi-year">NOW</div><div class="hi-line"></div><div><div class="hi-title">EL RESURGIMIENTO</div><p class="hi-desc">Fusión con UK garage, tech house, bass music. Nuevos productores, nuevos sellos. El break nunca estuvo muerto, solo estaba cargando.</p></div></div>
+  </div>
+</div>
+
+<!-- ============ ARTISTAS ============ -->
+<section id="artistas" class="lined">
+  <div class="sec-tag">03 — REFERENTES</div>
+  <h2 class="sec-title">ARTISTAS<br><span class="hl">CLAVE</span></h2>
+  <div class="artist-ransom">
+    <div class="ar-card"><div class="ar-num">#1</div><div class="ar-name">THE PRODIGY</div><div class="ar-genre"><span>Big Beat</span><span>Rave</span><span>Punk</span></div><p class="ar-desc">Liam Howlett y crew redefinieron la electrónica en directo. Agresivos, salvajes y absolutamente icónicos.</p></div>
+    <div class="ar-card"><div class="ar-num">#2</div><div class="ar-name">FATBOY SLIM</div><div class="ar-genre"><span>Big Beat</span><span>Funk</span></div><p class="ar-desc">Norman Cook convirtió los breaks en fiesta planetaria. Himnos que definen festivales enteros.</p></div>
+    <div class="ar-card"><div class="ar-num">#3</div><div class="ar-name">CHEMICAL BROTHERS</div><div class="ar-genre"><span>Big Beat</span><span>Psychedelic</span></div><p class="ar-desc">Tom y Ed mezclaron breaks con psicodelia y rock. Un universo sonoro sin etiquetas.</p></div>
+    <div class="ar-card"><div class="ar-num">#4</div><div class="ar-name">STANTON WARRIORS</div><div class="ar-genre"><span>Nu Skool</span><span>Bass</span></div><p class="ar-desc">Bass gordo, samples listos y sets que arrasan. Nu skool con nombre propio.</p></div>
+    <div class="ar-card"><div class="ar-num">#5</div><div class="ar-name">ADAM FREELAND</div><div class="ar-genre"><span>Progressive</span><span>Breaks</span></div><p class="ar-desc">Marine Parade. Elegancia y contundencia. Empujó el break hacia nuevos territorios.</p></div>
+    <div class="ar-card"><div class="ar-num">#6</div><div class="ar-name">KRAFTY KUTS</div><div class="ar-genre"><span>Breaks</span><span>Hip-Hop</span></div><p class="ar-desc">El puente entre breaks y hip-hop. Scratching, sampling y flow sobre ritmos rotos.</p></div>
+  </div>
+</section>
+
+<!-- ============ EVENTOS ============ -->
+<section id="eventos">
+  <div class="sec-tag">04 — CALENDARIO</div>
+  <h2 class="sec-title">PRÓXIMOS<br><span class="hl">EVENTOS</span></h2>
+  <div class="events-board">
+    <div class="flyer"><div class="flyer-date">12 Abril 2026</div><div class="flyer-name">BREAKPOINT FESTIVAL</div><div class="flyer-loc">Warehouse BCN — Barcelona</div><div class="flyer-sticker">FESTIVAL</div></div>
+    <div class="flyer"><div class="flyer-date">23 Mayo 2026</div><div class="flyer-name">NU BREAKS SESSIONS</div><div class="flyer-loc">Fabric — London</div><div class="flyer-sticker">CLUB</div></div>
+    <div class="flyer"><div class="flyer-date">15 Junio 2026</div><div class="flyer-name">AMEN GATHERING</div><div class="flyer-loc">Tresor — Berlin</div><div class="flyer-sticker">RAVE</div></div>
+    <div class="flyer"><div class="flyer-date">08 Sept 2026</div><div class="flyer-name">OPTIMAL BREAKS SHOWCASE</div><div class="flyer-loc">Sala B — Murcia</div><div class="flyer-sticker">HOME</div></div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<div class="cta-section">
+  <h2><span class="outline">ROMPE</span><br>EL COMPÁS</h2>
+  <a href="#" class="cta-btn">ENTRA YA →</a>
+</div>
+
+<div class="danger-bar"></div>
+
+<footer>
+  <div class="flogo">OPTIMAL//BREAKS</div>
+  <span>© 2026 — HECHO CON BREAKS Y RUIDO</span>
+</footer>
+
+<script>
+function toggleDeck(side) {
+  const platter = document.getElementById('platter-' + side);
+  const arm = document.getElementById('arm-' + side);
+  const btn = document.getElementById('btn-' + side);
+  const isSpinning = platter.classList.contains('spinning');
+  if (isSpinning) {
+    platter.classList.remove('spinning');
+    platter.classList.add('stopped');
+    arm.classList.remove('playing');
+    btn.classList.remove('active');
+    btn.textContent = '■ STOP';
+  } else {
+    platter.classList.remove('stopped');
+    platter.classList.add('spinning');
+    arm.classList.add('playing');
+    btn.classList.add('active');
+    btn.textContent = '▶ PLAY';
+  }
+}
+document.querySelectorAll('.knob').forEach(knob => {
+  let angle = 0;
+  knob.addEventListener('click', () => {
+    angle += 30; if (angle >= 360) angle = 0;
+    knob.style.transform = `rotate(${angle}deg)`;
+  });
+});
+const cf = document.getElementById('crossfader');
+cf.addEventListener('input', () => {
+  const v = cf.value;
+  document.getElementById('platter-left').style.opacity = Math.max(0.3, 1 - v/150);
+  document.getElementById('platter-right').style.opacity = Math.max(0.3, v/150);
+});
+</script>
+</body>
+</html>
