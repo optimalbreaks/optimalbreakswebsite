@@ -39,7 +39,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         <div className="sec-tag">ARTIST</div>
         <h1 className="sec-title"><span className="hl">{slug.replace(/-/g, ' ').toUpperCase()}</span></h1>
         <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{lang === 'es' ? 'La ficha de este artista se está preparando.' : 'This artist profile is being prepared.'}</p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default async function ArtistDetailPage({ params }: Props) {
         <div className="p-6 sm:p-8 bg-[var(--ink)] text-[var(--paper)]">
           {artist.essential_tracks?.length > 0 && (
             <div className="mb-6">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>{lang === 'es' ? 'TRACKS ESENCIALES' : 'ESSENTIAL TRACKS'}</div>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>{lang === 'es' ? 'TRACKS ESENCIALES' : 'ESSENTIAL TRACKS'}</div>
               {artist.essential_tracks.map((t: string, i: number) => (
                 <div key={i} className="py-1 border-b border-dashed border-white/10" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'rgba(232,220,200,0.6)' }}>{t}</div>
               ))}
@@ -83,7 +83,7 @@ export default async function ArtistDetailPage({ params }: Props) {
           )}
           {artist.socials && Object.keys(artist.socials).length > 0 && (
             <div>
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>LINKS</div>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>LINKS</div>
               {Object.entries(artist.socials).map(([key, url]) => (
                 <a key={key} href={url as string} target="_blank" rel="noopener noreferrer" className="block py-1 text-[var(--cyan)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>{key} →</a>
               ))}

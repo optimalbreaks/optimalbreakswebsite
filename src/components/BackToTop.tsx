@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react'
 
-export default function BackToTop() {
+type Props = {
+  ariaLabel?: string
+}
+
+export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -30,8 +34,9 @@ export default function BackToTop() {
 
   return (
     <button
+      type="button"
       onClick={scrollToTop}
-      className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-[150] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer"
+      className="fixed bottom-6 left-4 sm:bottom-8 sm:left-8 z-[150] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation"
       style={{
         fontFamily: "'Courier Prime', monospace",
         fontSize: '20px',
@@ -41,7 +46,7 @@ export default function BackToTop() {
         appearance: 'none',
         color: 'var(--ink)' /* Forzamos el color para que no se ponga blanco en iOS/Safari */
       }}
-      aria-label="Back to top"
+      aria-label={ariaLabel}
     >
       ↑
     </button>

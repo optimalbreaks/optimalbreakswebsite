@@ -109,7 +109,7 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
                 href={`/${lang}/artists/${a.slug}`}
                 className="p-5 sm:p-[22px_30px] border-b-[3px] sm:border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
               >
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
                   #{i + 1}
                 </div>
                 <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -147,7 +147,7 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
                   href={`/${lang}/artists/${artist.slug}`}
                   className="p-5 sm:p-[22px_30px] border-b-[3px] sm:border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)]"
                 >
-                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
                     #{i + 1}
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -186,13 +186,13 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 mt-8 border-4 border-[var(--ink)]">
           {ARTIST_ERAS.map((period, index) => (
             <div key={period.id} className="p-6 sm:p-8 border-b-[3px] lg:border-r-[3px] border-[var(--ink)] bg-[var(--paper)]">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(16px, 3vw, 22px)', color: 'var(--red)' }}>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 22px)', color: 'var(--red)' }}>
                 {period.period}
               </div>
               <p className="mt-3" style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'var(--dim)' }}>
                 {period.blurbs[lang]}
               </p>
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="artist-era-names flex flex-wrap gap-2 sm:gap-3 mt-4">
                 {period.names.map((name) => (
                   <span key={`${period.period}-${name}`} className={`cutout ${index % 2 === 0 ? 'red' : 'fill'}`}>
                     {name}

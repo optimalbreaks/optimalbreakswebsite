@@ -94,7 +94,7 @@ export default async function LabelsPage({ params }: { params: { lang: Locale } 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
             {list.map((l) => (
               <Link key={l.slug} href={`/${lang}/labels/${l.slug}`} className="p-6 sm:p-8 border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] max-md:!border-r-0">
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '16px', color: 'var(--red)' }}>Est. {l.founded_year || '?'}</div>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--red)' }}>Est. {l.founded_year || '?'}</div>
                 <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>{l.name}</div>
                 <div className="flex gap-2 mt-2">
                   <span className="cutout fill" style={{ margin: 0 }}>{l.country}</span>
@@ -106,7 +106,7 @@ export default async function LabelsPage({ params }: { params: { lang: Locale } 
         ) : (
           <div className="space-y-8">
             <div className="max-w-[860px] p-5 sm:p-7 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
                 {lang === 'es' ? 'SELLOS COMO COLUMNA VERTEBRAL' : 'LABELS AS BACKBONE'}
               </div>
               <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.72)' }}>
@@ -119,7 +119,7 @@ export default async function LabelsPage({ params }: { params: { lang: Locale } 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
               {FALLBACK_LABELS.map((label) => (
                 <div key={label.name} className="p-6 sm:p-8 border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] text-[var(--ink)] max-md:!border-r-0">
-                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '16px', color: 'var(--red)' }}>Est. {label.founded}</div>
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--red)' }}>Est. {label.founded}</div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                     {label.name}
                   </div>

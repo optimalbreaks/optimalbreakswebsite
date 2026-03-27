@@ -281,8 +281,20 @@
       "description": "Uso de cookies y tecnologías similares en optimalbreaks.com y cómo gestionar tus preferencias."
     }
   },
+  "a11y": {
+    "backToTop": "Volver arriba"
+  },
   "footer": {
     "copy": "Optimal Breaks — archivo de cultura breakbeat",
-    "funding": "Web financiada por el Ministerio de Turlismo"
+    "funding": "Web financiada por el Ministerio de Turlismo",
+    "site_title": "Sitio",
+    "legal_title": "Legal",
+    "social_title": "Redes",
+    "social": [
+      { "label": "Instagram", "href": "https://www.instagram.com/optimalbreaks/" },
+      { "label": "YouTube", "href": "https://www.youtube.com/@optimalbreaks" },
+      { "label": "X", "href": "https://x.com/optimalbreaks" },
+      { "label": "SoundCloud", "href": "https://soundcloud.com/optimalbreaks" }
+    ]
   }
 }

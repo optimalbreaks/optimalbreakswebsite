@@ -17,7 +17,7 @@ export default function Marquee({ items }: MarqueeProps) {
             key={i}
             className="px-8"
             style={{
-              fontFamily: "'Permanent Marker', cursive",
+              fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900,
               fontSize: 'clamp(14px, 4.5vw, 20px)',
               color: 'var(--yellow)',
             }}

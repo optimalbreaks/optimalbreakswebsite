@@ -11,7 +11,9 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CookieBanner from '@/components/CookieBanner'
 import { AuthProvider } from '@/components/AuthProvider'
+import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
+import BackToTop from '@/components/BackToTop'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -32,6 +34,16 @@ export default async function LangLayout({
 }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
+  const h = dict.home
+  const deckDict = {
+    play: h.play,
+    stop: h.stop,
+    deck_brand: h.deck_brand,
+    deck_model: h.deck_model,
+    mixer: h.mixer,
+    bpm: h.bpm,
+    crossfader: h.crossfader,
+  }
 
   return (
     <html lang={lang}>
@@ -48,11 +60,14 @@ export default async function LangLayout({
       <body>
         <AuthProvider>
           <Header dict={dict} lang={lang} />
-          <div className="danger-bar" />
-          <main className="relative z-[1]">{children}</main>
-          <div className="danger-bar" />
-          <Footer dict={dict} lang={lang} />
+          <DeckAudioProvider lang={lang} dict={deckDict}>
+            <div className="danger-bar" />
+            <main className="relative z-[1]">{children}</main>
+            <div className="danger-bar" />
+            <Footer dict={dict} lang={lang} />
+          </DeckAudioProvider>
           <CookieBanner lang={lang} />
+          <BackToTop ariaLabel={dict.a11y.backToTop} />
           <ServiceWorkerRegistration />
         </AuthProvider>
       </body>

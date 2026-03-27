@@ -39,7 +39,7 @@ export default async function LabelDetailPage({ params }: Props) {
         <div className="sec-tag">LABEL</div>
         <h1 className="sec-title"><span className="hl">{slug.replace(/-/g, ' ').toUpperCase()}</span></h1>
         <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{lang === 'es' ? 'Ficha del sello en preparación.' : 'Label profile in preparation.'}</p>
         </div>
       </div>
@@ -69,13 +69,13 @@ export default async function LabelDetailPage({ params }: Props) {
 
       {label.key_artists?.length > 0 && (
         <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>
           <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => <span key={i} className="cutout red">{a}</span>)}</div>
         </div>
       )}
       {label.key_releases?.length > 0 && (
         <div className="mt-4 p-4 sm:p-6 border-4 border-[var(--ink)]">
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '18px', color: 'var(--red)', marginBottom: '12px' }}>{lang === 'es' ? 'RELEASES CLAVE' : 'KEY RELEASES'}</div>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px' }}>{lang === 'es' ? 'RELEASES CLAVE' : 'KEY RELEASES'}</div>
           <div className="flex flex-wrap gap-2">{label.key_releases.map((r: string, i: number) => <span key={i} className="cutout fill">{r}</span>)}</div>
         </div>
       )}

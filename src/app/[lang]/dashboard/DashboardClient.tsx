@@ -128,7 +128,7 @@ function OverviewTab({ lang }: { lang: string }) {
       </div>
 
       <div className="mt-8 p-6 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-        <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '20px', color: 'var(--yellow)', marginBottom: '8px' }}>
+        <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', color: 'var(--yellow)', marginBottom: '8px' }}>
           {es ? '¡Sigue explorando!' : 'Keep exploring!'}
         </div>
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'rgba(232,220,200,0.6)', lineHeight: 1.7 }}>
@@ -267,7 +267,7 @@ function SightingsTab({ lang }: { lang: string }) {
           {sightings.map((s) => (
             <div key={s.id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between items-start gap-3">
               <div>
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '14px', color: 'var(--red)' }}>{s.seen_at}</div>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{s.seen_at}</div>
                 <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: '14px', textTransform: 'uppercase' }}>{s.event_name || s.venue}</div>
                 <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{s.venue} — {s.city}, {s.country}</div>
                 {s.rating && <div className="mt-1 text-[var(--yellow)]">{'★'.repeat(s.rating)}{'☆'.repeat(5 - s.rating)}</div>}

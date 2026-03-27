@@ -50,7 +50,7 @@ export default function Header({ dict, lang }: HeaderProps) {
       <Link
         href={`/${lang}`}
         className="flex items-center gap-2 px-3 sm:px-[18px] py-3 bg-[var(--red)] text-white whitespace-nowrap no-underline"
-        style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '18px', textShadow: '1px 1px 0 rgba(0,0,0,0.3)' }}
+        style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', textShadow: '1px 1px 0 rgba(0,0,0,0.3)' }}
       >
         <span className="hidden sm:inline">OPTIMAL//BREAKS</span>
         <span className="sm:hidden">OB</span>

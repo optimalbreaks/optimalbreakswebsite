@@ -18,7 +18,7 @@ export default function ArtistCard({ num, name, genres, desc, href }: ArtistCard
     <>
       <div
         className="leading-none"
-        style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(22px, 6vw, 36px)', color: 'var(--red)' }}
+        style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(22px, 6vw, 36px)', color: 'var(--red)' }}
       >
         #{num}
       </div>

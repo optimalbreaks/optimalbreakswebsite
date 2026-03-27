@@ -103,7 +103,7 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
             style={isDark ? { borderTop: `6px solid ${color}`, borderBottom: `6px solid ${color}` } : {}}
           >
             <div className="max-w-[800px] mx-auto">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(36px, 8vw, 60px)', color, lineHeight: 1, marginBottom: '12px' }}>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(36px, 8vw, 60px)', color, lineHeight: 1, marginBottom: '12px' }}>
                 {entry.yearLabel}
               </div>
 

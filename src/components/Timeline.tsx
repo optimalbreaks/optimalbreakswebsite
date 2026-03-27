@@ -62,7 +62,7 @@ export default function Timeline({ tag, title1, title2, items, footerLink }: Tim
             <div
               className="text-right leading-none"
               style={{
-                fontFamily: "'Permanent Marker', cursive",
+                fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900,
                 fontSize: 'clamp(24px, 5vw, 40px)',
                 color: 'var(--yellow)',
               }}

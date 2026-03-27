@@ -19,7 +19,7 @@ export default function NotFound() {
           <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(80px, 20vw, 200px)', lineHeight: 0.9, color: '#d62828' }}>
             404
           </div>
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(20px, 4vw, 36px)', marginTop: '20px' }}>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(20px, 4vw, 36px)', marginTop: '20px' }}>
             TRACK NOT FOUND
           </div>
           <p style={{ marginTop: '15px', fontSize: '16px', color: '#888', maxWidth: '400px' }}>

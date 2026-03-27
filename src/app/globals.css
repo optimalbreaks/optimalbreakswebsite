@@ -3,7 +3,7 @@
    Fanzine Club Edition
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&family=Darker+Grotesque:wght@400;700;900&family=Permanent+Marker&family=Special+Elite&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&family=Darker+Grotesque:wght@400;700;900&family=Special+Elite&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -155,6 +155,13 @@ body::before {
 .cutout.pink { background: var(--pink); color: white; }
 .cutout.blue { background: var(--blue); color: white; }
 .cutout.outline { border: 2px solid var(--ink); }
+
+/* Cronología «nombres por lustro» (artists): legible; .cutout global es 10px */
+.artist-era-names .cutout {
+  font-size: clamp(16px, 2.8vw, 20px);
+  letter-spacing: 1px;
+  padding: 6px 14px;
+}
 
 /* === Danger bar === */
 .danger-bar {

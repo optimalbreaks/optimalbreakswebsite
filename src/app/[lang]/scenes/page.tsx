@@ -94,7 +94,7 @@ export default async function ScenesPage({ params }: { params: { lang: Locale } 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
             {list.map((s) => (
               <Link key={s.slug} href={`/${lang}/scenes/${s.slug}`} className="p-6 sm:p-8 border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] max-md:!border-r-0">
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '14px', color: 'var(--red)' }}>{s.era}</div>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{s.era}</div>
                 <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                   {lang === 'es' ? s.name_es : s.name_en}
                 </div>
@@ -106,7 +106,7 @@ export default async function ScenesPage({ params }: { params: { lang: Locale } 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
             {FALLBACK_SCENES.map((scene) => (
               <div key={scene.name_en} className="p-6 sm:p-8 border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] text-[var(--ink)] max-md:!border-r-0">
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '14px', color: 'var(--red)' }}>{scene.era}</div>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{scene.era}</div>
                 <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                   {lang === 'es' ? scene.name_es : scene.name_en}
                 </div>

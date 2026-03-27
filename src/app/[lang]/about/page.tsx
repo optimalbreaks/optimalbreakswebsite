@@ -39,7 +39,7 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
             className="absolute -top-[6px] left-[30px] w-[80px] h-[20px]"
             style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }}
           />
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(20px, 5vw, 28px)', color: 'var(--yellow)', marginBottom: '15px' }}>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(20px, 5vw, 28px)', color: 'var(--yellow)', marginBottom: '15px' }}>
             {lang === 'es' ? '¿POR QUÉ?' : 'WHY?'}
           </div>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8, color: 'rgba(232,220,200,0.7)' }}>

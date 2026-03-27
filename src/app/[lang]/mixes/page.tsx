@@ -127,7 +127,7 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
                 <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
                   {m.title}
                 </div>
-                <div className="mt-2" style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '14px', color: 'var(--red)' }}>
+                <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
                   {m.artist_name}
                 </div>
                 {m.embed_url && (
@@ -146,7 +146,7 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
         ) : (
           <div className="space-y-8">
             <div className="max-w-[860px] p-5 sm:p-7 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
                 {lang === 'es' ? 'QUIÉN MANTUVO LA LLAMA' : 'WHO KEPT THE FLAME ALIVE'}
               </div>
               <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.72)' }}>
@@ -172,7 +172,7 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
                   <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
                     {lang === 'es' ? mix.title_es : mix.title_en}
                   </div>
-                  <div className="mt-2" style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '14px', color: 'var(--red)' }}>
+                  <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
                     {mix.artist}
                   </div>
                   <p className="mt-4 pr-16" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.7, color: 'var(--dim)' }}>

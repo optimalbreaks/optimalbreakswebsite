@@ -122,7 +122,7 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
             {list.map((e) => (
               <Link key={e.slug} href={`/${lang}/events/${e.slug}`} className="border-[3px] border-[var(--ink)] p-5 sm:p-7 relative transition-all duration-150 bg-[var(--paper)] hover:rotate-[-1deg] hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block">
                 <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
-                <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
                   {e.date_start || 'TBA'}
                 </div>
                 <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -140,7 +140,7 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
         ) : (
           <div className="space-y-8">
             <div className="max-w-[860px] p-5 sm:p-7 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-              <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
+              <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
                 {lang === 'es' ? 'EVENTOS COMO INFRAESTRUCTURA' : 'EVENTS AS INFRASTRUCTURE'}
               </div>
               <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.72)' }}>
@@ -154,7 +154,7 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
               {FALLBACK_EVENTS.map((event) => (
                 <div key={`${event.type}-${event.name_en}`} className="border-[3px] border-[var(--ink)] p-5 sm:p-7 relative transition-all duration-150 bg-[var(--paper)] hover:rotate-[-1deg] hover:shadow-[6px_6px_0_var(--ink)] text-[var(--ink)]">
                   <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
-                  <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
                     {lang === 'es' ? event.date_es : event.date_en}
                   </div>
                   <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>

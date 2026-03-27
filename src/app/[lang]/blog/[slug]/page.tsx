@@ -49,7 +49,7 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="sec-tag">BLOG</div>
         <h1 className="sec-title text-[clamp(24px,5vw,44px)]"><span className="hl">{safeSlug.replace(/-/g, ' ').toUpperCase()}</span></h1>
         <div className="mt-6 p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{safeLang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
+          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{safeLang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{safeLang === 'es' ? 'Este artículo se está preparando.' : 'This article is being prepared.'}</p>
         </div>
       </div>

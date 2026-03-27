@@ -62,7 +62,7 @@ export default async function HomePage({
         <div
           className="absolute top-[25px] right-[35px] z-[5] hidden md:block animate-stamp"
           style={{
-            fontFamily: "'Permanent Marker', cursive",
+            fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900,
             fontSize: '16px',
             color: 'var(--red)',
             border: '4px solid var(--red)',
@@ -120,8 +120,10 @@ export default async function HomePage({
           </p>
         </div>
 
-        {/* DJ Deck */}
-        <DjDeck dict={h} />
+        {/* DJ Deck — ancla #dj-deck para la mini bar global */}
+        <div id="dj-deck" className="scroll-mt-24">
+          <DjDeck dict={h} />
+        </div>
 
         {/* Genre tags */}
         <div className="mt-4 sm:mt-5 text-center">
@@ -152,7 +154,7 @@ export default async function HomePage({
           {/* !!! decoration — desktop only */}
           <div
             className="absolute -top-[25px] right-[25px] hidden md:block"
-            style={{ fontFamily: "'Permanent Marker', cursive", fontSize: '55px', color: 'var(--red)', transform: 'rotate(10deg)' }}
+            style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '55px', color: 'var(--red)', transform: 'rotate(10deg)' }}
           >
             !!!
           </div>
@@ -172,7 +174,7 @@ export default async function HomePage({
           {/* BPM dark side */}
           <div className="p-5 sm:p-[30px] bg-[var(--ink)] text-[var(--paper)] flex flex-col justify-center items-center relative">
             <div className="absolute -top-[6px] left-[20px] w-[70px] h-[20px] hidden sm:block" style={{ background: 'var(--tape)', transform: 'rotate(-3deg)' }} />
-            <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(60px, 15vw, 100px)', lineHeight: 1, color: 'var(--red)' }}>
+            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(60px, 15vw, 100px)', lineHeight: 1, color: 'var(--red)' }}>
               135
             </div>
             <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '5px', color: 'var(--dim)' }}>

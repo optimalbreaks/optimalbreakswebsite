@@ -19,7 +19,7 @@ export default function EventFlyer({ date, name, location, type }: EventFlyerPro
         style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }}
       />
 
-      <div style={{ fontFamily: "'Permanent Marker', cursive", fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
+      <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
         {date}
       </div>
       <div
