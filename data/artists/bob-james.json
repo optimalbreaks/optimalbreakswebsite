@@ -1,0 +1,62 @@
+{
+  "slug": "bob-james",
+  "name": "Bob James",
+  "name_display": "BOB JAMES",
+  "real_name": "Robert McElhiney James",
+  "country": "USA",
+  "category": "us_artist",
+  "styles": [
+    "Jazz",
+    "Fusion",
+    "Smooth Jazz"
+  ],
+  "era": "1960s-present",
+  "bio_en": "Bob James is an American jazz keyboardist, arranger, and record producer, born on December 25, 1939, in Marshall, Missouri. He is known for his significant contributions to the jazz genre, particularly in the fusion and smooth jazz styles.\n\nJames began his musical journey at a young age, influenced by the rich musical culture of his hometown. He studied at the University of Missouri and later at the Juilliard School, where he honed his skills in composition and arrangement.\n\nIn the 1960s, Bob James gained recognition through his work with various jazz ensembles and his innovative approach to blending jazz with other genres. His early influences included artists like Oscar Peterson and Bill Evans, which shaped his unique sound.\n\nHis first major breakthrough came with the release of his album \"One\" in 1974, which featured the iconic track \"Angela,\" known as the theme for the television show \"Taxi.\" This track became a defining moment in his career and showcased his ability to create memorable melodies.\n\nThroughout the 1970s and 1980s, James continued to develop his sound, incorporating elements of funk and R&B into his music. He became a prominent figure in the smooth jazz movement, collaborating with other notable musicians and expanding his audience.\n\nIn 1990, he co-founded the jazz fusion supergroup Fourplay, which further solidified his status in the music industry. The group became known for its smooth sound and commercial success, releasing several albums that topped jazz charts.\n\nBob James has collaborated with a wide range of artists, including Grover Washington Jr., David Sanborn, and Earl Klugh. These collaborations have enriched his musical repertoire and introduced his work to diverse audiences.\n\nHis discography includes numerous albums, with notable releases such as \"Two,\" \"Three,\" and \"The Genie.\" Each of these works reflects his evolving style and commitment to pushing the boundaries of jazz.\n\nJames's music has been sampled by various hip-hop artists, further extending his influence beyond the jazz genre. His compositions have found new life in contemporary music, showcasing the timeless quality of his work.\n\nIn recent years, Bob James has continued to perform and record, maintaining a presence in the jazz scene. His contributions to music have been recognized with multiple Grammy Awards, affirming his impact on the genre.\n\nAs a pioneer in jazz fusion, Bob James's legacy is marked by his innovative approach to music and his ability to connect with audiences across generations. He remains a significant figure in the evolution of jazz, inspiring new artists and continuing to shape the genre.\n\nBob James's work exemplifies the fusion of traditional jazz with modern influences, making him a key player in the ongoing development of the genre. His music continues to resonate with listeners, ensuring his place in the history of jazz.",
+  "bio_es": "Bob James es un tecladista, arreglista y productor musical estadounidense, nacido el 25 de diciembre de 1939 en Marshall, Missouri. Es conocido por sus significativas contribuciones al género del jazz, particularmente en los estilos de fusión y smooth jazz.\n\nJames comenzó su trayectoria musical a una edad temprana, influenciado por la rica cultura musical de su ciudad natal. Estudió en la Universidad de Missouri y más tarde en la Juilliard School, donde perfeccionó sus habilidades en composición y arreglos.\n\nEn la década de 1960, Bob James ganó reconocimiento a través de su trabajo con varios conjuntos de jazz y su enfoque innovador para mezclar jazz con otros géneros. Sus primeras influencias incluyeron a artistas como Oscar Peterson y Bill Evans, lo que moldeó su sonido único.\n\nSu primer gran éxito llegó con el lanzamiento de su álbum \"One\" en 1974, que incluía la icónica pista \"Angela,\" conocida como el tema de la serie de televisión \"Taxi.\" Esta pista se convirtió en un momento definitorio de su carrera y mostró su capacidad para crear melodías memorables.\n\nA lo largo de las décadas de 1970 y 1980, James continuó desarrollando su sonido, incorporando elementos de funk y R&B en su música. Se convirtió en una figura prominente en el movimiento del smooth jazz, colaborando con otros músicos notables y ampliando su audiencia.\n\nEn 1990, cofundó el supergrupo de fusión jazz Fourplay, lo que solidificó aún más su estatus en la industria musical. El grupo se hizo conocido por su sonido suave y éxito comercial, lanzando varios álbumes que encabezaron las listas de jazz.\n\nBob James ha colaborado con una amplia gama de artistas, incluidos Grover Washington Jr., David Sanborn y Earl Klugh. Estas colaboraciones han enriquecido su repertorio musical y han presentado su trabajo a diversas audiencias.\n\nSu discografía incluye numerosos álbumes, con lanzamientos notables como \"Two,\" \"Three,\" y \"The Genie.\" Cada una de estas obras refleja su estilo en evolución y su compromiso de expandir los límites del jazz.\n\nLa música de James ha sido sampleada por varios artistas de hip-hop, extendiendo aún más su influencia más allá del género del jazz. Sus composiciones han encontrado nueva vida en la música contemporánea, mostrando la calidad atemporal de su trabajo.\n\nEn años recientes, Bob James ha continuado actuando y grabando, manteniendo una presencia en la escena del jazz. Sus contribuciones a la música han sido reconocidas con múltiples premios Grammy, afirmando su impacto en el género.\n\nComo pionero en la fusión jazz, el legado de Bob James está marcado por su enfoque innovador hacia la música y su capacidad para conectar con audiencias a través de generaciones. Sigue siendo una figura significativa en la evolución del jazz, inspirando a nuevos artistas y continuando dando forma al género.\n\nEl trabajo de Bob James ejemplifica la fusión del jazz tradicional con influencias modernas, convirtiéndolo en un jugador clave en el desarrollo continuo del género. Su música sigue resonando con los oyentes, asegurando su lugar en la historia del jazz.",
+  "essential_tracks": [
+    "Angela",
+    "Nautilus",
+    "Maputo",
+    "West Coast",
+    "The Steamin' Feelin'"
+  ],
+  "recommended_mixes": [],
+  "related_artists": [
+    "Fourplay",
+    "Grover Washington Jr.",
+    "David Sanborn",
+    "Earl Klugh"
+  ],
+  "labels_founded": [],
+  "key_releases": [
+    {
+      "title": "One",
+      "year": 1974,
+      "note": "Includes the hit track 'Angela'."
+    },
+    {
+      "title": "Two",
+      "year": 1975,
+      "note": ""
+    },
+    {
+      "title": "Three",
+      "year": 1976,
+      "note": ""
+    },
+    {
+      "title": "The Genie",
+      "year": 1985,
+      "note": ""
+    }
+  ],
+  "socials": {
+    "facebook": "https://www.facebook.com/BobJamesMusic",
+    "instagram": "https://www.instagram.com/bob_james_music/",
+    "website": "https://www.bobjames.com"
+  },
+  "website": "https://www.bobjames.com",
+  "image_url": null,
+  "is_featured": true,
+  "sort_order": 50
+}

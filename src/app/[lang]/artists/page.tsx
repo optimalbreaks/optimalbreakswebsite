@@ -75,7 +75,7 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
   const { data: artists } = await supabase
     .from('artists')
     .select('slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url')
-    .order('sort_order', { ascending: true })
+    .order('name_display', { ascending: true })
 
   type ArtistListRow = Pick<
     Artist,
@@ -108,7 +108,9 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
-              {FEATURED_ARTISTS.map((artist, i) => {
+              {[...FEATURED_ARTISTS]
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                .map((artist) => {
                 const description = FEATURED_ARTIST_DESCRIPTIONS[artist.name]
                 return (
                 <Link
@@ -118,10 +120,7 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
                 >
                   <CardThumbnail src={artist.image_url} alt={artist.name} aspectClass="aspect-[5/3]" />
                   <div className="p-5 sm:p-[22px_30px] flex flex-col flex-grow min-h-0">
-                    <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
-                      #{i + 1}
-                    </div>
-                    <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                    <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                       {artist.name}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-[6px]">
@@ -140,7 +139,8 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
                     </p>
                   </div>
                 </Link>
-              )})}
+                )
+              })}
             </div>
           </div>
         )}

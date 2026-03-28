@@ -27,7 +27,6 @@ interface ArtistDict {
   view_list: string
   filter_genre: string
   filter_country: string
-  filter_era: string
   filter_category: string
   clear_filters: string
   results_count: string
@@ -55,7 +54,6 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeGenre, setActiveGenre] = useState('')
   const [activeCountry, setActiveCountry] = useState('')
-  const [activeEra, setActiveEra] = useState('')
 
   const allGenres = useMemo(() => {
     const set = new Set<string>()
@@ -71,34 +69,28 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
     return Array.from(set).sort()
   }, [artists])
 
-  const allEras = useMemo(() => {
-    const set = new Set<string>()
-    artists.forEach((a) => {
-      if (a.era) set.add(a.era)
-    })
-    return Array.from(set).sort()
-  }, [artists])
-
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
-    return artists.filter((a) => {
+    const rows = artists.filter((a) => {
       if (q && !(a.name_display || a.name).toLowerCase().includes(q) && !a.name.toLowerCase().includes(q)) return false
       if (activeCategory !== 'all' && a.category !== CATEGORY_MAP[activeCategory]) return false
       if (activeGenre && !a.styles?.includes(activeGenre)) return false
       if (activeCountry && a.country !== activeCountry) return false
-      if (activeEra && a.era !== activeEra) return false
       return true
     })
-  }, [artists, search, activeCategory, activeGenre, activeCountry, activeEra])
+    rows.sort((a, b) =>
+      (a.name_display || a.name).localeCompare(b.name_display || b.name, undefined, { sensitivity: 'base' }),
+    )
+    return rows
+  }, [artists, search, activeCategory, activeGenre, activeCountry])
 
-  const hasFilters = search || activeCategory !== 'all' || activeGenre || activeCountry || activeEra
+  const hasFilters = search || activeCategory !== 'all' || activeGenre || activeCountry
 
   function clearAll() {
     setSearch('')
     setActiveCategory('all')
     setActiveGenre('')
     setActiveCountry('')
-    setActiveEra('')
   }
 
   const filters = Object.entries(dict.filters) as [string, string][]
@@ -152,7 +144,6 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
       <div className="flex flex-wrap gap-2 mb-5">
         <FilterSelect value={activeGenre} onChange={setActiveGenre} placeholder={dict.filter_genre} options={allGenres} />
         <FilterSelect value={activeCountry} onChange={setActiveCountry} placeholder={dict.filter_country} options={allCountries} />
-        <FilterSelect value={activeEra} onChange={setActiveEra} placeholder={dict.filter_era} options={allEras} />
         {hasFilters && (
           <button
             onClick={clearAll}
@@ -223,7 +214,7 @@ function FilterSelect({ value, onChange, placeholder, options }: { value: string
 function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
-      {artists.map((a, i) => (
+      {artists.map((a) => (
         <Link
           key={a.slug}
           href={`/${lang}/artists/${a.slug}`}
@@ -231,10 +222,7 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
         >
           <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-[5/3]" />
           <div className="p-5 sm:p-[22px_30px] flex flex-col flex-grow min-h-0">
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 5vw, 36px)', color: 'var(--red)', lineHeight: 1 }}>
-              #{i + 1}
-            </div>
-            <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+            <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
               {a.name_display || a.name}
             </div>
             <div className="flex flex-wrap gap-1 mt-[6px]">
@@ -260,7 +248,7 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
 function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
-      {artists.map((a, i) => (
+      {artists.map((a) => (
         <Link
           key={a.slug}
           href={`/${lang}/artists/${a.slug}`}
@@ -268,10 +256,7 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
         >
           <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" />
           <div className="p-3 flex flex-col flex-grow min-h-0">
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', lineHeight: 1 }}>
-              #{i + 1}
-            </div>
-            <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+            <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
               {a.name_display || a.name}
             </div>
             <div className="flex flex-wrap gap-[2px] mt-1">
@@ -296,15 +281,12 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
 function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
-      {artists.map((a, i) => (
+      {artists.map((a) => (
         <Link
           key={a.slug}
           href={`/${lang}/artists/${a.slug}`}
           className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
         >
-          <div className="shrink-0 w-10 text-right" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', color: 'var(--red)', lineHeight: 1 }}>
-            {i + 1}
-          </div>
           <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
             <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" frameClass="" />
           </div>

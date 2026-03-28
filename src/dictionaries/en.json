@@ -189,7 +189,6 @@
     "view_list": "List",
     "filter_genre": "Genre",
     "filter_country": "Country",
-    "filter_era": "Decade",
     "filter_category": "Category",
     "clear_filters": "Clear filters",
     "results_count": "{count} artists",

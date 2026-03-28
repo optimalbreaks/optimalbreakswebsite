@@ -4,6 +4,8 @@
  * Uso:
  *   node scripts/generar-artista-agente.mjs <slug> "Nombre del artista" [--notes archivo.txt] [--stdout] [--no-search]
  *   npm run db:artist:agent -- krafty-kuts "Krafty Kuts"
+ *   npm run db:artist:agent:all --              # todos en BD excepto deekline
+ *   npm run db:artist:agent:all -- --limit 3  # prueba con 3
  *
  * Requiere OPENAI_API_KEY en .env.local.
  * Opcional: SERPAPI_API_KEY (Google via serpapi.com) para contexto de búsqueda.
@@ -15,6 +17,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
+import { createClient } from '@supabase/supabase-js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -154,8 +157,7 @@ function normalizeSocials(raw) {
 async function openAiJson({ system, user }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) {
-    console.error('Falta OPENAI_API_KEY en .env.local')
-    process.exit(1)
+    throw new Error('Falta OPENAI_API_KEY en .env.local')
   }
   const model = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -176,20 +178,22 @@ async function openAiJson({ system, user }) {
   })
   if (!res.ok) {
     const err = await res.text()
-    console.error('OpenAI error:', res.status, err)
-    process.exit(1)
+    throw new Error(`OpenAI ${res.status}: ${err}`)
   }
   const data = await res.json()
   const content = data.choices?.[0]?.message?.content
   if (!content) {
-    console.error('Respuesta OpenAI vacía')
-    process.exit(1)
+    throw new Error('Respuesta OpenAI vacía')
   }
   let raw = content.trim()
   if (raw.startsWith('```')) {
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
   }
-  return JSON.parse(raw)
+  try {
+    return JSON.parse(raw)
+  } catch (e) {
+    throw new Error(`JSON del modelo no parseable: ${e.message}`)
+  }
 }
 
 function normalizeArtist(obj, expectedSlug) {
@@ -237,9 +241,172 @@ function validateMinimal(obj) {
   return err
 }
 
+/**
+ * Genera y opcionalmente escribe data/artists/<slug>.json. Lanza Error si falla.
+ */
+export async function runArtistAgent({
+  slug,
+  artistName,
+  extraNotes = '',
+  noSearch = false,
+  stdout = false,
+  quiet = false,
+}) {
+  let research = ''
+  if (!noSearch) {
+    const serpKey = process.env.SERPAPI_API_KEY?.trim()
+    if (serpKey) {
+      const q = `${artistName} DJ producer breakbeat biography discography`
+      if (!quiet) console.log('[agente] Buscando contexto (SerpAPI)...')
+      research = await fetchSerpContext(q, serpKey)
+      if (!quiet) {
+        if (research) console.log('[agente] Contexto web:', research.length, 'caracteres')
+        else console.log('[agente] Sin resultados útiles de SerpAPI')
+      }
+    } else if (!quiet) {
+      console.log('[agente] SERPAPI_API_KEY no definida; modo solo modelo.')
+    }
+  }
+
+  const userPrompt = buildUserPrompt({ slug, artistName, extraNotes, research })
+  if (!quiet) console.log('[agente] Llamando OpenAI…')
+  const parsed = await openAiJson({
+    system: loadSystemPrompt(),
+    user: userPrompt,
+  })
+
+  const normalized = normalizeArtist(parsed, slug)
+  const bad = validateMinimal(normalized)
+  if (bad.length) {
+    throw new Error(`Faltan campos: ${bad.join(', ')}`)
+  }
+
+  const jsonOut = JSON.stringify(normalized, null, 2) + '\n'
+  if (stdout) {
+    process.stdout.write(jsonOut)
+    return { path: null, slug: normalized.slug }
+  }
+  const dir = join(ROOT, 'data', 'artists')
+  mkdirSync(dir, { recursive: true })
+  const outPath = join(dir, `${normalized.slug}.json`)
+  writeFileSync(outPath, jsonOut, 'utf8')
+  if (!quiet) {
+    console.log('Escrito:', outPath)
+    console.log('Siguiente paso: npm run db:artist -- data/artists/' + normalized.slug + '.json')
+  }
+  return { path: outPath, slug: normalized.slug }
+}
+
+async function fetchAllArtistsFromSupabase() {
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+  const key = (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    ''
+  ).trim()
+  if (!url || !key) {
+    throw new Error(
+      'Falta NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY) en .env.local',
+    )
+  }
+  const sb = createClient(url, key, { auth: { persistSession: false } })
+  const all = []
+  const page = 1000
+  let from = 0
+  for (;;) {
+    const { data, error } = await sb
+      .from('artists')
+      .select('slug,name')
+      .order('slug', { ascending: true })
+      .range(from, from + page - 1)
+    if (error) throw new Error(error.message)
+    if (!data?.length) break
+    all.push(...data)
+    if (data.length < page) break
+    from += page
+  }
+  return all
+}
+
+function parseLimit(argv) {
+  const i = argv.indexOf('--limit')
+  if (i === -1 || !argv[i + 1]) return Infinity
+  const n = parseInt(argv[i + 1], 10)
+  return Number.isFinite(n) && n > 0 ? n : Infinity
+}
+
+function parseDelayMs(argv) {
+  const i = argv.indexOf('--delay-ms')
+  if (i === -1 || !argv[i + 1]) return 3000
+  const n = parseInt(argv[i + 1], 10)
+  return Number.isFinite(n) && n >= 0 ? n : 3000
+}
+
+async function runFromDbMode(argv) {
+  const skipSlugs = new Set(['deekline'])
+  const extraSkip = argv.find((a) => a.startsWith('--skip='))
+  if (extraSkip) {
+    for (const s of extraSkip.slice('--skip='.length).split(',')) {
+      const t = s.trim().toLowerCase()
+      if (t) skipSlugs.add(t)
+    }
+  }
+  const limit = parseLimit(argv)
+  const delayMs = parseDelayMs(argv)
+  const noSearch = argv.includes('--no-search')
+
+  const rows = await fetchAllArtistsFromSupabase()
+  let todo = rows.filter((r) => r.slug && !skipSlugs.has(r.slug))
+  if (Number.isFinite(limit)) todo = todo.slice(0, limit)
+
+  console.log(
+    `[batch] ${todo.length} artistas (omitidos: ${[...skipSlugs].join(', ')}); pausa ${delayMs} ms entre llamadas`,
+  )
+
+  let ok = 0
+  let fail = 0
+  const failed = []
+  for (let i = 0; i < todo.length; i++) {
+    const { slug, name } = todo[i]
+    const artistName = String(name || slug).trim() || slug
+    console.log(`[batch] ${i + 1}/${todo.length} ${slug} (${artistName})`)
+    let lastErr = null
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await runArtistAgent({ slug, artistName, extraNotes: '', noSearch, stdout: false, quiet: true })
+        ok++
+        lastErr = null
+        break
+      } catch (e) {
+        lastErr = e
+        console.warn(`[batch] intento ${attempt}/3 ${slug}:`, e.message)
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 5000 * attempt))
+      }
+    }
+    if (lastErr) {
+      fail++
+      failed.push(slug)
+    }
+    if (i < todo.length - 1 && delayMs > 0) await new Promise((r) => setTimeout(r, delayMs))
+  }
+
+  console.log(`[batch] Fin: ok=${ok} fallos=${fail}`)
+  if (failed.length) console.log('[batch] Slugs con error:', failed.join(', '))
+}
+
 async function main() {
   loadEnvLocal()
   const argv = process.argv.slice(2)
+  if (argv.includes('--from-db')) {
+    try {
+      await runFromDbMode(argv)
+    } catch (e) {
+      console.error('[batch]', e.message)
+      process.exit(1)
+    }
+    return
+  }
+
   let noSearch = false
   let stdout = false
   const filtered = []
@@ -252,7 +419,10 @@ async function main() {
   }
   const pos = filtered.filter((x) => typeof x === 'string')
   if (pos.length < 2) {
-    console.error(`Uso: node scripts/generar-artista-agente.mjs <slug> "Nombre artista" [--notes ruta.txt] [--stdout] [--no-search]`)
+    console.error(
+      `Uso: node scripts/generar-artista-agente.mjs <slug> "Nombre artista" [--notes ruta.txt] [--stdout] [--no-search]`,
+    )
+    console.error(`   o: node scripts/generar-artista-agente.mjs --from-db [--limit N] [--delay-ms ms] [--no-search] [--skip=a,b]`)
     process.exit(1)
   }
   const slug = pos[0]
@@ -268,48 +438,12 @@ async function main() {
     extraNotes = readFileSync(np, 'utf8')
   }
 
-  let research = ''
-  if (!noSearch) {
-    const serpKey = process.env.SERPAPI_API_KEY?.trim()
-    if (serpKey) {
-      const q = `${artistName} DJ producer breakbeat biography discography`
-      console.log('[agente] Buscando contexto (SerpAPI)...')
-      research = await fetchSerpContext(q, serpKey)
-      if (research) console.log('[agente] Contexto web:', research.length, 'caracteres')
-      else console.log('[agente] Sin resultados útiles de SerpAPI')
-    } else {
-      console.log('[agente] SERPAPI_API_KEY no definida; modo solo modelo.')
-    }
-  }
-
-  const userPrompt = buildUserPrompt({ slug, artistName, extraNotes, research })
-  console.log('[agente] Llamando OpenAI...')
-  let parsed
   try {
-    parsed = await openAiJson({ system: loadSystemPrompt(), user: userPrompt })
+    await runArtistAgent({ slug, artistName, extraNotes, noSearch, stdout, quiet: false })
   } catch (e) {
-    console.error('JSON inválido del modelo:', e.message)
+    console.error('[agente]', e.message)
     process.exit(1)
   }
-
-  const normalized = normalizeArtist(parsed, slug)
-  const bad = validateMinimal(normalized)
-  if (bad.length) {
-    console.error('Faltan campos:', bad.join(', '))
-    process.exit(1)
-  }
-
-  const jsonOut = JSON.stringify(normalized, null, 2) + '\n'
-  if (stdout) {
-    process.stdout.write(jsonOut)
-    return
-  }
-  const dir = join(ROOT, 'data', 'artists')
-  mkdirSync(dir, { recursive: true })
-  const outPath = join(dir, `${normalized.slug}.json`)
-  writeFileSync(outPath, jsonOut, 'utf8')
-  console.log('Escrito:', outPath)
-  console.log('Siguiente paso: npm run db:artist -- data/artists/' + normalized.slug + '.json')
 }
 
 main().catch((e) => {
