@@ -26,6 +26,12 @@ export interface Database {
         Update: Partial<Omit<Label, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
+      organizations: {
+        Row: Organization
+        Insert: Omit<Organization, 'id' | 'created_at'>
+        Update: Partial<Omit<Organization, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
       events: {
         Row: BreakEvent
         Insert: Omit<BreakEvent, 'id' | 'created_at'>
@@ -222,6 +228,27 @@ export interface Label extends Record<string, unknown> {
   key_releases: string[]
   is_active: boolean
   is_featured: boolean
+  organization_id: string | null
+}
+
+export type OrganizationRole = 'label' | 'promoter' | 'booking' | 'media' | 'community'
+
+export interface Organization extends Record<string, unknown> {
+  id: string
+  created_at: string
+  slug: string
+  name: string
+  country: string
+  base_city: string | null
+  founded_year: number | null
+  description_en: string
+  description_es: string
+  image_url: string | null
+  website: string | null
+  socials: Record<string, string>
+  roles: OrganizationRole[]
+  is_active: boolean
+  is_featured: boolean
 }
 
 export interface BreakEvent extends Record<string, unknown> {
@@ -242,6 +269,7 @@ export interface BreakEvent extends Record<string, unknown> {
   website: string | null
   lineup: string[]
   is_featured: boolean
+  promoter_organization_id: string | null
 }
 
 export interface BlogPost extends Record<string, unknown> {

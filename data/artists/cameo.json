@@ -1,0 +1,56 @@
+{
+  "slug": "cameo",
+  "name": "Cameo",
+  "name_display": "CAMEO",
+  "real_name": null,
+  "country": "USA",
+  "category": "us_artist",
+  "styles": [
+    "Funk",
+    "R&B",
+    "Synth Funk"
+  ],
+  "era": "1970s-present",
+  "bio_en": "Cameo is an American funk band formed in 1974, originally known as the New York City Players. The group, led by Larry Blackmon, gained prominence in the late 1970s and 1980s, contributing significantly to the funk and R&B genres.\n\nThe band's early years were marked by a blend of funk and soul, drawing influences from the vibrant music scene of New York City. Their unique sound combined catchy melodies with rhythmic grooves, which resonated well with audiences.\n\nCameo's breakthrough came with their 1980 album 'Cardiac Arrest', which featured the hit single 'Shake Your Pants'. This track showcased their distinctive style and helped establish them as a key player in the funk genre.\n\nThroughout the 1980s, Cameo continued to evolve their sound, incorporating elements of disco and electronic music. Their 1986 hit 'Word Up!' became one of their most recognizable tracks, further solidifying their place in music history.\n\nThe band has released a total of seventeen studio albums, with notable works including 'She's Strange' (1984) and 'Single Life' (1985). Each album reflected their growth as artists and their ability to adapt to changing musical landscapes.\n\nCameo has been associated with several influential labels and has collaborated with various artists throughout their career. Their work has been featured in numerous films and television shows, showcasing their broad appeal.\n\nKey collaborations include work with producers and fellow musicians who have helped shape their sound over the years. This network of artists has contributed to their longevity in the industry.\n\nThe band's music has been celebrated for its infectious grooves and danceable rhythms, making them a staple in clubs and parties. Tracks like 'Candy' and 'Back and Forth' remain popular on dance floors.\n\nCameo's influence extends beyond their own releases, as they have inspired countless artists in the funk and R&B genres. Their innovative approach to music production and performance has left a lasting legacy.\n\nIn recent years, Cameo has continued to tour and perform, bringing their classic hits to new generations of fans. Their live shows are known for their high energy and engaging performances.\n\nAs a pioneering force in funk music, Cameo's contributions have been recognized with various accolades and a dedicated fan base. They remain an integral part of the American music landscape.\n\nCameo's ability to blend genres and adapt to the times has ensured their relevance in the ever-evolving music scene. Their journey reflects the rich history of funk and R&B music in America.\n\nOverall, Cameo's legacy is marked by their innovative sound, memorable hits, and significant impact on the music industry, making them a respected name in the world of funk and R&B.",
+  "bio_es": "Cameo es una banda estadounidense de funk formada en 1974, originalmente conocida como New York City Players. El grupo, liderado por Larry Blackmon, ganó prominencia a finales de los años 70 y 80, contribuyendo de manera significativa a los géneros funk y R&B.\n\nLos primeros años de la banda estuvieron marcados por una mezcla de funk y soul, influenciados por la vibrante escena musical de la ciudad de Nueva York. Su sonido único combinaba melodías pegajosas con ritmos rítmicos, que resonaban bien con el público.\n\nEl gran avance de Cameo llegó con su álbum de 1980 'Cardiac Arrest', que presentó el sencillo 'Shake Your Pants'. Esta canción mostró su estilo distintivo y ayudó a establecerlos como un actor clave en el género funk.\n\nA lo largo de los años 80, Cameo continuó evolucionando su sonido, incorporando elementos de disco y música electrónica. Su éxito de 1986 'Word Up!' se convirtió en una de sus canciones más reconocibles, consolidando aún más su lugar en la historia de la música.\n\nLa banda ha lanzado un total de diecisiete álbumes de estudio, con obras notables como 'She's Strange' (1984) y 'Single Life' (1985). Cada álbum reflejó su crecimiento como artistas y su capacidad para adaptarse a los paisajes musicales cambiantes.\n\nCameo ha estado asociada con varios sellos influyentes y ha colaborado con diversos artistas a lo largo de su carrera. Su trabajo ha sido presentado en numerosas películas y programas de televisión, mostrando su amplio atractivo.\n\nLas colaboraciones clave incluyen trabajos con productores y músicos compañeros que han ayudado a dar forma a su sonido a lo largo de los años. Esta red de artistas ha contribuido a su longevidad en la industria.\n\nLa música de la banda ha sido celebrada por sus ritmos contagiosos y bailables, convirtiéndolos en un pilar en clubes y fiestas. Canciones como 'Candy' y 'Back and Forth' siguen siendo populares en las pistas de baile.\n\nLa influencia de Cameo se extiende más allá de sus propios lanzamientos, ya que han inspirado a innumerables artistas en los géneros funk y R&B. Su enfoque innovador en la producción musical y la actuación ha dejado un legado duradero.\n\nEn los últimos años, Cameo ha continuado de gira y actuando, llevando sus éxitos clásicos a nuevas generaciones de fans. Sus shows en vivo son conocidos por su alta energía y actuaciones cautivadoras.\n\nComo una fuerza pionera en la música funk, las contribuciones de Cameo han sido reconocidas con varios premios y una base de fans dedicada. Siguen siendo una parte integral del paisaje musical estadounidense.\n\nLa capacidad de Cameo para mezclar géneros y adaptarse a los tiempos ha asegurado su relevancia en la siempre cambiante escena musical. Su viaje refleja la rica historia de la música funk y R&B en América.\n\nEn general, el legado de Cameo está marcado por su sonido innovador, éxitos memorables y un impacto significativo en la industria musical, lo que los convierte en un nombre respetado en el mundo del funk y R&B.",
+  "essential_tracks": [
+    "Word Up!",
+    "Shake Your Pants",
+    "Candy",
+    "Back and Forth"
+  ],
+  "recommended_mixes": [],
+  "related_artists": [
+    "Larry Blackmon",
+    "Prince",
+    "Parliament"
+  ],
+  "labels_founded": [],
+  "key_releases": [
+    {
+      "title": "Cardiac Arrest",
+      "year": 1980,
+      "note": "Breakthrough album featuring the hit 'Shake Your Pants'."
+    },
+    {
+      "title": "Word Up!",
+      "year": 1986,
+      "note": "Iconic track that became synonymous with the band."
+    },
+    {
+      "title": "She's Strange",
+      "year": 1984,
+      "note": "Notable album that showcased their evolving sound."
+    },
+    {
+      "title": "Single Life",
+      "year": 1985,
+      "note": "Continued their success with memorable tracks."
+    }
+  ],
+  "socials": {},
+  "website": null,
+  "image_url": null,
+  "is_featured": false,
+  "sort_order": 100
+}

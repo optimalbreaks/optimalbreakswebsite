@@ -49,9 +49,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const client = createSimpleSupabase()
-  const [artistsR, labelsR, eventsR, scenesR, blogR] = await Promise.all([
+  const [artistsR, labelsR, organizationsR, eventsR, scenesR, blogR] = await Promise.all([
     client.from('artists').select('slug'),
     client.from('labels').select('slug'),
+    client.from('organizations').select('slug'),
     client.from('events').select('slug'),
     client.from('scenes').select('slug'),
     client.from('blog_posts').select('slug').eq('is_published', true),
@@ -60,6 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dynamic: { prefix: string; slugs: string[]; priority: number; freq: 'weekly' | 'monthly' }[] = [
     { prefix: '/artists', slugs: slugList(artistsR.data), priority: 0.85, freq: 'weekly' },
     { prefix: '/labels', slugs: slugList(labelsR.data), priority: 0.75, freq: 'weekly' },
+    { prefix: '/organizations', slugs: slugList(organizationsR.data), priority: 0.75, freq: 'weekly' },
     { prefix: '/events', slugs: slugList(eventsR.data), priority: 0.75, freq: 'weekly' },
     { prefix: '/scenes', slugs: slugList(scenesR.data), priority: 0.75, freq: 'weekly' },
     { prefix: '/blog', slugs: slugList(blogR.data), priority: 0.8, freq: 'weekly' },

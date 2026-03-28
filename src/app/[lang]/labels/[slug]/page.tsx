@@ -6,7 +6,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { Label } from '@/types/database'
+import type { Label, Organization } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -15,6 +15,9 @@ import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
 type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url'>
+type LabelPageRow = Label & {
+  organization: Pick<Organization, 'slug' | 'name'> | null
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -31,8 +34,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LabelDetailPage({ params }: Props) {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
-  const { data: rawLabel } = await supabase.from('labels').select('*').eq('slug', slug).single()
-  const label = rawLabel as Label | null
+  const { data: rawLabel } = await supabase
+    .from('labels')
+    .select('*, organization:organizations!labels_organization_id_fkey(slug, name)')
+    .eq('slug', slug)
+    .single()
+  const label = rawLabel as LabelPageRow | null
 
   if (!label) {
     return (
@@ -68,6 +75,11 @@ export default async function LabelDetailPage({ params }: Props) {
         <span className="cutout fill">{label.country}</span>
         {label.founded_year && <span className="cutout outline">Est. {label.founded_year}</span>}
         <span className={`cutout ${label.is_active ? 'acid' : 'red'}`}>{label.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
+        {label.organization && (
+          <Link href={`/${lang}/organizations/${label.organization.slug}`} className="cutout outline no-underline text-[var(--ink)]">
+            {lang === 'es' ? 'Organizacion: ' : 'Organization: '}{label.organization.name}
+          </Link>
+        )}
       </div>
       <p className="max-w-[700px]" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8 }}>
         {lang === 'es' ? label.description_es : label.description_en}

@@ -6,7 +6,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { BreakEvent } from '@/types/database'
+import type { BreakEvent, Organization } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -15,6 +15,9 @@ import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
 type EventSeoRow = Pick<BreakEvent, 'name' | 'description_en' | 'description_es' | 'image_url'>
+type EventPageRow = BreakEvent & {
+  promoter: Pick<Organization, 'slug' | 'name'> | null
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -30,8 +33,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function EventDetailPage({ params }: Props) {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
-  const { data: rawEvent } = await supabase.from('events').select('*').eq('slug', slug).single()
-  const event = rawEvent as BreakEvent | null
+  const { data: rawEvent } = await supabase
+    .from('events')
+    .select('*, promoter:organizations!events_promoter_organization_id_fkey(slug, name)')
+    .eq('slug', slug)
+    .single()
+  const event = rawEvent as EventPageRow | null
 
   if (!event) {
     return (
@@ -67,6 +74,11 @@ export default async function EventDetailPage({ params }: Props) {
         <span className="cutout red">{event.event_type}</span>
         <span className="cutout fill">{event.city}, {event.country}</span>
         {event.venue && <span className="cutout outline">{event.venue}</span>}
+        {event.promoter && (
+          <Link href={`/${lang}/organizations/${event.promoter.slug}`} className="cutout outline no-underline text-[var(--ink)]">
+            {lang === 'es' ? 'Promueve: ' : 'Promoted by: '}{event.promoter.name}
+          </Link>
+        )}
       </div>
       {event.date_start && (
         <div className="mb-6 break-words" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 4vw, 20px)', color: 'var(--red)' }}>

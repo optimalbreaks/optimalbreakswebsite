@@ -102,7 +102,13 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
   const { data: events } = await supabase.from('events').select('*').order('date_start', { ascending: false })
-  const list = (events || []) as BreakEvent[]
+  const list = ((events || []) as BreakEvent[]).sort((a, b) => {
+    if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
+    if (a.event_type !== 'upcoming' && b.event_type === 'upcoming') return 1
+    const aTime = a.date_start ? Date.parse(a.date_start) : Number.NEGATIVE_INFINITY
+    const bTime = b.date_start ? Date.parse(b.date_start) : Number.NEGATIVE_INFINITY
+    return bTime - aTime
+  })
   const filters = Object.entries(dict.events.filters) as [string, string][]
 
   return (
