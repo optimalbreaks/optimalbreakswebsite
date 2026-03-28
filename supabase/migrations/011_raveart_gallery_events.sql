@@ -1,0 +1,176 @@
+-- =============================================
+-- RAVEART — Eventos alineados con la galería oficial
+-- https://www.raveart.es/galeria/
+-- Faltaban: Winter 2019, Winter 2022, Retro Halloween 2022–2025
+-- =============================================
+
+WITH raveart_org AS (
+  SELECT id FROM public.organizations WHERE slug = 'raveart' LIMIT 1
+)
+INSERT INTO public.events (
+  slug,
+  name,
+  description_en,
+  description_es,
+  event_type,
+  date_start,
+  date_end,
+  location,
+  city,
+  country,
+  venue,
+  website,
+  lineup,
+  is_featured,
+  promoter_organization_id
+)
+SELECT
+  source.slug,
+  source.name,
+  source.description_en,
+  source.description_es,
+  source.event_type,
+  source.date_start,
+  source.date_end,
+  source.location,
+  source.city,
+  source.country,
+  source.venue,
+  source.website,
+  source.lineup,
+  source.is_featured,
+  raveart_org.id
+FROM raveart_org
+CROSS JOIN (
+  VALUES
+    (
+      'raveart-winter-festival-2019',
+      'Raveart Winter Festival 2019',
+      'Eleventh winter edition back at B3 in Seville. Finger Lickin'' Records celebrated its 20th anniversary with a dedicated room alongside an international breaks and DnB lineup.',
+      'Undecima edicion invernal de vuelta en B3 en Sevilla. Finger Lickin Records celebro su vigesimo aniversario con sala propia junto a un cartel internacional de breaks y DnB.',
+      'past_iconic',
+      DATE '2019-01-31',
+      NULL::DATE,
+      'B3, Seville',
+      'Seville',
+      'Spain',
+      'B3',
+      'https://www.raveart.es/winter-festival-2019/',
+      ARRAY['Plump DJs', 'Stereo 8', 'Soul of Man']::TEXT[],
+      FALSE
+    ),
+    (
+      'raveart-winter-festival-2022',
+      'Raveart Winter Festival 2022',
+      'Twentieth anniversary winter festival at Complejo Embrujo (Las Gabias, Granada area). Four stages and a full breaks and DnB bill after the pandemic postponement from 2021 tickets.',
+      'Festival invernal del vigesimo aniversario en Complejo Embrujo (Las Gabias, area de Granada). Cuatro escenarios y cartel completo de breaks y DnB tras el aplazamiento pandemia de entradas 2021.',
+      'past_iconic',
+      DATE '2022-03-12',
+      NULL::DATE,
+      'Complejo Embrujo, Las Gabias, Granada',
+      'Las Gabias',
+      'Spain',
+      'Complejo Embrujo',
+      'https://www.raveart.es/winter-festival-2022-comunicado/',
+      ARRAY['Stanton Warriors', 'Lady Waks', 'Freestylers', 'The Brainkiller', 'Anuschka', 'Colombo']::TEXT[],
+      FALSE
+    ),
+    (
+      'raveart-retro-halloween-2022',
+      'Raveart Retro Halloween 2022',
+      'Halloween edition focused on retro electronic classics with multiple stages. Official photo gallery is available on Raveart''s site; lineup combined international names with strong Spanish support.',
+      'Edicion Halloween centrada en clasicos electronicos retro con varios escenarios. La galeria oficial esta en la web de Raveart; el cartel mezclo nombres internacionales con fuerte apoyo nacional.',
+      'past_iconic',
+      DATE '2022-10-29',
+      NULL::DATE,
+      'Estadio de la Cartuja, Seville',
+      'Seville',
+      'Spain',
+      'Estadio de la Cartuja (exterior)',
+      'https://www.raveart.es/galeria/retro-halloween-2022/',
+      ARRAY['Krafty Kuts', 'Westbam', 'Ed Rush & Optical', 'Cappella']::TEXT[],
+      FALSE
+    ),
+    (
+      'raveart-retro-halloween-2023',
+      'Raveart Retro Halloween 2023',
+      'Retro Halloween at Jerez circuit: four simultaneous stages mixing breakbeat, house and techno with a strong Halloween production.',
+      'Retro Halloween en el circuito de Jerez: cuatro escenarios simultaneos mezclando breakbeat, house y techno con produccion Halloween.',
+      'past_iconic',
+      DATE '2023-10-28',
+      NULL::DATE,
+      'Circuito de Velocidad, Jerez de la Frontera',
+      'Jerez de la Frontera',
+      'Spain',
+      'Circuito de Velocidad',
+      'https://www.raveart.es/galeria/retro-halloween-2023/',
+      ARRAY['Krafty Kuts', 'Meat Katie', 'Anuschka', 'Norbak']::TEXT[],
+      FALSE
+    ),
+    (
+      'raveart-retro-halloween-2024',
+      'Raveart Retro Halloween 2024',
+      'Saturday 26 October in Jerez with four stages: international acts such as The Crystal Method, Josh Wink and Krafty Kuts alongside top Spanish breaks talent.',
+      'Sabado 26 de octubre en Jerez con cuatro escenarios: internacionales como The Crystal Method, Josh Wink y Krafty Kuts junto a talento nacional de breaks.',
+      'past_iconic',
+      DATE '2024-10-26',
+      NULL::DATE,
+      'Circuito de Velocidad, Jerez de la Frontera',
+      'Jerez de la Frontera',
+      'Spain',
+      'Circuito de Velocidad',
+      'https://houseandujar.com/2024/09/18/jerez-acogera-lo-mejor-del-breaks-en-la-nueva-edicion-del-raveart-retro-halloween/',
+      ARRAY['The Crystal Method', 'Josh Wink', 'Krafty Kuts', 'Meat Katie', 'General MIDI', 'Anuschka']::TEXT[],
+      TRUE
+    ),
+    (
+      'raveart-retro-halloween-2025',
+      'Raveart Retro Halloween 2025',
+      '2025 Halloween edition at Complejo Embrujo (Las Gabias, Granada area). Check Raveart channels for final galleries and any schedule updates.',
+      'Edicion Halloween 2025 en Complejo Embrujo (Las Gabias, area de Granada). Consulta canales de Raveart para galerias y posibles cambios de horario.',
+      'past_iconic',
+      DATE '2025-11-01',
+      NULL::DATE,
+      'Complejo Embrujo, Las Gabias, Granada',
+      'Las Gabias',
+      'Spain',
+      'Complejo Embrujo',
+      'https://www.monsterticket.com/evento/retro-halloween-2025-buses',
+      ARRAY[]::TEXT[],
+      FALSE
+    )
+) AS source(
+  slug,
+  name,
+  description_en,
+  description_es,
+  event_type,
+  date_start,
+  date_end,
+  location,
+  city,
+  country,
+  venue,
+  website,
+  lineup,
+  is_featured
+)
+ON CONFLICT (slug) DO UPDATE SET
+  name = EXCLUDED.name,
+  description_en = EXCLUDED.description_en,
+  description_es = EXCLUDED.description_es,
+  event_type = EXCLUDED.event_type,
+  date_start = EXCLUDED.date_start,
+  date_end = EXCLUDED.date_end,
+  location = EXCLUDED.location,
+  city = EXCLUDED.city,
+  country = EXCLUDED.country,
+  venue = EXCLUDED.venue,
+  website = EXCLUDED.website,
+  lineup = EXCLUDED.lineup,
+  is_featured = EXCLUDED.is_featured,
+  promoter_organization_id = EXCLUDED.promoter_organization_id;
+
+-- Rellenar image_url tras subir a Storage bucket `media` (ver 005_storage_media.sql), por ejemplo:
+-- UPDATE public.events SET image_url = 'https://<project>.supabase.co/storage/v1/object/public/media/events/<slug>/cover.jpg'
+-- WHERE slug = 'raveart-summer-festival-2025';
