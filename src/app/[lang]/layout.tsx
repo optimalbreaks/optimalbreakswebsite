@@ -22,6 +22,9 @@ export const viewport: Viewport = {
   themeColor: '#e8dcc8',
 }
 
+/** Datos de Supabase y rutas con contenido vivo: cada petición renderiza de nuevo (no HTML del build). */
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ lang: locale }))
 }

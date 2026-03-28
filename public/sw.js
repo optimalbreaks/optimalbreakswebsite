@@ -3,7 +3,7 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'ob-v1'
+const CACHE_NAME = 'ob-v2'
 const STATIC_ASSETS = [
   '/',
   '/favicon.svg',

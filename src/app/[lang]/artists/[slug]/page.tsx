@@ -6,7 +6,6 @@ import { createSimpleSupabase } from '@/lib/supabase'
 import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { sanitizeSlug } from '@/lib/security'
-import { i18n } from '@/lib/i18n-config'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease } from '@/types/database'
 import type { Metadata } from 'next'
@@ -58,15 +57,6 @@ function buildArtistKeywords(artist: ArtistSeoRow, lang: Locale): string[] {
     artist.era,
   ].filter(Boolean)
   return Array.from(new Set([...specific, ...base]))
-}
-
-export async function generateStaticParams() {
-  const supabase = createSimpleSupabase()
-  const { data } = await supabase.from('artists').select('slug') as { data: { slug: string }[] | null }
-  const slugs = data?.map((a) => a.slug).filter(Boolean) || []
-  return i18n.locales.flatMap((lang) =>
-    slugs.map((slug) => ({ lang, slug }))
-  )
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
