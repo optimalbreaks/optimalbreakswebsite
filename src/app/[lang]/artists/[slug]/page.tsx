@@ -3,6 +3,13 @@
 // ============================================
 
 import { createSimpleSupabase } from '@/lib/supabase'
+import {
+  buildArtistSlugLookup,
+  fetchAllArtistLinkRows,
+  normalizeForEntityMatch,
+  resolveArtistSlug,
+  splitRelatedArtistNames,
+} from '@/lib/artist-entity-match'
 import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { sanitizeSlug } from '@/lib/security'
@@ -35,15 +42,6 @@ function buildJsonLd(artist: Artist, lang: Locale, slug: string) {
     sameAs: artist.socials ? Object.values(artist.socials).filter(Boolean) : [],
     ...(artist.website && { mainEntityOfPage: artist.website }),
   }
-}
-
-/** Normaliza nombres para enlazar con filas de BD (apóstrofos, espacios). */
-function normalizeForEntityMatch(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .replace(/[''´`]/g, '')
-    .replace(/\s+/g, ' ')
 }
 
 function buildArtistKeywords(artist: ArtistSeoRow, lang: Locale): string[] {
@@ -126,9 +124,9 @@ export default async function ArtistDetailPage({ params }: Props) {
     )
   }
 
-  const [{ data: labelRows }, { data: allArtistsForLinks }] = await Promise.all([
+  const [{ data: labelRows }, allArtistLinkRows] = await Promise.all([
     supabase.from('labels').select('name, slug'),
-    supabase.from('artists').select('name, name_display, slug'),
+    fetchAllArtistLinkRows(supabase),
   ])
 
   const labelSlugByName = new Map<string, string>()
@@ -137,15 +135,7 @@ export default async function ArtistDetailPage({ params }: Props) {
     if (key && !labelSlugByName.has(key)) labelSlugByName.set(key, row.slug)
   }
 
-  const artistSlugByName = new Map<string, string>()
-  for (const row of allArtistsForLinks ?? []) {
-    const k1 = normalizeForEntityMatch(row.name)
-    if (k1 && !artistSlugByName.has(k1)) artistSlugByName.set(k1, row.slug)
-    if (row.name_display) {
-      const k2 = normalizeForEntityMatch(row.name_display)
-      if (k2 && !artistSlugByName.has(k2)) artistSlugByName.set(k2, row.slug)
-    }
-  }
+  const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
 
   const bio = lang === 'es' ? artist.bio_es : artist.bio_en
   const bioBlocks = splitBioParagraphs(bio)
@@ -296,31 +286,40 @@ export default async function ArtistDetailPage({ params }: Props) {
                 <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
                   {lang === 'es' ? 'ARTISTAS RELACIONADOS' : 'RELATED ARTISTS'}
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-col gap-0">
                   {artist.related_artists.map((relatedName: string, i: number) => {
-                    const relatedSlug = artistSlugByName.get(normalizeForEntityMatch(relatedName))
-                    const rowClass = 'py-1 border-b border-dashed border-white/10 block w-full'
+                    const segments = splitRelatedArtistNames(relatedName)
+                    const rowClass = 'py-1 border-b border-dashed border-white/10 w-full'
                     const rowStyle = {
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: '12px',
                       color: 'rgba(232,220,200,0.6)',
                     }
-                    if (relatedSlug && relatedSlug !== slug) {
-                      return (
-                        <Link
-                          key={i}
-                          href={`/${lang}/artists/${relatedSlug}`}
-                          className={`${rowClass} text-[var(--cyan)] hover:text-white hover:underline transition-colors`}
-                          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}
-                        >
-                          {relatedName}
-                        </Link>
-                      )
-                    }
                     return (
-                      <span key={i} className={rowClass} style={rowStyle}>
-                        {relatedName}
-                      </span>
+                      <div key={i} className={`${rowClass} flex flex-wrap items-baseline gap-x-1 gap-y-0`}>
+                        {segments.map((seg, si) => {
+                          const relatedSlug = resolveArtistSlug(seg, artistSlugByName)
+                          const showAmp = si < segments.length - 1
+                          const isSelf = relatedSlug === slug
+                          const linkable = relatedSlug && !isSelf
+                          return (
+                            <span key={si} className="inline-flex flex-wrap items-baseline gap-x-1">
+                              {linkable ? (
+                                <Link
+                                  href={`/${lang}/artists/${relatedSlug}`}
+                                  className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}
+                                >
+                                  {seg}
+                                </Link>
+                              ) : (
+                                <span style={rowStyle}>{seg}</span>
+                              )}
+                              {showAmp && <span style={rowStyle} aria-hidden>&nbsp;&amp;&nbsp;</span>}
+                            </span>
+                          )
+                        })}
+                      </div>
                     )
                   })}
                 </div>

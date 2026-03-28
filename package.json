@@ -11,6 +11,7 @@
     "db:migrate": "node scripts/seed-supabase.mjs --all",
     "db:verify": "node scripts/seed-supabase.mjs --verify",
     "db:artist": "node scripts/actualizar-artista.mjs",
+    "db:artist:ensure": "node scripts/ensure-artist-json-in-db.mjs",
     "db:artist:agent": "node scripts/generar-artista-agente.mjs",
     "db:artist:agent:all": "node scripts/generar-artista-agente.mjs --from-db",
     "db:timeline": "node scripts/sync-timeline-artists.mjs",

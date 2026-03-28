@@ -4,7 +4,7 @@
  * Uso:
  *   node scripts/generar-artista-agente.mjs <slug> "Nombre del artista" [--notes archivo.txt] [--stdout] [--no-search]
  *   npm run db:artist:agent -- krafty-kuts "Krafty Kuts"
- *   npm run db:artist:agent:all --              # todos en BD excepto deekline
+ *   npm run db:artist:agent:all --              # todos en BD (opcional: --skip=slug1,slug2)
  *   npm run db:artist:agent:all -- --limit 3  # prueba con 3
  *
  * Requiere OPENAI_API_KEY en .env.local.
@@ -343,7 +343,7 @@ function parseDelayMs(argv) {
 }
 
 async function runFromDbMode(argv) {
-  const skipSlugs = new Set(['deekline'])
+  const skipSlugs = new Set()
   const extraSkip = argv.find((a) => a.startsWith('--skip='))
   if (extraSkip) {
     for (const s of extraSkip.slice('--skip='.length).split(',')) {

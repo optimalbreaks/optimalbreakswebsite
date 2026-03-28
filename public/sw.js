@@ -3,7 +3,7 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'ob-v2'
+const CACHE_NAME = 'ob-v3'
 const STATIC_ASSETS = [
   '/',
   '/favicon.svg',
@@ -50,7 +50,16 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Pages: network first, cache fallback
+  // Fichas / listado artistas: siempre red (no guardar HTML; evita bios viejas tras db:artist)
+  if (
+    request.headers.get('accept')?.includes('text/html') &&
+    url.pathname.includes('/artists')
+  ) {
+    event.respondWith(fetch(request))
+    return
+  }
+
+  // Otras páginas: red primero, caché si falla la red
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)

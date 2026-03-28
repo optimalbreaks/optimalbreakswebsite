@@ -98,6 +98,8 @@ After uploading a file, store the **public object URL** in the corresponding `im
 
 ```
 OptimalBreaks/
+├── docs/
+│   └── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 ├── data/
 │   └── artists/                # One JSON file per artist → npm run db:artist
 ├── scripts/
@@ -292,17 +294,23 @@ The browser **anon / publishable** key cannot be used for this write path. JWT k
 
 ### 5b. Agent: generate artist JSON (OpenAI + optional SerpAPI)
 
-Draft a new `data/artists/<slug>.json` from a model using the same schema as above. Editable system prompt: [`scripts/prompts/artista-agente-system.txt`](scripts/prompts/artista-agente-system.txt).
+The agent writes **`data/artists/<slug>.json` only** — not Supabase. After generation, run **`npm run db:artist`** to upsert into the database (same schema as [`006_artist_extended_fields.sql`](supabase/migrations/006_artist_extended_fields.sql)).
 
-Requires **`OPENAI_API_KEY`** in `.env.local`. The agent defaults to **`gpt-5.4`** and you can override it with **`OPENAI_MODEL`**. Optional **`SERPAPI_API_KEY`** (Google snippets via [SerpApi](https://serpapi.com)) for research context; if missing or invalid, the agent runs on model knowledge only.
+**Full documentation (batch mode, env vars, admin API, bulk sync):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).
+
+Editable system prompt: [`scripts/prompts/artista-agente-system.txt`](scripts/prompts/artista-agente-system.txt).
+
+Requires **`OPENAI_API_KEY`** in `.env.local`. Defaults to **`gpt-5.4`**; override with **`OPENAI_MODEL`**. Optional **`SERPAPI_API_KEY`** ([SerpApi](https://serpapi.com)) for web snippets; if missing, the agent uses model knowledge only.
 
 ```bash
 npm run db:artist:agent -- plump-djs "Plump DJs"
 npm run db:artist:agent -- some-slug "Artist Name" --notes research/artist-notes.txt
 npm run db:artist:agent -- some-slug "Artist" --no-search --stdout
+npm run db:artist:agent:all                    # regenerate JSON for every artist row in Supabase (slow / API cost)
+npm run db:artist:ensure -- data/artists/deekline.json   # verify DB matches JSON; sync if not
 ```
 
-Then review the file, edit if needed, and run `npm run db:artist -- data/artists/<slug>.json`. **Always fact-check** before publishing.
+Then review the JSON, fact-check, and run `npm run db:artist -- data/artists/<slug>.json`. **Always fact-check** before publishing.
 
 ### 6. Run development server
 
@@ -369,10 +377,12 @@ Files under `supabase/migrations/` (apply in lexical order):
 | Script | Purpose |
 |--------|---------|
 | `npm run db:artist -- data/artists/<file>.json` | Upsert **one artist** from JSON (`slug` is the natural key). |
+| `npm run db:artist:ensure -- data/artists/<file>.json` | Compare JSON vs Supabase row; run upsert if bios / `real_name` differ. |
 | `npm run db:migrate` | Execute all `supabase/migrations/*.sql` in order via **Postgres** (requires connection string or password in env). |
 | `npm run db:seed` | Run `002_seed_data.sql` only (Postgres). |
 | `npm run db:verify` | Row-count sanity check via **Supabase HTTP API** (`NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). |
-| `npm run db:artist:agent -- <slug> "Name"` | Generate `data/artists/<slug>.json` with OpenAI (+ optional SerpAPI). |
+| `npm run db:artist:agent -- <slug> "Name"` | Generate `data/artists/<slug>.json` with OpenAI (+ optional SerpAPI). See [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md). |
+| `npm run db:artist:agent:all` | Regenerate JSON for **all** artists listed in Supabase (uses API credits; then run `db:artist` per file or bulk script). |
 | `npm run db:timeline` | Insert **missing** artists from `src/lib/artists-timeline.ts` (`ARTIST_ERAS`, same names as `/artists`) via **Supabase API** (service/secret key). Skips slugs already in `artists`. |
 | `npm run db:timeline:sql` | Regenerate `009_artists_from_artist_eras_timeline.sql` (optional; for migrations without running the script against prod). |
 

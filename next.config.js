@@ -11,7 +11,19 @@ const nextConfig = {
 
   // Security headers
   async headers() {
+    const noStoreArtists = [
+      {
+        key: 'Cache-Control',
+        value: 'private, no-cache, no-store, max-age=0, must-revalidate',
+      },
+      {
+        key: 'CDN-Cache-Control',
+        value: 'no-store',
+      },
+    ]
     return [
+      { source: '/:lang/artists', headers: noStoreArtists },
+      { source: '/:lang/artists/:slug*', headers: noStoreArtists },
       {
         source: '/(.*)',
         headers: [
