@@ -9,7 +9,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/_next/'],
+      disallow: [
+        '/api/',
+        '/_next/',
+        '/en/login',
+        '/es/login',
+        '/en/dashboard',
+        '/es/dashboard',
+        '/*/administrator',
+      ],
     },
     sitemap: 'https://optimalbreaks.com/sitemap.xml',
   }

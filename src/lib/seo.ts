@@ -8,6 +8,18 @@ import type { Locale } from '@/lib/i18n-config'
 
 export const SITE_URL = 'https://optimalbreaks.com' as const
 
+/** Referenced in manifest; default social preview when no entity image. */
+export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
+
+export function absoluteOgImage(url?: string | null): string {
+  const fallback = `${SITE_URL}${DEFAULT_OG_IMAGE_PATH}`
+  const u = url?.trim()
+  if (!u) return fallback
+  if (u.startsWith('http://') || u.startsWith('https://')) return u
+  if (u.startsWith('/')) return `${SITE_URL}${u}`
+  return fallback
+}
+
 export type SeoStaticKey =
   | 'home'
   | 'history'
@@ -33,6 +45,7 @@ export async function staticPageMetadata(lang: Locale, path: string, key: SeoSta
   const page = seo[key]
   const siteName = seo.site_name
   const url = `${SITE_URL}/${lang}${path}`
+  const ogImage = absoluteOgImage(null)
 
   return {
     title: page.title,
@@ -53,13 +66,25 @@ export async function staticPageMetadata(lang: Locale, path: string, key: SeoSta
       siteName,
       locale: lang === 'es' ? 'es_ES' : 'en_US',
       type: 'website',
+      images: [{ url: ogImage, alt: siteName }],
     },
     twitter: {
       card: 'summary_large_image',
       title: page.title,
       description: page.description,
+      images: [ogImage],
     },
   }
+}
+
+/** Truncate text at word boundary without cutting mid-word. */
+export function smartTruncate(text: string, maxLen = 160): string {
+  const trimmed = text.trim()
+  if (trimmed.length <= maxLen) return trimmed
+  const cut = trimmed.slice(0, maxLen)
+  const lastSpace = cut.lastIndexOf(' ')
+  const result = lastSpace > maxLen * 0.6 ? cut.slice(0, lastSpace) : cut
+  return result.replace(/[,;:\s]+$/, '') + '…'
 }
 
 export function detailPageMetadata(
@@ -69,13 +94,17 @@ export function detailPageMetadata(
   title: string,
   description: string | undefined,
   ogType: 'website' | 'article' | 'profile' = 'website',
+  ogImageUrl?: string | null,
+  keywords?: string[],
 ): Metadata {
   const url = `${SITE_URL}/${lang}${path}`
-  const desc = description?.trim() || ''
+  const desc = description ? smartTruncate(description) : ''
+  const ogImage = absoluteOgImage(ogImageUrl)
 
   return {
     title,
     description: desc || undefined,
+    keywords: keywords?.length ? keywords : undefined,
     alternates: {
       canonical: url,
       languages: {
@@ -91,11 +120,13 @@ export function detailPageMetadata(
       siteName,
       locale: lang === 'es' ? 'es_ES' : 'en_US',
       type: ogType,
+      images: [{ url: ogImage, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description: desc || undefined,
+      images: [ogImage],
     },
   }
 }

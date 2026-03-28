@@ -9,7 +9,9 @@
     "lint": "next lint",
     "db:seed": "node scripts/seed-supabase.mjs",
     "db:migrate": "node scripts/seed-supabase.mjs --all",
-    "db:verify": "node scripts/seed-supabase.mjs --verify"
+    "db:verify": "node scripts/seed-supabase.mjs --verify",
+    "db:artist": "node scripts/actualizar-artista.mjs",
+    "db:artist:agent": "node scripts/generar-artista-agente.mjs"
   },
   "dependencies": {
     "next": "^14.2.0",

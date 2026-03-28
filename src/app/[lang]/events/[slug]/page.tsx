@@ -14,17 +14,17 @@ import FanCounter from '@/components/FanCounter'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
-type EventSeoRow = Pick<BreakEvent, 'name' | 'description_en' | 'description_es'>
+type EventSeoRow = Pick<BreakEvent, 'name' | 'description_en' | 'description_es' | 'image_url'>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
-  const { data: raw } = await supabase.from('events').select('name, description_en, description_es').eq('slug', slug).single()
+  const { data: raw } = await supabase.from('events').select('name, description_en, description_es, image_url').eq('slug', slug).single()
   const data = raw as EventSeoRow | null
   if (!data?.name) return { title: lang === 'es' ? 'Evento no encontrado' : 'Event not found', robots: { index: false, follow: true } }
   const siteName = await siteNameForLang(lang)
   const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
-  return detailPageMetadata(lang, `/events/${slug}`, siteName, data.name, description, 'website')
+  return detailPageMetadata(lang, `/events/${slug}`, siteName, data.name, description, 'website', data.image_url)
 }
 
 export default async function EventDetailPage({ params }: Props) {

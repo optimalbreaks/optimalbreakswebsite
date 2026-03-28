@@ -14,6 +14,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import BackToTop from '@/components/BackToTop'
+import { DEFAULT_OG_IMAGE_PATH, SITE_URL } from '@/lib/seo'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -45,6 +46,28 @@ export default async function LangLayout({
     crossfader: h.crossfader,
   }
 
+  const siteName = dict.seo.site_name
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: siteName,
+        inLanguage: lang === 'es' ? 'es' : 'en',
+        publisher: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: siteName,
+        url: SITE_URL,
+        logo: `${SITE_URL}${DEFAULT_OG_IMAGE_PATH}`,
+      },
+    ],
+  }
+
   return (
     <html lang={lang}>
       <head>
@@ -53,11 +76,12 @@ export default async function LangLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="alternate" hrefLang="es" href="https://optimalbreaks.com/es" />
-        <link rel="alternate" hrefLang="en" href="https://optimalbreaks.com/en" />
-        <link rel="alternate" hrefLang="x-default" href="https://optimalbreaks.com/en" />
       </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <AuthProvider>
           <Header dict={dict} lang={lang} />
           <DeckAudioProvider lang={lang} dict={deckDict}>

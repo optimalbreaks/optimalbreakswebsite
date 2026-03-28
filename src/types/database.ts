@@ -173,6 +173,13 @@ export interface ProfileRow extends Record<string, unknown> {
   total_favorites: number
   total_events_attended: number
   total_events_wishlist: number
+  role: 'user' | 'admin'
+}
+
+export interface ArtistKeyRelease {
+  title: string
+  year: number
+  note?: string
 }
 
 export interface Artist extends Record<string, unknown> {
@@ -181,6 +188,7 @@ export interface Artist extends Record<string, unknown> {
   slug: string
   name: string
   name_display: string
+  real_name: string | null
   country: string
   bio_en: string
   bio_es: string
@@ -191,6 +199,8 @@ export interface Artist extends Record<string, unknown> {
   essential_tracks: string[]
   recommended_mixes: string[]
   related_artists: string[]
+  labels_founded: string[]
+  key_releases: ArtistKeyRelease[]
   website: string | null
   socials: Record<string, string>
   is_featured: boolean

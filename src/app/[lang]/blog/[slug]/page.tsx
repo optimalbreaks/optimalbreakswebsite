@@ -4,7 +4,7 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
+import { absoluteOgImage, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { sanitizeHtml, sanitizeSlug, validateLocale } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
 import type { BlogPost } from '@/types/database'
@@ -14,7 +14,7 @@ import ShareButtons from '@/components/ShareButtons'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
-type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es'>
+type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url'>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -22,13 +22,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const safeSlug = sanitizeSlug(slug)
   if (!safeSlug) return { title: safeLang === 'es' ? 'Entrada no encontrada' : 'Post not found', robots: { index: false, follow: true } }
   const supabase = createServerSupabase()
-  const { data: raw } = await supabase.from('blog_posts').select('title_en, title_es, excerpt_en, excerpt_es').eq('slug', safeSlug).single()
+  const { data: raw } = await supabase
+    .from('blog_posts')
+    .select('title_en, title_es, excerpt_en, excerpt_es, image_url')
+    .eq('slug', safeSlug)
+    .eq('is_published', true)
+    .single()
   const data = raw as BlogSeoRow | null
   if (!data) return { title: safeLang === 'es' ? 'Entrada no encontrada' : 'Post not found', robots: { index: false, follow: true } }
   const title = safeLang === 'es' ? data.title_es : data.title_en
   const description = safeLang === 'es' ? data.excerpt_es : data.excerpt_en
   const siteName = await siteNameForLang(safeLang)
-  return detailPageMetadata(safeLang, `/blog/${safeSlug}`, siteName, title, description, 'article')
+  return detailPageMetadata(safeLang, `/blog/${safeSlug}`, siteName, title, description, 'article', data.image_url)
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -60,9 +65,21 @@ export default async function BlogPostPage({ params }: Props) {
   const title = safeLang === 'es' ? post.title_es : post.title_en
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
+  const articleUrl = `${SITE_URL}/${safeLang}/blog/${safeSlug}`
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    author: { '@type': 'Person', name: post.author || 'Optimal Breaks' },
+    datePublished: post.published_at,
+    image: absoluteOgImage(post.image_url),
+    mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
+    inLanguage: safeLang,
+  }
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20 max-w-[800px] mx-auto">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
       <Link href={`/${safeLang}/blog`} className="btn-back"><span className="arrow">←</span> {safeLang === 'es' ? 'Volver al Blog' : 'Back to Blog'}</Link>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">

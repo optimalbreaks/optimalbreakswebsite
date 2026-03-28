@@ -3,6 +3,9 @@
 // ============================================
 
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGE_PATH, SITE_URL } from '@/lib/seo'
+
+const defaultOg = `${SITE_URL}${DEFAULT_OG_IMAGE_PATH}`
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://optimalbreaks.com'),
@@ -26,6 +29,11 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Optimal Breaks',
+    images: [{ url: defaultOg, alt: 'Optimal Breaks' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [defaultOg],
   },
   robots: { index: true, follow: true },
 }
