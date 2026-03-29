@@ -561,10 +561,36 @@ async function main() {
     return
   }
 
+  if (argv.includes('--all')) {
+    const { data: rows, error: eAll } = await sb
+      .from('events')
+      .select('slug')
+      .order('date_start', { ascending: false })
+    if (eAll) throw eAll
+    console.log(`[enrich-all] ${rows.length} eventos a enriquecer (force=${force})...\n`)
+    let updated = 0
+    let skipped = 0
+    let errors = 0
+    for (let i = 0; i < rows.length; i++) {
+      const s = rows[i].slug
+      console.log(`\n── [${i + 1}/${rows.length}] ${s} ──`)
+      try {
+        await runEnrich(s, { dryRun, force, withPoster })
+        updated++
+      } catch (err) {
+        console.error(`[enrich-all] ERROR en ${s}:`, err.message || err)
+        errors++
+      }
+    }
+    console.log(`\n[enrich-all] Terminado. Procesados: ${updated}, errores: ${errors}`)
+    return
+  }
+
   const slug = argv.find((a) => !a.startsWith('--'))
   if (!slug) {
     console.error(`Uso:
   node scripts/enriquecer-evento.mjs <slug> [--with-poster] [--dry-run] [--force]
+  node scripts/enriquecer-evento.mjs --all [--force] [--dry-run] [--with-poster]
   node scripts/enriquecer-evento.mjs --prune-non-spain [--dry-run]
   node scripts/enriquecer-evento.mjs --delete-event-slug <slug>
   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
