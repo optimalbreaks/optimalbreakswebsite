@@ -163,6 +163,35 @@
   "history": {
     "title": "History",
     "subtitle": "From the Bronx to dancefloors worldwide: origins, national scenes, crisis, resilience and the digital life of breakbeat.",
+    "break_note": {
+      "tag": "BREAK NOTE",
+      "title": "When the break became body",
+      "subtitle": "From the drum break to breaking, and from dance to broken rhythms.",
+      "paragraphs": [
+        "Before \"breakbeat\" became an umbrella for scenes, labels and subgenres, the break was already a physical moment: the point in a record where the song opened up, the vocal stepped back or vanished, and the percussion took command. That fragment carried a different kind of energy. It was not mere accompaniment: it was the peak-tension point for the DJ, the floor and the dancer.",
+        "A large part of the vocabulary comes from there. B-boys and b-girls were, quite literally, the people who came alive most intensely when the break arrived. \"Breakdance\" was popularised from outside the culture, especially by media and the market, but the cultural core is breaking: a dance form built on cuts, accents, pauses, weight shifts and bodily response to drums that do not flow straight, but push, interrupt and reopen space.",
+        "That is why the connection between breakdance, breakbeat and \"broken rhythms\" is not decorative, nor merely historical: it is structural. The logic is the same. The break isolates, highlights and repeats the most rhythmic part of the record; breaking turns that rupture into body language; and later electronic music carries the same idea into the studio and the club, fragmenting pulse, displacing hits and turning broken rhythm into a full aesthetic."
+      ],
+      "points": [
+        {
+          "term": "Break",
+          "text": "The fragment of a record where percussion is left more exposed and takes centre stage. This is where the energy later isolated, looped and sampled becomes concentrated."
+        },
+        {
+          "term": "Breaking",
+          "text": "The culturally more precise name for the dance of b-boys and b-girls. It is not just an urban dance style: it emerges as a direct response to the break."
+        },
+        {
+          "term": "Breakdance",
+          "text": "A term popularised by media, industry and general language. It is useful for broad understanding, but it simplifies a wider culture that also includes DJing, MCing, graffiti and breaking."
+        },
+        {
+          "term": "Broken Rhythm",
+          "text": "It does not mean shapeless chaos: it means syncopation, interruption, displacement and the play between space and impact. Electronic breakbeat inherits exactly that tension."
+        }
+      ],
+      "footer": "Seen this way, the break is not just a musical device: it is a way of organising movement, the dancefloor and listening itself. First it was a cut inside funk and hip hop; then a bodily culture; later, a whole grammar for electronic music."
+    },
     "sections": {
       "origins": {
         "title": "Origins: funk, soul and the birth of the break",

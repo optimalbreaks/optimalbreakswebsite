@@ -1,0 +1,48 @@
+-- Lineup completo Raveart Retro Halloween 2025 (cartel oficial)
+-- Idempotente: solo actualiza si existe la fila.
+
+UPDATE public.events
+SET lineup = ARRAY[
+  'Aquasky vs Backdraft',
+  'Brothers Bud',
+  'Entity',
+  'Future Funk Squad',
+  'Mutiny',
+  'Phantom Beats',
+  'Quest',
+  'Sonz of Mecha',
+  'Stereo 8',
+  'Aggresivnes',
+  'Aldo Ferrari',
+  'Amaya Dejota',
+  'Anuschka',
+  'Bubu',
+  'Cerbero',
+  'Colombo',
+  'Damián',
+  'Destroyers',
+  'Fran Break',
+  'Hankook',
+  'Jan-B',
+  'Jordi Slate',
+  'Killer',
+  'Man',
+  'Maribel',
+  'Mbreaks',
+  'Memo',
+  'Mike',
+  'Mr Fli',
+  'Perfect Kombo',
+  'Peter Paul',
+  'Prody',
+  'Rupe',
+  'Saturn',
+  'Sekret Chadow',
+  'Shemma',
+  'Wally',
+  'Celluk MC',
+  'Speaker Reality',
+  'Benjamin VJ',
+  'Carlos Mejías'
+]::TEXT[]
+WHERE slug = 'raveart-retro-halloween-2025';

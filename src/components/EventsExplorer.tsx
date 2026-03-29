@@ -41,7 +41,13 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           href={`/${lang}/events/${e.slug}`}
           className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group"
         >
-          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-[16/10]" frameClass="border-b-[3px] border-[var(--ink)]" />
+          <CardThumbnail
+            src={e.image_url}
+            alt={e.name}
+            aspectClass="aspect-[2/3]"
+            frameClass="border-b-[3px] border-[var(--ink)]"
+            fit="contain"
+          />
           <div className="p-5 sm:p-7 relative">
             <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
@@ -72,7 +78,7 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           href={`/${lang}/events/${e.slug}`}
           className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
-          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-square" />
+          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-[2/3]" fit="contain" />
           <div className="p-3 flex flex-col flex-grow min-h-0">
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>
               {e.date_start || 'TBA'}
@@ -99,8 +105,8 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
           href={`/${lang}/events/${e.slug}`}
           className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
         >
-          <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
-            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-square" frameClass="" />
+          <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
+            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-[2/3]" frameClass="" fit="contain" />
           </div>
           <div className="flex-grow min-w-0">
             <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>

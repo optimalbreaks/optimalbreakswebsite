@@ -66,8 +66,8 @@ export default async function EventDetailPage({ params }: Props) {
         <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
       </div>
 
-      <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden">
-        <CardThumbnail src={event.image_url} alt={event.name} heightClass="h-48 sm:h-56 md:h-64" frameClass="border-0" />
+      <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden sm:max-w-lg">
+        <CardThumbnail src={event.image_url} alt={event.name} aspectClass="aspect-[2/3] w-full" frameClass="border-0" fit="contain" />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">

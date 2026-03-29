@@ -142,7 +142,12 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
               {FALLBACK_EVENTS.map((event) => (
                 <div key={`${event.type}-${event.name_en}`} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] text-[var(--ink)] overflow-hidden group">
-                  <CardThumbnail src={null} alt={lang === 'es' ? event.name_es : event.name_en} aspectClass="aspect-[21/9] sm:aspect-[16/10]" />
+                  <CardThumbnail
+                    src={null}
+                    alt={lang === 'es' ? event.name_es : event.name_en}
+                    aspectClass="aspect-[2/3]"
+                    fit="contain"
+                  />
                   <div className="p-5 sm:p-7 relative">
                   <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
                   <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>

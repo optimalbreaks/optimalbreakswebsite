@@ -93,9 +93,9 @@ export default async function LangLayout({
             <main className="relative z-[1]">{children}</main>
             <div className="danger-bar" />
             <Footer dict={dict} lang={lang} />
+            <BackToTop ariaLabel={dict.a11y.backToTop} />
           </DeckAudioProvider>
           <CookieBanner lang={lang} />
-          <BackToTop ariaLabel={dict.a11y.backToTop} />
           <ServiceWorkerRegistration />
           <GoogleAnalytics />
         </AuthProvider>

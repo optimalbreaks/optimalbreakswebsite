@@ -9,6 +9,8 @@ interface CardThumbnailProps {
   aspectClass?: string
   /** Si se define, sustituye aspectClass (p. ej. h-48 sm:h-56) */
   heightClass?: string
+  /** cover = rellena el marco (puede recortar); contain = imagen completa (p. ej. carteles 2:3) */
+  fit?: 'cover' | 'contain'
   /** Borde del marco (p. ej. lista blog: sm:border-r sin bottom) */
   frameClass?: string
   className?: string
@@ -19,11 +21,16 @@ export default function CardThumbnail({
   alt,
   aspectClass = 'aspect-[5/3]',
   heightClass,
+  fit = 'cover',
   frameClass = 'border-b-[3px] border-[var(--ink)]',
   className = '',
 }: CardThumbnailProps) {
   const url = src?.trim()
   const box = heightClass ?? aspectClass
+  const imgFit =
+    fit === 'contain'
+      ? 'object-contain object-center'
+      : 'object-cover group-hover:scale-[1.04]'
 
   return (
     <div
@@ -34,7 +41,7 @@ export default function CardThumbnail({
         <img
           src={url}
           alt={alt}
-          className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+          className={`h-full w-full transition-transform duration-300 ease-out ${imgFit}`}
           loading="lazy"
           decoding="async"
         />

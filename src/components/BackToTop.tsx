@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useDeckAudio } from '@/components/DeckAudioProvider'
 
 type Props = {
   ariaLabel?: string
 }
 
 export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
+  const { sessionActive } = useDeckAudio()
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -36,7 +38,9 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
     <button
       type="button"
       onClick={scrollToTop}
-      className="fixed bottom-6 left-4 sm:bottom-8 sm:left-8 z-[150] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation"
+      className={`fixed left-4 sm:left-8 z-[200] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation ${
+        sessionActive ? 'bottom-[5.75rem] sm:bottom-[6.25rem]' : 'bottom-6 sm:bottom-8'
+      }`}
       style={{
         fontFamily: "'Courier Prime', monospace",
         fontSize: '20px',
