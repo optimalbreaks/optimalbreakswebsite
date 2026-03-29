@@ -5,6 +5,7 @@
 import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
 import React from 'react'
+import ManageConsentButton from './ManageConsentButton'
 
 type FooterDict = {
   nav: Record<string, string>
@@ -139,6 +140,12 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
                 <Link href={`/${lang}/cookies`} className={linkClass}>
                   Cookies
                 </Link>
+              </li>
+              <li>
+                <ManageConsentButton
+                  label={lang === 'es' ? 'Configurar cookies' : 'Manage cookies'}
+                  className={linkClass}
+                />
               </li>
             </ul>
           </nav>
