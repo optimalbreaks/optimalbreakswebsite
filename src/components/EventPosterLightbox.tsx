@@ -47,36 +47,44 @@ export default function EventPosterLightbox({
     url &&
     createPortal(
       <div
-        className="fixed inset-0 z-[400] flex items-center justify-center bg-[var(--ink)]/92 p-3 sm:p-6 box-border"
+        className="fixed inset-0 z-[400] box-border"
         role="dialog"
         aria-modal="true"
         aria-label={lightboxTitle}
-        onClick={() => setOpen(false)}
       >
-        <button
-          ref={closeBtnRef}
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setOpen(false)
-          }}
-          className="absolute right-3 top-3 z-[2] border-4 border-[var(--ink)] bg-[var(--yellow)] px-3 py-2 text-[var(--ink)] shadow-[4px_4px_0_var(--ink)] transition-colors hover:bg-[var(--red)] hover:text-white"
-          style={{
-            fontFamily: "'Courier Prime', monospace",
-            fontWeight: 900,
-            fontSize: '18px',
-            lineHeight: 1,
-          }}
-          aria-label={closeLabel}
-        >
-          ×
-        </button>
+        {/* Capa de fondo: clic fuera del cartel cierra (toda el área oscura) */}
         <div
-          className="relative z-[1] box-border flex h-[min(94dvh,calc(100vh-2.5rem))] w-[min(100%,calc(100vw-1.5rem))] max-h-[min(94dvh,calc(100vh-2.5rem))] max-w-[min(100%,calc(100vw-1.5rem))] shrink-0 items-center justify-center border-4 border-[var(--paper)] shadow-[8px_8px_0_rgba(232,220,200,0.2)] sm:w-[min(100%,calc(100vw-3rem))] sm:max-w-[min(100%,calc(100vw-3rem))]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- URL dinámica evento */}
-          <img src={url} alt={alt} className="h-full w-full object-contain" />
+          role="presentation"
+          className="absolute inset-0 cursor-pointer bg-[var(--ink)]/92"
+          onClick={() => setOpen(false)}
+        />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-6">
+          <div
+            className="pointer-events-auto relative z-[1] box-border flex h-[min(94dvh,calc(100vh-2.5rem))] w-[min(100%,calc(100vw-1.5rem))] max-h-[min(94dvh,calc(100vh-2.5rem))] max-w-[min(100%,calc(100vw-1.5rem))] shrink-0 items-center justify-center border-4 border-[var(--paper)] shadow-[8px_8px_0_rgba(232,220,200,0.2)] sm:w-[min(100%,calc(100vw-3rem))] sm:max-w-[min(100%,calc(100vw-3rem))]"
+            onClick={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setOpen(false)
+              }}
+              className="absolute -right-1 -top-1 z-[2] flex h-11 min-h-[44px] min-w-[44px] w-11 -translate-y-1/2 translate-x-1/2 items-center justify-center border-4 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] shadow-[4px_4px_0_var(--ink)] transition-colors hover:bg-[var(--red)] hover:text-white sm:-right-0.5 sm:-top-0.5"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontWeight: 900,
+                fontSize: '22px',
+                lineHeight: 1,
+              }}
+              aria-label={closeLabel}
+            >
+              ×
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element -- URL dinámica evento */}
+            <img src={url} alt={alt} className="h-full w-full object-contain" />
+          </div>
         </div>
       </div>,
       document.body,
