@@ -20,6 +20,7 @@ export default function CookieBanner({ lang }: { lang: string }) {
     const isSecure = window.location.protocol === 'https:'
     const securePart = isSecure ? ';Secure' : ''
     document.cookie = `ob_cookie_consent=${value};max-age=31536000;path=/;SameSite=Lax${securePart}`
+    window.dispatchEvent(new CustomEvent('ob-cookie-consent', { detail: { value } }))
     setVisible(false)
   }
 

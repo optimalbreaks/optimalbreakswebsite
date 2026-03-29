@@ -14,6 +14,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import BackToTop from '@/components/BackToTop'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 import { DEFAULT_OG_IMAGE_PATH, SITE_URL } from '@/lib/seo'
 
 export const viewport: Viewport = {
@@ -96,6 +97,7 @@ export default async function LangLayout({
           <CookieBanner lang={lang} />
           <BackToTop ariaLabel={dict.a11y.backToTop} />
           <ServiceWorkerRegistration />
+          <GoogleAnalytics />
         </AuthProvider>
       </body>
     </html>
