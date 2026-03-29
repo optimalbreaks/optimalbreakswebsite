@@ -85,12 +85,44 @@ const ACTIONS = [
       'UPSERT organizacion hibrida-fest + 3 eventos vía API (sin DATABASE_URL; alinea con 014/015). Añade --verify para comprobar columnas y datos.',
   },
   {
-    id: 'events-discover',
-    run: 'node scripts/guia-base-datos.mjs run events-discover [--per-artist-max N|--max N] [--artist-limit N] [--max-total N] [--keywords-only] [--also-keywords]',
-    npm: 'npm run db:events:discover -- --per-artist-max 15',
-    creds: 'OPENAI + SERPAPI + URL + SERVICE_ROLE (por defecto busca por nombres de artistas en public.artists)',
+    id: 'events-enrich',
+    run: 'node scripts/guia-base-datos.mjs run events-enrich <slug> [--with-poster] [--dry-run] [--force]',
+    npm: 'npm run db:events:enrich -- <slug> [--with-poster]',
+    creds: 'OPENAI + SERPAPI + URL + SERVICE_ROLE',
     description:
-      'Uno por uno: por cada artista (y cada query keywords) → Serp → OpenAI → UPSERT. --max-total para parar tras N filas OK. --keywords-only = solo queries genéricas.',
+      'Enriquece un evento existente: SerpAPI (web) + OpenAI completan campos vacíos (fecha, lineup, descripción, venue, tags, etc.). --with-poster también busca cartel. --force sobreescribe campos ya rellenos.',
+  },
+  {
+    id: 'events-prune-non-spain',
+    run: 'node scripts/guia-base-datos.mjs run events-prune-non-spain [--dry-run]',
+    npm: 'npm run db:guia -- run events-prune-non-spain --dry-run',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'DELETE en public.events donde country no es España (Spain/España/ES). --dry-run lista slugs sin borrar. CASCADE en asistencias/valoraciones.',
+  },
+  {
+    id: 'events-patch-raveart-winter-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-winter-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-winter-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Pone date_start=2026-03-14 y date_end=null en slug raveart-winter-festival-2026 (cartel oficial).',
+  },
+  {
+    id: 'events-patch-raveart-summer-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-summer-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-summer-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Actualiza slug raveart-summer-2026: 4 jul 2026, Hacienda El Chaparrejo (Alcala de Guadaira / Sevilla), textos XXIV aniversario.',
+  },
+  {
+    id: 'events-delete-slug',
+    run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
+    npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'DELETE una fila de public.events por slug (duplicados, pruebas). CASCADE en asistencias/valoraciones.',
   },
   {
     id: 'events-poster',
@@ -164,7 +196,12 @@ Punto de entrada unificado:
   seed                   seed-supabase (solo seed)
   migrate                seed-supabase --all
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
-  events-discover …      descubrir-eventos-breakbeat.mjs (OpenAI + Serp → events)
+  events-enrich <slug> [--with-poster] [--dry-run] [--force]
+                               enriquecer-evento.mjs (SerpAPI web + OpenAI → completar ficha)
+  events-prune-non-spain [--dry-run]  enriquecer-evento.mjs --prune-non-spain
+  events-patch-raveart-winter-2026     fecha 14 mar 2026 en raveart-winter-festival-2026
+  events-patch-raveart-summer-2026     4 jul 2026 Sevilla / Chaparrejo en raveart-summer-2026
+  events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
   verify                 seed-supabase --verify
@@ -212,9 +249,14 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • push-hibrida-fest.mjs — UPSERT de organizations/events Hibrida Fest por API
   (service role) si no hay DATABASE_URL; mismo contenido que 014_….sql.
 
-• descubrir-eventos-breakbeat.mjs — Por cada artista operativo: Serp → OpenAI
-  (tope --per-artist-max) → UPSERT; opcional ronda keywords igual de secuencial.
-  Flags: --also-keywords, --artist-limit, --max-total, --openai-delay-ms.
+• enriquecer-evento.mjs — «Completar ficha de evento». El usuario crea el evento
+  desde /administrator o pide al agente Cursor. Luego este script busca en internet
+  (SerpAPI web) y OpenAI completa fecha, lineup, descripción, venue, tags, etc.
+  Uso: enriquecer-evento.mjs <slug> [--with-poster] [--dry-run] [--force].
+  Utilidades de mantenimiento incluidas:
+  --prune-non-spain [--dry-run] borra eventos con country distinto de España.
+  --delete-event-slug <slug> elimina una fila concreta (duplicados).
+  --patch-raveart-winter-2026 / --patch-raveart-summer-2026 (carteles oficiales).
 
 • elegir-poster-evento.mjs — Carteles de eventos: SerpAPI Google Imágenes +
   OpenAI eligen flyer/póster; descarga y sube a media/events/<slug>/poster.* y
@@ -347,9 +389,33 @@ function main() {
     case 'push-hibrida-fest':
       runNode('push-hibrida-fest.mjs', rest)
       break
-    case 'events-discover':
-      runNode('descubrir-eventos-breakbeat.mjs', rest)
+    case 'events-enrich': {
+      const enrichSlug = (rest[0] || '').trim()
+      if (!enrichSlug) {
+        console.error('Uso: run events-enrich <slug> [--with-poster] [--dry-run] [--force]')
+        process.exit(1)
+      }
+      runNode('enriquecer-evento.mjs', rest)
       break
+    }
+    case 'events-prune-non-spain':
+      runNode('enriquecer-evento.mjs', ['--prune-non-spain', ...rest])
+      break
+    case 'events-patch-raveart-winter-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-raveart-winter-2026', ...rest])
+      break
+    case 'events-patch-raveart-summer-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-raveart-summer-2026', ...rest])
+      break
+    case 'events-delete-slug': {
+      const slug = (rest[0] || '').trim()
+      if (!slug) {
+        console.error('Uso: run events-delete-slug <slug>')
+        process.exit(1)
+      }
+      runNode('enriquecer-evento.mjs', ['--delete-event-slug', slug])
+      break
+    }
     case 'events-poster':
       runNode('elegir-poster-evento.mjs', rest)
       break

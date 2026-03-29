@@ -12,6 +12,8 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Organizaciones y Raveart:** existe la tabla **`organizations`** (promotora, roles, enlaces). Los **sellos** pueden enlazar a una organización (`labels.organization_id`) y los **eventos** a la promotora (`events.promoter_organization_id`). Ficha pública: `/[lang]/organizations/[slug]` (p. ej. `raveart`). Datos sembrados y ampliados con las migraciones **`010_raveart_organizations.sql`** y **`011_raveart_gallery_events.sql`** (alineación con la [galería oficial](https://www.raveart.es/galeria/)). Detalle técnico y tabla de migraciones en [README.md](./README.md).
 
+**Eventos:** se crean **manualmente** desde el panel admin (`/administrator/events/new`) o pidiendo al agente Cursor. Para completar la ficha (fecha, lineup, descripción, venue, tags, etc.) se usa el **agente enriquecedor**: `npm run db:events:enrich -- <slug> [--with-poster]`. SerpAPI busca en la web y OpenAI completa los campos vacíos.
+
 ---
 
 ## Stack principal

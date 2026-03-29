@@ -29,8 +29,8 @@ INSERT INTO public.events (
 SELECT
   'raveart-winter-festival-2026',
   'Raveart Winter Festival 2026',
-  'Winter Festival 2026 at Complejo Embrujo (Las Gabias, Granada area): four areas (Winter, 24 Aniversario, Raveart Records, Mare Bass). Poster and final details on Raveart channels.',
-  'Winter Festival 2026 en Complejo Embrujo (Las Gabias, area de Granada): cuatro areas (Winter, 24 Aniversario, Raveart Records, Mare Bass). Cartel y detalles en canales de Raveart.',
+  'Winter Festival 2026 (Saturday 14 March) at Complejo Embrujo (Las Gabias, Granada area): four areas (Winter, 24 Aniversario, Raveart Records, Mass Bass). Poster and final details on Raveart channels.',
+  'Winter Festival 2026 (sábado 14 de marzo) en Complejo Embrujo (Las Gabias, area de Granada): cuatro areas (Winter, 24 Aniversario, Raveart Records, Mass Bass). Cartel y detalles en canales de Raveart.',
   'past_iconic',
   DATE '2026-03-14',
   NULL::DATE,

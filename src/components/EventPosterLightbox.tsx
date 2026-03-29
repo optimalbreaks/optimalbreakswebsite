@@ -47,7 +47,7 @@ export default function EventPosterLightbox({
     url &&
     createPortal(
       <div
-        className="fixed inset-0 z-[400] flex items-center justify-center bg-[var(--ink)]/92 p-4 sm:p-8"
+        className="fixed inset-0 z-[400] flex items-center justify-center bg-[var(--ink)]/92 p-3 sm:p-6 box-border"
         role="dialog"
         aria-modal="true"
         aria-label={lightboxTitle}
@@ -71,13 +71,13 @@ export default function EventPosterLightbox({
         >
           ×
         </button>
-        {/* eslint-disable-next-line @next/next/no-img-element -- URL dinámica evento */}
-        <img
-          src={url}
-          alt={alt}
-          className="relative z-[1] max-h-[88vh] w-auto max-w-full object-contain border-4 border-[var(--paper)] shadow-[8px_8px_0_rgba(232,220,200,0.2)]"
+        <div
+          className="relative z-[1] box-border flex h-[min(94dvh,calc(100vh-2.5rem))] w-[min(100%,calc(100vw-1.5rem))] max-h-[min(94dvh,calc(100vh-2.5rem))] max-w-[min(100%,calc(100vw-1.5rem))] shrink-0 items-center justify-center border-4 border-[var(--paper)] shadow-[8px_8px_0_rgba(232,220,200,0.2)] sm:w-[min(100%,calc(100vw-3rem))] sm:max-w-[min(100%,calc(100vw-3rem))]"
           onClick={(e) => e.stopPropagation()}
-        />
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- URL dinámica evento */}
+          <img src={url} alt={alt} className="h-full w-full object-contain" />
+        </div>
       </div>,
       document.body,
     )

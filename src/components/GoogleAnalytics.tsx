@@ -24,12 +24,30 @@ function AnalyticsTracker({ enabled }: { enabled: boolean }) {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (enabled && typeof window !== 'undefined' && typeof window.gtag === 'function') {
-      let url = pathname
-      const qs = searchParams.toString()
-      if (qs) url += `?${qs}`
+    if (!enabled || typeof window === 'undefined') return
 
-      window.gtag('event', 'page_view', { page_path: url })
+    const sendPageView = () => {
+      if (typeof window.gtag !== 'function') return false
+      let path = pathname
+      const qs = searchParams.toString()
+      if (qs) path += `?${qs}`
+      window.gtag('event', 'page_view', {
+        page_path: path,
+        page_title: document.title,
+        page_location: window.location.href,
+      })
+      return true
+    }
+
+    if (sendPageView()) return
+
+    const id = window.setInterval(() => {
+      if (sendPageView()) window.clearInterval(id)
+    }, 50)
+    const maxWait = window.setTimeout(() => window.clearInterval(id), 10_000)
+    return () => {
+      window.clearInterval(id)
+      window.clearTimeout(maxWait)
     }
   }, [pathname, searchParams, enabled])
 
@@ -68,7 +86,7 @@ export default function GoogleAnalytics() {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${GA_ID}', { send_page_view: true });
+          gtag('config', '${GA_ID}', { send_page_view: false });
         `}
       </Script>
       <Suspense fallback={null}>

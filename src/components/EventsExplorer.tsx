@@ -108,7 +108,18 @@ function eventYear(e: BreakEvent): number | null {
   return Number.isFinite(y) ? y : null
 }
 
-/** Mantiene el orden de llegada dentro de cada año. Años numéricos primero (desc), «sin fecha» al final. */
+/** Para ordenar: día local de inicio, o fin si no hay inicio; sin fecha → al final del bloque. */
+function eventSortTimestamp(e: BreakEvent): number {
+  const t = parseLocalDayStart(e.date_start) ?? parseLocalDayStart(e.date_end)
+  return t ?? Number.NEGATIVE_INFINITY
+}
+
+/** Dentro de cada año: fechas de más reciente a más antigua (p. ej. 24/11/2025 antes que 24/03/2025). */
+function sortEventsByDateDesc(items: BreakEvent[]): BreakEvent[] {
+  return [...items].sort((a, b) => eventSortTimestamp(b) - eventSortTimestamp(a))
+}
+
+/** Años numéricos primero (año más reciente arriba); dentro de cada año, orden por fecha desc. «Sin fecha» al final. */
 function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: BreakEvent[] }[] {
   const map = new Map<YearGroupKey, BreakEvent[]>()
   for (const e of items) {
@@ -121,10 +132,10 @@ function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: Br
   numeric.sort((a, b) => b - a)
   const out: { key: YearGroupKey; items: BreakEvent[] }[] = numeric.map((k) => ({
     key: k,
-    items: map.get(k)!,
+    items: sortEventsByDateDesc(map.get(k)!),
   }))
   const und = map.get('undated')
-  if (und && und.length > 0) out.push({ key: 'undated', items: und })
+  if (und && und.length > 0) out.push({ key: 'undated', items: sortEventsByDateDesc(und) })
   return out
 }
 

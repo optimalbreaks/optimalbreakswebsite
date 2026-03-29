@@ -27,7 +27,7 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
         </h1>
       </section>
 
-      <section className="px-3 sm:px-6 py-10 sm:py-16 max-w-[800px]">
+      <section className="px-3 sm:px-6 py-10 sm:py-16 max-w-[800px] mx-auto">
         {/* Description */}
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 'clamp(16px, 4vw, 19px)', lineHeight: 1.8, marginBottom: 'clamp(24px, 6vw, 40px)' }}>
           {dict.about.description}
