@@ -91,20 +91,25 @@ export default function CookieBanner({ lang }: { lang: string }) {
 
   return (
     <>
-      {/* Overlay oscuro que bloquea la interacción (solo primera visita) */}
+      {/* Overlay + centrado (solo primera visita) */}
       {!isReopen && (
         <div className="fixed inset-0 z-[199] bg-black/60 backdrop-blur-[2px]" aria-hidden="true" />
       )}
 
       <div
-        className={`fixed z-[200] bg-[var(--paper)] text-[var(--ink)] border-[6px] border-[var(--ink)] shadow-[8px_8px_0_rgba(0,0,0,0.25)] ${
+        className={`fixed z-[200] ${
           isReopen
-            ? 'bottom-0 left-0 right-0 border-x-0 border-b-0'
-            : 'inset-x-4 sm:inset-x-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-auto sm:max-w-lg'
+            ? 'bottom-0 left-0 right-0'
+            : 'inset-0 flex items-center justify-center p-4'
         }`}
         role="dialog"
         aria-modal="true"
         aria-label={es ? 'Consentimiento de cookies' : 'Cookie consent'}
+      >
+      <div
+        className={`bg-[var(--paper)] text-[var(--ink)] border-[6px] border-[var(--ink)] shadow-[8px_8px_0_rgba(0,0,0,0.25)] ${
+          isReopen ? 'border-x-0 border-b-0' : 'w-full max-w-lg'
+        }`}
       >
         <div className="p-5 sm:p-7">
           <h3
@@ -210,6 +215,7 @@ export default function CookieBanner({ lang }: { lang: string }) {
             )}
           </div>
         </div>
+      </div>
       </div>
     </>
   )
