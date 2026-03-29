@@ -62,24 +62,24 @@ export default function GoogleAnalytics() {
   useEffect(() => {
     if (!GA_ID) return
 
-    const updateConsent = (granted: boolean) => {
-      if (typeof window.gtag === 'function') {
-        window.gtag('consent', 'update', {
-          analytics_storage: granted ? 'granted' : 'denied',
-          ad_storage: granted ? 'granted' : 'denied',
-          ad_user_data: granted ? 'granted' : 'denied',
-          ad_personalization: granted ? 'granted' : 'denied',
-        })
-      } else {
-        // Fallback si gtag no se ha inicializado
+    const ensureGtag = () => {
+      if (typeof window.gtag !== 'function') {
         window.dataLayer = window.dataLayer || []
-        window.dataLayer.push('consent', 'update', {
-          analytics_storage: granted ? 'granted' : 'denied',
-          ad_storage: granted ? 'granted' : 'denied',
-          ad_user_data: granted ? 'granted' : 'denied',
-          ad_personalization: granted ? 'granted' : 'denied',
-        })
+        window.gtag = function () {
+          // eslint-disable-next-line prefer-rest-params
+          window.dataLayer.push(arguments)
+        }
       }
+    }
+
+    const updateConsent = (granted: boolean) => {
+      ensureGtag()
+      window.gtag('consent', 'update', {
+        analytics_storage: granted ? 'granted' : 'denied',
+        ad_storage: granted ? 'granted' : 'denied',
+        ad_user_data: granted ? 'granted' : 'denied',
+        ad_personalization: granted ? 'granted' : 'denied',
+      })
     }
 
     // Configurar el estado de consentimiento inicial en base a cookies
@@ -121,8 +121,6 @@ export default function GoogleAnalytics() {
       />
       <Script id="ga-init" strategy="afterInteractive">
         {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
           gtag('config', '${GA_ID}', { send_page_view: false });
         `}
