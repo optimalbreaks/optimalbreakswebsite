@@ -12,12 +12,8 @@ import { GoogleAnalytics as NextGoogleAnalytics } from '@next/third-parties/goog
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
-declare global {
-  interface Window {
-    dataLayer: any[]
-    gtag: (...args: any[]) => void
-  }
-}
+// No ampliar Window.dataLayer aquí: @next/third-parties/google ya declara `dataLayer?: Object[]`;
+// duplicarla con otro modificador rompe el build de TypeScript.
 
 // Helper para asegurar que gtag existe en el entorno cliente
 const ensureGtag = () => {
@@ -25,8 +21,9 @@ const ensureGtag = () => {
   window.dataLayer = window.dataLayer || []
   if (typeof window.gtag !== 'function') {
     window.gtag = function () {
+      window.dataLayer ??= []
       // eslint-disable-next-line prefer-rest-params
-      window.dataLayer.push(arguments)
+      window.dataLayer.push(arguments as unknown as object)
     }
   }
 }
