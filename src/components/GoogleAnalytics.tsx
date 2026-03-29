@@ -1,14 +1,14 @@
 // ============================================
-// OPTIMAL BREAKS — Google Analytics 4 (gtag.js)
-// Implements Consent Mode V2
+// OPTIMAL BREAKS — Google Analytics 4
+// Implements Consent Mode V2 via @next/third-parties/google
 // ============================================
 
 'use client'
 
 import Script from 'next/script'
-import { useEffect, Suspense } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 import { readConsent, type CookieConsent } from './CookieBanner'
+import { GoogleAnalytics as NextGoogleAnalytics } from '@next/third-parties/google'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -19,7 +19,7 @@ declare global {
   }
 }
 
-// Helper para asegurar que gtag existe de forma asíncrona segura
+// Helper para asegurar que gtag existe en el entorno cliente
 const ensureGtag = () => {
   if (typeof window === 'undefined') return
   window.dataLayer = window.dataLayer || []
@@ -29,31 +29,6 @@ const ensureGtag = () => {
       window.dataLayer.push(arguments)
     }
   }
-}
-
-function AnalyticsTracker() {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    if (!GA_ID || typeof window === 'undefined') return
-
-    ensureGtag()
-
-    let path = pathname
-    const qs = searchParams.toString()
-    if (qs) path += `?${qs}`
-
-    // Como ensureGtag() garantiza que window.gtag existe (y empuja a dataLayer),
-    // no necesitamos polling. GA lo procesará cuando su script cargue.
-    window.gtag('event', 'page_view', {
-      page_path: path,
-      page_title: document.title,
-      page_location: window.location.href,
-    })
-  }, [pathname, searchParams])
-
-  return null
 }
 
 export default function GoogleAnalytics() {
@@ -75,7 +50,7 @@ export default function GoogleAnalytics() {
     const saved = readConsent()
     if (saved?.analytics) updateConsent(true)
 
-    // Escuchar cambios
+    // Escuchar cambios interactivos del banner
     const onConsent = (e: Event) => {
       const consent = (e as CustomEvent<CookieConsent>).detail
       updateConsent(consent?.analytics === true)
@@ -89,31 +64,22 @@ export default function GoogleAnalytics() {
 
   return (
     <>
-      <Script id="ga-init" strategy="afterInteractive">
+      <Script id="ga-consent" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           
-          // Consent Mode por defecto (denied)
+          // Consent Mode v2 por defecto
           gtag('consent', 'default', {
             'analytics_storage': 'denied',
             'ad_storage': 'denied',
             'ad_user_data': 'denied',
             'ad_personalization': 'denied',
           });
-
-          // Inicializar GA4 sin page_view automático
-          gtag('js', new Date());
-          gtag('config', '${GA_ID}', { send_page_view: false });
         `}
       </Script>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="afterInteractive"
-      />
-      <Suspense fallback={null}>
-        <AnalyticsTracker />
-      </Suspense>
+      {/* Componente oficial de Next.js. Gestiona gtag.js y el tracking automático de page_views en App Router */}
+      <NextGoogleAnalytics gaId={GA_ID} />
     </>
   )
 }
