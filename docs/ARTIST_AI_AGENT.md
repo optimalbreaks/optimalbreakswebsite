@@ -16,6 +16,8 @@ El **agente de fichas de artista** genera con OpenAI (y búsqueda opcional) un o
 - **`--save-json`** — además del UPSERT, guarda copia en `data/artists/<slug>.json`.
 - **`--stdout`** — imprime JSON por consola; sin escritura a disco ni a BD.
 
+Los archivos **`data/artists/*.json`** están en **`.gitignore`** (canónico en Supabase); se generan o editan solo en local.
+
 ### Archivos implicados
 
 | Ruta | Rol |
@@ -135,6 +137,8 @@ The **artist profile agent** uses OpenAI (and optional web search) to produce an
 - **`--json-only`** — skip the DB; write only `data/artists/<slug>.json`.
 - **`--save-json`** — UPSERT **and** save a copy under `data/artists/<slug>.json`.
 - **`--stdout`** — print JSON to stdout; no disk or DB writes.
+
+**`data/artists/*.json`** files are **gitignored** (Supabase is canonical); create or edit them only locally.
 
 ### Files involved
 
