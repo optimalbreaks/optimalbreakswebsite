@@ -4,6 +4,7 @@
  * Uso:
  *   npm run db:seed              → solo 002_seed_data.sql (requiere esquema ya aplicado)
  *   npm run db:migrate           → todos los *.sql en supabase/migrations (orden alfabético)
+ *   node scripts/seed-supabase.mjs --files 010_....sql 011_....sql  → solo esos archivos (BD ya existente)
  *   npm run db:verify            → cuenta filas vía API (NEXT_PUBLIC_* + anon; no usa Postgres directo)
  *
  * URI de Postgres, en este orden:
@@ -110,6 +111,44 @@ function connectionOptions() {
   return { connectionString, ssl }
 }
 
+/** Nombres de archivo tras --files (solo basenames en supabase/migrations). */
+function listMigrationFilesFromArgs(argv) {
+  const i = argv.indexOf('--files')
+  if (i === -1) return null
+  const names = []
+  for (let j = i + 1; j < argv.length; j++) {
+    if (argv[j].startsWith('--')) break
+    names.push(argv[j])
+  }
+  if (names.length === 0) {
+    console.error(
+      'Uso: node scripts/seed-supabase.mjs --files 010_uno.sql 011_otro.sql',
+    )
+    process.exit(1)
+  }
+  if (!existsSync(MIGRATIONS_DIR)) {
+    console.error('No existe:', MIGRATIONS_DIR)
+    process.exit(1)
+  }
+  for (const name of names) {
+    if (
+      name.includes('..') ||
+      name.includes('/') ||
+      name.includes('\\') ||
+      !name.endsWith('.sql')
+    ) {
+      console.error('Nombre de migración no válido:', name)
+      process.exit(1)
+    }
+    const full = join(MIGRATIONS_DIR, name)
+    if (!existsSync(full)) {
+      console.error('No existe el archivo en migrations:', name)
+      process.exit(1)
+    }
+  }
+  return names
+}
+
 function listMigrationFiles(all) {
   if (!existsSync(MIGRATIONS_DIR)) {
     console.error('No existe:', MIGRATIONS_DIR)
@@ -197,15 +236,18 @@ async function main() {
     await verifyViaAnonApi()
     return
   }
+  const explicitFiles = listMigrationFilesFromArgs(args)
   const runAll = args.includes('--all') || args.includes('--migrate')
 
-  if (runAll) {
+  if (explicitFiles) {
+    console.log('Modo --files: ejecutando solo', explicitFiles.join(', '))
+  } else if (runAll) {
     console.warn(
-      'Modo --all: re-ejecutar 001/003 puede fallar si el esquema ya existe. Úsalo en proyectos nuevos o a sabiendas.'
+      'Modo --all: re-ejecutar 001/003 puede fallar si el esquema ya existe. Úsalo en proyectos nuevos o a sabiendas.',
     )
   }
 
-  const files = listMigrationFiles(runAll)
+  const files = explicitFiles || listMigrationFiles(runAll)
   const { connectionString, ssl } = connectionOptions()
   const client = new pg.Client({ connectionString, ssl })
 

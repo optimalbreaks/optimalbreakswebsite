@@ -440,6 +440,8 @@ Files under `supabase/migrations/` (apply in lexical order):
 | `npm run db:artist -- data/artists/<file>.json` | Upsert **one artist** from JSON (`slug` is the natural key). |
 | `npm run db:artist:ensure -- data/artists/<file>.json` | Compare JSON vs Supabase row; run upsert if bios / `real_name` differ. |
 | `npm run db:migrate` | Execute all `supabase/migrations/*.sql` in order via **Postgres** (requires connection string or password in env). |
+| `npm run db:migrate:raveart` | Run only **`010_raveart_organizations.sql`** and **`011_raveart_gallery_events.sql`** (safe on DBs that already have `001`–`009`). Same Postgres env as `db:migrate`. |
+| `node scripts/seed-supabase.mjs --files <name>.sql …` | Run an explicit list of migration files by basename (no path traversal). |
 | `npm run db:seed` | Run `002_seed_data.sql` only (Postgres). |
 | `npm run db:verify` | Row-count sanity check via **Supabase HTTP API** (`NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). |
 | `npm run db:artist:agent -- <slug> "Name"` | Generate `data/artists/<slug>.json` with OpenAI (+ optional SerpAPI). See [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md). |
