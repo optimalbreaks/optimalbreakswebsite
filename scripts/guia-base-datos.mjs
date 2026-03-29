@@ -93,6 +93,14 @@ const ACTIONS = [
       'Uno por uno: por cada artista (y cada query keywords) → Serp → OpenAI → UPSERT. --max-total para parar tras N filas OK. --keywords-only = solo queries genéricas.',
   },
   {
+    id: 'events-poster',
+    run: 'node scripts/guia-base-datos.mjs run events-poster <slug> | --missing-only [--limit N] | --all [--limit N]',
+    npm: 'npm run db:events:poster   # sin args = missing-only límite 20 (EVENTS_POSTER_DEFAULT_LIMIT)',
+    creds: 'OPENAI + SERPAPI + URL + SERVICE_ROLE (bucket media, ruta events/<slug>/poster.*)',
+    description:
+      'Google Imágenes (SerpAPI) + OpenAI eligen cartel; sube a Storage y actualiza events.image_url. --json-only = URL externa sin Storage.',
+  },
+  {
     id: 'migrate-files',
     run: 'node scripts/guia-base-datos.mjs run migrate-files -- 010_x.sql 011_y.sql',
     npm: 'npm run db:migrate:raveart (ejemplo fijo en package.json)',
@@ -157,6 +165,7 @@ Punto de entrada unificado:
   migrate                seed-supabase --all
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
   events-discover …      descubrir-eventos-breakbeat.mjs (OpenAI + Serp → events)
+  events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
@@ -206,6 +215,10 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • descubrir-eventos-breakbeat.mjs — Por cada artista operativo: Serp → OpenAI
   (tope --per-artist-max) → UPSERT; opcional ronda keywords igual de secuencial.
   Flags: --also-keywords, --artist-limit, --max-total, --openai-delay-ms.
+
+• elegir-poster-evento.mjs — Carteles de eventos: SerpAPI Google Imágenes +
+  OpenAI eligen flyer/póster; descarga y sube a media/events/<slug>/poster.* y
+  actualiza events.image_url. Slug único, --missing-only o --all; --vision opcional.
 
 • sync-timeline-artists.mjs — «Artistas que salen en la cronología web». Sin
   flags: INSERT en artists de los que faltan. Con --sql: solo genera/actualiza
@@ -336,6 +349,9 @@ function main() {
       break
     case 'events-discover':
       runNode('descubrir-eventos-breakbeat.mjs', rest)
+      break
+    case 'events-poster':
+      runNode('elegir-poster-evento.mjs', rest)
       break
     case 'migrate-files': {
       const files = stripLeadingDashDash(rest)

@@ -272,7 +272,7 @@ export default async function EventDetailPage({ params }: Props) {
         <section className="mb-10">
           <SectionHeading>{lang === 'es' ? 'HORARIOS' : 'SCHEDULE'}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[...scheduleByStage.entries()].map(([stageName, slots]) => (
+            {Array.from(scheduleByStage.entries()).map(([stageName, slots]) => (
               <div key={stageName} className="border-4 border-[var(--ink)] overflow-hidden">
                 <div className="bg-[var(--ink)] px-4 py-2">
                   <span style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)' }}>

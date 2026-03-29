@@ -22,7 +22,8 @@
     "db:user-list": "node scripts/sync-user-list-artists.mjs",
     "media:upload": "node scripts/upload-storage-media.mjs",
     "db:artist:photo": "node scripts/elegir-foto-artista.mjs",
-    "db:events:discover": "node scripts/descubrir-eventos-breakbeat.mjs"
+    "db:events:discover": "node scripts/descubrir-eventos-breakbeat.mjs",
+    "db:events:poster": "node scripts/elegir-poster-evento.mjs"
   },
   "dependencies": {
     "next": "^14.2.0",

@@ -15,3 +15,5 @@ Si el usuario pide **actualizar la base de datos**, **guardar en Supabase**, **s
 Objetivo: cuando pida un cambio en datos persistidos, **el usuario no deba hacer nada más** salvo que sea inevitable (p. ej. credencial ausente en su entorno).
 
 **Fotos (`elegir-foto-artista`):** sube la imagen elegida al **bucket `media`** y deja `image_url` como URL pública de Supabase; luego UPSERT. **`--json-only`** = sin Storage ni BD (solo URL externa en JSON). Requiere `SERVICE_ROLE` + `NEXT_PUBLIC_SUPABASE_URL`. Catálogo: `node scripts/guia-base-datos.mjs`.
+
+**Carteles de eventos (`elegir-poster-evento` / `run events-poster`):** SerpAPI Google Imágenes + OpenAI; sube a `media/events/<slug>/poster.*` y actualiza `events.image_url`. Entrada: `npm run db:events:poster -- <slug>` o `--missing-only --limit N`.
