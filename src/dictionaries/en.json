@@ -265,6 +265,8 @@
     "filter_genre": "Genre",
     "filter_country": "Country",
     "filter_category": "Category",
+    "filter_years": "Years",
+    "filter_years_label": "{from} – {to}",
     "clear_filters": "Clear filters",
     "results_count": "{count} artists",
     "no_matches": "No artists match the current filters"

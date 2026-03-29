@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
@@ -27,6 +27,8 @@ interface ArtistDict {
   filter_genre: string
   filter_country: string
   filter_category: string
+  filter_years: string
+  filter_years_label: string
   clear_filters: string
   results_count: string
   no_matches: string
@@ -47,12 +49,34 @@ const CATEGORY_MAP: Record<string, string> = {
   current: 'current',
 }
 
+const YEAR_MIN = 1970
+const YEAR_MAX = 2026
+
+/**
+ * Extract the start year from an era string like "1990s-present",
+ * "mid-2000s-present", "late-1960s-1970s", "early-1990s-present".
+ */
+function parseEraStartYear(era: string): number | null {
+  if (!era) return null
+  const m = era.match(/(\d{4})/)
+  if (!m) return null
+  const base = parseInt(m[1], 10)
+
+  if (/\bmid[- ]?/i.test(era.split('-')[0] || '')) return base + 5
+  if (/\blate[- ]?/i.test(era.split('-')[0] || '')) return base + 7
+  if (/\bearly[- ]?/i.test(era.split('-')[0] || '')) return base + 2
+
+  return base
+}
+
 export default function ArtistsExplorer({ artists, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeGenre, setActiveGenre] = useState('')
   const [activeCountry, setActiveCountry] = useState('')
+  const [yearFrom, setYearFrom] = useState(YEAR_MIN)
+  const [yearTo, setYearTo] = useState(YEAR_MAX)
 
   const allGenres = useMemo(() => {
     const set = new Set<string>()
@@ -68,6 +92,8 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
     return Array.from(set).sort()
   }, [artists])
 
+  const yearRange = yearFrom !== YEAR_MIN || yearTo !== YEAR_MAX
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     const rows = artists.filter((a) => {
@@ -75,21 +101,28 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
       if (activeCategory !== 'all' && a.category !== CATEGORY_MAP[activeCategory]) return false
       if (activeGenre && !a.styles?.includes(activeGenre)) return false
       if (activeCountry && a.country !== activeCountry) return false
+      if (yearRange) {
+        const y = parseEraStartYear(a.era)
+        if (y == null) return true
+        if (y < yearFrom || y > yearTo) return false
+      }
       return true
     })
     rows.sort((a, b) =>
       (a.name_display || a.name).localeCompare(b.name_display || b.name, undefined, { sensitivity: 'base' }),
     )
     return rows
-  }, [artists, search, activeCategory, activeGenre, activeCountry])
+  }, [artists, search, activeCategory, activeGenre, activeCountry, yearFrom, yearTo, yearRange])
 
-  const hasFilters = search || activeCategory !== 'all' || activeGenre || activeCountry
+  const hasFilters = search || activeCategory !== 'all' || activeGenre || activeCountry || yearRange
 
   function clearAll() {
     setSearch('')
     setActiveCategory('all')
     setActiveGenre('')
     setActiveCountry('')
+    setYearFrom(YEAR_MIN)
+    setYearTo(YEAR_MAX)
   }
 
   const filters = Object.entries(dict.filters) as [string, string][]
@@ -130,9 +163,19 @@ export default function ArtistsExplorer({ artists, dict, lang }: Props) {
       </div>
 
       {/* Advanced filters */}
-      <div className="flex flex-wrap gap-2 mb-5">
+      <div className="flex flex-wrap gap-2 items-end mb-5">
         <FilterSelect value={activeGenre} onChange={setActiveGenre} placeholder={dict.filter_genre} options={allGenres} />
         <FilterSelect value={activeCountry} onChange={setActiveCountry} placeholder={dict.filter_country} options={allCountries} />
+        <YearRangeSlider
+          min={YEAR_MIN}
+          max={YEAR_MAX}
+          from={yearFrom}
+          to={yearTo}
+          onChangeFrom={setYearFrom}
+          onChangeTo={setYearTo}
+          label={dict.filter_years}
+          rangeLabel={dict.filter_years_label}
+        />
         {hasFilters && (
           <button
             onClick={clearAll}
@@ -179,6 +222,102 @@ function FilterSelect({ value, onChange, placeholder, options }: { value: string
         <option key={o} value={o}>{o}</option>
       ))}
     </select>
+  )
+}
+
+/* ─── Year Range Slider (dual thumb) ─── */
+
+function YearRangeSlider({
+  min, max, from, to, onChangeFrom, onChangeTo, label, rangeLabel,
+}: {
+  min: number; max: number; from: number; to: number
+  onChangeFrom: (v: number) => void; onChangeTo: (v: number) => void
+  label: string; rangeLabel: string
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef<'from' | 'to' | null>(null)
+
+  const pct = useCallback((v: number) => ((v - min) / (max - min)) * 100, [min, max])
+
+  const valueFromX = useCallback((clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect) return min
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    return Math.round(min + ratio * (max - min))
+  }, [min, max])
+
+  const onPointerDown = useCallback((thumb: 'from' | 'to') => (e: React.PointerEvent) => {
+    e.preventDefault()
+    dragging.current = thumb
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    const v = valueFromX(e.clientX)
+    if (dragging.current === 'from') {
+      onChangeFrom(Math.min(v, to - 1))
+    } else {
+      onChangeTo(Math.max(v, from + 1))
+    }
+  }, [valueFromX, from, to, onChangeFrom, onChangeTo])
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = null
+  }, [])
+
+  const handleTrackClick = useCallback((e: React.MouseEvent) => {
+    if (dragging.current) return
+    const v = valueFromX(e.clientX)
+    const distFrom = Math.abs(v - from)
+    const distTo = Math.abs(v - to)
+    if (distFrom <= distTo) {
+      onChangeFrom(Math.min(v, to - 1))
+    } else {
+      onChangeTo(Math.max(v, from + 1))
+    }
+  }, [valueFromX, from, to, onChangeFrom, onChangeTo])
+
+  const isActive = from !== min || to !== max
+  const displayLabel = rangeLabel.replace('{from}', String(from)).replace('{to}', String(to))
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div
+        className="flex items-center justify-between"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase' }}
+      >
+        <span className="text-[var(--ink)]">{label}</span>
+        <span className={isActive ? 'text-[var(--red)] font-black' : 'text-[var(--dim)]'}>{displayLabel}</span>
+      </div>
+      <div
+        ref={trackRef}
+        className="relative h-7 w-48 sm:w-56 cursor-pointer select-none touch-none"
+        onClick={handleTrackClick}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+      >
+        {/* track bg */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-[6px] bg-[var(--paper-dark)] border-2 border-[var(--ink)]" />
+        {/* active range */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 h-[6px] bg-[var(--ink)]"
+          style={{ left: `${pct(from)}%`, width: `${pct(to) - pct(from)}%` }}
+        />
+        {/* from thumb */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-[var(--yellow)] border-[3px] border-[var(--ink)] cursor-grab active:cursor-grabbing z-10 hover:scale-110 transition-transform"
+          style={{ left: `${pct(from)}%` }}
+          onPointerDown={onPointerDown('from')}
+        />
+        {/* to thumb */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 bg-[var(--yellow)] border-[3px] border-[var(--ink)] cursor-grab active:cursor-grabbing z-10 hover:scale-110 transition-transform"
+          style={{ left: `${pct(to)}%` }}
+          onPointerDown={onPointerDown('to')}
+        />
+      </div>
+    </div>
   )
 }
 

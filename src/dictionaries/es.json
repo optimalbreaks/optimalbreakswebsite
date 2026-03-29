@@ -190,6 +190,8 @@
     "filter_genre": "Género",
     "filter_country": "País",
     "filter_category": "Categoría",
+    "filter_years": "Años",
+    "filter_years_label": "{from} – {to}",
     "clear_filters": "Limpiar filtros",
     "results_count": "{count} artistas",
     "no_matches": "Ningún artista coincide con los filtros"
