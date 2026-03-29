@@ -20,8 +20,18 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 - **Next.js 14** (App Router), **TypeScript**, **Tailwind** 3.4
 - **Supabase**: PostgreSQL + autenticación + **Storage** (bucket público `media` para fotos de contenido)
+- **Analítica (opcional)**: **Google Analytics 4** con el paquete oficial **`@next/third-parties/google`** y **Consent Mode v2** enlazado al banner de cookies (`CookieBanner` + `GoogleAnalytics`). Detalle en [README.md — Analytics](./README.md#analytics-google-analytics-4) y en la sección [Analítica (GA4)](#analítica-ga4) de este archivo.
 - Rutas `/es` y `/en` con middleware propio
 - Tipografías: Unbounded, Courier Prime, Special Elite, Darker Grotesque
+
+---
+
+## Analítica (GA4)
+
+- Variable **`NEXT_PUBLIC_GA_MEASUREMENT_ID`** (ID de medición `G-…`): en `.env.local` y en **Vercel → Environment Variables** para que producción cargue gtag. Si no está definida, no se carga Google Analytics.
+- Código: **`src/components/GoogleAnalytics.tsx`** (componente `GoogleAnalytics` de `@next/third-parties/google` + script previo de consentimiento) y **`src/components/CookieBanner.tsx`** (evento `ob-cookie-consent` al aceptar o rechazar cookies analíticas).
+
+Más contexto (CSP, flujo): [README.md — Analytics](./README.md#analytics-google-analytics-4).
 
 ---
 
@@ -118,6 +128,7 @@ Copia `.env.local.example` → `.env.local`.
 - **Solo servidor** (Storage admin, `db:artist` vía API, **`npm run media:upload`**): **`SUPABASE_SERVICE_ROLE_KEY`** *o* **`SUPABASE_SECRET_KEY`** (`sb_secret_*`). Nunca en `NEXT_PUBLIC_*`.
 - **Postgres** (opcional, para `db:migrate` / `db:seed`): ver comentarios en `.env.local.example`.
 - **Agente de bios** (opcional): `OPENAI_API_KEY`, opcionalmente `OPENAI_MODEL`, y si quieres búsqueda web `SERPAPI_API_KEY` (ver `.env.local.example` y [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md)).
+- **Google Analytics 4** (opcional): `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-…` (público; sin ella no se carga GA).
 
 ---
 
@@ -192,7 +203,7 @@ Aplica `supabase/migrations/` en **orden alfabético**. Descripción detallada d
 
 ## Roadmap (resumen)
 
-Hecho: Supabase en listados, miniaturas y Storage, auth, dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML.  
+Hecho: Supabase en listados, miniaturas y Storage, auth, dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
 Pendiente: búsqueda global, OG por sección, RSS, modo oscuro, etc.
 
 ---

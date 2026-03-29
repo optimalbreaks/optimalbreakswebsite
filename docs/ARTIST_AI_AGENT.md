@@ -123,6 +123,7 @@ Ruta de API: `POST /api/admin/agent` (cuerpo JSON con `slug`, `artistName`, nota
 
 - Esquema de base de datos, migraciones SQL (incl. **`010`–`011`** organizaciones / Raveart) y tabla de scripts: [**README.md**](../README.md) · resumen ES: [**README.es.md**](../README.es.md).
 - Subir un archivo local al bucket **`media`**: `npm run media:upload` → [`scripts/upload-storage-media.mjs`](../scripts/upload-storage-media.mjs).
+- Analítica web (GA4, variables `NEXT_PUBLIC_GA_MEASUREMENT_ID`, Consent Mode): [**README.md** — Analytics](../README.md#analytics-google-analytics-4) · [**README.es.md**](../README.es.md) (sección *Analítica (GA4)*).
 
 ---
 
@@ -245,3 +246,4 @@ The prompt is conservative: no invented URLs, **labels founded** vs labels where
 
 - Full database schema, SQL migrations (including **`010`–`011`** organizations / Raveart), and npm scripts table: [**README.md**](../README.md) · Spanish summary: [**README.es.md**](../README.es.md).
 - Upload a local file to the **`media`** bucket: `npm run media:upload` → [`scripts/upload-storage-media.mjs`](../scripts/upload-storage-media.mjs).
+- Web analytics (GA4, `NEXT_PUBLIC_GA_MEASUREMENT_ID`, Consent Mode): [**README.md** — Analytics](../README.md#analytics-google-analytics-4) · [**README.es.md**](../README.es.md) (section *Analítica (GA4)*).

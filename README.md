@@ -61,8 +61,24 @@ This split helps the site feel both like an archive and like a living magazine w
 - **Database**: Supabase (PostgreSQL) + Row Level Security
 - **Storage**: Supabase Storage (public bucket `media` for content images — see below)
 - **i18n**: Custom middleware with `/es` and `/en` prefixed routes + hreflang tags
+- **Analytics**: Google Analytics 4 via **`@next/third-parties/google`** (`GoogleAnalytics` component) + **Consent Mode v2** aligned with `CookieBanner` (see [Analytics (GA4)](#analytics-google-analytics-4))
 - **Audio**: Web Audio API with scratch simulation
 - **Fonts**: Unbounded, Courier Prime, Special Elite, Darker Grotesque
+
+---
+
+## Analytics (Google Analytics 4)
+
+Optional measurement ID (public env var, safe in the browser):
+
+- Set **`NEXT_PUBLIC_GA_MEASUREMENT_ID`** to your GA4 measurement ID (format `G-XXXXXXXXXX`) in `.env.local` and in **Vercel → Project → Environment Variables** for Production/Preview. If unset, no GA scripts load.
+
+Implementation:
+
+- **`src/components/GoogleAnalytics.tsx`** — loads **`GoogleAnalytics`** from **`@next/third-parties/google`** (official Next.js integration: gtag.js + automatic **page_view** tracking on App Router navigations). A small inline **`Script`** runs first to set **Consent Mode v2** defaults (`analytics_storage` and ad-related flags **denied** until the user accepts analytics cookies).
+- **`src/components/CookieBanner.tsx`** — persists choices and dispatches **`ob-cookie-consent`**; `GoogleAnalytics` listens and calls **`gtag('consent', 'update', …)`** when analytics is granted or revoked.
+
+CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-analytics.com` in `connect-src` / `script-src` as needed.
 
 ---
 
@@ -181,6 +197,8 @@ OptimalBreaks/
 │   │   ├── ArtistCard.tsx      # Home / grid artist card (with thumbnail)
 │   │   ├── EventFlyer.tsx      # Event flyer with tape decoration + thumbnail
 │   │   ├── AuthProvider.tsx    # Supabase auth context
+│   │   ├── GoogleAnalytics.tsx # GA4 via @next/third-parties + Consent Mode v2
+│   │   ├── CookieBanner.tsx    # Cookie UI + consent events for GA
 │   │   └── ShareButtons.tsx    # Social share on detail pages
 │   ├── hooks/
 │   │   └── useUserData.ts      # Favorites, sightings, saved mixes, etc.
@@ -290,6 +308,8 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 Never put elevated keys in `NEXT_PUBLIC_*` or client-side code.
+
+**Google Analytics 4 (optional)** — set **`NEXT_PUBLIC_GA_MEASUREMENT_ID=G-…`** in `.env.local` and Vercel so GA4 loads in production. Omit the variable to disable analytics entirely.
 
 **Postgres URI** (optional) — required only for `npm run db:migrate` / `db:seed` against SQL files, not for day-to-day artist JSON updates via API. See `.env.local.example`.
 
@@ -468,6 +488,7 @@ Files under `supabase/migrations/` (apply in lexical order):
 - [ ] Search functionality
 - [ ] Richer SoundCloud/YouTube/Mixcloud embeds in mixes section
 - [x] Dynamic sitemap (`src/app/sitemap.ts`, includes `/organizations/*`) + robots rules (`src/app/robots.ts`) for SEO basics
+- [x] Google Analytics 4 (`@next/third-parties/google` + Consent Mode v2 + `CookieBanner`)
 - [ ] OG images per section
 - [ ] RSS feed for blog
 - [ ] Newsletter subscription
