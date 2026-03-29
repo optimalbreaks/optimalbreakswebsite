@@ -19,40 +19,38 @@ declare global {
   }
 }
 
+// Helper para asegurar que gtag existe de forma asíncrona segura
+const ensureGtag = () => {
+  if (typeof window === 'undefined') return
+  window.dataLayer = window.dataLayer || []
+  if (typeof window.gtag !== 'function') {
+    window.gtag = function () {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer.push(arguments)
+    }
+  }
+}
+
 function AnalyticsTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (!GA_ID || typeof window === 'undefined') return
 
-    const sendPageView = () => {
-      if (typeof window.gtag !== 'function') return false
-      
-      let path = pathname
-      const qs = searchParams.toString()
-      if (qs) path += `?${qs}`
-      
-      window.gtag('event', 'page_view', {
-        page_path: path,
-        page_title: document.title,
-        page_location: window.location.href,
-      })
-      return true
-    }
+    ensureGtag()
 
-    if (sendPageView()) return
+    let path = pathname
+    const qs = searchParams.toString()
+    if (qs) path += `?${qs}`
 
-    // Si gtag no está listo aún, reintentar un poco
-    const id = window.setInterval(() => {
-      if (sendPageView()) window.clearInterval(id)
-    }, 50)
-    const maxWait = window.setTimeout(() => window.clearInterval(id), 5_000)
-    
-    return () => {
-      window.clearInterval(id)
-      window.clearTimeout(maxWait)
-    }
+    // Como ensureGtag() garantiza que window.gtag existe (y empuja a dataLayer),
+    // no necesitamos polling. GA lo procesará cuando su script cargue.
+    window.gtag('event', 'page_view', {
+      page_path: path,
+      page_title: document.title,
+      page_location: window.location.href,
+    })
   }, [pathname, searchParams])
 
   return null
@@ -62,31 +60,20 @@ export default function GoogleAnalytics() {
   useEffect(() => {
     if (!GA_ID) return
 
-    const ensureGtag = () => {
-      if (typeof window.gtag !== 'function') {
-        window.dataLayer = window.dataLayer || []
-        window.gtag = function () {
-          // eslint-disable-next-line prefer-rest-params
-          window.dataLayer.push(arguments)
-        }
-      }
-    }
-
     const updateConsent = (granted: boolean) => {
       ensureGtag()
+      const status = granted ? 'granted' : 'denied'
       window.gtag('consent', 'update', {
-        analytics_storage: granted ? 'granted' : 'denied',
-        ad_storage: granted ? 'granted' : 'denied',
-        ad_user_data: granted ? 'granted' : 'denied',
-        ad_personalization: granted ? 'granted' : 'denied',
+        analytics_storage: status,
+        ad_storage: status,
+        ad_user_data: status,
+        ad_personalization: status,
       })
     }
 
     // Configurar el estado de consentimiento inicial en base a cookies
     const saved = readConsent()
-    if (saved?.analytics) {
-      updateConsent(true)
-    }
+    if (saved?.analytics) updateConsent(true)
 
     // Escuchar cambios
     const onConsent = (e: Event) => {
@@ -102,29 +89,28 @@ export default function GoogleAnalytics() {
 
   return (
     <>
-      <Script id="ga-consent" strategy="afterInteractive">
+      <Script id="ga-init" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           
+          // Consent Mode por defecto (denied)
           gtag('consent', 'default', {
             'analytics_storage': 'denied',
             'ad_storage': 'denied',
             'ad_user_data': 'denied',
             'ad_personalization': 'denied',
           });
+
+          // Inicializar GA4 sin page_view automático
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}', { send_page_view: false });
         `}
       </Script>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
       />
-      <Script id="ga-init" strategy="afterInteractive">
-        {`
-          gtag('js', new Date());
-          gtag('config', '${GA_ID}', { send_page_view: false });
-        `}
-      </Script>
       <Suspense fallback={null}>
         <AnalyticsTracker />
       </Suspense>
