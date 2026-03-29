@@ -277,7 +277,16 @@ CONTEXTO WEB (resultados de busqueda):
 ${webContext}
 ---
 
-Completa o mejora los campos vacios/incompletos de este evento. Devuelve SOLO el JSON con todos los campos del esquema (ver sistema). Los campos que ya tienen valor correcto, repitelos tal cual.`
+Devuelve SOLO el JSON final con todos los campos del esquema (ver sistema).
+
+Prioridades para este enriquecimiento:
+- Respeta los valores existentes si ya son plausibles y el contexto no los contradice.
+- Prioriza los campos que mas valor aportan a la BD y a la pagina de detalle: fecha, venue, ciudad, pais, location, address, lineup, stages, schedule, tags, website, tickets_url, socials, doors_open, doors_close, age_restriction y capacity.
+- Si no hay dia exacto confirmado, deja date_start/date_end en null.
+- Si no hay evidencia suficientemente clara para un campo, devuelvelo vacio en lugar de inferirlo.
+- Las descripciones EN/ES deben contar la misma historia y no introducir hechos nuevos.
+
+Los campos que ya tienen valor correcto, repitelos tal cual.`
 
   console.log('[enrich] Consultando OpenAI...')
   const enriched = await openAiJson({ system: systemPrompt, user: userPrompt })
