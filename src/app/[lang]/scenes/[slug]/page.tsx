@@ -6,7 +6,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { Scene } from '@/types/database'
+import type { Artist, Label, Scene } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -44,7 +44,8 @@ export default async function SceneDetailPage({ params }: Props) {
       .from('artists')
       .select('name, slug')
       .in('name', scene.key_artists)
-    matchedArtists?.forEach((a) => artistSlugs.set(a.name, a.slug))
+    const artistRows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
+    for (const a of artistRows) artistSlugs.set(a.name, a.slug)
   }
 
   const labelSlugs = new Map<string, string>()
@@ -53,7 +54,8 @@ export default async function SceneDetailPage({ params }: Props) {
       .from('labels')
       .select('name, slug')
       .in('name', scene.key_labels)
-    matchedLabels?.forEach((l) => labelSlugs.set(l.name, l.slug))
+    const labelRows = (matchedLabels ?? []) as Pick<Label, 'name' | 'slug'>[]
+    for (const l of labelRows) labelSlugs.set(l.name, l.slug)
   }
 
   if (!scene) {

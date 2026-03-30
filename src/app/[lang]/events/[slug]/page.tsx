@@ -5,7 +5,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
+import type { Artist, BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -133,7 +133,8 @@ export default async function EventDetailPage({ params }: Props) {
       .from('artists')
       .select('name, slug')
       .in('name', Array.from(allArtistNames))
-    matchedArtists?.forEach((a) => artistSlugs.set(a.name, a.slug))
+    const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
+    for (const a of rows) artistSlugs.set(a.name, a.slug)
   }
 
   return (
