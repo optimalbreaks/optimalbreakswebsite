@@ -515,7 +515,7 @@ export default async function HomePage({
           ) : null}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
           {displayEvents.map((e) => (
             <EventFlyer
               key={e.key}

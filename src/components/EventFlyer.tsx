@@ -1,6 +1,5 @@
 // ============================================
-// OPTIMAL BREAKS — Event Flyer Card
-// Responsive: smaller padding + text on mobile
+// OPTIMAL BREAKS — Event Flyer Card (home = vista grande /events)
 // ============================================
 
 import Link from 'next/link'
@@ -16,15 +15,22 @@ interface EventFlyerProps {
   href?: string
 }
 
+/** Misma envoltura y miniatura que `LargeGrid` en `EventsExplorer` (vista grande /events). */
 export default function EventFlyer({ date, name, location, type, imageUrl, href }: EventFlyerProps) {
   const shell =
-    'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] min-w-0 sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] flex flex-col h-full overflow-hidden group'
+    'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group'
 
   const body = (
     <>
-      <CardThumbnail src={imageUrl} alt={name} aspectClass="aspect-poster w-full" fit="contain" />
+      <CardThumbnail
+        src={imageUrl}
+        alt={name}
+        aspectClass="aspect-poster w-full"
+        frameClass="border-b-[3px] border-[var(--ink)]"
+        fit="cover"
+      />
 
-      <div className="p-4 sm:p-7 relative flex flex-col flex-grow">
+      <div className="p-5 sm:p-7 relative">
         {/* Tape */}
         <div
           className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]"
@@ -35,7 +41,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href 
           {date}
         </div>
         <div
-          className="mt-2 leading-none break-words pr-16 sm:pr-0"
+          className="mt-2 leading-none"
           style={{
             fontFamily: "'Unbounded', sans-serif",
             fontWeight: 900,
@@ -46,7 +52,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href 
         >
           {name}
         </div>
-        <div className="mt-2 flex-grow pb-4" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
+        <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
           {location}
         </div>
 
@@ -71,7 +77,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href 
 
   if (href) {
     return (
-      <Link href={href} className={`${shell} no-underline text-[var(--ink)]`}>
+      <Link href={href} className={shell}>
         {body}
       </Link>
     )
