@@ -14,6 +14,7 @@
  *   node scripts/enriquecer-evento.mjs --delete-event-slug <slug>
  *   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -529,6 +530,106 @@ async function runPatchRaveartSummer2026(sb) {
   console.log('[patch-raveart-summer] despues:', after)
 }
 
+const RAVEART_RVT_WE_LOVE_RETRO_SLUG = 'raveart-rvt-we-love-retro-granada-2026'
+const RAVEART_RVT_WE_LOVE_RETRO_POSTER = join(
+  ROOT,
+  'public',
+  'images',
+  'events',
+  'raveart_we_lo_retro_2026.png',
+)
+
+const RAVEART_RVT_WE_LOVE_RETRO_ROW = {
+  name: 'RVT by Raveart: We Love Retro w/ Freestylers',
+  description_en:
+    'RVT Booking & Clubbing presents We Love Retro at Sala El Tren (Granada): breakbeat night with Freestylers plus national support. Friday 10 April 2026, doors 1:00–7:00. Entry includes lanyard and beer (per promoter offer). Tickets via MonsterTicket. Official info: rvtpro.com.',
+  description_es:
+    'RVT Booking & Clubbing presenta We Love Retro en Sala El Tren (Granada): noche de breakbeat con Freestylers y artistas nacionales. Viernes 10 de abril de 2026, 1:00h–7:00h. La entrada incluye lanyard y cerveza (según oferta del promotor). Entradas en MonsterTicket. Info: rvtpro.com.',
+  event_type: 'club_night',
+  date_start: '2026-04-10',
+  date_end: null,
+  location: 'Sala El Tren, Chana, Granada, Spain',
+  city: 'Granada',
+  country: 'Spain',
+  venue: 'Sala El Tren',
+  address: 'Ctra. de Málaga, 136, Chana, Granada',
+  website: 'https://www.rvtpro.com/',
+  tickets_url:
+    'https://www.monsterticket.com/evento/rvt-by-raveart-we-love-retro-w-freestylers--el-tren-granada',
+  age_restriction: '18+',
+  doors_open: '01:00',
+  doors_close: '07:00',
+  tags: ['breakbeat', 'raveart', 'granada', 'rvt'],
+  lineup: [
+    'Freestylers',
+    'BLNK',
+    'Jan B',
+    'Killer',
+    'Man',
+    'Saturn',
+    'Tilla Pink',
+    'Wally',
+  ],
+}
+
+async function uploadLocalPosterToMedia(sb, slug, absPath) {
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, '')
+  if (!baseUrl) throw new Error('Falta NEXT_PUBLIC_SUPABASE_URL')
+  if (!existsSync(absPath)) {
+    console.warn('[patch-rvt-retro] Sin cartel local, image_url no se actualiza:', absPath)
+    return null
+  }
+  const normalized = `events/${slug}/poster.png`
+  const buf = readFileSync(absPath)
+  const { error } = await sb.storage.from('media').upload(normalized, buf, {
+    contentType: 'image/png',
+    upsert: true,
+  })
+  if (error) throw error
+  return `${baseUrl}/storage/v1/object/public/media/${normalized}`
+}
+
+async function runPatchRaveartRvtWeLoveRetro2026(sb) {
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+  if (!org?.id) {
+    console.error('[patch-rvt-retro] Falta organizations.slug = raveart')
+    process.exit(1)
+  }
+
+  let imageUrl = null
+  try {
+    imageUrl = await uploadLocalPosterToMedia(sb, RAVEART_RVT_WE_LOVE_RETRO_SLUG, RAVEART_RVT_WE_LOVE_RETRO_POSTER)
+  } catch (e) {
+    console.error('[patch-rvt-retro] Error subiendo cartel:', e.message || e)
+    throw e
+  }
+
+  const row = {
+    slug: RAVEART_RVT_WE_LOVE_RETRO_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RAVEART_RVT_WE_LOVE_RETRO_ROW,
+    image_url: imageUrl,
+    is_featured: true,
+    promoter_organization_id: org.id,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', RAVEART_RVT_WE_LOVE_RETRO_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-rvt-retro] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -561,6 +662,11 @@ async function main() {
 
   if (argv.includes('--patch-raveart-summer-2026')) {
     await runPatchRaveartSummer2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-raveart-rvt-we-love-retro-2026')) {
+    await runPatchRaveartRvtWeLoveRetro2026(sb)
     return
   }
 
@@ -603,7 +709,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --prune-non-spain [--dry-run]
   node scripts/enriquecer-evento.mjs --delete-event-slug <slug>
   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
-  node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026`)
+  node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026`)
     process.exit(1)
   }
 
