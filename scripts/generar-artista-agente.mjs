@@ -8,7 +8,9 @@
  *
  * Uso:
  *   npm run db:artist:agent -- krafty-kuts "Krafty Kuts"
- *   npm run db:artist:agent -- slug "Nombre" [--notes archivo.txt] [--no-search]
+ *   npm run db:artist:agent -- slug "Nombre" [--notes archivo.txt] [--notes otro.md …] [--no-search]
+ *   npm run db:artist:agent -- slug "Nombre" --revise [--notes artists_docs/slug/notas.txt] [--json-only]
+ *   Con --revise conviene --no-search si solo confías en la documentación del artista (menos deriva respecto al texto actual).
  *   npm run db:artist:agent -- slug "Nombre" --json-only     # sin BD, solo data/artists/<slug>.json
  *   npm run db:artist:agent -- slug "Nombre" --save-json     # BD + copia JSON
  *   npm run db:artist:agent -- slug "Nombre" --stdout        # JSON por stdout, sin BD
@@ -24,7 +26,7 @@ import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
-import { upsertArtist } from './lib/artist-upsert.mjs'
+import { upsertArtist, supabaseApiCredentials } from './lib/artist-upsert.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -55,13 +57,23 @@ function loadEnvLocal() {
 const VALID_CATEGORIES = ['pioneer', 'uk_legend', 'us_artist', 'andalusian', 'current', 'crew']
 
 const SYSTEM_PROMPT_PATH = join(__dirname, 'prompts', 'artista-agente-system.txt')
+const REVISION_APPEND_PATH = join(__dirname, 'prompts', 'artista-agente-revision-system.txt')
 
-function loadSystemPrompt() {
+function loadSystemPromptBase() {
   if (existsSync(SYSTEM_PROMPT_PATH)) {
     return readFileSync(SYSTEM_PROMPT_PATH, 'utf8').trim()
   }
   console.error('Falta el prompt:', SYSTEM_PROMPT_PATH)
   process.exit(1)
+}
+
+/** @param {boolean} withRevisionAppend */
+function loadSystemPrompt(withRevisionAppend) {
+  const base = loadSystemPromptBase()
+  if (!withRevisionAppend) return base
+  if (!existsSync(REVISION_APPEND_PATH)) return base
+  const add = readFileSync(REVISION_APPEND_PATH, 'utf8').trim()
+  return add ? `${base}\n\n---\n\n${add}` : base
 }
 
 async function fetchSerpContext(query, apiKey) {
@@ -96,12 +108,51 @@ async function fetchSerpContext(query, apiKey) {
   }
 }
 
-function buildUserPrompt({ slug, artistName, extraNotes, research }) {
-  let s = `Genera el JSON del artista siguiendo el prompt de sistema V2 (redactor Optimal Breaks).
+/** Texto JSON de la ficha actual: repo primero, si no Supabase. */
+async function loadCurrentArtistJsonForRevise(slug) {
+  const p = join(ROOT, 'data', 'artists', `${slug}.json`)
+  if (existsSync(p)) return readFileSync(p, 'utf8')
+  const creds = supabaseApiCredentials()
+  if (!creds) return null
+  const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
+  const { data, error } = await sb
+    .from('artists')
+    .select(
+      'slug,name,name_display,real_name,country,category,styles,era,bio_en,bio_es,essential_tracks,recommended_mixes,related_artists,labels_founded,key_releases,website,socials,image_url,is_featured,sort_order',
+    )
+    .eq('slug', slug)
+    .maybeSingle()
+  if (error || !data) return null
+  return `${JSON.stringify(data, null, 2)}\n`
+}
+
+function buildUserPrompt({
+  slug,
+  artistName,
+  extraNotes,
+  research,
+  revise = false,
+  currentArtistJson = '',
+}) {
+  let s = revise
+    ? `Tarea: REVISION de ficha existente (mejorar y corregir, no reemplazar desde cero). Sigue el prompt de sistema V2 + bloque MODO REVISION.
 
 slug (kebab-case): ${slug}
 Nombre artístico principal: ${artistName}
 `
+    : `Genera el JSON del artista siguiendo el prompt de sistema V2 (redactor Optimal Breaks).
+
+slug (kebab-case): ${slug}
+Nombre artístico principal: ${artistName}
+`
+  if (revise && currentArtistJson) {
+    s += `
+FICHA ACTUAL (JSON completo del repo o BD). Parte de aqui; las bio_en y bio_es deben seguir siendo esencialmente ESTA historia, mejorada y ampliada segun notas/web, sin vaciar ni reescribir en frio:
+---
+${currentArtistJson}
+---
+`
+  }
   if (research) {
     s += `
 CONTEXTO DE BÚSQUEDA WEB (puede contener errores; contrasta y no inventes cifras exactas sin soporte):
@@ -114,7 +165,7 @@ ${research}
   }
   if (extraNotes) {
     s += `
-NOTAS DEL EDITOR (máxima prioridad si hay conflicto con web o modelo):
+NOTAS DEL EDITOR / DOCUMENTACION DEL ARTISTA (maxima prioridad si hay conflicto con ficha actual, web o modelo):
 ---
 ${extraNotes}
 ---
@@ -123,7 +174,8 @@ ${extraNotes}
   s += `
 CHECKLIST V2 (obligatorio antes de cerrar la respuesta):
 - Solo un objeto JSON parseable; sin markdown, sin texto fuera del JSON, sin campos extra.
-- Prioridad de fuentes: notas del editor > contexto web > conocimiento general.
+- Prioridad de fuentes: ${revise ? 'notas del artista / documentacion > ficha actual > ' : ''}notas del editor > contexto web > conocimiento general.
+${revise ? '- Modo revision: no sustituyas las biografias por un borrador nuevo; conserva y mejora el texto de la FICHA ACTUAL salvo correcciones documentadas.\n' : ''}
 - No inventes charts, fechas exactas, premios, sellos, colaboraciones ni URLs sin base razonable.
 - slug EXACTO (kebab-case, solo a-z, 0-9, guiones): "${slug}"
 - bio_es y bio_en: apunta normalmente a 10-16 parrafos cada una; solo alarga mas si hay base suficiente, y si la evidencia es limitada prioriza precision antes que longitud. Separa parrafos con \\n\\n dentro del string JSON.
@@ -253,6 +305,7 @@ function validateMinimal(obj) {
  * @param {object} opts
  * @param {boolean} [opts.jsonOnly] — solo escribir JSON, no tocar BD
  * @param {boolean} [opts.saveJson] — tras guardar en BD, también escribir data/artists/<slug>.json
+ * @param {boolean} [opts.revise] — inyecta ficha actual + prompt de revision (mejorar sin borrar)
  */
 export async function runArtistAgent({
   slug,
@@ -263,7 +316,19 @@ export async function runArtistAgent({
   jsonOnly = false,
   saveJson = false,
   quiet = false,
+  revise = false,
 }) {
+  let currentArtistJson = ''
+  if (revise) {
+    currentArtistJson = (await loadCurrentArtistJsonForRevise(slug)) || ''
+    if (!currentArtistJson) {
+      throw new Error(
+        'Modo --revise: no hay data/artists/<slug>.json ni fila en Supabase. Crea el JSON o sincroniza la BD.',
+      )
+    }
+    if (!quiet) console.log('[agente] Modo --revise: ficha actual cargada,', currentArtistJson.length, 'caracteres')
+  }
+
   let research = ''
   if (!noSearch) {
     const serpKey = process.env.SERPAPI_API_KEY?.trim()
@@ -280,10 +345,17 @@ export async function runArtistAgent({
     }
   }
 
-  const userPrompt = buildUserPrompt({ slug, artistName, extraNotes, research })
+  const userPrompt = buildUserPrompt({
+    slug,
+    artistName,
+    extraNotes,
+    research,
+    revise,
+    currentArtistJson,
+  })
   if (!quiet) console.log('[agente] Llamando OpenAI…')
   const parsed = await openAiJson({
-    system: loadSystemPrompt(),
+    system: loadSystemPrompt(revise),
     user: userPrompt,
   })
 
@@ -474,20 +546,23 @@ async function main() {
   let stdout = false
   let jsonOnly = false
   let saveJson = false
+  let revise = false
+  const notePaths = []
   const filtered = []
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--no-search') noSearch = true
     else if (argv[i] === '--stdout') stdout = true
     else if (argv[i] === '--json-only') jsonOnly = true
     else if (argv[i] === '--save-json') saveJson = true
+    else if (argv[i] === '--revise') revise = true
     else if (argv[i] === '--notes' && argv[i + 1]) {
-      filtered.push({ type: 'notes', path: argv[++i] })
+      notePaths.push(argv[++i])
     } else filtered.push(argv[i])
   }
   const pos = filtered.filter((x) => typeof x === 'string')
   if (pos.length < 2) {
     console.error(
-      `Uso: node scripts/generar-artista-agente.mjs <slug> "Nombre artista" [--notes ruta] [--no-search] [--stdout] [--json-only] [--save-json]`,
+      `Uso: node scripts/generar-artista-agente.mjs <slug> "Nombre artista" [--revise] [--notes ruta ...] [--no-search] [--stdout] [--json-only] [--save-json]`,
     )
     console.error(
       `   o: node scripts/generar-artista-agente.mjs --from-db [--starter-bio-only] [--limit N] [--delay-ms ms] [--no-search] [--skip=a,b] [--save-json]  # --starter-bio-only = solo bio_es «Incluido en el listado extendido…»`,
@@ -497,14 +572,17 @@ async function main() {
   const slug = pos[0]
   const artistName = pos[1]
   let extraNotes = ''
-  const noteArg = filtered.find((x) => x && typeof x === 'object' && x.type === 'notes')
-  if (noteArg) {
-    const np = resolve(ROOT, noteArg.path)
-    if (!existsSync(np)) {
-      console.error('No existe archivo de notas:', np)
-      process.exit(1)
+  if (notePaths.length) {
+    const parts = []
+    for (let n = 0; n < notePaths.length; n++) {
+      const np = resolve(ROOT, notePaths[n])
+      if (!existsSync(np)) {
+        console.error('No existe archivo de notas:', np)
+        process.exit(1)
+      }
+      parts.push(`--- Documento ${n + 1} (${notePaths[n]}) ---\n${readFileSync(np, 'utf8')}`)
     }
-    extraNotes = readFileSync(np, 'utf8')
+    extraNotes = parts.join('\n\n')
   }
 
   try {
@@ -517,6 +595,7 @@ async function main() {
       jsonOnly,
       saveJson,
       quiet: false,
+      revise,
     })
   } catch (e) {
     console.error('[agente]', e.message)

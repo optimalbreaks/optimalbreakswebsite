@@ -223,7 +223,21 @@ export async function upsertArtist(data) {
   if (pgOpts) {
     const { sql, vals } = buildUpsertQuery(data)
     const client = new pg.Client({ connectionString: pgOpts.connectionString, ssl: pgOpts.ssl })
-    await client.connect()
+    try {
+      await client.connect()
+    } catch (e) {
+      const msg = typeof e?.message === 'string' ? e.message : ''
+      const dnsFail =
+        e?.code === 'ENOTFOUND' || msg.includes('getaddrinfo') || msg.includes('EAI_AGAIN')
+      if (dnsFail) {
+        console.warn(
+          '[artist-upsert] Postgres (host db.*.supabase.co) no alcanzable desde esta red; reintentando vía API REST…',
+        )
+        const row = await upsertViaSupabaseApi(data)
+        if (row) return row
+      }
+      throw e
+    }
     try {
       const result = await client.query(sql, vals)
       return result.rows[0]

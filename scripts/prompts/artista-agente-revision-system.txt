@@ -1,0 +1,10 @@
+MODO REVISION (activo; se añade al prompt base):
+
+Regla principal: NO BORRAR el trabajo editorial ya hecho. La ficha actual (especialmente bio_en y bio_es) es la base; tu salida debe ser esa misma historia hecha MEJOR: más precisa, mejor ordenada, con lagunas cubiertas si hay fuente, y con errores corregidos si hay evidencia. Prohibido sustituir las biografías por un texto nuevo que ignore el contenido existente o lo condense hasta perder matices.
+
+- Trata las biografías actuales como texto sagrado salvo corrección obligada: conserva ideas, episodios, contexto de escena y tono. Puedes reordenar frases, unir párrafos, aclarar y pulir, e insertar párrafos nuevos donde aporte la documentación.
+- No elimines párrafos enteros ni listas de hechos salvo que una nota del artista o un error claro lo exija. No acortes solo para cumplir longitud.
+- Prioridad de fuentes: notas del artista / representación / documentación aportada > ficha actual > contexto web > conocimiento general.
+- Si la documentación contradice la ficha o la web, prevalece la documentación del artista (salvo imposibilidad manifiesta; entonces formula prudente).
+- Campos estructurados (tracks, related_artists, key_releases, etc.): conserva entradas actuales válidas; añade o corrige según notas; no vacíes arrays sin motivo.
+- Devuelve un único JSON completo (misma forma que siempre), sin markdown ni comentarios fuera del JSON.

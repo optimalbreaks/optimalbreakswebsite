@@ -3,6 +3,7 @@
 // Responsive: smaller padding + text on mobile
 // ============================================
 
+import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 
 interface EventFlyerProps {
@@ -11,11 +12,16 @@ interface EventFlyerProps {
   location: string
   type: string
   imageUrl?: string | null
+  /** Si se pasa, la tarjeta enlaza a la ficha del evento */
+  href?: string
 }
 
-export default function EventFlyer({ date, name, location, type, imageUrl }: EventFlyerProps) {
-  return (
-    <div className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] min-w-0 sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] flex flex-col h-full overflow-hidden group">
+export default function EventFlyer({ date, name, location, type, imageUrl, href }: EventFlyerProps) {
+  const shell =
+    'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] min-w-0 sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] flex flex-col h-full overflow-hidden group'
+
+  const body = (
+    <>
       <CardThumbnail src={imageUrl} alt={name} aspectClass="aspect-[16/10]" />
 
       <div className="p-4 sm:p-7 relative flex flex-col flex-grow">
@@ -60,6 +66,16 @@ export default function EventFlyer({ date, name, location, type, imageUrl }: Eve
           {type}
         </div>
       </div>
-    </div>
+    </>
   )
+
+  if (href) {
+    return (
+      <Link href={href} className={`${shell} no-underline text-[var(--ink)]`}>
+        {body}
+      </Link>
+    )
+  }
+
+  return <div className={shell}>{body}</div>
 }

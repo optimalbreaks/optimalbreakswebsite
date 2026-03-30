@@ -78,6 +78,87 @@ const FALLBACK_POSTS: FallbackPost[] = [
   },
 ]
 
+type BlogListRow = Pick<
+  BlogPost,
+  | 'slug'
+  | 'title_en'
+  | 'title_es'
+  | 'excerpt_en'
+  | 'excerpt_es'
+  | 'category'
+  | 'published_at'
+  | 'tags'
+  | 'author'
+  | 'image_url'
+  | 'is_featured'
+>
+
+function formatBlogListDate(publishedAt: string | null | undefined, lang: Locale): string {
+  if (!publishedAt) return ''
+  try {
+    const d = new Date(publishedAt)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
+function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
+  const title = lang === 'es' ? p.title_es : p.title_en
+  const dateStr = formatBlogListDate(p.published_at, lang)
+  return (
+    <Link
+      href={`/${lang}/blog/${p.slug}`}
+      className="group flex flex-col sm:flex-row border-b-[3px] border-[var(--ink)] last:border-b-0 transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden"
+    >
+      <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">
+        <CardThumbnail
+          src={p.image_url}
+          alt={title}
+          aspectClass="aspect-[16/9] sm:aspect-[4/3]"
+          frameClass="border-0"
+        />
+      </div>
+      <div className="flex flex-col justify-center p-6 sm:p-8 sm:pl-10 flex-grow min-w-0 transition-[padding] duration-150 sm:group-hover:pl-12">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <span className="cutout red" style={{ margin: 0 }}>
+            {p.category}
+          </span>
+          {dateStr ? (
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
+              {dateStr}
+            </span>
+          ) : null}
+        </div>
+        <div
+          className="mt-3"
+          style={{
+            fontFamily: "'Unbounded', sans-serif",
+            fontWeight: 900,
+            fontSize: 'clamp(16px, 3vw, 22px)',
+            textTransform: 'uppercase',
+            letterSpacing: '-0.5px',
+            lineHeight: 1.1,
+          }}
+        >
+          {title}
+        </div>
+        <p
+          className="mt-2"
+          style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)', lineHeight: 1.5 }}
+        >
+          {lang === 'es' ? p.excerpt_es : p.excerpt_en}
+        </p>
+      </div>
+    </Link>
+  )
+}
+
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/blog', 'blog')
@@ -89,14 +170,15 @@ export default async function BlogPage({ params }: { params: { lang: Locale } })
   const supabase = createServerSupabase()
   const { data: posts } = await supabase
     .from('blog_posts')
-    .select('slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url')
+    .select(
+      'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured',
+    )
     .eq('is_published', true)
     .order('published_at', { ascending: false })
-  type BlogListRow = Pick<
-    BlogPost,
-    'slug' | 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'category' | 'published_at' | 'tags' | 'author' | 'image_url'
-  >
+
   const list = (posts || []) as BlogListRow[]
+  const featured = list.filter((p) => p.is_featured)
+  const rest = list.filter((p) => !p.is_featured)
 
   return (
     <div className="lined min-h-screen">
@@ -107,40 +189,29 @@ export default async function BlogPage({ params }: { params: { lang: Locale } })
       </section>
       <section className="px-4 sm:px-6 py-10 sm:py-12">
         {list.length > 0 ? (
-          <div className="space-y-0 border-4 border-[var(--ink)]">
-            {list.map((p) => {
-              const title = lang === 'es' ? p.title_es : p.title_en
-              return (
-              <Link
-                key={p.slug}
-                href={`/${lang}/blog/${p.slug}`}
-                className="group flex flex-col sm:flex-row border-b-[3px] border-[var(--ink)] last:border-b-0 transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden"
-              >
-                <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">
-                  <CardThumbnail
-                    src={p.image_url}
-                    alt={title}
-                    aspectClass="aspect-[16/9] sm:aspect-[4/3]"
-                    frameClass="border-0"
-                  />
+          <div>
+            {featured.length > 0 ? (
+              <div className="mb-10 sm:mb-12">
+                <h2 className="sec-tag mb-4 sm:mb-5">{dict.blog.featured_heading}</h2>
+                <div className="space-y-0 border-4 border-[var(--ink)]">
+                  {featured.map((p) => (
+                    <BlogIndexRow key={p.slug} p={p} lang={lang} />
+                  ))}
                 </div>
-                <div className="flex flex-col justify-center p-6 sm:p-8 sm:pl-10 flex-grow min-w-0 transition-[padding] duration-150 sm:group-hover:pl-12">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className="cutout red" style={{ margin: 0 }}>{p.category}</span>
-                    <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
-                      {new Date(p.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                  <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 22px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-                    {title}
-                  </div>
-                  <p className="mt-2" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)', lineHeight: 1.5 }}>
-                    {lang === 'es' ? p.excerpt_es : p.excerpt_en}
-                  </p>
+              </div>
+            ) : null}
+            {rest.length > 0 ? (
+              <div>
+                {featured.length > 0 ? (
+                  <h2 className="sec-tag mb-4 sm:mb-5">{dict.blog.more_articles}</h2>
+                ) : null}
+                <div className="space-y-0 border-4 border-[var(--ink)]">
+                  {rest.map((p) => (
+                    <BlogIndexRow key={p.slug} p={p} lang={lang} />
+                  ))}
                 </div>
-              </Link>
-              )
-            })}
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-0 border-4 border-[var(--ink)]">

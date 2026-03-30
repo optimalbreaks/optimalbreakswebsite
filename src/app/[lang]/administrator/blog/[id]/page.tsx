@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminUpdate } from '@/lib/admin-api'
+import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ArrayEditor from '@/components/admin/ArrayEditor'
@@ -14,7 +14,8 @@ const TABLE = 'blog_posts'
 const CATEGORIES = ['article', 'ranking', 'retrospective', 'interview', 'review', 'opinion'] as const
 
 export default function BlogEditPage() {
-  const { lang, id } = useParams<{ lang: string; id: string }>()
+  const { lang, id: idParam } = useParams()
+  const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -36,12 +37,12 @@ export default function BlogEditPage() {
   })
 
   useEffect(() => {
-    fetch(`/api/admin/${TABLE}?limit=999`)
-      .then((r) => r.json())
-      .then((res) => {
-        const found = res.data?.find((a: any) => a.id === id)
+    if (!id) return
+    adminGetRowById(TABLE, id)
+      .then((found: any) => {
         if (found) setForm(found)
       })
+      .catch(() => {})
   }, [id])
 
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>

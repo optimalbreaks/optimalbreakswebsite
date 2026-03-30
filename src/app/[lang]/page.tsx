@@ -6,8 +6,11 @@
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import { HOME_OG_IMAGE_ES, staticPageMetadata } from '@/lib/seo'
+import { createServerSupabase } from '@/lib/supabase-server'
+import type { Artist, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import CardThumbnail from '@/components/CardThumbnail'
 import DjDeck from '@/components/DjDeck'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
@@ -49,7 +52,8 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   return staticPageMetadata(lang, '', 'home')
 }
 
-const FEATURED_EVENTS: {
+/** Solo si no hay filas en `events` (BD vacía o entorno sin datos). */
+const FALLBACK_HOME_EVENTS: {
   date_en: string
   date_es: string
   name: string
@@ -63,6 +67,75 @@ const FEATURED_EVENTS: {
   { date_en: '2 Mar 2002', date_es: '2 Mar 2002', name: 'MARTIN CARPENA', location: 'Malaga — Andalusia', type: 'TURNING' },
 ]
 
+type HomeEventRow = Pick<
+  BreakEvent,
+  'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url'
+>
+
+function sortEventsForHome<T extends { event_type?: string; date_start?: string | null }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
+    if (a.event_type !== 'upcoming' && b.event_type === 'upcoming') return 1
+    const aTime = a.date_start ? Date.parse(a.date_start) : Number.NEGATIVE_INFINITY
+    const bTime = b.date_start ? Date.parse(b.date_start) : Number.NEGATIVE_INFINITY
+    return bTime - aTime
+  })
+}
+
+function formatHomeEventDate(dateStart: string | null, dateEnd: string | null, lang: Locale): string {
+  const tba = lang === 'es' ? 'Por confirmar' : 'TBA'
+  if (!dateStart) return tba
+  try {
+    const d = new Date(`${dateStart}T12:00:00`)
+    const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
+    const locale = lang === 'es' ? 'es-ES' : 'en-GB'
+    const start = d.toLocaleDateString(locale, opts)
+    if (dateEnd && dateEnd !== dateStart) {
+      const d2 = new Date(`${dateEnd}T12:00:00`)
+      const end = d2.toLocaleDateString(locale, opts)
+      return `${start} — ${end}`
+    }
+    return start
+  } catch {
+    return dateStart
+  }
+}
+
+function eventTypeLabelHome(type: string, lang: Locale): string {
+  const map: Record<string, { es: string; en: string }> = {
+    festival: { es: 'Festival', en: 'Festival' },
+    club_night: { es: 'Club night', en: 'Club night' },
+    past_iconic: { es: 'Histórico', en: 'Past iconic' },
+    upcoming: { es: 'Próximo', en: 'Upcoming' },
+  }
+  return lang === 'es' ? map[type]?.es ?? type.replace(/_/g, ' ') : map[type]?.en ?? type.replace(/_/g, ' ')
+}
+
+function eventLocationLine(e: Pick<BreakEvent, 'venue' | 'city' | 'country'>): string {
+  const place = [e.city, e.country].filter(Boolean).join(', ')
+  const parts = [e.venue, place].filter(Boolean)
+  return parts.length ? parts.join(' — ') : '—'
+}
+
+type HomeBlogRow = Pick<
+  BlogPost,
+  'slug' | 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'category' | 'published_at' | 'image_url'
+>
+
+function formatBlogPublishedAt(publishedAt: string, lang: Locale): string {
+  try {
+    const d = new Date(publishedAt)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -73,6 +146,83 @@ export default async function HomePage({
   const h = dict.home
   const explore =
     'section_explore' in h ? (h as { section_explore: HomeExplore }).section_explore : null
+
+  const supabase = createServerSupabase()
+  const featuredSlugs = FEATURED_ARTISTS.map((a) => a.slug)
+  const { data: artistRows } = await supabase
+    .from('artists')
+    .select('slug, name_display, image_url, styles')
+    .in('slug', featuredSlugs)
+
+  const artistBySlug = new Map(
+    ((artistRows || []) as Pick<Artist, 'slug' | 'name_display' | 'image_url' | 'styles'>[]).map((r) => [
+      r.slug,
+      r,
+    ]),
+  )
+
+  const resolvedArtists = FEATURED_ARTISTS.map((a) => {
+    const row = artistBySlug.get(a.slug)
+    const styles = row?.styles?.filter(Boolean) ?? []
+    return {
+      ...a,
+      name: row?.name_display?.trim() || a.name,
+      image_url: row?.image_url ?? a.image_url ?? null,
+      genres: styles.length > 0 ? styles.slice(0, 5) : a.genres,
+    }
+  })
+
+  const { data: featuredEventsRaw } = await supabase
+    .from('events')
+    .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+    .eq('is_featured', true)
+
+  let homeEvents = (featuredEventsRaw || []) as HomeEventRow[]
+  if (homeEvents.length === 0) {
+    const { data: anyEvents } = await supabase
+      .from('events')
+      .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+      .limit(48)
+    homeEvents = sortEventsForHome((anyEvents || []) as HomeEventRow[]).slice(0, 4)
+  } else {
+    homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
+  }
+
+  const displayEvents =
+    homeEvents.length > 0
+      ? homeEvents.map((e) => ({
+          key: e.slug,
+          date: formatHomeEventDate(e.date_start, e.date_end, lang),
+          name: e.name,
+          location: eventLocationLine(e),
+          type: eventTypeLabelHome(e.event_type, lang),
+          imageUrl: e.image_url,
+          href: `/${lang}/events/${e.slug}`,
+        }))
+      : FALLBACK_HOME_EVENTS.map((e, i) => ({
+          key: `fallback-${i}`,
+          date: lang === 'es' ? e.date_es : e.date_en,
+          name: e.name,
+          location: e.location,
+          type: e.type,
+          imageUrl: e.image_url ?? null,
+          href: undefined as string | undefined,
+        }))
+
+  const { data: featuredBlogRaw } = await supabase
+    .from('blog_posts')
+    .select('slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, image_url')
+    .eq('is_published', true)
+    .eq('is_featured', true)
+    .order('published_at', { ascending: false })
+    .limit(3)
+
+  const featuredBlogPosts = (featuredBlogRaw || []) as HomeBlogRow[]
+
+  const sectionBlog =
+    'section_blog' in h
+      ? (h as { section_blog: { tag: string; title_1: string; title_2: string; see_all: string } }).section_blog
+      : null
 
   return (
     <>
@@ -322,7 +472,7 @@ export default async function HomePage({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 mt-8 sm:mt-10 border-4 border-[var(--ink)]">
-          {FEATURED_ARTISTS.map((a, i) => (
+          {resolvedArtists.map((a, i) => (
             <ArtistCard
               key={a.slug}
               num={i + 1}
@@ -366,18 +516,103 @@ export default async function HomePage({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
-          {FEATURED_EVENTS.map((e, i) => (
+          {displayEvents.map((e) => (
             <EventFlyer
-              key={i}
-              date={lang === 'es' ? e.date_es : e.date_en}
+              key={e.key}
+              date={e.date}
               name={e.name}
               location={e.location}
               type={e.type}
-              imageUrl={e.image_url}
+              imageUrl={e.imageUrl}
+              href={e.href}
             />
           ))}
         </div>
       </section>
+
+      {sectionBlog && featuredBlogPosts.length > 0 ? (
+        <section className="lined px-3 sm:px-6 py-12 sm:py-20 relative z-[1] border-t-[5px] border-[var(--ink)]">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-2">
+            <div>
+              <div className="sec-tag">{sectionBlog.tag}</div>
+              <h2 className="sec-title mt-0">
+                {sectionBlog.title_1}
+                <br />
+                <span className="hl">{sectionBlog.title_2}</span>
+              </h2>
+            </div>
+            <Link
+              href={`/${lang}/blog`}
+              className="shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontWeight: 700,
+                fontSize: '11px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                color: 'var(--ink)',
+              }}
+            >
+              {sectionBlog.see_all}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
+            {featuredBlogPosts.map((p) => {
+              const title = lang === 'es' ? p.title_es : p.title_en
+              const excerpt = lang === 'es' ? p.excerpt_es : p.excerpt_en
+              const dateStr = formatBlogPublishedAt(p.published_at, lang)
+              return (
+                <Link
+                  key={p.slug}
+                  href={`/${lang}/blog/${p.slug}`}
+                  className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
+                >
+                  <CardThumbnail
+                    src={p.image_url}
+                    alt={title}
+                    aspectClass="aspect-[16/9] w-full"
+                    frameClass="border-b-[3px] border-[var(--ink)]"
+                  />
+                  <div className="flex flex-col flex-grow p-4 sm:p-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="cutout red" style={{ margin: 0 }}>
+                        {p.category}
+                      </span>
+                      {dateStr ? (
+                        <span
+                          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}
+                        >
+                          {dateStr}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div
+                      className="mt-3 line-clamp-3"
+                      style={{
+                        fontFamily: "'Unbounded', sans-serif",
+                        fontWeight: 900,
+                        fontSize: 'clamp(15px, 2.5vw, 18px)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '-0.5px',
+                        lineHeight: 1.15,
+                      }}
+                    >
+                      {title}
+                    </div>
+                    <p
+                      className="mt-2 line-clamp-3 flex-grow"
+                      style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px', color: 'var(--dim)', lineHeight: 1.5 }}
+                    >
+                      {excerpt}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
 
       {/* ===== CTA ===== */}
       <div className="text-center px-3 sm:px-6 py-12 sm:py-[100px] bg-[var(--red)] text-white border-t-8 border-b-8 border-[var(--ink)]">

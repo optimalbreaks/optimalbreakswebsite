@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminUpdate } from '@/lib/admin-api'
+import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ArrayEditor from '@/components/admin/ArrayEditor'
@@ -10,7 +10,8 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import SlugField from '@/components/admin/SlugField'
 
 export default function LabelsEditPage() {
-  const { lang, id } = useParams()
+  const { lang, id: idParam } = useParams()
+  const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -29,12 +30,12 @@ export default function LabelsEditPage() {
   })
 
   useEffect(() => {
-    fetch(`/api/admin/labels?limit=999`)
-      .then((r) => r.json())
-      .then((res) => {
-        const found = res.data?.find((a: any) => a.id === id)
+    if (!id) return
+    adminGetRowById('labels', id)
+      .then((found: any) => {
         if (found) setForm(found)
       })
+      .catch(() => {})
   }, [id])
 
   const set = (key: string, val: any) => setForm((p) => ({ ...p, [key]: val }))

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminUpdate } from '@/lib/admin-api'
+import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import SlugField from '@/components/admin/SlugField'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
@@ -22,8 +22,11 @@ const inputClass =
   'w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]'
 const labelClass = 'block text-sm font-medium text-gray-300 mb-1'
 
+const TABLE = 'history_entries'
+
 export default function HistoryEditPage() {
-  const { lang, id } = useParams<{ lang: string; id: string }>()
+  const { lang, id: idParam } = useParams()
+  const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -41,12 +44,12 @@ export default function HistoryEditPage() {
   })
 
   useEffect(() => {
-    fetch(`/api/admin/history?limit=999`)
-      .then((r) => r.json())
-      .then((res) => {
-        const found = res.data?.find((a: any) => a.id === id)
+    if (!id) return
+    adminGetRowById(TABLE, id)
+      .then((found: any) => {
         if (found) setForm(found)
       })
+      .catch(() => {})
   }, [id])
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -56,7 +59,7 @@ export default function HistoryEditPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      await adminUpdate('history_entries', { id, ...form })
+      await adminUpdate(TABLE, { id, ...form })
       router.push(`/${lang}/administrator/history`)
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al guardar')

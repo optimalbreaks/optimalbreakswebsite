@@ -133,6 +133,12 @@
         }
       ]
     },
+    "section_blog": {
+      "tag": "06 — BLOG",
+      "title_1": "FEATURED",
+      "title_2": "READS",
+      "see_all": "FULL BLOG"
+    },
     "timeline_footer": "Full history: chapters, nuance and sources",
     "cta": {
       "title_1": "BREAK",
@@ -345,7 +351,9 @@
   },
   "blog": {
     "title": "Blog",
-    "subtitle": "The project’s editorial layer: essays, comparisons, scene memory and retrospectives"
+    "subtitle": "The project’s editorial layer: essays, comparisons, scene memory and retrospectives",
+    "featured_heading": "Featured",
+    "more_articles": "More articles"
   },
   "mixes": {
     "title": "Mixes & Sets",

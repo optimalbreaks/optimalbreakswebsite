@@ -72,6 +72,12 @@
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
       ]
     },
+    "section_blog": {
+      "tag": "06 — BLOG",
+      "title_1": "LECTURAS",
+      "title_2": "DESTACADAS",
+      "see_all": "VER TODO EL BLOG"
+    },
     "timeline_footer": "Historia ampliada: capítulos, fuentes y matices",
     "cta": {
       "title_1": "ROMPE",
@@ -270,7 +276,9 @@
   },
   "blog": {
     "title": "Blog",
-    "subtitle": "Capa editorial del proyecto: articulos, comparativas, memoria de escena y retrospectivas"
+    "subtitle": "Capa editorial del proyecto: articulos, comparativas, memoria de escena y retrospectivas",
+    "featured_heading": "Destacados",
+    "more_articles": "Más artículos"
   },
   "mixes": {
     "title": "Mixes y Sets",

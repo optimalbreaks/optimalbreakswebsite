@@ -53,7 +53,8 @@ const ACTIONS = [
     run: 'node scripts/guia-base-datos.mjs run agent -- <slug> "Nombre" [flags]',
     npm: 'npm run db:artist:agent -- …',
     creds: 'OPENAI_API_KEY; BD como artist-json; opcional SERPAPI_API_KEY',
-    description: 'Genera ficha con OpenAI (+ Serp opcional) y UPSERT por defecto.',
+    description:
+      'Genera ficha con OpenAI (+ Serp opcional) y UPSERT por defecto. --revise: refina ficha existente (JSON local o BD) sin vaciar biografías; varios --notes para docs del artista.',
   },
   {
     id: 'photo',
@@ -249,8 +250,9 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   API admin. Ahí está el INSERT/UPDATE real de la tabla artists.
 
 • generar-artista-agente.mjs — «Redactor IA de fichas». OpenAI (+ Serp opcional)
-  genera la ficha. Por defecto: UPSERT en BD. Ojo: con --json-only o --stdout
-  NO escribe en Supabase (solo fichero o consola).
+  genera la ficha. --revise + ficha en data/artists o BD: refina biografías y campos
+  sin vaciar el texto existente; varios --notes. Por defecto: UPSERT en BD. Ojo:
+  con --json-only o --stdout NO escribe en Supabase (solo fichero o consola).
 
 • elegir-foto-artista.mjs — «Buscar foto, subirla a Storage y enlazar». Elige URL
   con SerpAPI+IA, descarga la imagen, la sube a bucket media bajo artists/<slug>/,

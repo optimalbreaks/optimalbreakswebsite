@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminUpdate } from '@/lib/admin-api'
+import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import SlugField from '@/components/admin/SlugField'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
@@ -28,7 +28,8 @@ const inputClass =
 const labelClass = 'block text-sm font-medium text-gray-300 mb-1'
 
 export default function MixEditPage() {
-  const { lang, id } = useParams<{ lang: string; id: string }>()
+  const { lang, id: idParam } = useParams()
+  const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -49,12 +50,12 @@ export default function MixEditPage() {
   })
 
   useEffect(() => {
-    fetch(`/api/admin/mixes?limit=999`)
-      .then((r) => r.json())
-      .then((res) => {
-        const found = res.data?.find((a: any) => a.id === id)
+    if (!id) return
+    adminGetRowById('mixes', id)
+      .then((found: any) => {
         if (found) setForm(found)
       })
+      .catch(() => {})
   }, [id])
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>

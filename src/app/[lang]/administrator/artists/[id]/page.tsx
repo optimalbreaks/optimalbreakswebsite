@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminUpdate } from '@/lib/admin-api'
+import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import SlugField from '@/components/admin/SlugField'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
@@ -48,7 +48,8 @@ interface Artist {
 }
 
 export default function ArtistEditPage() {
-  const { lang, id } = useParams()
+  const { lang, id: idParam } = useParams()
+  const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
@@ -77,36 +78,38 @@ export default function ArtistEditPage() {
   })
 
   useEffect(() => {
-    fetch(`/api/admin/artists?limit=999`)
-      .then((r) => r.json())
-      .then((res) => {
-        const found = res.data?.find((a: Artist) => a.id === id)
-        if (found) {
-          setForm({
-            name: found.name ?? '',
-            name_display: found.name_display ?? '',
-            slug: found.slug ?? '',
-            real_name: found.real_name ?? '',
-            country: found.country ?? '',
-            era: found.era ?? '',
-            website: found.website ?? '',
-            category: found.category ?? 'current',
-            bio_en: found.bio_en ?? '',
-            bio_es: found.bio_es ?? '',
-            styles: found.styles ?? [],
-            essential_tracks: found.essential_tracks ?? [],
-            recommended_mixes: found.recommended_mixes ?? [],
-            related_artists: found.related_artists ?? [],
-            labels_founded: found.labels_founded ?? [],
-            key_releases: found.key_releases ?? [],
-            socials: found.socials ?? {},
-            image_url: found.image_url ?? null,
-            is_featured: found.is_featured ?? false,
-            sort_order: found.sort_order ?? 0,
-          })
-        }
-        setReady(true)
+    if (!id) {
+      setReady(true)
+      return
+    }
+    adminGetRowById<Artist>('artists', id)
+      .then((found) => {
+        if (!found) return
+        setForm({
+          name: found.name ?? '',
+          name_display: found.name_display ?? '',
+          slug: found.slug ?? '',
+          real_name: found.real_name ?? '',
+          country: found.country ?? '',
+          era: found.era ?? '',
+          website: found.website ?? '',
+          category: found.category ?? 'current',
+          bio_en: found.bio_en ?? '',
+          bio_es: found.bio_es ?? '',
+          styles: found.styles ?? [],
+          essential_tracks: found.essential_tracks ?? [],
+          recommended_mixes: found.recommended_mixes ?? [],
+          related_artists: found.related_artists ?? [],
+          labels_founded: found.labels_founded ?? [],
+          key_releases: found.key_releases ?? [],
+          socials: found.socials ?? {},
+          image_url: found.image_url ?? null,
+          is_featured: found.is_featured ?? false,
+          sort_order: found.sort_order ?? 0,
+        })
       })
+      .catch(() => {})
+      .finally(() => setReady(true))
   }, [id])
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
