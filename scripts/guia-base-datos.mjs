@@ -125,6 +125,14 @@ const ACTIONS = [
       'UPSERT raveart-rvt-we-love-retro-granada-2026: We Love Retro + Freestylers, Sala El Tren 10 abr 2026, cartel local → Storage, entradas MonsterTicket.',
   },
   {
+    id: 'events-patch-raveart-rvt-booking-clubbing-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-rvt-booking-clubbing-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-rvt-booking-clubbing-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT raveart-rvt-booking-clubbing-elysium-2026: RVT + Freestylers, Elysium Sevilla 11 abr 2026, cartel local → Storage, rvtpro.com/entradas.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -210,6 +218,7 @@ Punto de entrada unificado:
   events-patch-raveart-winter-2026     fecha 14 mar 2026 en raveart-winter-festival-2026
   events-patch-raveart-summer-2026     4 jul 2026 Sevilla / Chaparrejo en raveart-summer-2026
   events-patch-raveart-rvt-we-love-retro-2026  RVT We Love Retro + Freestylers, Granada 10 abr 2026
+  events-patch-raveart-rvt-booking-clubbing-2026  RVT Booking & Clubbing, Elysium Sevilla 11 abr 2026
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -418,6 +427,9 @@ function main() {
       break
     case 'events-patch-raveart-rvt-we-love-retro-2026':
       runNode('enriquecer-evento.mjs', ['--patch-raveart-rvt-we-love-retro-2026', ...rest])
+      break
+    case 'events-patch-raveart-rvt-booking-clubbing-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-raveart-rvt-booking-clubbing-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

@@ -15,6 +15,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -576,7 +577,7 @@ async function uploadLocalPosterToMedia(sb, slug, absPath) {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, '')
   if (!baseUrl) throw new Error('Falta NEXT_PUBLIC_SUPABASE_URL')
   if (!existsSync(absPath)) {
-    console.warn('[patch-rvt-retro] Sin cartel local, image_url no se actualiza:', absPath)
+    console.warn('[upload-poster] Sin cartel local, image_url no se actualiza:', absPath)
     return null
   }
   const normalized = `events/${slug}/poster.png`
@@ -630,6 +631,100 @@ async function runPatchRaveartRvtWeLoveRetro2026(sb) {
   console.log('[patch-rvt-retro] OK:', after)
 }
 
+const RAVEART_RVT_BOOKING_CLUBBING_SLUG = 'raveart-rvt-booking-clubbing-elysium-2026'
+const RAVEART_RVT_BOOKING_CLUBBING_POSTER = join(
+  ROOT,
+  'public',
+  'images',
+  'events',
+  'raveart_booking_clubbing_2026.png',
+)
+
+const RAVEART_RVT_BOOKING_CLUBBING_ROW = {
+  name: 'RVT: Raveart Booking & Clubbing w/ Freestylers',
+  description_en:
+    'Raveart Booking & Clubbing brings RVT to Elysium Sevilla: Freestylers headline a long-format night with a strong national lineup. Saturday 11 April 2026, 19:00–07:00 (12+ hours). Ticket types on rvtpro.com include early passes and VIP options per promoter. Tickets and info: rvtpro.com/entradas · clubbing@rvtpro.com.',
+  description_es:
+    'Raveart Booking & Clubbing presenta RVT en Elysium Sevilla: Freestylers encabezan una noche larga con cartel nacional. Sabado 11 de abril de 2026, 19:00h–7:00h (mas de 12 horas). Tipos de entrada en rvtpro.com (early pass, general con lanyard, VIP segun promotor). Entradas: rvtpro.com/entradas · clubbing@rvtpro.com.',
+  event_type: 'club_night',
+  date_start: '2026-04-11',
+  date_end: null,
+  location: 'Elysium Sevilla, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Elysium Sevilla',
+  address: 'C/ La Red Seis, 39, Sevilla',
+  website: 'https://www.rvtpro.com/',
+  tickets_url: 'https://www.rvtpro.com/entradas',
+  age_restriction: '18+',
+  doors_open: '19:00',
+  doors_close: '07:00',
+  tags: ['breakbeat', 'raveart', 'sevilla', 'rvt', 'elysium'],
+  lineup: [
+    'Freestylers',
+    'Aggresivnes',
+    'Aldo Ferrari',
+    'Destroyers',
+    'Elle Skull',
+    'G-One',
+    'Hankook',
+    'Korain',
+    'Malanda',
+    'Secret Shadow',
+    'She Beat',
+    'SL-Small',
+  ],
+  socials: {
+    email: 'mailto:clubbing@rvtpro.com',
+    phone: 'tel:+34657733208',
+  },
+}
+
+async function runPatchRaveartRvtBookingClubbing2026(sb) {
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+  if (!org?.id) {
+    console.error('[patch-rvt-booking] Falta organizations.slug = raveart')
+    process.exit(1)
+  }
+
+  let imageUrl = null
+  try {
+    imageUrl = await uploadLocalPosterToMedia(
+      sb,
+      RAVEART_RVT_BOOKING_CLUBBING_SLUG,
+      RAVEART_RVT_BOOKING_CLUBBING_POSTER,
+    )
+  } catch (e) {
+    console.error('[patch-rvt-booking] Error subiendo cartel:', e.message || e)
+    throw e
+  }
+
+  const row = {
+    slug: RAVEART_RVT_BOOKING_CLUBBING_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RAVEART_RVT_BOOKING_CLUBBING_ROW,
+    image_url: imageUrl,
+    is_featured: true,
+    promoter_organization_id: org.id,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', RAVEART_RVT_BOOKING_CLUBBING_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-rvt-booking] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -667,6 +762,11 @@ async function main() {
 
   if (argv.includes('--patch-raveart-rvt-we-love-retro-2026')) {
     await runPatchRaveartRvtWeLoveRetro2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-raveart-rvt-booking-clubbing-2026')) {
+    await runPatchRaveartRvtBookingClubbing2026(sb)
     return
   }
 
@@ -710,7 +810,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --delete-event-slug <slug>
   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
-  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026`)
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026`)
     process.exit(1)
   }
 
