@@ -60,7 +60,7 @@ export default function ScenesListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-100 mb-6">Scenes</h1>
+      <h1 className="admin-page-title">Escenas</h1>
       <AdminTable
         columns={columns}
         data={data}

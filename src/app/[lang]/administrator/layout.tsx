@@ -47,13 +47,13 @@ export default async function AdminLayout({
   if (profile?.role !== 'admin') redirect(`/${lang}`)
 
   return (
-    <div className="flex min-h-screen bg-[#0f0f1a] text-gray-200">
-      <AdminSidebar lang={lang} currentPath="" />
-      <div className="flex-1 overflow-auto">
-        <header className="h-14 border-b border-[#2a2a4a] flex items-center px-6 bg-[#12121f]">
-          <span className="text-sm text-gray-400">Optimal Breaks — Panel de Administración</span>
+    <div className="admin-shell lined">
+      <AdminSidebar lang={lang} />
+      <div className="admin-main">
+        <header className="admin-topbar">
+          <span>Optimal Breaks // Panel de administración</span>
         </header>
-        <div className="p-6">{children}</div>
+        <div className="admin-content">{children}</div>
       </div>
     </div>
   )

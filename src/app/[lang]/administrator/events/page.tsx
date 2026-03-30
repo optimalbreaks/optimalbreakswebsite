@@ -47,7 +47,9 @@ export default function EventsListPage() {
   }
 
   return (
-    <AdminTable
+    <div>
+      <h1 className="admin-page-title">Eventos</h1>
+      <AdminTable
       columns={[
         { key: 'name', label: 'Nombre' },
         { key: 'event_type', label: 'Tipo' },
@@ -70,5 +72,6 @@ export default function EventsListPage() {
       newHref={`/${lang}/administrator/events/new`}
       searchPlaceholder="Buscar eventos…"
     />
+    </div>
   )
 }

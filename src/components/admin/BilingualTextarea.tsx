@@ -23,35 +23,35 @@ export default function BilingualTextarea({
 
   return (
     <div className="space-y-2">
-      {label && (
-        <label className="block text-sm font-medium text-gray-300">
-          {label}
-        </label>
-      )}
-      <div className="flex gap-px bg-[#12121f] rounded-t-md overflow-hidden border border-b-0 border-[#2a2a4a]">
-        {(['es', 'en'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`flex-1 px-4 py-2 text-sm font-medium uppercase transition-colors ${
-              tab === t
-                ? 'bg-[#2a2a4a] text-white'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+      {label && <label className="admin-label">{label}</label>}
+      <div className="border-[3px] border-[var(--ink)] bg-[#fffef6] shadow-[4px_4px_0_rgba(26,26,26,0.12)]">
+        <div className="flex border-b-[3px] border-[var(--ink)]">
+          {(['es', 'en'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`flex-1 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors border-r-[3px] border-[var(--ink)] last:border-r-0 ${
+                tab === t
+                  ? 'bg-[var(--red)] text-white'
+                  : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'
+              }`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={tab === 'en' ? valueEn : valueEs}
+          onChange={(e) =>
+            tab === 'en' ? onChangeEn(e.target.value) : onChangeEs(e.target.value)
+          }
+          rows={rows}
+          className="w-full px-3 py-2.5 bg-transparent text-[var(--ink)] resize-y border-0 focus:outline-none focus:ring-0 focus-visible:shadow-[inset_0_0_0_3px_var(--yellow)]"
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}
+        />
       </div>
-      <textarea
-        value={tab === 'en' ? valueEn : valueEs}
-        onChange={(e) =>
-          tab === 'en' ? onChangeEn(e.target.value) : onChangeEs(e.target.value)
-        }
-        rows={rows}
-        className="w-full px-3 py-2 rounded-b-md bg-[#12121f] border border-t-0 border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a] resize-y"
-      />
     </div>
   )
 }

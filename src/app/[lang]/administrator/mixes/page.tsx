@@ -49,7 +49,7 @@ export default function MixesListPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-100 mb-6">Mixes</h1>
+      <h1 className="admin-page-title">Mixes</h1>
       <AdminTable
         columns={[
           { key: 'title', label: 'Título' },

@@ -19,8 +19,8 @@ const SECTIONS = [
 ]
 
 const inputClass =
-  'w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]'
-const labelClass = 'block text-sm font-medium text-gray-300 mb-1'
+  'admin-input'
+const labelClass = 'admin-label'
 
 export default function HistoryNewPage() {
   const { lang } = useParams()

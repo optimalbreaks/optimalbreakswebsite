@@ -46,7 +46,7 @@ export default function HistoryListPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-100 mb-6">Historia</h1>
+      <h1 className="admin-page-title">Historia</h1>
       <AdminTable
         columns={[
           { key: 'title_en', label: 'Título (EN)' },

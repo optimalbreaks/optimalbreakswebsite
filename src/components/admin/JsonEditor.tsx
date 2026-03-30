@@ -29,24 +29,22 @@ export default function JsonEditor({ value, onChange, label }: JsonEditorProps) 
 
   return (
     <div className="space-y-2">
-      {label && (
-        <label className="block text-sm font-medium text-gray-300">
-          {label}
-        </label>
-      )}
+      {label && <label className="admin-label">{label}</label>}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         onBlur={handleBlur}
         rows={8}
         spellCheck={false}
-        className={`w-full px-3 py-2 rounded-md bg-[#12121f] border text-gray-200 text-sm font-mono focus:outline-none resize-y ${
-          error
-            ? 'border-red-500 focus:border-red-400'
-            : 'border-[#2a2a4a] focus:border-[#4a4a6a]'
+        className={`admin-input admin-input-mono resize-y ${
+          error ? '!border-[var(--red)] focus:!shadow-[4px_4px_0_var(--red)]' : ''
         }`}
       />
-      {error && <p className="text-xs text-red-400">JSON inválido: {error}</p>}
+      {error && (
+        <p className="text-xs font-bold text-[var(--red)]">
+          JSON inválido: {error}
+        </p>
+      )}
     </div>
   )
 }

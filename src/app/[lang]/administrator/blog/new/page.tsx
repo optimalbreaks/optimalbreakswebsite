@@ -98,11 +98,11 @@ export default function BlogNewPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Categoría</label>
+        <label className="admin-label">Categoría</label>
         <select
           value={form.category}
           onChange={(e) => set('category', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -111,22 +111,22 @@ export default function BlogNewPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Autor</label>
+        <label className="admin-label">Autor</label>
         <input
           type="text"
           value={form.author}
           onChange={(e) => set('author', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Fecha publicación</label>
+        <label className="admin-label">Fecha publicación</label>
         <input
           type="date"
           value={form.published_at}
           onChange={(e) => set('published_at', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         />
       </div>
 
@@ -153,18 +153,18 @@ export default function BlogNewPage() {
             type="checkbox"
             checked={form.is_published}
             onChange={(e) => set('is_published', e.target.checked)}
-            className="w-4 h-4 rounded bg-[#12121f] border-[#2a2a4a]"
+            className="admin-checkbox"
           />
-          <span className="text-sm text-gray-300">Publicado</span>
+          <span className="admin-muted normal-case">Publicado</span>
         </label>
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={form.is_featured}
             onChange={(e) => set('is_featured', e.target.checked)}
-            className="w-4 h-4 rounded bg-[#12121f] border-[#2a2a4a]"
+            className="admin-checkbox"
           />
-          <span className="text-sm text-gray-300">Destacado</span>
+          <span className="admin-muted normal-case">Destacado</span>
         </label>
       </div>
     </AdminForm>

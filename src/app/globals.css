@@ -369,3 +369,180 @@ body::before {
 main {
   min-height: 60vh;
 }
+
+/* === Admin (mismo lenguaje fanzine / brutalist que el front) === */
+.admin-shell {
+  display: flex;
+  min-height: min(70vh, calc(100vh - 120px));
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.admin-main {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-topbar {
+  flex-shrink: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  background: var(--red);
+  color: #fff;
+  border-bottom: 4px solid var(--ink);
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-page-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(22px, 4vw, 40px);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+
+.admin-label {
+  display: block;
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.admin-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.admin-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 3px solid var(--ink);
+  background: #fffef6;
+  color: var(--ink);
+  font-family: 'Courier Prime', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--yellow);
+}
+
+select.admin-input {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.admin-input::placeholder {
+  color: var(--dim);
+}
+
+.admin-input-mono {
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.admin-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  border: 3px solid var(--ink);
+  accent-color: var(--red);
+  cursor: pointer;
+}
+
+.admin-panel {
+  border: 3px solid var(--ink);
+  background: rgba(255, 254, 246, 0.92);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.08);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 3px solid var(--ink);
+  background: var(--red);
+  color: #fff;
+  font-family: 'Courier Prime', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, transform 0.12s;
+}
+
+.admin-btn:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--yellow);
+}
+
+.admin-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.admin-btn--yellow {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.admin-btn--yellow:hover:not(:disabled) {
+  background: var(--uv);
+  color: #fff;
+}
+
+.admin-btn--ghost {
+  background: transparent;
+  color: var(--ink);
+}
+
+.admin-btn--ghost:hover:not(:disabled) {
+  background: var(--red);
+  color: #fff;
+}
+
+.admin-btn--sm {
+  padding: 6px 12px;
+  font-size: 10px;
+}
+
+.admin-muted {
+  color: var(--text-muted);
+  font-family: 'Courier Prime', monospace;
+  font-size: 13px;
+}

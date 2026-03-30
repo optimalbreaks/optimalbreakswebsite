@@ -45,11 +45,7 @@ export default function ImageUpload({
 
   return (
     <div className="space-y-2">
-      {label && (
-        <label className="block text-sm font-medium text-gray-300">
-          {label}
-        </label>
-      )}
+      {label && <label className="admin-label">{label}</label>}
 
       {value ? (
         <div className="relative inline-block">
@@ -58,12 +54,13 @@ export default function ImageUpload({
             alt="Preview"
             width={200}
             height={200}
-            className="rounded-lg border border-[#2a2a4a] object-cover"
+            className="border-[3px] border-[var(--ink)] object-cover shadow-[4px_4px_0_var(--ink)]"
           />
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs flex items-center justify-center transition-colors"
+            className="absolute top-1 right-1 w-7 h-7 flex items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--red)] text-white text-sm font-bold leading-none hover:bg-[var(--ink)] transition-colors"
+            aria-label="Quitar imagen"
           >
             ×
           </button>
@@ -73,14 +70,15 @@ export default function ImageUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={loading}
-          className="w-full max-w-xs h-32 rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-[#4a4a6a] bg-[#12121f] flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-50"
+          className="w-full max-w-xs h-32 border-[3px] border-dashed border-[var(--ink)] bg-[#fffef6] flex flex-col items-center justify-center gap-2 text-[var(--text-muted)] hover:bg-[var(--yellow)]/40 hover:text-[var(--ink)] transition-colors cursor-pointer disabled:opacity-50"
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', fontWeight: 700 }}
         >
           {loading ? (
-            <span className="text-sm animate-pulse">Subiendo…</span>
+            <span className="animate-pulse">Subiendo…</span>
           ) : (
             <>
               <span className="text-2xl">📁</span>
-              <span className="text-sm">Seleccionar imagen</span>
+              <span>Seleccionar imagen</span>
             </>
           )}
         </button>
@@ -94,7 +92,11 @@ export default function ImageUpload({
         className="hidden"
       />
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--red)]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

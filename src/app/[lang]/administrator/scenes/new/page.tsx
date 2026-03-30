@@ -84,32 +84,32 @@ export default function SceneNewPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">País</label>
+        <label className="admin-label">País</label>
         <input
           type="text"
           value={form.country}
           onChange={(e) => set('country', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Región</label>
+        <label className="admin-label">Región</label>
         <input
           type="text"
           value={form.region}
           onChange={(e) => set('region', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1">Era</label>
+        <label className="admin-label">Era</label>
         <input
           type="text"
           value={form.era}
           onChange={(e) => set('era', e.target.value)}
-          className="w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input"
         />
       </div>
 
@@ -154,9 +154,9 @@ export default function SceneNewPage() {
             type="checkbox"
             checked={form.is_featured}
             onChange={(e) => set('is_featured', e.target.checked)}
-            className="w-4 h-4 rounded bg-[#12121f] border-[#2a2a4a]"
+            className="admin-checkbox"
           />
-          <span className="text-sm text-gray-300">Destacado</span>
+          <span className="admin-muted normal-case">Destacado</span>
         </label>
       </div>
     </AdminForm>

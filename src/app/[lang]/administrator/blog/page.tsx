@@ -65,7 +65,7 @@ export default function BlogListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-100 mb-6">Blog Posts</h1>
+      <h1 className="admin-page-title">Blog Posts</h1>
       <AdminTable
         columns={columns}
         data={data}

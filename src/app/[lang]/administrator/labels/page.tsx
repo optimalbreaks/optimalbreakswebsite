@@ -44,8 +44,10 @@ export default function LabelsListPage() {
   }
 
   return (
-    <AdminTable
-      columns={[
+    <div>
+      <h1 className="admin-page-title">Sellos</h1>
+      <AdminTable
+        columns={[
         { key: 'name', label: 'Nombre' },
         { key: 'country', label: 'País' },
         { key: 'founded_year', label: 'Año' },
@@ -59,17 +61,18 @@ export default function LabelsListPage() {
           label: 'Destacado',
           render: (v: boolean) => (v ? '✓' : '✗'),
         },
-      ]}
-      data={data}
-      count={count}
-      page={page}
-      limit={limit}
-      onPageChange={setPage}
-      onSearch={setSearch}
-      onDelete={handleDelete}
-      editHref={(row) => `/${lang}/administrator/labels/${row.id}`}
-      newHref={`/${lang}/administrator/labels/new`}
-      searchPlaceholder="Buscar sellos…"
-    />
+        ]}
+        data={data}
+        count={count}
+        page={page}
+        limit={limit}
+        onPageChange={setPage}
+        onSearch={setSearch}
+        onDelete={handleDelete}
+        editHref={(row) => `/${lang}/administrator/labels/${row.id}`}
+        newHref={`/${lang}/administrator/labels/new`}
+        searchPlaceholder="Buscar sellos…"
+      />
+    </div>
   )
 }

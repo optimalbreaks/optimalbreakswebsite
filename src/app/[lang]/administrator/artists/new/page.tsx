@@ -20,8 +20,8 @@ const CATEGORIES = [
 ]
 
 const inputClass =
-  'w-full px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm focus:outline-none focus:border-[#4a4a6a]'
-const labelClass = 'block text-sm font-medium text-gray-300 mb-1'
+  'admin-input'
+const labelClass = 'admin-label'
 
 export default function ArtistNewPage() {
   const { lang } = useParams()
@@ -244,9 +244,9 @@ export default function ArtistNewPage() {
             type="checkbox"
             checked={form.is_featured}
             onChange={(e) => set('is_featured', e.target.checked)}
-            className="w-4 h-4 rounded bg-[#12121f] border-[#2a2a4a]"
+            className="admin-checkbox"
           />
-          <span className="text-sm text-gray-300">Destacado</span>
+          <span className="admin-muted normal-case">Destacado</span>
         </label>
       </div>
 

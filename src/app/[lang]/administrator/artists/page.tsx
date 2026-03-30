@@ -52,7 +52,7 @@ export default function ArtistsListPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-100 mb-6">Artistas</h1>
+      <h1 className="admin-page-title">Artistas</h1>
       <AdminTable
         columns={columns}
         data={data}

@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface AdminSidebarProps {
   lang: string
-  currentPath: string
 }
 
 const NAV_ITEMS = [
@@ -19,34 +19,52 @@ const NAV_ITEMS = [
   { key: 'agent', label: 'Agente IA', icon: '⚙', path: '/agent' },
 ]
 
-export default function AdminSidebar({ lang, currentPath }: AdminSidebarProps) {
+export default function AdminSidebar({ lang }: AdminSidebarProps) {
+  const pathname = usePathname()
   const base = `/${lang}/administrator`
 
   return (
-    <aside className="w-56 min-h-screen bg-[#12121f] border-r border-[#2a2a4a] flex flex-col py-6">
-      <div className="px-5 mb-8">
-        <span className="text-lg font-bold tracking-wider text-gray-100">
-          OB Admin
-        </span>
+    <aside className="w-[13.5rem] shrink-0 min-h-0 border-r-4 border-[var(--ink)] bg-[var(--paper)] flex flex-col py-5">
+      <div className="px-4 mb-6">
+        <Link
+          href={base}
+          className="inline-block no-underline border-[3px] border-[var(--ink)] bg-[var(--red)] text-white px-3 py-2"
+          style={{
+            fontFamily: "'Darker Grotesque', sans-serif",
+            fontWeight: 900,
+            fontSize: '17px',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          OB // ADMIN
+        </Link>
       </div>
-      <nav className="flex flex-col gap-1 px-3">
+      <nav className="flex flex-col gap-0.5 px-2">
         {NAV_ITEMS.map((item) => {
           const href = `${base}${item.path}`
-          const isActive =
-            currentPath === href ||
-            (item.path !== '' && currentPath.startsWith(href))
+          const isExact = item.path === ''
+          const isActive = isExact
+            ? pathname === href || pathname === `${href}/`
+            : pathname === href || pathname.startsWith(`${href}/`)
 
           return (
             <Link
               key={item.key}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2.5 no-underline border-l-[3px] transition-colors duration-100 ${
                 isActive
-                  ? 'bg-[#2a2a4a] text-white font-medium'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a1a2e]'
+                  ? 'border-[var(--red)] bg-[var(--red)] text-white'
+                  : 'border-transparent text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--yellow)]'
               }`}
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontWeight: 700,
+                fontSize: '11px',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}
             >
-              <span className="w-5 text-center text-base">{item.icon}</span>
+              <span className="w-5 text-center text-sm leading-none">{item.icon}</span>
               {item.label}
             </Link>
           )

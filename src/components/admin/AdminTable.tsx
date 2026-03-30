@@ -56,68 +56,74 @@ export default function AdminTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <input
           type="text"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder={searchPlaceholder}
-          className="flex-1 max-w-sm px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input flex-1 max-w-md"
         />
-        <Link
-          href={newHref}
-          className="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
-        >
+        <Link href={newHref} className="admin-btn admin-btn--yellow no-underline text-center sm:text-left">
           + Nuevo
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-[#2a2a4a]">
+      <div className="overflow-x-auto border-[3px] border-[var(--ink)] bg-[#fffef6] shadow-[6px_6px_0_rgba(26,26,26,0.12)]">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#12121f] border-b border-[#2a2a4a]">
+            <tr className="bg-[var(--yellow)] border-b-[3px] border-[var(--ink)]">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400"
+                  className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
                 >
                   {col.label}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <th
+                className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
                 Acciones
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#2a2a4a]">
+          <tbody className="divide-y-[3px] divide-[var(--ink)]">
             {data.map((row, i) => (
               <tr
                 key={row.id ?? i}
-                className="bg-[#1a1a2e] hover:bg-[#22223a] transition-colors"
+                className="bg-[var(--paper)] hover:bg-[var(--paper-dark)] transition-colors"
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-gray-200">
+                  <td
+                    key={col.key}
+                    className="px-4 py-3 text-[var(--ink)]"
+                    style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}
+                  >
                     {col.render
                       ? col.render(row[col.key], row)
                       : (row[col.key] ?? '—')}
                   </td>
                 ))}
                 <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                  <Link
-                    href={editHref(row)}
-                    className="inline-block px-3 py-1 rounded bg-[#2a2a4a] hover:bg-[#3a3a5a] text-gray-200 text-xs transition-colors"
-                  >
+                  <Link href={editHref(row)} className="admin-btn admin-btn--ghost admin-btn--sm no-underline">
                     Editar
                   </Link>
                   {onDelete && (
                     <button
+                      type="button"
                       onClick={() => handleDelete(row.id)}
                       onBlur={() => setConfirmId(null)}
-                      className={`inline-block px-3 py-1 rounded text-xs transition-colors ${
-                        confirmId === row.id
-                          ? 'bg-red-600 text-white'
-                          : 'bg-[#2a2a4a] hover:bg-red-900/50 text-gray-400 hover:text-red-300'
+                      className={`admin-btn admin-btn--sm ${
+                        confirmId === row.id ? '' : 'admin-btn--ghost'
                       }`}
+                      style={
+                        confirmId === row.id
+                          ? { background: 'var(--red)', color: '#fff' }
+                          : undefined
+                      }
                     >
                       {confirmId === row.id ? '¿Seguro?' : 'Eliminar'}
                     </button>
@@ -129,7 +135,7 @@ export default function AdminTable({
               <tr>
                 <td
                   colSpan={columns.length + 1}
-                  className="px-4 py-8 text-center text-gray-500"
+                  className="px-4 py-8 text-center admin-muted normal-case"
                 >
                   Sin resultados
                 </td>
@@ -139,23 +145,27 @@ export default function AdminTable({
         </table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-gray-400">
+      <div
+        className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-[var(--text-muted)]"
+        style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}
+      >
         <span>
-          {count} registro{count !== 1 ? 's' : ''} — Página {page} de{' '}
-          {totalPages}
+          {count} registro{count !== 1 ? 's' : ''} — Página {page} de {totalPages}
         </span>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1 rounded bg-[#2a2a4a] hover:bg-[#3a3a5a] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="admin-btn admin-btn--ghost admin-btn--sm disabled:opacity-30 disabled:cursor-not-allowed"
           >
             ← Anterior
           </button>
           <button
+            type="button"
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1 rounded bg-[#2a2a4a] hover:bg-[#3a3a5a] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="admin-btn admin-btn--ghost admin-btn--sm disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Siguiente →
           </button>

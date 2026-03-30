@@ -37,23 +37,21 @@ export default function ArrayEditor({
 
   return (
     <div className="space-y-2">
-      {label && (
-        <label className="block text-sm font-medium text-gray-300">
-          {label}
-        </label>
-      )}
+      {label && <label className="admin-label">{label}</label>}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((item, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#2a2a4a] text-gray-200 text-sm"
+              className="inline-flex items-center gap-1 cutout fill text-xs"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
             >
               {item}
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="ml-1 text-gray-500 hover:text-red-400 transition-colors"
+                className="ml-0.5 opacity-70 hover:opacity-100 hover:text-[var(--red)] transition-opacity"
+                aria-label="Quitar"
               >
                 ×
               </button>
@@ -68,13 +66,9 @@ export default function ArrayEditor({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 rounded-md bg-[#12121f] border border-[#2a2a4a] text-gray-200 text-sm placeholder:text-gray-500 focus:outline-none focus:border-[#4a4a6a]"
+          className="admin-input flex-1"
         />
-        <button
-          type="button"
-          onClick={add}
-          className="px-3 py-2 rounded-md bg-[#2a2a4a] hover:bg-[#3a3a5a] text-gray-200 text-sm transition-colors"
-        >
+        <button type="button" onClick={add} className="admin-btn admin-btn--ghost admin-btn--sm shrink-0">
           Añadir
         </button>
       </div>
