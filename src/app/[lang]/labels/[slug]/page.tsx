@@ -68,18 +68,31 @@ export default async function LabelDetailPage({ params }: Props) {
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
       <Link href={`/${lang}/labels`} className="btn-back"><span className="arrow">←</span> {lang === 'es' ? 'Volver a Sellos' : 'Back to Labels'}</Link>
-      <div className="sec-tag">LABEL</div>
-      <h1 className="sec-title"><span className="hl">{label.name}</span></h1>
 
-      {/* Share + Fan counter row */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <FanCounter type="label" entityId={label.id} lang={lang} />
-        <ShareButtons url={`/${lang}/labels/${slug}`} title={`${label.name} | Optimal Breaks`} lang={lang} />
-      </div>
-
-      <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden">
-        <CardThumbnail src={label.image_url} alt={label.name} heightClass="h-44 sm:h-52 md:h-56" frameClass="border-0" />
-      </div>
+      {/* Misma estructura hero que artistas: logo acotado + título/compartir en fila (md+) */}
+      <header className="mb-8 md:mb-10 border-b-[3px] border-[var(--ink)] pb-8 md:pb-10">
+        <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 lg:gap-10 items-stretch md:items-start">
+          <div className="w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(400px,40vw)] shrink-0 mx-auto md:mx-0">
+            <CardThumbnail
+              src={label.image_url}
+              alt={label.name}
+              aspectClass="aspect-square w-full"
+              frameClass="border-[3px] border-[var(--ink)]"
+              fit="contain"
+            />
+          </div>
+          <div className="min-w-0 flex-1 flex flex-col justify-center md:justify-start md:pt-0">
+            <div className="sec-tag w-fit">LABEL</div>
+            <h1 className="sec-title mt-2 md:mt-3">
+              <span className="hl">{label.name}</span>
+            </h1>
+            <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-6">
+              <FanCounter type="label" entityId={label.id} lang={lang} />
+              <ShareButtons url={`/${lang}/labels/${slug}`} title={`${label.name} | Optimal Breaks`} lang={lang} />
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className="flex flex-wrap gap-2 mb-8">
         <span className="cutout fill">{label.country}</span>
