@@ -1,6 +1,6 @@
 /**
  * UPSERT de organizacion + eventos Hibrida Fest vía Supabase REST (service role).
- * Usar cuando .env.local tenga SUPABASE_SERVICE_ROLE_KEY pero no DATABASE_URL.
+ * Requiere NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (API; sin Postgres).
  * Debe coincidir con supabase/migrations/014_hibrida_fest_organization.sql
  *
  *   node scripts/push-hibrida-fest.mjs

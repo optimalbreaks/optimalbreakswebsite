@@ -22,7 +22,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href 
 
   const body = (
     <>
-      <CardThumbnail src={imageUrl} alt={name} aspectClass="aspect-[16/10]" />
+      <CardThumbnail src={imageUrl} alt={name} aspectClass="aspect-poster w-full" fit="contain" />
 
       <div className="p-4 sm:p-7 relative flex flex-col flex-grow">
         {/* Tape */}

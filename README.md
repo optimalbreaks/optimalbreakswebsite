@@ -141,7 +141,7 @@ OptimalBreaks/
 │   └── artists/                # One JSON file per artist → npm run db:artist
 ├── scripts/
 │   ├── seed-supabase.mjs            # Run SQL migrations / seed (needs Postgres URI)
-│   ├── actualizar-artista.mjs       # Upsert artists from JSON (Postgres or Supabase API)
+│   ├── actualizar-artista.mjs       # Upsert artists from JSON (Supabase REST API only)
 │   ├── ensure-artist-json-in-db.mjs # Compare JSON vs DB; upsert if bios differ
 │   ├── generar-artista-agente.mjs   # OpenAI → data/artists/<slug>.json
 │   ├── upload-storage-media.mjs     # npm run media:upload — local file → bucket `media`
@@ -300,7 +300,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # or: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-**Server-only elevated key** — Storage uploads, `createServiceSupabase()`, and the `db:artist` script (when not using Postgres) need the legacy **service_role** JWT or the new **secret** key (`sb_secret_…`):
+**Server-only elevated key** — Storage uploads, `createServiceSupabase()`, and **all** CLI upserts for artists/labels (`db:artist`, agents, `elegir-foto`, etc.) require the legacy **service_role** JWT or the new **secret** key (`sb_secret_…`). Data scripts do **not** use direct Postgres for those writes.
 
 ```
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -311,7 +311,7 @@ Never put elevated keys in `NEXT_PUBLIC_*` or client-side code.
 
 **Google Analytics 4 (optional)** — set **`NEXT_PUBLIC_GA_MEASUREMENT_ID=G-…`** in `.env.local` and Vercel so GA4 loads in production. Omit the variable to disable analytics entirely.
 
-**Postgres URI** (optional) — required only for `npm run db:migrate` / `db:seed` against SQL files, not for day-to-day artist JSON updates via API. See `.env.local.example`.
+**Postgres URI** (optional) — **only** for `npm run db:migrate` / `db:seed` (`seed-supabase.mjs` runs SQL against the database). Artist/label agents, `db:artist`, `db:label`, photos, and similar tools use **Supabase HTTP API + service role**, not `DATABASE_URL`.
 
 ### 4. Apply database migrations
 
@@ -344,14 +344,13 @@ The script **upserts on `slug`**: updates an existing artist or inserts a new ro
 
 | Mode | When it runs |
 |------|----------------|
-| **Postgres** | If `DATABASE_URL` (or aliases in `.env.local.example`) or `SUPABASE_DB_PASSWORD` + `NEXT_PUBLIC_SUPABASE_URL` is set — same as `db:seed`. |
-| **Supabase API** | If Postgres is not configured: uses `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** or **`SUPABASE_SECRET_KEY`**. |
+| **Supabase REST API** | Always for `db:artist` / `lib/artist-upsert.mjs`: `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** or **`SUPABASE_SECRET_KEY`**. |
 
-The browser **anon / publishable** key cannot be used for this write path. JWT keys and `sb_*` keys are **not** Postgres passwords; SQL migrations still need a real DB connection string or password when you use `db:migrate`.
+The browser **anon / publishable** key cannot be used for this write path. **`DATABASE_URL` / `SUPABASE_DB_PASSWORD` are not used** for artist or label upserts from scripts (avoids blocked `db.*.supabase.co` on many networks). SQL migrations (`db:migrate`) still need Postgres credentials when you run them locally.
 
 ### 5b. Agent: generate artist profiles (OpenAI + optional SerpAPI)
 
-By default the agent **UPSERTs into Supabase** (same write path as **`npm run db:artist`**: Postgres connection string or service-role API). Optional **`--json-only`** writes only `data/artists/<slug>.json`; **`--save-json`** upserts **and** saves a JSON copy (schema: [`006_artist_extended_fields.sql`](supabase/migrations/006_artist_extended_fields.sql)).
+By default the agent **UPSERTs into Supabase** via the **REST API + service role** (same path as **`npm run db:artist`**). Optional **`--json-only`** writes only `data/artists/<slug>.json`; **`--save-json`** upserts **and** saves a JSON copy (schema: [`006_artist_extended_fields.sql`](supabase/migrations/006_artist_extended_fields.sql)).
 
 **Full documentation (batch mode, env vars, admin API, bulk sync):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).
 
@@ -482,7 +481,7 @@ Files under `supabase/migrations/` (apply in lexical order):
 - [x] Supabase-backed listings for artists, events, blog, labels, scenes, mixes (with static fallbacks when empty)
 - [x] Per-entity `image_url` + shared card thumbnails and Storage bucket for hosted images
 - [x] User auth + dashboard (favorites, sightings, saved content)
-- [x] Artist updates via JSON + `npm run db:artist` (upsert by `slug`; Postgres or Supabase API)
+- [x] Artist updates via JSON + `npm run db:artist` (upsert by `slug`; Supabase REST API + service role)
 - [x] Admin UI — `/[lang]/administrator`: CRUD for artists, labels, events, blog, scenes, mixes, history + image upload (requires `admin` on `profiles`)
 - [x] Public reference listings — **large / compact / list** views for artists, labels, events, scenes, mixes (default **compact**; choice not persisted)
 - [ ] Search functionality

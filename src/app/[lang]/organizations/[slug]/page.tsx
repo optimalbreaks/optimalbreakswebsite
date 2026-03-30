@@ -9,6 +9,7 @@ import type { BreakEvent, Label, Organization } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
+import { splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -112,9 +113,17 @@ export default async function OrganizationDetailPage({ params }: Props) {
         {organization.founded_year && <span className="cutout outline">Est. {organization.founded_year}</span>}
       </div>
 
-      <p className="max-w-[760px]" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}>
-        {lang === 'es' ? organization.description_es : organization.description_en}
-      </p>
+      <div className="max-w-[760px] space-y-5">
+        {splitBioParagraphs(lang === 'es' ? organization.description_es : organization.description_en).map((para, i) => (
+          <p
+            key={i}
+            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+            className="text-[var(--ink)]"
+          >
+            {para}
+          </p>
+        ))}
+      </div>
 
       {socials.length > 0 && (
         <div className="mt-8 p-4 sm:p-6 border-4 border-[var(--ink)]">

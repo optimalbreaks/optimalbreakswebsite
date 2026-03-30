@@ -10,6 +10,7 @@ import type { Label, Organization } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
+import { splitBioParagraphs } from '@/lib/bio-format'
 import FanCounter from '@/components/FanCounter'
 import CardThumbnail from '@/components/CardThumbnail'
 
@@ -40,6 +41,15 @@ export default async function LabelDetailPage({ params }: Props) {
     .eq('slug', slug)
     .single()
   const label = rawLabel as LabelPageRow | null
+
+  const artistSlugs = new Map<string, string>()
+  if (label?.key_artists?.length) {
+    const { data: matchedArtists } = await supabase
+      .from('artists')
+      .select('name, slug')
+      .in('name', label.key_artists)
+    matchedArtists?.forEach((a) => artistSlugs.set(a.name, a.slug))
+  }
 
   if (!label) {
     return (
@@ -81,14 +91,27 @@ export default async function LabelDetailPage({ params }: Props) {
           </Link>
         )}
       </div>
-      <p className="max-w-[700px]" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8 }}>
-        {lang === 'es' ? label.description_es : label.description_en}
-      </p>
+      <div className="max-w-[700px] space-y-5">
+        {splitBioParagraphs(lang === 'es' ? label.description_es : label.description_en).map((para, i) => (
+          <p
+            key={i}
+            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+            className="text-[var(--ink)]"
+          >
+            {para}
+          </p>
+        ))}
+      </div>
 
       {label.key_artists?.length > 0 && (
         <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
           <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>
-          <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => <span key={i} className="cutout red">{a}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => {
+            const artistSlug = artistSlugs.get(a)
+            return artistSlug
+              ? <Link key={i} href={`/${lang}/artists/${artistSlug}`} className="cutout red no-underline">{a}</Link>
+              : <span key={i} className="cutout red">{a}</span>
+          })}</div>
         </div>
       )}
       {label.key_releases?.length > 0 && (

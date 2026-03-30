@@ -11,6 +11,7 @@ import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import EventPosterLightbox from '@/components/EventPosterLightbox'
+import { splitBioParagraphs } from '@/lib/bio-format'
 import { getDictionary } from '@/lib/dictionaries'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -121,6 +122,20 @@ export default async function EventDetailPage({ params }: Props) {
     scheduleByStage.get(key)!.push(slot)
   }
 
+  const allArtistNames = new Set<string>()
+  for (const s of stages) s.lineup?.forEach((a) => allArtistNames.add(a))
+  event.lineup?.forEach((a: string) => allArtistNames.add(a))
+  for (const slot of schedule) if (slot.artist) allArtistNames.add(slot.artist)
+
+  const artistSlugs = new Map<string, string>()
+  if (allArtistNames.size > 0) {
+    const { data: matchedArtists } = await supabase
+      .from('artists')
+      .select('name, slug')
+      .in('name', Array.from(allArtistNames))
+    matchedArtists?.forEach((a) => artistSlugs.set(a.name, a.slug))
+  }
+
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
       <Link href={`/${lang}/events`} className="btn-back">
@@ -222,10 +237,16 @@ export default async function EventDetailPage({ params }: Props) {
       </header>
 
       {/* ── DESCRIPTION ── */}
-      <section className="mb-10 max-w-[760px]">
-        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}>
-          {lang === 'es' ? event.description_es : event.description_en}
-        </p>
+      <section className="mb-10 max-w-[760px] space-y-5">
+        {splitBioParagraphs(lang === 'es' ? event.description_es : event.description_en).map((para, i) => (
+          <p
+            key={i}
+            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+            className="text-[var(--ink)]"
+          >
+            {para}
+          </p>
+        ))}
       </section>
 
       {/* ── STAGES + LINEUP ── */}
@@ -239,15 +260,22 @@ export default async function EventDetailPage({ params }: Props) {
                   {stage.name}
                 </div>
                 {(lang === 'es' ? stage.description_es : stage.description_en) && (
-                  <p className="mb-4" style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px', lineHeight: 1.7, color: 'rgba(232,220,200,0.65)' }}>
-                    {lang === 'es' ? stage.description_es : stage.description_en}
-                  </p>
+                  <div className="mb-4 space-y-3">
+                    {splitBioParagraphs(lang === 'es' ? stage.description_es : stage.description_en).map((para, pi) => (
+                      <p key={pi} style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px', lineHeight: 1.7, color: 'rgba(232,220,200,0.65)' }}>
+                        {para}
+                      </p>
+                    ))}
+                  </div>
                 )}
                 {stage.lineup && stage.lineup.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
-                    {stage.lineup.map((a, j) => (
-                      <span key={j} className="cutout red">{a}</span>
-                    ))}
+                    {stage.lineup.map((a, j) => {
+                      const aSlug = artistSlugs.get(a)
+                      return aSlug
+                        ? <Link key={j} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
+                        : <span key={j} className="cutout red">{a}</span>
+                    })}
                   </div>
                 )}
               </div>
@@ -259,9 +287,12 @@ export default async function EventDetailPage({ params }: Props) {
           <SectionHeading>LINEUP</SectionHeading>
           <div className="p-5 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
             <div className="flex flex-wrap gap-2">
-              {event.lineup.map((a: string, i: number) => (
-                <span key={i} className="cutout red">{a}</span>
-              ))}
+              {event.lineup.map((a: string, i: number) => {
+                const aSlug = artistSlugs.get(a)
+                return aSlug
+                  ? <Link key={i} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
+                  : <span key={i} className="cutout red">{a}</span>
+              })}
             </div>
           </div>
         </section>
@@ -292,7 +323,12 @@ export default async function EventDetailPage({ params }: Props) {
                         className="flex-1 min-w-0"
                         style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 800, fontSize: '15px' }}
                       >
-                        {slot.artist}
+                        {(() => {
+                          const aSlug = artistSlugs.get(slot.artist)
+                          return aSlug
+                            ? <Link href={`/${lang}/artists/${aSlug}`} className="no-underline text-inherit hover:text-[var(--red)] transition-colors">{slot.artist}</Link>
+                            : slot.artist
+                        })()}
                         {slot.is_b2b && (
                           <span className="ml-1.5 text-[10px] font-bold tracking-wider text-[var(--red)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
                             B2B

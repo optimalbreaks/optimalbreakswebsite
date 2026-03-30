@@ -83,10 +83,9 @@ for f in data/artists/*.json; do npm run db:artist -- "$f"; done
 
 | Modo | Cuándo |
 |------|--------|
-| **Postgres directo** | Si tienes `DATABASE_URL` (u otros alias del `.env.local.example`) o `SUPABASE_DB_PASSWORD` + `NEXT_PUBLIC_SUPABASE_URL` — igual que `npm run db:seed`. |
-| **API de Supabase** | Si **no** hay URI/contraseña de Postgres: `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** o **`SUPABASE_SECRET_KEY`** (formato nuevo `sb_secret_*`). |
+| **API de Supabase** | Siempre para `npm run db:artist` / `lib/artist-upsert.mjs`: `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** o **`SUPABASE_SECRET_KEY`**. No se usa Postgres directo (`pg`) en estos upserts. |
 
-La clave **anon** o **publishable** (`sb_publishable_*`) **no sirve** para este script: no puede escribir en `artists` con los permisos habituales. Las claves JWT / `sb_*` **no son** la contraseña de PostgreSQL; para ejecutar SQL masivo con `npm run db:migrate` sigues necesitando conexión a la base de datos.
+La clave **anon** o **publishable** (`sb_publishable_*`) **no sirve** para escribir en `artists`. **`DATABASE_URL` / contraseña de Postgres** solo hacen falta para **`npm run db:migrate`** / **`db:seed`** (SQL local), no para agentes ni `db:artist`.
 
 ### Estructura del proyecto (artistas)
 
@@ -125,8 +124,8 @@ Necesitas **`OPENAI_API_KEY`**. Por defecto **`gpt-5.4`**; **`OPENAI_MODEL`** lo
 Copia `.env.local.example` → `.env.local`.
 
 - **Cliente (navegador):** `NEXT_PUBLIC_SUPABASE_URL` + **`NEXT_PUBLIC_SUPABASE_ANON_KEY`** *o* **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** (`sb_publishable_*`).
-- **Solo servidor** (Storage admin, `db:artist` vía API, **`npm run media:upload`**): **`SUPABASE_SERVICE_ROLE_KEY`** *o* **`SUPABASE_SECRET_KEY`** (`sb_secret_*`). Nunca en `NEXT_PUBLIC_*`.
-- **Postgres** (opcional, para `db:migrate` / `db:seed`): ver comentarios en `.env.local.example`.
+- **Solo servidor** (Storage admin, **todos** los upserts CLI `db:artist` / `db:label` / agentes / fotos, **`npm run media:upload`**): **`SUPABASE_SERVICE_ROLE_KEY`** *o* **`SUPABASE_SECRET_KEY`** (`sb_secret_*`). Nunca en `NEXT_PUBLIC_*`.
+- **Postgres** (opcional, **solo** `db:migrate` / `db:seed` con `seed-supabase.mjs`): ver `.env.local.example`. No se usa para rellenar artistas/sellos desde scripts.
 - **Agente de bios** (opcional): `OPENAI_API_KEY`, opcionalmente `OPENAI_MODEL`, y si quieres búsqueda web `SERPAPI_API_KEY` (ver `.env.local.example` y [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md)).
 - **Google Analytics 4** (opcional): `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-…` (público; sin ella no se carga GA).
 

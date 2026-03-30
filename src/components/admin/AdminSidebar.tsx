@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { key: 'scenes', label: 'Escenas', icon: '☰', path: '/scenes' },
   { key: 'mixes', label: 'Mixes', icon: '▶', path: '/mixes' },
   { key: 'history', label: 'Historia', icon: '↻', path: '/history' },
-  { key: 'agent', label: 'Agente IA', icon: '⚙', path: '/agent' },
+  { key: 'agent', label: 'Agentes IA', icon: '⚙', path: '/agent' },
 ]
 
 export default function AdminSidebar({ lang }: AdminSidebarProps) {

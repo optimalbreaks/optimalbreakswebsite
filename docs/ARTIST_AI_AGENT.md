@@ -10,7 +10,7 @@
 
 El **agente de fichas de artista** genera con OpenAI (y búsqueda opcional) un objeto con el esquema de la tabla `artists` de Supabase: biografías bilingües (EN/ES), estilos, tracks esenciales, sellos fundados, lanzamientos clave, relacionados, redes, etc.
 
-**Por defecto** el CLI hace **UPSERT directo en Supabase** (misma lógica que `npm run db:artist`: Postgres con `DATABASE_URL` / contraseña, o API con **service role**). La web sigue leyendo solo la base de datos.
+**Por defecto** el CLI hace **UPSERT vía API REST de Supabase** (misma lógica que `npm run db:artist`: `NEXT_PUBLIC_SUPABASE_URL` + **service role** / **secret**; `lib/artist-upsert.mjs` **no** usa Postgres/`pg`). La web sigue leyendo solo la base de datos.
 
 - **`--json-only`** — no toca la BD; escribe solo `data/artists/<slug>.json`.
 - **`--save-json`** — además del UPSERT, guarda copia en `data/artists/<slug>.json`.
@@ -25,7 +25,7 @@ Los archivos **`data/artists/*.json`** están en **`.gitignore`** (canónico en 
 | `scripts/generar-artista-agente.mjs` | CLI: OpenAI + SerpAPI opcional → UPSERT en BD (opcional JSON) |
 | `scripts/prompts/artista-agente-system.txt` | Prompt de sistema (reglas editoriales y esquema JSON) |
 | `src/app/api/admin/agent/route.ts` | POST: genera con el modelo y **persiste** vía `scripts/lib/artist-upsert.mjs` |
-| `scripts/lib/artist-upsert.mjs` | UPSERT compartido (CLI agente, `actualizar-artista`, API admin) |
+| `scripts/lib/artist-upsert.mjs` | UPSERT compartido solo por REST (CLI agente, `actualizar-artista`, API admin) |
 | `scripts/actualizar-artista.mjs` | UPSERT desde un archivo JSON → Supabase |
 | `scripts/ensure-artist-json-in-db.mjs` | Comprueba JSON vs fila en BD y sincroniza si difiere |
 | `src/lib/artist-entity-match.ts` | En fichas públicas: enlazar nombres de `related_artists` a slugs del directorio |
@@ -37,7 +37,7 @@ Definidas en `.env.local` (ver `.env.local.example`):
 - **`OPENAI_API_KEY`** — obligatoria para el agente.
 - **`OPENAI_MODEL`** — opcional; por defecto el código usa **`gpt-5.4`**.
 - **`SERPAPI_API_KEY`** — opcional; snippets de Google para contexto (si falta, el agente usa solo el modelo).
-- Para **escribir en `artists`** (agente por defecto, `db:artist`, batch): `DATABASE_URL` (o `SUPABASE_DB_PASSWORD` + `NEXT_PUBLIC_SUPABASE_URL`) **o** `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. La clave **anon/publishable** no vale para upsert.
+- Para **escribir en `artists`** (agente por defecto, `db:artist`, batch): `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. La clave **anon/publishable** no vale para upsert. `DATABASE_URL` solo aplica a migraciones (`db:migrate`), no a estos scripts.
 
 ### Comandos (npm)
 
@@ -133,7 +133,7 @@ Ruta de API: `POST /api/admin/agent` (cuerpo JSON con `slug`, `artistName`, nota
 
 The **artist profile agent** uses OpenAI (and optional web search) to produce an object matching the Supabase `artists` schema: bilingual bios (EN/ES), styles, essential tracks, labels founded, key releases, related artists, socials, etc.
 
-**By default** the CLI performs a **direct UPSERT into Supabase** (same path as `npm run db:artist`: Postgres via `DATABASE_URL` / password, or HTTP API with **service role**). The site still reads only the database.
+**By default** the CLI **UPSERTs via Supabase REST API** (same as `npm run db:artist`: `NEXT_PUBLIC_SUPABASE_URL` + **service role** / **secret**; `lib/artist-upsert.mjs` does **not** use Postgres/`pg`). The site still reads only the database.
 
 - **`--json-only`** — skip the DB; write only `data/artists/<slug>.json`.
 - **`--save-json`** — UPSERT **and** save a copy under `data/artists/<slug>.json`.
@@ -148,7 +148,7 @@ The **artist profile agent** uses OpenAI (and optional web search) to produce an
 | `scripts/generar-artista-agente.mjs` | CLI: OpenAI + optional SerpAPI → UPSERT (optional JSON file) |
 | `scripts/prompts/artista-agente-system.txt` | System prompt (editorial rules + JSON shape) |
 | `src/app/api/admin/agent/route.ts` | POST: model output, then **persist** via `scripts/lib/artist-upsert.mjs` |
-| `scripts/lib/artist-upsert.mjs` | Shared UPSERT (agent CLI, `actualizar-artista`, admin API) |
+| `scripts/lib/artist-upsert.mjs` | Shared UPSERT over HTTP only (agent CLI, `actualizar-artista`, admin API) |
 | `scripts/actualizar-artista.mjs` | UPSERT from a JSON file → Supabase |
 | `scripts/ensure-artist-json-in-db.mjs` | Compare JSON vs DB row and sync if different |
 | `src/lib/artist-entity-match.ts` | Public artist pages: map `related_artists` names to internal slugs |
@@ -160,7 +160,7 @@ Set in `.env.local` (see `.env.local.example`):
 - **`OPENAI_API_KEY`** — required for the agent.
 - **`OPENAI_MODEL`** — optional; default in code is **`gpt-5.4`**.
 - **`SERPAPI_API_KEY`** — optional; Google snippets for context (if missing, model-only).
-- To **write `artists`** (default agent, `db:artist`, batch): `DATABASE_URL` (or `SUPABASE_DB_PASSWORD` + `NEXT_PUBLIC_SUPABASE_URL`) **or** `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. The **anon/publishable** key cannot upsert.
+- To **write `artists`** (default agent, `db:artist`, batch): `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. The **anon/publishable** key cannot upsert. `DATABASE_URL` is for migrations (`db:migrate`), not these scripts.
 
 ### Commands (npm)
 

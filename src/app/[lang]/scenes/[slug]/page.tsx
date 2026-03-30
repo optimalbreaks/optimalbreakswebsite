@@ -10,6 +10,7 @@ import type { Scene } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
+import { splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -36,6 +37,24 @@ export default async function SceneDetailPage({ params }: Props) {
   const supabase = createServerSupabase()
   const { data: rawScene } = await supabase.from('scenes').select('*').eq('slug', slug).single()
   const scene = rawScene as Scene | null
+
+  const artistSlugs = new Map<string, string>()
+  if (scene?.key_artists?.length) {
+    const { data: matchedArtists } = await supabase
+      .from('artists')
+      .select('name, slug')
+      .in('name', scene.key_artists)
+    matchedArtists?.forEach((a) => artistSlugs.set(a.name, a.slug))
+  }
+
+  const labelSlugs = new Map<string, string>()
+  if (scene?.key_labels?.length) {
+    const { data: matchedLabels } = await supabase
+      .from('labels')
+      .select('name, slug')
+      .in('name', scene.key_labels)
+    matchedLabels?.forEach((l) => labelSlugs.set(l.name, l.slug))
+  }
 
   if (!scene) {
     return (
@@ -73,19 +92,37 @@ export default async function SceneDetailPage({ params }: Props) {
         {scene.region && <span className="cutout outline">{scene.region}</span>}
         <span className="cutout red">{scene.era}</span>
       </div>
-      <p className="max-w-[700px] mb-8" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8 }}>
-        {lang === 'es' ? scene.description_es : scene.description_en}
-      </p>
+      <div className="max-w-[700px] mb-8 space-y-5">
+        {splitBioParagraphs(lang === 'es' ? scene.description_es : scene.description_en).map((para, i) => (
+          <p
+            key={i}
+            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+            className="text-[var(--ink)]"
+          >
+            {para}
+          </p>
+        ))}
+      </div>
       {scene.key_artists?.length > 0 && (
         <div className="p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)] mb-4">
           <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>
-          <div className="flex flex-wrap gap-2">{scene.key_artists.map((a: string, i: number) => <span key={i} className="cutout red">{a}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{scene.key_artists.map((a: string, i: number) => {
+            const aSlug = artistSlugs.get(a)
+            return aSlug
+              ? <Link key={i} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
+              : <span key={i} className="cutout red">{a}</span>
+          })}</div>
         </div>
       )}
       {scene.key_labels?.length > 0 && (
         <div className="p-4 sm:p-6 border-4 border-[var(--ink)]">
           <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px' }}>{lang === 'es' ? 'SELLOS CLAVE' : 'KEY LABELS'}</div>
-          <div className="flex flex-wrap gap-2">{scene.key_labels.map((l: string, i: number) => <span key={i} className="cutout fill">{l}</span>)}</div>
+          <div className="flex flex-wrap gap-2">{scene.key_labels.map((l: string, i: number) => {
+            const lSlug = labelSlugs.get(l)
+            return lSlug
+              ? <Link key={i} href={`/${lang}/labels/${lSlug}`} className="cutout fill no-underline">{l}</Link>
+              : <span key={i} className="cutout fill">{l}</span>
+          })}</div>
         </div>
       )}
     </div>

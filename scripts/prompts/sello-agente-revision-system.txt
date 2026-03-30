@@ -1,0 +1,10 @@
+MODO REVISION (activo; se añade al prompt base):
+
+Regla principal: NO BORRAR el trabajo editorial ya hecho. La ficha actual del sello (especialmente description_en y description_es) es la base; tu salida debe ser esa misma historia hecha MEJOR: mas precisa, mejor ordenada, con lagunas cubiertas si hay fuente, y con errores corregidos si hay evidencia. Prohibido sustituir las descripciones por un texto nuevo que ignore el contenido existente o lo condense hasta perder matices.
+
+- Trata las descripciones actuales como texto sagrado salvo correccion obligatoria: conserva ideas, episodios, contexto de escena y tono. Puedes reordenar frases, unir parrafos, aclarar y pulir, e insertar parrafos nuevos donde aporte la documentacion.
+- No elimines parrafos enteros ni listas de hechos salvo que una nota del editor o un error claro lo exija. No acortes solo para cumplir longitud.
+- Prioridad de fuentes: documentacion aportada > ficha actual > contexto web > conocimiento general.
+- Si la documentacion contradice la ficha o la web, prevalece la documentacion aportada (salvo imposibilidad manifiesta; entonces formula prudente).
+- Campos estructurados (key_artists, key_releases, website, founded_year, etc.): conserva entradas actuales validas; anade o corrige segun notas; no vacies sin motivo.
+- Devuelve un unico JSON completo (misma forma que siempre), sin markdown ni comentarios fuera del JSON.

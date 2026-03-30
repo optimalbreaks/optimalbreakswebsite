@@ -85,6 +85,63 @@ export async function uploadArtistPortraitFromUrl(opts) {
   return publicUrl
 }
 
+/**
+ * Sube logo de sello a media/labels/<slug>/logo.<ext> (misma ruta que la API admin label-logo).
+ * @param {{ slug: string, sourceUrl: string, quiet?: boolean }} opts
+ * @returns {Promise<string>} URL pública del objeto en Storage
+ */
+export async function uploadLabelLogoFromUrl(opts) {
+  const { slug, sourceUrl, quiet = false } = opts
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_SECRET_KEY?.trim() ||
+    ''
+  if (!base || !key) {
+    throw new Error(
+      'Falta NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY) para subir al bucket media',
+    )
+  }
+
+  const res = await fetch(sourceUrl, {
+    headers: {
+      'User-Agent': 'OptimalBreaksLabelLogo/1.0',
+    },
+  })
+  if (!res.ok) {
+    throw new Error(`Descarga de la imagen: HTTP ${res.status} ${res.statusText}`)
+  }
+
+  const buf = Buffer.from(await res.arrayBuffer())
+  if (buf.length > MAX_BYTES) {
+    throw new Error(`Imagen demasiado grande (${buf.length} bytes; máx ${MAX_BYTES})`)
+  }
+
+  const ext = extFromSourceUrl(sourceUrl)
+  const objectPath = `labels/${slug}/logo${ext}`
+
+  let contentType = mimeForExt(ext)
+  const ct = res.headers.get('content-type')
+  if (ct && ct.startsWith('image/')) {
+    contentType = ct.split(';')[0].trim()
+  }
+
+  const sb = createClient(base, key, { auth: { persistSession: false } })
+  const { error } = await sb.storage.from('media').upload(objectPath, buf, {
+    contentType,
+    upsert: true,
+  })
+  if (error) {
+    throw new Error(`Storage: ${error.message}`)
+  }
+
+  const publicUrl = `${base.replace(/\/$/, '')}/storage/v1/object/public/media/${objectPath}`
+  if (!quiet) {
+    console.log(`[logo-sello] ${slug}: bucket media → ${publicUrl}`)
+  }
+  return publicUrl
+}
+
 export function hasStorageCredentials() {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const key =

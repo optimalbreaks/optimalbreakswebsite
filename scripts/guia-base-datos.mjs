@@ -13,7 +13,9 @@
  *   node scripts/guia-base-datos.mjs run artist-file data/artists/deekline.json
  *   node scripts/guia-base-datos.mjs run migrate
  *   node scripts/guia-base-datos.mjs run agent -- krafty-kuts "Krafty Kuts"
+ *   node scripts/guia-base-datos.mjs run label-agent -- lot49 "Lot49"
  *   node scripts/guia-base-datos.mjs run photo -- fatboy-slim
+ *   node scripts/guia-base-datos.mjs run label-photo -- --missing-only
  */
 
 import { spawnSync } from 'child_process'
@@ -31,7 +33,7 @@ const ACTIONS = [
     id: 'artist-json',
     run: 'node scripts/guia-base-datos.mjs run artist-json <slug>',
     npm: 'npm run db:guia -- run artist-json <slug>',
-    creds: 'DATABASE_URL o SUPABASE_DB_PASSWORD+URL o SERVICE_ROLE+NEXT_PUBLIC_SUPABASE_URL',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET); no Postgres para UPSERT',
     description:
       'UPSERT de un artista desde data/artists/<slug>.json (tras editar el JSON en repo).',
   },
@@ -39,7 +41,7 @@ const ACTIONS = [
     id: 'artist-file',
     run: 'node scripts/guia-base-datos.mjs run artist-file <ruta-desde-raíz>',
     npm: 'npm run db:guia -- run artist-file data/artists/x.json',
-    creds: 'Igual que artist-json',
+    creds: 'Igual que artist-json (solo API Supabase)',
     description: 'UPSERT desde cualquier ruta de JSON relativa al repo.',
   },
   {
@@ -52,17 +54,40 @@ const ACTIONS = [
     id: 'agent',
     run: 'node scripts/guia-base-datos.mjs run agent -- <slug> "Nombre" [flags]',
     npm: 'npm run db:artist:agent -- …',
-    creds: 'OPENAI_API_KEY; BD como artist-json; opcional SERPAPI_API_KEY',
+    creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI_API_KEY',
     description:
       'Genera ficha con OpenAI (+ Serp opcional) y UPSERT por defecto. --revise: refina ficha existente (JSON local o BD) sin vaciar biografías; varios --notes para docs del artista.',
+  },
+  {
+    id: 'label-json',
+    run: 'node scripts/guia-base-datos.mjs run label-json <slug>',
+    npm: 'npm run db:guia -- run label-json lot49',
+    creds: 'API Supabase service role (tabla public.labels)',
+    description: 'UPSERT de un sello desde data/labels/<slug>.json.',
+  },
+  {
+    id: 'label-agent',
+    run: 'node scripts/guia-base-datos.mjs run label-agent -- <slug> "Nombre sello" [flags]',
+    npm: 'npm run db:label:agent -- …',
+    creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI_API_KEY',
+    description:
+      'Redactor IA de sellos (mismo flujo que agent de artistas): prompts/sello-agente-*.txt; --revise, --notes, --json-only, --save-json; --from-db para lote.',
   },
   {
     id: 'photo',
     run: 'node scripts/guia-base-datos.mjs run photo -- <slug> [--json-only] …',
     npm: 'npm run db:artist:photo -- …',
-    creds: 'OPENAI_API_KEY + SERPAPI_API_KEY + mismas credenciales BD que actualizar-artista',
+    creds: 'OPENAI_API_KEY + SERPAPI_API_KEY + URL + SUPABASE_SERVICE_ROLE_KEY (Storage + UPSERT vía API)',
     description:
       'SerpAPI + modelo eligen imagen; descarga, sube a bucket media (artists/<slug>/portrait.*), image_url = URL Supabase; UPSERT. --json-only: sin Storage ni BD.',
+  },
+  {
+    id: 'label-photo',
+    run: 'node scripts/guia-base-datos.mjs run label-photo -- <slug> | --missing-only | --all [flags]',
+    npm: 'npm run db:label:photo   # sin args = cola sin logo; npm run db:label:photo -- lot49',
+    creds: 'OPENAI_API_KEY + SERPAPI_API_KEY + URL + SERVICE_ROLE (igual que API admin label-logo)',
+    description:
+      'Logos de sellos: Serp + OpenAI → Storage labels/<slug>/logo.* y UPDATE image_url. --missing-only = cola sin https en image_url.',
   },
   {
     id: 'seed',
@@ -83,7 +108,7 @@ const ACTIONS = [
     run: 'node scripts/guia-base-datos.mjs run push-hibrida-fest',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)',
     description:
-      'UPSERT organizacion hibrida-fest + 3 eventos vía API (sin DATABASE_URL; alinea con 014/015). Añade --verify para comprobar columnas y datos.',
+      'UPSERT organizacion hibrida-fest + 3 eventos vía API Supabase (alinea con 014/015). Añade --verify para comprobar columnas y datos.',
   },
   {
     id: 'events-enrich',
@@ -209,7 +234,10 @@ Punto de entrada unificado:
   artist-file <ruta>     UPSERT desde ruta relativa al repo
   ensure <ruta.json>     Alinear BD con JSON (ensure-artist-json-in-db)
   agent -- …             generar-artista-agente.mjs (pasar args tras --)
+  label-json <slug>      UPSERT desde data/labels/<slug>.json
+  label-agent -- …       generar-sello-agente.mjs (pasar args tras --)
   photo -- …             elegir-foto-artista.mjs
+  label-photo -- …       elegir-foto-sello.mjs (logos sellos)
   seed                   seed-supabase (solo seed)
   migrate                seed-supabase --all
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
@@ -245,14 +273,23 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   fichero data/artists/….json y hace UPSERT en public.artists (Postgres o API).
   Siempre escribe en base si las credenciales están bien.
 
-• lib/artist-upsert.mjs — «Motor común de guardado». No se ejecuta a mano; lo
-  usan actualizar-artista, generar-artista-agente, elegir-foto (por defecto con BD) y la
-  API admin. Ahí está el INSERT/UPDATE real de la tabla artists.
+• lib/artist-upsert.mjs — «Motor común de guardado» (solo REST Supabase + service role;
+  sin Postgres/`pg`). Lo usan actualizar-artista, generar-artista-agente, elegir-foto
+  (UPSERT) y la API admin.
 
 • generar-artista-agente.mjs — «Redactor IA de fichas». OpenAI (+ Serp opcional)
   genera la ficha. --revise + ficha en data/artists o BD: refina biografías y campos
   sin vaciar el texto existente; varios --notes. Por defecto: UPSERT en BD. Ojo:
   con --json-only o --stdout NO escribe en Supabase (solo fichero o consola).
+
+• actualizar-sello.mjs / generar-sello-agente.mjs — «Sello desde JSON» / «Redactor IA
+  de sellos». Misma mecánica que artistas: lib/label-upsert.mjs, prompts en
+  scripts/prompts/sello-agente-system.txt (+ revision). Guía: run label-json <slug>,
+  run label-agent -- <slug> "Nombre". Lote: generar-sello-agente.mjs --from-db.
+
+• elegir-foto-sello.mjs — «Logo del sello» (misma idea que la API /admin/agent/label-logo):
+  SerpAPI + OpenAI → `media/labels/<slug>/logo.*` y UPDATE `labels.image_url`.
+  run label-photo -- --missing-only | <slug> | --all.
 
 • elegir-foto-artista.mjs — «Buscar foto, subirla a Storage y enlazar». Elige URL
   con SerpAPI+IA, descarga la imagen, la sube a bucket media bajo artists/<slug>/,
@@ -267,7 +304,7 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   (--all, --files, o solo seed). Modo --verify: solo lee conteos (anon), no escribe.
 
 • push-hibrida-fest.mjs — UPSERT de organizations/events Hibrida Fest por API
-  (service role) si no hay DATABASE_URL; mismo contenido que 014_….sql.
+  (service role); mismo contenido que 014_….sql.
 
 • enriquecer-evento.mjs — «Completar ficha de evento». El usuario crea el evento
   desde /administrator o pide al agente Cursor. Luego este script busca en internet
@@ -296,10 +333,15 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • prompts/artista-agente-system.txt — Texto de sistema para el agente de bios;
   no es un programa.
 
+• prompts/sello-agente-system.txt — Texto de sistema para el agente de sellos.
+
 Resumen «¿escribe en la tabla artists?»: sí → actualizar-artista, generar-artista-agente
 (salvo --json-only/--stdout), ensure (si hay desajuste), sync-timeline (sin --sql),
 sync-user-list, elegir-foto (salvo --json-only). no (solo) → elegir-foto
 --json-only, sync-timeline --sql (solo archivo), verify, guia.
+
+Resumen «¿escribe en la tabla labels?»: sí → actualizar-sello, generar-sello-agente
+(salvo --json-only/--stdout), push-labels-batch.mjs.
 `)
 }
 
@@ -397,8 +439,28 @@ function main() {
     case 'agent':
       runNode('generar-artista-agente.mjs', stripLeadingDashDash(rest))
       break
+    case 'label-json': {
+      const slug = (rest[0] || '').replace(/\.json$/i, '').trim()
+      if (!slug) {
+        console.error('Uso: run label-json <slug>')
+        process.exit(1)
+      }
+      const p = join(ROOT, 'data', 'labels', `${slug}.json`)
+      if (!existsSync(p)) {
+        console.error('No existe:', p)
+        process.exit(1)
+      }
+      runNode('actualizar-sello.mjs', [p])
+      break
+    }
+    case 'label-agent':
+      runNode('generar-sello-agente.mjs', stripLeadingDashDash(rest))
+      break
     case 'photo':
       runNode('elegir-foto-artista.mjs', stripLeadingDashDash(rest))
+      break
+    case 'label-photo':
+      runNode('elegir-foto-sello.mjs', stripLeadingDashDash(rest))
       break
     case 'seed':
       runNode('seed-supabase.mjs', [])
