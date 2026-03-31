@@ -16,7 +16,7 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. La guía detallada del agente de **artistas** sigue en [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md).
 
-**Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario** (favoritos, visto en vivo, asistencia a eventos, reseñas): [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md).
+**Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario:** [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md). **Estrellas 1–5 solo** para **experiencias a las que puedes ir**: **artistas** (visto en vivo) y **eventos** (fui). Sellos, mixes, etc.: solo favoritos/guardados, sin puntuación.
 
 ---
 
@@ -146,7 +146,7 @@ Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**.
 
 ### My Breaks / interacción del usuario
 
-Resumen de favoritos, **visto en vivo** en artistas (estrellas 1–5), **valorar evento** en la ficha del evento (mismo tipo de modal: fecha, sitio, estrellas, notas), asistencia y reseñas en el dashboard: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración Supabase **`032_event_ratings_attendance_fields.sql`** para los campos extra de la valoración de eventos.
+Política: **valoración con estrellas solo en artistas y eventos** (experiencias presenciales). **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración **`032_event_ratings_attendance_fields.sql`** para campos extra en valoración de eventos.
 
 ### Vistas de listado (grande / compacto / lista)
 

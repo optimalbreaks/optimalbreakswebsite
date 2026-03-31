@@ -1270,8 +1270,8 @@ function ReviewsTab({ lang }: { lang: string }) {
         </div>
         <p className="mt-2 mb-0" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)', lineHeight: 1.5 }}>
           {es
-            ? 'Aquí aparecen las reseñas de eventos y las valoraciones que das desde «Visto en vivo» en fichas de artista (no es lo mismo que solo guardar favoritos).'
-            : 'Event reviews plus ratings you submit from “Seen live” on artist pages (not the same as favorites only).'}
+            ? 'Pulsa una fila para abrir la ficha y editar tu valoración o tu directo. También puedes hacerlo desde el botón VALORAR / VISTO EN VIVO en cada página.'
+            : 'Tap a row to open the page and edit your rating or live entry. You can also use RATE / SEEN LIVE on each detail page.'}
         </p>
       </div>
 
@@ -1298,17 +1298,19 @@ function ReviewsTab({ lang }: { lang: string }) {
                   const r = ratings[id]
                   if (!ev || !r) return null
                   return (
-                    <div key={id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start">
+                    <Link
+                      key={id}
+                      href={`/${lang}/events/${ev.slug}?editReview=1`}
+                      className="group p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start no-underline text-inherit cursor-pointer hover:bg-[var(--paper-dark)]/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)] focus-visible:ring-offset-2"
+                    >
                       <div className="shrink-0 w-20 sm:w-24 border-[2px] border-[var(--ink)]">
-                        <Link href={`/${lang}/events/${ev.slug}`}>
-                          <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-square" fit="cover" />
-                        </Link>
+                        <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-square" fit="cover" />
                       </div>
                       <div className="flex-grow min-w-0">
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <Link href={`/${lang}/events/${ev.slug}`} className="no-underline text-[var(--ink)] hover:text-[var(--red)]">
-                            <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{ev.name}</div>
-                          </Link>
+                          <div className="text-[var(--ink)] group-hover:text-[var(--red)] transition-colors" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>
+                            {ev.name}
+                          </div>
                           <DashboardReviewStars rating={r.rating} />
                         </div>
                         <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
@@ -1331,7 +1333,7 @@ function ReviewsTab({ lang }: { lang: string }) {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   )
                 })}
               </div>
@@ -1345,29 +1347,19 @@ function ReviewsTab({ lang }: { lang: string }) {
               </span>
               <div className="mt-3 space-y-0 border-4 border-[var(--ink)]">
                 {sightings.map((s) => {
-                  const href = s.artist_slug ? `/${lang}/artists/${s.artist_slug}` : null
+                  const editHref = s.artist_slug ? `/${lang}/artists/${s.artist_slug}?editSighting=${encodeURIComponent(s.id)}` : null
                   const title = s.artist_name || s.artist_slug || (es ? 'Artista' : 'Artist')
                   const thumb = artistImages[s.artist_id]
-                  return (
-                    <div key={s.id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start">
+                  const rowInner = (
+                    <>
                       <div className="shrink-0 w-20 sm:w-24 border-[2px] border-[var(--ink)] bg-[var(--paper-dark)]">
-                        {href ? (
-                          <Link href={href}>
-                            <CardThumbnail src={thumb} alt={title} aspectClass="aspect-square" fit="cover" />
-                          </Link>
-                        ) : (
-                          <CardThumbnail src={thumb} alt={title} aspectClass="aspect-square" fit="cover" />
-                        )}
+                        <CardThumbnail src={thumb} alt={title} aspectClass="aspect-square" fit="cover" />
                       </div>
                       <div className="flex-grow min-w-0">
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          {href ? (
-                            <Link href={href} className="no-underline text-[var(--ink)] hover:text-[var(--red)]">
-                              <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{title}</div>
-                            </Link>
-                          ) : (
-                            <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{title}</div>
-                          )}
+                          <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }} className="text-[var(--ink)]">
+                            {title}
+                          </div>
                           <DashboardReviewStars rating={s.rating} />
                         </div>
                         <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
@@ -1386,6 +1378,19 @@ function ReviewsTab({ lang }: { lang: string }) {
                           </div>
                         )}
                       </div>
+                    </>
+                  )
+                  return editHref ? (
+                    <Link
+                      key={s.id}
+                      href={editHref}
+                      className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start no-underline text-inherit cursor-pointer hover:bg-[var(--paper-dark)]/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)] focus-visible:ring-offset-2"
+                    >
+                      {rowInner}
+                    </Link>
+                  ) : (
+                    <div key={s.id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start">
+                      {rowInner}
                     </div>
                   )
                 })}

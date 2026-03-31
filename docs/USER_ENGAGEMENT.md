@@ -6,6 +6,19 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 
 ---
 
+## Product policy: who gets 1–5 stars?
+
+**Only experiences you can physically go to** — things that happen in real life:
+
+| Stars? | Entity | Why |
+|--------|--------|-----|
+| **Yes** | **Artists** | “I saw this DJ / act **live**” (`artist_sightings`). |
+| **Yes** | **Events** | “I **went to** this party / festival / club night” (`event_ratings`). |
+
+**No star ratings** (bookmark / save only): **labels**, **mixes**, **blog posts**, **scenes**, etc. Favorites and saves stay **binary** (heart / save) — no numeric score. The schema and UI intentionally do **not** add `label_ratings` or `mix_ratings`.
+
+---
+
 ## Summary table
 
 | Action | Stars / score? | Where in UI | Table(s) | Notes |
@@ -39,8 +52,8 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 
 ## Favorites vs ratings
 
-- **Favorite** = bookmark / “I like this” — no stars.
-- **Rating** = only **seen live** (artist) and **event_ratings** (event), when used.
+- **Favorite** = bookmark / “I like this” — no stars (artists, labels, events, mixes).
+- **Rating (1–5)** = **only** **seen live** (artist) and **event review** (event) — both are “I was there” experiences.
 
 ---
 

@@ -21,7 +21,10 @@ import {
 } from '@/lib/bio-format'
 import { getDictionary } from '@/lib/dictionaries'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = {
+  params: Promise<{ lang: Locale; slug: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
 type EventSeoRow = Pick<BreakEvent, 'name' | 'description_en' | 'description_es' | 'image_url'>
 type EventPageRow = BreakEvent & {
   promoter: Pick<Organization, 'slug' | 'name'> | null
@@ -102,8 +105,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return detailPageMetadata(lang, `/events/${slug}`, siteName, data.name, description, 'website', data.image_url)
 }
 
-export default async function EventDetailPage({ params }: Props) {
+function firstSearchParam(v: string | string[] | undefined): string | undefined {
+  if (v === undefined) return undefined
+  return Array.isArray(v) ? v[0] : v
+}
+
+export default async function EventDetailPage({ params, searchParams }: Props) {
   const { lang, slug } = await params
+  const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
+  const autoOpenEventReview = firstSearchParam(sp.editReview) === '1'
   const supabase = createServerSupabase()
   const { data: rawEvent } = await supabase
     .from('events')
@@ -278,6 +288,7 @@ export default async function EventDetailPage({ params }: Props) {
                 defaultVenue={event.venue}
                 defaultCity={event.city}
                 defaultCountry={event.country}
+                autoOpenForm={autoOpenEventReview}
               />
               <FanCounter type="event" entityId={event.id} lang={lang} />
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />

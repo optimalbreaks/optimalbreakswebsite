@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { useEventRatings } from '@/hooks/useUserData'
@@ -22,6 +22,8 @@ interface Props {
   defaultVenue?: string | null
   defaultCity?: string | null
   defaultCountry?: string | null
+  /** Desde `?editReview=1` (p. ej. al pulsar una reseña en el dashboard) */
+  autoOpenForm?: boolean
 }
 
 function getLang(pathname: string) {
@@ -55,10 +57,12 @@ export default function EventReviewButton({
   defaultVenue,
   defaultCity,
   defaultCountry,
+  autoOpenForm = false,
 }: Props) {
   const { user } = useAuth()
   const { rate, refetch } = useEventRatings()
   const pathname = usePathname()
+  const router = useRouter()
   const resolvedLang = lang || getLang(pathname)
   const es = resolvedLang === 'es'
 
@@ -78,6 +82,7 @@ export default function EventReviewButton({
   const [saveError, setSaveError] = useState<string | null>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLDivElement>(null)
+  const autoOpenDoneRef = useRef(false)
 
   useEffect(() => {
     setMounted(true)
@@ -148,7 +153,7 @@ export default function EventReviewButton({
     }
   }, [showTooltip])
 
-  const openForm = () => {
+  const openForm = useCallback(() => {
     if (!user) {
       setShowTooltip(true)
       return
@@ -175,7 +180,20 @@ export default function EventReviewButton({
       })
     }
     setShowForm(true)
-  }
+  }, [user, row, defaultDate, defaultVenue, defaultCity, defaultCountry])
+
+  useEffect(() => {
+    if (!autoOpenForm || !user || loading || autoOpenDoneRef.current) return
+    autoOpenDoneRef.current = true
+    openForm()
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('editReview') === '1') {
+        url.searchParams.delete('editReview')
+        router.replace(url.pathname + (url.search || ''), { scroll: false })
+      }
+    }
+  }, [autoOpenForm, user, loading, openForm, router])
 
   const handleSubmit = async () => {
     if (!user || form.rating < 1) return

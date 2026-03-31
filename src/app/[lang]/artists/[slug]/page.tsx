@@ -25,7 +25,17 @@ import FavoriteButton from '@/components/FavoriteButton'
 import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = {
+  params: Promise<{ lang: Locale; slug: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+function firstSearchParam(v: string | string[] | undefined): string | undefined {
+  if (v === undefined) return undefined
+  return Array.isArray(v) ? v[0] : v
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'styles' | 'country' | 'era'>
 
 const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
@@ -96,8 +106,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   )
 }
 
-export default async function ArtistDetailPage({ params }: Props) {
+export default async function ArtistDetailPage({ params, searchParams }: Props) {
   const { lang, slug: rawSlug } = await params
+  const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
+  const editSightingRaw = firstSearchParam(sp.editSighting)
+  const editSightingId = editSightingRaw && UUID_RE.test(editSightingRaw) ? editSightingRaw : null
   const slug = sanitizeSlug(rawSlug)
   const supabase = createSimpleSupabase()
   const { data: rawArtist } = await supabase
@@ -195,7 +208,12 @@ export default async function ArtistDetailPage({ params }: Props) {
               )}
               <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-6">
                 <FavoriteButton type="artist" entityId={artist.id} size="md" lang={lang} />
-                <SeenLiveButton artistId={artist.id} artistName={artist.name_display || artist.name} lang={lang} />
+                <SeenLiveButton
+                  artistId={artist.id}
+                  artistName={artist.name_display || artist.name}
+                  lang={lang}
+                  editSightingId={editSightingId}
+                />
                 <FanCounter type="artist" entityId={artist.id} lang={lang} />
                 <ShareButtons
                   url={`/${lang}/artists/${slug}`}

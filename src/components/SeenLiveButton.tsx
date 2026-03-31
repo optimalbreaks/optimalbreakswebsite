@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { i18n } from '@/lib/i18n-config'
@@ -17,6 +17,8 @@ interface Props {
   artistId: string
   artistName: string
   lang?: string
+  /** UUID de `artist_sightings` — abre el formulario en modo edición (`?editSighting=` desde el dashboard). */
+  editSightingId?: string | null
 }
 
 function getLang(pathname: string) {
@@ -24,9 +26,10 @@ function getLang(pathname: string) {
   return i18n.locales.includes(seg as any) ? seg : i18n.defaultLocale
 }
 
-export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
+export default function SeenLiveButton({ artistId, artistName, lang, editSightingId = null }: Props) {
   const { user } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const resolvedLang = lang || getLang(pathname)
   const es = resolvedLang === 'es'
 
@@ -45,6 +48,8 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
 
   const [form, setForm] = useState({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [editingSightingId, setEditingSightingId] = useState<string | null>(null)
+  const autoEditOpenedRef = useRef(false)
 
   const checkSightings = useCallback(async () => {
     if (!user) { setHasSeen(false); setSightingCount(0); setLoading(false); return }
@@ -61,6 +66,57 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
   }, [user, artistId])
 
   useEffect(() => { checkSightings() }, [checkSightings])
+
+  useEffect(() => {
+    if (!showForm) setEditingSightingId(null)
+  }, [showForm])
+
+  useEffect(() => {
+    if (!editSightingId || !user || autoEditOpenedRef.current) return
+    let cancelled = false
+    const supabase: any = createBrowserSupabase()
+    ;(async () => {
+      const { data } = await supabase
+        .from('artist_sightings')
+        .select('*')
+        .eq('id', editSightingId)
+        .eq('user_id', user.id)
+        .eq('artist_id', artistId)
+        .maybeSingle()
+      if (cancelled) return
+      if (!data) {
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href)
+          if (url.searchParams.get('editSighting')) {
+            url.searchParams.delete('editSighting')
+            router.replace(url.pathname + (url.search || ''), { scroll: false })
+          }
+        }
+        return
+      }
+      autoEditOpenedRef.current = true
+      setEditingSightingId(data.id)
+      setSaveError(null)
+      setForm({
+        seen_at: data.seen_at ? String(data.seen_at).slice(0, 10) : '',
+        venue: data.venue || '',
+        city: data.city || '',
+        country: data.country || '',
+        event_name: data.event_name || '',
+        notes: data.notes || '',
+        rating: data.rating || 0,
+      })
+      setShowForm(true)
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        if (url.searchParams.get('editSighting')) {
+          url.searchParams.delete('editSighting')
+          router.replace(url.pathname + (url.search || ''), { scroll: false })
+        }
+      }
+    })()
+    return () => { cancelled = true }
+  }, [editSightingId, user, artistId, router])
 
   useEffect(() => {
     if (!showTooltip) return
@@ -93,7 +149,11 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
     if (!user) { setShowTooltip(true); return }
     setShowForm((v) => {
       const next = !v
-      if (next) setSaveError(null)
+      if (next) {
+        setSaveError(null)
+        setEditingSightingId(null)
+        setForm({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
+      }
       return next
     })
   }
@@ -102,10 +162,7 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
     if (!user || form.rating < 1) return
     setSaveError(null)
     const supabase: any = createBrowserSupabase()
-    // venue/city/country son NOT NULL en BD: no enviar null o el INSERT falla sin feedback.
-    const { error } = await supabase.from('artist_sightings').insert({
-      user_id: user.id,
-      artist_id: artistId,
+    const row = {
       seen_at: form.seen_at || null,
       venue: form.venue.trim() || '',
       city: form.city.trim() || '',
@@ -113,7 +170,14 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
       event_name: form.event_name.trim() || '',
       notes: form.notes.trim() || '',
       rating: form.rating,
-    })
+    }
+    const { error } = editingSightingId
+      ? await supabase.from('artist_sightings').update(row).eq('id', editingSightingId).eq('user_id', user.id)
+      : await supabase.from('artist_sightings').insert({
+          user_id: user.id,
+          artist_id: artistId,
+          ...row,
+        })
     if (error) {
       setSaveError(
         es
@@ -123,6 +187,7 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
       return
     }
     setForm({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
+    setEditingSightingId(null)
     setShowForm(false)
     await checkSightings()
   }
@@ -210,7 +275,13 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
         >
           <div className="bg-[var(--ink)] text-[var(--yellow)] px-4 py-2">
             <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              {es ? `HE VISTO A ${artistName.toUpperCase()}` : `I SAW ${artistName.toUpperCase()}`}
+              {editingSightingId
+                ? es
+                  ? `EDITAR DIRECTO — ${artistName.toUpperCase()}`
+                  : `EDIT LIVE — ${artistName.toUpperCase()}`
+                : es
+                  ? `HE VISTO A ${artistName.toUpperCase()}`
+                  : `I SAW ${artistName.toUpperCase()}`}
             </span>
           </div>
           <div className="p-4 space-y-2">
