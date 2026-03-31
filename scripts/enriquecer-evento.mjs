@@ -16,6 +16,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -456,6 +457,35 @@ async function runPatchRaveartWinter2026(sb) {
   console.log('[patch-raveart-winter] despues:', after)
 }
 
+const RAVEART_RETRO_HALLOWEEN_2025_SLUG = 'raveart-retro-halloween-2025'
+const RAVEART_RETRO_HALLOWEEN_2025_IMAGE = '/images/events/retro-halloween-2025.jpg'
+
+async function runPatchRaveartRetroHalloween2025Poster(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, image_url')
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2025_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  if (!before) {
+    console.error('[patch-retro-halloween-2025] No existe fila:', RAVEART_RETRO_HALLOWEEN_2025_SLUG)
+    process.exit(1)
+  }
+  console.log('[patch-retro-halloween-2025] antes:', before)
+  const { error: e1 } = await sb
+    .from('events')
+    .update({ image_url: RAVEART_RETRO_HALLOWEEN_2025_IMAGE })
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2025_SLUG)
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, image_url')
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2025_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-retro-halloween-2025] despues:', after)
+}
+
 const RAVEART_SUMMER_2026_SLUG = 'raveart-summer-2026'
 
 const EVENT_ROW_DEFAULTS = {
@@ -770,6 +800,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-raveart-retro-halloween-2025-poster')) {
+    await runPatchRaveartRetroHalloween2025Poster(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -811,7 +846,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-winter-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
-  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026`)
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
+  node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster`)
     process.exit(1)
   }
 

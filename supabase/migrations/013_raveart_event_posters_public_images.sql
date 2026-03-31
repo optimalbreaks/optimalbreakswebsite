@@ -2,7 +2,7 @@
 -- image_url como ruta absoluta del sitio (/images/...); SEO la resuelve con SITE_URL.
 
 UPDATE public.events
-SET image_url = '/images/events/raveart_retro_hallowen_2025.jpeg'
+SET image_url = '/images/events/retro-halloween-2025.jpg'
 WHERE slug = 'raveart-retro-halloween-2025';
 
 WITH raveart_org AS (
