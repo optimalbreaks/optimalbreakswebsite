@@ -107,3 +107,51 @@ export async function adminDelete(table: string, id: string): Promise<void> {
   const res = await fetch(`${BASE}/${table}?id=${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
 }
+
+// --- Usuarios (Auth + profiles; no usa /api/admin/[table]) ---
+
+export type AdminUserRow = {
+  id: string
+  email: string
+  display_name: string | null
+  username: string | null
+  role: 'user' | 'admin'
+  created_at: string
+  last_sign_in_at: string | null
+}
+
+export async function adminListUsers(opts: {
+  page?: number
+  limit?: number
+  search?: string
+} = {}): Promise<ListResponse<AdminUserRow>> {
+  const params = new URLSearchParams()
+  if (opts.page) params.set('page', String(opts.page))
+  if (opts.limit) params.set('limit', String(opts.limit))
+  if (opts.search) params.set('search', opts.search)
+  const res = await fetch(`${BASE}/users?${params}`)
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
+
+export async function adminGetUserDetail(id: string): Promise<{
+  id: string
+  email: string
+  last_sign_in_at: string | null
+  created_at: string
+  profile: Record<string, unknown> | null
+}> {
+  const res = await fetch(`${BASE}/users/${id}`)
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
+
+export async function adminUpdateUserRole(id: string, role: 'user' | 'admin'): Promise<Record<string, unknown>> {
+  const res = await fetch(`${BASE}/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  })
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}

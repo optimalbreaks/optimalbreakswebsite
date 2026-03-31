@@ -23,7 +23,7 @@ const CARDS = [
   { key: 'scenes', label: 'Escenas', icon: '☰', href: '/scenes', bg: 'var(--cyan)', fg: '#fff' },
   { key: 'mixes', label: 'Mixes', icon: '▶', href: '/mixes', bg: 'var(--pink)', fg: '#fff' },
   { key: 'history_entries', label: 'Historia', icon: '↻', href: '/history', bg: 'var(--yellow)', fg: 'var(--ink)' },
-  { key: 'users', label: 'Usuarios', icon: '☻', href: '', bg: 'var(--paper-dark)', fg: 'var(--ink)' },
+  { key: 'users', label: 'Usuarios', icon: '☻', href: '/users', bg: 'var(--paper-dark)', fg: 'var(--ink)' },
 ] as const
 
 export default function AdminDashboard() {

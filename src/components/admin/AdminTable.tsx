@@ -19,7 +19,8 @@ interface AdminTableProps {
   onSearch: (term: string) => void
   onDelete?: (id: string) => void
   editHref: (row: any) => string
-  newHref: string
+  /** Si se omite, no se muestra el botón «+ Nuevo». */
+  newHref?: string
   searchPlaceholder?: string
 }
 
@@ -64,9 +65,11 @@ export default function AdminTable({
           placeholder={searchPlaceholder}
           className="admin-input flex-1 max-w-md"
         />
-        <Link href={newHref} className="admin-btn admin-btn--yellow no-underline text-center sm:text-left">
-          + Nuevo
-        </Link>
+        {newHref ? (
+          <Link href={newHref} className="admin-btn admin-btn--yellow no-underline text-center sm:text-left">
+            + Nuevo
+          </Link>
+        ) : null}
       </div>
 
       <div className="overflow-x-auto border-[3px] border-[var(--ink)] bg-[#fffef6] shadow-[6px_6px_0_rgba(26,26,26,0.12)]">

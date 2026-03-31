@@ -9,6 +9,7 @@ interface AdminSidebarProps {
 
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: '◉', path: '' },
+  { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
   { key: 'artists', label: 'Artistas', icon: '♫', path: '/artists' },
   { key: 'labels', label: 'Sellos', icon: '◈', path: '/labels' },
   { key: 'events', label: 'Eventos', icon: '⚡', path: '/events' },
