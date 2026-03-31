@@ -58,41 +58,52 @@ export default function DjDeck({ dict }: DjDeckProps) {
       <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[80px] sm:w-[100px] h-[22px] z-10 shadow-sm" style={{ background: 'var(--tape)', transform: 'rotate(-1deg)' }} />
 
       {/* Top bar — track selector */}
-      <div className="relative z-10 flex justify-between items-center mb-4 pb-2 border-b border-white/5 gap-2 shadow-[0_1px_0_rgba(0,0,0,0.5)]">
-        <div className="hidden sm:block" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--yellow)', letterSpacing: '3px' }}>
-          {h.deck_brand}
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2 flex-1 sm:flex-none justify-center min-w-0">
-          <button type="button" onClick={() => { initAudio(); switchTrack(-1) }} className="text-white/50 hover:text-[var(--yellow)] transition-colors text-lg px-2 py-1">
-            ◄
-          </button>
-          <div className="text-center truncate flex-1 max-w-[120px] sm:max-w-[200px]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'var(--yellow)', letterSpacing: '1px' }}>
-            {track.title}
+      <div className="relative z-10 mb-4 bg-[#0a0a0c] border-2 border-[#222] rounded-md p-2 sm:p-3 shadow-inner">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4">
+          <div className="hidden sm:block text-[#444]" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '4px' }}>
+            {h.deck_brand}
           </div>
-          <button type="button" onClick={() => { initAudio(); switchTrack(1) }} className="text-white/50 hover:text-[var(--yellow)] transition-colors text-lg px-2 py-1">
-            ►
-          </button>
+          
+          <div className="flex items-center justify-between w-full sm:w-auto flex-1 max-w-[400px] bg-[#111] border border-[#333] rounded px-2 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+            <button type="button" onClick={() => { initAudio(); switchTrack(-1) }} className="text-[#555] hover:text-[var(--acid)] transition-colors p-1" aria-label="Previous track">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"><polygon points="19,4 5,12 19,20" /></svg>
+            </button>
+            <div className="flex flex-col items-center justify-center flex-1 px-3 min-w-0 overflow-hidden">
+              <div className="text-[#333] mb-0.5" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', textTransform: 'uppercase' }}>Now Playing</div>
+              <div className="w-full text-center truncate text-[#00ffcc] animate-pulse-slow" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '1px', textShadow: '0 0 5px rgba(0,255,204,0.5)' }}>
+                {track.title}
+              </div>
+            </div>
+            <button type="button" onClick={() => { initAudio(); switchTrack(1) }} className="text-[#555] hover:text-[var(--acid)] transition-colors p-1" aria-label="Next track">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"><polygon points="5,4 19,12 5,20" /></svg>
+            </button>
+          </div>
+          
+          <div className="hidden md:block text-[#444]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '2px' }}>
+            {h.deck_model}
+          </div>
         </div>
-        <div className="hidden lg:block" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '2px', color: 'rgba(255,255,255,0.3)' }}>
-          {h.deck_model}
-        </div>
-      </div>
 
-      {/* Progress bar */}
-      <div className="relative z-10 mb-5 px-1">
-        <div
-          className="h-[3px] bg-white/10 rounded-full relative cursor-pointer"
+        {/* Progress bar inside the display */}
+        <div className="mt-3 relative cursor-pointer group"
           onClick={(e) => {
             if (!duration) return
             const rect = e.currentTarget.getBoundingClientRect()
             seekToRatio((e.clientX - rect.left) / rect.width)
           }}
         >
-          <div className="h-full bg-[var(--red)] rounded-full" style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }} />
-        </div>
-        <div className="flex justify-between mt-1">
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>{fmt(progress)}</span>
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>{duration ? fmt(duration) : '0:00'}</span>
+          <div className="h-[4px] bg-[#111] border border-[#333] rounded-full overflow-hidden shadow-inner">
+            <div className="h-full bg-[var(--acid)] relative" style={{ width: duration ? `${(progress / duration) * 100}%` : '0%', boxShadow: '0 0 8px var(--acid)' }}>
+              <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white opacity-80 shadow-[0_0_4px_white]" />
+            </div>
+          </div>
+          {/* Hover hit area expansion */}
+          <div className="absolute -inset-y-2 inset-x-0" />
+          
+          <div className="flex justify-between mt-1.5 px-1">
+            <span className="text-[#00ffcc]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', textShadow: '0 0 2px rgba(0,255,204,0.3)' }}>{fmt(progress)}</span>
+            <span className="text-[#444]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px' }}>{duration ? fmt(duration) : '0:00'}</span>
+          </div>
         </div>
       </div>
 
