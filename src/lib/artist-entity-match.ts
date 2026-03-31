@@ -70,6 +70,28 @@ export function splitRelatedArtistNames(relatedName: string): string[] {
   return [t]
 }
 
+/**
+ * Quita de `related_artists` cualquier segmento que coincida con un sello en BD
+ * (evita que la IA o datos legacy mezclen sellos con artistas relacionados).
+ */
+export function filterRelatedArtistsExcludingLabels(
+  relatedArtists: string[] | null | undefined,
+  labelSlugByName: Map<string, string>,
+): string[] {
+  if (!relatedArtists?.length) return []
+  const out: string[] = []
+  for (const relatedName of relatedArtists) {
+    const segments = splitRelatedArtistNames(relatedName)
+    const artistOnly = segments.filter((seg) => {
+      const key = normalizeForEntityMatch(seg)
+      return key && !labelSlugByName.has(key)
+    })
+    if (artistOnly.length === 0) continue
+    out.push(artistOnly.length === 1 ? artistOnly[0]! : artistOnly.join(' & '))
+  }
+  return out
+}
+
 const PAGE = 1000
 
 export async function fetchAllArtistLinkRows(

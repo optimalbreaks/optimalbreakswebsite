@@ -122,6 +122,7 @@ CHECKLIST V2 (obligatorio antes de cerrar la respuesta):
 - slug EXACTO (kebab-case, solo a-z, 0-9, guiones): "${opts.slug}"
 - bio_es y bio_en: apunta normalmente a 10-16 parrafos cada una; solo alarga mas si hay base suficiente, y si la evidencia es limitada prioriza precision antes que longitud. Separa parrafos con \\n\\n dentro del string JSON.
 - Arrays sin duplicados ni strings vacíos; sin placeholders (TBD, N/A, unknown).
+- related_artists: SOLO artistas; NUNCA nombres de sellos discográficos. labels_founded solo si el artista fundó el sello.
 - socials y website: solo URLs https presentes en contexto o notas; si no hay evidencia, {} y null.
 - image_url: null salvo URL https pública clara y estable en el contexto.
 `

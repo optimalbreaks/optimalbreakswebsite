@@ -7,4 +7,5 @@ Regla principal: NO BORRAR el trabajo editorial ya hecho. La ficha actual (espec
 - Prioridad de fuentes: notas del artista / representación / documentación aportada > ficha actual > contexto web > conocimiento general.
 - Si la documentación contradice la ficha o la web, prevalece la documentación del artista (salvo imposibilidad manifiesta; entonces formula prudente).
 - Campos estructurados (tracks, related_artists, key_releases, etc.): conserva entradas actuales válidas; añade o corrige según notas; no vacíes arrays sin motivo.
+- related_artists: solo artistas; nunca sellos discográficos (corrige si la ficha mezcla ambos). labels_founded solo si el artista fundó el sello.
 - Devuelve un único JSON completo (misma forma que siempre), sin markdown ni comentarios fuera del JSON.

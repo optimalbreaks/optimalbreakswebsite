@@ -6,6 +6,7 @@ import { createSimpleSupabase } from '@/lib/supabase'
 import {
   buildArtistSlugLookup,
   fetchAllArtistLinkRows,
+  filterRelatedArtistsExcludingLabels,
   normalizeForEntityMatch,
   resolveArtistSlug,
   splitRelatedArtistNames,
@@ -136,6 +137,10 @@ export default async function ArtistDetailPage({ params }: Props) {
   }
 
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+  const relatedArtistsForDisplay = filterRelatedArtistsExcludingLabels(
+    artist.related_artists,
+    labelSlugByName,
+  )
 
   const bio = lang === 'es' ? artist.bio_es : artist.bio_en
   const bioBlocks = splitBioParagraphs(bio)
@@ -296,14 +301,14 @@ export default async function ArtistDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Related artists */}
-            {artist.related_artists?.length > 0 && (
+            {/* Related artists (excluye nombres que coinciden con sellos en BD) */}
+            {relatedArtistsForDisplay.length > 0 && (
               <div className="mb-6">
                 <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
                   {lang === 'es' ? 'ARTISTAS RELACIONADOS' : 'RELATED ARTISTS'}
                 </div>
                 <div className="flex flex-col gap-0">
-                  {artist.related_artists.map((relatedName: string, i: number) => {
+                  {relatedArtistsForDisplay.map((relatedName: string, i: number) => {
                     const segments = splitRelatedArtistNames(relatedName)
                     const rowClass = 'py-1 border-b border-dashed border-white/10 w-full'
                     const rowStyle = {

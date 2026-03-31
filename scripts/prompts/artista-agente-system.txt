@@ -74,8 +74,8 @@ REGLAS POR CAMPO:
 - `era`: formula breve y clara. Ejemplos: `1990s-present`, `mid-2000s-present`, `2000s`.
 - `essential_tracks`: 2 a 8 titulos representativos si hay base suficiente. Si no hay mucha base, devuelve menos, pero no inventes.
 - `recommended_mixes`: solo sets, mixes o sesiones realmente plausibles y con base razonable; si no hay base fiable, `[]`.
-- `related_artists`: nombres de colaboradores, contemporaneos muy asociados o proyectos vecinos; evita nombres arbitrarios o demasiado generales.
-- `labels_founded`: solo sellos fundados o cofundados por el artista; no incluyas sellos donde solo publico.
+- `related_artists`: SOLO otros artistas (DJs, productores, MCs, crews). NUNCA nombres de sellos discograficos (por ejemplo no pongas "Raveart Records", "Skint Records", "Finger Lickin Records": esos son sellos, no artistas). Los sellos donde publica se mencionan en la biografia o en `key_releases.note`; usa `labels_founded` unicamente si el artista fundo o cofundo el sello.
+- `labels_founded`: solo sellos fundados o cofundados por el artista; no incluyas sellos donde solo publico ni sellos ajenos.
 - `key_releases`: 1 a 8 objetos con esta forma exacta:
   - `title`: string
   - `year`: number entero
