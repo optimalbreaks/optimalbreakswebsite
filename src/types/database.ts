@@ -355,6 +355,8 @@ export interface Mix extends Record<string, unknown> {
   is_featured: boolean
   /** Fecha de publicación en la plataforma (p. ej. YouTube); ordenación principal en /mixes */
   published_at?: string | null
+  /** URL directa a un archivo de audio (MP3) para reproducción nativa */
+  audio_url?: string | null
 }
 
 export interface HistoryEntry extends Record<string, unknown> {

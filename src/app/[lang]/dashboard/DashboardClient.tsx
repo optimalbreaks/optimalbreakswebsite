@@ -13,6 +13,8 @@ import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
+import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
+import { getMixTrack } from '@/components/MixesExplorer'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -55,6 +57,30 @@ function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; ti
         className="absolute inset-0 h-full w-full border-0"
       />
     </div>
+  )
+}
+
+function DashboardMixPlayButton({ m }: { m: any }) {
+  const { playMix, currentMix, mixPlaying } = useDeckAudio()
+  const track = getMixTrack(m)
+  if (!track) return null
+
+  const isThisMix = currentMix?.id === m.id
+  const label = isThisMix && mixPlaying ? '■ STOP' : '▶ PLAY'
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        playMix(track)
+      }}
+      className={`mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] hover:bg-[var(--red)] hover:text-white transition-colors cursor-pointer border-0 ${isThisMix && mixPlaying ? 'animate-pulse' : ''}`}
+      style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -225,7 +251,7 @@ function FavoritesTab({ lang }: { lang: string }) {
       }
       if (mixIds.length === 0) { if (!cancelled) setMixes([]) }
       else {
-        const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform').in('id', mixIds)
+        const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', mixIds)
         if (!cancelled) setMixes(data || [])
       }
     })()
@@ -408,6 +434,8 @@ function FavoritesTab({ lang }: { lang: string }) {
                       >
                         YouTube ↗
                       </a>
+                    ) : getMixTrack(m) ? (
+                      <DashboardMixPlayButton m={m} />
                     ) : m.embed_url ? (
                       <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
                         ▶ PLAY
@@ -612,7 +640,7 @@ function MixesTab({ lang }: { lang: string }) {
     let cancelled = false
     const supabase = createBrowserSupabase()
     ;(async () => {
-      const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform').in('id', saved)
+      const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', saved)
       if (!cancelled) setMixes(data || [])
     })()
     return () => { cancelled = true }
@@ -666,6 +694,8 @@ function MixesTab({ lang }: { lang: string }) {
                     >
                       YouTube ↗
                     </a>
+                  ) : getMixTrack(m) ? (
+                    <DashboardMixPlayButton m={m} />
                   ) : m.embed_url ? (
                     <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
                       ▶ PLAY

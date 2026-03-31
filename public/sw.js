@@ -35,8 +35,8 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api')) return
   if (url.hostname.includes('supabase')) return
 
-  // Music files: cache first
-  if (url.pathname.startsWith('/music/')) {
+  // Music & mix audio files: cache first
+  if (url.pathname.startsWith('/music/') || url.pathname.startsWith('/mixes-audio/') || /\.(mp3|m4a|ogg|wav)(\?|$)/.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached

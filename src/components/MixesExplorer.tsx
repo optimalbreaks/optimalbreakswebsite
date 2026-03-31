@@ -5,6 +5,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
+import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -56,6 +57,59 @@ function formatMixDateLine(m: Mix, lang: string): string {
   return `${datePart}${dur}`
 }
 
+function getMixTrack(m: Mix): MixTrack | null {
+  const audioUrl = (m as any).audio_url as string | null | undefined
+  if (audioUrl) {
+    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: audioUrl }
+  }
+  if (m.embed_url?.includes('soundcloud.com')) {
+    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'soundcloud', src: m.embed_url }
+  }
+  if (m.embed_url && /\.mp3(\?|$)/i.test(m.embed_url)) {
+    return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: m.embed_url }
+  }
+  return null
+}
+
+function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'xs' }) {
+  const { playMix, currentMix, mixPlaying } = useDeckAudio()
+  const track = getMixTrack(mix)
+  if (!track) return null
+
+  const isThisMix = currentMix?.id === mix.id
+  const label = isThisMix && mixPlaying ? '■ STOP' : '▶ PLAY'
+
+  const sizeClass = size === 'lg'
+    ? 'absolute bottom-3 right-3'
+    : size === 'sm'
+      ? 'mt-2'
+      : ''
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        playMix(track)
+      }}
+      className={`${sizeClass} bg-[var(--ink)] text-[var(--yellow)] hover:bg-[var(--red)] hover:text-white transition-colors cursor-pointer border-0 ${isThisMix && mixPlaying ? 'animate-pulse' : ''}`}
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        fontWeight: 700,
+        fontSize: size === 'lg' ? '11px' : size === 'sm' ? '9px' : '9px',
+        letterSpacing: size === 'lg' ? '2px' : '1px',
+        padding: size === 'lg' ? '4px 12px' : '2px 8px',
+        transform: size === 'lg' ? 'rotate(2deg)' : undefined,
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+export { getMixTrack }
+
 interface Props {
   mixes: Mix[]
   dict: { view_large: string; view_compact: string; view_list: string }
@@ -83,6 +137,8 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
 }
 
 function PlayLink({ mix }: { mix: Mix }) {
+  const track = getMixTrack(mix)
+  if (track) return <MixPlayButton mix={mix} size="lg" />
   if (mix.embed_url) {
     return (
       <a href={mix.embed_url} target="_blank" rel="noopener noreferrer" className="absolute bottom-3 right-3 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', padding: '4px 12px', transform: 'rotate(2deg)' }}>
@@ -181,6 +237,8 @@ function CompactGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
                 <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
                   YouTube ↗
                 </a>
+              ) : getMixTrack(m) ? (
+                <MixPlayButton mix={m} size="sm" />
               ) : m.embed_url ? (
                 <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
                   ▶ PLAY
@@ -271,7 +329,9 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
                     })
                   : m.year ?? '—'}
               </span>
-              {m.embed_url ? (
+              {getMixTrack(m) ? (
+                <MixPlayButton mix={m} size="xs" />
+              ) : m.embed_url ? (
                 <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 8px' }}>
                   ▶
                 </a>

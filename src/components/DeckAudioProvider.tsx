@@ -1,5 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Global deck audio (persists across routes)
+// Supports two modes: 'deck' (DJ deck tracks) and 'mix' (SoundCloud / MP3)
 // ============================================
 
 'use client'
@@ -17,6 +18,7 @@ import {
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import type { Locale } from '@/lib/i18n-config'
 import Link from 'next/link'
+import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 
 export interface DeckDict {
   play: string
@@ -26,6 +28,17 @@ export interface DeckDict {
   mixer: string
   bpm: string
   crossfader: string
+}
+
+export type PlayerMode = 'idle' | 'deck' | 'mix'
+
+export interface MixTrack {
+  id: string
+  title: string
+  artist: string
+  imageUrl?: string | null
+  source: 'mp3' | 'soundcloud'
+  src: string
 }
 
 interface DeckAudioContextValue {
@@ -54,6 +67,16 @@ interface DeckAudioContextValue {
   handleScratchEnd: () => void
   track: DeckTrack
   fmt: (s: number) => string
+  // Mix player extensions
+  mode: PlayerMode
+  currentMix: MixTrack | null
+  mixPlaying: boolean
+  mixProgress: number
+  mixDuration: number
+  playMix: (mix: MixTrack) => void
+  toggleMixPlayback: () => void
+  stopMix: () => void
+  seekMixToRatio: (ratio: number) => void
 }
 
 const DeckAudioContext = createContext<DeckAudioContextValue | null>(null)
@@ -64,10 +87,19 @@ export function useDeckAudio() {
   return ctx
 }
 
+// ─── MiniDeckBar ────────────────────────────────────────
 function MiniDeckBar({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
-  if (!ctx.sessionActive) return null
-  const { isPlaying, togglePlay, initAudio, track, progress, duration, fmt, seekToRatio } = ctx
+  const { mode, sessionActive } = ctx
+  if (mode === 'idle' && !sessionActive) return null
+
+  if (mode === 'mix') return <MiniMixBar lang={lang} />
+  if (sessionActive) return <MiniDeckBarInner lang={lang} />
+  return null
+}
+
+function MiniDeckBarInner({ lang }: { lang: Locale }) {
+  const { isPlaying, togglePlay, initAudio, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
   const es = lang === 'es'
   return (
     <div
@@ -147,6 +179,81 @@ function MiniDeckBar({ lang }: { lang: Locale }) {
   )
 }
 
+function MiniMixBar({ lang }: { lang: Locale }) {
+  const { currentMix, mixPlaying, mixProgress, mixDuration, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
+  const es = lang === 'es'
+  if (!currentMix) return null
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] shadow-[0_-6px_24px_rgba(0,0,0,0.25)]"
+      role="region"
+      aria-label={es ? 'Reproductor de mix' : 'Mix player'}
+    >
+      <div className="flex items-center gap-2 sm:gap-4 px-3 py-2 sm:px-4 sm:py-2.5 max-w-[1200px] mx-auto">
+        <button
+          type="button"
+          onClick={toggleMixPlayback}
+          className={`shrink-0 border-[3px] px-3 py-1.5 sm:px-4 sm:py-2 transition-colors ${
+            mixPlaying
+              ? 'border-[var(--red)] bg-[var(--red)] text-white'
+              : 'border-[var(--yellow)] bg-[var(--yellow)] text-[var(--ink)]'
+          }`}
+          style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', letterSpacing: '2px' }}
+        >
+          {mixPlaying ? '■' : '▶'}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span
+              className="shrink-0 bg-[var(--red)] text-white"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '1px', padding: '1px 6px', textTransform: 'uppercase' }}
+            >
+              {currentMix.source === 'soundcloud' ? 'SC' : 'MP3'}
+            </span>
+            <div
+              className="truncate"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', color: 'var(--yellow)' }}
+            >
+              {currentMix.artist} — {currentMix.title}
+            </div>
+          </div>
+          <div
+            className="h-[2px] bg-white/10 rounded-full mt-1 overflow-hidden cursor-pointer"
+            onClick={(e) => {
+              if (!mixDuration) return
+              const rect = e.currentTarget.getBoundingClientRect()
+              seekMixToRatio((e.clientX - rect.left) / rect.width)
+            }}
+          >
+            <div
+              className="h-full bg-[var(--yellow)] rounded-full"
+              style={{ width: mixDuration ? `${(mixProgress / mixDuration) * 100}%` : '0%' }}
+            />
+          </div>
+          <div className="flex justify-between mt-0.5">
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'rgba(232,220,200,0.4)' }}>
+              {fmt(mixProgress)}
+            </span>
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'rgba(232,220,200,0.4)' }}>
+              {mixDuration ? fmt(mixDuration) : '—'}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={stopMix}
+          className="shrink-0 border-[2px] border-white/20 text-white/60 hover:border-[var(--red)] hover:text-[var(--red)] transition-colors"
+          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '1px', padding: '5px 8px' }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Provider ───────────────────────────────────────────
 export function DeckAudioProvider({
   children,
   lang,
@@ -156,6 +263,7 @@ export function DeckAudioProvider({
   lang: Locale
   dict: DeckDict
 }) {
+  // === Deck audio refs (unchanged) ===
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
@@ -181,10 +289,21 @@ export function DeckAudioProvider({
   const [rightRotation, setRightRotation] = useState(0)
   const animFrameRef = useRef<number>(0)
 
+  // === Mix player state ===
+  const [mode, setMode] = useState<PlayerMode>('idle')
+  const [currentMix, setCurrentMix] = useState<MixTrack | null>(null)
+  const [mixPlaying, setMixPlaying] = useState(false)
+  const [mixProgress, setMixProgress] = useState(0)
+  const [mixDuration, setMixDuration] = useState(0)
+  const mixAudioRef = useRef<HTMLAudioElement | null>(null)
+  const scHandleRef = useRef<SoundCloudWidgetHandle | null>(null)
+  const [scTrackUrl, setScTrackUrl] = useState<string | null>(null)
+
   useEffect(() => {
     currentTrackRef.current = currentTrack
   }, [currentTrack])
 
+  // === Deck audio init (unchanged) ===
   const initAudio = useCallback(() => {
     if (!scratchAudioRef.current) {
       const scratch = new Audio('/music/scratch.mp3')
@@ -220,6 +339,7 @@ export function DeckAudioProvider({
     }
   }, [])
 
+  // === Deck animation tick (unchanged) ===
   useEffect(() => {
     const tick = () => {
       if (audioRef.current && isPlaying && !scratchingLeft && !scratchingRight) {
@@ -234,6 +354,7 @@ export function DeckAudioProvider({
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [isPlaying, scratchingLeft, scratchingRight])
 
+  // === Crossfader gain (unchanged) ===
   useEffect(() => {
     if (gainRef.current) {
       const normalizedCf = crossfader / 100
@@ -242,6 +363,7 @@ export function DeckAudioProvider({
     }
   }, [crossfader])
 
+  // === Deck togglePlay (unchanged) ===
   const togglePlay = useCallback(() => {
     initAudio()
     if (audioCtxRef.current?.state === 'suspended') void audioCtxRef.current.resume()
@@ -265,6 +387,11 @@ export function DeckAudioProvider({
         setIsPlaying(false)
       }
     } else {
+      // If a mix is playing, stop it first
+      if (mode === 'mix') {
+        stopMixInternal()
+      }
+      setMode('deck')
       setSessionActive(true)
       setIsPlaying(true)
       const audio = audioRef.current
@@ -283,11 +410,13 @@ export function DeckAudioProvider({
         step()
       }
     }
-  }, [initAudio, isPlaying])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initAudio, isPlaying, mode])
 
   const toggleDeckLeft = useCallback(() => setLeftActive((v) => !v), [])
   const toggleDeckRight = useCallback(() => setRightActive((v) => !v), [])
 
+  // === Scratch handlers (unchanged) ===
   const handleScratchStart = useCallback(
     (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => {
       if (!audioRef.current || !isPlaying) return
@@ -386,6 +515,172 @@ export function DeckAudioProvider({
 
   const track = DECK_TRACKS[currentTrack]
 
+  // === Mix player: internal stop helper ===
+  const stopMixInternal = useCallback(() => {
+    if (mixAudioRef.current) {
+      mixAudioRef.current.pause()
+      mixAudioRef.current.src = ''
+    }
+    if (scHandleRef.current) {
+      scHandleRef.current.pause()
+    }
+    setScTrackUrl(null)
+    scHandleRef.current = null
+    setMixPlaying(false)
+    setMixProgress(0)
+    setMixDuration(0)
+    setCurrentMix(null)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('seekbackward', null)
+      navigator.mediaSession.setActionHandler('seekforward', null)
+    }
+  }, [])
+
+  // === Mix player: playMix ===
+  const playMix = useCallback((mix: MixTrack) => {
+    // Pause the deck if it's playing
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.playbackRate = 1
+      setIsPlaying(false)
+    }
+
+    // Stop any previous mix
+    stopMixInternal()
+
+    setCurrentMix(mix)
+    setMode('mix')
+    setMixProgress(0)
+    setMixDuration(0)
+
+    if (mix.source === 'mp3') {
+      if (!mixAudioRef.current) {
+        mixAudioRef.current = new Audio()
+      }
+      const audio = mixAudioRef.current
+      audio.src = mix.src
+      audio.preload = 'auto'
+
+      const onLoaded = () => setMixDuration(audio.duration)
+      const onTimeUpdate = () => setMixProgress(audio.currentTime)
+      const onEnded = () => {
+        setMixPlaying(false)
+        setMode('idle')
+      }
+
+      audio.addEventListener('loadedmetadata', onLoaded)
+      audio.addEventListener('timeupdate', onTimeUpdate)
+      audio.addEventListener('ended', onEnded)
+
+      void audio.play().then(() => setMixPlaying(true)).catch(() => {})
+    } else if (mix.source === 'soundcloud') {
+      setScTrackUrl(mix.src)
+      // SC widget will auto-play via onReady; state managed by callbacks
+    }
+
+    // Media Session
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: mix.title,
+        artist: mix.artist,
+        artwork: mix.imageUrl ? [{ src: mix.imageUrl, sizes: '512x512', type: 'image/jpeg' }] : [],
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, stopMixInternal])
+
+  // === Mix player: toggle pause/resume ===
+  const toggleMixPlayback = useCallback(() => {
+    if (!currentMix) return
+
+    if (currentMix.source === 'mp3' && mixAudioRef.current) {
+      if (mixPlaying) {
+        mixAudioRef.current.pause()
+        setMixPlaying(false)
+      } else {
+        void mixAudioRef.current.play().then(() => setMixPlaying(true)).catch(() => {})
+      }
+    } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
+      if (mixPlaying) {
+        scHandleRef.current.pause()
+        setMixPlaying(false)
+      } else {
+        scHandleRef.current.play()
+        setMixPlaying(true)
+      }
+    }
+  }, [currentMix, mixPlaying])
+
+  // === Mix player: stop ===
+  const stopMix = useCallback(() => {
+    stopMixInternal()
+    setMode('idle')
+  }, [stopMixInternal])
+
+  // === Mix player: seek ===
+  const seekMixToRatio = useCallback((ratio: number) => {
+    const clamped = Math.max(0, Math.min(1, ratio))
+    if (!currentMix) return
+
+    if (currentMix.source === 'mp3' && mixAudioRef.current && mixDuration) {
+      mixAudioRef.current.currentTime = clamped * mixDuration
+      setMixProgress(mixAudioRef.current.currentTime)
+    } else if (currentMix.source === 'soundcloud' && scHandleRef.current && mixDuration) {
+      scHandleRef.current.seekTo(clamped * mixDuration * 1000)
+      setMixProgress(clamped * mixDuration)
+    }
+  }, [currentMix, mixDuration])
+
+  // === Media Session action handlers (update when mix state changes) ===
+  useEffect(() => {
+    if (mode !== 'mix' || !('mediaSession' in navigator)) return
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      toggleMixPlayback()
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      toggleMixPlayback()
+    })
+    navigator.mediaSession.setActionHandler('seekbackward', () => {
+      seekMixToRatio(Math.max(0, (mixProgress - 10) / (mixDuration || 1)))
+    })
+    navigator.mediaSession.setActionHandler('seekforward', () => {
+      seekMixToRatio(Math.min(1, (mixProgress + 10) / (mixDuration || 1)))
+    })
+  }, [mode, mixProgress, mixDuration, toggleMixPlayback, seekMixToRatio])
+
+  // === SC Widget callbacks ===
+  const handleScReady = useCallback(() => {
+    setMixPlaying(true)
+  }, [])
+
+  const handleScProgress = useCallback((posMs: number, durMs: number) => {
+    setMixProgress(posMs / 1000)
+    setMixDuration(durMs / 1000)
+  }, [])
+
+  const handleScFinish = useCallback(() => {
+    setMixPlaying(false)
+    setMode('idle')
+    setCurrentMix(null)
+  }, [])
+
+  const handleScPause = useCallback(() => {
+    setMixPlaying(false)
+  }, [])
+
+  const handleScPlay = useCallback(() => {
+    setMixPlaying(true)
+  }, [])
+
+  const handleScHandleRef = useCallback((h: SoundCloudWidgetHandle | null) => {
+    scHandleRef.current = h
+  }, [])
+
+  // === Context value ===
   const value = useMemo<DeckAudioContextValue>(
     () => ({
       dict,
@@ -413,6 +708,15 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
+      mode,
+      currentMix,
+      mixPlaying,
+      mixProgress,
+      mixDuration,
+      playMix,
+      toggleMixPlayback,
+      stopMix,
+      seekMixToRatio,
     }),
     [
       dict,
@@ -437,13 +741,35 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
+      mode,
+      currentMix,
+      mixPlaying,
+      mixProgress,
+      mixDuration,
+      playMix,
+      toggleMixPlayback,
+      stopMix,
+      seekMixToRatio,
     ]
   )
 
+  const showBar = mode !== 'idle' || sessionActive
+
   return (
     <DeckAudioContext.Provider value={value}>
-      <div className={sessionActive ? 'pb-[4.75rem] sm:pb-[5rem]' : undefined}>{children}</div>
+      <div className={showBar ? 'pb-[4.75rem] sm:pb-[5rem]' : undefined}>{children}</div>
       <MiniDeckBar lang={lang} />
+      {scTrackUrl && (
+        <SoundCloudWidget
+          trackUrl={scTrackUrl}
+          onReady={handleScReady}
+          onPlay={handleScPlay}
+          onPause={handleScPause}
+          onFinish={handleScFinish}
+          onProgress={handleScProgress}
+          handleRef={handleScHandleRef}
+        />
+      )}
     </DeckAudioContext.Provider>
   )
 }
