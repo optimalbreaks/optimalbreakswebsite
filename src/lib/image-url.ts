@@ -1,6 +1,8 @@
 // ============================================
 // OPTIMAL BREAKS — Normaliza URLs de imagen a WebP donde aplica
-// Solo rutas bajo /images/ y Supabase Storage; no toca CDNs externos.
+// Solo rutas bajo public/images/ (assets estáticos migrados a WebP).
+// Las image_url de Supabase Storage se usan tal cual en BD: si forzamos .webp
+// y en el bucket solo existe .jpg, el cartel/retrato rompe (404).
 // ============================================
 
 const RASTER_EXT = /\.(jpe?g|png)(?=$|[?#])/i
@@ -29,9 +31,7 @@ function shouldSkipWebpPath(pathname: string): boolean {
 }
 
 function isOurOptimizableUrl(u: string): boolean {
-  if (u.startsWith('/images/')) return true
-  if (u.includes('supabase.co') && u.includes('/storage/')) return true
-  return false
+  return u.startsWith('/images/')
 }
 
 /**
