@@ -21,6 +21,7 @@ import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
+import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -192,6 +193,7 @@ export default async function ArtistDetailPage({ params }: Props) {
               )}
               <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-6">
                 <FavoriteButton type="artist" entityId={artist.id} size="md" lang={lang} />
+                <SeenLiveButton artistId={artist.id} artistName={artist.name_display || artist.name} lang={lang} />
                 <FanCounter type="artist" entityId={artist.id} lang={lang} />
                 <ShareButtons
                   url={`/${lang}/artists/${slug}`}

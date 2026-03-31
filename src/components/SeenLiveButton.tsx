@@ -1,0 +1,258 @@
+// ============================================
+// OPTIMAL BREAKS — Seen Live Button
+// "I've seen this artist live" toggle for artist detail pages
+// ============================================
+
+'use client'
+
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useAuth } from '@/components/AuthProvider'
+import { createBrowserSupabase } from '@/lib/supabase'
+import { i18n } from '@/lib/i18n-config'
+
+interface Props {
+  artistId: string
+  artistName: string
+  lang?: string
+}
+
+function getLang(pathname: string) {
+  const seg = pathname.split('/')[1]
+  return i18n.locales.includes(seg as any) ? seg : i18n.defaultLocale
+}
+
+export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
+  const { user } = useAuth()
+  const pathname = usePathname()
+  const resolvedLang = lang || getLang(pathname)
+  const es = resolvedLang === 'es'
+
+  const [hasSeen, setHasSeen] = useState(false)
+  const [sightingCount, setSightingCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  const [form, setForm] = useState({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
+
+  const checkSightings = useCallback(async () => {
+    if (!user) { setHasSeen(false); setSightingCount(0); setLoading(false); return }
+    const supabase: any = createBrowserSupabase()
+    const { count } = await supabase
+      .from('artist_sightings')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('artist_id', artistId)
+    const n = count ?? 0
+    setHasSeen(n > 0)
+    setSightingCount(n)
+    setLoading(false)
+  }, [user, artistId])
+
+  useEffect(() => { checkSightings() }, [checkSightings])
+
+  useEffect(() => {
+    if (!showTooltip) return
+    const handle = (e: MouseEvent | TouchEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) setShowTooltip(false)
+    }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle) }
+  }, [showTooltip])
+
+  useEffect(() => {
+    if (!showForm) return
+    const handle = (e: MouseEvent | TouchEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) setShowForm(false)
+    }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle) }
+  }, [showForm])
+
+  useEffect(() => {
+    if (showTooltip) {
+      const t = setTimeout(() => setShowTooltip(false), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [showTooltip])
+
+  const handleClick = () => {
+    if (!user) { setShowTooltip(true); return }
+    setShowForm((v) => !v)
+  }
+
+  const handleSubmit = async () => {
+    if (!user || !form.seen_at) return
+    const supabase: any = createBrowserSupabase()
+    await supabase.from('artist_sightings').insert({
+      user_id: user.id,
+      artist_id: artistId,
+      seen_at: form.seen_at,
+      venue: form.venue || null,
+      city: form.city || null,
+      country: form.country || null,
+      event_name: form.event_name || null,
+      notes: form.notes || null,
+      rating: form.rating || null,
+    })
+    setForm({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
+    setShowForm(false)
+    await checkSightings()
+  }
+
+  const handleQuickMark = async () => {
+    if (!user) { setShowTooltip(true); return }
+    const supabase: any = createBrowserSupabase()
+    await supabase.from('artist_sightings').insert({
+      user_id: user.id,
+      artist_id: artistId,
+      seen_at: new Date().toISOString().slice(0, 10),
+      venue: null,
+      city: null,
+      country: null,
+      event_name: null,
+      notes: null,
+      rating: null,
+    })
+    await checkSightings()
+  }
+
+  return (
+    <div className="relative inline-flex">
+      <button
+        onClick={handleClick}
+        className={`inline-flex items-center gap-[6px] px-3 py-[5px] border-2 transition-all duration-200 cursor-pointer ${
+          hasSeen
+            ? 'border-[var(--acid)] bg-[var(--acid)] text-[var(--ink)]'
+            : 'border-[var(--acid)] bg-transparent text-[var(--acid)] hover:bg-[var(--acid)] hover:text-[var(--ink)]'
+        }`}
+        aria-label={hasSeen ? (es ? 'Visto en vivo' : 'Seen live') : (es ? 'Marcar como visto en vivo' : 'Mark as seen live')}
+      >
+        <span style={{ fontSize: '14px' }}>♫</span>
+        <span
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontWeight: 700,
+            fontSize: '9px',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {hasSeen
+            ? (es ? `VISTO ×${sightingCount}` : `SEEN ×${sightingCount}`)
+            : (es ? 'VISTO EN VIVO' : 'SEEN LIVE')}
+        </span>
+      </button>
+
+      {/* Guest tooltip */}
+      {showTooltip && !user && (
+        <div
+          ref={tooltipRef}
+          className="absolute z-50 left-0 top-full mt-2 w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-4 shadow-[6px_6px_0_var(--ink)]"
+          style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
+        >
+          <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+            {es ? '¡Regístrate para registrar tus directos!' : 'Sign up to log your live shows!'}
+          </p>
+          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.5, margin: '6px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+            {es ? 'Lleva la cuenta de todos los artistas que has visto actuar.' : 'Keep track of every artist you\'ve seen perform.'}
+          </p>
+          <Link
+            href={`/${resolvedLang}/login`}
+            className="mt-3 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '2px', padding: '8px 14px' }}
+          >
+            {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+          </Link>
+        </div>
+      )}
+
+      {/* Sighting form */}
+      {showForm && user && (
+        <div
+          ref={formRef}
+          className="absolute z-50 left-0 top-full mt-2 w-[320px] bg-[var(--paper)] border-[4px] border-[var(--ink)] shadow-[6px_6px_0_var(--ink)]"
+          style={{ animation: 'fadeIn 0.15s ease-out' }}
+        >
+          <div className="bg-[var(--ink)] text-[var(--yellow)] px-4 py-2">
+            <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              {es ? `HE VISTO A ${artistName.toUpperCase()}` : `I SAW ${artistName.toUpperCase()}`}
+            </span>
+          </div>
+          <div className="p-4 space-y-2">
+            <input
+              type="date"
+              value={form.seen_at}
+              onChange={(e) => setForm({ ...form, seen_at: e.target.value })}
+              className="w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+              placeholder={es ? 'Fecha' : 'Date'}
+            />
+            <input
+              placeholder={es ? 'Evento / Festival' : 'Event / Festival'}
+              value={form.event_name}
+              onChange={(e) => setForm({ ...form, event_name: e.target.value })}
+              className="w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                placeholder={es ? 'Venue / Sala' : 'Venue'}
+                value={form.venue}
+                onChange={(e) => setForm({ ...form, venue: e.target.value })}
+                className="px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]"
+                style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+              />
+              <input
+                placeholder={es ? 'Ciudad' : 'City'}
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className="px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]"
+                style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: 'var(--dim)', letterSpacing: '1px' }}>
+                {es ? 'RATING:' : 'RATING:'}
+              </span>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setForm({ ...form, rating: form.rating === n ? 0 : n })}
+                  className={`text-base cursor-pointer border-0 bg-transparent ${form.rating >= n ? 'text-[var(--yellow)]' : 'text-[var(--ink)]/20'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!form.seen_at}
+                className="flex-1 cutout red cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {es ? 'GUARDAR' : 'SAVE'}
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickMark}
+                className="cutout outline cursor-pointer"
+                title={es ? 'Marcar rápido (hoy)' : 'Quick mark (today)'}
+              >
+                ⚡ {es ? 'HOY' : 'TODAY'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

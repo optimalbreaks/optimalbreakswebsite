@@ -85,20 +85,25 @@ export default function FavoriteButton({
   const tooltip = showTooltip && !isLoggedIn && (
     <div
       ref={tooltipRef}
-      className="absolute z-50 right-0 top-full mt-2 w-[200px] bg-[var(--ink)] text-[var(--paper)] border-[3px] border-[var(--red)] p-3 shadow-[4px_4px_0_var(--red)]"
-      style={{ animation: 'fadeIn 0.15s ease-out' }}
+      className="absolute z-50 right-0 top-full mt-2 w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-4 shadow-[6px_6px_0_var(--ink)]"
+      style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
     >
-      <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: 0 }}>
+      <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
         {es
-          ? 'Regístrate para guardar tus favoritos y crear tu colección.'
-          : 'Sign up to save your favorites and build your collection.'}
+          ? '¡Regístrate para guardar tus favoritos!'
+          : 'Sign up to save your favorites!'}
+      </p>
+      <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.5, margin: '6px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+        {es
+          ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
+          : 'Build your collection of artists, labels, events and mixes.'}
       </p>
       <Link
         href={`/${resolvedLang}/login`}
-        className="mt-2 block text-center bg-[var(--red)] text-white no-underline hover:bg-[var(--yellow)] hover:text-[var(--ink)] transition-colors"
-        style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '10px', letterSpacing: '2px', padding: '6px 12px' }}
+        className="mt-3 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+        style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '2px', padding: '8px 14px' }}
       >
-        {es ? 'ENTRAR / REGISTRO' : 'LOG IN / SIGN UP'}
+        {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
       </Link>
     </div>
   )
