@@ -14,6 +14,18 @@ export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 /** Home /en y /es: imagen OG compartida (Facebook, X, etc.). */
 export const HOME_OG_IMAGE = '/images/og-home-optimal-beats.jpeg' as const
 
+/** Texto alt de la imagen OG de la home (accesibilidad / redes). */
+export function homeOgImageAlt(lang: Locale): string {
+  return lang === 'es'
+    ? 'Optimal Breaks — gráfica Optimal Beats (vinilo y funda)'
+    : 'Optimal Breaks — Optimal Beats graphic (vinyl and sleeve)'
+}
+
+/** Idioma secundario para og:locale:alternate (Facebook / Meta). */
+export function ogAlternateLocales(lang: Locale): string[] {
+  return lang === 'es' ? ['en_US'] : ['es_ES']
+}
+
 /** Ruta generada por `app/[lang]/opengraph-image.tsx` (1200×630). */
 export function generatedOgImageUrl(lang: Locale): string {
   return `${SITE_URL}/${lang}/opengraph-image`
@@ -103,6 +115,7 @@ export async function staticPageMetadata(
       url,
       siteName,
       locale: lang === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: ogAlternateLocales(lang),
       type: 'website',
       images: [ogImageMeta],
     },
@@ -151,6 +164,7 @@ export function detailPageMetadata(
       url,
       siteName,
       locale: lang === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: ogAlternateLocales(lang),
       type: ogType,
       images: [ogImageMeta],
     },

@@ -3,7 +3,7 @@
 // Header + Footer + Auth + CookieBanner + PWA
 // ============================================
 
-import type { Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import '../globals.css'
 import { i18n, type Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/dictionaries'
@@ -15,7 +15,15 @@ import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import BackToTop from '@/components/BackToTop'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
-import { DEFAULT_OG_IMAGE_PATH, SITE_URL } from '@/lib/seo'
+import {
+  absoluteOgImage,
+  DEFAULT_OG_IMAGE_PATH,
+  HOME_OG_IMAGE,
+  homeOgImageAlt,
+  ogAlternateLocales,
+  SITE_URL,
+  smartTruncate,
+} from '@/lib/seo'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -28,6 +36,50 @@ export const dynamic = 'force-dynamic'
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ lang: locale }))
+}
+
+type SeoRoot = {
+  site_name: string
+  default_keywords: string
+  home: { title: string; description: string }
+}
+
+/** Metadatos base por idioma: evita que el layout raíz fije OG solo en inglés. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
+  const { lang } = await params
+  const dict = await getDictionary(lang)
+  const seo = dict.seo as SeoRoot
+  const home = seo.home
+  const url = `${SITE_URL}/${lang}`
+  const desc = smartTruncate(home.description, 160)
+  const titleFull = `${home.title} | ${seo.site_name}`
+  const ogImage = absoluteOgImage(HOME_OG_IMAGE, lang)
+  const ogAlt = homeOgImageAlt(lang)
+
+  return {
+    description: desc,
+    keywords: seo.default_keywords.split(',').map((k) => k.trim()),
+    openGraph: {
+      type: 'website',
+      url,
+      title: titleFull,
+      description: desc,
+      siteName: seo.site_name,
+      locale: lang === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: ogAlternateLocales(lang),
+      images: [{ url: ogImage, alt: ogAlt }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: titleFull,
+      description: desc,
+      images: [ogImage],
+    },
+  }
 }
 
 export default async function LangLayout({

@@ -5,7 +5,7 @@
 
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import { HOME_OG_IMAGE, staticPageMetadata } from '@/lib/seo'
+import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
 import type { Artist, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
@@ -43,13 +43,9 @@ const FEATURED_ARTISTS: {
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  const ogImageAlt =
-    lang === 'es'
-      ? 'Optimal Breaks — gráfica Optimal Beats (vinilo y funda)'
-      : 'Optimal Breaks — Optimal Beats graphic (vinyl and sleeve)'
   return staticPageMetadata(lang, '', 'home', {
     ogImagePath: HOME_OG_IMAGE,
-    ogImageAlt,
+    ogImageAlt: homeOgImageAlt(lang),
   })
 }
 
