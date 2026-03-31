@@ -146,18 +146,38 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
     .sort(([, a], [, b]) => b - a)
     .map(([t, n]) => `${t}: ${n}`)
     .join(', ')
+  const labelDecadesStr = Object.entries(stats.label_decades)
+    .sort(([, a], [, b]) => b - a)
+    .map(([era, n]) => `${era}: ${n}`)
+    .join(', ')
+  const eventCountriesStr = stats.event_profile.countries.join(', ')
 
   const isEs = lang === 'es'
   const systemPrompt = isEs
-    ? `Eres un crítico musical experto en breakbeat con personalidad, humor y nostalgia. Escribes para Optimal Breaks, un archivo cultural del breakbeat. Tu tarea es analizar los gustos del usuario y hablarle DIRECTAMENTE A ÉL en segunda persona ("tú eres", "veo que te gusta"). Tu tono es apasionado, cercano, de "colega", y con referencias culturales reales del breakbeat (artistas, sellos, raves, épocas). Nunca suenas genérico ni hablas de él en tercera persona.`
-    : `You are an expert breakbeat music critic with personality, humor and nostalgia. You write for Optimal Breaks, a breakbeat cultural archive. Your task is to analyze the user's taste and speak DIRECTLY TO THEM in the second person ("you are", "I see you like"). Your tone is passionate, warm, "mate-like", and full of real breakbeat cultural references (artists, labels, raves, eras). Never sound generic or talk about them in the third person.`
+    ? `Eres un analista experto en cultura breakbeat para Optimal Breaks. Interpretas gustos musicales con criterio real de escena, precisión y lenguaje claro. Hablas directamente al usuario en segunda persona. Tu tono es cercano pero analítico: nada promocional, nada grandilocuente, nada genérico. Prioriza patrones observables sobre adornos. No inventes artistas, sellos, eventos o escenas concretas si no están respaldados por los datos. Si haces una inferencia, debe ser prudente y razonable.`
+    : `You are an expert analyst of breakbeat culture for Optimal Breaks. You interpret musical taste with real scene knowledge, precision and clear language. Speak directly to the user in the second person. Your tone is warm but analytical: never promotional, never overblown, never generic. Prioritize observable patterns over decoration. Do not invent specific artists, labels, events or scenes unless the data truly supports them. Any inference must be cautious and reasonable.`
 
   const userPrompt = isEs
     ? `Analiza este perfil breakbeatero y escribe:
 
-1. Un ARQUETIPO corto (3-5 palabras máximo, ej: "Purista del Nu Skool", "Arqueólogo del Florida Breaks", "Animal del Bassline", "Ecléctico sin remedio"). Solo el nombre, sin explicación.
+1. Un ARQUETIPO corto (2-4 palabras), preciso y musicalmente creíble. Solo el nombre, sin explicación.
 
-2. Un análisis de 3-4 párrafos cortos (máx 600 caracteres total) dirigiéndote directamente al usuario ("Tú eres...", "Por tus datos veo que..."). Describe su personalidad breakbeatera basándote en los datos. Sé específico con las referencias (inventa qué artistas o sellos concretos encajan con esos datos). Incluye algo de humor. ¡No hables de "este usuario"! Habla con él.
+2. Un análisis de 3 párrafos cortos, dirigido al usuario, con un máximo de 900 caracteres en total.
+
+OBJETIVO DEL ANÁLISIS:
+- Explica qué subgéneros dominan realmente su gusto.
+- Explica qué décadas pesan más y qué sugiere eso sobre su escucha.
+- Interpreta si su perfil apunta más a crate digger, selector, clubber, festivalero, purista o ecléctico.
+- Usa el patrón de mixes y eventos para reforzar la lectura.
+
+REGLAS:
+- Háblale siempre de tú a tú.
+- No digas "este usuario".
+- No metas chistes fáciles ni copy promocional.
+- No inventes favoritos concretos.
+- Si faltan datos, no fuerces conclusiones.
+- Quiero una lectura seria de gustos, no un texto comercial.
+- Debes mencionar explícitamente subgéneros y épocas dominantes.
 
 DATOS DEL PERFIL:
 - Subgéneros favoritos: ${stylesStr}
@@ -165,16 +185,33 @@ DATOS DEL PERFIL:
 - Eras/décadas: ${erasStr}
 - Categorías de artistas: ${catsStr}
 - Perfil de mixes: ${mixStr}
+- Décadas de sellos: ${labelDecadesStr || 'sin datos'}
 - Eventos: ${stats.event_profile.festivals} festivales, ${stats.event_profile.club_nights} club nights
+- Países de eventos: ${eventCountriesStr || 'sin datos'}
 - Total de datos: ${stats.total_data_points} elementos
 
 Responde EXACTAMENTE en este formato JSON:
 {"archetype": "...", "text": "..."}`
     : `Analyze this breakbeat profile and write:
 
-1. A short ARCHETYPE (3-5 words max, e.g.: "Nu Skool Purist", "Florida Breaks Archaeologist", "Bassline Animal", "Hopeless Eclectic"). Just the name, no explanation.
+1. A short ARCHETYPE (2-4 words), precise and musically credible. Just the name, no explanation.
 
-2. A 3-4 short paragraph analysis (max 600 chars total) talking DIRECTLY to the user ("You are...", "I see from your profile that..."). Describe their breakbeat personality based on the data. Be specific with references (invent which real artists or labels fit that data). Include some humor. Do not talk about "this user", talk to them!
+2. A 3-paragraph analysis addressed directly to the user, with a maximum of 900 characters total.
+
+ANALYSIS GOALS:
+- Explain which subgenres genuinely dominate their taste.
+- Explain which decades carry the most weight and what that suggests.
+- Interpret whether the profile feels more like a crate digger, selector, clubber, festival-goer, purist or eclectic listener.
+- Use the mix and event patterns to support the reading.
+
+RULES:
+- Always speak directly to the user.
+- Do not say "this user".
+- No cheap jokes and no promotional copy.
+- Do not invent specific favorites.
+- If the data is thin, do not force conclusions.
+- This must read like a serious taste analysis, not marketing text.
+- You must explicitly mention dominant subgenres and eras.
 
 PROFILE DATA:
 - Favorite subgenres: ${stylesStr}
@@ -182,7 +219,9 @@ PROFILE DATA:
 - Eras/decades: ${erasStr}
 - Artist categories: ${catsStr}
 - Mix profile: ${mixStr}
+- Label decades: ${labelDecadesStr || 'no data'}
 - Events: ${stats.event_profile.festivals} festivals, ${stats.event_profile.club_nights} club nights
+- Event countries: ${eventCountriesStr || 'no data'}
 - Total data: ${stats.total_data_points} items
 
 Reply EXACTLY in this JSON format:
@@ -201,8 +240,8 @@ Reply EXACTLY in this JSON format:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.85,
-        max_tokens: 500,
+        temperature: 0.45,
+        max_tokens: 550,
       }),
     })
 
@@ -239,6 +278,13 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
   const topCountry = stats.top_countries[0]?.name || ''
   const topEra = Object.entries(stats.era_distribution).sort(([, a], [, b]) => b - a)[0]?.[0] || ''
   const topCat = Object.entries(stats.category_breakdown).sort(([, a], [, b]) => b - a)[0]?.[0] || ''
+  const topMix = Object.entries(stats.mix_taste).sort(([, a], [, b]) => b - a)[0]?.[0] || ''
+  const eventBias =
+    stats.event_profile.club_nights > stats.event_profile.festivals
+      ? (isEs ? 'club' : 'club')
+      : stats.event_profile.festivals > stats.event_profile.club_nights
+        ? (isEs ? 'festival' : 'festival')
+        : (isEs ? 'equilibrado' : 'balanced')
 
   const archetypes: Record<string, { en: string; es: string }> = {
     nu_skool: { en: 'Nu Skool Purist', es: 'Purista del Nu Skool' },
@@ -263,8 +309,8 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
   const cName = countryNames[topCountry] || { en: topCountry, es: topCountry }
 
   const text = isEs
-    ? `Tu ADN breakbeatero tiene un sello inconfundible: ${topStyle.replace(/_/g, ' ')} con raíces en ${cName.es}. Tus gustos se mueven sobre todo por la era de los ${topEra}, y eso dice mucho de ti. Con ${stats.total_data_points} datos en tu perfil, está claro que no eres un oyente casual — esto va en serio.`
-    : `Your breakbeat DNA has an unmistakable stamp: ${topStyle.replace(/_/g, ' ')} with roots in ${cName.en}. Your taste gravitates around the ${topEra} era, and that says a lot about you. With ${stats.total_data_points} data points in your profile, you're clearly not a casual listener — this is serious business.`
+    ? `Por tu selección se ve que te tira sobre todo el ${topStyle.replace(/_/g, ' ')} y que tu centro de gravedad está en los ${topEra}. Eso sugiere una escucha bastante definida, con referencias fuertes en ${cName.es || 'tu eje principal'}. También aparece un sesgo ${eventBias}${topMix ? ` y un consumo de mixes más cercano a ${topMix.replace(/_/g, ' ')}` : ''}. No suenas a oyente casual: con ${stats.total_data_points} datos y peso en ${topCat.replace(/_/g, ' ')}, tu perfil apunta más a criterio que a picoteo.`
+    : `Your selection shows a clear pull toward ${topStyle.replace(/_/g, ' ')} and a center of gravity in the ${topEra}. That suggests a fairly defined listening profile, with strong references in ${cName.en || 'your main axis'}. There is also a ${eventBias} bias${topMix ? ` and a mix pattern closer to ${topMix.replace(/_/g, ' ')}` : ''}. You do not read like a casual listener: with ${stats.total_data_points} data points and weight in ${topCat.replace(/_/g, ' ')}, your profile points more to discernment than random browsing.`
 
   return { text, archetype, method: 'rules' }
 }
