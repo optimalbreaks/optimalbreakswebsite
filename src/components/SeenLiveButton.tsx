@@ -94,38 +94,21 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
   }
 
   const handleSubmit = async () => {
-    if (!user || !form.seen_at) return
+    if (!user || form.rating < 1) return
     const supabase: any = createBrowserSupabase()
     await supabase.from('artist_sightings').insert({
       user_id: user.id,
       artist_id: artistId,
-      seen_at: form.seen_at,
+      seen_at: form.seen_at || null,
       venue: form.venue || null,
       city: form.city || null,
       country: form.country || null,
       event_name: form.event_name || null,
       notes: form.notes || null,
-      rating: form.rating || null,
+      rating: form.rating,
     })
     setForm({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
     setShowForm(false)
-    await checkSightings()
-  }
-
-  const handleQuickMark = async () => {
-    if (!user) { setShowTooltip(true); return }
-    const supabase: any = createBrowserSupabase()
-    await supabase.from('artist_sightings').insert({
-      user_id: user.id,
-      artist_id: artistId,
-      seen_at: new Date().toISOString().slice(0, 10),
-      venue: null,
-      city: null,
-      country: null,
-      event_name: null,
-      notes: null,
-      rating: null,
-    })
     await checkSightings()
   }
 
@@ -248,36 +231,28 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: 'var(--dim)', letterSpacing: '1px' }}>
-                {es ? 'RATING:' : 'RATING:'}
+              <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: form.rating < 1 ? 'var(--red)' : 'var(--dim)', letterSpacing: '1px', fontWeight: 700 }}>
+                RATING *
               </span>
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => setForm({ ...form, rating: form.rating === n ? 0 : n })}
-                  className={`text-base cursor-pointer border-0 bg-transparent ${form.rating >= n ? 'text-[var(--yellow)]' : 'text-[var(--ink)]/20'}`}
+                  className={`text-lg cursor-pointer border-0 bg-transparent transition-transform hover:scale-125 ${form.rating >= n ? 'text-[var(--yellow)]' : 'text-[var(--ink)]/20'}`}
                 >
                   ★
                 </button>
               ))}
             </div>
-            <div className="flex gap-2 pt-1">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={!form.seen_at}
-                className="flex-1 cutout red cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={form.rating < 1}
+                className="w-full cutout red cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {es ? 'GUARDAR' : 'SAVE'}
-              </button>
-              <button
-                type="button"
-                onClick={handleQuickMark}
-                className="cutout outline cursor-pointer"
-                title={es ? 'Marcar rápido (hoy)' : 'Quick mark (today)'}
-              >
-                ⚡ {es ? 'HOY' : 'TODAY'}
               </button>
             </div>
           </div>

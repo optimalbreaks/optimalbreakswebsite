@@ -182,13 +182,13 @@ export function useEventAttendance() {
 export interface Sighting {
   id: string
   artist_id: string
-  seen_at: string
+  seen_at: string | null
   venue: string
   city: string
   country: string
   event_name: string
   notes: string
-  rating: number | null
+  rating: number
 }
 
 export function useArtistSightings() {
@@ -198,7 +198,7 @@ export function useArtistSightings() {
 
   const fetch = useCallback(async () => {
     if (!user) { setSightings([]); setLoading(false); return }
-    const { data } = await supabase.from('artist_sightings').select('*').eq('user_id', user.id).order('seen_at', { ascending: false })
+    const { data } = await supabase.from('artist_sightings').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
     setSightings((data as Sighting[]) || [])
     setLoading(false)
   }, [user])

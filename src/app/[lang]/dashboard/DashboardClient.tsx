@@ -992,19 +992,20 @@ function SightingsTab({ lang }: { lang: string }) {
             <input placeholder={es ? 'Notas' : 'Notes'} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] sm:col-span-2" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px' }} />
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{es ? 'Valoración:' : 'Rating:'}</span>
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: form.rating < 1 ? 'var(--red)' : 'var(--dim)', fontWeight: 700, letterSpacing: '1px' }}>RATING *</span>
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} onClick={() => setForm({ ...form, rating: n })} className={`text-lg ${form.rating >= n ? 'text-[var(--yellow)]' : 'text-[var(--ink)]/20'}`}>★</button>
+              <button key={n} onClick={() => setForm({ ...form, rating: form.rating === n ? 0 : n })} className={`text-lg cursor-pointer border-0 bg-transparent transition-transform hover:scale-125 ${form.rating >= n ? 'text-[var(--yellow)]' : 'text-[var(--ink)]/20'}`}>★</button>
             ))}
           </div>
           <button
             onClick={async () => {
-              if (!form.seen_at || !form.venue) return
+              if (form.rating < 1) return
               await add(form as any)
               setForm({ artist_id: '', seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
               setShowForm(false)
             }}
-            className="mt-3 cutout red"
+            disabled={form.rating < 1}
+            className="mt-3 cutout red disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ cursor: 'pointer' }}
           >
             {es ? 'GUARDAR' : 'SAVE'}
