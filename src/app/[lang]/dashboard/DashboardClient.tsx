@@ -281,31 +281,67 @@ function EraTreemap({ eras }: { eras: Record<string, number> }) {
     '2010s': 'var(--pink)', '2020s': 'var(--cyan)',
   }
 
+  let currentX = 0;
+  let currentY = 0;
+  let currentW = 100;
+  let currentH = 100;
+  let visW = 200;
+  let visH = 100;
+  let sum = sorted.reduce((acc, [, pct]) => acc + pct, 0);
+
+  const boxes = sorted.map(([era, pct]) => {
+    const ratio = pct / sum;
+    let box = { x: 0, y: 0, w: 0, h: 0 };
+    
+    if (visW > visH) {
+      const width = currentW * ratio;
+      const vWidth = visW * ratio;
+      box = { x: currentX, y: currentY, w: width, h: currentH };
+      currentX += width;
+      currentW -= width;
+      visW -= vWidth;
+    } else {
+      const height = currentH * ratio;
+      const vHeight = visH * ratio;
+      box = { x: currentX, y: currentY, w: currentW, h: height };
+      currentY += height;
+      currentH -= height;
+      visH -= vHeight;
+    }
+    
+    sum -= pct;
+    return { era, pct, box };
+  });
+
   return (
-    <div className="flex w-full h-[140px] border-[3px] border-[var(--ink)] overflow-hidden shadow-[4px_4px_0px_var(--ink)]">
-      {sorted.map(([era, pct]) => {
+    <div className="relative w-full h-[140px] border-[3px] border-[var(--ink)] overflow-hidden shadow-[4px_4px_0px_var(--ink)]">
+      {boxes.map(({ era, pct, box }) => {
         return (
           <div
             key={era}
-            className="flex flex-col items-center justify-center border-r-[3px] border-[var(--ink)] last:border-r-0 transition-all duration-700 hover:brightness-110"
+            className="absolute flex flex-col items-center justify-center border-[1.5px] border-[var(--ink)] transition-all duration-700 hover:brightness-110 overflow-hidden"
             style={{
-              flex: pct,
+              left: `${box.x}%`,
+              top: `${box.y}%`,
+              width: `${box.w}%`,
+              height: `${box.h}%`,
               background: colors[era] || 'var(--yellow)',
-              minWidth: 0,
             }}
             title={`${era}: ${Math.round(pct * 100)}%`}
           >
-            {pct >= 0.08 && (
+            {box.w > 15 && box.h > 20 && (
               <div className="flex flex-col items-center px-1 overflow-hidden w-full">
                 <span
                   className="truncate w-full text-center"
-                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 18px)', color: 'var(--ink)' }}
+                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(10px, 2vw, 16px)', color: 'var(--ink)' }}
                 >
                   {era}
                 </span>
-                <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', color: 'var(--ink)', marginTop: '2px' }}>
-                  {Math.round(pct * 100)}%
-                </span>
+                {box.h > 35 && (
+                  <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', color: 'var(--ink)', marginTop: '2px' }}>
+                    {Math.round(pct * 100)}%
+                  </span>
+                )}
               </div>
             )}
           </div>
