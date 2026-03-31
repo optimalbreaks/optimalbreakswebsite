@@ -179,20 +179,20 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-[100] flex items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
-      {/* Logo (punk lockup — public/images/logo_punk.png) */}
+      {/* Logo definitivo — public/images/logo_punk_brutalism.png */}
       <Link
         href={`/${lang}`}
-        className="flex items-center shrink-0 px-2 sm:px-3 py-2 sm:py-2.5 bg-black no-underline border-r-[3px] border-[var(--ink)]"
+        className="flex items-center shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 bg-black no-underline border-r-[3px] border-[var(--ink)]"
         aria-label="Optimal Breaks"
       >
         <Image
-          src="/images/logo_punk.png"
+          src="/images/logo_punk_brutalism.png"
           alt="Optimal Breaks"
-          width={220}
-          height={56}
-          className="h-8 sm:h-9 w-auto max-w-[min(52vw,220px)] object-contain object-left"
+          width={280}
+          height={90}
+          className="h-9 sm:h-10 max-h-[44px] sm:max-h-[52px] w-auto max-w-[min(58vw,280px)] object-contain object-left"
           priority
-          sizes="(max-width: 640px) 160px, 220px"
+          sizes="(max-width: 640px) 200px, 280px"
         />
       </Link>
 

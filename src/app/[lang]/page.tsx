@@ -9,6 +9,7 @@ import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
 import type { Artist, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import DjDeck from '@/components/DjDeck'
@@ -328,9 +329,22 @@ export default async function HomePage({
           </div>
         </div>
 
-        {/* DJ Deck — ancla #dj-deck para la mini bar global */}
-        <div id="dj-deck" className="scroll-mt-24">
-          <DjDeck dict={h} />
+        {/* DJ Deck — logo brutalismo encima del vinilo; ancla #dj-deck */}
+        <div id="dj-deck" className="scroll-mt-24 relative z-[2]">
+          <div className="relative z-[5] flex justify-center pointer-events-none px-2 -mb-[clamp(1.25rem,5vw,2.75rem)]">
+            <Image
+              src="/images/logo_punk_brutalism.png"
+              alt="Optimal Breaks"
+              width={640}
+              height={220}
+              className="w-[min(94%,560px)] max-h-[clamp(64px,16vw,120px)] h-auto object-contain object-bottom drop-shadow-[0_8px_28px_rgba(0,0,0,0.35)]"
+              priority
+              sizes="(max-width: 768px) 94vw, 560px"
+            />
+          </div>
+          <div className="relative z-[3]">
+            <DjDeck dict={h} />
+          </div>
         </div>
 
         {/* Genre tags */}
