@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
+import FavoriteButton from '@/components/FavoriteButton'
 
 interface ArtistCardProps {
   num: number
@@ -13,9 +14,11 @@ interface ArtistCardProps {
   desc: string
   href?: string
   imageUrl?: string | null
+  entityId?: string
+  lang?: string
 }
 
-export default function ArtistCard({ num, name, genres, desc, href, imageUrl }: ArtistCardProps) {
+export default function ArtistCard({ num, name, genres, desc, href, imageUrl, entityId, lang }: ArtistCardProps) {
   const body = (
     <>
       <CardThumbnail src={imageUrl} alt={name} aspectClass="aspect-[5/3]" />
@@ -68,9 +71,12 @@ export default function ArtistCard({ num, name, genres, desc, href, imageUrl }: 
 
   if (href) {
     return (
-      <Link href={href} className={`${shell} no-underline text-[var(--ink)]`}>
-        {body}
-      </Link>
+      <div className="relative">
+        {entityId && lang && <FavoriteButton type="artist" entityId={entityId} lang={lang} />}
+        <Link href={href} className={`${shell} no-underline text-[var(--ink)]`}>
+          {body}
+        </Link>
+      </div>
     )
   }
 

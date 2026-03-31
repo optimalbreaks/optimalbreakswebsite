@@ -5,7 +5,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { i18n } from '@/lib/i18n-config'
+import { i18n, type Locale } from '@/lib/i18n-config'
 
 export const metadata: Metadata = {
   title: '404 — Track not found',
@@ -18,11 +18,11 @@ export default async function NotFound() {
   const referer = headersList.get('referer') ?? ''
   const url = headersList.get('x-url') ?? headersList.get('x-invoke-path') ?? ''
 
-  let lang = i18n.defaultLocale
+  let lang: Locale = i18n.defaultLocale
   for (const source of [url, referer]) {
     const match = source.match(/\/([a-z]{2})(?:\/|$)/)
-    if (match && i18n.locales.includes(match[1] as any)) {
-      lang = match[1]
+    if (match && i18n.locales.includes(match[1] as Locale)) {
+      lang = match[1] as Locale
       break
     }
   }

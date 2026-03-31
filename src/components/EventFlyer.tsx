@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
+import FavoriteButton from '@/components/FavoriteButton'
 
 interface EventFlyerProps {
   date: string
@@ -13,10 +14,12 @@ interface EventFlyerProps {
   imageUrl?: string | null
   /** Si se pasa, la tarjeta enlaza a la ficha del evento */
   href?: string
+  entityId?: string
+  lang?: string
 }
 
 /** Misma envoltura y miniatura que `LargeGrid` en `EventsExplorer` (vista grande /events). */
-export default function EventFlyer({ date, name, location, type, imageUrl, href }: EventFlyerProps) {
+export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang }: EventFlyerProps) {
   const shell =
     'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group'
 
@@ -77,9 +80,12 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href 
 
   if (href) {
     return (
-      <Link href={href} className={shell}>
-        {body}
-      </Link>
+      <div className="relative">
+        {entityId && lang && <FavoriteButton type="event" entityId={entityId} lang={lang} />}
+        <Link href={href} className={shell}>
+          {body}
+        </Link>
+      </div>
     )
   }
 

@@ -66,7 +66,7 @@ const FALLBACK_HOME_EVENTS: {
 
 type HomeEventRow = Pick<
   BreakEvent,
-  'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url'
+  'id' | 'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url'
 >
 
 /** «Hoy» calendario (sitio centrado en España; coherente en SSR). */
@@ -167,11 +167,11 @@ export default async function HomePage({
   const featuredSlugs = FEATURED_ARTISTS.map((a) => a.slug)
   const { data: artistRows } = await supabase
     .from('artists')
-    .select('slug, name_display, image_url, styles')
+    .select('id, slug, name_display, image_url, styles')
     .in('slug', featuredSlugs)
 
   const artistBySlug = new Map(
-    ((artistRows || []) as Pick<Artist, 'slug' | 'name_display' | 'image_url' | 'styles'>[]).map((r) => [
+    ((artistRows || []) as Pick<Artist, 'id' | 'slug' | 'name_display' | 'image_url' | 'styles'>[]).map((r) => [
       r.slug,
       r,
     ]),
@@ -182,6 +182,7 @@ export default async function HomePage({
     const styles = row?.styles?.filter(Boolean) ?? []
     return {
       ...a,
+      id: row?.id ?? null,
       name: row?.name_display?.trim() || a.name,
       image_url: row?.image_url ?? a.image_url ?? null,
       genres: styles.length > 0 ? styles.slice(0, 5) : a.genres,
@@ -190,14 +191,14 @@ export default async function HomePage({
 
   const { data: featuredEventsRaw } = await supabase
     .from('events')
-    .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+    .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
     .eq('is_featured', true)
 
   let homeEvents = filterUpcomingHomeEvents((featuredEventsRaw || []) as HomeEventRow[])
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
-      .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+      .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
       .limit(48)
     homeEvents = filterUpcomingHomeEvents((anyEvents || []) as HomeEventRow[])
     homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
@@ -209,6 +210,7 @@ export default async function HomePage({
     homeEvents.length > 0
       ? homeEvents.map((e) => ({
           key: e.slug,
+          id: e.id,
           date: formatHomeEventDate(e.date_start, e.date_end, lang),
           name: e.name,
           location: eventLocationLine(e),
@@ -218,6 +220,7 @@ export default async function HomePage({
         }))
       : FALLBACK_HOME_EVENTS.map((e, i) => ({
           key: `fallback-${i}`,
+          id: undefined as string | undefined,
           date: lang === 'es' ? e.date_es : e.date_en,
           name: e.name,
           location: e.location,
@@ -513,6 +516,8 @@ export default async function HomePage({
               desc={lang === 'es' ? a.desc_es : a.desc_en}
               href={`/${lang}/artists/${a.slug}`}
               imageUrl={a.image_url}
+              entityId={a.id ?? undefined}
+              lang={lang}
             />
           ))}
         </div>
@@ -557,6 +562,8 @@ export default async function HomePage({
               type={e.type}
               imageUrl={e.imageUrl}
               href={e.href}
+              entityId={e.id}
+              lang={lang}
             />
           ))}
         </div>
