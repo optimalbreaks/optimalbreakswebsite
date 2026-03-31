@@ -270,7 +270,7 @@ export default async function HomePage({
         <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0">
           <h1 className="m-0 flex justify-center mx-auto max-w-full">
             <Image
-              src="/images/logo_punk_brutalism.png"
+              src="/images/logo_punk_brutalism.webp"
               alt="Optimal Breaks"
               width={720}
               height={240}

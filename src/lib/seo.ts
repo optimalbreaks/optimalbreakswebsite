@@ -12,7 +12,7 @@ export const SITE_URL = 'https://www.optimalbreaks.com' as const
 export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 
 /** Home /en y /es: imagen OG (logo brutalismo, fondo transparente en PNG). */
-export const HOME_OG_IMAGE = '/images/logo_punk_brutalism.png' as const
+export const HOME_OG_IMAGE = '/images/logo_punk_brutalism.webp' as const
 
 /** Texto alt de la imagen OG de la home (accesibilidad / redes). */
 export function homeOgImageAlt(lang: Locale): string {
