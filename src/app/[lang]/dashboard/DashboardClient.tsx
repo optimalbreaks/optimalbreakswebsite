@@ -261,10 +261,12 @@ function HorizontalBars({ data, color, maxItems = 5 }: { data: { name: string; p
   )
 }
 
-function EraTimeline({ eras }: { eras: Record<string, number> }) {
-  const sorted = Object.entries(eras).sort(([a], [b]) => a.localeCompare(b))
+function EraTreemap({ eras }: { eras: Record<string, number> }) {
+  const sorted = Object.entries(eras)
+    .filter(([, pct]) => pct > 0)
+    .sort(([, a], [, b]) => b - a)
+
   if (sorted.length === 0) return null
-  const maxPct = Math.max(...sorted.map(([, v]) => v), 0.01)
 
   const colors: Record<string, string> = {
     '1980s': 'var(--uv)', '1990s': 'var(--acid)', '2000s': 'var(--red)',
@@ -272,18 +274,32 @@ function EraTimeline({ eras }: { eras: Record<string, number> }) {
   }
 
   return (
-    <div className="flex items-end gap-[3px] h-[80px]">
+    <div className="flex w-full h-[140px] border-[3px] border-[var(--ink)] overflow-hidden shadow-[4px_4px_0px_var(--ink)]">
       {sorted.map(([era, pct]) => {
-        const height = Math.max((pct / maxPct) * 100, 8)
         return (
-          <div key={era} className="flex flex-col items-center flex-1 min-w-0">
-            <div
-              className="w-full border-[2px] border-[var(--ink)] transition-all duration-700"
-              style={{ height: `${height}%`, background: colors[era] || 'var(--yellow)', minHeight: '6px' }}
-            />
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', fontWeight: 700, marginTop: '3px', color: 'var(--dim)' }}>
-              {era.replace('s', '')}
-            </span>
+          <div
+            key={era}
+            className="flex flex-col items-center justify-center border-r-[3px] border-[var(--ink)] last:border-r-0 transition-all duration-700 hover:brightness-110"
+            style={{
+              flex: pct,
+              background: colors[era] || 'var(--yellow)',
+              minWidth: 0,
+            }}
+            title={`${era}: ${Math.round(pct * 100)}%`}
+          >
+            {pct >= 0.08 && (
+              <div className="flex flex-col items-center px-1 overflow-hidden w-full">
+                <span
+                  className="truncate w-full text-center"
+                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 18px)', color: 'var(--ink)' }}
+                >
+                  {era}
+                </span>
+                <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', color: 'var(--ink)', marginTop: '2px' }}>
+                  {Math.round(pct * 100)}%
+                </span>
+              </div>
+            )}
           </div>
         )
       })}
@@ -438,7 +454,7 @@ function BreakbeatDNA({ lang }: { lang: string }) {
               <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--acid)' }}>
                 {es ? 'Épocas' : 'Eras'}
               </div>
-              <EraTimeline eras={stats.era_distribution} />
+              <EraTreemap eras={stats.era_distribution} />
               {/* Category badges */}
               {Object.keys(stats.category_breakdown).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-4">
