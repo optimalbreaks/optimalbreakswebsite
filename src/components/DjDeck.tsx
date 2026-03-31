@@ -219,7 +219,7 @@ function Platter({
           style={{
             background: 'linear-gradient(90deg, #999 0%, #ccc 40%, #555 100%)',
             transformOrigin: 'top center',
-            transform: playing && !scratching ? 'rotate(22deg)' : 'rotate(0deg)',
+            transform: playing ? 'rotate(22deg)' : 'rotate(0deg)',
           }}
         >
           {/* Tonearm base */}
