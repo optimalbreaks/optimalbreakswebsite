@@ -12,7 +12,7 @@ export const SITE_URL = 'https://www.optimalbreaks.com' as const
 export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 
 /** Home /en y /es: imagen OG compartida (Facebook, X, etc.). */
-export const HOME_OG_IMAGE = '/images/og-home-optimal-beats.jpeg' as const
+export const HOME_OG_IMAGE = '/images/opengraph_OB.jpeg' as const
 
 /** Texto alt de la imagen OG de la home (accesibilidad / redes). */
 export function homeOgImageAlt(lang: Locale): string {

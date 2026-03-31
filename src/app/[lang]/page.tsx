@@ -305,6 +305,21 @@ export default async function HomePage({
               ● {h.live}
             </span>
           </p>
+          <div className="mt-5 sm:mt-6 animate-bounce">
+            <span
+              className="inline-block"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: '10px',
+                letterSpacing: '2px',
+                color: 'var(--yellow)',
+                background: 'var(--ink)',
+                padding: '4px 12px',
+              }}
+            >
+              {h.press_play}
+            </span>
+          </div>
         </div>
 
         {/* DJ Deck — ancla #dj-deck para la mini bar global */}

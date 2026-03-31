@@ -11,7 +11,11 @@ import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import EventPosterLightbox from '@/components/EventPosterLightbox'
-import { splitBioParagraphs, splitProseForDisplay } from '@/lib/bio-format'
+import {
+  splitBioParagraphs,
+  splitFestivalDescriptionSections,
+  splitProseForDisplay,
+} from '@/lib/bio-format'
 import { getDictionary } from '@/lib/dictionaries'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -56,6 +60,24 @@ function formatDoorTime(t: string | null | undefined): string {
   if (!t) return ''
   const m = String(t).match(/^(\d{1,2}):(\d{2})/)
   return m ? `${m[1]}:${m[2]}` : t
+}
+
+function dateStampParts(dateStr: string | null, lang: Locale): { day: string; month: string; line: string } | null {
+  if (!dateStr) return null
+  try {
+    const d = new Date(dateStr + 'T12:00:00')
+    return {
+      day: String(d.getDate()),
+      month: d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { month: 'short' }).replace('.', '').toUpperCase(),
+      line: d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -143,6 +165,25 @@ export default async function EventDetailPage({ params }: Props) {
     const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
     for (const a of rows) artistSlugs.set(a.name, a.slug)
   }
+
+  const rawDesc = lang === 'es' ? event.description_es : event.description_en
+  let festivalSections = splitFestivalDescriptionSections(rawDesc, lang === 'es' ? 'es' : 'en')
+  const lineupDupTitles =
+    lang === 'es'
+      ? new Set(['Primera confirmación', 'Segunda confirmación'])
+      : new Set(['First wave', 'Second wave'])
+  const hasFlatLineup = (event.lineup?.length ?? 0) > 0
+  const hasStageLineups = stages.some((s) => (s.lineup?.length ?? 0) > 0)
+  if (festivalSections?.length && (hasFlatLineup || hasStageLineups)) {
+    festivalSections = festivalSections.filter((s) => !lineupDupTitles.has(s.title))
+  }
+  if (!festivalSections || festivalSections.length < 2) {
+    festivalSections = null
+  }
+  const useFestivalSpark =
+    hasFlatLineup || stages.length > 0 || event.event_type === 'festival'
+  const hasLineupAnchor = stages.length > 0 || hasFlatLineup
+  const stamp = dateStampParts(event.date_start, lang)
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
@@ -244,31 +285,67 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       </header>
 
-      {/* ── DESCRIPTION (misma lectura visual que bio de artistas / sellos) ── */}
+      {/* ── PULSO: cinta tipo festival (no es bio de artista: datos + saltos a lineup/mapa) ── */}
+      {useFestivalSpark && (
+        <EventFestivalPulse
+          lang={lang}
+          stamp={stamp}
+          doorsOpen={event.doors_open}
+          doorsClose={event.doors_close}
+          lineupCount={event.lineup?.length ?? 0}
+          showLineupLink={hasLineupAnchor}
+          venue={event.venue}
+          city={event.city}
+          hasMap={Boolean(mapLink)}
+        />
+      )}
+
+      {/* ── TEXTO: tarjetas troceadas si el copy encaja; si no, párrafos como antes ── */}
       <section className="mb-10">
-        <SectionHeading>{lang === 'es' ? 'SOBRE EL EVENTO' : 'ABOUT THE EVENT'}</SectionHeading>
-        <div className="max-w-[760px] border-4 border-[var(--ink)] bg-[var(--paper)] p-6 sm:p-8 shadow-[6px_6px_0_var(--ink)]">
-          <div className="space-y-0">
-            {splitProseForDisplay(lang === 'es' ? event.description_es : event.description_en).map((para, i) => (
+        <SectionHeading>{lang === 'es' ? 'NOTAS DE PISTA' : 'FLOOR NOTES'}</SectionHeading>
+        {festivalSections ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {festivalSections.map((s, i) => (
               <div
                 key={i}
-                className={i > 0 ? 'mt-6 pt-6 border-t-[3px] border-[var(--ink)]/15' : ''}
+                className="border-4 border-[var(--ink)] bg-[var(--paper)] p-5 sm:p-6 shadow-[5px_5px_0_var(--ink)] transition-transform sm:hover:-rotate-[0.5deg] sm:hover:shadow-[7px_7px_0_var(--ink)]"
               >
+                <div
+                  className="inline-block mb-3 cutout red"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', padding: '4px 10px', margin: 0 }}
+                >
+                  {s.title}
+                </div>
                 <p
-                  style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+                  style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.82 }}
                   className="text-[var(--ink)]"
                 >
-                  {para}
+                  {s.body}
                 </p>
               </div>
             ))}
           </div>
-        </div>
+        ) : (
+          <div className="max-w-[760px] border-4 border-[var(--ink)] bg-[var(--paper)] p-6 sm:p-8 shadow-[6px_6px_0_var(--ink)]">
+            <div className="space-y-0">
+              {splitProseForDisplay(rawDesc).map((para, i) => (
+                <div key={i} className={i > 0 ? 'mt-6 pt-6 border-t-[3px] border-[var(--ink)]/15' : ''}>
+                  <p
+                    style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+                    className="text-[var(--ink)]"
+                  >
+                    {para}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── STAGES + LINEUP ── */}
       {stages.length > 0 ? (
-        <section className="mb-10">
+        <section id="event-lineup" className="mb-10 scroll-mt-24">
           <SectionHeading>{lang === 'es' ? 'ESCENARIOS' : 'STAGES'}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stages.map((stage, i) => (
@@ -300,7 +377,7 @@ export default async function EventDetailPage({ params }: Props) {
           </div>
         </section>
       ) : event.lineup?.length > 0 ? (
-        <section className="mb-10">
+        <section id="event-lineup" className="mb-10 scroll-mt-24">
           <SectionHeading>LINEUP</SectionHeading>
           <div className="p-5 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
             <div className="flex flex-wrap gap-2">
@@ -368,7 +445,7 @@ export default async function EventDetailPage({ params }: Props) {
 
       {/* ── LOCATION / MAP ── */}
       {(event.address || event.location || mapLink) && (
-        <section className="mb-10">
+        <section id="event-location" className="mb-10 scroll-mt-24">
           <SectionHeading>{lang === 'es' ? 'UBICACIÓN' : 'LOCATION'}</SectionHeading>
           <div className="border-4 border-[var(--ink)] p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -449,6 +526,227 @@ export default async function EventDetailPage({ params }: Props) {
           </div>
         </section>
       )}
+    </div>
+  )
+}
+
+function PulseCell({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`p-4 sm:p-5 min-h-[112px] flex flex-col justify-start ${className}`}>{children}</div>
+}
+
+function EventFestivalPulse({
+  lang,
+  stamp,
+  doorsOpen,
+  doorsClose,
+  lineupCount,
+  showLineupLink,
+  venue,
+  city,
+  hasMap,
+}: {
+  lang: Locale
+  stamp: ReturnType<typeof dateStampParts>
+  doorsOpen: string | null
+  doorsClose: string | null
+  lineupCount: number
+  showLineupLink: boolean
+  venue: string | null
+  city: string
+  hasMap: boolean
+}) {
+  const doors =
+    doorsOpen || doorsClose
+      ? `${formatDoorTime(doorsOpen) || '—'} → ${formatDoorTime(doorsClose) || '—'}`
+      : null
+
+  return (
+    <div className="mb-10 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] shadow-[8px_8px_0_rgba(24,20,16,0.2)] overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b-2 border-[var(--paper)]/12">
+        <span
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '4px', color: 'var(--yellow)' }}
+        >
+          {lang === 'es' ? 'PULSO DEL EVENTO' : 'EVENT PULSE'}
+        </span>
+        <span
+          className="text-[var(--cyan)]/90 max-sm:hidden"
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '2px' }}
+        >
+          {lang === 'es' ? 'DATOS · SALTO A CARTEL Y MAPA' : 'FACTS · JUMP TO LINEUP & MAP'}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-[var(--paper)]/12">
+        <PulseCell>
+          {stamp ? (
+            <>
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span
+                  style={{
+                    fontFamily: "'Unbounded', sans-serif",
+                    fontWeight: 900,
+                    fontSize: 'clamp(36px, 9vw, 56px)',
+                    lineHeight: 1,
+                    color: 'var(--yellow)',
+                  }}
+                >
+                  {stamp.day}
+                </span>
+                <span
+                  style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    color: 'var(--red)',
+                    letterSpacing: '2px',
+                  }}
+                >
+                  {stamp.month}
+                </span>
+              </div>
+              <p
+                className="mt-2 capitalize opacity-85"
+                style={{ fontFamily: "'Special Elite', monospace", fontSize: '12px', lineHeight: 1.45 }}
+              >
+                {stamp.line}
+              </p>
+            </>
+          ) : (
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', opacity: 0.6 }}>—</span>
+          )}
+        </PulseCell>
+        <PulseCell>
+          <div
+            style={{
+              fontFamily: "'Darker Grotesque', sans-serif",
+              fontWeight: 900,
+              fontSize: '12px',
+              color: 'var(--yellow)',
+              letterSpacing: '2px',
+            }}
+          >
+            {lang === 'es' ? 'PUERTAS' : 'DOORS'}
+          </div>
+          {doors ? (
+            <p
+              className="mt-2"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: 'clamp(15px, 3.5vw, 20px)', fontWeight: 700 }}
+            >
+              {doors}
+            </p>
+          ) : (
+            <p className="mt-2 opacity-60" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>
+              —
+            </p>
+          )}
+        </PulseCell>
+        <PulseCell className="col-span-2 lg:col-span-1">
+          {showLineupLink ? (
+            <Link href="#event-lineup" className="group block no-underline text-inherit">
+              <div
+                style={{
+                  fontFamily: "'Darker Grotesque', sans-serif",
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  color: 'var(--yellow)',
+                  letterSpacing: '2px',
+                }}
+              >
+                LINE-UP
+              </div>
+              <p
+                className="mt-2 group-hover:text-[var(--cyan)] transition-colors"
+                style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(22px, 5vw, 32px)', lineHeight: 1.1 }}
+              >
+                {lineupCount > 0
+                  ? `${lineupCount} ${lang === 'es' ? 'NOMBRES' : 'ACTS'}`
+                  : '—'}
+              </p>
+              <span
+                className="inline-block mt-2"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '1px', color: 'var(--cyan)' }}
+              >
+                {lang === 'es' ? 'VER CARTEL ↓' : 'SEE LINEUP ↓'}
+              </span>
+            </Link>
+          ) : (
+            <div>
+              <div
+                style={{
+                  fontFamily: "'Darker Grotesque', sans-serif",
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  color: 'var(--yellow)',
+                  letterSpacing: '2px',
+                }}
+              >
+                LINE-UP
+              </div>
+              <p
+                className="mt-2 opacity-80"
+                style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.35 }}
+              >
+                {lang === 'es' ? 'Cartel por confirmar.' : 'Lineup TBA.'}
+              </p>
+            </div>
+          )}
+        </PulseCell>
+        <PulseCell className="col-span-2 lg:col-span-1">
+          {hasMap ? (
+            <Link href="#event-location" className="group block no-underline text-inherit">
+              <div
+                style={{
+                  fontFamily: "'Darker Grotesque', sans-serif",
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  color: 'var(--yellow)',
+                  letterSpacing: '2px',
+                }}
+              >
+                {lang === 'es' ? 'RECINTO' : 'VENUE'}
+              </div>
+              {venue && (
+                <p
+                  className="mt-2 group-hover:text-[var(--cyan)] transition-colors"
+                  style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.35 }}
+                >
+                  {venue}
+                </p>
+              )}
+              <p className="mt-1 opacity-75" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px' }}>
+                {city}
+              </p>
+              <span
+                className="inline-block mt-2"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '1px', color: 'var(--cyan)' }}
+              >
+                {lang === 'es' ? 'MAPA ↓' : 'MAP ↓'}
+              </span>
+            </Link>
+          ) : (
+            <>
+              <div
+                style={{
+                  fontFamily: "'Darker Grotesque', sans-serif",
+                  fontWeight: 900,
+                  fontSize: '12px',
+                  color: 'var(--yellow)',
+                  letterSpacing: '2px',
+                }}
+              >
+                {lang === 'es' ? 'RECINTO' : 'VENUE'}
+              </div>
+              {venue && (
+                <p className="mt-2" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.35 }}>
+                  {venue}
+                </p>
+              )}
+              <p className="mt-1 opacity-75" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px' }}>
+                {city}
+              </p>
+            </>
+          )}
+        </PulseCell>
+      </div>
     </div>
   )
 }
