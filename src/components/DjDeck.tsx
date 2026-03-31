@@ -183,7 +183,7 @@ function Platter({
         <div
           className={`${compact ? 'w-[85%]' : 'w-[82%]'} aspect-square rounded-full relative select-none`}
           style={{
-            backgroundImage: 'url(/images/disco_optimal_breaks.png)',
+            backgroundImage: `url(/images/${side === 'left' ? 'disco_optimal_breaks_A.png' : 'disco_optimal_breaks.png'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             border: '2px solid rgba(255,255,255,0.08)',
