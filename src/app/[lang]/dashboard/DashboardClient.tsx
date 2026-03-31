@@ -1022,10 +1022,30 @@ function SightingsTab({ lang }: { lang: string }) {
           {sightings.map((s) => (
             <div key={s.id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between items-start gap-3">
               <div>
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{s.seen_at}</div>
-                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: '14px', textTransform: 'uppercase' }}>{s.event_name || s.venue}</div>
-                <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{s.venue} — {s.city}, {s.country}</div>
-                {s.rating && <div className="mt-1 text-[var(--yellow)]">{'★'.repeat(s.rating)}{'☆'.repeat(5 - s.rating)}</div>}
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
+                  {s.seen_at || (es ? 'Sin fecha' : 'No date')}
+                </div>
+                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 700, fontSize: '14px', textTransform: 'uppercase' }}>
+                  {s.artist_slug ? (
+                    <Link href={`/${lang}/artists/${s.artist_slug}`} className="text-[var(--ink)] no-underline hover:underline">
+                      {s.artist_name || s.artist_slug}
+                    </Link>
+                  ) : (
+                    s.artist_name || s.event_name || s.venue || (es ? 'Visto en vivo' : 'Live sighting')
+                  )}
+                </div>
+                {(s.artist_name || s.artist_slug) && s.event_name && (
+                  <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{s.event_name}</div>
+                )}
+                {!s.artist_name && !s.artist_slug && (s.event_name || s.venue) && (
+                  <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{s.event_name || s.venue}</div>
+                )}
+                {[s.venue, s.city, s.country].some(Boolean) && (
+                  <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
+                    {[s.venue, [s.city, s.country].filter(Boolean).join(', ')].filter(Boolean).join(' — ')}
+                  </div>
+                )}
+                {s.rating >= 1 && <div className="mt-1 text-[var(--yellow)]">{'★'.repeat(s.rating)}{'☆'.repeat(5 - s.rating)}</div>}
                 {s.notes && <p className="mt-1" style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px', color: 'var(--dim)' }}>{s.notes}</p>}
               </div>
               <button onClick={() => remove(s.id)} className="cutout outline text-[var(--red)] shrink-0" style={{ cursor: 'pointer', fontSize: '8px' }}>✕</button>

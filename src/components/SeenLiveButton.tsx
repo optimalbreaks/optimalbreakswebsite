@@ -44,6 +44,7 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
   }, [])
 
   const [form, setForm] = useState({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const checkSightings = useCallback(async () => {
     if (!user) { setHasSeen(false); setSightingCount(0); setLoading(false); return }
@@ -90,23 +91,37 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
 
   const handleClick = () => {
     if (!user) { setShowTooltip(true); return }
-    setShowForm((v) => !v)
+    setShowForm((v) => {
+      const next = !v
+      if (next) setSaveError(null)
+      return next
+    })
   }
 
   const handleSubmit = async () => {
     if (!user || form.rating < 1) return
+    setSaveError(null)
     const supabase: any = createBrowserSupabase()
-    await supabase.from('artist_sightings').insert({
+    // venue/city/country son NOT NULL en BD: no enviar null o el INSERT falla sin feedback.
+    const { error } = await supabase.from('artist_sightings').insert({
       user_id: user.id,
       artist_id: artistId,
       seen_at: form.seen_at || null,
-      venue: form.venue || null,
-      city: form.city || null,
-      country: form.country || null,
-      event_name: form.event_name || null,
-      notes: form.notes || null,
+      venue: form.venue.trim() || '',
+      city: form.city.trim() || '',
+      country: form.country.trim() || '',
+      event_name: form.event_name.trim() || '',
+      notes: form.notes.trim() || '',
       rating: form.rating,
     })
+    if (error) {
+      setSaveError(
+        es
+          ? 'No se pudo guardar (¿fecha obligatoria en la base de datos?). Revisa o contacta soporte.'
+          : 'Could not save. If the problem persists, try again or contact support.'
+      )
+      return
+    }
     setForm({ seen_at: '', venue: '', city: '', country: '', event_name: '', notes: '', rating: 0 })
     setShowForm(false)
     await checkSightings()
@@ -245,6 +260,11 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
                 </button>
               ))}
             </div>
+            {saveError && (
+              <p className="text-[var(--red)]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.4, margin: 0 }}>
+                {saveError}
+              </p>
+            )}
             <div className="pt-1">
               <button
                 type="button"

@@ -189,6 +189,9 @@ export interface Sighting {
   event_name: string
   notes: string
   rating: number
+  /** Rellenado al listar (join vía segunda query) */
+  artist_name?: string
+  artist_slug?: string
 }
 
 export function useArtistSightings() {
@@ -199,16 +202,47 @@ export function useArtistSightings() {
   const fetch = useCallback(async () => {
     if (!user) { setSightings([]); setLoading(false); return }
     const { data } = await supabase.from('artist_sightings').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
-    setSightings((data as Sighting[]) || [])
+    const rows = (data as Sighting[]) || []
+    const artistIds = [...new Set(rows.map((r) => r.artist_id).filter(Boolean))]
+    const nameById: Record<string, { name: string; slug: string }> = {}
+    if (artistIds.length) {
+      const { data: artists } = await supabase.from('artists').select('id, name, slug').in('id', artistIds)
+      artists?.forEach((a: { id: string; name: string; slug: string }) => {
+        nameById[a.id] = { name: a.name, slug: a.slug }
+      })
+    }
+    setSightings(
+      rows.map((r) => ({
+        ...r,
+        artist_name: nameById[r.artist_id]?.name,
+        artist_slug: nameById[r.artist_id]?.slug,
+      }))
+    )
     setLoading(false)
   }, [user])
 
   useEffect(() => { fetch() }, [fetch])
 
   const add = async (sighting: Omit<Sighting, 'id'>) => {
-    if (!user) return
-    const { data } = await supabase.from('artist_sightings').insert({ ...sighting, user_id: user.id }).select().single()
-    if (data) setSightings((s) => [data as Sighting, ...s])
+    if (!user) return false
+    const payload = {
+      user_id: user.id,
+      artist_id: sighting.artist_id,
+      seen_at: sighting.seen_at || null,
+      venue: sighting.venue ?? '',
+      city: sighting.city ?? '',
+      country: sighting.country ?? '',
+      event_name: sighting.event_name ?? '',
+      notes: sighting.notes ?? '',
+      rating: sighting.rating,
+    }
+    const { error } = await supabase.from('artist_sightings').insert(payload)
+    if (error) {
+      console.error('[artist_sightings insert]', error)
+      return false
+    }
+    await fetch()
+    return true
   }
 
   const remove = async (id: string) => {
