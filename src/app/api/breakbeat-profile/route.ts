@@ -149,15 +149,15 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
 
   const isEs = lang === 'es'
   const systemPrompt = isEs
-    ? `Eres un crítico musical experto en breakbeat con personalidad, humor y nostalgia. Escribes para Optimal Breaks, un archivo cultural del breakbeat. Tu tono es apasionado, cercano y con referencias culturales del breakbeat (artistas, sellos, raves, épocas). Nunca suenas genérico.`
-    : `You are an expert breakbeat music critic with personality, humor and nostalgia. You write for Optimal Breaks, a breakbeat cultural archive. Your tone is passionate, warm and full of breakbeat cultural references (artists, labels, raves, eras). Never sound generic.`
+    ? `Eres un crítico musical experto en breakbeat con personalidad, humor y nostalgia. Escribes para Optimal Breaks, un archivo cultural del breakbeat. Tu tarea es analizar los gustos del usuario y hablarle DIRECTAMENTE A ÉL en segunda persona ("tú eres", "veo que te gusta"). Tu tono es apasionado, cercano, de "colega", y con referencias culturales reales del breakbeat (artistas, sellos, raves, épocas). Nunca suenas genérico ni hablas de él en tercera persona.`
+    : `You are an expert breakbeat music critic with personality, humor and nostalgia. You write for Optimal Breaks, a breakbeat cultural archive. Your task is to analyze the user's taste and speak DIRECTLY TO THEM in the second person ("you are", "I see you like"). Your tone is passionate, warm, "mate-like", and full of real breakbeat cultural references (artists, labels, raves, eras). Never sound generic or talk about them in the third person.`
 
   const userPrompt = isEs
     ? `Analiza este perfil breakbeatero y escribe:
 
 1. Un ARQUETIPO corto (3-5 palabras máximo, ej: "Purista del Nu Skool", "Arqueólogo del Florida Breaks", "Animal del Bassline", "Ecléctico sin remedio"). Solo el nombre, sin explicación.
 
-2. Un análisis de 3-4 párrafos cortos (máx 600 caracteres total) describiendo la personalidad breakbeatera de este usuario. Sé específico con las referencias (artistas, sellos, raves reales). Usa un tono de "colega que te conoce bien". Incluye algo de humor.
+2. Un análisis de 3-4 párrafos cortos (máx 600 caracteres total) dirigiéndote directamente al usuario ("Tú eres...", "Por tus datos veo que..."). Describe su personalidad breakbeatera basándote en los datos. Sé específico con las referencias (inventa qué artistas o sellos concretos encajan con esos datos). Incluye algo de humor. ¡No hables de "este usuario"! Habla con él.
 
 DATOS DEL PERFIL:
 - Subgéneros favoritos: ${stylesStr}
@@ -174,7 +174,7 @@ Responde EXACTAMENTE en este formato JSON:
 
 1. A short ARCHETYPE (3-5 words max, e.g.: "Nu Skool Purist", "Florida Breaks Archaeologist", "Bassline Animal", "Hopeless Eclectic"). Just the name, no explanation.
 
-2. A 3-4 short paragraph analysis (max 600 chars total) describing this user's breakbeat personality. Be specific with references (real artists, labels, raves). Use a "mate who knows you well" tone. Include some humor.
+2. A 3-4 short paragraph analysis (max 600 chars total) talking DIRECTLY to the user ("You are...", "I see from your profile that..."). Describe their breakbeat personality based on the data. Be specific with references (invent which real artists or labels fit that data). Include some humor. Do not talk about "this user", talk to them!
 
 PROFILE DATA:
 - Favorite subgenres: ${stylesStr}
