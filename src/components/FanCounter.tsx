@@ -20,7 +20,6 @@ interface FanCounterProps {
 const TABLE_MAP: Record<string, { table: string; column: string }> = {
   artist: { table: 'favorite_artists', column: 'artist_id' },
   label: { table: 'favorite_labels', column: 'label_id' },
-  event: { table: 'event_attendance', column: 'event_id' },
   mix: { table: 'saved_mixes', column: 'mix_id' },
 }
 
@@ -31,11 +30,26 @@ export default function FanCounter({ type, entityId, lang }: FanCounterProps) {
   useEffect(() => {
     const fetchCount = async () => {
       if (!entityId) return
-      const config = TABLE_MAP[type]
-      if (!config) return
 
       try {
         const supabase = createBrowserSupabase()
+        if (type === 'event') {
+          const { data, error } = await (supabase as any).rpc('event_engaged_user_count', { eid: entityId })
+          if (!error && typeof data === 'number') {
+            setCount(data)
+            return
+          }
+          const { count: fallback } = await supabase
+            .from('event_attendance')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', entityId)
+          if (fallback !== null) setCount(fallback)
+          return
+        }
+
+        const config = TABLE_MAP[type]
+        if (!config) return
+
         const { count: total, error } = await supabase
           .from(config.table)
           .select('*', { count: 'exact', head: true })

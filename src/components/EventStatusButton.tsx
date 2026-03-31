@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
@@ -41,7 +42,12 @@ export default function EventStatusButton({ eventId, lang }: EventStatusButtonPr
   const [status, setStatus] = useState<Status>(null)
   const [loading, setLoading] = useState(true)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const tooltipRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchStatus = useCallback(async () => {
     if (!user) { setStatus(null); setLoading(false); return }
@@ -119,43 +125,53 @@ export default function EventStatusButton({ eventId, lang }: EventStatusButtonPr
         )
       })}
 
-      {showTooltip && !user && (
-        <>
-          <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowTooltip(false)} />
-          <div
-            ref={tooltipRef}
-            className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:absolute md:left-0 md:top-full md:right-auto md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 md:p-4 shadow-[6px_6px_0_var(--ink)]"
-            style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
-          >
-            <button
-              type="button"
-              onClick={() => setShowTooltip(false)}
-              className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer md:hidden"
-              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
-              aria-label="Close"
+      {mounted &&
+        showTooltip &&
+        !user &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[1100] bg-black/50" onClick={() => setShowTooltip(false)} aria-hidden />
+            <div
+              className="fixed inset-0 z-[1101] flex items-center justify-center p-4 pointer-events-none"
+              role="dialog"
+              aria-modal="true"
             >
-              ✕
-            </button>
-            <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-              {es
-                ? '¡Regístrate para seguir eventos!'
-                : 'Sign up to track events!'}
-            </p>
-            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
-              {es
-                ? 'Marca los eventos que quieres ir, a los que vas o a los que fuiste.'
-                : 'Mark events as wishlist, going, or attended.'}
-            </p>
-            <Link
-              href={`/${resolvedLang}/login`}
-              className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
-              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
-            >
-              {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
-            </Link>
-          </div>
-        </>
-      )}
+              <div
+                ref={tooltipRef}
+                className="pointer-events-auto relative w-full max-w-[280px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 shadow-[6px_6px_0_var(--ink)]"
+                style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowTooltip(false)}
+                  className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+                <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                  {es
+                    ? '¡Regístrate para seguir eventos!'
+                    : 'Sign up to track events!'}
+                </p>
+                <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+                  {es
+                    ? 'Marca los eventos que quieres ir, a los que vas o a los que fuiste.'
+                    : 'Mark events as wishlist, going, or attended.'}
+                </p>
+                <Link
+                  href={`/${resolvedLang}/login`}
+                  className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
+                >
+                  {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+                </Link>
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   )
 }

@@ -80,6 +80,12 @@ export interface Database {
         Update: Partial<Pick<SavedMixRow, 'user_id' | 'mix_id'>>
         Relationships: DbRelationship[]
       }
+      favorite_events: {
+        Row: FavoriteEventRow
+        Insert: Pick<FavoriteEventRow, 'user_id' | 'event_id'>
+        Update: Partial<Pick<FavoriteEventRow, 'user_id' | 'event_id'>>
+        Relationships: DbRelationship[]
+      }
       event_attendance: {
         Row: EventAttendanceRow
         Insert: Pick<EventAttendanceRow, 'user_id' | 'event_id' | 'status'>
@@ -109,7 +115,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      event_engaged_user_count: {
+        Args: { eid: string }
+        Returns: number
+      }
     }
   }
 }
@@ -132,6 +141,13 @@ export interface SavedMixRow extends Record<string, unknown> {
   id: string
   user_id: string
   mix_id: string
+  created_at: string
+}
+
+export interface FavoriteEventRow extends Record<string, unknown> {
+  id: string
+  user_id: string
+  event_id: string
   created_at: string
 }
 

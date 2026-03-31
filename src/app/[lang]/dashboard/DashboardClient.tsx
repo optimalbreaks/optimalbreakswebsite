@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { useProfile, useFavoriteArtists, useFavoriteLabels, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings } from '@/hooks/useUserData'
+import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings } from '@/hooks/useUserData'
 import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -173,14 +173,14 @@ function OverviewTab({ lang }: { lang: string }) {
   const es = lang === 'es'
 
   const attended = Object.values(attendance).filter((s) => s === 'attended').length
-  const wishlist = Object.values(attendance).filter((s) => s === 'wishlist').length
+  const planning = Object.values(attendance).filter((s) => s === 'wishlist' || s === 'attending').length
 
   const stats = [
     { num: favArtists.length, label: es ? 'ARTISTAS FAV' : 'FAV ARTISTS', color: 'var(--red)' },
     { num: favLabels.length, label: es ? 'SELLOS FAV' : 'FAV LABELS', color: 'var(--uv)' },
     { num: sightings.length, label: es ? 'VISTOS EN VIVO' : 'SEEN LIVE', color: 'var(--acid)' },
     { num: attended, label: es ? 'EVENTOS ASISTIDOS' : 'EVENTS ATTENDED', color: 'var(--yellow)' },
-    { num: wishlist, label: es ? 'EN MI LISTA' : 'WISHLIST', color: 'var(--pink)' },
+    { num: planning, label: es ? 'QUIERO IR / VOY' : 'WISHLIST & GOING', color: 'var(--pink)' },
     { num: savedMixes.length, label: es ? 'MIXES GUARDADOS' : 'SAVED MIXES', color: 'var(--cyan)' },
   ]
 
@@ -219,15 +219,13 @@ function OverviewTab({ lang }: { lang: string }) {
 function FavoritesTab({ lang }: { lang: string }) {
   const { favorites: artistIds } = useFavoriteArtists()
   const { favorites: labelIds } = useFavoriteLabels()
-  const { attendance } = useEventAttendance()
+  const { favorites: favoriteEventIds } = useFavoriteEvents()
   const { saved: mixIds } = useSavedMixes()
   const [artists, setArtists] = useState<any[]>([])
   const [labels, setLabels] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [mixes, setMixes] = useState<any[]>([])
   const es = lang === 'es'
-
-  const wishlistIds = Object.entries(attendance).filter(([, s]) => s === 'wishlist').map(([id]) => id)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -244,9 +242,9 @@ function FavoritesTab({ lang }: { lang: string }) {
         const { data } = await supabase.from('labels').select('id, slug, name, country, founded_year, is_active, image_url').in('id', labelIds)
         if (!cancelled) setLabels(data || [])
       }
-      if (wishlistIds.length === 0) { if (!cancelled) setEvents([]) }
+      if (favoriteEventIds.length === 0) { if (!cancelled) setEvents([]) }
       else {
-        const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country, venue, event_type, image_url').in('id', wishlistIds)
+        const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country, venue, event_type, image_url').in('id', favoriteEventIds)
         if (!cancelled) setEvents(data || [])
       }
       if (mixIds.length === 0) { if (!cancelled) setMixes([]) }
@@ -258,7 +256,7 @@ function FavoritesTab({ lang }: { lang: string }) {
 
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistIds, labelIds, JSON.stringify(wishlistIds), mixIds])
+  }, [artistIds, labelIds, JSON.stringify(favoriteEventIds), mixIds])
 
   return (
     <div className="space-y-10">
@@ -338,12 +336,12 @@ function FavoritesTab({ lang }: { lang: string }) {
         )}
       </div>
 
-      {/* Events (wishlist) */}
+      {/* Events (corazón → favorite_events) */}
       <div>
         <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-          {es ? 'EVENTOS FAVORITOS' : 'FAVORITE EVENTS'} ({wishlistIds.length})
+          {es ? 'EVENTOS FAVORITOS' : 'FAVORITE EVENTS'} ({favoriteEventIds.length})
         </h2>
-        {wishlistIds.length === 0 ? (
+        {favoriteEventIds.length === 0 ? (
           <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
             {es ? 'Aún no has marcado eventos.' : 'No favorite events yet.'}
           </p>

@@ -108,6 +108,37 @@ export function useSavedMixes() {
 }
 
 // =============================================
+// FAVORITE EVENTS (corazón; independiente de event_attendance)
+// =============================================
+export function useFavoriteEvents() {
+  const { user } = useAuth()
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    if (!user) { setFavorites([]); setLoading(false); return }
+    const { data } = await supabase.from('favorite_events').select('event_id').eq('user_id', user.id)
+    setFavorites(data?.map((d: any) => d.event_id) || [])
+    setLoading(false)
+  }, [user])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  const toggle = async (eventId: string) => {
+    if (!user) return
+    if (favorites.includes(eventId)) {
+      await supabase.from('favorite_events').delete().eq('user_id', user.id).eq('event_id', eventId)
+      setFavorites((f) => f.filter((id) => id !== eventId))
+    } else {
+      await supabase.from('favorite_events').insert({ user_id: user.id, event_id: eventId })
+      setFavorites((f) => [...f, eventId])
+    }
+  }
+
+  return { favorites, loading, toggle, isFavorite: (id: string) => favorites.includes(id), refetch: fetch }
+}
+
+// =============================================
 // EVENT ATTENDANCE
 // =============================================
 type AttendanceStatus = 'wishlist' | 'attending' | 'attended' | null
@@ -226,7 +257,7 @@ export type FavoriteType = 'artist' | 'label' | 'event' | 'mix'
 const FAV_CONFIG: Record<FavoriteType, { table: string; column: string }> = {
   artist: { table: 'favorite_artists', column: 'artist_id' },
   label: { table: 'favorite_labels', column: 'label_id' },
-  event: { table: 'event_attendance', column: 'event_id' },
+  event: { table: 'favorite_events', column: 'event_id' },
   mix: { table: 'saved_mixes', column: 'mix_id' },
 }
 
@@ -241,22 +272,12 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
     const check = async () => {
       if (!user || !entityId) { setIsFavorite(false); setLoading(false); return }
 
-      if (type === 'event') {
-        const { data } = await supabase
-          .from(cfg.table)
-          .select('status')
-          .eq('user_id', user.id)
-          .eq(cfg.column, entityId)
-          .maybeSingle()
-        if (!cancelled) setIsFavorite(!!data)
-      } else {
-        const { count } = await supabase
-          .from(cfg.table)
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq(cfg.column, entityId)
-        if (!cancelled) setIsFavorite((count ?? 0) > 0)
-      }
+      const { count } = await supabase
+        .from(cfg.table)
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq(cfg.column, entityId)
+      if (!cancelled) setIsFavorite((count ?? 0) > 0)
       if (!cancelled) setLoading(false)
     }
     check()
@@ -270,14 +291,7 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
       await supabase.from(cfg.table).delete().eq('user_id', user.id).eq(cfg.column, entityId)
       setIsFavorite(false)
     } else {
-      if (type === 'event') {
-        await supabase.from(cfg.table).upsert(
-          { user_id: user.id, [cfg.column]: entityId, status: 'wishlist' },
-          { onConflict: `user_id,${cfg.column}` }
-        )
-      } else {
-        await supabase.from(cfg.table).insert({ user_id: user.id, [cfg.column]: entityId })
-      }
+      await supabase.from(cfg.table).insert({ user_id: user.id, [cfg.column]: entityId })
       setIsFavorite(true)
     }
   }, [user, entityId, isFavorite, type, cfg.table, cfg.column])

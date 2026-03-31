@@ -7,7 +7,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { createPortal } from 'react-dom'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useFavoriteToggle, type FavoriteType } from '@/hooks/useUserData'
 import { i18n } from '@/lib/i18n-config'
@@ -33,13 +34,17 @@ export default function FavoriteButton({
   lang,
   className = '',
 }: FavoriteButtonProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const resolvedLang = lang || getLang(pathname)
   const { isFavorite, loading, toggle, isLoggedIn } = useFavoriteToggle(type, entityId)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!showTooltip) return
@@ -82,44 +87,62 @@ export default function FavoriteButton({
     </svg>
   )
 
-  const tooltip = showTooltip && !isLoggedIn && (
-    <>
-      {/* Backdrop — solo móvil */}
-      <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowTooltip(false)} />
-      <div
-        ref={tooltipRef}
-        className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:absolute md:left-auto md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 md:p-4 shadow-[6px_6px_0_var(--ink)]"
-        style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
-      >
-        <button
-          type="button"
+  const guestModal =
+    mounted &&
+    showTooltip &&
+    !isLoggedIn &&
+    createPortal(
+      <>
+        <div
+          className="fixed inset-0 z-[1100] bg-black/50"
           onClick={() => setShowTooltip(false)}
-          className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer md:hidden"
-          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
-          aria-label="Close"
+          aria-hidden
+        />
+        <div
+          className="fixed inset-0 z-[1101] flex items-center justify-center p-4 pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="fav-guest-title"
         >
-          ✕
-        </button>
-        <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-          {es
-            ? '¡Regístrate para guardar tus favoritos!'
-            : 'Sign up to save your favorites!'}
-        </p>
-        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
-          {es
-            ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
-            : 'Build your collection of artists, labels, events and mixes.'}
-        </p>
-        <Link
-          href={`/${resolvedLang}/login`}
-          className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
-          style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
-        >
-          {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
-        </Link>
-      </div>
-    </>
-  )
+          <div
+            ref={tooltipRef}
+            className="pointer-events-auto relative w-full max-w-[280px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 shadow-[6px_6px_0_var(--ink)]"
+            style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowTooltip(false)}
+              className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <p
+              id="fav-guest-title"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}
+            >
+              {es
+                ? '¡Regístrate para guardar tus favoritos!'
+                : 'Sign up to save your favorites!'}
+            </p>
+            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+              {es
+                ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
+                : 'Build your collection of artists, labels, events and mixes.'}
+            </p>
+            <Link
+              href={`/${resolvedLang}/login`}
+              className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
+            >
+              {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+            </Link>
+          </div>
+        </div>
+      </>,
+      document.body
+    )
 
   if (size === 'sm') {
     return (
@@ -136,7 +159,7 @@ export default function FavoriteButton({
         >
           {heartSvg(16)}
         </button>
-        {tooltip}
+        {guestModal}
       </div>
     )
   }
@@ -165,7 +188,7 @@ export default function FavoriteButton({
           {isFavorite ? (es ? 'FAVORITO' : 'SAVED') : (es ? 'FAVORITO' : 'FAVORITE')}
         </span>
       </button>
-      {tooltip}
+      {guestModal}
     </div>
   )
 }
