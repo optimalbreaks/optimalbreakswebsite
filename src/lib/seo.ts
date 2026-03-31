@@ -12,13 +12,13 @@ export const SITE_URL = 'https://www.optimalbreaks.com' as const
 export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 
 /** Home /en y /es: imagen OG compartida (Facebook, X, etc.). */
-export const HOME_OG_IMAGE = '/images/opengraph_OB.jpeg' as const
+export const HOME_OG_IMAGE = '/images/opengraph_OB_punk.png' as const
 
 /** Texto alt de la imagen OG de la home (accesibilidad / redes). */
 export function homeOgImageAlt(lang: Locale): string {
   return lang === 'es'
-    ? 'Optimal Breaks — gráfica Optimal Beats (vinilo y funda)'
-    : 'Optimal Breaks — Optimal Beats graphic (vinyl and sleeve)'
+    ? 'Optimal Breaks — arte punk con vinilo y funda'
+    : 'Optimal Breaks — punk artwork with vinyl and sleeve'
 }
 
 /** Idioma secundario para og:locale:alternate (Facebook / Meta). */
