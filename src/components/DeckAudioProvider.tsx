@@ -110,7 +110,7 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
             initAudio()
             togglePlay()
           }}
-          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0"
+          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0 outline-none [-webkit-tap-highlight-color:transparent]"
           style={{
             background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
             border: '3px solid #080808',
@@ -118,8 +118,16 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
           }}
         >
           <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
-            <span className="transition-all duration-200" style={{ fontSize: '12px', lineHeight: 1, filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
-              {isPlaying ? '■' : '▶'}
+            <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
+              {isPlaying ? (
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px' }}>
+                  <rect x="6" y="6" width="12" height="12" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px', marginLeft: '1px' }}>
+                  <polygon points="6,4 20,12 6,20" />
+                </svg>
+              )}
             </span>
             {isPlaying ? 'STOP' : 'PLAY'}
           </span>
@@ -192,7 +200,7 @@ function MiniMixBar({ lang }: { lang: Locale }) {
         <button
           type="button"
           onClick={toggleMixPlayback}
-          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0"
+          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0 outline-none [-webkit-tap-highlight-color:transparent]"
           style={{
             background: mixPlaying ? 'linear-gradient(135deg, var(--red) 0%, #8b0000 100%)' : 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
             border: '3px solid #080808',
@@ -200,8 +208,16 @@ function MiniMixBar({ lang }: { lang: Locale }) {
           }}
         >
           <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: mixPlaying ? '#fff' : 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
-            <span className="transition-all duration-200" style={{ fontSize: '12px', lineHeight: 1, filter: mixPlaying ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 0 6px var(--red))' }}>
-              {mixPlaying ? '■' : '▶'}
+            <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: mixPlaying ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 0 6px var(--red))' }}>
+              {mixPlaying ? (
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px' }}>
+                  <rect x="6" y="6" width="12" height="12" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px', marginLeft: '1px' }}>
+                  <polygon points="6,4 20,12 6,20" />
+                </svg>
+              )}
             </span>
             {mixPlaying ? 'STOP' : 'PLAY'}
           </span>
