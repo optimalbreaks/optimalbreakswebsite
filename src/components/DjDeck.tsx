@@ -177,17 +177,15 @@ function Platter({
   deckLabel: string
   compact?: boolean
 }) {
-  const labelBg =
-    labelColor === 'red' ? 'radial-gradient(circle, var(--red) 0%, #8b0000 100%)' : 'radial-gradient(circle, var(--yellow) 0%, #b8a800 100%)'
-  const labelText = labelColor === 'red' ? 'white' : 'var(--ink)'
-
   return (
     <div>
       <div className={`relative flex items-center justify-center bg-[#0e0e12] rounded-md border-2 border-white/[0.06] ${compact ? 'aspect-square' : 'aspect-square'}`}>
         <div
           className={`${compact ? 'w-[85%]' : 'w-[82%]'} aspect-square rounded-full relative select-none`}
           style={{
-            background: 'repeating-radial-gradient(circle at center, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 4px)',
+            backgroundImage: 'url(/images/disco_optimal_breaks.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             border: '2px solid rgba(255,255,255,0.08)',
             transform: `rotate(${rotation}deg)`,
             cursor: scratching ? 'grabbing' : 'grab',
@@ -201,25 +199,7 @@ function Platter({
           onTouchMove={(e) => onScratchMove(side, e)}
           onTouchEnd={onScratchEnd}
         >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[34%] aspect-square rounded-full flex items-center justify-center z-[2]">
-            <div className="w-full h-full rounded-full flex flex-col items-center justify-center" style={{ background: labelBg, color: labelText }}>
-              <div
-                style={{
-                  fontFamily: "'Unbounded', sans-serif",
-                  fontWeight: 900,
-                  fontSize: compact ? '5px' : '7px',
-                  letterSpacing: '2px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {track.artist}
-              </div>
-              <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: compact ? '4px' : '5.5px', letterSpacing: '1px', marginTop: '1px', opacity: 0.7 }}>
-                {track.title}
-              </div>
-            </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[5px] h-[5px] sm:w-[7px] sm:h-[7px] rounded-full bg-[#0e0e12] border border-white/[0.15]" />
-          </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[5px] h-[5px] sm:w-[7px] sm:h-[7px] rounded-full bg-[#0e0e12] border border-white/[0.15] z-[2]" />
           <div className="absolute top-[10%] left-1/2 w-[1px] h-[15%] bg-white/10" />
         </div>
 
