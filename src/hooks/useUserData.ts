@@ -203,7 +203,7 @@ export function useArtistSightings() {
     if (!user) { setSightings([]); setLoading(false); return }
     const { data } = await supabase.from('artist_sightings').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
     const rows = (data as Sighting[]) || []
-    const artistIds = [...new Set(rows.map((r) => r.artist_id).filter(Boolean))]
+    const artistIds = Array.from(new Set(rows.map((r) => r.artist_id).filter(Boolean)))
     const nameById: Record<string, { name: string; slug: string }> = {}
     if (artistIds.length) {
       const { data: artists } = await supabase.from('artists').select('id, name, slug').in('id', artistIds)

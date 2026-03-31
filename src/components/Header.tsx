@@ -5,6 +5,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
@@ -178,14 +179,21 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-[100] flex items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
-      {/* Logo */}
+      {/* Logo (punk lockup — public/images/logo_punk.png) */}
       <Link
         href={`/${lang}`}
-        className="flex items-center gap-2 px-3 sm:px-[18px] py-3 bg-[var(--red)] text-white whitespace-nowrap no-underline"
-        style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', textShadow: '1px 1px 0 rgba(0,0,0,0.3)' }}
+        className="flex items-center shrink-0 px-2 sm:px-3 py-2 sm:py-2.5 bg-black no-underline border-r-[3px] border-[var(--ink)]"
+        aria-label="Optimal Breaks"
       >
-        <span className="hidden sm:inline">OPTIMAL//BREAKS</span>
-        <span className="sm:hidden">OB</span>
+        <Image
+          src="/images/logo_punk.png"
+          alt="Optimal Breaks"
+          width={220}
+          height={56}
+          className="h-8 sm:h-9 w-auto max-w-[min(52vw,220px)] object-contain object-left"
+          priority
+          sizes="(max-width: 640px) 160px, 220px"
+        />
       </Link>
 
       {/* Desktop nav */}
