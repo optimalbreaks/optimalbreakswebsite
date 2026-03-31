@@ -100,8 +100,11 @@ export interface Database {
       }
       event_ratings: {
         Row: EventRatingRow
-        Insert: Pick<EventRatingRow, 'user_id' | 'event_id' | 'rating' | 'review'>
-        Update: Partial<Pick<EventRatingRow, 'rating' | 'review'>>
+        Insert: Pick<
+          EventRatingRow,
+          'user_id' | 'event_id' | 'rating' | 'review' | 'attended_at' | 'venue' | 'city' | 'country'
+        >
+        Update: Partial<Pick<EventRatingRow, 'rating' | 'review' | 'attended_at' | 'venue' | 'city' | 'country'>>
         Relationships: DbRelationship[]
       }
       profiles: {
@@ -186,6 +189,10 @@ export interface EventRatingRow extends Record<string, unknown> {
   created_at: string
   rating: number
   review: string | null
+  attended_at: string | null
+  venue: string
+  city: string
+  country: string
 }
 
 export interface ProfileRow extends Record<string, unknown> {

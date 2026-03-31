@@ -1314,6 +1314,14 @@ function ReviewsTab({ lang }: { lang: string }) {
                         <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
                           {ev.date_start || 'TBA'} — {ev.venue ? `${ev.venue}, ` : ''}{ev.city}, {ev.country}
                         </div>
+                        {(r.attended_at || r.venue || r.city || r.country) && (
+                          <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: 'var(--dim)' }}>
+                            {es ? 'Tu experiencia: ' : 'Your experience: '}
+                            {r.attended_at ? `${String(r.attended_at).slice(0, 10)}` : ''}
+                            {r.attended_at && (r.venue || r.city || r.country) ? ' — ' : ''}
+                            {[r.venue, [r.city, r.country].filter(Boolean).join(', ')].filter(Boolean).join(' — ')}
+                          </div>
+                        )}
                         {r.review && (
                           <div className="mt-3 p-3 bg-[var(--paper-dark)] border-[2px] border-[var(--ink)] relative">
                             <div className="absolute -top-3 left-3 text-[var(--dim)]" style={{ fontFamily: "Georgia, serif", fontSize: '32px', lineHeight: 1 }}>&ldquo;</div>

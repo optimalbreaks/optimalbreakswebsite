@@ -16,7 +16,7 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 | **Save mix** | No | Save on mixes | `saved_mixes` | “Saves” count |
 | **Seen live (artist)** | **Yes — 1–5** + optional text | **SEEN LIVE** on artist page (`SeenLiveButton`) | `artist_sightings` | Date, venue, city, country, event name, **rating**, **notes** |
 | **Event status** | No (state machine) | Event page: wishlist / going / attended | `event_attendance` | Toggles only; “interested” style counts for events |
-| **Rate + review event** | **Yes — 1–5** + optional review text | **Hook/API ready**; **no public form** on event page yet | `event_ratings` | Shown in dashboard **Reviews** + **Events** if a row exists |
+| **Rate + review event** | **Yes — 1–5** + optional review text | Event page: **`EventReviewButton`** (RATE / VALORAR) — same modal pattern as seen live: date, venue, city, country, stars, notes | `event_ratings` (+ optional `attended_at`, `venue`, `city`, `country` after migration **`032_event_ratings_attendance_fields.sql`**) | Dashboard **Reviews** + **Events**; apply migration on Supabase or upsert errors |
 | **Breakbeat profile** | N/A | Dashboard Overview (generate) | `breakbeat_profiles` (if used) | Needs enough favorites to unlock |
 
 ---
@@ -33,7 +33,7 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 ## Event: attendance vs rating
 
 - **Attendance** (no numeric score): `EventStatusButton` → `event_attendance` (`wishlist` | `attending` | `attended`).
-- **Rating + review:** `useEventRatings()` exposes `rate(eventId, rating, review)` and writes `event_ratings`. The dashboard **reads** ratings for display; **as of this doc, no event detail page wires a UI to call `rate()`** — so end-users normally only get event rows in Reviews if another client or admin inserted them. *Product note: add an “Rate this event” block on the event page or dashboard if you want this flow.*
+- **Rating + review:** `EventReviewButton` on **`/[lang]/events/[slug]`** calls `useEventRatings().rate(eventId, { rating, review, attended_at, venue, city, country })` → `event_ratings`. One row per user per event (upsert).
 
 ---
 
@@ -54,4 +54,4 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 
 - `src/hooks/useUserData.ts` — favorites, sightings, attendance, event ratings
 - `src/app/[lang]/dashboard/DashboardClient.tsx` — tabs: Overview, Favorites, Seen Live, Events, Reviews, Mixes, Profile
-- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`
+- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`

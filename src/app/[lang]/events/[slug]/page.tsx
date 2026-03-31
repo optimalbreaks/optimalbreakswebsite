@@ -12,6 +12,7 @@ import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
 import EventStatusButton from '@/components/EventStatusButton'
+import EventReviewButton from '@/components/EventReviewButton'
 import EventPosterLightbox from '@/components/EventPosterLightbox'
 import {
   splitBioParagraphs,
@@ -269,6 +270,15 @@ export default async function EventDetailPage({ params }: Props) {
             <div className="flex flex-wrap items-center gap-3 mt-5">
               <FavoriteButton type="event" entityId={event.id} size="md" lang={lang} />
               <EventStatusButton eventId={event.id} lang={lang} />
+              <EventReviewButton
+                eventId={event.id}
+                eventName={event.name}
+                lang={lang}
+                defaultDate={event.date_start}
+                defaultVenue={event.venue}
+                defaultCity={event.city}
+                defaultCountry={event.country}
+              />
               <FanCounter type="event" entityId={event.id} lang={lang} />
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
             </div>

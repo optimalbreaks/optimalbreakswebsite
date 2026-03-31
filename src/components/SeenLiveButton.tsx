@@ -245,6 +245,13 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
                 style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
               />
             </div>
+            <input
+              placeholder={es ? 'País' : 'Country'}
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              className="w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+            />
             <div className="flex items-center gap-2">
               <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: form.rating < 1 ? 'var(--red)' : 'var(--dim)', letterSpacing: '1px', fontWeight: 700 }}>
                 RATING *

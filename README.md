@@ -55,7 +55,7 @@ This split helps the site feel both like an archive and like a living magazine w
 
 ## User engagement (My Breaks)
 
-Logged-in users get **My Breaks** (`/[lang]/dashboard`): favorites, event attendance, mixes saved, **seen live** (artists with 1–5 stars), and reviews. **Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md) (tables, UI locations, and a note that **event star ratings** exist in the schema but need a **public form** wired to `useEventRatings().rate` if you want users to submit them from the site).
+Logged-in users get **My Breaks** (`/[lang]/dashboard`): favorites, event attendance, mixes saved, **seen live** (artists with 1–5 stars), and **event + artist reviews** (stars). Event detail pages include **`EventReviewButton`** (same modal pattern as artist “seen live”). **Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** apply migration **`032_event_ratings_attendance_fields.sql`** so `event_ratings` can store `attended_at` / venue / city / country.
 
 ---
 

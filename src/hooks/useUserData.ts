@@ -257,26 +257,78 @@ export function useArtistSightings() {
 // =============================================
 // EVENT RATINGS
 // =============================================
+export type EventRatingSummary = {
+  rating: number
+  review: string
+  attended_at: string | null
+  venue: string
+  city: string
+  country: string
+}
+
+export type EventRatingSave = {
+  rating: number
+  review?: string
+  attended_at?: string | null
+  venue?: string
+  city?: string
+  country?: string
+}
+
 export function useEventRatings() {
   const { user } = useAuth()
-  const [ratings, setRatings] = useState<Record<string, { rating: number; review: string }>>({})
+  const [ratings, setRatings] = useState<Record<string, EventRatingSummary>>({})
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
     if (!user) { setRatings({}); setLoading(false); return }
-    const { data } = await supabase.from('event_ratings').select('event_id, rating, review').eq('user_id', user.id)
-    const map: Record<string, { rating: number; review: string }> = {}
-    data?.forEach((d: any) => { map[d.event_id] = { rating: d.rating, review: d.review || '' } })
+    const { data } = await supabase
+      .from('event_ratings')
+      .select('event_id, rating, review, attended_at, venue, city, country')
+      .eq('user_id', user.id)
+    const map: Record<string, EventRatingSummary> = {}
+    data?.forEach((d: any) => {
+      map[d.event_id] = {
+        rating: d.rating,
+        review: d.review || '',
+        attended_at: d.attended_at ?? null,
+        venue: d.venue || '',
+        city: d.city || '',
+        country: d.country || '',
+      }
+    })
     setRatings(map)
     setLoading(false)
   }, [user])
 
   useEffect(() => { fetch() }, [fetch])
 
-  const rate = async (eventId: string, rating: number, review: string = '') => {
-    if (!user) return
-    await supabase.from('event_ratings').upsert({ user_id: user.id, event_id: eventId, rating, review }, { onConflict: 'user_id,event_id' })
-    setRatings((r) => ({ ...r, [eventId]: { rating, review } }))
+  const rate = async (eventId: string, data: EventRatingSave) => {
+    if (!user) return { error: new Error('Not signed in') }
+    const payload = {
+      user_id: user.id,
+      event_id: eventId,
+      rating: data.rating,
+      review: data.review ?? '',
+      attended_at: data.attended_at?.trim() ? data.attended_at.trim() : null,
+      venue: data.venue ?? '',
+      city: data.city ?? '',
+      country: data.country ?? '',
+    }
+    const { error } = await supabase.from('event_ratings').upsert(payload, { onConflict: 'user_id,event_id' })
+    if (error) return { error: new Error(error.message) }
+    setRatings((r) => ({
+      ...r,
+      [eventId]: {
+        rating: payload.rating,
+        review: payload.review,
+        attended_at: payload.attended_at,
+        venue: payload.venue,
+        city: payload.city,
+        country: payload.country,
+      },
+    }))
+    return { error: null }
   }
 
   return { ratings, loading, rate, getRating: (id: string) => ratings[id] || null, refetch: fetch }

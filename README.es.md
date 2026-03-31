@@ -146,7 +146,7 @@ Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**.
 
 ### My Breaks / interacción del usuario
 
-Resumen de favoritos, **visto en vivo** (estrellas 1–5), asistencia a eventos y reseñas: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. En el README en inglés hay una sección equivalente bajo *User engagement*.
+Resumen de favoritos, **visto en vivo** en artistas (estrellas 1–5), **valorar evento** en la ficha del evento (mismo tipo de modal: fecha, sitio, estrellas, notas), asistencia y reseñas en el dashboard: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración Supabase **`032_event_ratings_attendance_fields.sql`** para los campos extra de la valoración de eventos.
 
 ### Vistas de listado (grande / compacto / lista)
 
