@@ -54,10 +54,10 @@ export default function FavoriteButton({
     return (
       <button
         onClick={handleClick}
-        className={`absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
+        className={`absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full border-2 border-[var(--ink)] transition-all duration-200 ${
           isFavorite
-            ? 'bg-[var(--red)] text-white shadow-[2px_2px_0_var(--ink)]'
-            : 'bg-[var(--paper)]/90 text-[var(--ink)] hover:bg-[var(--red)] hover:text-white shadow-[1px_1px_0_var(--ink)]'
+            ? 'bg-[var(--red)] text-white border-[var(--red)] shadow-[2px_2px_0_var(--ink)]'
+            : 'bg-white text-[var(--ink)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] shadow-[1px_1px_0_var(--ink)]'
         } ${className}`}
         aria-label={isFavorite ? (es ? 'Quitar de favoritos' : 'Remove from favorites') : (es ? 'Añadir a favoritos' : 'Add to favorites')}
         title={isFavorite ? (es ? 'Quitar de favoritos' : 'Remove from favorites') : (es ? 'Añadir a favoritos' : 'Add to favorites')}

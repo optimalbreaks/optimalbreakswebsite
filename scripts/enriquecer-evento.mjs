@@ -17,6 +17,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
+ *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -788,6 +789,87 @@ async function runPatchRaveartRvtBookingClubbing2026(sb) {
   console.log('[patch-rvt-booking] OK:', after)
 }
 
+const KULTURA_BREAKZ_II_SLUG = 'kultura-breakz-ii-aniversario-2026'
+const KULTURA_BREAKZ_TICKETS =
+  'https://site.fourvenues.com/es/dj-rokeh/events/ii-aniversario-kultura-breakz-02-05-2026-K0AA'
+
+const KULTURA_BREAKZ_II_ROW = {
+  name: 'II Aniversario Kultura Breakz',
+  description_en:
+    'Second anniversary of the Kultura Breakz radio show and community: Saturday 2 May 2026 at Sala Pandora, Seville. The lineup focuses on producers shaping the breakbeat scene — veterans such as Rasco, Guau and Geon (returning to a live event after more than ten years, exclusive appearance), plus Lords of Motion, Ro73 (pronounced Rote) and Jormek, all playing own productions, peers’ tracks and remixes. Organised in the spirit of “Familia Kultura Breakz”; tickets and invitations via Fourvenues. Weekly Kultura Breakz on Twitch, YouTube and associated channels; more info on kulturabreakz.com and djkultur.com.',
+  description_es:
+    'Segundo aniversario del programa y la comunidad Kultura Breakz: sábado 2 de mayo de 2026 en la sala Pandora, Sevilla. Apuesta por productores que construyen la escena breakbeat: veteranos como Rasco, Guau y Geon (más de diez años sin actuar en un evento, en exclusiva), junto a Lords Of Motion, Ro73 (pronúnciese Rote) y Jormek, con sesiones basadas en temas propios, de colegas y remixes. Convocatoria en clave “Familia Kultura Breakz”; invitaciones y entradas en Fourvenues. El programa sale todos los miércoles en Twitch, YouTube y canales asociados; más información en kulturabreakz.com y djkultur.com.',
+  event_type: 'club_night',
+  date_start: '2026-05-02',
+  date_end: null,
+  location: 'Sala Pandora, Sevilla',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Pandora',
+  website: 'https://www.kulturabreakz.com/',
+  tickets_url: KULTURA_BREAKZ_TICKETS,
+  lineup: [
+    'Rasco',
+    'Guau',
+    'Geon',
+    'Lords Of Motion',
+    'Ro73',
+    'Jormek',
+    'DJ Rokeh',
+  ],
+  tags: [
+    'kultura breakz',
+    'breakbeat',
+    'breakz',
+    'nuskool breaks',
+    'sevilla',
+    'sala pandora',
+    '2026',
+    'dj kultur',
+  ],
+  socials: {
+    'TikTok @kultur.exe': 'https://www.tiktok.com/@kultur.exe',
+    'Instagram @kultur.exe': 'https://www.instagram.com/kultur.exe/',
+    'Facebook Kültur': 'https://www.facebook.com/kulturdotexe/',
+    'djkultur.com': 'https://www.djkultur.com/',
+    'Twitch Kultura Breakz': 'https://www.twitch.tv/kulturabreakz',
+    'YouTube Kultura Breakz': 'https://www.youtube.com/@kulturabreakz',
+    'YouTube Kultur Archives': 'https://www.youtube.com/@kulturarchives',
+    'Instagram @kultura_breakz': 'https://www.instagram.com/kultura_breakz/',
+    'Facebook Kultura Breakz': 'https://www.facebook.com/kulturabreakz',
+    'Grupo Facebook': 'https://www.facebook.com/groups/486865200520039',
+  },
+}
+
+async function runPatchKulturaBreakzIiAniversario2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue')
+    .eq('slug', KULTURA_BREAKZ_II_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-kultura-breakz-ii] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: KULTURA_BREAKZ_II_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...KULTURA_BREAKZ_II_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, tickets_url, website')
+    .eq('slug', KULTURA_BREAKZ_II_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-kultura-breakz-ii] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -838,6 +920,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-kultura-breakz-ii-aniversario-2026')) {
+    await runPatchKulturaBreakzIiAniversario2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -880,7 +967,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
-  node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster`)
+  node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
+  node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026`)
     process.exit(1)
   }
 
