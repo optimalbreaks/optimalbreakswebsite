@@ -110,17 +110,19 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
             initAudio()
             togglePlay()
           }}
-          className={`shrink-0 border-[3px] border-[var(--ink)] px-3 py-1.5 sm:px-4 sm:py-2 transition-colors ${
-            isPlaying ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)]'
-          }`}
+          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0"
           style={{
-            fontFamily: "'Unbounded', sans-serif",
-            fontWeight: 900,
-            fontSize: '11px',
-            letterSpacing: '2px',
+            background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
+            border: '3px solid #080808',
+            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
           }}
         >
-          {isPlaying ? '■' : '▶'}
+          <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
+            <span className="transition-all duration-200" style={{ fontSize: '12px', lineHeight: 1, filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
+              {isPlaying ? '■' : '▶'}
+            </span>
+            {isPlaying ? 'STOP' : 'PLAY'}
+          </span>
         </button>
         <div className="min-w-0 flex-1">
           <div
@@ -190,14 +192,19 @@ function MiniMixBar({ lang }: { lang: Locale }) {
         <button
           type="button"
           onClick={toggleMixPlayback}
-          className={`shrink-0 border-[3px] px-3 py-1.5 sm:px-4 sm:py-2 transition-colors ${
-            mixPlaying
-              ? 'border-[var(--red)] bg-[var(--red)] text-white'
-              : 'border-[var(--yellow)] bg-[var(--yellow)] text-[var(--ink)]'
-          }`}
-          style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', letterSpacing: '2px' }}
+          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0"
+          style={{
+            background: mixPlaying ? 'linear-gradient(135deg, var(--red) 0%, #8b0000 100%)' : 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
+            border: '3px solid #080808',
+            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
+          }}
         >
-          {mixPlaying ? '■' : '▶'}
+          <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: mixPlaying ? '#fff' : 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
+            <span className="transition-all duration-200" style={{ fontSize: '12px', lineHeight: 1, filter: mixPlaying ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 0 6px var(--red))' }}>
+              {mixPlaying ? '■' : '▶'}
+            </span>
+            {mixPlaying ? 'STOP' : 'PLAY'}
+          </span>
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
