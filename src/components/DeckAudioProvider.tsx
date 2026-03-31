@@ -282,6 +282,7 @@ export function DeckAudioProvider({
   const [leftRotation, setLeftRotation] = useState(0)
   const [rightRotation, setRightRotation] = useState(0)
   const animFrameRef = useRef<number>(0)
+  const lastTickRef = useRef<number>(0)
 
   // === Mix player state ===
   const [mode, setMode] = useState<PlayerMode>('idle')
@@ -335,15 +336,24 @@ export function DeckAudioProvider({
 
   // === Deck animation tick (unchanged) ===
   useEffect(() => {
-    const tick = () => {
+    const tick = (time: number) => {
+      if (!lastTickRef.current) lastTickRef.current = time
+      const deltaMs = time - lastTickRef.current
+      lastTickRef.current = time
+
       if (audioRef.current && isPlaying && !scratchingLeft && !scratchingRight) {
         setProgress(audioRef.current.currentTime)
-        const rpm = 33.33 / 60
-        setLeftRotation((r) => r + rpm * 6 * 2)
-        setRightRotation((r) => r + rpm * 6 * 2)
+        // 33 1/3 RPM = 33.33/60 revolutions per sec = 200 degrees/sec
+        const rpm = 33.33
+        const degreesPerSec = (rpm / 60) * 360
+        const deltaDeg = degreesPerSec * (deltaMs / 1000)
+        
+        setLeftRotation((r) => r + deltaDeg)
+        setRightRotation((r) => r + deltaDeg)
       }
       animFrameRef.current = requestAnimationFrame(tick)
     }
+    lastTickRef.current = performance.now()
     animFrameRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [isPlaying, scratchingLeft, scratchingRight])

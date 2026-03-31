@@ -189,7 +189,6 @@ function Platter({
             border: '2px solid rgba(255,255,255,0.08)',
             transform: `rotate(${rotation}deg)`,
             cursor: scratching ? 'grabbing' : 'grab',
-            transition: scratching ? 'none' : 'transform 0.05s linear',
           }}
           onMouseDown={(e) => onScratchStart(side, e)}
           onMouseMove={(e) => onScratchMove(side, e)}
