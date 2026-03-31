@@ -309,8 +309,8 @@ function MixerPanel({
           boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
         }}
       >
-        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '8px' : '10px', letterSpacing: '1px', color: '#111', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          <span className="text-[var(--red)] transition-all duration-200" style={{ fontSize: isH ? '16px' : '20px', lineHeight: 1, filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
+        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '8px' : '10px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
+          <span className="transition-all duration-200" style={{ fontSize: isH ? '16px' : '20px', lineHeight: 1, filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
             {isPlaying ? '■' : '▶'}
           </span>
           {isPlaying ? 'STOP' : 'PLAY'}
