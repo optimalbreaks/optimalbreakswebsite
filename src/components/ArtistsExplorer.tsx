@@ -4,8 +4,10 @@ import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
+import FavoriteButton from '@/components/FavoriteButton'
 
 interface ArtistRow {
+  id: string
   slug: string
   name: string
   name_display: string
@@ -327,29 +329,31 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
       {artists.map((a) => (
-        <Link
-          key={a.slug}
-          href={`/${lang}/artists/${a.slug}`}
-          className="border-b-[3px] sm:border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden h-full min-h-0"
-        >
-          <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-[5/3]" />
-          <div className="p-5 sm:p-[22px_30px] flex flex-col flex-grow min-h-0">
-            <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              {a.name_display || a.name}
+        <div key={a.slug} className="relative border-b-[3px] sm:border-r-[3px] border-[var(--ink)]">
+          <FavoriteButton type="artist" entityId={a.id} lang={lang} />
+          <Link
+            href={`/${lang}/artists/${a.slug}`}
+            className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden h-full min-h-0"
+          >
+            <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-[5/3]" />
+            <div className="p-5 sm:p-[22px_30px] flex flex-col flex-grow min-h-0">
+              <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+                {a.name_display || a.name}
+              </div>
+              <div className="flex flex-wrap gap-1 mt-[6px]">
+                {a.styles?.map((s, si) => (
+                  <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px' }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
+                <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1 mt-[6px]">
-              {a.styles?.map((s, si) => (
-                <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px' }}>
-                  {s}
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
-              <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       ))}
     </div>
   )
@@ -361,28 +365,30 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
       {artists.map((a) => (
-        <Link
-          key={a.slug}
-          href={`/${lang}/artists/${a.slug}`}
-          className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
-        >
-          <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" />
-          <div className="p-3 flex flex-col flex-grow min-h-0">
-            <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
-              {a.name_display || a.name}
+        <div key={a.slug} className="relative border-b-[3px] border-r-[3px] border-[var(--ink)]">
+          <FavoriteButton type="artist" entityId={a.id} lang={lang} />
+          <Link
+            href={`/${lang}/artists/${a.slug}`}
+            className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
+          >
+            <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" />
+            <div className="p-3 flex flex-col flex-grow min-h-0">
+              <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+                {a.name_display || a.name}
+              </div>
+              <div className="flex flex-wrap gap-[2px] mt-1">
+                {a.styles?.slice(0, 2).map((s, si) => (
+                  <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 4px' }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-1 mt-1">
+                <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{a.country}</span>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-[2px] mt-1">
-              {a.styles?.slice(0, 2).map((s, si) => (
-                <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 4px' }}>
-                  {s}
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-1 mt-1">
-              <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{a.country}</span>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       ))}
     </div>
   )
@@ -394,31 +400,33 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {artists.map((a) => (
-        <Link
-          key={a.slug}
-          href={`/${lang}/artists/${a.slug}`}
-          className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
-        >
-          <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
-            <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" frameClass="" />
-          </div>
-          <div className="flex-grow min-w-0">
-            <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-              {a.name_display || a.name}
+        <div key={a.slug} className="relative border-b-[2px] border-[var(--ink)]">
+          <Link
+            href={`/${lang}/artists/${a.slug}`}
+            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
+          >
+            <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+              <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" frameClass="" />
             </div>
-            <div className="flex flex-wrap gap-[3px] mt-[2px]">
-              {a.styles?.slice(0, 3).map((s, si) => (
-                <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 5px' }}>
-                  {s}
-                </span>
-              ))}
+            <div className="flex-grow min-w-0">
+              <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                {a.name_display || a.name}
+              </div>
+              <div className="flex flex-wrap gap-[3px] mt-[2px]">
+                {a.styles?.slice(0, 3).map((s, si) => (
+                  <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 5px' }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="hidden sm:flex gap-2 shrink-0">
-            <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
-            <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
-          </div>
-        </Link>
+            <div className="hidden sm:flex gap-2 shrink-0">
+              <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
+              <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
+            </div>
+          </Link>
+          <FavoriteButton type="artist" entityId={a.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+        </div>
       ))}
     </div>
   )

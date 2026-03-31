@@ -4,9 +4,11 @@
 
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
+import { i18n } from '@/lib/i18n-config'
 
 interface AuthContextType {
   user: User | null
@@ -28,11 +30,18 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
+function getLangFromPath(pathname: string) {
+  const seg = pathname.split('/')[1]
+  return i18n.locales.includes(seg as any) ? seg : i18n.defaultLocale
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createBrowserSupabase()
+  const pathname = usePathname()
+  const lang = getLangFromPath(pathname)
 
   useEffect(() => {
     // Get initial session
@@ -52,14 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/dashboard`,
       },
     })
-  }
+  }, [supabase.auth, lang])
 
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -77,10 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message || null }
   }
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut()
-    window.location.href = '/'
-  }
+    window.location.href = `/${lang}`
+  }, [supabase.auth, lang])
 
   return (
     <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>

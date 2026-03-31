@@ -4,6 +4,7 @@ import { useState } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
+import FavoriteButton from '@/components/FavoriteButton'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -106,6 +107,7 @@ function LargeGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
             key={m.slug}
             className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
           >
+            <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
               <YouTubeIframe videoId={ytId} title={m.title} />
             ) : (
@@ -154,8 +156,9 @@ function CompactGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
         return (
           <div
             key={m.slug}
-            className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden"
+            className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative"
           >
+            <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
               <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
             ) : (
@@ -200,8 +203,9 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
           return (
             <div
               key={m.slug}
-              className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40"
+              className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
             >
+              <FavoriteButton type="mix" entityId={m.id} lang={lang} />
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -242,8 +246,9 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
         return (
           <div
             key={m.slug}
-            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group"
+            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative"
           >
+            <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
             <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)] relative">
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" frameClass="" />
             </div>

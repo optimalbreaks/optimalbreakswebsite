@@ -218,6 +218,74 @@ export function useEventRatings() {
 }
 
 // =============================================
+// UNIFIED FAVORITE TOGGLE
+// Single hook for FavoriteButton across all entity types
+// =============================================
+export type FavoriteType = 'artist' | 'label' | 'event' | 'mix'
+
+const FAV_CONFIG: Record<FavoriteType, { table: string; column: string }> = {
+  artist: { table: 'favorite_artists', column: 'artist_id' },
+  label: { table: 'favorite_labels', column: 'label_id' },
+  event: { table: 'event_attendance', column: 'event_id' },
+  mix: { table: 'saved_mixes', column: 'mix_id' },
+}
+
+export function useFavoriteToggle(type: FavoriteType, entityId: string) {
+  const { user } = useAuth()
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const cfg = FAV_CONFIG[type]
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      if (!user || !entityId) { setIsFavorite(false); setLoading(false); return }
+
+      if (type === 'event') {
+        const { data } = await supabase
+          .from(cfg.table)
+          .select('status')
+          .eq('user_id', user.id)
+          .eq(cfg.column, entityId)
+          .maybeSingle()
+        if (!cancelled) setIsFavorite(!!data)
+      } else {
+        const { count } = await supabase
+          .from(cfg.table)
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq(cfg.column, entityId)
+        if (!cancelled) setIsFavorite((count ?? 0) > 0)
+      }
+      if (!cancelled) setLoading(false)
+    }
+    check()
+    return () => { cancelled = true }
+  }, [user, entityId, type, cfg.table, cfg.column])
+
+  const toggle = useCallback(async () => {
+    if (!user || !entityId) return
+
+    if (isFavorite) {
+      await supabase.from(cfg.table).delete().eq('user_id', user.id).eq(cfg.column, entityId)
+      setIsFavorite(false)
+    } else {
+      if (type === 'event') {
+        await supabase.from(cfg.table).upsert(
+          { user_id: user.id, [cfg.column]: entityId, status: 'wishlist' },
+          { onConflict: `user_id,${cfg.column}` }
+        )
+      } else {
+        await supabase.from(cfg.table).insert({ user_id: user.id, [cfg.column]: entityId })
+      }
+      setIsFavorite(true)
+    }
+  }, [user, entityId, isFavorite, type, cfg.table, cfg.column])
+
+  return { isFavorite, loading, toggle, isLoggedIn: !!user }
+}
+
+// =============================================
 // USER PROFILE
 // =============================================
 export type UserProfile = ProfileRow

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { BreakEvent } from '@/types/database'
+import FavoriteButton from '@/components/FavoriteButton'
 
 type DateWhen = 'all' | 'upcoming' | 'past' | 'undated'
 type YearGroupKey = number | 'undated'
@@ -406,6 +407,7 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           href={`/${lang}/events/${e.slug}`}
           className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group"
         >
+          <FavoriteButton type="event" entityId={e.id} lang={lang} />
           <CardThumbnail
             src={e.image_url}
             alt={e.name}
@@ -441,8 +443,9 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
         <Link
           key={e.slug}
           href={`/${lang}/events/${e.slug}`}
-          className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
+          className="relative border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
+          <FavoriteButton type="event" entityId={e.id} lang={lang} />
           <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
           <div className="p-3 flex flex-col flex-grow min-h-0">
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>
@@ -465,27 +468,29 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {events.map((e) => (
-        <Link
-          key={e.slug}
-          href={`/${lang}/events/${e.slug}`}
-          className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
-        >
-          <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
-            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" />
-          </div>
-          <div className="flex-grow min-w-0">
-            <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-              {e.name}
+        <div key={e.slug} className="relative border-b-[2px] border-[var(--ink)]">
+          <FavoriteButton type="event" entityId={e.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+          <Link
+            href={`/${lang}/events/${e.slug}`}
+            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
+          >
+            <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
+              <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" />
             </div>
-            <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>
-              {e.date_start || 'TBA'}
+            <div className="flex-grow min-w-0">
+              <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                {e.name}
+              </div>
+              <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>
+                {e.date_start || 'TBA'}
+              </div>
             </div>
-          </div>
-          <div className="hidden sm:flex gap-2 shrink-0">
-            <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.city}, {e.country}</span>
-            <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.event_type?.replace('_', ' ')}</span>
-          </div>
-        </Link>
+            <div className="hidden sm:flex gap-2 shrink-0">
+              <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.city}, {e.country}</span>
+              <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.event_type?.replace('_', ' ')}</span>
+            </div>
+          </Link>
+        </div>
       ))}
     </div>
   )

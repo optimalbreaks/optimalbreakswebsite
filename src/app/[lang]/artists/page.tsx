@@ -74,12 +74,12 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
   const supabase = createServerSupabase()
   const { data: artists } = await supabase
     .from('artists')
-    .select('slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url')
+    .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url')
     .order('name_display', { ascending: true })
 
   type ArtistListRow = Pick<
     Artist,
-    'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
+    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
   >
   const list = (artists || []) as ArtistListRow[]
   return (

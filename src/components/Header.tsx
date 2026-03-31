@@ -15,6 +15,27 @@ interface HeaderProps {
   lang: Locale
 }
 
+function FlagES({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="480" fill="#c60b1e" />
+      <rect width="640" height="240" y="120" fill="#ffc400" />
+    </svg>
+  )
+}
+
+function FlagGB({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg">
+      <rect width="640" height="480" fill="#012169" />
+      <path d="M75 0l244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0z" fill="#fff" />
+      <path d="M424 281l216 159v40L369 281zm-184 20l6 35L54 480H0zM640 0v3L391 191l2-44L590 0zM0 0l239 176h-60L0 42z" fill="#C8102E" />
+      <path d="M241 0v480h160V0zM0 160v160h640V160z" fill="#fff" />
+      <path d="M0 193v96h640v-96zM273 0v480h96V0z" fill="#C8102E" />
+    </svg>
+  )
+}
+
 export default function Header({ dict, lang }: HeaderProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -33,6 +54,7 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   const otherLang = lang === 'es' ? 'en' : 'es'
   const switchPath = pathname.replace(`/${lang}`, `/${otherLang}`)
+  const FlagIcon = otherLang === 'es' ? FlagES : FlagGB
 
   const navLinkStyle = (href: string) => ({
     fontFamily: "'Courier Prime', monospace",
@@ -72,9 +94,11 @@ export default function Header({ dict, lang }: HeaderProps) {
         {/* Language switch */}
         <Link
           href={switchPath}
-          className="flex items-center px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--uv)] hover:text-white"
+          className="flex items-center gap-1.5 px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--uv)] hover:text-white"
           style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--ink)' }}
+          title={otherLang === 'es' ? 'Cambiar a Español' : 'Switch to English'}
         >
+          <FlagIcon className="w-5 h-[14px] rounded-[2px] shadow-sm" />
           {otherLang.toUpperCase()}
         </Link>
 
@@ -105,8 +129,15 @@ export default function Header({ dict, lang }: HeaderProps) {
         )}
       </nav>
 
-      {/* Mobile: auth + hamburger */}
+      {/* Mobile: lang + auth + hamburger */}
       <div className="lg:hidden ml-auto flex items-stretch">
+        <Link
+          href={switchPath}
+          className="flex items-center px-2.5 border-l-[3px] border-[var(--ink)] transition-colors hover:bg-[var(--uv)]"
+          title={otherLang === 'es' ? 'Cambiar a Español' : 'Switch to English'}
+        >
+          <FlagIcon className="w-6 h-[17px] rounded-[2px] shadow-sm" />
+        </Link>
         {!loading && (
           user ? (
             <Link
@@ -147,11 +178,6 @@ export default function Header({ dict, lang }: HeaderProps) {
               {dict.nav[item.key]}
             </Link>
           ))}
-          <Link href={switchPath} onClick={() => setMenuOpen(false)}
-            className="block px-6 py-3 no-underline hover:bg-[var(--uv)] hover:text-white"
-            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--uv)' }}>
-            🌐 {otherLang.toUpperCase()}
-          </Link>
         </div>
       )}
     </header>

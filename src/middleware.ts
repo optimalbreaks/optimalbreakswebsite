@@ -6,7 +6,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { i18n } from '@/lib/i18n-config'
 
+const LOCALE_COOKIE = 'OB_LOCALE'
+
 function getLocale(request: NextRequest): string {
+  const cookie = request.cookies.get(LOCALE_COOKIE)?.value
+  if (cookie && i18n.locales.includes(cookie as any)) return cookie
+
   const acceptLanguage = request.headers.get('accept-language')
   if (acceptLanguage) {
     const preferred = acceptLanguage.split(',')[0].split('-')[0].toLowerCase()
@@ -80,7 +85,17 @@ export async function middleware(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
 
-  if (pathnameHasLocale) return response
+  if (pathnameHasLocale) {
+    const currentLocale = pathname.split('/')[1]
+    if (request.cookies.get(LOCALE_COOKIE)?.value !== currentLocale) {
+      response.cookies.set(LOCALE_COOKIE, currentLocale, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      })
+    }
+    return response
+  }
 
   // Redirect to locale-prefixed path
   const locale = getLocale(request)

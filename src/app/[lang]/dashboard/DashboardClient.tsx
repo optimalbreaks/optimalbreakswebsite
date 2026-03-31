@@ -146,95 +146,155 @@ function OverviewTab({ lang }: { lang: string }) {
 // FAVORITES TAB
 // =============================================
 function FavoritesTab({ lang }: { lang: string }) {
-  const { favorites: artistIds, loading: aLoading } = useFavoriteArtists()
-  const { favorites: labelIds, loading: lLoading } = useFavoriteLabels()
+  const { favorites: artistIds } = useFavoriteArtists()
+  const { favorites: labelIds } = useFavoriteLabels()
+  const { attendance } = useEventAttendance()
+  const { saved: mixIds } = useSavedMixes()
   const [artists, setArtists] = useState<any[]>([])
   const [labels, setLabels] = useState<any[]>([])
+  const [events, setEvents] = useState<any[]>([])
+  const [mixes, setMixes] = useState<any[]>([])
   const es = lang === 'es'
+
+  const wishlistIds = Object.entries(attendance).filter(([, s]) => s === 'wishlist').map(([id]) => id)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
     let cancelled = false
 
     ;(async () => {
-      if (artistIds.length === 0) {
-        if (!cancelled) setArtists([])
-      } else {
-        const { data } = await supabase
-          .from('artists')
-          .select('id, slug, name, name_display, styles, country, image_url')
-          .in('id', artistIds)
+      if (artistIds.length === 0) { if (!cancelled) setArtists([]) }
+      else {
+        const { data } = await supabase.from('artists').select('id, slug, name, name_display, styles, country, image_url').in('id', artistIds)
         if (!cancelled) setArtists(data || [])
       }
-      if (labelIds.length === 0) {
-        if (!cancelled) setLabels([])
-      } else {
+      if (labelIds.length === 0) { if (!cancelled) setLabels([]) }
+      else {
         const { data } = await supabase.from('labels').select('id, slug, name, country, image_url').in('id', labelIds)
         if (!cancelled) setLabels(data || [])
       }
+      if (wishlistIds.length === 0) { if (!cancelled) setEvents([]) }
+      else {
+        const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country, image_url').in('id', wishlistIds)
+        if (!cancelled) setEvents(data || [])
+      }
+      if (mixIds.length === 0) { if (!cancelled) setMixes([]) }
+      else {
+        const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url').in('id', mixIds)
+        if (!cancelled) setMixes(data || [])
+      }
     })()
 
-    return () => {
-      cancelled = true
-    }
-  }, [artistIds, labelIds])
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artistIds, labelIds, JSON.stringify(wishlistIds), mixIds])
 
   return (
-    <div>
-      <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-        {es ? 'ARTISTAS FAVORITOS' : 'FAVORITE ARTISTS'} ({artistIds.length})
-      </h2>
-      {artistIds.length === 0 ? (
-        <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-          {es ? 'Aún no tienes artistas favoritos. Explora y marca los que te gusten.' : 'No favorite artists yet. Explore and mark the ones you like.'}
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-4 border-[var(--ink)] mb-8">
-          {artists.map((a) => (
-            <Link
-              key={a.id}
-              href={`/${lang}/artists/${a.slug}`}
-              className="group flex flex-col border-b-[3px] sm:border-r-[3px] border-[var(--ink)] hover:bg-[var(--yellow)] no-underline text-[var(--ink)] transition-all overflow-hidden"
-            >
-              <CardThumbnail
-                src={a.image_url}
-                alt={a.name_display || a.name}
-                heightClass="h-28 sm:h-32"
-                frameClass="border-b-[3px] border-[var(--ink)]"
-              />
-              <div className="p-4">
-                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>{a.name_display || a.name}</div>
-                <div className="flex gap-1 mt-1 flex-wrap">{a.styles?.map((s: string, i: number) => <span key={i} className="cutout fill" style={{ fontSize: '8px', padding: '1px 5px', margin: 0 }}>{s}</span>)}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="space-y-10">
+      {/* Artists */}
+      <div>
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          {es ? 'ARTISTAS FAVORITOS' : 'FAVORITE ARTISTS'} ({artistIds.length})
+        </h2>
+        {artistIds.length === 0 ? (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+            {es ? 'Aún no tienes artistas favoritos. Explora y marca los que te gusten.' : 'No favorite artists yet. Explore and mark the ones you like.'}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
+            {artists.map((a) => (
+              <Link key={a.id} href={`/${lang}/artists/${a.slug}`} className="group flex flex-col border-b-[3px] sm:border-r-[3px] border-[var(--ink)] hover:bg-[var(--yellow)] no-underline text-[var(--ink)] transition-all overflow-hidden">
+                <CardThumbnail src={a.image_url} alt={a.name_display || a.name} heightClass="h-28 sm:h-32" frameClass="border-b-[3px] border-[var(--ink)]" />
+                <div className="p-4">
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>{a.name_display || a.name}</div>
+                  <div className="flex gap-1 mt-1 flex-wrap">{a.styles?.map((s: string, i: number) => <span key={i} className="cutout fill" style={{ fontSize: '8px', padding: '1px 5px', margin: 0 }}>{s}</span>)}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
-      <h2 className="mt-8" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-        {es ? 'SELLOS FAVORITOS' : 'FAVORITE LABELS'} ({labelIds.length})
-      </h2>
-      {labelIds.length === 0 ? (
-        <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-          {es ? 'Aún no tienes sellos favoritos.' : 'No favorite labels yet.'}
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
-          {labels.map((l) => (
-            <Link
-              key={l.id}
-              href={`/${lang}/labels/${l.slug}`}
-              className="group flex flex-col border-b-[3px] sm:border-r-[3px] border-[var(--ink)] hover:bg-[var(--yellow)] no-underline text-[var(--ink)] transition-all overflow-hidden"
-            >
-              <CardThumbnail src={l.image_url} alt={l.name} heightClass="h-28 sm:h-32" frameClass="border-b-[3px] border-[var(--ink)]" />
-              <div className="p-4">
-                <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>{l.name}</div>
-                <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 5px', margin: 0 }}>{l.country}</span>
+      {/* Labels */}
+      <div>
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          {es ? 'SELLOS FAVORITOS' : 'FAVORITE LABELS'} ({labelIds.length})
+        </h2>
+        {labelIds.length === 0 ? (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+            {es ? 'Aún no tienes sellos favoritos.' : 'No favorite labels yet.'}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
+            {labels.map((l) => (
+              <Link key={l.id} href={`/${lang}/labels/${l.slug}`} className="group flex flex-col border-b-[3px] sm:border-r-[3px] border-[var(--ink)] hover:bg-[var(--yellow)] no-underline text-[var(--ink)] transition-all overflow-hidden">
+                <CardThumbnail src={l.image_url} alt={l.name} heightClass="h-28 sm:h-32" frameClass="border-b-[3px] border-[var(--ink)]" />
+                <div className="p-4">
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>{l.name}</div>
+                  <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 5px', margin: 0 }}>{l.country}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Events (wishlist) */}
+      <div>
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          {es ? 'EVENTOS FAVORITOS' : 'FAVORITE EVENTS'} ({wishlistIds.length})
+        </h2>
+        {wishlistIds.length === 0 ? (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+            {es ? 'Aún no has marcado eventos.' : 'No favorite events yet.'}
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
+            {events.map((ev) => (
+              <Link key={ev.id} href={`/${lang}/events/${ev.slug}`} className="group flex flex-col border-b-[3px] sm:border-r-[3px] border-[var(--ink)] hover:bg-[var(--yellow)] no-underline text-[var(--ink)] transition-all overflow-hidden">
+                <CardThumbnail src={ev.image_url} alt={ev.name} heightClass="h-28 sm:h-32" frameClass="border-b-[3px] border-[var(--ink)]" fit="contain" />
+                <div className="p-4">
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '13px', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                  <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>{ev.name}</div>
+                  <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{ev.city}, {ev.country}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Mixes */}
+      <div>
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          {es ? 'MIXES GUARDADOS' : 'SAVED MIXES'} ({mixIds.length})
+        </h2>
+        {mixIds.length === 0 ? (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+            {es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}
+          </p>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {mixes.map((m) => (
+              <div key={m.id} className="flex items-center gap-4 p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 hover:bg-[var(--yellow)] transition-all">
+                <div className="shrink-0 w-14 h-14 overflow-hidden border-[2px] border-[var(--ink)]">
+                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" frameClass="" />
+                </div>
+                <div className="flex-grow min-w-0">
+                  <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>{m.title}</div>
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '13px', color: 'var(--red)' }}>{m.artist_name}</div>
+                  <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                </div>
+                {m.video_url && (
+                  <a href={m.video_url} target="_blank" rel="noopener noreferrer" className="shrink-0 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '4px 10px' }}>
+                    YouTube ↗
+                  </a>
+                )}
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -322,13 +382,48 @@ function SightingsTab({ lang }: { lang: string }) {
 // EVENTS TAB
 // =============================================
 function EventsTab({ lang }: { lang: string }) {
-  const { attendance, loading } = useEventAttendance()
+  const { attendance } = useEventAttendance()
   const { ratings } = useEventRatings()
+  const [eventsData, setEventsData] = useState<Record<string, any>>({})
   const es = lang === 'es'
 
+  const allEventIds = Object.keys(attendance)
   const wishlist = Object.entries(attendance).filter(([, s]) => s === 'wishlist')
   const attended = Object.entries(attendance).filter(([, s]) => s === 'attended')
   const going = Object.entries(attendance).filter(([, s]) => s === 'attending')
+
+  useEffect(() => {
+    if (allEventIds.length === 0) return
+    let cancelled = false
+    const supabase = createBrowserSupabase()
+    ;(async () => {
+      const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country').in('id', allEventIds)
+      if (!cancelled && data) {
+        const map: Record<string, any> = {}
+        data.forEach((e: any) => { map[e.id] = e })
+        setEventsData(map)
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(allEventIds)])
+
+  const renderEventRow = (id: string, extra?: React.ReactNode) => {
+    const ev = eventsData[id]
+    return (
+      <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between items-center gap-3">
+        {ev ? (
+          <Link href={`/${lang}/events/${ev.slug}`} className="flex-grow min-w-0 no-underline text-[var(--ink)] hover:text-[var(--red)]">
+            <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>{ev.name}</div>
+            <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{ev.date_start || 'TBA'} — {ev.city}, {ev.country}</div>
+          </Link>
+        ) : (
+          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>{id.slice(0, 8)}...</span>
+        )}
+        {extra}
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -336,7 +431,7 @@ function EventsTab({ lang }: { lang: string }) {
         {es ? 'MIS EVENTOS' : 'MY EVENTS'}
       </h2>
 
-      {Object.keys(attendance).length === 0 ? (
+      {allEventIds.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
           {es ? 'Explora eventos y marca los que te interesan.' : 'Explore events and mark the ones you\'re interested in.'}
         </p>
@@ -346,11 +441,7 @@ function EventsTab({ lang }: { lang: string }) {
             <div>
               <span className="cutout acid">{es ? 'VOY' : 'GOING'} ({going.length})</span>
               <div className="mt-2 border-4 border-[var(--ink)]">
-                {going.map(([id]) => (
-                  <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
-                    <Link href={`/${lang}/events`} className="text-[var(--ink)] hover:text-[var(--red)]">{id.slice(0, 8)}...</Link>
-                  </div>
-                ))}
+                {going.map(([id]) => renderEventRow(id))}
               </div>
             </div>
           )}
@@ -358,11 +449,7 @@ function EventsTab({ lang }: { lang: string }) {
             <div>
               <span className="cutout uv">{es ? 'QUIERO IR' : 'WISHLIST'} ({wishlist.length})</span>
               <div className="mt-2 border-4 border-[var(--ink)]">
-                {wishlist.map(([id]) => (
-                  <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
-                    {id.slice(0, 8)}...
-                  </div>
-                ))}
+                {wishlist.map(([id]) => renderEventRow(id))}
               </div>
             </div>
           )}
@@ -372,12 +459,7 @@ function EventsTab({ lang }: { lang: string }) {
               <div className="mt-2 border-4 border-[var(--ink)]">
                 {attended.map(([id]) => {
                   const r = ratings[id]
-                  return (
-                    <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
-                      <span>{id.slice(0, 8)}...</span>
-                      {r && <span className="text-[var(--yellow)]">{'★'.repeat(r.rating)}</span>}
-                    </div>
-                  )
+                  return renderEventRow(id, r ? <span className="text-[var(--yellow)] shrink-0">{'★'.repeat(r.rating)}</span> : undefined)
                 })}
               </div>
             </div>
@@ -392,8 +474,20 @@ function EventsTab({ lang }: { lang: string }) {
 // MIXES TAB
 // =============================================
 function MixesTab({ lang }: { lang: string }) {
-  const { saved, loading } = useSavedMixes()
+  const { saved } = useSavedMixes()
+  const [mixes, setMixes] = useState<any[]>([])
   const es = lang === 'es'
+
+  useEffect(() => {
+    if (saved.length === 0) { setMixes([]); return }
+    let cancelled = false
+    const supabase = createBrowserSupabase()
+    ;(async () => {
+      const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url').in('id', saved)
+      if (!cancelled) setMixes(data || [])
+    })()
+    return () => { cancelled = true }
+  }, [saved])
 
   return (
     <div>
@@ -406,9 +500,21 @@ function MixesTab({ lang }: { lang: string }) {
         </p>
       ) : (
         <div className="border-4 border-[var(--ink)]">
-          {saved.map((id) => (
-            <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
-              {id.slice(0, 8)}...
+          {mixes.map((m) => (
+            <div key={m.id} className="flex items-center gap-4 p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 hover:bg-[var(--yellow)] transition-all">
+              <div className="shrink-0 w-12 h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+                <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" frameClass="" />
+              </div>
+              <div className="flex-grow min-w-0">
+                <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}>{m.title}</div>
+                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '13px', color: 'var(--red)' }}>{m.artist_name}</div>
+                <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+              </div>
+              {m.video_url && (
+                <a href={m.video_url} target="_blank" rel="noopener noreferrer" className="shrink-0 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '4px 10px' }}>
+                  YouTube ↗
+                </a>
+              )}
             </div>
           ))}
         </div>

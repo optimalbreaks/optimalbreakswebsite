@@ -10,6 +10,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
+import FavoriteButton from '@/components/FavoriteButton'
 import EventPosterLightbox from '@/components/EventPosterLightbox'
 import {
   splitBioParagraphs,
@@ -263,8 +264,9 @@ export default async function EventDetailPage({ params }: Props) {
               </div>
             )}
 
-            {/* Fan counter + share */}
+            {/* Favorite + fan counter + share */}
             <div className="flex flex-wrap items-center gap-3 mt-5">
+              <FavoriteButton type="event" entityId={event.id} size="md" lang={lang} />
               <FanCounter type="event" entityId={event.id} lang={lang} />
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
             </div>
