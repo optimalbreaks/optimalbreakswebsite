@@ -179,20 +179,20 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-[100] flex items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
-      {/* Logo definitivo — public/images/logo_punk_brutalism.png */}
+      {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
       <Link
         href={`/${lang}`}
-        className="flex items-center shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 bg-black no-underline border-r-[3px] border-[var(--ink)]"
+        className="flex items-center justify-center shrink-0 px-2 sm:px-2.5 py-1.5 sm:py-2 bg-black no-underline border-r-[3px] border-[var(--ink)]"
         aria-label="Optimal Breaks"
       >
         <Image
-          src="/images/logo_punk_brutalism.png"
+          src="/images/favicon_punk_brutalism.png"
           alt="Optimal Breaks"
-          width={280}
-          height={90}
-          className="h-9 sm:h-10 max-h-[44px] sm:max-h-[52px] w-auto max-w-[min(58vw,280px)] object-contain object-left"
+          width={128}
+          height={128}
+          className="h-9 w-9 sm:h-10 sm:w-10 object-contain object-center"
           priority
-          sizes="(max-width: 640px) 200px, 280px"
+          sizes="40px"
         />
       </Link>
 
