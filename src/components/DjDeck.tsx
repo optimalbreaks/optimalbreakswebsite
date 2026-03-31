@@ -88,7 +88,7 @@ export default function DjDeck({ dict }: DjDeckProps) {
             seekToRatio((e.clientX - rect.left) / rect.width)
           }}
         >
-          <div className="h-full bg-[var(--red)] rounded-full transition-all duration-100" style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }} />
+          <div className="h-full bg-[var(--red)] rounded-full" style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }} />
         </div>
         <div className="flex justify-between mt-1">
           <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>{fmt(progress)}</span>

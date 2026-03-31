@@ -271,6 +271,14 @@ export function DeckAudioProvider({
   const [crossfader, setCrossfader] = useState(50)
   const [currentTrack, setCurrentTrack] = useState(0)
   const currentTrackRef = useRef(0)
+
+  // Randomize initial track on client-side mount
+  useEffect(() => {
+    const randomIdx = Math.floor(Math.random() * DECK_TRACKS.length)
+    setCurrentTrack(randomIdx)
+    currentTrackRef.current = randomIdx
+  }, [])
+
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
 
