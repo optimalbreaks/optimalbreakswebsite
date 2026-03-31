@@ -11,7 +11,7 @@ import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import EventPosterLightbox from '@/components/EventPosterLightbox'
-import { splitBioParagraphs } from '@/lib/bio-format'
+import { splitBioParagraphs, splitProseForDisplay } from '@/lib/bio-format'
 import { getDictionary } from '@/lib/dictionaries'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -49,6 +49,13 @@ function mapsUrl(coords: { lat: number; lng: number } | null, address: string | 
   if (coords) return `https://www.google.com/maps?q=${coords.lat},${coords.lng}`
   if (address) return `https://www.google.com/maps/search/${encodeURIComponent(address)}`
   return null
+}
+
+/** Postgres TIME devuelve a veces "16:00:00"; en UI mostramos "16:00". */
+function formatDoorTime(t: string | null | undefined): string {
+  if (!t) return ''
+  const m = String(t).match(/^(\d{1,2}):(\d{2})/)
+  return m ? `${m[1]}:${m[2]}` : t
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -178,9 +185,9 @@ export default async function EventDetailPage({ params }: Props) {
             {/* Doors */}
             {(event.doors_open || event.doors_close) && (
               <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '14px', color: 'var(--dim)' }}>
-                {event.doors_open && <>{lang === 'es' ? 'Apertura: ' : 'Doors: '}{event.doors_open}</>}
+                {event.doors_open && <>{lang === 'es' ? 'Apertura: ' : 'Doors: '}{formatDoorTime(event.doors_open)}</>}
                 {event.doors_open && event.doors_close && ' — '}
-                {event.doors_close && <>{lang === 'es' ? 'Cierre: ' : 'Close: '}{event.doors_close}</>}
+                {event.doors_close && <>{lang === 'es' ? 'Cierre: ' : 'Close: '}{formatDoorTime(event.doors_close)}</>}
               </div>
             )}
 
@@ -237,17 +244,26 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       </header>
 
-      {/* ── DESCRIPTION ── */}
-      <section className="mb-10 max-w-[760px] space-y-5">
-        {splitBioParagraphs(lang === 'es' ? event.description_es : event.description_en).map((para, i) => (
-          <p
-            key={i}
-            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
-            className="text-[var(--ink)]"
-          >
-            {para}
-          </p>
-        ))}
+      {/* ── DESCRIPTION (misma lectura visual que bio de artistas / sellos) ── */}
+      <section className="mb-10">
+        <SectionHeading>{lang === 'es' ? 'SOBRE EL EVENTO' : 'ABOUT THE EVENT'}</SectionHeading>
+        <div className="max-w-[760px] border-4 border-[var(--ink)] bg-[var(--paper)] p-6 sm:p-8 shadow-[6px_6px_0_var(--ink)]">
+          <div className="space-y-0">
+            {splitProseForDisplay(lang === 'es' ? event.description_es : event.description_en).map((para, i) => (
+              <div
+                key={i}
+                className={i > 0 ? 'mt-6 pt-6 border-t-[3px] border-[var(--ink)]/15' : ''}
+              >
+                <p
+                  style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+                  className="text-[var(--ink)]"
+                >
+                  {para}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── STAGES + LINEUP ── */}
