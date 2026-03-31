@@ -266,23 +266,18 @@ export default async function HomePage({
           {dict.common.since}
         </div>
 
-        {/* Title */}
+        {/* Título = logo (mismo asset que OG; h1 semántico para SEO y accesibilidad) */}
         <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0">
-          <h1
-            className="break-words max-w-full"
-            style={{
-              fontFamily: "'Unbounded', sans-serif",
-              fontWeight: 900,
-              fontSize: 'clamp(28px, 9vw, 90px)',
-              textTransform: 'uppercase',
-              letterSpacing: 'clamp(-1.5px, -0.4vw, -2px)',
-              lineHeight: 0.92,
-            }}
-          >
-            <span className="block sm:inline" style={{ WebkitTextStroke: 'clamp(2px, 0.4vw, 3px) var(--ink)', WebkitTextFillColor: 'transparent' }}>
-              OPTIMAL
-            </span>{' '}
-            <span className="hl">BREAKS</span>
+          <h1 className="m-0 flex justify-center mx-auto max-w-full">
+            <Image
+              src="/images/logo_punk_brutalism.png"
+              alt="Optimal Breaks"
+              width={720}
+              height={240}
+              className="w-[min(100%,720px)] max-h-[clamp(76px,22vw,168px)] h-auto object-contain object-center"
+              priority
+              sizes="(max-width: 768px) 100vw, 720px"
+            />
           </h1>
           <p
             className="mt-2 sm:mt-3"
@@ -329,22 +324,9 @@ export default async function HomePage({
           </div>
         </div>
 
-        {/* DJ Deck — logo brutalismo encima del vinilo; ancla #dj-deck */}
-        <div id="dj-deck" className="scroll-mt-24 relative z-[2]">
-          <div className="relative z-[5] flex justify-center pointer-events-none px-2 -mb-[clamp(1.25rem,5vw,2.75rem)]">
-            <Image
-              src="/images/logo_punk_brutalism.png"
-              alt="Optimal Breaks"
-              width={640}
-              height={220}
-              className="w-[min(94%,560px)] max-h-[clamp(64px,16vw,120px)] h-auto object-contain object-bottom drop-shadow-[0_8px_28px_rgba(0,0,0,0.35)]"
-              priority
-              sizes="(max-width: 768px) 94vw, 560px"
-            />
-          </div>
-          <div className="relative z-[3]">
-            <DjDeck dict={h} />
-          </div>
+        {/* DJ Deck — ancla #dj-deck (el logo va en el h1 de arriba) */}
+        <div id="dj-deck" className="scroll-mt-24">
+          <DjDeck dict={h} />
         </div>
 
         {/* Genre tags */}
