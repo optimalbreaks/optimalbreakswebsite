@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import CardThumbnail from '@/components/CardThumbnail'
+import { displayImageUrl } from '@/lib/image-url'
 
 type Props = {
   src: string | null | undefined
@@ -19,7 +20,7 @@ export default function EventPosterLightbox({
   closeLabel,
   lightboxTitle,
 }: Props) {
-  const url = src?.trim()
+  const url = displayImageUrl(src)?.trim()
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const closeBtnRef = useRef<HTMLButtonElement>(null)

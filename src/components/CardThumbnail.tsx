@@ -2,6 +2,8 @@
 // OPTIMAL BREAKS — Imagen de tarjeta (DB image_url + placeholder)
 // ============================================
 
+import { displayImageUrl } from '@/lib/image-url'
+
 interface CardThumbnailProps {
   src?: string | null
   alt: string
@@ -25,7 +27,7 @@ export default function CardThumbnail({
   frameClass = 'border-b-[3px] border-[var(--ink)]',
   className = '',
 }: CardThumbnailProps) {
-  const url = src?.trim()
+  const url = displayImageUrl(src)?.trim()
   const box = heightClass ?? aspectClass
   const imgFit =
     fit === 'contain'

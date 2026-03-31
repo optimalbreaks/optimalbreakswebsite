@@ -4,6 +4,7 @@
 
 import type { Metadata } from 'next'
 import { getDictionary } from '@/lib/dictionaries'
+import { displayImageUrl } from '@/lib/image-url'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 export const SITE_URL = 'https://www.optimalbreaks.com' as const
@@ -36,7 +37,8 @@ export function generatedOgImageUrl(lang: Locale): string {
  */
 export function absoluteOgImage(url?: string | null, lang?: Locale): string {
   const fallback = generatedOgImageUrl(lang ?? i18n.defaultLocale)
-  const u = url?.trim()
+  const raw = url?.trim()
+  const u = raw ? displayImageUrl(raw) ?? raw : ''
   if (!u) return fallback
   if (u.startsWith('http://') || u.startsWith('https://')) return u
   if (u.startsWith('/')) return `${SITE_URL}${u}`

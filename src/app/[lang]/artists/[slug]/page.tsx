@@ -13,6 +13,7 @@ import {
 } from '@/lib/artist-entity-match'
 import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
+import { displayImageUrl } from '@/lib/image-url'
 import { sanitizeSlug } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease } from '@/types/database'
@@ -32,13 +33,14 @@ const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
 function buildJsonLd(artist: Artist, lang: Locale, slug: string) {
   const isSolo = SOLO_CATEGORIES.has(artist.category)
   const url = `${SITE_URL}/${lang}/artists/${slug}`
+  const imageUrl = displayImageUrl(artist.image_url)
 
   return {
     '@context': 'https://schema.org',
     '@type': isSolo ? 'Person' : 'MusicGroup',
     name: artist.name_display || artist.name,
     url,
-    ...(artist.image_url && { image: artist.image_url }),
+    ...(imageUrl && { image: imageUrl }),
     ...(artist.country && { nationality: artist.country }),
     genre: artist.styles?.join(', ') || 'Breakbeat',
     description: (lang === 'es' ? artist.bio_es : artist.bio_en)?.slice(0, 300),
