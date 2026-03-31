@@ -326,3 +326,47 @@ export function useProfile() {
 
   return { profile, loading, update, refetch: fetch }
 }
+
+// =============================================
+// BREAKBEAT PROFILE (DNA analysis)
+// =============================================
+export function useBreakbeatProfile() {
+  const { user } = useAuth()
+  const [profile, setProfile] = useState<BreakbeatProfileRow | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+
+  const fetch = useCallback(async () => {
+    if (!user) { setProfile(null); setLoading(false); return }
+    const { data } = await supabase
+      .from('breakbeat_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+    setProfile(data as BreakbeatProfileRow | null)
+    setLoading(false)
+  }, [user])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  const save = async (row: {
+    stats: BreakbeatProfileStats
+    analysis_text_en: string
+    analysis_text_es: string
+    archetype_en: string
+    archetype_es: string
+    input_hash: string
+    generated_by: 'rules' | 'openai' | 'manual'
+  }) => {
+    if (!user) return
+    const payload = { user_id: user.id, ...row }
+    const { data } = await supabase
+      .from('breakbeat_profiles')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single()
+    if (data) setProfile(data as BreakbeatProfileRow)
+  }
+
+  return { profile, loading, generating, setGenerating, save, refetch: fetch }
+}

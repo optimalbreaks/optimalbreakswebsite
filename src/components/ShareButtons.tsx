@@ -7,6 +7,7 @@
 'use client'
 
 import { useState } from 'react'
+import { SITE_URL } from '@/lib/seo'
 
 interface ShareButtonsProps {
   url: string
@@ -14,10 +15,26 @@ interface ShareButtonsProps {
   lang: string
 }
 
+/** Facebook espera un popup con tamaño fijo; abrir solo en pestaña nueva suele dar pantalla en blanco o errores en algunos navegadores. */
+function openFacebookShare(fullUrl: string, e: React.MouseEvent<HTMLAnchorElement>) {
+  const u = encodeURIComponent(fullUrl)
+  const href = `https://www.facebook.com/sharer/sharer.php?u=${u}`
+  const popup = window.open(
+    href,
+    'fb_share',
+    'width=626,height=436,left=100,top=100,scrollbars=yes,resizable=yes'
+  )
+  if (popup) {
+    popup.opener = null
+    e.preventDefault()
+  }
+}
+
 export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const es = lang === 'es'
-  const fullUrl = `https://www.optimalbreaks.com${url}`
+  const path = url.startsWith('/') ? url : `/${url}`
+  const fullUrl = `${SITE_URL.replace(/\/$/, '')}${path}`
   const encodedUrl = encodeURIComponent(fullUrl)
   const encodedTitle = encodeURIComponent(title)
 
@@ -87,6 +104,7 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
         <a
           key={link.name}
           href={link.href}
+          onClick={link.name === 'Facebook' ? (e) => openFacebookShare(fullUrl, e) : undefined}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center w-[30px] h-[30px] border-2 no-underline transition-all duration-150 hover:scale-110 hover:rotate-[-3deg]"

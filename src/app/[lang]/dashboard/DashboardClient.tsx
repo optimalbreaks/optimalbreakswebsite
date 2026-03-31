@@ -8,7 +8,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings } from '@/hooks/useUserData'
+import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings, useBreakbeatProfile } from '@/hooks/useUserData'
+import type { BreakbeatProfileStats } from '@/types/database'
 import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -162,6 +163,322 @@ export default function DashboardClient({ lang }: { lang: string }) {
 }
 
 // =============================================
+// BREAKBEAT DNA — SVG charts + AI analysis
+// =============================================
+
+function RadarChart({ styles }: { styles: BreakbeatProfileStats['top_styles'] }) {
+  const items = styles.slice(0, 6)
+  if (items.length < 3) return null
+  const cx = 120, cy = 120, r = 90
+  const n = items.length
+  const maxPct = Math.max(...items.map(s => s.pct), 0.01)
+
+  const pointsOuter = items.map((_, i) => {
+    const angle = (Math.PI * 2 * i) / n - Math.PI / 2
+    return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`
+  }).join(' ')
+
+  const pointsData = items.map((s, i) => {
+    const angle = (Math.PI * 2 * i) / n - Math.PI / 2
+    const ratio = s.pct / maxPct
+    return `${cx + r * ratio * Math.cos(angle)},${cy + r * ratio * Math.sin(angle)}`
+  }).join(' ')
+
+  const gridLevels = [0.33, 0.66, 1]
+
+  return (
+    <svg viewBox="0 0 240 240" className="w-full max-w-[280px] mx-auto">
+      {gridLevels.map(level => (
+        <polygon
+          key={level}
+          points={items.map((_, i) => {
+            const angle = (Math.PI * 2 * i) / n - Math.PI / 2
+            return `${cx + r * level * Math.cos(angle)},${cy + r * level * Math.sin(angle)}`
+          }).join(' ')}
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="0.5"
+          opacity="0.2"
+        />
+      ))}
+      {items.map((_, i) => {
+        const angle = (Math.PI * 2 * i) / n - Math.PI / 2
+        return (
+          <line key={i} x1={cx} y1={cy}
+            x2={cx + r * Math.cos(angle)} y2={cy + r * Math.sin(angle)}
+            stroke="var(--ink)" strokeWidth="0.5" opacity="0.15" />
+        )
+      })}
+      <polygon points={pointsOuter} fill="none" stroke="var(--ink)" strokeWidth="1.5" opacity="0.3" />
+      <polygon points={pointsData} fill="var(--red)" fillOpacity="0.25" stroke="var(--red)" strokeWidth="2" />
+      {items.map((s, i) => {
+        const angle = (Math.PI * 2 * i) / n - Math.PI / 2
+        const ratio = s.pct / maxPct
+        const lx = cx + (r + 18) * Math.cos(angle)
+        const ly = cy + (r + 18) * Math.sin(angle)
+        const dx = cx + r * ratio * Math.cos(angle)
+        const dy = cy + r * ratio * Math.sin(angle)
+        return (
+          <g key={i}>
+            <circle cx={dx} cy={dy} r="3.5" fill="var(--red)" />
+            <text x={lx} y={ly} textAnchor="middle" dominantBaseline="central"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', fontWeight: 700, fill: 'var(--ink)', textTransform: 'uppercase' }}>
+              {s.name.replace(/_/g, ' ').slice(0, 12)}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+function HorizontalBars({ data, color, maxItems = 5 }: { data: { name: string; pct: number }[]; color: string; maxItems?: number }) {
+  const items = data.slice(0, maxItems)
+  if (items.length === 0) return null
+  const maxPct = Math.max(...items.map(d => d.pct), 0.01)
+
+  return (
+    <div className="space-y-2">
+      {items.map((d) => (
+        <div key={d.name}>
+          <div className="flex justify-between items-center mb-[2px]">
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {d.name.replace(/_/g, ' ')}
+            </span>
+            <span style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '13px', fontWeight: 900, color }}>
+              {Math.round(d.pct * 100)}%
+            </span>
+          </div>
+          <div className="h-[10px] border-[2px] border-[var(--ink)] relative overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 transition-all duration-700"
+              style={{ width: `${(d.pct / maxPct) * 100}%`, background: color }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EraTimeline({ eras }: { eras: Record<string, number> }) {
+  const sorted = Object.entries(eras).sort(([a], [b]) => a.localeCompare(b))
+  if (sorted.length === 0) return null
+  const maxPct = Math.max(...sorted.map(([, v]) => v), 0.01)
+
+  const colors: Record<string, string> = {
+    '1980s': 'var(--uv)', '1990s': 'var(--acid)', '2000s': 'var(--red)',
+    '2010s': 'var(--pink)', '2020s': 'var(--cyan)',
+  }
+
+  return (
+    <div className="flex items-end gap-[3px] h-[80px]">
+      {sorted.map(([era, pct]) => {
+        const height = Math.max((pct / maxPct) * 100, 8)
+        return (
+          <div key={era} className="flex flex-col items-center flex-1 min-w-0">
+            <div
+              className="w-full border-[2px] border-[var(--ink)] transition-all duration-700"
+              style={{ height: `${height}%`, background: colors[era] || 'var(--yellow)', minHeight: '6px' }}
+            />
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', fontWeight: 700, marginTop: '3px', color: 'var(--dim)' }}>
+              {era.replace('s', '')}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function BreakbeatDNA({ lang }: { lang: string }) {
+  const es = lang === 'es'
+  const { profile: bpProfile, loading: bpLoading, generating, setGenerating, save: saveBP } = useBreakbeatProfile()
+  const { favorites: favArtists } = useFavoriteArtists()
+  const { favorites: favLabels } = useFavoriteLabels()
+  const { favorites: favEvents } = useFavoriteEvents()
+  const { saved: savedMixes } = useSavedMixes()
+  const { attendance } = useEventAttendance()
+  const [error, setError] = useState('')
+
+  const totalInputs = favArtists.length + favLabels.length + favEvents.length + savedMixes.length + Object.keys(attendance).length
+  const hasEnoughData = totalInputs >= 3
+
+  const generate = async () => {
+    setGenerating(true)
+    setError('')
+    try {
+      const res = await fetch('/api/breakbeat-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        setError(err.error || 'Error generating profile')
+        return
+      }
+      await saveBP(await res.json())
+    } catch {
+      setError(es ? 'Error de conexión' : 'Connection error')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const stats = bpProfile?.stats as BreakbeatProfileStats | undefined
+  const archetype = es ? bpProfile?.archetype_es : bpProfile?.archetype_en
+  const analysisText = es ? bpProfile?.analysis_text_es : bpProfile?.analysis_text_en
+
+  if (bpLoading) return null
+
+  return (
+    <div className="mb-8 border-4 border-[var(--ink)] overflow-hidden">
+      {/* Header */}
+      <div className="bg-[var(--ink)] text-[var(--paper)] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span style={{ fontSize: '28px' }}>&#x1F9EC;</span>
+          <div>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 3vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', color: 'var(--yellow)' }}>
+              {es ? 'TU ADN BREAKBEATERO' : 'YOUR BREAKBEAT DNA'}
+            </div>
+            {archetype && (
+              <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '1px', color: 'var(--red)', marginTop: '2px' }}>
+                {archetype}
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={generate}
+          disabled={generating || !hasEnoughData}
+          className="transition-all duration-150 border-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px',
+            padding: '6px 16px', textTransform: 'uppercase',
+            background: generating ? 'var(--dim)' : 'var(--red)', color: 'white',
+          }}
+        >
+          {generating
+            ? (es ? '⏳ ANALIZANDO...' : '⏳ ANALYZING...')
+            : bpProfile
+              ? (es ? '↻ REGENERAR' : '↻ REGENERATE')
+              : (es ? '▶ ANALIZAR MI PERFIL' : '▶ ANALYZE MY PROFILE')
+          }
+        </button>
+      </div>
+
+      {/* Content */}
+      {!bpProfile && !generating && (
+        <div className="p-5 bg-[var(--paper-dark)]">
+          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)', lineHeight: 1.7 }}>
+            {!hasEnoughData
+              ? (es
+                ? `Necesitas al menos 3 favoritos (artistas, sellos, eventos o mixes) para desbloquear tu perfil. Llevas ${totalInputs}.`
+                : `You need at least 3 favorites (artists, labels, events or mixes) to unlock your profile. You have ${totalInputs}.`)
+              : (es
+                ? 'Pulsa "ANALIZAR MI PERFIL" y nuestra IA analizará tus gustos breakbeateros: subgéneros, países, épocas, eventos y mixes.'
+                : 'Press "ANALYZE MY PROFILE" and our AI will analyze your breakbeat taste: subgenres, countries, eras, events and mixes.')
+            }
+          </p>
+        </div>
+      )}
+
+      {generating && (
+        <div className="p-8 flex flex-col items-center gap-4 bg-[var(--paper-dark)]">
+          <div className="w-16 h-16 rounded-full border-4 border-[var(--ink)] border-t-[var(--red)]" style={{ animation: 'spin 1s linear infinite' }} />
+          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)' }}>
+            {es ? 'Analizando tu ADN breakbeatero...' : 'Analyzing your breakbeat DNA...'}
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div className="px-5 py-3 bg-[var(--red)] text-white">
+          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>{error}</p>
+        </div>
+      )}
+
+      {bpProfile && stats && !generating && (
+        <div>
+          {/* AI Text */}
+          {analysisText && (
+            <div className="p-5 border-b-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
+              <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                {analysisText}
+              </p>
+              {bpProfile.generated_by === 'openai' && (
+                <span className="mt-3 inline-block" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'var(--dim)', letterSpacing: '1px' }}>
+                  {es ? 'GENERADO CON IA' : 'AI GENERATED'}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Charts grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            {/* Radar: subgenres */}
+            <div className="p-5 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+              <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--red)' }}>
+                {es ? 'Subgéneros' : 'Subgenres'}
+              </div>
+              <RadarChart styles={stats.top_styles} />
+            </div>
+
+            {/* Bars: countries */}
+            <div className="p-5 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+              <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--uv)' }}>
+                {es ? 'Países' : 'Countries'}
+              </div>
+              <HorizontalBars data={stats.top_countries} color="var(--uv)" />
+            </div>
+
+            {/* Timeline: eras */}
+            <div className="p-5">
+              <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--acid)' }}>
+                {es ? 'Épocas' : 'Eras'}
+              </div>
+              <EraTimeline eras={stats.era_distribution} />
+              {/* Category badges */}
+              {Object.keys(stats.category_breakdown).length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-4">
+                  {Object.entries(stats.category_breakdown)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([cat, count]) => (
+                      <span key={cat} className="bg-[var(--ink)] text-[var(--paper)]"
+                        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '2px 6px' }}>
+                        {cat.replace(/_/g, ' ')} ×{count}
+                      </span>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer stats */}
+          <div className="bg-[var(--ink)] text-[var(--paper)] px-5 py-3 flex flex-wrap gap-4 items-center">
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
+              {es ? 'DATOS ANALIZADOS' : 'DATA ANALYZED'}: {stats.total_data_points}
+            </span>
+            {stats.event_profile.festivals + stats.event_profile.club_nights > 0 && (
+              <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
+                {es ? 'EVENTOS' : 'EVENTS'}: {stats.event_profile.festivals}F / {stats.event_profile.club_nights}CN
+              </span>
+            )}
+            {Object.keys(stats.mix_taste).length > 0 && (
+              <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
+                MIXES: {Object.entries(stats.mix_taste).map(([t, n]) => `${t.replace(/_/g, ' ')} ×${n}`).join(', ')}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================
 // OVERVIEW TAB
 // =============================================
 function OverviewTab({ lang }: { lang: string }) {
@@ -187,6 +504,9 @@ function OverviewTab({ lang }: { lang: string }) {
 
   return (
     <div>
+      {/* Breakbeat DNA Analysis */}
+      <BreakbeatDNA lang={lang} />
+
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
         {stats.map((s, i) => (
           <div key={i} className="p-5 sm:p-6 border-r-[3px] border-b-[3px] border-[var(--ink)] text-center transition-all hover:bg-[var(--yellow)]">
