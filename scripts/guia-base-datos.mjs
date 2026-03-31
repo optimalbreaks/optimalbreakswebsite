@@ -274,7 +274,7 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   Siempre escribe en base si las credenciales están bien.
 
 • lib/artist-upsert.mjs — «Motor común de guardado» (solo REST Supabase + service role;
-  sin Postgres/`pg`). Lo usan actualizar-artista, generar-artista-agente, elegir-foto
+  sin Postgres/pg). Lo usan actualizar-artista, generar-artista-agente, elegir-foto
   (UPSERT) y la API admin.
 
 • generar-artista-agente.mjs — «Redactor IA de fichas». OpenAI (+ Serp opcional)
@@ -288,7 +288,7 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   run label-agent -- <slug> "Nombre". Lote: generar-sello-agente.mjs --from-db.
 
 • elegir-foto-sello.mjs — «Logo del sello» (misma idea que la API /admin/agent/label-logo):
-  SerpAPI + OpenAI → `media/labels/<slug>/logo.*` y UPDATE `labels.image_url`.
+  SerpAPI + OpenAI → media/labels/<slug>/logo.* y UPDATE labels.image_url.
   run label-photo -- --missing-only | <slug> | --all.
 
 • elegir-foto-artista.mjs — «Buscar foto, subirla a Storage y enlazar». Elige URL

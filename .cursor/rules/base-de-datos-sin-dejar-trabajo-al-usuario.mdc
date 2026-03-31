@@ -16,6 +16,8 @@ Objetivo: cuando pida un cambio en datos persistidos, **el usuario no deba hacer
 
 **Fotos (`elegir-foto-artista`):** sube la imagen elegida al **bucket `media`** y deja `image_url` como URL pública de Supabase; luego UPSERT. **`--json-only`** = sin Storage ni BD (solo URL externa en JSON). Requiere `SERVICE_ROLE` + `NEXT_PUBLIC_SUPABASE_URL`. Catálogo: `node scripts/guia-base-datos.mjs`.
 
+**Bio corregida por el artista (EPK, PDF, notas en `artists_docs/…`):** la guía redactó la ficha inicial, pero si el artista envía texto oficial o datos revisados, el agente debe **priorizar esa fuente** sobre inferencias o fuentes secundarias. Flujo habitual: (1) guardar el documento bajo `artists_docs/<artista>/` (o ruta que indique el usuario); (2) o bien editar `data/artists/<slug>.json` integrando hechos y tono enciclopédico del sitio, o bien `run agent -- <slug> "Nombre" --revise --no-search --notes <ruta>` para que el modelo fusione notas + ficha actual; (3) `run artist-json <slug>` para UPSERT en Supabase. No pedir al usuario que ejecute él los comandos si el entorno tiene credenciales.
+
 **Eventos:** el usuario los crea desde `/administrator/events/new` o lo pide al agente Cursor (datos mínimos: nombre, slug, país). Para completar la ficha (fecha, lineup, descripción, venue, tags, etc.): `run events-enrich <slug> [--with-poster] [--dry-run] [--force]`. No existe agente de descubrimiento automático; los eventos se crean manualmente.
 
 **Carteles de eventos (`elegir-poster-evento` / `run events-poster`):** SerpAPI Google Imágenes + OpenAI; sube a `media/events/<slug>/poster.*` y actualiza `events.image_url`. Entrada: `npm run db:events:poster -- <slug>` o `--missing-only --limit N`.
