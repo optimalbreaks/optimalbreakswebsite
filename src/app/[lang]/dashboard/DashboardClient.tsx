@@ -1185,6 +1185,21 @@ function EventsTab({ lang }: { lang: string }) {
   )
 }
 
+/** Estrellas en pestaña Reviews: borde rojo + fondo oscuro para contraste sobre papel. */
+function DashboardReviewStars({ rating }: { rating: number }) {
+  if (rating < 1) return null
+  return (
+    <span
+      className="inline-flex shrink-0 items-center border-[3px] border-[var(--red)] bg-[var(--ink)] px-2 py-1"
+      style={{ fontSize: '16px', lineHeight: 1, letterSpacing: '2px' }}
+      aria-label={`${rating}/5`}
+    >
+      <span className="text-[var(--yellow)]">{'★'.repeat(rating)}</span>
+      <span style={{ color: 'rgba(232,220,200,0.4)' }}>{'☆'.repeat(5 - rating)}</span>
+    </span>
+  )
+}
+
 // =============================================
 // REVIEWS TAB — event_ratings + artist_sightings (visto en vivo)
 // =============================================
@@ -1294,7 +1309,7 @@ function ReviewsTab({ lang }: { lang: string }) {
                           <Link href={`/${lang}/events/${ev.slug}`} className="no-underline text-[var(--ink)] hover:text-[var(--red)]">
                             <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{ev.name}</div>
                           </Link>
-                          <div className="text-[var(--yellow)]" style={{ fontSize: '16px' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                          <DashboardReviewStars rating={r.rating} />
                         </div>
                         <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
                           {ev.date_start || 'TBA'} — {ev.venue ? `${ev.venue}, ` : ''}{ev.city}, {ev.country}
@@ -1345,9 +1360,7 @@ function ReviewsTab({ lang }: { lang: string }) {
                           ) : (
                             <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{title}</div>
                           )}
-                          {s.rating >= 1 && (
-                            <div className="text-[var(--yellow)]" style={{ fontSize: '16px' }}>{'★'.repeat(s.rating)}{'☆'.repeat(5 - s.rating)}</div>
-                          )}
+                          <DashboardReviewStars rating={s.rating} />
                         </div>
                         <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
                           {s.seen_at || (es ? 'Sin fecha' : 'No date')}
