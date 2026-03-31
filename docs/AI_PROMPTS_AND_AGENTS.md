@@ -41,7 +41,7 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Sello (API admin + CLI sello) | `gpt-5.4` |
 | Enriquecer evento (CLI + API admin evento) | `gpt-4o-mini` |
 | Elegir foto artista / sello, poster, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
-| Perfil breakbeat (`/api/breakbeat-profile`) | `gpt-4o-mini` **fijo** en código (no usa `OPENAI_MODEL`) |
+| Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.4` |
 
 Comprueba siempre el archivo concreto si cambias de modelo: los defaults pueden divergir entre flujos.
 
@@ -51,7 +51,7 @@ Van **en código** (fetch a `v1/chat/completions`), no en `.txt`. Ejemplos:
 
 - Agente admin artista: `temperature`, `response_format: json_object` en `src/app/api/admin/agent/route.ts`.
 - Enriquecedor de eventos: ver `scripts/enriquecer-evento.mjs` y `src/app/api/admin/agent/event/route.ts`.
-- Perfil breakbeat: `max_tokens` acotado en `src/app/api/breakbeat-profile/route.ts`.
+- Perfil breakbeat: `max_tokens` y la longitud objetivo del análisis se controlan en `src/app/api/breakbeat-profile/route.ts`.
 
 Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman parte del **texto del prompt** o del bloque de usuario, no de una constante global única.
 
@@ -108,7 +108,7 @@ See `.env.local` / `.env.local.example`.
 | Label (admin API + label CLI) | `gpt-5.4` |
 | Event enrich (CLI + admin event API) | `gpt-4o-mini` |
 | Artist/label photo pick, poster, logo scripts/APIs | often `gpt-5.4` except vision branches |
-| Breakbeat profile API | **`gpt-4o-mini` hardcoded** (ignores `OPENAI_MODEL`) |
+| Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.4` |
 
 Always check the specific file if you rely on a single global default.
 

@@ -227,6 +227,11 @@ export interface BreakbeatProfileStats {
   mix_taste: Record<string, number>
   label_decades: Record<string, number>
   total_data_points: number
+  sample_artists?: string[]
+  sample_labels?: string[]
+  sample_events?: string[]
+  sample_mixes?: string[]
+  scene_hints?: string[]
 }
 
 export interface ArtistKeyRelease {

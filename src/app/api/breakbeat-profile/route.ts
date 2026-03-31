@@ -9,7 +9,36 @@ import type { BreakbeatProfileStats } from '@/types/database'
 // Generates the user's breakbeat DNA profile
 // =============================================
 
-const OPENAI_MODEL = 'gpt-4o-mini'
+const OPENAI_MODEL = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+
+type ArtistProfileInput = {
+  name: string
+  styles: string[]
+  country: string
+  era: string
+  category: string
+}
+
+type LabelProfileInput = {
+  name: string
+  country: string
+  founded_year: number | null
+  is_active: boolean
+}
+
+type EventProfileInput = {
+  name: string
+  event_type: string
+  country: string
+  city: string
+  tags: string[]
+}
+
+type MixProfileInput = {
+  title: string
+  mix_type: string
+  year: number | null
+}
 
 async function getAuthenticatedUser() {
   const cookieStore = await cookies()
@@ -42,11 +71,91 @@ function hashInputs(ids: string[]): string {
   return Math.abs(h).toString(36)
 }
 
+function takeUniqueNonEmpty(values: Array<string | null | undefined>, limit = 5): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const value of values) {
+    const trimmed = String(value || '').trim()
+    if (!trimmed) continue
+    const key = trimmed.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(trimmed)
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+function inferSceneHints(args: {
+  topStyles: { name: string; count: number; pct: number }[]
+  topCountries: { name: string; count: number; pct: number }[]
+  eraDistribution: Record<string, number>
+  categoryBreakdown: Record<string, number>
+}): string[] {
+  const styles = new Set(args.topStyles.map((s) => s.name))
+  const countries = new Set(args.topCountries.map((c) => c.name))
+  const eras = new Set(Object.keys(args.eraDistribution))
+  const hints: string[] = []
+
+  const push = (hint: string) => {
+    if (!hints.includes(hint)) hints.push(hint)
+  }
+
+  if (countries.has('UK')) {
+    if (
+      styles.has('nu_skool') ||
+      styles.has('big_beat') ||
+      styles.has('bassline') ||
+      styles.has('progressive_breaks') ||
+      styles.has('acid_breaks')
+    ) {
+      push('continuo británico de rave y breakbeat de club entre los 90 y los 2000')
+    }
+    if (styles.has('uk_garage') || styles.has('bass')) {
+      push('eje UK garage, bass music y cultura soundsystem británica')
+    }
+  }
+
+  if (countries.has('ES') || (args.categoryBreakdown.andalusian || 0) > 0) {
+    push('escena andaluza de breaks y su circuito Cádiz-Sevilla/club-radio-coche')
+  }
+
+  if (countries.has('US')) {
+    if (styles.has('florida_breaks')) {
+      push('tradición Florida breaks y su lectura más de pista')
+    }
+    if (styles.has('electro') || eras.has('1980s')) {
+      push('raíces electro, hip-hop temprano y primeras culturas del break en Nueva York')
+    }
+  }
+
+  if (countries.has('AU')) {
+    push('rama australiana del breakbeat de club y sus cruces con bass music')
+  }
+
+  if (styles.has('big_beat')) {
+    push('big beat y cruce entre cultura de club, rock sampleado y breaks de finales de los 90')
+  }
+
+  if (styles.has('nu_skool')) {
+    push('nu skool breaks como reformulación moderna del breakbeat clásico')
+  }
+
+  return hints.slice(0, 3)
+}
+
+function isStrongEnoughAnalysis(text: string): boolean {
+  const normalized = text.trim()
+  if (normalized.length < 1400) return false
+  const paragraphs = normalized.split(/\n\s*\n/).filter(Boolean)
+  return paragraphs.length >= 4
+}
+
 function computeStats(
-  artists: { styles: string[]; country: string; era: string; category: string }[],
-  labels: { country: string; founded_year: number | null; is_active: boolean }[],
-  events: { event_type: string; country: string; city: string; tags: string[] }[],
-  mixes: { mix_type: string; year: number | null }[],
+  artists: ArtistProfileInput[],
+  labels: LabelProfileInput[],
+  events: EventProfileInput[],
+  mixes: MixProfileInput[],
 ): BreakbeatProfileStats {
   const styleCounts: Record<string, number> = {}
   const countryCounts: Record<string, number> = {}
@@ -112,6 +221,13 @@ function computeStats(
     eraDistribution[era] = Math.round((count / totalEras) * 100) / 100
   }
 
+  const sceneHints = inferSceneHints({
+    topStyles,
+    topCountries,
+    eraDistribution,
+    categoryBreakdown: catCounts,
+  })
+
   return {
     top_styles: topStyles,
     top_countries: topCountries,
@@ -121,6 +237,11 @@ function computeStats(
     mix_taste: mixTaste,
     label_decades: labelDecades,
     total_data_points: artists.length + labels.length + events.length + mixes.length,
+    sample_artists: takeUniqueNonEmpty(artists.map((a) => a.name), 6),
+    sample_labels: takeUniqueNonEmpty(labels.map((l) => l.name), 5),
+    sample_events: takeUniqueNonEmpty(events.map((e) => e.name), 4),
+    sample_mixes: takeUniqueNonEmpty(mixes.map((m) => m.title), 4),
+    scene_hints: sceneHints,
   }
 }
 
@@ -151,33 +272,47 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
     .map(([era, n]) => `${era}: ${n}`)
     .join(', ')
   const eventCountriesStr = stats.event_profile.countries.join(', ')
+  const sampleArtistsStr = stats.sample_artists?.join(', ') || ''
+  const sampleLabelsStr = stats.sample_labels?.join(', ') || ''
+  const sampleEventsStr = stats.sample_events?.join(', ') || ''
+  const sampleMixesStr = stats.sample_mixes?.join(', ') || ''
+  const sceneHintsStr = stats.scene_hints?.join(' | ') || ''
 
   const isEs = lang === 'es'
   const systemPrompt = isEs
-    ? `Eres un analista experto en cultura breakbeat para Optimal Breaks. Interpretas gustos musicales con criterio real de escena, precisión y lenguaje claro. Hablas directamente al usuario en segunda persona. Tu tono es cercano pero analítico: nada promocional, nada grandilocuente, nada genérico. Prioriza patrones observables sobre adornos. No inventes artistas, sellos, eventos o escenas concretas si no están respaldados por los datos. Si haces una inferencia, debe ser prudente y razonable.`
-    : `You are an expert analyst of breakbeat culture for Optimal Breaks. You interpret musical taste with real scene knowledge, precision and clear language. Speak directly to the user in the second person. Your tone is warm but analytical: never promotional, never overblown, never generic. Prioritize observable patterns over decoration. Do not invent specific artists, labels, events or scenes unless the data truly supports them. Any inference must be cautious and reasonable.`
+    ? `Eres un analista experto en cultura breakbeat para Optimal Breaks. Interpretas gustos musicales con criterio real de escena, precisión y lenguaje claro. Hablas directamente al usuario en segunda persona. Tu tono es cercano pero analítico: nada promocional, nada grandilocuente, nada genérico. Prioriza patrones observables sobre adornos. Conecta subgéneros, épocas, geografías y lógicas de escena. Si el contexto incluye nombres concretos de artistas, sellos, eventos o mixes, puedes citarlos como ejemplos del gusto del usuario; si no aparecen en los datos, no los inventes. Si haces una inferencia, debe ser prudente y razonable.`
+    : `You are an expert analyst of breakbeat culture for Optimal Breaks. You interpret musical taste with real scene knowledge, precision and clear language. Speak directly to the user in the second person. Your tone is warm but analytical: never promotional, never overblown, never generic. Connect subgenres, eras, geographies and scene logic. If the context includes concrete artist, label, event or mix names, you may cite them as examples of the user's taste; if they are not in the data, do not invent them. Any inference must be cautious and reasonable.`
 
   const userPrompt = isEs
     ? `Analiza este perfil breakbeatero y escribe:
 
 1. Un ARQUETIPO corto (2-4 palabras), preciso y musicalmente creíble. Solo el nombre, sin explicación.
 
-2. Un análisis de 3 párrafos cortos, dirigido al usuario, con un máximo de 900 caracteres en total.
+2. Un análisis largo, dirigido al usuario, de 5 a 7 párrafos. No escatimes en longitud: apunta normalmente a 1400-2600 caracteres y, si los datos dan para más, puedes extenderte.
 
 OBJETIVO DEL ANÁLISIS:
 - Explica qué subgéneros dominan realmente su gusto.
 - Explica qué décadas pesan más y qué sugiere eso sobre su escucha.
 - Interpreta si su perfil apunta más a crate digger, selector, clubber, festivalero, purista o ecléctico.
 - Usa el patrón de mixes y eventos para reforzar la lectura.
+- Conecta el gusto con escenas o continuidades breakbeat reconocibles cuando los datos lo permitan.
+- Si hay nombres concretos en los datos, menciona algunos como ejemplos y no te quedes en abstracciones.
+- Traza una lectura temporal: de dónde parece venir ese gusto, cuáles podrían ser sus raíces y hacia qué mutaciones del breakbeat o bass se proyecta.
+- Habla del papel de artistas, sellos, escenas locales, circuitos de club, radio o cultura rave si aparecen respaldados por los datos.
 
 REGLAS:
 - Háblale siempre de tú a tú.
 - No digas "este usuario".
 - No metas chistes fáciles ni copy promocional.
-- No inventes favoritos concretos.
+- No inventes favoritos concretos ni escenas si no están respaldados por los datos.
 - Si faltan datos, no fuerces conclusiones.
 - Quiero una lectura seria de gustos, no un texto comercial.
 - Debes mencionar explícitamente subgéneros y épocas dominantes.
+- Debes mencionar al menos una escena, geografía o continuidad cultural si el perfil da pie a ello.
+- Debes mencionar artistas, sellos, eventos o mixes concretos varias veces cuando existan datos.
+- Estructura la lectura con progresión histórica: origen o raíz, desarrollo, evolución y situación actual del gusto.
+- No entregues un texto corto o vago: si no llegas a 1400 caracteres, la respuesta es inválida.
+- No pongas un máximo práctico de longitud si el contexto es rico.
 
 DATOS DEL PERFIL:
 - Subgéneros favoritos: ${stylesStr}
@@ -188,6 +323,11 @@ DATOS DEL PERFIL:
 - Décadas de sellos: ${labelDecadesStr || 'sin datos'}
 - Eventos: ${stats.event_profile.festivals} festivales, ${stats.event_profile.club_nights} club nights
 - Países de eventos: ${eventCountriesStr || 'sin datos'}
+- Artistas guardados o favoritos (muestra): ${sampleArtistsStr || 'sin datos'}
+- Sellos guardados o favoritos (muestra): ${sampleLabelsStr || 'sin datos'}
+- Eventos guardados/asistencias (muestra): ${sampleEventsStr || 'sin datos'}
+- Mixes guardados (muestra): ${sampleMixesStr || 'sin datos'}
+- Pistas de escena inferibles desde los datos: ${sceneHintsStr || 'sin datos suficientes'}
 - Total de datos: ${stats.total_data_points} elementos
 
 Responde EXACTAMENTE en este formato JSON:
@@ -196,22 +336,31 @@ Responde EXACTAMENTE en este formato JSON:
 
 1. A short ARCHETYPE (2-4 words), precise and musically credible. Just the name, no explanation.
 
-2. A 3-paragraph analysis addressed directly to the user, with a maximum of 900 characters total.
+2. A long analysis addressed directly to the user, in 5 to 7 paragraphs. Do not be afraid of length: normally aim for 1400-2600 characters and, if the data supports it, you may go longer.
 
 ANALYSIS GOALS:
 - Explain which subgenres genuinely dominate their taste.
 - Explain which decades carry the most weight and what that suggests.
 - Interpret whether the profile feels more like a crate digger, selector, clubber, festival-goer, purist or eclectic listener.
 - Use the mix and event patterns to support the reading.
+- Connect the taste to recognizable breakbeat scenes or continuities whenever the data supports it.
+- If concrete names are available, mention some of them as examples instead of staying abstract.
+- Build a temporal reading: where that taste seems to come from, what its roots are, and which later breakbeat or bass mutations it points toward.
+- Discuss the role of artists, labels, local scenes, club circuits, radio culture or rave culture whenever the data supports it.
 
 RULES:
 - Always speak directly to the user.
 - Do not say "this user".
 - No cheap jokes and no promotional copy.
-- Do not invent specific favorites.
+- Do not invent specific favorites or scenes not supported by the data.
 - If the data is thin, do not force conclusions.
 - This must read like a serious taste analysis, not marketing text.
 - You must explicitly mention dominant subgenres and eras.
+- You must mention at least one scene, geography or cultural continuity when the profile supports it.
+- You must mention artists, labels, events or mixes by name several times when data exists.
+- Structure the reading historically: origin or roots, development, evolution and current profile.
+- Do not return a short or vague text: if it is below 1400 characters, it is invalid.
+- Do not impose a practical upper limit when the context is rich.
 
 PROFILE DATA:
 - Favorite subgenres: ${stylesStr}
@@ -222,6 +371,11 @@ PROFILE DATA:
 - Label decades: ${labelDecadesStr || 'no data'}
 - Events: ${stats.event_profile.festivals} festivals, ${stats.event_profile.club_nights} club nights
 - Event countries: ${eventCountriesStr || 'no data'}
+- Saved/favorite artists (sample): ${sampleArtistsStr || 'no data'}
+- Saved/favorite labels (sample): ${sampleLabelsStr || 'no data'}
+- Saved/attended events (sample): ${sampleEventsStr || 'no data'}
+- Saved mixes (sample): ${sampleMixesStr || 'no data'}
+- Scene hints inferred from the data: ${sceneHintsStr || 'not enough data'}
 - Total data: ${stats.total_data_points} items
 
 Reply EXACTLY in this JSON format:
@@ -241,7 +395,7 @@ Reply EXACTLY in this JSON format:
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.45,
-        max_tokens: 550,
+        max_tokens: 1800,
       }),
     })
 
@@ -256,6 +410,9 @@ Reply EXACTLY in this JSON format:
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
+      if (!isStrongEnoughAnalysis(parsed.text || '')) {
+        return generateRulesText(stats, lang)
+      }
       return {
         text: parsed.text || '',
         archetype: parsed.archetype || '',
@@ -307,10 +464,26 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
     AU: { en: 'Australia', es: 'Australia' },
   }
   const cName = countryNames[topCountry] || { en: topCountry, es: topCountry }
+  const topStyles = stats.top_styles
+    .slice(0, 3)
+    .map((s) => s.name.replace(/_/g, ' '))
+    .join(isEs ? ', ' : ', ')
+  const topEras = Object.entries(stats.era_distribution)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([era]) => era)
+    .join(', ')
+  const sampleArtists = stats.sample_artists?.slice(0, 3).join(', ') || ''
+  const sampleLabels = stats.sample_labels?.slice(0, 2).join(', ') || ''
+  const sampleEvents = stats.sample_events?.slice(0, 2).join(', ') || ''
+  const sampleMixes = stats.sample_mixes?.slice(0, 2).join(', ') || ''
+  const sceneHints = stats.scene_hints?.slice(0, 2).join(isEs ? '; ' : '; ') || ''
+  const mixLabel = topMix ? topMix.replace(/_/g, ' ') : (isEs ? 'sesiones guardadas' : 'saved mixes')
+  const categoryLabel = topCat ? topCat.replace(/_/g, ' ') : (isEs ? 'artistas' : 'artists')
 
   const text = isEs
-    ? `Por tu selección se ve que te tira sobre todo el ${topStyle.replace(/_/g, ' ')} y que tu centro de gravedad está en los ${topEra}. Eso sugiere una escucha bastante definida, con referencias fuertes en ${cName.es || 'tu eje principal'}. También aparece un sesgo ${eventBias}${topMix ? ` y un consumo de mixes más cercano a ${topMix.replace(/_/g, ' ')}` : ''}. No suenas a oyente casual: con ${stats.total_data_points} datos y peso en ${topCat.replace(/_/g, ' ')}, tu perfil apunta más a criterio que a picoteo.`
-    : `Your selection shows a clear pull toward ${topStyle.replace(/_/g, ' ')} and a center of gravity in the ${topEra}. That suggests a fairly defined listening profile, with strong references in ${cName.en || 'your main axis'}. There is also a ${eventBias} bias${topMix ? ` and a mix pattern closer to ${topMix.replace(/_/g, ' ')}` : ''}. You do not read like a casual listener: with ${stats.total_data_points} data points and weight in ${topCat.replace(/_/g, ' ')}, your profile points more to discernment than random browsing.`
+    ? `Lo primero que se ve en tu ADN breakbeatero es un eje muy claro entre ${topStyles || topStyle.replace(/_/g, ' ')}. No suena a gusto aleatorio ni a escucha superficial: hay un centro de gravedad reconocible en los ${topEras || topEra}, con bastante peso de ${cName.es || 'tu geografía principal'}, así que tu perfil parece construido desde referencias de escena más que desde hits sueltos. Tu escucha parece empezar en una base histórica bastante reconocible y luego abrirse a derivaciones posteriores sin perder del todo el hilo del breakbeat.\n\nEso importa porque no estás marcando solo géneros, sino una trayectoria. Si te tiran esos estilos y décadas, no solo buscas pegada: también te interesa cómo evolucionan los breaks, cómo cambia la relación entre batería rota y bajo, y cómo una misma lógica pasa del rave, el electro o el big beat a formas más modernas de bass music. ${sceneHints ? `Aquí asoman pistas bastante claras de ${sceneHints}.` : 'Aunque el mapa no sea cerradísimo, sí hay una lógica de escena reconocible detrás de tu selección.'}\n\nCuando aparecen nombres concretos como ${sampleArtists || 'tus artistas guardados'}, ${sampleLabels ? `junto a sellos como ${sampleLabels}` : 'más el peso de tus sellos favoritos'}, tu perfil deja de ser abstracto y empieza a contar una historia. Ahí es donde se ve mejor el origen del gusto: artistas, catálogos y escenas que funcionan como anclas, no como referencias sueltas. ${sampleMixes ? `Si además guardas mixes como ${sampleMixes},` : 'Si además tus mixes guardados pesan de verdad,'} la lectura se vuelve todavía más clara, porque confirma que no te interesa solo el tema individual sino también el relato que construye un selector.\n\n${sampleEvents ? `La presencia de eventos como ${sampleEvents}` : 'Incluso si la huella de eventos es más ligera'} ayuda a medir cómo se proyecta ese gusto hacia la pista y hacia la cultura viva. Según el equilibrio entre festivales y club nights, no pareces tanto un oyente pasivo como alguien que distingue contextos: qué suena mejor en club, qué conecta con una tradición rave más amplia y qué funciona como actualización contemporánea de esa memoria.\n\nPor mezcla general, te acercas más a un perfil ${eventBias}${topMix ? ` con atención real a ${mixLabel}` : ''}, probablemente entre selector y digger, pero sin cerrar la puerta a lo ecléctico. Con ${stats.total_data_points} datos y peso en ${categoryLabel}, tu gusto parece apoyarse tanto en los orígenes como en la evolución del breakbeat: hay raíces, hay desarrollo, hay mutaciones y hay una búsqueda bastante consciente de identidad sonora.`
+    : `The first thing your breakbeat DNA shows is a very clear axis between ${topStyles || topStyle.replace(/_/g, ' ')}. This does not read as random taste or shallow browsing: there is a recognizable center of gravity in the ${topEras || topEra}, with plenty of weight from ${cName.en || 'your main geography'}, so your profile feels built from scene references rather than isolated hits. Your listening seems to begin from a fairly recognizable historical base and then open up to later mutations without losing the thread of breakbeat itself.\n\nThat matters because you are not only picking genres, but tracing a trajectory. If those styles and decades dominate your profile, you are not only after impact: you also seem drawn to how breaks evolve, how the relationship between broken rhythm and bass pressure shifts over time, and how one logic can move from rave, electro or big beat into more modern bass mutations. ${sceneHints ? `There are fairly clear signs here of ${sceneHints}.` : 'Even if the map is not totally closed, there is still a recognizable scene logic behind your picks.'}\n\nWhen concrete names such as ${sampleArtists || 'your saved artists'} appear${sampleLabels ? `, together with labels like ${sampleLabels}` : ''}, the profile stops feeling abstract and starts telling a story. That is where the roots of the taste become visible: artists, catalogues and scenes acting as anchors rather than scattered references. ${sampleMixes ? `If you also save mixes like ${sampleMixes},` : 'If saved mixes also carry real weight,'} the reading becomes even clearer, because it shows you care not only about individual tracks but also about the arc a selector builds.\n\n${sampleEvents ? `The presence of events like ${sampleEvents}` : 'Even if event data is lighter'} helps measure how that taste projects onto the dancefloor and into living culture. Depending on the balance between festivals and club nights, you do not read like a passive listener so much as someone who distinguishes contexts: what works in clubs, what connects to a broader rave tradition, and what feels like a contemporary update of that memory.\n\nOverall, you lean toward a ${eventBias} profile${topMix ? ` with real attention to ${mixLabel}` : ''}, probably somewhere between selector and digger without losing an eclectic side. With ${stats.total_data_points} data points and strong weight in ${categoryLabel}, your taste seems grounded in both the origins and the evolution of breakbeat: there are roots, there is development, there are mutations, and there is a fairly conscious search for sonic identity.`
 
   return { text, archetype, method: 'rules' }
 }
@@ -356,16 +529,16 @@ export async function POST(request: NextRequest) {
     // Fetch entity details in parallel
     const [artistsRes, labelsRes, eventsRes, mixesRes] = await Promise.all([
       artistIds.length > 0
-        ? supabase.from('artists').select('styles, country, era, category').in('id', artistIds)
+        ? supabase.from('artists').select('name, styles, country, era, category').in('id', artistIds)
         : { data: [] },
       labelIds.length > 0
-        ? supabase.from('labels').select('country, founded_year, is_active').in('id', labelIds)
+        ? supabase.from('labels').select('name, country, founded_year, is_active').in('id', labelIds)
         : { data: [] },
       eventIds.length > 0
-        ? supabase.from('events').select('event_type, country, city, tags').in('id', eventIds)
+        ? supabase.from('events').select('name, event_type, country, city, tags').in('id', eventIds)
         : { data: [] },
       mixIds.length > 0
-        ? supabase.from('mixes').select('mix_type, year').in('id', mixIds)
+        ? supabase.from('mixes').select('title, mix_type, year').in('id', mixIds)
         : { data: [] },
     ])
 
