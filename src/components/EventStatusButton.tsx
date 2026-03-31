@@ -1,19 +1,24 @@
 // ============================================
 // OPTIMAL BREAKS — Event Status Button
 // wishlist → attending → attended → none
+// Self-contained: reads/writes event_attendance via hook
+// Guest users see a centered modal prompt
 // ============================================
 
 'use client'
 
+import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { useRouter } from 'next/navigation'
+import { createBrowserSupabase } from '@/lib/supabase'
+import { i18n } from '@/lib/i18n-config'
 
 type Status = 'wishlist' | 'attending' | 'attended' | null
 
 interface EventStatusButtonProps {
-  status: Status
-  onSetStatus: (status: Status) => void
-  lang: string
+  eventId: string
+  lang?: string
 }
 
 const STATUS_CONFIG: Record<string, { label_en: string; label_es: string; color: string; icon: string }> = {
@@ -22,18 +27,71 @@ const STATUS_CONFIG: Record<string, { label_en: string; label_es: string; color:
   attended: { label_en: 'ATTENDED', label_es: 'FUI', color: 'var(--yellow)', icon: '★' },
 }
 
-export default function EventStatusButton({ status, onSetStatus, lang }: EventStatusButtonProps) {
-  const { user } = useAuth()
-  const router = useRouter()
-  const es = lang === 'es'
+function getLang(pathname: string) {
+  const seg = pathname.split('/')[1]
+  return i18n.locales.includes(seg as any) ? seg : i18n.defaultLocale
+}
 
-  const handleClick = (newStatus: Status) => {
-    if (!user) { router.push(`/${lang}/login`); return }
-    onSetStatus(status === newStatus ? null : newStatus)
+export default function EventStatusButton({ eventId, lang }: EventStatusButtonProps) {
+  const { user } = useAuth()
+  const pathname = usePathname()
+  const resolvedLang = lang || getLang(pathname)
+  const es = resolvedLang === 'es'
+
+  const [status, setStatus] = useState<Status>(null)
+  const [loading, setLoading] = useState(true)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const fetchStatus = useCallback(async () => {
+    if (!user) { setStatus(null); setLoading(false); return }
+    const supabase: any = createBrowserSupabase()
+    const { data } = await supabase
+      .from('event_attendance')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('event_id', eventId)
+      .maybeSingle()
+    setStatus(data?.status ?? null)
+    setLoading(false)
+  }, [user, eventId])
+
+  useEffect(() => { fetchStatus() }, [fetchStatus])
+
+  useEffect(() => {
+    if (!showTooltip) return
+    const handle = (e: MouseEvent | TouchEvent) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) setShowTooltip(false)
+    }
+    document.addEventListener('mousedown', handle)
+    document.addEventListener('touchstart', handle)
+    return () => { document.removeEventListener('mousedown', handle); document.removeEventListener('touchstart', handle) }
+  }, [showTooltip])
+
+  useEffect(() => {
+    if (showTooltip) {
+      const t = setTimeout(() => setShowTooltip(false), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [showTooltip])
+
+  const handleClick = async (newStatus: Status) => {
+    if (!user) { setShowTooltip(true); return }
+    const supabase: any = createBrowserSupabase()
+    const target = status === newStatus ? null : newStatus
+    if (target === null) {
+      await supabase.from('event_attendance').delete().eq('user_id', user.id).eq('event_id', eventId)
+    } else {
+      await supabase.from('event_attendance').upsert(
+        { user_id: user.id, event_id: eventId, status: target },
+        { onConflict: 'user_id,event_id' }
+      )
+    }
+    setStatus(target)
   }
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="relative inline-flex flex-wrap gap-1">
       {Object.entries(STATUS_CONFIG).map(([key, conf]) => {
         const active = status === key
         return (
@@ -60,6 +118,44 @@ export default function EventStatusButton({ status, onSetStatus, lang }: EventSt
           </button>
         )
       })}
+
+      {showTooltip && !user && (
+        <>
+          <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowTooltip(false)} />
+          <div
+            ref={tooltipRef}
+            className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:absolute md:left-0 md:top-full md:right-auto md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 md:p-4 shadow-[6px_6px_0_var(--ink)]"
+            style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowTooltip(false)}
+              className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer md:hidden"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+              {es
+                ? '¡Regístrate para seguir eventos!'
+                : 'Sign up to track events!'}
+            </p>
+            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+              {es
+                ? 'Marca los eventos que quieres ir, a los que vas o a los que fuiste.'
+                : 'Mark events as wishlist, going, or attended.'}
+            </p>
+            <Link
+              href={`/${resolvedLang}/login`}
+              className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
+            >
+              {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   )
 }

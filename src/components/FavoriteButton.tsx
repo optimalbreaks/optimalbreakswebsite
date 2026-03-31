@@ -83,29 +83,42 @@ export default function FavoriteButton({
   )
 
   const tooltip = showTooltip && !isLoggedIn && (
-    <div
-      ref={tooltipRef}
-      className="absolute z-50 right-0 top-full mt-2 w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-4 shadow-[6px_6px_0_var(--ink)]"
-      style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
-    >
-      <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-        {es
-          ? '¡Regístrate para guardar tus favoritos!'
-          : 'Sign up to save your favorites!'}
-      </p>
-      <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.5, margin: '6px 0 0', color: 'rgba(255,255,255,0.8)' }}>
-        {es
-          ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
-          : 'Build your collection of artists, labels, events and mixes.'}
-      </p>
-      <Link
-        href={`/${resolvedLang}/login`}
-        className="mt-3 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
-        style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '2px', padding: '8px 14px' }}
+    <>
+      {/* Backdrop — solo móvil */}
+      <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowTooltip(false)} />
+      <div
+        ref={tooltipRef}
+        className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:absolute md:left-auto md:top-full md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 md:p-4 shadow-[6px_6px_0_var(--ink)]"
+        style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
       >
-        {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
-      </Link>
-    </div>
+        <button
+          type="button"
+          onClick={() => setShowTooltip(false)}
+          className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer md:hidden"
+          style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+        <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+          {es
+            ? '¡Regístrate para guardar tus favoritos!'
+            : 'Sign up to save your favorites!'}
+        </p>
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+          {es
+            ? 'Crea tu colección de artistas, sellos, eventos y mixes.'
+            : 'Build your collection of artists, labels, events and mixes.'}
+        </p>
+        <Link
+          href={`/${resolvedLang}/login`}
+          className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+          style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
+        >
+          {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+        </Link>
+      </div>
+    </>
   )
 
   if (size === 'sm') {

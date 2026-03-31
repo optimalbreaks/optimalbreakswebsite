@@ -152,32 +152,46 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
 
       {/* Guest tooltip */}
       {showTooltip && !user && (
-        <div
-          ref={tooltipRef}
-          className="absolute z-50 left-0 top-full mt-2 w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-4 shadow-[6px_6px_0_var(--ink)]"
-          style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
-        >
-          <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-            {es ? '¡Regístrate para registrar tus directos!' : 'Sign up to log your live shows!'}
-          </p>
-          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.5, margin: '6px 0 0', color: 'rgba(255,255,255,0.8)' }}>
-            {es ? 'Lleva la cuenta de todos los artistas que has visto actuar.' : 'Keep track of every artist you\'ve seen perform.'}
-          </p>
-          <Link
-            href={`/${resolvedLang}/login`}
-            className="mt-3 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
-            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '2px', padding: '8px 14px' }}
+        <>
+          <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowTooltip(false)} />
+          <div
+            ref={tooltipRef}
+            className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] md:absolute md:left-0 md:top-full md:right-auto md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[240px] bg-[var(--red)] text-[var(--yellow)] border-[4px] border-[var(--ink)] p-5 md:p-4 shadow-[6px_6px_0_var(--ink)]"
+            style={{ animation: 'fadeIn 0.15s ease-out', transform: 'rotate(-1deg)' }}
           >
-            {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
-          </Link>
-        </div>
+            <button
+              type="button"
+              onClick={() => setShowTooltip(false)}
+              className="absolute top-2 right-3 text-[var(--yellow)] hover:text-white transition-colors bg-transparent border-0 cursor-pointer md:hidden"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <p style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', lineHeight: 1.4, margin: 0, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+              {es ? '¡Regístrate para registrar tus directos!' : 'Sign up to log your live shows!'}
+            </p>
+            <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', lineHeight: 1.5, margin: '8px 0 0', color: 'rgba(255,255,255,0.8)' }}>
+              {es ? 'Lleva la cuenta de todos los artistas que has visto actuar.' : 'Keep track of every artist you\'ve seen perform.'}
+            </p>
+            <Link
+              href={`/${resolvedLang}/login`}
+              className="mt-4 block text-center bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-white transition-colors"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', letterSpacing: '2px', padding: '10px 14px' }}
+            >
+              {es ? '¡ENTRA YA!' : 'JOIN NOW!'}
+            </Link>
+          </div>
+        </>
       )}
 
       {/* Sighting form */}
       {showForm && user && (
+        <>
+        <div className="fixed inset-0 z-[998] bg-black/50 md:hidden" onClick={() => setShowForm(false)} />
         <div
           ref={formRef}
-          className="absolute z-50 left-0 top-full mt-2 w-[320px] bg-[var(--paper)] border-[4px] border-[var(--ink)] shadow-[6px_6px_0_var(--ink)]"
+          className="fixed z-[999] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-[320px] md:absolute md:left-0 md:top-full md:right-auto md:translate-x-0 md:translate-y-0 md:mt-2 md:w-[320px] bg-[var(--paper)] border-[4px] border-[var(--ink)] shadow-[6px_6px_0_var(--ink)]"
           style={{ animation: 'fadeIn 0.15s ease-out' }}
         >
           <div className="bg-[var(--ink)] text-[var(--yellow)] px-4 py-2">
@@ -252,6 +266,7 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
             </div>
           </div>
         </div>
+        </>
       )}
     </div>
   )
