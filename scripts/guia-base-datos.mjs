@@ -16,6 +16,8 @@
  *   node scripts/guia-base-datos.mjs run label-agent -- lot49 "Lot49"
  *   node scripts/guia-base-datos.mjs run photo -- fatboy-slim
  *   node scripts/guia-base-datos.mjs run label-photo -- --missing-only
+ *
+ * Prompts de sistema de los agentes (.txt), OPENAI_MODEL por flujo: docs/AI_PROMPTS_AND_AGENTS.md
  */
 
 import { spawnSync } from 'child_process'

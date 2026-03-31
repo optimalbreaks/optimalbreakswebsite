@@ -82,6 +82,15 @@ CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-an
 
 ---
 
+## AI prompts and agents (OpenAI)
+
+System prompts for **artist**, **label**, and **event enrichment** agents live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**) are set in **`.env.local`**; temperature, `max_tokens`, and JSON user instructions are defined in code per route or script.
+
+**Central index (all prompt files, defaults per flow, related APIs):** [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md).  
+**Artist agent (batch, admin API, commands):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).
+
+---
+
 ## Images & cards
 
 Listings and detail pages use a shared **`CardThumbnail`** component (`src/components/CardThumbnail.tsx`):
@@ -136,6 +145,7 @@ Script: [`scripts/upload-storage-media.mjs`](scripts/upload-storage-media.mjs). 
 ```
 OptimalBreaks/
 ├── docs/
+│   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
 │   └── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 ├── data/
 │   └── artists/                # One JSON file per artist → npm run db:artist
@@ -147,8 +157,12 @@ OptimalBreaks/
 │   ├── upload-storage-media.mjs     # npm run media:upload — local file → bucket `media`
 │   ├── sync-timeline-artists.mjs    # db:timeline / db:timeline:sql
 │   ├── sync-user-list-artists.mjs   # db:user-list — starter rows for extended name list
-│   └── prompts/
-│       └── artista-agente-system.txt  # System prompt for db:artist:agent
+│   └── prompts/                # System prompts: artist, label, event enrich, revision modes
+│       ├── artista-agente-system.txt
+│       ├── artista-agente-revision-system.txt
+│       ├── sello-agente-system.txt
+│       ├── sello-agente-revision-system.txt
+│       └── evento-enriquecer-system.txt
 ├── public/
 │   └── music/                  # MP3 tracks for the DJ deck
 ├── supabase/
@@ -352,7 +366,8 @@ The browser **anon / publishable** key cannot be used for this write path. **`DA
 
 By default the agent **UPSERTs into Supabase** via the **REST API + service role** (same path as **`npm run db:artist`**). Optional **`--json-only`** writes only `data/artists/<slug>.json`; **`--save-json`** upserts **and** saves a JSON copy (schema: [`006_artist_extended_fields.sql`](supabase/migrations/006_artist_extended_fields.sql)).
 
-**Full documentation (batch mode, env vars, admin API, bulk sync):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).
+**Full documentation (batch mode, env vars, admin API, bulk sync):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).  
+**All AI prompts and per-flow model defaults:** [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md).
 
 Editable system prompt: [`scripts/prompts/artista-agente-system.txt`](scripts/prompts/artista-agente-system.txt).
 
@@ -423,7 +438,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
 - **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`
 - **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`)
-- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are **created manually** (admin UI or Cursor agent) and then **enriched** with `npm run db:events:enrich -- <slug>` (SerpAPI + OpenAI fill missing fields)
+- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are **created manually** (admin UI or Cursor agent) and then **enriched** with `npm run db:events:enrich -- <slug>` (SerpAPI + OpenAI fill missing fields). Enricher system prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt) (see [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md))
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
 - **blog_posts** — title, content, excerpt (EN/ES), category, tags, author, `image_url`, published flag
 - **scenes** — name (EN/ES), country, region, key artists/labels/venues, era, `image_url`

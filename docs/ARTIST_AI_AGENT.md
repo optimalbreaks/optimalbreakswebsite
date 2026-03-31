@@ -2,6 +2,8 @@
 
 [English below](#english) · [Español arriba](#español)
 
+**Índice de todos los prompts `.txt`, variables OpenAI y otros agentes (sellos, eventos, etc.):** [`docs/AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md).
+
 ---
 
 ## Español
@@ -121,6 +123,7 @@ Ruta de API: `POST /api/admin/agent` (cuerpo JSON con `slug`, `artistName`, nota
 
 ### Ver también (resto del repo)
 
+- Índice de prompts `.txt`, modelos por flujo y otros agentes: [**AI_PROMPTS_AND_AGENTS.md**](./AI_PROMPTS_AND_AGENTS.md).
 - Esquema de base de datos, migraciones SQL (incl. **`010`–`011`** organizaciones / Raveart) y tabla de scripts: [**README.md**](../README.md) · resumen ES: [**README.es.md**](../README.es.md).
 - Subir un archivo local al bucket **`media`**: `npm run media:upload` → [`scripts/upload-storage-media.mjs`](../scripts/upload-storage-media.mjs).
 - Analítica web (GA4, variables `NEXT_PUBLIC_GA_MEASUREMENT_ID`, Consent Mode): [**README.md** — Analytics](../README.md#analytics-google-analytics-4) · [**README.es.md**](../README.es.md) (sección *Analítica (GA4)*).
@@ -128,6 +131,8 @@ Ruta de API: `POST /api/admin/agent` (cuerpo JSON con `slug`, `artistName`, nota
 ---
 
 ## English
+
+**Index of all `.txt` prompts, OpenAI env vars, and other agents (labels, events, etc.):** [`docs/AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md).
 
 ### What it does
 
@@ -244,6 +249,7 @@ The prompt is conservative: no invented URLs, **labels founded** vs labels where
 
 ### See also (rest of repo)
 
+- Index of `.txt` prompts, per-flow model defaults, and other agents: [**AI_PROMPTS_AND_AGENTS.md**](./AI_PROMPTS_AND_AGENTS.md).
 - Full database schema, SQL migrations (including **`010`–`011`** organizations / Raveart), and npm scripts table: [**README.md**](../README.md) · Spanish summary: [**README.es.md**](../README.es.md).
 - Upload a local file to the **`media`** bucket: `npm run media:upload` → [`scripts/upload-storage-media.mjs`](../scripts/upload-storage-media.mjs).
 - Web analytics (GA4, `NEXT_PUBLIC_GA_MEASUREMENT_ID`, Consent Mode): [**README.md** — Analytics](../README.md#analytics-google-analytics-4) · [**README.es.md**](../README.es.md) (section *Analítica (GA4)*).
