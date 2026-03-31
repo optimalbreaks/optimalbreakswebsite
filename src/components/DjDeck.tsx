@@ -303,13 +303,13 @@ function MixerPanel({
         onClick={togglePlay}
         className={`relative flex flex-col items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_6px_12px_rgba(0,0,0,0.6)] active:shadow-[0_2px_4px_rgba(0,0,0,0.8)] active:translate-y-[2px] ${isH ? 'w-16 h-16' : 'w-20 h-20'}`}
         style={{
-          background: 'linear-gradient(135deg, #333 0%, #111 100%)',
+          background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
           border: '4px solid #080808',
-          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5)'
+          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
         }}
       >
-        <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mb-1 sm:mb-1.5 transition-colors duration-200 ${isPlaying ? 'bg-[var(--red)] shadow-[0_0_10px_var(--red)]' : 'bg-red-900/40 shadow-inner'}`} />
-        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '7px' : '9px', letterSpacing: '1px', color: isPlaying ? '#fff' : '#666' }}>
+        <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mb-1 sm:mb-1.5 transition-colors duration-200 ${isPlaying ? 'bg-[var(--red)] shadow-[0_0_10px_var(--red)]' : 'bg-black/60 shadow-inner'}`} />
+        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '7px' : '9px', letterSpacing: '1px', color: '#111' }}>
           {isPlaying ? 'STOP' : 'START'}
         </span>
       </button>
