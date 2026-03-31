@@ -117,10 +117,13 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
     .order('year', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
   const raw = (mixes || []) as Mix[]
+  /** Orden: 1) fecha de publicación en YouTube (mixes.published_at, backfill o admin), más reciente primero; 2) año; 3) created_at. Sin published_at van detrás de los que sí la tienen. */
   const list = [...raw].sort((a, b) => {
-    const ta = a.published_at ? new Date(a.published_at).getTime() : 0
-    const tb = b.published_at ? new Date(b.published_at).getTime() : 0
-    if (ta !== tb) return tb - ta
+    const ta = a.published_at ? new Date(a.published_at).getTime() : null
+    const tb = b.published_at ? new Date(b.published_at).getTime() : null
+    if (ta != null && tb != null && ta !== tb) return tb - ta
+    if (ta != null && tb == null) return -1
+    if (ta == null && tb != null) return 1
     const ya = a.year ?? -1
     const yb = b.year ?? -1
     if (ya !== yb) return yb - ya
