@@ -13,6 +13,7 @@ import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
+import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
 import { getMixTrack } from '@/components/MixesExplorer'
 
@@ -179,8 +180,8 @@ function OverviewTab({ lang }: { lang: string }) {
     { num: favArtists.length, label: es ? 'ARTISTAS FAV' : 'FAV ARTISTS', color: 'var(--red)' },
     { num: favLabels.length, label: es ? 'SELLOS FAV' : 'FAV LABELS', color: 'var(--uv)' },
     { num: sightings.length, label: es ? 'VISTOS EN VIVO' : 'SEEN LIVE', color: 'var(--acid)' },
-    { num: attended, label: es ? 'EVENTOS ASISTIDOS' : 'EVENTS ATTENDED', color: 'var(--yellow)' },
     { num: planning, label: es ? 'QUIERO IR / VOY' : 'WISHLIST & GOING', color: 'var(--pink)' },
+    { num: attended, label: es ? 'EVENTOS ASISTIDOS' : 'EVENTS ATTENDED', color: 'var(--yellow)' },
     { num: savedMixes.length, label: es ? 'MIXES GUARDADOS' : 'SAVED MIXES', color: 'var(--cyan)' },
   ]
 
@@ -216,6 +217,21 @@ function OverviewTab({ lang }: { lang: string }) {
 // =============================================
 // FAVORITES TAB
 // =============================================
+function viewLabels(es: boolean) {
+  return { view_large: es ? 'Grande' : 'Large', view_compact: es ? 'Compacto' : 'Compact', view_list: es ? 'Lista' : 'List' }
+}
+
+function SectionHeader({ title, count, view, setView, es }: { title: string; count: number; view: ViewMode; setView: (v: ViewMode) => void; es: boolean }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
+        {title} ({count})
+      </h2>
+      {count > 0 && <ViewToggle view={view} setView={setView} labels={viewLabels(es)} />}
+    </div>
+  )
+}
+
 function FavoritesTab({ lang }: { lang: string }) {
   const { favorites: artistIds } = useFavoriteArtists()
   const { favorites: labelIds } = useFavoriteLabels()
@@ -225,6 +241,10 @@ function FavoritesTab({ lang }: { lang: string }) {
   const [labels, setLabels] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
   const [mixes, setMixes] = useState<any[]>([])
+  const [artistView, setArtistView] = useState<ViewMode>('large')
+  const [labelView, setLabelView] = useState<ViewMode>('large')
+  const [eventView, setEventView] = useState<ViewMode>('large')
+  const [mixView, setMixView] = useState<ViewMode>('large')
   const es = lang === 'es'
 
   useEffect(() => {
@@ -262,32 +282,23 @@ function FavoritesTab({ lang }: { lang: string }) {
     <div className="space-y-10">
       {/* Artists */}
       <div>
-        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-          {es ? 'ARTISTAS FAVORITOS' : 'FAVORITE ARTISTS'} ({artistIds.length})
-        </h2>
+        <SectionHeader title={es ? 'ARTISTAS FAVORITOS' : 'FAVORITE ARTISTS'} count={artistIds.length} view={artistView} setView={setArtistView} es={es} />
         {artistIds.length === 0 ? (
           <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
             {es ? 'Aún no tienes artistas favoritos. Explora y marca los que te gusten.' : 'No favorite artists yet. Explore and mark the ones you like.'}
           </p>
-        ) : (
+        ) : artistView === 'large' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
             {artists.map((a) => (
               <div key={a.id} className="relative border-b-[3px] sm:border-r-[3px] border-[var(--ink)]">
                 <FavoriteButton type="artist" entityId={a.id} lang={lang} />
-                <Link
-                  href={`/${lang}/artists/${a.slug}`}
-                  className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden h-full min-h-0"
-                >
+                <Link href={`/${lang}/artists/${a.slug}`} className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden h-full min-h-0">
                   <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-[5/3]" />
                   <div className="p-5 sm:p-[22px_30px] flex flex-col flex-grow min-h-0">
-                    <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-                      {a.name_display || a.name}
-                    </div>
+                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>{a.name_display || a.name}</div>
                     <div className="flex flex-wrap gap-1 mt-[6px]">
                       {a.styles?.map((s: string, si: number) => (
-                        <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px' }}>
-                          {s}
-                        </span>
+                        <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px' }}>{s}</span>
                       ))}
                     </div>
                     <div className="flex gap-2 mt-2">
@@ -299,27 +310,67 @@ function FavoritesTab({ lang }: { lang: string }) {
               </div>
             ))}
           </div>
+        ) : artistView === 'compact' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
+            {artists.map((a) => (
+              <div key={a.id} className="relative border-b-[3px] border-r-[3px] border-[var(--ink)]">
+                <FavoriteButton type="artist" entityId={a.id} lang={lang} />
+                <Link href={`/${lang}/artists/${a.slug}`} className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden">
+                  <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" />
+                  <div className="p-3 flex flex-col flex-grow min-h-0">
+                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{a.name_display || a.name}</div>
+                    <div className="flex flex-wrap gap-[2px] mt-1">
+                      {a.styles?.slice(0, 2).map((s: string, si: number) => (
+                        <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 4px' }}>{s}</span>
+                      ))}
+                    </div>
+                    <div className="flex gap-1 mt-1">
+                      {a.country && <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{a.country}</span>}
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {artists.map((a) => (
+              <div key={a.id} className="relative border-b-[2px] border-[var(--ink)]">
+                <Link href={`/${lang}/artists/${a.slug}`} className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]">
+                  <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+                    <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" frameClass="" />
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{a.name_display || a.name}</div>
+                    <div className="flex flex-wrap gap-[3px] mt-[2px]">
+                      {a.styles?.slice(0, 3).map((s: string, si: number) => (
+                        <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 5px' }}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex gap-2 shrink-0">
+                    {a.country && <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>}
+                    {a.era && <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>}
+                  </div>
+                </Link>
+                <FavoriteButton type="artist" entityId={a.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Labels */}
       <div>
-        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-          {es ? 'SELLOS FAVORITOS' : 'FAVORITE LABELS'} ({labelIds.length})
-        </h2>
+        <SectionHeader title={es ? 'SELLOS FAVORITOS' : 'FAVORITE LABELS'} count={labelIds.length} view={labelView} setView={setLabelView} es={es} />
         {labelIds.length === 0 ? (
-          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-            {es ? 'Aún no tienes sellos favoritos.' : 'No favorite labels yet.'}
-          </p>
-        ) : (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>{es ? 'Aún no tienes sellos favoritos.' : 'No favorite labels yet.'}</p>
+        ) : labelView === 'large' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
             {labels.map((l) => (
               <div key={l.id} className="relative border-r-[3px] border-b-[3px] border-[var(--ink)] max-md:!border-r-0">
                 <FavoriteButton type="label" entityId={l.id} lang={lang} />
-                <Link
-                  href={`/${lang}/labels/${l.slug}`}
-                  className="transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] flex flex-col overflow-hidden group min-h-0"
-                >
+                <Link href={`/${lang}/labels/${l.slug}`} className="transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] flex flex-col overflow-hidden group min-h-0">
                   <CardThumbnail src={l.image_url} alt={l.name} aspectClass="aspect-[3/2]" />
                   <div className="p-6 sm:p-8 flex flex-col flex-grow min-h-0">
                     <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--red)' }}>Est. {l.founded_year || '?'}</div>
@@ -333,52 +384,107 @@ function FavoritesTab({ lang }: { lang: string }) {
               </div>
             ))}
           </div>
+        ) : labelView === 'compact' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
+            {labels.map((l) => (
+              <div key={l.id} className="relative border-b-[3px] border-r-[3px] border-[var(--ink)]">
+                <FavoriteButton type="label" entityId={l.id} lang={lang} />
+                <Link href={`/${lang}/labels/${l.slug}`} className="transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden">
+                  <CardThumbnail src={l.image_url} alt={l.name} aspectClass="aspect-square" />
+                  <div className="p-3 flex flex-col flex-grow min-h-0">
+                    <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>Est. {l.founded_year || '?'}</div>
+                    <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{l.name}</div>
+                    <div className="flex gap-1 mt-1">
+                      <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{l.country}</span>
+                      <span className={`cutout ${l.is_active ? 'acid' : 'outline'}`} style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{l.is_active ? (es ? 'ACTIVO' : 'ACTIVE') : (es ? 'INACTIVO' : 'INACTIVE')}</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {labels.map((l) => (
+              <div key={l.id} className="relative border-b-[2px] border-[var(--ink)]">
+                <FavoriteButton type="label" entityId={l.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+                <Link href={`/${lang}/labels/${l.slug}`} className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] pr-12">
+                  <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+                    <CardThumbnail src={l.image_url} alt={l.name} aspectClass="aspect-square" frameClass="" />
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{l.name}</div>
+                    <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>Est. {l.founded_year || '?'}</div>
+                  </div>
+                  <div className="hidden sm:flex gap-2 shrink-0">
+                    <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{l.country}</span>
+                    <span className={`cutout ${l.is_active ? 'acid' : 'outline'}`} style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{l.is_active ? (es ? 'ACTIVO' : 'ACTIVE') : (es ? 'INACTIVO' : 'INACTIVE')}</span>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Events (corazón → favorite_events) */}
       <div>
-        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-          {es ? 'EVENTOS FAVORITOS' : 'FAVORITE EVENTS'} ({favoriteEventIds.length})
-        </h2>
+        <SectionHeader title={es ? 'EVENTOS FAVORITOS' : 'FAVORITE EVENTS'} count={favoriteEventIds.length} view={eventView} setView={setEventView} es={es} />
         {favoriteEventIds.length === 0 ? (
-          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-            {es ? 'Aún no has marcado eventos.' : 'No favorite events yet.'}
-          </p>
-        ) : (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>{es ? 'Aún no has marcado eventos.' : 'No favorite events yet.'}</p>
+        ) : eventView === 'large' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
             {events.map((ev) => (
-              <Link
-                key={ev.id}
-                href={`/${lang}/events/${ev.slug}`}
-                className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group"
-              >
+              <Link key={ev.id} href={`/${lang}/events/${ev.slug}`} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group">
                 <FavoriteButton type="event" entityId={ev.id} lang={lang} />
-                <CardThumbnail
-                  src={ev.image_url}
-                  alt={ev.name}
-                  aspectClass="aspect-poster w-full"
-                  frameClass="border-b-[3px] border-[var(--ink)]"
-                  fit="contain"
-                />
+                <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-poster w-full" frameClass="border-b-[3px] border-[var(--ink)]" fit="contain" />
                 <div className="p-5 sm:p-7 relative">
                   <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
-                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
-                    {ev.date_start || 'TBA'}
-                  </div>
-                  <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-                    {ev.name}
-                  </div>
-                  <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
-                    {ev.venue ? `${ev.venue} — ` : ''}{ev.city}, {ev.country}
-                  </div>
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                  <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>{ev.name}</div>
+                  <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>{ev.venue ? `${ev.venue} — ` : ''}{ev.city}, {ev.country}</div>
                   {ev.event_type && (
-                    <div className="absolute bottom-3 right-3 bg-[var(--red)] text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', padding: '3px 10px', transform: 'rotate(3deg)' }}>
-                      {ev.event_type.replace('_', ' ')}
-                    </div>
+                    <div className="absolute bottom-3 right-3 bg-[var(--red)] text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', padding: '3px 10px', transform: 'rotate(3deg)' }}>{ev.event_type.replace('_', ' ')}</div>
                   )}
                 </div>
               </Link>
+            ))}
+          </div>
+        ) : eventView === 'compact' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-start">
+            {events.map((ev) => (
+              <Link key={ev.id} href={`/${lang}/events/${ev.slug}`} className="relative border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden">
+                <FavoriteButton type="event" entityId={ev.id} lang={lang} />
+                <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-poster w-full" fit="cover" />
+                <div className="p-3 flex flex-col flex-grow min-h-0">
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                  <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{ev.name}</div>
+                  <div className="flex gap-1 mt-1">
+                    <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{ev.country}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {events.map((ev) => (
+              <div key={ev.id} className="relative border-b-[2px] border-[var(--ink)]">
+                <FavoriteButton type="event" entityId={ev.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+                <Link href={`/${lang}/events/${ev.slug}`} className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]">
+                  <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
+                    <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" />
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{ev.name}</div>
+                    <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                  </div>
+                  <div className="hidden sm:flex gap-2 shrink-0">
+                    <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{ev.city}, {ev.country}</span>
+                    {ev.event_type && <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{ev.event_type.replace('_', ' ')}</span>}
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         )}
@@ -386,63 +492,80 @@ function FavoritesTab({ lang }: { lang: string }) {
 
       {/* Mixes */}
       <div>
-        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-          {es ? 'MIXES GUARDADOS' : 'SAVED MIXES'} ({mixIds.length})
-        </h2>
+        <SectionHeader title={es ? 'MIXES GUARDADOS' : 'SAVED MIXES'} count={mixIds.length} view={mixView} setView={setMixView} es={es} />
         {mixIds.length === 0 ? (
-          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-            {es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}
-          </p>
-        ) : (
+          <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>{es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}</p>
+        ) : mixes.length === 0 ? (
+          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>{es ? 'Cargando mixes…' : 'Loading mixes…'}</p>
+        ) : mixView === 'large' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
             {mixes.map((m) => {
               const ytId = extractYouTubeId(m.video_url)
               return (
-                <div
-                  key={m.id}
-                  className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
-                >
+                <div key={m.id} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group">
                   <FavoriteButton type="mix" entityId={m.id} lang={lang} />
-                  {ytId ? (
-                    <YouTubeIframe videoId={ytId} title={m.title} />
-                  ) : (
-                    <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
-                  )}
+                  {ytId ? <YouTubeIframe videoId={ytId} title={m.title} /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />}
                   <div className="p-5 sm:p-7 relative">
                     <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="cutout red" style={{ margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
-                      <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
-                        {formatMixDateLine(m, lang)}
-                      </span>
+                      <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{formatMixDateLine(m, lang)}</span>
                     </div>
-                    <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-                      {m.title}
-                    </div>
-                    <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
-                      {m.artist_name}
-                    </div>
+                    <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>{m.title}</div>
+                    <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{m.artist_name}</div>
                     {ytId ? (
-                      <a
-                        href={m.video_url!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
-                        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}
-                      >
-                        YouTube ↗
-                      </a>
+                      <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>YouTube ↗</a>
                     ) : getMixTrack(m) ? (
                       <DashboardMixPlayButton m={m} />
                     ) : m.embed_url ? (
-                      <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
-                        ▶ PLAY
-                      </a>
+                      <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>▶ PLAY</a>
                     ) : m.platform ? (
-                      <div className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
-                        ▶ {m.platform.toUpperCase()}
-                      </div>
+                      <div className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>▶ {m.platform.toUpperCase()}</div>
                     ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : mixView === 'compact' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
+            {mixes.map((m) => {
+              const ytId = extractYouTubeId(m.video_url)
+              return (
+                <div key={m.id} className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative">
+                  <FavoriteButton type="mix" entityId={m.id} lang={lang} />
+                  {ytId ? <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />}
+                  <div className="p-3 flex flex-col flex-grow min-h-0">
+                    <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{m.artist_name}</div>
+                    <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{m.title}</div>
+                    <div className="flex flex-wrap gap-1 mt-1 items-center">
+                      <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                      <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'var(--dim)' }}>{formatMixDateLine(m, lang)}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="border-4 border-[var(--ink)]">
+            {mixes.map((m) => {
+              const ytId = extractYouTubeId(m.video_url)
+              return (
+                <div key={m.id} className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-3 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative">
+                  <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+                  <div className="flex items-center gap-3 sm:gap-5 pr-10">
+                    <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+                      {ytId ? <div className="w-full h-full bg-[var(--ink)] flex items-center justify-center text-[var(--yellow)] text-xs">▶</div> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" frameClass="" />}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{m.title}</div>
+                      <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>{m.artist_name}</div>
+                    </div>
+                    <div className="hidden sm:flex gap-2 shrink-0">
+                      <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                      <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{formatMixDateLine(m, lang)}</span>
+                    </div>
                   </div>
                 </div>
               )
@@ -540,6 +663,7 @@ function EventsTab({ lang }: { lang: string }) {
   const { attendance } = useEventAttendance()
   const { ratings } = useEventRatings()
   const [eventsData, setEventsData] = useState<Record<string, any>>({})
+  const [view, setView] = useState<ViewMode>('list')
   const es = lang === 'es'
 
   const allEventIds = Object.keys(attendance)
@@ -552,7 +676,7 @@ function EventsTab({ lang }: { lang: string }) {
     let cancelled = false
     const supabase = createBrowserSupabase()
     ;(async () => {
-      const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country').in('id', allEventIds)
+      const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country, venue, event_type, image_url').in('id', allEventIds)
       if (!cancelled && data) {
         const map: Record<string, any> = {}
         data.forEach((e: any) => { map[e.id] = e })
@@ -563,28 +687,85 @@ function EventsTab({ lang }: { lang: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(allEventIds)])
 
-  const renderEventRow = (id: string, extra?: React.ReactNode) => {
-    const ev = eventsData[id]
+  const renderSection = (label: string, cutoutClass: string, entries: [string, unknown][], cutoutStyle?: React.CSSProperties) => {
+    if (entries.length === 0) return null
+    const ids = entries.map(([id]) => id)
     return (
-      <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between items-center gap-3">
-        {ev ? (
-          <Link href={`/${lang}/events/${ev.slug}`} className="flex-grow min-w-0 no-underline text-[var(--ink)] hover:text-[var(--red)]">
-            <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>{ev.name}</div>
-            <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{ev.date_start || 'TBA'} — {ev.city}, {ev.country}</div>
-          </Link>
+      <div>
+        <span className={`cutout ${cutoutClass}`} style={cutoutStyle}>{label} ({entries.length})</span>
+        {view === 'large' ? (
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
+            {ids.map((id) => {
+              const ev = eventsData[id]
+              if (!ev) return null
+              const r = ratings[id]
+              return (
+                <Link key={id} href={`/${lang}/events/${ev.slug}`} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group">
+                  <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-poster w-full" frameClass="border-b-[3px] border-[var(--ink)]" fit="contain" />
+                  <div className="p-5 sm:p-7 relative">
+                    <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
+                    <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                    <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>{ev.name}</div>
+                    <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>{ev.venue ? `${ev.venue} — ` : ''}{ev.city}, {ev.country}</div>
+                    {r && <div className="mt-2 text-[var(--yellow)]">{'★'.repeat(r.rating)}</div>}
+                    {ev.event_type && <div className="absolute bottom-3 right-3 bg-[var(--red)] text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', padding: '3px 10px', transform: 'rotate(3deg)' }}>{ev.event_type.replace('_', ' ')}</div>}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        ) : view === 'compact' ? (
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-start">
+            {ids.map((id) => {
+              const ev = eventsData[id]
+              if (!ev) return null
+              return (
+                <Link key={id} href={`/${lang}/events/${ev.slug}`} className="relative border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden">
+                  <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-poster w-full" fit="cover" />
+                  <div className="p-3 flex flex-col flex-grow min-h-0">
+                    <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{ev.date_start || 'TBA'}</div>
+                    <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{ev.name}</div>
+                    <div className="flex gap-1 mt-1">
+                      <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{ev.country}</span>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
         ) : (
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>{id.slice(0, 8)}...</span>
+          <div className="mt-2 border-4 border-[var(--ink)]">
+            {ids.map((id) => {
+              const ev = eventsData[id]
+              const r = ratings[id]
+              return (
+                <div key={id} className="p-3 border-b-[3px] border-[var(--ink)] last:border-b-0 flex justify-between items-center gap-3">
+                  {ev ? (
+                    <Link href={`/${lang}/events/${ev.slug}`} className="flex-grow min-w-0 no-underline text-[var(--ink)] hover:text-[var(--red)]">
+                      <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '13px', textTransform: 'uppercase' }}>{ev.name}</div>
+                      <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{ev.date_start || 'TBA'} — {ev.city}, {ev.country}</div>
+                    </Link>
+                  ) : (
+                    <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>{id.slice(0, 8)}...</span>
+                  )}
+                  {r ? <span className="text-[var(--yellow)] shrink-0">{'★'.repeat(r.rating)}</span> : undefined}
+                </div>
+              )
+            })}
+          </div>
         )}
-        {extra}
       </div>
     )
   }
 
   return (
     <div>
-      <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-        {es ? 'MIS EVENTOS' : 'MY EVENTS'}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
+          {es ? 'MIS EVENTOS' : 'MY EVENTS'}
+        </h2>
+        {allEventIds.length > 0 && <ViewToggle view={view} setView={setView} labels={viewLabels(es)} />}
+      </div>
 
       {allEventIds.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
@@ -592,33 +773,9 @@ function EventsTab({ lang }: { lang: string }) {
         </p>
       ) : (
         <div className="space-y-6">
-          {going.length > 0 && (
-            <div>
-              <span className="cutout acid">{es ? 'VOY' : 'GOING'} ({going.length})</span>
-              <div className="mt-2 border-4 border-[var(--ink)]">
-                {going.map(([id]) => renderEventRow(id))}
-              </div>
-            </div>
-          )}
-          {wishlist.length > 0 && (
-            <div>
-              <span className="cutout uv">{es ? 'QUIERO IR' : 'WISHLIST'} ({wishlist.length})</span>
-              <div className="mt-2 border-4 border-[var(--ink)]">
-                {wishlist.map(([id]) => renderEventRow(id))}
-              </div>
-            </div>
-          )}
-          {attended.length > 0 && (
-            <div>
-              <span className="cutout fill" style={{ background: 'var(--yellow)', color: 'var(--ink)' }}>{es ? 'ASISTÍ' : 'ATTENDED'} ({attended.length})</span>
-              <div className="mt-2 border-4 border-[var(--ink)]">
-                {attended.map(([id]) => {
-                  const r = ratings[id]
-                  return renderEventRow(id, r ? <span className="text-[var(--yellow)] shrink-0">{'★'.repeat(r.rating)}</span> : undefined)
-                })}
-              </div>
-            </div>
-          )}
+          {renderSection(es ? 'VOY' : 'GOING', 'acid', going)}
+          {renderSection(es ? 'QUIERO IR' : 'WISHLIST', 'uv', wishlist)}
+          {renderSection(es ? 'ASISTÍ' : 'ATTENDED', 'fill', attended, { background: 'var(--yellow)', color: 'var(--ink)' })}
         </div>
       )}
     </div>
@@ -631,78 +788,110 @@ function EventsTab({ lang }: { lang: string }) {
 function MixesTab({ lang }: { lang: string }) {
   const { saved } = useSavedMixes()
   const [mixes, setMixes] = useState<any[]>([])
+  const [mixesLoading, setMixesLoading] = useState(true)
+  const [view, setView] = useState<ViewMode>('large')
   const es = lang === 'es'
 
   useEffect(() => {
-    if (saved.length === 0) { setMixes([]); return }
+    if (saved.length === 0) { setMixes([]); setMixesLoading(false); return }
     let cancelled = false
+    setMixesLoading(true)
     const supabase = createBrowserSupabase()
     ;(async () => {
-      const { data } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', saved)
-      if (!cancelled) setMixes(data || [])
+      const { data, error } = await supabase.from('mixes').select('id, slug, title, artist_name, mix_type, image_url, video_url, published_at, year, duration_minutes, embed_url, platform, audio_url').in('id', saved)
+      if (!cancelled) {
+        setMixes(data || [])
+        setMixesLoading(false)
+        if (error) console.warn('[MixesTab] Error fetching mixes:', error.message)
+      }
     })()
     return () => { cancelled = true }
   }, [saved])
 
   return (
     <div>
-      <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase', marginBottom: '16px' }}>
-        {es ? 'MIXES GUARDADOS' : 'SAVED MIXES'} ({saved.length})
-      </h2>
+      <SectionHeader title={es ? 'MIXES GUARDADOS' : 'SAVED MIXES'} count={saved.length} view={view} setView={setView} es={es} />
       {saved.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
           {es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}
         </p>
-      ) : (
+      ) : mixesLoading ? (
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
+          {es ? 'Cargando mixes…' : 'Loading mixes…'}
+        </p>
+      ) : mixes.length === 0 ? (
+        <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+          {es ? 'No se pudieron cargar los mixes. Puede que hayan sido eliminados.' : 'Could not load mixes. They may have been removed.'}
+        </p>
+      ) : view === 'large' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
           {mixes.map((m) => {
             const ytId = extractYouTubeId(m.video_url)
             return (
-              <div
-                key={m.id}
-                className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
-              >
+              <div key={m.id} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group">
                 <FavoriteButton type="mix" entityId={m.id} lang={lang} />
-                {ytId ? (
-                  <YouTubeIframe videoId={ytId} title={m.title} />
-                ) : (
-                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
-                )}
+                {ytId ? <YouTubeIframe videoId={ytId} title={m.title} /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />}
                 <div className="p-5 sm:p-7 relative">
                   <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="cutout red" style={{ margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
-                    <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
-                      {formatMixDateLine(m, lang)}
-                    </span>
+                    <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{formatMixDateLine(m, lang)}</span>
                   </div>
-                  <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-                    {m.title}
-                  </div>
-                  <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
-                    {m.artist_name}
-                  </div>
+                  <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>{m.title}</div>
+                  <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{m.artist_name}</div>
                   {ytId ? (
-                    <a
-                      href={m.video_url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
-                      style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}
-                    >
-                      YouTube ↗
-                    </a>
+                    <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>YouTube ↗</a>
                   ) : getMixTrack(m) ? (
                     <DashboardMixPlayButton m={m} />
                   ) : m.embed_url ? (
-                    <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
-                      ▶ PLAY
-                    </a>
+                    <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>▶ PLAY</a>
                   ) : m.platform ? (
-                    <div className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>
-                      ▶ {m.platform.toUpperCase()}
-                    </div>
+                    <div className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>▶ {m.platform.toUpperCase()}</div>
                   ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : view === 'compact' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
+          {mixes.map((m) => {
+            const ytId = extractYouTubeId(m.video_url)
+            return (
+              <div key={m.id} className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative">
+                <FavoriteButton type="mix" entityId={m.id} lang={lang} />
+                {ytId ? <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />}
+                <div className="p-3 flex flex-col flex-grow min-h-0">
+                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{m.artist_name}</div>
+                  <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{m.title}</div>
+                  <div className="flex flex-wrap gap-1 mt-1 items-center">
+                    <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                    <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'var(--dim)' }}>{formatMixDateLine(m, lang)}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="border-4 border-[var(--ink)]">
+          {mixes.map((m) => {
+            const ytId = extractYouTubeId(m.video_url)
+            return (
+              <div key={m.id} className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-3 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative">
+                <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+                <div className="flex items-center gap-3 sm:gap-5 pr-10">
+                  <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+                    {ytId ? <div className="w-full h-full bg-[var(--ink)] flex items-center justify-center text-[var(--yellow)] text-xs">▶</div> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" frameClass="" />}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>{m.title}</div>
+                    <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>{m.artist_name}</div>
+                  </div>
+                  <div className="hidden sm:flex gap-2 shrink-0">
+                    <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                    <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{formatMixDateLine(m, lang)}</span>
+                  </div>
                 </div>
               </div>
             )

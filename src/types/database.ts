@@ -110,6 +110,12 @@ export interface Database {
         Update: Partial<Omit<ProfileRow, 'id' | 'created_at' | 'updated_at'>>
         Relationships: DbRelationship[]
       }
+      breakbeat_profiles: {
+        Row: BreakbeatProfileRow
+        Insert: Omit<BreakbeatProfileRow, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<BreakbeatProfileRow, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -196,6 +202,31 @@ export interface ProfileRow extends Record<string, unknown> {
   total_events_attended: number
   total_events_wishlist: number
   role: 'user' | 'admin'
+}
+
+export interface BreakbeatProfileRow extends Record<string, unknown> {
+  id: string
+  user_id: string
+  created_at: string
+  updated_at: string
+  analysis_text_en: string
+  analysis_text_es: string
+  archetype_en: string
+  archetype_es: string
+  stats: BreakbeatProfileStats
+  input_hash: string
+  generated_by: 'rules' | 'openai' | 'manual'
+}
+
+export interface BreakbeatProfileStats {
+  top_styles: { name: string; count: number; pct: number }[]
+  top_countries: { name: string; count: number; pct: number }[]
+  era_distribution: Record<string, number>
+  category_breakdown: Record<string, number>
+  event_profile: { festivals: number; club_nights: number; countries: string[] }
+  mix_taste: Record<string, number>
+  label_decades: Record<string, number>
+  total_data_points: number
 }
 
 export interface ArtistKeyRelease {

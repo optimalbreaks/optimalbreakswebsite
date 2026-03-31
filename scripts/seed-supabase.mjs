@@ -8,6 +8,7 @@
  *   npm run db:migrate           → todos los *.sql en supabase/migrations (orden alfabético)
  *   node scripts/seed-supabase.mjs --files 010_....sql 011_....sql  → solo esos archivos (BD ya existente)
  *   npm run db:verify            → cuenta filas vía API (NEXT_PUBLIC_* + anon; no usa Postgres directo)
+ *   node scripts/seed-supabase.mjs --check-user-events → Postgres: tablas favorite_events / event_attendance + RPC conteo
  *
  * URI de Postgres, en este orden (primera no vacía gana):
  *   1) DATABASE_URL, DIRECT_URL (Prisma), SUPABASE_DB_URL, POSTGRES_URL, POSTGRES_URL_NON_POOLING,
@@ -274,11 +275,96 @@ async function verifyViaAnonApi() {
   process.exit(ok ? 0 : 1)
 }
 
+/**
+ * Postgres directo: tablas favorite_events, event_attendance, RPC event_engaged_user_count.
+ * Usa la misma conexión que migrate (.env + .env.local → DATABASE_URL o SUPABASE_DB_PASSWORD + URL).
+ * @returns {Promise<number>} 0 si todo OK, 1 si falta algo
+ */
+async function checkUserEventsSchema() {
+  console.log(
+    'Comprobación usuario/eventos en Postgres (lee .env + .env.local, sin imprimir secretos)…\n',
+  )
+  const { connectionString, ssl } = connectionOptions()
+  const client = new pg.Client({ connectionString, ssl })
+  await client.connect()
+  let exitCode = 0
+  try {
+    const { rows: tables } = await client.query(
+      `select table_name from information_schema.tables
+       where table_schema = 'public'
+         and table_name in ('favorite_events', 'event_attendance', 'event_ratings')
+       order by table_name`,
+    )
+    const have = new Set(tables.map((r) => r.table_name))
+    for (const t of ['event_attendance', 'event_ratings', 'favorite_events']) {
+      if (have.has(t)) {
+        console.log(`Tabla public.${t}: OK`)
+      } else {
+        console.log(
+          `Tabla public.${t}: FALTA — aplica migraciones (003_user_system.sql y 005_favorite_events.sql)`,
+        )
+        exitCode = 1
+      }
+    }
+
+    const { rows: cols } = await client.query(
+      `select column_name from information_schema.columns
+       where table_schema = 'public' and table_name = 'event_attendance'
+       order by ordinal_position`,
+    )
+    if (cols.length) {
+      const names = cols.map((c) => c.column_name).join(', ')
+      console.log(`Columnas event_attendance: ${names}`)
+      if (!cols.some((c) => c.column_name === 'status')) {
+        console.log('  Advertencia: falta columna status')
+        exitCode = 1
+      }
+    }
+
+    const { rows: fn } = await client.query(
+      `select p.proname from pg_proc p
+       join pg_namespace n on p.pronamespace = n.oid
+       where n.nspname = 'public' and p.proname = 'event_engaged_user_count'`,
+    )
+    if (fn.length) {
+      console.log('Función public.event_engaged_user_count(uuid): OK')
+    } else {
+      console.log(
+        'Función public.event_engaged_user_count(uuid): FALTA — aplica 005_favorite_events.sql',
+      )
+      exitCode = 1
+    }
+
+    if (have.has('event_attendance')) {
+      const { rows } = await client.query(
+        'select count(*)::int as n from public.event_attendance',
+      )
+      console.log(`Filas event_attendance: ${rows[0]?.n ?? 0}`)
+    }
+    if (have.has('favorite_events')) {
+      const { rows } = await client.query(
+        'select count(*)::int as n from public.favorite_events',
+      )
+      console.log(`Filas favorite_events: ${rows[0]?.n ?? 0}`)
+    }
+
+    console.log('')
+    return exitCode
+  } finally {
+    await client.end()
+  }
+}
+
 async function main() {
   loadEnvLocal()
   const args = process.argv.slice(2)
   if (args.includes('--verify')) {
     await verifyViaAnonApi()
+    return
+  }
+  if (args.includes('--check-user-events')) {
+    const code = await checkUserEventsSchema()
+    process.exit(code)
     return
   }
   const explicitFiles = listMigrationFilesFromArgs(args)

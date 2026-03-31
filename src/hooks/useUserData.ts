@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { useAuth } from '@/components/AuthProvider'
-import type { ProfileRow } from '@/types/database'
+import type { ProfileRow, BreakbeatProfileRow, BreakbeatProfileStats } from '@/types/database'
 
 // Tipos manuales: Insert/Omit no encajan con `GenericTable` de supabase-js → mutaciones inferidas como `never`; el runtime es correcto.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

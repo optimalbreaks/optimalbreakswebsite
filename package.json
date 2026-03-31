@@ -12,6 +12,7 @@
     "db:migrate": "node scripts/seed-supabase.mjs --all",
     "db:migrate:raveart": "node scripts/seed-supabase.mjs --files 010_raveart_organizations.sql 011_raveart_gallery_events.sql",
     "db:verify": "node scripts/seed-supabase.mjs --verify",
+    "db:check-user-events": "node scripts/seed-supabase.mjs --check-user-events",
     "db:artist": "node scripts/actualizar-artista.mjs",
     "db:artist:ensure": "node scripts/ensure-artist-json-in-db.mjs",
     "db:artist:agent": "node scripts/generar-artista-agente.mjs",
