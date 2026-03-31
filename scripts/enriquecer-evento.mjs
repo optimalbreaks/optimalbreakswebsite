@@ -506,6 +506,7 @@ const EVENT_ROW_DEFAULTS = {
 
 const RAVEART_SUMMER_2026_ROW = {
   name: 'Raveart Summer Festival 2026',
+  image_url: '/images/events/summer-festival-2026.jpg',
   description_en:
     'XXIV Anniversary Summer Festival: Saturday 4 July 2026 at Hacienda El Chaparrejo in Alcala de Guadaira (Seville / Sevilla area). Official poster and updates on raveart.es.',
   description_es:
