@@ -6,9 +6,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import type { Locale } from '@/lib/i18n-config'
+import type { User } from '@supabase/supabase-js'
 
 interface HeaderProps {
   dict: any
@@ -33,6 +34,115 @@ function FlagGB({ className }: { className?: string }) {
       <path d="M241 0v480h160V0zM0 160v160h640V160z" fill="#fff" />
       <path d="M0 193v96h640v-96zM273 0v480h96V0z" fill="#C8102E" />
     </svg>
+  )
+}
+
+function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; variant: 'desktop' | 'mobile' }) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const { signOut } = useAuth()
+  const es = lang === 'es'
+
+  useEffect(() => {
+    if (!open) return
+    const close = () => setOpen(false)
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) close()
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('touchstart', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('touchstart', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const initial = (user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()
+  const menuPanel = open && (
+    <div
+      role="menu"
+      className="absolute right-0 top-full min-w-[200px] bg-[var(--paper)] border-4 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] z-[200]"
+    >
+      <Link
+        role="menuitem"
+        href={`/${lang}/dashboard`}
+        onClick={() => setOpen(false)}
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
+      >
+        {es ? 'Mis breaks' : 'My Breaks'}
+      </Link>
+      <Link
+        role="menuitem"
+        href={`/${lang}/dashboard?tab=profile`}
+        onClick={() => setOpen(false)}
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
+      >
+        {es ? 'Mi perfil' : 'Profile'}
+      </Link>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          setOpen(false)
+          void signOut()
+        }}
+        className="w-full text-left px-4 py-3 bg-transparent cursor-pointer hover:bg-[var(--red)] hover:text-white border-0"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
+      >
+        {es ? 'Cerrar sesión' : 'Log out'}
+      </button>
+    </div>
+  )
+
+  if (variant === 'desktop') {
+    return (
+      <div ref={wrapRef} className="relative border-l-[3px] border-[var(--ink)]">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          className="flex items-center gap-2 px-4 py-3 w-full h-full bg-transparent cursor-pointer transition-all duration-100 hover:bg-[var(--yellow)]"
+          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
+        >
+          <span className="w-6 h-6 rounded-full bg-[var(--red)] text-white flex items-center justify-center shrink-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '10px' }}>
+            {initial}
+          </span>
+          <span className="hidden xl:inline" style={{ color: 'var(--ink)', textTransform: 'uppercase' }}>
+            MY BREAKS
+          </span>
+          <span className="hidden xl:inline text-[10px] opacity-60" aria-hidden>
+            {open ? '▲' : '▼'}
+          </span>
+        </button>
+        {menuPanel}
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} className="relative border-l-[3px] border-[var(--ink)]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={es ? 'Menú de cuenta' : 'Account menu'}
+        className="flex items-center px-3 py-3 h-full bg-transparent cursor-pointer hover:bg-[var(--yellow)]/40"
+      >
+        <span className="w-7 h-7 rounded-full bg-[var(--red)] text-white flex items-center justify-center" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px' }}>
+          {initial}
+        </span>
+      </button>
+      {menuPanel}
+    </div>
   )
 }
 
@@ -105,18 +215,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         {/* Auth button */}
         {!loading && (
           user ? (
-            <Link
-              href={`/${lang}/dashboard`}
-              className="flex items-center gap-2 px-4 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--yellow)]"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
-            >
-              <span className="w-6 h-6 rounded-full bg-[var(--red)] text-white flex items-center justify-center" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '10px' }}>
-                {(user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()}
-              </span>
-              <span className="hidden xl:inline" style={{ color: 'var(--ink)', textTransform: 'uppercase' }}>
-                MY BREAKS
-              </span>
-            </Link>
+            <HeaderUserMenu lang={lang} user={user} variant="desktop" />
           ) : (
             <Link
               href={`/${lang}/login`}
@@ -140,14 +239,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         </Link>
         {!loading && (
           user ? (
-            <Link
-              href={`/${lang}/dashboard`}
-              className="flex items-center px-3 border-l-[3px] border-[var(--ink)]"
-            >
-              <span className="w-7 h-7 rounded-full bg-[var(--red)] text-white flex items-center justify-center" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px' }}>
-                {(user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()}
-              </span>
-            </Link>
+            <HeaderUserMenu lang={lang} user={user} variant="mobile" />
           ) : (
             <Link
               href={`/${lang}/login`}

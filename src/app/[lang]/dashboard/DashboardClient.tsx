@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings, useBreakbeatProfile } from '@/hooks/useUserData'
 import type { BreakbeatProfileStats } from '@/types/database'
@@ -88,11 +88,19 @@ function DashboardMixPlayButton({ m }: { m: any }) {
 
 type Tab = 'overview' | 'favorites' | 'sightings' | 'events' | 'mixes' | 'profile'
 
+const VALID_TABS: Tab[] = ['overview', 'favorites', 'sightings', 'events', 'mixes', 'profile']
+
 export default function DashboardClient({ lang }: { lang: string }) {
   const { user, loading: authLoading, signOut } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [tab, setTab] = useState<Tab>('overview')
   const es = lang === 'es'
+
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t && (VALID_TABS as string[]).includes(t)) setTab(t as Tab)
+  }, [searchParams])
 
   // Redirect if not logged in
   if (!authLoading && !user) {
