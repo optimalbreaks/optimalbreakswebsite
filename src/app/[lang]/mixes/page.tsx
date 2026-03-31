@@ -21,6 +21,8 @@ type FallbackMix = {
   desc_es: string
   desc_en: string
   platform: string
+  /** Enlace real cuando la tabla `mixes` está vacía (evita “▶ YOUTUBE” que no lleva a ningún sitio). */
+  href?: string
 }
 
 const FALLBACK_MIXES: FallbackMix[] = [
@@ -34,6 +36,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'Ejemplo perfecto de continuidad: mezcla regular, comunidad y presencia sostenida cuando el breakbeat deja de ocupar el centro.',
     desc_en: 'A perfect example of continuity: regular mixing, community and sustained presence after breakbeat left the centre.',
     platform: 'YOUTUBE',
+    href: 'https://www.youtube.com/@LadyWaksRadio',
   },
   {
     type: 'DJ CULTURE',
@@ -45,6 +48,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'Su figura sirve para leer la resistencia del género desde la cabina, el edit y la circulación constante de mixes.',
     desc_en: 'His role helps read the genre’s resistance through the booth, edits and the steady circulation of mixes.',
     platform: 'MIXCLOUD',
+    href: 'https://www.mixcloud.com/kraftykuts/',
   },
   {
     type: 'PIRATE RADIO',
@@ -56,6 +60,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'Antes del algoritmo, muchas sesiones clave pasaban por radios y emisoras especializadas que definían qué sonaba caliente.',
     desc_en: 'Before the algorithm, many key mixes passed through radio and specialist stations that defined what sounded hot.',
     platform: 'RADIO',
+    href: 'https://www.mixcloud.com/discover/breakbeat/',
   },
   {
     type: 'DIGITAL ERA',
@@ -67,6 +72,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'La lógica del mixtape se desplaza a plataformas donde el género sobrevive como nicho activo, no como museo.',
     desc_en: 'Mixtape logic shifts to platforms where the genre survives as an active niche, not as a museum piece.',
     platform: 'ONLINE',
+    href: 'https://www.youtube.com/@optimalbreaks',
   },
   {
     type: 'LIVE SET',
@@ -78,6 +84,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'La época en la que los sets funcionan como carta de presentación de un sonido internacional muy reconocible.',
     desc_en: 'The era when sets function as the calling card of a highly recognisable international sound.',
     platform: 'CLUB',
+    href: 'https://www.youtube.com/results?search_query=nu+skool+breaks+live+set',
   },
   {
     type: 'ARCHIVE',
@@ -89,6 +96,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
     desc_es: 'Una parte esencial de la historia del break no está solo en los tracks, sino en quién los mezcló, cuándo y para qué público.',
     desc_en: 'A key part of break history lives not only in tracks, but in who mixed them, when, and for which crowd.',
     platform: 'ARCHIVE',
+    href: 'https://www.mixcloud.com/discover/breakbeat/',
   },
 ]
 
@@ -101,13 +109,23 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
+  // No ordenar por published_at en SQL: si la migración 021 no está aplicada en Supabase,
+  // PostgREST falla y data queda vacío → se muestra el fallback estático.
   const { data: mixes } = await supabase
     .from('mixes')
     .select('*')
-    .order('published_at', { ascending: false, nullsFirst: false })
     .order('year', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
-  const list = (mixes || []) as Mix[]
+  const raw = (mixes || []) as Mix[]
+  const list = [...raw].sort((a, b) => {
+    const ta = a.published_at ? new Date(a.published_at).getTime() : 0
+    const tb = b.published_at ? new Date(b.published_at).getTime() : 0
+    if (ta !== tb) return tb - ta
+    const ya = a.year ?? -1
+    const yb = b.year ?? -1
+    if (ya !== yb) return yb - ya
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   return (
     <div className="lined min-h-screen">
@@ -129,6 +147,11 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
                 {lang === 'es'
                   ? 'Esta seccion no va solo de sets famosos. Tambien va de radio, podcasts, canales y sesiones regulares que sostuvieron la cultura break durante los años de latencia.'
                   : 'This section is not only about famous sets. It is also about radio, podcasts, channels and regular sessions that sustained break culture during the latency years.'}
+              </p>
+              <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', lineHeight: 1.6, color: 'rgba(232,220,200,0.55)', marginTop: '14px' }}>
+                {lang === 'es'
+                  ? 'Ahora mismo no hay filas en la base de datos (mixes): estas tarjetas son referencia con enlaces externos. Cuando cargues mixes en Supabase, aquí verás iframes y enlaces por vídeo.'
+                  : 'There are no rows in the database (mixes) right now: these cards are reference with external links. Once mixes are loaded in Supabase, you will see embeds and per-video links here.'}
               </p>
             </div>
 
@@ -156,9 +179,21 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
                   <p className="mt-4 pr-16" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.7, color: 'var(--dim)' }}>
                     {lang === 'es' ? mix.desc_es : mix.desc_en}
                   </p>
-                  <div className="absolute bottom-3 right-3 bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', padding: '4px 12px', transform: 'rotate(2deg)' }}>
-                    ▶ {mix.platform}
-                  </div>
+                  {mix.href ? (
+                    <a
+                      href={mix.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-3 right-3 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
+                      style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', padding: '4px 12px', transform: 'rotate(2deg)' }}
+                    >
+                      ▶ {mix.platform} ↗
+                    </a>
+                  ) : (
+                    <div className="absolute bottom-3 right-3 bg-[var(--ink)] text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', padding: '4px 12px', transform: 'rotate(2deg)' }}>
+                      ▶ {mix.platform}
+                    </div>
+                  )}
                   </div>
                 </div>
               ))}
