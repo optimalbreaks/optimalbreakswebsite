@@ -59,6 +59,8 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 
 - **Artista (batch, admin, comandos):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **Base de datos, enrich, posters, fotos:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) (`node scripts/guia-base-datos.mjs` sin args).
+- **Imágenes / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
+- **Favoritos, valoraciones, asistencia:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts fuera de `scripts/prompts/`
 
@@ -68,6 +70,7 @@ Algunas herramientas (p. ej. elección de imagen entre candidatos SerpAPI) lleva
 
 - [`README.md`](../README.md) — stack, env, comandos `npm run db:*`.
 - [`README.es.md`](../README.es.md) — resumen en español y flujo de artistas.
+- [`IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md), [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ---
 
@@ -120,6 +123,8 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 
 - **Artist agent:** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **DB CLI catalogue:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs).
+- **Images / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
+- **User favorites, ratings, attendance:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts not under `scripts/prompts/`
 
@@ -128,3 +133,4 @@ Some tools (e.g. image picking from SerpAPI candidates) use **short inline syste
 ### See also
 
 - [`README.md`](../README.md), [`README.es.md`](../README.es.md).
+- [`IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md), [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).

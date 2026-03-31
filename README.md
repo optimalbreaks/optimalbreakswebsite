@@ -53,6 +53,12 @@ This split helps the site feel both like an archive and like a living magazine w
 
 ---
 
+## User engagement (My Breaks)
+
+Logged-in users get **My Breaks** (`/[lang]/dashboard`): favorites, event attendance, mixes saved, **seen live** (artists with 1–5 stars), and reviews. **Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md) (tables, UI locations, and a note that **event star ratings** exist in the schema but need a **public form** wired to `useEventRatings().rate` if you want users to submit them from the site).
+
+---
+
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
@@ -93,9 +99,12 @@ System prompts for **artist**, **label**, and **event enrichment** agents live u
 
 ## Images & cards
 
+**Full guide (WebP, `public/images` vs Supabase, pitfalls):** [`docs/IMAGES_AND_WEBP.md`](docs/IMAGES_AND_WEBP.md).
+
 Listings and detail pages use a shared **`CardThumbnail`** component (`src/components/CardThumbnail.tsx`):
 
 - **`image_url`** on artists, events, labels, scenes, mixes and blog posts can point to any HTTPS image (e.g. Supabase Storage public URL or external CDN).
+- **`displayImageUrl()`** (`src/lib/image-url.ts`) normalises URLs: **only** paths under **`/images/`** (static `public/` assets) get `.jpg`/`.png` → `.webp` substitution. **Supabase Storage URLs are used exactly as stored** — the object must exist at that path (do not rely on the client renaming `.jpg` to `.webp`).
 - If `image_url` is empty, a **placeholder** (diagonal stripes + initials from the title) keeps the layout consistent.
 - **Home** `ArtistCard` / `EventFlyer` include the same thumbnail strip.
 - **Blog post** pages show a wide hero image under the title when `image_url` is set (or placeholder if not).
@@ -128,7 +137,7 @@ Server-side helpers:
 - `src/lib/supabase-admin.ts` — `createServiceSupabase()` (requires `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`, **server only**).
 - `src/lib/supabase-storage.ts` — `publicMediaObjectUrl()`, `uploadPublicMedia()` for scripts or Route Handlers.
 
-After uploading a file, store the **public object URL** in the corresponding `image_url` column (or build it with `publicMediaObjectUrl('path/inside/bucket.jpg')`).
+After uploading a file, store the **public object URL** in the corresponding `image_url` column (or build it with `publicMediaObjectUrl('path/inside/bucket.jpg')`). Prefer **`.webp`** for new objects when you control the file; the URL in the database must match the uploaded extension (see [IMAGES_AND_WEBP.md](docs/IMAGES_AND_WEBP.md)).
 
 **CLI upload (local file → bucket `media`):** with service/secret key in `.env.local`:
 
@@ -146,7 +155,9 @@ Script: [`scripts/upload-storage-media.mjs`](scripts/upload-storage-media.mjs). 
 OptimalBreaks/
 ├── docs/
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
-│   └── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
+│   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
+│   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
+│   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
 ├── data/
 │   └── artists/                # One JSON file per artist → npm run db:artist
 ├── scripts/

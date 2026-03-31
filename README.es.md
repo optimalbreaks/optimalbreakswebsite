@@ -16,6 +16,8 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. La guía detallada del agente de **artistas** sigue en [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md).
 
+**Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario** (favoritos, visto en vivo, asistencia a eventos, reseñas): [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md).
+
 ---
 
 ## Stack principal
@@ -135,10 +137,16 @@ Copia `.env.local.example` → `.env.local`.
 
 ## Imágenes
 
-- Cada entidad relevante tiene **`image_url`** en la base de datos.
-- El componente **`CardThumbnail`** muestra la foto o un **placeholder** (iniciales + rayas) si no hay URL.
-- Se usa en listados, fichas de detalle, home, blog (lista y artículo) y favoritos del dashboard.
-- Las URLs pueden ser de **Supabase Storage** (`/storage/v1/object/public/media/...`) u otros HTTPS.
+Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**.
+
+- Cada entidad relevante tiene **`image_url`** en la base de datos (casi siempre **Supabase Storage**, no `public/images/`).
+- **`displayImageUrl()`** (`src/lib/image-url.ts`) solo reescribe **rutas locales** `/images/*.jpg|png` → `.webp`. Las URLs de **Storage** se usan **tal cual** en la BD: el objeto debe existir con esa extensión.
+- El componente **`CardThumbnail`** aplica esa normalización y muestra **placeholder** si no hay URL.
+- Se usa en listados, fichas, home, blog y dashboard.
+
+### My Breaks / interacción del usuario
+
+Resumen de favoritos, **visto en vivo** (estrellas 1–5), asistencia a eventos y reseñas: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. En el README en inglés hay una sección equivalente bajo *User engagement*.
 
 ### Vistas de listado (grande / compacto / lista)
 
