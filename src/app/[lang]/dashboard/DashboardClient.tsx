@@ -86,9 +86,9 @@ function DashboardMixPlayButton({ m }: { m: any }) {
   )
 }
 
-type Tab = 'overview' | 'favorites' | 'sightings' | 'events' | 'mixes' | 'profile'
+type Tab = 'overview' | 'favorites' | 'sightings' | 'events' | 'reviews' | 'mixes' | 'profile'
 
-const VALID_TABS: Tab[] = ['overview', 'favorites', 'sightings', 'events', 'mixes', 'profile']
+const VALID_TABS: Tab[] = ['overview', 'favorites', 'sightings', 'events', 'reviews', 'mixes', 'profile']
 
 export default function DashboardClient({ lang }: { lang: string }) {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -121,6 +121,7 @@ export default function DashboardClient({ lang }: { lang: string }) {
     { key: 'favorites', label_en: 'FAVORITES', label_es: 'FAVORITOS', icon: '★' },
     { key: 'sightings', label_en: 'SEEN LIVE', label_es: 'VISTOS EN VIVO', icon: '♫' },
     { key: 'events', label_en: 'EVENTS', label_es: 'EVENTOS', icon: '📅' },
+    { key: 'reviews', label_en: 'REVIEWS', label_es: 'RESEÑAS', icon: '📝' },
     { key: 'mixes', label_en: 'SAVED MIXES', label_es: 'MIXES GUARDADOS', icon: '🎧' },
     { key: 'profile', label_en: 'PROFILE', label_es: 'PERFIL', icon: '⚙' },
   ]
@@ -163,6 +164,7 @@ export default function DashboardClient({ lang }: { lang: string }) {
         {tab === 'favorites' && <FavoritesTab lang={lang} />}
         {tab === 'sightings' && <SightingsTab lang={lang} />}
         {tab === 'events' && <EventsTab lang={lang} />}
+        {tab === 'reviews' && <ReviewsTab lang={lang} />}
         {tab === 'mixes' && <MixesTab lang={lang} />}
         {tab === 'profile' && <ProfileTab lang={lang} onSignOut={signOut} />}
       </div>
@@ -1177,6 +1179,96 @@ function EventsTab({ lang }: { lang: string }) {
           {renderSection(es ? 'VOY' : 'GOING', 'acid', going)}
           {renderSection(es ? 'QUIERO IR' : 'WISHLIST', 'uv', wishlist)}
           {renderSection(es ? 'ASISTÍ' : 'ATTENDED', 'fill', attended, { background: 'var(--yellow)', color: 'var(--ink)' })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================
+// REVIEWS TAB
+// =============================================
+function ReviewsTab({ lang }: { lang: string }) {
+  const { ratings } = useEventRatings()
+  const [eventsData, setEventsData] = useState<Record<string, any>>({})
+  const [loading, setLoading] = useState(true)
+  const es = lang === 'es'
+
+  const ratedEventIds = Object.keys(ratings)
+
+  useEffect(() => {
+    if (ratedEventIds.length === 0) {
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    const supabase = createBrowserSupabase()
+    ;(async () => {
+      const { data } = await supabase.from('events').select('id, slug, name, date_start, city, country, venue, event_type, image_url').in('id', ratedEventIds)
+      if (!cancelled) {
+        if (data) {
+          const map: Record<string, any> = {}
+          data.forEach((e: any) => { map[e.id] = e })
+          setEventsData(map)
+        }
+        setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(ratedEventIds)])
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
+          {es ? 'MIS RESEÑAS' : 'MY REVIEWS'} ({ratedEventIds.length})
+        </h2>
+      </div>
+
+      {loading ? (
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
+          {es ? 'Cargando...' : 'Loading...'}
+        </p>
+      ) : ratedEventIds.length === 0 ? (
+        <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
+          {es ? 'Aún no has escrito reseñas ni valorado eventos.' : 'You haven\'t written any reviews or rated events yet.'}
+        </p>
+      ) : (
+        <div className="space-y-0 border-4 border-[var(--ink)]">
+          {ratedEventIds.map((id) => {
+            const ev = eventsData[id]
+            const r = ratings[id]
+            if (!ev || !r) return null
+            return (
+              <div key={id} className="p-4 border-b-[3px] border-[var(--ink)] last:border-b-0 flex flex-col sm:flex-row gap-4 items-start">
+                <div className="shrink-0 w-20 sm:w-24 border-[2px] border-[var(--ink)]">
+                  <Link href={`/${lang}/events/${ev.slug}`}>
+                    <CardThumbnail src={ev.image_url} alt={ev.name} aspectClass="aspect-square" fit="cover" />
+                  </Link>
+                </div>
+                <div className="flex-grow min-w-0">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <Link href={`/${lang}/events/${ev.slug}`} className="no-underline text-[var(--ink)] hover:text-[var(--red)]">
+                      <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase' }}>{ev.name}</div>
+                    </Link>
+                    <div className="text-[var(--yellow)]" style={{ fontSize: '16px' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                  </div>
+                  <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
+                    {ev.date_start || 'TBA'} — {ev.venue ? `${ev.venue}, ` : ''}{ev.city}, {ev.country}
+                  </div>
+                  {r.review && (
+                    <div className="mt-3 p-3 bg-[var(--paper-dark)] border-[2px] border-[var(--ink)] relative">
+                      <div className="absolute -top-3 left-3 text-[var(--dim)]" style={{ fontFamily: "Georgia, serif", fontSize: '32px', lineHeight: 1 }}>&ldquo;</div>
+                      <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--ink)', position: 'relative', zIndex: 1, margin: 0, whiteSpace: 'pre-line' }}>
+                        {r.review}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
