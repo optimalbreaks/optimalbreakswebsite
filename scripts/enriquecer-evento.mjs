@@ -488,6 +488,26 @@ async function runPatchRaveartRetroHalloween2025Poster(sb) {
 
 const RAVEART_SUMMER_2026_SLUG = 'raveart-summer-2026'
 
+/** Confirmaciones oficiales (dos tandas); nombres tal cartel / comunicación Raveart. */
+const RAVEART_SUMMER_2026_LINEUP = [
+  'BREAKFASTAZ (world premiere)',
+  '4AM KRU (live)',
+  'Baymont Bross',
+  'Hankook',
+  'Nosk',
+  'Paket',
+  'Pray for Bass',
+  'The Mind Hackers',
+  'Backdraft',
+  'Kid Panel',
+  'Frannabik',
+  'Karpin',
+  'Norbak',
+  'Prody',
+  'Seveng',
+  'Staxia',
+]
+
 const EVENT_ROW_DEFAULTS = {
   stages: [],
   schedule: [],
@@ -508,17 +528,30 @@ const RAVEART_SUMMER_2026_ROW = {
   name: 'Raveart Summer Festival 2026',
   image_url: '/images/events/summer-festival-2026.jpg',
   description_en:
-    'XXIV Anniversary Summer Festival: Saturday 4 July 2026 at Hacienda El Chaparrejo in Alcala de Guadaira (Seville / Sevilla area). Official poster and updates on raveart.es.',
+    'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Doors 16:00–07:00. First wave (international): BREAKFASTAZ (world premiere), 4AM KRU live. National: Baymont Bross, Hankook, Nosk, Paket, Pray for Bass, The Mind Hackers. Second wave: Backdraft, Kid Panel (Hungary); Frannabik, Karpin, Norbak, Prody, Seveng, Staxia. General admission includes entry plus minimum spend valid until 20:00; VIP adds VIP zone, drink, glass, re-entry pass within set hours and queue-free access. Tickets and updates on raveart.es.',
   description_es:
-    'Summer Festival del XXIV Aniversario: sabado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcala de Guadaira (Sevilla). Cartel e informacion en raveart.es.',
+    'Edición del XXIV aniversario el sábado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcalá de Guadaíra (Sevilla). Horario de apertura 16:00 h a 07:00 h. Primera tanda (internacionales): BREAKFASTAZ (primicia mundial), 4AM KRU en directo. Nacionales: Baymont Bross, Hankook, Nosk, Paket, Pray for Bass, The Mind Hackers. Segunda tanda: Backdraft, Kid Panel; Frannabik, Karpin, Norbak, Prody, Seveng, Staxia. Entrada general: entrada + consumición mínima válida hasta las 20:00 h. Entrada VIP: zona VIP, copa, vaso, bono ReAcceso en horarios establecidos y acceso sin colas. Venta de entradas e información en raveart.es.',
   event_type: 'upcoming',
   date_start: '2026-07-04',
   date_end: null,
-  location: 'Hacienda El Chaparrejo, Alcala de Guadaira, Seville',
+  location: 'Hacienda El Chaparrejo, Alcalá de Guadaíra, Sevilla',
   city: 'Alcala de Guadaira',
   country: 'Spain',
   venue: 'Hacienda El Chaparrejo',
   website: 'https://www.raveart.es/',
+  tickets_url: 'https://www.raveart.es/',
+  doors_open: '16:00',
+  doors_close: '07:00',
+  lineup: RAVEART_SUMMER_2026_LINEUP,
+  tags: [
+    'Raveart',
+    'Summer Festival',
+    'breakbeat',
+    'drum and bass',
+    'Sevilla',
+    'Alcalá de Guadaíra',
+    '2026',
+  ],
 }
 
 async function runPatchRaveartSummer2026(sb) {
@@ -545,7 +578,6 @@ async function runPatchRaveartSummer2026(sb) {
     slug: RAVEART_SUMMER_2026_SLUG,
     ...EVENT_ROW_DEFAULTS,
     ...RAVEART_SUMMER_2026_ROW,
-    lineup: [],
     is_featured: true,
     promoter_organization_id: org.id,
   }
