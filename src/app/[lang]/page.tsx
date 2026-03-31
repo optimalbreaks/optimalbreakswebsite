@@ -310,14 +310,17 @@ export default async function HomePage({
           </p>
           <div className="mt-5 sm:mt-6 animate-bounce">
             <span
-              className="inline-block"
+              className="inline-block border-[3px] border-[var(--ink)] shadow-[4px_4px_0_var(--ink)]"
               style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: '10px',
-                letterSpacing: '2px',
+                fontFamily: "'Unbounded', sans-serif",
+                fontWeight: 900,
+                fontSize: '14px',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
                 color: 'var(--yellow)',
-                background: 'var(--ink)',
-                padding: '4px 12px',
+                background: 'var(--red)',
+                padding: '8px 16px',
+                transform: 'rotate(-2deg)'
               }}
             >
               {h.press_play}

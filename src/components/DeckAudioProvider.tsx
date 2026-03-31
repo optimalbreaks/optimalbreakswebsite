@@ -44,8 +44,6 @@ export interface MixTrack {
 interface DeckAudioContextValue {
   dict: DeckDict
   isPlaying: boolean
-  leftActive: boolean
-  rightActive: boolean
   crossfader: number
   setCrossfader: (v: number) => void
   currentTrack: number
@@ -58,8 +56,6 @@ interface DeckAudioContextValue {
   sessionActive: boolean
   initAudio: () => void
   togglePlay: () => void
-  toggleDeckLeft: () => void
-  toggleDeckRight: () => void
   switchTrack: (direction: 1 | -1) => void
   seekToRatio: (ratio: number) => void
   handleScratchStart: (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => void
@@ -272,8 +268,6 @@ export function DeckAudioProvider({
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [sessionActive, setSessionActive] = useState(false)
-  const [leftActive, setLeftActive] = useState(true)
-  const [rightActive, setRightActive] = useState(true)
   const [crossfader, setCrossfader] = useState(50)
   const [currentTrack, setCurrentTrack] = useState(0)
   const currentTrackRef = useRef(0)
@@ -412,9 +406,6 @@ export function DeckAudioProvider({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initAudio, isPlaying, mode])
-
-  const toggleDeckLeft = useCallback(() => setLeftActive((v) => !v), [])
-  const toggleDeckRight = useCallback(() => setRightActive((v) => !v), [])
 
   // === Scratch handlers (unchanged) ===
   const handleScratchStart = useCallback(
@@ -685,8 +676,6 @@ export function DeckAudioProvider({
     () => ({
       dict,
       isPlaying,
-      leftActive,
-      rightActive,
       crossfader,
       setCrossfader,
       currentTrack,
@@ -699,8 +688,6 @@ export function DeckAudioProvider({
       sessionActive,
       initAudio,
       togglePlay,
-      toggleDeckLeft,
-      toggleDeckRight,
       switchTrack,
       seekToRatio,
       handleScratchStart,
@@ -721,8 +708,6 @@ export function DeckAudioProvider({
     [
       dict,
       isPlaying,
-      leftActive,
-      rightActive,
       crossfader,
       currentTrack,
       progress,

@@ -14,8 +14,6 @@ interface DjDeckProps {
     deck_model: string
     deck_a: string
     deck_b: string
-    play: string
-    stop: string
     mixer: string
     bpm: string
     crossfader: string
@@ -26,8 +24,6 @@ export default function DjDeck({ dict }: DjDeckProps) {
   const {
     dict: d,
     isPlaying,
-    leftActive,
-    rightActive,
     crossfader,
     setCrossfader,
     progress,
@@ -38,8 +34,6 @@ export default function DjDeck({ dict }: DjDeckProps) {
     rightRotation,
     initAudio,
     togglePlay,
-    toggleDeckLeft,
-    toggleDeckRight,
     switchTrack,
     seekToRatio,
     handleScratchStart,
@@ -99,35 +93,27 @@ export default function DjDeck({ dict }: DjDeckProps) {
         <Platter
           side="left"
           rotation={leftRotation}
-          active={leftActive}
           playing={isPlaying}
           scratching={scratchingLeft}
           track={track}
           labelColor="red"
-          onToggle={toggleDeckLeft}
           onScratchStart={handleScratchStart}
           onScratchMove={handleScratchMove}
           onScratchEnd={handleScratchEnd}
           deckLabel={h.deck_a}
-          dictPlay={h.play}
-          dictStop={h.stop}
         />
         <MixerPanel dict={d} isPlaying={isPlaying} crossfader={crossfader} setCrossfader={setCrossfader} togglePlay={togglePlay} layout="vertical" />
         <Platter
           side="right"
           rotation={rightRotation}
-          active={rightActive}
           playing={isPlaying}
           scratching={scratchingRight}
           track={track}
           labelColor="yellow"
-          onToggle={toggleDeckRight}
           onScratchStart={handleScratchStart}
           onScratchMove={handleScratchMove}
           onScratchEnd={handleScratchEnd}
           deckLabel={h.deck_b}
-          dictPlay={h.play}
-          dictStop={h.stop}
         />
       </div>
 
@@ -136,35 +122,27 @@ export default function DjDeck({ dict }: DjDeckProps) {
           <Platter
             side="left"
             rotation={leftRotation}
-            active={leftActive}
             playing={isPlaying}
             scratching={scratchingLeft}
             track={track}
             labelColor="red"
-            onToggle={toggleDeckLeft}
             onScratchStart={handleScratchStart}
             onScratchMove={handleScratchMove}
             onScratchEnd={handleScratchEnd}
             deckLabel={h.deck_a}
-            dictPlay={h.play}
-            dictStop={h.stop}
             compact
           />
           <Platter
             side="right"
             rotation={rightRotation}
-            active={rightActive}
             playing={isPlaying}
             scratching={scratchingRight}
             track={track}
             labelColor="yellow"
-            onToggle={toggleDeckRight}
             onScratchStart={handleScratchStart}
             onScratchMove={handleScratchMove}
             onScratchEnd={handleScratchEnd}
             deckLabel={h.deck_b}
-            dictPlay={h.play}
-            dictStop={h.stop}
             compact
           />
         </div>
@@ -177,34 +155,26 @@ export default function DjDeck({ dict }: DjDeckProps) {
 function Platter({
   side,
   rotation,
-  active,
   playing,
   scratching,
   track,
   labelColor,
-  onToggle,
   onScratchStart,
   onScratchMove,
   onScratchEnd,
   deckLabel,
-  dictPlay,
-  dictStop,
   compact = false,
 }: {
   side: 'left' | 'right'
   rotation: number
-  active: boolean
   playing: boolean
   scratching: boolean
   track: { title: string; artist: string }
   labelColor: string
-  onToggle: () => void
   onScratchStart: (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => void
   onScratchMove: (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => void
   onScratchEnd: () => void
   deckLabel: string
-  dictPlay: string
-  dictStop: string
   compact?: boolean
 }) {
   const labelBg =
@@ -212,7 +182,7 @@ function Platter({
   const labelText = labelColor === 'red' ? 'white' : 'var(--ink)'
 
   return (
-    <div style={{ opacity: active ? 1 : 0.4, transition: 'opacity 0.2s' }}>
+    <div>
       <div className={`relative flex items-center justify-center bg-[#0e0e12] rounded-md border-2 border-white/[0.06] ${compact ? 'aspect-square' : 'aspect-square'}`}>
         <div
           className={`${compact ? 'w-[85%]' : 'w-[82%]'} aspect-square rounded-full relative select-none`}
@@ -258,7 +228,7 @@ function Platter({
           style={{
             background: 'linear-gradient(180deg, #666, #444)',
             transformOrigin: 'top center',
-            transform: playing && active && !scratching ? 'rotate(8deg)' : 'rotate(-15deg)',
+            transform: playing && !scratching ? 'rotate(8deg)' : 'rotate(-15deg)',
           }}
         >
           <div className="absolute -top-[3px] -left-[2px] sm:-left-[3px] w-[6px] h-[6px] sm:w-[9px] sm:h-[9px] rounded-full bg-[#555]" />
@@ -268,16 +238,6 @@ function Platter({
 
       <div className={`text-center ${compact ? 'mt-1' : 'mt-2'}`} style={{ fontFamily: "'Courier Prime', monospace", fontSize: compact ? '7px' : '9px', letterSpacing: '3px', color: 'rgba(255,255,255,0.3)' }}>
         {deckLabel}
-      </div>
-      <div className={`flex justify-center ${compact ? 'mt-1' : 'mt-2'}`}>
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`border-2 cursor-pointer transition-all duration-100 ${compact ? 'px-2 py-[3px]' : 'px-[18px] py-[5px]'} ${active ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-transparent text-[var(--yellow)] border-white/[0.15] hover:bg-[var(--yellow)] hover:text-[var(--ink)] hover:border-[var(--yellow)]'}`}
-          style={{ fontFamily: "'Courier Prime', monospace", fontSize: compact ? '8px' : '10px', letterSpacing: compact ? '1px' : '3px', textTransform: 'uppercase' }}
-        >
-          {active ? `▶ ${dictPlay}` : `■ ${dictStop}`}
-        </button>
       </div>
     </div>
   )
