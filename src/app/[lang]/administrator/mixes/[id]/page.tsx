@@ -7,6 +7,7 @@ import AdminForm from '@/components/admin/AdminForm'
 import SlugField from '@/components/admin/SlugField'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ImageUpload from '@/components/admin/ImageUpload'
+import { datetimeLocalToIso, isoToDatetimeLocal } from '@/lib/mix-datetime-local'
 
 const MIX_TYPES = [
   { value: 'essential_mix', label: 'Essential Mix' },
@@ -48,13 +49,18 @@ export default function MixEditPage() {
     platform: 'soundcloud' as string,
     image_url: null as string | null,
     is_featured: false,
+    published_at: null as string | null,
   })
 
   useEffect(() => {
     if (!id) return
     adminGetRowById('mixes', id)
       .then((found: any) => {
-        if (found) setForm(found)
+        if (found)
+          setForm({
+            ...found,
+            published_at: found.published_at ?? null,
+          })
       })
       .catch(() => {})
   }, [id])
@@ -72,6 +78,7 @@ export default function MixEditPage() {
         artist_id: form.artist_id || null,
         embed_url: form.embed_url || null,
         video_url: form.video_url || null,
+        published_at: form.published_at,
       })
       router.push(`/${lang}/administrator/mixes`)
     } catch (err) {
@@ -167,6 +174,19 @@ export default function MixEditPage() {
           }
           className={inputClass}
         />
+      </div>
+
+      <div>
+        <label className={labelClass}>Publicado en plataforma</label>
+        <input
+          type="datetime-local"
+          value={isoToDatetimeLocal(form.published_at)}
+          onChange={(e) => set('published_at', datetimeLocalToIso(e.target.value))}
+          className={inputClass}
+        />
+        <p className="admin-muted text-xs mt-1 normal-case">
+          Opcional: fecha real de publicación (p. ej. YouTube). Prioritaria para el orden en /mixes.
+        </p>
       </div>
 
       <div>

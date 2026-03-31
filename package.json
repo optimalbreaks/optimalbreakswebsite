@@ -27,7 +27,8 @@
     "db:artist:photo": "node scripts/elegir-foto-artista.mjs",
     "db:label:photo": "node scripts/elegir-foto-sello.mjs",
     "db:events:enrich": "node scripts/enriquecer-evento.mjs",
-    "db:events:poster": "node scripts/elegir-poster-evento.mjs"
+    "db:events:poster": "node scripts/elegir-poster-evento.mjs",
+    "db:mixes:published": "node scripts/backfill-mix-youtube-published-at.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.1",

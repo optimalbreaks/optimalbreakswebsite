@@ -101,7 +101,12 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
-  const { data: mixes } = await supabase.from('mixes').select('*').order('year', { ascending: false })
+  const { data: mixes } = await supabase
+    .from('mixes')
+    .select('*')
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .order('year', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
   const list = (mixes || []) as Mix[]
 
   return (

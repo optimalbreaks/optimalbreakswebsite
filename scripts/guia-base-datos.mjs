@@ -182,6 +182,15 @@ const ACTIONS = [
     description: 'Solo los ficheros SQL indicados tras --.',
   },
   {
+    id: 'mixes-published',
+    run: 'node scripts/guia-base-datos.mjs run mixes-published [--force]',
+    npm: 'npm run db:mixes:published -- [--force]',
+    creds:
+      'NEXT_PUBLIC_SUPABASE_URL + SERVICE_ROLE. Aplicar antes migración 021_mixes_published_at.sql (Postgres o SQL Editor).',
+    description:
+      'Rellena mixes.published_at desde fecha de publicación de YouTube (API v3 con YOUTUBE_DATA_API_KEY, o yt-dlp, o scraping HTML). --force sobrescribe fechas ya guardadas.',
+  },
+  {
     id: 'verify',
     run: 'node scripts/guia-base-datos.mjs run verify',
     npm: 'npm run db:verify',
@@ -251,6 +260,7 @@ Punto de entrada unificado:
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
+  mixes-published [--force]  backfill-mix-youtube-published-at.mjs (fecha publicación YouTube → orden /mixes)
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -516,6 +526,9 @@ function main() {
       runNode('seed-supabase.mjs', ['--files', ...files])
       break
     }
+    case 'mixes-published':
+      runNode('backfill-mix-youtube-published-at.mjs', rest)
+      break
     case 'verify':
       runNode('seed-supabase.mjs', ['--verify'])
       break

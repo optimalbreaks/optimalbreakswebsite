@@ -1,0 +1,83 @@
+-- Lady Waks — cuatro sesiones YouTube (Heat Pro / Breakbeat Fest Granada / From Russia With Bass)
+INSERT INTO public.mixes (
+  slug,
+  title,
+  artist_name,
+  description_en,
+  description_es,
+  mix_type,
+  year,
+  duration_minutes,
+  platform,
+  video_url,
+  embed_url,
+  is_featured
+) VALUES
+  (
+    'lady-waks-heat-closing-boiler-xl-2025',
+    'Lady Waks — Heat Closing Boiler XL 2025',
+    'Lady Waks',
+    'Lady Waks closing set at Boiler XL 2025 (Heat Pro). Breakbeat energy from a major Russian/club context.',
+    'Cierre de Lady Waks en Boiler XL 2025 (Heat Pro). Energía breakbeat en un contexto de club destacado.',
+    'youtube_session',
+    2025,
+    NULL,
+    'youtube',
+    'https://youtu.be/fNxM71G5xYM',
+    'https://youtu.be/fNxM71G5xYM',
+    TRUE
+  ),
+  (
+    'lady-waks-live-granada-breakbeat-fest-2026',
+    'Lady Waks — Live Breakbeat Fest Granada (21 Feb 2026)',
+    'Lady Waks',
+    'Live mix recorded at Breakbeat Fest in Granada, Spain (21 February 2026).',
+    'Mix en directo en Breakbeat Fest, Granada (21 de febrero de 2026).',
+    'youtube_session',
+    2026,
+    NULL,
+    'youtube',
+    'https://youtu.be/-rnf5297XZA',
+    'https://youtu.be/-rnf5297XZA',
+    TRUE
+  ),
+  (
+    'lady-waks-from-russia-with-bass-003-st-petersburg',
+    'Lady Waks — From Russia With Bass #003 (St. Petersburg)',
+    'Lady Waks',
+    'Episode #003 of the From Russia With Bass series: Lady Waks in St. Petersburg (LadyWaksRadio).',
+    'Episodio #003 de From Russia With Bass: Lady Waks en San Petersburgo (LadyWaksRadio).',
+    'youtube_session',
+    2021,
+    NULL,
+    'youtube',
+    'https://youtu.be/6cps7-SSu3g',
+    'https://youtu.be/6cps7-SSu3g',
+    TRUE
+  ),
+  (
+    'lady-waks-from-russia-with-bass-006',
+    'Lady Waks — From Russia With Bass #006',
+    'Lady Waks',
+    'Episode #006 of From Russia With Bass (LadyWaksRadio).',
+    'Episodio #006 de From Russia With Bass (LadyWaksRadio).',
+    'youtube_session',
+    2025,
+    NULL,
+    'youtube',
+    'https://youtu.be/pjzoSqoH4dQ',
+    'https://youtu.be/pjzoSqoH4dQ',
+    TRUE
+  )
+ON CONFLICT (slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  artist_name = EXCLUDED.artist_name,
+  description_en = EXCLUDED.description_en,
+  description_es = EXCLUDED.description_es,
+  mix_type = EXCLUDED.mix_type,
+  year = EXCLUDED.year,
+  duration_minutes = EXCLUDED.duration_minutes,
+  platform = EXCLUDED.platform,
+  video_url = EXCLUDED.video_url,
+  embed_url = EXCLUDED.embed_url,
+  is_featured = EXCLUDED.is_featured;

@@ -38,6 +38,23 @@ function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; ti
   )
 }
 
+/** Fecha de publicación (YouTube) o año catalogado + duración opcional. */
+function formatMixDateLine(m: Mix, lang: string): string {
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB'
+  const published = m.published_at
+  const datePart = published
+    ? new Date(published).toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
+    : m.year != null
+      ? String(m.year)
+      : '—'
+  const dur = m.duration_minutes != null ? ` · ${m.duration_minutes} min` : ''
+  return `${datePart}${dur}`
+}
+
 interface Props {
   mixes: Mix[]
   dict: { view_large: string; view_compact: string; view_list: string }
@@ -99,7 +116,7 @@ function LargeGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="cutout red" style={{ margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
                 <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
-                  {m.year} · {m.duration_minutes} min
+                  {formatMixDateLine(m, lang)}
                 </span>
               </div>
               <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
@@ -151,8 +168,11 @@ function CompactGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
               <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
                 {m.title}
               </div>
-              <div className="flex gap-1 mt-1">
+              <div className="flex flex-wrap gap-1 mt-1 items-center">
                 <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'var(--dim)' }}>
+                  {formatMixDateLine(m, lang)}
+                </span>
               </div>
               {ytId ? (
                 <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
@@ -186,7 +206,15 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
-                    <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.year}</span>
+                    <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
+                      {m.published_at
+                        ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : m.year ?? '—'}
+                    </span>
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
                     {m.title}
@@ -229,7 +257,15 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
             </div>
             <div className="hidden sm:flex gap-2 shrink-0 items-center">
               <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
-              <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.year}</span>
+              <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
+                {m.published_at
+                  ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : m.year ?? '—'}
+              </span>
               {m.embed_url ? (
                 <a href={m.embed_url} target="_blank" rel="noopener noreferrer" className="bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 8px' }}>
                   ▶

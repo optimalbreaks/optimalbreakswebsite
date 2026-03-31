@@ -69,6 +69,25 @@ type HomeEventRow = Pick<
   'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url'
 >
 
+/** «Hoy» calendario (sitio centrado en España; coherente en SSR). */
+const HOME_EVENTS_TZ = 'Europe/Madrid'
+
+function todayYmdHome(): string {
+  return new Date().toLocaleDateString('en-CA', { timeZone: HOME_EVENTS_TZ })
+}
+
+/** Próximos = aún no han terminado: último día del evento ≥ hoy. Sin fechas = se mantiene (TBA). */
+function isEventUpcomingForHomeSection(e: Pick<HomeEventRow, 'date_start' | 'date_end'>): boolean {
+  if (!e.date_start && !e.date_end) return true
+  const lastYmd = String(e.date_end || e.date_start || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastYmd)) return true
+  return lastYmd >= todayYmdHome()
+}
+
+function filterUpcomingHomeEvents(rows: HomeEventRow[]): HomeEventRow[] {
+  return rows.filter(isEventUpcomingForHomeSection)
+}
+
 function sortEventsForHome<T extends { event_type?: string; date_start?: string | null }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
@@ -174,13 +193,14 @@ export default async function HomePage({
     .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
     .eq('is_featured', true)
 
-  let homeEvents = (featuredEventsRaw || []) as HomeEventRow[]
+  let homeEvents = filterUpcomingHomeEvents((featuredEventsRaw || []) as HomeEventRow[])
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
       .select('slug, name, date_start, date_end, venue, city, country, event_type, image_url')
       .limit(48)
-    homeEvents = sortEventsForHome((anyEvents || []) as HomeEventRow[]).slice(0, 4)
+    homeEvents = filterUpcomingHomeEvents((anyEvents || []) as HomeEventRow[])
+    homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
   } else {
     homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
   }

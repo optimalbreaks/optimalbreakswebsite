@@ -21,6 +21,7 @@ interface Mix {
   platform: 'soundcloud' | 'youtube' | 'mixcloud' | 'other'
   image_url: string | null
   is_featured: boolean
+  published_at?: string | null
 }
 
 export default function MixesListPage() {
@@ -57,6 +58,18 @@ export default function MixesListPage() {
           { key: 'mix_type', label: 'Tipo' },
           { key: 'platform', label: 'Plataforma' },
           { key: 'year', label: 'Año' },
+          {
+            key: 'published_at',
+            label: 'Publicado',
+            render: (_: unknown, row: Mix) =>
+              row.published_at
+                ? new Date(row.published_at).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                : '—',
+          },
           {
             key: 'is_featured',
             label: 'Destacado',

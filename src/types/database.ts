@@ -353,6 +353,8 @@ export interface Mix extends Record<string, unknown> {
   platform: 'soundcloud' | 'youtube' | 'mixcloud' | 'other'
   image_url: string | null
   is_featured: boolean
+  /** Fecha de publicación en la plataforma (p. ej. YouTube); ordenación principal en /mixes */
+  published_at?: string | null
 }
 
 export interface HistoryEntry extends Record<string, unknown> {
