@@ -11,8 +11,8 @@ export const SITE_URL = 'https://www.optimalbreaks.com' as const
 /** Referenced in manifest / JSON-LD logo; PWA icons. */
 export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 
-/** Home /es: foto real (artista + equipo) para previews en redes. */
-export const HOME_OG_IMAGE_ES = '/images/foto_equipo_winter2026_4_artist_krafty_kuts.jpeg' as const
+/** Home /en y /es: imagen OG compartida (Facebook, X, etc.). */
+export const HOME_OG_IMAGE = '/images/og-home-optimal-beats.jpeg' as const
 
 /** Ruta generada por `app/[lang]/opengraph-image.tsx` (1200×630). */
 export function generatedOgImageUrl(lang: Locale): string {
