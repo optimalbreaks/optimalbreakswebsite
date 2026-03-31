@@ -46,12 +46,19 @@ export default function DjDeck({ dict }: DjDeckProps) {
   const h = dict
 
   return (
-    <div className="relative z-[2] w-full min-w-0 max-w-[880px] mx-auto bg-[var(--ink)] border-4 border-[var(--ink)] p-3 sm:p-5 shadow-[8px_8px_0_rgba(0,0,0,0.15)]">
+    <div className="relative z-[2] w-full min-w-0 max-w-[880px] mx-auto bg-[#1a1a1c] rounded-lg p-3 sm:p-5 shadow-[10px_10px_0_rgba(0,0,0,0.3)] border-t-[2px] border-l-[2px] border-white/[0.05] border-b-[4px] border-r-[4px] border-black/[0.8] overflow-hidden">
+      {/* Worn noise texture */}
+      <div className="absolute inset-0 opacity-[0.15] pointer-events-none mix-blend-overlay z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+      {/* Scratches/wear simulation */}
+      <div className="absolute top-[10%] left-[5%] w-[100px] h-[1px] bg-white/[0.03] rotate-45 pointer-events-none z-0" />
+      <div className="absolute bottom-[20%] right-[10%] w-[60px] h-[1px] bg-white/[0.04] -rotate-12 pointer-events-none z-0" />
+      <div className="absolute top-[50%] right-[30%] w-[150px] h-[2px] bg-black/[0.2] rotate-3 pointer-events-none z-0" />
+
       {/* Tape */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-[80px] sm:w-[100px] h-[22px] z-10" style={{ background: 'var(--tape)' }} />
+      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[80px] sm:w-[100px] h-[22px] z-10 shadow-sm" style={{ background: 'var(--tape)', transform: 'rotate(-1deg)' }} />
 
       {/* Top bar — track selector */}
-      <div className="flex justify-between items-center mb-3 pb-2 border-b border-dashed border-white/10 gap-2">
+      <div className="relative z-10 flex justify-between items-center mb-4 pb-2 border-b border-white/5 gap-2 shadow-[0_1px_0_rgba(0,0,0,0.5)]">
         <div className="hidden sm:block" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--yellow)', letterSpacing: '3px' }}>
           {h.deck_brand}
         </div>
@@ -72,7 +79,7 @@ export default function DjDeck({ dict }: DjDeckProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="mb-3 px-1">
+      <div className="relative z-10 mb-5 px-1">
         <div
           className="h-[3px] bg-white/10 rounded-full relative cursor-pointer"
           onClick={(e) => {
@@ -89,7 +96,7 @@ export default function DjDeck({ dict }: DjDeckProps) {
         </div>
       </div>
 
-      <div className="hidden md:grid grid-cols-[1fr_170px_1fr] gap-3 items-center">
+      <div className="relative z-10 hidden md:grid grid-cols-[1fr_170px_1fr] gap-4 items-center">
         <Platter
           side="left"
           rotation={leftRotation}
@@ -117,8 +124,8 @@ export default function DjDeck({ dict }: DjDeckProps) {
         />
       </div>
 
-      <div className="md:hidden">
-        <div className="grid grid-cols-2 gap-2 mb-3">
+      <div className="relative z-10 md:hidden">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <Platter
             side="left"
             rotation={leftRotation}
@@ -179,14 +186,18 @@ function Platter({
 }) {
   return (
     <div>
-      <div className={`relative flex items-center justify-center bg-[#0e0e12] rounded-md border-2 border-white/[0.06] ${compact ? 'aspect-square' : 'aspect-square'}`}>
+      <div className={`relative flex items-center justify-center bg-[#131316] rounded-md border-t border-l border-white/[0.08] border-b-2 border-r-2 border-black/[0.6] shadow-inner overflow-hidden ${compact ? 'aspect-square' : 'aspect-square'}`}>
+        {/* Technics style strobe dots ring */}
+        <div className="absolute w-[94%] aspect-square rounded-full bg-[#222] shadow-[0_0_15px_rgba(0,0,0,0.9)_inset]" />
+        <div className="absolute w-[92%] aspect-square rounded-full" style={{ background: 'repeating-conic-gradient(from 0deg, #666 0deg 1.5deg, #111 1.5deg 3deg)', transform: `rotate(${rotation}deg)` }} />
+        <div className="absolute w-[88%] aspect-square rounded-full bg-[#0a0a0c] shadow-[0_2px_4px_rgba(0,0,0,0.5)]" />
+
         <div
-          className={`${compact ? 'w-[85%]' : 'w-[82%]'} aspect-square rounded-full relative select-none`}
+          className={`${compact ? 'w-[84%]' : 'w-[81%]'} aspect-square rounded-full relative select-none shadow-[0_0_10px_rgba(0,0,0,0.8)]`}
           style={{
             backgroundImage: `url(/images/${side === 'left' ? 'disco_optimal_breaks_A.webp' : 'disco_optimal_breaks.webp'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            border: '2px solid rgba(255,255,255,0.08)',
             transform: `rotate(${rotation}deg)`,
             cursor: scratching ? 'grabbing' : 'grab',
           }}
@@ -203,15 +214,19 @@ function Platter({
         </div>
 
         <div
-          className={`absolute top-[6px] right-[8px] sm:right-[10px] z-[5] w-[2px] sm:w-[3px] rounded-[2px] transition-transform duration-500 ${compact ? 'h-[40%]' : 'h-1/2'}`}
+          className={`absolute top-[8%] right-[6%] z-[5] w-[3px] sm:w-[4px] rounded-[2px] transition-transform duration-500 shadow-[-2px_2px_4px_rgba(0,0,0,0.5)] ${compact ? 'h-[42%]' : 'h-[52%]'}`}
           style={{
-            background: 'linear-gradient(180deg, #666, #444)',
+            background: 'linear-gradient(90deg, #999 0%, #ccc 40%, #555 100%)',
             transformOrigin: 'top center',
-            transform: playing && !scratching ? 'rotate(8deg)' : 'rotate(-15deg)',
+            transform: playing && !scratching ? 'rotate(22deg)' : 'rotate(0deg)',
           }}
         >
-          <div className="absolute -top-[3px] -left-[2px] sm:-left-[3px] w-[6px] h-[6px] sm:w-[9px] sm:h-[9px] rounded-full bg-[#555]" />
-          <div className="absolute -bottom-[2px] -left-[1px] sm:-left-[2px] w-[5px] h-[7px] sm:w-[7px] sm:h-[10px] bg-[#777] rounded-[1px]" />
+          {/* Tonearm base */}
+          <div className="absolute -top-[10px] -left-[12px] sm:-top-[14px] sm:-left-[16px] w-[26px] h-[26px] sm:w-[36px] sm:h-[36px] rounded-full bg-[#111] border-2 border-[#333] flex items-center justify-center shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+            <div className="w-[12px] h-[12px] sm:w-[16px] sm:h-[16px] rounded-full bg-gradient-to-br from-[#888] to-[#333]" />
+          </div>
+          {/* Headhead */}
+          <div className="absolute -bottom-[4px] -left-[2px] sm:-left-[3px] w-[7px] h-[12px] sm:w-[10px] sm:h-[16px] bg-[#222] rounded-[1px] border-t-2 border-[#555] shadow-[-2px_4px_4px_rgba(0,0,0,0.4)]" style={{ transform: 'rotate(20deg)', transformOrigin: 'top center' }} />
         </div>
       </div>
 
@@ -240,7 +255,7 @@ function MixerPanel({
   const isH = layout === 'horizontal'
 
   return (
-    <div className={`bg-[#0a0a0e] border border-white/[0.06] rounded-md ${isH ? 'p-3 flex flex-wrap items-center justify-center gap-3' : 'p-3 flex flex-col gap-3 items-center'}`}>
+    <div className={`bg-[#141416] border-t border-l border-white/[0.08] border-b-[3px] border-r-[3px] border-black/[0.8] rounded-md shadow-inner ${isH ? 'p-3 flex flex-wrap items-center justify-center gap-4' : 'p-4 flex flex-col gap-4 items-center'}`}>
       <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '3px', color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase' }}>
         {dict.mixer}
       </div>
@@ -286,10 +301,17 @@ function MixerPanel({
       <button
         type="button"
         onClick={togglePlay}
-        className={`border-2 cursor-pointer transition-all duration-150 ${isH ? 'px-6 py-2' : 'w-full py-3'} ${isPlaying ? 'bg-[var(--red)] border-[var(--red)] text-white' : 'bg-[var(--yellow)] border-[var(--yellow)] text-[var(--ink)]'}`}
-        style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '12px' : '14px', letterSpacing: '3px', textTransform: 'uppercase' }}
+        className={`relative flex flex-col items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_6px_12px_rgba(0,0,0,0.6)] active:shadow-[0_2px_4px_rgba(0,0,0,0.8)] active:translate-y-[2px] ${isH ? 'w-16 h-16' : 'w-20 h-20'}`}
+        style={{
+          background: 'linear-gradient(135deg, #333 0%, #111 100%)',
+          border: '4px solid #080808',
+          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5)'
+        }}
       >
-        {isPlaying ? '■ PAUSE' : '▶ PLAY'}
+        <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full mb-1 sm:mb-1.5 transition-colors duration-200 ${isPlaying ? 'bg-[var(--red)] shadow-[0_0_10px_var(--red)]' : 'bg-red-900/40 shadow-inner'}`} />
+        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '7px' : '9px', letterSpacing: '1px', color: isPlaying ? '#fff' : '#666' }}>
+          {isPlaying ? 'STOP' : 'START'}
+        </span>
       </button>
 
       <div className={`bg-[#070709] border border-white/[0.04] rounded-[3px] text-center ${isH ? 'px-4 py-2' : 'p-[6px] w-full'}`} style={{ animation: isPlaying ? 'bpmPulse 1s ease-in-out infinite' : 'none' }}>
@@ -324,17 +346,21 @@ type MixerDict = Pick<DeckDict, 'mixer' | 'bpm' | 'crossfader'>
 
 function Knob({ label, colorClass, compact = false }: { label: string; colorClass: string; compact?: boolean }) {
   const [angle, setAngle] = useState(0)
+  const colorVar = colorClass.replace('bg-[', '').replace(']', '')
+  
   return (
     <div className="text-center">
-      <label className="block mb-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', color: 'rgba(255,255,255,0.25)' }}>
+      <label className="block mb-1 sm:mb-2" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', color: 'rgba(255,255,255,0.4)', textShadow: '0 1px 1px rgba(0,0,0,0.8)' }}>
         {label}
       </label>
       <div
-        className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-full border-2 border-[#555] mx-auto relative cursor-pointer transition-transform duration-200`}
-        style={{ background: 'conic-gradient(from 220deg, #333, #555, #333)', transform: `rotate(${angle}deg)` }}
+        className={`${compact ? 'w-7 h-7' : 'w-9 h-9'} rounded-full border-[2px] border-[#0a0a0c] mx-auto relative cursor-pointer transition-transform duration-200 shadow-[0_4px_6px_rgba(0,0,0,0.6)]`}
+        style={{ background: 'conic-gradient(from 220deg, #444, #777, #222, #444)', transform: `rotate(${angle}deg)` }}
         onClick={() => setAngle((a) => (a + 30) % 360)}
       >
-        <div className={`absolute top-[2px] sm:top-[3px] left-1/2 -translate-x-1/2 w-[2px] ${compact ? 'h-[6px]' : 'h-[8px]'} rounded-[1px] ${colorClass}`} />
+        {/* Inner dimple */}
+        <div className="absolute inset-[4px] rounded-full bg-gradient-to-br from-[#222] to-[#111] shadow-inner" />
+        <div className={`absolute top-[2px] sm:top-[2px] left-1/2 -translate-x-1/2 w-[2px] ${compact ? 'h-[8px]' : 'h-[10px]'} rounded-[1px] ${colorClass}`} style={{ boxShadow: `0 0 4px ${colorVar}` }} />
       </div>
     </div>
   )
