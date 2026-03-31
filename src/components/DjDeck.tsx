@@ -186,7 +186,7 @@ function Platter({
 }) {
   return (
     <div>
-      <div className={`relative flex items-center justify-center bg-[#131316] rounded-md border-t border-l border-white/[0.08] border-b-2 border-r-2 border-black/[0.6] shadow-inner overflow-hidden ${compact ? 'aspect-square' : 'aspect-square'}`}>
+      <div className={`relative flex items-center justify-center bg-[#131316] rounded-md border-t border-l border-white/[0.08] border-b-2 border-r-2 border-black/[0.6] shadow-inner overflow-hidden ${compact ? 'aspect-square' : 'aspect-square'}`} style={{ touchAction: 'none' }}>
         {/* Technics style strobe dots ring */}
         <div className="absolute w-[94%] aspect-square rounded-full bg-[#222] shadow-[0_0_15px_rgba(0,0,0,0.9)_inset]" />
         <div className="absolute w-[92%] aspect-square rounded-full" style={{ background: 'repeating-conic-gradient(from 0deg, #666 0deg 1.5deg, #111 1.5deg 3deg)', transform: `rotate(${rotation}deg)` }} />
