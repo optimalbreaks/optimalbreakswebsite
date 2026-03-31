@@ -349,6 +349,7 @@ export interface Mix extends Record<string, unknown> {
   year: number | null
   duration_minutes: number | null
   embed_url: string | null
+  video_url: string | null
   platform: 'soundcloud' | 'youtube' | 'mixcloud' | 'other'
   image_url: string | null
   is_featured: boolean

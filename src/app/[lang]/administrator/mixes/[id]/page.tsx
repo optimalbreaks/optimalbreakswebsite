@@ -44,6 +44,7 @@ export default function MixEditPage() {
     year: null as number | null,
     duration_minutes: null as number | null,
     embed_url: '' as string | null,
+    video_url: '' as string | null,
     platform: 'soundcloud' as string,
     image_url: null as string | null,
     is_featured: false,
@@ -70,6 +71,7 @@ export default function MixEditPage() {
         ...form,
         artist_id: form.artist_id || null,
         embed_url: form.embed_url || null,
+        video_url: form.video_url || null,
       })
       router.push(`/${lang}/administrator/mixes`)
     } catch (err) {
@@ -180,13 +182,26 @@ export default function MixEditPage() {
       </div>
 
       <div className="md:col-span-2">
-        <label className={labelClass}>Embed URL</label>
+        <label className={labelClass}>Embed URL (audio: SoundCloud, Mixcloud…)</label>
         <input
           type="text"
           value={form.embed_url ?? ''}
           onChange={(e) => set('embed_url', e.target.value)}
           className={inputClass}
+          placeholder="https://soundcloud.com/..."
         />
+      </div>
+
+      <div className="md:col-span-2">
+        <label className={labelClass}>Video URL (YouTube)</label>
+        <input
+          type="text"
+          value={form.video_url ?? ''}
+          onChange={(e) => set('video_url', e.target.value)}
+          className={inputClass}
+          placeholder="https://youtu.be/... o https://youtube.com/watch?v=..."
+        />
+        <p className="admin-muted text-xs mt-1 normal-case">Si se rellena, se mostrará el vídeo embebido en la tarjeta del mix</p>
       </div>
 
       <div className="md:col-span-2">
