@@ -260,6 +260,14 @@ export default function SeenLiveButton({ artistId, artistName, lang }: Props) {
                 </button>
               ))}
             </div>
+            <textarea
+              placeholder={es ? 'Notas / mini reseña (opcional)' : 'Notes / mini review (optional)'}
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] resize-y min-h-[72px]"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '13px' }}
+            />
             {saveError && (
               <p className="text-[var(--red)]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', lineHeight: 1.4, margin: 0 }}>
                 {saveError}
