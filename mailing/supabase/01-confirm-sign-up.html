@@ -87,7 +87,7 @@
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin-bottom:20px;">
                       <tr>
                         <td align="left" bgcolor="#d62828" style="border:3px solid #1a1a1a;">
-                          <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block; padding:14px 28px; font-family:Arial Black,Arial,Helvetica,sans-serif; font-size:14px; line-height:1.2; color:#ffffff; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
+                          <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup" target="_blank" style="display:inline-block; padding:14px 28px; font-family:Arial Black,Arial,Helvetica,sans-serif; font-size:14px; line-height:1.2; color:#ffffff; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
                             Confirmar correo
                           </a>
                         </td>
@@ -97,7 +97,7 @@
                       Si el botón no funciona, pega este enlace en el navegador:
                     </p>
                     <p style="margin:0 0 20px 0; font-family:Courier New,Courier,monospace; font-size:11px; line-height:1.45; color:#1a1a1a; word-break:break-all;">
-                      {{ .ConfirmationURL }}
+                      {{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=signup
                     </p>
                     <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.5; color:#4a4238;">
                       Código alternativo (si lo pide la web): <strong style="color:#1a1a1a; font-size:16px; letter-spacing:2px;">{{ .Token }}</strong>

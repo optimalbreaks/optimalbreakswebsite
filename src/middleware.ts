@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/music') ||
     pathname.startsWith('/images/') ||
     pathname.includes('/auth/callback') ||
+    pathname.includes('/auth/confirm') ||
     pathname.includes('.')
   ) {
     return NextResponse.next()
