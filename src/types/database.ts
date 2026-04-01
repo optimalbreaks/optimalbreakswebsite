@@ -45,6 +45,7 @@ export type ChartTrack = {
   beatport_url: string | null
   artwork_url: string | null
   sample_url: string | null
+  waveform_url: string | null
   previous_position: number | null
   weeks_in_chart: number
 }

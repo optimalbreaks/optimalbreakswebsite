@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const ALLOWED_HOSTS = ['geo-samples.beatport.com']
+const ALLOWED_HOSTS = ['geo-samples.beatport.com', 'geo-media.beatport.com']
 const MAX_SIZE = 10 * 1024 * 1024 // 10 MB
 
 export async function GET(request: NextRequest) {

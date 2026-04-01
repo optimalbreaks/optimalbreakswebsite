@@ -5,7 +5,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartTrack, ChartTrackArtist } from '@/types/database'
 
@@ -113,87 +113,175 @@ function ArtistNames({ artists }: { artists: ChartTrackArtist[] }) {
 }
 
 let currentPlayingAudio: HTMLAudioElement | null = null
-let currentPlayingSetter: ((playing: boolean) => void) | null = null
+let currentPlayingPauser: (() => void) | null = null
 
-function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: any }) {
+function formatTime(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = Math.floor(s % 60)
+  return `${m}:${sec.toString().padStart(2, '0')}`
+}
+
+function PreviewPlayer({
+  sampleUrl,
+  waveformUrl,
+  dict,
+}: {
+  sampleUrl: string | null
+  waveformUrl: string | null
+  dict: any
+}) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const rafRef = useRef<number>(0)
+  const barRef = useRef<HTMLDivElement | null>(null)
   const [playing, setPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
 
   if (!sampleUrl) return null
 
-  const proxiedUrl = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
+  const proxiedAudio = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
+  const proxiedWaveform = waveformUrl
+    ? `/api/audio-proxy?url=${encodeURIComponent(waveformUrl)}`
+    : null
+
+  const tick = useCallback(() => {
+    const a = audioRef.current
+    if (a && a.duration) {
+      setProgress(a.currentTime / a.duration)
+      setCurrentTime(a.currentTime)
+      setDuration(a.duration)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+  }, [])
+
+  const stopTick = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = 0
+  }, [])
+
+  useEffect(() => () => stopTick(), [stopTick])
+
+  const pauseThis = useCallback(() => {
+    audioRef.current?.pause()
+    setPlaying(false)
+    stopTick()
+  }, [stopTick])
 
   const toggle = () => {
     const audio = audioRef.current
     if (!audio) return
 
     if (playing) {
-      audio.pause()
-      audio.currentTime = 0
-      setPlaying(false)
+      pauseThis()
       if (currentPlayingAudio === audio) {
         currentPlayingAudio = null
-        currentPlayingSetter = null
+        currentPlayingPauser = null
       }
     } else {
       if (currentPlayingAudio && currentPlayingAudio !== audio) {
-        currentPlayingAudio.pause()
-        currentPlayingAudio.currentTime = 0
-        if (currentPlayingSetter) currentPlayingSetter(false)
+        if (currentPlayingPauser) currentPlayingPauser()
       }
-      
-      const playPromise = audio.play()
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setPlaying(true)
-            currentPlayingAudio = audio
-            currentPlayingSetter = setPlaying
-          })
-          .catch((err) => {
-            console.error('Audio play error:', err)
-            setPlaying(false)
-            if (currentPlayingAudio === audio) {
-              currentPlayingAudio = null
-              currentPlayingSetter = null
-            }
-          })
-      } else {
+      audio.play().then(() => {
         setPlaying(true)
         currentPlayingAudio = audio
-        currentPlayingSetter = setPlaying
-      }
+        currentPlayingPauser = pauseThis
+        rafRef.current = requestAnimationFrame(tick)
+      }).catch(() => {})
     }
   }
 
   const handleEnded = () => {
     setPlaying(false)
+    setProgress(0)
+    stopTick()
     if (currentPlayingAudio === audioRef.current) {
       currentPlayingAudio = null
-      currentPlayingSetter = null
+      currentPlayingPauser = null
     }
   }
 
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current
+    const bar = barRef.current
+    if (!audio || !bar || !audio.duration) return
+    const rect = bar.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    audio.currentTime = ratio * audio.duration
+    setProgress(ratio)
+    setCurrentTime(audio.currentTime)
+  }
+
+  const c = dict.charts
+
   return (
-    <>
-      <audio
-        ref={audioRef}
-        src={proxiedUrl}
-        preload="none"
-        onEnded={handleEnded}
-      />
-      <button
-        type="button"
-        onClick={toggle}
-        className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-          ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
-        style={{ fontFamily: "'Courier Prime', monospace" }}
-        title={playing ? dict.charts.preview_stop : dict.charts.preview_play}
-        aria-label={playing ? dict.charts.preview_stop : dict.charts.preview_play}
-      >
-        {playing ? '■ STOP' : '▶ PLAY'}
-      </button>
-    </>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <audio
+          ref={audioRef}
+          src={proxiedAudio}
+          preload="none"
+          onEnded={handleEnded}
+        />
+        <button
+          type="button"
+          onClick={toggle}
+          className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+            ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+          title={playing ? c.preview_pause : c.preview_play}
+          aria-label={playing ? c.preview_pause : c.preview_play}
+        >
+          {playing ? '❚❚' : '▶ PLAY'}
+        </button>
+        {(playing || progress > 0) && duration > 0 && (
+          <span
+            className="text-[9px] text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        )}
+      </div>
+      {(playing || progress > 0) && (
+        <div
+          ref={barRef}
+          onClick={seek}
+          className="relative w-full h-8 sm:h-6 border-2 border-[var(--ink)] bg-[var(--paper-dark)] cursor-pointer overflow-hidden touch-manipulation"
+          role="progressbar"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          {proxiedWaveform && (
+            <img
+              src={proxiedWaveform}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover opacity-30"
+              aria-hidden
+            />
+          )}
+          <div
+            className="absolute top-0 left-0 h-full bg-[var(--red)]/60 transition-[width] duration-100"
+            style={{ width: `${progress * 100}%` }}
+          />
+          {proxiedWaveform && (
+            <div
+              className="absolute top-0 left-0 h-full overflow-hidden"
+              style={{ width: `${progress * 100}%` }}
+            >
+              <img
+                src={proxiedWaveform}
+                alt=""
+                className="h-full object-cover opacity-80"
+                style={{ width: barRef.current?.offsetWidth ?? '100%' }}
+                aria-hidden
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -298,7 +386,7 @@ function ChartTrackRow({
             {track.music_key}
           </span>
         )}
-        <PreviewButton sampleUrl={track.sample_url} dict={dict} />
+        <PreviewPlayer sampleUrl={track.sample_url} waveformUrl={track.waveform_url} dict={dict} />
         {track.beatport_url && (
           <a
             href={track.beatport_url}
