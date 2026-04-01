@@ -265,7 +265,7 @@ export default async function HomePage({
           {dict.common.since}
         </div>
 
-        {/* Título brutalista; halo solo con colores marca (negro, rojo, amarillo) */}
+        {/* Título brutalista: sombras solo con offset (sin blur / glow) */}
         <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <h1
             className="m-0 mx-auto max-w-full whitespace-nowrap inline-block min-w-min"
@@ -283,9 +283,8 @@ export default async function HomePage({
               style={{
                 WebkitTextStroke: 'clamp(2px, 0.35vw, 3px) var(--ink)',
                 WebkitTextFillColor: 'transparent',
-                /* Solo rojo + negro en el halo: amarillo+rojo difuminados leían como magenta en pantalla */
                 filter:
-                  'drop-shadow(0 0 4px rgba(214, 40, 40, 0.95)) drop-shadow(0 0 14px rgba(214, 40, 40, 0.5)) drop-shadow(2px 2px 0 var(--ink))',
+                  'drop-shadow(2px 2px 0 var(--ink)) drop-shadow(4px 4px 0 rgba(214, 40, 40, 0.55))',
               }}
             >
               OPTIMAL
@@ -294,9 +293,8 @@ export default async function HomePage({
               className="hl inline"
               style={{
                 color: 'var(--red)',
-                /* Amarillo solo en la franja .hl; aquí halo rojo + contorno negro (sin glow amarillo) */
                 textShadow:
-                  '0 0 6px rgba(214, 40, 40, 0.95), 0 0 16px rgba(214, 40, 40, 0.45), 2px 2px 0 var(--ink)',
+                  '2px 2px 0 var(--ink), 4px 4px 0 var(--ink)',
               }}
             >
               BREAKS
