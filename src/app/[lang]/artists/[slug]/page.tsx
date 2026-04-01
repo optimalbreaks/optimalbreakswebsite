@@ -48,15 +48,6 @@ function redirectSiSlugEsNombreDeImagenEstatica(rawSlug: string) {
   redirect(`/images/artists/${s.toLowerCase()}`)
 }
 
-/**
- * Nombre artístico: Blazer. La URL canónica conserva el slug histórico `blazer-beats`.
- * La fila duplicada `blazer` en BD se eliminó; quien use /artists/blazer llega aquí.
- */
-function redirectSiSlugArtistaUnificado(lang: Locale, rawSlug: string) {
-  const slug = sanitizeSlug(rawSlug)
-  if (slug === 'blazer') redirect(`/${lang}/artists/blazer-beats`)
-}
-
 type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'og_image_url' | 'styles' | 'country' | 'era'>
 
 const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
@@ -96,7 +87,6 @@ function buildArtistKeywords(artist: ArtistSeoRow, lang: Locale): string[] {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug: rawSlug } = await params
   redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
-  redirectSiSlugArtistaUnificado(lang, rawSlug)
   const slug = sanitizeSlug(rawSlug)
   const supabase = createSimpleSupabase()
   const { data: raw } = await supabase
@@ -132,7 +122,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArtistDetailPage({ params, searchParams }: Props) {
   const { lang, slug: rawSlug } = await params
   redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
-  redirectSiSlugArtistaUnificado(lang, rawSlug)
   const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
   const editSightingRaw = firstSearchParam(sp.editSighting)
   const editSightingId = editSightingRaw && UUID_RE.test(editSightingRaw) ? editSightingRaw : null

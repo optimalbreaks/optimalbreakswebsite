@@ -1,6 +1,6 @@
 INSTRUCCIONES EDITOR / ARTISTA (prioridad máxima)
 
-- Slug fijo en URL: blazer-beats (histórico; no cambiar). El artista es siempre Blazer, no «Blazer Beats».
+- Slug en URL = slug en BD / JSON (`blazer`). El artista es siempre Blazer, no «Blazer Beats».
 - Nombre en ficha: name "Blazer", name_display "BLAZER".
 - real_name: null (el artista no quiere que el sitio destaque una faceta narrada como "Alberto Olivares"; no uses el bloque de nombre real en la ficha).
 - En bio_es y bio_en: centrar el relato en Blazer como DJ y productor de música electrónica y break; intensidad, pegada, bajos, tensión rítmica, impacto de pista y directo. NO desarrollar como eje principal la faceta de sound design / electrónica cinematográfica / tráilers de cine ni un relato paralelo bajo el nombre civil. Puedes mencionar una sola vez, de forma breve y neutral, que Blazer es el nombre artístico de Alberto Olivares Olgoso, nacido en Cartagena (Murcia), si encaja en el primer párrafo — sin volver a usar el nombre civil después ni contraponer "identidades".

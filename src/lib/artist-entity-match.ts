@@ -43,6 +43,18 @@ export function buildArtistSlugLookup(rows: ArtistLinkRow[]): Map<string, string
   return map
 }
 
+/**
+ * Variantes «A Skillz» / «A.Skillz» (inicial + punto vs espacio) tras normalize.
+ * Solo aplica a nombres de una sola letra + resto, para no tocar casos tipo «st.».
+ */
+function alternateSingleInitialKey(n: string): string | undefined {
+  const spaced = /^([a-z])\s+(.+)$/.exec(n)
+  if (spaced) return `${spaced[1]}.${spaced[2]}`
+  const dotted = /^([a-z])\.(.+)$/.exec(n)
+  if (dotted) return `${dotted[1]} ${dotted[2]}`.replace(/\s+/g, ' ').trim()
+  return undefined
+}
+
 /** Resuelve slug; prueba nombre normalizado y sin prefijo DJ/MC/The. */
 export function resolveArtistSlug(
   displayName: string,
@@ -51,9 +63,19 @@ export function resolveArtistSlug(
   const n = normalizeForEntityMatch(displayName)
   if (!n) return undefined
   if (slugByNormalizedName.has(n)) return slugByNormalizedName.get(n)
+  const altInitial = alternateSingleInitialKey(n)
+  if (altInitial && slugByNormalizedName.has(altInitial)) {
+    return slugByNormalizedName.get(altInitial)
+  }
   const stripped = n.replace(/^(dj|mc|the)\s+/, '')
   if (stripped !== n && slugByNormalizedName.has(stripped)) {
     return slugByNormalizedName.get(stripped)
+  }
+  if (stripped !== n) {
+    const altStripped = alternateSingleInitialKey(stripped)
+    if (altStripped && slugByNormalizedName.has(altStripped)) {
+      return slugByNormalizedName.get(altStripped)
+    }
   }
   return undefined
 }
