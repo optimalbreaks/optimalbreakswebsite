@@ -18,6 +18,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
+ *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -870,6 +871,163 @@ async function runPatchKulturaBreakzIiAniversario2026(sb) {
   console.log('[patch-kultura-breakz-ii] OK:', after)
 }
 
+const PURE_BASSLINE_7_SLUG = 'pure-bassline-7-aniversario-2026'
+const PURE_BASSLINE_TICKETS =
+  'https://site.fourvenues.com/es/dj-rokeh/events/pure-bassline-7-aniversario-02-04-2026-0BJP'
+const PURE_BASSLINE_IMAGE = '/images/events/Pure_bassline_2026.jpg'
+
+const PURE_BASSLINE_STAGES = [
+  {
+    name: 'Pure Bassline Room',
+    description_en: 'Main room: breaks, bassline and related sounds on the official Pure Bassline timetable.',
+    description_es:
+      'Sala principal: breaks, bassline y sonidos afines según el horario oficial de Pure Bassline.',
+    lineup: [
+      'TWOOK × Tomy × KMK',
+      'Pavane × Glow × JN Cruz',
+      'Kuplay × Sans × Rhades',
+      'Quadrat Beat × Under This',
+      'Rasco × DJ Nitro × Sellrude',
+      'Mbreaks × Wiguez',
+      'Citybox',
+      'V. Aparicio × Nokaut',
+    ],
+  },
+  {
+    name: 'The Moon Room (Dirty Kitchen Rave)',
+    description_en: 'Second area curated by Dirty Kitchen Rave: hybrid bass and rave energy from 22:00.',
+    description_es: 'Segundo espacio a cargo de Dirty Kitchen Rave: bass híbrido y energía rave desde las 22:00.',
+    lineup: [
+      'Percybass',
+      'Blow',
+      'Wez Whatevr',
+      'Acenoise',
+      'Godino',
+      'Afghan Headspin',
+      'Datafunk',
+      'Manxito',
+      'Squat Party B2B Syndkt',
+    ],
+  },
+]
+
+const PURE_BASSLINE_SCHEDULE = [
+  { time: '22:00', artist: 'Percybass', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '23:00', artist: 'Blow', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '00:00', artist: 'TWOOK × Tomy × KMK', stage: 'Pure Bassline Room' },
+  { time: '00:00', artist: 'Wez Whatevr', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '00:50', artist: 'Acenoise', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '01:00', artist: 'Pavane × Glow × JN Cruz', stage: 'Pure Bassline Room' },
+  { time: '01:40', artist: 'Godino', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '02:00', artist: 'Kuplay × Sans × Rhades', stage: 'Pure Bassline Room' },
+  { time: '02:30', artist: 'Afghan Headspin', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '03:00', artist: 'Quadrat Beat × Under This', stage: 'Pure Bassline Room' },
+  { time: '03:20', artist: 'Datafunk', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '04:00', artist: 'Rasco × DJ Nitro × Sellrude', stage: 'Pure Bassline Room' },
+  { time: '04:10', artist: 'Manxito', stage: 'The Moon Room (Dirty Kitchen Rave)' },
+  { time: '04:45', artist: 'Mbreaks × Wiguez', stage: 'Pure Bassline Room' },
+  { time: '05:00', artist: 'Squat Party B2B Syndkt', stage: 'The Moon Room (Dirty Kitchen Rave)', is_b2b: true },
+  { time: '05:30', artist: 'Citybox', stage: 'Pure Bassline Room' },
+  { time: '06:15', artist: 'V. Aparicio × Nokaut', stage: 'Pure Bassline Room' },
+]
+
+const PURE_BASSLINE_7_ROW = {
+  name: 'Pure Bassline 7º Aniversario',
+  description_en:
+    'Seventh anniversary of Pure Bassline on Thursday 2 April 2026 (Maundy Thursday) at Sala Pandora, Seville. Advertised as 12+ hours across three areas with 25+ artists: the main Pure Bassline room (breaks and bass-focused sets) and The Moon Room by Dirty Kitchen Rave. Hosted by Cellux MC. Official guest list and ticket sales via Fourvenues (DJ Rokeh).',
+  description_es:
+    'Séptimo aniversario de Pure Bassline el jueves 2 de abril de 2026 (Jueves Santo) en la sala Pandora, Sevilla. Convocatoria de más de doce horas, tres áreas y más de veinticinco artistas: sala principal Pure Bassline (breaks y sonidos de bajo) y The Moon Room a cargo de Dirty Kitchen Rave. Presentación con Cellux MC. Invitaciones y venta de entradas en Fourvenues (RRPP oficial: DJ Rokeh).',
+  event_type: 'club_night',
+  date_start: '2026-04-02',
+  date_end: null,
+  location: 'Sala Pandora, Sevilla',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Pandora',
+  website: null,
+  tickets_url: PURE_BASSLINE_TICKETS,
+  image_url: PURE_BASSLINE_IMAGE,
+  lineup: [
+    'TWOOK',
+    'Tomy',
+    'KMK',
+    'Pavane',
+    'Glow',
+    'JN Cruz',
+    'Kuplay',
+    'Sans',
+    'Rhades',
+    'Quadrat Beat',
+    'Under This',
+    'Rasco',
+    'DJ Nitro',
+    'Sellrude',
+    'Mbreaks',
+    'Wiguez',
+    'Citybox',
+    'V. Aparicio',
+    'Nokaut',
+    'Percybass',
+    'Blow',
+    'Wez Whatevr',
+    'Acenoise',
+    'Godino',
+    'Afghan Headspin',
+    'Datafunk',
+    'Manxito',
+    'Squat Party',
+    'Syndkt',
+    'Cellux MC',
+    'DJ Rokeh',
+  ],
+  stages: PURE_BASSLINE_STAGES,
+  schedule: PURE_BASSLINE_SCHEDULE,
+  tags: [
+    'pure bassline',
+    'bassline',
+    'breaks',
+    'breakbeat',
+    'dirty kitchen rave',
+    'sevilla',
+    'sala pandora',
+    '2026',
+    'dj rokeh',
+    'fourvenues',
+  ],
+  socials: {},
+  doors_open: '22:00',
+  doors_close: '10:00',
+}
+
+async function runPatchPureBassline7Aniversario2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', PURE_BASSLINE_7_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-pure-bassline-7] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: PURE_BASSLINE_7_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...PURE_BASSLINE_7_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', PURE_BASSLINE_7_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-pure-bassline-7] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -925,6 +1083,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-pure-bassline-7-aniversario-2026')) {
+    await runPatchPureBassline7Aniversario2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -968,7 +1131,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
-  node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026`)
+  node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
+  node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026`)
     process.exit(1)
   }
 

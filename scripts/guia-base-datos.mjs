@@ -177,6 +177,14 @@ const ACTIONS = [
       'UPSERT kultura-breakz-ii-aniversario-2026: 2 may 2026 Sala Pandora Sevilla, lineup breakbeat, entradas Fourvenues, redes Kültur / Kultura Breakz.',
   },
   {
+    id: 'events-patch-pure-bassline-7-aniversario-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-pure-bassline-7-aniversario-2026',
+    npm: 'npm run db:guia -- run events-patch-pure-bassline-7-aniversario-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT pure-bassline-7-aniversario-2026: 2 abr 2026 (Jueves Santo) Sala Pandora Sevilla, cartel public/images/events/Pure_bassline_2026.jpg, entradas Fourvenues.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -277,6 +285,7 @@ Punto de entrada unificado:
   events-patch-raveart-rvt-booking-clubbing-2026  RVT Booking & Clubbing, Elysium Sevilla 11 abr 2026
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
+  events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -530,6 +539,9 @@ function main() {
       break
     case 'events-patch-kultura-breakz-ii-aniversario-2026':
       runNode('enriquecer-evento.mjs', ['--patch-kultura-breakz-ii-aniversario-2026', ...rest])
+      break
+    case 'events-patch-pure-bassline-7-aniversario-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-pure-bassline-7-aniversario-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()
