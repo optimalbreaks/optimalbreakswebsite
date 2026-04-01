@@ -1,0 +1,33 @@
+INSTRUCCIONES EDITOR / ARTISTA (prioridad máxima)
+
+- Slug fijo: blazer-beats (no cambiar).
+- Nombre en ficha: name "Blazer", name_display "BLAZER" (no "Blazer Beats").
+- real_name: null (el artista no quiere que el sitio destaque una faceta narrada como "Alberto Olivares"; no uses el bloque de nombre real en la ficha).
+- En bio_es y bio_en: centrar el relato en Blazer como DJ y productor de música electrónica y break; intensidad, pegada, bajos, tensión rítmica, impacto de pista y directo. NO desarrollar como eje principal la faceta de sound design / electrónica cinematográfica / tráilers de cine ni un relato paralelo bajo el nombre civil. Puedes mencionar una sola vez, de forma breve y neutral, que Blazer es el nombre artístico de Alberto Olivares Olgoso, nacido en Cartagena (Murcia), si encaja en el primer párrafo — sin volver a usar el nombre civil después ni contraponer "identidades".
+- Vinculación geográfica: Cartagena / electrónica española (ajusta si el contexto web contradice con evidencia clara).
+- Estilos: priorizar Breakbeat / Breaks, Bass, Club, Electronic; evitar listas largas de ambient/glitch/IDM como protagonistas si no están sustentadas para este enfoque.
+
+Texto de referencia (base narrativa para bio_es; traduce/adapta equivalente en bio_en):
+
+Blazer es el nombre artístico de Alberto Olivares Olgoso, DJ y productor nacido en Cartagena, cuya trayectoria dentro de la música electrónica ha ido construyendo una identidad propia marcada por la intensidad, la pegada y un enfoque muy cuidado de la producción. En el contexto de la escena break, su nombre se asocia a una propuesta sonora enérgica y precisa, donde el peso del ritmo, la tensión de los desarrollos y la contundencia de los bajos ocupan un lugar central.
+
+A lo largo de su recorrido, Blazer ha desarrollado un perfil artístico que combina la visión del productor con la sensibilidad del creador sonoro. Sus perfiles públicos lo presentan como un artista con experiencia en producción electrónica, composición y diseño de sonido, una base que se traduce en un sonido trabajado al detalle y con personalidad propia. Esa combinación técnica y creativa ayuda a entender una propuesta que, más allá de etiquetas amplias, encuentra en el break un terreno natural para desplegar fuerza, atmósfera y carácter.
+
+Su presencia en plataformas especializadas como Beatport y en canales propios como Bandcamp y SoundCloud refleja una actividad continuada como artista y productor, con lanzamientos y referencias que consolidan su recorrido dentro de la electrónica. Esa continuidad es importante porque sitúa a Blazer no como un nombre circunstancial, sino como un proyecto con desarrollo, discurso y una identidad reconocible dentro del circuito.
+
+Dentro de un directorio centrado en artistas de break, Blazer destaca por una forma de entender el género desde la construcción sonora y la energía de pista: breaks marcados, tensión rítmica, producción robusta y una clara orientación al impacto del directo y de la mezcla. Su proyecto artístico representa una línea seria y personal dentro de la electrónica española, vinculada a Cartagena y abierta a una proyección más amplia gracias a una trayectoria sostenida y a una firma sonora propia.
+
+URLs a conservar en socials y website (https):
+spotify: https://open.spotify.com/intl-es/artist/4yJ5jZtYMjxlksVSXdN4nx
+instagram: https://www.instagram.com/blazer_official/
+soundcloud: https://soundcloud.com/blazer
+facebook: https://www.facebook.com/blazermusic/
+bandcamp: https://albertoolivares.bandcamp.com/
+apple: https://music.apple.com/gb/artist/blazer/1532060796
+beatport: https://www.beatport.com/artist/blazer/83691
+youtube: https://www.youtube.com/c/BlazerOfficial
+website: https://blazer.es/
+
+Tras generar el JSON, el repositorio usa image_url local: /images/artists/blazer_beat.webp
+
+Referencias de obra útiles si encajan con contexto web (no inventar fechas exactas ni charts): Toxic Girl (Ayra Recordings), Afterlife, Almost Human; Low Gravity y otros breaks en sellos del circuito solo si hay base en búsqueda.
