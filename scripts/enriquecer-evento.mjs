@@ -19,6 +19,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
+ *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -1029,6 +1030,94 @@ async function runPatchPureBassline7Aniversario2026(sb) {
   console.log('[patch-pure-bassline-7] OK:', after)
 }
 
+const MALAGA_IS_BREAK_2026_SLUG = 'malaga-is-break-3-aniversario-frequency-break-2026'
+const MALAGA_IS_BREAK_TICKETS =
+  'https://www.monsterticket.com/evento/malaga-is-break-3-aniversario-frequency-break'
+const MALAGA_IS_BREAK_IMAGE = '/images/events/malaga_is_break.webp'
+
+const MALAGA_IS_BREAK_LINEUP = [
+  'SHADE K vs BAMER 29 (Brothers Battle)',
+  'VAZTERIA X',
+  'EVIL CREW vs PLAYBASS',
+  'ISMA BREAKZ vs WINGBREAKS',
+  'Datafunk',
+  'JN Cruz',
+  'Manxito',
+  'Franetik',
+  'TTBeats',
+  'Bassko',
+  'Wallmaster',
+  '100duritos',
+  'CBK',
+]
+
+const MALAGA_IS_BREAK_2026_ROW = {
+  name: 'Malaga is Break (3 Aniversario Frequency Break)',
+  description_en:
+    'Third-anniversary Frequency Break night in MIB theme: Friday 3 April 2026 at Sala Roka, Málaga. Lineup from the official poster and @frequencybreak: brothers battle SHADE K vs BAMER 29, VAZTERIA X, crew battles EVIL CREW vs PLAYBASS and ISMA BREAKZ vs WINGBREAKS, plus Datafunk, JN Cruz, Manxito, Franetik, TTBeats, Bassko, Wallmaster, 100duritos and CBK. Advance €10 + drink (copa); door €15 + drink per flyer. Promoter note: Sala Roka does not charge for wristbands. Tickets on MonsterTicket; 18+ only. Calle Leda 1, Málaga.',
+  description_es:
+    'Tercer aniversario de Frequency Break con propuesta MIB: viernes 3 de abril de 2026 en la Sala Roka, Málaga. Cartel según flyer e Instagram @frequencybreak: batalla de hermanos SHADE K vs BAMER 29, VAZTERIA X, batallas EVIL CREW vs PLAYBASS e ISMA BREAKZ vs WINGBREAKS, más Datafunk, JN Cruz, Manxito, Franetik, TTBeats, Bassko, Wallmaster, 100duritos y CBK. Anticipada 10 € + copa; taquilla 15 € + copa (cartel). Aviso del promotor: Sala Roka no cobra pulsera. Entradas en MonsterTicket; +18. Calle Leda 1, Málaga.',
+  event_type: 'club_night',
+  date_start: '2026-04-03',
+  date_end: null,
+  location: 'Sala Roka, Málaga',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Sala Roka',
+  address: 'Calle Leda 1, Málaga',
+  website: 'https://www.instagram.com/frequencybreak/',
+  tickets_url: MALAGA_IS_BREAK_TICKETS,
+  image_url: MALAGA_IS_BREAK_IMAGE,
+  lineup: MALAGA_IS_BREAK_LINEUP,
+  tags: [
+    'malaga is break',
+    'frequency break',
+    'mib',
+    'breakbeat',
+    'breaks',
+    'málaga',
+    'sala roka',
+    '2026',
+    'monsterticket',
+    'shade k',
+    'bamer 29',
+    'battles',
+  ],
+  socials: {
+    Instagram: 'https://www.instagram.com/frequencybreak/',
+  },
+  age_restriction: '18+',
+}
+
+async function runPatchMalagaIsBreak3AniversarioFrequencyBreak2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', MALAGA_IS_BREAK_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-malaga-is-break-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: MALAGA_IS_BREAK_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...MALAGA_IS_BREAK_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', MALAGA_IS_BREAK_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-malaga-is-break-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -1089,6 +1178,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-malaga-is-break-3-aniversario-frequency-break-2026')) {
+    await runPatchMalagaIsBreak3AniversarioFrequencyBreak2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -1133,7 +1227,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
-  node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026`)
+  node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
+  node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026`)
     process.exit(1)
   }
 

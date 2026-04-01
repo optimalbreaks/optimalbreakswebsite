@@ -185,6 +185,14 @@ const ACTIONS = [
       'UPSERT pure-bassline-7-aniversario-2026: 2 abr 2026 (Jueves Santo) Sala Pandora Sevilla, cartel public/images/events/Pure_bassline_2026.webp, entradas Fourvenues.',
   },
   {
+    id: 'events-patch-malaga-is-break-3-aniversario-frequency-break-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-malaga-is-break-3-aniversario-frequency-break-2026',
+    npm: 'npm run db:guia -- run events-patch-malaga-is-break-3-aniversario-frequency-break-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT malaga-is-break-3-aniversario-frequency-break-2026: 3 abr 2026 Sala Roka Málaga, cartel public/images/events/malaga_is_break.webp, entradas MonsterTicket.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -286,6 +294,7 @@ Punto de entrada unificado:
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
+  events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -542,6 +551,12 @@ function main() {
       break
     case 'events-patch-pure-bassline-7-aniversario-2026':
       runNode('enriquecer-evento.mjs', ['--patch-pure-bassline-7-aniversario-2026', ...rest])
+      break
+    case 'events-patch-malaga-is-break-3-aniversario-frequency-break-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-malaga-is-break-3-aniversario-frequency-break-2026',
+        ...rest,
+      ])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()
