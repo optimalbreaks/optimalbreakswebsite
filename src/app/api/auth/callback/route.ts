@@ -1,10 +1,10 @@
 // ============================================
-// OPTIMAL BREAKS — Auth Callback Route
-// Handles OAuth redirect from Google/etc.
+// OPTIMAL BREAKS — Auth callback (legacy /api path)
+// Redirige a /[lang]/auth/callback para que el intercambio PKCE ocurra en el
+// cliente (mismas cookies que al pedir reset / OAuth). Correos viejos con
+// redirect_to → /api/auth/callback siguen funcionando.
 // ============================================
 
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import { i18n } from '@/lib/i18n-config'
 import { isSafeAppPath, normalizeRelativeNext } from '@/lib/auth-callback'
@@ -24,38 +24,18 @@ function detectLocale(request: NextRequest, next: string | null): string {
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
-  const normalizedNext = normalizeRelativeNext(searchParams.get('next'))
+  const rawNext = searchParams.get('next')
+  const normalizedNext = normalizeRelativeNext(rawNext)
   const safeNext = normalizedNext && isSafeAppPath(normalizedNext) ? normalizedNext : null
   const locale = detectLocale(request, safeNext)
-  const fallbackAfterAuth = safeNext ?? `/${locale}`
 
-  if (code) {
-    const cookieStore = await cookies()
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const publishable =
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-    if (!url || !publishable) {
-      return NextResponse.redirect(`${origin}/${locale}/login?auth_error=config`)
-    }
-    const supabase = createServerClient(url, publishable, {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch { /* server component limitation */ }
-        },
-      },
-    })
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${origin}${fallbackAfterAuth}`)
-    }
+  if (!code) {
+    return NextResponse.redirect(`${origin}/${locale}/login?auth_error=true`)
   }
 
-  return NextResponse.redirect(`${origin}/${locale}/login?auth_error=true`)
+  const dest = new URL(`/${locale}/auth/callback`, origin)
+  dest.searchParams.set('code', code)
+  if (rawNext) dest.searchParams.set('next', rawNext)
+
+  return NextResponse.redirect(dest)
 }
