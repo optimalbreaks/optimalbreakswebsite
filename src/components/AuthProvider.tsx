@@ -65,14 +65,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
+  const authCallbackUrl = useCallback(
+    (nextPath: string) =>
+      `${window.location.origin}/${lang}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+    [lang]
+  )
+
   const signInWithGoogle = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/dashboard`,
+        redirectTo: authCallbackUrl(`/${lang}/dashboard`),
       },
     })
-  }, [supabase.auth, lang])
+  }, [supabase.auth, authCallbackUrl, lang])
 
   const signInWithEmail = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -80,13 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    const nextPath = `/${lang}/login`
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: name },
-        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        // Ruta con prefijo de idioma: coincide con redirect_to típico y evita 404 si alguien usa /es/auth/callback
+        emailRedirectTo: `${window.location.origin}/${lang}/auth/callback`,
       },
     })
     return { error: error?.message || null }
@@ -96,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string) => {
       const nextPath = `/${lang}/reset-password`
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        redirectTo: `${window.location.origin}/${lang}/auth/callback?next=${encodeURIComponent(nextPath)}`,
       })
       return { error: error?.message || null }
     },

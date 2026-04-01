@@ -149,6 +149,21 @@ Script: [`scripts/upload-storage-media.mjs`](scripts/upload-storage-media.mjs). 
 
 ---
 
+## Authentication (Supabase Auth and email templates)
+
+**App routes:** `src/app/[lang]/login/` (sign up / sign in / forgot password), `src/app/[lang]/reset-password/` (set new password after the recovery link), `src/app/[lang]/auth/callback/route.ts` (primary: exchanges the auth `code` for a session; default redirect `/{lang}/login`, or `?next=` when safe). Legacy: `src/app/api/auth/callback/route.ts`.
+
+**Redirects (must match [URL Configuration](https://supabase.com/dashboard/project/_/auth/url-configuration) allow list):**
+
+- **Sign up** — `emailRedirectTo` → `https://…/{lang}/auth/callback` so confirmation ends on `/{lang}/login` with a session (avoids broken `/es/auth/callback`-style 404s when the path was locale-prefixed without a handler).
+- **Password reset** — `redirectTo` → `/{lang}/auth/callback?next=/{lang}/reset-password`.
+
+**HTML email templates (branded, Outlook-friendly tables):** copy from [`mailing/supabase/`](mailing/supabase/) into **Supabase Dashboard → Authentication → Email** for each template (confirm signup, invite, magic link, change email, reset password, reauthentication). Full file list, paste steps, variables, and SMTP notes: [`mailing/supabase/README.md`](mailing/supabase/README.md).
+
+Customizing the template **does not** choose the post-click page by itself: that comes from `{{ .ConfirmationURL }}` (which embeds the allowed `redirect_to` from the app). Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your domain; avoid link-tracking features that rewrite confirmation URLs.
+
+---
+
 ## Project Structure
 
 ```
@@ -158,6 +173,9 @@ OptimalBreaks/
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
 │   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
+├── mailing/
+│   ├── supabase/               # Auth email HTML → paste into Supabase Email templates (see README there)
+│   └── firma-*.html            # Email signature variants (not used by Supabase Auth)
 ├── data/
 │   └── artists/                # One JSON file per artist → npm run db:artist
 ├── scripts/
@@ -201,7 +219,9 @@ OptimalBreaks/
 │   │       │   └── [slug]/     # Individual blog posts
 │   │       ├── mixes/          # Essential mixes, classic sets, radio shows
 │   │       ├── dashboard/      # Logged-in user area (favorites, sightings, …)
-│   │       ├── login/          # Auth entry
+│   │       ├── login/          # Email/password auth, forgot password
+│   │       ├── auth/callback/  # PKCE exchange → login or ?next= (signup / OAuth / recovery)
+│   │       ├── reset-password/ # New password after recovery email (post-callback)
 │   │       ├── privacy/        # Legal
 │   │       ├── terms/
 │   │       ├── cookies/
@@ -436,7 +456,8 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views** |
 | Dashboard | `/[lang]/dashboard` | User area (favorites, sightings, events, mixes, profile) — requires login |
-| Login | `/[lang]/login` | Supabase auth |
+| Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
+| Reset password | `/[lang]/reset-password` | Set new password after opening the recovery link (session via `/{lang}/auth/callback` or legacy `/api/auth/callback`) |
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |

@@ -18,6 +18,8 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario:** [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md). **Estrellas 1–5 solo** para **experiencias a las que puedes ir**: **artistas** (visto en vivo) y **eventos** (fui). Sellos, mixes, etc.: solo favoritos/guardados, sin puntuación.
 
+**Correos de autenticación (plantillas HTML para Supabase):** [`mailing/supabase/README.md`](./mailing/supabase/README.md) — confirmación de registro, invitación, magic link, cambio de correo, recuperación de contraseña, reautenticación. Resumen del flujo en [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
+
 ---
 
 ## Stack principal
@@ -27,6 +29,17 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 - **Analítica (opcional)**: **Google Analytics 4** con el paquete oficial **`@next/third-parties/google`** y **Consent Mode v2** enlazado al banner de cookies (`CookieBanner` + `GoogleAnalytics`). Detalle en [README.md — Analytics](./README.md#analytics-google-analytics-4) y en la sección [Analítica (GA4)](#analítica-ga4) de este archivo.
 - Rutas `/es` y `/en` con middleware propio
 - Tipografías: Unbounded, Courier Prime, Special Elite, Darker Grotesque
+
+---
+
+## Autenticación y correos (Supabase)
+
+- **Rutas:** `login` (registro, entrada, «¿Olvidaste tu contraseña?»), `reset-password` (nueva contraseña tras el enlace del correo), **`/{lang}/auth/callback`** (intercambia el `code` de Supabase por sesión; por defecto va a `/{lang}/login`). Sigue existiendo `/api/auth/callback` por compatibilidad.
+- **Redirecciones:** el registro usa `emailRedirectTo` hacia `https://…/{lang}/auth/callback`; la recuperación usa `redirectTo` hacia `/{lang}/auth/callback?next=/{lang}/reset-password`. En Supabase, **URL Configuration** debe permitir el origen (p. ej. `https://www.optimalbreaks.com/**` y en local `http://localhost:3000/**`).
+- **Plantillas de correo con marca:** archivos en [`mailing/supabase/`](./mailing/supabase/) — cópialos en **Authentication → Email** del proyecto. Guía detallada: [`mailing/supabase/README.md`](./mailing/supabase/README.md).
+- **SMTP propio (OVH, etc.):** opcional en el mismo panel; evita el “tracking de enlaces” del proveedor si reescribe URLs y rompe la confirmación.
+
+Documentación en inglés con el mismo contenido: [README.md — Authentication](README.md#authentication--supabase-auth--email-templates).
 
 ---
 
@@ -202,7 +215,7 @@ Tras el núcleo (`001`–`006`): **`007`** rol admin, **`008`–`009`** artistas
 
 ## Secciones del sitio
 
-Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login**, **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). Detalle en [README.md](./README.md).
+Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). Detalle en [README.md](./README.md).
 
 ### Migraciones SQL (resumen)
 
@@ -212,7 +225,7 @@ Aplica `supabase/migrations/` en **orden alfabético**. Descripción detallada d
 
 ## Roadmap (resumen)
 
-Hecho: Supabase en listados, miniaturas y Storage, auth, dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
+Hecho: Supabase en listados, miniaturas y Storage, auth (login, recuperación de contraseña, callback, plantillas HTML en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
 Pendiente: búsqueda global, OG por sección, RSS, modo oscuro, etc.
 
 ---

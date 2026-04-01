@@ -7,6 +7,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import { i18n } from '@/lib/i18n-config'
+import { isSafeAppPath, normalizeRelativeNext } from '@/lib/auth-callback'
 
 function detectLocale(request: NextRequest, next: string | null): string {
   const seg = next?.split('/')[1]
@@ -23,9 +24,10 @@ function detectLocale(request: NextRequest, next: string | null): string {
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
-  const next = searchParams.get('next')
-  const locale = detectLocale(request, next)
-  const fallbackHome = `/${locale}`
+  const normalizedNext = normalizeRelativeNext(searchParams.get('next'))
+  const safeNext = normalizedNext && isSafeAppPath(normalizedNext) ? normalizedNext : null
+  const locale = detectLocale(request, safeNext)
+  const fallbackAfterAuth = safeNext ?? `/${locale}`
 
   if (code) {
     const cookieStore = await cookies()
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     if (!url || !publishable) {
-      return NextResponse.redirect(`${origin}/${locale}?auth_error=config`)
+      return NextResponse.redirect(`${origin}/${locale}/login?auth_error=config`)
     }
     const supabase = createServerClient(url, publishable, {
       cookies: {
@@ -51,9 +53,9 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next || fallbackHome}`)
+      return NextResponse.redirect(`${origin}${fallbackAfterAuth}`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/${locale}?auth_error=true`)
+  return NextResponse.redirect(`${origin}/${locale}/login?auth_error=true`)
 }
