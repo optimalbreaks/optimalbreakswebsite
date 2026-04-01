@@ -10,9 +10,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginForm({ lang }: { lang: string }) {
-  const { signInWithEmail, signUpWithEmail, user, loading } = useAuth()
+  const { signInWithEmail, signUpWithEmail, resetPasswordForEmail, user, loading } = useAuth()
   const router = useRouter()
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -32,7 +32,17 @@ export default function LoginForm({ lang }: { lang: string }) {
     setSuccess('')
     setSubmitting(true)
 
-    if (mode === 'login') {
+    if (mode === 'forgot') {
+      const { error: err } = await resetPasswordForEmail(email.trim())
+      if (err) setError(err)
+      else {
+        setSuccess(
+          es
+            ? 'Si ese email está registrado, recibirás un enlace para restablecer la contraseña.'
+            : 'If that email is registered, you will receive a link to reset your password.'
+        )
+      }
+    } else if (mode === 'login') {
       const { error: err } = await signInWithEmail(email, password)
       if (err) setError(err)
       else router.push(`/${lang}/dashboard`)
@@ -56,10 +66,13 @@ export default function LoginForm({ lang }: { lang: string }) {
         <div className="text-center mb-8">
           <div className="sec-tag">{es ? 'TU CUENTA' : 'YOUR ACCOUNT'}</div>
           <h1 className="mt-4" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(28px, 6vw, 44px)', textTransform: 'uppercase', lineHeight: 0.9 }}>
-            {mode === 'login'
-              ? <><span className="hl">{es ? 'ENTRAR' : 'LOG IN'}</span></>
-              : <><span className="hl">{es ? 'CREAR CUENTA' : 'SIGN UP'}</span></>
-            }
+            {mode === 'forgot' ? (
+              <><span className="hl">{es ? 'RECUPERAR CONTRASEÑA' : 'RESET PASSWORD'}</span></>
+            ) : mode === 'login' ? (
+              <><span className="hl">{es ? 'ENTRAR' : 'LOG IN'}</span></>
+            ) : (
+              <><span className="hl">{es ? 'CREAR CUENTA' : 'SIGN UP'}</span></>
+            )}
           </h1>
         </div>
 
@@ -82,18 +95,21 @@ export default function LoginForm({ lang }: { lang: string }) {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => mode !== 'signup' && e.key === 'Enter' && handleSubmit()}
             className="w-full px-4 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] transition-colors"
             style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px' }}
           />
-          <input
-            type="password"
-            placeholder={es ? 'Contraseña' : 'Password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            className="w-full px-4 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] transition-colors"
-            style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px' }}
-          />
+          {mode !== 'forgot' && (
+            <input
+              type="password"
+              placeholder={es ? 'Contraseña' : 'Password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              className="w-full px-4 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] transition-colors"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px' }}
+            />
+          )}
 
           {error && (
             <div className="p-3 bg-[var(--red)] text-white" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
@@ -114,23 +130,49 @@ export default function LoginForm({ lang }: { lang: string }) {
           >
             {submitting
               ? '...'
-              : mode === 'login'
-                ? (es ? 'ENTRAR' : 'LOG IN')
-                : (es ? 'CREAR CUENTA' : 'SIGN UP')
+              : mode === 'forgot'
+                ? (es ? 'ENVIAR ENLACE' : 'SEND LINK')
+                : mode === 'login'
+                  ? (es ? 'ENTRAR' : 'LOG IN')
+                  : (es ? 'CREAR CUENTA' : 'SIGN UP')
             }
           </button>
         </div>
 
+        {mode === 'login' && (
+          <div className="text-center mt-3">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('forgot')
+                setError('')
+                setSuccess('')
+              }}
+              className="bg-transparent border-none cursor-pointer underline"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)' }}
+            >
+              {es ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}
+            </button>
+          </div>
+        )}
+
         {/* Toggle mode */}
         <div className="text-center mt-6">
           <button
-            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
+            onClick={() => {
+              if (mode === 'forgot') setMode('login')
+              else setMode(mode === 'login' ? 'signup' : 'login')
+              setError('')
+              setSuccess('')
+            }}
             className="bg-transparent border-none cursor-pointer underline"
             style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)' }}
           >
-            {mode === 'login'
-              ? (es ? '¿No tienes cuenta? Crear una' : "Don't have an account? Create one")
-              : (es ? '¿Ya tienes cuenta? Entrar' : 'Already have an account? Log in')
+            {mode === 'forgot'
+              ? (es ? 'Volver al inicio de sesión' : 'Back to log in')
+              : mode === 'login'
+                ? (es ? '¿No tienes cuenta? Crear una' : "Don't have an account? Create one")
+                : (es ? '¿Ya tienes cuenta? Entrar' : 'Already have an account? Log in')
             }
           </button>
         </div>
