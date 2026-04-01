@@ -179,7 +179,8 @@ export default function Header({ dict, lang }: HeaderProps) {
   })
 
   return (
-    <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch overflow-x-hidden bg-[var(--paper)] border-b-4 border-[var(--ink)]">
+    <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
+      {/* Sin overflow-x en el header: con overflow-x:hidden el panel absolute del menú (y menús de cuenta) queda recortado. El ancho móvil lo contienen html/body/main. */}
       {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
       <Link
         href={`/${lang}`}

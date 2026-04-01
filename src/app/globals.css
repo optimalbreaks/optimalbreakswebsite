@@ -290,6 +290,10 @@ body::before {
   max-width: 100%;
 }
 
+.prose-ob-blog {
+  color: var(--ink);
+}
+
 /* Cuerpo del artículo: tipografía de máquina; los h2–h6 no heredan (evita que Preflight + inherit los aplasten) */
 .prose-ob-blog > p,
 .prose-ob-blog > ul,
@@ -299,6 +303,38 @@ body::before {
   font-family: 'Special Elite', monospace;
   font-size: 16px;
   line-height: 1.9;
+}
+
+/* Tiny / WordPress–like: párrafos y sublistas dentro de <li> */
+.prose-ob-blog li p,
+.prose-ob-blog li ul,
+.prose-ob-blog li ol {
+  font-family: 'Special Elite', monospace;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.prose-ob-blog li p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-ob-blog blockquote p {
+  font-family: 'Special Elite', monospace;
+  font-size: 16px;
+  line-height: 1.9;
+  margin-bottom: 0.75em;
+}
+
+.prose-ob-blog blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-ob h2 + h3 {
+  margin-top: 1.15em;
+}
+
+.prose-ob h3 + h4 {
+  margin-top: 1em;
 }
 
 .prose-ob h2 {
@@ -366,6 +402,13 @@ body::before {
   text-decoration: underline;
   text-decoration-color: var(--red);
   text-underline-offset: 3px;
+}
+
+.prose-ob s,
+.prose-ob del,
+.prose-ob strike {
+  text-decoration: line-through;
+  text-decoration-color: var(--dim);
 }
 
 .prose-ob mark {
@@ -625,4 +668,16 @@ select.admin-input {
   color: var(--text-muted);
   font-family: 'Courier Prime', monospace;
   font-size: 13px;
+}
+
+/* TinyMCE (admin blog): borde fanzine */
+.admin-tinymce-host .tox-tinymce {
+  border-width: 3px !important;
+  border-color: var(--ink) !important;
+  border-radius: 0 !important;
+}
+
+.admin-tinymce-host .tox-editor-header {
+  box-shadow: none !important;
+  border-bottom: 2px solid var(--ink) !important;
 }
