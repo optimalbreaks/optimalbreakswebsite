@@ -247,37 +247,38 @@ function PreviewPlayer({
         <div
           ref={barRef}
           onClick={seek}
-          className="relative w-full h-8 sm:h-6 border-2 border-[var(--ink)] bg-[var(--paper-dark)] cursor-pointer overflow-hidden touch-manipulation"
+          className="relative w-full h-8 sm:h-6 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-2 border-[var(--ink)]"
           role="progressbar"
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          {proxiedWaveform && (
-            <img
-              src={proxiedWaveform}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-30"
-              aria-hidden
-            />
-          )}
-          <div
-            className="absolute top-0 left-0 h-full bg-[var(--red)]/60 transition-[width] duration-100"
-            style={{ width: `${progress * 100}%` }}
-          />
-          {proxiedWaveform && (
+          {proxiedWaveform ? (
             <div
-              className="absolute top-0 left-0 h-full overflow-hidden"
-              style={{ width: `${progress * 100}%` }}
+              className="absolute inset-0"
+              style={{
+                maskImage: `url("${proxiedWaveform}")`,
+                WebkitMaskImage: `url("${proxiedWaveform}")`,
+                maskSize: '100% 100%',
+                WebkitMaskSize: '100% 100%',
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+              }}
             >
-              <img
-                src={proxiedWaveform}
-                alt=""
-                className="h-full object-cover opacity-80"
-                style={{ width: barRef.current?.offsetWidth ?? '100%' }}
-                aria-hidden
+              {/* Base amarilla de la onda */}
+              <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
+              {/* Progreso rojo de la onda */}
+              <div
+                className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
+                style={{ width: `${progress * 100}%` }}
               />
             </div>
+          ) : (
+            /* Fallback si no hay onda: barra sólida */
+            <div
+              className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
+              style={{ width: `${progress * 100}%` }}
+            />
           )}
         </div>
       )}
