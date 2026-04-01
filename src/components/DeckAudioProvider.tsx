@@ -471,60 +471,31 @@ export function DeckAudioProvider({
   }, [crossfader, trackIdxA, trackIdxB])
 
   // === Start/stop individual sides (each has its own brake animation ref) ===
-  const startSideA = useCallback((audio: HTMLAudioElement | null) => {
-    if (!audio) return
-    cancelAnimationFrame(brakeAnimRefA.current)
-    audio.playbackRate = 0
-    void audio.play().catch(() => {})
-    let rate = 0
-    const step = () => {
-      rate = Math.min(1, rate + 0.06)
-      audio.playbackRate = rate
-      if (rate < 1) brakeAnimRefA.current = requestAnimationFrame(step)
-    }
-    step()
-  }, [])
-
-  const stopSideA = useCallback((audio: HTMLAudioElement | null, cb: () => void) => {
-    if (!audio) { cb(); return }
-    cancelAnimationFrame(brakeAnimRefA.current)
-    let rate = audio.playbackRate
-    const step = () => {
-      rate = Math.max(0, rate - 0.06)
-      audio.playbackRate = rate
-      if (rate > 0) {
-        brakeAnimRefA.current = requestAnimationFrame(step)
-      } else {
-        audio.pause()
-        cb()
+  const spinUp = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>) => {
+    cancelAnimationFrame(brakeRef.current)
+    // Start playback at full rate first (Chrome desktop needs rate>0 for play() to work)
+    audio.playbackRate = 1
+    void audio.play().then(() => {
+      // Once playing, animate spin-up from slow to full speed
+      audio.playbackRate = 0.1
+      let rate = 0.1
+      const step = () => {
+        rate = Math.min(1, rate + 0.06)
+        audio.playbackRate = rate
+        if (rate < 1) brakeRef.current = requestAnimationFrame(step)
       }
-    }
-    step()
+      brakeRef.current = requestAnimationFrame(step)
+    }).catch(() => {})
   }, [])
 
-  const startSideB = useCallback((audio: HTMLAudioElement | null) => {
-    if (!audio) return
-    cancelAnimationFrame(brakeAnimRefB.current)
-    audio.playbackRate = 0
-    void audio.play().catch(() => {})
-    let rate = 0
-    const step = () => {
-      rate = Math.min(1, rate + 0.06)
-      audio.playbackRate = rate
-      if (rate < 1) brakeAnimRefB.current = requestAnimationFrame(step)
-    }
-    step()
-  }, [])
-
-  const stopSideB = useCallback((audio: HTMLAudioElement | null, cb: () => void) => {
-    if (!audio) { cb(); return }
-    cancelAnimationFrame(brakeAnimRefB.current)
+  const spinDown = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, cb: () => void) => {
+    cancelAnimationFrame(brakeRef.current)
     let rate = audio.playbackRate
     const step = () => {
       rate = Math.max(0, rate - 0.06)
       audio.playbackRate = rate
       if (rate > 0) {
-        brakeAnimRefB.current = requestAnimationFrame(step)
+        brakeRef.current = requestAnimationFrame(step)
       } else {
         audio.pause()
         cb()
@@ -536,28 +507,35 @@ export function DeckAudioProvider({
   // Toggle play for a specific side
   const togglePlaySide = useCallback((side: 'A' | 'B') => {
     initAudio()
-    if (audioCtxRef.current?.state === 'suspended') void audioCtxRef.current.resume()
+    // Resume AudioContext synchronously in user gesture
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume()
+    }
     if (mode === 'mix') stopMixInternal()
     setMode('deck')
     setSessionActive(true)
 
     if (side === 'A') {
+      const audio = audioRefA.current
+      if (!audio) return
       if (playingA) {
-        stopSideA(audioRefA.current, () => setPlayingA(false))
+        spinDown(audio, brakeAnimRefA, () => setPlayingA(false))
       } else {
-        startSideA(audioRefA.current)
+        spinUp(audio, brakeAnimRefA)
         setPlayingA(true)
       }
     } else {
+      const audio = audioRefB.current
+      if (!audio) return
       if (playingB) {
-        stopSideB(audioRefB.current, () => setPlayingB(false))
+        spinDown(audio, brakeAnimRefB, () => setPlayingB(false))
       } else {
-        startSideB(audioRefB.current)
+        spinUp(audio, brakeAnimRefB)
         setPlayingB(true)
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initAudio, playingA, playingB, mode, startSideA, stopSideA, startSideB, stopSideB])
+  }, [initAudio, playingA, playingB, mode, spinUp, spinDown])
 
   // Legacy togglePlay = toggle the active side
   const togglePlay = useCallback(() => {
@@ -643,6 +621,7 @@ export function DeckAudioProvider({
       }
       step()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scratchingLeft, scratchingRight, playingA, playingB])
 
   // Switch track on a specific side
