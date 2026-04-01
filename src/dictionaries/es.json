@@ -9,7 +9,7 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "Sobre",
-    "charts": "Charts"
+    "charts": "Tracks"
   },
   "home": {
     "hero_subtitle": "La Biblia del Breakbeat",
@@ -71,6 +71,7 @@
         { "href": "/events", "label": "Eventos", "hint": "Agenda y archivo" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
+        { "href": "/charts", "label": "Tracks", "hint": "40 Breaks Vitales, chart semanal" },
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
       ]
     },

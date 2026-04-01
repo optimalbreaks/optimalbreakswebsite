@@ -9,7 +9,7 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "About",
-    "charts": "Charts"
+    "charts": "Tracks"
   },
   "home": {
     "hero_subtitle": "The Breakbeat Bible",
@@ -127,6 +127,11 @@
           "href": "/mixes",
           "label": "Mixes",
           "hint": "Sets and sonic continuity"
+        },
+        {
+          "href": "/charts",
+          "label": "Tracks",
+          "hint": "40 Breaks Vitales, weekly chart"
         },
         {
           "href": "/about",
