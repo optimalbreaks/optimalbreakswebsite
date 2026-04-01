@@ -151,16 +151,24 @@ Script: [`scripts/upload-storage-media.mjs`](scripts/upload-storage-media.mjs). 
 
 ## Authentication (Supabase Auth and email templates)
 
-**App routes:** `src/app/[lang]/login/` (sign up / sign in / forgot password), `src/app/[lang]/reset-password/` (set new password after the recovery link), `src/app/[lang]/auth/callback/route.ts` (primary: exchanges the auth `code` for a session; default redirect `/{lang}/login`, or `?next=` when safe). Legacy: `src/app/api/auth/callback/route.ts`.
+**App routes:**
 
-**Redirects (must match [URL Configuration](https://supabase.com/dashboard/project/_/auth/url-configuration) allow list):**
+- `src/app/[lang]/login/` — sign up, sign in, forgot password (sends recovery email).
+- `src/app/[lang]/reset-password/` — **new password form** after a valid recovery session (this is the screen users expect after clicking the email link).
+- `src/app/[lang]/auth/confirm/route.ts` — **server** [`verifyOtp`](https://supabase.com/docs/reference/javascript/auth-verifyotp) with `token_hash` + `type` from the link query string; sets the session cookie and redirects. **`type=recovery`** → `/{lang}/reset-password`; other types (e.g. signup) → `/{lang}/login` (or a safe `?next=` path only).
+- `src/app/[lang]/auth/callback/` — **client page** for **OAuth (Google) PKCE**: exchanges `?code=` via `exchangeCodeForSession`, or listens for auth events. If Supabase lands here **without** `code` but with email params (e.g. `token_hash` nested inside `?next=`), the client **redirects to** `/{lang}/auth/confirm` so the server can finish verification (avoids hanging on “Confirming session…”).
+- Legacy: `src/app/api/auth/callback/route.ts` — redirects to `/{locale}/auth/callback` preserving `code` / `next` for old `redirect_to` values.
 
-- **Sign up** — `emailRedirectTo` → `https://…/{lang}/auth/callback` so confirmation ends on `/{lang}/login` with a session (avoids broken `/es/auth/callback`-style 404s when the path was locale-prefixed without a handler).
-- **Password reset** — `redirectTo` → `/{lang}/auth/callback?next=/{lang}/reset-password`.
+Helpers: `src/lib/auth-callback.ts` (`normalizeRelativeNext`, `isSafeAppPath`, `parseOtpFromAuthCallbackParams`, etc.). Middleware skips session refresh on paths containing `/auth/callback` and `/auth/confirm` so auth cookies are not disturbed mid-flow.
 
-**HTML email templates (branded, Outlook-friendly tables):** copy from [`mailing/supabase/`](mailing/supabase/) into **Supabase Dashboard → Authentication → Email** for each template (confirm signup, invite, magic link, change email, reset password, reauthentication). Full file list, paste steps, variables, and SMTP notes: [`mailing/supabase/README.md`](mailing/supabase/README.md).
+**Redirects from the app (must match [URL Configuration](https://supabase.com/dashboard/project/_/auth/url-configuration) allow list):**
 
-Customizing the template **does not** choose the post-click page by itself: that comes from `{{ .ConfirmationURL }}` (which embeds the allowed `redirect_to` from the app). Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your domain; avoid link-tracking features that rewrite confirmation URLs.
+- **Sign up** — `emailRedirectTo` → `https://…/{lang}/auth/confirm` (email link should hit this route with `token_hash` + `type`; see templates below).
+- **Password reset** — `redirectTo` → `https://…/{lang}/auth/confirm` (same; after `verifyOtp`, user is sent to `/{lang}/reset-password`).
+
+**HTML email templates (branded, Outlook-friendly tables):** copy from [`mailing/supabase/`](mailing/supabase/) into **Supabase Dashboard → Authentication → Email**. The repo templates use **`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=…`** for the main button/link so the first hop is **your** `/auth/confirm` endpoint (recommended for SSR; avoids broken PKCE-only redirects). Full file list, `type` per template, paste steps, variables, and SMTP notes: [`mailing/supabase/README.md`](mailing/supabase/README.md).
+
+Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your domain; disable link-tracking that rewrites URLs.
 
 ---
 
@@ -220,8 +228,9 @@ OptimalBreaks/
 │   │       ├── mixes/          # Essential mixes, classic sets, radio shows
 │   │       ├── dashboard/      # Logged-in user area (favorites, sightings, …)
 │   │       ├── login/          # Email/password auth, forgot password
-│   │       ├── auth/callback/  # PKCE exchange → login or ?next= (signup / OAuth / recovery)
-│   │       ├── reset-password/ # New password after recovery email (post-callback)
+│   │       ├── auth/confirm/   # GET route: verifyOtp(token_hash, type) → session + redirect
+│   │       ├── auth/callback/  # Client: OAuth PKCE (?code=); repair → /auth/confirm if needed
+│   │       ├── reset-password/ # New password after recovery (session from /auth/confirm)
 │   │       ├── privacy/        # Legal
 │   │       ├── terms/
 │   │       ├── cookies/
@@ -258,11 +267,12 @@ OptimalBreaks/
 │   │   ├── supabase-admin.ts   # Service role (server only)
 │   │   ├── supabase-storage.ts # Storage URL + upload helpers
 │   │   ├── artist-entity-match.ts  # Resolve related-artist names → slugs for internal links
+│   │   ├── auth-callback.ts    # Safe redirect paths; parse token_hash from broken callback URLs
 │   │   ├── seo.ts              # Metadata helpers
 │   │   └── security.ts         # Slug / locale sanitization
 │   ├── types/
 │   │   └── database.ts         # Full DB types: artists, labels, events, blog, scenes, mixes, history, profiles, …
-│   └── middleware.ts           # i18n redirect middleware
+│   └── middleware.ts           # i18n + Supabase cookie refresh (skips /auth/callback, /auth/confirm)
 ├── music/                      # Source MP3 files (copy to public/music)
 ├── propuesta12-fanzine-club.html  # Design reference
 ├── Historia del break.txt      # Research content
@@ -457,7 +467,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views** |
 | Dashboard | `/[lang]/dashboard` | User area (favorites, sightings, events, mixes, profile) — requires login |
 | Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
-| Reset password | `/[lang]/reset-password` | Set new password after opening the recovery link (session via `/{lang}/auth/callback` or legacy `/api/auth/callback`) |
+| Reset password | `/[lang]/reset-password` | New password after recovery email; session created by `/{lang}/auth/confirm` (or repaired via `/{lang}/auth/callback` → confirm) |
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |

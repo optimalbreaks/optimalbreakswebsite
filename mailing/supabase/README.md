@@ -1,50 +1,75 @@
 # Correos de autenticación (Supabase)
 
-Plantillas **HTML** para pegar en el panel de Supabase: **Authentication → Email** (plantillas de correo). Estética alineada con la web (papel, tinta, rojo Optimal Breaks, franja amarilla), maquetadas con **tablas y estilos inline** para que se lean bien en **Outlook**, Gmail, Apple Mail, etc.
+Plantillas **HTML** para pegar en el panel de Supabase: **Authentication → Email**. Estética alineada con la web (papel, tinta, rojo Optimal Breaks, franja amarilla), maquetadas con **tablas y estilos inline** para **Outlook**, Gmail, Apple Mail, etc.
 
-**No sustituyen la configuración de redirección:** el destino tras hacer clic lo define la URL que genera Supabase en `{{ .ConfirmationURL }}` (incluye el `redirect_to` que manda la app: registro → `/{lang}/auth/callback`, recuperación → `/{lang}/auth/callback?next=…`). Las plantillas solo cambian **texto y diseño**; el botón principal debe seguir usando `href="{{ .ConfirmationURL }}"`.
+## Enlace del botón: `RedirectTo` + `TokenHash` (recomendado)
+
+En este repo, el CTA principal **no** usa solo `{{ .ConfirmationURL }}` (que pasa por `auth/v1/verify` en Supabase y a veces acaba en URLs con PKCE rotas o `next` mal formado).
+
+En su lugar, el `href` del botón y el enlace en texto plano siguen el patrón de la [documentación de plantillas de Supabase](https://supabase.com/docs/guides/auth/auth-email-templates) para **SSR**:
+
+- **`{{ .RedirectTo }}`** — URL absoluta que la app pasó en `emailRedirectTo` / `redirectTo` (p. ej. `https://www.optimalbreaks.com/es/auth/confirm`).
+- **`{{ .TokenHash }}`** — hash del token para `verifyOtp` en tu servidor.
+- **`type=…`** — según el tipo de correo (`signup`, `recovery`, `invite`, `magiclink`, `email_change`, `reauthentication`).
+
+Ejemplo (recuperación de contraseña):
+
+```text
+{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery
+```
+
+La aplicación expone **`GET /{lang}/auth/confirm`** (`src/app/[lang]/auth/confirm/route.ts`): llama a `verifyOtp({ token_hash, type })`, escribe la sesión en cookies y redirige. Con **`recovery`** → **`/{lang}/reset-password`** (formulario de **nueva contraseña**).
+
+**Importante:** en el código, `emailRedirectTo` y `redirectTo` deben ser **`…/{lang}/auth/confirm`** para que `{{ .RedirectTo }}` coincida con esa ruta (véase `AuthProvider.tsx` y [README.md](../../README.md#authentication-supabase-auth-and-email-templates)).
+
+Si dejas plantillas antiguas que solo usan `{{ .ConfirmationURL }}`, el usuario puede acabar en **`/{lang}/auth/callback`** sin `?code=`; la app intenta **reenviar** a `/auth/confirm` parseando `token_hash` incluso si viene incrustado en `next`. Lo fiable es **pegar estas plantillas** en el dashboard.
 
 ## Archivos (orden sugerido al configurar el panel)
 
-| Archivo | Plantilla en Supabase |
-|---------|------------------------|
-| `01-confirm-sign-up.html` | Confirm sign up |
-| `02-invite-user.html` | Invite user |
-| `03-magic-link.html` | Magic link |
-| `04-change-email.html` | Change email address |
-| `05-reset-password.html` | Reset password |
-| `06-reauthentication.html` | Reauthentication |
+| Archivo | Plantilla en Supabase | `type=` en el enlace |
+|---------|------------------------|----------------------|
+| `01-confirm-sign-up.html` | Confirm sign up | `signup` |
+| `02-invite-user.html` | Invite user | `invite` |
+| `03-magic-link.html` | Magic link | `magiclink` |
+| `04-change-email.html` | Change email address | `email_change` |
+| `05-reset-password.html` | Reset password | `recovery` |
+| `06-reauthentication.html` | Reauthentication | `reauthentication` |
 
 En el comentario al inicio de cada HTML hay un **asunto sugerido** para el campo *Subject* del mismo template.
 
 ## Cómo aplicarlas
 
-1. Abre el `.html` en el editor, elimina el bloque `<!-- ... -->` inicial si no quieres guardar notas en Supabase.
-2. Copia el documento completo (`<!DOCTYPE>` … `</html>`) y pégalo en el cuerpo del template. Si el editor solo acepta fragmento, prueba con **solo el contenido dentro de `<body>…</body>`**.
+1. Abre el `.html` en el editor; puedes quitar el bloque `<!-- ... -->` inicial si no quieres notas en Supabase.
+2. Copia el documento completo (`<!DOCTYPE>` … `</html>`) y pégalo en el cuerpo del template. Si el editor solo acepta fragmento, prueba **solo el interior de `<body>…</body>`**.
 3. Guarda en el dashboard. Repite para cada tipo de correo.
 
 ## Variables Go (Supabase)
 
-- `{{ .ConfirmationURL }}` — enlace de verificación (lleva el `redirect_to` acordado con la app).
-- `{{ .Token }}` — OTP de 6 dígitos (útil si Microsoft Safe Links u otro sistema “consume” el enlace al previsualizar).
-- `{{ .SiteURL }}`, `{{ .Email }}`, `{{ .RedirectTo }}`, `{{ .Data }}` según [documentación oficial](https://supabase.com/docs/guides/auth/auth-email-templates).
+- **`{{ .RedirectTo }}`** — URL de redirección que envió la app (debe ser tu `/{lang}/auth/confirm` en flujos nuevos).
+- **`{{ .TokenHash }}`** — para construir el enlace a `/auth/confirm` como arriba.
+- **`{{ .ConfirmationURL }}`** — enlace clásico vía Supabase (no es el patrón principal en estos HTML).
+- **`{{ .Token }}`** — OTP de 6 dígitos (útil si Safe Links u otro sistema “consume” el enlace al previsualizar).
+- **`{{ .SiteURL }}`**, **`{{ .Email }}`**, **`{{ .Data }}`**, etc. — [documentación oficial](https://supabase.com/docs/guides/auth/auth-email-templates).
 - **Change email:** `{{ .NewEmail }}` y `{{ .Email }}` (correo anterior).
 
-En `06-reauthentication.html`, el botón y el enlace duplicado van dentro de `{{ if .ConfirmationURL }}` por si en algún proyecto no hay URL; si al guardar Supabase se queja del `if`, quita ese bloque y deja solo el código `{{ .Token }}`.
+En `06-reauthentication.html`, el bloque opcional del botón sigue condicionado con `{{ if .ConfirmationURL }}` por compatibilidad; los enlaces internos usan `RedirectTo` + `TokenHash`. Si Supabase se queja del `if`, simplifica según indique el panel.
 
-## Flujo en la aplicación (recordatorio)
+## Flujo en la aplicación (resumen)
 
-- **Alta:** `AuthProvider` → `signUp` con `emailRedirectTo` → `https://tudominio/{lang}/auth/callback` (tras el `code`, redirige a `/{lang}/login`).
-- **Recuperación:** `resetPasswordForEmail` con `redirectTo` → `/{lang}/auth/callback?next=/{lang}/reset-password`.
-- **OAuth (Google):** mismo prefijo `/{lang}/auth/callback?next=…`. La ruta antigua `/api/auth/callback` sigue existiendo por compatibilidad.
-- **Supabase → URL Configuration:** Site URL y **Redirect URLs** deben incluir el origen de producción (p. ej. `https://www.optimalbreaks.com/**`) y, para pruebas locales, `http://localhost:3000/**` o el puerto que uses.
+| Acción | Destino en el correo (repo) | Resultado |
+|--------|------------------------------|-----------|
+| Alta / invitación / magic link / cambio correo | `/{lang}/auth/confirm?token_hash=…&type=…` | Sesión + redirección a `login` u otra ruta segura |
+| Recuperar contraseña | Igual con `type=recovery` | Sesión de recuperación + **`/{lang}/reset-password`** |
+| Google OAuth | `/{lang}/auth/callback?next=…` | `exchangeCodeForSession` con `?code=` |
 
-Los correos enviados **desde el panel de Supabase** (p. ej. “Send recovery” manual) **no** usan el `redirectTo` de la app; para el mismo flujo que en producción, conviene la opción **¿Olvidaste tu contraseña?** en la web.
+**Supabase → URL Configuration:** Site URL y **Redirect URLs** deben incluir producción (`https://www.optimalbreaks.com/**`) y local (`http://localhost:3000/**` o el puerto que uses).
+
+Los correos enviados **manualmente** desde el panel de Supabase (“Send recovery”) **no** usan el `redirectTo` de tu web; para probar el mismo flujo que los usuarios, usa **¿Olvidaste tu contraseña?** en `/login`.
 
 ## SMTP propio (OVH u otro)
 
-Si activas **SMTP personalizado** en Supabase, desactiva el **tracking de enlaces** del proveedor de correo si lo hubiera: puede reescribir URLs y romper `{{ .ConfirmationURL }}`.
+Si activas **SMTP personalizado**, desactiva el **tracking de enlaces** del proveedor si reescribe URLs y rompe la verificación.
 
 ---
 
-*English summary:* HTML email templates for Supabase Auth (confirm signup, invite, magic link, email change, reset password, reauthentication). Paste into **Authentication → Email templates**. Redirect targets are set by the app (`emailRedirectTo` / `redirectTo` → `/{lang}/auth/callback`); templates only control look and copy. See also the main [README.md](../../README.md).
+*English summary:* Paste these HTML templates into **Supabase → Authentication → Email**. Primary links use **`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=…`** so verification hits **`/{lang}/auth/confirm`** (server `verifyOtp`); **recovery** then redirects to **`/{lang}/reset-password`**. OAuth still uses **`/{lang}/auth/callback`**. See [README.md](../../README.md#authentication-supabase-auth-and-email-templates).

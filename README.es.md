@@ -18,7 +18,7 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario:** [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md). **Estrellas 1–5 solo** para **experiencias a las que puedes ir**: **artistas** (visto en vivo) y **eventos** (fui). Sellos, mixes, etc.: solo favoritos/guardados, sin puntuación.
 
-**Correos de autenticación (plantillas HTML para Supabase):** [`mailing/supabase/README.md`](./mailing/supabase/README.md) — confirmación de registro, invitación, magic link, cambio de correo, recuperación de contraseña, reautenticación. Resumen del flujo en [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
+**Correos de autenticación (plantillas HTML para Supabase):** [`mailing/supabase/README.md`](./mailing/supabase/README.md) — confirmación de registro, invitación, magic link, cambio de correo, recuperación de contraseña, reautenticación. Flujo técnico actualizado en [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
 
 ---
 
@@ -34,12 +34,19 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 ## Autenticación y correos (Supabase)
 
-- **Rutas:** `login` (registro, entrada, «¿Olvidaste tu contraseña?»), `reset-password` (nueva contraseña tras el enlace del correo), **`/{lang}/auth/callback`** (intercambia el `code` de Supabase por sesión; por defecto va a `/{lang}/login`). Sigue existiendo `/api/auth/callback` por compatibilidad.
-- **Redirecciones:** el registro usa `emailRedirectTo` hacia `https://…/{lang}/auth/callback`; la recuperación usa `redirectTo` hacia `/{lang}/auth/callback?next=/{lang}/reset-password`. En Supabase, **URL Configuration** debe permitir el origen (p. ej. `https://www.optimalbreaks.com/**` y en local `http://localhost:3000/**`).
-- **Plantillas de correo con marca:** archivos en [`mailing/supabase/`](./mailing/supabase/) — cópialos en **Authentication → Email** del proyecto. Guía detallada: [`mailing/supabase/README.md`](./mailing/supabase/README.md).
-- **SMTP propio (OVH, etc.):** opcional en el mismo panel; evita el “tracking de enlaces” del proveedor si reescribe URLs y rompe la confirmación.
+- **`/{lang}/login`** — registro, entrada y «¿Olvidaste tu contraseña?» (Supabase envía el correo).
+- **`/{lang}/reset-password`** — pantalla donde el usuario **escribe la contraseña nueva** tras un enlace de recuperación válido (es el destino final del flujo).
+- **`/{lang}/auth/confirm`** (Route Handler en servidor) — recibe `token_hash` y `type` en la query, llama a **`verifyOtp`**, fija la sesión en cookies y redirige: **`type=recovery`** → `reset-password`; alta y otros tipos → `login` (u otra ruta interna segura).
+- **`/{lang}/auth/callback`** (página cliente) — sobre todo **OAuth (Google)** con `?code=` (`exchangeCodeForSession`). Si el correo antiguo o una redirección rara lleva aquí **sin** `code` pero con datos de verificación (p. ej. `token_hash` metido dentro de `next`), la app **redirige a** `/auth/confirm` para no quedarse colgada en «Confirmando sesión…».
+- **`/api/auth/callback`** — legado; redirige al callback con idioma preservando parámetros.
 
-Documentación en inglés con el mismo contenido: [README.md — Authentication](README.md#authentication--supabase-auth--email-templates).
+**Desde la app:** `emailRedirectTo` y `redirectTo` apuntan a **`https://…/{lang}/auth/confirm`** (no al callback). En **URL Configuration** de Supabase deben estar permitidos el origen de producción y local (`https://www.optimalbreaks.com/**`, `http://localhost:3000/**`, etc.).
+
+**Plantillas HTML** en [`mailing/supabase/`](./mailing/supabase/): el botón principal usa **`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=…`** para que el primer clic vaya a **tu** `/auth/confirm`. Cópialas en **Authentication → Email**. Detalle: [`mailing/supabase/README.md`](./mailing/supabase/README.md).
+
+**SMTP propio (OVH, etc.):** opcional; desactiva el tracking de enlaces que reescriba URLs.
+
+Documentación en inglés: [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
 
 ---
 
@@ -225,7 +232,7 @@ Aplica `supabase/migrations/` en **orden alfabético**. Descripción detallada d
 
 ## Roadmap (resumen)
 
-Hecho: Supabase en listados, miniaturas y Storage, auth (login, recuperación de contraseña, callback, plantillas HTML en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
+Hecho: Supabase en listados, miniaturas y Storage, auth (login, **`/auth/confirm`**, callback OAuth, recuperación → **`/reset-password`**, plantillas en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
 Pendiente: búsqueda global, OG por sección, RSS, modo oscuro, etc.
 
 ---
