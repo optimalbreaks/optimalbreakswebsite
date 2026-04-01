@@ -300,7 +300,12 @@
     "preview_stop": "Parar preview",
     "open_beatport": "Ver en Beatport",
     "bpm_label": "BPM",
-    "key_label": "KEY"
+    "key_label": "KEY",
+    "week_current_badge": "ACTUAL",
+    "week_number_badge": "#{n}",
+    "week_tracks_count": "{n} temas",
+    "week_toggle_show": "Desplegar lista de esta semana",
+    "week_toggle_hide": "Plegar esta semana"
   },
   "mixes": {
     "title": "Mixes y Sets",

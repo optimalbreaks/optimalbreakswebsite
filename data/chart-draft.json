@@ -1,0 +1,860 @@
+{
+  "week_date": "2026-03-30",
+  "sources": [
+    "beatport"
+  ],
+  "tracks": [
+    {
+      "position": 1,
+      "title": "Flex It",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "MPH",
+          "beatport_url": "https://www.beatport.com/track/flex-it/24001508"
+        },
+        {
+          "name": "y3kfae",
+          "beatport_url": "https://www.beatport.com/track/flex-it/24001508"
+        }
+      ],
+      "label": "Black Book Records",
+      "bpm": 135,
+      "key": "Gb Major",
+      "beatport_url": "https://www.beatport.com/track/flex-it/24001508",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 2,
+      "title": "GET OUT MY HEAD",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Redlight",
+          "beatport_url": "https://www.beatport.com/track/get-out-my-head/24146297"
+        },
+        {
+          "name": "NOTION",
+          "beatport_url": "https://www.beatport.com/track/get-out-my-head/24146297"
+        }
+      ],
+      "label": "Polydor Records",
+      "bpm": 138,
+      "key": "B Minor",
+      "beatport_url": "https://www.beatport.com/track/get-out-my-head/24146297",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 3,
+      "title": "Muita",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed",
+          "beatport_url": "https://www.beatport.com/track/muita/20609095"
+        }
+      ],
+      "label": "83",
+      "bpm": 137,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/muita/20609095",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 4,
+      "title": "I Can Feel U",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed",
+          "beatport_url": "https://www.beatport.com/track/i-can-feel-u/24028316"
+        }
+      ],
+      "label": "83",
+      "bpm": 145,
+      "key": "C Minor",
+      "beatport_url": "https://www.beatport.com/track/i-can-feel-u/24028316",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 5,
+      "title": "Hold It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Guau",
+          "beatport_url": "https://www.beatport.com/track/hold-it/24214500"
+        },
+        {
+          "name": "Lototskiy",
+          "beatport_url": "https://www.beatport.com/track/hold-it/24214500"
+        }
+      ],
+      "label": "83",
+      "bpm": 140,
+      "key": "Db Minor",
+      "beatport_url": "https://www.beatport.com/track/hold-it/24214500",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 6,
+      "title": "flight fm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Joy Orbison",
+          "beatport_url": "https://www.beatport.com/track/flight-fm/18574695"
+        }
+      ],
+      "label": "XL Recordings",
+      "bpm": 140,
+      "key": "D Major",
+      "beatport_url": "https://www.beatport.com/track/flight-fm/18574695",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 7,
+      "title": "Curveball",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Max Dean",
+          "beatport_url": "https://www.beatport.com/track/curveball/20305519"
+        },
+        {
+          "name": "Luke Dean",
+          "beatport_url": "https://www.beatport.com/track/curveball/20305519"
+        },
+        {
+          "name": "Locky (UK)",
+          "beatport_url": "https://www.beatport.com/track/curveball/20305519"
+        }
+      ],
+      "label": "neXup recz",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/curveball/20305519",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 8,
+      "title": "Lose My Mind",
+      "mix_name": "Keith MacKenzie 808 Mix",
+      "artists": [
+        {
+          "name": "Krafty Kuts",
+          "beatport_url": "https://www.beatport.com/track/lose-my-mind/24135457"
+        }
+      ],
+      "label": "Illeven Eleven",
+      "bpm": 130,
+      "key": "E Minor",
+      "beatport_url": "https://www.beatport.com/track/lose-my-mind/24135457",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 9,
+      "title": "G Tek 3000",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Icey",
+          "beatport_url": "https://www.beatport.com/track/g-tek-3000/24574845"
+        }
+      ],
+      "label": "Zone Records",
+      "bpm": 135,
+      "key": "Gb Minor",
+      "beatport_url": "https://www.beatport.com/track/g-tek-3000/24574845",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 10,
+      "title": "What?",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Mary Droppinz",
+          "beatport_url": "https://www.beatport.com/track/what/23436476"
+        },
+        {
+          "name": "Neumonic",
+          "beatport_url": "https://www.beatport.com/track/what/23436476"
+        }
+      ],
+      "label": "Deadbeats",
+      "bpm": 142,
+      "key": "F Major",
+      "beatport_url": "https://www.beatport.com/track/what/23436476",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 11,
+      "title": "Bass Drop",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Magic Mike",
+          "beatport_url": "https://www.beatport.com/track/bass-drop/24237292"
+        },
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/track/bass-drop/24237292"
+        }
+      ],
+      "label": "Ravesta Records",
+      "bpm": 134,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/bass-drop/24237292",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 12,
+      "title": "Space Meeting",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Devis Hard",
+          "beatport_url": "https://www.beatport.com/track/space-meeting/24452508"
+        },
+        {
+          "name": "Montylla",
+          "beatport_url": "https://www.beatport.com/track/space-meeting/24452508"
+        }
+      ],
+      "label": "Br8kn Records",
+      "bpm": 135,
+      "key": "Gb Major",
+      "beatport_url": "https://www.beatport.com/track/space-meeting/24452508",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 13,
+      "title": "Go Fast",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Aggresivnes",
+          "beatport_url": "https://www.beatport.com/track/go-fast/24124584"
+        },
+        {
+          "name": "SellRude",
+          "beatport_url": "https://www.beatport.com/track/go-fast/24124584"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "bpm": 136,
+      "key": "E Minor",
+      "beatport_url": "https://www.beatport.com/track/go-fast/24124584",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 14,
+      "title": "Zamar",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed",
+          "beatport_url": "https://www.beatport.com/track/zamar/23386042"
+        }
+      ],
+      "label": "83",
+      "bpm": 138,
+      "key": "G Major",
+      "beatport_url": "https://www.beatport.com/track/zamar/23386042",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 15,
+      "title": "Nighty",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Shade K",
+          "beatport_url": "https://www.beatport.com/track/nighty/23609006"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "bpm": 130,
+      "key": "G Major",
+      "beatport_url": "https://www.beatport.com/track/nighty/23609006",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 16,
+      "title": "Demon In The Mirror",
+      "mix_name": "Som.1 Remix",
+      "artists": [
+        {
+          "name": "Ayk",
+          "beatport_url": "https://www.beatport.com/track/demon-in-the-mirror/23483256"
+        }
+      ],
+      "label": "R&S Records",
+      "bpm": 136,
+      "key": "A Minor",
+      "beatport_url": "https://www.beatport.com/track/demon-in-the-mirror/23483256",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 17,
+      "title": "Let's Get Filthy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/track/lets-get-filthy/22663969"
+        }
+      ],
+      "label": "Ravesta Records",
+      "bpm": 133,
+      "key": "F Major",
+      "beatport_url": "https://www.beatport.com/track/lets-get-filthy/22663969",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 18,
+      "title": "Detroit Damager",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Borez",
+          "beatport_url": "https://www.beatport.com/track/detroit-damager/23871775"
+        },
+        {
+          "name": "Dominic B UK",
+          "beatport_url": "https://www.beatport.com/track/detroit-damager/23871775"
+        }
+      ],
+      "label": "Rebel Bass",
+      "bpm": 134,
+      "key": "D Major",
+      "beatport_url": "https://www.beatport.com/track/detroit-damager/23871775",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 19,
+      "title": "Break It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FM-3",
+          "beatport_url": "https://www.beatport.com/track/break-it/23315363"
+        },
+        {
+          "name": "Rhades",
+          "beatport_url": "https://www.beatport.com/track/break-it/23315363"
+        }
+      ],
+      "label": "Banana Club",
+      "bpm": 138,
+      "key": "G Major",
+      "beatport_url": "https://www.beatport.com/track/break-it/23315363",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 20,
+      "title": "Nighthawk",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Freestylers",
+          "beatport_url": "https://www.beatport.com/track/nighthawk/20790826"
+        },
+        {
+          "name": "Krafty Kuts",
+          "beatport_url": "https://www.beatport.com/track/nighthawk/20790826"
+        },
+        {
+          "name": "Plump DJs",
+          "beatport_url": "https://www.beatport.com/track/nighthawk/20790826"
+        },
+        {
+          "name": "King of the Beats",
+          "beatport_url": "https://www.beatport.com/track/nighthawk/20790826"
+        }
+      ],
+      "label": "Speaker Freaker",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/nighthawk/20790826",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 21,
+      "title": "Find Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Jem Haynes",
+          "beatport_url": "https://www.beatport.com/track/find-me/20666254"
+        },
+        {
+          "name": "Dominic B UK",
+          "beatport_url": "https://www.beatport.com/track/find-me/20666254"
+        }
+      ],
+      "label": "Rebel Bass",
+      "bpm": 128,
+      "key": "Bb Minor",
+      "beatport_url": "https://www.beatport.com/track/find-me/20666254",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 22,
+      "title": "I Am",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ardalan",
+          "beatport_url": "https://www.beatport.com/track/i-am/26840851"
+        },
+        {
+          "name": "Marieme",
+          "beatport_url": "https://www.beatport.com/track/i-am/26840851"
+        }
+      ],
+      "label": "DIRTYBIRD",
+      "bpm": 130,
+      "key": "Bb Major",
+      "beatport_url": "https://www.beatport.com/track/i-am/26840851",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 23,
+      "title": "Everybody Bassing",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Aggresivnes",
+          "beatport_url": "https://www.beatport.com/track/everybody-bassing/23206142"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "bpm": 68,
+      "key": "G Minor",
+      "beatport_url": "https://www.beatport.com/track/everybody-bassing/23206142",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 24,
+      "title": "Out of Space",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Prodigy",
+          "beatport_url": "https://www.beatport.com/track/out-of-space/18965801"
+        }
+      ],
+      "label": "XL Recordings",
+      "bpm": 147,
+      "key": "A Minor",
+      "beatport_url": "https://www.beatport.com/track/out-of-space/18965801",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 25,
+      "title": "Body",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Borez",
+          "beatport_url": "https://www.beatport.com/track/body/24089044"
+        },
+        {
+          "name": "Dominic B UK",
+          "beatport_url": "https://www.beatport.com/track/body/24089044"
+        }
+      ],
+      "label": "Rebel Bass",
+      "bpm": 132,
+      "key": "Ab Minor",
+      "beatport_url": "https://www.beatport.com/track/body/24089044",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 26,
+      "title": "Hate Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Orebeat",
+          "beatport_url": "https://www.beatport.com/track/hate-me/23952171"
+        },
+        {
+          "name": "Xwile",
+          "beatport_url": "https://www.beatport.com/track/hate-me/23952171"
+        }
+      ],
+      "label": "Distorsion Records",
+      "bpm": 136,
+      "key": "Ab Major",
+      "beatport_url": "https://www.beatport.com/track/hate-me/23952171",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 27,
+      "title": "Pixels In The Dark",
+      "mix_name": "Extended Club Mix",
+      "artists": [
+        {
+          "name": "DJ Icey",
+          "beatport_url": "https://www.beatport.com/track/pixels-in-the-dark/26856072"
+        }
+      ],
+      "label": "Zone Records",
+      "bpm": 134,
+      "key": "Db Major",
+      "beatport_url": "https://www.beatport.com/track/pixels-in-the-dark/26856072",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 28,
+      "title": "Turn The Page",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Streets",
+          "beatport_url": "https://www.beatport.com/track/turn-the-page/18967933"
+        },
+        {
+          "name": "Overmono",
+          "beatport_url": "https://www.beatport.com/track/turn-the-page/18967933"
+        }
+      ],
+      "label": "XL Recordings",
+      "bpm": 130,
+      "key": "D Minor",
+      "beatport_url": "https://www.beatport.com/track/turn-the-page/18967933",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 29,
+      "title": "Make Me",
+      "mix_name": "Extended",
+      "artists": [
+        {
+          "name": "Borai & Denham Audio",
+          "beatport_url": "https://www.beatport.com/track/make-me/17367614"
+        }
+      ],
+      "label": "Columbia (Sony)",
+      "bpm": 130,
+      "key": "Bb Minor",
+      "beatport_url": "https://www.beatport.com/track/make-me/17367614",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 30,
+      "title": "Gangsta SH!T",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Cocuns",
+          "beatport_url": "https://www.beatport.com/track/gangsta-sht/26927143"
+        },
+        {
+          "name": "Ghezz",
+          "beatport_url": "https://www.beatport.com/track/gangsta-sht/26927143"
+        }
+      ],
+      "label": "getbusy",
+      "bpm": 128,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/gangsta-sht/26927143",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 31,
+      "title": "Deal With The Matter",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dub Elements",
+          "beatport_url": "https://www.beatport.com/track/deal-with-the-matter/23947293"
+        }
+      ],
+      "label": "Raveart Records",
+      "bpm": 136,
+      "key": "G Minor",
+      "beatport_url": "https://www.beatport.com/track/deal-with-the-matter/23947293",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 32,
+      "title": "Under Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "MIAU",
+          "beatport_url": "https://www.beatport.com/track/under-pressure/23044562"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "bpm": 134,
+      "key": "A Minor",
+      "beatport_url": "https://www.beatport.com/track/under-pressure/23044562",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 33,
+      "title": "Funk Funk",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "X Prod",
+          "beatport_url": "https://www.beatport.com/track/funk-funk/17724757"
+        }
+      ],
+      "label": "Distorsion Records",
+      "bpm": 128,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/funk-funk/17724757",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 34,
+      "title": "Races",
+      "mix_name": "Extended",
+      "artists": [
+        {
+          "name": "Blanco",
+          "beatport_url": "https://www.beatport.com/track/races/18817612"
+        },
+        {
+          "name": "Interplanetary Criminal",
+          "beatport_url": "https://www.beatport.com/track/races/18817612"
+        }
+      ],
+      "label": "Room Two Recordings",
+      "bpm": 140,
+      "key": "B Minor",
+      "beatport_url": "https://www.beatport.com/track/races/18817612",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 35,
+      "title": "Hold On",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "PhoenixRising",
+          "beatport_url": "https://www.beatport.com/track/hold-on/25754415"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "bpm": 132,
+      "key": "D Minor",
+      "beatport_url": "https://www.beatport.com/track/hold-on/25754415",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 36,
+      "title": "Little Rumble",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Buson",
+          "beatport_url": "https://www.beatport.com/track/little-rumble/24088011"
+        }
+      ],
+      "label": "Banana Club",
+      "bpm": 134,
+      "key": "G Major",
+      "beatport_url": "https://www.beatport.com/track/little-rumble/24088011",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 37,
+      "title": "Calypso",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bowser",
+          "beatport_url": "https://www.beatport.com/track/calypso/22791018"
+        }
+      ],
+      "label": "83",
+      "bpm": 137,
+      "key": "Gb Minor",
+      "beatport_url": "https://www.beatport.com/track/calypso/22791018",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 38,
+      "title": "Soul Vibrates",
+      "mix_name": "Guau Remix",
+      "artists": [
+        {
+          "name": "Plump DJs",
+          "beatport_url": "https://www.beatport.com/track/soul-vibrates/22527745"
+        }
+      ],
+      "label": "83",
+      "bpm": 137,
+      "key": "Db Major",
+      "beatport_url": "https://www.beatport.com/track/soul-vibrates/22527745",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 39,
+      "title": "SPARK UP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Efan",
+          "beatport_url": "https://www.beatport.com/track/spark-up/21495348"
+        }
+      ],
+      "label": "DistroKid",
+      "bpm": 140,
+      "key": "D Minor",
+      "beatport_url": "https://www.beatport.com/track/spark-up/21495348",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 40,
+      "title": "Freedom 2",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Joy Orbison",
+          "beatport_url": "https://www.beatport.com/track/freedom-2/17998365"
+        },
+        {
+          "name": "Overmono",
+          "beatport_url": "https://www.beatport.com/track/freedom-2/17998365"
+        },
+        {
+          "name": "Kwengface",
+          "beatport_url": "https://www.beatport.com/track/freedom-2/17998365"
+        }
+      ],
+      "label": "Kwengface LTD",
+      "bpm": 70,
+      "key": "B Minor",
+      "beatport_url": "https://www.beatport.com/track/freedom-2/17998365",
+      "artwork_url": null,
+      "sample_url": null,
+      "previous_position": null,
+      "weeks_in_chart": 1
+    }
+  ]
+}

@@ -379,7 +379,12 @@
     "preview_stop": "Stop preview",
     "open_beatport": "View on Beatport",
     "bpm_label": "BPM",
-    "key_label": "KEY"
+    "key_label": "KEY",
+    "week_current_badge": "CURRENT",
+    "week_number_badge": "#{n}",
+    "week_tracks_count": "{n} tracks",
+    "week_toggle_show": "Expand this week’s chart",
+    "week_toggle_hide": "Collapse this week"
   },
   "mixes": {
     "title": "Mixes & Sets",
