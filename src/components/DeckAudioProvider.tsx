@@ -470,47 +470,6 @@ export function DeckAudioProvider({
     setCurrentTrack(crossfader < 50 ? trackIdxA : trackIdxB)
   }, [crossfader, trackIdxA, trackIdxB])
 
-  // === Start/stop individual sides ===
-  // Abort controllers so spinDown can cancel a pending spinUp .then()
-  const abortRefA = useRef(0)
-  const abortRefB = useRef(0)
-
-  const spinUp = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, abortRef: React.MutableRefObject<number>) => {
-    cancelAnimationFrame(brakeRef.current)
-    const token = ++abortRef.current
-    audio.playbackRate = 1
-    void audio.play().then(() => {
-      if (abortRef.current !== token) return
-      audio.playbackRate = 0.15
-      let rate = 0.15
-      const step = () => {
-        if (abortRef.current !== token) return
-        rate = Math.min(1, rate + 0.06)
-        audio.playbackRate = rate
-        if (rate < 1) brakeRef.current = requestAnimationFrame(step)
-      }
-      brakeRef.current = requestAnimationFrame(step)
-    }).catch(() => {})
-  }, [])
-
-  const spinDown = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, abortRef: React.MutableRefObject<number>, cb: () => void) => {
-    ++abortRef.current
-    cancelAnimationFrame(brakeRef.current)
-    let rate = audio.playbackRate
-    if (rate <= 0) { audio.pause(); cb(); return }
-    const step = () => {
-      rate = Math.max(0, rate - 0.08)
-      audio.playbackRate = rate
-      if (rate > 0) {
-        brakeRef.current = requestAnimationFrame(step)
-      } else {
-        audio.pause()
-        cb()
-      }
-    }
-    step()
-  }, [])
-
   // Toggle play for a specific side
   const togglePlaySide = useCallback((side: 'A' | 'B') => {
     initAudio()
@@ -525,23 +484,27 @@ export function DeckAudioProvider({
       const audio = audioRefA.current
       if (!audio) return
       if (playingA) {
-        spinDown(audio, brakeAnimRefA, abortRefA, () => setPlayingA(false))
+        setPlayingA(false)
+        audio.pause()
       } else {
-        spinUp(audio, brakeAnimRefA, abortRefA)
         setPlayingA(true)
+        audio.playbackRate = 1
+        void audio.play().catch(() => {})
       }
     } else {
       const audio = audioRefB.current
       if (!audio) return
       if (playingB) {
-        spinDown(audio, brakeAnimRefB, abortRefB, () => setPlayingB(false))
+        setPlayingB(false)
+        audio.pause()
       } else {
-        spinUp(audio, brakeAnimRefB, abortRefB)
         setPlayingB(true)
+        audio.playbackRate = 1
+        void audio.play().catch(() => {})
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initAudio, playingA, playingB, mode, spinUp, spinDown])
+  }, [initAudio, playingA, playingB, mode])
 
   // Legacy togglePlay = toggle the active side
   const togglePlay = useCallback(() => {
