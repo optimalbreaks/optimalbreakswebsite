@@ -270,20 +270,47 @@ body::before {
 .prose-ob h2 {
   font-family: 'Unbounded', sans-serif;
   font-weight: 900;
-  font-size: 22px;
+  font-size: clamp(26px, 5.2vw, 40px);
+  line-height: 1.1;
   text-transform: uppercase;
-  margin-top: 2em;
-  margin-bottom: 0.5em;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-top: 2.25em;
+  margin-bottom: 0.65em;
+  padding-bottom: 0.45em;
+  border-bottom: 4px solid var(--ink);
+}
+
+.prose-ob h2:first-child {
+  margin-top: 0.35em;
 }
 
 .prose-ob h3 {
   font-family: 'Unbounded', sans-serif;
-  font-weight: 700;
-  font-size: 17px;
+  font-weight: 900;
+  font-size: clamp(19px, 3.6vw, 28px);
+  line-height: 1.18;
   text-transform: uppercase;
-  margin-top: 1.5em;
-  margin-bottom: 0.4em;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-top: 1.85em;
+  margin-bottom: 0.55em;
+  padding: 0.15em 0 0.15em 0.65em;
+  border-left: 5px solid var(--red);
+}
+
+.prose-ob h4,
+.prose-ob h5,
+.prose-ob h6 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 800;
+  font-size: clamp(16px, 2.8vw, 20px);
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-top: 1.35em;
+  margin-bottom: 0.45em;
 }
 
 .prose-ob p {
