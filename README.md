@@ -66,7 +66,7 @@ Logged-in users get **My Breaks** (`/[lang]/dashboard`): favorites, attendance, 
 - **Styling**: Tailwind CSS 3.4 + custom CSS variables
 - **Database**: Supabase (PostgreSQL) + Row Level Security
 - **Storage**: Supabase Storage (public bucket `media` for content images — see below)
-- **i18n**: Custom middleware with `/es` and `/en` prefixed routes + hreflang tags
+- **i18n**: Custom middleware with `/es` and `/en` prefixed routes + hreflang tags; global **deck / mix audio** remounts on locale change (`DeckAudioProvider` `key={lang}` in `[lang]/layout.tsx`) so one playback session per language
 - **Analytics**: Google Analytics 4 via **`@next/third-parties/google`** (`GoogleAnalytics` component) + **Consent Mode v2** aligned with `CookieBanner` (see [Analytics (GA4)](#analytics-google-analytics-4))
 - **Audio**: Web Audio API with scratch simulation
 - **Fonts**: Unbounded, Courier Prime, Special Elite, Darker Grotesque
@@ -93,7 +93,8 @@ CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-an
 System prompts for **artist**, **label**, and **event enrichment** agents live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**) are set in **`.env.local`**; temperature, `max_tokens`, and JSON user instructions are defined in code per route or script.
 
 **Central index (all prompt files, defaults per flow, related APIs):** [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md).  
-**Artist agent (batch, admin API, commands):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).
+**Artist agent (batch, admin API, commands):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).  
+**All Markdown docs (map + audit):** [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -177,6 +178,7 @@ Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your d
 ```
 OptimalBreaks/
 ├── docs/
+│   ├── README.md               # Doc index + maintenance audit (what each .md covers)
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
@@ -314,6 +316,14 @@ The hero section includes a fully interactive DJ controller:
 - **Tonearms** — move when playing/stopped
 - **Touch support** — works on mobile
 - **Auto-advance** — next track plays when current one ends
+- **Locale switch (ES/EN)** — `DeckAudioProvider` is mounted with **`key={lang}`** in `src/app/[lang]/layout.tsx`. Navigating between `/en` and `/es` **remounts** the audio context (home vinyl deck, mini bar, SoundCloud/mix mode). Playback from the previous locale does **not** continue in the background.
+
+---
+
+## Layout, header, and mobile width
+
+- **`html` / `body`** in `src/app/globals.css` use **`max-width: 100%`** and **`overflow-x: hidden`** (or `clip` where supported) to avoid horizontal “ghost” scroll on narrow viewports (`100vw` vs usable width).
+- The **`<header>`** intentionally does **not** set `overflow-x: hidden`, so **absolutely positioned** panels (mobile hamburger menu, **account dropdown** behind the avatar) are not clipped. Dropdowns use a high **z-index** (e.g. `z-[200]`) above the sticky bar (`z-[100]`).
 
 ---
 
@@ -492,7 +502,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
 ## SQL migrations (reference)
 
-Files under `supabase/migrations/` (apply in lexical order):
+Files under `supabase/migrations/` (apply in lexical order). **Many migrations exist beyond the table below** (012+ charts, mixes, OG URLs, scenes, engagement, content batches, etc.): open the folder or run `ls supabase/migrations` for the full list.
 
 | File | Purpose |
 |------|---------|

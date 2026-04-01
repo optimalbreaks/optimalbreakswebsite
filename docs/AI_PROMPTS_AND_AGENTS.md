@@ -70,6 +70,7 @@ Algunas herramientas (p. ej. elección de imagen entre candidatos SerpAPI) lleva
 
 - [`README.md`](../README.md) — stack, env, comandos `npm run db:*`.
 - [`README.es.md`](../README.es.md) — resumen en español y flujo de artistas.
+- [`docs/README.md`](./README.md) — índice de toda la documentación Markdown y auditoría.
 - [`IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md), [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ---
@@ -133,4 +134,5 @@ Some tools (e.g. image picking from SerpAPI candidates) use **short inline syste
 ### See also
 
 - [`README.md`](../README.md), [`README.es.md`](../README.es.md).
+- [`docs/README.md`](./README.md) — Markdown map and maintenance audit.
 - [`IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md), [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).

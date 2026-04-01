@@ -14,7 +14,7 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Eventos:** se crean **manualmente** desde el panel admin (`/administrator/events/new`) o pidiendo al agente Cursor. Para completar la ficha (fecha, lineup, descripción, venue, tags, etc.) se usa el **agente enriquecedor**: `npm run db:events:enrich -- <slug> [--with-poster]`. SerpAPI busca en la web y OpenAI completa los campos vacíos. El prompt de sistema del enriquecedor está en **`scripts/prompts/evento-enriquecer-system.txt`**.
 
-**Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. La guía detallada del agente de **artistas** sigue en [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md).
+**Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. La guía detallada del agente de **artistas** sigue en [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md). **Mapa de toda la documentación Markdown y auditoría:** [`docs/README.md`](./docs/README.md).
 
 **Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario:** [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md). **Estrellas 1–5 solo** para **experiencias a las que puedes ir**: **artistas** (visto en vivo) y **eventos** (fui). Sellos, mixes, etc.: solo favoritos/guardados, sin puntuación.
 
@@ -27,7 +27,7 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 - **Next.js 14** (App Router), **TypeScript**, **Tailwind** 3.4
 - **Supabase**: PostgreSQL + autenticación + **Storage** (bucket público `media` para fotos de contenido)
 - **Analítica (opcional)**: **Google Analytics 4** con el paquete oficial **`@next/third-parties/google`** y **Consent Mode v2** enlazado al banner de cookies (`CookieBanner` + `GoogleAnalytics`). Detalle en [README.md — Analytics](./README.md#analytics-google-analytics-4) y en la sección [Analítica (GA4)](#analítica-ga4) de este archivo.
-- Rutas `/es` y `/en` con middleware propio
+- Rutas `/es` y `/en` con middleware propio; el audio global del **deck / mixes** se **reinicia** al cambiar de idioma (`DeckAudioProvider` con `key={lang}` en `[lang]/layout.tsx`), una sesión por idioma
 - Tipografías: Unbounded, Courier Prime, Special Elite, Darker Grotesque
 
 ---
@@ -226,7 +226,20 @@ Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`)
 
 ### Migraciones SQL (resumen)
 
-Aplica `supabase/migrations/` en **orden alfabético**. Descripción detallada de cada archivo en el README en inglés.
+Aplica `supabase/migrations/` en **orden alfabético**. El README en inglés incluye una tabla **parcial** (001–011); hay **muchas más** (charts, mixes, OG, escenas, engagement, lotes de contenido…): lista completa en la carpeta del repo.
+
+---
+
+## Cabecera y ancho en móvil
+
+- En **`globals.css`**, `html` y `body` llevan `max-width: 100%` y `overflow-x: hidden` (o `clip`) para evitar scroll horizontal fantasma.
+- El **`<header>`** no usa `overflow-x: hidden`, para que los paneles en posición absoluta (menú hamburguesa, **desplegable de cuenta** tras el avatar) no queden recortados. Z-index alto en esos paneles respecto a la barra sticky.
+
+---
+
+## Deck e idioma
+
+Al navegar entre **`/en` y `/es`**, el proveedor de audio se **vuelve a montar** (`key={lang}`): se para el sonido del idioma anterior y el mini reproductor coincide con la sesión actual (mismo criterio si había un mix en curso).
 
 ---
 
