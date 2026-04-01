@@ -41,7 +41,7 @@ function LargeGrid({ scenes, lang }: { scenes: Scene[]; lang: string }) {
           href={`/${lang}/scenes/${s.slug}`}
           className="border-r-[3px] border-b-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] max-md:!border-r-0 flex flex-col overflow-hidden group min-h-0"
         >
-          <CardThumbnail src={s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-[5/3]" />
+          <CardThumbnail src={s.og_image_url || s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-[5/3]" />
           <div className="p-6 sm:p-8">
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>{s.era}</div>
             <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
@@ -64,7 +64,7 @@ function CompactGrid({ scenes, lang }: { scenes: Scene[]; lang: string }) {
           href={`/${lang}/scenes/${s.slug}`}
           className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
-          <CardThumbnail src={s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-square" />
+          <CardThumbnail src={s.og_image_url || s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-square" />
           <div className="p-3 flex flex-col flex-grow min-h-0">
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{s.era}</div>
             <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
@@ -90,7 +90,7 @@ function ListView({ scenes, lang }: { scenes: Scene[]; lang: string }) {
           className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
         >
           <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
-            <CardThumbnail src={s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-square" frameClass="" />
+            <CardThumbnail src={s.og_image_url || s.image_url} alt={lang === 'es' ? s.name_es : s.name_en} aspectClass="aspect-square" frameClass="" />
           </div>
           <div className="flex-grow min-w-0">
             <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>

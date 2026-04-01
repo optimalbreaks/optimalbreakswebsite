@@ -191,14 +191,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error: dbErr } = await sb
-    .from(tbl)
-    .update({ og_image_url: publicUrl })
-    .eq('slug', slug)
+  const updateRow =
+    tbl === 'scenes'
+      ? { og_image_url: publicUrl, image_url: publicUrl }
+      : { og_image_url: publicUrl }
+
+  const { error: dbErr } = await sb.from(tbl).update(updateRow).eq('slug', slug)
 
   return NextResponse.json({
     slug,
     og_image_url: publicUrl,
+    ...(tbl === 'scenes' ? { image_url: publicUrl } : {}),
     saved: !dbErr,
     dbError: dbErr?.message,
     promptLength: prompt.length,

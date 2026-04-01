@@ -200,10 +200,14 @@ async function processEntity(sb, table, row, { dryRun, force }) {
   console.log(`  📤 ${row.slug} — subiendo a Storage (${(buf.length / 1024).toFixed(0)} KB)...`)
   const publicUrl = await uploadOgImage(sb, table, row.slug, buf)
 
-  const { error: dbErr } = await sb
-    .from(table)
-    .update({ og_image_url: publicUrl })
-    .eq('slug', row.slug)
+  // Escenas: el front histórico usa `image_url` (/images/scenes/…). Unificamos con la OG en Storage
+  // para que listado y ficha muestren la imagen IA sin depender solo de og_image_url.
+  const payload =
+    table === 'scenes'
+      ? { og_image_url: publicUrl, image_url: publicUrl }
+      : { og_image_url: publicUrl }
+
+  const { error: dbErr } = await sb.from(table).update(payload).eq('slug', row.slug)
 
   if (dbErr) {
     console.error(`  ❌ ${row.slug} — error BD: ${dbErr.message}`)

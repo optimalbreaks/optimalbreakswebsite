@@ -86,7 +86,12 @@ export default async function SceneDetailPage({ params }: Props) {
       </div>
 
       <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden">
-        <CardThumbnail src={scene.image_url} alt={sceneName} heightClass="h-48 sm:h-56 md:h-64" frameClass="border-0" />
+        <CardThumbnail
+          src={scene.og_image_url || scene.image_url}
+          alt={sceneName}
+          heightClass="h-48 sm:h-56 md:h-64"
+          frameClass="border-0"
+        />
       </div>
 
       <div className="flex flex-wrap gap-2 mb-8">
