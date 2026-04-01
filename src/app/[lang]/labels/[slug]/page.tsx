@@ -16,7 +16,7 @@ import FavoriteButton from '@/components/FavoriteButton'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
-type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url'>
+type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
 type LabelPageRow = Label & {
   organization: Pick<Organization, 'slug' | 'name'> | null
 }
@@ -24,13 +24,13 @@ type LabelPageRow = Label & {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
-  const { data: raw } = await supabase.from('labels').select('name, description_en, description_es, image_url').eq('slug', slug).single()
+  const { data: raw } = await supabase.from('labels').select('name, description_en, description_es, image_url, og_image_url').eq('slug', slug).single()
   const data = raw as LabelSeoRow | null
   if (!data?.name)
     return { title: lang === 'es' ? 'Sello no encontrado' : 'Label not found', robots: { index: false, follow: true } }
   const siteName = await siteNameForLang(lang)
   const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
-  return detailPageMetadata(lang, `/labels/${slug}`, siteName, data.name, description, 'website', data.image_url)
+  return detailPageMetadata(lang, `/labels/${slug}`, siteName, data.name, description, 'website', data.og_image_url || data.image_url)
 }
 
 export default async function LabelDetailPage({ params }: Props) {

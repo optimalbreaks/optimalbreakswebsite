@@ -312,6 +312,7 @@ export interface Artist extends Record<string, unknown> {
   styles: string[]
   era: string
   image_url: string | null
+  og_image_url: string | null
   essential_tracks: string[]
   recommended_mixes: string[]
   related_artists: string[]
@@ -333,6 +334,7 @@ export interface Label extends Record<string, unknown> {
   description_en: string
   description_es: string
   image_url: string | null
+  og_image_url: string | null
   website: string | null
   key_artists: string[]
   key_releases: string[]
@@ -392,6 +394,7 @@ export interface BreakEvent extends Record<string, unknown> {
   country: string
   venue: string | null
   image_url: string | null
+  og_image_url: string | null
   website: string | null
   lineup: string[]
   is_featured: boolean
@@ -422,6 +425,7 @@ export interface BlogPost extends Record<string, unknown> {
   category: 'article' | 'ranking' | 'retrospective' | 'interview' | 'review' | 'opinion'
   tags: string[]
   image_url: string | null
+  og_image_url: string | null
   author: string
   published_at: string
   is_published: boolean
@@ -443,6 +447,7 @@ export interface Scene extends Record<string, unknown> {
   key_venues: string[]
   era: string
   image_url: string | null
+  og_image_url: string | null
   is_featured: boolean
 }
 

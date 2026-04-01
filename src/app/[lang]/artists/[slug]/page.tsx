@@ -36,7 +36,7 @@ function firstSearchParam(v: string | string[] | undefined): string | undefined 
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'styles' | 'country' | 'era'>
+type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'og_image_url' | 'styles' | 'country' | 'era'>
 
 const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
 
@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createSimpleSupabase()
   const { data: raw } = await supabase
     .from('artists')
-    .select('name, bio_en, bio_es, image_url, styles, country, era')
+    .select('name, bio_en, bio_es, image_url, og_image_url, styles, country, era')
     .eq('slug', slug)
     .single()
   const meta = raw as ArtistSeoRow | null
@@ -101,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `${meta.name} | ${siteName}`,
     description,
     'profile',
-    meta.image_url,
+    meta.og_image_url || meta.image_url,
     keywords,
   )
 }

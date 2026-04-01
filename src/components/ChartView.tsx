@@ -5,7 +5,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartTrack, ChartTrackArtist } from '@/types/database'
 
@@ -121,19 +121,30 @@ function formatTime(s: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
+function defaultPreviewLayout(
+  controls: React.ReactNode,
+  progressBar: React.ReactNode,
+) {
+  return (
+    <div className="flex flex-col gap-1 min-w-[8rem] sm:min-w-0 sm:max-w-[280px] w-full">
+      {controls}
+      {progressBar}
+    </div>
+  )
+}
+
 function PreviewPlayer({
   sampleUrl,
   waveformUrl,
   dict,
-  children,
+  children = defaultPreviewLayout,
 }: {
   sampleUrl: string | null
   waveformUrl: string | null
   dict: any
-  children: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
+  children?: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const rafRef = useRef<number>(0)
   const barRef = useRef<HTMLDivElement | null>(null)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -141,7 +152,7 @@ function PreviewPlayer({
   const [duration, setDuration] = useState(0)
 
   if (!sampleUrl) {
-    return <>{children(null, null)}</>
+    return null
   }
 
   const proxiedAudio = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
@@ -150,28 +161,10 @@ function PreviewPlayer({
     ? `/_next/image?url=${encodeURIComponent(waveformUrl)}&w=1920&q=75`
     : null
 
-  const tick = useCallback(() => {
-    const a = audioRef.current
-    if (a && a.duration) {
-      setProgress(a.currentTime / a.duration)
-      setCurrentTime(a.currentTime)
-      setDuration(a.duration)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-  }, [])
-
-  const stopTick = useCallback(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = 0
-  }, [])
-
-  useEffect(() => () => stopTick(), [stopTick])
-
   const pauseThis = useCallback(() => {
     audioRef.current?.pause()
     setPlaying(false)
-    stopTick()
-  }, [stopTick])
+  }, [])
 
   const toggle = () => {
     const audio = audioRef.current
@@ -191,7 +184,6 @@ function PreviewPlayer({
         setPlaying(true)
         currentPlayingAudio = audio
         currentPlayingPauser = pauseThis
-        rafRef.current = requestAnimationFrame(tick)
       }).catch(() => {})
     }
   }
@@ -199,10 +191,18 @@ function PreviewPlayer({
   const handleEnded = () => {
     setPlaying(false)
     setProgress(0)
-    stopTick()
     if (currentPlayingAudio === audioRef.current) {
       currentPlayingAudio = null
       currentPlayingPauser = null
+    }
+  }
+
+  const handleTimeUpdate = () => {
+    const a = audioRef.current
+    if (a && a.duration) {
+      setProgress(a.currentTime / a.duration)
+      setCurrentTime(a.currentTime)
+      setDuration(a.duration)
     }
   }
 
@@ -226,6 +226,8 @@ function PreviewPlayer({
         src={proxiedAudio}
         preload="none"
         onEnded={handleEnded}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleTimeUpdate}
       />
       <button
         type="button"
@@ -249,41 +251,39 @@ function PreviewPlayer({
     </div>
   )
 
-  const progressBar = (playing || progress > 0) ? (
-        <div
-          ref={barRef}
-          onClick={seek}
-          className="relative w-full h-8 sm:h-10 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-[3px] border-[var(--ink)]"
-          role="progressbar"
-          aria-valuenow={Math.round(progress * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          {nextWaveform ? (
+  const progressBar =
+    playing || progress > 0 ? (
+      <div
+        ref={barRef}
+        onClick={seek}
+        className="relative w-full h-8 sm:h-10 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-[3px] border-[var(--ink)]"
+        role="progressbar"
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        {nextWaveform ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              mask: `url('${nextWaveform}') center/100% 100% no-repeat`,
+              WebkitMask: `url('${nextWaveform}') center/100% 100% no-repeat`,
+            }}
+          >
+            <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
             <div
-              className="absolute inset-0"
-              style={{
-                mask: `url('${nextWaveform}') center/100% 100% no-repeat`,
-                WebkitMask: `url('${nextWaveform}') center/100% 100% no-repeat`,
-              }}
-            >
-          {/* Base amarilla de la onda */}
-          <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
-          {/* Progreso rojo de la onda */}
+              className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+        ) : (
           <div
             className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
             style={{ width: `${progress * 100}%` }}
           />
-        </div>
-      ) : (
-        /* Fallback si no hay onda: barra sólida */
-        <div
-          className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
-          style={{ width: `${progress * 100}%` }}
-        />
-      )}
-    </div>
-  ) : null
+        )}
+      </div>
+    ) : null
 
   return <>{children(controls, progressBar)}</>
 }

@@ -14,14 +14,14 @@ import { splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
-type SceneSeoRow = Pick<Scene, 'name_en' | 'name_es' | 'description_en' | 'description_es' | 'image_url'>
+type SceneSeoRow = Pick<Scene, 'name_en' | 'name_es' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
   const { data: raw } = await supabase
     .from('scenes')
-    .select('name_en, name_es, description_en, description_es, image_url')
+    .select('name_en, name_es, description_en, description_es, image_url, og_image_url')
     .eq('slug', slug)
     .single()
   const data = raw as SceneSeoRow | null
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = lang === 'es' ? data.name_es : data.name_en
   const siteName = await siteNameForLang(lang)
   const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
-  return detailPageMetadata(lang, `/scenes/${slug}`, siteName, title, description, 'website', data.image_url)
+  return detailPageMetadata(lang, `/scenes/${slug}`, siteName, title, description, 'website', data.og_image_url || data.image_url)
 }
 
 export default async function SceneDetailPage({ params }: Props) {
