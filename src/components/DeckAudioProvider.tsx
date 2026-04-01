@@ -303,7 +303,7 @@ export function DeckAudioProvider({
   const audioCtxRef = useRef<AudioContext | null>(null)
   const gainRefA = useRef<GainNode | null>(null)
   const gainRefB = useRef<GainNode | null>(null)
-  const scratchAudioRef = useRef<HTMLAudioElement | null>(null)
+  const lastScratchTimeRef = useRef<number>(0)
 
   // Legacy single-track references (used by context consumers that rely on `track`)
   const audioRef = audioRefA
@@ -391,12 +391,6 @@ export function DeckAudioProvider({
   }, [])
 
   const initAudio = useCallback(() => {
-    if (!scratchAudioRef.current) {
-      const scratch = new Audio('/music/scratch.mp3')
-      scratch.volume = 0.6
-      scratchAudioRef.current = scratch
-    }
-
     createDeckAudio(
       audioRefA, gainRefA,
       DECK_TRACKS[trackIdxARef.current].file,
@@ -549,11 +543,37 @@ export function DeckAudioProvider({
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
       const delta = (scratchStartY.current - clientY) * 0.02
 
-      if (Math.abs(delta) > 0.02 && scratchAudioRef.current) {
-        if (scratchAudioRef.current.paused || scratchAudioRef.current.currentTime > 0.08) {
-          scratchAudioRef.current.currentTime = 0
-          scratchAudioRef.current.playbackRate = 0.8 + Math.random() * 0.6
-          void scratchAudioRef.current.play().catch(() => {})
+      if (Math.abs(delta) > 0.02 && audioCtxRef.current && audioCtxRef.current.state === 'running') {
+        const ctx = audioCtxRef.current
+        const now = ctx.currentTime
+        if (now - lastScratchTimeRef.current > 0.1) {
+          lastScratchTimeRef.current = now
+          try {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            const filter = ctx.createBiquadFilter()
+
+            osc.type = 'sawtooth'
+            const startFreq = delta > 0 ? 800 : 300
+            const endFreq = delta > 0 ? 300 : 800
+            osc.frequency.setValueAtTime(startFreq, now)
+            osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.08)
+
+            filter.type = 'bandpass'
+            filter.frequency.value = 1500
+            filter.Q.value = 1.5
+
+            gain.gain.setValueAtTime(0, now)
+            gain.gain.linearRampToValueAtTime(0.4, now + 0.01)
+            gain.gain.linearRampToValueAtTime(0, now + 0.08)
+
+            osc.connect(filter)
+            filter.connect(gain)
+            gain.connect(ctx.destination)
+
+            osc.start(now)
+            osc.stop(now + 0.08)
+          } catch (err) {}
         }
       }
 
