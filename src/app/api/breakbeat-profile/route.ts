@@ -3,7 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 import type { BreakbeatProfileStats } from '@/types/database'
-import { normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
+import { artistEraToReferenceYear, normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
 
 // =============================================
 // POST /api/breakbeat-profile
@@ -161,7 +161,14 @@ function computeStats(
   const styleCounts: Record<string, number> = {}
   const countryCounts: Record<string, number> = {}
   const eraCounts: Record<string, number> = {}
+  const yearCounts: Record<number, number> = {}
   const catCounts: Record<string, number> = {}
+  const maxYear = new Date().getFullYear() + 1
+
+  const bumpYear = (y: number) => {
+    if (!Number.isFinite(y) || y < 1970 || y > maxYear) return
+    yearCounts[y] = (yearCounts[y] || 0) + 1
+  }
 
   for (const a of artists) {
     for (const s of a.styles || []) styleCounts[s] = (styleCounts[s] || 0) + 1
@@ -169,6 +176,8 @@ function computeStats(
     if (a.era) {
       const eraBucket = normalizeArtistEraToDecade(a.era) || a.era.trim()
       eraCounts[eraBucket] = (eraCounts[eraBucket] || 0) + 1
+      const refY = artistEraToReferenceYear(a.era)
+      if (refY != null) bumpYear(refY)
     }
     if (a.category) catCounts[a.category] = (catCounts[a.category] || 0) + 1
   }
@@ -178,6 +187,7 @@ function computeStats(
     if (l.founded_year) {
       const decade = `${Math.floor(l.founded_year / 10) * 10}s`
       eraCounts[decade] = (eraCounts[decade] || 0) + 1
+      bumpYear(l.founded_year)
     }
   }
 
@@ -216,6 +226,7 @@ function computeStats(
     if (m.year) {
       const decade = `${Math.floor(m.year / 10) * 10}s`
       eraCounts[decade] = (eraCounts[decade] || 0) + 1
+      bumpYear(m.year)
     }
   }
 
@@ -223,6 +234,12 @@ function computeStats(
   const eraDistribution: Record<string, number> = {}
   for (const [era, count] of Object.entries(eraCounts)) {
     eraDistribution[era] = Math.round((count / totalEras) * 100) / 100
+  }
+
+  const totalYear = Object.values(yearCounts).reduce((a, b) => a + b, 0) || 1
+  const yearDistribution: Record<string, number> = {}
+  for (const [y, count] of Object.entries(yearCounts)) {
+    yearDistribution[y] = Math.round((count / totalYear) * 100) / 100
   }
 
   const sceneHints = inferSceneHints({
@@ -236,6 +253,7 @@ function computeStats(
     top_styles: topStyles,
     top_countries: topCountries,
     era_distribution: eraDistribution,
+    year_distribution: yearDistribution,
     category_breakdown: catCounts,
     event_profile: { festivals, club_nights: clubNights, countries: Array.from(eventCountries) },
     mix_taste: mixTaste,
@@ -262,6 +280,11 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
   const erasStr = Object.entries(stats.era_distribution)
     .sort(([, a], [, b]) => b - a)
     .map(([era, pct]) => `${era}: ${Math.round(pct * 100)}%`)
+    .join(', ')
+  const yearsStr = Object.entries(stats.year_distribution || {})
+    .filter(([, pct]) => pct > 0)
+    .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
+    .map(([y, pct]) => `${y}: ${Math.round(pct * 100)}%`)
     .join(', ')
   const catsStr = Object.entries(stats.category_breakdown)
     .sort(([, a], [, b]) => b - a)
@@ -322,6 +345,7 @@ DATOS DEL PERFIL:
 - Subgéneros favoritos: ${stylesStr}
 - Países dominantes: ${countriesStr}
 - Eras/décadas: ${erasStr}
+- Años (histograma: artistas→año referencia por década, sellos/mixes→año exacto): ${yearsStr || 'sin datos'}
 - Categorías de artistas: ${catsStr}
 - Perfil de mixes: ${mixStr}
 - Décadas de sellos: ${labelDecadesStr || 'sin datos'}
@@ -370,6 +394,7 @@ PROFILE DATA:
 - Favorite subgenres: ${stylesStr}
 - Dominant countries: ${countriesStr}
 - Eras/decades: ${erasStr}
+- Years (histogram: artists→reference year per decade, labels/mixes→exact year): ${yearsStr || 'no data'}
 - Artist categories: ${catsStr}
 - Mix profile: ${mixStr}
 - Label decades: ${labelDecadesStr || 'no data'}

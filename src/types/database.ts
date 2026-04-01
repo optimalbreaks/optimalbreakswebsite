@@ -280,6 +280,8 @@ export interface BreakbeatProfileStats {
   top_styles: { name: string; count: number; pct: number }[]
   top_countries: { name: string; count: number; pct: number }[]
   era_distribution: Record<string, number>
+  /** Pesos por año calendario (0–1). Artistas → año centro de década; sellos y mixes → año exacto. */
+  year_distribution?: Record<string, number>
   category_breakdown: Record<string, number>
   event_profile: { festivals: number; club_nights: number; countries: string[] }
   mix_taste: Record<string, number>

@@ -1,6 +1,6 @@
 /**
  * Normaliza textos de era de artistas (p. ej. "late-1990s-present") a décadas
- * canónicas ("1990s") para agregar estadísticas y el treemap del ADN breakbeatero.
+ * canónicas ("1990s") para agregar estadísticas y el histograma de años del ADN breakbeatero.
  */
 export function normalizeArtistEraToDecade(eraRaw: string): string | null {
   const s = String(eraRaw || '').trim().toLowerCase()
@@ -23,12 +23,18 @@ export function normalizeArtistEraToDecade(eraRaw: string): string | null {
   return null
 }
 
+/** Año referencia (centro de década) para artistas con era textual o clave "1990s". */
+export function artistEraToReferenceYear(eraRaw: string): number | null {
+  const dec = normalizeArtistEraToDecade(eraRaw)
+  if (!dec) return null
+  const m = dec.match(/^((?:19|20)\d{2})s$/i)
+  if (!m) return null
+  return parseInt(m[1], 10) + 5
+}
+
 /** Etiqueta corta: "1990s" o texto legacy → año centro de década (p. ej. 1995). */
 export function decadeBucketToMidYearLabel(bucket: string): string {
-  const canonical = normalizeArtistEraToDecade(bucket)
-  if (canonical) {
-    const m = canonical.match(/^((?:19|20)\d{2})s$/i)
-    if (m) return String(parseInt(m[1], 10) + 5)
-  }
+  const y = artistEraToReferenceYear(bucket)
+  if (y != null) return String(y)
   return bucket.length > 12 ? `${bucket.slice(0, 11)}…` : bucket
 }

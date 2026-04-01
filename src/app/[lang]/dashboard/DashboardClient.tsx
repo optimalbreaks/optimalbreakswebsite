@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings, useBreakbeatProfile } from '@/hooks/useUserData'
 import type { BreakbeatProfileStats } from '@/types/database'
-import { decadeBucketToMidYearLabel, normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
+import { decadeBucketToMidYearLabel } from '@/lib/breakbeat-profile-era'
 import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -272,86 +272,90 @@ function HorizontalBars({ data, color, maxItems = 5 }: { data: { name: string; p
   )
 }
 
-function EraTreemap({ eras }: { eras: Record<string, number> }) {
-  const sorted = Object.entries(eras)
-    .filter(([, pct]) => pct > 0)
-    .sort(([, a], [, b]) => b - a)
-
-  if (sorted.length === 0) return null
-
-  const colors: Record<string, string> = {
-    '1980s': 'var(--uv)', '1990s': 'var(--acid)', '2000s': 'var(--red)',
-    '2010s': 'var(--pink)', '2020s': 'var(--cyan)',
+function barColorForCalendarYear(year: number): string {
+  const decade = Math.floor(year / 10) * 10
+  const map: Record<number, string> = {
+    1980: 'var(--uv)',
+    1990: 'var(--acid)',
+    2000: 'var(--red)',
+    2010: 'var(--pink)',
+    2020: 'var(--cyan)',
   }
+  return map[decade] || 'var(--yellow)'
+}
 
-  let currentX = 0;
-  let currentY = 0;
-  let currentW = 100;
-  let currentH = 100;
-  let visW = 200;
-  let visH = 100;
-  let sum = sorted.reduce((acc, [, pct]) => acc + pct, 0);
+function buildYearHistogramData(stats: BreakbeatProfileStats): { name: string; pct: number }[] {
+  const raw = stats.year_distribution
+  if (raw && Object.keys(raw).length > 0) {
+    return Object.entries(raw)
+      .filter(([, p]) => p > 0)
+      .map(([y, pct]) => ({ name: y, pct }))
+      .sort((a, b) => parseInt(a.name, 10) - parseInt(b.name, 10))
+  }
+  const merged: Record<string, number> = {}
+  for (const [era, pct] of Object.entries(stats.era_distribution || {})) {
+    const label = decadeBucketToMidYearLabel(era)
+    const y = parseInt(label, 10)
+    if (!Number.isFinite(y)) continue
+    merged[label] = (merged[label] || 0) + pct
+  }
+  return Object.entries(merged)
+    .map(([name, pct]) => ({ name, pct }))
+    .sort((a, b) => parseInt(a.name, 10) - parseInt(b.name, 10))
+}
 
-  const boxes = sorted.map(([era, pct]) => {
-    const ratio = pct / sum;
-    let box = { x: 0, y: 0, w: 0, h: 0 };
-    
-    if (visW > visH) {
-      const width = currentW * ratio;
-      const vWidth = visW * ratio;
-      box = { x: currentX, y: currentY, w: width, h: currentH };
-      currentX += width;
-      currentW -= width;
-      visW -= vWidth;
-    } else {
-      const height = currentH * ratio;
-      const vHeight = visH * ratio;
-      box = { x: currentX, y: currentY, w: currentW, h: height };
-      currentY += height;
-      currentH -= height;
-      visH -= vHeight;
-    }
-    
-    sum -= pct;
-    return { era, pct, box };
-  });
+function YearHistogramBars({ stats, es }: { stats: BreakbeatProfileStats; es: boolean }) {
+  const items = buildYearHistogramData(stats)
+  if (items.length === 0) {
+    return (
+      <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '12px', color: 'var(--dim)' }}>
+        {es ? 'Sin datos temporales suficientes.' : 'Not enough temporal data.'}
+      </p>
+    )
+  }
+  const maxPct = Math.max(...items.map((d) => d.pct), 0.01)
 
   return (
-    <div className="relative w-full h-[140px] border-[3px] border-[var(--ink)] overflow-hidden shadow-[4px_4px_0px_var(--ink)]">
-      {boxes.map(({ era, pct, box }) => {
-        const colorKey = normalizeArtistEraToDecade(era) || era
-        const yearLabel = decadeBucketToMidYearLabel(era)
-        return (
-          <div
-            key={era}
-            className="absolute flex flex-col items-center justify-center border-[1.5px] border-[var(--ink)] transition-all duration-700 hover:brightness-110 overflow-hidden"
-            style={{
-              left: `${box.x}%`,
-              top: `${box.y}%`,
-              width: `${box.w}%`,
-              height: `${box.h}%`,
-              background: colors[colorKey] || 'var(--yellow)',
-            }}
-            title={`${yearLabel}: ${Math.round(pct * 100)}%`}
-          >
-            {box.w > 12 && box.h > 20 && (
-              <div className="flex flex-col items-center px-1 overflow-hidden w-full">
+    <div>
+      <p
+        className="mb-2"
+        style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', letterSpacing: '0.4px', color: 'var(--dim)', lineHeight: 1.45 }}
+      >
+        {es
+          ? 'Cada barra es un año: sellos y mixes cuentan con año real; artistas aportan el año centro de su década.'
+          : 'Each bar is one year: labels and mixes use exact years; artists use the mid-decade reference year.'}
+      </p>
+      <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 border-[2px] border-[var(--ink)] p-2 shadow-[3px_3px_0px_var(--ink)] bg-[var(--paper)]">
+        {items.map((d) => {
+          const y = parseInt(d.name, 10)
+          const color = Number.isFinite(y) ? barColorForCalendarYear(y) : 'var(--acid)'
+          return (
+            <div key={d.name}>
+              <div className="flex justify-between items-center mb-[2px]">
                 <span
-                  className="truncate w-full text-center"
-                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(10px, 2vw, 16px)', color: 'var(--ink)' }}
+                  style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px',
+                  }}
                 >
-                  {yearLabel}
+                  {d.name}
                 </span>
-                {box.h > 35 && (
-                  <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', color: 'var(--ink)', marginTop: '2px' }}>
-                    {Math.round(pct * 100)}%
-                  </span>
-                )}
+                <span style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '13px', fontWeight: 900, color }}>
+                  {Math.round(d.pct * 100)}%
+                </span>
               </div>
-            )}
-          </div>
-        )
-      })}
+              <div className="h-[10px] border-[2px] border-[var(--ink)] relative overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 transition-all duration-700"
+                  style={{ width: `${(d.pct / maxPct) * 100}%`, background: color }}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -498,12 +502,12 @@ function BreakbeatDNA({ lang }: { lang: string }) {
               <HorizontalBars data={stats.top_countries} color="var(--uv)" />
             </div>
 
-            {/* Timeline: eras */}
+            {/* Years histogram (replaces treemap) */}
             <div className="p-5">
               <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--acid)' }}>
-                {es ? 'Épocas' : 'Eras'}
+                {es ? 'Años' : 'Years'}
               </div>
-              <EraTreemap eras={stats.era_distribution} />
+              <YearHistogramBars stats={stats} es={es} />
               {/* Category badges */}
               {Object.keys(stats.category_breakdown).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-4">
