@@ -41,6 +41,13 @@ export interface MixTrack {
   src: string
 }
 
+export interface DeckSideState {
+  trackIdx: number
+  progress: number
+  duration: number
+  playing: boolean
+}
+
 interface DeckAudioContextValue {
   dict: DeckDict
   isPlaying: boolean
@@ -63,6 +70,14 @@ interface DeckAudioContextValue {
   handleScratchEnd: () => void
   track: DeckTrack
   fmt: (s: number) => string
+  // Dual-deck extensions
+  deckA: DeckSideState
+  deckB: DeckSideState
+  activeSide: 'A' | 'B'
+  trackA: DeckTrack
+  trackB: DeckTrack
+  switchTrackOnSide: (side: 'A' | 'B', direction: 1 | -1) => void
+  togglePlaySide: (side: 'A' | 'B') => void
   // Mix player extensions
   mode: PlayerMode
   currentMix: MixTrack | null
@@ -282,28 +297,47 @@ export function DeckAudioProvider({
   lang: Locale
   dict: DeckDict
 }) {
-  // === Deck audio refs (unchanged) ===
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  // === Dual-deck audio refs ===
+  const audioRefA = useRef<HTMLAudioElement | null>(null)
+  const audioRefB = useRef<HTMLAudioElement | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
-  const gainRef = useRef<GainNode | null>(null)
+  const gainRefA = useRef<GainNode | null>(null)
+  const gainRefB = useRef<GainNode | null>(null)
   const scratchAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Legacy single-track references (used by context consumers that rely on `track`)
+  const audioRef = audioRefA
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [sessionActive, setSessionActive] = useState(false)
-  const [crossfader, setCrossfader] = useState(50)
-  const [currentTrack, setCurrentTrack] = useState(0)
-  const currentTrackRef = useRef(0)
+  const [crossfader, setCrossfader] = useState(0) // 0=A, 100=B
 
-  // Randomize initial track on client-side mount
+  const [trackIdxA, setTrackIdxA] = useState(0)
+  const [trackIdxB, setTrackIdxB] = useState(1)
+  const trackIdxARef = useRef(0)
+  const trackIdxBRef = useRef(1)
+
+  const [currentTrack, setCurrentTrack] = useState(0) // legacy compat
+
   useEffect(() => {
-    const randomIdx = Math.floor(Math.random() * DECK_TRACKS.length)
-    setCurrentTrack(randomIdx)
-    currentTrackRef.current = randomIdx
+    const a = Math.floor(Math.random() * DECK_TRACKS.length)
+    let b = (a + 1) % DECK_TRACKS.length
+    if (b === a) b = (a + 2) % DECK_TRACKS.length
+    setTrackIdxA(a); trackIdxARef.current = a
+    setTrackIdxB(b); trackIdxBRef.current = b
+    setCurrentTrack(a)
   }, [])
 
-  const [progress, setProgress] = useState(0)
-  const [duration, setDuration] = useState(0)
+  const [progressA, setProgressA] = useState(0)
+  const [durationA, setDurationA] = useState(0)
+  const [playingA, setPlayingA] = useState(false)
+  const [progressB, setProgressB] = useState(0)
+  const [durationB, setDurationB] = useState(0)
+  const [playingB, setPlayingB] = useState(false)
+
+  // Legacy compat
+  const progress = crossfader < 50 ? progressA : progressB
+  const duration = crossfader < 50 ? durationA : durationB
 
   const [scratchingLeft, setScratchingLeft] = useState(false)
   const [scratchingRight, setScratchingRight] = useState(false)
@@ -325,11 +359,36 @@ export function DeckAudioProvider({
   const scHandleRef = useRef<SoundCloudWidgetHandle | null>(null)
   const [scTrackUrl, setScTrackUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    currentTrackRef.current = currentTrack
-  }, [currentTrack])
+  useEffect(() => { trackIdxARef.current = trackIdxA }, [trackIdxA])
+  useEffect(() => { trackIdxBRef.current = trackIdxB }, [trackIdxB])
 
-  // === Deck audio init (unchanged) ===
+  // Helper to create and wire an audio element through a GainNode
+  const createDeckAudio = useCallback((
+    ref: React.MutableRefObject<HTMLAudioElement | null>,
+    gainRef: React.MutableRefObject<GainNode | null>,
+    file: string,
+    onDuration: (d: number) => void,
+    onEnded: () => void,
+  ) => {
+    if (ref.current) return
+    const audio = new Audio(file)
+    audio.crossOrigin = 'anonymous'
+    audio.preload = 'auto'
+    audio.addEventListener('loadedmetadata', () => onDuration(audio.duration))
+    audio.addEventListener('ended', onEnded)
+    ref.current = audio
+
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext()
+    }
+    const ctx = audioCtxRef.current
+    const source = ctx.createMediaElementSource(audio)
+    const gain = ctx.createGain()
+    source.connect(gain)
+    gain.connect(ctx.destination)
+    gainRef.current = gain
+  }, [])
+
   const initAudio = useCallback(() => {
     if (!scratchAudioRef.current) {
       const scratch = new Audio('/music/scratch.mp3')
@@ -337,146 +396,176 @@ export function DeckAudioProvider({
       scratchAudioRef.current = scratch
     }
 
-    if (!audioRef.current) {
-      const audio = new Audio(DECK_TRACKS[currentTrackRef.current].file)
-      audio.crossOrigin = 'anonymous'
-      audio.preload = 'auto'
-      audio.addEventListener('loadedmetadata', () => setDuration(audio.duration))
-      audio.addEventListener('ended', () => {
-        const idx = currentTrackRef.current
-        const next = (idx + 1) % DECK_TRACKS.length
-        currentTrackRef.current = next
-        setCurrentTrack(next)
-        audio.src = DECK_TRACKS[next].file
-        void audio.play().catch(() => {})
-      })
-      audioRef.current = audio
-    }
+    createDeckAudio(
+      audioRefA, gainRefA,
+      DECK_TRACKS[trackIdxARef.current].file,
+      (d) => setDurationA(d),
+      () => {
+        const next = (trackIdxARef.current + 1) % DECK_TRACKS.length
+        trackIdxARef.current = next; setTrackIdxA(next)
+        if (audioRefA.current) {
+          audioRefA.current.src = DECK_TRACKS[next].file
+          void audioRefA.current.play().catch(() => {})
+        }
+      },
+    )
 
-    if (!audioCtxRef.current && audioRef.current) {
-      const ctx = new AudioContext()
-      audioCtxRef.current = ctx
-      const source = ctx.createMediaElementSource(audioRef.current)
-      const gain = ctx.createGain()
-      source.connect(gain)
-      gain.connect(ctx.destination)
-      sourceRef.current = source
-      gainRef.current = gain
-    }
-  }, [])
+    createDeckAudio(
+      audioRefB, gainRefB,
+      DECK_TRACKS[trackIdxBRef.current].file,
+      (d) => setDurationB(d),
+      () => {
+        const next = (trackIdxBRef.current + 1) % DECK_TRACKS.length
+        trackIdxBRef.current = next; setTrackIdxB(next)
+        if (audioRefB.current) {
+          audioRefB.current.src = DECK_TRACKS[next].file
+          void audioRefB.current.play().catch(() => {})
+        }
+      },
+    )
+  }, [createDeckAudio])
 
-  // === Deck animation tick (unchanged) ===
+  // === Animation tick: update progress + platter rotation ===
   useEffect(() => {
     const tick = (time: number) => {
       if (!lastTickRef.current) lastTickRef.current = time
       const deltaMs = time - lastTickRef.current
       lastTickRef.current = time
 
-      if (audioRef.current && isPlaying && !scratchingLeft && !scratchingRight) {
-        setProgress(audioRef.current.currentTime)
-        // 33 1/3 RPM = 33.33/60 revolutions per sec = 200 degrees/sec
-        const rpm = 33.33
-        const degreesPerSec = (rpm / 60) * 360
-        const deltaDeg = degreesPerSec * (deltaMs / 1000)
-        
-        setLeftRotation((r) => r + deltaDeg)
-        setRightRotation((r) => r + deltaDeg)
-      }
+      if (audioRefA.current && playingA) setProgressA(audioRefA.current.currentTime)
+      if (audioRefB.current && playingB) setProgressB(audioRefB.current.currentTime)
+
+      const rpm = 33.33
+      const degreesPerSec = (rpm / 60) * 360
+      const deltaDeg = degreesPerSec * (deltaMs / 1000)
+
+      if (playingA && !scratchingLeft) setLeftRotation((r) => r + deltaDeg)
+      if (playingB && !scratchingRight) setRightRotation((r) => r + deltaDeg)
+
       animFrameRef.current = requestAnimationFrame(tick)
     }
     lastTickRef.current = performance.now()
     animFrameRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(animFrameRef.current)
-  }, [isPlaying, scratchingLeft, scratchingRight])
+  }, [playingA, playingB, scratchingLeft, scratchingRight])
 
-  // === Crossfader gain (unchanged) ===
+  // === Crossfader sharp cut: A at <50, B at >=50, tiny xfade at boundary ===
   useEffect(() => {
-    if (gainRef.current) {
-      const normalizedCf = crossfader / 100
-      const vol = 1 - Math.abs(normalizedCf - 0.5) * 0.4
-      gainRef.current.gain.setValueAtTime(vol, audioCtxRef.current?.currentTime || 0)
+    const ctx = audioCtxRef.current
+    const t = ctx?.currentTime ?? 0
+    const fade = 0.03 // 30ms micro-fade to avoid click
+    if (gainRefA.current) {
+      gainRefA.current.gain.cancelScheduledValues(t)
+      gainRefA.current.gain.setTargetAtTime(crossfader < 50 ? 1 : 0, t, fade)
+    }
+    if (gainRefB.current) {
+      gainRefB.current.gain.cancelScheduledValues(t)
+      gainRefB.current.gain.setTargetAtTime(crossfader >= 50 ? 1 : 0, t, fade)
     }
   }, [crossfader])
 
-  // === Deck togglePlay (unchanged) ===
-  const togglePlay = useCallback(() => {
+  // Keep legacy `currentTrack` in sync with active side
+  useEffect(() => {
+    setCurrentTrack(crossfader < 50 ? trackIdxA : trackIdxB)
+  }, [crossfader, trackIdxA, trackIdxB])
+
+  // === Start/stop individual sides ===
+  const startSide = useCallback((audio: HTMLAudioElement | null) => {
+    if (!audio) return
+    audio.playbackRate = 0
+    void audio.play().catch(() => {})
+    if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
+    let rate = 0
+    const step = () => {
+      rate = Math.min(1, rate + 0.06)
+      audio.playbackRate = rate
+      if (rate < 1) brakeAnimRef.current = requestAnimationFrame(step)
+    }
+    step()
+  }, [])
+
+  const stopSide = useCallback((audio: HTMLAudioElement | null, cb: () => void) => {
+    if (!audio) { cb(); return }
+    if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
+    let rate = audio.playbackRate
+    const step = () => {
+      rate = Math.max(0, rate - 0.06)
+      audio.playbackRate = rate
+      if (rate > 0) {
+        brakeAnimRef.current = requestAnimationFrame(step)
+      } else {
+        audio.pause()
+        cb()
+      }
+    }
+    step()
+  }, [])
+
+  // Toggle play for a specific side
+  const togglePlaySide = useCallback((side: 'A' | 'B') => {
     initAudio()
     if (audioCtxRef.current?.state === 'suspended') void audioCtxRef.current.resume()
-    if (isPlaying) {
-      if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
-      const audio = audioRef.current
-      if (audio) {
-        let rate = audio.playbackRate
-        const step = () => {
-          rate = Math.max(0, rate - 0.06)
-          audio.playbackRate = rate
-          if (rate > 0) {
-            brakeAnimRef.current = requestAnimationFrame(step)
-          } else {
-            audio.pause()
-            setIsPlaying(false)
-          }
-        }
-        step()
+    if (mode === 'mix') stopMixInternal()
+    setMode('deck')
+    setSessionActive(true)
+
+    if (side === 'A') {
+      if (playingA) {
+        stopSide(audioRefA.current, () => setPlayingA(false))
       } else {
-        setIsPlaying(false)
+        startSide(audioRefA.current)
+        setPlayingA(true)
       }
     } else {
-      // If a mix is playing, stop it first
-      if (mode === 'mix') {
-        stopMixInternal()
-      }
-      setMode('deck')
-      setSessionActive(true)
-      setIsPlaying(true)
-      const audio = audioRef.current
-      if (audio) {
-        audio.playbackRate = 0
-        void audio.play()
-        if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
-        let rate = 0
-        const step = () => {
-          rate = Math.min(1, rate + 0.06)
-          audio.playbackRate = rate
-          if (rate < 1) {
-            brakeAnimRef.current = requestAnimationFrame(step)
-          }
-        }
-        step()
+      if (playingB) {
+        stopSide(audioRefB.current, () => setPlayingB(false))
+      } else {
+        startSide(audioRefB.current)
+        setPlayingB(true)
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initAudio, isPlaying, mode])
+  }, [initAudio, playingA, playingB, mode, startSide, stopSide])
 
-  // === Scratch handlers (unchanged) ===
+  // Legacy togglePlay = toggle the active side
+  const togglePlay = useCallback(() => {
+    togglePlaySide(crossfader < 50 ? 'A' : 'B')
+  }, [togglePlaySide, crossfader])
+
+  // isPlaying = whichever side is audible
+  useEffect(() => {
+    setIsPlaying(crossfader < 50 ? playingA : playingB)
+  }, [crossfader, playingA, playingB])
+
+  // === Scratch handlers (adapted for dual deck) ===
   const handleScratchStart = useCallback(
     (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => {
-      if (!audioRef.current || !isPlaying) return
+      const audio = side === 'left' ? audioRefA.current : audioRefB.current
+      const sPlaying = side === 'left' ? playingA : playingB
+      if (!audio || !sPlaying) return
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
       scratchStartY.current = clientY
-      scratchStartTime.current = audioRef.current.currentTime
+      scratchStartTime.current = audio.currentTime
       if (side === 'left') setScratchingLeft(true)
       else setScratchingRight(true)
 
       if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
-      const audio = audioRef.current
       let rate = audio.playbackRate
       const step = () => {
         rate = Math.max(0, rate - 0.1)
-        if (audio) audio.playbackRate = rate
-        if (rate > 0) {
-          brakeAnimRef.current = requestAnimationFrame(step)
-        }
+        audio.playbackRate = rate
+        if (rate > 0) brakeAnimRef.current = requestAnimationFrame(step)
       }
       step()
     },
-    [isPlaying]
+    [playingA, playingB]
   )
 
   const handleScratchMove = useCallback(
     (side: 'left' | 'right', e: React.MouseEvent | React.TouchEvent) => {
       if ((side === 'left' && !scratchingLeft) || (side === 'right' && !scratchingRight)) return
-      if (!audioRef.current) return
+      const audio = side === 'left' ? audioRefA.current : audioRefB.current
+      if (!audio) return
       const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
       const delta = (scratchStartY.current - clientY) * 0.02
 
@@ -488,9 +577,9 @@ export function DeckAudioProvider({
         }
       }
 
-      const dur = audioRef.current.duration || duration
+      const dur = audio.duration || (side === 'left' ? durationA : durationB)
       const newTime = Math.max(0, Math.min(scratchStartTime.current + delta, dur))
-      audioRef.current.currentTime = newTime
+      audio.currentTime = newTime
 
       const rotDelta = (scratchStartY.current - clientY) * 2
       if (side === 'left') setLeftRotation((r) => r + rotDelta * 0.5)
@@ -499,53 +588,77 @@ export function DeckAudioProvider({
       scratchStartY.current = clientY
       scratchStartTime.current = newTime
     },
-    [scratchingLeft, scratchingRight, duration]
+    [scratchingLeft, scratchingRight, durationA, durationB]
   )
 
   const handleScratchEnd = useCallback(() => {
+    const wasLeft = scratchingLeft
+    const wasRight = scratchingRight
     setScratchingLeft(false)
     setScratchingRight(false)
 
-    if (audioRef.current && isPlaying) {
+    const audio = wasLeft ? audioRefA.current : wasRight ? audioRefB.current : null
+    const sPlaying = wasLeft ? playingA : wasRight ? playingB : false
+    if (audio && sPlaying) {
       if (brakeAnimRef.current) cancelAnimationFrame(brakeAnimRef.current)
-      const audio = audioRef.current
       let rate = audio.playbackRate
       const step = () => {
         rate = Math.min(1, rate + 0.1)
-        if (audio) audio.playbackRate = rate
-        if (rate < 1) {
-          brakeAnimRef.current = requestAnimationFrame(step)
-        }
+        audio.playbackRate = rate
+        if (rate < 1) brakeAnimRef.current = requestAnimationFrame(step)
       }
       step()
     }
-  }, [isPlaying])
+  }, [scratchingLeft, scratchingRight, playingA, playingB])
 
+  // Switch track on a specific side
+  const switchTrackOnSide = useCallback((side: 'A' | 'B', direction: 1 | -1) => {
+    if (side === 'A') {
+      const next = (trackIdxARef.current + direction + DECK_TRACKS.length) % DECK_TRACKS.length
+      trackIdxARef.current = next; setTrackIdxA(next)
+      if (audioRefA.current) {
+        audioRefA.current.src = DECK_TRACKS[next].file
+        if (playingA) void audioRefA.current.play().catch(() => {})
+      }
+    } else {
+      const next = (trackIdxBRef.current + direction + DECK_TRACKS.length) % DECK_TRACKS.length
+      trackIdxBRef.current = next; setTrackIdxB(next)
+      if (audioRefB.current) {
+        audioRefB.current.src = DECK_TRACKS[next].file
+        if (playingB) void audioRefB.current.play().catch(() => {})
+      }
+    }
+  }, [playingA, playingB])
+
+  // Legacy switchTrack: affects active side
   const switchTrack = useCallback(
     (direction: 1 | -1) => {
-      const next = (currentTrackRef.current + direction + DECK_TRACKS.length) % DECK_TRACKS.length
-      currentTrackRef.current = next
-      setCurrentTrack(next)
-      if (audioRef.current) {
-        audioRef.current.src = DECK_TRACKS[next].file
-        if (isPlaying) void audioRef.current.play()
-      }
+      switchTrackOnSide(crossfader < 50 ? 'A' : 'B', direction)
     },
-    [isPlaying]
+    [switchTrackOnSide, crossfader]
   )
 
   const seekToRatio = useCallback(
     (ratio: number) => {
-      if (!audioRef.current || !duration) return
-      audioRef.current.currentTime = Math.max(0, Math.min(1, ratio)) * duration
-      setProgress(audioRef.current.currentTime)
+      const audio = crossfader < 50 ? audioRefA.current : audioRefB.current
+      const dur = crossfader < 50 ? durationA : durationB
+      if (!audio || !dur) return
+      audio.currentTime = Math.max(0, Math.min(1, ratio)) * dur
+      if (crossfader < 50) setProgressA(audio.currentTime)
+      else setProgressB(audio.currentTime)
     },
-    [duration]
+    [crossfader, durationA, durationB]
   )
 
   const fmt = useCallback((s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`, [])
 
   const track = DECK_TRACKS[currentTrack]
+  const trackA = DECK_TRACKS[trackIdxA]
+  const trackB = DECK_TRACKS[trackIdxB]
+  const activeSide: 'A' | 'B' = crossfader < 50 ? 'A' : 'B'
+
+  const deckA: DeckSideState = { trackIdx: trackIdxA, progress: progressA, duration: durationA, playing: playingA }
+  const deckB: DeckSideState = { trackIdx: trackIdxB, progress: progressB, duration: durationB, playing: playingB }
 
   // === Mix player: internal stop helper ===
   const stopMixInternal = useCallback(() => {
@@ -736,6 +849,13 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
+      deckA,
+      deckB,
+      activeSide,
+      trackA,
+      trackB,
+      switchTrackOnSide,
+      togglePlaySide,
       mode,
       currentMix,
       mixPlaying,
@@ -746,6 +866,7 @@ export function DeckAudioProvider({
       stopMix,
       seekMixToRatio,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       dict,
       isPlaying,
@@ -767,6 +888,13 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
+      trackIdxA, progressA, durationA, playingA,
+      trackIdxB, progressB, durationB, playingB,
+      activeSide,
+      trackA,
+      trackB,
+      switchTrackOnSide,
+      togglePlaySide,
       mode,
       currentMix,
       mixPlaying,

@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, type CSSProperties } from 'react'
-import { useDeckAudio, type DeckDict } from '@/components/DeckAudioProvider'
+import { useDeckAudio, type DeckDict, type DeckSideState } from '@/components/DeckAudioProvider'
 
 interface DjDeckProps {
   dict: Record<string, unknown> & {
@@ -23,24 +23,24 @@ interface DjDeckProps {
 export default function DjDeck({ dict }: DjDeckProps) {
   const {
     dict: d,
-    isPlaying,
     crossfader,
     setCrossfader,
-    progress,
-    duration,
     scratchingLeft,
     scratchingRight,
     leftRotation,
     rightRotation,
     initAudio,
-    togglePlay,
-    switchTrack,
-    seekToRatio,
     handleScratchStart,
     handleScratchMove,
     handleScratchEnd,
-    track,
     fmt,
+    deckA,
+    deckB,
+    activeSide,
+    trackA,
+    trackB,
+    switchTrackOnSide,
+    togglePlaySide,
   } = useDeckAudio()
 
   const h = dict
@@ -49,7 +49,6 @@ export default function DjDeck({ dict }: DjDeckProps) {
     <div className="relative z-[2] w-full min-w-0 max-w-[960px] mx-auto bg-[#1a1a1c] rounded-lg p-3 sm:p-5 shadow-[10px_10px_0_rgba(0,0,0,0.3)] border-t-[2px] border-l-[2px] border-white/[0.05] border-b-[4px] border-r-[4px] border-black/[0.8] overflow-hidden">
       {/* Worn noise texture */}
       <div className="absolute inset-0 opacity-[0.15] pointer-events-none mix-blend-overlay z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
-      {/* Scratches/wear simulation */}
       <div className="absolute top-[10%] left-[5%] w-[100px] h-[1px] bg-white/[0.03] rotate-45 pointer-events-none z-0" />
       <div className="absolute bottom-[20%] right-[10%] w-[60px] h-[1px] bg-white/[0.04] -rotate-12 pointer-events-none z-0" />
       <div className="absolute top-[50%] right-[30%] w-[150px] h-[2px] bg-black/[0.2] rotate-3 pointer-events-none z-0" />
@@ -57,75 +56,51 @@ export default function DjDeck({ dict }: DjDeckProps) {
       {/* Tape */}
       <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-[80px] sm:w-[100px] h-[22px] z-10 shadow-sm" style={{ background: 'var(--tape)', transform: 'rotate(-1deg)' }} />
 
-      {/* Top bar — track selector */}
-      <div className="relative z-10 mb-4 bg-[#0a0a0c] border-2 border-[#222] rounded-md p-2 sm:p-3 shadow-inner">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4">
-          <div className="hidden sm:block text-[#444]" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '4px' }}>
-            {h.deck_brand}
-          </div>
-          
-          <div className="flex items-center justify-between w-full sm:w-auto flex-1 max-w-[400px] bg-[#111] border border-[#333] rounded px-2 py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
-            <button type="button" onClick={() => { initAudio(); switchTrack(-1) }} className="text-[#555] hover:text-[var(--acid)] transition-colors p-1" aria-label="Previous track">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"><polygon points="19,4 5,12 19,20" /></svg>
-            </button>
-            <div className="flex flex-col items-center justify-center flex-1 px-3 min-w-0 overflow-hidden">
-              <div className="text-[#333] mb-0.5" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', textTransform: 'uppercase' }}>Now Playing</div>
-              <div className="w-full text-center truncate text-[#00ffcc] animate-pulse-slow" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '1px', textShadow: '0 0 5px rgba(0,255,204,0.5)' }}>
-                {track.title}
-              </div>
-            </div>
-            <button type="button" onClick={() => { initAudio(); switchTrack(1) }} className="text-[#555] hover:text-[var(--acid)] transition-colors p-1" aria-label="Next track">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5"><polygon points="5,4 19,12 5,20" /></svg>
-            </button>
-          </div>
-          
-          <div className="hidden md:block text-[#444]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '2px' }}>
-            {h.deck_model}
-          </div>
-        </div>
-
-        {/* Progress bar inside the display */}
-        <div className="mt-3 relative cursor-pointer group"
-          onClick={(e) => {
-            if (!duration) return
-            const rect = e.currentTarget.getBoundingClientRect()
-            seekToRatio((e.clientX - rect.left) / rect.width)
-          }}
-        >
-          <div className="h-[4px] bg-[#111] border border-[#333] rounded-full overflow-hidden shadow-inner">
-            <div className="h-full bg-[var(--acid)] relative" style={{ width: duration ? `${(progress / duration) * 100}%` : '0%', boxShadow: '0 0 8px var(--acid)' }}>
-              <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-white opacity-80 shadow-[0_0_4px_white]" />
-            </div>
-          </div>
-          {/* Hover hit area expansion */}
-          <div className="absolute -inset-y-2 inset-x-0" />
-          
-          <div className="flex justify-between mt-1.5 px-1">
-            <span className="text-[#00ffcc]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', textShadow: '0 0 2px rgba(0,255,204,0.3)' }}>{fmt(progress)}</span>
-            <span className="text-[#444]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px' }}>{duration ? fmt(duration) : '0:00'}</span>
-          </div>
-        </div>
+      {/* Top bar — dual track displays */}
+      <div className="relative z-10 mb-4 grid grid-cols-2 gap-2">
+        <DeckDisplay
+          label={h.deck_a}
+          track={trackA}
+          deck={deckA}
+          active={activeSide === 'A'}
+          color="var(--red)"
+          fmt={fmt}
+          onPrev={() => { initAudio(); switchTrackOnSide('A', -1) }}
+          onNext={() => { initAudio(); switchTrackOnSide('A', 1) }}
+          onToggle={() => { initAudio(); togglePlaySide('A') }}
+        />
+        <DeckDisplay
+          label={h.deck_b}
+          track={trackB}
+          deck={deckB}
+          active={activeSide === 'B'}
+          color="var(--yellow)"
+          fmt={fmt}
+          onPrev={() => { initAudio(); switchTrackOnSide('B', -1) }}
+          onNext={() => { initAudio(); switchTrackOnSide('B', 1) }}
+          onToggle={() => { initAudio(); togglePlaySide('B') }}
+        />
       </div>
 
       <div className="relative z-10 hidden md:grid grid-cols-[1fr_170px_1fr] gap-4 items-center">
         <Platter
           side="left"
           rotation={leftRotation}
-          playing={isPlaying}
+          playing={deckA.playing}
           scratching={scratchingLeft}
-          track={track}
+          track={trackA}
           labelColor="red"
           onScratchStart={handleScratchStart}
           onScratchMove={handleScratchMove}
           onScratchEnd={handleScratchEnd}
         />
-        <MixerPanel dict={d} isPlaying={isPlaying} crossfader={crossfader} setCrossfader={setCrossfader} togglePlay={togglePlay} layout="vertical" />
+        <MixerPanel dict={d} isPlayingA={deckA.playing} isPlayingB={deckB.playing} crossfader={crossfader} setCrossfader={setCrossfader} togglePlayA={() => { initAudio(); togglePlaySide('A') }} togglePlayB={() => { initAudio(); togglePlaySide('B') }} layout="vertical" />
         <Platter
           side="right"
           rotation={rightRotation}
-          playing={isPlaying}
+          playing={deckB.playing}
           scratching={scratchingRight}
-          track={track}
+          track={trackB}
           labelColor="yellow"
           onScratchStart={handleScratchStart}
           onScratchMove={handleScratchMove}
@@ -138,9 +113,9 @@ export default function DjDeck({ dict }: DjDeckProps) {
           <Platter
             side="left"
             rotation={leftRotation}
-            playing={isPlaying}
+            playing={deckA.playing}
             scratching={scratchingLeft}
-            track={track}
+            track={trackA}
             labelColor="red"
             onScratchStart={handleScratchStart}
             onScratchMove={handleScratchMove}
@@ -150,9 +125,9 @@ export default function DjDeck({ dict }: DjDeckProps) {
           <Platter
             side="right"
             rotation={rightRotation}
-            playing={isPlaying}
+            playing={deckB.playing}
             scratching={scratchingRight}
-            track={track}
+            track={trackB}
             labelColor="yellow"
             onScratchStart={handleScratchStart}
             onScratchMove={handleScratchMove}
@@ -160,7 +135,51 @@ export default function DjDeck({ dict }: DjDeckProps) {
             compact
           />
         </div>
-        <MixerPanel dict={d} isPlaying={isPlaying} crossfader={crossfader} setCrossfader={setCrossfader} togglePlay={togglePlay} layout="horizontal" />
+        <MixerPanel dict={d} isPlayingA={deckA.playing} isPlayingB={deckB.playing} crossfader={crossfader} setCrossfader={setCrossfader} togglePlayA={() => { initAudio(); togglePlaySide('A') }} togglePlayB={() => { initAudio(); togglePlaySide('B') }} layout="horizontal" />
+      </div>
+    </div>
+  )
+}
+
+function DeckDisplay({
+  label, track, deck, active, color, fmt, onPrev, onNext, onToggle,
+}: {
+  label: string
+  track: { title: string; artist: string }
+  deck: DeckSideState
+  active: boolean
+  color: string
+  fmt: (s: number) => string
+  onPrev: () => void
+  onNext: () => void
+  onToggle: () => void
+}) {
+  const pct = deck.duration ? (deck.progress / deck.duration) * 100 : 0
+  return (
+    <div className={`bg-[#0a0a0c] border-2 rounded-md p-2 shadow-inner transition-colors ${active ? 'border-[color:var(--c)]' : 'border-[#222]'}`} style={{ '--c': color } as React.CSSProperties}>
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', color: active ? color : '#444', textTransform: 'uppercase' }}>{label}</span>
+        <button type="button" onClick={onToggle} className="px-1.5 py-0.5 text-[8px] font-black tracking-wider border rounded transition-colors" style={{ fontFamily: "'Courier Prime', monospace", borderColor: deck.playing ? color : '#333', color: deck.playing ? color : '#555' }}>
+          {deck.playing ? '■ STOP' : '▶ PLAY'}
+        </button>
+      </div>
+      <div className="flex items-center gap-1">
+        <button type="button" onClick={onPrev} className="text-[#444] hover:text-white transition-colors p-0.5" aria-label="Prev">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><polygon points="19,4 5,12 19,20" /></svg>
+        </button>
+        <div className="flex-1 min-w-0 text-center truncate" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '1px', color: active ? color : '#666', textShadow: active ? `0 0 5px ${color}40` : 'none' }}>
+          {track.title}
+        </div>
+        <button type="button" onClick={onNext} className="text-[#444] hover:text-white transition-colors p-0.5" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><polygon points="5,4 19,12 5,20" /></svg>
+        </button>
+      </div>
+      <div className="mt-1.5 h-[3px] bg-[#111] border border-[#222] rounded-full overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color, boxShadow: deck.playing ? `0 0 6px ${color}` : 'none' }} />
+      </div>
+      <div className="flex justify-between mt-0.5 px-0.5">
+        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: active ? color : '#333' }}>{fmt(deck.progress)}</span>
+        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: '#333' }}>{deck.duration ? fmt(deck.duration) : '0:00'}</span>
       </div>
     </div>
   )
@@ -241,20 +260,25 @@ function Platter({
 
 function MixerPanel({
   dict,
-  isPlaying,
+  isPlayingA,
+  isPlayingB,
   crossfader,
   setCrossfader,
-  togglePlay,
+  togglePlayA,
+  togglePlayB,
   layout,
 }: {
   dict: MixerDict
-  isPlaying: boolean
+  isPlayingA: boolean
+  isPlayingB: boolean
   crossfader: number
   setCrossfader: (v: number) => void
-  togglePlay: () => void
+  togglePlayA: () => void
+  togglePlayB: () => void
   layout: 'vertical' | 'horizontal'
 }) {
   const isH = layout === 'horizontal'
+  const anyPlaying = isPlayingA || isPlayingB
 
   return (
     <div className={`bg-[#141416] border-t border-l border-white/[0.08] border-b-[3px] border-r-[3px] border-black/[0.8] rounded-md shadow-inner ${isH ? 'p-3 flex flex-wrap items-center justify-center gap-4' : 'p-3 flex flex-col gap-2 sm:gap-3 items-center'}`}>
@@ -277,9 +301,9 @@ function MixerPanel({
             style={
               {
                 background: bar.color,
-                '--min': `${isPlaying ? (isH ? bar.min * 0.6 : bar.min) : 4}px`,
-                '--max': `${isPlaying ? (isH ? bar.max * 0.6 : bar.max) : 6}px`,
-                animation: `vuBounce ${isPlaying ? '0.8' : '2'}s ease-in-out infinite`,
+                '--min': `${anyPlaying ? (isH ? bar.min * 0.6 : bar.min) : 4}px`,
+                '--max': `${anyPlaying ? (isH ? bar.max * 0.6 : bar.max) : 6}px`,
+                animation: `vuBounce ${anyPlaying ? '0.8' : '2'}s ease-in-out infinite`,
                 animationDelay: `${bar.delay}s`,
               } as CSSProperties
             }
@@ -300,34 +324,14 @@ function MixerPanel({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={togglePlay}
-        className={`relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_6px_12px_rgba(0,0,0,0.6)] active:shadow-[0_2px_4px_rgba(0,0,0,0.8)] active:translate-y-[2px] ${isH ? 'w-16 h-16' : 'w-[72px] h-[72px]'} outline-none [-webkit-tap-highlight-color:transparent]`}
-        style={{
-          background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
-          border: '4px solid #080808',
-          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
-        }}
-      >
-        <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '8px' : '10px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
-          <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
-            {isPlaying ? (
-              <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: isH ? '16px' : '20px', height: isH ? '16px' : '20px' }}>
-                <rect x="6" y="6" width="12" height="12" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: isH ? '16px' : '20px', height: isH ? '16px' : '20px', marginLeft: '2px' }}>
-                <polygon points="6,4 20,12 6,20" />
-              </svg>
-            )}
-          </span>
-          {isPlaying ? 'STOP' : 'PLAY'}
-        </span>
-      </button>
+      {/* Dual play buttons */}
+      <div className={`flex ${isH ? 'gap-3' : 'gap-2 w-full justify-center'}`}>
+        <PlayButton label="A" playing={isPlayingA} onClick={togglePlayA} color="var(--red)" compact={isH} />
+        <PlayButton label="B" playing={isPlayingB} onClick={togglePlayB} color="var(--yellow)" compact={isH} />
+      </div>
 
-      <div className={`bg-[#070709] border border-white/[0.04] rounded-[3px] text-center ${isH ? 'px-4 py-2' : 'p-[6px] w-full'}`} style={{ animation: isPlaying ? 'bpmPulse 1s ease-in-out infinite' : 'none' }}>
-        <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '18px' : '24px', color: 'var(--yellow)', textShadow: isPlaying ? '0 0 8px rgba(247,231,51,0.3)' : 'none' }}>
+      <div className={`bg-[#070709] border border-white/[0.04] rounded-[3px] text-center ${isH ? 'px-4 py-2' : 'p-[6px] w-full'}`} style={{ animation: anyPlaying ? 'bpmPulse 1s ease-in-out infinite' : 'none' }}>
+        <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: isH ? '18px' : '24px', color: 'var(--yellow)', textShadow: anyPlaying ? '0 0 8px rgba(247,231,51,0.3)' : 'none' }}>
           135
         </div>
         <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '3px', color: 'var(--red)' }}>{dict.bpm}</div>
@@ -346,11 +350,38 @@ function MixerPanel({
           className="w-full h-[6px] bg-[#222] rounded-[3px] cursor-pointer appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:bg-gradient-to-b [&::-webkit-slider-thumb]:from-[#777] [&::-webkit-slider-thumb]:to-[#444] [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#999] [&::-webkit-slider-thumb]:rounded-[2px] [&::-webkit-slider-thumb]:cursor-grab"
         />
         <div className="flex justify-between mt-1">
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', color: 'rgba(255,255,255,0.2)' }}>A</span>
-          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', color: 'rgba(255,255,255,0.2)' }}>B</span>
+          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', color: crossfader < 50 ? 'var(--red)' : 'rgba(255,255,255,0.15)' }}>A</span>
+          <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', color: crossfader >= 50 ? 'var(--yellow)' : 'rgba(255,255,255,0.15)' }}>B</span>
         </div>
       </div>
     </div>
+  )
+}
+
+function PlayButton({ label, playing, onClick, color, compact }: { label: string; playing: boolean; onClick: () => void; color: string; compact: boolean }) {
+  const size = compact ? 'w-12 h-12' : 'w-14 h-14'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_6px_12px_rgba(0,0,0,0.6)] active:shadow-[0_2px_4px_rgba(0,0,0,0.8)] active:translate-y-[2px] ${size} outline-none [-webkit-tap-highlight-color:transparent]`}
+      style={{
+        background: playing ? `linear-gradient(135deg, ${color} 0%, #222 100%)` : 'linear-gradient(135deg, #333 0%, #111 100%)',
+        border: `3px solid ${playing ? color : '#080808'}`,
+        boxShadow: playing ? `inset 0 2px 4px rgba(255,255,255,0.2), 0 0 12px ${color}40` : 'inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5)',
+      }}
+    >
+      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: compact ? '7px' : '8px', letterSpacing: '1px', color: playing ? '#fff' : '#555', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <span className="flex items-center justify-center">
+          {playing ? (
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '14px' : '16px', height: compact ? '14px' : '16px' }}><rect x="6" y="6" width="12" height="12" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '14px' : '16px', height: compact ? '14px' : '16px', marginLeft: '2px' }}><polygon points="6,4 20,12 6,20" /></svg>
+          )}
+        </span>
+        {label}
+      </span>
+    </button>
   )
 }
 
