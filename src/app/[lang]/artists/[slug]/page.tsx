@@ -19,6 +19,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
@@ -36,6 +37,17 @@ function firstSearchParam(v: string | string[] | undefined): string | undefined 
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** Si alguien confunde la URL del retrato (README: `/images/artists/*.webp`) con el slug del artista. */
+const SLUG_QUE_PARECE_IMAGEN_ARTISTA =
+  /^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?\.(webp|jpe?g|png)$/i
+
+function redirectSiSlugEsNombreDeImagenEstatica(rawSlug: string) {
+  const s = rawSlug.trim()
+  if (!SLUG_QUE_PARECE_IMAGEN_ARTISTA.test(s)) return
+  redirect(`/images/artists/${s.toLowerCase()}`)
+}
+
 type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'og_image_url' | 'styles' | 'country' | 'era'>
 
 const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
@@ -74,6 +86,7 @@ function buildArtistKeywords(artist: ArtistSeoRow, lang: Locale): string[] {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug: rawSlug } = await params
+  redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
   const slug = sanitizeSlug(rawSlug)
   const supabase = createSimpleSupabase()
   const { data: raw } = await supabase
@@ -108,6 +121,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArtistDetailPage({ params, searchParams }: Props) {
   const { lang, slug: rawSlug } = await params
+  redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
   const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
   const editSightingRaw = firstSearchParam(sp.editSighting)
   const editSightingId = editSightingRaw && UUID_RE.test(editSightingRaw) ? editSightingRaw : null
