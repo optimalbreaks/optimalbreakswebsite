@@ -158,7 +158,7 @@ function DeckDisplay({
   return (
     <div className={`bg-[#0a0a0c] border-2 rounded-md p-2 shadow-inner transition-colors ${active ? 'border-[color:var(--c)]' : 'border-[#222]'}`} style={{ '--c': color } as React.CSSProperties}>
       <div className="flex items-center justify-between gap-1 mb-1">
-        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '7px', letterSpacing: '2px', color: active ? color : '#444', textTransform: 'uppercase' }}>{label}</span>
+        <span className="text-[7px] md:text-[10px] font-bold" style={{ fontFamily: "'Courier Prime', monospace", letterSpacing: '2px', color: active ? color : '#444', textTransform: 'uppercase' }}>{label}</span>
         <button type="button" onClick={onToggle} className="px-1.5 py-0.5 text-[8px] font-black tracking-wider border rounded transition-colors" style={{ fontFamily: "'Courier Prime', monospace", borderColor: deck.playing ? color : '#333', color: deck.playing ? color : '#555' }}>
           {deck.playing ? '■ STOP' : '▶ PLAY'}
         </button>
@@ -167,7 +167,7 @@ function DeckDisplay({
         <button type="button" onClick={onPrev} className="text-[#444] hover:text-white transition-colors p-0.5" aria-label="Prev">
           <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><polygon points="19,4 5,12 19,20" /></svg>
         </button>
-        <div className="flex-1 min-w-0 text-center truncate" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '1px', color: active ? color : '#666', textShadow: active ? `0 0 5px ${color}40` : 'none' }}>
+        <div className="flex-1 min-w-0 text-center truncate text-[10px] md:text-sm font-bold" style={{ fontFamily: "'Courier Prime', monospace", letterSpacing: '1px', color: active ? color : '#666', textShadow: active ? `0 0 5px ${color}40` : 'none' }}>
           {track.title}
         </div>
         <button type="button" onClick={onNext} className="text-[#444] hover:text-white transition-colors p-0.5" aria-label="Next">
@@ -177,9 +177,9 @@ function DeckDisplay({
       <div className="mt-1.5 h-[3px] bg-[#111] border border-[#222] rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color, boxShadow: deck.playing ? `0 0 6px ${color}` : 'none' }} />
       </div>
-      <div className="flex justify-between mt-0.5 px-0.5">
-        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: active ? color : '#333' }}>{fmt(deck.progress)}</span>
-        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: '#333' }}>{deck.duration ? fmt(deck.duration) : '0:00'}</span>
+      <div className="flex justify-between mt-1 px-0.5">
+        <span className="text-[8px] md:text-[10px] font-bold" style={{ fontFamily: "'Courier Prime', monospace", color: active ? color : '#333' }}>{fmt(deck.progress)}</span>
+        <span className="text-[8px] md:text-[10px] font-bold" style={{ fontFamily: "'Courier Prime', monospace", color: '#333' }}>{deck.duration ? fmt(deck.duration) : '0:00'}</span>
       </div>
     </div>
   )
