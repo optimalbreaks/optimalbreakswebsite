@@ -4,6 +4,7 @@
 
 'use client'
 
+import Image from 'next/image'
 import { useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartTrack, ChartTrackArtist } from '@/types/database'
@@ -111,6 +112,9 @@ function ArtistNames({ artists }: { artists: ChartTrackArtist[] }) {
   )
 }
 
+let currentPlayingAudio: HTMLAudioElement | null = null
+let currentPlayingSetter: ((playing: boolean) => void) | null = null
+
 function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: any }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playing, setPlaying] = useState(false)
@@ -120,15 +124,33 @@ function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: an
   const toggle = () => {
     if (!audioRef.current) {
       audioRef.current = new Audio(sampleUrl)
-      audioRef.current.addEventListener('ended', () => setPlaying(false))
+      audioRef.current.addEventListener('ended', () => {
+        setPlaying(false)
+        if (currentPlayingAudio === audioRef.current) {
+          currentPlayingAudio = null
+          currentPlayingSetter = null
+        }
+      })
     }
+    
     if (playing) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
       setPlaying(false)
+      if (currentPlayingAudio === audioRef.current) {
+        currentPlayingAudio = null
+        currentPlayingSetter = null
+      }
     } else {
+      if (currentPlayingAudio && currentPlayingAudio !== audioRef.current) {
+        currentPlayingAudio.pause()
+        currentPlayingAudio.currentTime = 0
+        if (currentPlayingSetter) currentPlayingSetter(false)
+      }
       audioRef.current.play().catch(() => {})
       setPlaying(true)
+      currentPlayingAudio = audioRef.current
+      currentPlayingSetter = setPlaying
     }
   }
 
@@ -164,13 +186,14 @@ function ChartTrackRow({
         <PositionBadge position={track.position} />
 
         {track.artwork_url ? (
-          <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)]">
-            <img
+          <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+            <Image
               src={track.artwork_url}
               alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-              referrerPolicy="no-referrer"
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 56px, 64px"
+              unoptimized={false}
             />
           </div>
         ) : null}
