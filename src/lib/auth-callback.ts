@@ -7,6 +7,16 @@
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { i18n } from '@/lib/i18n-config'
 
+/** sessionStorage: recuperación por correo hasta guardar nueva contraseña o cerrar sesión. */
+export const OB_PASSWORD_RECOVERY_PENDING_KEY = 'ob_password_recovery_pending'
+
+/** Query en `/reset-password` cuando el alta viene de `verifyOtp` recovery (marca flujo sensible). */
+export const OB_RECOVERY_URL_PARAM = 'recovery'
+
+export function resetPasswordUrlWithRecoveryFlag(lang: string): string {
+  return `/${lang}/reset-password?${OB_RECOVERY_URL_PARAM}=1`
+}
+
 /** Tipos que pueden venir en enlaces de correo (verifyOtp con token_hash). */
 const EMAIL_VERIFY_TYPES = new Set<string>([
   'signup',

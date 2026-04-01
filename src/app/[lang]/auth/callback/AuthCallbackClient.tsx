@@ -8,6 +8,7 @@ import {
   normalizeRelativeNext,
   parseOtpFromAuthCallbackParams,
   appPathOnly,
+  resetPasswordUrlWithRecoveryFlag,
 } from '@/lib/auth-callback'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
@@ -55,7 +56,7 @@ function AuthCallbackInner({ lang }: { lang: string }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' && session) {
         subscription.unsubscribe()
-        router.replace(`/${validLang}/reset-password`)
+        router.replace(resetPasswordUrlWithRecoveryFlag(validLang))
         return
       }
 

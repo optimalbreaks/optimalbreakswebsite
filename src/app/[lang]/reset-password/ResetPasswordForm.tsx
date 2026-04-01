@@ -1,23 +1,49 @@
 // ============================================
 // OPTIMAL BREAKS — Restablecer contraseña (cliente)
-// Tras el enlace del correo, el callback deja sesión; aquí se guarda la nueva clave.
+// Tras el enlace del correo, verifyOtp deja sesión; aquí se guarda la nueva clave.
+// Si el usuario sale sin completar (p. ej. «Volver» o menú), se cierra sesión: la sesión
+// de recovery no debe contar como «logueado» sin haber pasado por login con contraseña.
 // ============================================
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import {
+  OB_PASSWORD_RECOVERY_PENDING_KEY,
+  OB_RECOVERY_URL_PARAM,
+} from '@/lib/auth-callback'
 
 export default function ResetPasswordForm({ lang }: { lang: string }) {
-  const { user, loading, updatePassword } = useAuth()
+  const { user, loading, updatePassword, signOut } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const recoveryFromEmail = searchParams.get(OB_RECOVERY_URL_PARAM) === '1'
+
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const es = lang === 'es'
+
+  useEffect(() => {
+    if (loading) return
+    try {
+      if (!user) {
+        sessionStorage.removeItem(OB_PASSWORD_RECOVERY_PENDING_KEY)
+        return
+      }
+      if (recoveryFromEmail) {
+        sessionStorage.setItem(OB_PASSWORD_RECOVERY_PENDING_KEY, '1')
+      } else {
+        sessionStorage.removeItem(OB_PASSWORD_RECOVERY_PENDING_KEY)
+      }
+    } catch {
+      /* sin sessionStorage */
+    }
+  }, [user, loading, recoveryFromEmail])
 
   const handleSubmit = async () => {
     setError('')
@@ -33,7 +59,18 @@ export default function ResetPasswordForm({ lang }: { lang: string }) {
     const { error: err } = await updatePassword(password)
     setSubmitting(false)
     if (err) setError(err)
-    else router.push(`/${lang}/dashboard`)
+    else {
+      try {
+        sessionStorage.removeItem(OB_PASSWORD_RECOVERY_PENDING_KEY)
+      } catch {
+        /* */
+      }
+      router.push(`/${lang}/dashboard`)
+    }
+  }
+
+  const handleBack = () => {
+    void signOut(`/${lang}/login`)
   }
 
   if (loading) {
@@ -117,9 +154,14 @@ export default function ResetPasswordForm({ lang }: { lang: string }) {
         </div>
 
         <div className="text-center mt-4">
-          <Link href={`/${lang}/login`} className="cutout outline no-underline">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="cutout outline no-underline bg-transparent cursor-pointer"
+            style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px' }}
+          >
             ← {es ? 'VOLVER' : 'BACK'}
-          </Link>
+          </button>
         </div>
       </div>
     </div>

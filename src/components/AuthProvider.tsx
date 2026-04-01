@@ -4,11 +4,12 @@
 
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 import type { User, Session } from '@supabase/supabase-js'
 import { i18n } from '@/lib/i18n-config'
+import { OB_PASSWORD_RECOVERY_PENDING_KEY } from '@/lib/auth-callback'
 
 interface AuthContextType {
   user: User | null
@@ -19,7 +20,8 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>
   resetPasswordForEmail: (email: string) => Promise<{ error: string | null }>
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>
-  signOut: () => Promise<void>
+  /** Sin argumento → inicio `/{lang}`. Con ruta → `window.location` ahí (p. ej. `/${lang}/login`). */
+  signOut: (redirectTo?: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -65,6 +67,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
+  const prevPathnameRef = useRef<string | null>(null)
+
+  // Salir de /reset-password sin completar recuperación (correo) → cerrar sesión; la sesión de recovery no debe quedar como "logueado normal".
+  useEffect(() => {
+    const prev = prevPathnameRef.current
+    prevPathnameRef.current = pathname
+    if (prev === null) return
+    const leftReset =
+      prev.includes('/reset-password') && !pathname.includes('/reset-password')
+    if (!leftReset) return
+    try {
+      if (sessionStorage.getItem(OB_PASSWORD_RECOVERY_PENDING_KEY) !== '1') return
+      sessionStorage.removeItem(OB_PASSWORD_RECOVERY_PENDING_KEY)
+    } catch {
+      return
+    }
+    void supabase.auth.signOut()
+  }, [pathname, supabase.auth])
+
   const signInWithGoogle = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -106,10 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error?.message || null }
   }
 
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
-    window.location.href = `/${lang}`
-  }, [supabase.auth, lang])
+  const signOut = useCallback(
+    async (redirectTo?: string) => {
+      await supabase.auth.signOut()
+      try {
+        sessionStorage.removeItem(OB_PASSWORD_RECOVERY_PENDING_KEY)
+      } catch {
+        /* modo privado / sin storage */
+      }
+      window.location.href = redirectTo ?? `/${lang}`
+    },
+    [supabase.auth, lang]
+  )
 
   return (
     <AuthContext.Provider

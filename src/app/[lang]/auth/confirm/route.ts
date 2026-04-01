@@ -2,7 +2,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { i18n, type Locale } from '@/lib/i18n-config'
-import { safeRedirectPathAfterOtp } from '@/lib/auth-callback'
+import { resetPasswordUrlWithRecoveryFlag, safeRedirectPathAfterOtp } from '@/lib/auth-callback'
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +22,7 @@ export async function GET(
 
     if (!error) {
       if (type === 'recovery') {
-        return NextResponse.redirect(`${origin}/${lang}/reset-password`)
+        return NextResponse.redirect(`${origin}${resetPasswordUrlWithRecoveryFlag(lang)}`)
       }
       return NextResponse.redirect(`${origin}${nextPath}`)
     }
