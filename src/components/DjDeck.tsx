@@ -82,7 +82,7 @@ export default function DjDeck({ dict }: DjDeckProps) {
         />
       </div>
 
-      <div className="relative z-10 hidden md:grid grid-cols-[1fr_170px_1fr] gap-4 items-center">
+      <div className="relative z-10 hidden md:grid grid-cols-[1fr_200px_1fr] gap-4 items-center">
         <Platter
           side="left"
           rotation={leftRotation}
