@@ -360,7 +360,10 @@
     "title": "Blog",
     "subtitle": "The project’s editorial layer: essays, comparisons, scene memory and retrospectives",
     "featured_heading": "Featured",
-    "more_articles": "More articles"
+    "more_articles": "More articles",
+    "pagination_prev": "Previous",
+    "pagination_next": "Next",
+    "pagination_page": "Page {current} of {total}"
   },
   "charts": {
     "title": "40 Breaks Vitales",

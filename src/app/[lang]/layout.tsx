@@ -142,7 +142,7 @@ export default async function LangLayout({
           <Header dict={dict} lang={lang} />
           <DeckAudioProvider lang={lang} dict={deckDict}>
             <div className="danger-bar" />
-            <main className="relative z-[1]">{children}</main>
+            <main className="relative z-[1] min-w-0 w-full max-w-full">{children}</main>
             <div className="danger-bar" />
             <Footer dict={dict} lang={lang} />
             <BackToTop ariaLabel={dict.a11y.backToTop} />

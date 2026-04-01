@@ -281,7 +281,10 @@
     "title": "Blog",
     "subtitle": "Capa editorial del proyecto: articulos, comparativas, memoria de escena y retrospectivas",
     "featured_heading": "Destacados",
-    "more_articles": "Más artículos"
+    "more_articles": "Más artículos",
+    "pagination_prev": "Anterior",
+    "pagination_next": "Siguiente",
+    "pagination_page": "Página {current} de {total}"
   },
   "charts": {
     "title": "40 Breaks Vitales",

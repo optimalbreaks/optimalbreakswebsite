@@ -179,7 +179,7 @@ export default function Header({ dict, lang }: HeaderProps) {
   })
 
   return (
-    <header className="sticky top-0 z-[100] flex items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
+    <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch overflow-x-hidden bg-[var(--paper)] border-b-4 border-[var(--ink)]">
       {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
       <Link
         href={`/${lang}`}

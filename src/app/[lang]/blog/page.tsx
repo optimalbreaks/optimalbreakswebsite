@@ -108,6 +108,79 @@ function formatBlogListDate(publishedAt: string | null | undefined, lang: Locale
   }
 }
 
+const BLOG_PAGE_SIZE = 12
+
+function blogPaginationHref(lang: Locale, page: number): string {
+  if (page <= 1) return `/${lang}/blog`
+  return `/${lang}/blog?page=${page}`
+}
+
+function BlogPagination({
+  lang,
+  currentPage,
+  totalPages,
+  prevLabel,
+  nextLabel,
+  pageLabel,
+}: {
+  lang: Locale
+  currentPage: number
+  totalPages: number
+  prevLabel: string
+  nextLabel: string
+  pageLabel: string
+}) {
+  if (totalPages <= 1) return null
+  const canPrev = currentPage > 1
+  const canNext = currentPage < totalPages
+  return (
+    <nav
+      className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-4 border-[var(--ink)] p-4 sm:p-5"
+      aria-label={lang === 'es' ? 'Paginación del blog' : 'Blog pagination'}
+    >
+      <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>
+        {pageLabel.replace('{current}', String(currentPage)).replace('{total}', String(totalPages))}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {canPrev ? (
+          <Link
+            href={blogPaginationHref(lang, currentPage - 1)}
+            className="inline-flex items-center justify-center px-4 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] no-underline font-bold uppercase tracking-wide transition-colors duration-150 hover:bg-[var(--yellow)]"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '12px' }}
+          >
+            ← {prevLabel}
+          </Link>
+        ) : (
+          <span
+            className="inline-flex items-center justify-center px-4 py-2 border-[3px] border-[var(--ink)] opacity-35 cursor-not-allowed"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '12px' }}
+            aria-disabled="true"
+          >
+            ← {prevLabel}
+          </span>
+        )}
+        {canNext ? (
+          <Link
+            href={blogPaginationHref(lang, currentPage + 1)}
+            className="inline-flex items-center justify-center px-4 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] no-underline font-bold uppercase tracking-wide transition-colors duration-150 hover:bg-[var(--yellow)]"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '12px' }}
+          >
+            {nextLabel} →
+          </Link>
+        ) : (
+          <span
+            className="inline-flex items-center justify-center px-4 py-2 border-[3px] border-[var(--ink)] opacity-35 cursor-not-allowed"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '12px' }}
+            aria-disabled="true"
+          >
+            {nextLabel} →
+          </span>
+        )}
+      </div>
+    </nav>
+  )
+}
+
 function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
   const title = lang === 'es' ? p.title_es : p.title_en
   const dateStr = formatBlogListDate(p.published_at, lang)
@@ -164,21 +237,73 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   return staticPageMetadata(lang, '/blog', 'blog')
 }
 
-export default async function BlogPage({ params }: { params: { lang: Locale } }) {
+const BLOG_SELECT =
+  'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured'
+
+export default async function BlogPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: Locale }>
+  searchParams?: Promise<{ page?: string | string[] }>
+}) {
   const { lang } = await params
+  const sp = await (searchParams ?? Promise.resolve({} as { page?: string | string[] }))
+  const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page
+  const parsed = parseInt(rawPage || '1', 10)
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
-  const { data: posts } = await supabase
-    .from('blog_posts')
-    .select(
-      'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured',
-    )
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
 
-  const list = (posts || []) as BlogListRow[]
-  const featured = list.filter((p) => p.is_featured)
-  const rest = list.filter((p) => !p.is_featured)
+  const { count: publishedCount } = await supabase
+    .from('blog_posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_published', true)
+
+  const { count: restTotal } = await supabase
+    .from('blog_posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_published', true)
+    .eq('is_featured', false)
+
+  const totalRest = restTotal ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalRest / BLOG_PAGE_SIZE))
+  let currentPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1
+  if (currentPage > totalPages) currentPage = totalPages
+
+  let featured: BlogListRow[] = []
+  let restPage: BlogListRow[] = []
+
+  if (currentPage === 1) {
+    const [{ data: feat }, { data: rest }] = await Promise.all([
+      supabase
+        .from('blog_posts')
+        .select(BLOG_SELECT)
+        .eq('is_published', true)
+        .eq('is_featured', true)
+        .order('published_at', { ascending: false }),
+      supabase
+        .from('blog_posts')
+        .select(BLOG_SELECT)
+        .eq('is_published', true)
+        .eq('is_featured', false)
+        .order('published_at', { ascending: false })
+        .range(0, BLOG_PAGE_SIZE - 1),
+    ])
+    featured = (feat || []) as BlogListRow[]
+    restPage = (rest || []) as BlogListRow[]
+  } else {
+    const offset = (currentPage - 1) * BLOG_PAGE_SIZE
+    const { data: rest } = await supabase
+      .from('blog_posts')
+      .select(BLOG_SELECT)
+      .eq('is_published', true)
+      .eq('is_featured', false)
+      .order('published_at', { ascending: false })
+      .range(offset, offset + BLOG_PAGE_SIZE - 1)
+    restPage = (rest || []) as BlogListRow[]
+  }
+
+  const hasAnyPost = (publishedCount ?? 0) > 0
 
   return (
     <div className="lined min-h-screen">
@@ -188,9 +313,9 @@ export default async function BlogPage({ params }: { params: { lang: Locale } })
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '17px', lineHeight: 1.8, maxWidth: '700px', color: 'var(--dim)' }}>{dict.blog.subtitle}</p>
       </section>
       <section className="px-4 sm:px-6 py-10 sm:py-12">
-        {list.length > 0 ? (
+        {hasAnyPost ? (
           <div>
-            {featured.length > 0 ? (
+            {currentPage === 1 && featured.length > 0 ? (
               <div className="mb-10 sm:mb-12">
                 <h2 className="sec-tag mb-4 sm:mb-5">{dict.blog.featured_heading}</h2>
                 <div className="space-y-0 border-4 border-[var(--ink)]">
@@ -200,18 +325,26 @@ export default async function BlogPage({ params }: { params: { lang: Locale } })
                 </div>
               </div>
             ) : null}
-            {rest.length > 0 ? (
+            {restPage.length > 0 ? (
               <div>
-                {featured.length > 0 ? (
+                {currentPage === 1 && featured.length > 0 ? (
                   <h2 className="sec-tag mb-4 sm:mb-5">{dict.blog.more_articles}</h2>
                 ) : null}
                 <div className="space-y-0 border-4 border-[var(--ink)]">
-                  {rest.map((p) => (
+                  {restPage.map((p) => (
                     <BlogIndexRow key={p.slug} p={p} lang={lang} />
                   ))}
                 </div>
               </div>
             ) : null}
+            <BlogPagination
+              lang={lang}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              prevLabel={dict.blog.pagination_prev}
+              nextLabel={dict.blog.pagination_next}
+              pageLabel={dict.blog.pagination_page}
+            />
           </div>
         ) : (
           <div className="space-y-0 border-4 border-[var(--ink)]">

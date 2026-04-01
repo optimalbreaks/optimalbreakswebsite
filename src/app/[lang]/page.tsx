@@ -266,13 +266,13 @@ export default async function HomePage({
         </div>
 
         {/* Título brutalista: sombras solo con offset (sin blur / glow) */}
-        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-2 min-w-0 max-w-full overflow-x-hidden">
           <h1
-            className="m-0 mx-auto max-w-full whitespace-nowrap inline-block min-w-min"
+            className="m-0 mx-auto max-w-full inline-block text-balance max-sm:whitespace-normal sm:whitespace-nowrap sm:min-w-min"
             style={{
               fontFamily: "'Unbounded', sans-serif",
               fontWeight: 900,
-              fontSize: 'clamp(17px, 5.5vw, 90px)',
+              fontSize: 'clamp(15px, 5.2vw, 90px)',
               textTransform: 'uppercase',
               letterSpacing: 'clamp(-1.5px, -0.35vw, -2px)',
               lineHeight: 1,
