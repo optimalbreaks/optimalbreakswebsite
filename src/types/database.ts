@@ -170,6 +170,12 @@ export interface Database {
         Update: Partial<Omit<ChartTrack, 'id'>>
         Relationships: DbRelationship[]
       }
+      mix_play_events: {
+        Row: MixPlayEventRow
+        Insert: Pick<MixPlayEventRow, 'mix_id'> & Partial<Pick<MixPlayEventRow, 'user_id'>>
+        Update: never
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -178,6 +184,10 @@ export interface Database {
       event_engaged_user_count: {
         Args: { eid: string }
         Returns: number
+      }
+      admin_engagement_stats: {
+        Args: { p_limit?: number }
+        Returns: Record<string, unknown>
       }
     }
   }
@@ -201,6 +211,13 @@ export interface SavedMixRow extends Record<string, unknown> {
   id: string
   user_id: string
   mix_id: string
+  created_at: string
+}
+
+export interface MixPlayEventRow extends Record<string, unknown> {
+  id: string
+  mix_id: string
+  user_id: string | null
   created_at: string
 }
 

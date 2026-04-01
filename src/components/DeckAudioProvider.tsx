@@ -667,6 +667,20 @@ export function DeckAudioProvider({
   const deckB: DeckSideState = { trackIdx: trackIdxB, progress: progressB, duration: durationB, playing: playingB }
 
   // === Mix player: internal stop helper ===
+  const mixPlayLoggedRef = useRef(false)
+  const currentMixIdRef = useRef<string | null>(null)
+
+  const logMixPlayOnce = useCallback(() => {
+    const id = currentMixIdRef.current
+    if (!id || mixPlayLoggedRef.current) return
+    mixPlayLoggedRef.current = true
+    void fetch('/api/mix-play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mixId: id }),
+    }).catch(() => {})
+  }, [])
+
   const stopMixInternal = useCallback(() => {
     if (mixAudioRef.current) {
       mixAudioRef.current.pause()
@@ -702,6 +716,9 @@ export function DeckAudioProvider({
     // Stop any previous mix
     stopMixInternal()
 
+    mixPlayLoggedRef.current = false
+    currentMixIdRef.current = mix.id
+
     setCurrentMix(mix)
     setMode('mix')
     setMixProgress(0)
@@ -726,7 +743,13 @@ export function DeckAudioProvider({
       audio.addEventListener('timeupdate', onTimeUpdate)
       audio.addEventListener('ended', onEnded)
 
-      void audio.play().then(() => setMixPlaying(true)).catch(() => {})
+      void audio
+        .play()
+        .then(() => {
+          setMixPlaying(true)
+          logMixPlayOnce()
+        })
+        .catch(() => {})
     } else if (mix.source === 'soundcloud') {
       setScTrackUrl(mix.src)
       // SC widget will auto-play via onReady; state managed by callbacks
@@ -741,7 +764,7 @@ export function DeckAudioProvider({
       })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, stopMixInternal])
+  }, [isPlaying, stopMixInternal, logMixPlayOnce])
 
   // === Mix player: toggle pause/resume ===
   const toggleMixPlayback = useCallback(() => {
@@ -825,7 +848,8 @@ export function DeckAudioProvider({
 
   const handleScPlay = useCallback(() => {
     setMixPlaying(true)
-  }, [])
+    logMixPlayOnce()
+  }, [logMixPlayOnce])
 
   const handleScHandleRef = useCallback((h: SoundCloudWidgetHandle | null) => {
     scHandleRef.current = h
