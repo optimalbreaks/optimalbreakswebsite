@@ -125,10 +125,12 @@ function PreviewPlayer({
   sampleUrl,
   waveformUrl,
   dict,
+  children,
 }: {
   sampleUrl: string | null
   waveformUrl: string | null
   dict: any
+  children: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const rafRef = useRef<number>(0)
@@ -138,11 +140,14 @@ function PreviewPlayer({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  if (!sampleUrl) return null
+  if (!sampleUrl) {
+    return <>{children(null, null)}</>
+  }
 
   const proxiedAudio = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
-  const proxiedWaveform = waveformUrl
-    ? `/api/audio-proxy?url=${encodeURIComponent(waveformUrl)}`
+  // Usamos el optimizador de imágenes de Next.js para la onda (evita fallos del proxy de audio)
+  const nextWaveform = waveformUrl
+    ? `/_next/image?url=${encodeURIComponent(waveformUrl)}&w=1920&q=75`
     : null
 
   const tick = useCallback(() => {
@@ -214,76 +219,73 @@ function PreviewPlayer({
 
   const c = dict.charts
 
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <audio
-          ref={audioRef}
-          src={proxiedAudio}
-          preload="none"
-          onEnded={handleEnded}
-        />
-        <button
-          type="button"
-          onClick={toggle}
-          className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-            ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+  const controls = (
+    <div className="flex items-center gap-2">
+      <audio
+        ref={audioRef}
+        src={proxiedAudio}
+        preload="none"
+        onEnded={handleEnded}
+      />
+      <button
+        type="button"
+        onClick={toggle}
+        className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+          ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+        title={playing ? c.preview_pause : c.preview_play}
+        aria-label={playing ? c.preview_pause : c.preview_play}
+      >
+        {playing ? '❚❚' : '▶ PLAY'}
+      </button>
+      {(playing || progress > 0) && duration > 0 && (
+        <span
+          className="text-[9px] text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap"
           style={{ fontFamily: "'Courier Prime', monospace" }}
-          title={playing ? c.preview_pause : c.preview_play}
-          aria-label={playing ? c.preview_pause : c.preview_play}
         >
-          {playing ? '❚❚' : '▶ PLAY'}
-        </button>
-        {(playing || progress > 0) && duration > 0 && (
-          <span
-            className="text-[9px] text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-        )}
-      </div>
-      {(playing || progress > 0) && (
+          {formatTime(currentTime)} / {formatTime(duration)}
+        </span>
+      )}
+    </div>
+  )
+
+  const progressBar = (playing || progress > 0) ? (
         <div
           ref={barRef}
           onClick={seek}
-          className="relative w-full h-8 sm:h-6 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-2 border-[var(--ink)]"
+          className="relative w-full h-8 sm:h-10 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-[3px] border-[var(--ink)]"
           role="progressbar"
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          {proxiedWaveform ? (
+          {nextWaveform ? (
             <div
               className="absolute inset-0"
               style={{
-                maskImage: `url("${proxiedWaveform}")`,
-                WebkitMaskImage: `url("${proxiedWaveform}")`,
-                maskSize: '100% 100%',
-                WebkitMaskSize: '100% 100%',
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
+                mask: `url('${nextWaveform}') center/100% 100% no-repeat`,
+                WebkitMask: `url('${nextWaveform}') center/100% 100% no-repeat`,
               }}
             >
-              {/* Base amarilla de la onda */}
-              <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
-              {/* Progreso rojo de la onda */}
-              <div
-                className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
-                style={{ width: `${progress * 100}%` }}
-              />
-            </div>
-          ) : (
-            /* Fallback si no hay onda: barra sólida */
-            <div
-              className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
-              style={{ width: `${progress * 100}%` }}
-            />
-          )}
+          {/* Base amarilla de la onda */}
+          <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
+          {/* Progreso rojo de la onda */}
+          <div
+            className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
+            style={{ width: `${progress * 100}%` }}
+          />
         </div>
+      ) : (
+        /* Fallback si no hay onda: barra sólida */
+        <div
+          className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
+          style={{ width: `${progress * 100}%` }}
+        />
       )}
     </div>
-  )
+  ) : null
+
+  return <>{children(controls, progressBar)}</>
 }
 
 function ChartTrackRow({
@@ -297,109 +299,111 @@ function ChartTrackRow({
   const artists = Array.isArray(track.artists) ? track.artists : []
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
-      {/* Fila superior: posición + carátula + texto (mismo contenido que desktop) */}
-      <div className="flex items-start gap-3 min-w-0 flex-1">
-        <PositionBadge position={track.position} />
+    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        {/* Fila superior: posición + carátula + texto (mismo contenido que desktop) */}
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <PositionBadge position={track.position} />
 
-        {track.artwork_url ? (
-          <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-            <Image
-              src={track.artwork_url}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 56px, 64px"
-              unoptimized={false}
-            />
-          </div>
-        ) : null}
+          {track.artwork_url ? (
+            <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+              <Image
+                src={track.artwork_url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 56px, 64px"
+                unoptimized={false}
+              />
+            </div>
+          ) : null}
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <MovementIndicator
-              position={track.position}
-              previousPosition={track.previous_position}
-              weeksInChart={track.weeks_in_chart}
-              dict={dict}
-            />
-            {track.weeks_in_chart > 1 && (
-              <span
-                className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider"
-                style={{ fontFamily: "'Courier Prime', monospace" }}
-              >
-                {c.weeks_in_chart.replace('{n}', String(track.weeks_in_chart))}
-              </span>
-            )}
-          </div>
-          <h3
-            className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate"
-            style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-          >
-            {track.title}
-            {track.mix_name && (
-              <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">
-                {track.mix_name}
-              </span>
-            )}
-          </h3>
-          <p
-            className="text-xs sm:text-sm mt-0.5 sm:truncate"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            <ArtistNames artists={artists} />
-            {track.label && (
-              <>
-                <span className="mx-1.5 text-[var(--ink)]/30">|</span>
-                <span className="text-[var(--ink)]/50">{track.label}</span>
-              </>
-            )}
-            {track.release_year != null && track.release_year > 0 && (
-              <>
-                <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <MovementIndicator
+                position={track.position}
+                previousPosition={track.previous_position}
+                weeksInChart={track.weeks_in_chart}
+                dict={dict}
+              />
+              {track.weeks_in_chart > 1 && (
                 <span
-                  className="text-[var(--ink)]/45 font-bold tabular-nums"
-                  title={c.release_year_title}
+                  className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
                 >
-                  {track.release_year}
+                  {c.weeks_in_chart.replace('{n}', String(track.weeks_in_chart))}
                 </span>
-              </>
-            )}
-          </p>
+              )}
+            </div>
+            <h3
+              className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate"
+              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+            >
+              {track.title}
+              {track.mix_name && (
+                <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">
+                  {track.mix_name}
+                </span>
+              )}
+            </h3>
+            <p
+              className="text-xs sm:text-sm mt-0.5 sm:truncate"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              <ArtistNames artists={artists} />
+              {track.label && (
+                <>
+                  <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+                  <span className="text-[var(--ink)]/50">{track.label}</span>
+                </>
+              )}
+              {track.release_year != null && track.release_year > 0 && (
+                <>
+                  <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+                  <span
+                    className="text-[var(--ink)]/45 font-bold tabular-nums"
+                    title={c.release_year_title}
+                  >
+                    {track.release_year}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* BPM + key + preview + Beatport: siempre visibles (móvil y PC); en móvil fila táctil ancha */}
-      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center md:flex-nowrap touch-manipulation">
-        {track.bpm && (
-          <span
-            className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {track.bpm} {c.bpm_label}
-          </span>
-        )}
-        {track.music_key && (
-          <span
-            className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {track.music_key}
-          </span>
-        )}
-        <PreviewPlayer sampleUrl={track.sample_url} waveformUrl={track.waveform_url} dict={dict} />
-        {track.beatport_url && (
-          <a
-            href={track.beatport_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-            title={c.open_beatport}
-          >
-            BEATPORT
-          </a>
-        )}
+        {/* BPM + key + preview + Beatport: siempre visibles (móvil y PC); en móvil fila táctil ancha */}
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center md:flex-nowrap touch-manipulation">
+          {track.bpm && (
+            <span
+              className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {track.bpm} {c.bpm_label}
+            </span>
+          )}
+          {track.music_key && (
+            <span
+              className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {track.music_key}
+            </span>
+          )}
+          <PreviewPlayer sampleUrl={track.sample_url} waveformUrl={track.waveform_url} dict={dict} />
+          {track.beatport_url && (
+            <a
+              href={track.beatport_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title={c.open_beatport}
+            >
+              BEATPORT
+            </a>
+          )}
+        </div>
       </div>
     </div>
   )
