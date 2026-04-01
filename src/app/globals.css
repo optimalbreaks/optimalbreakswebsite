@@ -267,6 +267,17 @@ body::before {
   max-width: 100%;
 }
 
+/* Cuerpo del artículo: tipografía de máquina; los h2–h6 no heredan (evita que Preflight + inherit los aplasten) */
+.prose-ob-blog > p,
+.prose-ob-blog > ul,
+.prose-ob-blog > ol,
+.prose-ob-blog > blockquote,
+.prose-ob-blog li {
+  font-family: 'Special Elite', monospace;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
 .prose-ob h2 {
   font-family: 'Unbounded', sans-serif;
   font-weight: 900;
@@ -277,8 +288,16 @@ body::before {
   color: var(--ink);
   margin-top: 2.25em;
   margin-bottom: 0.65em;
-  padding-bottom: 0.45em;
+  padding: 0.35em 0.5em 0.5em 0.5em;
   border-bottom: 4px solid var(--ink);
+  background: linear-gradient(
+    180deg,
+    rgba(247, 231, 51, 0.42) 0%,
+    rgba(247, 231, 51, 0.08) 55%,
+    transparent 100%
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .prose-ob h2:first-child {
@@ -295,8 +314,11 @@ body::before {
   color: var(--ink);
   margin-top: 1.85em;
   margin-bottom: 0.55em;
-  padding: 0.15em 0 0.15em 0.65em;
-  border-left: 5px solid var(--red);
+  padding: 0.35em 0.65em 0.35em 0.75em;
+  border-left: 6px solid var(--red);
+  background: rgba(214, 40, 40, 0.09);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .prose-ob h4,

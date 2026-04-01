@@ -36,6 +36,7 @@
     "blog:import-csv": "node scripts/import-blog-from-csv.mjs",
     "blog:import-csv-missing": "node scripts/import-blog-from-csv.mjs --only-missing",
     "blog:refresh-images": "node scripts/import-blog-from-csv.mjs --refresh-images",
+    "blog:refresh-images-all": "node scripts/import-blog-from-csv.mjs --refresh-images-from-db",
     "blog:append-csv-extra": "node scripts/append-blog-extra-rows.mjs"
   },
   "dependencies": {

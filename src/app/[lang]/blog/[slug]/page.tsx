@@ -109,7 +109,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      <article className="prose-ob" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.9 }} dangerouslySetInnerHTML={{ __html: content }} />
+      <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />
 
       {/* Bottom share */}
       <div className="mt-12 pt-8 border-t-4 border-dashed border-[var(--ink)] flex flex-wrap items-center justify-between gap-4">

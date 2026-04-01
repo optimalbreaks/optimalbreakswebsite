@@ -12,8 +12,11 @@
  *   node scripts/import-blog-from-csv.mjs --refresh-images
  *   node scripts/import-blog-from-csv.mjs --refresh-images --dry-run
  *
- * --refresh-images: no borra ni inserta posts; empareja cada fila del CSV con blog_posts.title_es,
- * regenera portada (agente + imagen) y actualiza image_url / og_image_url. Requiere OPENAI_API_KEY.
+ * --refresh-images: empareja CSV ↔ blog_posts por title_es; regenera portada (agente + imagen).
+ *
+ * --refresh-images-from-db: recorre TODOS los posts publicados en Supabase (sin CSV); el agente usa
+ * title_es, excerpt_es y content_es de la BD. Ideal tras terminar un import masivo para uniformar
+ * criterio (luz/paleta variada, menos “serie oscura”).
  *
  * --only-missing: no borra nada. Inserta solo filas cuyo title_es no está ya en blog_posts.
  * published_at: desde la fecha más antigua ya guardada hacia atrás, saltos aleatorios 11/13/15 días
@@ -248,6 +251,17 @@ function excerptFromBody(html, max = 220) {
   return (sp > max * 0.6 ? cut.slice(0, sp) : cut) + '…'
 }
 
+/** HTML guardado en BD → texto plano para el agente de imagen */
+function stripHtmlToPlain(html) {
+  if (!html) return ''
+  return html
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function slugify(s, used) {
   let base = s
     .normalize('NFD')
@@ -282,7 +296,7 @@ function randomGapDays() {
 }
 
 const IMAGE_SUFFIX =
-  ' Formato panorámico 16:9, fotografía hiperrealista editorial, nitidez alta, sin texto legible ni logotipos ni marcas de agua. Personas solo anónimas, lejanas, de espaldas o desenfocadas salvo que el artículo exija un retrato concreto.'
+  ' Formato panorámico 16:9, fotografía hiperrealista editorial, nitidez alta, sin texto legible ni logotipos ni marcas de agua. Personas solo anónimas, lejanas, de espaldas o desenfocadas salvo que el artículo exija un retrato concreto. Evita subexponer: debe haber detalle en sombras salvo que el guion de luz pida lo contrario. Respeta la paleta e iluminación descritas en el prompt (incluidas escenas claras o diurnas cuando toquen).'
 
 const OG_SIZE = '1536x1024'
 const MAX_PROMPT_LEN = 4000
@@ -294,18 +308,45 @@ function hashString(s) {
   return Math.abs(h)
 }
 
-/** Sesgo de encuadre distinto por slug (estable entre ejecuciones) para evitar repetición. */
+/**
+ * Encuadre / tipo de escena por slug. Mezcla club con objeto, archivo, calle, estudio — para no parecer una sola serie.
+ */
 const COMPOSITION_BIAS = [
-  'Extreme close-up / macro: vinyl groove, stylus, knobs, cables, dust in light beam — zero faces.',
-  'Wide establishing shot: empty warehouse club, bar, or hall after hours — architecture and haze dominate.',
-  'Low angle on a sound system stack or subs — sculptural, no portrait of a DJ.',
-  'Overhead / flat-lay: records, flyers, tickets, headphones, cables on concrete or wood — still life.',
-  'Street-level night exterior: neon, wet asphalt, venue doorway — mood only, no hero DJ close-up.',
-  'Crowd from behind at a gig: anonymous shoulders, raised hands, stage lights — no facial detail.',
-  'Hands only adjusting turntable or mixer — crop tight on gear, no face visible.',
-  'Abstract light: lasers, smoke volumes, color gradients suggesting rave energy — minimal or no people.',
-  'Archival / era detail: cassette deck, CRT, radio, magazine stack — period-appropriate breakbeat culture.',
-  'Long corridor or backstage: cables, cases, flight cases, work lights — documentary feel.',
+  'Macro extremo: surco de vinilo, aguja, polvo en haz de luz suave — cero rostros.',
+  'Plano cenital still life: discos, fundas genéricas, tickets, auriculares sobre madera clara o hormigón claro.',
+  'Estudio o mesa de trabajo diurna: equipo, cables, taza, revistas — sensación de taller iluminado, no cueva.',
+  'Interior cultural de día: librería, archivo, vitrina o pasillo de museo con luz ambiente clara.',
+  'Gran angular de sala de concierto vacía o ensayando luces (haz visible pero ambiente NO totalmente negro: detalle en gradas/pared).',
+  'Contrapicado a sound system o subgrave como volumen escultórico — puede ser noche de club pero con relleno de luz ambiental visible.',
+  'Calle o patio urbano de día: fachada, cartel genérico ilegible, asfalto, sombras de mediodía o tarde temprana.',
+  'Multitud desde atrás en pico de bolo: siluetas, manos, sin rostros; mezcla de strobo Y área con luz de relleno.',
+  'Solo manos y plato/mesas de mezcla — encuadre muy cerrado, piel y metal legibles, sin retrato.',
+  'Abstracción luminosa: humo, prisma, reflejos, gradientes — puede ser vibrante pero no todo negro; deja zonas claras o medias.',
+  'Objetos de época en mesa: cassette, CRT, radio, fanzine — escena doméstica o estudio con luz de ventana o flexo + ambiente.',
+  'Pasillo backstage o flight cases: sensación documental; mezcla de work light cálido y sombras abiertas (no silueta pura).',
+  'Ventana con lluvia o reflejo urbano desde interior iluminado: exterior gris pero interior con tonos claros visibles.',
+  'Espacio vacío tipo galería o sala polivalente con pared clara y una sola pieza de equipo como protagonista.',
+  'Explanada o mercadillo / feria de discos al aire libre de día, mesas y cajas, gente como borrones de movimiento.',
+]
+
+/**
+ * Eje de luz y color OBLIGATORIO por slug (independiente del encuadre). Rompe el “todo club oscuro + neón”.
+ */
+const LIGHTING_PALETTE = [
+  'Luz natural lateral de ventana, día nublado o velado: sombras suaves, fondo o superficie en tonos claros (blanco roto, beige, gris claro).',
+  'High-key de estudio: fondo muy claro, exposición generosa, pocas sombras duras; sensación limpia tipo revista de diseño.',
+  'Interior diurno con sol entrando por puerta o vidriera: polvo en el aire legible, paleta cálida y aireada.',
+  'Atardecer suave (no noche cerrada): cielo claro anaranjado o rosa, relleno de sombra con detalle visible.',
+  'Flash o strobe rebotado en techo/pared clara: look documental; colores naturales, sin apagar la escena.',
+  'Día lluvioso: luz gris-azulada fuera, interior o primer plano suficientemente iluminado para texturas (vinilo, papel).',
+  'Neón o color de escena solo como ACENTO: el 70–85% de la imagen en tonos medios o claros; un solo bloque de color artificial.',
+  'Luz de flexo de escritorio + ambiente de sala clara; madera clara, papeles, objetos reconocibles sin cueva.',
+  'Ciudad a mediodía: sombras definidas pero exposición alta en fachadas; cielo o pavimento aportan claridad.',
+  'Galería / museo: pared blanca, foco suave, ambiente cultural diurno, sombras abiertas.',
+  'Golden hour en espacio semiabierto: contraste moderado, calidez sin subexponer siluetas.',
+  'Paleta pastel desaturada en gran parte del encuadre con un detalle saturado puntual (objeto o luz).',
+  'Iluminación mixta tungsteno + luz fría de ventana: contraste de temperaturas, pero con medios tonos visibles (no solo negro).',
+  'Contraluz controlado con viñeta ligera: halo claro en bordes o fondo, sujeto aún legible en tonos medios.',
 ]
 
 /** Si una fila no trae columna de imagen, usamos el mismo “tipo” de prompt que el CSV habitual. */
@@ -344,6 +385,8 @@ async function buildImagePromptFromArticleAgent({
     process.env.OPENAI_MODEL?.trim() ||
     'gpt-4o-mini'
   const bias = COMPOSITION_BIAS[hashString(slug) % COMPOSITION_BIAS.length]
+  const lightPalette =
+    LIGHTING_PALETTE[hashString(`${slug}|lux`) % LIGHTING_PALETTE.length]
   const snippet = body_plain_es.replace(/\s+/g, ' ').trim().slice(0, MAX_ARTICLE_CHARS_FOR_AGENT)
   const ejemplo = (csvPromptExample || '').trim() || DEFAULT_CSV_PROMPT_SKELETON
 
@@ -352,15 +395,21 @@ async function buildImagePromptFromArticleAgent({
 Recibirás un EJEMPLO de prompt en español (plantilla editorial del equipo). Ese ejemplo define el FORMATO y el TONO que debes respetar: mismas secciones o etiquetas (por ejemplo "Sujeto:", "Iluminación", párrafos separados, nivel de detalle hiperrealista). No lo copies palabra por palabra.
 
 Reglas:
-- El SESGO DE COMPOSICIÓN indicado es OBLIGATORIO: define encuadre y tipo de escena. No sustituyas por el cliché repetido de "primer plano de DJ mirando la mesa" salvo que el sesgo lo pida explícitamente.
-- El contenido de "Sujeto" y detalles deben reflejar el artículo (temas, época, geografía, objetos, ambiente) según el texto en español.
+- El SESGO DE COMPOSICIÓN y la PALETA / ILUMINACIÓN asignados son OBLIGATORIOS. La sección "Iluminación y color" del prompt final debe reflejar con claridad la paleta indicada (incluidas escenas claras, diurnas o high-key cuando toque).
+- NO homogeneices todo como "club oscuro + magenta y azul". El breakbeat tiene noche, pero también vinilos de día, archivo, calle, estudio, ferias, cultura material. Si el encuadre es objeto o interior cultural, la luz debe poder ser natural, de estudio o diurna sin parecer una segunda copia de cabina nocturna.
+- Evita que el conjunto de portadas parezca un batch de IA con el mismo LUT: varía temperatura de color, ratio de sombras y momento del día según las instrucciones que recibes, no según un default oscuro.
+- No sustituyas el encuadre por el cliché de "primer plano de DJ en cabina" salvo que el sesgo lo pida.
+- El contenido de "Sujeto" y detalles debe reflejar el artículo (temas, época, geografía, objetos) según el texto en español.
 - Mantén el estilo del ejemplo: fotografía hiperrealista, calidad editorial, descripciones sensoriales concretas.
-- La escena descrita no debe incluir texto legible, logotipos ni marcas de agua. No uses celebridades reconocibles. Si hay personas, anónimas, lejanas, de espaldas o desenfocadas.
+- La escena no debe incluir texto legible, logotipos ni marcas de agua. No uses celebridades reconocibles. Personas anónimas, lejanas, de espaldas o desenfocadas.
 
 Salida: SOLO el texto del prompt final en español, sin comillas, sin markdown, sin prefijos tipo "Prompt:". Longitud similar al ejemplo (varias secciones con saltos de línea).`
 
   const user = `SESGO DE COMPOSICIÓN (obligatorio, respétalo en Sujeto y Encuadre):
 ${bias}
+
+PALETA E ILUMINACIÓN OBLIGATORIAS (deben notarse en tu sección "Iluminación y color"; no las sustituyas por oscuridad genérica):
+${lightPalette}
 
 EJEMPLO DE FORMATO Y ESTILO (replica estructura y riqueza de detalle, no el sujeto genérico):
 ---
@@ -387,7 +436,7 @@ ${snippet}`
         { role: 'user', content: user },
       ],
       max_tokens: 1200,
-      temperature: 0.82,
+      temperature: 0.88,
     }),
   })
 
@@ -541,6 +590,71 @@ async function refreshBlogCoverImages(sb, args) {
 
   const okLabel = args.dryRun ? 'filas con post y coincidencia listadas' : 'portadas regeneradas'
   console.log(`\n📊 ${okLabel}: ${ok}; sin post en BD para el título: ${miss}; errores: ${fail}.\n`)
+}
+
+/**
+ * Regenera portadas para todos los posts publicados usando datos ya en BD (sin CSV).
+ */
+async function refreshAllBlogCoversFromDb(sb, args) {
+  let q = sb
+    .from('blog_posts')
+    .select('id, slug, title_es, title_en, excerpt_es, content_es')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+  if (args.limit) q = q.limit(args.limit)
+  const { data: posts, error: listErr } = await q
+  if (listErr) throw new Error(`Listar blog_posts: ${listErr.message}`)
+  const list = posts || []
+
+  console.log(
+    `\n🖼  Regenerar TODAS las portadas desde BD: ${list.length} posts${args.dryRun ? ' [DRY-RUN]' : ''}\n`,
+  )
+
+  let ok = 0
+  let fail = 0
+
+  for (let idx = 0; idx < list.length; idx++) {
+    const post = list[idx]
+    const title_es = (post.title_es || '').trim()
+    const title_en = (post.title_en || '').trim() || title_es
+    const excerpt_es =
+      (post.excerpt_es || '').trim() || excerptFromBody(post.content_es || '')
+    const body_plain_es = stripHtmlToPlain(post.content_es || '')
+
+    if (args.dryRun) {
+      console.log(`  🔍 [dry-run] ${post.slug}`)
+      ok++
+      continue
+    }
+
+    try {
+      console.log(`  🎨 [${idx + 1}/${list.length}] ${post.slug} — agente + imagen…`)
+      const imagePrompt = await buildImagePromptFromArticleAgent({
+        slug: post.slug,
+        title_es,
+        title_en,
+        excerpt_es,
+        body_plain_es,
+        csvPromptExample: '',
+      })
+      const buf = await generateCoverImage(imagePrompt)
+      const url = await uploadBlogCover(sb, post.slug, buf)
+      const { error: upErr } = await sb
+        .from('blog_posts')
+        .update({ image_url: url, og_image_url: url })
+        .eq('id', post.id)
+      if (upErr) throw new Error(upErr.message)
+      console.log(`  ✅ ${post.slug}`)
+      ok++
+      await sleep(1200)
+    } catch (e) {
+      console.error(`  ⚠️  ${post.slug}: ${e.message}`)
+      fail++
+    }
+  }
+
+  const okLabel = args.dryRun ? 'posts listados' : 'portadas regeneradas'
+  console.log(`\n📊 ${okLabel}: ${ok}; errores: ${fail}.\n`)
 }
 
 /**
@@ -699,6 +813,7 @@ function parseArgs() {
     limit: null,
     dryRun: false,
     refreshImages: false,
+    refreshImagesFromDb: false,
     onlyMissing: false,
   }
   for (let i = 0; i < a.length; i++) {
@@ -726,6 +841,10 @@ function parseArgs() {
       out.refreshImages = true
       continue
     }
+    if (a[i] === '--refresh-images-from-db') {
+      out.refreshImagesFromDb = true
+      continue
+    }
     if (a[i] === '--only-missing') {
       out.onlyMissing = true
       continue
@@ -737,9 +856,23 @@ function parseArgs() {
 async function main() {
   const args = parseArgs()
 
-  if (args.refreshImages && args.onlyMissing) {
-    console.error('No combines --refresh-images con --only-missing.')
+  if (args.refreshImages && args.refreshImagesFromDb) {
+    console.error('Elige --refresh-images O --refresh-images-from-db, no ambos.')
     process.exit(1)
+  }
+  if ((args.refreshImages || args.refreshImagesFromDb) && args.onlyMissing) {
+    console.error('No combines refresh de imágenes con --only-missing.')
+    process.exit(1)
+  }
+
+  if (args.refreshImagesFromDb) {
+    if (args.skipImages) {
+      console.error('No uses --skip-images con --refresh-images-from-db.')
+      process.exit(1)
+    }
+    const sb = createSb()
+    await refreshAllBlogCoversFromDb(sb, args)
+    return
   }
 
   if (args.refreshImages) {
