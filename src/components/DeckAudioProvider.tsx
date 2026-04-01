@@ -470,16 +470,21 @@ export function DeckAudioProvider({
     setCurrentTrack(crossfader < 50 ? trackIdxA : trackIdxB)
   }, [crossfader, trackIdxA, trackIdxB])
 
-  // === Start/stop individual sides (each has its own brake animation ref) ===
-  const spinUp = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>) => {
+  // === Start/stop individual sides ===
+  // Abort controllers so spinDown can cancel a pending spinUp .then()
+  const abortRefA = useRef(0)
+  const abortRefB = useRef(0)
+
+  const spinUp = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, abortRef: React.MutableRefObject<number>) => {
     cancelAnimationFrame(brakeRef.current)
-    // Start playback at full rate first (Chrome desktop needs rate>0 for play() to work)
+    const token = ++abortRef.current
     audio.playbackRate = 1
     void audio.play().then(() => {
-      // Once playing, animate spin-up from slow to full speed
-      audio.playbackRate = 0.1
-      let rate = 0.1
+      if (abortRef.current !== token) return
+      audio.playbackRate = 0.15
+      let rate = 0.15
       const step = () => {
+        if (abortRef.current !== token) return
         rate = Math.min(1, rate + 0.06)
         audio.playbackRate = rate
         if (rate < 1) brakeRef.current = requestAnimationFrame(step)
@@ -488,11 +493,13 @@ export function DeckAudioProvider({
     }).catch(() => {})
   }, [])
 
-  const spinDown = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, cb: () => void) => {
+  const spinDown = useCallback((audio: HTMLAudioElement, brakeRef: React.MutableRefObject<number>, abortRef: React.MutableRefObject<number>, cb: () => void) => {
+    ++abortRef.current
     cancelAnimationFrame(brakeRef.current)
     let rate = audio.playbackRate
+    if (rate <= 0) { audio.pause(); cb(); return }
     const step = () => {
-      rate = Math.max(0, rate - 0.06)
+      rate = Math.max(0, rate - 0.08)
       audio.playbackRate = rate
       if (rate > 0) {
         brakeRef.current = requestAnimationFrame(step)
@@ -507,7 +514,6 @@ export function DeckAudioProvider({
   // Toggle play for a specific side
   const togglePlaySide = useCallback((side: 'A' | 'B') => {
     initAudio()
-    // Resume AudioContext synchronously in user gesture
     if (audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume()
     }
@@ -519,18 +525,18 @@ export function DeckAudioProvider({
       const audio = audioRefA.current
       if (!audio) return
       if (playingA) {
-        spinDown(audio, brakeAnimRefA, () => setPlayingA(false))
+        spinDown(audio, brakeAnimRefA, abortRefA, () => setPlayingA(false))
       } else {
-        spinUp(audio, brakeAnimRefA)
+        spinUp(audio, brakeAnimRefA, abortRefA)
         setPlayingA(true)
       }
     } else {
       const audio = audioRefB.current
       if (!audio) return
       if (playingB) {
-        spinDown(audio, brakeAnimRefB, () => setPlayingB(false))
+        spinDown(audio, brakeAnimRefB, abortRefB, () => setPlayingB(false))
       } else {
-        spinUp(audio, brakeAnimRefB)
+        spinUp(audio, brakeAnimRefB, abortRefB)
         setPlayingB(true)
       }
     }
