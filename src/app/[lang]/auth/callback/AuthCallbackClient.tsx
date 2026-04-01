@@ -1,12 +1,6 @@
-// ============================================
-// OPTIMAL BREAKS — PKCE en el cliente
-// exchangeCodeForSession en el navegador usa el mismo almacén de cookies
-// que resetPasswordForEmail / signUp; el Route Handler a veces fallaba en prod.
-// ============================================
-
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { isSafeAppPath, normalizeRelativeNext } from '@/lib/auth-callback'
@@ -16,36 +10,45 @@ function AuthCallbackInner({ lang }: { lang: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [note, setNote] = useState('')
+  const handled = useRef(false)
 
   const validLang = i18n.locales.includes(lang as Locale) ? lang : i18n.defaultLocale
 
   useEffect(() => {
-    const run = async () => {
-      const code = searchParams.get('code')
-      const normalized = normalizeRelativeNext(searchParams.get('next'))
-      const next =
-        normalized && isSafeAppPath(normalized) ? normalized : `/${validLang}/login`
+    if (handled.current) return
+    handled.current = true
 
-      if (!code) {
-        router.replace(`/${validLang}/login?auth_error=true`)
+    const normalized = normalizeRelativeNext(searchParams.get('next'))
+    const nextParam =
+      normalized && isSafeAppPath(normalized) ? normalized : `/${validLang}/login`
+
+    setNote(validLang === 'es' ? 'Confirmando sesión…' : 'Confirming session…')
+
+    const supabase = createBrowserSupabase()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        subscription.unsubscribe()
+        router.replace(`/${validLang}/reset-password`)
         return
       }
 
-      setNote(validLang === 'es' ? 'Confirmando sesión…' : 'Confirming session…')
-
-      const supabase = createBrowserSupabase()
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-      if (error) {
-        console.error('[OB auth/callback]', error.message)
-        router.replace(`/${validLang}/login?auth_error=true`)
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        subscription.unsubscribe()
+        router.replace(nextParam)
         return
       }
+    })
 
-      router.replace(next)
+    const timeout = setTimeout(() => {
+      subscription.unsubscribe()
+      router.replace(`/${validLang}/login?auth_error=timeout`)
+    }, 10000)
+
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
     }
-
-    void run()
   }, [router, searchParams, validLang])
 
   return (

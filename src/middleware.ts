@@ -30,6 +30,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/music') ||
     pathname.startsWith('/images/') ||
+    pathname.includes('/auth/callback') ||
     pathname.includes('.')
   ) {
     return NextResponse.next()
