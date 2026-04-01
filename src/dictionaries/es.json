@@ -8,7 +8,8 @@
     "scenes": "Escenas",
     "blog": "Blog",
     "mixes": "Mixes",
-    "about": "Sobre"
+    "about": "Sobre",
+    "charts": "Charts"
   },
   "home": {
     "hero_subtitle": "La Biblia del Breakbeat",
@@ -281,6 +282,25 @@
     "featured_heading": "Destacados",
     "more_articles": "Más artículos"
   },
+  "charts": {
+    "title": "40 Breaks Vitales",
+    "subtitle": "El chart semanal del breakbeat: los 40 temas que revientan pistas ahora mismo, curados desde Beatport y otras fuentes.",
+    "week_label": "Semana del",
+    "new_entry": "NUEVO",
+    "re_entry": "RE-ENTRY",
+    "position_up": "Sube",
+    "position_down": "Baja",
+    "position_same": "Se mantiene",
+    "weeks_in_chart": "{n} sem.",
+    "previous_editions": "Ediciones anteriores",
+    "no_chart_yet": "Todavía no hay ningún chart publicado. Vuelve pronto.",
+    "source_label": "Fuentes",
+    "preview_play": "Escuchar preview",
+    "preview_stop": "Parar preview",
+    "open_beatport": "Ver en Beatport",
+    "bpm_label": "BPM",
+    "key_label": "KEY"
+  },
   "mixes": {
     "title": "Mixes y Sets",
     "subtitle": "Sets esenciales, radio, podcasts y continuidad digital de la escena",
@@ -336,6 +356,10 @@
     "blog": {
       "title": "Blog — artículos, opiniones y retrospectivas",
       "description": "Textos sobre breakbeat, rankings, entrevistas y memoria de escena. Contenido editorial Optimal Breaks."
+    },
+    "charts": {
+      "title": "40 Breaks Vitales — chart semanal de breakbeat",
+      "description": "Los 40 temas de breakbeat que revientan pistas esta semana, curados desde Beatport, Traxsource y más. Chart semanal de Optimal Breaks."
     },
     "mixes": {
       "title": "Mixes, sets y radio shows esenciales",

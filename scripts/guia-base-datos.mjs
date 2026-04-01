@@ -225,6 +225,22 @@ const ACTIONS = [
       'Rellena mixes.published_at desde fecha de publicación de YouTube (API v3 con YOUTUBE_DATA_API_KEY, o yt-dlp, o scraping HTML). --force sobrescribe fechas ya guardadas.',
   },
   {
+    id: 'chart-propose',
+    run: 'node scripts/guia-base-datos.mjs run chart-propose [--sources beatport,juno]',
+    npm: 'npm run db:chart -- --dry-run [--sources beatport,juno]',
+    creds: 'OPENAI_API_KEY (curación IA); Supabase opcional para historial previo',
+    description:
+      '40 Breaks Vitales: scrapea Beatport + fuentes opcionales, IA elige 40, muestra propuesta en terminal (dry-run). No sube a BD.',
+  },
+  {
+    id: 'chart-confirm',
+    run: 'node scripts/guia-base-datos.mjs run chart-confirm [--week 2026-03-30] [--sources beatport,juno]',
+    npm: 'npm run db:chart -- --confirm [--week 2026-03-30]',
+    creds: 'OPENAI_API_KEY + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      '40 Breaks Vitales: scrapea, cura con IA y sube a Supabase (chart_editions + chart_tracks). Publica automáticamente.',
+  },
+  {
     id: 'verify',
     run: 'node scripts/guia-base-datos.mjs run verify',
     npm: 'npm run db:verify',
@@ -299,6 +315,8 @@ Punto de entrada unificado:
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
   mixes-published [--force]  backfill-mix-youtube-published-at.mjs (fecha publicación YouTube → orden /mixes)
+  chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
+  chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -366,6 +384,12 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • elegir-poster-evento.mjs — Carteles de eventos: SerpAPI Google Imágenes +
   OpenAI eligen flyer/póster; descarga y sube a media/events/<slug>/poster.* y
   actualiza events.image_url. Slug único, --missing-only o --all; --vision opcional.
+
+• chart-40-breaks.mjs — «40 Breaks Vitales». Scrapea Beatport Top 100
+  Breaks/Breakbeat/UK Bass (+ Juno opcional), IA selecciona los 40 mejores,
+  muestra propuesta en terminal (--dry-run) o sube a Supabase (--confirm).
+  Compara con la edición anterior para calcular movimiento y semanas en chart.
+  Uso rápido: run chart-propose | run chart-confirm [--week 2026-03-30].
 
 • sync-timeline-artists.mjs — «Artistas que salen en la cronología web». Sin
   flags: INSERT en artists de los que faltan. Con --sql: solo genera/actualiza
@@ -581,6 +605,12 @@ function main() {
     }
     case 'mixes-published':
       runNode('backfill-mix-youtube-published-at.mjs', rest)
+      break
+    case 'chart-propose':
+      runNode('chart-40-breaks.mjs', ['--dry-run', ...rest])
+      break
+    case 'chart-confirm':
+      runNode('chart-40-breaks.mjs', ['--confirm', ...rest])
       break
     case 'verify':
       runNode('seed-supabase.mjs', ['--verify'])

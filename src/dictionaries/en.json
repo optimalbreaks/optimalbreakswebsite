@@ -8,7 +8,8 @@
     "scenes": "Scenes",
     "blog": "Blog",
     "mixes": "Mixes",
-    "about": "About"
+    "about": "About",
+    "charts": "Charts"
   },
   "home": {
     "hero_subtitle": "The Breakbeat Bible",
@@ -356,6 +357,25 @@
     "featured_heading": "Featured",
     "more_articles": "More articles"
   },
+  "charts": {
+    "title": "40 Breaks Vitales",
+    "subtitle": "The weekly breakbeat chart: 40 tracks smashing dancefloors right now, curated from Beatport and beyond.",
+    "week_label": "Week of",
+    "new_entry": "NEW",
+    "re_entry": "RE-ENTRY",
+    "position_up": "Up",
+    "position_down": "Down",
+    "position_same": "Holds",
+    "weeks_in_chart": "{n} wk.",
+    "previous_editions": "Previous editions",
+    "no_chart_yet": "No chart published yet. Check back soon.",
+    "source_label": "Sources",
+    "preview_play": "Play preview",
+    "preview_stop": "Stop preview",
+    "open_beatport": "View on Beatport",
+    "bpm_label": "BPM",
+    "key_label": "KEY"
+  },
   "mixes": {
     "title": "Mixes & Sets",
     "subtitle": "Essential sets, radio, podcasts and the scene’s digital continuity",
@@ -411,6 +431,10 @@
     "blog": {
       "title": "Blog — articles, opinion and retrospectives",
       "description": "Editorial pieces on breakbeat, rankings, interviews and scene memory from Optimal Breaks."
+    },
+    "charts": {
+      "title": "40 Breaks Vitales — weekly breakbeat chart",
+      "description": "The 40 breakbeat tracks smashing dancefloors this week, curated from Beatport, Traxsource and more. Optimal Breaks weekly chart."
     },
     "mixes": {
       "title": "Essential mixes, sets and radio shows",

@@ -160,6 +160,7 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'scenes', href: `/${lang}/scenes` },
     { key: 'blog', href: `/${lang}/blog` },
     { key: 'mixes', href: `/${lang}/mixes` },
+    { key: 'charts', href: `/${lang}/charts` },
     { key: 'about', href: `/${lang}/about` },
   ]
 

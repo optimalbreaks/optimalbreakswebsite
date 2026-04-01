@@ -54,6 +54,7 @@ export type SeoStaticKey =
   | 'scenes'
   | 'blog'
   | 'mixes'
+  | 'charts'
   | 'about'
   | 'privacy'
   | 'terms'

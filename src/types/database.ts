@@ -119,6 +119,18 @@ export interface Database {
         Update: Partial<Omit<BreakbeatProfileRow, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
         Relationships: DbRelationship[]
       }
+      chart_editions: {
+        Row: ChartEdition
+        Insert: Omit<ChartEdition, 'id' | 'created_at'>
+        Update: Partial<Omit<ChartEdition, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      chart_tracks: {
+        Row: ChartTrack
+        Insert: Omit<ChartTrack, 'id'>
+        Update: Partial<Omit<ChartTrack, 'id'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -431,4 +443,38 @@ export interface HistoryEntry extends Record<string, unknown> {
   year_end: number | null
   image_url: string | null
   sort_order: number
+}
+
+export interface ChartEdition extends Record<string, unknown> {
+  id: string
+  created_at: string
+  week_date: string
+  title: string
+  description_en: string
+  description_es: string
+  is_published: boolean
+  published_at: string | null
+  sources: string[]
+}
+
+export interface ChartTrackArtist {
+  name: string
+  beatport_url?: string
+}
+
+export interface ChartTrack extends Record<string, unknown> {
+  id: string
+  chart_edition_id: string
+  position: number
+  title: string
+  mix_name: string
+  artists: ChartTrackArtist[]
+  label: string
+  bpm: number | null
+  key: string
+  beatport_url: string | null
+  artwork_url: string | null
+  sample_url: string | null
+  previous_position: number | null
+  weeks_in_chart: number
 }
