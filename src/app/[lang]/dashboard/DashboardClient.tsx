@@ -246,7 +246,6 @@ function RadarChart({ styles }: { styles: BreakbeatProfileStats['top_styles'] })
 function HorizontalBars({ data, color, maxItems = 5 }: { data: { name: string; pct: number }[]; color: string; maxItems?: number }) {
   const items = data.slice(0, maxItems)
   if (items.length === 0) return null
-  const maxPct = Math.max(...items.map(d => d.pct), 0.01)
 
   return (
     <div className="space-y-2">
@@ -263,7 +262,7 @@ function HorizontalBars({ data, color, maxItems = 5 }: { data: { name: string; p
           <div className="h-[10px] border-[2px] border-[var(--ink)] relative overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 transition-all duration-700"
-              style={{ width: `${(d.pct / maxPct) * 100}%`, background: color }}
+              style={{ width: `${d.pct * 100}%`, background: color }}
             />
           </div>
         </div>
@@ -313,7 +312,6 @@ function YearHistogramBars({ stats, es }: { stats: BreakbeatProfileStats; es: bo
       </p>
     )
   }
-  const maxPct = Math.max(...items.map((d) => d.pct), 0.01)
 
   return (
     <div>
@@ -349,7 +347,7 @@ function YearHistogramBars({ stats, es }: { stats: BreakbeatProfileStats; es: bo
               <div className="h-[10px] border-[2px] border-[var(--ink)] relative overflow-hidden">
                 <div
                   className="absolute inset-y-0 left-0 transition-all duration-700"
-                  style={{ width: `${(d.pct / maxPct) * 100}%`, background: color }}
+                  style={{ width: `${d.pct * 100}%`, background: color }}
                 />
               </div>
             </div>

@@ -291,6 +291,16 @@ export interface BreakbeatProfileStats {
   sample_labels?: string[]
   sample_events?: string[]
   sample_mixes?: string[]
+  sample_tracks?: string[]
+  sample_artist_releases?: string[]
+  sample_label_releases?: string[]
+  sample_label_artists?: string[]
+  sample_recommended_mixes?: string[]
+  sample_event_lineup?: string[]
+  sample_event_contexts?: string[]
+  sample_mix_contexts?: string[]
+  dominant_eras?: { name: string; pct: number }[]
+  dominant_years?: { year: string; pct: number }[]
   scene_hints?: string[]
 }
 
