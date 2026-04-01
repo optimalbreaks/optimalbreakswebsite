@@ -5,7 +5,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartTrack, ChartTrackArtist } from '@/types/database'
 
@@ -135,12 +135,10 @@ function defaultPreviewLayout(
 
 function PreviewPlayer({
   sampleUrl,
-  waveformUrl,
   dict,
   children = defaultPreviewLayout,
 }: {
   sampleUrl: string | null
-  waveformUrl: string | null
   dict: any
   children?: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
 }) {
@@ -156,15 +154,37 @@ function PreviewPlayer({
   }
 
   const proxiedAudio = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
-  // Usamos el optimizador de imágenes de Next.js para la onda (evita fallos del proxy de audio)
-  const nextWaveform = waveformUrl
-    ? `/_next/image?url=${encodeURIComponent(waveformUrl)}&w=1920&q=75`
-    : null
 
   const pauseThis = useCallback(() => {
     audioRef.current?.pause()
     setPlaying(false)
   }, [])
+
+  // Sincronía con el audio: onTimeUpdate es muy espaciado (~4/s); rAF lee currentTime cada frame.
+  const rafRef = useRef(0)
+  useLayoutEffect(() => {
+    if (!playing) return
+
+    let cancelled = false
+    const tick = () => {
+      if (cancelled) return
+      const a = audioRef.current
+      if (!a || a.paused || a !== currentPlayingAudio) return
+      if (a.duration && Number.isFinite(a.duration)) {
+        const t = a.currentTime
+        const d = a.duration
+        setProgress(t / d)
+        setCurrentTime(t)
+        setDuration(d)
+      }
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [playing])
 
   const toggle = () => {
     const audio = audioRef.current
@@ -219,6 +239,11 @@ function PreviewPlayer({
 
   const c = dict.charts
 
+  // Solo barra y tiempo de la pista que está sonando ahora (evita barra congelada al cambiar de preview)
+  const audioEl = audioRef.current
+  const isThisOnePlaying =
+    playing && audioEl != null && audioEl === currentPlayingAudio
+
   const controls = (
     <div className="flex items-center gap-2">
       <audio
@@ -240,7 +265,7 @@ function PreviewPlayer({
       >
         {playing ? '❚❚' : '▶ PLAY'}
       </button>
-      {(playing || progress > 0) && duration > 0 && (
+      {isThisOnePlaying && duration > 0 && (
         <span
           className="text-[9px] text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap"
           style={{ fontFamily: "'Courier Prime', monospace" }}
@@ -252,36 +277,20 @@ function PreviewPlayer({
   )
 
   const progressBar =
-    playing || progress > 0 ? (
+    isThisOnePlaying ? (
       <div
         ref={barRef}
         onClick={seek}
-        className="relative w-full h-8 sm:h-10 bg-[var(--ink)] cursor-pointer overflow-hidden touch-manipulation border-t-[3px] border-[var(--ink)]"
+        className="relative w-full h-2 bg-[var(--ink)]/20 cursor-pointer overflow-hidden touch-manipulation rounded-full"
         role="progressbar"
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        {nextWaveform ? (
-          <div
-            className="absolute inset-0"
-            style={{
-              mask: `url('${nextWaveform}') center/100% 100% no-repeat`,
-              WebkitMask: `url('${nextWaveform}') center/100% 100% no-repeat`,
-            }}
-          >
-            <div className="absolute inset-0 bg-[var(--yellow)] opacity-90" />
-            <div
-              className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-        ) : (
-          <div
-            className="absolute inset-y-0 left-0 bg-[var(--red)] transition-[width] duration-75"
-            style={{ width: `${progress * 100}%` }}
-          />
-        )}
+        <div
+          className="absolute inset-y-0 left-0 bg-[var(--red)] rounded-full"
+          style={{ width: `${progress * 100}%` }}
+        />
       </div>
     ) : null
 
@@ -390,7 +399,7 @@ function ChartTrackRow({
               {track.music_key}
             </span>
           )}
-          <PreviewPlayer sampleUrl={track.sample_url} waveformUrl={track.waveform_url} dict={dict} />
+          <PreviewPlayer sampleUrl={track.sample_url} dict={dict} />
           {track.beatport_url && (
             <a
               href={track.beatport_url}
