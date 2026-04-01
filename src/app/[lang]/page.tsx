@@ -9,7 +9,6 @@ import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
 import type { Artist, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import DjDeck from '@/components/DjDeck'
@@ -266,18 +265,39 @@ export default async function HomePage({
           {dict.common.since}
         </div>
 
-        {/* Título = logo (mismo asset que OG; h1 semántico para SEO y accesibilidad) */}
-        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0">
-          <h1 className="m-0 flex justify-center mx-auto max-w-full">
-            <Image
-              src="/images/logo_punk_brutalism.webp"
-              alt="Optimal Breaks"
-              width={720}
-              height={240}
-              className="w-[min(100%,720px)] max-h-[clamp(76px,22vw,168px)] h-auto object-contain object-center"
-              priority
-              sizes="(max-width: 768px) 100vw, 720px"
-            />
+        {/* Título tipográfico brutalista + neon; una sola línea en todos los anchos */}
+        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-1 min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <h1
+            className="m-0 mx-auto max-w-full whitespace-nowrap inline-block min-w-min"
+            style={{
+              fontFamily: "'Unbounded', sans-serif",
+              fontWeight: 900,
+              fontSize: 'clamp(17px, 5.5vw, 90px)',
+              textTransform: 'uppercase',
+              letterSpacing: 'clamp(-1.5px, -0.35vw, -2px)',
+              lineHeight: 1,
+            }}
+          >
+            <span
+              className="inline"
+              style={{
+                WebkitTextStroke: 'clamp(2px, 0.35vw, 3px) var(--ink)',
+                WebkitTextFillColor: 'transparent',
+                filter:
+                  'drop-shadow(0 0 10px rgba(8, 145, 178, 0.55)) drop-shadow(0 0 18px rgba(123, 47, 247, 0.35))',
+              }}
+            >
+              OPTIMAL
+            </span>{' '}
+            <span
+              className="hl inline"
+              style={{
+                textShadow:
+                  '0 0 12px rgba(233, 30, 140, 0.7), 0 0 22px rgba(123, 47, 247, 0.45), 0 0 2px var(--ink)',
+              }}
+            >
+              BREAKS
+            </span>
           </h1>
           <p
             className="mt-2 sm:mt-3"
@@ -324,7 +344,7 @@ export default async function HomePage({
           </div>
         </div>
 
-        {/* DJ Deck — ancla #dj-deck (el logo va en el h1 de arriba) */}
+        {/* DJ Deck — ancla #dj-deck */}
         <div id="dj-deck" className="scroll-mt-24">
           <DjDeck dict={h} />
         </div>
