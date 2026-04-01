@@ -226,16 +226,33 @@ function PreviewPlayer({
     }
   }
 
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekTo = useCallback((clientX: number) => {
     const audio = audioRef.current
     const bar = barRef.current
     if (!audio || !bar || !audio.duration) return
     const rect = bar.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     audio.currentTime = ratio * audio.duration
     setProgress(ratio)
     setCurrentTime(audio.currentTime)
-  }
+  }, [])
+
+  const draggingRef = useRef(false)
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    seekTo(e.clientX)
+  }, [seekTo])
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return
+    seekTo(e.clientX)
+  }, [seekTo])
+
+  const onPointerUp = useCallback(() => {
+    draggingRef.current = false
+  }, [])
 
   const c = dict.charts
 
@@ -282,8 +299,12 @@ function PreviewPlayer({
     isThisOnePlaying ? (
       <div
         ref={barRef}
-        onClick={seek}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
         className="group relative w-full h-6 cursor-pointer touch-manipulation select-none"
+        style={{ touchAction: 'none' }}
         role="progressbar"
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
