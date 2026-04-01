@@ -3,7 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
-import { isSafeAppPath, normalizeRelativeNext } from '@/lib/auth-callback'
+import {
+  isSafeAppPath,
+  normalizeRelativeNext,
+  parseOtpFromAuthCallbackParams,
+  appPathOnly,
+} from '@/lib/auth-callback'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 function AuthCallbackInner({ lang }: { lang: string }) {
@@ -18,13 +23,34 @@ function AuthCallbackInner({ lang }: { lang: string }) {
     if (handled.current) return
     handled.current = true
 
-    const normalized = normalizeRelativeNext(searchParams.get('next'))
+    const code = searchParams.get('code')
+    const otpFromUrl = parseOtpFromAuthCallbackParams((k) => searchParams.get(k))
+
+    // Recovery / email sin ?code=: Supabase mete token_hash dentro de ?next=…; el cliente PKCE nunca recibe code → timeout.
+    if (!code && otpFromUrl) {
+      const u = new URL(`/${validLang}/auth/confirm`, window.location.origin)
+      u.searchParams.set('token_hash', otpFromUrl.token_hash)
+      u.searchParams.set('type', otpFromUrl.type)
+      window.location.replace(u.toString())
+      return
+    }
+
+    const rawNext = normalizeRelativeNext(searchParams.get('next'))
+    const pathOnly = rawNext ? appPathOnly(rawNext) : null
     const nextParam =
-      normalized && isSafeAppPath(normalized) ? normalized : `/${validLang}/login`
+      pathOnly && isSafeAppPath(pathOnly) ? pathOnly : `/${validLang}/login`
 
     setNote(validLang === 'es' ? 'Confirmando sesión…' : 'Confirming session…')
 
     const supabase = createBrowserSupabase()
+
+    if (code) {
+      void supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          router.replace(`/${validLang}/login?auth_error=exchange`)
+        }
+      })
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' && session) {

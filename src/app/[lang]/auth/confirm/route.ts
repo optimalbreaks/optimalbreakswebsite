@@ -2,6 +2,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { i18n, type Locale } from '@/lib/i18n-config'
+import { safeRedirectPathAfterOtp } from '@/lib/auth-callback'
 
 export async function GET(
   request: NextRequest,
@@ -13,7 +14,7 @@ export async function GET(
   const { searchParams, origin } = request.nextUrl
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? `/${lang}/login`
+  const nextPath = safeRedirectPathAfterOtp(searchParams.get('next'), lang)
 
   if (token_hash && type) {
     const supabase = createServerSupabase()
@@ -23,7 +24,7 @@ export async function GET(
       if (type === 'recovery') {
         return NextResponse.redirect(`${origin}/${lang}/reset-password`)
       }
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${origin}${nextPath}`)
     }
   }
 
