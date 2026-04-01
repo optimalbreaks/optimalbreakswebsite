@@ -29,7 +29,8 @@
     "db:label:photo": "node scripts/elegir-foto-sello.mjs",
     "db:events:enrich": "node scripts/enriquecer-evento.mjs",
     "db:events:poster": "node scripts/elegir-poster-evento.mjs",
-    "db:mixes:published": "node scripts/backfill-mix-youtube-published-at.mjs"
+    "db:mixes:published": "node scripts/backfill-mix-youtube-published-at.mjs",
+    "images:to-webp": "node scripts/convert-public-image-to-webp.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.1",
@@ -48,6 +49,7 @@
     "eslint-config-next": "14.2.0",
     "pg": "^8.13.0",
     "postcss": "^8",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.0",
     "typescript": "^5"
   }

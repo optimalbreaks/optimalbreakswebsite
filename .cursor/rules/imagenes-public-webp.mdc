@@ -1,0 +1,29 @@
+---
+description: public/images: si el fichero ya es WebP, referenciar tal cual; si llega JPG/PNG, convertir a WebP y usar solo esa ruta.
+alwaysApply: true
+---
+
+# Imágenes en `public/images/`
+
+## Caso 1 — Ya está guardada como WebP
+
+Si el archivo **ya existe** en el repo como `.webp` (la IA lo guardó así, un script, o quien sea):
+
+- **`image_url` y cualquier referencia** deben coincidir **exactamente** con cómo está en disco: misma ruta bajo `public/` → misma URL bajo `/images/...` y misma extensión **`.webp`**.
+- **No** reconvertir ni renombrar “por principio” si no hace falta.
+
+## Caso 2 — El usuario sube a `public/` un JPG, JPEG, PNG (u otro raster no WebP)
+
+Para retratos de artistas, carteles de eventos y análogos en `artists/`, `events/`, `labels/`, `scenes/`:
+
+1. **Convertir a WebP** (`npm run images:to-webp -- public/images/.../archivo.jpg` o el script equivalente).
+2. **Eliminar el original** (el script lo hace).
+3. Poner en JSON/parches/BD la ruta del **`.webp` generado** y hacer UPSERT como toque.
+
+**No** dejar en `image_url` un `.jpg`/`.jpeg`/`.png` cuando el archivo servido en producción debe ser WebP tras este flujo.
+
+## Otras excepciones
+
+Favicons, open graph u otros que un estándar pida en PNG/JPEG: fuera de esta convención; no mezclar con carteles/retratos en las carpetas de contenido anterior.
+
+**Detalle operativo:** `public/images/README.md`.

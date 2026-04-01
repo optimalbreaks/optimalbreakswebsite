@@ -166,7 +166,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-raveart-retro-halloween-2025-poster',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'image_url = /images/events/retro-halloween-2025.jpg en slug raveart-retro-halloween-2025.',
+      'image_url = /images/events/retro-halloween-2025.webp en slug raveart-retro-halloween-2025.',
   },
   {
     id: 'events-patch-kultura-breakz-ii-aniversario-2026',
@@ -182,7 +182,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-pure-bassline-7-aniversario-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT pure-bassline-7-aniversario-2026: 2 abr 2026 (Jueves Santo) Sala Pandora Sevilla, cartel public/images/events/Pure_bassline_2026.jpg, entradas Fourvenues.',
+      'UPSERT pure-bassline-7-aniversario-2026: 2 abr 2026 (Jueves Santo) Sala Pandora Sevilla, cartel public/images/events/Pure_bassline_2026.webp, entradas Fourvenues.',
   },
   {
     id: 'events-delete-slug',

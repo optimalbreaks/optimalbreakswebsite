@@ -21,3 +21,5 @@ Objetivo: cuando pida un cambio en datos persistidos, **el usuario no deba hacer
 **Eventos:** el usuario los crea desde `/administrator/events/new` o lo pide al agente Cursor (datos mínimos: nombre, slug, país). Para completar la ficha (fecha, lineup, descripción, venue, tags, etc.): `run events-enrich <slug> [--with-poster] [--dry-run] [--force]`. No existe agente de descubrimiento automático; los eventos se crean manualmente.
 
 **Carteles de eventos (`elegir-poster-evento` / `run events-poster`):** SerpAPI Google Imágenes + OpenAI; sube a `media/events/<slug>/poster.*` y actualiza `events.image_url`. Entrada: `npm run db:events:poster -- <slug>` o `--missing-only --limit N`.
+
+**Imágenes en `public/images/` (artistas, eventos, etc.):** ver **imagenes-public-webp** y `public/images/README.md`: si **ya** hay `.webp` en repo, `image_url` = esa ruta tal cual; si el usuario sube JPG/PNG, **convertir** a WebP, borrar el original y referenciar el `.webp` (`npm run images:to-webp -- <ruta>`).

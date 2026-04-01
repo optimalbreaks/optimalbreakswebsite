@@ -460,7 +460,7 @@ async function runPatchRaveartWinter2026(sb) {
 }
 
 const RAVEART_RETRO_HALLOWEEN_2025_SLUG = 'raveart-retro-halloween-2025'
-const RAVEART_RETRO_HALLOWEEN_2025_IMAGE = '/images/events/retro-halloween-2025.jpg'
+const RAVEART_RETRO_HALLOWEEN_2025_IMAGE = '/images/events/retro-halloween-2025.webp'
 
 async function runPatchRaveartRetroHalloween2025Poster(sb) {
   const { data: before, error: e0 } = await sb
@@ -528,7 +528,7 @@ const EVENT_ROW_DEFAULTS = {
 
 const RAVEART_SUMMER_2026_ROW = {
   name: 'Raveart Summer Festival 2026',
-  image_url: '/images/events/summer-festival-2026.jpg',
+  image_url: '/images/events/summer-festival-2026.webp',
   description_en:
     'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Doors 16:00–07:00. First wave (international): BREAKFASTAZ (world premiere), 4AM KRU live. National: Baymont Bross, Hankook, Nosk, Paket, Pray for Bass, The Mind Hackers. Second wave: Backdraft, Kid Panel (Hungary); Frannabik, Karpin, Norbak, Prody, Seveng, Staxia. General admission includes entry plus minimum spend valid until 20:00; VIP adds VIP zone, drink, glass, re-entry pass within set hours and queue-free access. Tickets and updates on raveart.es.',
   description_es:
@@ -874,7 +874,7 @@ async function runPatchKulturaBreakzIiAniversario2026(sb) {
 const PURE_BASSLINE_7_SLUG = 'pure-bassline-7-aniversario-2026'
 const PURE_BASSLINE_TICKETS =
   'https://site.fourvenues.com/es/dj-rokeh/events/pure-bassline-7-aniversario-02-04-2026-0BJP'
-const PURE_BASSLINE_IMAGE = '/images/events/Pure_bassline_2026.jpg'
+const PURE_BASSLINE_IMAGE = '/images/events/Pure_bassline_2026.webp'
 
 const PURE_BASSLINE_STAGES = [
   {

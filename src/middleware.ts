@@ -23,12 +23,13 @@ function getLocale(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip static files
+  // Skip static files (incl. todo bajo /images/ aunque falte extensión, para no prefijar locale)
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/music') ||
+    pathname.startsWith('/images/') ||
     pathname.includes('.')
   ) {
     return NextResponse.next()
@@ -104,5 +105,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|favicon|music|.*\\..*).*)'],
+  matcher: ['/((?!_next|api|favicon|music|images|.*\\..*).*)'],
 }
