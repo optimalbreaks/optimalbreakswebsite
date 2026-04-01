@@ -364,7 +364,8 @@
   },
   "charts": {
     "title": "40 Breaks Vitales",
-    "subtitle": "The weekly breakbeat chart: 40 tracks smashing dancefloors right now, curated from Beatport and beyond.",
+    "subtitle": "Weekly breakbeat chart: 40 tracks from the current scene, drawn from Beatport’s live genre Top 100 at generation time and narrowed by editorial curation.",
+    "method_note": "“Week of…” is this edition’s label. Beatport is read in real time when you publish (there’s no stored “Top 100 as of March 15” API): run the script when you ship that week’s chart so the list matches the moment.",
     "week_label": "Week of",
     "new_entry": "NEW",
     "re_entry": "RE-ENTRY",
@@ -380,6 +381,7 @@
     "open_beatport": "View on Beatport",
     "bpm_label": "BPM",
     "key_label": "KEY",
+    "release_year_title": "Release year on Beatport (store release date, not necessarily studio production year)",
     "week_current_badge": "CURRENT",
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} tracks",
@@ -444,7 +446,7 @@
     },
     "charts": {
       "title": "40 Breaks Vitales — weekly breakbeat chart",
-      "description": "The 40 breakbeat tracks smashing dancefloors this week, curated from Beatport, Traxsource and more. Optimal Breaks weekly chart."
+      "description": "40 current tracks from Beatport’s live breakbeat Top 100, narrowed by editorial curation. Each edition is dated by week; the list reflects the moment you publish."
     },
     "mixes": {
       "title": "Essential mixes, sets and radio shows",

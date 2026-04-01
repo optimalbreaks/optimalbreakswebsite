@@ -285,7 +285,8 @@
   },
   "charts": {
     "title": "40 Breaks Vitales",
-    "subtitle": "El chart semanal del breakbeat: los 40 temas que revientan pistas ahora mismo, curados desde Beatport y otras fuentes.",
+    "subtitle": "Chart semanal de breakbeat: 40 temas de la escena actual, tomados del Top 100 en vivo de Beatport en el momento de generar la lista y pasados por curación editorial.",
+    "method_note": "La fecha «Semana del…» es la edición del chart. Beatport se consulta en tiempo real al publicar (no hay «top del 15 de marzo» archivado): para que la lista sea «de esta semana», conviene ejecutar el script al publicar esa edición.",
     "week_label": "Semana del",
     "new_entry": "NUEVO",
     "re_entry": "RE-ENTRY",
@@ -301,6 +302,7 @@
     "open_beatport": "Ver en Beatport",
     "bpm_label": "BPM",
     "key_label": "KEY",
+    "release_year_title": "Año de publicación en Beatport (fecha del lanzamiento, no necesariamente grabación en estudio)",
     "week_current_badge": "ACTUAL",
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} temas",
@@ -365,7 +367,7 @@
     },
     "charts": {
       "title": "40 Breaks Vitales — chart semanal de breakbeat",
-      "description": "Los 40 temas de breakbeat que revientan pistas esta semana, curados desde Beatport, Traxsource y más. Chart semanal de Optimal Breaks."
+      "description": "40 temas actuales a partir del Top 100 en vivo de Beatport (breakbeat) y curación editorial. Cada edición lleva su semana; la lista refleja el momento en que se publica."
     },
     "mixes": {
       "title": "Mixes, sets y radio shows esenciales",

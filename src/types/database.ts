@@ -40,6 +40,8 @@ export type ChartTrack = {
   label: string
   bpm: number | null
   music_key: string
+  /** Año de publicación en Beatport (lanzamiento), null si no hay dato. */
+  release_year: number | null
   beatport_url: string | null
   artwork_url: string | null
   sample_url: string | null

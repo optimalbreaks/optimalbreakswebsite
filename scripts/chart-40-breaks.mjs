@@ -1,6 +1,10 @@
 /**
  * OPTIMAL BREAKS — 40 Breaks Vitales: scraping + curación IA + UPSERT Supabase
  *
+ * Editorial: cada --week YYYY-MM-DD etiqueta la *edición* del chart (lunes de esa semana).
+ * Beatport: se pide el Top 100 *en vivo* en el momento de la ejecución; no hay API de “top histórico”.
+ * Para que los 40 temas reflejen “esta semana”, ejecuta --confirm cuando publiques esa edición.
+ *
  *   node scripts/chart-40-breaks.mjs --dry-run
  *   node scripts/chart-40-breaks.mjs --confirm
  *   node scripts/chart-40-breaks.mjs --confirm --week 2026-03-30
@@ -162,11 +166,7 @@ function parseBeatportNextData(html) {
       beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
     }))
 
-    const artworkUrl = t.release?.image?.dynamic_uri
-      ? t.release.image.dynamic_uri.replace('{w}', '250').replace('{h}', '250')
-      : t.image?.dynamic_uri
-        ? t.image.dynamic_uri.replace('{w}', '250').replace('{h}', '250')
-        : null
+    const artworkUrl = artworkUrlFromBeatportEntity(t)
 
     return {
       position: i + 1,
@@ -179,11 +179,71 @@ function parseBeatportNextData(html) {
       beatport_url: `https://www.beatport.com/track/${t.slug}/${t.id}`,
       artwork_url: artworkUrl,
       sample_url: t.sample_url || null,
+      release_year: beatportReleaseYear(t),
     }
   })
 
   console.log(`  ↳ Parsed ${tracks.length} tracks from Beatport __NEXT_DATA__`)
   return tracks
+}
+
+/** Año desde publish_date / new_release_date (YYYY-MM-DD) en payload Beatport. */
+function beatportReleaseYear(t) {
+  const raw = t.publish_date || t.new_release_date
+  if (raw == null || raw === '') return null
+  const s = String(raw).trim()
+  const m = s.match(/^(\d{4})/)
+  if (!m) return null
+  const y = parseInt(m[1], 10)
+  if (!Number.isFinite(y) || y < 1970 || y > 2100) return null
+  return y
+}
+
+/** URL cuadrada de carátula (release preferido sobre imagen de track). */
+function artworkUrlFromBeatportEntity(t) {
+  const rel = t.release?.image
+  const trk = t.image
+  const pick = (img) => {
+    if (!img) return null
+    if (img.dynamic_uri) {
+      return String(img.dynamic_uri).replace(/\{w\}/g, '250').replace(/\{h\}/g, '250')
+    }
+    if (img.uri) return String(img.uri)
+    return null
+  }
+  return pick(rel) || pick(trk)
+}
+
+/** ID numérico del track en URL Beatport. */
+function beatportTrackIdFromUrl(url) {
+  if (!url || typeof url !== 'string') return null
+  const m = url.trim().match(/\/track\/[^/]+\/(\d+)(?:[?#]|$)/)
+  return m ? m[1] : null
+}
+
+/** Carátula, preview y año de publicación solo desde scrape Beatport (la IA no interviene). */
+function mergeBeatportMetadata(curated, beatportTracks) {
+  const byId = new Map()
+  for (const src of beatportTracks) {
+    const id = beatportTrackIdFromUrl(src.beatport_url)
+    if (id) byId.set(id, src)
+  }
+  let filled = 0
+  const out = curated.map((t) => {
+    const { artwork_url: _a, sample_url: _s, release_year: _y, ...rest } = t
+    const id = beatportTrackIdFromUrl(rest.beatport_url)
+    const src = id ? byId.get(id) : null
+    if (!src) {
+      return { ...rest, artwork_url: null, sample_url: null, release_year: null }
+    }
+    const artwork_url = src.artwork_url ?? null
+    const sample_url = src.sample_url ?? null
+    const release_year = src.release_year ?? null
+    if (artwork_url) filled++
+    return { ...rest, artwork_url, sample_url, release_year }
+  })
+  console.log(`  ↳ Carátula + sample + año (Beatport por id): ${filled}/${out.length} con imagen`)
+  return out
 }
 
 function parseBeatportHtmlFallback(html) {
@@ -205,6 +265,7 @@ function parseBeatportHtmlFallback(html) {
       beatport_url: `https://www.beatport.com/track/${match[1]}/${match[2]}`,
       artwork_url: null,
       sample_url: null,
+      release_year: null,
     })
   }
   console.log(`  ↳ Fallback parsed ${tracks.length} tracks`)
@@ -266,25 +327,25 @@ Selection criteria:
 - Weight Beatport chart position as a strong signal but not the only one
 - If Juno data is available, tracks appearing on both charts should be boosted
 
-Output EXACTLY 40 tracks as a JSON object with key "tracks", an array of objects:
+Output EXACTLY 40 tracks as a JSON object with key "tracks", an array of objects (no artwork or audio preview — those are added later from Beatport only):
 {
   "tracks": [
     {
       "position": 1,
       "title": "Track Title",
       "mix_name": "Extended Mix",
-      "artists": [{"name": "Artist Name", "beatport_url": "https://..."}],
+      "artists": [{"name": "Artist Name", "beatport_url": "https://www.beatport.com/artist/..."}],
       "label": "Label Name",
       "bpm": 135,
       "key": "Gb Major",
-      "beatport_url": "https://www.beatport.com/track/...",
-      "artwork_url": null,
-      "sample_url": null
+      "beatport_url": "https://www.beatport.com/track/slug/12345678"
     }
   ]
 }
 
-If you cannot fill 40 quality tracks, fill all you can and pad to 40 with the best remaining from the source data. Keep all available metadata (BPM, key, URLs) intact from the source.`
+Use the exact beatport_url from the Beatport list for each chosen track (same track id). Do not invent artwork_url, sample_url, or image URLs.
+
+If you cannot fill 40 quality tracks, fill all you can and pad to 40 with the best remaining from the source data. Keep BPM, key, mix_name, and URLs consistent with the source lines.`
 
 async function curateWithAI(beatportTracks, junoTracks = []) {
   console.log(`\n  🤖 Sending ${beatportTracks.length} tracks to OpenAI for curation...`)
@@ -470,6 +531,7 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
     beatport_url: t.beatport_url || null,
     artwork_url: t.artwork_url || null,
     sample_url: t.sample_url || null,
+    release_year: t.release_year ?? null,
     previous_position: t.previous_position ?? null,
     weeks_in_chart: t.weeks_in_chart || 1,
   }))
@@ -537,6 +599,7 @@ Fuentes disponibles: beatport, juno
   // 2. AI curation
   let curated = await curateWithAI(beatportTracks, junoTracks)
   curated = curated.slice(0, 40).map((t, i) => ({ ...t, position: i + 1 }))
+  curated = mergeBeatportMetadata(curated, beatportTracks)
 
   // 3. Historical comparison
   if (confirm) {

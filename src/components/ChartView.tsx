@@ -163,19 +163,17 @@ function ChartTrackRow({
       <div className="flex items-start gap-3 min-w-0 flex-1">
         <PositionBadge position={track.position} />
 
-        <div
-          className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)]"
-          aria-hidden={!track.artwork_url}
-        >
-          {track.artwork_url ? (
+        {track.artwork_url ? (
+          <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)]">
             <img
               src={track.artwork_url}
               alt=""
               className="w-full h-full object-cover"
               loading="lazy"
+              referrerPolicy="no-referrer"
             />
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -214,6 +212,17 @@ function ChartTrackRow({
               <>
                 <span className="mx-1.5 text-[var(--ink)]/30">|</span>
                 <span className="text-[var(--ink)]/50">{track.label}</span>
+              </>
+            )}
+            {track.release_year != null && track.release_year > 0 && (
+              <>
+                <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+                <span
+                  className="text-[var(--ink)]/45 font-bold tabular-nums"
+                  title={c.release_year_title}
+                >
+                  {track.release_year}
+                </span>
               </>
             )}
           </p>
@@ -321,6 +330,14 @@ export default function ChartView({
         >
           {c.subtitle}
         </p>
+        {c.method_note && (
+          <p
+            className="mt-2 max-w-2xl text-xs sm:text-sm text-[var(--ink)]/45 leading-relaxed"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {c.method_note}
+          </p>
+        )}
       </header>
 
       <div className="flex flex-col gap-2 px-2 sm:px-0">
