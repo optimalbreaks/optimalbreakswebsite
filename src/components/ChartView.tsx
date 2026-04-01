@@ -121,6 +121,8 @@ function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: an
 
   if (!sampleUrl) return null
 
+  const proxiedUrl = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
+
   const toggle = () => {
     const audio = audioRef.current
     if (!audio) return
@@ -176,10 +178,9 @@ function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: an
     <>
       <audio
         ref={audioRef}
-        src={sampleUrl}
+        src={proxiedUrl}
         preload="none"
         onEnded={handleEnded}
-        crossOrigin="anonymous"
       />
       <button
         type="button"
