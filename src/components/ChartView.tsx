@@ -276,20 +276,30 @@ function PreviewPlayer({
     </div>
   )
 
+  const pct = `${progress * 100}%`
+
   const progressBar =
     isThisOnePlaying ? (
       <div
         ref={barRef}
         onClick={seek}
-        className="relative w-full h-2 bg-[var(--ink)]/20 cursor-pointer overflow-hidden touch-manipulation rounded-full"
+        className="group relative w-full h-6 cursor-pointer touch-manipulation select-none"
         role="progressbar"
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
+        {/* Rail: surco central tipo crossfader */}
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-[var(--ink)]/15 shadow-[inset_0_1px_2px_rgba(0,0,0,.25)]" />
+        {/* Relleno recorrido */}
         <div
-          className="absolute inset-y-0 left-0 bg-[var(--red)] rounded-full"
-          style={{ width: `${progress * 100}%` }}
+          className="absolute top-1/2 -translate-y-1/2 left-0 h-[6px] rounded-full bg-[var(--red)]/70"
+          style={{ width: pct }}
+        />
+        {/* Thumb: controlador rojo */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[var(--red)] border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,.15),0_2px_4px_rgba(0,0,0,.3)] group-hover:scale-110 transition-transform"
+          style={{ left: pct }}
         />
       </div>
     ) : null
