@@ -444,14 +444,14 @@ export function DeckAudioProvider({
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [playingA, playingB, scratchingLeft, scratchingRight])
 
-  // === Crossfader sharp cut: A at <50, B at >=50, tiny xfade at boundary ===
+  // === Crossfader sharp cut: A at <=50, B at >=50 (at exactly 50 both are audible) ===
   useEffect(() => {
     const ctx = audioCtxRef.current
     const t = ctx?.currentTime ?? 0
     const fade = 0.03 // 30ms micro-fade to avoid click
     if (gainRefA.current) {
       gainRefA.current.gain.cancelScheduledValues(t)
-      gainRefA.current.gain.setTargetAtTime(crossfader < 50 ? 1 : 0, t, fade)
+      gainRefA.current.gain.setTargetAtTime(crossfader <= 50 ? 1 : 0, t, fade)
     }
     if (gainRefB.current) {
       gainRefB.current.gain.cancelScheduledValues(t)
@@ -484,6 +484,8 @@ export function DeckAudioProvider({
         setPlayingA(true)
         audio.playbackRate = 1
         void audio.play().catch(() => {})
+        if (playingB) setCrossfader(50)
+        else setCrossfader(0)
       }
     } else {
       const audio = audioRefB.current
@@ -495,6 +497,8 @@ export function DeckAudioProvider({
         setPlayingB(true)
         audio.playbackRate = 1
         void audio.play().catch(() => {})
+        if (playingA) setCrossfader(50)
+        else setCrossfader(100)
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -507,7 +511,7 @@ export function DeckAudioProvider({
 
   // isPlaying = whichever side is audible
   useEffect(() => {
-    setIsPlaying(crossfader < 50 ? playingA : playingB)
+    setIsPlaying((crossfader <= 50 && playingA) || (crossfader >= 50 && playingB))
   }, [crossfader, playingA, playingB])
 
   // === Scratch handlers (adapted for dual deck) ===
