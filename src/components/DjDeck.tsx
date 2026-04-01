@@ -358,25 +358,25 @@ function MixerPanel({
   )
 }
 
-function PlayButton({ label, playing, onClick, color, compact }: { label: string; playing: boolean; onClick: () => void; color: string; compact: boolean }) {
-  const size = compact ? 'w-12 h-12' : 'w-14 h-14'
+function PlayButton({ label, playing, onClick, compact }: { label: string; playing: boolean; onClick: () => void; color: string; compact: boolean }) {
+  const size = compact ? 'w-14 h-14' : 'w-[60px] h-[60px]'
   return (
     <button
       type="button"
       onClick={onClick}
       className={`relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_6px_12px_rgba(0,0,0,0.6)] active:shadow-[0_2px_4px_rgba(0,0,0,0.8)] active:translate-y-[2px] ${size} outline-none [-webkit-tap-highlight-color:transparent]`}
       style={{
-        background: playing ? `linear-gradient(135deg, ${color} 0%, #222 100%)` : 'linear-gradient(135deg, #333 0%, #111 100%)',
-        border: `3px solid ${playing ? color : '#080808'}`,
-        boxShadow: playing ? `inset 0 2px 4px rgba(255,255,255,0.2), 0 0 12px ${color}40` : 'inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 8px rgba(0,0,0,0.5)',
+        background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
+        border: '4px solid #080808',
+        boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)',
       }}
     >
-      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: compact ? '7px' : '8px', letterSpacing: '1px', color: playing ? '#fff' : '#555', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-        <span className="flex items-center justify-center">
+      <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: compact ? '8px' : '10px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
+        <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: playing ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
           {playing ? (
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '14px' : '16px', height: compact ? '14px' : '16px' }}><rect x="6" y="6" width="12" height="12" /></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '16px' : '20px', height: compact ? '16px' : '20px' }}><rect x="6" y="6" width="12" height="12" /></svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '14px' : '16px', height: compact ? '14px' : '16px', marginLeft: '2px' }}><polygon points="6,4 20,12 6,20" /></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: compact ? '16px' : '20px', height: compact ? '16px' : '20px', marginLeft: '2px' }}><polygon points="6,4 20,12 6,20" /></svg>
           )}
         </span>
         {label}
