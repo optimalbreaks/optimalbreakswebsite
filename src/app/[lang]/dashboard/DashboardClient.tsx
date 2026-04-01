@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useProfile, useFavoriteArtists, useFavoriteLabels, useFavoriteEvents, useSavedMixes, useEventAttendance, useArtistSightings, useEventRatings, useBreakbeatProfile } from '@/hooks/useUserData'
 import type { BreakbeatProfileStats } from '@/types/database'
+import { decadeBucketToMidYearLabel, normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
 import { createBrowserSupabase } from '@/lib/supabase'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -318,6 +319,8 @@ function EraTreemap({ eras }: { eras: Record<string, number> }) {
   return (
     <div className="relative w-full h-[140px] border-[3px] border-[var(--ink)] overflow-hidden shadow-[4px_4px_0px_var(--ink)]">
       {boxes.map(({ era, pct, box }) => {
+        const colorKey = normalizeArtistEraToDecade(era) || era
+        const yearLabel = decadeBucketToMidYearLabel(era)
         return (
           <div
             key={era}
@@ -327,17 +330,17 @@ function EraTreemap({ eras }: { eras: Record<string, number> }) {
               top: `${box.y}%`,
               width: `${box.w}%`,
               height: `${box.h}%`,
-              background: colors[era] || 'var(--yellow)',
+              background: colors[colorKey] || 'var(--yellow)',
             }}
-            title={`${era}: ${Math.round(pct * 100)}%`}
+            title={`${yearLabel}: ${Math.round(pct * 100)}%`}
           >
-            {box.w > 15 && box.h > 20 && (
+            {box.w > 12 && box.h > 20 && (
               <div className="flex flex-col items-center px-1 overflow-hidden w-full">
                 <span
                   className="truncate w-full text-center"
                   style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(10px, 2vw, 16px)', color: 'var(--ink)' }}
                 >
-                  {era}
+                  {yearLabel}
                 </span>
                 {box.h > 35 && (
                   <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', color: 'var(--ink)', marginTop: '2px' }}>

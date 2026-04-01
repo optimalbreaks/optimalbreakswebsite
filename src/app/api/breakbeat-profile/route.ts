@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
 import type { BreakbeatProfileStats } from '@/types/database'
+import { normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
 
 // =============================================
 // POST /api/breakbeat-profile
@@ -165,7 +166,10 @@ function computeStats(
   for (const a of artists) {
     for (const s of a.styles || []) styleCounts[s] = (styleCounts[s] || 0) + 1
     if (a.country) countryCounts[a.country] = (countryCounts[a.country] || 0) + 1
-    if (a.era) eraCounts[a.era] = (eraCounts[a.era] || 0) + 1
+    if (a.era) {
+      const eraBucket = normalizeArtistEraToDecade(a.era) || a.era.trim()
+      eraCounts[eraBucket] = (eraCounts[eraBucket] || 0) + 1
+    }
     if (a.category) catCounts[a.category] = (catCounts[a.category] || 0) + 1
   }
 

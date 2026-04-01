@@ -48,7 +48,10 @@ function redirectSiSlugEsNombreDeImagenEstatica(rawSlug: string) {
   redirect(`/images/artists/${s.toLowerCase()}`)
 }
 
-/** Slug duplicado eliminado en BD; la ficha canónica es `blazer-beats`. */
+/**
+ * Nombre artístico: Blazer. La URL canónica conserva el slug histórico `blazer-beats`.
+ * La fila duplicada `blazer` en BD se eliminó; quien use /artists/blazer llega aquí.
+ */
 function redirectSiSlugArtistaUnificado(lang: Locale, rawSlug: string) {
   const slug = sanitizeSlug(rawSlug)
   if (slug === 'blazer') redirect(`/${lang}/artists/blazer-beats`)
