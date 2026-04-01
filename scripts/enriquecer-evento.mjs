@@ -828,6 +828,7 @@ const KULTURA_BREAKZ_II_ROW = {
     '2026',
     'dj kultur',
   ],
+  image_url: '/images/events/2-aniversario-kultura-breakz--pandora.webp',
   socials: {
     'TikTok @kultur.exe': 'https://www.tiktok.com/@kultur.exe',
     'Instagram @kultur.exe': 'https://www.instagram.com/kultur.exe/',
