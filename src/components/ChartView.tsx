@@ -122,50 +122,77 @@ function PreviewButton({ sampleUrl, dict }: { sampleUrl: string | null; dict: an
   if (!sampleUrl) return null
 
   const toggle = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio(sampleUrl)
-      audioRef.current.addEventListener('ended', () => {
-        setPlaying(false)
-        if (currentPlayingAudio === audioRef.current) {
-          currentPlayingAudio = null
-          currentPlayingSetter = null
-        }
-      })
-    }
-    
+    const audio = audioRef.current
+    if (!audio) return
+
     if (playing) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+      audio.pause()
+      audio.currentTime = 0
       setPlaying(false)
-      if (currentPlayingAudio === audioRef.current) {
+      if (currentPlayingAudio === audio) {
         currentPlayingAudio = null
         currentPlayingSetter = null
       }
     } else {
-      if (currentPlayingAudio && currentPlayingAudio !== audioRef.current) {
+      if (currentPlayingAudio && currentPlayingAudio !== audio) {
         currentPlayingAudio.pause()
         currentPlayingAudio.currentTime = 0
         if (currentPlayingSetter) currentPlayingSetter(false)
       }
-      audioRef.current.play().catch(() => {})
-      setPlaying(true)
-      currentPlayingAudio = audioRef.current
-      currentPlayingSetter = setPlaying
+      
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true)
+            currentPlayingAudio = audio
+            currentPlayingSetter = setPlaying
+          })
+          .catch((err) => {
+            console.error('Audio play error:', err)
+            setPlaying(false)
+            if (currentPlayingAudio === audio) {
+              currentPlayingAudio = null
+              currentPlayingSetter = null
+            }
+          })
+      } else {
+        setPlaying(true)
+        currentPlayingAudio = audio
+        currentPlayingSetter = setPlaying
+      }
+    }
+  }
+
+  const handleEnded = () => {
+    setPlaying(false)
+    if (currentPlayingAudio === audioRef.current) {
+      currentPlayingAudio = null
+      currentPlayingSetter = null
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-        ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
-      title={playing ? dict.charts.preview_stop : dict.charts.preview_play}
-      aria-label={playing ? dict.charts.preview_stop : dict.charts.preview_play}
-    >
-      {playing ? '■ STOP' : '▶ PLAY'}
-    </button>
+    <>
+      <audio
+        ref={audioRef}
+        src={sampleUrl}
+        preload="none"
+        onEnded={handleEnded}
+        crossOrigin="anonymous"
+      />
+      <button
+        type="button"
+        onClick={toggle}
+        className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+          ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+        title={playing ? dict.charts.preview_stop : dict.charts.preview_play}
+        aria-label={playing ? dict.charts.preview_stop : dict.charts.preview_play}
+      >
+        {playing ? '■ STOP' : '▶ PLAY'}
+      </button>
+    </>
   )
 }
 
