@@ -466,7 +466,7 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
     artists: t.artists || [],
     label: t.label || '',
     bpm: t.bpm || null,
-    key: t.key || '',
+    music_key: t.key || '',
     beatport_url: t.beatport_url || null,
     artwork_url: t.artwork_url || null,
     sample_url: t.sample_url || null,

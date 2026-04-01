@@ -11,6 +11,42 @@ type DbRelationship = {
   referencedColumns: string[]
 }
 
+/** Chart tables (sin `extends Record<…>`: evita inferencia rota en el cliente Supabase). */
+export interface ChartTrackArtist {
+  name: string
+  beatport_url?: string
+}
+
+export type ChartEdition = {
+  id: string
+  created_at: string
+  week_date: string
+  title: string
+  description_en: string
+  description_es: string
+  is_published: boolean
+  published_at: string | null
+  sources: string[]
+}
+
+/** Columna en BD: `music_key` (antes `key`; la palabra `key` rompía los genéricos de @supabase/supabase-js). */
+export type ChartTrack = {
+  id: string
+  chart_edition_id: string
+  position: number
+  title: string
+  mix_name: string
+  artists: ChartTrackArtist[]
+  label: string
+  bpm: number | null
+  music_key: string
+  beatport_url: string | null
+  artwork_url: string | null
+  sample_url: string | null
+  previous_position: number | null
+  weeks_in_chart: number
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -443,38 +479,4 @@ export interface HistoryEntry extends Record<string, unknown> {
   year_end: number | null
   image_url: string | null
   sort_order: number
-}
-
-export interface ChartEdition extends Record<string, unknown> {
-  id: string
-  created_at: string
-  week_date: string
-  title: string
-  description_en: string
-  description_es: string
-  is_published: boolean
-  published_at: string | null
-  sources: string[]
-}
-
-export interface ChartTrackArtist {
-  name: string
-  beatport_url?: string
-}
-
-export interface ChartTrack extends Record<string, unknown> {
-  id: string
-  chart_edition_id: string
-  position: number
-  title: string
-  mix_name: string
-  artists: ChartTrackArtist[]
-  label: string
-  bpm: number | null
-  key: string
-  beatport_url: string | null
-  artwork_url: string | null
-  sample_url: string | null
-  previous_position: number | null
-  weeks_in_chart: number
 }

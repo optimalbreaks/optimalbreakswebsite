@@ -29,19 +29,25 @@ export default async function ChartsPage({
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
 
-  let editionQuery = supabase
-    .from('chart_editions')
-    .select('*')
-    .eq('is_published', true)
-
+  // No usar `cond ? await a : await b` con dos builders distintos: TypeScript une los
+  // tipos de respuesta y acaba infiriendo `data` como `never` (fallo de build en Vercel).
+  let edition: ChartEdition | null = null
   if (searchParams.week) {
-    editionQuery = editionQuery.eq('week_date', searchParams.week)
+    const { data } = await supabase
+      .from('chart_editions')
+      .select('*')
+      .eq('is_published', true)
+      .eq('week_date', searchParams.week)
+    edition = (data?.[0] as ChartEdition | undefined) ?? null
   } else {
-    editionQuery = editionQuery.order('week_date', { ascending: false }).limit(1)
+    const { data } = await supabase
+      .from('chart_editions')
+      .select('*')
+      .eq('is_published', true)
+      .order('week_date', { ascending: false })
+      .limit(1)
+    edition = (data?.[0] as ChartEdition | undefined) ?? null
   }
-
-  const { data: editions } = await editionQuery
-  const edition: ChartEdition | null = editions?.[0] ?? null
 
   let tracks: ChartTrack[] = []
   if (edition) {

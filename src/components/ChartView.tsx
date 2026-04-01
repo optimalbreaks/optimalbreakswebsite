@@ -223,12 +223,12 @@ function ChartTrackRow({
             {track.bpm} {c.bpm_label}
           </span>
         )}
-        {track.key && (
+        {track.music_key && (
           <span
             className="px-1.5 py-0.5 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)]"
             style={{ fontFamily: "'Courier Prime', monospace" }}
           >
-            {track.key}
+            {track.music_key}
           </span>
         )}
         <PreviewButton sampleUrl={track.sample_url} dict={dict} />
