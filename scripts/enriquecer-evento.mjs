@@ -1204,6 +1204,75 @@ async function runPatchCyberBass2026(sb) {
   console.log('[patch-cyber-bass-2026] OK:', after)
 }
 
+const FINGER_LICKIN_BOAT_PARTY_2026_SLUG = 'finger-lickin-boat-party-2026'
+const FINGER_LICKIN_SKIDDLE =
+  'https://www.skiddle.com/whats-on/London/Dutch-Master-Party-Boat/Finger-Lickin-Boat-Party/42152456/'
+const FINGER_LICKIN_IMAGE = '/images/events/finger-lickin-boat-party.webp'
+
+const FINGER_LICKIN_BOAT_PARTY_2026_ROW = {
+  name: 'Finger Lickin Boat Party',
+  description_en:
+    'Daytime boat party on the Dutch Master Party Boat, London. Public listings (including Skiddle and secondary aggregators) give Saturday 16 May 2026, with embarkation hours around 12:30–16:30 local time. Venue cited as Tower Millennium Pier, Tower Pier, London. Listing genres mentioned: breaks, hip hop and funk. Tickets and official listing: Skiddle.',
+  description_es:
+    'Fiesta en barco diurna en el Dutch Master Party Boat, Londres. Las fichas públicas (Skiddle y agregadores) citan el sábado 16 de mayo de 2026, con horario de embarque aproximado 12:30–16:30 hora local. Dirección citada: Tower Millennium Pier, Tower Pier, Londres. Géneros mencionados en listados: breaks, hip hop y funk. Entradas y ficha: Skiddle.',
+  event_type: 'club_night',
+  date_start: '2026-05-16',
+  date_end: null,
+  location: 'Dutch Master Party Boat, Tower Millennium Pier, London, United Kingdom',
+  city: 'London',
+  country: 'United Kingdom',
+  venue: 'Dutch Master Party Boat',
+  address: 'Tower Millennium Pier, Tower Pier, London',
+  website: FINGER_LICKIN_SKIDDLE,
+  tickets_url: FINGER_LICKIN_SKIDDLE,
+  image_url: FINGER_LICKIN_IMAGE,
+  lineup: [],
+  tags: [
+    'london',
+    'boat party',
+    'breaks',
+    'hip hop',
+    'funk',
+    'united kingdom',
+    'dutch master',
+    '2026',
+    'skiddle',
+  ],
+  socials: {},
+  age_restriction: null,
+  doors_open: '12:30',
+  doors_close: '16:30',
+}
+
+async function runPatchFingerLickinBoatParty2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', FINGER_LICKIN_BOAT_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-finger-lickin-boat-party-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: FINGER_LICKIN_BOAT_PARTY_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FINGER_LICKIN_BOAT_PARTY_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', FINGER_LICKIN_BOAT_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-finger-lickin-boat-party-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -1271,6 +1340,11 @@ async function main() {
 
   if (argv.includes('--patch-cyber-bass-2026')) {
     await runPatchCyberBass2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-finger-lickin-boat-party-2026')) {
+    await runPatchFingerLickinBoatParty2026(sb)
     return
   }
 

@@ -201,6 +201,14 @@ const ACTIONS = [
       'UPSERT cyber-bass-2026: 18 abr 2026 Sala Maruja Limón (Alhaurín de la Torre), GOAT Breakbeat, cartel public/images/events/cyber-bass-2026.webp, entradas MonsterTicket.',
   },
   {
+    id: 'events-patch-finger-lickin-boat-party-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-finger-lickin-boat-party-2026',
+    npm: 'npm run db:guia -- run events-patch-finger-lickin-boat-party-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT finger-lickin-boat-party-2026: 16 may 2026 Dutch Master Party Boat (Tower Pier, Londres), cartel public/images/events/finger-lickin-boat-party.webp, Skiddle 42152456.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -320,6 +328,7 @@ Punto de entrada unificado:
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
+  events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -593,6 +602,9 @@ function main() {
       break
     case 'events-patch-cyber-bass-2026':
       runNode('enriquecer-evento.mjs', ['--patch-cyber-bass-2026', ...rest])
+      break
+    case 'events-patch-finger-lickin-boat-party-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-boat-party-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()
