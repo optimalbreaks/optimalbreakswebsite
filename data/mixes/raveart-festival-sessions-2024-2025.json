@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "dj-tortu-winter-festival-2024-raveart-area",
+    "title": "Dj Tortu — Winter Festival 2024 (Área Winter Festival)",
+    "artist_name": "Dj Tortu",
+    "description_en": "Breakbeat DJ set from Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "description_es": "Sesión breakbeat del Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "mix_type": "youtube_session",
+    "year": 2024,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/rrFvlQA-bRU",
+    "embed_url": "https://youtu.be/rrFvlQA-bRU",
+    "is_featured": true
+  },
+  {
+    "slug": "norbak-winter-festival-2025-raveart",
+    "title": "Norbak — Winter Festival 2025 (Raveart)",
+    "artist_name": "Norbak",
+    "description_en": "Breakbeat set from Winter Festival 2025 (Raveart).",
+    "description_es": "Sesión breakbeat del Winter Festival 2025 (Raveart).",
+    "mix_type": "youtube_session",
+    "year": 2025,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/pm80ibT6KSI",
+    "embed_url": "https://youtu.be/pm80ibT6KSI",
+    "is_featured": true
+  },
+  {
+    "slug": "anuschka-winter-festival-2024-raveart-area",
+    "title": "Anuschka — Winter Festival 2024 (Área Winter Festival)",
+    "artist_name": "Anuschka",
+    "description_en": "Breakbeat DJ set from Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "description_es": "Sesión breakbeat del Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "mix_type": "youtube_session",
+    "year": 2024,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/A5kbu9tLkDQ",
+    "embed_url": "https://youtu.be/A5kbu9tLkDQ",
+    "is_featured": true
+  },
+  {
+    "slug": "bowser-vs-mbreaks-summer-festival-2024-raveart-aniversario",
+    "title": "Bowser vs MBREAKS — Summer Festival 2024 (Área Aniversario)",
+    "artist_name": "Bowser vs MBREAKS",
+    "description_en": "B2B breakbeat set from Summer Festival 2024 (Raveart, Área Aniversario).",
+    "description_es": "Sesión breakbeat B2B del Summer Festival 2024 (Raveart, Área Aniversario).",
+    "mix_type": "youtube_session",
+    "year": 2024,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/tHwDnPYuWFc",
+    "embed_url": "https://youtu.be/tHwDnPYuWFc",
+    "is_featured": true
+  }
+]

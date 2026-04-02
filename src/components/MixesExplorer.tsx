@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
@@ -110,14 +110,63 @@ function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'x
 
 export { getMixTrack }
 
+type YearGroupKey = number | 'undated'
+
+/** Año calendario UTC de publicación en YouTube; si no hay `published_at`, el año catalogado (`mix.year`). */
+function mixGroupYear(m: Mix): number | null {
+  if (m.published_at) {
+    const d = new Date(m.published_at)
+    if (!Number.isNaN(d.getTime())) return d.getUTCFullYear()
+  }
+  if (m.year != null && Number.isFinite(Number(m.year))) return Number(m.year)
+  return null
+}
+
+function mixSortTimestamp(m: Mix): number {
+  if (m.published_at) {
+    const t = new Date(m.published_at).getTime()
+    if (!Number.isNaN(t)) return t
+  }
+  const c = new Date(m.created_at).getTime()
+  return Number.isNaN(c) ? 0 : c
+}
+
+/** Años numéricos primero (más reciente arriba); «undated» al final. Dentro de cada año: más reciente primero. */
+function groupMixesByPublicationYear(items: Mix[]): { key: YearGroupKey; items: Mix[] }[] {
+  const map = new Map<YearGroupKey, Mix[]>()
+  for (const m of items) {
+    const y = mixGroupYear(m)
+    const k: YearGroupKey = y == null ? 'undated' : y
+    if (!map.has(k)) map.set(k, [])
+    map.get(k)!.push(m)
+  }
+  const numeric = Array.from(map.keys()).filter((k): k is number => k !== 'undated')
+  numeric.sort((a, b) => b - a)
+  const sortWithin = (row: Mix[]) => [...row].sort((a, b) => mixSortTimestamp(b) - mixSortTimestamp(a))
+  const out: { key: YearGroupKey; items: Mix[] }[] = numeric.map((k) => ({
+    key: k,
+    items: sortWithin(map.get(k)!),
+  }))
+  const und = map.get('undated')
+  if (und && und.length > 0) out.push({ key: 'undated', items: sortWithin(und) })
+  return out
+}
+
 interface Props {
   mixes: Mix[]
-  dict: { view_large: string; view_compact: string; view_list: string }
+  dict: {
+    view_large: string
+    view_compact: string
+    view_list: string
+    year_undated?: string
+  }
   lang: string
 }
 
 export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
+
+  const yearGroups = useMemo(() => groupMixesByPublicationYear(mixes), [mixes])
 
   return (
     <div>
@@ -125,13 +174,35 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
         <ViewToggle view={view} setView={setView} labels={dict} />
       </div>
 
-      {view === 'large' ? (
-        <LargeGrid mixes={mixes} lang={lang} />
-      ) : view === 'compact' ? (
-        <CompactGrid mixes={mixes} lang={lang} />
-      ) : (
-        <ListView mixes={mixes} lang={lang} />
-      )}
+      <div className="space-y-10 sm:space-y-14">
+        {yearGroups.map(({ key, items }, idx) => {
+          const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
+          return (
+            <section key={String(key)} aria-labelledby={`mixes-year-${key}`}>
+              <h2
+                id={`mixes-year-${key}`}
+                className={`mt-0 mb-4 sm:mb-5 pb-3 border-b-[4px] border-[var(--ink)] ${idx === 0 ? '' : 'pt-2'}`}
+                style={{
+                  fontFamily: "'Unbounded', sans-serif",
+                  fontWeight: 900,
+                  fontSize: 'clamp(26px, 4.5vw, 40px)',
+                  letterSpacing: '-0.04em',
+                  lineHeight: 1.05,
+                }}
+              >
+                {title}
+              </h2>
+              {view === 'large' ? (
+                <LargeGrid mixes={items} lang={lang} />
+              ) : view === 'compact' ? (
+                <CompactGrid mixes={items} lang={lang} />
+              ) : (
+                <ListView mixes={items} lang={lang} />
+              )}
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -241,6 +241,14 @@ const ACTIONS = [
       'Rellena mixes.published_at desde fecha de publicación de YouTube (API v3 con YOUTUBE_DATA_API_KEY, o yt-dlp, o scraping HTML). --force sobrescribe fechas ya guardadas.',
   },
   {
+    id: 'mixes-file',
+    run: 'node scripts/guia-base-datos.mjs run mixes-file data/mixes/<lote>.json',
+    npm: 'npm run db:mixes -- data/mixes/lote.json',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET); solo API REST, sin Postgres',
+    description:
+      'UPSERT de uno o varios mixes desde JSON (array o { "mixes": […] }). Igual espíritu que artist-file.',
+  },
+  {
     id: 'chart-propose',
     run: 'node scripts/guia-base-datos.mjs run chart-propose [--sources beatport,juno]',
     npm: 'npm run db:chart -- --dry-run [--sources beatport,juno]',
@@ -332,6 +340,7 @@ Punto de entrada unificado:
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
+  mixes-file <ruta>      UPSERT mixes desde JSON (actualizar-mixes.mjs; p. ej. data/mixes/*.json)
   mixes-published [--force]  backfill-mix-youtube-published-at.mjs (fecha publicación YouTube → orden /mixes)
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
@@ -630,6 +639,21 @@ function main() {
     case 'mixes-published':
       runNode('backfill-mix-youtube-published-at.mjs', rest)
       break
+    case 'mixes-file': {
+      const rel = rest[0]
+      if (!rel) {
+        console.error('Uso: run mixes-file <ruta-desde-raíz-repo>')
+        console.error('  Ej: run mixes-file data/mixes/raveart-festival-sessions-2024-2025.json')
+        process.exit(1)
+      }
+      const p = resolve(ROOT, rel)
+      if (!existsSync(p)) {
+        console.error('No existe:', p)
+        process.exit(1)
+      }
+      runNode('actualizar-mixes.mjs', [p])
+      break
+    }
     case 'chart-propose':
       runNode('chart-40-breaks.mjs', ['--dry-run', ...rest])
       break

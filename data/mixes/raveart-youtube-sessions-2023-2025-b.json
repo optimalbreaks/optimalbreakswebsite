@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "aggresivnes-winter-festival-2024-raveart-area",
+    "title": "Aggresivnes — Winter Festival 2024 (Área Winter Festival)",
+    "artist_name": "Aggresivnes",
+    "description_en": "Breakbeat set from Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "description_es": "Sesión breakbeat del Winter Festival 2024 (Raveart, Área Winter Festival).",
+    "mix_type": "youtube_session",
+    "year": 2024,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/3-2QSYQoe14",
+    "embed_url": "https://youtu.be/3-2QSYQoe14",
+    "is_featured": true
+  },
+  {
+    "slug": "guau-winter-festival-2023-raveart-granada",
+    "title": "Guau — Winter Festival 2023 (Raveart, Granada)",
+    "artist_name": "Guau",
+    "description_en": "DJ set from Winter Festival 2023 — Raveart, Granada (4 March 2023).",
+    "description_es": "Sesión del Winter Festival 2023 — Raveart, Granada (4 de marzo de 2023).",
+    "mix_type": "youtube_session",
+    "year": 2023,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/i2GoM75UVZY",
+    "embed_url": "https://youtu.be/i2GoM75UVZY",
+    "is_featured": true
+  },
+  {
+    "slug": "norbak-vs-prody-summer-festival-2025-raveart",
+    "title": "Norbak vs Prody — Summer Festival 2025 (Raveart)",
+    "artist_name": "Norbak vs Prody",
+    "description_en": "B2B breakbeat set from Summer Festival 2025 (Raveart).",
+    "description_es": "Sesión breakbeat B2B del Summer Festival 2025 (Raveart).",
+    "mix_type": "youtube_session",
+    "year": 2025,
+    "duration_minutes": null,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/voWEV2GALLk",
+    "embed_url": "https://youtu.be/voWEV2GALLk",
+    "is_featured": true
+  }
+]

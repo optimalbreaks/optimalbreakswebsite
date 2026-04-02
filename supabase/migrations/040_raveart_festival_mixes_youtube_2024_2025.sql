@@ -1,0 +1,83 @@
+-- Raveart — sesiones YouTube Winter/Summer Festival 2024–2025 (área Winter / aniversario)
+INSERT INTO public.mixes (
+  slug,
+  title,
+  artist_name,
+  description_en,
+  description_es,
+  mix_type,
+  year,
+  duration_minutes,
+  platform,
+  video_url,
+  embed_url,
+  is_featured
+) VALUES
+  (
+    'dj-tortu-winter-festival-2024-raveart-area',
+    'Dj Tortu — Winter Festival 2024 (Área Winter Festival)',
+    'Dj Tortu',
+    'Breakbeat DJ set from Winter Festival 2024 (Raveart, Área Winter Festival).',
+    'Sesión breakbeat del Winter Festival 2024 (Raveart, Área Winter Festival).',
+    'youtube_session',
+    2024,
+    NULL,
+    'youtube',
+    'https://youtu.be/rrFvlQA-bRU',
+    'https://youtu.be/rrFvlQA-bRU',
+    TRUE
+  ),
+  (
+    'norbak-winter-festival-2025-raveart',
+    'Norbak — Winter Festival 2025 (Raveart)',
+    'Norbak',
+    'Breakbeat set from Winter Festival 2025 (Raveart).',
+    'Sesión breakbeat del Winter Festival 2025 (Raveart).',
+    'youtube_session',
+    2025,
+    NULL,
+    'youtube',
+    'https://youtu.be/pm80ibT6KSI',
+    'https://youtu.be/pm80ibT6KSI',
+    TRUE
+  ),
+  (
+    'anuschka-winter-festival-2024-raveart-area',
+    'Anuschka — Winter Festival 2024 (Área Winter Festival)',
+    'Anuschka',
+    'Breakbeat DJ set from Winter Festival 2024 (Raveart, Área Winter Festival).',
+    'Sesión breakbeat del Winter Festival 2024 (Raveart, Área Winter Festival).',
+    'youtube_session',
+    2024,
+    NULL,
+    'youtube',
+    'https://youtu.be/A5kbu9tLkDQ',
+    'https://youtu.be/A5kbu9tLkDQ',
+    TRUE
+  ),
+  (
+    'bowser-vs-mbreaks-summer-festival-2024-raveart-aniversario',
+    'Bowser vs MBREAKS — Summer Festival 2024 (Área Aniversario)',
+    'Bowser vs MBREAKS',
+    'B2B breakbeat set from Summer Festival 2024 (Raveart, Área Aniversario).',
+    'Sesión breakbeat B2B del Summer Festival 2024 (Raveart, Área Aniversario).',
+    'youtube_session',
+    2024,
+    NULL,
+    'youtube',
+    'https://youtu.be/tHwDnPYuWFc',
+    'https://youtu.be/tHwDnPYuWFc',
+    TRUE
+  )
+ON CONFLICT (slug) DO UPDATE SET
+  title = EXCLUDED.title,
+  artist_name = EXCLUDED.artist_name,
+  description_en = EXCLUDED.description_en,
+  description_es = EXCLUDED.description_es,
+  mix_type = EXCLUDED.mix_type,
+  year = EXCLUDED.year,
+  duration_minutes = EXCLUDED.duration_minutes,
+  platform = EXCLUDED.platform,
+  video_url = EXCLUDED.video_url,
+  embed_url = EXCLUDED.embed_url,
+  is_featured = EXCLUDED.is_featured;
