@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // ============================================
-// OPTIMAL BREAKS — OG 16:9 para páginas de listado (artists, labels, …)
-// Escribe PNG en public/images/opengraph/sections/<clave>.png
-// Misma API que generar-og-image.mjs (gpt-image-1, 1536×1024) + reglas de luz variada.
+// OPTIMAL BREAKS — OG para páginas de listado (artists, labels, …)
+// gpt-image-1 no exporta 1200×630; generamos 1536×1024 y encajamos a 1200×630 (ratio Meta ~1.91:1).
+// Recorte vertical (OG_SECTION_CROP_BIAS) + marco crema (OG_SECTION_FRAME_PADDING) para padding real en píxeles.
 // ============================================
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
+import sharp from 'sharp'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -42,10 +43,67 @@ function loadEnv() {
 
 loadEnv()
 
-const OG_WIDTH = 1536
-const OG_HEIGHT = 1024
-const OG_SIZE = `${OG_WIDTH}x${OG_HEIGHT}`
+const OPENAI_WIDTH = 1536
+const OPENAI_HEIGHT = 1024
+const OG_SIZE = `${OPENAI_WIDTH}x${OPENAI_HEIGHT}`
+/** Salida final = recomendación Meta para og:image de enlaces (no cuadrado). */
+const FB_OG_WIDTH = 1200
+const FB_OG_HEIGHT = 630
 const MAX_PROMPT_LEN = 4000
+
+/**
+ * Recorte a 1200×630 + encogido centrado sobre fondo crema (padding fijo, sin depender solo del prompt).
+ */
+async function toFacebookOgPng(buf) {
+  const rawBias = process.env.OG_SECTION_CROP_BIAS?.trim()
+  const bias = rawBias !== undefined && rawBias !== '' ? Number(rawBias) : 0.41
+  const t = Number.isFinite(bias) ? Math.min(1, Math.max(0, bias)) : 0.41
+
+  const rawPad = process.env.OG_SECTION_FRAME_PADDING?.trim()
+  const padFrac =
+    rawPad !== undefined && rawPad !== '' ? Number(rawPad) : 0.065
+  const p = Number.isFinite(padFrac) ? Math.min(0.14, Math.max(0, padFrac)) : 0.065
+
+  const meta = await sharp(buf).metadata()
+  const w = meta.width || OPENAI_WIDTH
+  const h = meta.height || OPENAI_HEIGHT
+  const scale = Math.max(FB_OG_WIDTH / w, FB_OG_HEIGHT / h)
+  const scaledW = Math.round(w * scale)
+  const scaled = await sharp(buf).resize({ width: scaledW }).toBuffer()
+  const m2 = await sharp(scaled).metadata()
+  const rh = m2.height || Math.round(h * scale)
+  const rw = m2.width || scaledW
+  const spanX = rw - FB_OG_WIDTH
+  const spanY = rh - FB_OG_HEIGHT
+  const left = Math.max(0, Math.floor(spanX / 2))
+  const top = Math.max(0, Math.min(Math.round(spanY * t), spanY))
+
+  let cropped = await sharp(scaled)
+    .extract({ left, top, width: FB_OG_WIDTH, height: FB_OG_HEIGHT })
+    .png()
+    .toBuffer()
+
+  if (p <= 0) return cropped
+
+  const maxW = Math.floor(FB_OG_WIDTH * (1 - 2 * p))
+  const maxH = Math.floor(FB_OG_HEIGHT * (1 - 2 * p))
+  const inner = await sharp(cropped)
+    .resize(maxW, maxH, { fit: 'inside' })
+    .png()
+    .toBuffer()
+
+  return sharp({
+    create: {
+      width: FB_OG_WIDTH,
+      height: FB_OG_HEIGHT,
+      channels: 3,
+      background: '#e8dcc8',
+    },
+  })
+    .composite([{ input: inner, gravity: 'centre' }])
+    .png()
+    .toBuffer()
+}
 
 function env(key) {
   const v = process.env[key]?.trim()
@@ -54,89 +112,86 @@ function env(key) {
 }
 
 /**
- * Márgenes amplios: OG en redes recorta bordes; el usuario pidió más “fondo” y separación del borde.
+ * La IA no puede dibujar en 1200×630 real; le pedimos que mentalice ese marco y coloque el texto en una franja segura.
  */
-const LAYOUT_MARGINS_BLOCK = `
-LAYOUT AND MARGINS (mandatory — follow before anything else): The canvas must show a CLEAR QUIET FRAME of mostly empty cream/paper (#e8dcc8) on ALL FOUR EDGES. Reserve an outer band of approximately 20% of the image width on the LEFT and 20% on the RIGHT (40% total horizontal margin), and approximately 20% of the height on TOP and 20% on BOTTOM (40% total vertical margin) — that outer band must stay visually quiet: subtle paper grain OK, but NO large type, NO icons, NO busy collage there. All headline text and main graphics must fit STRICTLY inside the inner ~60% × ~60% central “safe zone”, well away from every edge; the first line of the headline must start clearly below the top 20% band. Nothing important may touch or hug the image boundary. Think museum matting. Social platforms crop link previews; these margins are non-negotiable.
-`.trim()
+const MASTER_OG_BLOCK = `
+OUTPUT: One landscape illustration for Optimal Breaks (breakbeat encyclopedia) — used as Open Graph when links are shared.
 
-/** Alineado con la filosofía del blog CSV: no homogeneizar en cueva nocturna + neón. */
-const LIGHTING_AND_MOOD_BLOCK = `
-${LAYOUT_MARGINS_BLOCK}
+SITE SCOPE (mandatory): This project documents breakbeat / breaks culture across ALL eras and ALL regions worldwide — not UK-only, not 1990s-only. Do NOT use decorative stickers, stamps, or tags that say UK, 90s, 00s, London, or any single country/decade as a default motif. If a small secondary word-sticker fits the layout, prefer the word BREAKS (or abstract shapes: vinyl, waveform, sync arrows, BPM dots) — era- and region-neutral.
 
-LIGHTING AND MOOD (mandatory — do not ignore): This is a bold graphic OpenGraph illustration; it must stay READABLE at tiny thumbnail size. Prefer compositions where a large area is cream/beige (#e8dcc8), warm off-white paper, daylight studio flatness, or high-key color blocks — NOT a uniform pitch-black nightclub void. If night or rave appears, use poster-style separation, rim light, or visible mid-tones so every shape stays legible. Avoid muddy underexposure and generic "all neon dystopia". Welcome variety: sunlit record fair, daytime festival field, bright archive shelf, radio booth with window light, editorial desk — break the "everything is a dark club" cliché.
+TARGET FRAME (read carefully): The final file shown on Facebook is exactly aspect ratio 1.91:1, i.e. 1200 pixels wide × 630 pixels tall. Your output bitmap is slightly taller; the pipeline will trim top/bottom. You must therefore “design for 1200×630” mentally: NO letter may be clipped in that final card.
 
-NO photographs of identifiable real people. Neo-brutalist punk zine / gig poster / record-sleeve graphic design. Bold stencil or block typography only, no cursive. Tiny site credits only: "OPTIMAL BREAKS" very small inside the BOTTOM margin band (bottom-left), "www.optimalbreaks.com" very small inside the BOTTOM margin band (bottom-right) — they must not compete with the main headline and must stay above the absolute bottom edge with padding.
+TYPOGRAPHY — FIT INSIDE THE VISIBLE CARD:
+• The TOPMOST pixel of the tallest capital in the MAIN HEADLINE must be at or BELOW 26% of the full image height (from top). Never put headline caps in the top 22% band.
+• The BOTTOMMOST pixel of the SUBTITLE line must be at or ABOVE 48% of full image height (subtitle sits tight under headline with normal leading).
+• Main headline + subtitle block: horizontally centered, occupying ~55–75% of image width. Generous cream padding between text block and left/right edges (at least ~10% of width each side) as part of the artwork — full-bleed background still touches both sides.
+• Decorative tags, stickers, vinyl, icons: keep at least ~6% of canvas height/width away from the final crop edges — never flush in a corner.
+• Decorative icons/graphics: only between ~50% and 74% of full height, grouped; nothing important below 76% (bottom strip may be cropped).
+• Tiny credits "OPTIMAL BREAKS" (bottom-left) and "www.optimalbreaks.com" (bottom-right): very small, entire glyphs between 72% and 82% from top — if unsure, omit credits rather than placing them too low.
+
+BACKGROUND: Cream #e8dcc8 with paper grain/halftone; can extend to all edges. Top 15% and bottom 12% should be mostly quiet background only.
+
+STYLE: Neo-brutalist punk zine graphic — not a photo. No real identifiable people. Bold block type, no script. Palette: #e8dcc8, #1a1a1a, #d62828, optional #00b4d8 / #f0c808.
+
+LIGHTING: Prefer daylight, high-key, editorial desk, record fair — not uniform dark club. If night vibe, keep mid-tones legible; no muddy blacks, no lazy all-neon look.
 `.trim()
 
 const SECTION_PROMPTS = {
-  artists: `Create a striking OpenGraph preview image (landscape, social share card) for the "Artists" index of a breakbeat music encyclopedia site.
+  artists: `Section: ARTISTS index (encyclopedia of breakbeat DJs and producers).
 
-Headline typography: the word "ARTISTS" must dominate (huge, brutal). Secondary line (smaller): "DJs · producers · archive".
+Main headline word: ARTISTS (dominant). Subtitle: DJs · producers · archive
 
-Visual direction: collage of abstract turntable parts, vinyl groove macros, era tags, country pins as flat shapes — underground editorial, not a stock photo. Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan (#00b4d8) or yellow (#f0c808).
+Motifs: abstract vinyl groove, stylus, 7" label circle, optional one small BREAKS sticker or neutral geometric shards — never UK/90s/00s/country tags. Collage zine, not stock photo.
 
-${LIGHTING_AND_MOOD_BLOCK}`,
+${MASTER_OG_BLOCK}`,
 
-  labels: `Create a striking OpenGraph preview image for the "Record labels" index of a breakbeat music site.
+  labels: `Section: LABELS index (breakbeat record labels).
 
-Headline: "LABELS" dominant. Secondary: "imprints · catalogs · vinyl culture".
+Main headline: exactly one word LABELS (do not duplicate or prefix another LABEL). Subtitle: imprints · catalogs · vinyl culture
 
-Visuals: press stamps, catalog cards, spine stacks as abstract geometry, label-logo placeholders (generic shapes only). Neo-brutalist record-industry zine.
+Motifs: rubber stamp shapes, catalog cards, spine strips as geometry, generic “label mark” placeholders (no real trademark).
 
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan or yellow accents.
+${MASTER_OG_BLOCK}`,
 
-${LIGHTING_AND_MOOD_BLOCK}`,
+  events: `Section: EVENTS index (festivals, club nights, breakbeat parties).
 
-  events: `Create a striking OpenGraph preview image for the "Events" index: festivals, club nights, breakbeat parties.
+Main headline: EVENTS. Subtitle: festivals · bills · nights out
 
-Headline: "EVENTS" dominant. Secondary: "festivals · bills · nights out".
+Motifs: stacked gig-poster rectangles, calendar/date block, sound-system silhouette as bold graphic (not a photo) — energetic but legible at small size.
 
-Visuals: gig-poster stack abstraction, date blocks, sound-system silhouette with STRONG graphic contrast (not a black void), ticket stub shapes. Festival energy without a cliché neon-only cave.
+${MASTER_OG_BLOCK}`,
 
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan (#00b4d8).
+  scenes: `Section: SCENES index (regional scenes and crews).
 
-${LIGHTING_AND_MOOD_BLOCK}`,
+Main headline: SCENES. Subtitle: cities · crews · local history
 
-  scenes: `Create a striking OpenGraph preview image for the "Scenes" index: regional breakbeat communities and cities.
+Motifs: map shards, skyline cut-paper, compass, halftone blocks — place identity as graphic design.
 
-Headline: "SCENES" dominant. Secondary: "cities · crews · local history".
+${MASTER_OG_BLOCK}`,
 
-Visuals: map fragments, skyline as flat cut-paper shapes, compass rose, halftone city blocks — regional identity as graphic design, not a photo of a crowd.
+  blog: `Section: BLOG index (long-form articles).
 
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional yellow (#f0c808).
+Main headline: BLOG. Subtitle: essays · deep cuts · journalism
 
-${LIGHTING_AND_MOOD_BLOCK}`,
+Motifs: magazine rules, torn paper layers, ink splatter, typewriter grid — editorial desk energy, not a rave flyer.
 
-  blog: `Create a striking OpenGraph preview image for the "Blog" index: long-form articles and essays about breakbeat culture.
+${MASTER_OG_BLOCK}`,
 
-Headline: "BLOG" dominant. Secondary: "essays · deep cuts · journalism".
+  mixes: `Section: MIXES index (DJ sets).
 
-Visuals: magazine spread feel — torn paper layers, column rules, ink splatter, typewriter keys as abstract shapes; intellectual zine, not a dark club flyer.
+Main headline: MIXES. Subtitle: DJ sets · sessions · archives
 
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan.
+Motifs: bold waveform bar, headphone silhouette, cassette hubs as circles — can suggest studio daylight as well as club.
 
-${LIGHTING_AND_MOOD_BLOCK}`,
+${MASTER_OG_BLOCK}`,
 
-  mixes: `Create a striking OpenGraph preview image for the "Mixes" index: DJ sets and recorded sessions.
+  about: `Section: ABOUT Optimal Breaks (encyclopedia + editorial project).
 
-Headline: "MIXES" dominant. Secondary: "DJ sets · sessions · archives".
+Main headline: OPTIMAL BREAKS (may be two lines, same brutal style). Subtitle: encyclopedia · culture · breaks
 
-Visuals: waveform as bold graphic, headphone cups as geometric icons, cassette reels abstracted, mixer faders as flat shapes — studio or daytime listening vibe welcome alongside club accents.
+Motifs: masthead / charter / open fanzine spread suggestion — welcoming, archival, bright.
 
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan or yellow.
-
-${LIGHTING_AND_MOOD_BLOCK}`,
-
-  about: `Create a striking OpenGraph preview image for the "About" page of Optimal Breaks, a breakbeat music encyclopedia and editorial project.
-
-Headline: "OPTIMAL BREAKS" as main title (can span two lines). Secondary: "about the project" or "encyclopedia · culture · breaks".
-
-Visuals: masthead / editorial charter feel — open book or fanzine layout, mission statement energy, vinyl and paper textures as graphic elements. Welcoming, archival, daytime studio or bright editorial table — avoid default nightclub darkness.
-
-Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional yellow (#f0c808).
-
-${LIGHTING_AND_MOOD_BLOCK}`,
+${MASTER_OG_BLOCK}`,
 }
 
 const SECTION_KEYS = Object.keys(SECTION_PROMPTS)
@@ -178,19 +233,24 @@ function printHelp() {
   console.log(`
 Uso: node scripts/generar-og-secciones.mjs [opciones]
 
-Genera PNG en public/images/opengraph/sections/<sección>.png
+Salida: PNG 1200×630 en public/images/opengraph/sections/<sección>.png
 
 Opciones:
   --dry-run              Solo listar secciones y longitud de prompt
   --only <a,b,c>         Solo estas claves (coma): ${SECTION_KEYS.join(', ')}
   --force                Sobrescribir aunque el archivo ya exista
+  --resize-only          Normalizar PNG existentes a 1200×630 con cover (sin OpenAI; ideal si son 1536×1024)
   --help
 
-Variable: OPENAI_API_KEY (requerida salvo --dry-run)
+Variables:
+  OPENAI_API_KEY     (requerida salvo --dry-run y --resize-only)
+  OG_SECTION_CROP_BIAS     0–1, sesgo vertical al recortar (default 0.41)
+  OG_SECTION_FRAME_PADDING 0–0.14 fracción de marco crema alrededor del diseño (default 0.065 ≈ 6.5% por lado)
 
 Ejemplo:
   npm run og:sections
   npm run og:sections -- --only blog,about --force
+  node scripts/generar-og-secciones.mjs --resize-only
 `)
 }
 
@@ -203,6 +263,7 @@ async function main() {
 
   const dryRun = args.includes('--dry-run')
   const force = args.includes('--force')
+  const resizeOnly = args.includes('--resize-only')
   let only = null
   const onlyIdx = args.indexOf('--only')
   if (onlyIdx !== -1 && args[onlyIdx + 1]) {
@@ -226,11 +287,33 @@ async function main() {
 
   mkdirSync(OUT_DIR, { recursive: true })
 
-  console.log(`\n🖼  OG secciones → ${OUT_DIR}${dryRun ? ' [DRY-RUN]' : ''}\n`)
+  console.log(
+    `\n🖼  OG secciones → ${OUT_DIR}${dryRun ? ' [DRY-RUN]' : ''}${resizeOnly ? ' [RESIZE-ONLY]' : ''}\n`,
+  )
 
   for (const sectionKey of keys) {
     const prompt = SECTION_PROMPTS[sectionKey]
     const outPath = join(OUT_DIR, `${sectionKey}.png`)
+
+    if (resizeOnly) {
+      if (dryRun) {
+        console.log(`  🔍 ${sectionKey} — resize-only dry-run`)
+        continue
+      }
+      if (!existsSync(outPath)) {
+        console.log(`  ⏭  ${sectionKey}.png no existe, skip`)
+        continue
+      }
+      try {
+        const raw = readFileSync(outPath)
+        const out = await toFacebookOgPng(raw)
+        writeFileSync(outPath, out)
+        console.log(`  📐 ${sectionKey}.png → ${FB_OG_WIDTH}×${FB_OG_HEIGHT} (${(out.length / 1024).toFixed(0)} KB)`)
+      } catch (e) {
+        console.error(`  ❌ ${sectionKey}: ${e.message}`)
+      }
+      continue
+    }
 
     if (!force && existsSync(outPath) && !dryRun) {
       console.log(`  ⏭  ${sectionKey}.png ya existe (usa --force)`)
@@ -244,9 +327,10 @@ async function main() {
 
     try {
       console.log(`  🎨 ${sectionKey} — generando…`)
-      const buf = await generateOgImage(prompt)
+      let buf = await generateOgImage(prompt)
+      buf = await toFacebookOgPng(buf)
       writeFileSync(outPath, buf)
-      console.log(`  ✅ ${sectionKey}.png (${(buf.length / 1024).toFixed(0)} KB)`)
+      console.log(`  ✅ ${sectionKey}.png ${FB_OG_WIDTH}×${FB_OG_HEIGHT} (${(buf.length / 1024).toFixed(0)} KB)`)
     } catch (e) {
       console.error(`  ❌ ${sectionKey}: ${e.message}`)
     }

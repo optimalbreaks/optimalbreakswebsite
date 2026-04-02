@@ -5,6 +5,11 @@
 import type { Metadata } from 'next'
 import { getDictionary } from '@/lib/dictionaries'
 import { displayImageUrl } from '@/lib/image-url'
+import {
+  SECTION_OG_BASE,
+  SECTION_OG_PIXEL_HEIGHT,
+  SECTION_OG_PIXEL_WIDTH,
+} from '@/lib/og-section-images'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 export const SITE_URL = 'https://www.optimalbreaks.com' as const
@@ -95,9 +100,17 @@ export async function staticPageMetadata(
   const assetPath = options?.ogImagePath?.trim() || null
   const ogImage = absoluteOgImage(assetPath, lang)
   const usesGeneratedFallback = !assetPath
+  const isSectionOg = !!assetPath?.startsWith(`${SECTION_OG_BASE}/`)
   const ogImageMeta = usesGeneratedFallback
     ? { url: ogImage, width: 1200, height: 630, alt: options?.ogImageAlt ?? siteName }
-    : { url: ogImage, alt: options?.ogImageAlt ?? siteName }
+    : isSectionOg
+      ? {
+          url: ogImage,
+          width: SECTION_OG_PIXEL_WIDTH,
+          height: SECTION_OG_PIXEL_HEIGHT,
+          alt: options?.ogImageAlt ?? siteName,
+        }
+      : { url: ogImage, alt: options?.ogImageAlt ?? siteName }
   const desc = smartTruncate(page.description, 160)
 
   return {
