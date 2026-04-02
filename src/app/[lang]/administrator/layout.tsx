@@ -3,7 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Locale } from '@/lib/i18n-config'
 import type { Database } from '@/types/database'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import AdminShell from '@/components/admin/AdminShell'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,14 +47,8 @@ export default async function AdminLayout({
   if (profile?.role !== 'admin') redirect(`/${lang}`)
 
   return (
-    <div className="admin-shell lined">
-      <AdminSidebar lang={lang} />
-      <div className="admin-main">
-        <header className="admin-topbar">
-          <span>Optimal Breaks // Panel de administración</span>
-        </header>
-        <div className="admin-content">{children}</div>
-      </div>
-    </div>
+    <AdminShell lang={lang}>
+      {children}
+    </AdminShell>
   )
 }
