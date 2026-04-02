@@ -7,9 +7,15 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
-import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
+import {
+  SECTION_OG_PIXEL_HEIGHT,
+  SECTION_OG_PIXEL_WIDTH,
+  sectionOgImageAlt,
+  sectionOgImagePath,
+} from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
+import Image from 'next/image'
 import EventsExplorer from '@/components/EventsExplorer'
 
 type FallbackEvent = {
@@ -119,6 +125,17 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
         <div className="sec-tag">EVENTS</div>
         <h1 className="sec-title">{dict.events.title}<br /><span className="hl">BREAKBEAT</span></h1>
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '17px', lineHeight: 1.8, maxWidth: '700px', color: 'var(--dim)' }}>{dict.events.subtitle}</p>
+        <div className="mt-8 sm:mt-10 max-w-4xl mx-auto">
+          <Image
+            src={sectionOgImagePath('events')}
+            alt={sectionOgImageAlt('events', lang)}
+            width={SECTION_OG_PIXEL_WIDTH}
+            height={SECTION_OG_PIXEL_HEIGHT}
+            className="w-full h-auto border-4 border-[var(--ink)]"
+            sizes="(max-width: 896px) 100vw, 896px"
+            priority
+          />
+        </div>
       </section>
       <section className="px-4 sm:px-6 py-10 sm:py-12">
         {list.length > 0 ? (
