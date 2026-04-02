@@ -53,11 +53,20 @@ function env(key) {
   return v
 }
 
+/**
+ * Márgenes amplios: OG en redes recorta bordes; el usuario pidió más “fondo” y separación del borde.
+ */
+const LAYOUT_MARGINS_BLOCK = `
+LAYOUT AND MARGINS (mandatory — follow before anything else): The canvas must show a CLEAR QUIET FRAME of mostly empty cream/paper (#e8dcc8) on ALL FOUR EDGES. Reserve an outer band at least 12–15% of the image width on left and right, and 12–15% of the height on top and bottom, as breathing room: subtle paper grain OK, but NO large type, NO icons, NO busy collage in that outer band. The headline and main graphics live ONLY in the inner ~70–76% “safe zone”, comfortably inset from every edge — especially the TOP: the first line of the headline must start well below the top border with obvious padding. Nothing important may touch or hug the image boundary. Think museum matting or a poster mounted on a large sheet with visible margin. Social platforms crop link previews; generous margins prevent clipped titles.
+`.trim()
+
 /** Alineado con la filosofía del blog CSV: no homogeneizar en cueva nocturna + neón. */
 const LIGHTING_AND_MOOD_BLOCK = `
+${LAYOUT_MARGINS_BLOCK}
+
 LIGHTING AND MOOD (mandatory — do not ignore): This is a bold graphic OpenGraph illustration; it must stay READABLE at tiny thumbnail size. Prefer compositions where a large area is cream/beige (#e8dcc8), warm off-white paper, daylight studio flatness, or high-key color blocks — NOT a uniform pitch-black nightclub void. If night or rave appears, use poster-style separation, rim light, or visible mid-tones so every shape stays legible. Avoid muddy underexposure and generic "all neon dystopia". Welcome variety: sunlit record fair, daytime festival field, bright archive shelf, radio booth with window light, editorial desk — break the "everything is a dark club" cliché.
 
-NO photographs of identifiable real people. Neo-brutalist punk zine / gig poster / record-sleeve graphic design. Bold stencil or block typography only, no cursive. Small text "OPTIMAL BREAKS" bottom-left corner, "www.optimalbreaks.com" bottom-right corner.
+NO photographs of identifiable real people. Neo-brutalist punk zine / gig poster / record-sleeve graphic design. Bold stencil or block typography only, no cursive. Tiny site credits only: "OPTIMAL BREAKS" very small inside the BOTTOM margin band (bottom-left), "www.optimalbreaks.com" very small inside the BOTTOM margin band (bottom-right) — they must not compete with the main headline and must stay above the absolute bottom edge with padding.
 `.trim()
 
 const SECTION_PROMPTS = {
