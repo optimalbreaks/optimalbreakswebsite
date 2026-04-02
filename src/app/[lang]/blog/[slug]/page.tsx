@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = safeLang === 'es' ? data.title_es : data.title_en
   const description = safeLang === 'es' ? data.excerpt_es : data.excerpt_en
   const siteName = await siteNameForLang(safeLang)
-  return detailPageMetadata(safeLang, `/blog/${safeSlug}`, siteName, title, description, 'article', data.og_image_url || data.image_url)
+  // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
+  return detailPageMetadata(safeLang, `/blog/${safeSlug}`, siteName, title, description, 'article', data.image_url || data.og_image_url)
 }
 
 export default async function BlogPostPage({ params }: Props) {

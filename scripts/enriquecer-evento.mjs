@@ -20,6 +20,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
+ *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -1118,6 +1119,91 @@ async function runPatchMalagaIsBreak3AniversarioFrequencyBreak2026(sb) {
   console.log('[patch-malaga-is-break-2026] OK:', after)
 }
 
+const CYBER_BASS_2026_SLUG = 'cyber-bass-2026'
+const CYBER_BASS_TICKETS =
+  'https://www.monsterticket.com/evento/cyber-bass-goat-breakbeat'
+const CYBER_BASS_IMAGE = '/images/events/cyber-bass-2026.webp'
+
+const CYBER_BASS_2026_LINEUP = [
+  'Tortu',
+  'Norbak',
+  'Jan-B',
+  'Prody',
+  'Godino',
+  'Nicola Slof',
+  'Franetik',
+  'Superbreak',
+  'V. Aparicio',
+  'Kid:Katana',
+]
+
+const CYBER_BASS_2026_ROW = {
+  name: 'Cyber Bass 2026',
+  description_en:
+    'GOAT Breakbeat presents Cyber Bass 2026 on Saturday 18 April 2026 at Sala Maruja Limón, Alhaurín de la Torre (Málaga province). Doors 23:30. Headliners Tortu, Norbak and Jan-B; support from Prody, Godino, Nicola Slof, Franetik and Superbreak; plus the Goat crew with V. Aparicio and Kid:Katana. The flyer lists VIP zones, LED screens and cold CO2 effects. Non-nominal tickets on MonsterTicket; no entry under 18 per the official listing. Address: Av. Las Americas, Nave 1 y 2, Alhaurín de la Torre.',
+  description_es:
+    'GOAT Breakbeat presenta Cyber Bass 2026 el sábado 18 de abril de 2026 en la Sala Maruja Limón, Alhaurín de la Torre (provincia de Málaga). Apertura 23:30 h. Cabezas de cartel Tortu, Norbak y Jan-B; soporte Prody, Godino, Nicola Slof, Franetik y Superbreak; más el crew Goat con V. Aparicio y Kid:Katana. El cartel anuncia zonas VIP, pantallas LED y efectos de CO2 en frío. Entradas no nominativas en MonsterTicket; prohibido el acceso a menores de 18 años según la ficha oficial. Dirección: Av. Las Americas, Nave 1 y 2, Alhaurín de la Torre.',
+  event_type: 'club_night',
+  date_start: '2026-04-18',
+  date_end: null,
+  location: 'Sala Maruja Limón, Alhaurín de la Torre, Málaga',
+  city: 'Alhaurín de la Torre',
+  country: 'Spain',
+  venue: 'Sala Maruja Limón',
+  address: 'Av. Las Americas, Nave 1 y 2, Alhaurín de la Torre, Málaga',
+  website: null,
+  tickets_url: CYBER_BASS_TICKETS,
+  image_url: CYBER_BASS_IMAGE,
+  lineup: CYBER_BASS_2026_LINEUP,
+  tags: [
+    'cyber bass',
+    'goat breakbeat',
+    'breakbeat',
+    'breaks',
+    'alhaurín de la torre',
+    'málaga',
+    'sala maruja limón',
+    'tortu',
+    'norbak',
+    'jan-b',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '23:30',
+  doors_close: null,
+}
+
+async function runPatchCyberBass2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', CYBER_BASS_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-cyber-bass-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: CYBER_BASS_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...CYBER_BASS_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', CYBER_BASS_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-cyber-bass-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -1183,6 +1269,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-cyber-bass-2026')) {
+    await runPatchCyberBass2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -1228,7 +1319,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
-  node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026`)
+  node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
+  node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026`)
     process.exit(1)
   }
 

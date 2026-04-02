@@ -40,6 +40,16 @@ export function buildArtistSlugLookup(rows: ArtistLinkRow[]): Map<string, string
       if (depref && depref !== key && !map.has(depref)) map.set(depref, row.slug)
     })
   }
+  /** Grafías / separaciones habituales en metadatos → slug canónico ya existente en BD */
+  const extraKeysToSlug: [string, string][] = [
+    ['defkline', 'deekline'],
+    ['aqua sky', 'aquasky'],
+    ['master blaster', 'master-blaster'],
+    ['masterblaster', 'master-blaster'],
+  ]
+  for (const [aliasNorm, slug] of extraKeysToSlug) {
+    if (!map.has(aliasNorm)) map.set(aliasNorm, slug)
+  }
   return map
 }
 
