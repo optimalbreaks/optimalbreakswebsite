@@ -29,6 +29,34 @@ function mimeForExt(ext) {
   return 'image/jpeg'
 }
 
+/** Supabase Storage rechaza subtipos en mayúsculas (p. ej. image/JPEG de CDNs). */
+function normalizeImageContentType(headerVal) {
+  if (!headerVal) return null
+  const base = headerVal.split(';')[0].trim().toLowerCase()
+  if (!base.startsWith('image/')) return null
+  if (base === 'image/jpg') return 'image/jpeg'
+  return base
+}
+
+/** Alinea extensión y Content-Type con los bytes (evita .jpg + WebP real → 500 o imagen rota en Storage). */
+function sniffImageFormat(buf) {
+  if (!buf || buf.length < 12) return null
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+    return { ext: '.jpg', contentType: 'image/jpeg' }
+  }
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return { ext: '.png', contentType: 'image/png' }
+  }
+  if (buf.toString('utf8', 0, 4) === 'RIFF' && buf.toString('utf8', 8, 12) === 'WEBP') {
+    return { ext: '.webp', contentType: 'image/webp' }
+  }
+  if (buf.length >= 6) {
+    const h = buf.toString('ascii', 0, 6)
+    if (h === 'GIF87a' || h === 'GIF89a') return { ext: '.gif', contentType: 'image/gif' }
+  }
+  return null
+}
+
 /**
  * @param {{ slug: string, sourceUrl: string, quiet?: boolean }} opts
  * @returns {Promise<string>} URL pública del objeto en Storage
@@ -59,15 +87,27 @@ export async function uploadArtistPortraitFromUrl(opts) {
   if (buf.length > MAX_BYTES) {
     throw new Error(`Imagen demasiado grande (${buf.length} bytes; máx ${MAX_BYTES})`)
   }
-
-  const ext = extFromSourceUrl(sourceUrl)
-  const objectPath = `artists/${slug}/portrait${ext}`
-
-  let contentType = mimeForExt(ext)
-  const ct = res.headers.get('content-type')
-  if (ct && ct.startsWith('image/')) {
-    contentType = ct.split(';')[0].trim()
+  if (buf.length < 32) {
+    throw new Error('Descarga demasiado pequeña o vacía; no es una imagen usable')
   }
+
+  const headAscii = buf.toString('utf8', 0, Math.min(64, buf.length)).toLowerCase()
+  if (headAscii.includes('<!doctype') || headAscii.includes('<html')) {
+    throw new Error(
+      'La URL devolvió HTML (p. ej. login o crawler bloqueado), no bytes de imagen. Elige otro candidato o usa --vision.',
+    )
+  }
+
+  const sniffed = sniffImageFormat(buf)
+  if (!sniffed) {
+    throw new Error(
+      'Los bytes descargados no son JPEG/PNG/WebP/GIF reconocibles; no se sube a Storage para evitar objetos rotos.',
+    )
+  }
+
+  const ext = sniffed.ext
+  const contentType = sniffed.contentType
+  const objectPath = `artists/${slug}/portrait${ext}`
 
   const sb = createClient(base, key, { auth: { persistSession: false } })
   const { error } = await sb.storage.from('media').upload(objectPath, buf, {
@@ -116,15 +156,24 @@ export async function uploadLabelLogoFromUrl(opts) {
   if (buf.length > MAX_BYTES) {
     throw new Error(`Imagen demasiado grande (${buf.length} bytes; máx ${MAX_BYTES})`)
   }
-
-  const ext = extFromSourceUrl(sourceUrl)
-  const objectPath = `labels/${slug}/logo${ext}`
-
-  let contentType = mimeForExt(ext)
-  const ct = res.headers.get('content-type')
-  if (ct && ct.startsWith('image/')) {
-    contentType = ct.split(';')[0].trim()
+  if (buf.length >= 16) {
+    const headAscii = buf.toString('utf8', 0, Math.min(64, buf.length)).toLowerCase()
+    if (headAscii.includes('<!doctype') || headAscii.includes('<html')) {
+      throw new Error('La URL devolvió HTML, no una imagen de logo.')
+    }
   }
+
+  const sniffed = sniffImageFormat(buf)
+  let ext = extFromSourceUrl(sourceUrl)
+  let contentType = mimeForExt(ext)
+  const ctNorm = normalizeImageContentType(res.headers.get('content-type'))
+  if (ctNorm) contentType = ctNorm
+  if (sniffed) {
+    ext = sniffed.ext
+    contentType = sniffed.contentType
+  }
+
+  const objectPath = `labels/${slug}/logo${ext}`
 
   const sb = createClient(base, key, { auth: { persistSession: false } })
   const { error } = await sb.storage.from('media').upload(objectPath, buf, {

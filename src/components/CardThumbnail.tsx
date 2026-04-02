@@ -1,7 +1,10 @@
+'use client'
+
 // ============================================
 // OPTIMAL BREAKS — Imagen de tarjeta (DB image_url + placeholder)
 // ============================================
 
+import { useEffect, useState } from 'react'
 import { displayImageUrl } from '@/lib/image-url'
 
 /** Marca de sitio cuando no hay retrato/logo en BD (OG home punk). */
@@ -42,18 +45,46 @@ export default function CardThumbnail({
       className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${frameClass} ${box} ${className}`}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element -- URLs dinámicas desde Supabase / CMS
-        <img
-          src={url}
-          alt={alt}
-          className={`absolute inset-0 h-full w-full transition-transform duration-300 ease-out ${imgFit}`}
-          loading="lazy"
-          decoding="async"
-        />
+        <CardThumbnailRemoteImage src={url} alt={alt} fit={fit} imgFit={imgFit} />
       ) : (
         <BrandedMissingThumbnail alt={alt} fit={fit} />
       )}
     </div>
+  )
+}
+
+/** Si la URL de Supabase/CMS devuelve 404 u otro error, mostrar el mismo fallback que sin imagen. */
+function CardThumbnailRemoteImage({
+  src,
+  alt,
+  fit,
+  imgFit,
+}: {
+  src: string
+  alt: string
+  fit: 'cover' | 'contain'
+  imgFit: string
+}) {
+  const [broken, setBroken] = useState(false)
+
+  useEffect(() => {
+    setBroken(false)
+  }, [src])
+
+  if (broken) {
+    return <BrandedMissingThumbnail alt={alt} fit={fit} />
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- URLs dinámicas desde Supabase / CMS
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setBroken(true)}
+      className={`absolute inset-0 h-full w-full transition-transform duration-300 ease-out ${imgFit}`}
+      loading="lazy"
+      decoding="async"
+    />
   )
 }
 

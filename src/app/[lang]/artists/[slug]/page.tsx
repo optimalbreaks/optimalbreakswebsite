@@ -13,7 +13,7 @@ import {
 } from '@/lib/artist-entity-match'
 import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
-import { displayImageUrl } from '@/lib/image-url'
+import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease } from '@/types/database'
@@ -55,7 +55,7 @@ const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
 function buildJsonLd(artist: Artist, lang: Locale, slug: string) {
   const isSolo = SOLO_CATEGORIES.has(artist.category)
   const url = `${SITE_URL}/${lang}/artists/${slug}`
-  const imageUrl = displayImageUrl(artist.image_url)
+  const imageUrl = displayArtistImageUrl(slug, artist.image_url)
 
   return {
     '@context': 'https://schema.org',
@@ -107,6 +107,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = lang === 'es' ? meta.bio_es : meta.bio_en
   const keywords = buildArtistKeywords(meta, lang)
 
+  const ogPortrait =
+    meta.og_image_url?.trim() ||
+    displayArtistImageUrl(slug, meta.image_url) ||
+    meta.image_url
+
   return detailPageMetadata(
     lang,
     `/artists/${slug}`,
@@ -114,7 +119,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     `${meta.name} | ${siteName}`,
     description,
     'profile',
-    meta.og_image_url || meta.image_url,
+    ogPortrait,
     keywords,
   )
 }
@@ -196,7 +201,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
           <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 lg:gap-10 items-stretch md:items-start">
             <div className="w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(400px,40vw)] shrink-0 mx-auto md:mx-0">
               <CardThumbnail
-                src={artist.image_url}
+                src={displayArtistImageUrl(slug, artist.image_url)}
                 alt={artist.name_display || artist.name}
                 aspectClass="aspect-square w-full"
                 frameClass="border-[3px] border-[var(--ink)]"

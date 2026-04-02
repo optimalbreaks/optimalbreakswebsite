@@ -77,8 +77,8 @@ const ACTIONS = [
   },
   {
     id: 'photo',
-    run: 'node scripts/guia-base-datos.mjs run photo -- <slug> [--json-only] …',
-    npm: 'npm run db:artist:photo -- …',
+    run: 'node scripts/guia-base-datos.mjs run photo -- <slug> | --all | --repair [--limit=N] …',
+    npm: 'npm run db:artist:photo -- <slug> | npm run db:artist:photo:repair | npm run db:artist:sync-public-portraits',
     creds: 'OPENAI_API_KEY + SERPAPI_API_KEY + URL + SUPABASE_SERVICE_ROLE_KEY (Storage + UPSERT vía API)',
     description:
       'SerpAPI + modelo eligen imagen; descarga, sube a bucket media (artists/<slug>/portrait.*), image_url = URL Supabase; UPSERT. --json-only: sin Storage ni BD.',

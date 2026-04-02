@@ -2,6 +2,7 @@
 // OPTIMAL BREAKS — Artists Page (Supabase)
 // ============================================
 
+import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
@@ -86,6 +87,10 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
     'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
   >
   const list = (artists || []) as ArtistListRow[]
+  const listForUi = list.map((a) => ({
+    ...a,
+    image_url: displayArtistImageUrl(a.slug, a.image_url) ?? null,
+  }))
   return (
     <div className="lined min-h-screen">
       <section className="px-4 sm:px-6 pt-10 pb-10 sm:pt-16 sm:pb-12 border-b-[5px] border-[var(--ink)]">
@@ -100,8 +105,8 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
       </section>
 
       <section className="px-4 sm:px-6 py-10 sm:py-12">
-        {list.length > 0 ? (
-          <ArtistsExplorer artists={list} dict={dict.artists} lang={lang} />
+        {listForUi.length > 0 ? (
+          <ArtistsExplorer artists={listForUi} dict={dict.artists} lang={lang} />
         ) : (
           <div className="space-y-8">
             <div className="max-w-[860px]">

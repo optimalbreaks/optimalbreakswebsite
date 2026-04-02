@@ -22,6 +22,7 @@ export default function AgentArtistPhoto({ lang }: { lang: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{
+    skipped?: boolean
     chosen: string | null
     storageUrl?: string
     reason: string
@@ -81,6 +82,15 @@ export default function AgentArtistPhoto({ lang }: { lang: string }) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || res.statusText)
+      if (json.skipped) {
+        setResult({
+          skipped: true,
+          chosen: null,
+          reason: typeof json.reason === 'string' ? json.reason : 'Omitido',
+          candidates: 0,
+        })
+        return
+      }
       setResult(json)
       if (json.saved) void loadPendingQueue()
     } catch (err) {
@@ -97,7 +107,7 @@ export default function AgentArtistPhoto({ lang }: { lang: string }) {
           Cola: artistas sin foto
         </h2>
         <p className="text-sm leading-relaxed text-[var(--ink)]" style={{ fontFamily: "'Special Elite', monospace" }}>
-          Artistas cuya <code>image_url</code> está vacía.{' '}
+          Artistas cuya <code>image_url</code> está vacía (sin retrato en <code>public/images/artists</code> según el mapa).{' '}
           <strong>Busca y asigna fotos con IA</strong> desde Google Imágenes.
         </p>
         {queueLoading && <p className="admin-muted text-xs">Cargando cola…</p>}
@@ -158,6 +168,11 @@ export default function AgentArtistPhoto({ lang }: { lang: string }) {
       {result && (
         <div className="admin-panel space-y-4">
           <h2 className="text-base font-black uppercase border-b-[3px] border-[var(--ink)] pb-2" style={{ fontFamily: "'Unbounded', sans-serif" }}>Resultado</h2>
+          {result.skipped && (
+            <div className="admin-panel border-[3px] border-[var(--ink)] bg-[var(--yellow)]/40 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              No se ha buscado foto: {result.reason}
+            </div>
+          )}
           <div className="space-y-2 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>
             <p><strong>Candidatos evaluados:</strong> {result.candidates}</p>
             <p><strong>Motivo:</strong> {result.reason}</p>
@@ -181,7 +196,11 @@ export default function AgentArtistPhoto({ lang }: { lang: string }) {
           {result.saved && <div className="admin-panel border-[3px] border-[var(--acid)] bg-[var(--acid)]/25 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>Foto guardada en Storage y actualizada en BD.</div>}
           {result.storageError && <div className="admin-panel border-[3px] border-[var(--red)] bg-[var(--red)]/10 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>Error Storage: {result.storageError}</div>}
           {result.dbError && <div className="admin-panel border-[3px] border-[var(--orange)] bg-[var(--orange)]/15 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>Error BD: {result.dbError}</div>}
-          {!result.chosen && <div className="admin-panel border-[3px] border-[var(--orange)] bg-[var(--orange)]/15 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>No se encontró foto adecuada. Prueba con otro nombre o sube manualmente.</div>}
+          {!result.skipped && !result.chosen && (
+            <div className="admin-panel border-[3px] border-[var(--orange)] bg-[var(--orange)]/15 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              No se encontró foto adecuada. Prueba con otro nombre o sube manualmente.
+            </div>
+          )}
         </div>
       )}
     </div>

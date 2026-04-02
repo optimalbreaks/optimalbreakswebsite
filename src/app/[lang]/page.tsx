@@ -3,6 +3,7 @@
 // Full responsive: mobile-first
 // ============================================
 
+import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
@@ -180,11 +181,12 @@ export default async function HomePage({
   const resolvedArtists = FEATURED_ARTISTS.map((a) => {
     const row = artistBySlug.get(a.slug)
     const styles = row?.styles?.filter(Boolean) ?? []
+    const dbImg = row?.image_url ?? a.image_url ?? null
     return {
       ...a,
       id: row?.id ?? null,
       name: row?.name_display?.trim() || a.name,
-      image_url: row?.image_url ?? a.image_url ?? null,
+      image_url: displayArtistImageUrl(a.slug, dbImg) ?? null,
       genres: styles.length > 0 ? styles.slice(0, 5) : a.genres,
     }
   })

@@ -98,6 +98,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Usa ?queue=missing' }, { status: 400 })
   }
 
+  const portraitHref = pathToFileURL(
+    join(process.cwd(), 'scripts', 'lib', 'editorial-public-artist-portrait.mjs'),
+  ).href
+  const { hasEditorialPortraitFile } = await import(portraitHref) as {
+    hasEditorialPortraitFile: (s: string) => boolean
+  }
+
   try {
     const sb = createServiceSupabase()
     const artists: { slug: string; name: string }[] = []
@@ -113,9 +120,9 @@ export async function GET(request: NextRequest) {
       if (!data?.length) break
       for (const row of data) {
         const url = String(row.image_url || '').trim()
-        if (row.slug && row.name && !url.startsWith('https://')) {
-          artists.push({ slug: row.slug, name: row.name })
-        }
+        if (!row.slug || !row.name || url.startsWith('https://')) continue
+        if (hasEditorialPortraitFile(row.slug)) continue
+        artists.push({ slug: row.slug, name: row.name })
       }
       if (data.length < pageSize) break
       from += pageSize
@@ -138,6 +145,23 @@ export async function POST(request: NextRequest) {
   const { slug, artistName } = body as { slug?: string; artistName?: string }
   if (!slug || !artistName) {
     return NextResponse.json({ error: 'Se requieren slug y artistName' }, { status: 400 })
+  }
+
+  const force = request.nextUrl.searchParams.get('force') === '1'
+  if (!force) {
+    const portraitHref = pathToFileURL(
+      join(process.cwd(), 'scripts', 'lib', 'editorial-public-artist-portrait.mjs'),
+    ).href
+    const { hasEditorialPortraitFile } = await import(portraitHref) as {
+      hasEditorialPortraitFile: (s: string) => boolean
+    }
+    if (hasEditorialPortraitFile(slug)) {
+      return NextResponse.json({
+        skipped: true,
+        reason:
+          'Retrato editorial en public/images/artists (mapa). Quita el slug del JSON map o llama POST /api/admin/agent/artist-photo?force=1',
+      })
+    }
   }
 
   const serpKey = process.env.SERPAPI_API_KEY?.trim()
