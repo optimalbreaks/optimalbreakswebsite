@@ -152,21 +152,14 @@ function groupMixesByPublicationYear(items: Mix[]): { key: YearGroupKey; items: 
   return out
 }
 
-type MixDateFilter = 'all' | 'dated' | 'undated'
+/** Filtro por año de publicación/catalogación; `undated` = sin año asignable. */
+type YearFilterValue = 'all' | 'undated' | number
 
 type MixFilterDict = {
   search_placeholder: string
-  date_label: string
-  all_dates: string
-  dated: string
+  year_label: string
+  all_years: string
   undated: string
-  type_label: string
-  all_types: string
-  type_essential_mix: string
-  type_classic_set: string
-  type_radio_show: string
-  type_youtube_session: string
-  type_podcast: string
   platform_label: string
   all_platforms: string
   platform_youtube: string
@@ -178,14 +171,7 @@ type MixFilterDict = {
   clear_filters: string
 }
 
-const MIX_TYPE_ORDER = ['essential_mix', 'classic_set', 'radio_show', 'youtube_session', 'podcast'] as const satisfies readonly Mix['mix_type'][]
 const PLATFORM_ORDER = ['youtube', 'soundcloud', 'mixcloud', 'other'] as const satisfies readonly Mix['platform'][]
-
-function mixTypeChipLabel(mf: MixFilterDict, t: Mix['mix_type']): string {
-  const key = `type_${t}` as keyof MixFilterDict
-  const v = mf[key]
-  return typeof v === 'string' ? v : t.replace(/_/g, ' ')
-}
 
 function platformChipLabel(mf: MixFilterDict, p: Mix['platform']): string {
   const key = `platform_${p}` as keyof MixFilterDict
@@ -208,21 +194,10 @@ interface Props {
 export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [search, setSearch] = useState('')
-  const [dateFilter, setDateFilter] = useState<MixDateFilter>('all')
-  const [mixType, setMixType] = useState<'all' | Mix['mix_type']>('all')
+  const [yearFilter, setYearFilter] = useState<YearFilterValue>('all')
   const [platform, setPlatform] = useState<'all' | Mix['platform']>('all')
 
   const mf = dict.mix_filter
-
-  const distinctMixTypes = useMemo(() => {
-    const s = new Set<Mix['mix_type']>()
-    mixes.forEach((m) => {
-      if (m.mix_type) s.add(m.mix_type)
-    })
-    return Array.from(s).sort(
-      (a, b) => MIX_TYPE_ORDER.indexOf(a) - MIX_TYPE_ORDER.indexOf(b),
-    )
-  }, [mixes])
 
   const distinctPlatforms = useMemo(() => {
     const s = new Set<Mix['platform']>()
@@ -234,6 +209,20 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
     )
   }, [mixes])
 
+  const distinctYears = useMemo(() => {
+    const s = new Set<number>()
+    mixes.forEach((m) => {
+      const y = mixGroupYear(m)
+      if (y != null) s.add(y)
+    })
+    return Array.from(s).sort((a, b) => b - a)
+  }, [mixes])
+
+  const hasUndatedMixes = useMemo(
+    () => mixes.some((m) => mixGroupYear(m) == null),
+    [mixes],
+  )
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     return mixes.filter((m) => {
@@ -243,18 +232,20 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
         if (!title.includes(q) && !artist.includes(q)) return false
       }
       const gy = mixGroupYear(m)
-      if (dateFilter === 'dated' && gy == null) return false
-      if (dateFilter === 'undated' && gy != null) return false
-      if (mixType !== 'all' && m.mix_type !== mixType) return false
+      if (yearFilter === 'undated') {
+        if (gy != null) return false
+      } else if (typeof yearFilter === 'number') {
+        if (gy !== yearFilter) return false
+      }
       if (platform !== 'all' && m.platform !== platform) return false
       return true
     })
-  }, [mixes, search, dateFilter, mixType, platform])
+  }, [mixes, search, yearFilter, platform])
 
   const yearGroups = useMemo(() => groupMixesByPublicationYear(filtered), [filtered])
 
   const hasNonDefaultFilters =
-    search.trim() !== '' || dateFilter !== 'all' || mixType !== 'all' || platform !== 'all'
+    search.trim() !== '' || yearFilter !== 'all' || platform !== 'all'
 
   const chipBase =
     'cursor-pointer border-[3px] border-[var(--ink)] px-2.5 py-1 transition-colors text-[9px] sm:text-[10px] font-bold uppercase tracking-wider'
@@ -264,8 +255,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
 
   function clearFilters() {
     setSearch('')
-    setDateFilter('all')
-    setMixType('all')
+    setYearFilter('all')
     setPlatform('all')
   }
 
@@ -293,56 +283,38 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
               className="shrink-0 text-[var(--dim)] mr-1"
               style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
             >
-              {mf.date_label}
+              {mf.year_label}
             </span>
-            {(
-              [
-                ['all', mf.all_dates] as const,
-                ['dated', mf.dated] as const,
-                ['undated', mf.undated] as const,
-              ] as const
-            ).map(([key, label]) => (
+            <button
+              type="button"
+              style={chipFont}
+              className={`${chipBase} ${yearFilter === 'all' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+              onClick={() => setYearFilter('all')}
+            >
+              {mf.all_years}
+            </button>
+            {distinctYears.map((y) => (
               <button
-                key={key}
+                key={y}
                 type="button"
                 style={chipFont}
-                className={`${chipBase} ${dateFilter === key ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
-                onClick={() => setDateFilter(key)}
+                className={`${chipBase} ${yearFilter === y ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setYearFilter(y)}
               >
-                {label}
+                {y}
               </button>
             ))}
-          </div>
-
-          {distinctMixTypes.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2 gap-y-3">
-              <span
-                className="shrink-0 text-[var(--dim)] mr-1"
-                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
-              >
-                {mf.type_label}
-              </span>
+            {hasUndatedMixes ? (
               <button
                 type="button"
                 style={chipFont}
-                className={`${chipBase} ${mixType === 'all' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
-                onClick={() => setMixType('all')}
+                className={`${chipBase} ${yearFilter === 'undated' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setYearFilter('undated')}
               >
-                {mf.all_types}
+                {mf.undated}
               </button>
-              {distinctMixTypes.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  style={chipFont}
-                  className={`${chipBase} ${mixType === t ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
-                  onClick={() => setMixType(t)}
-                >
-                  {mixTypeChipLabel(mf, t)}
-                </button>
-              ))}
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
           {distinctPlatforms.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 gap-y-3">
