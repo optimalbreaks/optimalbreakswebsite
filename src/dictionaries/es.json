@@ -38,12 +38,16 @@
       "title_1": "HISTORIA DEL",
       "title_2": "BREAK",
       "items": [
-        { "year": "1970", "title": "LOS ORÍGENES", "desc": "Kool Herc, Bronx, block parties. La técnica del \"merry-go-round\" sobre breaks de funk crea la semilla del hip-hop y del breakbeat electrónico." },
-        { "year": "1986", "title": "AMEN BREAK", "desc": "6 segundos de batería de The Winstons. El loop más sampleado de la historia. La base del jungle, del DnB y de medio internet." },
-        { "year": "1990", "title": "UK RAVE CULTURE", "desc": "Warehouses ilegales, piratas radiofónicas. El breakbeat conquista la escena rave británica sin pedir permiso a nadie." },
-        { "year": "1997", "title": "BIG BEAT EXPLODES", "desc": "The Prodigy, Chemical Brothers, Fatboy Slim. El break llena estadios, MTV y las listas de todo el mundo. La era dorada." },
-        { "year": "2003", "title": "NU SKOOL ERA", "desc": "Stanton Warriors, Plump DJs, Freq Nasty. El break se pule: más limpio, más gordo, más orientado a reventar pistas." },
-        { "year": "NOW", "title": "EL RESURGIMIENTO", "desc": "Fusión con UK garage, tech house, bass music. Nuevos productores, nuevos sellos. El break nunca estuvo muerto, solo estaba cargando." }
+        { "year": "1973—1986", "title": "ORÍGENES Y AMEN", "desc": "DJ Kool Herc en el Bronx y el merry-go-round sobre funk y soul; James Brown y la materia prima sampleada. The Winstons y el Amen break: semilla del hip-hop, jungle y DnB." },
+        { "year": "1988—1994", "title": "UK RAVE Y HARDCORE", "desc": "Acid house y techno reinterpretados en UK: warehouses, radios pirata y breakbeat hardcore. The Prodigy, Shut Up and Dance, 808 State, Renegade Soundwave, SL2, Altern-8 — el ritmo roto como columna del rave." },
+        { "year": "1980s—2000s", "title": "EE. UU., OTRO MAPA", "desc": "Misma genealogía del break, otro club: house y techno en 4x4 marcan el relato; Florida breaks, Miami bass, electro y costa Oeste — escena potente pero más fragmentada que el arco UK." },
+        { "year": "1992—2002", "title": "ANDALUCÍA, EDAD DE ORO", "desc": "Breakbeat de masas: Canal Sur Radio, macrofiestas y cultura de fin de semana. El Martín Carpena (Málaga, 2002) como quiebre; memoria en documentales como Break Nation (2023)." },
+        { "year": "1995—2000", "title": "BIG BEAT EXPLOTA", "desc": "The Prodigy, The Chemical Brothers, Fatboy Slim. El break llena estadios, MTV y listas — el pico comercial del ritmo roto en la cultura pop." },
+        { "year": "2000—2006", "title": "NU SKOOL BREAKS", "desc": "Stanton Warriors, Plump DJs, Adam Freeland, Freq Nasty y Krafty Kuts. Sellos Finger Lickin' y Marine Parade; Breakspoll y residencias en Fabric — el break pulido para la pista." },
+        { "year": "2001—2025", "title": "AUSTRALIA, CONTINUIDAD", "desc": "Breakfest en Perth como cita fija; Pendulum desde Australia al circuito internacional. Escena sólida fuera del foco UK — breaks como infraestructura, no anécdota." },
+        { "year": "2005—2019", "title": "DECLIVE Y LATENCIA", "desc": "El género pierde el centro mainstream; Breakspoll y escena en salas más pequeñas. Krafty Kuts, Lady Waks y otros mantienen cabina, radio y comunidad online — vivo pero menos visible." },
+        { "year": "2015—HOY", "title": "ANDALUCÍA Y RAVEART", "desc": "Resurgimiento en el sur: DJs y productores del archivo (Cerbero, Bubu, Javy Groove, Yo Speed, Fran Break…). Raveart (Sevilla, promotora desde 2002 en BD) articula Summer/Winter, Retro Halloween, We Love Retro / Booking & Clubbing con invitados UK (Freestylers) y Raveart Records — eventos y organización enlazados en el sitio." },
+        { "year": "1998—HOY", "title": "ERA DIGITAL (GLOBAL)", "desc": "Beatport y Breaks / Breakbeat / UK Bass; YouTube, Mixcloud y SoundCloud como archivo planetario. Capa global que convive con capítulos locales como el andaluz: nuevos productores, sellos y fusión con garage, tech house y bass." }
       ]
     },
     "section_artists": {
@@ -168,10 +172,12 @@
           "El documental «Break Nation. La electrónica que bailó Andalucía» (2023, David Pareja) recorre ese ciclo de euforia y también de quiebre; sirve como referencia editorial para tratar Andalucía como capítulo propio dentro de la historia global del breakbeat.",
           "El punto de inflexión que suele citarse es la noche del Martín Carpena en Málaga (2 de marzo de 2002): multitud desbordada, estampidas y, lo más grave, víctimas mortales vinculadas en la prensa a consumo. A partir de ahí el estilo y la escena quedaron muy estigmatizados; se cancelaron eventos y muchas instituciones giraron la espalda a esa cultura.",
           "Importante matizar: no fue un apagón total. Quedó latente —DJs, productores, memorias, circuitos pequeños— hasta la recuperación simbólica que hoy permite hablar de «resurrección» en títulos de prensa y en obras como la citada.",
-          "En paralelo, el declive del breakbeat como «etiqueta reina» del club fue también global: en Andalucía coincidió un golpe local brutal con una tendencia más amplia hacia otros sonidos bass y electrónicos."
+          "En paralelo, el declive del breakbeat como «etiqueta reina» del club fue también global: en Andalucía coincidió un golpe local brutal con una tendencia más amplia hacia otros sonidos bass y electrónicos.",
+          "A partir de mediados de los 2010 el sur recupera presencia propia: festivales, sellos y promotores que enlazan la memoria noventera con bass music y breaks actuales. Raveart (Sevilla, referenciada en la tabla organizations de este proyecto desde 2002) concentra Summer y Winter, Retro Halloween, giras club con nombres británicos y el sello Raveart Records; los eventos enlazan a la promotora en la base de datos. Artistas andaluces documentados aquí — Cerbero, Bubu, Javy Groove, Yo Speed, Fran Break y otros — mantienen cabina y estudio; Break Nation (2023) ayuda a contar el arco generacional junto a plataformas digitales."
         ],
         "links": [
-          { "label": "Break Nation en FilmAffinity", "href": "https://www.filmaffinity.com/es/film126766.html" }
+          { "label": "Break Nation en FilmAffinity", "href": "https://www.filmaffinity.com/es/film126766.html" },
+          { "label": "Raveart (web oficial)", "href": "https://www.raveart.es/" }
         ]
       },
       "australian": {

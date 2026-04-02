@@ -52,7 +52,7 @@ export default function Timeline({ tag, title1, title2, items, footerLink }: Tim
       <div className="mt-8 sm:mt-10">
         {items.map((item, i) => (
           <div
-            key={i}
+            key={`${item.year}-${item.title}`}
             className="grid gap-2 sm:gap-5 py-4 sm:py-6 transition-all duration-200 sm:hover:pl-3 min-w-0"
             style={{
               gridTemplateColumns: 'clamp(48px, 14vw, 100px) 3px minmax(0, 1fr)',

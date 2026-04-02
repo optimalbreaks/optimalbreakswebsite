@@ -44,34 +44,54 @@
       "title_2": "THE BREAK",
       "items": [
         {
-          "year": "1970",
-          "title": "THE ORIGINS",
-          "desc": "Kool Herc, the Bronx, block parties. The 'merry-go-round' technique over funk breaks plants the seed of hip-hop and electronic breakbeat."
+          "year": "1973—1986",
+          "title": "ORIGINS & AMEN",
+          "desc": "DJ Kool Herc in the Bronx and the merry-go-round on funk and soul; James Brown and the sample bedrock. The Winstons and the Amen break — seed of hip-hop, jungle and DnB."
         },
         {
-          "year": "1986",
-          "title": "AMEN BREAK",
-          "desc": "6 seconds of drums from The Winstons. The most sampled loop in history. The foundation of jungle, DnB and half the internet."
+          "year": "1988—1994",
+          "title": "UK RAVE & HARDCORE",
+          "desc": "Acid house and techno reimagined in the UK: warehouses, pirate radio and breakbeat hardcore. The Prodigy, Shut Up and Dance, 808 State, Renegade Soundwave, SL2, Altern-8 — broken rhythm as the spine of rave."
         },
         {
-          "year": "1990",
-          "title": "UK RAVE CULTURE",
-          "desc": "Illegal warehouses, pirate radios. Breakbeat conquers the British rave scene without asking anyone's permission."
+          "year": "1980s—2000s",
+          "title": "US, A DIFFERENT MAP",
+          "desc": "Same break DNA, different club story: house and techno in 4/4 dominate the narrative; Florida breaks, Miami bass, electro and the West Coast — strong but more fragmented than the UK arc."
         },
         {
-          "year": "1997",
+          "year": "1992—2002",
+          "title": "ANDALUSIA, GOLDEN AGE",
+          "desc": "Mass-market breakbeat: Canal Sur Radio, mega-parties and weekend culture. The Martín Carpena night in Málaga (2002) as a turning point; memory kept alive in films like Break Nation (2023)."
+        },
+        {
+          "year": "1995—2000",
           "title": "BIG BEAT EXPLODES",
-          "desc": "The Prodigy, Chemical Brothers, Fatboy Slim. Breaks fill stadiums, MTV and charts worldwide. The golden era."
+          "desc": "The Prodigy, The Chemical Brothers, Fatboy Slim. Breaks fill stadiums, MTV and charts — the commercial peak of broken beats in pop culture."
         },
         {
-          "year": "2003",
-          "title": "NU SKOOL ERA",
-          "desc": "Stanton Warriors, Plump DJs, Freq Nasty. The break gets polished: cleaner, fatter, built to destroy dancefloors."
+          "year": "2000—2006",
+          "title": "NU SKOOL BREAKS",
+          "desc": "Stanton Warriors, Plump DJs, Adam Freeland, Freq Nasty and Krafty Kuts. Labels like Finger Lickin' and Marine Parade; Breakspoll and Fabric residencies — breaks polished for the floor."
         },
         {
-          "year": "NOW",
-          "title": "THE RESURGENCE",
-          "desc": "Fusion with UK garage, tech house, bass music. New producers, new labels. The break was never dead, it was just reloading."
+          "year": "2001—2025",
+          "title": "AUSTRALIA, CONTINUITY",
+          "desc": "Breakfest in Perth as a long-running anchor; Pendulum from Australia to the world stage. A solid scene outside the UK spotlight — breaks as infrastructure, not a footnote."
+        },
+        {
+          "year": "2005—2019",
+          "title": "DECLINE & LATENCY",
+          "desc": "The genre leaves the mainstream centre; Breakspoll and the circuit move to smaller rooms. Krafty Kuts, Lady Waks and others keep booths, radio and online communities alive — present but less visible."
+        },
+        {
+          "year": "2015—NOW",
+          "title": "ANDALUSIA & RAVEART",
+          "desc": "A southern resurgence: DJs and producers in this archive (Cerbero, Bubu, Javy Groove, Yo Speed, Fran Break…). Raveart (Seville, promoter since 2002 in our DB) runs Summer/Winter, Retro Halloween, We Love Retro / Booking & Clubbing with UK guests like Freestylers, plus Raveart Records — organization and events linked on the site."
+        },
+        {
+          "year": "1998—NOW",
+          "title": "DIGITAL ERA (GLOBAL)",
+          "desc": "Beatport and Breaks / Breakbeat / UK Bass; YouTube, Mixcloud and SoundCloud as a worldwide archive. The global layer coexists with local chapters such as Andalusia’s: new producers, labels and fusion with garage, tech house and bass."
         }
       ]
     },
@@ -241,12 +261,17 @@
           "The film \"Break Nation: The electronics that danced Andalusia\" (2023, David Pareja) traces that cycle of euphoria and fracture; it is a solid editorial anchor for treating Andalusia as its own chapter in global breakbeat history.",
           "The turning point often cited is the night at the Martín Carpena arena in Málaga (2 March 2002): overcrowding, crushing and, most seriously, fatalities reported in the press in connection with substance use. Afterward the sound and scene were heavily stigmatised; events were cancelled and many institutions turned away from that culture.",
           "It is vital to nuance: it was not a total blackout. The scene went latent — DJs, producers, memories, smaller circuits — until the symbolic \"resurrection\" headlines and works like the film above can describe today.",
-          "In parallel, breakbeat’s fall as the club’s \"headline\" genre was global: in Andalusia a brutal local shock coincided with a wider shift toward other bass and electronic sounds."
+          "In parallel, breakbeat’s fall as the club’s \"headline\" genre was global: in Andalusia a brutal local shock coincided with a wider shift toward other bass and electronic sounds.",
+          "From the mid-2010s the south regains its own footprint: festivals, labels and promoters tying 1990s memory to current bass and breaks. Raveart (Seville, recorded in this project’s organizations table since 2002) anchors Summer and Winter, Retro Halloween, club tours with British guests and Raveart Records; events link to the promoter in the database. Andalusian artists documented here — Cerbero, Bubu, Javy Groove, Yo Speed, Fran Break and others — keep booths and studios; Break Nation (2023) helps tell the generational arc alongside digital platforms."
         ],
         "links": [
           {
             "label": "Break Nation on FilmAffinity",
             "href": "https://www.filmaffinity.com/es/film126766.html"
+          },
+          {
+            "label": "Raveart (official site)",
+            "href": "https://www.raveart.es/"
           }
         ]
       },

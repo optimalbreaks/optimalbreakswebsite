@@ -93,7 +93,10 @@ export default async function HistoryPage({ params }: { params: { lang: Locale }
       ? list.map((entry) => ({
           slug: entry.slug,
           section: entry.section,
-          yearLabel: entry.year_end ? `${entry.year_start} — ${entry.year_end}` : `${entry.year_start}`,
+          yearLabel:
+            entry.year_end != null
+              ? `${entry.year_start} — ${entry.year_end}`
+              : `${entry.year_start} — ${lang === 'es' ? 'hoy' : 'today'}`,
           title: lang === 'es' ? entry.title_es : entry.title_en,
           content: lang === 'es' ? entry.content_es : entry.content_en,
         }))
