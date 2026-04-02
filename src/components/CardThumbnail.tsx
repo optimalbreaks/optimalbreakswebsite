@@ -4,6 +4,9 @@
 
 import { displayImageUrl } from '@/lib/image-url'
 
+/** Marca de sitio cuando no hay retrato/logo en BD (OG home punk). */
+const MISSING_IMAGE_FALLBACK = '/images/opengraph_OB_punk.png'
+
 interface CardThumbnailProps {
   src?: string | null
   alt: string
@@ -48,42 +51,33 @@ export default function CardThumbnail({
           decoding="async"
         />
       ) : (
-        <ThumbnailPlaceholder alt={alt} />
+        <BrandedMissingThumbnail alt={alt} fit={fit} />
       )}
     </div>
   )
 }
 
-function ThumbnailPlaceholder({ alt }: { alt: string }) {
-  const letters = alt
-    .replace(/[^a-zA-ZÀ-ÿ0-9]/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-  const a = letters[0]?.[0] ?? '?'
-  const b = letters[1]?.[0] ?? letters[0]?.[1] ?? ''
-  const initials = `${a}${b}`.toUpperCase()
+function BrandedMissingThumbnail({ alt, fit }: { alt: string; fit: 'cover' | 'contain' }) {
+  const fallbackUrl = displayImageUrl(MISSING_IMAGE_FALLBACK) ?? MISSING_IMAGE_FALLBACK
+  const imgFit =
+    fit === 'contain'
+      ? 'object-contain object-center'
+      : 'object-cover object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out'
 
   return (
-    <div
-      className="absolute inset-0 flex w-full items-center justify-center"
-      style={{
-        backgroundImage:
-          'repeating-linear-gradient(-45deg, var(--paper-dark), var(--paper-dark) 6px, rgba(26,26,26,0.06) 6px, rgba(26,26,26,0.06) 12px)',
-      }}
-      role="img"
-      aria-label={alt}
-    >
-      <span
+    <div className="absolute inset-0" role="img" aria-label={alt}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- asset estático bajo /images/ */}
+      <img
+        src={fallbackUrl}
+        alt=""
+        className={`absolute inset-0 h-full w-full ${imgFit}`}
+        loading="lazy"
+        decoding="async"
+      />
+      <div
+        className="absolute inset-0 bg-[var(--paper-dark)]/35 pointer-events-none"
         aria-hidden
-        className="select-none font-black tracking-tighter text-[var(--ink)]/25"
-        style={{
-          fontFamily: "'Unbounded', sans-serif",
-          fontSize: 'clamp(1.75rem, 7vw, 3rem)',
-        }}
-      >
-        {initials}
-      </span>
+      />
     </div>
   )
 }

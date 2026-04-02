@@ -6,7 +6,7 @@
 'use client'
 
 import Script from 'next/script'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { readConsent, type CookieConsent } from './CookieBanner'
 
@@ -25,20 +25,32 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
  * We handle everything here: consent default → gtag.js load → config (with
  * send_page_view:false) → explicit page_view on every route change including first.
  */
+/** Evita dos `page_view` seguidos por la misma URL (React Strict Mode en dev y re-renders con misma ruta). */
+const PAGE_VIEW_DEDUPE_MS = 150
+
 export default function GoogleAnalytics() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const searchKey = searchParams?.toString() ?? ''
+  const lastPageViewRef = useRef<{ path: string; at: number } | null>(null)
 
   useEffect(() => {
     if (!GA_ID || typeof window.gtag !== 'function') return
 
-    const url = pathname + (searchParams?.toString() ? `?${searchParams}` : '')
+    const pathWithQuery = searchKey ? `${pathname}?${searchKey}` : pathname
+    const now = Date.now()
+    const prev = lastPageViewRef.current
+    if (prev && prev.path === pathWithQuery && now - prev.at < PAGE_VIEW_DEDUPE_MS) {
+      return
+    }
+    lastPageViewRef.current = { path: pathWithQuery, at: now }
+
     window.gtag('event', 'page_view', {
-      page_path: url,
-      page_location: window.location.origin + url,
+      page_path: pathWithQuery,
+      page_location: window.location.origin + pathWithQuery,
       page_title: document.title,
     })
-  }, [pathname, searchParams])
+  }, [pathname, searchKey])
 
   // Consent updates (initial read + banner interaction)
   useEffect(() => {

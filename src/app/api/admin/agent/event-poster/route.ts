@@ -26,42 +26,17 @@ Responde SOLO JSON:
 {"chosen": <índice 0-based del array "candidates" o null>, "reason": <string breve en español>}
 Si ningún candidato es fiable, chosen debe ser null.`
 
-async function serpGoogleImages(query: string, apiKey: string, max = 18): Promise<ImageCandidate[]> {
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google_images')
-  url.searchParams.set('q', query)
-  url.searchParams.set('api_key', apiKey)
-  url.searchParams.set('hl', 'en')
-  url.searchParams.set('gl', 'uk')
+type SerpImageOpts = { alternateQueries?: string[] }
 
-  const res = await fetch(url.toString())
-  const data = await res.json()
-  if (!res.ok) throw new Error(`SerpAPI ${res.status}: ${data.error || res.statusText}`)
-
-  const raw = data.images_results
-  if (!Array.isArray(raw)) return []
-
-  const seen = new Set<string>()
-  const out: ImageCandidate[] = []
-  for (const r of raw) {
-    if (out.length >= max) break
-    const original = typeof r.original === 'string' ? r.original.trim() : ''
-    if (!original.startsWith('https://')) continue
-    if (r.is_product === true) continue
-    const key = original.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push({
-      title: String(r.title || '').slice(0, 200),
-      source: String(r.source || '').slice(0, 120),
-      link: typeof r.link === 'string' ? r.link.slice(0, 500) : '',
-      original,
-      width: typeof r.original_width === 'number' ? r.original_width : null,
-      height: typeof r.original_height === 'number' ? r.original_height : null,
-      thumbnail: typeof r.thumbnail === 'string' ? r.thumbnail : '',
-    })
-  }
-  return out
+async function serpGoogleImages(
+  query: string,
+  apiKey: string,
+  max = 18,
+  opts: SerpImageOpts = {},
+): Promise<ImageCandidate[]> {
+  const href = pathToFileURL(join(process.cwd(), 'scripts', 'lib', 'serp-google-images.mjs')).href
+  const { fetchGoogleImageCandidates } = await import(href)
+  return fetchGoogleImageCandidates(query, apiKey, max, opts) as Promise<ImageCandidate[]>
 }
 
 async function openAiChoosePoster(
@@ -193,10 +168,18 @@ export async function POST(request: NextRequest) {
   if (country) q += ` ${country}`
   if (venue) q += ` ${venue}`
   q += ' festival club night poster flyer cartel event'
+  const primary = q.replace(/\s+/g, ' ').trim()
+  const alternateQueries = [
+    `"${name}" poster flyer event`,
+    year ? `"${name}" ${year} festival poster` : '',
+    city ? `"${name}" ${city} club night poster` : '',
+  ]
+    .map((s) => s.replace(/\s+/g, ' ').trim())
+    .filter((s) => s && s !== primary)
 
   let candidates: ImageCandidate[]
   try {
-    candidates = await serpGoogleImages(q.replace(/\s+/g, ' ').trim(), serpKey, 18)
+    candidates = await serpGoogleImages(primary, serpKey, 18, { alternateQueries })
   } catch (e) {
     return NextResponse.json({ error: `SerpAPI: ${e instanceof Error ? e.message : e}` }, { status: 502 })
   }

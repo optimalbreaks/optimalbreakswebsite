@@ -59,6 +59,25 @@ function buildLogoQuery(labelName) {
   return `"${String(labelName).trim()}" record label logo discography music`.replace(/\s+/g, ' ').trim()
 }
 
+function buildLogoSearchQueries(labelName) {
+  const n = String(labelName || '').trim()
+  const primary = buildLogoQuery(n)
+  const alts = [
+    `"${n}" electronic music label logo`,
+    `${n} records label logo`,
+    `"${n}" discogs label`,
+    `${n} breakbeat label logo`,
+  ].map((q) => q.replace(/\s+/g, ' ').trim())
+  const seen = new Set()
+  const out = []
+  for (const q of [primary, ...alts]) {
+    if (!q || seen.has(q)) continue
+    seen.add(q)
+    out.push(q)
+  }
+  return out
+}
+
 async function openAiChooseLogo(labelName, slug, candidates, quiet) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY en .env.local')
@@ -155,12 +174,15 @@ async function processOneLabel({ slug, labelName, sb, serpKey, maxCandidates, fl
     }
   }
 
-  const q = buildLogoQuery(labelName)
-  if (!quiet) console.log(`[logo-sello] ${slug}: SerpAPI →`, q)
+  const queries = buildLogoSearchQueries(labelName)
+  const [primaryQ, ...altQueries] = queries
+  if (!quiet) console.log(`[logo-sello] ${slug}: SerpAPI →`, primaryQ, altQueries.length ? `+${altQueries.length} alt.` : '')
 
   let candidates
   try {
-    candidates = await fetchGoogleImageCandidates(q, serpKey, maxCandidates)
+    candidates = await fetchGoogleImageCandidates(primaryQ, serpKey, maxCandidates, {
+      alternateQueries: altQueries,
+    })
   } catch (e) {
     console.error(`[logo-sello] ${slug}: SerpAPI`, e.message)
     return { ok: false, slug, error: e.message }

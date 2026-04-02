@@ -81,6 +81,36 @@ function buildImageSearchQuery(artist, extraSuffix) {
   return q.replace(/\s+/g, ' ').trim()
 }
 
+/** Varias formulaciones; SerpAPI a vecer falla con comillas o nombres raros. */
+function buildArtistImageSearchQueries(artist, extraSuffix) {
+  const suffix = extraSuffix ? ` ${String(extraSuffix).trim()}` : ''
+  const name = String(artist.name || '').trim()
+  const rn = artist.real_name ? String(artist.real_name).trim() : ''
+  const country = artist.country ? String(artist.country).trim() : ''
+  const styles = Array.isArray(artist.styles)
+    ? artist.styles.filter(Boolean).slice(0, 2).join(' ')
+    : ''
+
+  const primary = buildImageSearchQuery(artist, extraSuffix)
+  const alts = []
+  if (name) alts.push(`${name} DJ producer portrait press photo${suffix}`.replace(/\s+/g, ' ').trim())
+  if (name && styles) alts.push(`"${name}" ${styles} musician DJ`.replace(/\s+/g, ' ').trim())
+  if (rn && name && rn.toLowerCase() !== name.toLowerCase()) {
+    alts.push(`"${rn}" ${name} DJ`.replace(/\s+/g, ' ').trim())
+  }
+  if (name && country) alts.push(`"${name}" ${country} electronic DJ`.replace(/\s+/g, ' ').trim())
+
+  const seenQ = new Set()
+  const unique = []
+  for (const q of [primary, ...alts]) {
+    const k = q.replace(/\s+/g, ' ').trim()
+    if (!k || seenQ.has(k)) continue
+    seenQ.add(k)
+    unique.push(k)
+  }
+  return unique
+}
+
 const SYSTEM_TEXT = `Eres editor de Optimal Breaks (música dance / breakbeat). Te pasan candidatos de Google Imágenes como METADATOS (no ves la foto).
 Tu tarea: elegir a lo sumo UN candidato que sea muy probablemente una foto del artista o grupo indicado (retrato, promo, directo claro). Rechaza: otra persona homónima, memes, portadas de disco solas si parece que no hay persona, logos abstractos, renders genéricos, capturas de baja calidad, merchandising, resultados dudosos.
 Responde SOLO un JSON con el esquema:
@@ -261,12 +291,15 @@ async function processOneArtist({
     }
   }
 
-  const q = buildImageSearchQuery(artist, querySuffix)
-  if (!quiet) console.log(`[foto] ${slug}: SerpAPI →`, q)
+  const queries = buildArtistImageSearchQueries(artist, querySuffix)
+  const [primaryQ, ...altQueries] = queries
+  if (!quiet) console.log(`[foto] ${slug}: SerpAPI →`, primaryQ, altQueries.length ? `+${altQueries.length} alt.` : '')
 
   let candidates
   try {
-    candidates = await fetchGoogleImageCandidates(q, serpKey, maxCandidates)
+    candidates = await fetchGoogleImageCandidates(primaryQ, serpKey, maxCandidates, {
+      alternateQueries: altQueries,
+    })
   } catch (e) {
     console.error(`[foto] ${slug}: SerpAPI`, e.message)
     return { ok: false, slug, error: e.message }
