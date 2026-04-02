@@ -23,7 +23,7 @@ function extractYouTubeId(url: string | null | undefined): string | null {
   return null
 }
 
-/** Reproductor embebido 16:9 (estilo tutoriales: iframe visible, lazy-load del navegador). */
+/** Reproductor embebido 16:9. `loading="eager"`: en listas filtradas, lazy + reconciliación de React suele dejar iframes en gris hasta recargar. */
 function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
   return (
     <div className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
@@ -32,7 +32,7 @@ function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; ti
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
-        loading="lazy"
+        loading="eager"
         referrerPolicy="strict-origin-when-cross-origin"
         className="absolute inset-0 h-full w-full border-0"
       />
@@ -244,6 +244,12 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
 
   const yearGroups = useMemo(() => groupMixesByPublicationYear(filtered), [filtered])
 
+  /** Al cambiar filtros/búsqueda, fuerza remontaje de cada iframe; si no, React reutiliza nodos y YouTube a veces no vuelve a pintar el preview. */
+  const iframeRemountSig = useMemo(
+    () => `${String(yearFilter)}|${platform}|${search.trim()}`,
+    [yearFilter, platform, search],
+  )
+
   const hasNonDefaultFilters =
     search.trim() !== '' || yearFilter !== 'all' || platform !== 'all'
 
@@ -398,11 +404,11 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
                   {title}
                 </h2>
                 {view === 'large' ? (
-                  <LargeGrid mixes={items} lang={lang} />
+                  <LargeGrid mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
                 ) : view === 'compact' ? (
-                  <CompactGrid mixes={items} lang={lang} />
+                  <CompactGrid mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
                 ) : (
-                  <ListView mixes={items} lang={lang} />
+                  <ListView mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
                 )}
               </section>
             )
@@ -430,19 +436,19 @@ function PlayLink({ mix }: { mix: Mix }) {
   )
 }
 
-function LargeGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
+function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
         return (
           <div
-            key={m.slug}
+            key={m.id}
             className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <YouTubeIframe videoId={ytId} title={m.title} />
+              <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
             )}
@@ -481,19 +487,19 @@ function LargeGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
   )
 }
 
-function CompactGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
+function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
         return (
           <div
-            key={m.slug}
+            key={m.id}
             className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+              <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />
             )}
@@ -529,7 +535,7 @@ function CompactGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
   )
 }
 
-function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
+function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {mixes.map((m) => {
@@ -537,7 +543,7 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
         if (ytId) {
           return (
             <div
-              key={m.slug}
+              key={m.id}
               className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
             >
               <FavoriteButton type="mix" entityId={m.id} lang={lang} />
@@ -572,7 +578,7 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <YouTubeIframe videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
+                  <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
                 </div>
               </div>
             </div>
@@ -580,7 +586,7 @@ function ListView({ mixes, lang }: { mixes: Mix[]; lang: string }) {
         }
         return (
           <div
-            key={m.slug}
+            key={m.id}
             className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
