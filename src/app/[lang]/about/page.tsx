@@ -4,10 +4,9 @@
 
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import { SECTION_OG_PIXELS, sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
@@ -23,27 +22,27 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
 
   return (
     <div className="lined min-h-screen">
-      <section className="px-3 sm:px-6 pt-10 pb-10 sm:pt-16 sm:pb-12 border-b-[5px] border-[var(--ink)]">
+      <section className="px-4 sm:px-6 pt-10 pb-10 sm:pt-16 sm:pb-12 border-b-[5px] border-[var(--ink)]">
         <div className="sec-tag">ABOUT</div>
         <h1 className="sec-title">
           {dict.about.title}
           <br />
           <span className="hl">OPTIMAL//BREAKS</span>
         </h1>
-        <div className="mt-8 sm:mt-10 max-w-4xl mx-auto">
-          <Image
-            src={sectionOgImagePath('about')}
-            alt={sectionOgImageAlt('about', lang)}
-            width={SECTION_OG_PIXELS.about.width}
-            height={SECTION_OG_PIXELS.about.height}
-            className="w-full h-auto border-4 border-[var(--ink)]"
-            sizes="(max-width: 896px) 100vw, 896px"
-            priority
-          />
-        </div>
+        <p
+          style={{
+            fontFamily: "'Special Elite', monospace",
+            fontSize: '17px',
+            lineHeight: 1.8,
+            maxWidth: '700px',
+            color: 'var(--dim)',
+          }}
+        >
+          {dict.about.subtitle}
+        </p>
       </section>
 
-      <section className="px-3 sm:px-6 py-10 sm:py-16 max-w-[800px] mx-auto">
+      <section className="px-4 sm:px-6 py-10 sm:py-16 max-w-[800px] mx-auto">
         {/* Description */}
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: 'clamp(16px, 4vw, 19px)', lineHeight: 1.8, marginBottom: 'clamp(24px, 6vw, 40px)' }}>
           {dict.about.description}
