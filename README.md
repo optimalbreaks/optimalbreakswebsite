@@ -305,6 +305,14 @@ OptimalBreaks/
 
 ---
 
+## Home — history timeline (`section_history`)
+
+The dark **Timeline** on the home page (`src/components/Timeline.tsx`) is driven by **`home.section_history.items`** in `src/dictionaries/en.json` and `es.json`. Each row has a display **`year`** string (often a range), **`title`**, and **`desc`**.
+
+**Order is not computed in code** — there is no sort by start year, end year, or midpoint. The JSON array order is **manual and editorial**: a narrative thread (origins → UK → …), **side paths** (e.g. US as a parallel map), and a **closing** block (e.g. global digital era last, as a layer that spans decades alongside other chapters). Overlapping periods are expected; placement follows **story flow**, not a single numeric rule. To reorder, edit `items` in **both** locale files.
+
+---
+
 ## DJ Deck Features
 
 The hero section includes a fully interactive DJ controller:

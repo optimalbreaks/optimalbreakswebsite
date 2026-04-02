@@ -32,6 +32,14 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 ---
 
+## Home — línea temporal «Historia del break» (`section_history`)
+
+El bloque oscuro **Timeline** de la portada (`src/components/Timeline.tsx`) toma los datos de **`home.section_history.items`** en `src/dictionaries/es.json` y `en.json`. Cada fila tiene un **`year`** de pantalla (a menudo un rango), **`title`** y **`desc`**.
+
+**No hay ordenación automática en código** (ni por año de inicio, fin o punto medio). El orden del array es **manual y editorial**: hilo narrativo (orígenes → UK → …), **apartados** comparativos (p. ej. EE. UU. como otro mapa) y un **cierre** (p. ej. era digital global al final, como capa que convive en el tiempo con otros capítulos). Es normal que los periodos se solapen; la posición obedece al **relato**, no a una regla numérica única. Para reordenar, edita `items` en **ambos** idiomas. Detalle en inglés: [README.md — Home — history timeline](./README.md#home--history-timeline-section_history).
+
+---
+
 ## Autenticación y correos (Supabase)
 
 - **`/{lang}/login`** — registro, entrada y «¿Olvidaste tu contraseña?» (Supabase envía el correo).
