@@ -8,6 +8,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { BlogPost } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 
@@ -234,7 +235,10 @@ function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/blog', 'blog')
+  return staticPageMetadata(lang, '/blog', 'blog', {
+    ogImagePath: sectionOgImagePath('blog'),
+    ogImageAlt: sectionOgImageAlt('blog', lang),
+  })
 }
 
 const BLOG_SELECT =

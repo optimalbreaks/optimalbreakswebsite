@@ -7,6 +7,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { Label } from '@/types/database'
 import type { Metadata } from 'next'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import LabelsExplorer from '@/components/LabelsExplorer'
@@ -73,7 +74,10 @@ const FALLBACK_LABELS: FallbackLabel[] = [
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/labels', 'labels')
+  return staticPageMetadata(lang, '/labels', 'labels', {
+    ogImagePath: sectionOgImagePath('labels'),
+    ogImageAlt: sectionOgImageAlt('labels', lang),
+  })
 }
 
 export default async function LabelsPage({ params }: { params: { lang: Locale } }) {

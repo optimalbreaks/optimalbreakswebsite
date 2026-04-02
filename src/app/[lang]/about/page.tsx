@@ -4,12 +4,16 @@
 
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/about', 'about')
+  return staticPageMetadata(lang, '/about', 'about', {
+    ogImagePath: sectionOgImagePath('about'),
+    ogImageAlt: sectionOgImageAlt('about', lang),
+  })
 }
 
 export default async function AboutPage({ params }: { params: { lang: Locale } }) {

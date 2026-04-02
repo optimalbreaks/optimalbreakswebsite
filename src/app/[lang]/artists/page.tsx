@@ -8,6 +8,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Artist } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import { ARTIST_ERAS, FEATURED_ARTISTS, artistSlug } from '@/lib/artists-timeline'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -63,7 +64,10 @@ const FEATURED_ARTIST_DESCRIPTIONS: Record<string, { es: string; en: string; cou
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/artists', 'artists')
+  return staticPageMetadata(lang, '/artists', 'artists', {
+    ogImagePath: sectionOgImagePath('artists'),
+    ogImageAlt: sectionOgImageAlt('artists', lang),
+  })
 }
 
 export default async function ArtistsPage({ params }: { params: { lang: Locale } }) {

@@ -7,6 +7,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { Mix } from '@/types/database'
 import type { Metadata } from 'next'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import MixesExplorer from '@/components/MixesExplorer'
@@ -102,7 +103,10 @@ const FALLBACK_MIXES: FallbackMix[] = [
 
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/mixes', 'mixes')
+  return staticPageMetadata(lang, '/mixes', 'mixes', {
+    ogImagePath: sectionOgImagePath('mixes'),
+    ogImageAlt: sectionOgImageAlt('mixes', lang),
+  })
 }
 
 export default async function MixesPage({ params }: { params: { lang: Locale } }) {
