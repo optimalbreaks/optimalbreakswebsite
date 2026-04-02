@@ -102,12 +102,19 @@ export async function staticPageMetadata(
   const usesGeneratedFallback = !assetPath
   const isSectionOg = !!assetPath?.startsWith(`${SECTION_OG_BASE}/`)
   const ogImageMeta = usesGeneratedFallback
-    ? { url: ogImage, width: 1200, height: 630, alt: options?.ogImageAlt ?? siteName }
+    ? {
+        url: ogImage,
+        width: 1200,
+        height: 630,
+        type: 'image/png',
+        alt: options?.ogImageAlt ?? siteName,
+      }
     : isSectionOg
       ? {
           url: ogImage,
           width: SECTION_OG_PIXEL_WIDTH,
           height: SECTION_OG_PIXEL_HEIGHT,
+          type: 'image/png',
           alt: options?.ogImageAlt ?? siteName,
         }
       : { url: ogImage, alt: options?.ogImageAlt ?? siteName }

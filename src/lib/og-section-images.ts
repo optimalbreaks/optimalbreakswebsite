@@ -8,9 +8,9 @@ import type { Locale } from '@/lib/i18n-config'
 
 export const SECTION_OG_BASE = '/images/opengraph/sections' as const
 
-/** Meta/Facebook: og:image de enlace ~1.91:1 (evita recortes arbitrarios). */
+/** OG secciones: ratio 1.2:1 (1200×1000); texto centrado para recortes cuadrados de Meta. */
 export const SECTION_OG_PIXEL_WIDTH = 1200 as const
-export const SECTION_OG_PIXEL_HEIGHT = 630 as const
+export const SECTION_OG_PIXEL_HEIGHT = 1000 as const
 
 export const SECTION_OG_KEYS = [
   'artists',

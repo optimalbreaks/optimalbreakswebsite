@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // ============================================
 // OPTIMAL BREAKS — OG para páginas de listado (artists, labels, …)
-// gpt-image-1 no exporta 1200×630; generamos 1536×1024 y encajamos a 1200×630 (ratio Meta ~1.91:1).
-// Recorte vertical (OG_SECTION_CROP_BIAS) + marco crema (OG_SECTION_FRAME_PADDING) para padding real en píxeles.
+// Salida final 1200×1000 (ratio 1.2:1). gpt-image-1 → 1536×1024 + sharp (recorte + marco crema).
 // ============================================
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
@@ -46,13 +45,13 @@ loadEnv()
 const OPENAI_WIDTH = 1536
 const OPENAI_HEIGHT = 1024
 const OG_SIZE = `${OPENAI_WIDTH}x${OPENAI_HEIGHT}`
-/** Salida final = recomendación Meta para og:image de enlaces (no cuadrado). */
+/** Ratio 1.2:1 — más tolerante al recorte cuadrado central de Facebook que 1.91:1. */
 const FB_OG_WIDTH = 1200
-const FB_OG_HEIGHT = 630
+const FB_OG_HEIGHT = 1000
 const MAX_PROMPT_LEN = 4000
 
 /**
- * Recorte a 1200×630 + encogido centrado sobre fondo crema (padding fijo, sin depender solo del prompt).
+ * Recorte a 1200×1000 (1.2:1) + encogido centrado sobre fondo crema.
  */
 async function toFacebookOgPng(buf) {
   const rawBias = process.env.OG_SECTION_CROP_BIAS?.trim()
@@ -112,28 +111,32 @@ function env(key) {
 }
 
 /**
- * La IA no puede dibujar en 1200×630 real; le pedimos que mentalice ese marco y coloque el texto en una franja segura.
+ * 1.2:1 (1200×1000) + texto con alineación CENTRADA para sobrevivir al recorte cuadrado de Facebook.
  */
 const MASTER_OG_BLOCK = `
-OUTPUT: One landscape illustration for Optimal Breaks (breakbeat encyclopedia) — used as Open Graph when links are shared.
+OPEN GRAPH CARD for Optimal Breaks (breakbeat encyclopedia). Link previews on Facebook / Meta / X.
 
-SITE SCOPE (mandatory): This project documents breakbeat / breaks culture across ALL eras and ALL regions worldwide — not UK-only, not 1990s-only. Do NOT use decorative stickers, stamps, or tags that say UK, 90s, 00s, London, or any single country/decade as a default motif. If a small secondary word-sticker fits the layout, prefer the word BREAKS (or abstract shapes: vinyl, waveform, sync arrows, BPM dots) — era- and region-neutral.
+(1) FINAL ASPECT RATIO 1.2:1: The delivered image is 1200 pixels wide by 1000 pixels tall (width ÷ height = 1.2). You draw a slightly taller source; our pipeline crops to this ratio. Think in 1200×1000 when placing content.
 
-TARGET FRAME (read carefully): The final file shown on Facebook is exactly aspect ratio 1.91:1, i.e. 1200 pixels wide × 630 pixels tall. Your output bitmap is slightly taller; the pipeline will trim top/bottom. You must therefore “design for 1200×630” mentally: NO letter may be clipped in that final card.
+(2) TEXT IN THE CENTER OF THE IMAGE: If you draw any words, the whole text block (headline + subtitle + credits) must sit in the CENTER of the frame — both horizontally and vertically the mass of typography should cluster around the image’s geometric center (slightly above true center is OK so subtitle fits below). No text hugging top, bottom, or sides.
 
-TYPOGRAPHY — FIT INSIDE THE VISIBLE CARD:
-• The TOPMOST pixel of the tallest capital in the MAIN HEADLINE must be at or BELOW 26% of the full image height (from top). Never put headline caps in the top 22% band.
-• The BOTTOMMOST pixel of the SUBTITLE line must be at or ABOVE 48% of full image height (subtitle sits tight under headline with normal leading).
-• Main headline + subtitle block: horizontally centered, occupying ~55–75% of image width. Generous cream padding between text block and left/right edges (at least ~10% of width each side) as part of the artwork — full-bleed background still touches both sides.
-• Decorative tags, stickers, vinyl, icons: keep at least ~6% of canvas height/width away from the final crop edges — never flush in a corner.
-• Decorative icons/graphics: only between ~50% and 74% of full height, grouped; nothing important below 76% (bottom strip may be cropped).
-• Tiny credits "OPTIMAL BREAKS" (bottom-left) and "www.optimalbreaks.com" (bottom-right): very small, entire glyphs between 72% and 82% from top — if unsure, omit credits rather than placing them too low.
+(3) ALL TEXT CENTER-ALIGNED (non-negotiable): Every line center-aligned on the vertical midline. NO left-flush, NO right-flush. Icons and graphics in a denser cluster ON that same center axis, around and under the type.
 
-BACKGROUND: Cream #e8dcc8 with paper grain/halftone; can extend to all edges. Top 15% and bottom 12% should be mostly quiet background only.
+(4) VERTICAL STACK (top to bottom), same center axis:
+  - MAIN HEADLINE (largest, center-aligned)
+  - subtitle (center-aligned)
+  - graphic cluster (centered, can be busier)
+  - optional tiny credits line (center-aligned)
 
-STYLE: Neo-brutalist punk zine graphic — not a photo. No real identifiable people. Bold block type, no script. Palette: #e8dcc8, #1a1a1a, #d62828, optional #00b4d8 / #f0c808.
+(5) WHY: Facebook often SQUARE-crops the center; centered text survives. Pipeline trims top/bottom — keep the message in the middle.
 
-LIGHTING: Prefer daylight, high-key, editorial desk, record fair — not uniform dark club. If night vibe, keep mid-tones legible; no muddy blacks, no lazy all-neon look.
+(6) SAFE REGION (percent from left / top): Glyphs and key icons ~12%–88% W, ~18%–82% H. Outer rim = cream #e8dcc8 only.
+
+SITE SCOPE: Breaks worldwide, all eras. No UK/90s cliché tags. Prefer BREAKS or abstract shapes.
+
+STYLE — PUNK BRUTALIST INDUSTRIAL (amp it up): Push harder than a clean minimal poster. Think warehouse flyer, stencil spray, photocopy grime, hazard stripes, rivet/bolt motifs, warning-stamp frames, halftone noise, misregistered layers, torn paper edges, rubber-stamp marks, grid lines, scratched ink. Slightly OVERLOADED and dense — collage energy, not empty minimalism — but the MAIN HEADLINE must still read instantly at thumbnail size. Not a photograph. No identifiable people. Bold block / stencil type only, no script. Palette: cream #e8dcc8, ink #1a1a1a, red #d62828, optional cyan #00b4d8 / industrial yellow #f0c808.
+
+LIGHTING: Harsh contrast OK; gritty paper + workshop / print-shop feel; keep the headline letterforms crisp enough for social previews.
 `.trim()
 
 const SECTION_PROMPTS = {
@@ -233,13 +236,13 @@ function printHelp() {
   console.log(`
 Uso: node scripts/generar-og-secciones.mjs [opciones]
 
-Salida: PNG 1200×630 en public/images/opengraph/sections/<sección>.png
+Salida: PNG 1200×1000 (1.2:1) en public/images/opengraph/sections/<sección>.png
 
 Opciones:
   --dry-run              Solo listar secciones y longitud de prompt
   --only <a,b,c>         Solo estas claves (coma): ${SECTION_KEYS.join(', ')}
   --force                Sobrescribir aunque el archivo ya exista
-  --resize-only          Normalizar PNG existentes a 1200×630 con cover (sin OpenAI; ideal si son 1536×1024)
+  --resize-only          Reprocesar PNG existentes a 1200×1000 (sin OpenAI; mejor si el PNG ya es grande)
   --help
 
 Variables:
