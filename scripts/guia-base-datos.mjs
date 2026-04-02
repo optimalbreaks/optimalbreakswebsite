@@ -385,9 +385,13 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   run label-photo -- --missing-only | <slug> | --all.
 
 • elegir-foto-artista.mjs — «Buscar foto, subirla a Storage y enlazar». Elige URL
-  con SerpAPI+IA, descarga la imagen, la sube a bucket media bajo artists/<slug>/,
-  y guarda en JSON y BD la URL pública de Supabase. --json-only: solo URL externa
-  en JSON (sin Storage ni UPSERT).
+  con SerpAPI+IA, descarga bytes de imagen válidos (rechaza HTML), sube a bucket
+  media bajo artists/<slug>/, y guarda en JSON y BD la URL pública de Supabase.
+  --repair: cola desde Supabase (sin https o URL rota); si falla → image_url null.
+  Omite slugs con retrato en public/images/artists según data/artist-public-portrait-map.json
+  salvo --force-rephoto. sync-artist-public-portrait-urls.mjs: mapa+fichero → /images/artists/…
+  en JSON y UPSERT. --json-only: solo URL externa en JSON (sin Storage ni UPSERT).
+  Documentación: docs/ARTIST_AI_AGENT.md (Fotos de artista).
 
 • ensure-artist-json-in-db.mjs — «¿El JSON y la BD dicen lo mismo?». Lee la BD,
   compara bios/real_name con el JSON; si no coinciden, llama a actualizar-artista

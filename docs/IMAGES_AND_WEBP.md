@@ -12,7 +12,13 @@
 | **`public/images/`** | Logos, deck assets, favicon-adjacent files, static marketing images | `/images/foo.webp` (site origin) |
 | **Supabase Storage** (`media` bucket) | Artist portraits, event posters, label logos, blog heroes, etc. | `https://<project>.supabase.co/storage/v1/object/public/media/...` |
 
-Entity pages (artists, events, labels, …) read **`image_url` from PostgreSQL**. Those values almost always point at **Storage**, not at `public/images/`.
+Entity pages (artists, events, labels, …) read **`image_url` from PostgreSQL**. For **artists**, `image_url` may be a **Storage** `https://` URL or a site path **`/images/artists/<file>.webp`** when the portrait is versioned under **`public/images/artists/`** (see map below).
+
+### Artist portraits: map + `displayArtistImageUrl`
+
+- **`data/artist-public-portrait-map.json`** — maps **`slug` → filename** (e.g. `deekline.webp`) for files in **`public/images/artists/`**. After adding a WebP and an entry, run **`npm run db:artist:sync-public-portraits`** so JSON + Supabase get **`image_url: /images/artists/…`** (optional but keeps DB aligned with the static asset).
+- **`src/lib/artist-public-portrait.ts`** — **`displayArtistImageUrl(slug, image_url)`** for listings and artist pages: prefer **remote** `https://` / `http://` from the DB, then the **map** (local `/images/artists/…`), then an **`image_url`** that already starts with **`/images/artists/`**. If nothing valid remains, the UI uses the **punk** thumbnail fallback in **`CardThumbnail`** (not stored as a URL in the database).
+- **Automated web photo search** (`npm run db:artist:photo`, **`db:artist:photo:repair`**) **skips** slugs that have an editorial file + map entry (or `image_url` under `/images/artists/`) unless **`--force-rephoto`**. See [**`docs/ARTIST_AI_AGENT.md`**](ARTIST_AI_AGENT.md).
 
 ---
 
@@ -50,6 +56,7 @@ Entity pages (artists, events, labels, …) read **`image_url` from PostgreSQL**
 ## Resumen (ES)
 
 - **`public/images/`**: el código puede sustituir `.jpg`/`.png` por `.webp` automáticamente (`displayImageUrl`).
+- **Artistas**: además, **`displayArtistImageUrl`** prioriza URL remota en BD, luego retrato del **mapa** `data/artist-public-portrait-map.json` + `public/images/artists/`, luego ruta local en BD; si no hay imagen, **fallback punk** en la UI. Script de foto por internet **no** toca esos slugs editoriales salvo forzar.
 - **Supabase**: la URL en la base debe coincidir con el fichero subido; **no** se inventa `.webp` en el cliente.
 - Para WebP en Storage: sube el `.webp` y actualiza `image_url`.
 
@@ -58,6 +65,7 @@ Entity pages (artists, events, labels, …) read **`image_url` from PostgreSQL**
 ## Related files
 
 - `src/lib/image-url.ts` — `displayImageUrl`
+- `src/lib/artist-public-portrait.ts` — `displayArtistImageUrl`, map import
 - `src/components/CardThumbnail.tsx`
 - `src/components/EventPosterLightbox.tsx`
 - `src/lib/seo.ts` — `absoluteOgImage`

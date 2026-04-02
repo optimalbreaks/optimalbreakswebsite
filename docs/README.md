@@ -11,8 +11,8 @@ Mapa de los **Markdown** del proyecto, para saber qué leer primero y qué mante
 | **[`README.md`](../README.md)** (raíz) | Documentación técnica **canónica** (inglés): stack, env, auth, Storage, DJ deck, migraciones (tabla parcial), scripts `npm`, estructura de carpetas. |
 | **[`README.es.md`](../README.es.md)** | Resumen en **español**: flujo de artistas, auth, GA4, vistas de listado; enlaza al README en inglés para el detalle largo. |
 | **[`docs/AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md)** | Índice de **prompts** (`scripts/prompts/*.txt`), variables OpenAI/SerpAPI, modelo por defecto **por flujo**, rutas API relacionadas. Bilingüe (ES/EN en un solo archivo). |
-| **[`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md)** | Manual del **agente de artistas**: CLI, flags, batch, API admin, UPSERT por REST. Complementa al README; no sustituye la tabla general de prompts (está en `AI_PROMPTS_AND_AGENTS.md`). |
-| **[`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md)** | `displayImageUrl`, `public/images/` vs Supabase Storage, reglas WebP, SEO/OG. |
+| **[`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md)** | Manual del **agente de artistas** (bios): CLI, batch, API admin, UPSERT por REST. Incluye además **fotos de artista** (`db:artist:photo`, `--repair`, retratos en `public/images/artists`, sync del mapa). |
+| **[`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md)** | `displayImageUrl`, **`displayArtistImageUrl`** (artistas), `public/images/` vs Supabase Storage, reglas WebP, SEO/OG. |
 | **[`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md)** | Favoritos, “seen live”, asistencia a eventos, valoraciones; tablas Supabase y componentes. |
 | **[`mailing/supabase/README.md`](../mailing/supabase/README.md)** | Plantillas HTML de **correo** para pegar en Supabase Auth (`RedirectTo` + `TokenHash`). |
 | **[`public/images/README.md`](../public/images/README.md)** | Convención **operativa** para assets estáticos (WebP, `npm run images:to-webp`). Alineado con la regla de Cursor `imagenes-public-webp`. |
@@ -31,7 +31,7 @@ Este archivo (**`docs/README.md`**) es solo índice y auditoría; no duplica pro
 
 ### Duplicación a vigilar (no urgente)
 
-- Comandos **`db:artist`**, **`db:artist:agent`** y variables Supabase aparecen en README, README.es y `ARTIST_AI_AGENT.md`. Si cambia un comando, conviene actualizar **los tres** o al menos README + README.es y dejar el agente como detalle.
+- Comandos **`db:artist`**, **`db:artist:agent`**, **`db:artist:photo`** / **`db:artist:photo:repair`**, **`db:artist:sync-public-portraits`** y variables Supabase aparecen en README, README.es y `ARTIST_AI_AGENT.md`. Si cambia un comando, conviene actualizar **los tres** o al menos README + README.es y dejar el agente como detalle.
 
 ### Qué falta o es opcional
 
@@ -48,5 +48,6 @@ Este archivo (**`docs/README.md`**) es solo índice y auditoría; no duplica pro
 
 ## Cambios recientes documentados en README
 
+- **Fotos de artista:** `db:artist:photo`, `db:artist:photo:repair`, retratos en `public/images/artists` + `data/artist-public-portrait-map.json`, `db:artist:sync-public-portraits`, prioridad en UI (`displayArtistImageUrl`) y fallback punk — descrito en **`ARTIST_AI_AGENT.md`**, **`IMAGES_AND_WEBP.md`**, **`README.md` / `README.es.md`** (tabla npm y sección retratos), **`public/images/README.md`**.
 - **Audio e idioma:** `DeckAudioProvider` con **`key={lang}`** en `src/app/[lang]/layout.tsx` — al cambiar ES/EN se reinicia la sesión de audio (deck de la home, barra inferior, modo mix).
 - **Navbar móvil:** `html`/`body` con `overflow-x` para ancho; **header** sin `overflow-x` para no recortar menús desplegables (cuenta, hamburguesa).

@@ -57,14 +57,19 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 
 ### Guías detalladas por agente
 
-- **Artista (batch, admin, comandos):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
+- **Artista — biografías y también fotos (SerpAPI → Storage, `--repair`, retratos en `public`):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **Base de datos, enrich, posters, fotos:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) (`node scripts/guia-base-datos.mjs` sin args).
 - **Imágenes / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
 - **Favoritos, valoraciones, asistencia:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts fuera de `scripts/prompts/`
 
-Algunas herramientas (p. ej. elección de imagen entre candidatos SerpAPI) llevan **cadenas de sistema breves en el propio script** o en la ruta API, no en un `.txt` separado. Si unifica criterios editoriales ahí, conviene buscar en el fichero del script o en `src/app/api/...` correspondiente.
+Algunas herramientas llevan **cadenas de sistema breves en el propio script** o en la ruta API, no en un `.txt` separado:
+
+- **Elegir foto de artista:** `scripts/elegir-foto-artista.mjs` (texto + JSON de candidatos; modo `--vision` con miniaturas). API admin: `src/app/api/admin/agent/artist-photo/route.ts`.
+- **Logos / carteles** (sellos, eventos): scripts y rutas API homólogas bajo `scripts/` y `src/app/api/admin/agent/`.
+
+Si unifica criterios editoriales, busca en el fichero del script o en `src/app/api/...` correspondiente. Comandos y flags: sección *Fotos de artista* en [`ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 
 ### Ver también
 
@@ -122,14 +127,19 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 
 ### Deeper docs
 
-- **Artist agent:** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
+- **Artist agent (bios + photos / repair / public portraits):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **DB CLI catalogue:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs).
 - **Images / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
 - **User favorites, ratings, attendance:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts not under `scripts/prompts/`
 
-Some tools (e.g. image picking from SerpAPI candidates) use **short inline system strings** in the script or API route.
+Some tools use **short inline system strings** in the script or API route:
+
+- **Artist photo pick:** `scripts/elegir-foto-artista.mjs` (text + candidate JSON; `--vision` with thumbnails). Admin: `src/app/api/admin/agent/artist-photo/route.ts`.
+- **Label logos / event posters:** sibling scripts and admin routes under `scripts/` and `src/app/api/admin/agent/`.
+
+Commands and flags: *Artist photos* section in [`ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 
 ### See also
 

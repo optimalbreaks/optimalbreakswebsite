@@ -141,6 +141,19 @@ npm run db:artist:ensure -- data/artists/deekline.json         # comprobar JSON 
 
 Necesitas **`OPENAI_API_KEY`**. Por defecto **`gpt-5.4`**; **`OPENAI_MODEL`** lo sobrescribe. Opcional **`SERPAPI_API_KEY`**. Revisa siempre hechos antes de publicar.
 
+### Fotos de artista (otro flujo: imágenes, no biografías)
+
+SerpAPI (Google Imágenes) + OpenAI eligen candidato; el script **descarga** la imagen, la **valida** (no HTML) y la sube a **Storage**; actualiza **`image_url`** en JSON y Supabase.
+
+```bash
+npm run db:artist:photo -- tu-slug
+npm run db:artist:photo:repair              # cola en BD: sin foto https o URL rota; si no hay resultado → image_url null (fallback punk en la web)
+npm run db:artist:photo -- --repair --limit=10 --dry-run
+npm run db:artist:sync-public-portraits     # retratos ya en public/images/artists + mapa → poner /images/artists/… en BD
+```
+
+Los slugs con retrato en **`public/images/artists`** según **`data/artist-public-portrait-map.json`** **no** se buscan en internet (ahorro de API) salvo **`--force-rephoto`**. Detalle: **[`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md)** — sección *Fotos de artista*.
+
 ---
 
 ## Variables de entorno (resumen)
@@ -157,11 +170,12 @@ Copia `.env.local.example` → `.env.local`.
 
 ## Imágenes
 
-Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**.
+Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**. Retratos locales de artistas y mapa: **`public/images/README.md`**.
 
-- Cada entidad relevante tiene **`image_url`** en la base de datos (casi siempre **Supabase Storage**, no `public/images/`).
-- **`displayImageUrl()`** (`src/lib/image-url.ts`) solo reescribe **rutas locales** `/images/*.jpg|png` → `.webp`. Las URLs de **Storage** se usan **tal cual** en la BD: el objeto debe existir con esa extensión.
-- El componente **`CardThumbnail`** aplica esa normalización y muestra **placeholder** si no hay URL.
+- Cada entidad relevante tiene **`image_url`** en la base de datos (artistas: a menudo **Storage** `https://…` o ruta **`/images/artists/…`** si el retrato vive en `public`).
+- **Artistas:** **`displayArtistImageUrl`** (`src/lib/artist-public-portrait.ts`) — prioridad: URL remota en BD → retrato del **mapa** `data/artist-public-portrait-map.json` → ruta `/images/artists/` en BD; si no hay imagen válida, **`CardThumbnail`** usa **fallback punk** (también si la URL remota falla al cargar).
+- **Resto de entidades:** **`displayImageUrl()`** (`src/lib/image-url.ts`) solo reescribe **rutas locales** `/images/*.jpg|png` → `.webp`. Las URLs de **Storage** se usan **tal cual** en la BD.
+- El componente **`CardThumbnail`** aplica la normalización que corresponda y muestra **placeholder** (iniciales / rayas) donde no aplique el fallback punk.
 - Se usa en listados, fichas, home, blog y dashboard.
 
 ### My Breaks / interacción del usuario

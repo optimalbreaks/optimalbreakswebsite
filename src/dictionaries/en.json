@@ -316,9 +316,16 @@
   "labels": {
     "title": "Labels",
     "subtitle": "Labels, catalogues and infrastructure: who shaped and sustained the sound",
+    "search_placeholder": "Search label…",
     "view_large": "Large",
     "view_compact": "Compact",
-    "view_list": "List"
+    "view_list": "List",
+    "filter_country": "Country",
+    "filter_years": "Founded",
+    "filter_years_label": "{from} – {to}",
+    "clear_filters": "Clear filters",
+    "results_count": "{count} labels",
+    "no_matches": "No labels match these filters"
   },
   "events": {
     "title": "Events",
@@ -398,7 +405,30 @@
     "view_large": "Large",
     "view_compact": "Compact",
     "view_list": "List",
-    "year_undated": "No upload date"
+    "year_undated": "No upload date",
+    "mix_filter": {
+      "search_placeholder": "Search title or artist…",
+      "date_label": "Date",
+      "all_dates": "All",
+      "dated": "Dated",
+      "undated": "No date",
+      "type_label": "Type",
+      "all_types": "All",
+      "type_essential_mix": "Essential Mix",
+      "type_classic_set": "Classic set",
+      "type_radio_show": "Radio",
+      "type_youtube_session": "YouTube session",
+      "type_podcast": "Podcast",
+      "platform_label": "Platform",
+      "all_platforms": "All",
+      "platform_youtube": "YouTube",
+      "platform_soundcloud": "SoundCloud",
+      "platform_mixcloud": "Mixcloud",
+      "platform_other": "Other",
+      "showing": "Showing {n} of {total}",
+      "no_results": "No mixes match these filters",
+      "clear_filters": "Clear"
+    }
   },
   "about": {
     "title": "About",

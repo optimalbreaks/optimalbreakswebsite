@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
@@ -152,6 +152,47 @@ function groupMixesByPublicationYear(items: Mix[]): { key: YearGroupKey; items: 
   return out
 }
 
+type MixDateFilter = 'all' | 'dated' | 'undated'
+
+type MixFilterDict = {
+  search_placeholder: string
+  date_label: string
+  all_dates: string
+  dated: string
+  undated: string
+  type_label: string
+  all_types: string
+  type_essential_mix: string
+  type_classic_set: string
+  type_radio_show: string
+  type_youtube_session: string
+  type_podcast: string
+  platform_label: string
+  all_platforms: string
+  platform_youtube: string
+  platform_soundcloud: string
+  platform_mixcloud: string
+  platform_other: string
+  showing: string
+  no_results: string
+  clear_filters: string
+}
+
+const MIX_TYPE_ORDER = ['essential_mix', 'classic_set', 'radio_show', 'youtube_session', 'podcast'] as const satisfies readonly Mix['mix_type'][]
+const PLATFORM_ORDER = ['youtube', 'soundcloud', 'mixcloud', 'other'] as const satisfies readonly Mix['platform'][]
+
+function mixTypeChipLabel(mf: MixFilterDict, t: Mix['mix_type']): string {
+  const key = `type_${t}` as keyof MixFilterDict
+  const v = mf[key]
+  return typeof v === 'string' ? v : t.replace(/_/g, ' ')
+}
+
+function platformChipLabel(mf: MixFilterDict, p: Mix['platform']): string {
+  const key = `platform_${p}` as keyof MixFilterDict
+  const v = mf[key]
+  return typeof v === 'string' ? v : p
+}
+
 interface Props {
   mixes: Mix[]
   dict: {
@@ -159,50 +200,243 @@ interface Props {
     view_compact: string
     view_list: string
     year_undated?: string
+    mix_filter?: MixFilterDict
   }
   lang: string
 }
 
 export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
+  const [search, setSearch] = useState('')
+  const [dateFilter, setDateFilter] = useState<MixDateFilter>('all')
+  const [mixType, setMixType] = useState<'all' | Mix['mix_type']>('all')
+  const [platform, setPlatform] = useState<'all' | Mix['platform']>('all')
 
-  const yearGroups = useMemo(() => groupMixesByPublicationYear(mixes), [mixes])
+  const mf = dict.mix_filter
+
+  const distinctMixTypes = useMemo(() => {
+    const s = new Set<Mix['mix_type']>()
+    mixes.forEach((m) => {
+      if (m.mix_type) s.add(m.mix_type)
+    })
+    return Array.from(s).sort(
+      (a, b) => MIX_TYPE_ORDER.indexOf(a) - MIX_TYPE_ORDER.indexOf(b),
+    )
+  }, [mixes])
+
+  const distinctPlatforms = useMemo(() => {
+    const s = new Set<Mix['platform']>()
+    mixes.forEach((m) => {
+      if (m.platform) s.add(m.platform)
+    })
+    return Array.from(s).sort(
+      (a, b) => PLATFORM_ORDER.indexOf(a) - PLATFORM_ORDER.indexOf(b),
+    )
+  }, [mixes])
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    return mixes.filter((m) => {
+      if (q) {
+        const title = (m.title || '').toLowerCase()
+        const artist = (m.artist_name || '').toLowerCase()
+        if (!title.includes(q) && !artist.includes(q)) return false
+      }
+      const gy = mixGroupYear(m)
+      if (dateFilter === 'dated' && gy == null) return false
+      if (dateFilter === 'undated' && gy != null) return false
+      if (mixType !== 'all' && m.mix_type !== mixType) return false
+      if (platform !== 'all' && m.platform !== platform) return false
+      return true
+    })
+  }, [mixes, search, dateFilter, mixType, platform])
+
+  const yearGroups = useMemo(() => groupMixesByPublicationYear(filtered), [filtered])
+
+  const hasNonDefaultFilters =
+    search.trim() !== '' || dateFilter !== 'all' || mixType !== 'all' || platform !== 'all'
+
+  const chipBase =
+    'cursor-pointer border-[3px] border-[var(--ink)] px-2.5 py-1 transition-colors text-[9px] sm:text-[10px] font-bold uppercase tracking-wider'
+  const chipFont: CSSProperties = {
+    fontFamily: "'Courier Prime', monospace",
+  }
+
+  function clearFilters() {
+    setSearch('')
+    setDateFilter('all')
+    setMixType('all')
+    setPlatform('all')
+  }
 
   return (
     <div>
+      {mf ? (
+        <div className="mb-6 space-y-4 border-b-[3px] border-[var(--ink)] pb-6">
+          <div className="relative max-w-md">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={mf.search_placeholder}
+              className="w-full border-[3px] border-[var(--ink)] bg-[var(--paper)] px-4 pl-10 py-2 text-sm focus:outline-none focus:border-[var(--red)] transition-colors"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 gap-y-3">
+            <span
+              className="shrink-0 text-[var(--dim)] mr-1"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
+            >
+              {mf.date_label}
+            </span>
+            {(
+              [
+                ['all', mf.all_dates] as const,
+                ['dated', mf.dated] as const,
+                ['undated', mf.undated] as const,
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                style={chipFont}
+                className={`${chipBase} ${dateFilter === key ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setDateFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {distinctMixTypes.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 gap-y-3">
+              <span
+                className="shrink-0 text-[var(--dim)] mr-1"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
+              >
+                {mf.type_label}
+              </span>
+              <button
+                type="button"
+                style={chipFont}
+                className={`${chipBase} ${mixType === 'all' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setMixType('all')}
+              >
+                {mf.all_types}
+              </button>
+              {distinctMixTypes.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  style={chipFont}
+                  className={`${chipBase} ${mixType === t ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                  onClick={() => setMixType(t)}
+                >
+                  {mixTypeChipLabel(mf, t)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {distinctPlatforms.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 gap-y-3">
+              <span
+                className="shrink-0 text-[var(--dim)] mr-1"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
+              >
+                {mf.platform_label}
+              </span>
+              <button
+                type="button"
+                style={chipFont}
+                className={`${chipBase} ${platform === 'all' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setPlatform('all')}
+              >
+                {mf.all_platforms}
+              </button>
+              {distinctPlatforms.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  style={chipFont}
+                  className={`${chipBase} ${platform === p ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                  onClick={() => setPlatform(p)}
+                >
+                  {platformChipLabel(mf, p)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center gap-3 gap-y-2">
+            <p
+              className="text-[var(--dim)] m-0"
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px' }}
+            >
+              {mf.showing.replace('{n}', String(filtered.length)).replace('{total}', String(mixes.length))}
+            </p>
+            {hasNonDefaultFilters ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                style={chipFont}
+                className={`${chipBase} bg-[var(--paper)] hover:bg-[var(--yellow)]`}
+              >
+                ✕ {mf.clear_filters}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex justify-end mb-5">
         <ViewToggle view={view} setView={setView} labels={dict} />
       </div>
 
-      <div className="space-y-10 sm:space-y-14">
-        {yearGroups.map(({ key, items }, idx) => {
-          const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
-          return (
-            <section key={String(key)} aria-labelledby={`mixes-year-${key}`}>
-              <h2
-                id={`mixes-year-${key}`}
-                className={`mt-0 mb-4 sm:mb-5 pb-3 border-b-[4px] border-[var(--ink)] ${idx === 0 ? '' : 'pt-2'}`}
-                style={{
-                  fontFamily: "'Unbounded', sans-serif",
-                  fontWeight: 900,
-                  fontSize: 'clamp(26px, 4.5vw, 40px)',
-                  letterSpacing: '-0.04em',
-                  lineHeight: 1.05,
-                }}
-              >
-                {title}
-              </h2>
-              {view === 'large' ? (
-                <LargeGrid mixes={items} lang={lang} />
-              ) : view === 'compact' ? (
-                <CompactGrid mixes={items} lang={lang} />
-              ) : (
-                <ListView mixes={items} lang={lang} />
-              )}
-            </section>
-          )
-        })}
-      </div>
+      {filtered.length === 0 ? (
+        <p
+          className="py-12 text-center text-[var(--dim)] border-4 border-[var(--ink)] border-dashed px-4"
+          style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px' }}
+        >
+          {mf?.no_results ?? '—'}
+        </p>
+      ) : (
+        <div className="space-y-10 sm:space-y-14">
+          {yearGroups.map(({ key, items }, idx) => {
+            const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
+            return (
+              <section key={String(key)} aria-labelledby={`mixes-year-${key}`}>
+                <h2
+                  id={`mixes-year-${key}`}
+                  className={`mt-0 mb-4 sm:mb-5 pb-3 border-b-[4px] border-[var(--ink)] ${idx === 0 ? '' : 'pt-2'}`}
+                  style={{
+                    fontFamily: "'Unbounded', sans-serif",
+                    fontWeight: 900,
+                    fontSize: 'clamp(26px, 4.5vw, 40px)',
+                    letterSpacing: '-0.04em',
+                    lineHeight: 1.05,
+                  }}
+                >
+                  {title}
+                </h2>
+                {view === 'large' ? (
+                  <LargeGrid mixes={items} lang={lang} />
+                ) : view === 'compact' ? (
+                  <CompactGrid mixes={items} lang={lang} />
+                ) : (
+                  <ListView mixes={items} lang={lang} />
+                )}
+              </section>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

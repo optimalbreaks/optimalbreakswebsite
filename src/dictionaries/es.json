@@ -237,9 +237,16 @@
   "labels": {
     "title": "Sellos",
     "subtitle": "Sellos, catalogos e infraestructura: quien dio forma y continuidad al sonido",
+    "search_placeholder": "Buscar sello…",
     "view_large": "Grande",
     "view_compact": "Compacto",
-    "view_list": "Lista"
+    "view_list": "Lista",
+    "filter_country": "País",
+    "filter_years": "Año de fundación",
+    "filter_years_label": "{from} – {to}",
+    "clear_filters": "Limpiar filtros",
+    "results_count": "{count} sellos",
+    "no_matches": "Ningún sello coincide con los filtros"
   },
   "events": {
     "title": "Eventos",
@@ -319,7 +326,30 @@
     "view_large": "Grande",
     "view_compact": "Compacto",
     "view_list": "Lista",
-    "year_undated": "Sin fecha de subida"
+    "year_undated": "Sin fecha de subida",
+    "mix_filter": {
+      "search_placeholder": "Buscar título o artista…",
+      "date_label": "Fecha",
+      "all_dates": "Todos",
+      "dated": "Con fecha",
+      "undated": "Sin fecha",
+      "type_label": "Tipo",
+      "all_types": "Todos",
+      "type_essential_mix": "Essential Mix",
+      "type_classic_set": "Classic set",
+      "type_radio_show": "Radio",
+      "type_youtube_session": "YouTube",
+      "type_podcast": "Podcast",
+      "platform_label": "Plataforma",
+      "all_platforms": "Todos",
+      "platform_youtube": "YouTube",
+      "platform_soundcloud": "SoundCloud",
+      "platform_mixcloud": "Mixcloud",
+      "platform_other": "Otra",
+      "showing": "Mostrando {n} de {total}",
+      "no_results": "Ningún mix coincide con los filtros",
+      "clear_filters": "Limpiar"
+    }
   },
   "about": {
     "title": "Sobre",

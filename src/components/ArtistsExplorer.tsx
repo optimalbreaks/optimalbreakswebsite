@@ -229,7 +229,7 @@ function FilterSelect({ value, onChange, placeholder, options }: { value: string
 
 /* ─── Year Range Slider (dual thumb) ─── */
 
-function YearRangeSlider({
+export function YearRangeSlider({
   min, max, from, to, onChangeFrom, onChangeTo, label, rangeLabel,
 }: {
   min: number; max: number; from: number; to: number

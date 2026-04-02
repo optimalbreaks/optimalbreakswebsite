@@ -121,6 +121,33 @@ El prompt pide prudencia: sin inventar URLs, distinguir sellos **fundados** de s
 
 Ruta de API: `POST /api/admin/agent` (cuerpo JSON con `slug`, `artistName`, notas opcionales, `search` boolean). Requiere sesión de administrador. Tras generar, el servidor hace **UPSERT** en `artists`. La respuesta incluye `artist`, `saved`, `row` o `dbError` si falló la escritura.
 
+### Fotos de artista (SerpAPI, Storage, reparación)
+
+Distinto del agente de **biografías**: el script **`scripts/elegir-foto-artista.mjs`** busca en Google Imágenes (SerpAPI), OpenAI elige un candidato, **descarga bytes reales** (rechaza HTML/login) y sube a **Supabase Storage** (`media/artists/<slug>/portrait.*`). Actualiza `data/artists/<slug>.json` y hace **UPSERT** en `artists.image_url` salvo `--json-only`.
+
+**Variables:** `SERPAPI_API_KEY`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL` + **service role** / **secret**. Opcional `--vision` y `OPENAI_VISION_MODEL`.
+
+**Comandos:**
+
+```bash
+npm run db:artist:photo -- <slug>              # un artista
+npm run db:artist:photo -- --all               # todos los JSON en data/artists/ (uso avanzado)
+npm run db:artist:photo:repair                 # cola desde Supabase: sin https, URL rota (HEAD), o subida inválida previa
+npm run db:artist:photo -- --repair --limit=20 --dry-run
+```
+
+**Retratos editoriales en `public/images/artists/`:** el mapa **`data/artist-public-portrait-map.json`** (slug → nombre de `.webp`) + fichero en disco define un retrato **local**. Esos slugs **no** entran en `--repair` y el script **no** llama a SerpAPI/OpenAI salvo **`--force-rephoto`**. En admin, `POST /api/admin/agent/artist-photo` devuelve `skipped: true` salvo **`?force=1`**.
+
+**Sincronizar BD/JSON con retratos ya en `public`:** tras añadir `.webp` y entrada en el mapa:
+
+```bash
+npm run db:artist:sync-public-portraits
+```
+
+**Prioridad en la web:** `displayArtistImageUrl` (`src/lib/artist-public-portrait.ts`) — primero `https://` en BD, luego mapa → `/images/artists/…`, luego `image_url` que ya sea ruta local; si no hay nada válido, **`CardThumbnail`** muestra el **fallback punk** (no se guarda una URL de fallback en la base).
+
+**Modo `--repair`:** recorre filas en Supabase; excluye editoriales y `/images/artists/*.webp`. Si tras buscar no hay foto fiable o la subida falla, deja **`image_url` en `null`** para que la UI use el fallback.
+
 ### Ver también (resto del repo)
 
 - Índice de prompts `.txt`, modelos por flujo y otros agentes: [**AI_PROMPTS_AND_AGENTS.md**](./AI_PROMPTS_AND_AGENTS.md).
@@ -246,6 +273,33 @@ The prompt is conservative: no invented URLs, **labels founded** vs labels where
 ### Admin API
 
 `POST /api/admin/agent` with JSON body (`slug`, `artistName`, optional notes, `search` boolean). Requires admin session. After validation, the server attempts an **UPSERT** into `artists`. Response includes `artist`, `saved`, `row`, or `dbError` if the write failed (retry from the UI).
+
+### Artist photos (SerpAPI, Storage, repair)
+
+Separate from the **bio** agent: **`scripts/elegir-foto-artista.mjs`** uses SerpAPI (Google Images), OpenAI picks a candidate, **downloads real image bytes** (rejects HTML/login pages), uploads to **Supabase Storage** (`media/artists/<slug>/portrait.*`), updates `data/artists/<slug>.json`, and **UPSERTs** `artists.image_url` unless `--json-only`.
+
+**Env:** `SERPAPI_API_KEY`, `OPENAI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL` + **service role** / **secret**. Optional `--vision` and `OPENAI_VISION_MODEL`.
+
+**Commands:**
+
+```bash
+npm run db:artist:photo -- <slug>
+npm run db:artist:photo -- --all
+npm run db:artist:photo:repair
+npm run db:artist:photo -- --repair --limit=20 --dry-run
+```
+
+**Editorial portraits in `public/images/artists/`:** **`data/artist-public-portrait-map.json`** (slug → `.webp` filename) plus the file on disk. Those slugs are **skipped** by `--repair` and the script **does not** call SerpAPI/OpenAI unless **`--force-rephoto`**. Admin `POST /api/admin/agent/artist-photo` returns `skipped: true` unless **`?force=1`**.
+
+**Sync DB/JSON after adding local WebP + map entry:**
+
+```bash
+npm run db:artist:sync-public-portraits
+```
+
+**Site display order:** `displayArtistImageUrl` in `src/lib/artist-public-portrait.ts` — remote `https://` first, then map → `/images/artists/…`, then a local-path `image_url`; if nothing works, **`CardThumbnail`** shows the **punk fallback** (no fallback URL stored in the DB).
+
+**`--repair` mode:** walks Supabase rows; skips editorial slugs and `/images/artists/*.webp`. If no reliable photo or upload fails, sets **`image_url` to `null`** so the UI uses the fallback.
 
 ### See also (rest of repo)
 

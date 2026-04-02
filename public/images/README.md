@@ -39,6 +39,18 @@ El script crea `mismo-nombre.webp` junto al original y **elimina** el JPG/PNG.
 - No poner en `image_url` una extensión distinta de la del archivo que realmente sirves (si en disco es `.webp`, el enlace es `.webp`).
 - No dejar JPG/PNG versionados para carteles/retratos cuando el flujo acordado es WebP (caso B).
 
+## Retratos de artistas (`artists/`)
+
+Los **.webp** en **`public/images/artists/`** son retratos editoriales servidos como **`/images/artists/<archivo>.webp`**.
+
+1. Añade el fichero (WebP; si partes de JPG/PNG, usa `npm run images:to-webp -- …` como en el caso B de arriba).
+2. Registra el slug en **`data/artist-public-portrait-map.json`** (`"slug": "nombre.webp"`).
+3. Opcional pero recomendable: **`npm run db:artist:sync-public-portraits`** — escribe **`image_url`** con esa ruta en los JSON de `data/artists/` (si existen) y hace **UPSERT** en Supabase.
+
+El script **`npm run db:artist:photo`** y el modo **`--repair`** **no** buscan foto en internet para esos slugs (mapa + archivo en disco), para no gastar API ni sobrescribir el retrato local. Para forzar búsqueda: **`--force-rephoto`** (CLI) o **`?force=1`** en la API admin de foto.
+
+Más contexto: [`docs/ARTIST_AI_AGENT.md`](../../docs/ARTIST_AI_AGENT.md) y [`docs/IMAGES_AND_WEBP.md`](../../docs/IMAGES_AND_WEBP.md).
+
 ## Raíz de `public/images/` (logos, OG, etc.)
 
 Pueden seguir PNG/JPEG si una herramienta o red social lo exige; eso no aplica al mismo criterio que `artists/` y `events/` para contenido editorial.

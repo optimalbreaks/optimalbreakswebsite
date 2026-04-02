@@ -84,7 +84,7 @@ export default async function LabelsPage({ params }: { params: { lang: Locale } 
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createServerSupabase()
-  const { data: labels } = await supabase.from('labels').select('*').order('founded_year', { ascending: true })
+  const { data: labels } = await supabase.from('labels').select('*').order('name', { ascending: true })
   const list = (labels || []) as Label[]
 
   return (

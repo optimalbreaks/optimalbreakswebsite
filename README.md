@@ -105,8 +105,9 @@ System prompts for **artist**, **label**, and **event enrichment** agents live u
 Listings and detail pages use a shared **`CardThumbnail`** component (`src/components/CardThumbnail.tsx`):
 
 - **`image_url`** on artists, events, labels, scenes, mixes and blog posts can point to any HTTPS image (e.g. Supabase Storage public URL or external CDN).
-- **`displayImageUrl()`** (`src/lib/image-url.ts`) normalises URLs: **only** paths under **`/images/`** (static `public/` assets) get `.jpg`/`.png` → `.webp` substitution. **Supabase Storage URLs are used exactly as stored** — the object must exist at that path (do not rely on the client renaming `.jpg` to `.webp`).
-- If `image_url` is empty, a **placeholder** (diagonal stripes + initials from the title) keeps the layout consistent.
+- **Artists only:** **`displayArtistImageUrl(slug, image_url)`** (`src/lib/artist-public-portrait.ts`) prefers remote HTTPS, then **editorial** portraits from **`data/artist-public-portrait-map.json`** + `public/images/artists/*.webp`, then a DB value already under **`/images/artists/`**. If still nothing usable, the thumbnail uses a **branded punk fallback** (`onError` also falls back if a remote URL breaks).
+- Other entities use **`displayImageUrl()`** (`src/lib/image-url.ts`): **only** paths under **`/images/`** (static `public/` assets) get `.jpg`/`.png` → `.webp` substitution. **Supabase Storage URLs are used exactly as stored** — the object must exist at that path (do not rely on the client renaming `.jpg` to `.webp`).
+- If `image_url` is empty (non-artist paths), a **placeholder** (diagonal stripes + initials from the title) keeps the layout consistent.
 - **Home** `ArtistCard` / `EventFlyer` include the same thumbnail strip.
 - **Blog post** pages show a wide hero image under the title when `image_url` is set (or placeholder if not).
 - **Responsive**: grids stack to one column on small screens; flyer-style hover tilt is limited to `sm:` and up to avoid awkward touch behaviour.
@@ -193,6 +194,8 @@ OptimalBreaks/
 │   ├── actualizar-artista.mjs       # Upsert artists from JSON (Supabase REST API only)
 │   ├── ensure-artist-json-in-db.mjs # Compare JSON vs DB; upsert if bios differ
 │   ├── generar-artista-agente.mjs   # OpenAI → data/artists/<slug>.json
+│   ├── elegir-foto-artista.mjs      # npm run db:artist:photo — SerpAPI + OpenAI → Storage + UPSERT
+│   ├── sync-artist-public-portrait-urls.mjs  # db:artist:sync-public-portraits — map + public/images/artists → image_url
 │   ├── upload-storage-media.mjs     # npm run media:upload — local file → bucket `media`
 │   ├── sync-timeline-artists.mjs    # db:timeline / db:timeline:sql
 │   ├── sync-user-list-artists.mjs   # db:user-list — starter rows for extended name list
@@ -434,6 +437,10 @@ npm run db:artist:ensure -- data/artists/deekline.json   # verify DB matches JSO
 
 Fact-check bios and URLs after generation. If you used **`--json-only`**, run **`npm run db:artist -- data/artists/<slug>.json`** to publish.
 
+### 5c. Artist portraits (web search → Storage, repair, `public/images/artists`)
+
+**Not** the bio agent: **`npm run db:artist:photo`** / **`db:artist:photo:repair`** use SerpAPI + OpenAI, validate downloaded bytes, upload to Storage, and UPSERT **`image_url`**. Slugs covered by **`data/artist-public-portrait-map.json`** + a file in **`public/images/artists/`** are skipped automatically (no wasted API calls) unless **`--force-rephoto`**. After adding local WebP + map entry, run **`npm run db:artist:sync-public-portraits`**. Full flags and admin API: [**`docs/ARTIST_AI_AGENT.md`**](docs/ARTIST_AI_AGENT.md) (section *Artist photos* / *Fotos de artista*).
+
 **Bulk upsert (all JSON files in `data/artists/`)** — from repo root, PowerShell:
 
 ```powershell
@@ -446,7 +453,7 @@ Git Bash:
 for f in data/artists/*.json; do npm run db:artist -- "$f"; done
 ```
 
-### 5c. Artist pages: Supabase vs Git, caching, placeholders
+### 5d. Artist pages: Supabase vs Git, caching, placeholders
 
 - **Source of truth for the live site** is the **`artists` table** in the Supabase project configured as `NEXT_PUBLIC_SUPABASE_URL` in Vercel (or locally). Committing JSON to Git does **not** update bios until an upsert runs against that project (**`npm run db:artist`**, the agent CLI by default, or admin save).
 - **`npm run db:user-list`** inserts **starter** rows for many names (short placeholder copy in ES/EN). Replace those profiles with the agent (default UPSERT) or **`db:artist`** when you have a full JSON.
@@ -534,6 +541,9 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `npm run db:verify` | Row-count sanity check via **Supabase HTTP API** (`NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). |
 | `npm run db:artist:agent -- <slug> "Name"` | OpenAI (+ optional SerpAPI) → **UPSERT** `artists` by default; `--json-only` / `--save-json` for file-only or copy. See [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md). |
 | `npm run db:artist:agent:all` | Regenerate **all** artist rows in Supabase via the agent (API credits); optional `--save-json` for `data/artists/` copies. |
+| `npm run db:artist:photo -- <slug>` | SerpAPI Google Images + OpenAI → download valid image bytes → Storage `media/artists/<slug>/portrait.*` → UPSERT `artists.image_url`. Skips slugs with editorial portrait in `public/images/artists` (see map) unless `--force-rephoto`. |
+| `npm run db:artist:photo:repair` | Same script with **`--repair`**: queue from Supabase — missing `https://` image, broken URL (HEAD), or bad prior upload; re-search; on failure set `image_url` **null** (UI punk fallback). Editorial `public/images/artists` slugs excluded. |
+| `npm run db:artist:sync-public-portraits` | For each slug in **`data/artist-public-portrait-map.json`** with a matching file under **`public/images/artists/`**, set `image_url` to `/images/artists/<file>.webp` and UPSERT. |
 | `npm run db:timeline` | Insert **missing** artists from `src/lib/artists-timeline.ts` (`ARTIST_ERAS`, same names as `/artists`) via **Supabase API** (service/secret key). Skips slugs already in `artists`. |
 | `npm run db:timeline:sql` | Regenerate `009_artists_from_artist_eras_timeline.sql` (optional; for migrations without running the script against prod). |
 | `npm run db:user-list` | Insert **missing** artists from the extended name list in `sync-user-list-artists.mjs` (short **placeholder** bios until you enrich with agent + `db:artist`). |
