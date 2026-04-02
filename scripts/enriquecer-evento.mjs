@@ -1209,12 +1209,21 @@ const FINGER_LICKIN_SKIDDLE =
   'https://www.skiddle.com/whats-on/London/Dutch-Master-Party-Boat/Finger-Lickin-Boat-Party/42152456/'
 const FINGER_LICKIN_IMAGE = '/images/events/finger-lickin-boat-party.webp'
 
+const FINGER_LICKIN_BOAT_PARTY_2026_LINEUP = [
+  'Plump DJs',
+  'Krafty Kuts',
+  'A.Skillz',
+  'Soul of Man',
+  'Slyde',
+  'Jessica Joy',
+]
+
 const FINGER_LICKIN_BOAT_PARTY_2026_ROW = {
   name: 'Finger Lickin Boat Party',
   description_en:
-    'Daytime boat party on the Dutch Master Party Boat, London. Public listings (including Skiddle and secondary aggregators) give Saturday 16 May 2026, with embarkation hours around 12:30–16:30 local time. Venue cited as Tower Millennium Pier, Tower Pier, London. Listing genres mentioned: breaks, hip hop and funk. Tickets and official listing: Skiddle.',
+    'Annual Finger Lickin Records boat party on the Dutch Master (Thames, London): two floors, daytime sailing on Saturday 16 May 2026, with public listings giving embarkation around 12:30–16:30 at Tower Millennium Pier / Tower Pier. The label’s own announcement names Plump DJs (marking 25 years of Plump Nights Out), Krafty Kuts and A.Skillz, Soul of Man, Slyde and Jessica Joy, with further names to follow. Genres sit in the breaks / club spectrum the brand is known for. The promoter states tickets are sold only via Skiddle, are non-transferable, and warns against touts and unofficial resellers.',
   description_es:
-    'Fiesta en barco diurna en el Dutch Master Party Boat, Londres. Las fichas públicas (Skiddle y agregadores) citan el sábado 16 de mayo de 2026, con horario de embarque aproximado 12:30–16:30 hora local. Dirección citada: Tower Millennium Pier, Tower Pier, Londres. Géneros mencionados en listados: breaks, hip hop y funk. Entradas y ficha: Skiddle.',
+    'Fiesta anual en barco de Finger Lickin Records a bordo del Dutch Master por el Támesis (Londres): dos plantas, sesión diurna el sábado 16 de mayo de 2026; los listados públicos sitúan el embarque hacia 12:30–16:30 en Tower Millennium Pier / Tower Pier. El comunicado del sello cita a Plump DJs (25 años de Plump Nights Out), Krafty Kuts y A.Skillz, Soul of Man, Slyde y Jessica Joy, con más nombres por confirmar. El estilo encaja con el breaks y la línea club del sello. El promotor indica que las entradas solo se venden en Skiddle, que no son transferibles y advierte contra revendedores no oficiales.',
   event_type: 'club_night',
   date_start: '2026-05-16',
   date_end: null,
@@ -1226,19 +1235,26 @@ const FINGER_LICKIN_BOAT_PARTY_2026_ROW = {
   website: FINGER_LICKIN_SKIDDLE,
   tickets_url: FINGER_LICKIN_SKIDDLE,
   image_url: FINGER_LICKIN_IMAGE,
-  lineup: [],
+  lineup: FINGER_LICKIN_BOAT_PARTY_2026_LINEUP,
   tags: [
+    'finger lickin records',
     'london',
     'boat party',
+    'thames',
     'breaks',
-    'hip hop',
-    'funk',
-    'united kingdom',
+    'plump djs',
+    'krafty kuts',
+    'a.skillz',
+    'soul of man',
+    'slyde',
+    'jessica joy',
     'dutch master',
     '2026',
     'skiddle',
   ],
-  socials: {},
+  socials: {
+    'Instagram @thedutchmasterlondon': 'https://www.instagram.com/thedutchmasterlondon/',
+  },
   age_restriction: null,
   doors_open: '12:30',
   doors_close: '16:30',

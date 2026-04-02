@@ -7,8 +7,11 @@ import { getDictionary } from '@/lib/dictionaries'
 import { displayImageUrl } from '@/lib/image-url'
 import {
   SECTION_OG_BASE,
+  SECTION_OG_KEYS,
+  SECTION_OG_PIXELS,
   SECTION_OG_PIXEL_HEIGHT,
   SECTION_OG_PIXEL_WIDTH,
+  type SectionOgKey,
 } from '@/lib/og-section-images'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
@@ -80,6 +83,11 @@ export function smartTruncate(text: string, maxLen = 160): string {
   return result.replace(/[,;:\s]+$/, '') + '…'
 }
 
+function seoKeyToSectionOgKey(k: SeoStaticKey): SectionOgKey | null {
+  const hit = SECTION_OG_KEYS.find((sk) => sk === k)
+  return hit ?? null
+}
+
 export type StaticPageMetadataOptions = {
   /** Ruta bajo `public/` (p. ej. `/images/foo.jpeg`). Si se omite, se usa la OG generada. */
   ogImagePath?: string | null
@@ -101,6 +109,8 @@ export async function staticPageMetadata(
   const ogImage = absoluteOgImage(assetPath, lang)
   const usesGeneratedFallback = !assetPath
   const isSectionOg = !!assetPath?.startsWith(`${SECTION_OG_BASE}/`)
+  const sectionOgKey = seoKeyToSectionOgKey(key)
+  const sectionPixels = sectionOgKey ? SECTION_OG_PIXELS[sectionOgKey] : null
   const ogImageMeta = usesGeneratedFallback
     ? {
         url: ogImage,
@@ -112,8 +122,8 @@ export async function staticPageMetadata(
     : isSectionOg
       ? {
           url: ogImage,
-          width: SECTION_OG_PIXEL_WIDTH,
-          height: SECTION_OG_PIXEL_HEIGHT,
+          width: sectionPixels?.width ?? SECTION_OG_PIXEL_WIDTH,
+          height: sectionPixels?.height ?? SECTION_OG_PIXEL_HEIGHT,
           type: 'image/png',
           alt: options?.ogImageAlt ?? siteName,
         }

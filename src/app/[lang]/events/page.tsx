@@ -7,12 +7,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
-import {
-  SECTION_OG_PIXEL_HEIGHT,
-  SECTION_OG_PIXEL_WIDTH,
-  sectionOgImageAlt,
-  sectionOgImagePath,
-} from '@/lib/og-section-images'
+import { SECTION_OG_PIXELS, sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import Image from 'next/image'
@@ -129,8 +124,8 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
           <Image
             src={sectionOgImagePath('events')}
             alt={sectionOgImageAlt('events', lang)}
-            width={SECTION_OG_PIXEL_WIDTH}
-            height={SECTION_OG_PIXEL_HEIGHT}
+            width={SECTION_OG_PIXELS.events.width}
+            height={SECTION_OG_PIXELS.events.height}
             className="w-full h-auto border-4 border-[var(--ink)]"
             sizes="(max-width: 896px) 100vw, 896px"
             priority

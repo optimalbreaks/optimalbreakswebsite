@@ -4,12 +4,7 @@
 
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import {
-  SECTION_OG_PIXEL_HEIGHT,
-  SECTION_OG_PIXEL_WIDTH,
-  sectionOgImageAlt,
-  sectionOgImagePath,
-} from '@/lib/og-section-images'
+import { SECTION_OG_PIXELS, sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import type { Metadata } from 'next'
 import Image from 'next/image'
@@ -39,8 +34,8 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
           <Image
             src={sectionOgImagePath('about')}
             alt={sectionOgImageAlt('about', lang)}
-            width={SECTION_OG_PIXEL_WIDTH}
-            height={SECTION_OG_PIXEL_HEIGHT}
+            width={SECTION_OG_PIXELS.about.width}
+            height={SECTION_OG_PIXELS.about.height}
             className="w-full h-auto border-4 border-[var(--ink)]"
             sizes="(max-width: 896px) 100vw, 896px"
             priority

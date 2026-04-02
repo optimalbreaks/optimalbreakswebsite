@@ -206,7 +206,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-finger-lickin-boat-party-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT finger-lickin-boat-party-2026: 16 may 2026 Dutch Master Party Boat (Tower Pier, Londres), cartel public/images/events/finger-lickin-boat-party.webp, Skiddle 42152456.',
+      'UPSERT finger-lickin-boat-party-2026: 16 may 2026 Dutch Master (Támesis), lineup Plump DJs / Krafty Kuts / A.Skillz / Soul of Man / Slyde / Jessica Joy, textos según comunicado FLR, Skiddle 42152456.',
   },
   {
     id: 'events-delete-slug',
