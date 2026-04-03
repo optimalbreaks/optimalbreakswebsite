@@ -466,7 +466,11 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
             const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
             const sectionHasVisible = items.some(isMixVisible)
             return (
-              <section key={String(key)} aria-labelledby={`mixes-year-${key}`} hidden={!sectionHasVisible}>
+              <section
+                key={String(key)}
+                aria-labelledby={`mixes-year-${key}`}
+                className={sectionHasVisible ? undefined : 'hidden'}
+              >
                 <h2
                   id={`mixes-year-${key}`}
                   className={`mt-0 mb-4 sm:mb-5 pb-3 border-b-[4px] border-[var(--ink)] ${idx === 0 ? '' : 'pt-2'}`}
@@ -531,8 +535,11 @@ function LargeGrid({
         return (
           <div
             key={m.id}
-            hidden={!visible}
-            className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
+            className={
+              visible
+                ? 'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group'
+                : 'hidden'
+            }
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
@@ -605,8 +612,11 @@ function CompactGrid({
         return (
           <div
             key={m.id}
-            hidden={!visible}
-            className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative"
+            className={
+              visible
+                ? 'border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative'
+                : 'hidden'
+            }
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
@@ -676,8 +686,11 @@ function ListView({
           return (
             <div
               key={m.id}
-              hidden={!visible}
-              className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
+              className={
+                visible
+                  ? 'border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative'
+                  : 'hidden'
+              }
             >
               <FavoriteButton type="mix" entityId={m.id} lang={lang} />
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
@@ -721,8 +734,11 @@ function ListView({
           return (
             <div
               key={m.id}
-              hidden={!visible}
-              className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
+              className={
+                visible
+                  ? 'border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative'
+                  : 'hidden'
+              }
             >
               <FavoriteButton type="mix" entityId={m.id} lang={lang} />
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
@@ -765,8 +781,11 @@ function ListView({
         return (
           <div
             key={m.id}
-            hidden={!visible}
-            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative"
+            className={
+              visible
+                ? 'flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative'
+                : 'hidden'
+            }
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
             <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)] relative">
