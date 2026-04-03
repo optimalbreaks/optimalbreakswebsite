@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "krafty-kuts-the-halloween-mixtape",
+    "title": "The Halloween mixtape",
+    "artist_name": "Krafty Kuts",
+    "description_en": "Seasonal Halloween mixtape set from Krafty Kuts (SoundCloud).",
+    "description_es": "Sesión mixtape de Halloween de Krafty Kuts (SoundCloud).",
+    "mix_type": "classic_set",
+    "year": null,
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/kraftykuts/the-halloween-mixtape",
+    "image_url": "https://i1.sndcdn.com/artworks-HWXKIiv0udV28QLd-OzP6kQ-t500x500.jpg",
+    "is_featured": false
+  }
+]
