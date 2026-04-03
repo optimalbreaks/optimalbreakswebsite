@@ -209,6 +209,14 @@ const ACTIONS = [
       'UPSERT finger-lickin-boat-party-2026: 16 may 2026 Dutch Master (Támesis), lineup Plump DJs / Krafty Kuts / A.Skillz / Soul of Man / Slyde / Jessica Joy, textos según comunicado FLR, Skiddle 42152456.',
   },
   {
+    id: 'events-patch-dreambeach-costa-del-sol-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-dreambeach-costa-del-sol-2026',
+    npm: 'npm run db:guia -- run events-patch-dreambeach-costa-del-sol-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT dreambeach-costa-del-sol-2026: 31 jul–1 ago 2026 Vélez-Málaga; web dreambeach.es; cartel public/images/events/DREAMBEACH_festival_2026.webp; lineup breaks: Karpin, Lady Waks B2B Stanton Warriors, Wizard.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -337,6 +345,7 @@ Punto de entrada unificado:
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
+  events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -618,6 +627,9 @@ function main() {
       break
     case 'events-patch-finger-lickin-boat-party-2026':
       runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-boat-party-2026', ...rest])
+      break
+    case 'events-patch-dreambeach-costa-del-sol-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-dreambeach-costa-del-sol-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

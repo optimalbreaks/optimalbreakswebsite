@@ -21,6 +21,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+ *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -1289,6 +1290,80 @@ async function runPatchFingerLickinBoatParty2026(sb) {
   console.log('[patch-finger-lickin-boat-party-2026] OK:', after)
 }
 
+const DREAMBEACH_COSTA_DEL_SOL_2026_SLUG = 'dreambeach-costa-del-sol-2026'
+const DREAMBEACH_WEB = 'https://www.dreambeach.es/'
+
+const DREAMBEACH_COSTA_DEL_SOL_2026_LINEUP = [
+  'Karpin',
+  'Lady Waks B2B Stanton Warriors',
+  'Wizard',
+]
+
+const DREAMBEACH_COSTA_DEL_SOL_2026_ROW = {
+  name: 'Dreambeach Costa del Sol 2026',
+  description_en:
+    'First Dreambeach Costa del Sol edition: a two-day open-air electronic music festival on 31 July and 1 August 2026 in Vélez-Málaga on the Costa del Sol (Málaga province), Spain. Official communications promote the new location and a broad international bill across house, techno, EDM, drum and bass and related club styles. This Optimal Breaks entry highlights the breakbeat-facing names on the published 2026 poster: Karpin, the Spain-exclusive back-to-back Lady Waks B2B Stanton Warriors, and Wizard. Tickets and updates: dreambeach.es.',
+  description_es:
+    'Primera edición de Dreambeach Costa del Sol: festival al aire libre de música electrónica los días 31 de julio y 1 de agosto de 2026 en Vélez-Málaga, en la Costa del Sol (provincia de Málaga). La comunicación oficial presenta la nueva ubicación y un cartel amplio con nombres internacionales de house, techno, EDM, drum and bass y estilos de club afines. Esta ficha destaca los nombres con peso breakbeat en el cartel publicado para 2026: Karpin, el B2B en exclusiva para España Lady Waks B2B Stanton Warriors, y Wizard. Entradas e información: dreambeach.es.',
+  event_type: 'festival',
+  date_start: '2026-07-31',
+  date_end: '2026-08-01',
+  location: 'Vélez-Málaga, Costa del Sol, Málaga, Spain',
+  city: 'Vélez-Málaga',
+  country: 'Spain',
+  venue: 'Dreambeach Costa del Sol',
+  address: null,
+  website: DREAMBEACH_WEB,
+  tickets_url: DREAMBEACH_WEB,
+  image_url: '/images/events/DREAMBEACH_festival_2026.webp',
+  lineup: DREAMBEACH_COSTA_DEL_SOL_2026_LINEUP,
+  tags: [
+    'dreambeach',
+    'dreambeach costa del sol',
+    'vélez-málaga',
+    'málaga',
+    'costa del sol',
+    'festival',
+    '2026',
+    'breakbeat',
+    'breaks',
+    'karpin',
+    'lady waks',
+    'stanton warriors',
+    'wizard',
+  ],
+  socials: {},
+}
+
+async function runPatchDreambeachCostaDelSol2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, date_end, city, venue, image_url')
+    .eq('slug', DREAMBEACH_COSTA_DEL_SOL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-dreambeach-costa-del-sol-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: DREAMBEACH_COSTA_DEL_SOL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...DREAMBEACH_COSTA_DEL_SOL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, date_end, city, venue, lineup, website, tickets_url, image_url')
+    .eq('slug', DREAMBEACH_COSTA_DEL_SOL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-dreambeach-costa-del-sol-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -1364,6 +1439,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-dreambeach-costa-del-sol-2026')) {
+    await runPatchDreambeachCostaDelSol2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -1410,7 +1490,9 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
-  node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026`)
+  node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+  node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
+  node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026`)
     process.exit(1)
   }
 
