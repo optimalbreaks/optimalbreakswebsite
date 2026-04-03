@@ -200,6 +200,8 @@ En **Artistas**, **Sellos**, **Eventos**, **Escenas** y **Mixes** (cuando hay fi
 
 Componentes: `ViewToggle.tsx` más `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` en `src/components/`. Textos en `src/dictionaries/es.json` y `en.json` (`view_large`, `view_compact`, `view_list`).
 
+**Mixes (`MixesExplorer`, `/[lang]/mixes`):** Filtros por **año**, **plataforma** (YouTube, SoundCloud, …) y **búsqueda** en título + artista. La lógica de filtrado para el usuario es la misma; por debajo se mantiene **montado todo el catálogo** y las filas que no cumplen el filtro usan la clase **`hidden` de Tailwind** (no basta el atributo HTML `hidden` en el mismo nodo que `display: flex`, porque el estilo del autor gana y pueden seguir viéndose tarjetas incorrectas). Así los **embeds no se destruyen** al quitar filtros. **YouTube y SoundCloud** se cargan **bajo demanda** con `IntersectionObserver` cuando la tarjeta se acerca al viewport (en el DOM los años van **de más reciente a más antiguo**); el iframe lleva `loading="lazy"`. SoundCloud sigue el player visual (URLs como en `SoundCloudVisualEmbed`; el envoltorio lazy está en `MixesExplorer`).
+
 ---
 
 ## Storage en Supabase
@@ -244,7 +246,7 @@ Tras el núcleo (`001`–`006`): **`007`** rol admin, **`008`–`009`** artistas
 
 ## Secciones del sitio
 
-Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). Detalle en [README.md](./README.md).
+Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). En **mixes**: filtros y **carga perezosa de embeds** (ver sección *Vistas de listado* arriba y [README.md](./README.md)).
 
 ### Migraciones SQL (resumen)
 

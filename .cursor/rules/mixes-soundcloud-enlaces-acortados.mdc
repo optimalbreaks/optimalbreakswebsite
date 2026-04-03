@@ -30,4 +30,5 @@ Cuando el usuario pase un enlace de SoundCloud, **en especial acortados** (`http
 ## 4. UI
 
 - En `/mixes` (y vistas que repliquen tarjetas de mix), los mixes con `embed_url` de SoundCloud **no** son vídeo YouTube: se muestra el **widget visual** (`w.soundcloud.com/player`, `visual=true`) vía `SoundCloudVisualEmbed`, análogo al iframe de YouTube.
-- Implementación de referencia: `src/components/SoundCloudVisualEmbed.tsx` y su uso en `MixesExplorer` / dashboard.
+- Implementación de referencia: `src/components/SoundCloudVisualEmbed.tsx` (`buildSoundCloudVisualPlayerSrc`, etc.) y su uso en `MixesExplorer` / dashboard.
+- En el listado público, `MixesExplorer` monta el iframe SoundCloud (y YouTube) **de forma perezosa** (`IntersectionObserver`) y mantiene el catálogo en DOM al filtrar; no cambiar eso al tocar datos de SoundCloud salvo requisito explícito.

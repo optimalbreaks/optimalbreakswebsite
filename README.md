@@ -124,6 +124,8 @@ When Supabase returns rows, these five sections use **client components** that o
 
 Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` in `src/components/`. Labels for the buttons live under each section in `src/dictionaries/en.json` and `es.json` (`view_large`, `view_compact`, `view_list`).
 
+**Mixes (`MixesExplorer`, `/[lang]/mixes`):** Filters by **year**, **platform** (YouTube, SoundCloud, …), and **text search** on title + artist. Filter logic is unchanged from a user perspective; the implementation keeps the **full catalog mounted** and toggles visibility with Tailwind’s **`hidden` class** on non-matching cards so **embeds are not destroyed** when you clear filters (avoid using only the HTML `hidden` attribute on the same node as `display: flex` — author styles win and wrong rows could stay visible). **YouTube and SoundCloud iframes load on demand:** an `IntersectionObserver` mounts each embed when the card nears the viewport (DOM order follows **newest publication years first**), and the iframe uses `loading="lazy"`. SoundCloud continues to use the visual player (`SoundCloudVisualEmbed` URL builder; lazy wrapper in `MixesExplorer`).
+
 ---
 
 ## Supabase Storage (`media` bucket)
@@ -248,7 +250,7 @@ OptimalBreaks/
 │   │   ├── LabelsExplorer.tsx  # Labels: three views
 │   │   ├── EventsExplorer.tsx  # Events: three views
 │   │   ├── ScenesExplorer.tsx  # Scenes: three views
-│   │   ├── MixesExplorer.tsx   # Mixes: three views
+│   │   ├── MixesExplorer.tsx   # Mixes: three views, filters, lazy YT/SC embeds
 │   │   ├── CardThumbnail.tsx   # Shared image / placeholder for cards & heroes
 │   │   ├── DjDeck.tsx          # Interactive DJ controller with audio + scratch
 │   │   ├── Marquee.tsx         # Tape strip with infinite scroll
@@ -489,7 +491,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Events | `/[lang]/events` | Festivals, club nights, iconic past events, upcoming; **three listing views** |
 | Scenes | `/[lang]/scenes` | Breakbeat by territory; **three listing views** |
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
-| Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views** |
+| Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views**; year / platform / search filters; **lazy embeds** (see *Directory listing views* → Mixes) |
 | Dashboard | `/[lang]/dashboard` | User area (favorites, sightings, events, mixes, profile) — requires login |
 | Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
 | Reset password | `/[lang]/reset-password` | New password after recovery email; session created by `/{lang}/auth/confirm` (or repaired via `/{lang}/auth/callback` → confirm) |

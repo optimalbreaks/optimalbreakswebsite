@@ -8,8 +8,8 @@ Mapa de los **Markdown** del proyecto, para saber qué leer primero y qué mante
 
 | Ubicación | Propósito |
 |-----------|-----------|
-| **[`README.md`](../README.md)** (raíz) | Documentación técnica **canónica** (inglés): stack, env, auth, Storage, DJ deck, **línea temporal de la home** (`home.section_history` en diccionarios: orden **editorial manual**, sin sort por año), migraciones (tabla parcial), scripts `npm`, estructura de carpetas. |
-| **[`README.es.md`](../README.es.md)** | Resumen en **español**: flujo de artistas, auth, GA4, vistas de listado, **misma nota sobre la timeline de la home**; enlaza al README en inglés para el detalle largo. |
+| **[`README.md`](../README.md)** (raíz) | Documentación técnica **canónica** (inglés): stack, env, auth, Storage, DJ deck, **línea temporal de la home** (`home.section_history` en diccionarios: orden **editorial manual**, sin sort por año), migraciones (tabla parcial), scripts `npm`, estructura de carpetas, **página mixes** (filtros, embeds perezosos YouTube/SoundCloud, `MixesExplorer`). |
+| **[`README.es.md`](../README.es.md)** | Resumen en **español**: flujo de artistas, auth, GA4, vistas de listado (incl. **mixes**: filtros y embeds), **misma nota sobre la timeline de la home**; enlaza al README en inglés para el detalle largo. |
 | **[`docs/AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md)** | Índice de **prompts** (`scripts/prompts/*.txt`), variables OpenAI/SerpAPI, modelo por defecto **por flujo**, rutas API relacionadas. Bilingüe (ES/EN en un solo archivo). |
 | **[`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md)** | Manual del **agente de artistas** (bios): CLI, batch, API admin, UPSERT por REST. Incluye además **fotos de artista** (`db:artist:photo`, `--repair`, retratos en `public/images/artists`, sync del mapa). |
 | **[`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md)** | `displayImageUrl`, **`displayArtistImageUrl`** (artistas), `public/images/` vs Supabase Storage, reglas WebP, SEO/OG. |
@@ -48,6 +48,7 @@ Este archivo (**`docs/README.md`**) es solo índice y auditoría; no duplica pro
 
 ## Cambios recientes documentados en README
 
+- **Mixes / `MixesExplorer`:** filtros (año, plataforma, búsqueda título+artista); catálogo completo en DOM con visibilidad vía clase Tailwind `hidden` para no recargar embeds al limpiar filtros; iframes montados con `IntersectionObserver` + `loading="lazy"`. Detalle en **`README.md`** y **`README.es.md`** (sección *Directory listing views* / *Vistas de listado*).
 - **Fotos de artista:** `db:artist:photo`, `db:artist:photo:repair`, retratos en `public/images/artists` + `data/artist-public-portrait-map.json`, `db:artist:sync-public-portraits`, prioridad en UI (`displayArtistImageUrl`) y fallback punk — descrito en **`ARTIST_AI_AGENT.md`**, **`IMAGES_AND_WEBP.md`**, **`README.md` / `README.es.md`** (tabla npm y sección retratos), **`public/images/README.md`**.
 - **Audio e idioma:** `DeckAudioProvider` con **`key={lang}`** en `src/app/[lang]/layout.tsx` — al cambiar ES/EN se reinicia la sesión de audio (deck de la home, barra inferior, modo mix).
 - **Navbar móvil:** `html`/`body` con `overflow-x` para ancho; **header** sin `overflow-x` para no recortar menús desplegables (cuenta, hamburguesa).
