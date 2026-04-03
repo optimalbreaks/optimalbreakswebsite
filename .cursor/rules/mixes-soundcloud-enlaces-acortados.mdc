@@ -1,0 +1,33 @@
+---
+description: Mixes SoundCloud — enlaces on.soundcloud.com, JSON, UPSERT y tarjeta visual en /mixes
+alwaysApply: true
+---
+
+# Mixes: SoundCloud (enlaces acortados y tarjeta visual)
+
+Cuando el usuario pase un enlace de SoundCloud, **en especial acortados** (`https://on.soundcloud.com/...`):
+
+## 1. Resolver URL para BD y widget
+
+- **Objetivo en `embed_url`:** URL **HTTPS canónica del track**, idealmente `https://soundcloud.com/<usuario>/<slug-del-track>` (estable para el widget y la API embebida).
+- **Cómo resolver** el acortado (orden recomendado):
+  - Petición `HEAD` o `GET` con redirecciones seguidas y usar la **URL final**; o leer cabecera `Location` si `redirect: 'manual'`.
+  - Si no hay red: abrir el enlace en navegador y copiar la URL larga del track.
+- **No** guardar solo el acortado si puedes obtener la canónica; el widget suele aceptar `on.soundcloud.com`, pero la canónica evita sorpresas en scripts y enlaces externos.
+
+## 2. Fila `mixes` (Supabase)
+
+- `platform`: `soundcloud`
+- `embed_url`: URL canónica del track (o, en último caso, el `on.soundcloud.com` si no se pudo resolver)
+- `video_url`: `null` (reservado a YouTube)
+- `image_url`: **artwork** del tema (URL pública). Obtener vía [oEmbed SoundCloud](https://developers.soundcloud.com/docs/oembed) (`thumbnail_url`) o desde la ficha del track si hace falta.
+- Resto: `title`, `artist_name`, `slug`, `mix_type`, `year` / `published_at` / `duration_minutes` según catálogo.
+
+## 3. Persistencia
+
+- UPSERT con la guía del repo: `node scripts/guia-base-datos.mjs run mixes-file data/mixes/<lote>.json` (o el equivalente npm). **No** dejar solo instrucciones manuales si el entorno tiene credenciales (véase regla base-de-datos).
+
+## 4. UI
+
+- En `/mixes` (y vistas que repliquen tarjetas de mix), los mixes con `embed_url` de SoundCloud **no** son vídeo YouTube: se muestra el **widget visual** (`w.soundcloud.com/player`, `visual=true`) vía `SoundCloudVisualEmbed`, análogo al iframe de YouTube.
+- Implementación de referencia: `src/components/SoundCloudVisualEmbed.tsx` y su uso en `MixesExplorer` / dashboard.

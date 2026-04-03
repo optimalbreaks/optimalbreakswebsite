@@ -6,6 +6,7 @@ import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
+import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -441,6 +442,7 @@ function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: stri
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
+        const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
         return (
           <div
             key={m.id}
@@ -449,6 +451,8 @@ function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: stri
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
               <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} />
+            ) : scTrackUrl ? (
+              <SoundCloudVisualEmbed key={`${m.id}-${iframeRemountSig}`} trackUrl={scTrackUrl} title={m.title} height={300} />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
             )}
@@ -476,6 +480,16 @@ function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: stri
                 >
                   YouTube ↗
                 </a>
+              ) : scTrackUrl ? (
+                <a
+                  href={scTrackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}
+                >
+                  SoundCloud ↗
+                </a>
               ) : (
                 <PlayLink mix={m} />
               )}
@@ -492,6 +506,7 @@ function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: st
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
+        const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
         return (
           <div
             key={m.id}
@@ -500,6 +515,14 @@ function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: st
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
               <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+            ) : scTrackUrl ? (
+              <SoundCloudVisualEmbed
+                key={`${m.id}-${iframeRemountSig}`}
+                trackUrl={scTrackUrl}
+                title={m.title}
+                height={220}
+                className="border-b-[3px] border-[var(--ink)]"
+              />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />
             )}
@@ -519,6 +542,10 @@ function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: st
               {ytId ? (
                 <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
                   YouTube ↗
+                </a>
+              ) : scTrackUrl ? (
+                <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
+                  SoundCloud ↗
                 </a>
               ) : getMixTrack(m) ? (
                 <MixPlayButton mix={m} size="sm" />
@@ -540,6 +567,7 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
     <div className="border-4 border-[var(--ink)]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
+        const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
         if (ytId) {
           return (
             <div
@@ -579,6 +607,56 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
                   <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
+                </div>
+              </div>
+            </div>
+          )
+        }
+        if (scTrackUrl) {
+          return (
+            <div
+              key={m.id}
+              className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
+            >
+              <FavoriteButton type="mix" entityId={m.id} lang={lang} />
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
+                    <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
+                      {m.published_at
+                        ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : m.year ?? '—'}
+                    </span>
+                  </div>
+                  <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
+                    {m.title}
+                  </div>
+                  <div className="mt-1" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
+                    {m.artist_name}
+                  </div>
+                  <a
+                    href={scTrackUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
+                    style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 10px' }}
+                  >
+                    SoundCloud ↗
+                  </a>
+                </div>
+                <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
+                  <SoundCloudVisualEmbed
+                    key={`${m.id}-${iframeRemountSig}`}
+                    trackUrl={scTrackUrl}
+                    title={m.title}
+                    height={300}
+                    className="border-[3px] border-[var(--ink)]"
+                  />
                 </div>
               </div>
             </div>
