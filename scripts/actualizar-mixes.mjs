@@ -7,6 +7,7 @@
  *   node scripts/actualizar-mixes.mjs data/mixes/lote.json
  *
  * El JSON debe ser un array de objetos mix, o { "mixes": [ … ] }.
+ * Opcional: published_at (ISO 8601) para ordenación / fecha en plataforma (p. ej. SoundCloud).
  * Credenciales: .env.local — NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET).
  */
 
@@ -46,7 +47,7 @@ function validateMixRow(m, i) {
 }
 
 function normalizeMix(m) {
-  return {
+  const row = {
     slug: String(m.slug).trim(),
     title: String(m.title).trim(),
     artist_name: m.artist_name == null ? '' : String(m.artist_name).trim(),
@@ -69,6 +70,10 @@ function normalizeMix(m) {
     image_url:
       typeof m.image_url === 'string' && m.image_url.startsWith('https://') ? m.image_url.trim() : null,
   }
+  if (typeof m.published_at === 'string' && m.published_at.trim()) {
+    row.published_at = m.published_at.trim()
+  }
+  return row
 }
 
 async function main() {
