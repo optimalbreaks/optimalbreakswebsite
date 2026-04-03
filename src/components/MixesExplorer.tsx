@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
-import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
+import { buildSoundCloudVisualPlayerSrc, isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -24,19 +24,96 @@ function extractYouTubeId(url: string | null | undefined): string | null {
   return null
 }
 
-/** Reproductor embebido 16:9. `loading="eager"`: en listas filtradas, lazy + reconciliación de React suele dejar iframes en gris hasta recargar. */
-function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
+/** Monta el iframe solo al acercarse al viewport (orden DOM = años recientes primero). Evita 40+ embeds a la vez. */
+function LazyYouTubeEmbed({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [mountIframe, setMountIframe] = useState(false)
+
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || mountIframe) return
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMountIframe(true)
+          obs.disconnect()
+        }
+      },
+      { root: null, rootMargin: '380px 0px', threshold: 0.01 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [mountIframe])
+
   return (
-    <div className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
-      <iframe
-        src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-        title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-        loading="eager"
-        referrerPolicy="strict-origin-when-cross-origin"
-        className="absolute inset-0 h-full w-full border-0"
-      />
+    <div ref={rootRef} className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
+      {mountIframe ? (
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-black" aria-hidden />
+      )}
+    </div>
+  )
+}
+
+/** Misma estrategia que YouTube: iframe SoundCloud solo cuando entra en zona visible. */
+function LazySoundCloudEmbed({
+  trackUrl,
+  title,
+  height = 300,
+  className = '',
+}: {
+  trackUrl: string
+  title: string
+  height?: number
+  className?: string
+}) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [mountIframe, setMountIframe] = useState(false)
+  const src = buildSoundCloudVisualPlayerSrc(trackUrl)
+
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || mountIframe) return
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMountIframe(true)
+          obs.disconnect()
+        }
+      },
+      { root: null, rootMargin: '380px 0px', threshold: 0.01 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [mountIframe])
+
+  return (
+    <div
+      ref={rootRef}
+      className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${className}`}
+      style={{ height, minHeight: height }}
+    >
+      {mountIframe ? (
+        <iframe
+          title={title}
+          src={src}
+          allow="autoplay"
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          className="absolute inset-0 h-full w-full border-0"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[var(--paper-dark)]" aria-hidden />
+      )}
     </div>
   )
 }
@@ -224,9 +301,9 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
     [mixes],
   )
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
-    return mixes.filter((m) => {
+  const isMixVisible = useCallback(
+    (m: Mix) => {
+      const q = search.toLowerCase().trim()
       if (q) {
         const title = (m.title || '').toLowerCase()
         const artist = (m.artist_name || '').toLowerCase()
@@ -240,16 +317,14 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
       }
       if (platform !== 'all' && m.platform !== platform) return false
       return true
-    })
-  }, [mixes, search, yearFilter, platform])
-
-  const yearGroups = useMemo(() => groupMixesByPublicationYear(filtered), [filtered])
-
-  /** Al cambiar filtros/búsqueda, fuerza remontaje de cada iframe; si no, React reutiliza nodos y YouTube a veces no vuelve a pintar el preview. */
-  const iframeRemountSig = useMemo(
-    () => `${String(yearFilter)}|${platform}|${search.trim()}`,
-    [yearFilter, platform, search],
+    },
+    [search, yearFilter, platform],
   )
+
+  const filtered = useMemo(() => mixes.filter(isMixVisible), [mixes, isMixVisible])
+
+  /** Siempre el catálogo completo por años: las filas ocultas con `hidden` mantienen iframes ya cargados al quitar filtros. */
+  const yearGroups = useMemo(() => groupMixesByPublicationYear(mixes), [mixes])
 
   const hasNonDefaultFilters =
     search.trim() !== '' || yearFilter !== 'all' || platform !== 'all'
@@ -389,8 +464,9 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
         <div className="space-y-10 sm:space-y-14">
           {yearGroups.map(({ key, items }, idx) => {
             const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
+            const sectionHasVisible = items.some(isMixVisible)
             return (
-              <section key={String(key)} aria-labelledby={`mixes-year-${key}`}>
+              <section key={String(key)} aria-labelledby={`mixes-year-${key}`} hidden={!sectionHasVisible}>
                 <h2
                   id={`mixes-year-${key}`}
                   className={`mt-0 mb-4 sm:mb-5 pb-3 border-b-[4px] border-[var(--ink)] ${idx === 0 ? '' : 'pt-2'}`}
@@ -405,11 +481,11 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
                   {title}
                 </h2>
                 {view === 'large' ? (
-                  <LargeGrid mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
+                  <LargeGrid mixes={items} lang={lang} isMixVisible={isMixVisible} />
                 ) : view === 'compact' ? (
-                  <CompactGrid mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
+                  <CompactGrid mixes={items} lang={lang} isMixVisible={isMixVisible} />
                 ) : (
-                  <ListView mixes={items} lang={lang} iframeRemountSig={iframeRemountSig} />
+                  <ListView mixes={items} lang={lang} isMixVisible={isMixVisible} />
                 )}
               </section>
             )
@@ -437,22 +513,32 @@ function PlayLink({ mix }: { mix: Mix }) {
   )
 }
 
-function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
+function LargeGrid({
+  mixes,
+  lang,
+  isMixVisible,
+}: {
+  mixes: Mix[]
+  lang: string
+  isMixVisible: (m: Mix) => boolean
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
         const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
+        const visible = isMixVisible(m)
         return (
           <div
             key={m.id}
+            hidden={!visible}
             className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} />
             ) : scTrackUrl ? (
-              <SoundCloudVisualEmbed key={`${m.id}-${iframeRemountSig}`} trackUrl={scTrackUrl} title={m.title} height={300} />
+              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
             )}
@@ -501,23 +587,32 @@ function LargeGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: stri
   )
 }
 
-function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
+function CompactGrid({
+  mixes,
+  lang,
+  isMixVisible,
+}: {
+  mixes: Mix[]
+  lang: string
+  isMixVisible: (m: Mix) => boolean
+}) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
         const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
+        const visible = isMixVisible(m)
         return (
           <div
             key={m.id}
+            hidden={!visible}
             className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
             ) : scTrackUrl ? (
-              <SoundCloudVisualEmbed
-                key={`${m.id}-${iframeRemountSig}`}
+              <LazySoundCloudEmbed
                 trackUrl={scTrackUrl}
                 title={m.title}
                 height={220}
@@ -562,16 +657,26 @@ function CompactGrid({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: st
   )
 }
 
-function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: string; iframeRemountSig: string }) {
+function ListView({
+  mixes,
+  lang,
+  isMixVisible,
+}: {
+  mixes: Mix[]
+  lang: string
+  isMixVisible: (m: Mix) => boolean
+}) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {mixes.map((m) => {
         const ytId = extractYouTubeId(m.video_url)
         const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(m.embed_url) ? m.embed_url!.trim() : null
+        const visible = isMixVisible(m)
         if (ytId) {
           return (
             <div
               key={m.id}
+              hidden={!visible}
               className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
             >
               <FavoriteButton type="mix" entityId={m.id} lang={lang} />
@@ -606,7 +711,7 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <YouTubeIframe key={`${m.id}-${iframeRemountSig}`} videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
+                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
                 </div>
               </div>
             </div>
@@ -616,6 +721,7 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
           return (
             <div
               key={m.id}
+              hidden={!visible}
               className="border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative"
             >
               <FavoriteButton type="mix" entityId={m.id} lang={lang} />
@@ -650,13 +756,7 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <SoundCloudVisualEmbed
-                    key={`${m.id}-${iframeRemountSig}`}
-                    trackUrl={scTrackUrl}
-                    title={m.title}
-                    height={300}
-                    className="border-[3px] border-[var(--ink)]"
-                  />
+                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} className="border-[3px] border-[var(--ink)]" />
                 </div>
               </div>
             </div>
@@ -665,6 +765,7 @@ function ListView({ mixes, lang, iframeRemountSig }: { mixes: Mix[]; lang: strin
         return (
           <div
             key={m.id}
+            hidden={!visible}
             className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative"
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
