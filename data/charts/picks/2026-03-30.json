@@ -213,6 +213,30 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 11,
+      "title": "Planet Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Huda Hudia"
+        },
+        {
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/planet-love/28101006",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/91fe8a32-8cd7-45c1-b40d-e55875461e5d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/df675cec-cfb4-4312-93fa-dda95a786c44.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
