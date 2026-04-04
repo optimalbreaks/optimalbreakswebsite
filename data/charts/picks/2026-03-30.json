@@ -303,6 +303,69 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 15,
+      "title": "Bounce",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Rhades"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bounce/24308710",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/abc90255-b938-43f4-bb7b-b1c20554982f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d6b03aaa-e816-48fb-a311-6ba8008a224c.LOFI.mp3",
+      "bpm": 100,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 16,
+      "title": "Underground Queen",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hankook"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/underground-queen/26829996",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5d5ca0eb-69bb-408c-b673-290e78e56d30.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9c351b83-3e5c-426f-80d5-1a1b34fd730b.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 17,
+      "title": "Don't Stop The Beat Rocking",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Mutantbreakz"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-stop-the-beat-rocking/26795211",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4586505-c309-4764-ae37-b92754170c73.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f88cb444-d6f0-450a-bddd-301ef2ab89b5.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
