@@ -10,7 +10,7 @@ import type { Artist, Label, Scene } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
-import { splitBioParagraphs } from '@/lib/bio-format'
+import { descriptionLooksLikeHtml, splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: { lang: Locale; slug: string } }
@@ -73,6 +73,8 @@ export default async function SceneDetailPage({ params }: Props) {
   }
 
   const sceneName = lang === 'es' ? scene.name_es : scene.name_en
+  const sceneDescription = lang === 'es' ? scene.description_es : scene.description_en
+  const sceneBodyIsHtml = descriptionLooksLikeHtml(sceneDescription)
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
@@ -99,17 +101,24 @@ export default async function SceneDetailPage({ params }: Props) {
         {scene.region && <span className="cutout outline">{scene.region}</span>}
         <span className="cutout red">{scene.era}</span>
       </div>
-      <div className="max-w-[700px] mb-8 space-y-5">
-        {splitBioParagraphs(lang === 'es' ? scene.description_es : scene.description_en).map((para, i) => (
-          <p
-            key={i}
-            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
-            className="text-[var(--ink)]"
-          >
-            {para}
-          </p>
-        ))}
-      </div>
+      {sceneBodyIsHtml ? (
+        <article
+          className="max-w-[700px] mb-8 prose-ob prose-ob-blog text-[var(--ink)]"
+          dangerouslySetInnerHTML={{ __html: sceneDescription ?? '' }}
+        />
+      ) : (
+        <div className="max-w-[700px] mb-8 space-y-5">
+          {splitBioParagraphs(sceneDescription).map((para, i) => (
+            <p
+              key={i}
+              style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+              className="text-[var(--ink)]"
+            >
+              {para}
+            </p>
+          ))}
+        </div>
+      )}
       {scene.key_artists?.length > 0 && (
         <div className="p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)] mb-4">
           <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>

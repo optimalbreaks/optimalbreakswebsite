@@ -1,3 +1,10 @@
+/** True if copy likely contains HTML (TinyMCE, migraciones, etc.); si no, se muestra como párrafos de texto plano. */
+export function descriptionLooksLikeHtml(text: string | null | undefined): boolean {
+  const t = text?.trim()
+  if (!t) return false
+  return /<\/?[a-z][\s/>]/i.test(t)
+}
+
 /** Split stored bio text into paragraphs (double newlines). Falls back to a single block if none. */
 export function splitBioParagraphs(bio: string | null | undefined): string[] {
   const t = bio?.trim()

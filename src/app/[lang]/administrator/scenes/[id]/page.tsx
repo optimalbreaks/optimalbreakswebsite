@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
+import BilingualHtmlEditor from '@/components/admin/BilingualHtmlEditor'
 import ArrayEditor from '@/components/admin/ArrayEditor'
 import ImageUpload from '@/components/admin/ImageUpload'
 import SlugField from '@/components/admin/SlugField'
@@ -84,9 +85,9 @@ export default function SceneEditPage() {
       </div>
 
       <div className="md:col-span-2">
-        <BilingualTextarea
+        <BilingualHtmlEditor
           label="Descripción"
-          rows={8}
+          instanceKey={form.id || 'scene'}
           valueEn={form.description_en}
           valueEs={form.description_es}
           onChangeEn={(v) => set('description_en', v)}
