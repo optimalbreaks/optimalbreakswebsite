@@ -1,0 +1,18 @@
+{
+  "week_date": "2026-03-30",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Ejemplo — título que pegas tú",
+      "artists": [{ "name": "Artista" }],
+      "label": "Sello",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/release/…",
+      "link_label": "",
+      "artwork_url": "",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}

@@ -29,6 +29,28 @@ export type ChartEdition = {
   sources: string[]
 }
 
+/** Picks editoriales «New releases» (metadatos pegados a mano; sin scrape). */
+export interface ChartFeaturedArtist {
+  name: string
+  url?: string
+}
+
+export type ChartFeaturedTrack = {
+  id: string
+  chart_edition_id: string
+  sort_order: number
+  title: string
+  artists: ChartFeaturedArtist[]
+  label: string
+  platform: string
+  link_url: string
+  link_label: string
+  artwork_url: string | null
+  release_year: number | null
+  note_en: string
+  note_es: string
+}
+
 /** Columna en BD: `music_key` (antes `key`; la palabra `key` rompía los genéricos de @supabase/supabase-js). */
 export type ChartTrack = {
   id: string
@@ -168,6 +190,12 @@ export interface Database {
         Row: ChartTrack
         Insert: Omit<ChartTrack, 'id'>
         Update: Partial<Omit<ChartTrack, 'id'>>
+        Relationships: DbRelationship[]
+      }
+      chart_featured_tracks: {
+        Row: ChartFeaturedTrack
+        Insert: Omit<ChartFeaturedTrack, 'id'>
+        Update: Partial<Omit<ChartFeaturedTrack, 'id'>>
         Relationships: DbRelationship[]
       }
       mix_play_events: {

@@ -5,7 +5,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import type { ChartEdition, ChartTrack } from '@/types/database'
+import type { ChartEdition, ChartFeaturedTrack, ChartTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import { staticPageMetadata } from '@/lib/seo'
 import ChartView from '@/components/ChartView'
@@ -40,6 +40,7 @@ export default async function ChartsPage({
   const editionIds = editions.map((e) => e.id)
 
   let allTracks: ChartTrack[] = []
+  let allFeatured: ChartFeaturedTrack[] = []
   if (editionIds.length > 0) {
     const { data: trks } = await supabase
       .from('chart_tracks')
@@ -47,6 +48,13 @@ export default async function ChartsPage({
       .in('chart_edition_id', editionIds)
       .order('position', { ascending: true })
     allTracks = (trks as ChartTrack[]) ?? []
+
+    const { data: feat } = await supabase
+      .from('chart_featured_tracks')
+      .select('*')
+      .in('chart_edition_id', editionIds)
+      .order('sort_order', { ascending: true })
+    allFeatured = (feat as ChartFeaturedTrack[]) ?? []
   }
 
   const byEdition = new Map<string, ChartTrack[]>()
@@ -57,9 +65,18 @@ export default async function ChartsPage({
     byEdition.set(id, list)
   }
 
+  const featuredByEdition = new Map<string, ChartFeaturedTrack[]>()
+  for (const row of allFeatured) {
+    const id = row.chart_edition_id
+    const list = featuredByEdition.get(id) ?? []
+    list.push(row)
+    featuredByEdition.set(id, list)
+  }
+
   const weeks = editions.map((edition) => ({
     edition,
     tracks: byEdition.get(edition.id) ?? [],
+    featured: featuredByEdition.get(edition.id) ?? [],
   }))
 
   const validWeekParam =

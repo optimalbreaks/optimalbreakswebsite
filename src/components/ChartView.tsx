@@ -7,11 +7,18 @@
 import Image from 'next/image'
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import type { ChartEdition, ChartTrack, ChartTrackArtist } from '@/types/database'
+import type {
+  ChartEdition,
+  ChartFeaturedArtist,
+  ChartFeaturedTrack,
+  ChartTrack,
+  ChartTrackArtist,
+} from '@/types/database'
 
 type ChartWeekBundle = {
   edition: ChartEdition
   tracks: ChartTrack[]
+  featured: ChartFeaturedTrack[]
 }
 
 interface ChartViewProps {
@@ -110,6 +117,40 @@ function ArtistNames({ artists }: { artists: ChartTrackArtist[] }) {
       ))}
     </span>
   )
+}
+
+function FeaturedArtistNames({ artists }: { artists: ChartFeaturedArtist[] }) {
+  return (
+    <span className="text-[var(--ink)]/70">
+      {artists.map((a, i) => (
+        <span key={i}>
+          {a.url ? (
+            <a
+              href={a.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[var(--red)] transition-colors underline decoration-dotted"
+            >
+              {a.name}
+            </a>
+          ) : (
+            a.name
+          )}
+          {i < artists.length - 1 && ', '}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): string {
+  const custom = (track.link_label || '').trim()
+  if (custom) return custom
+  const plat = (track.platform || 'other').toLowerCase()
+  if (plat === 'beatport') return c.picks_open_beatport
+  if (plat === 'bandcamp') return c.picks_open_bandcamp
+  if (plat === 'soundcloud') return c.picks_open_soundcloud
+  return c.picks_open_link
 }
 
 let currentPlayingAudio: HTMLAudioElement | null = null
@@ -328,6 +369,83 @@ function PreviewPlayer({
   return <>{children(controls, progressBar)}</>
 }
 
+function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict: any; lang: Locale }) {
+  const c = dict.charts
+  const artists = Array.isArray(pick.artists) ? pick.artists : []
+  const note = lang === 'es' ? pick.note_es : pick.note_en
+  const cta = pickCtaLabel(c, pick)
+
+  return (
+    <div className="flex flex-col gap-2 py-3 sm:py-3.5 px-3 sm:px-4 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--acid)]/10 transition-colors">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <span
+            className="inline-flex items-center justify-center shrink-0 w-9 h-9 text-sm font-black bg-[var(--acid)] text-[var(--ink)] border-[3px] border-[var(--ink)]"
+            style={{ fontFamily: "'Unbounded', sans-serif" }}
+          >
+            {pick.sort_order}
+          </span>
+          {pick.artwork_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- URLs arbitrarias pegadas a mano (cualquier dominio)
+            <img
+              src={pick.artwork_url}
+              alt=""
+              className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] object-cover bg-[var(--paper-dark)]"
+              width={64}
+              height={64}
+            />
+          ) : null}
+          <div className="flex-1 min-w-0">
+            <h3
+              className="text-sm sm:text-base font-black leading-snug"
+              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+            >
+              {pick.title}
+            </h3>
+            <p
+              className="text-xs sm:text-sm mt-0.5"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              <FeaturedArtistNames artists={artists} />
+              {pick.label ? (
+                <>
+                  <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+                  <span className="text-[var(--ink)]/50">{pick.label}</span>
+                </>
+              ) : null}
+              {pick.release_year != null && pick.release_year > 0 ? (
+                <>
+                  <span className="mx-1.5 text-[var(--ink)]/30">|</span>
+                  <span className="text-[var(--ink)]/45 font-bold tabular-nums">{pick.release_year}</span>
+                </>
+              ) : null}
+            </p>
+            {note ? (
+              <p
+                className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                {note}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex sm:shrink-0 sm:self-center">
+          <a
+            href={pick.link_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all no-underline touch-manipulation w-full sm:w-auto text-center"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {cta}
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ChartTrackRow({
   track,
   dict,
@@ -526,7 +644,7 @@ export default function ChartView({
 
       <div className="flex flex-col gap-2 px-2 sm:px-0">
         {weeks.map((bundle, index) => {
-          const { edition, tracks: weekTracks } = bundle
+          const { edition, tracks: weekTracks, featured: weekFeatured } = bundle
           const expanded = openWeeks.has(edition.week_date)
           const isLatest = edition.week_date === latestWeekDate
           const editionNumber = index + 1
@@ -590,6 +708,41 @@ export default function ChartView({
                     >
                       {description}
                     </p>
+                  )}
+                  {weekFeatured.length > 0 && (
+                    <div className="border-t-[3px] border-[var(--ink)]/20 bg-[var(--paper-dark)]/30">
+                      <div className="px-3 sm:px-4 pt-3 pb-2">
+                        <span
+                          className="inline-block px-2 py-0.5 text-[9px] font-black tracking-[3px] bg-[var(--cyan)] text-white border-2 border-[var(--ink)] mb-2"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                        >
+                          {c.picks_kicker}
+                        </span>
+                        <h2
+                          className="text-lg sm:text-xl font-black"
+                          style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+                        >
+                          {c.picks_title}
+                        </h2>
+                        <p
+                          className="text-[11px] sm:text-xs text-[var(--ink)]/50 mt-1 max-w-2xl"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                        >
+                          {c.picks_intro}
+                        </p>
+                        <p
+                          className="text-[10px] text-[var(--ink)]/40 font-bold mt-2 tracking-wider"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                        >
+                          {c.picks_count.replace('{n}', String(weekFeatured.length))}
+                        </p>
+                      </div>
+                      <div className="border-t-[3px] border-[var(--ink)]/15">
+                        {weekFeatured.map((pick) => (
+                          <FeaturedPickRow key={pick.id} pick={pick} dict={dict} lang={lang} />
+                        ))}
+                      </div>
+                    </div>
                   )}
                   <div className="border-t-4 border-[var(--ink)]">
                     {weekTracks.map((track) => (

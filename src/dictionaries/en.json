@@ -422,7 +422,15 @@
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} tracks",
     "week_toggle_show": "Expand this week’s chart",
-    "week_toggle_hide": "Collapse this week"
+    "week_toggle_hide": "Collapse this week",
+    "picks_kicker": "NEW RELEASES",
+    "picks_title": "Optimal Breaks",
+    "picks_intro": "Hand-picked this week by the team. Titles, artwork and links are set manually — nothing is fetched automatically from stores.",
+    "picks_count": "{n} picks",
+    "picks_open_beatport": "BEATPORT",
+    "picks_open_bandcamp": "BANDCAMP",
+    "picks_open_soundcloud": "SOUNDCLOUD",
+    "picks_open_link": "OPEN LINK"
   },
   "mixes": {
     "title": "Mixes & Sets",

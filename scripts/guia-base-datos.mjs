@@ -273,6 +273,14 @@ const ACTIONS = [
       '40 Breaks Vitales: scrapea, cura con IA y sube a Supabase (chart_editions + chart_tracks). Publica automáticamente.',
   },
   {
+    id: 'chart-featured-file',
+    run: 'node scripts/guia-base-datos.mjs run chart-featured-file data/charts/picks/<semana>.json',
+    npm: 'npm run db:chart:featured -- data/charts/picks/2026-03-30.json',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
+  },
+  {
     id: 'verify',
     run: 'node scripts/guia-base-datos.mjs run verify',
     npm: 'npm run db:verify',
@@ -353,6 +361,7 @@ Punto de entrada unificado:
   mixes-published [--force]  backfill-mix-youtube-published-at.mjs (fecha publicación YouTube → orden /mixes)
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
+  chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -430,6 +439,10 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   muestra propuesta en terminal (--dry-run) o sube a Supabase (--confirm).
   Compara con la edición anterior para calcular movimiento y semanas en chart.
   Uso rápido: run chart-propose | run chart-confirm [--week 2026-03-30].
+
+• chart-featured-upsert.mjs — «New releases» en /charts. Lee solo un JSON con
+  week_date + picks (título, artistas, link_url, artwork opcional, etc.) y
+  sustituye chart_featured_tracks para esa edición. No scrapea tiendas.
 
 • sync-timeline-artists.mjs — «Artistas que salen en la cronología web». Sin
   flags: INSERT en artists de los que faltan. Con --sql: solo genera/actualiza
@@ -676,6 +689,21 @@ function main() {
     case 'chart-confirm':
       runNode('chart-40-breaks.mjs', ['--confirm', ...rest])
       break
+    case 'chart-featured-file': {
+      const rel = rest[0]
+      if (!rel) {
+        console.error('Uso: run chart-featured-file <ruta-desde-raíz-repo.json>')
+        console.error('  Ej: run chart-featured-file data/charts/picks/2026-03-30.json')
+        process.exit(1)
+      }
+      const p = resolve(ROOT, rel)
+      if (!existsSync(p)) {
+        console.error('No existe:', p)
+        process.exit(1)
+      }
+      runNode('chart-featured-upsert.mjs', [rel])
+      break
+    }
     case 'verify':
       runNode('seed-supabase.mjs', ['--verify'])
       break

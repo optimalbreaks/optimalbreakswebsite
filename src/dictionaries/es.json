@@ -324,7 +324,15 @@
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} temas",
     "week_toggle_show": "Desplegar lista de esta semana",
-    "week_toggle_hide": "Plegar esta semana"
+    "week_toggle_hide": "Plegar esta semana",
+    "picks_kicker": "NUEVOS LANZAMIENTOS",
+    "picks_title": "Optimal Breaks",
+    "picks_intro": "Selección semanal del equipo. Títulos, carátula y enlaces se cargan a mano; no se consultan tiendas automáticamente.",
+    "picks_count": "{n} destacados",
+    "picks_open_beatport": "BEATPORT",
+    "picks_open_bandcamp": "BANDCAMP",
+    "picks_open_soundcloud": "SOUNDCLOUD",
+    "picks_open_link": "ABRIR ENLACE"
   },
   "mixes": {
     "title": "Mixes y Sets",

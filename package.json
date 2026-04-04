@@ -34,6 +34,7 @@
     "db:events:poster": "node scripts/elegir-poster-evento.mjs",
     "db:mixes:published": "node scripts/backfill-mix-youtube-published-at.mjs",
     "db:chart": "node scripts/chart-40-breaks.mjs",
+    "db:chart:featured": "node scripts/chart-featured-upsert.mjs",
     "images:to-webp": "node scripts/convert-public-image-to-webp.mjs",
     "og:generate": "node scripts/generar-og-image.mjs",
     "og:sections": "node scripts/generar-og-secciones.mjs",
