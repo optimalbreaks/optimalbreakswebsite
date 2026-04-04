@@ -268,7 +268,7 @@ export default async function HomePage({
         </div>
 
         {/* Título brutalista: sombras solo con offset (sin blur / glow) */}
-        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-2 min-w-0 max-w-full overflow-x-hidden">
+        <div className="text-center mb-4 sm:mb-6 relative z-[2] px-2 min-w-0 max-w-full overflow-x-clip">
           <h1
             className="m-0 mx-auto max-w-full inline-block text-balance max-sm:whitespace-normal sm:whitespace-nowrap sm:min-w-min"
             style={{
@@ -327,7 +327,7 @@ export default async function HomePage({
               ● {h.live}
             </span>
           </p>
-          <div className="mt-5 sm:mt-6 animate-bounce">
+          <div className="mt-5 sm:mt-6 mb-6 sm:mb-8 animate-bounce">
             <span
               className="inline-block border-[3px] border-[var(--ink)] shadow-[4px_4px_0_var(--ink)]"
               style={{
