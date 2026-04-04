@@ -16,6 +16,7 @@
  *   node scripts/guia-base-datos.mjs run label-agent -- lot49 "Lot49"
  *   node scripts/guia-base-datos.mjs run photo -- fatboy-slim
  *   node scripts/guia-base-datos.mjs run label-photo -- --missing-only
+ *   node scripts/guia-base-datos.mjs run translate-scenes [--slug SLUG] [--force] [--dry-run] [--limit N]
  *
  * Prompts de sistema de los agentes (.txt), OPENAI_MODEL por flujo: docs/AI_PROMPTS_AND_AGENTS.md
  */
@@ -315,6 +316,14 @@ const ACTIONS = [
     creds: 'Service role / secret para Storage',
     description: 'Sube media al bucket; luego pegar URL pública en image_url en JSON + artist-json.',
   },
+  {
+    id: 'translate-scenes',
+    run: 'node scripts/guia-base-datos.mjs run translate-scenes [scenes] [--slug SLUG] [--force] [--dry-run] [--limit N]',
+    npm: 'npm run db:translate:scenes -- [--slug …] [--force] [--dry-run]',
+    creds: 'OPENAI_API_KEY + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Traduce escenas ES→EN (inglés neutro) con OpenAI: name_es/description_es → name_en/description_en. Módulo reutilizable src/lib/translate-es-en-openai.ts (translateFieldEsToEn para más tablas). Admin: editar escena → botones bajo el editor.',
+  },
 ]
 
 function printGuide() {
@@ -367,6 +376,7 @@ Punto de entrada unificado:
   timeline-sql [args]    sync-timeline-artists.mjs --sql
   user-list [args]       sync-user-list-artists.mjs
   media-upload -- …      upload-storage-media.mjs
+  translate-scenes …     traducir-bd-en.ts (tsx): escenas ES→EN OpenAI; --slug --force --dry-run --limit
 
 Catálogo JSON (para el agente):
   node scripts/guia-base-datos.mjs --json
@@ -454,6 +464,11 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • upload-storage-media.mjs — «Subir archivo al bucket media». Escribe en Storage
   de Supabase (no en la tabla artists). Después hace falta poner la URL en
   image_url (JSON + actualizar-artista o admin).
+
+• traducir-bd-en.ts — «Traducción ES→EN (inglés neutro) con OpenAI». Por ahora
+  public.scenes (name/description). Prompt scripts/prompts/translate-es-en-neutral-system.txt;
+  lógica compartida en src/lib/translate-es-en-openai.ts (translateFieldEsToEn para ampliar).
+  CLI: run translate-scenes …; admin: editar escena → botones bajo el editor HTML.
 
 • prompts/artista-agente-system.txt — Texto de sistema para el agente de bios;
   no es un programa.
@@ -719,6 +734,22 @@ function main() {
     case 'media-upload':
       runNode('upload-storage-media.mjs', stripLeadingDashDash(rest))
       break
+    case 'translate-scenes': {
+      const tsxCli = join(ROOT, 'node_modules', 'tsx', 'dist', 'cli.mjs')
+      const scriptTs = join(SCRIPTS, 'traducir-bd-en.ts')
+      if (!existsSync(tsxCli) || !existsSync(scriptTs)) {
+        console.error('Falta tsx o scripts/traducir-bd-en.ts. Ejecuta: npm install')
+        process.exit(1)
+      }
+      const pass = rest[0] === 'scenes' ? rest : ['scenes', ...rest]
+      const r = spawnSync(process.execPath, [tsxCli, scriptTs, ...pass], {
+        cwd: ROOT,
+        stdio: 'inherit',
+        env: process.env,
+      })
+      process.exit(r.status === null ? 1 : r.status)
+      break
+    }
     default:
       console.error('Orden run desconocida:', sub)
       console.error('Ver: node scripts/guia-base-datos.mjs --help')

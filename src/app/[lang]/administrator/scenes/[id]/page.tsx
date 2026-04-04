@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { adminGetRowById, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
+import { adminGetRowById, adminTranslateScene, adminUpdate, normalizeAdminRouteParam } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import BilingualHtmlEditor from '@/components/admin/BilingualHtmlEditor'
@@ -17,6 +17,8 @@ export default function SceneEditPage() {
   const id = normalizeAdminRouteParam(idParam as string | string[] | undefined)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [translateLoading, setTranslateLoading] = useState(false)
+  const [translateMsg, setTranslateMsg] = useState<string | null>(null)
   const [form, setForm] = useState({
     id: '',
     slug: '',
@@ -57,6 +59,26 @@ export default function SceneEditPage() {
     }
   }
 
+  const runTranslate = async (force: boolean) => {
+    if (!form.id) return
+    setTranslateMsg(null)
+    setTranslateLoading(true)
+    try {
+      const { row } = await adminTranslateScene({ id: form.id, force })
+      const r = row as typeof form
+      setForm((f) => ({
+        ...f,
+        name_en: typeof r.name_en === 'string' ? r.name_en : f.name_en,
+        description_en: typeof r.description_en === 'string' ? r.description_en : f.description_en,
+      }))
+      setTranslateMsg(force ? 'Inglés regenerado.' : 'Campos EN rellenados desde ES.')
+    } catch (e) {
+      setTranslateMsg(e instanceof Error ? e.message : 'Error al traducir')
+    } finally {
+      setTranslateLoading(false)
+    }
+  }
+
   return (
     <AdminForm
       title="Editar Scene"
@@ -93,6 +115,44 @@ export default function SceneEditPage() {
           onChangeEn={(v) => set('description_en', v)}
           onChangeEs={(v) => set('description_es', v)}
         />
+        {form.id ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={translateLoading}
+              onClick={() => runTranslate(false)}
+              className="admin-btn admin-btn--ghost admin-btn--sm text-[11px] uppercase tracking-wide"
+            >
+              {translateLoading ? 'Traduciendo…' : 'Rellenar inglés desde español'}
+            </button>
+            <button
+              type="button"
+              disabled={translateLoading}
+              onClick={() => {
+                if (
+                  typeof window !== 'undefined' &&
+                  !window.confirm(
+                    '¿Sobrescribir name_en y description_en con una nueva traducción desde el español?',
+                  )
+                ) {
+                  return
+                }
+                runTranslate(true)
+              }}
+              className="admin-btn admin-btn--ghost admin-btn--sm text-[11px] uppercase tracking-wide !border-[var(--red)] !text-[var(--red)]"
+            >
+              Regenerar todo el inglés
+            </button>
+            <span className="admin-muted text-[11px] normal-case">
+              OpenAI · inglés neutro · conserva HTML
+            </span>
+          </div>
+        ) : null}
+        {translateMsg ? (
+          <p className="mt-2 text-[12px] normal-case" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            {translateMsg}
+          </p>
+        ) : null}
       </div>
 
       <div>

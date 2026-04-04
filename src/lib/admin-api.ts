@@ -108,6 +108,27 @@ export async function adminDelete(table: string, id: string): Promise<void> {
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
 }
 
+/** Traduce name_es/description_es → EN (OpenAI, inglés neutro) y persiste en `scenes`. */
+export async function adminTranslateScene(opts: {
+  id?: string
+  slug?: string
+  force?: boolean
+}): Promise<{ ok: boolean; row: Record<string, unknown> }> {
+  const res = await fetch(`${BASE}/translate-scene`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(opts),
+  })
+  let data: { error?: string; ok?: boolean; row?: Record<string, unknown> } = {}
+  try {
+    data = await res.json()
+  } catch {
+    /* empty */
+  }
+  if (!res.ok) throw new Error(data.error || res.statusText)
+  return { ok: Boolean(data.ok), row: data.row ?? {} }
+}
+
 // --- Usuarios (Auth + profiles; no usa /api/admin/[table]) ---
 
 export type AdminUserRow = {
