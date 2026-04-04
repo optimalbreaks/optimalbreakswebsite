@@ -279,6 +279,30 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 14,
+      "title": "You Got Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Loopcrashing"
+        },
+        {
+          "name": "AndrewFx"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/you-got-me/26834281",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/99798505-1686-4b52-8983-2d92015db83d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/416a69aa-fdc2-4ef9-b8c3-053fa1dc12d3.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
