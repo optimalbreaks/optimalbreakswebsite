@@ -258,6 +258,27 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 13,
+      "title": "Shake It Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Genesis"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shake-it-up/24527857",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/df1d4107-b867-4b8f-b5a7-283ca1a358d6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bef45c8a-b7af-4fa9-b9f1-f00b5b8cd947.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
