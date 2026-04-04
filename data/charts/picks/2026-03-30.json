@@ -366,6 +366,27 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 18,
+      "title": "Keep It Ruff",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Guau"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-it-ruff/27483612",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d176c682-37e4-4c3f-9cd3-a1157cf051a8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eb31b7ee-8a89-4489-83b0-9f1e62c4b365.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
