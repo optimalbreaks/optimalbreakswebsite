@@ -230,7 +230,8 @@ export function HorizontalRankBars({
   maxHeight?: number
   color?: string
 }) {
-  const data = useMemo(() => [...rows].reverse(), [rows])
+  // Mismo orden que rowsToRankByKey: mayor valor arriba; empates A→Z. (Recharts pinta el 1.º del array arriba en eje Y.)
+  const data = useMemo(() => [...rows], [rows])
   const h = Math.min(maxHeight, Math.max(200, data.length * 40 + 40))
 
   if (data.length === 0) return <EmptyState />
