@@ -237,6 +237,27 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 12,
+      "title": "Deadly Memories",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Emisora 404"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/deadly-memories/24396412",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a19ccb48-e71d-4ea2-890a-6e6df1dfc144.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bd3f4da6-6246-4b8a-ac7e-ba0852063e6c.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
