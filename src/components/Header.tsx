@@ -155,12 +155,11 @@ export default function Header({ dict, lang }: HeaderProps) {
   const navItems = [
     { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
-    { key: 'labels', href: `/${lang}/labels` },
     { key: 'events', href: `/${lang}/events` },
-    { key: 'scenes', href: `/${lang}/scenes` },
-    { key: 'blog', href: `/${lang}/blog` },
+    { key: 'labels', href: `/${lang}/labels` },
     { key: 'mixes', href: `/${lang}/mixes` },
     { key: 'charts', href: `/${lang}/charts` },
+    { key: 'blog', href: `/${lang}/blog` },
     { key: 'about', href: `/${lang}/about` },
   ]
 
