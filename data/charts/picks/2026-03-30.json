@@ -25,7 +25,7 @@
     {
       "sort_order": 2,
       "title": "Bass Drop",
-      "mix_name": "",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "DJ Magic Mike"
@@ -36,12 +36,12 @@
       ],
       "label": "Ravesta Records",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/bass-drop/5934906",
+      "link_url": "https://www.beatport.com/track/bass-drop/24237292",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/09889a8c-73e9-451c-a7a1-6365efbc3203.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/20d1f68c-9f77-4372-925c-e8b56ec2e33b.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
@@ -49,7 +49,7 @@
     {
       "sort_order": 3,
       "title": "The One",
-      "mix_name": "",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Manxito"
@@ -57,20 +57,20 @@
       ],
       "label": "Raveart Records",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/the-one/5879915",
+      "link_url": "https://www.beatport.com/track/the-one/23947289",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3618181a-6515-4c22-ba1e-15a4d14755b2.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/f81e2fe8-6dda-472e-ad67-b1eb5ee0f589.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
     },
     {
       "sort_order": 4,
-      "title": "Dat Beat",
-      "mix_name": "",
+      "title": "Dat Beat ",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "FM-3"
@@ -78,20 +78,20 @@
       ],
       "label": "Banana Club",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/dat-beat/5936183",
+      "link_url": "https://www.beatport.com/track/dat-beat/24241586",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8a0ec877-f2cb-426d-8ce7-9011a0d5327d.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/8d58f578-2737-4520-bced-e0fba04a4b2f.LOFI.mp3",
+      "bpm": 139,
+      "music_key": "F Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
     },
     {
       "sort_order": 5,
-      "title": "Lose My Mind (Original Mix)",
-      "mix_name": "",
+      "title": "Lose My Mind",
+      "mix_name": "Keith MacKenzie 808 Mix",
       "artists": [
         {
           "name": "Krafty Kuts"
@@ -99,20 +99,20 @@
       ],
       "label": "Illeven Eleven",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/lose-my-mind-original-mix/5913654",
+      "link_url": "https://www.beatport.com/track/lose-my-mind/24135457",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/922bbdc2-caad-40c3-ab96-7dc72b6083b2.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/cfe2a06e-ee7c-4c30-888f-89cc9a955c61.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Minor",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
     },
     {
       "sort_order": 6,
-      "title": "Can't Stop It",
-      "mix_name": "",
+      "title": "Can't Stop It ",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "X Prod"
@@ -120,12 +120,12 @@
       ],
       "label": "83",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/cant-stop-it/5932341",
+      "link_url": "https://www.beatport.com/track/cant-stop-it/24228872",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/00d4c8ee-9aca-4349-bc00-54d6bc80912c.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/9d8bbe49-b0f1-4e08-bb93-3bc832cf71a4.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Minor",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
@@ -133,7 +133,7 @@
     {
       "sort_order": 7,
       "title": "Carpet Muncha",
-      "mix_name": "",
+      "mix_name": "2026 Remaster",
       "artists": [
         {
           "name": "Deep Impact"
@@ -141,12 +141,12 @@
       ],
       "label": "Cyberfunk Music",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/carpet-muncha/5967601",
+      "link_url": "https://www.beatport.com/track/carpet-muncha/24356193",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ae2f40cc-63bc-4cb6-a5a1-dff8af35a79d.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/4e337dcd-e4fb-46fb-ac16-090295867b9b.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Gb Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
@@ -154,7 +154,7 @@
     {
       "sort_order": 8,
       "title": "Torenza",
-      "mix_name": "",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Nitro (ESP)"
@@ -162,20 +162,20 @@
       ],
       "label": "Distorsion Records",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/torenza/5878180",
+      "link_url": "https://www.beatport.com/track/torenza/23941825",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6e9d8632-81d5-4f5c-bbdb-2bb5cde443a0.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/b794f56b-a81e-4c05-8f8d-34bd8c142655.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
     },
     {
       "sort_order": 9,
-      "title": "Missed Call",
-      "mix_name": "",
+      "title": "Missed Call ",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "DJ Quest"
@@ -183,20 +183,20 @@
       ],
       "label": "Elektroshok Records",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/missed-call/5936182",
+      "link_url": "https://www.beatport.com/track/missed-call/24241585",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0cfce672-7837-4c10-815f-9971f0ebf450.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/9889fc53-2c77-48da-8768-1fdc4b62d25d.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Gb Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
     },
     {
       "sort_order": 10,
-      "title": "Promise & Hold On",
-      "mix_name": "",
+      "title": "Hold On ",
+      "mix_name": "Original Mix",
       "artists": [
         {
           "name": "ance."
@@ -204,12 +204,12 @@
       ],
       "label": "Hot Cakes",
       "platform": "beatport",
-      "link_url": "https://www.beatport.com/release/promise-hold-on/6432122",
+      "link_url": "https://www.beatport.com/track/hold-on/26924993",
       "link_label": "",
       "artwork_url": "https://geo-media.beatport.com/image_size/250x250/88a63389-db5b-40ac-84a2-5fb9c26939a8.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
+      "sample_url": "https://geo-samples.beatport.com/track/3c89879e-47ce-424e-83b0-57357f585850.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
