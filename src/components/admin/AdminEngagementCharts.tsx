@@ -18,7 +18,6 @@ import {
   ZAxis,
 } from 'recharts'
 
-/** Paleta alineada con globals.css (fanzine / OB) */
 const C = {
   ink: '#1a1a1a',
   red: '#d62828',
@@ -28,7 +27,8 @@ const C = {
   acid: '#8db600',
   pink: '#e91e8c',
   yellow: '#f7e733',
-  paper: '#e8dcc8',
+  paper: '#fffef6',
+  paperDark: '#e8dcc8',
   dim: '#888888',
 }
 
@@ -53,21 +53,34 @@ function trunc(s: string, max: number): string {
   return `${t.slice(0, max - 1)}…`
 }
 
-const tooltipStyle = {
+const tooltipStyle: React.CSSProperties = {
   backgroundColor: C.paper,
-  border: `3px solid ${C.ink}`,
+  border: `2px solid ${C.ink}`,
   borderRadius: 0,
   fontFamily: "'Courier Prime', monospace",
   fontSize: 11,
   fontWeight: 700,
   color: C.ink,
-  boxShadow: '4px 4px 0 #1a1a1a',
+  boxShadow: '3px 3px 0 rgba(0,0,0,0.15)',
+  padding: '8px 12px',
 }
 
-function ChartFrame({ children, height, className = '' }: { children: React.ReactNode; height: number; className?: string }) {
+/* ------------------------------------------------------------------ */
+/*  Chart frame — clean container for Recharts                         */
+/* ------------------------------------------------------------------ */
+
+function ChartFrame({
+  children,
+  height,
+  className = '',
+}: {
+  children: React.ReactNode
+  height: number
+  className?: string
+}) {
   return (
     <div
-      className={`w-full border-[3px] border-[var(--ink)] bg-[#fffef6] p-2 sm:p-3 ${className}`}
+      className={`w-full border-2 border-[var(--ink)]/15 bg-[var(--paper)] rounded-sm p-2 sm:p-3 ${className}`}
       style={{ minHeight: height }}
     >
       {children}
@@ -75,7 +88,62 @@ function ChartFrame({ children, height, className = '' }: { children: React.Reac
   )
 }
 
-/** KPI reproducciones + proporción últimos 7 días vs histórico anterior */
+/* ------------------------------------------------------------------ */
+/*  KPI strip — 4 executive numbers                                    */
+/* ------------------------------------------------------------------ */
+
+export function ExecutiveKpiStrip({
+  mixAllTime,
+  mix7d,
+  maxEventEngaged,
+  maxArtistFavorites,
+}: {
+  mixAllTime: number
+  mix7d: number
+  maxEventEngaged: number
+  maxArtistFavorites: number
+}) {
+  const items: { k: string; v: number; accent: string; fg?: string }[] = [
+    { k: 'Plays total', v: mixAllTime, accent: C.yellow },
+    { k: 'Plays 7 días', v: mix7d, accent: C.red, fg: '#fff' },
+    { k: 'Máx. usuarios/evento', v: maxEventEngaged, accent: C.cyan, fg: '#fff' },
+    { k: 'Máx. favs/artista', v: maxArtistFavorites, accent: C.uv, fg: '#fff' },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-8">
+      {items.map((it) => (
+        <div
+          key={it.k}
+          className="relative border-[3px] border-[var(--ink)] px-4 py-4 overflow-hidden"
+          style={{
+            background: it.accent,
+            color: it.fg ?? C.ink,
+            boxShadow: '3px 3px 0 var(--ink)',
+          }}
+        >
+          <div
+            className="text-[9px] font-black uppercase tracking-wider leading-tight opacity-80"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {it.k}
+          </div>
+          <div
+            className="text-3xl sm:text-4xl font-black mt-1.5 leading-none"
+            style={{ fontFamily: "'Unbounded', sans-serif" }}
+          >
+            {it.v.toLocaleString()}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mix plays — stacked bar + number callout                           */
+/* ------------------------------------------------------------------ */
+
 export function MixPlaysExecutive({
   allTime,
   last7d,
@@ -88,40 +156,63 @@ export function MixPlaysExecutive({
   const barData = [{ name: 'mix', u7: last7d, prev }]
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div className="lg:col-span-2">
-        <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dim)] mb-2">
-          Peso reciente: últimos 7 días frente al histórico anterior (misma fuente de datos)
+        <p
+          className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/40 mb-2"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          Últimos 7 días vs histórico anterior
         </p>
-        <ChartFrame height={120}>
-          <ResponsiveContainer width="100%" height={100}>
-            <BarChart data={barData} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 0 }}>
+        <ChartFrame height={100}>
+          <ResponsiveContainer width="100%" height={80}>
+            <BarChart data={barData} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 0 }}>
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="name" width={4} hide />
               <Tooltip
-                formatter={(v: number, name: string) => [v, name === 'u7' ? 'Últimos 7 días' : 'Antes (histórico − 7d)']}
+                formatter={(v: number, name: string) => [v.toLocaleString(), name === 'u7' ? 'Últimos 7d' : 'Histórico']}
                 contentStyle={tooltipStyle}
               />
-              <Bar dataKey="prev" stackId="a" fill={C.paper} stroke={C.ink} strokeWidth={2} name="prev" />
+              <Bar dataKey="prev" stackId="a" fill={C.paperDark} stroke={C.ink} strokeWidth={2} name="prev" />
               <Bar dataKey="u7" stackId="a" fill={C.red} stroke={C.ink} strokeWidth={2} name="u7" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <p className="text-[10px] mt-1 font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>
-          ≈ {pct7}% de todas las reproducciones registradas ocurrieron en la última semana.
+        <p
+          className="text-[10px] mt-1.5 font-bold text-[var(--ink)]/50"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          ≈ {pct7}% de todas las reproducciones en la última semana.
         </p>
       </div>
-      <div className="flex flex-col justify-center gap-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/40 p-4">
+
+      <div className="flex flex-col justify-center gap-4 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/30 p-4">
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-80">Histórico completo</div>
-          <div className="text-4xl font-black leading-none" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {allTime}
+          <div
+            className="text-[9px] font-black uppercase tracking-widest opacity-70"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            Total histórico
+          </div>
+          <div
+            className="text-3xl sm:text-4xl font-black leading-none mt-1"
+            style={{ fontFamily: "'Unbounded', sans-serif" }}
+          >
+            {allTime.toLocaleString()}
           </div>
         </div>
-        <div className="border-t-2 border-[var(--ink)]/20 pt-3">
-          <div className="text-[9px] font-black uppercase tracking-widest opacity-80">Últimos 7 días</div>
-          <div className="text-3xl font-black leading-none text-[var(--red)]" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {last7d}
+        <div className="border-t-2 border-[var(--ink)]/15 pt-3">
+          <div
+            className="text-[9px] font-black uppercase tracking-widest opacity-70"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            Últimos 7 días
+          </div>
+          <div
+            className="text-2xl sm:text-3xl font-black leading-none text-[var(--red)] mt-1"
+            style={{ fontFamily: "'Unbounded', sans-serif" }}
+          >
+            {last7d.toLocaleString()}
           </div>
         </div>
       </div>
@@ -129,9 +220,12 @@ export function MixPlaysExecutive({
   )
 }
 
+/* ------------------------------------------------------------------ */
+/*  Horizontal bar ranks                                               */
+/* ------------------------------------------------------------------ */
+
 type RankRow = { name: string; value: number }
 
-/** Barras horizontales: rankings (tipo Power BI “top N”) */
 export function HorizontalRankBars({
   title,
   rows,
@@ -144,39 +238,53 @@ export function HorizontalRankBars({
   maxHeight?: number
 }) {
   const data = useMemo(() => [...rows].reverse(), [rows])
-  const h = Math.min(maxHeight, Math.max(220, data.length * 36 + 72))
+  const h = Math.min(maxHeight, Math.max(200, data.length * 34 + 60))
 
   if (data.length === 0) {
-    return <p className="admin-muted text-sm !mb-0">Sin datos para graficar.</p>
+    return (
+      <p
+        className="text-sm text-[var(--ink)]/35 py-4"
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+      >
+        Sin datos para graficar.
+      </p>
+    )
   }
 
   return (
-    <div className="mb-4">
+    <div className="mb-3">
       {title && (
-        <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dim)] mb-2">{title}</p>
+        <p
+          className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/40 mb-2"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          {title}
+        </p>
       )}
       <ChartFrame height={h}>
-        <ResponsiveContainer width="100%" height={h - 24}>
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ left: 8, right: 24, top: 8, bottom: 8 }}
-          >
-            <CartesianGrid strokeDasharray="4 4" stroke={`${C.ink}18`} horizontal={false} />
-            <XAxis type="number" tick={{ fill: C.ink, fontSize: 10, fontFamily: 'Courier Prime' }} stroke={C.ink} />
+        <ResponsiveContainer width="100%" height={h - 20}>
+          <BarChart data={data} layout="vertical" margin={{ left: 4, right: 20, top: 4, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="4 4" stroke={`${C.ink}10`} horizontal={false} />
+            <XAxis
+              type="number"
+              tick={{ fill: C.ink, fontSize: 9, fontFamily: "'Courier Prime', monospace" }}
+              stroke={`${C.ink}30`}
+              axisLine={false}
+              tickLine={false}
+            />
             <YAxis
               type="category"
               dataKey="name"
-              width={148}
-              tick={{ fill: C.ink, fontSize: 9, fontFamily: 'Courier Prime' }}
-              stroke={C.ink}
+              width={140}
+              tick={{ fill: C.ink, fontSize: 9, fontFamily: "'Courier Prime', monospace" }}
+              stroke="transparent"
               interval={0}
             />
             <Tooltip
-              formatter={(v: number) => [v, valueLabel]}
+              formatter={(v: number) => [v.toLocaleString(), valueLabel]}
               contentStyle={tooltipStyle}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} stroke={C.ink} strokeWidth={2}>
+            <Bar dataKey="value" radius={[0, 3, 3, 0]} stroke={C.ink} strokeWidth={1.5}>
               {data.map((_, i) => (
                 <Cell key={i} fill={BAR_PALETTE[i % BAR_PALETTE.length]} />
               ))}
@@ -188,7 +296,10 @@ export function HorizontalRankBars({
   )
 }
 
-/** Donut: concentración del top‑5 frente al resto del ranking devuelto */
+/* ------------------------------------------------------------------ */
+/*  Donut — top 5 concentration                                        */
+/* ------------------------------------------------------------------ */
+
 export function TopShareDonut({
   rows,
   valueKey,
@@ -207,21 +318,24 @@ export function TopShareDonut({
     const restRows = rows.slice(n)
     const restSum = restRows.reduce((s, r) => s + num(r[valueKey]), 0)
     const out = top.map((r) => ({ name: trunc(str(r[labelKey]), 22), value: num(r[valueKey]) }))
-    if (restSum > 0) out.push({ name: 'Resto (ranking)', value: restSum })
+    if (restSum > 0) out.push({ name: 'Resto', value: restSum })
     return { pieData: out }
   }, [rows, valueKey, labelKey])
 
-  if (pieData.length === 0) {
-    return null
-  }
+  if (pieData.length === 0) return null
 
   return (
-    <div className="mb-4">
+    <div className="mb-3">
       {title && (
-        <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dim)] mb-2">{title}</p>
+        <p
+          className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/40 mb-2"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          {title}
+        </p>
       )}
-      <ChartFrame height={300}>
-        <ResponsiveContainer width="100%" height={276}>
+      <ChartFrame height={280}>
+        <ResponsiveContainer width="100%" height={258}>
           <PieChart>
             <Pie
               data={pieData}
@@ -229,11 +343,11 @@ export function TopShareDonut({
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={58}
-              outerRadius={92}
+              innerRadius={52}
+              outerRadius={88}
               paddingAngle={2}
               stroke={C.ink}
-              strokeWidth={2}
+              strokeWidth={1.5}
             >
               {pieData.map((_, i) => (
                 <Cell key={i} fill={BAR_PALETTE[i % BAR_PALETTE.length]} />
@@ -241,7 +355,11 @@ export function TopShareDonut({
             </Pie>
             <Tooltip contentStyle={tooltipStyle} />
             <Legend
-              wrapperStyle={{ fontFamily: "'Courier Prime', monospace", fontSize: 10, fontWeight: 700 }}
+              wrapperStyle={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: 10,
+                fontWeight: 700,
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -250,7 +368,10 @@ export function TopShareDonut({
   )
 }
 
-/** Dispersión: volumen de valoraciones vs nota media (eventos o artistas en vivo) */
+/* ------------------------------------------------------------------ */
+/*  Scatter — rating vs volume                                         */
+/* ------------------------------------------------------------------ */
+
 export function RatingScatter({
   rows,
   title,
@@ -259,45 +380,50 @@ export function RatingScatter({
   title?: string
 }) {
   const data = useMemo(
-    () =>
-      rows.map((r) => ({
-        name: trunc(r.name, 28),
-        avg_rating: r.avg_rating,
-        rating_count: r.rating_count,
-      })),
+    () => rows.map((r) => ({ name: trunc(r.name, 28), avg_rating: r.avg_rating, rating_count: r.rating_count })),
     [rows],
   )
 
-  if (data.length === 0) {
-    return null
-  }
+  if (data.length === 0) return null
 
   return (
-    <div className="mb-4">
+    <div className="mb-3">
       {title && (
-        <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dim)] mb-2">{title}</p>
+        <p
+          className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/40 mb-2"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          {title}
+        </p>
       )}
-      <ChartFrame height={320}>
-        <ResponsiveContainer width="100%" height={296}>
-          <ScatterChart margin={{ top: 16, right: 16, bottom: 8, left: 8 }}>
-            <CartesianGrid strokeDasharray="4 4" stroke={`${C.ink}20`} />
+      <ChartFrame height={300}>
+        <ResponsiveContainer width="100%" height={276}>
+          <ScatterChart margin={{ top: 12, right: 16, bottom: 16, left: 4 }}>
+            <CartesianGrid strokeDasharray="4 4" stroke={`${C.ink}15`} />
             <XAxis
               type="number"
               dataKey="rating_count"
               name="Valoraciones"
-              tick={{ fill: C.ink, fontSize: 10, fontFamily: 'Courier Prime' }}
-              label={{ value: 'Nº valoraciones', position: 'bottom', offset: 0, fill: C.ink, fontSize: 10 }}
+              tick={{ fill: C.ink, fontSize: 9, fontFamily: "'Courier Prime', monospace" }}
+              stroke={`${C.ink}30`}
+              axisLine={false}
+              tickLine={false}
+              label={{ value: 'Nº valoraciones', position: 'bottom', offset: 0, fill: C.dim, fontSize: 9 }}
             />
             <YAxis
               type="number"
               dataKey="avg_rating"
               domain={[1, 5]}
               name="Media"
-              tick={{ fill: C.ink, fontSize: 10, fontFamily: 'Courier Prime' }}
-              label={{ value: 'Media ★', angle: -90, position: 'insideLeft', fill: C.ink, fontSize: 10 }}
+              tick={{ fill: C.ink, fontSize: 9, fontFamily: "'Courier Prime', monospace" }}
+              stroke={`${C.ink}30`}
+              axisLine={false}
+              tickLine={false}
+              label={{ value: 'Media ★', angle: -90, position: 'insideLeft', fill: C.dim, fontSize: 9 }}
             />
+            <ZAxis range={[40, 40]} />
             <Tooltip
-              cursor={{ strokeDasharray: '3 3' }}
+              cursor={{ strokeDasharray: '3 3', stroke: C.dim }}
               contentStyle={tooltipStyle}
               formatter={(v: number, key: string) => {
                 if (key === 'avg_rating') return [Number(v).toFixed(2), 'Media']
@@ -317,7 +443,10 @@ export function RatingScatter({
   )
 }
 
-/** Comparativa lado a lado: dos rankings con misma escala visual reducida */
+/* ------------------------------------------------------------------ */
+/*  Dual mini bars — side by side comparison                           */
+/* ------------------------------------------------------------------ */
+
 export function DualHorizontalMini({
   leftTitle,
   rightTitle,
@@ -329,88 +458,62 @@ export function DualHorizontalMini({
   leftRows: RankRow[]
   rightRows: RankRow[]
 }) {
-  const maxV = Math.max(
-    1,
-    ...leftRows.map((r) => r.value),
-    ...rightRows.map((r) => r.value),
-  )
+  const maxV = Math.max(1, ...leftRows.map((r) => r.value), ...rightRows.map((r) => r.value))
 
   const Mini = ({ rows, title }: { rows: RankRow[]; title: string }) => (
     <div>
-      <p className="text-[9px] font-black uppercase tracking-wider mb-2 text-[var(--ink)]">{title}</p>
+      <p
+        className="text-[9px] font-black uppercase tracking-wider mb-3 text-[var(--ink)]/60"
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+      >
+        {title}
+      </p>
       <div className="space-y-2">
         {rows.slice(0, 8).map((r, i) => (
           <div key={i} className="flex items-center gap-2">
             <span
-              className="text-[9px] font-bold truncate w-[100px] sm:w-[130px] shrink-0"
+              className="text-[9px] font-bold truncate w-[90px] sm:w-[120px] shrink-0 text-[var(--ink)]/70"
               style={{ fontFamily: "'Courier Prime', monospace" }}
               title={r.name}
             >
               {trunc(r.name, 18)}
             </span>
-            <div className="flex-1 h-3 border-2 border-[var(--ink)] bg-[var(--paper-dark)] relative">
+            <div className="flex-1 h-3 border border-[var(--ink)]/20 bg-[var(--ink)]/5 relative rounded-sm overflow-hidden">
               <div
-                className="h-full absolute left-0 top-0"
+                className="h-full absolute left-0 top-0 rounded-sm"
                 style={{
                   width: `${(r.value / maxV) * 100}%`,
                   background: BAR_PALETTE[i % BAR_PALETTE.length],
                 }}
               />
             </div>
-            <span className="text-[9px] font-black tabular-nums w-6 text-right">{r.value}</span>
+            <span
+              className="text-[9px] font-black tabular-nums w-6 text-right text-[var(--ink)]/70"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {r.value}
+            </span>
           </div>
         ))}
-        {rows.length === 0 && <p className="text-xs text-[var(--dim)]">—</p>}
+        {rows.length === 0 && (
+          <p className="text-xs text-[var(--ink)]/30" style={{ fontFamily: "'Courier Prime', monospace" }}>—</p>
+        )}
       </div>
     </div>
   )
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 border-[3px] border-[var(--ink)] bg-[#fffef6] p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-2 border-[var(--ink)]/15 bg-[var(--paper)] p-4 rounded-sm">
       <Mini rows={leftRows} title={leftTitle} />
       <Mini rows={rightRows} title={rightTitle} />
     </div>
   )
 }
 
-/** Fila ejecutiva: 4 KPIs derivados de los arrays (sin nuevas queries) */
-export function ExecutiveKpiStrip({
-  mixAllTime,
-  mix7d,
-  maxEventEngaged,
-  maxArtistFavorites,
-}: {
-  mixAllTime: number
-  mix7d: number
-  maxEventEngaged: number
-  maxArtistFavorites: number
-}) {
-  const items = [
-    { k: 'Plays mixes (total)', v: mixAllTime, bg: C.yellow },
-    { k: 'Plays mixes (7 días)', v: mix7d, bg: C.red, fg: '#fff' },
-    { k: 'Máx. usuarios en un evento', v: maxEventEngaged, bg: C.cyan, fg: '#fff' },
-    { k: 'Máx. favoritos a un artista', v: maxArtistFavorites, bg: C.uv, fg: '#fff' },
-  ]
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
 
-  return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-8">
-      {items.map((it) => (
-        <div
-          key={it.k}
-          className="border-[3px] border-[var(--ink)] px-3 py-3 shadow-[4px_4px_0_var(--ink)]"
-          style={{ background: it.bg, color: it.fg ?? C.ink }}
-        >
-          <div className="text-[9px] font-black uppercase tracking-wider opacity-90 leading-tight">{it.k}</div>
-          <div className="text-2xl sm:text-3xl font-black mt-1" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {it.v}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/** Helpers para transformar filas crudas del RPC */
 export function rowsToRankByKey(
   rows: Record<string, unknown>[],
   labelFrom: (r: Record<string, unknown>) => string,
