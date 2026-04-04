@@ -19,6 +19,40 @@ function openAiModel(): string {
   return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
 }
 
+const OPENAI_RETRY_STATUS = new Set([429, 502, 503])
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+/** Hasta 3 intentos ante rate limit o errores transitorios de la API. */
+async function openAiChatResponse(
+  key: string,
+  body: Record<string, unknown>,
+): Promise<Response> {
+  let lastStatus = 0
+  let lastText = ''
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify(body),
+    })
+    if (res.ok) return res
+    lastStatus = res.status
+    lastText = await res.text()
+    if (attempt < 3 && OPENAI_RETRY_STATUS.has(res.status)) {
+      await sleep(2000 * attempt)
+      continue
+    }
+    throw new Error(`OpenAI ${lastStatus}: ${lastText}`)
+  }
+  throw new Error(`OpenAI ${lastStatus}: ${lastText}`)
+}
+
 export type TranslateSceneInput = {
   name_es: string
   description_es: string
@@ -58,27 +92,15 @@ Rules for this row:
 Source JSON:
 ${JSON.stringify({ name_es: nameEs, description_es: descriptionEs })}`
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: openAiModel(),
-      temperature: 0.25,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+  const res = await openAiChatResponse(key, {
+    model: openAiModel(),
+    temperature: 0.25,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
   })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`OpenAI ${res.status}: ${err}`)
-  }
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[]
@@ -121,27 +143,15 @@ Return ONLY a JSON object: {"text_en":"..."}
 Spanish source:
 ${textSpanish}`
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: openAiModel(),
-      temperature: 0.25,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+  const res = await openAiChatResponse(key, {
+    model: openAiModel(),
+    temperature: 0.25,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
   })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`OpenAI ${res.status}: ${err}`)
-  }
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[]
