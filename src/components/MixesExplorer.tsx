@@ -7,6 +7,11 @@ import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
 import { buildSoundCloudVisualPlayerSrc, isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
+import {
+  loadSoundCloudWidgetAPI,
+  loadYouTubeIframeAPI,
+  logMixPlayOncePerBrowserSession,
+} from '@/lib/mix-play-session-log'
 
 function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -25,9 +30,20 @@ function extractYouTubeId(url: string | null | undefined): string | null {
 }
 
 /** Monta el iframe solo al acercarse al viewport (orden DOM = años recientes primero). Evita 40+ embeds a la vez. */
-function LazyYouTubeEmbed({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
+function LazyYouTubeEmbed({
+  videoId,
+  title,
+  className = '',
+  mixId,
+}: {
+  videoId: string
+  title: string
+  className?: string
+  mixId?: string
+}) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [mountIframe, setMountIframe] = useState(false)
+  const [embedSrc, setEmbedSrc] = useState<string | null>(null)
 
   useEffect(() => {
     const el = rootRef.current
@@ -45,11 +61,62 @@ function LazyYouTubeEmbed({ videoId, title, className = '' }: { videoId: string;
     return () => obs.disconnect()
   }, [mountIframe])
 
+  useEffect(() => {
+    if (!mountIframe) return
+    setEmbedSrc(
+      `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`,
+    )
+  }, [mountIframe, videoId])
+
+  useEffect(() => {
+    if (!mountIframe || !mixId || !embedSrc) return
+    let cancelled = false
+    let player: { destroy?: () => void } | undefined
+    const iframeId = `ob-yt-${mixId}`
+    const t = window.setTimeout(() => {
+      void loadYouTubeIframeAPI()
+        .then(() => {
+          if (cancelled) return
+          const YT = (
+            window as unknown as {
+              YT?: {
+                Player: new (id: string, opts: Record<string, unknown>) => { destroy?: () => void }
+                PlayerState: { PLAYING: number }
+              }
+            }
+          ).YT
+          if (!YT?.Player) return
+          try {
+            player = new YT.Player(iframeId, {
+              events: {
+                onStateChange: (e: { data: number }) => {
+                  if (e.data === YT.PlayerState.PLAYING) logMixPlayOncePerBrowserSession(mixId)
+                },
+              },
+            }) as { destroy?: () => void }
+          } catch {
+            /* init API en iframe puede fallar según políticas */
+          }
+        })
+        .catch(() => {})
+    }, 200)
+    return () => {
+      cancelled = true
+      window.clearTimeout(t)
+      try {
+        player?.destroy?.()
+      } catch {
+        /* */
+      }
+    }
+  }, [mountIframe, mixId, embedSrc])
+
   return (
     <div ref={rootRef} className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
-      {mountIframe ? (
+      {mountIframe && embedSrc ? (
         <iframe
-          src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+          id={mixId ? `ob-yt-${mixId}` : undefined}
+          src={embedSrc}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
@@ -70,11 +137,13 @@ function LazySoundCloudEmbed({
   title,
   height = 300,
   className = '',
+  mixId,
 }: {
   trackUrl: string
   title: string
   height?: number
   className?: string
+  mixId?: string
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [mountIframe, setMountIframe] = useState(false)
@@ -96,6 +165,35 @@ function LazySoundCloudEmbed({
     return () => obs.disconnect()
   }, [mountIframe])
 
+  useEffect(() => {
+    if (!mountIframe || !mixId) return
+    let cancelled = false
+    const iframeId = `ob-sc-${mixId}`
+    const t = window.setTimeout(() => {
+      void loadSoundCloudWidgetAPI()
+        .then(() => {
+          if (cancelled) return
+          const el = document.getElementById(iframeId) as HTMLIFrameElement | null
+          const SCg = (window as unknown as { SC?: { Widget?: unknown } }).SC
+          const Widget = SCg?.Widget as
+            | ((iframe: HTMLIFrameElement) => { bind: (ev: string, fn: () => void) => void })
+            | undefined
+          const Events = (SCg?.Widget as unknown as { Events?: { PLAY?: string } } | undefined)?.Events
+          if (!el || !Widget || !Events?.PLAY) return
+          try {
+            Widget(el).bind(Events.PLAY, () => logMixPlayOncePerBrowserSession(mixId))
+          } catch {
+            /* */
+          }
+        })
+        .catch(() => {})
+    }, 200)
+    return () => {
+      cancelled = true
+      window.clearTimeout(t)
+    }
+  }, [mountIframe, mixId, src])
+
   return (
     <div
       ref={rootRef}
@@ -104,6 +202,7 @@ function LazySoundCloudEmbed({
     >
       {mountIframe ? (
         <iframe
+          id={mixId ? `ob-sc-${mixId}` : undefined}
           title={title}
           src={src}
           allow="autoplay"
@@ -543,9 +642,9 @@ function LargeGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} />
             ) : scTrackUrl ? (
-              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} />
+              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} mixId={m.id} />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
             )}
@@ -620,13 +719,14 @@ function CompactGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} />
             ) : scTrackUrl ? (
               <LazySoundCloudEmbed
                 trackUrl={scTrackUrl}
                 title={m.title}
                 height={220}
                 className="border-b-[3px] border-[var(--ink)]"
+                mixId={m.id}
               />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />
@@ -724,7 +824,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" />
+                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
                 </div>
               </div>
             </div>
@@ -772,7 +872,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} className="border-[3px] border-[var(--ink)]" />
+                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
                 </div>
               </div>
             </div>
