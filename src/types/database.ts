@@ -40,12 +40,16 @@ export type ChartFeaturedTrack = {
   chart_edition_id: string
   sort_order: number
   title: string
+  mix_name: string
   artists: ChartFeaturedArtist[]
   label: string
   platform: string
   link_url: string
   link_label: string
   artwork_url: string | null
+  sample_url: string | null
+  bpm: number | null
+  music_key: string
   release_year: number | null
   note_en: string
   note_es: string

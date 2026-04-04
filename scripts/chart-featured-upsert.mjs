@@ -18,6 +18,10 @@
  *       "link_url": "https://…",
  *       "link_label": "",
  *       "artwork_url": "https://…",
+ *       "sample_url": "https://geo-samples.beatport.com/…mp3",
+ *       "mix_name": "Original Mix",
+ *       "bpm": 135,
+ *       "music_key": "G Minor",
  *       "release_year": 2026,
  *       "note_en": "",
  *       "note_es": ""
@@ -156,16 +160,26 @@ async function main() {
     const link_url = (p.link_url || '').trim()
     if (!link_url) throw new Error(`pick "${title}": falta link_url`)
 
+    const bpmRaw = p.bpm
+    const bpm =
+      bpmRaw != null && Number.isFinite(Number(bpmRaw)) && Number(bpmRaw) > 0
+        ? Number(bpmRaw)
+        : null
+
     return {
       chart_edition_id: editionId,
       sort_order: sort,
       title,
+      mix_name: (p.mix_name || '').trim(),
       artists: Array.isArray(p.artists) ? p.artists : [],
       label: (p.label || '').trim(),
       platform: (p.platform || 'other').trim().toLowerCase() || 'other',
       link_url,
       link_label: (p.link_label || '').trim(),
       artwork_url: (p.artwork_url || '').trim() || null,
+      sample_url: (p.sample_url || '').trim() || null,
+      bpm,
+      music_key: (p.music_key || '').trim(),
       release_year:
         p.release_year != null && Number.isFinite(Number(p.release_year))
           ? Number(p.release_year)

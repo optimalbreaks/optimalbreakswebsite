@@ -174,6 +174,19 @@ function defaultPreviewLayout(
   )
 }
 
+/** Beatport: proxy por CORS. Otros hosts: src directo (puede funcionar según CDN/CORS). */
+function previewAudioSrc(sampleUrl: string): string {
+  try {
+    const host = new URL(sampleUrl).hostname.toLowerCase()
+    if (host === 'geo-samples.beatport.com' || host === 'geo-media.beatport.com') {
+      return `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
+    }
+  } catch {
+    /* URL inválida: se intenta tal cual */
+  }
+  return sampleUrl
+}
+
 function PreviewPlayer({
   sampleUrl,
   dict,
@@ -194,7 +207,7 @@ function PreviewPlayer({
     return null
   }
 
-  const proxiedAudio = `/api/audio-proxy?url=${encodeURIComponent(sampleUrl)}`
+  const audioSrc = previewAudioSrc(sampleUrl)
 
   const pauseThis = useCallback(() => {
     audioRef.current?.pause()
@@ -306,7 +319,7 @@ function PreviewPlayer({
     <div className="flex items-center gap-2">
       <audio
         ref={audioRef}
-        src={proxiedAudio}
+        src={audioSrc}
         preload="none"
         onEnded={handleEnded}
         onTimeUpdate={handleTimeUpdate}
@@ -374,36 +387,41 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
   const cta = pickCtaLabel(c, pick)
+  const mixName = (pick.mix_name || '').trim()
 
   return (
-    <div className="flex flex-col gap-2 py-3 sm:py-3.5 px-3 sm:px-4 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--acid)]/10 transition-colors">
+    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span
-            className="inline-flex items-center justify-center shrink-0 w-9 h-9 text-sm font-black bg-[var(--acid)] text-[var(--ink)] border-[3px] border-[var(--ink)]"
-            style={{ fontFamily: "'Unbounded', sans-serif" }}
-          >
-            {pick.sort_order}
-          </span>
+          <PositionBadge position={pick.sort_order} />
+
           {pick.artwork_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- URLs arbitrarias pegadas a mano (cualquier dominio)
-            <img
-              src={pick.artwork_url}
-              alt=""
-              className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] object-cover bg-[var(--paper-dark)]"
-              width={64}
-              height={64}
-            />
+            <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+              <Image
+                src={pick.artwork_url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 56px, 64px"
+                unoptimized
+              />
+            </div>
           ) : null}
+
           <div className="flex-1 min-w-0">
+            {/* Misma altura de línea que MovementIndicator en el Top 40 */}
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap min-h-[22px]" aria-hidden={true} />
             <h3
-              className="text-sm sm:text-base font-black leading-snug"
+              className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate"
               style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
             >
               {pick.title}
+              {mixName ? (
+                <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span>
+              ) : null}
             </h3>
             <p
-              className="text-xs sm:text-sm mt-0.5"
+              className="text-xs sm:text-sm mt-0.5 sm:truncate"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
               <FeaturedArtistNames artists={artists} />
@@ -416,7 +434,12 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
               {pick.release_year != null && pick.release_year > 0 ? (
                 <>
                   <span className="mx-1.5 text-[var(--ink)]/30">|</span>
-                  <span className="text-[var(--ink)]/45 font-bold tabular-nums">{pick.release_year}</span>
+                  <span
+                    className="text-[var(--ink)]/45 font-bold tabular-nums"
+                    title={c.release_year_title}
+                  >
+                    {pick.release_year}
+                  </span>
                 </>
               ) : null}
             </p>
@@ -430,13 +453,32 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
             ) : null}
           </div>
         </div>
-        <div className="flex sm:shrink-0 sm:self-center">
+
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center md:flex-nowrap touch-manipulation">
+          {pick.bpm != null && pick.bpm > 0 ? (
+            <span
+              className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {pick.bpm} {c.bpm_label}
+            </span>
+          ) : null}
+          {(pick.music_key || '').trim() ? (
+            <span
+              className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {(pick.music_key || '').trim()}
+            </span>
+          ) : null}
+          <PreviewPlayer sampleUrl={pick.sample_url} dict={dict} />
           <a
             href={pick.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all no-underline touch-manipulation w-full sm:w-auto text-center"
+            className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
             style={{ fontFamily: "'Courier Prime', monospace" }}
+            title={pick.link_url}
           >
             {cta}
           </a>
@@ -575,14 +617,26 @@ export default function ChartView({
 }: ChartViewProps) {
   const c = dict.charts
 
-  const [openWeeks, setOpenWeeks] = useState<Set<string>>(() => {
+  const initOpen = () => {
     const s = new Set<string>()
     if (defaultExpandedWeekDate) s.add(defaultExpandedWeekDate)
     return s
-  })
+  }
 
-  const toggleWeek = (weekDate: string) => {
-    setOpenWeeks((prev) => {
+  const [openPicksByWeek, setOpenPicksByWeek] = useState<Set<string>>(initOpen)
+  const [openFortyByWeek, setOpenFortyByWeek] = useState<Set<string>>(initOpen)
+
+  const togglePicks = (weekDate: string) => {
+    setOpenPicksByWeek((prev) => {
+      const n = new Set(prev)
+      if (n.has(weekDate)) n.delete(weekDate)
+      else n.add(weekDate)
+      return n
+    })
+  }
+
+  const toggleForty = (weekDate: string) => {
+    setOpenFortyByWeek((prev) => {
       const n = new Set(prev)
       if (n.has(weekDate)) n.delete(weekDate)
       else n.add(weekDate)
@@ -645,57 +699,144 @@ export default function ChartView({
       <div className="flex flex-col gap-2 px-2 sm:px-0">
         {weeks.map((bundle, index) => {
           const { edition, tracks: weekTracks, featured: weekFeatured } = bundle
-          const expanded = openWeeks.has(edition.week_date)
+          const picksOpen = openPicksByWeek.has(edition.week_date)
+          const fortyOpen = openFortyByWeek.has(edition.week_date)
           const isLatest = edition.week_date === latestWeekDate
           const editionNumber = index + 1
-          const panelId = `chart-week-panel-${edition.week_date}`
+          const picksPanelId = `chart-picks-panel-${edition.week_date}`
+          const fortyPanelId = `chart-forty-panel-${edition.week_date}`
           const description = lang === 'es' ? edition.description_es : edition.description_en
           const countLabel = c.week_tracks_count.replace('{n}', String(weekTracks.length))
+          const picksCountLabel = c.picks_count.replace('{n}', String(weekFeatured.length))
           const badgeNum = c.week_number_badge.replace('{n}', String(editionNumber))
+
+          const accordionBtn =
+            'w-full flex flex-wrap items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation'
 
           return (
             <section
               key={edition.id}
               className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden"
             >
+              <div
+                className="w-full px-3 py-3 sm:px-4 sm:py-3.5 border-b-[3px] border-[var(--ink)]/12 bg-[var(--paper)]"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <span
+                    className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[12rem]"
+                    style={{ fontFamily: "'Unbounded', sans-serif" }}
+                  >
+                    {c.week_label} {formatWeekDate(edition.week_date, lang)}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
+                    {isLatest && (
+                      <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
+                        {c.week_current_badge}
+                      </span>
+                    )}
+                    <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider bg-[var(--paper-dark)] text-[var(--ink)] border-2 border-[var(--ink)]">
+                      {badgeNum}
+                    </span>
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-[var(--ink)]/45 mt-2 max-w-2xl leading-relaxed">
+                  {c.week_block_intro}
+                </p>
+              </div>
+
               <button
                 type="button"
-                id={`chart-week-trigger-${edition.week_date}`}
-                aria-expanded={expanded}
-                aria-controls={panelId}
-                onClick={() => toggleWeek(edition.week_date)}
-                className="w-full flex flex-wrap items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
+                id={`chart-picks-trigger-${edition.week_date}`}
+                aria-expanded={picksOpen}
+                aria-controls={picksPanelId}
+                onClick={() => togglePicks(edition.week_date)}
+                className={`${accordionBtn} border-b-[3px] border-[var(--ink)]/10`}
                 style={{ fontFamily: "'Courier Prime', monospace" }}
-                title={expanded ? c.week_toggle_hide : c.week_toggle_show}
+                title={picksOpen ? c.picks_toggle_hide : c.picks_toggle_show}
               >
                 <span
                   className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0"
                   style={{ fontFamily: "'Unbounded', sans-serif" }}
                   aria-hidden
                 >
-                  {expanded ? '▼' : '▶'}
+                  {picksOpen ? '▼' : '▶'}
                 </span>
-                <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[12rem]">
-                  {c.week_label} {formatWeekDate(edition.week_date, lang)}
-                </span>
-                <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
-                  {isLatest && (
-                    <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
-                      {c.week_current_badge}
-                    </span>
-                  )}
-                  <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider bg-[var(--paper-dark)] text-[var(--ink)] border-2 border-[var(--ink)]">
-                    {badgeNum}
+                <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[10rem] flex flex-wrap items-center gap-2">
+                  <span
+                    className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-[2px] bg-[var(--cyan)] text-white border-2 border-[var(--ink)]"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {c.picks_kicker}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold">{countLabel}</span>
+                  <span style={{ fontFamily: "'Unbounded', sans-serif" }}>{c.picks_title}</span>
+                </span>
+                <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">
+                  {picksCountLabel}
                 </span>
               </button>
 
-              {expanded && (
-                <div id={panelId} role="region" aria-labelledby={`chart-week-trigger-${edition.week_date}`}>
+              {picksOpen && (
+                <div id={picksPanelId} role="region" aria-labelledby={`chart-picks-trigger-${edition.week_date}`}>
+                  <div
+                    className="px-3 sm:px-4 py-3 border-b-[3px] border-[var(--ink)]/10 bg-[var(--paper-dark)]/20"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    <p className="text-[11px] sm:text-xs text-[var(--ink)]/55 max-w-2xl leading-relaxed">
+                      {c.picks_intro}
+                    </p>
+                  </div>
+                  {weekFeatured.length > 0 ? (
+                    <div className="border-b-[3px] border-[var(--ink)]/10">
+                      {weekFeatured.map((pick) => (
+                        <FeaturedPickRow key={pick.id} pick={pick} dict={dict} lang={lang} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p
+                      className="px-4 py-6 text-sm text-center text-[var(--ink)]/50 border-b-[3px] border-[var(--ink)]/10"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      {c.picks_empty}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <button
+                type="button"
+                id={`chart-forty-trigger-${edition.week_date}`}
+                aria-expanded={fortyOpen}
+                aria-controls={fortyPanelId}
+                onClick={() => toggleForty(edition.week_date)}
+                className={accordionBtn}
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+                title={fortyOpen ? c.forty_toggle_hide : c.forty_toggle_show}
+              >
+                <span
+                  className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0"
+                  style={{ fontFamily: "'Unbounded', sans-serif" }}
+                  aria-hidden
+                >
+                  {fortyOpen ? '▼' : '▶'}
+                </span>
+                <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[10rem] flex flex-wrap items-center gap-2">
+                  <span
+                    className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-[3px] bg-[var(--red)] text-white border-2 border-[var(--ink)]"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {c.forty_kicker}
+                  </span>
+                  <span style={{ fontFamily: "'Unbounded', sans-serif" }}>{c.title}</span>
+                </span>
+                <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">{countLabel}</span>
+              </button>
+
+              {fortyOpen && (
+                <div id={fortyPanelId} role="region" aria-labelledby={`chart-forty-trigger-${edition.week_date}`}>
                   {edition.sources.length > 0 && (
                     <p
-                      className="px-3 sm:px-4 pb-2 text-[10px] text-[var(--ink)]/45 tracking-wider"
+                      className="px-3 sm:px-4 pt-3 pb-2 text-[10px] text-[var(--ink)]/45 tracking-wider"
                       style={{ fontFamily: "'Courier Prime', monospace" }}
                     >
                       {c.source_label}: {edition.sources.join(', ')}
@@ -708,41 +849,6 @@ export default function ChartView({
                     >
                       {description}
                     </p>
-                  )}
-                  {weekFeatured.length > 0 && (
-                    <div className="border-t-[3px] border-[var(--ink)]/20 bg-[var(--paper-dark)]/30">
-                      <div className="px-3 sm:px-4 pt-3 pb-2">
-                        <span
-                          className="inline-block px-2 py-0.5 text-[9px] font-black tracking-[3px] bg-[var(--cyan)] text-white border-2 border-[var(--ink)] mb-2"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          {c.picks_kicker}
-                        </span>
-                        <h2
-                          className="text-lg sm:text-xl font-black"
-                          style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-                        >
-                          {c.picks_title}
-                        </h2>
-                        <p
-                          className="text-[11px] sm:text-xs text-[var(--ink)]/50 mt-1 max-w-2xl"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          {c.picks_intro}
-                        </p>
-                        <p
-                          className="text-[10px] text-[var(--ink)]/40 font-bold mt-2 tracking-wider"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          {c.picks_count.replace('{n}', String(weekFeatured.length))}
-                        </p>
-                      </div>
-                      <div className="border-t-[3px] border-[var(--ink)]/15">
-                        {weekFeatured.map((pick) => (
-                          <FeaturedPickRow key={pick.id} pick={pick} dict={dict} lang={lang} />
-                        ))}
-                      </div>
-                    </div>
                   )}
                   <div className="border-t-4 border-[var(--ink)]">
                     {weekTracks.map((track) => (
