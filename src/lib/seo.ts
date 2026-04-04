@@ -20,14 +20,14 @@ export const SITE_URL = 'https://www.optimalbreaks.com' as const
 /** Referenced in manifest / JSON-LD logo; PWA icons. */
 export const DEFAULT_OG_IMAGE_PATH = '/icon-512.png' as const
 
-/** Home /en y /es: imagen OG para redes (arte vinilo + funda punk, no el logo del sitio). */
-export const HOME_OG_IMAGE = '/images/opengraph_OB_punk.png' as const
+/** Home /en y /es: imagen OG para redes (`public/images/opengraph_home_OB.jpg`). */
+export const HOME_OG_IMAGE = '/images/opengraph_home_OB.jpg' as const
 
 /** Texto alt de la imagen OG de la home (accesibilidad / redes). */
 export function homeOgImageAlt(lang: Locale): string {
   return lang === 'es'
-    ? 'Optimal Breaks — vinilo y funda artwork'
-    : 'Optimal Breaks — vinyl sleeve artwork'
+    ? 'Optimal Breaks — The Breakbeat Bible, mezcladora de vinilos y géneros breakbeat'
+    : 'Optimal Breaks — The Breakbeat Bible, vinyl mixer deck and breakbeat genre tags'
 }
 
 /** Idioma secundario para og:locale:alternate (Facebook / Meta). */
