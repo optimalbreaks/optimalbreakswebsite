@@ -346,7 +346,7 @@ export function RatingScatter({
     [rows],
   )
 
-  if (data.length === 0) return <EmptyState message="No hay valoraciones suficientes" />
+  if (data.length === 0) return <EmptyState message="No hay valoraciones registradas" />
 
   return (
     <ChartFrame height={300}>

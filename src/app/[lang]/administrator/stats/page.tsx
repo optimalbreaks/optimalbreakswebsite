@@ -525,7 +525,7 @@ export default function AdminEngagementStatsPage() {
                         avg_rating: Number(num(r.avg_rating)).toFixed(2),
                         rating_count: String(num(r.rating_count)),
                       }))}
-                      empty="Sin suficientes valoraciones agrupadas."
+                      empty="No hay valoraciones de eventos."
                     />
                   </DetailToggle>
                 </Section>
@@ -548,7 +548,7 @@ export default function AdminEngagementStatsPage() {
                         avg_rating: Number(num(r.avg_rating)).toFixed(2),
                         rating_count: String(num(r.rating_count)),
                       }))}
-                      empty="Sin suficientes valoraciones."
+                      empty="No hay valoraciones de avistamientos."
                     />
                   </DetailToggle>
                 </Section>
