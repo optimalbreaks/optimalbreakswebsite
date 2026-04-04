@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'geo-media.beatport.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'f4.bcbits.com',
+      },
     ],
   },
 

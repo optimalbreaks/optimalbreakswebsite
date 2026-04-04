@@ -152,7 +152,10 @@ function defaultPreviewLayout(
   )
 }
 
-function previewAudioSrc(sampleUrl: string): string {
+function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
+  if (pick?.platform === 'bandcamp' && pick.link_url) {
+    return `/api/bandcamp-preview?track=${encodeURIComponent(pick.link_url)}`
+  }
   try {
     const host = new URL(sampleUrl).hostname.toLowerCase()
     if (host === 'geo-samples.beatport.com' || host === 'geo-media.beatport.com') {
@@ -165,10 +168,12 @@ function previewAudioSrc(sampleUrl: string): string {
 function PreviewPlayer({
   sampleUrl,
   dict,
+  pick,
   children = defaultPreviewLayout,
 }: {
   sampleUrl: string | null
   dict: any
+  pick?: ChartFeaturedTrack
   children?: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -178,9 +183,10 @@ function PreviewPlayer({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
 
-  if (!sampleUrl) return null
+  const hasBandcampPreview = pick?.platform === 'bandcamp' && pick.link_url
+  if (!sampleUrl && !hasBandcampPreview) return null
 
-  const audioSrc = previewAudioSrc(sampleUrl)
+  const audioSrc = previewAudioSrc(sampleUrl || '', pick)
 
   const pauseThis = useCallback(() => {
     audioRef.current?.pause()
@@ -324,7 +330,7 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
 
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-              <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized />
+              <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
             </div>
           ) : null}
 
@@ -353,7 +359,7 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <PreviewPlayer sampleUrl={pick.sample_url} dict={dict} />
+          <PreviewPlayer sampleUrl={pick.sample_url} dict={dict} pick={pick} />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
