@@ -70,12 +70,12 @@
       "items": [
         { "href": "/history", "label": "Historia", "hint": "Orígenes, UK, EE. UU., Andalucía, digital" },
         { "href": "/artists", "label": "Artistas", "hint": "Fichas, categorías, cronología" },
-        { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
-        { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/events", "label": "Eventos", "hint": "Agenda y archivo" },
-        { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
+        { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
         { "href": "/charts", "label": "Tracks", "hint": "40 Breaks Vitales, chart semanal" },
+        { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
+        { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
       ]
     },

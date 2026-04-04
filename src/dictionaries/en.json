@@ -124,24 +124,14 @@
           "hint": "Profiles, tags, timelines"
         },
         {
-          "href": "/scenes",
-          "label": "Scenes",
-          "hint": "Territories and local context"
-        },
-        {
-          "href": "/labels",
-          "label": "Labels",
-          "hint": "Sound infrastructure"
-        },
-        {
           "href": "/events",
           "label": "Events",
           "hint": "Agenda and archive"
         },
         {
-          "href": "/blog",
-          "label": "Blog",
-          "hint": "Essays and scene memory"
+          "href": "/labels",
+          "label": "Labels",
+          "hint": "Sound infrastructure"
         },
         {
           "href": "/mixes",
@@ -152,6 +142,16 @@
           "href": "/charts",
           "label": "Tracks",
           "hint": "40 Breaks Vitales, weekly chart"
+        },
+        {
+          "href": "/scenes",
+          "label": "Scenes",
+          "hint": "Territories and local context"
+        },
+        {
+          "href": "/blog",
+          "label": "Blog",
+          "hint": "Essays and scene memory"
         },
         {
           "href": "/about",
