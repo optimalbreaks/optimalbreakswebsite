@@ -288,8 +288,9 @@ export function TopShareDonut({
   const { pieData } = useMemo(() => {
     if (!rows.length) return { pieData: [] as { name: string; value: number }[] }
     const n = 5
-    const top = rows.slice(0, n)
-    const restRows = rows.slice(n)
+    const sorted = sortRowsByValueDescThenLabel(rows, valueKey, (r) => str(r[labelKey]))
+    const top = sorted.slice(0, n)
+    const restRows = sorted.slice(n)
     const restSum = restRows.reduce((s, r) => s + num(r[valueKey]), 0)
     const out = top.map((r) => ({ name: trunc(str(r[labelKey]), 20), value: num(r[valueKey]) }))
     if (restSum > 0) out.push({ name: 'Otros', value: restSum })
@@ -450,14 +451,30 @@ export function DualHorizontalMini({
 /*  Helpers                                                           */
 /* ------------------------------------------------------------------ */
 
+/** Mayor valor numérico primero; en empates, orden alfabético del nombre (es, sin distinguir mayúsculas). */
+export function sortRowsByValueDescThenLabel(
+  rows: Record<string, unknown>[],
+  valueKey: string,
+  labelFrom: (r: Record<string, unknown>) => string,
+): Record<string, unknown>[] {
+  return [...rows].sort((a, b) => {
+    const va = num(a[valueKey])
+    const vb = num(b[valueKey])
+    if (vb !== va) return vb - va
+    return labelFrom(a).localeCompare(labelFrom(b), 'es', { sensitivity: 'base' })
+  })
+}
+
 export function rowsToRankByKey(
   rows: Record<string, unknown>[],
   labelFrom: (r: Record<string, unknown>) => string,
   valueKey: string,
   limit = 10,
 ): RankRow[] {
-  return rows.slice(0, limit).map((r) => ({
-    name: labelFrom(r),
-    value: num(r[valueKey]),
-  }))
+  return sortRowsByValueDescThenLabel(rows, valueKey, labelFrom)
+    .slice(0, limit)
+    .map((r) => ({
+      name: labelFrom(r),
+      value: num(r[valueKey]),
+    }))
 }

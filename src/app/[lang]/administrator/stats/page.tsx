@@ -11,6 +11,7 @@ import {
   RatingScatter,
   TopShareDonut,
   rowsToRankByKey,
+  sortRowsByValueDescThenLabel,
   EmptyState,
 } from '@/components/admin/AdminEngagementCharts'
 
@@ -190,8 +191,37 @@ export default function AdminEngagementStatsPage() {
   const maxArtistFav = favArt.length ? num(favArt[0].cnt) : 0
 
   const mixRankRows = useMemo(() => rowsToRankByKey(mixTop, (r) => `${str(r.title)} — ${str(r.artist_name)}`, 'play_count', 16), [mixTop])
-  const eventRatingsScatter = useMemo(() => evRate.map((r) => ({ name: str(r.name), avg_rating: num(r.avg_rating), rating_count: num(r.rating_count) })), [evRate])
-  const artistRatedScatter = useMemo(() => sightR.map((r) => ({ name: str(r.name), avg_rating: num(r.avg_rating), rating_count: num(r.rating_count) })), [sightR])
+  const mixTopSorted = useMemo(
+    () => sortRowsByValueDescThenLabel(mixTop, 'play_count', (r) => `${str(r.title)} — ${str(r.artist_name)}`),
+    [mixTop],
+  )
+  const favArtSorted = useMemo(() => sortRowsByValueDescThenLabel(favArt, 'cnt', (r) => str(r.name)), [favArt])
+  const favLabSorted = useMemo(() => sortRowsByValueDescThenLabel(favLab, 'cnt', (r) => str(r.name)), [favLab])
+  const favEvSorted = useMemo(() => sortRowsByValueDescThenLabel(favEv, 'cnt', (r) => str(r.name)), [favEv])
+  const sightNSorted = useMemo(
+    () => sortRowsByValueDescThenLabel(sightN, 'sightings_count', (r) => str(r.name)),
+    [sightN],
+  )
+  const evAttSorted = useMemo(() => sortRowsByValueDescThenLabel(evAtt, 'cnt', (r) => str(r.name)), [evAtt])
+  const evDoneSorted = useMemo(() => sortRowsByValueDescThenLabel(evDone, 'cnt', (r) => str(r.name)), [evDone])
+  const eventRatingsScatter = useMemo(
+    () =>
+      sortRowsByValueDescThenLabel(evRate, 'rating_count', (r) => str(r.name)).map((r) => ({
+        name: str(r.name),
+        avg_rating: num(r.avg_rating),
+        rating_count: num(r.rating_count),
+      })),
+    [evRate],
+  )
+  const artistRatedScatter = useMemo(
+    () =>
+      sortRowsByValueDescThenLabel(sightR, 'rating_count', (r) => str(r.name)).map((r) => ({
+        name: str(r.name),
+        avg_rating: num(r.avg_rating),
+        rating_count: num(r.rating_count),
+      })),
+    [sightR],
+  )
 
   return (
     <div className="max-w-[1400px] mx-auto pb-20 font-sans">
@@ -303,7 +333,7 @@ export default function AdminEngagementStatsPage() {
                           { key: 'artist_name', label: 'Artista' },
                           { key: 'play_count', label: 'Reproducciones', align: 'right' },
                         ]}
-                        rows={mixTop.map((r) => ({
+                        rows={mixTopSorted.map((r) => ({
                           title: (
                             <Link href={`${base}/mixes/${str(r.mix_id)}`} className="text-indigo-600 hover:underline font-medium">
                               {str(r.title)}
@@ -343,7 +373,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'name', label: 'Artista' },
                         { key: 'cnt', label: 'Favoritos', align: 'right' },
                       ]}
-                      rows={favArt.map((r) => ({
+                      rows={favArtSorted.map((r) => ({
                         name: <Link href={`${site}/artists/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         cnt: String(num(r.cnt)),
                       }))}
@@ -360,7 +390,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'name', label: 'Sello' },
                         { key: 'cnt', label: 'Favoritos', align: 'right' },
                       ]}
-                      rows={favLab.map((r) => ({
+                      rows={favLabSorted.map((r) => ({
                         name: <Link href={`${site}/labels/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         cnt: String(num(r.cnt)),
                       }))}
@@ -379,7 +409,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'name', label: 'Artista' },
                         { key: 'cnt', label: 'Avistamientos', align: 'right' },
                       ]}
-                      rows={sightN.map((r) => ({
+                      rows={sightNSorted.map((r) => ({
                         name: <Link href={`${site}/artists/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         cnt: String(num(r.sightings_count)),
                       }))}
@@ -396,7 +426,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'name', label: 'Evento' },
                         { key: 'cnt', label: 'Favoritos', align: 'right' },
                       ]}
-                      rows={favEv.map((r) => ({
+                      rows={favEvSorted.map((r) => ({
                         name: <Link href={`${site}/events/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         cnt: String(num(r.cnt)),
                       }))}
@@ -438,7 +468,7 @@ export default function AdminEngagementStatsPage() {
                       { key: 'name', label: 'Evento' },
                       { key: 'cnt', label: 'Usuarios', align: 'right' },
                     ]}
-                    rows={evAtt.map((r) => ({
+                    rows={evAttSorted.map((r) => ({
                       name: <Link href={`${site}/events/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                       cnt: String(num(r.cnt)),
                     }))}
@@ -451,7 +481,7 @@ export default function AdminEngagementStatsPage() {
                       { key: 'name', label: 'Evento' },
                       { key: 'cnt', label: 'Usuarios', align: 'right' },
                     ]}
-                    rows={evDone.map((r) => ({
+                    rows={evDoneSorted.map((r) => ({
                       name: <Link href={`${site}/events/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                       cnt: String(num(r.cnt)),
                     }))}
@@ -479,7 +509,7 @@ export default function AdminEngagementStatsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Section title="Eventos mejor valorados">
                   <HorizontalRankBars
-                    rows={evRate.slice(0, 10).map((r) => ({ name: str(r.name), value: num(r.avg_rating) }))}
+                    rows={rowsToRankByKey(evRate, (r) => str(r.name), 'avg_rating', 10)}
                     valueLabel="Media ★"
                     color="#f59e0b"
                   />
@@ -490,7 +520,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'avg_rating', label: 'Nota Media' },
                         { key: 'rating_count', label: 'Votos', align: 'right' },
                       ]}
-                      rows={evRate.map((r) => ({
+                      rows={sortRowsByValueDescThenLabel(evRate, 'rating_count', (r) => str(r.name)).map((r) => ({
                         name: <Link href={`${site}/events/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         avg_rating: Number(num(r.avg_rating)).toFixed(2),
                         rating_count: String(num(r.rating_count)),
@@ -502,7 +532,7 @@ export default function AdminEngagementStatsPage() {
 
                 <Section title="Artistas mejor valorados (en vivo)">
                   <HorizontalRankBars
-                    rows={sightR.slice(0, 10).map((r) => ({ name: str(r.name), value: num(r.avg_rating) }))}
+                    rows={rowsToRankByKey(sightR, (r) => str(r.name), 'avg_rating', 10)}
                     valueLabel="Media ★"
                     color="#10b981"
                   />
@@ -513,7 +543,7 @@ export default function AdminEngagementStatsPage() {
                         { key: 'avg_rating', label: 'Nota Media' },
                         { key: 'rating_count', label: 'Votos', align: 'right' },
                       ]}
-                      rows={sightR.map((r) => ({
+                      rows={sortRowsByValueDescThenLabel(sightR, 'rating_count', (r) => str(r.name)).map((r) => ({
                         name: <Link href={`${site}/artists/${str(r.slug)}`} className="text-indigo-600 hover:underline font-medium">{str(r.name)}</Link>,
                         avg_rating: Number(num(r.avg_rating)).toFixed(2),
                         rating_count: String(num(r.rating_count)),
