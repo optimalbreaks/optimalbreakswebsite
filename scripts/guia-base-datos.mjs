@@ -290,6 +290,22 @@ const ACTIONS = [
       'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
   },
   {
+    id: 'chart-artists',
+    run: 'node scripts/guia-base-datos.mjs run chart-artists [--week=YYYY-MM-DD] [--all-published] [--file=ruta.json] [--dry-run]',
+    npm: 'npm run db:chart:artists -- [--week=… | --all-published | --file=… | --dry-run]',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (salvo --file + --dry-run)',
+    description:
+      'Tras publicar el chart: lee artistas de chart_tracks + chart_featured_tracks (última semana por defecto), actualiza styles/bios en catálogo y crea JSON+UPSERT de faltantes. Ampliar alias en scripts/sync-chart-artists.mjs (CHART_NAME_TO_SLUG) si hace falta.',
+  },
+  {
+    id: 'chart-artists-agent',
+    run: 'node scripts/guia-base-datos.mjs run chart-artists-agent [--week=…] [--file=…] [--force] [--dry-run] [--limit=N] [--delay-ms=…]',
+    npm: 'npm run db:chart:artists:agent -- [flags]',
+    creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI_API_KEY',
+    description:
+      'Enriquece con OpenAI (--revise --save-json) las fichas starter del chart; inyecta --notes con sellos y títulos del chart para desambiguar nombres genéricos. Por defecto solo JSON con plantilla starter; --force recorre todo el chart.',
+  },
+  {
     id: 'verify',
     run: 'node scripts/guia-base-datos.mjs run verify',
     npm: 'npm run db:verify',
@@ -380,6 +396,8 @@ Punto de entrada unificado:
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
+  chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
+  chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -462,6 +480,16 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • chart-featured-upsert.mjs — «New releases» en /charts. Lee solo un JSON con
   week_date + picks (título, artistas, link_url, artwork opcional, etc.) y
   sustituye chart_featured_tracks para esa edición. No scrapea tiendas.
+
+• sync-chart-artists.mjs — Tras publicar la semana: cruza nombres del chart
+  (chart_tracks + chart_featured_tracks, última edición por defecto) con
+  data/artists; añade Breakbeat + mención «40 Breaks Vitales» en bios; crea
+  fichas starter y UPSERT de faltantes. run chart-artists [--week=…|--all-published|--file=…] [--dry-run].
+
+• enrich-chart-artists-agent.mjs — Tras chart-artists: para fichas aún en
+  plantilla «starter», llama al agente (--revise --save-json) con un .md de notas
+  que incluye sellos y títulos del chart (desambiguación de nombres genéricos).
+  run chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N].
 
 • sync-timeline-artists.mjs — «Artistas que salen en la cronología web». Sin
   flags: INSERT en artists de los que faltan. Con --sql: solo genera/actualiza
@@ -731,6 +759,12 @@ function main() {
       runNode('chart-featured-upsert.mjs', [rel])
       break
     }
+    case 'chart-artists':
+      runNode('sync-chart-artists.mjs', rest)
+      break
+    case 'chart-artists-agent':
+      runNode('enrich-chart-artists-agent.mjs', rest)
+      break
     case 'verify':
       runNode('seed-supabase.mjs', ['--verify'])
       break

@@ -16,8 +16,14 @@ type DateFilterDict = {
   upcoming: string
   past: string
   undated: string
+  country_label?: string
+  all_countries?: string
   showing: string
   no_results: string
+}
+
+function normalizeCountry(s: string | null | undefined): string {
+  return String(s ?? '').trim()
 }
 
 interface Props {
@@ -143,8 +149,18 @@ function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: Br
 export default function EventsExplorer({ events, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [when, setWhen] = useState<DateWhen>('all')
+  const [country, setCountry] = useState<string | 'all'>('all')
 
   const df = dict.date_filter
+
+  const countryOptions = useMemo(() => {
+    const set = new Set<string>()
+    for (const e of events) {
+      const c = normalizeCountry(e.country)
+      if (c) set.add(c)
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, lang, { sensitivity: 'base' }))
+  }, [events, lang])
 
   const filtered = useMemo(() => {
     const today = startOfLocalToday()
@@ -153,16 +169,19 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
 
       if (when === 'upcoming') {
         if (day == null) return false
-        return day >= today
-      }
-      if (when === 'past') {
+        if (day < today) return false
+      } else if (when === 'past') {
         if (day == null) return false
-        return day < today
+        if (day >= today) return false
+      } else if (when === 'undated') {
+        if (day != null) return false
       }
-      if (when === 'undated') return day == null
+
+      if (country !== 'all' && normalizeCountry(e.country) !== country) return false
+
       return true
     })
-  }, [events, when])
+  }, [events, when, country])
 
   const yearGroups = useMemo(() => groupByYearOrdered(filtered), [filtered])
 
@@ -202,6 +221,35 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
               </button>
             ))}
           </div>
+          {df.country_label && countryOptions.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 gap-y-3">
+              <span
+                className="shrink-0 text-[var(--dim)] mr-1"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase' }}
+              >
+                {df.country_label}
+              </span>
+              <button
+                type="button"
+                style={chipFont}
+                className={`${chipBase} ${country === 'all' ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                onClick={() => setCountry('all')}
+              >
+                {df.all_countries ?? 'All'}
+              </button>
+              {countryOptions.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  style={chipFont}
+                  className={`${chipBase} ${country === c ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'}`}
+                  onClick={() => setCountry(c)}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <p
             className="text-[var(--dim)]"
             style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px' }}

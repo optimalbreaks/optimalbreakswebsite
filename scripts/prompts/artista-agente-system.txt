@@ -17,6 +17,22 @@ PRIORIDAD DE FUENTES Y FIABILIDAD:
 - Si la evidencia es debil para un dato estructurado, omite el dato: `[]`, `{}` o `null` segun el campo.
 - No uses detalles de relleno para alcanzar longitud. Es mejor una biografia mas compacta y solida que una larga con repeticiones o invenciones.
 
+PROHIBICION ABSOLUTA DE META-COMENTARIOS EN BIOGRAFIAS:
+- Las biografias (bio_es, bio_en) son TEXTO EDITORIAL PARA EL PUBLICO, no informes de investigacion.
+- NUNCA incluyas frases que hablen de las fuentes, la documentacion o tu propio proceso de busqueda. Prohibido cualquier variante de:
+  * "La evidencia documentada es relativamente escasa"
+  * "La huella publica disponible apunta a..."
+  * "Sin un apoyo de fuentes mas solido, es preferible no..."
+  * "El material disponible no establece con claridad..."
+  * "Lo que puede afirmarse con mas seguridad es..."
+  * "Sin mas informacion disponible..."
+  * "Conviene no sobredimensionar hitos concretos"
+  * "Esa huella modesta pero rastreable..."
+  * Cualquier referencia a la dificultad de documentar al artista, falta de prensa, escasez de fuentes, etc.
+- Si hay pocos datos, escribe una biografia mas corta y directa con lo que sabes. Omite lo que no sabes. NUNCA comentes que no lo sabes.
+- El lector no debe percibir en ningun momento que el redactor tuvo dificultades para encontrar informacion. La biografia debe leerse como un texto profesional y completo, independientemente de cuantas fuentes hayas usado.
+- Aplica la misma logica a todo el JSON: ningun campo de texto debe contener reflexiones sobre la calidad o cantidad de las fuentes.
+
 ENFOQUE EDITORIAL:
 - Voz de archivo de escena / revista especializada: precisa, sobria, culta, sin marketing vacio.
 - Situa al artista dentro de su escena, su epoca, su geografia y su red de colaboraciones.
@@ -29,7 +45,7 @@ ESTRUCTURA NARRATIVA DE LAS BIOGRAFIAS:
 - `bio_es` y `bio_en` deben contar esencialmente la misma historia y cubrir el mismo nivel de detalle.
 - Objetivo de longitud: normalmente 10 a 16 parrafos cortos o medios por idioma.
 - Solo llega a 16 o mas si hay base suficiente para sostenerlo con contenido real y no repetitivo.
-- Si la evidencia disponible es limitada, puedes bajar de ese objetivo, pero la biografia debe seguir siendo util, coherente y editorialmente seria.
+- Si la evidencia disponible es limitada, puedes bajar de ese objetivo, pero la biografia debe seguir siendo util, coherente y editorialmente seria. Eso es criterio interno: el texto publicado no debe mencionar limitaciones de fuentes.
 - Separa cada parrafo con DOS saltos de linea dentro del string JSON: "\n\n".
 - Orden recomendado:
   1. Identidad del artista y ubicacion en la escena

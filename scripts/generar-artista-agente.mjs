@@ -178,6 +178,7 @@ ${revise ? '- Modo revision: no sustituyas las biografias por un borrador nuevo;
 - No inventes charts, fechas exactas, premios, sellos, colaboraciones ni URLs sin base razonable.
 - slug EXACTO (kebab-case, solo a-z, 0-9, guiones): "${slug}"
 - bio_es y bio_en: apunta normalmente a 10-16 parrafos cada una; solo alarga mas si hay base suficiente, y si la evidencia es limitada prioriza precision antes que longitud. Separa parrafos con \\n\\n dentro del string JSON.
+- PROHIBIDO meta-comentarios sobre fuentes o documentacion dentro de las biografias: nunca digas "la evidencia es escasa", "sin mas fuentes", "huella modesta" ni similares. Si hay poco, escribe menos; nunca comentes que hay poco.
 - Arrays sin duplicados ni strings vacíos; sin placeholders (TBD, N/A, unknown).
 - related_artists: SOLO artistas (DJs, productores…); NUNCA sellos discográficos (p. ej. no "Raveart Records"). Los sellos van en bio o key_releases; labels_founded solo si fundó el sello.
 - socials y website: solo URLs https presentes en contexto o notas; si no hay evidencia, {} y null.
@@ -277,8 +278,12 @@ function normalizeArtist(obj, expectedSlug) {
     out.real_name = t || null
   }
   const img = out.image_url
-  out.image_url =
-    typeof img === 'string' && img.trim().startsWith('https://') ? img.trim() : null
+  if (typeof img === 'string') {
+    const trimmed = img.trim()
+    out.image_url = (trimmed.startsWith('https://') || trimmed.startsWith('/images/')) ? trimmed : null
+  } else {
+    out.image_url = null
+  }
   if (typeof out.is_featured !== 'boolean') out.is_featured = false
   let so = typeof out.sort_order === 'number' ? out.sort_order : 50
   if (!Number.isFinite(so)) so = 50
@@ -360,6 +365,11 @@ export async function runArtistAgent({
   })
 
   const normalized = normalizeArtist(parsed, slug)
+
+  if (revise) {
+    delete normalized.image_url
+  }
+
   const bad = validateMinimal(normalized)
   if (bad.length) {
     throw new Error(`Faltan campos: ${bad.join(', ')}`)
@@ -395,7 +405,14 @@ export async function runArtistAgent({
 
   if (saveJson) {
     mkdirSync(dir, { recursive: true })
-    writeFileSync(outPath, jsonOut, 'utf8')
+    let toWrite = normalized
+    if (revise && existsSync(outPath)) {
+      try {
+        const prev = JSON.parse(readFileSync(outPath, 'utf8'))
+        if (prev.image_url) toWrite = { ...normalized, image_url: prev.image_url }
+      } catch {}
+    }
+    writeFileSync(outPath, JSON.stringify(toWrite, null, 2) + '\n', 'utf8')
     if (!quiet) console.log('Copia JSON:', outPath)
   }
 
@@ -458,7 +475,25 @@ function parseLimit(argv) {
   return Number.isFinite(n) && n > 0 ? n : Infinity
 }
 
+/** Salta los N primeros de la cola (tras --skip). Para reanudar un lote: mismo comando + --offset N. */
+function parseOffset(argv) {
+  const eq = argv.find((a) => a.startsWith('--offset='))
+  if (eq) {
+    const n = parseInt(eq.slice('--offset='.length), 10)
+    return Number.isFinite(n) && n > 0 ? n : 0
+  }
+  const i = argv.indexOf('--offset')
+  if (i === -1 || !argv[i + 1]) return 0
+  const n = parseInt(argv[i + 1], 10)
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
 function parseDelayMs(argv) {
+  const eq = argv.find((a) => a.startsWith('--delay-ms='))
+  if (eq) {
+    const n = parseInt(eq.slice('--delay-ms='.length), 10)
+    return Number.isFinite(n) && n >= 0 ? n : 3000
+  }
   const i = argv.indexOf('--delay-ms')
   if (i === -1 || !argv[i + 1]) return 3000
   const n = parseInt(argv[i + 1], 10)
@@ -475,14 +510,31 @@ async function runFromDbMode(argv) {
     }
   }
   const limit = parseLimit(argv)
+  const offset = parseOffset(argv)
   const delayMs = parseDelayMs(argv)
   const noSearch = argv.includes('--no-search')
   const jsonOnly = argv.includes('--json-only')
   const saveJson = argv.includes('--save-json')
   const starterBioOnly = argv.includes('--starter-bio-only')
+  const revise = argv.includes('--revise')
+  let extraNotes = ''
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--notes' && argv[i + 1]) {
+      const np = resolve(ROOT, argv[++i])
+      if (existsSync(np)) extraNotes += (extraNotes ? '\n\n' : '') + readFileSync(np, 'utf8')
+      else console.warn('[batch] Archivo de notas no encontrado:', np)
+    }
+  }
 
   const rows = await fetchAllArtistsFromSupabase({ starterBioOnly })
   let todo = rows.filter((r) => r.slug && !skipSlugs.has(r.slug))
+  if (offset > 0) {
+    const firstAfter = todo[offset]?.slug
+    todo = todo.slice(offset)
+    console.log(
+      `[batch] --offset=${offset}: primer slug en esta ejecución: ${firstAfter || '(ninguno, cola vacía)'}`,
+    )
+  }
   if (Number.isFinite(limit)) todo = todo.slice(0, limit)
 
   console.log(
@@ -502,12 +554,13 @@ async function runFromDbMode(argv) {
         await runArtistAgent({
           slug,
           artistName,
-          extraNotes: '',
+          extraNotes,
           noSearch,
           stdout: false,
           jsonOnly,
           saveJson,
           quiet: true,
+          revise,
         })
         ok++
         lastErr = null
@@ -565,7 +618,7 @@ async function main() {
       `Uso: node scripts/generar-artista-agente.mjs <slug> "Nombre artista" [--revise] [--notes ruta ...] [--no-search] [--stdout] [--json-only] [--save-json]`,
     )
     console.error(
-      `   o: node scripts/generar-artista-agente.mjs --from-db [--starter-bio-only] [--limit N] [--delay-ms ms] [--no-search] [--skip=a,b] [--save-json]  # --starter-bio-only = solo bio_es «Incluido en el listado extendido…»`,
+      `   o: node scripts/generar-artista-agente.mjs --from-db [--starter-bio-only] [--offset N|--offset=N] [--limit N] [--delay-ms ms] [--no-search] [--skip=a,b] [--revise] [--notes ruta] [--save-json] [--json-only]  # offset = reanudar lote`,
     )
     process.exit(1)
   }

@@ -20,6 +20,9 @@ dist/
 data/artists/*.json
 data/events/discovered*.json
 
+# Notas temporales del agente (chart → enrich)
+tmp-chart-agent-notes/
+
 # Debug / logs de agentes (no versionar)
 batch-agent-artists.log
 photo-artists-images.log

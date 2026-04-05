@@ -185,9 +185,17 @@ function normalizeDbRowToArtistJson(row) {
   return o
 }
 
-async function finalizeArtistPhoto({ artist, slug, imageUrlFinal, flags, quiet, reason }) {
+async function finalizeArtistPhoto({ artist, slug, imageUrlFinal, flags, quiet, reason, outcome }) {
   const path = join(ARTISTS_DIR, `${slug}.json`)
   const next = { ...artist, image_url: imageUrlFinal }
+  const u = imageUrlFinal
+  const inferredOutcome =
+    outcome ||
+    (typeof u === 'string' && u.includes('/media/artists/') && u.includes('portrait')
+      ? 'portrait'
+      : u === null || u === undefined
+        ? 'null_result'
+        : 'portrait')
 
   if (flags.has('--dry-run')) {
     if (!quiet) {
@@ -197,30 +205,30 @@ async function finalizeArtistPhoto({ artist, slug, imageUrlFinal, flags, quiet, 
         reason ? `(${reason})` : '',
       )
     }
-    return { ok: true, slug, url: imageUrlFinal, reason: reason || '', dryRun: true }
+    return { ok: true, slug, url: imageUrlFinal, reason: reason || '', dryRun: true, outcome: inferredOutcome }
   }
 
   writeFileSync(path, JSON.stringify(next, null, 2) + '\n', 'utf8')
   if (!quiet) console.log(`[foto] ${slug}: guardado ${path}`)
 
   if (flags.has('--json-only')) {
-    return { ok: true, slug, url: imageUrlFinal, reason: reason || '' }
+    return { ok: true, slug, url: imageUrlFinal, reason: reason || '', outcome: inferredOutcome }
   }
 
   const errors = validateArtistRow(next)
   if (errors.length) {
     console.error(`[foto] ${slug}: validación fallida, no UPSERT:`, errors.join('; '))
-    return { ok: false, slug, error: 'validation' }
+    return { ok: false, slug, error: 'validation', outcome: 'hard_error' }
   }
   try {
     await upsertArtist(next)
     if (!quiet) console.log(`[foto] ${slug}: UPSERT en base OK`)
   } catch (e) {
     console.error(`[foto] ${slug}: UPSERT`, e.message)
-    return { ok: false, slug, error: e.message }
+    return { ok: false, slug, error: e.message, outcome: 'hard_error' }
   }
 
-  return { ok: true, slug, url: imageUrlFinal, reason: reason || '' }
+  return { ok: true, slug, url: imageUrlFinal, reason: reason || '', outcome: inferredOutcome }
 }
 
 async function collectRepairTargets(rows, quiet) {
@@ -413,18 +421,18 @@ async function processOneArtist({
       artist = JSON.parse(readFileSync(path, 'utf8'))
     } catch (e) {
       console.error(slug, e.message)
-      return { ok: false, slug, error: e.message }
+      return { ok: false, slug, error: e.message, outcome: 'hard_error' }
     }
   } else if (dbRow) {
     artist = normalizeDbRowToArtistJson(dbRow)
   } else {
     console.error(`No existe: ${path}`)
-    return { ok: false, slug, error: 'missing file' }
+    return { ok: false, slug, error: 'missing file', outcome: 'hard_error' }
   }
 
   if (!artist.name || !String(artist.name).trim()) {
     console.error(slug, 'JSON sin name')
-    return { ok: false, slug, error: 'no name' }
+    return { ok: false, slug, error: 'no name', outcome: 'hard_error' }
   }
 
   if (!flags.has('--force-rephoto') && shouldSkipInternetArtistPhotoSearch(slug, artist.image_url)) {
@@ -433,14 +441,20 @@ async function processOneArtist({
         `[foto] ${slug}: retrato en public/images/artists (mapa o /images/artists/) — omitido; --force-rephoto para buscar de nuevo`,
       )
     }
-    return { ok: true, slug, skipped: true, reason: 'editorial-public-portrait' }
+    return {
+      ok: true,
+      slug,
+      skipped: true,
+      reason: 'editorial-public-portrait',
+      outcome: 'skipped_editorial',
+    }
   }
 
   if (flags.has('--skip-existing')) {
     const u = artist.image_url
     if (typeof u === 'string' && u.trim().startsWith('https://')) {
       if (!quiet) console.log(`[foto] ${slug}: ya tiene image_url, omitido`)
-      return { ok: true, slug, skipped: true }
+      return { ok: true, slug, skipped: true, outcome: 'skipped_has_https' }
     }
   }
 
@@ -455,7 +469,7 @@ async function processOneArtist({
     })
   } catch (e) {
     console.error(`[foto] ${slug}: SerpAPI`, e.message)
-    return { ok: false, slug, error: e.message }
+    return { ok: false, slug, error: e.message, outcome: 'hard_error' }
   }
 
   if (candidates.length === 0) {
@@ -468,9 +482,10 @@ async function processOneArtist({
         flags,
         quiet,
         reason: 'sin resultados → null (fallback web)',
+        outcome: 'no_candidates',
       })
     }
-    return { ok: true, slug, url: null, reason: 'sin resultados' }
+    return { ok: true, slug, url: null, reason: 'sin resultados', outcome: 'no_candidates' }
   }
 
   if (!quiet) console.log(`[foto] ${slug}: ${candidates.length} candidatos → OpenAI…`)
@@ -493,7 +508,7 @@ async function processOneArtist({
     }
   } catch (e) {
     console.error(`[foto] ${slug}: OpenAI`, e.message)
-    return { ok: false, slug, error: e.message }
+    return { ok: false, slug, error: e.message, outcome: 'hard_error' }
   }
 
   if (!quiet) {
@@ -502,7 +517,14 @@ async function processOneArtist({
   }
 
   if (flags.has('--dry-run')) {
-    return { ok: true, slug, url, reason, dryRun: true }
+    return {
+      ok: true,
+      slug,
+      url,
+      reason,
+      dryRun: true,
+      outcome: url ? 'dry_run_chosen' : 'dry_run_null',
+    }
   }
 
   let imageUrlFinal = url || null
@@ -519,9 +541,10 @@ async function processOneArtist({
           flags,
           quiet,
           reason: `subida fallida → null (${e.message})`,
+          outcome: 'upload_failed',
         })
       }
-      return { ok: false, slug, error: e.message }
+      return { ok: false, slug, error: e.message, outcome: 'hard_error' }
     }
   }
 
@@ -537,7 +560,13 @@ async function processOneArtist({
       writeFileSync(pathJson, JSON.stringify(next, null, 2) + '\n', 'utf8')
       if (!quiet) console.log(`[foto] ${slug}: guardado ${pathJson}`)
     }
-    return { ok: true, slug, url: imageUrlFinal, reason }
+    return {
+      ok: true,
+      slug,
+      url: imageUrlFinal,
+      reason,
+      outcome: imageUrlFinal ? 'json_only_url' : 'model_null',
+    }
   }
 
   return finalizeArtistPhoto({
@@ -547,6 +576,7 @@ async function processOneArtist({
     flags,
     quiet,
     reason,
+    outcome: imageUrlFinal ? undefined : 'model_null',
   })
 }
 
@@ -619,8 +649,7 @@ async function main() {
       const n = parseInt(limitRepair.split('=')[1], 10)
       if (Number.isFinite(n) && n > 0) work = work.slice(0, n)
     }
-    let ok = 0
-    let fail = 0
+    const repairResults = []
     for (let i = 0; i < work.length; i++) {
       const { slug, dbRow } = work[i]
       const r = await processOneArtist({
@@ -633,14 +662,38 @@ async function main() {
         dbRow,
         repairMode: true,
       })
-      if (r.ok) ok++
-      else fail++
+      repairResults.push(r)
       if (i < work.length - 1 && delayMs > 0) await sleep(delayMs)
     }
-    if (!quiet) {
-      console.log(`\nListo [repair]: ${ok} ok, ${fail} errores (${work.length} procesados)`)
+
+    const agg = {}
+    let hardErrors = 0
+    for (const r of repairResults) {
+      if (!r.ok) {
+        hardErrors++
+        continue
+      }
+      const o = r.outcome || 'unknown'
+      agg[o] = (agg[o] || 0) + 1
     }
-    if (fail > 0) process.exit(1)
+
+    console.log(`\n[repair] RESUMEN (${work.length} procesados):`)
+    console.log(
+      `  retrato subido a Storage: ${agg.portrait || 0} | fallo subida (HTML/URL bloqueada): ${agg.upload_failed || 0}`,
+    )
+    console.log(
+      `  sin candidatos Serp: ${agg.no_candidates || 0} | modelo sin imagen fiable: ${agg.model_null || 0} | otro null: ${agg.null_result || 0}`,
+    )
+    console.log(
+      `  omitido (retrato en public): ${agg.skipped_editorial || 0} | omitido (ya tenía https): ${agg.skipped_has_https || 0}`,
+    )
+    console.log(`  errores duros (JSON/Serp/OpenAI/UPSERT): ${hardErrors}`)
+    if (agg.unknown) console.log(`  outcome desconocido: ${agg.unknown}`)
+    if (!quiet) {
+      console.log(`\nListo [repair] (detalle por outcome arriba).`)
+    }
+
+    if (hardErrors > 0) process.exit(1)
     return
   }
 

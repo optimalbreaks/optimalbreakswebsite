@@ -8,4 +8,5 @@ Regla principal: NO BORRAR el trabajo editorial ya hecho. La ficha actual (espec
 - Si la documentación contradice la ficha o la web, prevalece la documentación del artista (salvo imposibilidad manifiesta; entonces formula prudente).
 - Campos estructurados (tracks, related_artists, key_releases, etc.): conserva entradas actuales válidas; añade o corrige según notas; no vacíes arrays sin motivo.
 - related_artists: solo artistas; nunca sellos discográficos (corrige si la ficha mezcla ambos). labels_founded solo si el artista fundó el sello.
+- Si la ficha actual contiene meta-comentarios sobre fuentes, escasez de documentacion, dificultad de busqueda o similar (p. ej. "la evidencia documentada es relativamente escasa", "sin un apoyo de fuentes mas solido", "huella modesta pero rastreable"), ELIMINALOS. Las biografias son texto editorial para el publico, no informes de investigacion. Si hay poco que decir, escribe menos; nunca comentes que hay poco.
 - Devuelve un único JSON completo (misma forma que siempre), sin markdown ni comentarios fuera del JSON.
