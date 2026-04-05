@@ -7,7 +7,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartFeaturedTrack, ChartTrack } from '@/types/database'
 import type { Metadata } from 'next'
-import { staticPageMetadata } from '@/lib/seo'
+import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import ChartView from '@/components/ChartView'
 
 export async function generateMetadata({
@@ -15,7 +15,10 @@ export async function generateMetadata({
 }: {
   params: { lang: Locale }
 }): Promise<Metadata> {
-  return staticPageMetadata(params.lang, '/charts', 'charts')
+  return staticPageMetadata(params.lang, '/charts', 'charts', {
+    ogImagePath: HOME_OG_IMAGE,
+    ogImageAlt: homeOgImageAlt(params.lang),
+  })
 }
 
 export default async function ChartsPage({
