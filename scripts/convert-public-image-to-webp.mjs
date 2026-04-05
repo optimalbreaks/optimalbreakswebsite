@@ -4,7 +4,7 @@
  *   node scripts/convert-public-image-to-webp.mjs public/images/artists/foo.jpg
  *   node scripts/convert-public-image-to-webp.mjs public/images/artists/a.jpg public/images/events/b.png
  *
- * No convierte si ya es .webp. Extensiones de entrada: jpg, jpeg, png, gif, tiff, bmp.
+ * No convierte si ya es .webp. Extensiones de entrada: jpg, jpeg, png, gif, tiff, bmp, avif.
  */
 
 import { existsSync, unlinkSync } from 'fs'
@@ -15,7 +15,7 @@ import sharp from 'sharp'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
-const INPUT_EXT = new Set(['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.tif', '.bmp'])
+const INPUT_EXT = new Set(['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.tif', '.bmp', '.avif'])
 
 async function convertOne(relFromRoot) {
   const rel = relFromRoot.replace(/\\/g, '/').replace(/^\//, '')

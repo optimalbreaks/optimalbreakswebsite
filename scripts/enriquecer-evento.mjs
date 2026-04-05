@@ -21,6 +21,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+ *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
  *
  * Credenciales (.env.local):
@@ -1205,6 +1206,88 @@ async function runPatchCyberBass2026(sb) {
   console.log('[patch-cyber-bass-2026] OK:', after)
 }
 
+const LA_CASETA_DEL_BREAKBEAT_2026_SLUG = 'la-caseta-del-breakbeat-2026'
+const LA_CASETA_DEL_BREAKBEAT_TICKETS =
+  'https://site.fourvenues.com/es/dj-rokeh/events/la-caseta-del-breakbeat-25-04-2026-DGZP'
+const LA_CASETA_DEL_BREAKBEAT_IMAGE = '/images/events/la_caseta_del_breakbeat.webp'
+
+const LA_CASETA_DEL_BREAKBEAT_2026_LINEUP = [
+  'A.Skillz vs Krafty Kuts',
+  'Miau vs Terrie Kynd',
+  'Mutantbreakz',
+  'Guau',
+  'Yo Speed',
+  'Mbreaks',
+  'Bowser',
+  'Nosk',
+  'Buson',
+]
+
+const LA_CASETA_DEL_BREAKBEAT_2026_ROW = {
+  name: 'La Caseta del Breakbeat',
+  description_en:
+    'Breakbeat night at Sala Pandora, Seville, on Saturday 25 April 2026. Promoted via DJ Rokeh on Fourvenues: headline battles A.Skillz vs Krafty Kuts and Miau vs Terrie Kynd, plus Mutantbreakz, Guau, Yo Speed, Mbreaks, Bowser, Nosk and Buson, with further international artists and show still to be announced. Venue address: Calle Gramil 2. Advertised ticket tiers on Fourvenues: free before 23:00; group (4 people) €5.50; duo (2 people) €6; entry before 01:00 €6; general admission €10.',
+  description_es:
+    'Noche de breakbeat en la sala Pandora, Sevilla, el sábado 25 de abril de 2026. Convocatoria difundida por DJ Rokeh en Fourvenues: batallas A.Skillz vs Krafty Kuts y Miau vs Terrie Kynd; Mutantbreakz, Guau, Yo Speed, Mbreaks, Bowser, Nosk y Buson; más artistas y show internacional por confirmar. Dirección: calle Gramil 2. Precios publicitados en Fourvenues: gratis antes de las 23:00; grupo (4 pax) 5,50 €; dúo (2 pax) 6 €; acceso antes de la 01:00 6 €; general 10 €.',
+  event_type: 'club_night',
+  date_start: '2026-04-25',
+  date_end: null,
+  location: 'Sala Pandora, Sevilla',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Pandora',
+  address: 'Calle Gramil 2, Sevilla',
+  website: null,
+  tickets_url: LA_CASETA_DEL_BREAKBEAT_TICKETS,
+  image_url: LA_CASETA_DEL_BREAKBEAT_IMAGE,
+  lineup: LA_CASETA_DEL_BREAKBEAT_2026_LINEUP,
+  tags: [
+    'la caseta del breakbeat',
+    'breakbeat',
+    'breaks',
+    'sevilla',
+    'sala pandora',
+    'gramil',
+    '2026',
+    'dj rokeh',
+    'fourvenues',
+    'a.skillz',
+    'krafty kuts',
+  ],
+  socials: {},
+  doors_open: '22:00',
+  doors_close: null,
+}
+
+async function runPatchLaCasetaDelBreakbeat2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', LA_CASETA_DEL_BREAKBEAT_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-la-caseta-del-breakbeat-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: LA_CASETA_DEL_BREAKBEAT_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...LA_CASETA_DEL_BREAKBEAT_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', LA_CASETA_DEL_BREAKBEAT_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-la-caseta-del-breakbeat-2026] OK:', after)
+}
+
 const FINGER_LICKIN_BOAT_PARTY_2026_SLUG = 'finger-lickin-boat-party-2026'
 const FINGER_LICKIN_SKIDDLE =
   'https://www.skiddle.com/whats-on/London/Dutch-Master-Party-Boat/Finger-Lickin-Boat-Party/42152456/'
@@ -1434,6 +1517,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-la-caseta-del-breakbeat-2026')) {
+    await runPatchLaCasetaDelBreakbeat2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-finger-lickin-boat-party-2026')) {
     await runPatchFingerLickinBoatParty2026(sb)
     return
@@ -1491,6 +1579,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+  node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026`)
     process.exit(1)

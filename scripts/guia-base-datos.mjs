@@ -202,6 +202,14 @@ const ACTIONS = [
       'UPSERT cyber-bass-2026: 18 abr 2026 Sala Maruja Limón (Alhaurín de la Torre), GOAT Breakbeat, cartel public/images/events/cyber-bass-2026.webp, entradas MonsterTicket.',
   },
   {
+    id: 'events-patch-la-caseta-del-breakbeat-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-la-caseta-del-breakbeat-2026',
+    npm: 'npm run db:guia -- run events-patch-la-caseta-del-breakbeat-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT la-caseta-del-breakbeat-2026: 25 abr 2026 Sala Pandora Sevilla (calle Gramil 2), cartel public/images/events/la_caseta_del_breakbeat.webp, entradas Fourvenues.',
+  },
+  {
     id: 'events-patch-finger-lickin-boat-party-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-finger-lickin-boat-party-2026',
     npm: 'npm run db:guia -- run events-patch-finger-lickin-boat-party-2026',
@@ -361,6 +369,7 @@ Punto de entrada unificado:
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
+  events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
   events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
@@ -652,6 +661,9 @@ function main() {
       break
     case 'events-patch-cyber-bass-2026':
       runNode('enriquecer-evento.mjs', ['--patch-cyber-bass-2026', ...rest])
+      break
+    case 'events-patch-la-caseta-del-breakbeat-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-la-caseta-del-breakbeat-2026', ...rest])
       break
     case 'events-patch-finger-lickin-boat-party-2026':
       runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-boat-party-2026', ...rest])
