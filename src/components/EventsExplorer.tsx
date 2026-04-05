@@ -400,44 +400,6 @@ function MonthMiniCalendar({
 
 function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
-      {events.map((e) => (
-        <Link
-          key={e.slug}
-          href={`/${lang}/events/${e.slug}`}
-          className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group"
-        >
-          <FavoriteButton type="event" entityId={e.id} lang={lang} />
-          <CardThumbnail
-            src={e.image_url}
-            alt={e.name}
-            aspectClass="aspect-poster w-full"
-            frameClass="border-b-[3px] border-[var(--ink)]"
-            fit="contain"
-          />
-          <div className="p-5 sm:p-7 relative">
-            <div className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(2deg)' }} />
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2vw, 16px)', color: 'var(--red)' }}>
-              {e.date_start || 'TBA'}
-            </div>
-            <div className="mt-2 leading-none" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 24px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
-              {e.name}
-            </div>
-            <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
-              {e.venue ? `${e.venue} — ` : ''}{e.city}, {e.country}
-            </div>
-            <div className="absolute bottom-3 right-3 bg-[var(--red)] text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', textTransform: 'uppercase', padding: '3px 10px', transform: 'rotate(3deg)' }}>
-              {e.event_type?.replace('_', ' ')}
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  )
-}
-
-function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
-  return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-start">
       {events.map((e) => (
         <Link
@@ -456,6 +418,30 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
             </div>
             <div className="flex gap-1 mt-1">
               <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{e.country}</span>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-start">
+      {events.map((e) => (
+        <Link
+          key={e.slug}
+          href={`/${lang}/events/${e.slug}`}
+          className="relative border-b-[2px] border-r-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
+        >
+          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+          <div className="p-1.5 flex flex-col flex-grow min-h-0">
+            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '9px', color: 'var(--red)' }}>
+              {e.date_start || 'TBA'}
+            </div>
+            <div className="mt-0.5 line-clamp-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
+              {e.name}
             </div>
           </div>
         </Link>
