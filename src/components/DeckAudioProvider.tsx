@@ -98,6 +98,12 @@ export function useDeckAudio() {
   return ctx
 }
 
+export type AudioClaimSource = 'deck' | 'mix' | 'chart-preview' | 'chart-playall'
+
+export function claimAudio(source: AudioClaimSource) {
+  window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
+}
+
 // ─── MiniDeckBar ────────────────────────────────────────
 function MiniDeckBar({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
@@ -506,6 +512,7 @@ export function DeckAudioProvider({
         setPlayingA(false)
         audio.pause()
       } else {
+        claimAudio('deck')
         setPlayingA(true)
         audio.playbackRate = 1
         void audio.play().catch(() => {})
@@ -519,6 +526,7 @@ export function DeckAudioProvider({
         setPlayingB(false)
         audio.pause()
       } else {
+        claimAudio('deck')
         setPlayingB(true)
         audio.playbackRate = 1
         void audio.play().catch(() => {})
@@ -731,6 +739,7 @@ export function DeckAudioProvider({
 
   // === Mix player: playMix ===
   const playMix = useCallback((mix: MixTrack) => {
+    claimAudio('mix')
     // Pause the deck if it's playing
     if (isPlaying && audioRef.current) {
       audioRef.current.pause()
@@ -879,6 +888,22 @@ export function DeckAudioProvider({
   const handleScHandleRef = useCallback((h: SoundCloudWidgetHandle | null) => {
     scHandleRef.current = h
   }, [])
+
+  // === Global audio exclusion: stop deck/mix when another player claims audio ===
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
+      if (src === 'deck' || src === 'mix') return
+      // An external player claimed audio → stop everything here
+      if (playingA && audioRefA.current) { audioRefA.current.pause(); setPlayingA(false) }
+      if (playingB && audioRefB.current) { audioRefB.current.pause(); setPlayingB(false) }
+      if (currentMix) stopMixInternal()
+      setMode('idle')
+      setSessionActive(false)
+    }
+    window.addEventListener('ob-audio-claim', handler)
+    return () => window.removeEventListener('ob-audio-claim', handler)
+  }, [playingA, playingB, currentMix, stopMixInternal])
 
   // === Context value ===
   const value = useMemo<DeckAudioContextValue>(

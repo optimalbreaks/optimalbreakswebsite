@@ -8,6 +8,7 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
+import { claimAudio, type AudioClaimSource } from '@/components/DeckAudioProvider'
 import type {
   ChartEdition,
   ChartFeaturedArtist,
@@ -220,6 +221,7 @@ function PreviewPlayer({
       if (currentPlayingAudio === audio) { currentPlayingAudio = null; currentPlayingPauser = null }
     } else {
       if (currentPlayingAudio && currentPlayingAudio !== audio && currentPlayingPauser) currentPlayingPauser()
+      claimAudio('chart-preview')
       audio.play().then(() => {
         setPlaying(true)
         currentPlayingAudio = audio
@@ -584,6 +586,22 @@ export default function ChartView({
     setPlayAll(null)
   }, [])
 
+  // Listen for external audio claims → stop charts playback
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
+      if (src === 'chart-preview' || src === 'chart-playall') return
+      // External player claimed audio → stop play-all and any individual preview
+      if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+      const a = playAllRef.current
+      if (a) { a.pause(); a.removeAttribute('src'); a.load() }
+      playAllAudio = null
+      setPlayAll(null)
+    }
+    window.addEventListener('ob-audio-claim', handler)
+    return () => window.removeEventListener('ob-audio-claim', handler)
+  }, [])
+
   const advancePlayAll = useCallback(() => {
     setPlayAll((prev) => {
       if (!prev) return null
@@ -623,6 +641,7 @@ export default function ChartView({
 
   const startPlayAll = useCallback((key: string, queue: string[], meta: PlayAllTrackMeta[]) => {
     if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    claimAudio('chart-playall')
     setPlayAll({ key, queue, meta, index: 0 })
   }, [])
 
