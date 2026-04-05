@@ -110,91 +110,106 @@ function MiniDeckBar({ lang }: { lang: Locale }) {
 }
 
 function MiniDeckBarInner({ lang }: { lang: Locale }) {
-  const { isPlaying, togglePlay, initAudio, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
+  const { isPlaying, togglePlay, initAudio, switchTrack, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
   const es = lang === 'es'
+  const pct = duration ? (progress / duration) * 100 : 0
+
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const dragging = useRef(false)
+  const seek = useCallback((clientX: number) => {
+    if (!duration) return
+    const bar = barRef.current
+    if (!bar) return
+    const rect = bar.getBoundingClientRect()
+    seekToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
+  }, [duration, seekToRatio])
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
+  const onPointerUp = useCallback(() => { dragging.current = false }, [])
+
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-6px_24px_rgba(0,0,0,0.12)]"
+      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={es ? 'Reproductor del deck' : 'Deck player'}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
     >
-      <div className="flex items-center gap-2 sm:gap-4 px-3 py-2 sm:px-4 sm:py-2.5 max-w-[1200px] mx-auto">
-        <button
-          type="button"
-          onClick={() => {
-            initAudio()
-            togglePlay()
-          }}
-          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0 outline-none [-webkit-tap-highlight-color:transparent]"
-          style={{
-            background: 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
-            border: '3px solid #080808',
-            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
-          }}
-        >
-          <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
-            <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: isPlaying ? 'drop-shadow(0 0 6px var(--red))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
-              {isPlaying ? (
-                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px' }}>
-                  <rect x="6" y="6" width="12" height="12" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px', marginLeft: '1px' }}>
-                  <polygon points="6,4 20,12 6,20" />
-                </svg>
-              )}
-            </span>
-            {isPlaying ? 'STOP' : 'PLAY'}
-          </span>
-        </button>
-        <div className="min-w-0 flex-1">
-          <div
-            className="truncate"
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontWeight: 700,
-              fontSize: '10px',
-              letterSpacing: '2px',
-              color: 'var(--ink)',
-            }}
+      {/* seekable progress bar */}
+      <div
+        ref={barRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="group relative w-full h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
+        style={{ touchAction: 'none' }}
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+        {/* transport: prev / play-stop / next */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => { initAudio(); switchTrack(-1) }}
+            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors touch-manipulation"
+            title={es ? 'Pista anterior' : 'Previous track'}
+            aria-label={es ? 'Pista anterior' : 'Previous track'}
           >
-            OB DECK · {track.title}
-          </div>
-          <div
-            className="h-[2px] bg-[var(--ink)]/10 rounded-full mt-1 overflow-hidden cursor-pointer"
-            onClick={(e) => {
-              if (!duration) return
-              const rect = e.currentTarget.getBoundingClientRect()
-              seekToRatio((e.clientX - rect.left) / rect.width)
-            }}
+            ⏮
+          </button>
+          <button
+            type="button"
+            onClick={() => { initAudio(); togglePlay() }}
+            className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
+              ${isPlaying ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
+            title={isPlaying ? 'Stop' : 'Play'}
+            aria-label={isPlaying ? 'Stop' : 'Play'}
           >
-            <div
-              className="h-full bg-[var(--red)] rounded-full"
-              style={{ width: duration ? `${(progress / duration) * 100}%` : '0%' }}
-            />
-          </div>
-          <div className="flex justify-between mt-0.5">
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'var(--dim)' }}>
-              {fmt(progress)}
-            </span>
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'var(--dim)' }}>
-              {duration ? fmt(duration) : '—'}
-            </span>
-          </div>
+            {isPlaying ? '■' : '▶'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { initAudio(); switchTrack(1) }}
+            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors touch-manipulation"
+            title={es ? 'Siguiente pista' : 'Next track'}
+            aria-label={es ? 'Siguiente pista' : 'Next track'}
+          >
+            ⏭
+          </button>
         </div>
-        <Link
-          href={`/${lang}#dj-deck`}
-          className="shrink-0 cutout outline no-underline text-[var(--ink)] hover:bg-[var(--yellow)]"
-          style={{
-            fontFamily: "'Courier Prime', monospace",
-            fontWeight: 700,
-            fontSize: '8px',
-            letterSpacing: '1px',
-            padding: '6px 10px',
-          }}
-        >
-          {es ? 'AL DECK' : 'FULL DECK'}
-        </Link>
+
+        {/* track info */}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+            {track.title}
+          </p>
+          <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
+            OB DECK
+          </p>
+        </div>
+
+        {/* time + link */}
+        <div className="shrink-0 flex items-center gap-2">
+          <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+            {fmt(progress)} / {duration ? fmt(duration) : '—'}
+          </span>
+          <Link
+            href={`/${lang}#dj-deck`}
+            className="hidden sm:inline-flex items-center justify-center px-2 py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors no-underline touch-manipulation"
+          >
+            {es ? 'AL DECK' : 'FULL DECK'}
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -205,83 +220,93 @@ function MiniMixBar({ lang }: { lang: Locale }) {
   const es = lang === 'es'
   if (!currentMix) return null
 
+  const pct = mixDuration ? (mixProgress / mixDuration) * 100 : 0
+
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const dragging = useRef(false)
+  const seek = useCallback((clientX: number) => {
+    if (!mixDuration) return
+    const bar = barRef.current
+    if (!bar) return
+    const rect = bar.getBoundingClientRect()
+    seekMixToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
+  }, [mixDuration, seekMixToRatio])
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
+  const onPointerUp = useCallback(() => { dragging.current = false }, [])
+
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] shadow-[0_-6px_24px_rgba(0,0,0,0.25)]"
+      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={es ? 'Reproductor de mix' : 'Mix player'}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
     >
-      <div className="flex items-center gap-2 sm:gap-4 px-3 py-2 sm:px-4 sm:py-2.5 max-w-[1200px] mx-auto">
-        <button
-          type="button"
-          onClick={toggleMixPlayback}
-          className="relative flex items-center justify-center rounded-full cursor-pointer transition-all duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.6)] active:shadow-[0_1px_2px_rgba(0,0,0,0.8)] active:translate-y-[2px] w-12 h-12 shrink-0 outline-none [-webkit-tap-highlight-color:transparent]"
-          style={{
-            background: mixPlaying ? 'linear-gradient(135deg, var(--red) 0%, #8b0000 100%)' : 'linear-gradient(135deg, #f7e733 0%, #b8a800 100%)',
-            border: '3px solid #080808',
-            boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 8px rgba(0,0,0,0.5)'
-          }}
-        >
-          <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '6px', letterSpacing: '1px', color: mixPlaying ? '#fff' : 'var(--red)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', textShadow: '0 1px 1px rgba(0,0,0,0.2)' }}>
-            <span className="transition-all duration-200 flex items-center justify-center" style={{ filter: mixPlaying ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 'drop-shadow(0 0 6px var(--red))' }}>
-              {mixPlaying ? (
-                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px' }}>
-                  <rect x="6" y="6" width="12" height="12" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '12px', height: '12px', marginLeft: '1px' }}>
-                  <polygon points="6,4 20,12 6,20" />
-                </svg>
-              )}
-            </span>
-            {mixPlaying ? 'STOP' : 'PLAY'}
-          </span>
-        </button>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="shrink-0 bg-[var(--red)] text-white"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '1px', padding: '1px 6px', textTransform: 'uppercase' }}
-            >
-              {currentMix.source === 'soundcloud' ? 'SC' : 'MP3'}
-            </span>
-            <div
-              className="truncate"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', color: 'var(--yellow)' }}
-            >
-              {currentMix.artist} — {currentMix.title}
-            </div>
-          </div>
-          <div
-            className="h-[2px] bg-white/10 rounded-full mt-1 overflow-hidden cursor-pointer"
-            onClick={(e) => {
-              if (!mixDuration) return
-              const rect = e.currentTarget.getBoundingClientRect()
-              seekMixToRatio((e.clientX - rect.left) / rect.width)
-            }}
+      {/* seekable progress bar */}
+      <div
+        ref={barRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="group relative w-full h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
+        style={{ touchAction: 'none' }}
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+        {/* transport: play-pause / stop */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={toggleMixPlayback}
+            className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
+              ${mixPlaying ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
+            title={mixPlaying ? 'Pause' : 'Play'}
+            aria-label={mixPlaying ? 'Pause' : 'Play'}
           >
-            <div
-              className="h-full bg-[var(--yellow)] rounded-full"
-              style={{ width: mixDuration ? `${(mixProgress / mixDuration) * 100}%` : '0%' }}
-            />
-          </div>
-          <div className="flex justify-between mt-0.5">
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'rgba(232,220,200,0.4)' }}>
-              {fmt(mixProgress)}
-            </span>
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', color: 'rgba(232,220,200,0.4)' }}>
-              {mixDuration ? fmt(mixDuration) : '—'}
-            </span>
-          </div>
+            {mixPlaying ? '❚❚' : '▶'}
+          </button>
+          <button
+            type="button"
+            onClick={stopMix}
+            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-colors touch-manipulation"
+            title={es ? 'Cerrar' : 'Close'}
+            aria-label={es ? 'Cerrar' : 'Close'}
+          >
+            ✕
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={stopMix}
-          className="shrink-0 border-[2px] border-white/20 text-white/60 hover:border-[var(--red)] hover:text-[var(--red)] transition-colors"
-          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '1px', padding: '5px 8px' }}
-        >
-          ✕
-        </button>
+
+        {/* track info */}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+            {currentMix.title}
+          </p>
+          <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
+            {currentMix.artist}
+            <span className="ml-1.5 text-[var(--ink)]/30">·</span>
+            <span className="ml-1.5 text-[9px] font-bold tracking-wider uppercase text-[var(--ink)]/35">
+              {currentMix.source === 'soundcloud' ? 'SoundCloud' : 'MP3'}
+            </span>
+          </p>
+        </div>
+
+        {/* time */}
+        <div className="shrink-0 text-right">
+          <span className="block text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+            {fmt(mixProgress)} / {mixDuration ? fmt(mixDuration) : '—'}
+          </span>
+        </div>
       </div>
     </div>
   )
