@@ -445,7 +445,12 @@
     "stop_all": "■ STOP",
     "play_all_title": "Play all previews in order",
     "stop_all_title": "Stop playback",
-    "play_all_counter": "{current} / {total}"
+    "play_all_counter": "{current} / {total}",
+    "play_all_prev": "⏮",
+    "play_all_next": "⏭",
+    "play_all_prev_title": "Previous track",
+    "play_all_next_title": "Next track",
+    "play_all_now_playing": "Now playing"
   },
   "mixes": {
     "title": "Mixes & Sets",

@@ -347,7 +347,12 @@
     "stop_all": "■ STOP",
     "play_all_title": "Reproducir todos los previews en orden",
     "stop_all_title": "Detener reproducción",
-    "play_all_counter": "{current} / {total}"
+    "play_all_counter": "{current} / {total}",
+    "play_all_prev": "⏮",
+    "play_all_next": "⏭",
+    "play_all_prev_title": "Pista anterior",
+    "play_all_next_title": "Siguiente pista",
+    "play_all_now_playing": "Sonando"
   },
   "mixes": {
     "title": "Mixes y Sets",
