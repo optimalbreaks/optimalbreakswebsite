@@ -584,6 +584,13 @@ export default function ChartView({
     if (a) { a.pause(); a.removeAttribute('src'); a.load() }
     playAllAudio = null
     setPlayAll(null)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('previoustrack', null)
+      navigator.mediaSession.setActionHandler('nexttrack', null)
+    }
   }, [])
 
   // Listen for external audio claims → stop charts playback
@@ -597,6 +604,13 @@ export default function ChartView({
       if (a) { a.pause(); a.removeAttribute('src'); a.load() }
       playAllAudio = null
       setPlayAll(null)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null
+        navigator.mediaSession.setActionHandler('play', null)
+        navigator.mediaSession.setActionHandler('pause', null)
+        navigator.mediaSession.setActionHandler('previoustrack', null)
+        navigator.mediaSession.setActionHandler('nexttrack', null)
+      }
     }
     window.addEventListener('ob-audio-claim', handler)
     return () => window.removeEventListener('ob-audio-claim', handler)
@@ -610,6 +624,13 @@ export default function ChartView({
         const a = playAllRef.current
         if (a) { a.pause(); a.removeAttribute('src'); a.load() }
         playAllAudio = null
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = null
+          navigator.mediaSession.setActionHandler('play', null)
+          navigator.mediaSession.setActionHandler('pause', null)
+          navigator.mediaSession.setActionHandler('previoustrack', null)
+          navigator.mediaSession.setActionHandler('nexttrack', null)
+        }
         return null
       }
       return { ...prev, index: next }
@@ -634,10 +655,22 @@ export default function ChartView({
       currentPlayingAudio = a
       currentPlayingPauser = () => { a.pause(); setPlayAll(null) }
       playAllAudio = a
+      if ('mediaSession' in navigator) {
+        const m = playAll.meta[playAll.index]
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: m?.title ?? '',
+          artist: m?.artist ?? 'Optimal Breaks Charts',
+          artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+        })
+        navigator.mediaSession.setActionHandler('play', () => { a.play().catch(() => {}) })
+        navigator.mediaSession.setActionHandler('pause', () => { a.pause() })
+        navigator.mediaSession.setActionHandler('previoustrack', () => goToPlayAll(-1))
+        navigator.mediaSession.setActionHandler('nexttrack', () => goToPlayAll(1))
+      }
     }).catch(() => {
       advancePlayAll()
     })
-  }, [playAll?.key, playAll?.index, advancePlayAll, stopPlayAll]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [playAll?.key, playAll?.index, advancePlayAll, stopPlayAll, goToPlayAll]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const startPlayAll = useCallback((key: string, queue: string[], meta: PlayAllTrackMeta[]) => {
     if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()

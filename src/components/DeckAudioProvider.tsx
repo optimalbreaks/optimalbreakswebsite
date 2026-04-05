@@ -889,6 +889,29 @@ export function DeckAudioProvider({
     scHandleRef.current = h
   }, [])
 
+  // === Deck Media Session: lockscreen metadata + controls ===
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+    if (mode === 'deck' && sessionActive && (playingA || playingB)) {
+      const t = crossfader < 50 ? trackA : trackB
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title,
+        artist: 'OB Deck',
+        artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+      })
+      navigator.mediaSession.setActionHandler('play', () => togglePlay())
+      navigator.mediaSession.setActionHandler('pause', () => togglePlay())
+      navigator.mediaSession.setActionHandler('previoustrack', () => switchTrack(-1))
+      navigator.mediaSession.setActionHandler('nexttrack', () => switchTrack(1))
+    } else if (mode !== 'mix') {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('previoustrack', null)
+      navigator.mediaSession.setActionHandler('nexttrack', null)
+    }
+  }, [mode, sessionActive, playingA, playingB, crossfader, trackA, trackB, togglePlay, switchTrack])
+
   // === Global audio exclusion: stop deck/mix when another player claims audio ===
   useEffect(() => {
     const handler = (e: Event) => {
@@ -900,6 +923,15 @@ export function DeckAudioProvider({
       if (currentMix) stopMixInternal()
       setMode('idle')
       setSessionActive(false)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null
+        navigator.mediaSession.setActionHandler('play', null)
+        navigator.mediaSession.setActionHandler('pause', null)
+        navigator.mediaSession.setActionHandler('previoustrack', null)
+        navigator.mediaSession.setActionHandler('nexttrack', null)
+        navigator.mediaSession.setActionHandler('seekbackward', null)
+        navigator.mediaSession.setActionHandler('seekforward', null)
+      }
     }
     window.addEventListener('ob-audio-claim', handler)
     return () => window.removeEventListener('ob-audio-claim', handler)
