@@ -6,7 +6,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import type {
   ChartEdition,
@@ -455,6 +455,18 @@ function useToggleSet(initial: Set<string>) {
 }
 
 // ---------------------------------------------------------------------------
+// Play-all queue (shared across both sections)
+// ---------------------------------------------------------------------------
+
+type PlayAllState = {
+  key: string
+  queue: string[]
+  index: number
+} | null
+
+let playAllAudio: HTMLAudioElement | null = null
+
+// ---------------------------------------------------------------------------
 // Week accordion (re-usable for both sections)
 // ---------------------------------------------------------------------------
 
@@ -468,6 +480,7 @@ function WeekAccordion({
   onToggle,
   label,
   dict,
+  playAllSlot,
   children,
 }: {
   weekDate: string
@@ -479,6 +492,7 @@ function WeekAccordion({
   onToggle: () => void
   label: string
   dict: any
+  playAllSlot?: React.ReactNode
   children: React.ReactNode
 }) {
   const c = dict.charts
@@ -489,34 +503,41 @@ function WeekAccordion({
 
   return (
     <section className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
-      <button
-        type="button"
-        id={triggerId}
-        aria-expanded={expanded}
-        aria-controls={panelId}
-        onClick={onToggle}
-        className="w-full flex flex-wrap items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
-        style={{ fontFamily: "'Courier Prime', monospace" }}
-        title={expanded ? c.week_toggle_hide : c.week_toggle_show}
-      >
-        <span className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0" style={{ fontFamily: "'Unbounded', sans-serif" }} aria-hidden>
-          {expanded ? '▼' : '▶'}
-        </span>
-        <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[12rem]">
-          {c.week_label} {formatWeekDate(weekDate, lang)}
-        </span>
-        <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
-          {isLatest && (
-            <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
-              {c.week_current_badge}
-            </span>
-          )}
-          <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider bg-[var(--paper-dark)] text-[var(--ink)] border-2 border-[var(--ink)]">
-            {badgeNum}
+      <div className="flex items-center">
+        <button
+          type="button"
+          id={triggerId}
+          aria-expanded={expanded}
+          aria-controls={panelId}
+          onClick={onToggle}
+          className="flex-1 flex flex-wrap items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+          title={expanded ? c.week_toggle_hide : c.week_toggle_show}
+        >
+          <span className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0" style={{ fontFamily: "'Unbounded', sans-serif" }} aria-hidden>
+            {expanded ? '▼' : '▶'}
           </span>
-          <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold">{countLabel}</span>
-        </span>
-      </button>
+          <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[12rem]">
+            {c.week_label} {formatWeekDate(weekDate, lang)}
+          </span>
+          <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
+            {isLatest && (
+              <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
+                {c.week_current_badge}
+              </span>
+            )}
+            <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider bg-[var(--paper-dark)] text-[var(--ink)] border-2 border-[var(--ink)]">
+              {badgeNum}
+            </span>
+            <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold">{countLabel}</span>
+          </span>
+        </button>
+        {playAllSlot && (
+          <div className="shrink-0 pr-3 sm:pr-4">
+            {playAllSlot}
+          </div>
+        )}
+      </div>
 
       {expanded && (
         <div id={panelId} role="region" aria-labelledby={triggerId}>
@@ -548,6 +569,109 @@ export default function ChartView({
   const [openPicks, togglePicks] = useToggleSet(initOpen())
   const [openForty, toggleForty] = useToggleSet(initOpen())
 
+  // ---- Play-all state ----
+  const [playAll, setPlayAll] = useState<PlayAllState>(null)
+  const playAllRef = useRef<HTMLAudioElement | null>(null)
+
+  const stopPlayAll = useCallback(() => {
+    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    const a = playAllRef.current
+    if (a) { a.pause(); a.removeAttribute('src'); a.load() }
+    playAllAudio = null
+    setPlayAll(null)
+  }, [])
+
+  const advancePlayAll = useCallback(() => {
+    setPlayAll((prev) => {
+      if (!prev) return null
+      const next = prev.index + 1
+      if (next >= prev.queue.length) {
+        const a = playAllRef.current
+        if (a) { a.pause(); a.removeAttribute('src'); a.load() }
+        playAllAudio = null
+        return null
+      }
+      return { ...prev, index: next }
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!playAll) return
+    const a = playAllRef.current
+    if (!a) return
+
+    if (currentPlayingAudio && currentPlayingAudio !== a && currentPlayingPauser) {
+      currentPlayingPauser()
+    }
+
+    const src = playAll.queue[playAll.index]
+    if (!src) { stopPlayAll(); return }
+
+    a.src = src
+    a.load()
+    a.play().then(() => {
+      currentPlayingAudio = a
+      currentPlayingPauser = () => { a.pause(); setPlayAll(null) }
+      playAllAudio = a
+    }).catch(() => {
+      advancePlayAll()
+    })
+  }, [playAll?.key, playAll?.index, advancePlayAll, stopPlayAll]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startPlayAll = useCallback((key: string, queue: string[]) => {
+    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    setPlayAll({ key, queue, index: 0 })
+  }, [])
+
+  const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[]) => {
+    if (playAll?.key === sectionKey) {
+      stopPlayAll()
+    } else {
+      startPlayAll(sectionKey, audioSrcs)
+    }
+  }, [playAll?.key, stopPlayAll, startPlayAll])
+
+  function buildFeaturedSrcs(featured: ChartFeaturedTrack[]): string[] {
+    return featured
+      .map((p) => {
+        if (p.platform === 'bandcamp' && p.link_url) return previewAudioSrc('', p)
+        return p.sample_url ? previewAudioSrc(p.sample_url) : ''
+      })
+      .filter(Boolean)
+  }
+
+  function buildTrackSrcs(tracks: ChartTrack[]): string[] {
+    return tracks
+      .map((t) => (t.sample_url ? previewAudioSrc(t.sample_url) : ''))
+      .filter(Boolean)
+  }
+
+  function renderPlayAllBtn(sectionKey: string, audioSrcs: string[]) {
+    if (audioSrcs.length === 0) return undefined
+    const isActive = playAll?.key === sectionKey
+    const current = isActive ? (playAll!.index + 1) : 0
+    const total = isActive ? playAll!.queue.length : audioSrcs.length
+
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, audioSrcs) }}
+        className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
+          ${isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]'}`}
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+        title={isActive ? c.stop_all_title : c.play_all_title}
+        aria-label={isActive ? c.stop_all_title : c.play_all_title}
+      >
+        {isActive ? c.stop_all : c.play_all}
+        {isActive && (
+          <span className="text-[9px] font-bold opacity-80 tabular-nums">
+            {c.play_all_counter.replace('{current}', String(current)).replace('{total}', String(total))}
+          </span>
+        )}
+      </button>
+    )
+  }
+
   const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
   const latestWeekDate = weeks[0]?.edition.week_date ?? ''
 
@@ -566,6 +690,8 @@ export default function ChartView({
 
   return (
     <div className="max-w-4xl mx-auto px-0 sm:px-4 py-6 sm:py-10">
+      {/* hidden audio element for play-all queue */}
+      <audio ref={playAllRef} preload="none" onEnded={advancePlayAll} className="hidden" />
 
       {/* ================================================================ */}
       {/* SECTION 1 — New releases (editorial picks)                       */}
@@ -597,6 +723,8 @@ export default function ChartView({
             {weeksWithFeatured.map((bundle, index) => {
               const { edition, featured } = bundle
               const isLatest = edition.week_date === weeksWithFeatured[0].edition.week_date
+              const picksSrcs = buildFeaturedSrcs(featured)
+              const picksKey = `picks-${edition.week_date}`
 
               return (
                 <WeekAccordion
@@ -610,6 +738,7 @@ export default function ChartView({
                   onToggle={() => togglePicks(edition.week_date)}
                   label="picks"
                   dict={dict}
+                  playAllSlot={renderPlayAllBtn(picksKey, picksSrcs)}
                 >
                   {featured.map((pick) => (
                     <FeaturedPickRow key={pick.id} pick={pick} dict={dict} lang={lang} />
@@ -656,6 +785,8 @@ export default function ChartView({
             const { edition, tracks } = bundle
             const isLatest = edition.week_date === latestWeekDate
             const description = lang === 'es' ? edition.description_es : edition.description_en
+            const fortySrcs = buildTrackSrcs(tracks)
+            const fortyKey = `forty-${edition.week_date}`
 
             return (
               <WeekAccordion
@@ -669,6 +800,7 @@ export default function ChartView({
                 onToggle={() => toggleForty(edition.week_date)}
                 label="forty"
                 dict={dict}
+                playAllSlot={renderPlayAllBtn(fortyKey, fortySrcs)}
               >
                 {edition.sources.length > 0 && (
                   <p className="px-3 sm:px-4 pt-3 pb-2 text-[10px] text-[var(--ink)]/45 tracking-wider" style={{ fontFamily: "'Courier Prime', monospace" }}>

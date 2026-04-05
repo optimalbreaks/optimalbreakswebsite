@@ -279,6 +279,8 @@
       "upcoming": "Próximos",
       "past": "Pasados",
       "undated": "Sin fecha",
+      "country_label": "País",
+      "all_countries": "Todos",
       "showing": "Mostrando {n} de {total}",
       "no_results": "No hay eventos con estos criterios."
     }
@@ -340,7 +342,12 @@
     "picks_open_beatport": "BEATPORT",
     "picks_open_bandcamp": "BANDCAMP",
     "picks_open_soundcloud": "SOUNDCLOUD",
-    "picks_open_link": "ABRIR ENLACE"
+    "picks_open_link": "ABRIR ENLACE",
+    "play_all": "▶ PLAY ALL",
+    "stop_all": "■ STOP",
+    "play_all_title": "Reproducir todos los previews en orden",
+    "stop_all_title": "Detener reproducción",
+    "play_all_counter": "{current} / {total}"
   },
   "mixes": {
     "title": "Mixes y Sets",
