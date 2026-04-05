@@ -387,6 +387,31 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 19,
+      "title": "People Are You Ready",
+      "mix_name": "Inner Realms Remix",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "url": "https://www.beatport.com/artist/slug-fl/998525"
+        },
+        {
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/people-are-you-ready/27484128",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a3bd0e86-a803-4fe7-90b5-5d16f973bb70.png",
+      "sample_url": "https://geo-samples.beatport.com/track/a3bd0e86-a803-4fe7-90b5-5d16f973bb70.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
