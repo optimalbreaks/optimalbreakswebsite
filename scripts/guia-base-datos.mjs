@@ -487,7 +487,12 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   (con sample_url para preview) y guarda en beatport_top_tracks (JSONB).
   run beatport-top artist yo-speed 526398 | label 83 54171. Batch: --all-artists
   / --all-labels (todos los que tienen beatport_id). Las fichas web de artista/sello
-  muestran el bloque «BEATPORT TOP 10» con reproductor de previews.
+  muestran el bloque «BEATPORT TOP 10» como acordeón en el hero: filas idénticas
+  al chart semanal (PositionBadge, artwork, artista|sello|año, BPM, key, BEATPORT)
+  y barra flotante inferior compartida (transporte, progreso, mediaSession). El
+  reproductor usa claimAudio('beatport-top') para excluirse mutuamente con el deck,
+  mixes y chart. Migración: 046_beatport_top_tracks.sql. Docs: README.md §
+  «Beatport: weekly chart vs Top 10» y «Global audio system».
 
 • chart-40-breaks.mjs — «40 Breaks Vitales». Scrapea Beatport Top 100
   Breaks/Breakbeat/UK Bass (+ Juno opcional), IA selecciona los 40 mejores,

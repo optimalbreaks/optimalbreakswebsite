@@ -501,6 +501,55 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 
 ---
 
+## Global audio system (`DeckAudioProvider` + `claimAudio`)
+
+The app has **five audio sources** that must never play simultaneously:
+
+| Source key | Origin | Component |
+|------------|--------|-----------|
+| `deck` | DJ deck on the home page | `DeckAudioProvider` |
+| `mix` | SoundCloud / YouTube mix playing via deck mini-bar | `DeckAudioProvider` |
+| `chart-preview` | Individual track preview in charts | `ChartView` (inline `<audio>`) |
+| `chart-playall` | "Play All" queue in weekly chart | `ChartView` (floating bar) |
+| `beatport-top` | Beatport Top 10 on artist/label pages | `BeatportTopTracks` (floating bar) |
+
+### How mutual exclusion works
+
+1. **`claimAudio(source)`** (`src/components/DeckAudioProvider.tsx`) dispatches a `CustomEvent` named **`ob-audio-claim`** on `window` with `{ detail: { source } }`.
+2. Every audio-capable component listens for `ob-audio-claim`. When it fires, each component **stops its own playback** unless the event's `source` is itself. This means pressing play anywhere automatically stops every other audio player across the entire app.
+3. The type **`AudioClaimSource`** lists all valid source keys. Add a new key there when adding a new audio feature.
+
+### Floating now-playing bar
+
+Both `ChartView` (chart "Play All") and `BeatportTopTracks` (Top 10 "Play All" or individual track play) render a **fixed bottom bar** (`className="fixed bottom-0 inset-x-0 z-50"`) with identical layout:
+
+- **Progress bar** — seekable by click/drag (`onPointerDown/Move/Up`), red fill on neutral track.
+- **Transport** — Previous `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Next `⏭`, each `w-10 h-10 sm:w-8 sm:h-8`.
+- **Track info** — title (Unbounded font) + artist (Courier Prime); tap to scroll to the playing row in the list.
+- **Time & counter** — `currentTime / duration` + `index / total`.
+
+The bar dispatches **`OB_CHART_PLAYALL_BAR_EVENT`** (`ob-chart-playall-bar`) so that `BackToTop.tsx` can shift its scroll-to-top button upward while the bar is visible.
+
+### `MiniDeckBar` (home deck / mix)
+
+The home deck has its own sticky mini-bar inside `DeckAudioProvider`. It uses the same `ob-audio-claim` mechanism but renders a different UI (waveform, crossfader, mix info). The mutual-exclusion logic is shared.
+
+### `mediaSession` integration
+
+Both `ChartView` and `BeatportTopTracks` set `navigator.mediaSession.metadata` (title, artist, artwork) and register `play`/`pause`/`previoustrack`/`nexttrack` handlers so that hardware media keys, lock-screen controls and Bluetooth headset buttons work.
+
+### Key files
+
+| File | Role |
+|------|------|
+| `src/components/DeckAudioProvider.tsx` | Context provider, `claimAudio()`, `AudioClaimSource` type, `OB_CHART_PLAYALL_BAR_EVENT`, `MiniDeckBar` |
+| `src/components/ChartView.tsx` | Weekly chart: `WeekAccordion`, `ChartTrackRow`, play-all queue + floating bar |
+| `src/components/BeatportTopTracks.tsx` | Top 10 accordion + play-all queue + floating bar (identical bar layout) |
+| `src/components/BackToTop.tsx` | Listens for `OB_CHART_PLAYALL_BAR_EVENT` to offset the scroll button |
+| `src/app/api/audio-proxy/route.ts` | Server-side proxy for `geo-samples.beatport.com` / `geo-media.beatport.com` (prevents hotlink blocks) |
+
+---
+
 ## Database Schema
 
 Supabase tables are reflected in `src/types/database.ts`. Highlights:
@@ -545,7 +594,7 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 - **Top 10 sales on Beatport** — `npm run db:beatport:top -- artist <slug> <beatport_id>` or `label <slug> <beatport_id>` runs `scripts/beatport-top-tracks.mjs`: fetches the public Beatport page, reads embedded **`__NEXT_DATA__`**, extracts the **top-10-tracks** query, and **`UPDATE`s** the matching row in **`artists`** or **`labels`** by `slug` (`beatport_url`, `beatport_id`, `beatport_top_tracks`, `beatport_top_tracks_updated_at`). Requires migration **`046_beatport_top_tracks.sql`** and **`NEXT_PUBLIC_SUPABASE_URL` + service role / secret key**.
 - **Finding `beatport_id`** — Open the artist or label on [Beatport](https://www.beatport.com); the canonical URL is `/artist/<slug>/<id>` or `/label/<slug>/<id>`. Pass the same `slug` as in Optimal Breaks (e.g. `deekline` → `https://www.beatport.com/artist/deekline/3171` → `3171`).
 - **Batch refresh** — `npm run db:beatport:top -- --all-artists` or `--all-labels` walks every row that already has **`beatport_id`** set (staggered requests). Use `--dry-run` to print counts without writing.
-- **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart.
+- **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart. Track rows are **visually identical** to `ChartTrackRow` (same `PositionBadge`, artwork size, title/artist/label/year layout, BPM/key badges, BEATPORT button). The floating now-playing bar is the same design as the chart's play-all bar (see **Global audio system** above). `claimAudio('beatport-top')` participates in the global mutual-exclusion system — playing a Top 10 preview stops the deck, mixes and chart, and vice versa.
 - **JSON upsert** — Optional `beatport_id` and `beatport_url` on `data/artists/*.json` / label JSON are passed through **`npm run db:artist` / `db:label`** (`scripts/lib/artist-upsert.mjs`, `label-upsert.mjs`). They do **not** include `beatport_top_tracks`; refresh rankings with **`db:beatport:top`** after setting the ID.
 
 ---

@@ -182,7 +182,7 @@ npm run db:beatport:top -- --dry-run artist deekline 3171
 El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
 
 4. **Opcional en JSON** — Puedes añadir **`beatport_id`** y **`beatport_url`** en `data/artists/*.json` (o JSON de sellos) para que **`npm run db:artist`** / **`db:label`** los guarden; el **listado Top 10** no va en el JSON: se rellena solo con **`db:beatport:top`**.
-5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque.
+5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque. Las filas de cada track son **visualmente idénticas** a las del chart semanal (`PositionBadge`, artwork, título/artista/sello/año, badges BPM/key, botón BEATPORT). Al pulsar play (individual o "Play All"), aparece la **misma barra flotante inferior** que en el chart: transporte, progreso seekable, info del track. El reproductor participa en el **sistema de audio global** (`claimAudio('beatport-top')`) — se excluye mutuamente con el deck de la home, los mixes y el chart semanal (ver sección [Sistema de audio global](#sistema-de-audio-global-deckaudioprovider--claimaudio)).
 
 Detalle técnico y relación con el chart semanal: **[README.md — Beatport: weekly chart vs Top 10 on profiles](./README.md#beatport-weekly-chart-vs-top-10-on-profiles)**.
 
@@ -265,6 +265,43 @@ npm run db:migrate:raveart
 (Requiere `DATABASE_URL` u otra URI, o `SUPABASE_DB_PASSWORD` + `NEXT_PUBLIC_SUPABASE_URL`, en `.env.local` — igual que `db:migrate`.)
 
 Tras el núcleo (`001`–`006`): **`007`** rol admin, **`008`–`009`** artistas destacados y timeline; **`010`** tabla **`organizations`**, FKs en **`labels`** / **`events`**, siembra Raveart + Raveart Records + primer lote de festivales; **`011`** más eventos alineados con la [galería oficial de Raveart](https://www.raveart.es/galeria/). Tabla archivo a archivo en [README.md](./README.md).
+
+---
+
+## Sistema de audio global (`DeckAudioProvider` + `claimAudio`)
+
+La app tiene **cinco fuentes de audio** que nunca suenan a la vez:
+
+| Clave | Origen | Componente |
+|-------|--------|------------|
+| `deck` | DJ deck de la home | `DeckAudioProvider` |
+| `mix` | SoundCloud / YouTube vía mini-barra del deck | `DeckAudioProvider` |
+| `chart-preview` | Preview de un track en el chart semanal | `ChartView` (`<audio>` inline) |
+| `chart-playall` | Cola "Play All" del chart semanal | `ChartView` (barra flotante) |
+| `beatport-top` | Top 10 Beatport en ficha de artista/sello | `BeatportTopTracks` (barra flotante) |
+
+### Exclusión mutua
+
+Al pulsar play, el componente llama a **`claimAudio(source)`** → dispara evento **`ob-audio-claim`** en `window`. Cada componente de audio escucha ese evento y **se para** si el `source` no es él mismo. Resultado: solo suena **una** fuente a la vez sin importar desde dónde se pulsa play.
+
+El tipo **`AudioClaimSource`** (en `DeckAudioProvider.tsx`) lista las claves válidas. Para añadir un nuevo reproductor, basta con añadir una clave ahí.
+
+### Barra flotante inferior (reproductor global)
+
+Tanto `ChartView` ("Play All" del chart) como `BeatportTopTracks` (Top 10 individual o "Play All") renderizan una **barra fija** en la parte inferior (`fixed bottom-0 z-50`) con diseño **idéntico**:
+
+- **Barra de progreso** seekable (clic + arrastre).
+- **Transporte**: Anterior `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Siguiente `⏭`.
+- **Info del track**: título (Unbounded) + artista (Courier Prime); pulsar para hacer scroll a la fila.
+- **Tiempo**: `actual / duración` + `índice / total`.
+
+La barra emite `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible.
+
+### `mediaSession`
+
+Ambos componentes (`ChartView`, `BeatportTopTracks`) configuran `navigator.mediaSession` con metadatos y handlers de `play`/`pause`/`previoustrack`/`nexttrack`, así los botones de auriculares, pantalla de bloqueo y Bluetooth funcionan.
+
+Detalle técnico y tabla de archivos en [README.md — Global audio system](./README.md#global-audio-system-deckaudioprovider--claimaudio).
 
 ---
 
