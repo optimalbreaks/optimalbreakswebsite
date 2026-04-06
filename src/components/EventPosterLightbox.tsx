@@ -59,9 +59,10 @@ export default function EventPosterLightbox({
           className="absolute inset-0 cursor-pointer bg-[var(--ink)]/92"
           onClick={() => setOpen(false)}
         />
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-3 sm:p-6">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:p-8">
+          {/* Marco solo alrededor del cartel (no pantalla completa): la X queda junto al borde del póster */}
           <div
-            className="pointer-events-auto relative z-[1] box-border flex h-[min(94dvh,calc(100vh-2.5rem))] w-[min(100%,calc(100vw-1.5rem))] max-h-[min(94dvh,calc(100vh-2.5rem))] max-w-[min(100%,calc(100vw-1.5rem))] shrink-0 items-center justify-center border-4 border-[var(--paper)] shadow-[8px_8px_0_rgba(232,220,200,0.2)] sm:w-[min(100%,calc(100vw-3rem))] sm:max-w-[min(100%,calc(100vw-3rem))]"
+            className="pointer-events-auto relative z-[1] inline-block max-h-[min(88dvh,calc(100dvh-2rem))] max-w-[min(100%,calc(100vw-2rem))] border-4 border-[var(--paper)] bg-[var(--paper-dark)] shadow-[8px_8px_0_rgba(232,220,200,0.2)] sm:max-w-[min(100%,calc(100vw-4rem))]"
             onClick={(e) => e.stopPropagation()}
             role="presentation"
           >
@@ -72,7 +73,7 @@ export default function EventPosterLightbox({
                 e.stopPropagation()
                 setOpen(false)
               }}
-              className="absolute -right-1 -top-1 z-[2] flex h-11 min-h-[44px] min-w-[44px] w-11 -translate-y-1/2 translate-x-1/2 items-center justify-center border-4 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] shadow-[4px_4px_0_var(--ink)] transition-colors hover:bg-[var(--red)] hover:text-white sm:-right-0.5 sm:-top-0.5"
+              className="absolute z-[2] flex h-11 min-h-[44px] min-w-[44px] w-11 items-center justify-center border-4 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] shadow-[4px_4px_0_var(--ink)] transition-colors hover:bg-[var(--red)] hover:text-white right-2 top-2 sm:right-3 sm:top-3"
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontWeight: 900,
@@ -84,7 +85,11 @@ export default function EventPosterLightbox({
               ×
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element -- URL dinámica evento */}
-            <img src={url} alt={alt} className="h-full w-full object-contain" />
+            <img
+              src={url}
+              alt={alt}
+              className="block max-h-[min(82dvh,calc(100dvh-5.5rem))] w-auto max-w-full object-contain"
+            />
           </div>
         </div>
       </div>,
