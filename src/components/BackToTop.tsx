@@ -1,15 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDeckAudio } from '@/components/DeckAudioProvider'
+import { OB_CHART_PLAYALL_BAR_EVENT, useDeckAudio } from '@/components/DeckAudioProvider'
 
 type Props = {
   ariaLabel?: string
 }
 
 export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
-  const { sessionActive } = useDeckAudio()
+  const { sessionActive, mode } = useDeckAudio()
   const [isVisible, setIsVisible] = useState(false)
+  const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
+
+  const bottomBarVisible =
+    sessionActive || mode !== 'idle' || chartPlayAllBar
+
+  useEffect(() => {
+    const onChartBar = (e: Event) => {
+      const v = (e as CustomEvent<{ visible?: boolean }>).detail?.visible
+      if (typeof v === 'boolean') setChartPlayAllBar(v)
+    }
+    window.addEventListener(OB_CHART_PLAYALL_BAR_EVENT, onChartBar)
+    return () => window.removeEventListener(OB_CHART_PLAYALL_BAR_EVENT, onChartBar)
+  }, [])
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -39,7 +52,9 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
       type="button"
       onClick={scrollToTop}
       className={`fixed left-4 sm:left-8 z-[200] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation ${
-        sessionActive ? 'bottom-[5.75rem] sm:bottom-[6.25rem]' : 'bottom-6 sm:bottom-8'
+        bottomBarVisible
+          ? 'bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(7rem+env(safe-area-inset-bottom,0px))]'
+          : 'bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(2rem+env(safe-area-inset-bottom,0px))]'
       }`}
       style={{
         fontFamily: "'Courier Prime', monospace",

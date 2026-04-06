@@ -8,7 +8,11 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import { claimAudio, type AudioClaimSource } from '@/components/DeckAudioProvider'
+import {
+  claimAudio,
+  OB_CHART_PLAYALL_BAR_EVENT,
+  type AudioClaimSource,
+} from '@/components/DeckAudioProvider'
 import type {
   ChartEdition,
   ChartFeaturedArtist,
@@ -577,6 +581,20 @@ export default function ChartView({
   // ---- Play-all state ----
   const [playAll, setPlayAll] = useState<PlayAllState>(null)
   const playAllRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(OB_CHART_PLAYALL_BAR_EVENT, { detail: { visible: !!playAll } }),
+    )
+  }, [playAll])
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent(OB_CHART_PLAYALL_BAR_EVENT, { detail: { visible: false } }),
+      )
+    }
+  }, [])
 
   const stopPlayAll = useCallback(() => {
     if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()

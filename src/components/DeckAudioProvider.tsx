@@ -104,6 +104,9 @@ export function claimAudio(source: AudioClaimSource) {
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
 }
 
+/** ChartView emite esto al mostrar/ocultar la barra fija de play-all (BackToTop sube el botón). */
+export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
+
 // ─── MiniDeckBar ────────────────────────────────────────
 function MiniDeckBar({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
