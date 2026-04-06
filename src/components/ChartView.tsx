@@ -181,7 +181,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
   const hasSample = !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
 
   return (
-    <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 transition-colors ${isPlaying ? 'bg-[var(--red)]/10' : 'hover:bg-[var(--yellow)]/10'}`}>
+    <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={pick.sort_order} />
@@ -248,7 +248,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay }: { track: ChartTrack; 
   const artists = Array.isArray(track.artists) ? track.artists : []
 
   return (
-    <div id={`chart-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 transition-colors ${isPlaying ? 'bg-[var(--red)]/10' : 'hover:bg-[var(--yellow)]/10'}`}>
+    <div id={`chart-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={track.position} />
@@ -617,24 +617,6 @@ export default function ChartView({
     })
   }, [playAll, ensureOpenForty, ensureOpenPicks])
 
-  const playFromIndex = useCallback((sectionKey: string, queue: string[], meta: PlayAllTrackMeta[], index: number) => {
-    if (playAll?.key === sectionKey && playAll.index === index) {
-      stopPlayAll()
-      return
-    }
-    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-    claimAudio('chart-playall')
-    setPlayAll({ key: sectionKey, queue, meta, index })
-  }, [playAll?.key, playAll?.index, stopPlayAll])
-
-  const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
-    if (playAll?.key === sectionKey) {
-      stopPlayAll()
-    } else {
-      startPlayAll(sectionKey, audioSrcs, meta)
-    }
-  }, [playAll?.key, stopPlayAll, startPlayAll])
-
   // ---- Play-all pause/resume ----
   const [paPaused, setPaPaused] = useState(false)
 
@@ -648,6 +630,24 @@ export default function ChartView({
       setPaPaused(true)
     }
   }, [])
+
+  const playFromIndex = useCallback((sectionKey: string, queue: string[], meta: PlayAllTrackMeta[], index: number) => {
+    if (playAll?.key === sectionKey && playAll.index === index) {
+      togglePaPlayback()
+      return
+    }
+    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    claimAudio('chart-playall')
+    setPlayAll({ key: sectionKey, queue, meta, index })
+  }, [playAll?.key, playAll?.index, togglePaPlayback])
+
+  const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
+    if (playAll?.key === sectionKey) {
+      stopPlayAll()
+    } else {
+      startPlayAll(sectionKey, audioSrcs, meta)
+    }
+  }, [playAll?.key, stopPlayAll, startPlayAll])
 
   // ---- Play-all progress tracking ----
   const [paProgress, setPaProgress] = useState(0)
