@@ -237,7 +237,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       return
     }
 
-    claimAudio('beatport-top' as AudioClaimSource)
+    claimAudio('beatport-top')
     setExpanded(true)
     setPlayAll({ queue: bundle.srcs, meta: bundle.meta, index: bundleIdx })
   }, [buildBundle, tracks, playAll, togglePaPlayback])
@@ -248,7 +248,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
     } else {
       const bundle = buildBundle()
       if (bundle.srcs.length === 0) return
-      claimAudio('beatport-top' as AudioClaimSource)
+      claimAudio('beatport-top')
       setExpanded(true)
       setPlayAll({ queue: bundle.srcs, meta: bundle.meta, index: 0 })
     }

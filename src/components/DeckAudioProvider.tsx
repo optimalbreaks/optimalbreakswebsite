@@ -98,7 +98,7 @@ export function useDeckAudio() {
   return ctx
 }
 
-export type AudioClaimSource = 'deck' | 'mix' | 'chart-preview' | 'chart-playall'
+export type AudioClaimSource = 'deck' | 'mix' | 'chart-preview' | 'chart-playall' | 'beatport-top'
 
 export function claimAudio(source: AudioClaimSource) {
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
