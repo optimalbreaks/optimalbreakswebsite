@@ -505,8 +505,8 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 
 Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
-- **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`
-- **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`)
+- **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
+- **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`). Same optional Beatport columns as artists (`046`).
 - **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are **created manually** (admin UI or Cursor agent) and then **enriched** with `npm run db:events:enrich -- <slug>` (SerpAPI + OpenAI fill missing fields). Enricher system prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt) (see [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md))
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
 - **blog_posts** — title, content, excerpt (EN/ES), category, tags, author, `image_url`, published flag
@@ -535,6 +535,18 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `009_artists_from_artist_eras_timeline.sql` | Large INSERT set from era map (regenerable via `db:timeline:sql`) |
 | `010_raveart_organizations.sql` | Table **`organizations`**, FKs on **`labels.organization_id`** and **`events.promoter_organization_id`**, RLS read policy; seed **Raveart**, **Raveart Records**, first **Summer/Winter** (+ **Summer 2026** placeholder) |
 | `011_raveart_gallery_events.sql` | More **Raveart** events to match [galería oficial](https://www.raveart.es/galeria/) (**Winter 2019**, **Winter 2022**, **Retro Halloween** 2022–2025); SQL comment for filling **`image_url`** after Storage upload |
+| `046_beatport_top_tracks.sql` | **`artists`** and **`labels`**: `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, default `[]`), `beatport_top_tracks_updated_at` — powers the **Beatport Top 10** accordion on profile pages |
+
+---
+
+## Beatport: weekly chart vs Top 10 on profiles
+
+- **Weekly chart (“40 Breaks Vitales”)** — `npm run db:chart` runs `scripts/chart-40-breaks.mjs` (Beatport genre top 100 + editorial pipeline). Separate from per-artist sales widgets.
+- **Top 10 sales on Beatport** — `npm run db:beatport:top -- artist <slug> <beatport_id>` or `label <slug> <beatport_id>` runs `scripts/beatport-top-tracks.mjs`: fetches the public Beatport page, reads embedded **`__NEXT_DATA__`**, extracts the **top-10-tracks** query, and **`UPDATE`s** the matching row in **`artists`** or **`labels`** by `slug` (`beatport_url`, `beatport_id`, `beatport_top_tracks`, `beatport_top_tracks_updated_at`). Requires migration **`046_beatport_top_tracks.sql`** and **`NEXT_PUBLIC_SUPABASE_URL` + service role / secret key**.
+- **Finding `beatport_id`** — Open the artist or label on [Beatport](https://www.beatport.com); the canonical URL is `/artist/<slug>/<id>` or `/label/<slug>/<id>`. Pass the same `slug` as in Optimal Breaks (e.g. `deekline` → `https://www.beatport.com/artist/deekline/3171` → `3171`).
+- **Batch refresh** — `npm run db:beatport:top -- --all-artists` or `--all-labels` walks every row that already has **`beatport_id`** set (staggered requests). Use `--dry-run` to print counts without writing.
+- **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart.
+- **JSON upsert** — Optional `beatport_id` and `beatport_url` on `data/artists/*.json` / label JSON are passed through **`npm run db:artist` / `db:label`** (`scripts/lib/artist-upsert.mjs`, `label-upsert.mjs`). They do **not** include `beatport_top_tracks`; refresh rankings with **`db:beatport:top`** after setting the ID.
 
 ---
 
@@ -560,6 +572,8 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `npm run db:events:enrich -- <slug>` | **Enrich** an existing event: SerpAPI web + OpenAI fill date, lineup, descriptions, venue, tags, etc. Add `--with-poster` to also search for the poster image. `--dry-run` previews changes without writing. |
 | `npm run db:events:poster -- <slug>` | Search for event **poster/flyer** via SerpAPI Google Images + OpenAI; upload to Storage `media/events/<slug>/poster.*` and update `events.image_url`. |
 | `npm run media:upload -- <local-file> <path-in-bucket>` | Upload a file to Storage bucket **`media`** (service/secret key); prints public URL + sample SQL for `image_url`. |
+| `npm run db:beatport:top -- artist <slug> <beatport_id>` | Scrape Beatport **Top 10** for that **artist** → update `beatport_top_tracks` (+ URL/ID/timestamp) in Supabase. Same pattern: `label <slug> <id>`. Flags: `--all-artists`, `--all-labels`, `--dry-run`. See **Beatport: weekly chart vs Top 10 on profiles**. |
+| `npm run db:chart` | Weekly **genre chart** pipeline (`chart-40-breaks.mjs`); not the same as per-profile Top 10. |
 
 ---
 

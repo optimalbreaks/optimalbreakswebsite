@@ -241,6 +241,14 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   lang={lang}
                 />
               </div>
+              {(artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+                <BeatportTopTracks
+                  tracks={artist.beatport_top_tracks as BeatportTopTrack[]}
+                  beatportUrl={artist.beatport_url}
+                  lang={lang}
+                  entityName={artist.name_display || artist.name}
+                />
+              ) : null}
             </div>
           </div>
         </header>
@@ -411,15 +419,6 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
         </div>
       </div>
 
-        {/* Beatport Top 10 */}
-        {(artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
-          <BeatportTopTracks
-            tracks={artist.beatport_top_tracks as BeatportTopTrack[]}
-            beatportUrl={artist.beatport_url}
-            lang={lang}
-            entityName={artist.name_display || artist.name}
-          />
-        ) : null}
     </>
   )
 }

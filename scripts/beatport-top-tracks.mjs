@@ -5,12 +5,22 @@
  * bloque "Top Ten Tracks" desde __NEXT_DATA__ y guarda el resultado como
  * JSONB en Supabase (columnas beatport_top_tracks en artists / labels).
  *
+ * El slug y el ID numérico deben coincidir con la URL canónica de Beatport:
+ *   https://www.beatport.com/artist/<slug>/<id>
+ *   https://www.beatport.com/label/<slug>/<id>
+ * Ej.: Deekline → artist/deekline/3171. Si no conoces el ID, abre la ficha
+ * del artista o sello en beatport.com y copia los dos últimos segmentos.
+ *
  * Uso:
  *   node scripts/beatport-top-tracks.mjs artist yo-speed 526398
  *   node scripts/beatport-top-tracks.mjs label  83       54171
  *   node scripts/beatport-top-tracks.mjs --all-artists     # todos los que tienen beatport_id
  *   node scripts/beatport-top-tracks.mjs --all-labels       # todos los que tienen beatport_id
  *   node scripts/beatport-top-tracks.mjs --dry-run artist yo-speed 526398
+ *
+ * Documentación en repo: README.md / README.es.md (sección Beatport Top 10).
+ * Atajo npm: npm run db:beatport:top -- artist <slug> <beatport_id>
+ * Guía: node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>
  *
  * Credenciales (.env.local):
  *   NEXT_PUBLIC_SUPABASE_URL

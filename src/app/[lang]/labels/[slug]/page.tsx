@@ -94,6 +94,14 @@ export default async function LabelDetailPage({ params }: Props) {
               <FanCounter type="label" entityId={label.id} lang={lang} />
               <ShareButtons url={`/${lang}/labels/${slug}`} title={`${label.name} | Optimal Breaks`} lang={lang} />
             </div>
+            {(label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+              <BeatportTopTracks
+                tracks={label.beatport_top_tracks as BeatportTopTrack[]}
+                beatportUrl={label.beatport_url}
+                lang={lang}
+                entityName={label.name}
+              />
+            ) : null}
           </div>
         </div>
       </header>
@@ -138,15 +146,6 @@ export default async function LabelDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Beatport Top 10 */}
-      {(label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
-        <BeatportTopTracks
-          tracks={label.beatport_top_tracks as BeatportTopTrack[]}
-          beatportUrl={label.beatport_url}
-          lang={lang}
-          entityName={label.name}
-        />
-      ) : null}
     </div>
   )
 }

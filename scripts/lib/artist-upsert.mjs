@@ -59,6 +59,8 @@ const ALL_COLUMNS = [
   'image_url', 'essential_tracks', 'recommended_mixes',
   'related_artists', 'labels_founded', 'key_releases',
   'website', 'socials', 'is_featured', 'sort_order',
+  /** Opcional: enlace a la ficha de Beatport; el Top 10 se rellena con `npm run db:beatport:top` (no machaca JSON upsert). */
+  'beatport_id', 'beatport_url',
 ]
 
 export function validateArtistRow(data) {

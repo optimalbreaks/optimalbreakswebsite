@@ -164,6 +164,30 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 
 ---
 
+## Beatport: Top 10 en fichas de artista y sello
+
+Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**.
+
+1. **Migración** — Aplica **`supabase/migrations/046_beatport_top_tracks.sql`** en Supabase (columnas `beatport_id`, `beatport_url`, `beatport_top_tracks`, `beatport_top_tracks_updated_at` en `artists` y `labels`).
+2. **ID en la URL de Beatport** — La ficha canónica es `https://www.beatport.com/artist/<slug>/<id>` o `/label/<slug>/<id>`. El `<slug>` debe ser el mismo que en Optimal Breaks; el `<id>` es el número final (ej.: Deekline → `deekline` + `3171`).
+3. **Actualizar datos** — Con **`NEXT_PUBLIC_SUPABASE_URL`** + **`SUPABASE_SERVICE_ROLE_KEY`** (o secret):
+
+```bash
+npm run db:beatport:top -- artist deekline 3171
+npm run db:beatport:top -- label <slug-sello> <id-beatport>
+npm run db:beatport:top -- --all-artists   # solo filas que ya tienen beatport_id
+npm run db:beatport:top -- --dry-run artist deekline 3171
+```
+
+El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
+
+4. **Opcional en JSON** — Puedes añadir **`beatport_id`** y **`beatport_url`** en `data/artists/*.json` (o JSON de sellos) para que **`npm run db:artist`** / **`db:label`** los guarden; el **listado Top 10** no va en el JSON: se rellena solo con **`db:beatport:top`**.
+5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque.
+
+Detalle técnico y relación con el chart semanal: **[README.md — Beatport: weekly chart vs Top 10 on profiles](./README.md#beatport-weekly-chart-vs-top-10-on-profiles)**.
+
+---
+
 ## Variables de entorno (resumen)
 
 Copia `.env.local.example` → `.env.local`.

@@ -24,6 +24,9 @@ const ALL_COLUMNS = [
   'key_releases',
   'is_active',
   'is_featured',
+  /** Opcional: ficha Beatport; Top 10 vía `npm run db:beatport:top`. */
+  'beatport_id',
+  'beatport_url',
 ]
 
 export function validateLabelRow(data) {
