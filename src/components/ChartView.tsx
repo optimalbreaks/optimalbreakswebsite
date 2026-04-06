@@ -181,7 +181,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
   const hasSample = !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
 
   return (
-    <div id={`chart-row-${pick.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 transition-colors ${isPlaying ? 'bg-[var(--red)]/10' : 'hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={pick.sort_order} />
@@ -248,7 +248,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay }: { track: ChartTrack; 
   const artists = Array.isArray(track.artists) ? track.artists : []
 
   return (
-    <div id={`chart-row-${track.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 transition-colors ${isPlaying ? 'bg-[var(--red)]/10' : 'hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={track.position} />
