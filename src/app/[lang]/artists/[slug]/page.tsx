@@ -16,7 +16,7 @@ import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
-import type { Artist, ArtistKeyRelease } from '@/types/database'
+import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -25,6 +25,7 @@ import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
 import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
+import BeatportTopTracks from '@/components/BeatportTopTracks'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -409,6 +410,16 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
           </div>
         </div>
       </div>
+
+        {/* Beatport Top 10 */}
+        {(artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+          <BeatportTopTracks
+            tracks={artist.beatport_top_tracks as BeatportTopTrack[]}
+            beatportUrl={artist.beatport_url}
+            lang={lang}
+            entityName={artist.name_display || artist.name}
+          />
+        ) : null}
     </>
   )
 }

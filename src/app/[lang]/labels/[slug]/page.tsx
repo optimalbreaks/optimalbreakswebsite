@@ -6,7 +6,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { Artist, Label, Organization } from '@/types/database'
+import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -14,6 +14,7 @@ import { splitBioParagraphs } from '@/lib/bio-format'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
 import CardThumbnail from '@/components/CardThumbnail'
+import BeatportTopTracks from '@/components/BeatportTopTracks'
 
 type Props = { params: { lang: Locale; slug: string } }
 type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
@@ -136,6 +137,16 @@ export default async function LabelDetailPage({ params }: Props) {
           <div className="flex flex-wrap gap-2">{label.key_releases.map((r: string, i: number) => <span key={i} className="cutout fill">{r}</span>)}</div>
         </div>
       )}
+
+      {/* Beatport Top 10 */}
+      {(label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+        <BeatportTopTracks
+          tracks={label.beatport_top_tracks as BeatportTopTrack[]}
+          beatportUrl={label.beatport_url}
+          lang={lang}
+          entityName={label.name}
+        />
+      ) : null}
     </div>
   )
 }

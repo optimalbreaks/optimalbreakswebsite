@@ -359,6 +359,20 @@ export interface ArtistKeyRelease {
   note?: string
 }
 
+export interface BeatportTopTrack {
+  position: number
+  title: string
+  mix_name: string
+  artists: { name: string; beatport_url: string }[]
+  label: string
+  bpm: number | null
+  key: string
+  beatport_url: string
+  artwork_url: string | null
+  sample_url: string | null
+  release_year: number | null
+}
+
 export interface Artist extends Record<string, unknown> {
   id: string
   created_at: string
@@ -383,6 +397,10 @@ export interface Artist extends Record<string, unknown> {
   socials: Record<string, string>
   is_featured: boolean
   sort_order: number
+  beatport_id: number | null
+  beatport_url: string | null
+  beatport_top_tracks: BeatportTopTrack[]
+  beatport_top_tracks_updated_at: string | null
 }
 
 export interface Label extends Record<string, unknown> {
@@ -402,6 +420,10 @@ export interface Label extends Record<string, unknown> {
   is_active: boolean
   is_featured: boolean
   organization_id: string | null
+  beatport_id: number | null
+  beatport_url: string | null
+  beatport_top_tracks: BeatportTopTrack[]
+  beatport_top_tracks_updated_at: string | null
 }
 
 export type OrganizationRole = 'label' | 'promoter' | 'booking' | 'media' | 'community'

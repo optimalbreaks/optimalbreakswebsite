@@ -306,6 +306,14 @@ const ACTIONS = [
       'Enriquece con OpenAI (--revise --save-json) las fichas starter del chart; inyecta --notes con sellos y títulos del chart para desambiguar nombres genéricos. Por defecto solo JSON con plantilla starter; --force recorre todo el chart.',
   },
   {
+    id: 'beatport-top',
+    run: 'node scripts/guia-base-datos.mjs run beatport-top artist <slug> <beatport_id>',
+    npm: 'npm run db:beatport:top -- artist yo-speed 526398',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Scrapea el Top 10 de ventas de Beatport para un artista o sello y guarda en beatport_top_tracks (JSONB). --all-artists / --all-labels para batch. --dry-run para ver sin escribir.',
+  },
+  {
     id: 'verify',
     run: 'node scripts/guia-base-datos.mjs run verify',
     npm: 'npm run db:verify',
@@ -398,6 +406,9 @@ Punto de entrada unificado:
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
+  beatport-top artist <slug> <beatport_id>  beatport-top-tracks.mjs (Top 10 ventas Beatport → JSONB en BD)
+  beatport-top label <slug> <beatport_id>   idem para sellos
+  beatport-top --all-artists | --all-labels [--dry-run]  batch para todos los que tienen beatport_id
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -470,6 +481,13 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • elegir-poster-evento.mjs — Carteles de eventos: SerpAPI Google Imágenes +
   OpenAI eligen flyer/póster; descarga y sube a media/events/<slug>/poster.* y
   actualiza events.image_url. Slug único, --missing-only o --all; --vision opcional.
+
+• beatport-top-tracks.mjs — «Top 10 de ventas en Beatport» (artistas y sellos).
+  Scrapea __NEXT_DATA__ de la ficha pública, extrae los 10 tracks más vendidos
+  (con sample_url para preview) y guarda en beatport_top_tracks (JSONB).
+  run beatport-top artist yo-speed 526398 | label 83 54171. Batch: --all-artists
+  / --all-labels (todos los que tienen beatport_id). Las fichas web de artista/sello
+  muestran el bloque «BEATPORT TOP 10» con reproductor de previews.
 
 • chart-40-breaks.mjs — «40 Breaks Vitales». Scrapea Beatport Top 100
   Breaks/Breakbeat/UK Bass (+ Juno opcional), IA selecciona los 40 mejores,
@@ -764,6 +782,9 @@ function main() {
       break
     case 'chart-artists-agent':
       runNode('enrich-chart-artists-agent.mjs', rest)
+      break
+    case 'beatport-top':
+      runNode('beatport-top-tracks.mjs', rest)
       break
     case 'verify':
       runNode('seed-supabase.mjs', ['--verify'])
