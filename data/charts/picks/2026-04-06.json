@@ -1,0 +1,39 @@
+{
+  "week_date": "2026-04-06",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Psycho",
+      "mix_name": "2026 Remastered Version — CFUNK 009A",
+      "artists": [{ "name": "The Breakfasterz" }],
+      "label": "Cyberfunk Recordings",
+      "platform": "bandcamp",
+      "link_url": "https://djquest1.bandcamp.com/track/the-breakfasterz-psycho-2026-remastered-version-cfunk-009a",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a2443711679_5.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "note_en": "From The Breakfastaz — Psycho / Freefall EP (DJ QUEST).",
+      "note_es": "Del EP The Breakfastaz — Psycho / Freefall (DJ QUEST)."
+    },
+    {
+      "sort_order": 2,
+      "title": "Freefall",
+      "mix_name": "2026 Remastered Version — CFUNK 009AA",
+      "artists": [{ "name": "The Breakfasterz" }],
+      "label": "Cyberfunk Recordings",
+      "platform": "bandcamp",
+      "link_url": "https://djquest1.bandcamp.com/track/the-breakfasterz-freefall-2026-remastered-version-cfunk-009aa",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a2255905682_5.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "note_en": "From The Breakfastaz — Psycho / Freefall EP (DJ QUEST).",
+      "note_es": "Del EP The Breakfastaz — Psycho / Freefall (DJ QUEST)."
+    }
+  ]
+}
