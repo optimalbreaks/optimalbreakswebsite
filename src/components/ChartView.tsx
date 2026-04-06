@@ -568,6 +568,7 @@ export default function ChartView({
 
     a.src = src
     a.load()
+    setPaPaused(false)
     a.play().then(() => {
       currentPlayingAudio = a
       currentPlayingPauser = () => { a.pause(); setPlayAll(null) }
@@ -579,8 +580,13 @@ export default function ChartView({
           artist: m?.artist ?? 'Optimal Breaks Charts',
           artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
         })
-        navigator.mediaSession.setActionHandler('play', () => { a.play().catch(() => {}) })
-        navigator.mediaSession.setActionHandler('pause', () => { a.pause() })
+        navigator.mediaSession.setActionHandler('play', () => {
+          a.play().then(() => setPaPaused(false)).catch(() => {})
+        })
+        navigator.mediaSession.setActionHandler('pause', () => {
+          a.pause()
+          setPaPaused(true)
+        })
         navigator.mediaSession.setActionHandler('previoustrack', () => goToPlayAll(-1))
         navigator.mediaSession.setActionHandler('nexttrack', () => goToPlayAll(1))
       }
@@ -629,6 +635,20 @@ export default function ChartView({
     }
   }, [playAll?.key, stopPlayAll, startPlayAll])
 
+  // ---- Play-all pause/resume ----
+  const [paPaused, setPaPaused] = useState(false)
+
+  const togglePaPlayback = useCallback(() => {
+    const a = playAllRef.current
+    if (!a) return
+    if (a.paused) {
+      a.play().then(() => setPaPaused(false)).catch(() => {})
+    } else {
+      a.pause()
+      setPaPaused(true)
+    }
+  }, [])
+
   // ---- Play-all progress tracking ----
   const [paProgress, setPaProgress] = useState(0)
   const [paCurrentTime, setPaCurrentTime] = useState(0)
@@ -642,8 +662,7 @@ export default function ChartView({
     const tick = () => {
       if (cancelled) return
       const a = playAllRef.current
-      if (!a || a.paused) return
-      if (a.duration && Number.isFinite(a.duration)) {
+      if (a && a.duration && Number.isFinite(a.duration)) {
         setPaProgress(a.currentTime / a.duration)
         setPaCurrentTime(a.currentTime)
         setPaDuration(a.duration)
@@ -652,7 +671,7 @@ export default function ChartView({
     }
     paRafRef.current = requestAnimationFrame(tick)
     return () => { cancelled = true; cancelAnimationFrame(paRafRef.current) }
-  }, [playAll?.key, playAll?.index]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [playAll?.key, playAll?.index, paPaused]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const paSeekTo = useCallback((clientX: number) => {
     const a = playAllRef.current
@@ -935,7 +954,7 @@ export default function ChartView({
           </div>
 
           <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-            {/* transport: prev / stop / next */}
+            {/* transport: prev / play-pause / stop / next */}
             <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
               <button
                 type="button"
@@ -946,6 +965,16 @@ export default function ChartView({
                 aria-label={c.play_all_prev_title}
               >
                 {c.play_all_prev}
+              </button>
+              <button
+                type="button"
+                onClick={togglePaPlayback}
+                className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
+                  ${paPaused ? 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]'}`}
+                title={paPaused ? c.preview_play : c.preview_pause}
+                aria-label={paPaused ? c.preview_play : c.preview_pause}
+              >
+                {paPaused ? '▶' : '❚❚'}
               </button>
               <button
                 type="button"

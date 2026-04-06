@@ -850,6 +850,7 @@ export function DeckAudioProvider({
     if (mode !== 'mix' || !('mediaSession' in navigator)) return
 
     navigator.mediaSession.setActionHandler('play', () => {
+      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume()
       toggleMixPlayback()
     })
     navigator.mediaSession.setActionHandler('pause', () => {
@@ -902,7 +903,10 @@ export function DeckAudioProvider({
         artist: 'OB Deck',
         artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
       })
-      navigator.mediaSession.setActionHandler('play', () => togglePlay())
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume()
+        togglePlay()
+      })
       navigator.mediaSession.setActionHandler('pause', () => togglePlay())
       navigator.mediaSession.setActionHandler('previoustrack', () => switchTrack(-1))
       navigator.mediaSession.setActionHandler('nexttrack', () => switchTrack(1))
