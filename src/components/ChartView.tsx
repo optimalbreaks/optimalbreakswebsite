@@ -145,18 +145,6 @@ function formatTime(s: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
-function defaultPreviewLayout(
-  controls: React.ReactNode,
-  progressBar: React.ReactNode,
-) {
-  return (
-    <div className="flex flex-col gap-1 min-w-[8rem] sm:min-w-0 sm:max-w-[280px] w-full">
-      {controls}
-      {progressBar}
-    </div>
-  )
-}
-
 function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
   if (pick?.platform === 'bandcamp' && pick.link_url) {
     return `/api/bandcamp-preview?track=${encodeURIComponent(pick.link_url)}`
@@ -168,143 +156,6 @@ function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
     }
   } catch { /* use raw url */ }
   return sampleUrl
-}
-
-function PreviewPlayer({
-  sampleUrl,
-  dict,
-  pick,
-  children = defaultPreviewLayout,
-}: {
-  sampleUrl: string | null
-  dict: any
-  pick?: ChartFeaturedTrack
-  children?: (controls: React.ReactNode, progressBar: React.ReactNode) => React.ReactNode
-}) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const barRef = useRef<HTMLDivElement | null>(null)
-  const [playing, setPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-
-  const hasBandcampPreview = pick?.platform === 'bandcamp' && pick.link_url
-  if (!sampleUrl && !hasBandcampPreview) return null
-
-  const audioSrc = previewAudioSrc(sampleUrl || '', pick)
-
-  const pauseThis = useCallback(() => {
-    audioRef.current?.pause()
-    setPlaying(false)
-  }, [])
-
-  const rafRef = useRef(0)
-  useLayoutEffect(() => {
-    if (!playing) return
-    let cancelled = false
-    const tick = () => {
-      if (cancelled) return
-      const a = audioRef.current
-      if (!a || a.paused || a !== currentPlayingAudio) return
-      if (a.duration && Number.isFinite(a.duration)) {
-        setProgress(a.currentTime / a.duration)
-        setCurrentTime(a.currentTime)
-        setDuration(a.duration)
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => { cancelled = true; cancelAnimationFrame(rafRef.current) }
-  }, [playing])
-
-  const toggle = () => {
-    const audio = audioRef.current
-    if (!audio) return
-    if (playing) {
-      pauseThis()
-      if (currentPlayingAudio === audio) { currentPlayingAudio = null; currentPlayingPauser = null }
-    } else {
-      if (currentPlayingAudio && currentPlayingAudio !== audio && currentPlayingPauser) currentPlayingPauser()
-      claimAudio('chart-preview')
-      audio.play().then(() => {
-        setPlaying(true)
-        currentPlayingAudio = audio
-        currentPlayingPauser = pauseThis
-      }).catch(() => {})
-    }
-  }
-
-  const handleEnded = () => {
-    setPlaying(false)
-    setProgress(0)
-    if (currentPlayingAudio === audioRef.current) { currentPlayingAudio = null; currentPlayingPauser = null }
-  }
-
-  const handleTimeUpdate = () => {
-    const a = audioRef.current
-    if (a && a.duration) {
-      setProgress(a.currentTime / a.duration)
-      setCurrentTime(a.currentTime)
-      setDuration(a.duration)
-    }
-  }
-
-  const seekTo = useCallback((clientX: number) => {
-    const audio = audioRef.current
-    const bar = barRef.current
-    if (!audio || !bar || !audio.duration) return
-    const rect = bar.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    audio.currentTime = ratio * audio.duration
-    setProgress(ratio)
-    setCurrentTime(audio.currentTime)
-  }, [])
-
-  const draggingRef = useRef(false)
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { draggingRef.current = true; e.currentTarget.setPointerCapture(e.pointerId); seekTo(e.clientX) }, [seekTo])
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (draggingRef.current) seekTo(e.clientX) }, [seekTo])
-  const onPointerUp = useCallback(() => { draggingRef.current = false }, [])
-
-  const c = dict.charts
-  const audioEl = audioRef.current
-  const isThisOnePlaying = playing && audioEl != null && audioEl === currentPlayingAudio
-
-  const controls = (
-    <div className="flex items-center gap-2">
-      <audio ref={audioRef} src={audioSrc} preload="none" onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} onLoadedMetadata={handleTimeUpdate} />
-      <button
-        type="button"
-        onClick={toggle}
-        className={`min-h-[44px] min-w-[44px] px-3 py-2 sm:min-h-0 sm:min-w-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-          ${playing ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
-        style={{ fontFamily: "'Courier Prime', monospace" }}
-        title={playing ? c.preview_pause : c.preview_play}
-        aria-label={playing ? c.preview_pause : c.preview_play}
-      >
-        {playing ? '❚❚' : '▶ PLAY'}
-      </button>
-      {isThisOnePlaying && duration > 0 && (
-        <span className="text-[9px] text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap" style={{ fontFamily: "'Courier Prime', monospace" }}>
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
-      )}
-    </div>
-  )
-
-  const pct = `${progress * 100}%`
-  const progressBar = isThisOnePlaying ? (
-    <div
-      ref={barRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
-      className="group relative w-full h-6 cursor-pointer touch-manipulation select-none" style={{ touchAction: 'none' }}
-      role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}
-    >
-      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[6px] rounded-full bg-[var(--ink)]/15 shadow-[inset_0_1px_2px_rgba(0,0,0,.25)]" />
-      <div className="absolute top-1/2 -translate-y-1/2 left-0 h-[6px] rounded-full bg-[var(--red)]/70" style={{ width: pct }} />
-      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[var(--red)] border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,.15),0_2px_4px_rgba(0,0,0,.3)] group-hover:scale-110 transition-transform" style={{ left: pct }} />
-    </div>
-  ) : null
-
-  return <>{children(controls, progressBar)}</>
 }
 
 // ---------------------------------------------------------------------------
@@ -321,12 +172,13 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
-function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict: any; lang: Locale }) {
+function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
+  const hasSample = !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
 
   return (
     <div id={`chart-row-${pick.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
@@ -354,21 +206,33 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center md:flex-nowrap touch-manipulation">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+          {hasSample && onPlay && (
+            <button
+              type="button"
+              onClick={onPlay}
+              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title={isPlaying ? c.preview_pause : c.preview_play}
+              aria-label={isPlaying ? c.preview_pause : c.preview_play}
+            >
+              {isPlaying ? '❚❚' : '▶'}
+            </button>
+          )}
           {pick.bpm != null && pick.bpm > 0 ? (
-            <span className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              {pick.bpm} {c.bpm_label}
+            <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {pick.bpm}
             </span>
           ) : null}
           {(pick.music_key || '').trim() ? (
-            <span className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5 whitespace-nowrap" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <PreviewPlayer sampleUrl={pick.sample_url} dict={dict} pick={pick} />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
+            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
             style={{ fontFamily: "'Courier Prime', monospace" }}
           >
             {cta}
@@ -379,7 +243,7 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
   )
 }
 
-function ChartTrackRow({ track, dict }: { track: ChartTrack; dict: any }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
 
@@ -416,22 +280,34 @@ function ChartTrackRow({ track, dict }: { track: ChartTrack; dict: any }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center md:flex-nowrap touch-manipulation">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+          {track.sample_url && onPlay && (
+            <button
+              type="button"
+              onClick={onPlay}
+              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title={isPlaying ? c.preview_pause : c.preview_play}
+              aria-label={isPlaying ? c.preview_pause : c.preview_play}
+            >
+              {isPlaying ? '❚❚' : '▶'}
+            </button>
+          )}
           {track.bpm && (
-            <span className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              {track.bpm} {c.bpm_label}
+            <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {track.bpm}
             </span>
           )}
           {track.music_key && (
-            <span className="inline-flex items-center min-h-[36px] px-2 py-1 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:min-h-0 sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--cyan)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5 whitespace-nowrap" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {track.music_key}
             </span>
           )}
-          <PreviewPlayer sampleUrl={track.sample_url} dict={dict} />
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center min-h-[44px] px-3 py-2 sm:min-h-0 sm:px-2 sm:py-1 text-[11px] sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation"
+              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
               style={{ fontFamily: "'Courier Prime', monospace" }} title={c.open_beatport}
             >
               BEATPORT
@@ -623,7 +499,7 @@ export default function ChartView({
   useEffect(() => {
     const handler = (e: Event) => {
       const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
-      if (src === 'chart-preview' || src === 'chart-playall') return
+      if (src === 'chart-playall') return
       // External player claimed audio → stop play-all and any individual preview
       if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
       const a = playAllRef.current
@@ -663,6 +539,21 @@ export default function ChartView({
     })
   }, [])
 
+  const goToPlayAll = useCallback((delta: number) => {
+    setPlayAll((prev) => {
+      if (!prev) return null
+      const next = prev.index + delta
+      if (next < 0 || next >= prev.queue.length) return prev
+      return { ...prev, index: next }
+    })
+  }, [])
+
+  const startPlayAll = useCallback((key: string, queue: string[], meta: PlayAllTrackMeta[]) => {
+    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    claimAudio('chart-playall')
+    setPlayAll({ key, queue, meta, index: 0 })
+  }, [])
+
   useEffect(() => {
     if (!playAll) return
     const a = playAllRef.current
@@ -698,21 +589,6 @@ export default function ChartView({
     })
   }, [playAll?.key, playAll?.index, advancePlayAll, stopPlayAll, goToPlayAll]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const startPlayAll = useCallback((key: string, queue: string[], meta: PlayAllTrackMeta[]) => {
-    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-    claimAudio('chart-playall')
-    setPlayAll({ key, queue, meta, index: 0 })
-  }, [])
-
-  const goToPlayAll = useCallback((delta: number) => {
-    setPlayAll((prev) => {
-      if (!prev) return null
-      const next = prev.index + delta
-      if (next < 0 || next >= prev.queue.length) return prev
-      return { ...prev, index: next }
-    })
-  }, [])
-
   const scrollToCurrentTrack = useCallback(() => {
     if (!playAll) return
     const meta = playAll.meta[playAll.index]
@@ -734,6 +610,16 @@ export default function ChartView({
       }, 120)
     })
   }, [playAll, ensureOpenForty, ensureOpenPicks])
+
+  const playFromIndex = useCallback((sectionKey: string, queue: string[], meta: PlayAllTrackMeta[], index: number) => {
+    if (playAll?.key === sectionKey && playAll.index === index) {
+      stopPlayAll()
+      return
+    }
+    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
+    claimAudio('chart-playall')
+    setPlayAll({ key: sectionKey, queue, meta, index })
+  }, [playAll?.key, playAll?.index, stopPlayAll])
 
   const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
     if (playAll?.key === sectionKey) {
@@ -907,9 +793,21 @@ export default function ChartView({
                   dict={dict}
                   playAllSlot={renderPlayAllBtn(picksKey, picksBundle)}
                 >
-                  {featured.map((pick) => (
-                    <FeaturedPickRow key={pick.id} pick={pick} dict={dict} lang={lang} />
-                  ))}
+                  {featured.map((pick) => {
+                    const rowId = `chart-row-${pick.id}`
+                    const idx = picksBundle.meta.findIndex((m) => m.rowId === rowId)
+                    const isActive = playAll?.key === picksKey && playAll.index === idx
+                    return (
+                      <FeaturedPickRow
+                        key={pick.id}
+                        pick={pick}
+                        dict={dict}
+                        lang={lang}
+                        isPlaying={isActive}
+                        onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle.srcs, picksBundle.meta, idx) : undefined}
+                      />
+                    )
+                  })}
                 </WeekAccordion>
               )
             })}
@@ -980,9 +878,20 @@ export default function ChartView({
                   </p>
                 )}
                 <div className="border-t-4 border-[var(--ink)]">
-                  {tracks.map((track) => (
-                    <ChartTrackRow key={track.id} track={track} dict={dict} />
-                  ))}
+                  {tracks.map((track) => {
+                    const rowId = `chart-row-${track.id}`
+                    const idx = fortyBundle.meta.findIndex((m) => m.rowId === rowId)
+                    const isActive = playAll?.key === fortyKey && playAll.index === idx
+                    return (
+                      <ChartTrackRow
+                        key={track.id}
+                        track={track}
+                        dict={dict}
+                        isPlaying={isActive}
+                        onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle.srcs, fortyBundle.meta, idx) : undefined}
+                      />
+                    )
+                  })}
                 </div>
               </WeekAccordion>
             )
