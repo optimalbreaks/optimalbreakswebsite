@@ -329,7 +329,7 @@ function FeaturedPickRow({ pick, dict, lang }: { pick: ChartFeaturedTrack; dict:
   const mixName = (pick.mix_name || '').trim()
 
   return (
-    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-row-${pick.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={pick.sort_order} />
@@ -384,7 +384,7 @@ function ChartTrackRow({ track, dict }: { track: ChartTrack; dict: any }) {
   const artists = Array.isArray(track.artists) ? track.artists : []
 
   return (
-    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-row-${track.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <PositionBadge position={track.position} />
@@ -457,14 +457,22 @@ function useToggleSet(initial: Set<string>) {
       return n
     })
   }, [])
-  return [set, toggle] as const
+  const ensureOpen = useCallback((key: string) => {
+    setSet((prev) => {
+      if (prev.has(key)) return prev
+      const n = new Set(prev)
+      n.add(key)
+      return n
+    })
+  }, [])
+  return [set, toggle, ensureOpen] as const
 }
 
 // ---------------------------------------------------------------------------
 // Play-all queue (shared across both sections)
 // ---------------------------------------------------------------------------
 
-type PlayAllTrackMeta = { title: string; artist: string }
+type PlayAllTrackMeta = { title: string; artist: string; rowId?: string }
 
 type PlayAllState = {
   key: string
@@ -575,8 +583,8 @@ export default function ChartView({
     return s
   }
 
-  const [openPicks, togglePicks] = useToggleSet(initOpen())
-  const [openForty, toggleForty] = useToggleSet(initOpen())
+  const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(initOpen())
+  const [openForty, toggleForty, ensureOpenForty] = useToggleSet(initOpen())
 
   // ---- Play-all state ----
   const [playAll, setPlayAll] = useState<PlayAllState>(null)
@@ -705,6 +713,28 @@ export default function ChartView({
     })
   }, [])
 
+  const scrollToCurrentTrack = useCallback(() => {
+    if (!playAll) return
+    const meta = playAll.meta[playAll.index]
+    if (!meta?.rowId) return
+
+    const key = playAll.key
+    const weekDate = key.replace(/^(picks|forty)-/, '')
+    if (key.startsWith('forty-')) ensureOpenForty(weekDate)
+    else if (key.startsWith('picks-')) ensureOpenPicks(weekDate)
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const el = document.getElementById(meta.rowId!)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('!bg-[var(--yellow)]/25')
+          setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
+        }
+      }, 120)
+    })
+  }, [playAll, ensureOpenForty, ensureOpenPicks])
+
   const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
     if (playAll?.key === sectionKey) {
       stopPlayAll()
@@ -766,7 +796,7 @@ export default function ChartView({
       if (!src) continue
       srcs.push(src)
       const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
-      meta.push({ title: p.title, artist: artists })
+      meta.push({ title: p.title, artist: artists, rowId: `chart-row-${p.id}` })
     }
     return { srcs, meta }
   }
@@ -778,7 +808,7 @@ export default function ChartView({
       if (!t.sample_url) continue
       srcs.push(previewAudioSrc(t.sample_url))
       const artists = Array.isArray(t.artists) ? t.artists.map((a: ChartTrackArtist) => a.name).join(', ') : ''
-      meta.push({ title: t.title, artist: artists })
+      meta.push({ title: t.title, artist: artists, rowId: `chart-row-${t.id}` })
     }
     return { srcs, meta }
   }
@@ -1029,15 +1059,19 @@ export default function ChartView({
               </button>
             </div>
 
-            {/* track info */}
-            <div className="flex-1 min-w-0 overflow-hidden">
+            {/* track info — tap to scroll to position in chart */}
+            <button
+              type="button"
+              onClick={scrollToCurrentTrack}
+              className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
+            >
               <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
                 {playAll.meta[playAll.index]?.title ?? '—'}
               </p>
               <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
                 {playAll.meta[playAll.index]?.artist ?? ''}
               </p>
-            </div>
+            </button>
 
             {/* time + counter */}
             <div className="shrink-0 text-right">
