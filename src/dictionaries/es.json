@@ -304,7 +304,7 @@
   "charts": {
     "title": "40 Breaks Vitales",
     "subtitle": "Chart semanal de breakbeat: 40 temas de la escena actual, tomados del Top 100 en vivo de Beatport en el momento de generar la lista y pasados por curación editorial.",
-    "method_note": "La fecha «Semana del…» es la edición del chart. Beatport se consulta en tiempo real al publicar (no hay «top del 15 de marzo» archivado): para que la lista sea «de esta semana», conviene ejecutar el script al publicar esa edición.",
+    "method_note": "",
     "week_label": "Semana del",
     "new_entry": "NUEVO",
     "re_entry": "RE-ENTRY",

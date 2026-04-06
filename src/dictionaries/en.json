@@ -402,7 +402,7 @@
   "charts": {
     "title": "40 Breaks Vitales",
     "subtitle": "Weekly breakbeat chart: 40 tracks from the current scene, drawn from Beatport’s live genre Top 100 at generation time and narrowed by editorial curation.",
-    "method_note": "“Week of…” is this edition’s label. Beatport is read in real time when you publish (there’s no stored “Top 100 as of March 15” API): run the script when you ship that week’s chart so the list matches the moment.",
+    "method_note": "",
     "week_label": "Week of",
     "new_entry": "NEW",
     "re_entry": "RE-ENTRY",
