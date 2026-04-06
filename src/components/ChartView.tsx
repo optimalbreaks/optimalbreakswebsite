@@ -449,18 +449,11 @@ export default function ChartView({
   lang,
   dict,
   weeks,
-  defaultExpandedWeekDate,
 }: ChartViewProps) {
   const c = dict.charts
 
-  const initOpen = () => {
-    const s = new Set<string>()
-    if (defaultExpandedWeekDate) s.add(defaultExpandedWeekDate)
-    return s
-  }
-
-  const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(initOpen())
-  const [openForty, toggleForty, ensureOpenForty] = useToggleSet(initOpen())
+  const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(new Set<string>())
+  const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
 
   // ---- Play-all state ----
   const [playAll, setPlayAll] = useState<PlayAllState>(null)
@@ -751,7 +744,7 @@ export default function ChartView({
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <h1 className="text-3xl sm:text-5xl font-black mb-4" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
-          {c.title}
+          {c.radio_title}
         </h1>
         <p className="text-base text-[var(--ink)]/60" style={{ fontFamily: "'Courier Prime', monospace" }}>
           {c.no_chart_yet}
@@ -766,6 +759,24 @@ export default function ChartView({
       <audio ref={playAllRef} preload="none" onEnded={advancePlayAll} className="hidden" />
 
       {/* ================================================================ */}
+      {/* PAGE HEADER — "La radio de Optimal Breaks"                       */}
+      {/* ================================================================ */}
+      <header className="px-4 sm:px-0 mb-10 sm:mb-14 text-center">
+        <h1
+          className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+          style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+        >
+          {c.radio_title}
+        </h1>
+        <p
+          className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl mx-auto"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          {c.radio_subtitle}
+        </p>
+      </header>
+
+      {/* ================================================================ */}
       {/* SECTION 1 — New releases (editorial picks)                       */}
       {/* ================================================================ */}
       {weeksWithFeatured.length > 0 && (
@@ -777,12 +788,12 @@ export default function ChartView({
             >
               {c.picks_kicker}
             </span>
-            <h1
+            <h2
               className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
               style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
             >
               {c.picks_title}
-            </h1>
+            </h2>
             <p
               className="text-sm sm:text-base text-[var(--ink)]/60"
               style={{ fontFamily: "'Courier Prime', monospace" }}
@@ -845,12 +856,12 @@ export default function ChartView({
           >
             {c.forty_kicker}
           </span>
-          <h1
+          <h2
             className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
             style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
           >
             {c.title}
-          </h1>
+          </h2>
           <p
             className="text-sm sm:text-base text-[var(--ink)]/60"
             style={{ fontFamily: "'Courier Prime', monospace" }}

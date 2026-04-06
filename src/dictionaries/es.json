@@ -352,7 +352,9 @@
     "play_all_next": "⏭",
     "play_all_prev_title": "Pista anterior",
     "play_all_next_title": "Siguiente pista",
-    "play_all_now_playing": "Sonando"
+    "play_all_now_playing": "Sonando",
+    "radio_title": "La radio de Optimal Breaks",
+    "radio_subtitle": "Charts semanales, nuevos lanzamientos y previews de breakbeat — escucha, explora y descubre."
   },
   "mixes": {
     "title": "Mixes y Sets",
@@ -427,8 +429,8 @@
       "description": "Textos sobre breakbeat, rankings, entrevistas y memoria de escena. Contenido editorial Optimal Breaks."
     },
     "charts": {
-      "title": "40 Breaks Vitales — chart semanal de breakbeat | Optimal Breaks",
-      "description": "Chart semanal con los 40 temas de breakbeat más relevantes (Top 100 Beatport + curación editorial) y una selección de nuevos lanzamientos curados por el equipo de Optimal Breaks."
+      "title": "La radio de Optimal Breaks — charts y nuevos lanzamientos de breakbeat",
+      "description": "Escucha la radio de Optimal Breaks: chart semanal 40 Breaks Vitales (Top 100 Beatport + curación editorial) y nuevos lanzamientos de breakbeat curados cada semana."
     },
     "mixes": {
       "title": "Mixes, sets y radio shows esenciales",
