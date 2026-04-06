@@ -186,14 +186,14 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
               </span>
 
               {t.artwork_url && (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 border-2 border-[var(--ink)] overflow-hidden">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 border-2 border-[var(--ink)] overflow-hidden relative">
                   <Image
                     src={t.artwork_url}
-                    alt={t.title}
-                    width={40}
-                    height={40}
-                    className="object-cover w-full h-full"
-                    unoptimized
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                    unoptimized={false}
                   />
                 </div>
               )}
