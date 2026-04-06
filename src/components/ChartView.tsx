@@ -920,7 +920,7 @@ export default function ChartView({
             onPointerMove={paPointerMove}
             onPointerUp={paPointerUp}
             onPointerCancel={paPointerUp}
-            className="group relative w-full h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
+            className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
             style={{ touchAction: 'none' }}
             role="progressbar"
             aria-valuenow={Math.round(paProgress * 100)}
@@ -929,19 +929,19 @@ export default function ChartView({
           >
             <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${paProgress * 100}%` }} />
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ left: `${paProgress * 100}%` }}
             />
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
             {/* transport: prev / stop / next */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => goToPlayAll(-1)}
                 disabled={playAll.index === 0}
-                className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
                 title={c.play_all_prev_title}
                 aria-label={c.play_all_prev_title}
               >
@@ -950,7 +950,7 @@ export default function ChartView({
               <button
                 type="button"
                 onClick={stopPlayAll}
-                className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
+                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
                 title={c.stop_all_title}
                 aria-label={c.stop_all_title}
               >
@@ -960,7 +960,7 @@ export default function ChartView({
                 type="button"
                 onClick={() => goToPlayAll(1)}
                 disabled={playAll.index >= playAll.queue.length - 1}
-                className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
                 title={c.play_all_next_title}
                 aria-label={c.play_all_next_title}
               >
@@ -974,20 +974,20 @@ export default function ChartView({
               onClick={scrollToCurrentTrack}
               className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
             >
-              <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+              <p className="text-sm sm:text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
                 {playAll.meta[playAll.index]?.title ?? '—'}
               </p>
-              <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
+              <p className="text-xs sm:text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">
                 {playAll.meta[playAll.index]?.artist ?? ''}
               </p>
             </button>
 
             {/* time + counter */}
             <div className="shrink-0 text-right">
-              <span className="block text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+              <span className="block text-xs sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
                 {formatTime(paCurrentTime)} / {formatTime(paDuration)}
               </span>
-              <span className="block text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
+              <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
                 {playAll.index + 1} / {playAll.queue.length}
               </span>
             </div>
