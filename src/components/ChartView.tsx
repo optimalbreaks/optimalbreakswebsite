@@ -88,16 +88,6 @@ function PositionBadge({ position }: { position: number }) {
   )
 }
 
-/** Marcador neutro (sin número): la lista de nuevos lanzamientos va en orden alfabético por artista, no es un chart posicional. */
-function PicksRowMarker() {
-  return (
-    <span
-      className="inline-flex w-10 h-10 shrink-0 border-[3px] border-[var(--ink)] bg-[var(--cyan)]/20"
-      aria-hidden
-    />
-  )
-}
-
 function MovementIndicator({
   position,
   previousPosition,
@@ -218,8 +208,6 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
     <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <PicksRowMarker />
-
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
               <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
