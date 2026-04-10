@@ -47,6 +47,30 @@ function formatWeekDate(dateStr: string, lang: Locale): string {
   })
 }
 
+/** Primer artista (como en Beatport) para orden alfabético en «New releases» — no implica ranking. */
+function featuredPrimaryArtistName(pick: ChartFeaturedTrack): string {
+  const a = pick.artists
+  if (Array.isArray(a) && a.length > 0 && (a[0] as ChartFeaturedArtist)?.name) {
+    return String((a[0] as ChartFeaturedArtist).name).trim()
+  }
+  return (pick.title || '').trim()
+}
+
+function sortFeaturedByArtist(picks: ChartFeaturedTrack[], lang: Locale): ChartFeaturedTrack[] {
+  const loc = lang === 'es' ? 'es' : 'en'
+  return [...picks].sort((A, B) => {
+    const ka = featuredPrimaryArtistName(A).toLocaleLowerCase(loc)
+    const kb = featuredPrimaryArtistName(B).toLocaleLowerCase(loc)
+    let cmp = ka.localeCompare(kb, loc, { sensitivity: 'base' })
+    if (cmp !== 0) return cmp
+    const ta = (A.title || '').toLocaleLowerCase(loc)
+    const tb = (B.title || '').toLocaleLowerCase(loc)
+    cmp = ta.localeCompare(tb, loc, { sensitivity: 'base' })
+    if (cmp !== 0) return cmp
+    return (A.mix_name || '').localeCompare(B.mix_name || '', loc, { sensitivity: 'base' })
+  })
+}
+
 function PositionBadge({ position }: { position: number }) {
   const isTop3 = position <= 3
   const isTop10 = position <= 10
@@ -61,6 +85,16 @@ function PositionBadge({ position }: { position: number }) {
     >
       {position}
     </span>
+  )
+}
+
+/** Marcador neutro (sin número): la lista de nuevos lanzamientos va en orden alfabético por artista, no es un chart posicional. */
+function PicksRowMarker() {
+  return (
+    <span
+      className="inline-flex w-10 h-10 shrink-0 border-[3px] border-[var(--ink)] bg-[var(--cyan)]/20"
+      aria-hidden
+    />
   )
 }
 
@@ -184,7 +218,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
     <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <PositionBadge position={pick.sort_order} />
+          <PicksRowMarker />
 
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
@@ -806,7 +840,8 @@ export default function ChartView({
             {weeksWithFeatured.map((bundle, index) => {
               const { edition, featured } = bundle
               const isLatest = edition.week_date === weeksWithFeatured[0].edition.week_date
-              const picksBundle = buildFeaturedBundle(featured)
+              const featuredSorted = sortFeaturedByArtist(featured, lang)
+              const picksBundle = buildFeaturedBundle(featuredSorted)
               const picksKey = `picks-${edition.week_date}`
 
               return (
@@ -816,14 +851,14 @@ export default function ChartView({
                   lang={lang}
                   isLatest={isLatest}
                   editionNumber={index + 1}
-                  count={featured.length}
+                  count={featuredSorted.length}
                   expanded={openPicks.has(edition.week_date)}
                   onToggle={() => togglePicks(edition.week_date)}
                   label="picks"
                   dict={dict}
                   playAllSlot={renderPlayAllBtn(picksKey, picksBundle)}
                 >
-                  {featured.map((pick) => {
+                  {featuredSorted.map((pick) => {
                     const rowId = `chart-row-${pick.id}`
                     const idx = picksBundle.meta.findIndex((m) => m.rowId === rowId)
                     const isActive = playAll?.key === picksKey && playAll.index === idx
