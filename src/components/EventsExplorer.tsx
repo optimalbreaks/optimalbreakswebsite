@@ -62,11 +62,17 @@ function isEventPast(e: BreakEvent): boolean {
   return last < startOfLocalToday()
 }
 
-/** Aclarar ~50 % hacia blanco (hover pie de tarjeta). Verde #166534 = mismo tono que el fondo «próximo». */
+/** Aclarar ~50 % hacia blanco: pie o imagen (todo el <Link> es `group/link`). */
 const EVENT_FOOTER_HOVER_PAST =
-  'hover:bg-[color-mix(in_srgb,var(--red)_50%,white)]' as const
+  'hover:bg-[color-mix(in_srgb,var(--red)_50%,white)] group-hover/link:bg-[color-mix(in_srgb,var(--red)_50%,white)]' as const
+/** Amarillo de marca (`--yellow`, logo / navbar) en lugar de verde. */
 const EVENT_FOOTER_HOVER_UPCOMING =
-  'hover:bg-[color-mix(in_srgb,#166534_50%,white)]' as const
+  'hover:bg-[color-mix(in_srgb,var(--yellow)_50%,white)] group-hover/link:bg-[color-mix(in_srgb,var(--yellow)_50%,white)]' as const
+
+/** Franja detrás del cartel al hover: mismo cromatismo que el pie (rojo pasado / amarillo próximo). */
+const EVENT_POSTER_STRIP_HOVER_PAST =
+  'group-hover/link:bg-[color-mix(in_srgb,var(--red)_42%,white)]' as const
+const EVENT_POSTER_STRIP_HOVER_UPCOMING = 'group-hover/link:bg-[var(--yellow)]' as const
 
 function parseIsoYmd(s: string | null | undefined): { y: number; m: number; d: number } | null {
   if (!s) return null
@@ -471,14 +477,18 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           className="relative h-full min-h-0 border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 group/link no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
           <FavoriteButton type="event" entityId={e.id} lang={lang} />
-          <div className="relative shrink-0 transition-colors duration-150 group-hover/link:bg-[var(--yellow)]">
+          <div
+            className={`relative shrink-0 transition-colors duration-150 ${
+              past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
+            }`}
+          >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
           </div>
           <div
-            className={`flex flex-1 flex-col justify-start p-3 text-white transition-colors duration-200 ease-out min-h-[5.25rem] ${
+            className={`flex flex-1 flex-col justify-start p-3 text-left transition-colors duration-200 ease-out min-h-[5.25rem] ${
               past
-                ? `bg-[var(--red)] ${EVENT_FOOTER_HOVER_PAST}`
-                : `bg-[#166534] ${EVENT_FOOTER_HOVER_UPCOMING}`
+                ? `bg-[var(--red)] text-white ${EVENT_FOOTER_HOVER_PAST}`
+                : `bg-[var(--yellow)] text-[var(--ink)] ${EVENT_FOOTER_HOVER_UPCOMING}`
             }`}
           >
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'inherit' }}>
@@ -492,7 +502,11 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
             </div>
             <div className="mt-1 flex flex-wrap gap-1">
               <span
-                className="inline-block border border-white/35 bg-white/15 text-white"
+                className={
+                  past
+                    ? 'inline-block border border-white/35 bg-white/15 text-white'
+                    : 'inline-block border border-[var(--ink)]/30 bg-[var(--ink)]/10 text-[var(--ink)]'
+                }
                 style={{ fontSize: '7px', padding: '0px 4px', margin: 0, fontFamily: "'Courier Prime', monospace", fontWeight: 700, letterSpacing: '0.5px' }}
               >
                 {e.country}
@@ -517,14 +531,18 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           href={`/${lang}/events/${e.slug}`}
           className="relative h-full min-h-0 border-b-[2px] border-r-[2px] border-[var(--ink)] transition-all duration-150 group/link no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
-          <div className="relative shrink-0 transition-colors duration-150 group-hover/link:bg-[var(--yellow)]">
+          <div
+            className={`relative shrink-0 transition-colors duration-150 ${
+              past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
+            }`}
+          >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
           </div>
           <div
-            className={`flex flex-1 flex-col justify-start p-1.5 text-left text-white transition-colors duration-200 ease-out min-h-[3.75rem] ${
+            className={`flex flex-1 flex-col justify-start p-1.5 text-left transition-colors duration-200 ease-out min-h-[3.75rem] ${
               past
-                ? `bg-[var(--red)] ${EVENT_FOOTER_HOVER_PAST}`
-                : `bg-[#166534] ${EVENT_FOOTER_HOVER_UPCOMING}`
+                ? `bg-[var(--red)] text-white ${EVENT_FOOTER_HOVER_PAST}`
+                : `bg-[var(--yellow)] text-[var(--ink)] ${EVENT_FOOTER_HOVER_UPCOMING}`
             }`}
           >
             <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '9px', color: 'inherit' }}>
@@ -551,10 +569,18 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
           <FavoriteButton type="event" entityId={e.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
           <Link
             href={`/${lang}/events/${e.slug}`}
-            className="group/list-row group/link flex flex-col no-underline text-[var(--ink)]"
+            className="group/link flex flex-col no-underline text-[var(--ink)]"
           >
-            <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-colors duration-150 hover:bg-[var(--yellow)]">
-              <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
+            <div
+              className={`flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-colors duration-150 ${
+                past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
+              }`}
+            >
+              <div
+                className={`shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)] transition-colors duration-150 ${
+                  past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
+                }`}
+              >
                 <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" groupHoverGroup="link" />
               </div>
               <div className="flex-grow min-w-0">
@@ -576,8 +602,8 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
               title={past ? (lang === 'es' ? 'Evento pasado' : 'Past event') : lang === 'es' ? 'Próximo — aún puedes ir' : 'Upcoming'}
               className={`h-2.5 w-full shrink-0 border-t-[2px] border-[var(--ink)] transition-colors duration-200 ease-out ${
                 past
-                  ? `bg-[var(--red)] ${EVENT_FOOTER_HOVER_PAST} group-hover/list-row:bg-[color-mix(in_srgb,var(--red)_50%,white)]`
-                  : `bg-[#166534] ${EVENT_FOOTER_HOVER_UPCOMING} group-hover/list-row:bg-[color-mix(in_srgb,#166534_50%,white)]`
+                  ? `bg-[var(--red)] ${EVENT_FOOTER_HOVER_PAST}`
+                  : `bg-[var(--yellow)] ${EVENT_FOOTER_HOVER_UPCOMING}`
               }`}
             />
           </Link>
