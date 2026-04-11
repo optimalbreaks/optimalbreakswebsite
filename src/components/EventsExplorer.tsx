@@ -275,7 +275,7 @@ function CalendarDayEventsModal({
               return (
                 <article key={e.slug} className="pb-10 border-b-[2px] border-[var(--ink)] last:border-b-0 last:pb-0">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="sm:w-[min(42%,160px)] shrink-0 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper)]">
+                    <div className="sm:w-[min(42%,160px)] shrink-0 overflow-hidden bg-[var(--paper)]">
                       <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
                     </div>
                     <div className="min-w-0 flex-1 flex flex-col gap-2 text-[var(--ink)]">
