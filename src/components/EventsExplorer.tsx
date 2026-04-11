@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
@@ -33,8 +34,17 @@ interface Props {
     view_compact: string
     view_list: string
     view_calendar?: string
-    calendar_legend?: string
+    /** Leyenda calendario: pasado (rojo) / próximo (amarillo). */
+    calendar_legend_past?: string
+    calendar_legend_upcoming?: string
     calendar_undated_hint?: string
+    calendar_modal_close?: string
+    calendar_modal_view_event?: string
+    calendar_modal_lineup?: string
+    calendar_modal_location?: string
+    calendar_modal_dates?: string
+    calendar_modal_badge_past?: string
+    calendar_modal_badge_upcoming?: string
     date_filter?: DateFilterDict
   }
   lang: string
@@ -127,6 +137,217 @@ function weekdayLabelsMonFirst(locale: string): string[] {
   return out
 }
 
+function sortEventsForCalendarModal(events: BreakEvent[]): BreakEvent[] {
+  return [...events].sort((a, b) => {
+    const ap = isEventPast(a) ? 1 : 0
+    const bp = isEventPast(b) ? 1 : 0
+    if (ap !== bp) return ap - bp
+    return (parseLocalDayStart(b.date_start) ?? 0) - (parseLocalDayStart(a.date_start) ?? 0)
+  })
+}
+
+function formatEventDatesBrief(e: BreakEvent, locale: string): string {
+  const ds = e.date_start?.slice(0, 10)
+  const de = e.date_end?.slice(0, 10)
+  if (!ds) return '—'
+  if (!de || de === ds) {
+    return new Date(`${ds}T12:00:00`).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+  const a = new Date(`${ds}T12:00:00`)
+  const b = new Date(`${de}T12:00:00`)
+  return `${a.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} – ${b.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`
+}
+
+function eventLocationBrief(e: BreakEvent): string {
+  const parts = [e.venue, e.city, e.country].map((x) => String(x ?? '').trim()).filter(Boolean)
+  if (parts.length > 0) return parts.join(' · ')
+  return String(e.location ?? '').trim() || '—'
+}
+
+function lineupPreviewText(e: BreakEvent, max: number): string | null {
+  const names: string[] = []
+  const seen = new Set<string>()
+  for (const n of e.lineup ?? []) {
+    const t = String(n).trim()
+    if (t && !seen.has(t.toLowerCase())) {
+      seen.add(t.toLowerCase())
+      names.push(t)
+    }
+  }
+  for (const st of e.stages ?? []) {
+    for (const n of st.lineup ?? []) {
+      const t = String(n).trim()
+      if (t && !seen.has(t.toLowerCase())) {
+        seen.add(t.toLowerCase())
+        names.push(t)
+      }
+    }
+  }
+  if (names.length === 0) return null
+  if (names.length <= max) return names.join(', ')
+  return `${names.slice(0, max).join(', ')}…`
+}
+
+function descriptionExcerpt(e: BreakEvent, lang: string, maxLen: number): string {
+  const raw =
+    (lang === 'es' ? e.description_es : e.description_en) || e.description_en || e.description_es || ''
+  const plain = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (plain.length <= maxLen) return plain
+  return `${plain.slice(0, maxLen).trim()}…`
+}
+
+type CalendarModalLabels = {
+  close: string
+  viewEvent: string
+  lineup: string
+  location: string
+  dates: string
+  badgePast: string
+  badgeUpcoming: string
+}
+
+function CalendarDayEventsModal({
+  payload,
+  lang,
+  labels,
+  onClose,
+}: {
+  payload: { events: BreakEvent[]; date: Date }
+  lang: string
+  labels: CalendarModalLabels
+  onClose: () => void
+}) {
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB'
+  const heading = new Intl.DateTimeFormat(locale, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(payload.date)
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-[520] bg-black/55 backdrop-blur-[2px]"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="fixed inset-0 z-[521] flex items-center justify-center p-3 sm:p-6 pointer-events-none overflow-y-auto">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cal-day-modal-title"
+          className="pointer-events-auto w-full max-w-lg my-auto border-[4px] border-[var(--ink)] bg-[var(--paper)] shadow-[8px_8px_0_var(--ink)] max-h-[min(92vh,calc(100dvh-24px))] flex flex-col"
+        >
+          <div className="shrink-0 flex items-start justify-between gap-3 border-b-[3px] border-[var(--ink)] px-4 py-3 bg-[color-mix(in_srgb,var(--yellow)_22%,var(--paper))]">
+            <h2
+              id="cal-day-modal-title"
+              className="m-0 pr-2 capitalize text-[var(--ink)]"
+              style={{
+                fontFamily: "'Unbounded', sans-serif",
+                fontWeight: 900,
+                fontSize: 'clamp(14px, 3.2vw, 19px)',
+                lineHeight: 1.15,
+                letterSpacing: '-0.03em',
+              }}
+            >
+              {heading}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 w-9 h-9 flex items-center justify-center border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-colors cursor-pointer"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '18px', lineHeight: 1 }}
+              aria-label={labels.close}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="overflow-y-auto flex-1 min-h-0 px-4 py-5 space-y-10">
+            {payload.events.map((e) => {
+              const past = isEventPast(e)
+              const lineup = lineupPreviewText(e, 18)
+              const excerpt = descriptionExcerpt(e, lang, 220)
+              return (
+                <article key={e.slug} className="pb-10 border-b-[2px] border-[var(--ink)] last:border-b-0 last:pb-0">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="sm:w-[min(42%,160px)] shrink-0 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper)]">
+                      <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+                    </div>
+                    <div className="min-w-0 flex-1 flex flex-col gap-2 text-[var(--ink)]">
+                      <span
+                        className={`self-start text-[9px] uppercase tracking-wider px-2 py-0.5 border border-[var(--ink)] ${
+                          past ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)]'
+                        }`}
+                        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
+                      >
+                        {past ? labels.badgePast : labels.badgeUpcoming}
+                      </span>
+                      <h3
+                        className="m-0 uppercase"
+                        style={{
+                          fontFamily: "'Unbounded', sans-serif",
+                          fontWeight: 900,
+                          fontSize: 'clamp(14px, 2.8vw, 17px)',
+                          letterSpacing: '-0.03em',
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {e.name}
+                      </h3>
+                      <dl className="m-0 space-y-2 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                        <div>
+                          <dt className="text-[var(--dim)] text-[10px] uppercase tracking-wide m-0">{labels.dates}</dt>
+                          <dd className="m-0 mt-0.5 font-bold">{formatEventDatesBrief(e, locale)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[var(--dim)] text-[10px] uppercase tracking-wide m-0">{labels.location}</dt>
+                          <dd className="m-0 mt-0.5 font-bold">{eventLocationBrief(e)}</dd>
+                        </div>
+                        {lineup ? (
+                          <div>
+                            <dt className="text-[var(--dim)] text-[10px] uppercase tracking-wide m-0">{labels.lineup}</dt>
+                            <dd className="m-0 mt-0.5 font-bold leading-snug">{lineup}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                      {excerpt ? (
+                        <p
+                          className="m-0 text-[var(--dim)] text-[13px] leading-relaxed"
+                          style={{ fontFamily: "'Special Elite', system-ui", lineHeight: 1.55 }}
+                        >
+                          {excerpt}
+                        </p>
+                      ) : null}
+                      <Link
+                        href={`/${lang}/events/${e.slug}`}
+                        onClick={onClose}
+                        className="mt-2 inline-flex items-center justify-center text-center no-underline border-[3px] border-[var(--ink)] bg-[var(--red)] text-white px-4 py-2.5 hover:bg-[color-mix(in_srgb,var(--red)_55%,white)] transition-colors"
+                        style={{
+                          fontFamily: "'Unbounded', sans-serif",
+                          fontWeight: 900,
+                          fontSize: '12px',
+                          letterSpacing: '0.06em',
+                        }}
+                      >
+                        {labels.viewEvent}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 function eventYear(e: BreakEvent): number | null {
   const src = e.date_start || e.date_end
   if (!src) return null
@@ -169,8 +390,45 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [when, setWhen] = useState<DateWhen>('all')
   const [country, setCountry] = useState<string | 'all'>('all')
+  const [calDayModal, setCalDayModal] = useState<null | { events: BreakEvent[]; date: Date }>(null)
+  const [calPortalMounted, setCalPortalMounted] = useState(false)
 
   const df = dict.date_filter
+
+  const calendarModalLabels = useMemo<CalendarModalLabels>(
+    () => ({
+      close: dict.calendar_modal_close ?? 'Close',
+      viewEvent: dict.calendar_modal_view_event ?? 'View event page',
+      lineup: dict.calendar_modal_lineup ?? 'Lineup',
+      location: dict.calendar_modal_location ?? 'Location',
+      dates: dict.calendar_modal_dates ?? 'Dates',
+      badgePast: dict.calendar_modal_badge_past ?? 'Past',
+      badgeUpcoming: dict.calendar_modal_badge_upcoming ?? 'Upcoming',
+    }),
+    [dict],
+  )
+
+  useEffect(() => {
+    setCalPortalMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (view !== 'calendar') setCalDayModal(null)
+  }, [view])
+
+  useEffect(() => {
+    if (!calDayModal) return undefined
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setCalDayModal(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [calDayModal])
 
   const countryOptions = useMemo(() => {
     const set = new Set<string>()
@@ -211,6 +469,7 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
   }
 
   return (
+    <>
     <div>
       {df ? (
         <div className="mb-6 space-y-4 border-b-[3px] border-[var(--ink)] pb-6">
@@ -313,7 +572,14 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
                     year={key}
                     events={items}
                     lang={lang}
-                    legend={dict.calendar_legend ?? ''}
+                    legendPast={dict.calendar_legend_past ?? ''}
+                    legendUpcoming={dict.calendar_legend_upcoming ?? ''}
+                    onOpenCalendarDay={(list, y, m, d) =>
+                      setCalDayModal({
+                        events: sortEventsForCalendarModal(list),
+                        date: new Date(y, m - 1, d),
+                      })
+                    }
                   />
                 ) : view === 'calendar' && key === 'undated' ? (
                   <div className="space-y-4">
@@ -338,6 +604,18 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
         </div>
       )}
     </div>
+    {calPortalMounted && calDayModal
+      ? createPortal(
+          <CalendarDayEventsModal
+            payload={calDayModal}
+            lang={lang}
+            labels={calendarModalLabels}
+            onClose={() => setCalDayModal(null)}
+          />,
+          document.body,
+        )
+      : null}
+    </>
   )
 }
 
@@ -345,27 +623,45 @@ function YearCalendar({
   year,
   events,
   lang,
-  legend,
+  legendPast,
+  legendUpcoming,
+  onOpenCalendarDay,
 }: {
   year: number
   events: BreakEvent[]
   lang: string
-  legend: string
+  legendPast: string
+  legendUpcoming: string
+  onOpenCalendarDay: (events: BreakEvent[], y: number, month: number, day: number) => void
 }) {
   const locale = lang === 'es' ? 'es-ES' : 'en-GB'
   const dayMap = useMemo(() => buildDayMap(events, year), [events, year])
   const weekdayLabels = useMemo(() => weekdayLabelsMonFirst(locale), [locale])
+  const showLegend = Boolean(legendPast || legendUpcoming)
 
   return (
     <div>
-      {legend ? (
-        <p
-          className="flex flex-wrap items-center gap-2 mb-4 text-[var(--dim)]"
+      {showLegend ? (
+        <div
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 text-[var(--dim)]"
           style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px' }}
         >
-          <span className="inline-block w-5 h-5 shrink-0 bg-[var(--red)] border-2 border-[var(--ink)]" aria-hidden />
-          <span>{legend}</span>
-        </p>
+          {legendPast ? (
+            <p className="flex flex-wrap items-center gap-2 m-0">
+              <span className="inline-block w-5 h-5 shrink-0 bg-[var(--red)] border-2 border-[var(--ink)]" aria-hidden />
+              <span>{legendPast}</span>
+            </p>
+          ) : null}
+          {legendUpcoming ? (
+            <p className="flex flex-wrap items-center gap-2 m-0">
+              <span
+                className="inline-block w-5 h-5 shrink-0 bg-[var(--yellow)] border-2 border-[var(--ink)]"
+                aria-hidden
+              />
+              <span>{legendUpcoming}</span>
+            </p>
+          ) : null}
+        </div>
       ) : null}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {Array.from({ length: 12 }, (_, monthIndex) => (
@@ -376,6 +672,7 @@ function YearCalendar({
             dayMap={dayMap}
             weekdayLabels={weekdayLabels}
             lang={lang}
+            onOpenDayWithEvents={onOpenCalendarDay}
           />
         ))}
       </div>
@@ -389,12 +686,14 @@ function MonthMiniCalendar({
   dayMap,
   weekdayLabels,
   lang,
+  onOpenDayWithEvents,
 }: {
   year: number
   monthIndex: number
   dayMap: Map<string, BreakEvent[]>
   weekdayLabels: string[]
   lang: string
+  onOpenDayWithEvents: (events: BreakEvent[], y: number, month: number, day: number) => void
 }) {
   const monthTitle = new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
     month: 'long',
@@ -411,19 +710,27 @@ function MonthMiniCalendar({
     const list = dayMap.get(k)
     const has = list && list.length > 0
     const title = has ? list!.map((e) => e.name).join(' · ') : undefined
-    const first = has ? list![0] : null
+    /** Amarillo si queda algún evento no pasado ese día; rojo si todos ya pasaron (misma regla que el listado). */
+    const anyUpcoming = Boolean(has && list!.some((e) => !isEventPast(e)))
+
+    const dayBtnClass = anyUpcoming
+      ? 'w-full min-h-[1.35rem] flex items-center justify-center text-[10px] sm:text-[11px] font-bold border border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[color-mix(in_srgb,var(--yellow)_50%,white)] transition-colors rounded-sm cursor-pointer'
+      : 'w-full min-h-[1.35rem] flex items-center justify-center text-[10px] sm:text-[11px] font-bold border border-[var(--ink)] bg-[var(--red)] text-[var(--paper)] hover:bg-[color-mix(in_srgb,var(--red)_50%,white)] transition-colors rounded-sm cursor-pointer'
 
     cells.push(
       <div key={k} className="min-h-[1.35rem] flex items-center justify-center p-[1px]">
-        {has && first ? (
-          <Link
-            href={`/${lang}/events/${first.slug}`}
+        {has && list ? (
+          <button
+            type="button"
             title={title}
-            className="w-full min-h-[1.35rem] flex items-center justify-center text-[10px] sm:text-[11px] font-bold border border-[var(--ink)] bg-[var(--red)] text-[var(--paper)] hover:bg-[var(--ink)] transition-colors no-underline rounded-sm"
+            aria-haspopup="dialog"
+            aria-label={title}
+            className={dayBtnClass}
             style={{ fontFamily: "'Courier Prime', monospace" }}
+            onClick={() => onOpenDayWithEvents(list, year, monthIndex + 1, d)}
           >
             {d}
-          </Link>
+          </button>
         ) : (
           <span
             className="text-[10px] sm:text-[11px] text-[var(--dim)] tabular-nums"
