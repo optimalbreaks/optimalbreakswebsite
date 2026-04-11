@@ -1098,6 +1098,48 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 52,
+      "title": "Crazy",
+      "mix_name": "2026 Remaster — CFUNK 012A",
+      "artists": [
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "bandcamp",
+      "link_url": "https://djquest1.bandcamp.com/track/the-breakfastaz-crazy-2026-remaster-cfunk-012a-2",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1904038764_5.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "note_en": "From The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp).",
+      "note_es": "Del bundle The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp)."
+    },
+    {
+      "sort_order": 53,
+      "title": "Method Of Doubt",
+      "mix_name": "2026 Remaster — CFUNK 012AA",
+      "artists": [
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "bandcamp",
+      "link_url": "https://djquest1.bandcamp.com/track/the-breakfastaz-method-of-doubt-2026-remaster-cfunk-012aa-2",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a2766414676_5.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "note_en": "From The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp).",
+      "note_es": "Del bundle The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp)."
     }
   ]
 }

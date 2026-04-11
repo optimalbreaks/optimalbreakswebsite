@@ -295,7 +295,7 @@ const ACTIONS = [
     npm: 'npm run db:chart:vinyl -- data/charts/vinyl/2026-04-06.json',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Vinyl Picks semanales en /charts: UPSERT manual desde JSON (chart_vinyl_tracks). Datos de Discogs + YouTube. La edición week_date debe existir.',
+      'Retro Vinyl Picks semanales en /charts: UPSERT manual desde JSON (chart_vinyl_tracks). Datos de Discogs + YouTube. La edición week_date debe existir.',
   },
   {
     id: 'chart-artists',
@@ -412,7 +412,7 @@ Punto de entrada unificado:
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
-  chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
+  chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Retro Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
   beatport-top artist <slug> <beatport_id>  beatport-top-tracks.mjs (Top 10 ventas Beatport → JSONB en BD)

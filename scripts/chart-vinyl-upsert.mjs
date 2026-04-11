@@ -1,5 +1,5 @@
 /**
- * OPTIMAL BREAKS — Vinyl Picks semanal (chart_vinyl_tracks)
+ * OPTIMAL BREAKS — Retro Vinyl Picks semanal (chart_vinyl_tracks)
  *
  * Solo lee el JSON que pases: no consulta Discogs ni YouTube.
  *
@@ -180,7 +180,7 @@ async function main() {
   const { error: insErr } = await supabase.from('chart_vinyl_tracks').insert(rows)
   if (insErr) throw new Error(`insert chart_vinyl_tracks: ${insErr.message}`)
 
-  console.log(`  ↳ Semana ${weekDate}: ${rows.length} vinyl picks guardados.`)
+  console.log(`  ↳ Semana ${weekDate}: ${rows.length} retro vinyl picks guardados.`)
 }
 
 main().catch((e) => {

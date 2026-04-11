@@ -1,6 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Charts page (Client Component)
-// Three sections: New Releases + Vinyl Picks + 40 Breaks Vitales
+// Three sections: New Releases → 40 Breaks Vitales → Retro Vinyl Picks (al final)
 // ============================================
 
 'use client'
@@ -969,69 +969,9 @@ export default function ChartView({
       )}
 
       {/* ================================================================ */}
-      {/* SECTION 2 — Vinyl Picks (Discogs + YouTube)                      */}
+      {/* SECTION 2 — 40 Breaks Vitales (Beatport chart)                   */}
       {/* ================================================================ */}
-      {weeksWithVinyl.length > 0 && (
-        <section className="mb-12 sm:mb-16">
-          <header className="px-4 sm:px-0 mb-6 sm:mb-8">
-            <span
-              className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--uv)] text-white border-2 border-[var(--ink)] mb-3"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-            >
-              {c.vinyl_kicker}
-            </span>
-            <h2
-              className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
-              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-            >
-              {c.vinyl_title}
-            </h2>
-            <p
-              className="text-sm sm:text-base text-[var(--ink)]/60"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-            >
-              {c.vinyl_subtitle}
-            </p>
-          </header>
-
-          <div className="flex flex-col gap-2 px-2 sm:px-0">
-            {weeksWithVinyl.map((bundle, index) => {
-              const { edition, vinyl } = bundle
-              const isLatest = edition.week_date === weeksWithVinyl[0].edition.week_date
-              const vinylSorted = sortVinylByArtist(vinyl, lang)
-
-              return (
-                <WeekAccordion
-                  key={`vinyl-${edition.id}`}
-                  weekDate={edition.week_date}
-                  lang={lang}
-                  isLatest={isLatest}
-                  editionNumber={index + 1}
-                  count={vinylSorted.length}
-                  expanded={openVinyl.has(edition.week_date)}
-                  onToggle={() => toggleVinyl(edition.week_date)}
-                  label="vinyl"
-                  dict={dict}
-                >
-                  {vinylSorted.map((track) => (
-                    <VinylTrackRow
-                      key={track.id}
-                      track={track}
-                      dict={dict}
-                      lang={lang}
-                    />
-                  ))}
-                </WeekAccordion>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ================================================================ */}
-      {/* SECTION 3 — 40 Breaks Vitales (Beatport chart)                   */}
-      {/* ================================================================ */}
-      <section>
+      <section className="mb-12 sm:mb-16">
         <header className="px-4 sm:px-0 mb-6 sm:mb-8">
           <span
             className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--red)] text-white border-2 border-[var(--ink)] mb-3"
@@ -1111,6 +1051,66 @@ export default function ChartView({
           })}
         </div>
       </section>
+
+      {/* ================================================================ */}
+      {/* SECTION 3 — Retro Vinyl Picks (Discogs + YouTube)              */}
+      {/* ================================================================ */}
+      {weeksWithVinyl.length > 0 && (
+        <section className="mb-12 sm:mb-16">
+          <header className="px-4 sm:px-0 mb-6 sm:mb-8">
+            <span
+              className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--uv)] text-white border-2 border-[var(--ink)] mb-3"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_kicker}
+            </span>
+            <h2
+              className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+            >
+              {c.vinyl_title}
+            </h2>
+            <p
+              className="text-sm sm:text-base text-[var(--ink)]/60"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_subtitle}
+            </p>
+          </header>
+
+          <div className="flex flex-col gap-2 px-2 sm:px-0">
+            {weeksWithVinyl.map((bundle, index) => {
+              const { edition, vinyl } = bundle
+              const isLatest = edition.week_date === weeksWithVinyl[0].edition.week_date
+              const vinylSorted = sortVinylByArtist(vinyl, lang)
+
+              return (
+                <WeekAccordion
+                  key={`vinyl-${edition.id}`}
+                  weekDate={edition.week_date}
+                  lang={lang}
+                  isLatest={isLatest}
+                  editionNumber={index + 1}
+                  count={vinylSorted.length}
+                  expanded={openVinyl.has(edition.week_date)}
+                  onToggle={() => toggleVinyl(edition.week_date)}
+                  label="vinyl"
+                  dict={dict}
+                >
+                  {vinylSorted.map((track) => (
+                    <VinylTrackRow
+                      key={track.id}
+                      track={track}
+                      dict={dict}
+                      lang={lang}
+                    />
+                  ))}
+                </WeekAccordion>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <footer className="px-4 sm:px-0 mt-8 text-center">
         <p className="text-[10px] text-[var(--ink)]/30 tracking-[3px] font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>
