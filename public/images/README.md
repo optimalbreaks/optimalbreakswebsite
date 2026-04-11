@@ -31,7 +31,7 @@ El script crea `mismo-nombre.webp` junto al original y **elimina** el JPG/PNG.
 
 ## Convención de nombres
 
-- Preferir minúsculas y guiones coherentes por carpeta. Si ya hay un nombre fijado (`Anuschka.webp`), no cambiarlo sin actualizar JSON y BD.
+- Preferir minúsculas y guiones coherentes por carpeta. Si ya hay un nombre fijado (`foto-anushka-1.webp`, etc.), no cambiarlo sin actualizar JSON y BD.
 - La URL pública es `/images/...` = lo que hay bajo `public/images/...`.
 
 ## Qué no hacer

@@ -23,6 +23,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
+ *   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -1447,6 +1448,105 @@ async function runPatchDreambeachCostaDelSol2026(sb) {
   console.log('[patch-dreambeach-costa-del-sol-2026] OK:', after)
 }
 
+const IBERICAN_BREAKS_FESTIVAL_2026_SLUG = 'iberican-breaks-festival-2026'
+const IBERICAN_BREAKS_TICKETS = 'https://www.monsterticket.com/evento/iberican-breaks-festival-2026'
+const IBERICAN_BREAKS_IMAGE = '/images/events/iberican-breaks-festival-2026.webp'
+
+const IBERICAN_BREAKS_FESTIVAL_2026_LINEUP = [
+  'Anuschka',
+  'Sekret Chadow',
+  'Pray for Bass',
+  'Yo Speed',
+  'Mutantbreakz',
+  'Perfect Kombo',
+  'Destroyers',
+  'Shade K',
+  'Prody',
+  'Urbano',
+  'Cude',
+  'DJ WAVS',
+  'Four Motion',
+  'Müme',
+  'Pavane',
+  'Drumback',
+  'Staxia',
+  'Terrie Kynd',
+  'Welder B',
+  'Killerblitz',
+  'Buson',
+  'Kaak',
+  'Rapela',
+  'Speaker Cellux',
+]
+
+const IBERICAN_BREAKS_FESTIVAL_2026_ROW = {
+  name: 'IBÉRICAN Breaks Festival 2026',
+  description_en:
+    'IBÉRICAN Breaks Festival 2026 brings together a broad slice of national breakbeat talent for one open-air date on Saturday 16 May 2026 at Terraza Manhattan in Olvera (Cádiz province), Spain. Promoted by The Electronics Nightmare, the bill is built as a solid cross-section of the current Iberian breaks circuit — DJs and producers aligned with the sound, the crowd energy and the festival-ready side of the scene. Tickets are sold via MonsterTicket; the official listing states non-nominal passes and no entry under 18. Exact door times were still marked as to be confirmed on the ticket page at cataloguing time — check MonsterTicket and promoter channels for updates.',
+  description_es:
+    'IBÉRICAN Breaks Festival 2026 reúne a gran parte del talento nacional del breakbeat en una cita al aire libre el sábado 16 de mayo de 2026 en la Terraza Manhattan de Olvera (Cádiz). La promotora The Electronics Nightmare presenta un cartel amplio y representativo de la escena: sonido, ambiente y cultura de pista en clave breaks. Entradas a la venta en MonsterTicket; la ficha oficial indica entradas no nominativas y prohibición de acceso a menores de 18 años. El horario de apertura figuraba como «por confirmar» en la página de venta al cerrar esta ficha — conviene revisar MonsterTicket y las redes del promotor antes del evento.',
+  event_type: 'festival',
+  date_start: '2026-05-16',
+  date_end: null,
+  location: 'Terraza Manhattan, Olvera, Cádiz, Spain',
+  city: 'Olvera',
+  country: 'Spain',
+  venue: 'Terraza Manhattan',
+  address: null,
+  website: IBERICAN_BREAKS_TICKETS,
+  tickets_url: IBERICAN_BREAKS_TICKETS,
+  image_url: IBERICAN_BREAKS_IMAGE,
+  lineup: IBERICAN_BREAKS_FESTIVAL_2026_LINEUP,
+  tags: [
+    'iberican',
+    'iberican breaks',
+    'breakbeat',
+    'breaks',
+    'olvera',
+    'cadiz',
+    'cádiz',
+    'spain',
+    '2026',
+    'terrace',
+    'the electronics nightmare',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: null,
+  doors_close: null,
+  coords: { lat: 36.9333, lng: -5.2667 },
+}
+
+async function runPatchIbericanBreaksFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', IBERICAN_BREAKS_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-iberican-breaks-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: IBERICAN_BREAKS_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...IBERICAN_BREAKS_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, age_restriction')
+    .eq('slug', IBERICAN_BREAKS_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-iberican-breaks-festival-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -1532,6 +1632,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-iberican-breaks-festival-2026')) {
+    await runPatchIbericanBreaksFestival2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -1581,7 +1686,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
-  node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026`)
+  node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
+  node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026`)
     process.exit(1)
   }
 
