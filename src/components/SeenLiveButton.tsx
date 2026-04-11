@@ -196,19 +196,19 @@ export default function SeenLiveButton({ artistId, artistName, lang, editSightin
     <div className="relative inline-flex">
       <button
         onClick={handleClick}
-        className={`inline-flex items-center gap-[6px] px-3 py-[5px] border-2 transition-all duration-200 cursor-pointer ${
+        className={`inline-flex items-center gap-2 h-9 px-3.5 border-2 transition-all duration-200 cursor-pointer ${
           hasSeen
             ? 'border-[var(--acid)] bg-[var(--acid)] text-[var(--ink)]'
-            : 'border-[var(--acid)] bg-transparent text-[var(--acid)] hover:bg-[var(--acid)] hover:text-[var(--ink)]'
+            : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-[var(--acid)] hover:bg-[var(--acid)] hover:text-[var(--ink)]'
         }`}
         aria-label={hasSeen ? (es ? 'Visto en vivo' : 'Seen live') : (es ? 'Marcar como visto en vivo' : 'Mark as seen live')}
       >
-        <span style={{ fontSize: '14px' }}>♫</span>
+        <span style={{ fontSize: '15px', lineHeight: 1 }}>♫</span>
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
-            fontSize: '9px',
+            fontSize: '11px',
             letterSpacing: '1px',
             textTransform: 'uppercase',
           }}

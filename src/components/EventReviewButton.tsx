@@ -227,19 +227,19 @@ export default function EventReviewButton({
         type="button"
         onClick={openForm}
         disabled={loading}
-        className={`inline-flex items-center gap-[6px] px-3 py-[5px] border-2 transition-all duration-200 cursor-pointer disabled:opacity-50 ${
+        className={`inline-flex items-center gap-2 h-9 px-3.5 border-2 transition-all duration-200 cursor-pointer disabled:opacity-50 ${
           hasRating
             ? 'border-[var(--yellow)] bg-[var(--yellow)] text-[var(--ink)]'
-            : 'border-[var(--yellow)] bg-transparent text-[var(--yellow)] hover:bg-[var(--yellow)] hover:text-[var(--ink)]'
+            : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-[var(--yellow)] hover:bg-[var(--yellow)] hover:text-[var(--ink)]'
         }`}
         aria-label={hasRating ? (es ? 'Editar valoración del evento' : 'Edit event rating') : (es ? 'Valorar evento' : 'Rate event')}
       >
-        <span style={{ fontSize: '14px' }}>★</span>
+        <span style={{ fontSize: '15px', lineHeight: 1 }}>★</span>
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
-            fontSize: '9px',
+            fontSize: '11px',
             letterSpacing: '1px',
             textTransform: 'uppercase',
           }}

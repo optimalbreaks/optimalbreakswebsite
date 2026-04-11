@@ -87,13 +87,13 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-[6px]">
+    <div className="flex flex-wrap items-center gap-2">
       <span
+        className="inline-flex items-center h-9 text-white/50"
         style={{
           fontFamily: "'Courier Prime', monospace",
-          fontSize: '9px',
+          fontSize: '11px',
           letterSpacing: '2px',
-          color: 'var(--dim)',
           textTransform: 'uppercase',
         }}
       >
@@ -107,13 +107,11 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
           onClick={link.name === 'Facebook' ? (e) => openFacebookShare(fullUrl, e) : undefined}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center w-[30px] h-[30px] border-2 no-underline transition-all duration-150 hover:scale-110 hover:rotate-[-3deg]"
+          className="inline-flex items-center justify-center w-9 h-9 border-2 border-white/30 bg-[var(--ink)] text-white/80 no-underline transition-all duration-150 hover:scale-110 hover:border-white hover:text-white"
           style={{
-            borderColor: link.color,
-            color: link.color,
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
-            fontSize: '9px',
+            fontSize: '11px',
             letterSpacing: '0px',
           }}
           title={`${es ? 'Compartir en' : 'Share on'} ${link.name}`}
@@ -122,33 +120,31 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
         </a>
       ))}
 
-      {/* Copy link */}
       <button
         onClick={copyLink}
-        className={`inline-flex items-center justify-center h-[30px] px-2 border-2 transition-all duration-150 cursor-pointer ${
+        className={`inline-flex items-center justify-center h-9 px-3 border-2 transition-all duration-150 cursor-pointer ${
           copied
             ? 'bg-[var(--acid)] border-[var(--acid)] text-white'
-            : 'border-[var(--ink)]/20 text-[var(--ink)]/50 hover:border-[var(--ink)] hover:text-[var(--ink)]'
+            : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-white hover:text-white'
         }`}
         style={{
           fontFamily: "'Courier Prime', monospace",
           fontWeight: 700,
-          fontSize: '9px',
+          fontSize: '11px',
           letterSpacing: '1px',
         }}
       >
         {copied ? (es ? '✓ COPIADO' : '✓ COPIED') : (es ? '🔗 LINK' : '🔗 LINK')}
       </button>
 
-      {/* Native share (mobile only) */}
       {'share' in (typeof navigator !== 'undefined' ? navigator : {}) && (
         <button
           onClick={nativeShare}
-          className="inline-flex items-center justify-center w-[30px] h-[30px] border-2 border-[var(--red)] text-[var(--red)] transition-all duration-150 hover:bg-[var(--red)] hover:text-white cursor-pointer lg:hidden"
+          className="inline-flex items-center justify-center w-9 h-9 border-2 border-white/30 bg-[var(--ink)] text-white/80 transition-all duration-150 hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white cursor-pointer lg:hidden"
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
-            fontSize: '12px',
+            fontSize: '13px',
           }}
           title={es ? 'Compartir' : 'Share'}
         >

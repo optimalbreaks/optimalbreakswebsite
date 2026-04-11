@@ -168,19 +168,19 @@ export default function FavoriteButton({
     <div className={`relative inline-flex ${className}`}>
       <button
         onClick={handleClick}
-        className={`inline-flex items-center gap-[6px] px-3 py-[5px] border-2 transition-all duration-200 ${
+        className={`inline-flex items-center gap-2 h-9 px-3.5 border-2 transition-all duration-200 ${
           isFavorite
             ? 'border-[var(--red)] bg-[var(--red)] text-white'
-            : 'border-[var(--red)] bg-transparent text-[var(--red)] hover:bg-[var(--red)] hover:text-white'
+            : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white'
         }`}
         aria-label={isFavorite ? (es ? 'Quitar de favoritos' : 'Remove from favorites') : (es ? 'Añadir a favoritos' : 'Add to favorites')}
       >
-        {heartSvg(14)}
+        {heartSvg(15)}
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
-            fontSize: '9px',
+            fontSize: '11px',
             letterSpacing: '1px',
             textTransform: 'uppercase',
           }}

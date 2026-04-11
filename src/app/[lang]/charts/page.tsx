@@ -7,7 +7,8 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack } from '@/types/database'
 import type { Metadata } from 'next'
-import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
+import { staticPageMetadata } from '@/lib/seo'
+import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import ChartView from '@/components/ChartView'
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -35,8 +36,8 @@ export async function generateMetadata({
   params: { lang: Locale }
 }): Promise<Metadata> {
   return staticPageMetadata(params.lang, '/charts', 'charts', {
-    ogImagePath: HOME_OG_IMAGE,
-    ogImageAlt: homeOgImageAlt(params.lang),
+    ogImagePath: sectionOgImagePath('charts'),
+    ogImageAlt: sectionOgImageAlt('charts', params.lang),
     extraKeywords: CHARTS_KEYWORDS[params.lang],
   })
 }

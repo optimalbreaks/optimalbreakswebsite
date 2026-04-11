@@ -104,19 +104,19 @@ export default function EventStatusButton({ eventId, lang }: EventStatusButtonPr
           <button
             key={key}
             onClick={() => handleClick(key as Status)}
-            className={`border-2 cursor-pointer transition-all duration-150 px-2 py-1 ${
+            className={`inline-flex items-center h-9 border-2 cursor-pointer transition-all duration-150 px-3 ${
               active
                 ? 'text-white'
-                : 'bg-transparent text-[var(--ink)]/40 hover:text-[var(--ink)]'
+                : 'bg-[var(--ink)] text-white/60 hover:text-white border-white/30'
             }`}
             style={{
               fontFamily: "'Courier Prime', monospace",
               fontWeight: 700,
-              fontSize: '9px',
+              fontSize: '11px',
               letterSpacing: '1px',
               textTransform: 'uppercase',
-              background: active ? conf.color : 'transparent',
-              borderColor: active ? conf.color : 'rgba(26,26,26,0.15)',
+              background: active ? conf.color : undefined,
+              borderColor: active ? conf.color : undefined,
               color: active ? (key === 'attended' ? 'var(--ink)' : 'white') : undefined,
             }}
           >

@@ -79,12 +79,12 @@ export default function FanCounter({ type, entityId, lang }: FanCounterProps) {
 
   return (
     <div
-      className="inline-flex items-center gap-[6px] px-3 py-[5px] border-2 border-[var(--red)] transition-all duration-200 hover:bg-[var(--red)] hover:text-white group"
+      className="inline-flex items-center gap-2 h-9 px-3.5 border-2 border-white/30 bg-[var(--ink)] transition-all duration-200 hover:border-[var(--red)] hover:bg-[var(--red)] group cursor-default"
       title={`${count} ${label}`}
     >
       <span
-        className="text-[var(--red)] group-hover:text-white transition-colors"
-        style={{ fontSize: '14px' }}
+        className="text-[var(--yellow)] group-hover:text-white transition-colors"
+        style={{ fontSize: '15px', lineHeight: 1 }}
       >
         ★
       </span>
@@ -93,9 +93,8 @@ export default function FanCounter({ type, entityId, lang }: FanCounterProps) {
           fontFamily: "'Unbounded', sans-serif",
           fontWeight: 900,
           fontSize: '14px',
-          color: 'var(--red)',
         }}
-        className="group-hover:text-white transition-colors"
+        className="text-white transition-colors"
       >
         {count}
       </span>
@@ -103,12 +102,11 @@ export default function FanCounter({ type, entityId, lang }: FanCounterProps) {
         style={{
           fontFamily: "'Courier Prime', monospace",
           fontWeight: 700,
-          fontSize: '9px',
+          fontSize: '11px',
           letterSpacing: '1px',
           textTransform: 'uppercase',
-          color: 'var(--dim)',
         }}
-        className="group-hover:text-white/70 transition-colors"
+        className="text-white/60 group-hover:text-white/80 transition-colors"
       >
         {label}
       </span>

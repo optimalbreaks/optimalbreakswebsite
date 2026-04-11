@@ -19,19 +19,21 @@ export const SECTION_OG_KEYS = [
   'scenes',
   'blog',
   'mixes',
+  'charts',
   'about',
 ] as const
 
 export type SectionOgKey = (typeof SECTION_OG_KEYS)[number]
 
-/** Archivo por sección (about/events: arte manual `*-og-alternate.png`). */
+/** Archivo por sección (about/events: arte manual `*-og-alternate.png`; mixes/charts: screenshot). */
 const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   artists: 'artists.png',
   labels: 'labels.png',
   events: 'events-og-alternate.png',
   scenes: 'scenes.png',
   blog: 'blog.png',
-  mixes: 'mixes.png',
+  mixes: 'mixes-screenshot.png',
+  charts: 'charts-screenshot.png',
   about: 'about-og-alternate.png',
 }
 
@@ -42,7 +44,8 @@ export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: nu
   events: { width: 1764, height: 1264 },
   scenes: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
   blog: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
-  mixes: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
+  mixes: { width: 1200, height: 630 },
+  charts: { width: 1200, height: 630 },
   about: { width: 1764, height: 1264 },
 }
 
@@ -68,8 +71,12 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
     en: 'Optimal Breaks — Blog: articles and essays',
   },
   mixes: {
-    es: 'Optimal Breaks — Mixes: sesiones y DJ sets',
-    en: 'Optimal Breaks — Mixes: DJ sets and sessions',
+    es: 'Optimal Breaks — Tu página de sesiones breaks favorita',
+    en: 'Optimal Breaks — Your favorite breaks sessions page',
+  },
+  charts: {
+    es: 'Optimal Breaks — Tu radio de break favorita',
+    en: 'Optimal Breaks — Your favorite break radio',
   },
   about: {
     es: 'Optimal Breaks — Sobre el proyecto',
