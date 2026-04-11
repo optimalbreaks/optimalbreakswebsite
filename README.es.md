@@ -38,6 +38,8 @@ El bloque oscuro **Timeline** de la portada (`src/components/Timeline.tsx`) toma
 
 **No hay ordenación automática en código** (ni por año de inicio, fin o punto medio). El orden del array es **manual y editorial**: hilo narrativo (orígenes → UK → …), **apartados** comparativos (p. ej. EE. UU. como otro mapa) y un **cierre** (p. ej. era digital global al final, como capa que convive en el tiempo con otros capítulos). Es normal que los periodos se solapen; la posición obedece al **relato**, no a una regla numérica única. Para reordenar, edita `items` en **ambos** idiomas. Detalle en inglés: [README.md — Home — history timeline](./README.md#home--history-timeline-section_history).
 
+**Tira de eventos en portada:** hasta **4** filas con **`date_start` ≥ hoy** (día local), orden **ascendente** por fecha. Si no hay resultados, se muestran los **4 eventos más recientes** por **`date_start` DESC**; si la tabla está vacía, entran placeholders estáticos **`FALLBACK_HOME_EVENTS`**. Implementación: `src/app/[lang]/page.tsx`.
+
 ---
 
 ## Autenticación y correos (Supabase)
@@ -208,6 +210,7 @@ Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**. Ret
 - **Artistas:** **`displayArtistImageUrl`** (`src/lib/artist-public-portrait.ts`) — prioridad: URL remota en BD → retrato del **mapa** `data/artist-public-portrait-map.json` → ruta `/images/artists/` en BD; si no hay imagen válida, **`CardThumbnail`** usa **fallback punk** (también si la URL remota falla al cargar).
 - **Resto de entidades:** **`displayImageUrl()`** (`src/lib/image-url.ts`) solo reescribe **rutas locales** `/images/*.jpg|png` → `.webp`. Las URLs de **Storage** se usan **tal cual** en la BD.
 - El componente **`CardThumbnail`** aplica la normalización que corresponda y muestra **placeholder** (iniciales / rayas) donde no aplique el fallback punk.
+- Si el padre usa **`group/link`** (p. ej. tarjetas de **`EventsExplorer`**), pasa **`groupHoverGroup="link"`** en **`CardThumbnail`** para que el zoom del cartel use **`group-hover/link:`** y coincida con el pie y la franja del cartel.
 - Se usa en listados, fichas, home, blog y dashboard.
 
 ### My Breaks / interacción del usuario
@@ -223,6 +226,10 @@ En **Artistas**, **Sellos**, **Eventos**, **Escenas** y **Mixes** (cuando hay fi
 - **Lista** — filas con miniatura cuadrada.
 
 Componentes: `ViewToggle.tsx` más `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` en `src/components/`. Textos en `src/dictionaries/es.json` y `en.json` (`view_large`, `view_compact`, `view_list`).
+
+**Eventos (`EventsExplorer`, `/[lang]/events`):** El pie de tarjeta funciona como **semáforo** por día calendario: **pasados** (último día `date_end` o `date_start` anterior a hoy, medianoche local) van en **`var(--red)`** con texto **blanco**; **próximos** usan el **amarillo de marca** **`var(--yellow)`** (mismo token que logo/navbar) con **`var(--ink)`**. El **hover** aclara el pie con `color-mix` hacia blanco; la **franja detrás del cartel** refuerza el estado (mezcla con rojo si pasó, amarillo sólido si es próximo). El `<Link>` es **`group/link`** y el pie usa **`group-hover/link:`** para reaccionar al pasar por la imagen (y al revés). **`CardThumbnail`** lleva **`groupHoverGroup="link"`** para el zoom. Rejilla con **`items-stretch`**, enlace **`h-full`** y pie con **`flex-1`** / **`min-h-*`** para **alinear alturas de pie** en cada fila. El mini-calendario de “hay evento” sigue en rojo (sin cambio).
+
+**Ficha de evento (`/[lang]/events/[slug]`):** CTA ancha de compra en el **hero** si hay URL de entradas o web, el evento **no está pasado** por fecha (último día del evento antes que hoy) y además **`event_type === 'upcoming'`** o el enlace es **MonsterTicket** (`monsterticket.com` / `.es` y subdominios). Se prioriza URL MonsterTicket. Textos acordados para MonsterTicket: **«Compra de entradas»** / **«Buy tickets»**; enlaces genéricos: **«Comprar entradas»** / **«Get tickets»**. Detalle en inglés: [README.md — Directory listing views](./README.md#directory-listing-views-artists-labels-events-scenes-mixes).
 
 **Mixes (`MixesExplorer`, `/[lang]/mixes`):** Filtros por **año**, **plataforma** (YouTube, SoundCloud, …) y **búsqueda** en título + artista. La lógica de filtrado para el usuario es la misma; por debajo se mantiene **montado todo el catálogo** y las filas que no cumplen el filtro usan la clase **`hidden` de Tailwind** (no basta el atributo HTML `hidden` en el mismo nodo que `display: flex`, porque el estilo del autor gana y pueden seguir viéndose tarjetas incorrectas). Así los **embeds no se destruyen** al quitar filtros. **YouTube y SoundCloud** se cargan **bajo demanda** con `IntersectionObserver` cuando la tarjeta se acerca al viewport (en el DOM los años van **de más reciente a más antiguo**); el iframe lleva `loading="lazy"`. SoundCloud sigue el player visual (URLs como en `SoundCloudVisualEmbed`; el envoltorio lazy está en `MixesExplorer`).
 
@@ -307,7 +314,7 @@ Detalle técnico y tabla de archivos en [README.md — Global audio system](./RE
 
 ## Secciones del sitio
 
-Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). En **mixes**: filtros y **carga perezosa de embeds** (ver sección *Vistas de listado* arriba y [README.md](./README.md)).
+Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. En **inicio**: hasta **4 eventos próximos** (`date_start` ≥ hoy) y fallback si no hay datos (ver sección *Home — línea temporal* arriba). Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). En **eventos**: pie semáforo, hover y CTA MonsterTicket en ficha (ver *Vistas de listado*). En **mixes**: filtros y **carga perezosa de embeds** (ver sección *Vistas de listado* arriba y [README.md](./README.md)).
 
 ### Migraciones SQL (resumen)
 

@@ -66,6 +66,6 @@ Entity pages (artists, events, labels, …) read **`image_url` from PostgreSQL**
 
 - `src/lib/image-url.ts` — `displayImageUrl`
 - `src/lib/artist-public-portrait.ts` — `displayArtistImageUrl`, map import
-- `src/components/CardThumbnail.tsx`
+- `src/components/CardThumbnail.tsx` — miniaturas y zoom; prop opcional **`groupHoverGroup="link"`** cuando el padre es **`group/link`** (p. ej. listado de eventos), para alinear `group-hover` con el nombre del grupo (no afecta a URLs ni WebP).
 - `src/components/EventPosterLightbox.tsx`
 - `src/lib/seo.ts` — `absoluteOgImage`

@@ -111,6 +111,7 @@ Listings and detail pages use a shared **`CardThumbnail`** component (`src/compo
 - **Home** `ArtistCard` / `EventFlyer` include the same thumbnail strip.
 - **Blog post** pages show a wide hero image under the title when `image_url` is set (or placeholder if not).
 - **Responsive**: grids stack to one column on small screens; flyer-style hover tilt is limited to `sm:` and up to avoid awkward touch behaviour.
+- **Hover groups:** when a parent uses Tailwind **`group/link`** (e.g. event cards in `EventsExplorer`), pass **`groupHoverGroup="link"`** on **`CardThumbnail`** so poster zoom uses **`group-hover/link:`** and stays in sync with the footer strip.
 
 ### Directory listing views (Artists, Labels, Events, Scenes, Mixes)
 
@@ -125,6 +126,10 @@ When Supabase returns rows, these five sections use **client components** that o
 Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` in `src/components/`. Labels for the buttons live under each section in `src/dictionaries/en.json` and `es.json` (`view_large`, `view_compact`, `view_list`).
 
 **Mixes (`MixesExplorer`, `/[lang]/mixes`):** Filters by **year**, **platform** (YouTube, SoundCloud, …), and **text search** on title + artist. Filter logic is unchanged from a user perspective; the implementation keeps the **full catalog mounted** and toggles visibility with Tailwind’s **`hidden` class** on non-matching cards so **embeds are not destroyed** when you clear filters (avoid using only the HTML `hidden` attribute on the same node as `display: flex` — author styles win and wrong rows could stay visible). **YouTube and SoundCloud iframes load on demand:** an `IntersectionObserver` mounts each embed when the card nears the viewport (DOM order follows **newest publication years first**), and the iframe uses `loading="lazy"`. SoundCloud continues to use the visual player (`SoundCloudVisualEmbed` URL builder; lazy wrapper in `MixesExplorer`).
+
+**Events (`EventsExplorer`, `/[lang]/events`):** Footer acts as a **traffic light** by calendar day: **past** events (last day `date_end` or `date_start` before today, local midnight) use **`var(--red)`** with **white** text; **still upcoming** use the **brand yellow** **`var(--yellow)`** (same token as the logo / navbar) with **`var(--ink)`** text. **Hover** lightens the footer with `color-mix(…, white, 50%)` on both colours; the **strip behind the poster** uses a matching tint (**red mix** when past, solid yellow when upcoming) so image and footer read as one unit. The card `<Link>` is **`group/link`**, so **`group-hover/link:`** on the footer fires when hovering the image (and vice versa). **`CardThumbnail`** uses **`groupHoverGroup="link"`** for poster zoom. Rows use **`items-stretch`**, **`h-full`** on the link, and **`flex-1`** / **`min-h-*`** on the footer so **footer heights align** within each grid row (large and compact). Mini calendar cells for “has event” stay red (unchanged).
+
+**Event detail (`/[lang]/events/[slug]`):** Full-width **hero ticket CTA** when there is a ticket/website URL, the event is **not past** by date (`isEventPastByDate`: last calendar day of the event before today), and either **`event_type === 'upcoming'`** or **`tickets_url` / `website`** is a **MonsterTicket** host (`monsterticket.com`, `monsterticket.es`, including subdomains). **`preferredHeroTicketUrl`** prefers MonsterTicket over other URLs. Copy for MonsterTicket: **“Compra de entradas”** / **“Buy tickets”**; generic links keep **“Comprar entradas”** / **“Get tickets”**.
 
 ---
 
@@ -313,6 +318,8 @@ The dark **Timeline** on the home page (`src/components/Timeline.tsx`) is driven
 
 **Order is not computed in code** — there is no sort by start year, end year, or midpoint. The JSON array order is **manual and editorial**: a narrative thread (origins → UK → …), **side paths** (e.g. US as a parallel map), and a **closing** block (e.g. global digital era last, as a layer that spans decades alongside other chapters). Overlapping periods are expected; placement follows **story flow**, not a single numeric rule. To reorder, edit `items` in **both** locale files.
 
+**Events strip:** the home grid shows up to **four** rows where **`date_start` ≥ today** (local calendar `YYYY-MM-DD`), **`ORDER BY date_start ASC`**. If that query returns nothing, the page uses the **four latest** events by **`date_start` DESC**; if the table is empty, **`FALLBACK_HOME_EVENTS`** placeholders apply (`src/app/[lang]/page.tsx`).
+
 ---
 
 ## DJ Deck Features
@@ -483,7 +490,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 
 | Section | Route | Description |
 |---------|-------|-------------|
-| Home | `/[lang]` | Hero with DJ deck, timeline, featured artists, events, CTA |
+| Home | `/[lang]` | Hero with DJ deck, timeline, featured artists, **up to 4 upcoming events** (see *Home — history timeline*), CTA |
 | History | `/[lang]/history` | Origins, UK, US, Andalusia, Australia, decline, digital era |
 | Artists | `/[lang]/artists` | Directory from Supabase (or featured fallback); **large / compact / list** views + filters |
 | Labels | `/[lang]/labels` | Record labels that shaped the sound; **three listing views** when data exists |
