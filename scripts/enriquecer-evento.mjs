@@ -1452,12 +1452,13 @@ const IBERICAN_BREAKS_FESTIVAL_2026_SLUG = 'iberican-breaks-festival-2026'
 const IBERICAN_BREAKS_TICKETS = 'https://www.monsterticket.com/evento/iberican-breaks-festival-2026'
 const IBERICAN_BREAKS_IMAGE = '/images/events/iberican-breaks-festival-2026.webp'
 
+/** Cartel oficial 2026: public/images/events/iberican-breaks-festival-2026.webp (orden de lectura). */
 const IBERICAN_BREAKS_FESTIVAL_2026_LINEUP = [
   'Anuschka',
   'Sekret Chadow',
   'Pray for Bass',
   'Yo Speed',
-  'Mutantbreakz',
+  'Mutant Breakz',
   'Perfect Kombo',
   'Destroyers',
   'Shade K',
@@ -1482,9 +1483,9 @@ const IBERICAN_BREAKS_FESTIVAL_2026_LINEUP = [
 const IBERICAN_BREAKS_FESTIVAL_2026_ROW = {
   name: 'IBÉRICAN Breaks Festival 2026',
   description_en:
-    'IBÉRICAN Breaks Festival 2026 brings together a broad slice of national breakbeat talent for one open-air date on Saturday 16 May 2026 at Terraza Manhattan in Olvera (Cádiz province), Spain. Promoted by The Electronics Nightmare, the bill is built as a solid cross-section of the current Iberian breaks circuit — DJs and producers aligned with the sound, the crowd energy and the festival-ready side of the scene. Tickets are sold via MonsterTicket; the official listing states non-nominal passes and no entry under 18. Exact door times were still marked as to be confirmed on the ticket page at cataloguing time — check MonsterTicket and promoter channels for updates.',
+    'IBÉRICAN Breaks Festival 2026 brings together a broad slice of national breakbeat talent for one open-air date on Saturday 16 May 2026 at Terraza Manhattan in Olvera (Cádiz province), Spain. Promoted by The Electronics Nightmare, the bill is built as a solid cross-section of the current Iberian breaks circuit — DJs and producers aligned with the sound, the crowd energy and the festival-ready side of the scene. The stored lineup order matches the names printed on the official 2026 poster. Tickets are sold via MonsterTicket; the official listing states non-nominal passes and no entry under 18. Exact door times were still marked as to be confirmed on the ticket page at cataloguing time — check MonsterTicket and promoter channels for updates.',
   description_es:
-    'IBÉRICAN Breaks Festival 2026 reúne a gran parte del talento nacional del breakbeat en una cita al aire libre el sábado 16 de mayo de 2026 en la Terraza Manhattan de Olvera (Cádiz). La promotora The Electronics Nightmare presenta un cartel amplio y representativo de la escena: sonido, ambiente y cultura de pista en clave breaks. Entradas a la venta en MonsterTicket; la ficha oficial indica entradas no nominativas y prohibición de acceso a menores de 18 años. El horario de apertura figuraba como «por confirmar» en la página de venta al cerrar esta ficha — conviene revisar MonsterTicket y las redes del promotor antes del evento.',
+    'IBÉRICAN Breaks Festival 2026 reúne a gran parte del talento nacional del breakbeat en una cita al aire libre el sábado 16 de mayo de 2026 en la Terraza Manhattan de Olvera (Cádiz). La promotora The Electronics Nightmare presenta un cartel amplio y representativo de la escena: sonido, ambiente y cultura de pista en clave breaks. El lineup guardado reproduce el orden de los nombres del cartel oficial de 2026. Entradas a la venta en MonsterTicket; la ficha oficial indica entradas no nominativas y prohibición de acceso a menores de 18 años. El horario de apertura figuraba como «por confirmar» en la página de venta al cerrar esta ficha — conviene revisar MonsterTicket y las redes del promotor antes del evento.',
   event_type: 'festival',
   date_start: '2026-05-16',
   date_end: null,
