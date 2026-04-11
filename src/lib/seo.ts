@@ -182,7 +182,7 @@ export function detailPageMetadata(
   const usesGeneratedFallback = !ogImageUrl?.trim()
   const ogImageMeta = usesGeneratedFallback
     ? { url: ogImage, width: 1200, height: 630, alt: title }
-    : { url: ogImage, alt: title }
+    : { url: ogImage, alt: title, width: 1200, height: 1200 }
 
   return {
     title,
