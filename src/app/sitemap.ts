@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/events',
     '/scenes',
     '/blog',
+    '/charts',
     '/mixes',
     '/about',
     '/privacy',
@@ -36,8 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push({
         url: `${BASE_URL}/${locale}${page}`,
         lastModified: new Date(),
-        changeFrequency: page === '' ? 'daily' : page === '/blog' ? 'daily' : 'weekly',
-        priority: page === '' ? 1 : page === '/artists' ? 0.9 : 0.7,
+        changeFrequency: page === '' ? 'daily' : page === '/blog' || page === '/charts' ? 'daily' : 'weekly',
+        priority: page === '' ? 1 : page === '/artists' ? 0.9 : page === '/charts' ? 0.9 : 0.7,
         alternates: {
           languages: {
             es: `${BASE_URL}/es${page}`,

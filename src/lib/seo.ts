@@ -92,6 +92,8 @@ export type StaticPageMetadataOptions = {
   /** Ruta bajo `public/` (p. ej. `/images/foo.jpeg`). Si se omite, se usa la OG generada. */
   ogImagePath?: string | null
   ogImageAlt?: string
+  /** Keywords adicionales que se anteponen a las default (específicas de esta página). */
+  extraKeywords?: string[]
 }
 
 export async function staticPageMetadata(
@@ -133,7 +135,10 @@ export async function staticPageMetadata(
   return {
     title: page.title,
     description: desc,
-    keywords: seo.default_keywords.split(',').map((k) => k.trim()),
+    keywords: [
+      ...(options?.extraKeywords ?? []),
+      ...seo.default_keywords.split(',').map((k) => k.trim()),
+    ],
     alternates: {
       canonical: url,
       languages: {

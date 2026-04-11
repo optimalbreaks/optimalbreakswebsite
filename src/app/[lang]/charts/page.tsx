@@ -10,6 +10,25 @@ import type { Metadata } from 'next'
 import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import ChartView from '@/components/ChartView'
 
+const CHARTS_KEYWORDS: Record<Locale, string[]> = {
+  es: [
+    'radio de breakbeat online',
+    'breakbeat radio',
+    'chart breakbeat semanal',
+    'nuevos lanzamientos breakbeat',
+    'top breakbeat',
+    '40 Breaks Vitales',
+  ],
+  en: [
+    'online breakbeat radio',
+    'breakbeat radio',
+    'weekly breakbeat chart',
+    'new breakbeat releases',
+    'top breakbeat',
+    '40 Breaks Vitales',
+  ],
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -18,6 +37,7 @@ export async function generateMetadata({
   return staticPageMetadata(params.lang, '/charts', 'charts', {
     ogImagePath: HOME_OG_IMAGE,
     ogImageAlt: homeOgImageAlt(params.lang),
+    extraKeywords: CHARTS_KEYWORDS[params.lang],
   })
 }
 
