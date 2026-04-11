@@ -49,15 +49,57 @@ function isMonsterTicketUrl(url: string | null | undefined): boolean {
   if (!url || typeof url !== 'string') return false
   try {
     const host = new URL(url.trim()).hostname.toLowerCase()
-    return host === 'www.monsterticket.com' || host === 'monsterticket.com'
+    return (
+      host === 'www.monsterticket.com' ||
+      host === 'monsterticket.com' ||
+      host === 'www.monsterticket.es' ||
+      host === 'monsterticket.es' ||
+      host.endsWith('.monsterticket.com') ||
+      host.endsWith('.monsterticket.es')
+    )
   } catch {
     return false
   }
 }
 
+function parseEventDayStart(iso: string | null | undefined): number | null {
+  if (!iso) return null
+  const part = String(iso).slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(part)) return null
+  const [y, m, d] = part.split('-').map(Number)
+  const t = new Date(y, m - 1, d).setHours(0, 0, 0, 0)
+  return Number.isNaN(t) ? null : t
+}
+
+function startOfLocalTodayEventPage(): number {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+/** Último día del evento antes que hoy → ya pasó (no mostrar CTA de compra en hero). */
+function isEventPastByDate(event: Pick<BreakEvent, 'date_start' | 'date_end'>): boolean {
+  const last = parseEventDayStart(event.date_end) ?? parseEventDayStart(event.date_start)
+  if (last == null) return false
+  return last < startOfLocalTodayEventPage()
+}
+
+/** Prioriza URL de MonsterTicket si existe (tickets o web). */
+function preferredHeroTicketUrl(ev: Pick<BreakEvent, 'tickets_url' | 'website'>): string {
+  const t = (ev.tickets_url ?? '').trim()
+  const w = (ev.website ?? '').trim()
+  if (isMonsterTicketUrl(t)) return t
+  if (isMonsterTicketUrl(w)) return w
+  return t || w
+}
+
 /** Etiqueta del enlace principal de compra (MonsterTicket = copy acordado con el sitio). */
-function primaryTicketCtaLabel(url: string, lang: Locale): string {
-  if (isMonsterTicketUrl(url)) {
+function primaryTicketCtaLabel(
+  ticketsUrl: string | null | undefined,
+  websiteUrl: string | null | undefined,
+  lang: Locale,
+): string {
+  if (isMonsterTicketUrl(ticketsUrl) || isMonsterTicketUrl(websiteUrl)) {
     return lang === 'es' ? 'Compra de entradas' : 'Buy tickets'
   }
   return lang === 'es' ? 'Comprar entradas' : 'Get tickets'
@@ -187,7 +229,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const schedule = (event.schedule ?? []) as EventScheduleSlot[]
   const tags = (event.tags ?? []) as string[]
   const mapLink = mapsUrl(event.coords as { lat: number; lng: number } | null, event.address ?? event.location)
-  const isUpcoming = event.event_type === 'upcoming'
+  const ticketHeroHref = preferredHeroTicketUrl(event)
+  const hasMonsterTicketLink =
+    isMonsterTicketUrl(event.tickets_url) || isMonsterTicketUrl(event.website)
+  /** Hero: CTA rojo ancho si hay enlace de compra y (MonsterTicket o event_type upcoming), y el evento no ha pasado. */
+  const showHeroTicketCta =
+    ticketHeroHref.length > 0 &&
+    !isEventPastByDate(event) &&
+    (event.event_type === 'upcoming' || hasMonsterTicketLink)
 
   const scheduleByStage = new Map<string, EventScheduleSlot[]>()
   for (const slot of schedule) {
@@ -326,16 +375,16 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
             </div>
 
-            {/* CTA: tickets */}
-            {isUpcoming && (event.tickets_url || event.website) && (
+            {/* CTA: tickets (MonsterTicket o event_type upcoming + enlace) */}
+            {showHeroTicketCta && (
               <a
-                href={event.tickets_url || event.website || '#'}
+                href={ticketHeroHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-5 inline-block border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-3 text-white shadow-[4px_4px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)]"
+                className="mt-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-3.5 text-center text-white shadow-[4px_4px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)] no-underline"
                 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', letterSpacing: '1px', textTransform: 'uppercase' }}
               >
-                {primaryTicketCtaLabel(event.tickets_url || event.website || '', lang)} →
+                {primaryTicketCtaLabel(event.tickets_url, event.website, lang)} →
               </a>
             )}
           </div>

@@ -22,6 +22,11 @@ interface CardThumbnailProps {
   /** Borde del marco (p. ej. lista blog: sm:border-r sin bottom) */
   frameClass?: string
   className?: string
+  /**
+   * Si el contenedor usa `group/link` (p. ej. tarjetas de eventos), el zoom en hover usa `group-hover/link:`.
+   * Sin esto, `group-hover:scale` no coincide con el nombre del grupo y el cartel no reacciona.
+   */
+  groupHoverGroup?: 'link'
 }
 
 export default function CardThumbnail({
@@ -32,22 +37,25 @@ export default function CardThumbnail({
   fit = 'cover',
   frameClass = 'border-b-[3px] border-[var(--ink)]',
   className = '',
+  groupHoverGroup,
 }: CardThumbnailProps) {
   const url = displayImageUrl(src)?.trim()
   const box = heightClass ?? aspectClass
   const imgFit =
     fit === 'contain'
       ? 'object-contain object-center'
-      : 'object-cover group-hover:scale-[1.04]'
+      : groupHoverGroup === 'link'
+        ? 'object-cover object-center transition-transform duration-400 ease-out will-change-transform group-hover/link:scale-[1.08]'
+        : 'object-cover object-center transition-transform duration-300 ease-out group-hover:scale-[1.04]'
 
   return (
     <div
       className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${frameClass} ${box} ${className}`}
     >
       {url ? (
-        <CardThumbnailRemoteImage src={url} alt={alt} fit={fit} imgFit={imgFit} />
+        <CardThumbnailRemoteImage src={url} alt={alt} fit={fit} imgFit={imgFit} groupHoverGroup={groupHoverGroup} />
       ) : (
-        <BrandedMissingThumbnail alt={alt} fit={fit} />
+        <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} />
       )}
     </div>
   )
@@ -59,11 +67,13 @@ function CardThumbnailRemoteImage({
   alt,
   fit,
   imgFit,
+  groupHoverGroup,
 }: {
   src: string
   alt: string
   fit: 'cover' | 'contain'
   imgFit: string
+  groupHoverGroup?: 'link'
 }) {
   const [broken, setBroken] = useState(false)
 
@@ -72,7 +82,7 @@ function CardThumbnailRemoteImage({
   }, [src])
 
   if (broken) {
-    return <BrandedMissingThumbnail alt={alt} fit={fit} />
+    return <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} />
   }
 
   return (
@@ -81,19 +91,29 @@ function CardThumbnailRemoteImage({
       src={src}
       alt={alt}
       onError={() => setBroken(true)}
-      className={`absolute inset-0 h-full w-full transition-transform duration-300 ease-out ${imgFit}`}
+      className={`absolute inset-0 h-full w-full ${imgFit}`}
       loading="lazy"
       decoding="async"
     />
   )
 }
 
-function BrandedMissingThumbnail({ alt, fit }: { alt: string; fit: 'cover' | 'contain' }) {
+function BrandedMissingThumbnail({
+  alt,
+  fit,
+  groupHoverGroup,
+}: {
+  alt: string
+  fit: 'cover' | 'contain'
+  groupHoverGroup?: 'link'
+}) {
   const fallbackUrl = displayImageUrl(MISSING_IMAGE_FALLBACK) ?? MISSING_IMAGE_FALLBACK
   const imgFit =
     fit === 'contain'
       ? 'object-contain object-center'
-      : 'object-cover object-center group-hover:scale-[1.04] transition-transform duration-300 ease-out'
+      : groupHoverGroup === 'link'
+        ? 'object-cover object-center transition-transform duration-400 ease-out will-change-transform group-hover/link:scale-[1.08]'
+        : 'object-cover object-center transition-transform duration-300 ease-out group-hover:scale-[1.04]'
 
   return (
     <div className="absolute inset-0" role="img" aria-label={alt}>
