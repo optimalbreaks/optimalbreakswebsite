@@ -17,6 +17,23 @@ const nextConfig = {
     ],
   },
 
+  // Redirección de dominio raíz a www (canonical)
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'optimalbreaks.com',
+          },
+        ],
+        destination: 'https://www.optimalbreaks.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
+
   // Security headers
   async headers() {
     const noStoreArtists = [

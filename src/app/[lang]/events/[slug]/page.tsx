@@ -45,6 +45,38 @@ function formatDate(dateStr: string | null, lang: Locale): string {
   }
 }
 
+function isMonsterTicketUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false
+  try {
+    const host = new URL(url.trim()).hostname.toLowerCase()
+    return host === 'www.monsterticket.com' || host === 'monsterticket.com'
+  } catch {
+    return false
+  }
+}
+
+/** Etiqueta del enlace principal de compra (MonsterTicket = copy acordado con el sitio). */
+function primaryTicketCtaLabel(url: string, lang: Locale): string {
+  if (isMonsterTicketUrl(url)) {
+    return lang === 'es' ? 'Compra de entradas' : 'Buy tickets'
+  }
+  return lang === 'es' ? 'Comprar entradas' : 'Get tickets'
+}
+
+function websiteLinkLabel(url: string, lang: Locale): string {
+  if (isMonsterTicketUrl(url)) {
+    return lang === 'es' ? 'Compra de entradas' : 'Buy tickets'
+  }
+  return 'Web'
+}
+
+function secondaryTicketsLinkLabel(url: string, lang: Locale): string {
+  if (isMonsterTicketUrl(url)) {
+    return lang === 'es' ? 'Compra de entradas' : 'Buy tickets'
+  }
+  return lang === 'es' ? 'Entradas' : 'Tickets'
+}
+
 function eventTypeLabel(type: string, lang: Locale): string {
   const map: Record<string, { es: string; en: string }> = {
     festival: { es: 'Festival', en: 'Festival' },
@@ -303,7 +335,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                 className="mt-5 inline-block border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-3 text-white shadow-[4px_4px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)]"
                 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', letterSpacing: '1px', textTransform: 'uppercase' }}
               >
-                {lang === 'es' ? 'COMPRAR ENTRADAS' : 'GET TICKETS'} →
+                {primaryTicketCtaLabel(event.tickets_url || event.website || '', lang)} →
               </a>
             )}
           </div>
@@ -521,7 +553,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="text-[var(--cyan)] hover:text-white transition-colors"
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}
                 >
-                  WEB →
+                  {websiteLinkLabel(event.website, lang)} →
                 </a>
               )}
               {event.tickets_url && event.tickets_url !== event.website && (
@@ -532,7 +564,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="text-[var(--yellow)] hover:text-white transition-colors"
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}
                 >
-                  {lang === 'es' ? 'ENTRADAS' : 'TICKETS'} →
+                  {secondaryTicketsLinkLabel(event.tickets_url, lang)} →
                 </a>
               )}
               {Object.entries(event.socials ?? {}).map(([key, url]) => (
