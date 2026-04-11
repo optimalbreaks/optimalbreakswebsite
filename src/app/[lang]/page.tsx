@@ -77,27 +77,6 @@ function todayYmdHome(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: HOME_EVENTS_TZ })
 }
 
-/** Próximos = aún no han terminado: último día del evento ≥ hoy. Sin fechas = se mantiene (TBA). */
-function isEventUpcomingForHomeSection(e: Pick<HomeEventRow, 'date_start' | 'date_end'>): boolean {
-  if (!e.date_start && !e.date_end) return true
-  const lastYmd = String(e.date_end || e.date_start || '').slice(0, 10)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastYmd)) return true
-  return lastYmd >= todayYmdHome()
-}
-
-function filterUpcomingHomeEvents(rows: HomeEventRow[]): HomeEventRow[] {
-  return rows.filter(isEventUpcomingForHomeSection)
-}
-
-function sortEventsForHome<T extends { event_type?: string; date_start?: string | null }>(items: T[]): T[] {
-  return [...items].sort((a, b) => {
-    if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
-    if (a.event_type !== 'upcoming' && b.event_type === 'upcoming') return 1
-    const aTime = a.date_start ? Date.parse(a.date_start) : Number.NEGATIVE_INFINITY
-    const bTime = b.date_start ? Date.parse(b.date_start) : Number.NEGATIVE_INFINITY
-    return bTime - aTime
-  })
-}
 
 function formatHomeEventDate(dateStart: string | null, dateEnd: string | null, lang: Locale): string {
   const tba = lang === 'es' ? 'Por confirmar' : 'TBA'
@@ -191,21 +170,21 @@ export default async function HomePage({
     }
   })
 
-  const { data: featuredEventsRaw } = await supabase
+  const { data: upcomingEventsRaw } = await supabase
     .from('events')
     .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
-    .eq('is_featured', true)
+    .gte('date_start', todayYmdHome())
+    .order('date_start', { ascending: true })
+    .limit(4)
 
-  let homeEvents = filterUpcomingHomeEvents((featuredEventsRaw || []) as HomeEventRow[])
+  let homeEvents = (upcomingEventsRaw || []) as HomeEventRow[]
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
       .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
-      .limit(48)
-    homeEvents = filterUpcomingHomeEvents((anyEvents || []) as HomeEventRow[])
-    homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
-  } else {
-    homeEvents = sortEventsForHome(homeEvents).slice(0, 4)
+      .order('date_start', { ascending: false })
+      .limit(4)
+    homeEvents = (anyEvents || []) as HomeEventRow[]
   }
 
   const displayEvents =
