@@ -354,7 +354,18 @@
     "play_all_next_title": "Siguiente pista",
     "play_all_now_playing": "Sonando",
     "radio_title": "La radio de Optimal Breaks",
-    "radio_subtitle": "Charts semanales, nuevos lanzamientos y previews de breakbeat — escucha, explora y descubre."
+    "radio_subtitle": "Charts semanales, nuevos lanzamientos y previews de breakbeat — escucha, explora y descubre.",
+    "vinyl_kicker": "VINILOS SEMANALES",
+    "vinyl_title": "Vinyl Picks",
+    "vinyl_subtitle": "Vinilos históricos del breakbeat, curados semanalmente por el equipo de Optimal Breaks desde Discogs. Orden alfabético por artista.",
+    "vinyl_toggle_show": "Desplegar vinilos",
+    "vinyl_toggle_hide": "Plegar vinilos",
+    "vinyl_count": "{n} vinilos",
+    "vinyl_open_discogs": "DISCOGS",
+    "vinyl_open_youtube": "YOUTUBE",
+    "vinyl_year_label": "Año",
+    "vinyl_format_label": "Formato",
+    "vinyl_catalog_label": "Cat."
   },
   "mixes": {
     "title": "Mixes y Sets",

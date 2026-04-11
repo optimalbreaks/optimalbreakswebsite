@@ -37,6 +37,7 @@
     "db:chart:artists": "node scripts/sync-chart-artists.mjs",
     "db:chart:artists:agent": "node scripts/enrich-chart-artists-agent.mjs",
     "db:chart:featured": "node scripts/chart-featured-upsert.mjs",
+    "db:chart:vinyl": "node scripts/chart-vinyl-upsert.mjs",
     "db:beatport:top": "node scripts/beatport-top-tracks.mjs",
     "images:to-webp": "node scripts/convert-public-image-to-webp.mjs",
     "og:generate": "node scripts/generar-og-image.mjs",

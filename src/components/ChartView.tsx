@@ -1,6 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Charts page (Client Component)
-// Two independent sections: New Releases + 40 Breaks Vitales
+// Three sections: New Releases + Vinyl Picks + 40 Breaks Vitales
 // ============================================
 
 'use client'
@@ -19,12 +19,16 @@ import type {
   ChartFeaturedTrack,
   ChartTrack,
   ChartTrackArtist,
+  ChartVinylArtist,
+  ChartVinylTrack,
 } from '@/types/database'
+import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 
 type ChartWeekBundle = {
   edition: ChartEdition
   tracks: ChartTrack[]
   featured: ChartFeaturedTrack[]
+  vinyl: ChartVinylTrack[]
 }
 
 interface ChartViewProps {
@@ -61,6 +65,29 @@ function sortFeaturedByArtist(picks: ChartFeaturedTrack[], lang: Locale): ChartF
   return [...picks].sort((A, B) => {
     const ka = featuredPrimaryArtistName(A).toLocaleLowerCase(loc)
     const kb = featuredPrimaryArtistName(B).toLocaleLowerCase(loc)
+    let cmp = ka.localeCompare(kb, loc, { sensitivity: 'base' })
+    if (cmp !== 0) return cmp
+    const ta = (A.title || '').toLocaleLowerCase(loc)
+    const tb = (B.title || '').toLocaleLowerCase(loc)
+    cmp = ta.localeCompare(tb, loc, { sensitivity: 'base' })
+    if (cmp !== 0) return cmp
+    return (A.mix_name || '').localeCompare(B.mix_name || '', loc, { sensitivity: 'base' })
+  })
+}
+
+function vinylPrimaryArtistName(track: ChartVinylTrack): string {
+  const a = track.artists
+  if (Array.isArray(a) && a.length > 0 && (a[0] as ChartVinylArtist)?.name) {
+    return String((a[0] as ChartVinylArtist).name).trim()
+  }
+  return (track.title || '').trim()
+}
+
+function sortVinylByArtist(tracks: ChartVinylTrack[], lang: Locale): ChartVinylTrack[] {
+  const loc = lang === 'es' ? 'es' : 'en'
+  return [...tracks].sort((A, B) => {
+    const ka = vinylPrimaryArtistName(A).toLocaleLowerCase(loc)
+    const kb = vinylPrimaryArtistName(B).toLocaleLowerCase(loc)
     let cmp = ka.localeCompare(kb, loc, { sensitivity: 'base' })
     if (cmp !== 0) return cmp
     const ta = (A.title || '').toLocaleLowerCase(loc)
@@ -261,6 +288,77 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
           </a>
         </div>
       </div>
+    </div>
+  )
+}
+
+function VinylTrackRow({ track, dict, lang }: { track: ChartVinylTrack; dict: any; lang: Locale }) {
+  const c = dict.charts
+  const artists = Array.isArray(track.artists) ? track.artists : []
+  const note = lang === 'es' ? track.note_es : track.note_en
+  const mixName = (track.mix_name || '').trim()
+  const ytId = extractYouTubeId(track.youtube_url)
+
+  return (
+    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {track.artwork_url ? (
+            <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+            </div>
+          ) : null}
+
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
+              {track.title}
+              {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
+            </h3>
+            <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              <ArtistNames artists={artists} />
+              {track.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></> : null}
+              {track.year != null && track.year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{track.year}</span></> : null}
+            </p>
+            {(track.catalog_number || track.format) && (
+              <p className="text-[10px] text-[var(--ink)]/40 mt-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                {track.format ? <span>{track.format}</span> : null}
+                {track.format && track.catalog_number ? <span className="mx-1"> · </span> : null}
+                {track.catalog_number ? <span>{track.catalog_number}</span> : null}
+              </p>
+            )}
+            {note ? <p className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>{note}</p> : null}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+          {track.youtube_url && (
+            <a
+              href={track.youtube_url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_open_youtube}
+            </a>
+          )}
+          <a
+            href={track.discogs_url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {c.vinyl_open_discogs}
+          </a>
+        </div>
+      </div>
+
+      {ytId && (
+        <div className="w-full max-w-sm">
+          <LazyYouTubeEmbed
+            videoId={ytId}
+            title={`${track.title} — ${artists.map((a: ChartVinylArtist) => a.name).join(', ')}`}
+            className="border-[3px] border-[var(--ink)]"
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -475,6 +573,7 @@ export default function ChartView({
   const c = dict.charts
 
   const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(new Set<string>())
+  const [openVinyl, toggleVinyl] = useToggleSet(new Set<string>())
   const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
 
   // ---- Play-all state ----
@@ -760,6 +859,7 @@ export default function ChartView({
   }
 
   const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
+  const weeksWithVinyl = weeks.filter((w) => w.vinyl.length > 0)
   const latestWeekDate = weeks[0]?.edition.week_date ?? ''
 
   if (weeks.length === 0) {
@@ -869,7 +969,67 @@ export default function ChartView({
       )}
 
       {/* ================================================================ */}
-      {/* SECTION 2 — 40 Breaks Vitales (Beatport chart)                   */}
+      {/* SECTION 2 — Vinyl Picks (Discogs + YouTube)                      */}
+      {/* ================================================================ */}
+      {weeksWithVinyl.length > 0 && (
+        <section className="mb-12 sm:mb-16">
+          <header className="px-4 sm:px-0 mb-6 sm:mb-8">
+            <span
+              className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--uv)] text-white border-2 border-[var(--ink)] mb-3"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_kicker}
+            </span>
+            <h2
+              className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+            >
+              {c.vinyl_title}
+            </h2>
+            <p
+              className="text-sm sm:text-base text-[var(--ink)]/60"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_subtitle}
+            </p>
+          </header>
+
+          <div className="flex flex-col gap-2 px-2 sm:px-0">
+            {weeksWithVinyl.map((bundle, index) => {
+              const { edition, vinyl } = bundle
+              const isLatest = edition.week_date === weeksWithVinyl[0].edition.week_date
+              const vinylSorted = sortVinylByArtist(vinyl, lang)
+
+              return (
+                <WeekAccordion
+                  key={`vinyl-${edition.id}`}
+                  weekDate={edition.week_date}
+                  lang={lang}
+                  isLatest={isLatest}
+                  editionNumber={index + 1}
+                  count={vinylSorted.length}
+                  expanded={openVinyl.has(edition.week_date)}
+                  onToggle={() => toggleVinyl(edition.week_date)}
+                  label="vinyl"
+                  dict={dict}
+                >
+                  {vinylSorted.map((track) => (
+                    <VinylTrackRow
+                      key={track.id}
+                      track={track}
+                      dict={dict}
+                      lang={lang}
+                    />
+                  ))}
+                </WeekAccordion>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ================================================================ */}
+      {/* SECTION 3 — 40 Breaks Vitales (Beatport chart)                   */}
       {/* ================================================================ */}
       <section>
         <header className="px-4 sm:px-0 mb-6 sm:mb-8">

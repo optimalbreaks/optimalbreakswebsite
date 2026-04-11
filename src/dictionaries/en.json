@@ -452,7 +452,18 @@
     "play_all_next_title": "Next track",
     "play_all_now_playing": "Now playing",
     "radio_title": "Optimal Breaks Radio",
-    "radio_subtitle": "Weekly charts, new releases & breakbeat previews — listen, explore and discover."
+    "radio_subtitle": "Weekly charts, new releases & breakbeat previews — listen, explore and discover.",
+    "vinyl_kicker": "WEEKLY VINYL",
+    "vinyl_title": "Vinyl Picks",
+    "vinyl_subtitle": "Historic breakbeat vinyl curated weekly by the Optimal Breaks team from Discogs. Listed A–Z by primary artist name.",
+    "vinyl_toggle_show": "Expand vinyl picks",
+    "vinyl_toggle_hide": "Collapse vinyl picks",
+    "vinyl_count": "{n} vinyl picks",
+    "vinyl_open_discogs": "DISCOGS",
+    "vinyl_open_youtube": "YOUTUBE",
+    "vinyl_year_label": "Year",
+    "vinyl_format_label": "Format",
+    "vinyl_catalog_label": "Cat."
   },
   "mixes": {
     "title": "Mixes & Sets",

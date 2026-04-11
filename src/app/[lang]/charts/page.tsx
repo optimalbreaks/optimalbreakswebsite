@@ -5,7 +5,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import type { ChartEdition, ChartFeaturedTrack, ChartTrack } from '@/types/database'
+import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import ChartView from '@/components/ChartView'
@@ -44,6 +44,7 @@ export default async function ChartsPage({
 
   let allTracks: ChartTrack[] = []
   let allFeatured: ChartFeaturedTrack[] = []
+  let allVinyl: ChartVinylTrack[] = []
   if (editionIds.length > 0) {
     const { data: trks } = await supabase
       .from('chart_tracks')
@@ -58,6 +59,13 @@ export default async function ChartsPage({
       .in('chart_edition_id', editionIds)
       .order('sort_order', { ascending: true })
     allFeatured = (feat as ChartFeaturedTrack[]) ?? []
+
+    const { data: viny } = await supabase
+      .from('chart_vinyl_tracks')
+      .select('*')
+      .in('chart_edition_id', editionIds)
+      .order('sort_order', { ascending: true })
+    allVinyl = (viny as ChartVinylTrack[]) ?? []
   }
 
   const byEdition = new Map<string, ChartTrack[]>()
@@ -76,10 +84,19 @@ export default async function ChartsPage({
     featuredByEdition.set(id, list)
   }
 
+  const vinylByEdition = new Map<string, ChartVinylTrack[]>()
+  for (const row of allVinyl) {
+    const id = row.chart_edition_id
+    const list = vinylByEdition.get(id) ?? []
+    list.push(row)
+    vinylByEdition.set(id, list)
+  }
+
   const weeks = editions.map((edition) => ({
     edition,
     tracks: byEdition.get(edition.id) ?? [],
     featured: featuredByEdition.get(edition.id) ?? [],
+    vinyl: vinylByEdition.get(edition.id) ?? [],
   }))
 
   const validWeekParam =

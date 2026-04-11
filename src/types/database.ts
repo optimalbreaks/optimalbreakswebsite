@@ -76,6 +76,30 @@ export type ChartTrack = {
   weeks_in_chart: number
 }
 
+/** Vinilos semanales curados desde Discogs (preview vía YouTube embed). */
+export interface ChartVinylArtist {
+  name: string
+  url?: string
+}
+
+export type ChartVinylTrack = {
+  id: string
+  chart_edition_id: string
+  sort_order: number
+  title: string
+  mix_name: string
+  artists: ChartVinylArtist[]
+  label: string
+  catalog_number: string
+  year: number | null
+  format: string
+  discogs_url: string
+  youtube_url: string | null
+  artwork_url: string | null
+  note_en: string
+  note_es: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -200,6 +224,12 @@ export interface Database {
         Row: ChartFeaturedTrack
         Insert: Omit<ChartFeaturedTrack, 'id'>
         Update: Partial<Omit<ChartFeaturedTrack, 'id'>>
+        Relationships: DbRelationship[]
+      }
+      chart_vinyl_tracks: {
+        Row: ChartVinylTrack
+        Insert: Omit<ChartVinylTrack, 'id'>
+        Update: Partial<Omit<ChartVinylTrack, 'id'>>
         Relationships: DbRelationship[]
       }
       mix_play_events: {

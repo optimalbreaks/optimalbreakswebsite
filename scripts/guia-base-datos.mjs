@@ -290,6 +290,14 @@ const ACTIONS = [
       'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
   },
   {
+    id: 'chart-vinyl-file',
+    run: 'node scripts/guia-base-datos.mjs run chart-vinyl-file data/charts/vinyl/<semana>.json',
+    npm: 'npm run db:chart:vinyl -- data/charts/vinyl/2026-04-06.json',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Vinyl Picks semanales en /charts: UPSERT manual desde JSON (chart_vinyl_tracks). Datos de Discogs + YouTube. La edición week_date debe existir.',
+  },
+  {
     id: 'chart-artists',
     run: 'node scripts/guia-base-datos.mjs run chart-artists [--week=YYYY-MM-DD] [--all-published] [--file=ruta.json] [--dry-run]',
     npm: 'npm run db:chart:artists -- [--week=… | --all-published | --file=… | --dry-run]',
@@ -404,6 +412,7 @@ Punto de entrada unificado:
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
+  chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
   beatport-top artist <slug> <beatport_id>  beatport-top-tracks.mjs (Top 10 ventas Beatport → JSONB en BD)
@@ -780,6 +789,21 @@ function main() {
         process.exit(1)
       }
       runNode('chart-featured-upsert.mjs', [rel])
+      break
+    }
+    case 'chart-vinyl-file': {
+      const rel = rest[0]
+      if (!rel) {
+        console.error('Uso: run chart-vinyl-file <ruta-desde-raíz-repo.json>')
+        console.error('  Ej: run chart-vinyl-file data/charts/vinyl/2026-04-06.json')
+        process.exit(1)
+      }
+      const p = resolve(ROOT, rel)
+      if (!existsSync(p)) {
+        console.error('No existe:', p)
+        process.exit(1)
+      }
+      runNode('chart-vinyl-upsert.mjs', [rel])
       break
     }
     case 'chart-artists':
