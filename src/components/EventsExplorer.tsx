@@ -55,6 +55,16 @@ function startOfLocalToday(): number {
   return d.getTime()
 }
 
+/** Último día del evento (date_end o date_start) estrictamente antes que hoy → pasado. Sin fecha válida → no pasado (se trata como «aún relevante»). */
+function isEventPast(e: BreakEvent): boolean {
+  const last = parseLocalDayStart(e.date_end) ?? parseLocalDayStart(e.date_start)
+  if (last == null) return false
+  return last < startOfLocalToday()
+}
+
+/** Verde semáforo «puedes ir»: contraste con texto blanco (más oscuro que --acid). */
+const EVENT_CARD_UPCOMING_BG = '#166534' as const
+
 function parseIsoYmd(s: string | null | undefined): { y: number; m: number; d: number } | null {
   if (!s) return null
   const part = String(s).slice(0, 10)
@@ -449,27 +459,40 @@ function MonthMiniCalendar({
 function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-start">
-      {events.map((e) => (
+      {events.map((e) => {
+        const past = isEventPast(e)
+        return (
         <Link
           key={e.slug}
           href={`/${lang}/events/${e.slug}`}
-          className="relative border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
+          className="relative border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 group/link no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
           <FavoriteButton type="event" entityId={e.id} lang={lang} />
-          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
-          <div className="p-3 flex flex-col flex-grow min-h-0">
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>
+          <div className="relative transition-colors duration-150 group-hover/link:bg-[var(--yellow)]">
+            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+          </div>
+          <div
+            className={`p-3 flex flex-col flex-grow min-h-0 text-white ${past ? 'bg-[var(--red)]' : ''}`}
+            style={past ? undefined : { backgroundColor: EVENT_CARD_UPCOMING_BG }}
+          >
+            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'inherit' }}>
               {e.date_start || 'TBA'}
             </div>
-            <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
+            <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2, color: 'inherit' }}>
               {e.name}
             </div>
             <div className="flex gap-1 mt-1">
-              <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{e.country}</span>
+              <span
+                className="inline-block border border-white/35 bg-white/15 text-white"
+                style={{ fontSize: '7px', padding: '0px 4px', margin: 0, fontFamily: "'Courier Prime', monospace", fontWeight: 700, letterSpacing: '0.5px' }}
+              >
+                {e.country}
+              </span>
             </div>
           </div>
         </Link>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -477,23 +500,31 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
 function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-start">
-      {events.map((e) => (
+      {events.map((e) => {
+        const past = isEventPast(e)
+        return (
         <Link
           key={e.slug}
           href={`/${lang}/events/${e.slug}`}
-          className="relative border-b-[2px] border-r-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)] flex flex-col overflow-hidden"
+          className="relative border-b-[2px] border-r-[2px] border-[var(--ink)] transition-all duration-150 group/link no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
-          <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
-          <div className="p-1.5 flex flex-col flex-grow min-h-0">
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '9px', color: 'var(--red)' }}>
+          <div className="relative transition-colors duration-150 group-hover/link:bg-[var(--yellow)]">
+            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+          </div>
+          <div
+            className={`p-1.5 flex flex-col flex-grow min-h-0 text-white ${past ? 'bg-[var(--red)]' : ''}`}
+            style={past ? undefined : { backgroundColor: EVENT_CARD_UPCOMING_BG }}
+          >
+            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '9px', color: 'inherit' }}>
               {e.date_start || 'TBA'}
             </div>
-            <div className="mt-0.5 line-clamp-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
+            <div className="mt-0.5 line-clamp-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15, color: 'inherit' }}>
               {e.name}
             </div>
           </div>
         </Link>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -501,31 +532,43 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
 function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
-      {events.map((e) => (
+      {events.map((e) => {
+        const past = isEventPast(e)
+        return (
         <div key={e.slug} className="relative border-b-[2px] border-[var(--ink)]">
           <FavoriteButton type="event" entityId={e.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
           <Link
             href={`/${lang}/events/${e.slug}`}
-            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
+            className="flex flex-col no-underline text-[var(--ink)]"
           >
-            <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
-              <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" />
-            </div>
-            <div className="flex-grow min-w-0">
-              <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-                {e.name}
+            <div className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-colors duration-150 hover:bg-[var(--yellow)]">
+              <div className="shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)]">
+                <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" />
               </div>
-              <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>
-                {e.date_start || 'TBA'}
+              <div className="flex-grow min-w-0">
+                <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                  {e.name}
+                </div>
+                <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>
+                  {e.date_start || 'TBA'}
+                </div>
+              </div>
+              <div className="hidden sm:flex gap-2 shrink-0">
+                <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.city}, {e.country}</span>
+                <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.event_type?.replace('_', ' ')}</span>
               </div>
             </div>
-            <div className="hidden sm:flex gap-2 shrink-0">
-              <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.city}, {e.country}</span>
-              <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{e.event_type?.replace('_', ' ')}</span>
-            </div>
+            <div
+              role="presentation"
+              aria-hidden
+              className={`h-2.5 w-full shrink-0 border-t-[2px] border-[var(--ink)] ${past ? 'bg-[var(--red)]' : ''}`}
+              style={past ? undefined : { backgroundColor: EVENT_CARD_UPCOMING_BG }}
+              title={past ? (lang === 'es' ? 'Evento pasado' : 'Past event') : lang === 'es' ? 'Próximo — aún puedes ir' : 'Upcoming'}
+            />
           </Link>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
