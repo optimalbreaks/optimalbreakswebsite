@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
       .limit(8),
     supabase
       .from('mixes')
-      .select('id, slug, title, artist_name, image_url, year, platform, mix_type')
+      .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url')
       .or(`title.ilike.${ilike},artist_name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(8),
     supabase
@@ -196,15 +196,111 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  for (const m of mixesRes.data || []) {
+  // Para mixes sin portada propia: usa la foto del artista vinculado
+  // y, como último recurso, la thumbnail de YouTube (video_url/embed_url).
+  const mixesRows = (mixesRes.data || []) as Array<{
+    id: string
+    slug: string
+    title: string
+    artist_name: string
+    artist_id: string | null
+    image_url: string | null
+    year: number | null
+    platform: string | null
+    mix_type: string | null
+    video_url: string | null
+    embed_url: string | null
+  }>
+
+  const missingArtistIds = Array.from(
+    new Set(mixesRows.filter((m) => !m.image_url && m.artist_id).map((m) => m.artist_id as string)),
+  )
+  const artistImageById = new Map<string, { slug: string; image_url: string | null }>()
+  if (missingArtistIds.length) {
+    const { data: artistFallbacks } = await supabase
+      .from('artists')
+      .select('id, slug, image_url')
+      .in('id', missingArtistIds)
+    for (const a of artistFallbacks || []) {
+      artistImageById.set(a.id, { slug: a.slug, image_url: a.image_url ?? null })
+    }
+  }
+
+  // Como último recurso (mix sin image_url y sin artist_id resoluble), busca por nombre.
+  const missingNames = Array.from(
+    new Set(
+      mixesRows
+        .filter(
+          (m) =>
+            !m.image_url &&
+            (!m.artist_id || !artistImageById.has(m.artist_id)) &&
+            (m.artist_name || '').trim().length > 0,
+        )
+        .map((m) => (m.artist_name || '').trim().toLowerCase()),
+    ),
+  )
+  const artistImageByLowerName = new Map<string, { slug: string; image_url: string | null }>()
+  if (missingNames.length) {
+    const orFilter = missingNames
+      .slice(0, 12)
+      .map((n) => `name.ilike.${escIlike(n)},name_display.ilike.${escIlike(n)}`)
+      .join(',')
+    if (orFilter) {
+      const { data: rows } = await supabase
+        .from('artists')
+        .select('slug, name, name_display, image_url')
+        .or(orFilter)
+        .limit(24)
+      for (const r of rows || []) {
+        const keys = [r.name, r.name_display].filter(Boolean).map((s) => (s as string).toLowerCase())
+        for (const k of keys) {
+          if (!artistImageByLowerName.has(k)) {
+            artistImageByLowerName.set(k, { slug: r.slug, image_url: r.image_url ?? null })
+          }
+        }
+      }
+    }
+  }
+
+  function youtubeIdFromUrl(urlStr: string | null | undefined): string | null {
+    if (!urlStr) return null
+    const patterns = [
+      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+    ]
+    for (const re of patterns) {
+      const mm = urlStr.match(re)
+      if (mm) return mm[1]
+    }
+    return null
+  }
+
+  for (const m of mixesRows) {
     const parts = [m.artist_name, m.year ? String(m.year) : null].filter(Boolean)
+    let image: string | null = m.image_url ?? null
+    if (!image && m.artist_id) {
+      const a = artistImageById.get(m.artist_id)
+      image = displayArtistImageUrl(a?.slug, a?.image_url ?? null) ?? null
+    }
+    if (!image) {
+      const key = (m.artist_name || '').trim().toLowerCase()
+      const a = key ? artistImageByLowerName.get(key) : null
+      image = displayArtistImageUrl(a?.slug, a?.image_url ?? null) ?? null
+    }
+    if (!image) {
+      const ytId = youtubeIdFromUrl(m.video_url) || youtubeIdFromUrl(m.embed_url)
+      if (ytId) image = `https://i.ytimg.com/vi/${ytId}/mqdefault.jpg`
+    }
     results.push({
       type: 'mix',
       id: m.id,
       slug: m.slug,
       title: (m.title || m.slug) as string,
       subtitle: parts.join(' — '),
-      image_url: (m.image_url as string | null) ?? null,
+      image_url: image,
       href: base(`/mixes#${m.slug}`),
     })
   }
