@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import CommandPalette from '@/components/CommandPalette'
 import type { Locale } from '@/lib/i18n-config'
 import type { User } from '@supabase/supabase-js'
 
@@ -160,9 +161,12 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'mixes', href: `/${lang}/mixes` },
     { key: 'charts', href: `/${lang}/charts` },
     { key: 'scenes', href: `/${lang}/scenes` },
+    { key: 'network', href: `/${lang}/network` },
     { key: 'blog', href: `/${lang}/blog` },
     { key: 'about', href: `/${lang}/about` },
   ]
+
+  const paletteDict = (dict?.search || {}) as Parameters<typeof CommandPalette>[0]['dict']
 
   const otherLang = lang === 'es' ? 'en' : 'es'
   const switchPath = pathname.replace(`/${lang}`, `/${otherLang}`)
@@ -177,6 +181,15 @@ export default function Header({ dict, lang }: HeaderProps) {
     color: pathname === href ? 'white' : 'var(--ink)',
     background: pathname === href ? 'var(--red)' : 'transparent',
   })
+
+  const [isMacLike, setIsMacLike] = useState(false)
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsMacLike(/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent))
+    }
+  }, [])
+  const searchKbd = isMacLike ? '⌘K' : 'Ctrl K'
+  const searchLabel = paletteDict.button_full || (lang === 'es' ? 'Buscar' : 'Search')
 
   return (
     <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
@@ -211,6 +224,31 @@ export default function Header({ dict, lang }: HeaderProps) {
           </Link>
         ))}
 
+        {/* ⌘K launcher — desktop */}
+        <button
+          type="button"
+          data-open-command-palette
+          aria-label={searchLabel}
+          title={`${searchLabel} (${searchKbd})`}
+          className="flex items-center gap-2 px-3 xl:px-4 py-3 border-l-[3px] border-[var(--ink)] bg-transparent cursor-pointer hover:bg-[var(--yellow)] transition-colors"
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontWeight: 700,
+            fontSize: '11px',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            color: 'var(--ink)',
+          }}
+        >
+          <SearchGlyph className="w-4 h-4" />
+          <span
+            className="hidden 2xl:inline-flex items-center px-1.5 py-[1px] border-2 border-[var(--ink)] bg-white text-[9px] leading-none"
+            style={{ fontFamily: "'Courier Prime', monospace", letterSpacing: '1px' }}
+          >
+            {searchKbd}
+          </span>
+        </button>
+
         {/* Language switch */}
         <Link
           href={switchPath}
@@ -238,8 +276,16 @@ export default function Header({ dict, lang }: HeaderProps) {
         )}
       </nav>
 
-      {/* Mobile: lang + auth + hamburger */}
+      {/* Mobile: search + lang + auth + hamburger */}
       <div className="lg:hidden ml-auto flex items-stretch">
+        <button
+          type="button"
+          data-open-command-palette
+          aria-label={searchLabel}
+          className="flex items-center px-3 border-l-[3px] border-[var(--ink)] bg-transparent cursor-pointer hover:bg-[var(--yellow)] transition-colors"
+        >
+          <SearchGlyph className="w-5 h-5" />
+        </button>
         <Link
           href={switchPath}
           className="flex items-center px-2.5 border-l-[3px] border-[var(--ink)] transition-colors hover:bg-[var(--uv)]"
@@ -282,6 +328,28 @@ export default function Header({ dict, lang }: HeaderProps) {
           ))}
         </div>
       )}
+
+      {paletteDict && Object.keys(paletteDict).length > 0 ? (
+        <CommandPalette lang={lang} dict={paletteDict} />
+      ) : null}
     </header>
+  )
+}
+
+function SearchGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20L16 16" />
+    </svg>
   )
 }

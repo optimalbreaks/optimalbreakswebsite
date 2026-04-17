@@ -9,7 +9,37 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "About",
-    "charts": "Tracks"
+    "charts": "Tracks",
+    "network": "Network"
+  },
+  "search": {
+    "button_short": "Search",
+    "button_full": "Search Optimal Breaks",
+    "placeholder": "Artists, labels, events, mixes, scenes…",
+    "empty_hint": "Type at least 2 letters. Try \"Stanton\", \"Bronx\", \"Prodigy\" or \"Breakspoll\".",
+    "no_results": "No results. Try another term.",
+    "searching": "Searching…",
+    "hint_kbd": "Shortcut",
+    "hint_nav": "↑↓ move · Enter open · Esc close",
+    "type_artist": "Artist",
+    "type_label": "Label",
+    "type_event": "Event",
+    "type_mix": "Mix",
+    "type_scene": "Scene",
+    "type_post": "Blog",
+    "type_organization": "Organization",
+    "groups_all": "All",
+    "shortcut_open": "Open search",
+    "shortcut_close": "Close",
+    "quick_title": "Jump to",
+    "quick_artists": "Artists",
+    "quick_labels": "Labels",
+    "quick_events": "Events",
+    "quick_mixes": "Mixes",
+    "quick_scenes": "Scenes",
+    "quick_charts": "Tracks",
+    "quick_network": "Network",
+    "quick_blog": "Blog"
   },
   "home": {
     "hero_subtitle": "The Breakbeat Bible",
@@ -147,6 +177,11 @@
           "href": "/scenes",
           "label": "Scenes",
           "hint": "Territories and local context"
+        },
+        {
+          "href": "/network",
+          "label": "Network",
+          "hint": "Interactive graph: who connects to whom"
         },
         {
           "href": "/blog",

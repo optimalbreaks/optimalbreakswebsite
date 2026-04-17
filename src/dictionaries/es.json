@@ -9,7 +9,37 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "Sobre",
-    "charts": "Tracks"
+    "charts": "Tracks",
+    "network": "La Red"
+  },
+  "search": {
+    "button_short": "Buscar",
+    "button_full": "Buscar en Optimal Breaks",
+    "placeholder": "Artistas, sellos, eventos, mixes, escenas…",
+    "empty_hint": "Escribe al menos 2 letras. Prueba «Stanton», «Sevilla», «Prodigy» o «Breakspoll».",
+    "no_results": "Sin resultados. Prueba con otro término.",
+    "searching": "Buscando…",
+    "hint_kbd": "Atajo",
+    "hint_nav": "↑↓ moverte · Enter abrir · Esc cerrar",
+    "type_artist": "Artista",
+    "type_label": "Sello",
+    "type_event": "Evento",
+    "type_mix": "Mix",
+    "type_scene": "Escena",
+    "type_post": "Blog",
+    "type_organization": "Organización",
+    "groups_all": "Todo",
+    "shortcut_open": "Abrir búsqueda",
+    "shortcut_close": "Cerrar",
+    "quick_title": "Accesos rápidos",
+    "quick_artists": "Artistas",
+    "quick_labels": "Sellos",
+    "quick_events": "Eventos",
+    "quick_mixes": "Mixes",
+    "quick_scenes": "Escenas",
+    "quick_charts": "Tracks",
+    "quick_network": "La Red",
+    "quick_blog": "Blog"
   },
   "home": {
     "hero_subtitle": "La Biblia del Breakbeat",
@@ -75,6 +105,7 @@
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
         { "href": "/charts", "label": "Tracks", "hint": "40 Breaks Vitales, chart semanal" },
         { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
+        { "href": "/network", "label": "La Red", "hint": "Grafo interactivo: quién conecta con quién" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
       ]
