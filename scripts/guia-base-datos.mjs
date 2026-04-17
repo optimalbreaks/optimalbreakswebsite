@@ -122,6 +122,14 @@ const ACTIONS = [
       'Enriquece un evento existente: SerpAPI (web) + OpenAI completan campos vacíos (fecha, lineup, descripción, venue, tags, etc.). --with-poster también busca cartel. --force sobreescribe campos ya rellenos.',
   },
   {
+    id: 'network-enrich',
+    run: 'node scripts/guia-base-datos.mjs run network-enrich [--only artists|labels|scenes|events] [--slug X] [--country ES] [--limit N] [--min-confidence 0.65] [--dry-run] [--force]',
+    npm: 'npm run db:network:enrich -- --dry-run',
+    creds: 'OPENAI_API_KEY + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Agente IA (OPENAI_MODEL, por defecto gpt-5.4) que para cada entidad (artista/sello/escena/evento) sugiere qué SLUGS del archivo están conectados y fusiona en related_artists/labels_founded/key_artists/key_labels/lineup con dedupe. Marca ai_enriched_at. --dry-run imprime sugerencias sin escribir.',
+  },
+  {
     id: 'events-prune-non-spain',
     run: 'node scripts/guia-base-datos.mjs run events-prune-non-spain [--dry-run]',
     npm: 'npm run db:guia -- run events-prune-non-spain --dry-run',
@@ -399,6 +407,8 @@ Punto de entrada unificado:
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
   events-enrich <slug> [--with-poster] [--dry-run] [--force]
                                enriquecer-evento.mjs (SerpAPI web + OpenAI → completar ficha)
+  network-enrich [--only artists|labels|scenes|events] [--slug X] [--country ES] [--limit N] [--dry-run]
+                               enriquecer-red.mjs (GPT-5.4 → conexiones artistas/sellos/escenas/eventos; fusiona en BD)
   events-prune-non-spain [--dry-run]  enriquecer-evento.mjs --prune-non-spain
   events-patch-raveart-winter-2026     fecha 14 mar 2026 en raveart-winter-festival-2026
   events-patch-raveart-summer-2026     4 jul 2026 Sevilla / Chaparrejo en raveart-summer-2026
@@ -696,6 +706,10 @@ function main() {
         process.exit(1)
       }
       runNode('enriquecer-evento.mjs', rest)
+      break
+    }
+    case 'network-enrich': {
+      runNode('enriquecer-red.mjs', rest)
       break
     }
     case 'events-prune-non-spain':

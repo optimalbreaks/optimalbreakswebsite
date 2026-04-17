@@ -91,6 +91,10 @@ export interface GraphPageDict {
   edges_count: string
   empty: string
   back_home: string
+  layout_label?: string
+  layout_free?: string
+  layout_carta?: string
+  hint_mobile?: string
 }
 
 interface Props {
@@ -148,6 +152,8 @@ function normalize(s: string): string {
     .trim()
 }
 
+type LayoutMode = 'force' | 'carta'
+
 export default function BreakNetworkGraph({ data, dict, lang }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -158,13 +164,19 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     adjacency: Map<string, Set<string>>
   } | null>(null)
   const viewRef = useRef({ tx: 0, ty: 0, scale: 1 })
-  const dragRef = useRef<{ nodeId: string | null; pointerX: number; pointerY: number; panning: boolean } | null>(
-    null,
+  // Pointers activos para multitouch (pinch-zoom + pan)
+  const pointersRef = useRef<Map<number, { x: number; y: number; startX: number; startY: number; nodeId: string | null; dragging: boolean; moved: number }>>(
+    new Map(),
   )
+  const pinchRef = useRef<{ startDist: number; startScale: number; midX: number; midY: number } | null>(null)
   const heatRef = useRef<number>(1)
   const imageCacheRef = useRef<Map<string, HTMLImageElement | 'error'>>(new Map())
   const hoverRef = useRef<string | null>(null)
   const hoverRedrawRef = useRef<boolean>(false)
+  /** Altura actual del canvas (px). Se recalcula en resize según viewport. */
+  const canvasHeightRef = useRef<number>(620)
+  const [canvasHeight, setCanvasHeight] = useState<number>(620)
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('force')
 
   // Filtros
   const typeOptions: { id: GraphNodeType; label: string; color: string }[] = useMemo(
@@ -211,21 +223,229 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     return data.edges.filter((e) => idSet.has(e.source) && idSet.has(e.target))
   }, [data, visibleNodes])
 
-  // Reconstruye simulación cuando cambia el subset visible.
+  // --- Layout Carta: carriles por escena + tiempo en eje Y ---
+  // Devuelve posiciones deterministas por nodo visible, en coordenadas de mundo.
+  type CartaLane = { id: string; label: string; nodeIds: string[]; colorHint: string }
+  function computeCartaLayout(
+    nodesIn: GraphNode[],
+    edgesIn: GraphEdge[],
+    w: number,
+    h: number,
+  ): { positions: Map<string, { x: number; y: number }>; lanes: CartaLane[] } {
+    const positions = new Map<string, { x: number; y: number }>()
+
+    // 1) Encuentra escenas visibles
+    const sceneNodes = nodesIn.filter((n) => n.type === 'scene')
+
+    // 2) Para cada nodo, contamos conexiones con cada escena
+    const sceneByNode = new Map<string, Map<string, number>>()
+    for (const n of nodesIn) sceneByNode.set(n.id, new Map())
+    const sceneIds = new Set(sceneNodes.map((s) => s.id))
+    for (const e of edgesIn) {
+      if (sceneIds.has(e.source)) {
+        const m = sceneByNode.get(e.target)
+        if (m) m.set(e.source, (m.get(e.source) || 0) + 1)
+      }
+      if (sceneIds.has(e.target)) {
+        const m = sceneByNode.get(e.source)
+        if (m) m.set(e.target, (m.get(e.source) || 0) + 1)
+      }
+    }
+
+    // 3) Asigna primary lane por nodo
+    function countryLaneId(country: string) {
+      const c = (country || '').trim().toUpperCase()
+      if (!c) return 'lane:misc'
+      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return 'lane:country:ES'
+      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'lane:country:UK'
+      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'lane:country:US'
+      return `lane:country:${c}`
+    }
+    function countryLaneLabel(country: string) {
+      const c = (country || '').trim().toUpperCase()
+      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return lang === 'es' ? 'España' : 'Spain'
+      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'UK'
+      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'US'
+      return c || (lang === 'es' ? 'Varios' : 'Misc')
+    }
+
+    const nodeLane = new Map<string, string>()
+    for (const n of nodesIn) {
+      if (n.type === 'scene') {
+        nodeLane.set(n.id, n.id) // la escena vive en su propio carril
+        continue
+      }
+      const counts = sceneByNode.get(n.id) || new Map<string, number>()
+      let bestScene: string | null = null
+      let bestCount = 0
+      counts.forEach((c, sid) => {
+        if (c > bestCount) {
+          bestCount = c
+          bestScene = sid
+        }
+      })
+      if (bestScene) nodeLane.set(n.id, bestScene)
+      else nodeLane.set(n.id, countryLaneId(n.meta?.country || ''))
+    }
+
+    // 4) Carril "Otros" para organizaciones/eventos sin escena/country
+    // (ya cubierto por country; si no hay country caerá en "lane:misc")
+
+    // 5) Construir la lista de carriles (escenas + países usados)
+    const laneIds = new Set<string>()
+    nodeLane.forEach((lid) => laneIds.add(lid))
+
+    const lanes: CartaLane[] = []
+    // Primero las escenas (ordenadas por número de nodos que contienen, desc)
+    const sceneOrder = sceneNodes
+      .filter((s) => laneIds.has(s.id))
+      .map((s) => ({
+        s,
+        count: nodesIn.filter((n) => nodeLane.get(n.id) === s.id).length,
+      }))
+      .sort((a, b) => b.count - a.count)
+    for (const { s } of sceneOrder) {
+      lanes.push({ id: s.id, label: s.name, nodeIds: [], colorHint: TYPE_COLOR.scene })
+    }
+    // Luego países en uso
+    const countryLaneIds = Array.from(laneIds).filter((l) => l.startsWith('lane:country:'))
+    countryLaneIds.sort()
+    for (const lid of countryLaneIds) {
+      const country = lid.replace('lane:country:', '')
+      lanes.push({
+        id: lid,
+        label: countryLaneLabel(country),
+        nodeIds: [],
+        colorHint: '#6b7280',
+      })
+    }
+    // Finalmente "lane:misc"
+    if (laneIds.has('lane:misc')) {
+      lanes.push({
+        id: 'lane:misc',
+        label: lang === 'es' ? 'Varios' : 'Misc',
+        nodeIds: [],
+        colorHint: '#6b7280',
+      })
+    }
+
+    // 6) Rellena nodeIds por carril
+    const laneIndex = new Map<string, number>()
+    lanes.forEach((l, i) => laneIndex.set(l.id, i))
+    for (const n of nodesIn) {
+      const lid = nodeLane.get(n.id) || 'lane:misc'
+      const laneIdx = laneIndex.get(lid)
+      if (laneIdx === undefined) continue
+      lanes[laneIdx].nodeIds.push(n.id)
+    }
+
+    // 7) Eje temporal: extraer año/era por nodo
+    function parseYear(meta: GraphNode['meta'] | undefined, type: GraphNodeType): number {
+      const m = meta || {}
+      if (typeof m.year === 'number' && m.year > 1900) return m.year
+      const era = (m.era || '').toLowerCase()
+      if (era) {
+        const match = era.match(/(19|20)\d{2}/)
+        if (match) return Number(match[0])
+        if (era.includes('60s') || era.includes('1960')) return 1965
+        if (era.includes('70s') || era.includes('1970')) return 1975
+        if (era.includes('80s') || era.includes('1980')) return 1985
+        if (era.includes('90s') || era.includes('1990')) return 1995
+        if (era.includes('00s') || era.includes('2000')) return 2003
+        if (era.includes('10s') || era.includes('2010')) return 2013
+        if (era.includes('20s') || era.includes('2020')) return 2022
+        if (era.includes('pioneer') || era.includes('old')) return 1985
+        if (era.includes('golden') || era.includes('nu')) return 2001
+      }
+      if (type === 'event') return 2024
+      if (type === 'artist') {
+        const cat = (m.category || '').toLowerCase()
+        if (cat === 'pioneer') return 1975
+        if (cat === 'uk_legend' || cat === 'us_artist') return 1998
+        if (cat === 'andalusian') return 2018
+        if (cat === 'current') return 2022
+        if (cat === 'crew') return 2020
+      }
+      return 2005
+    }
+
+    const years = nodesIn.map((n) => parseYear(n.meta, n.type))
+    const minYear = Math.min(...years, 1970)
+    const maxYear = Math.max(...years, new Date().getFullYear())
+    const yearSpan = Math.max(1, maxYear - minYear)
+
+    // 8) Colocar cada nodo dentro de su carril
+    const laneCount = Math.max(1, lanes.length)
+    const padX = 80
+    const padTop = 70
+    const padBottom = 60
+    const usableH = Math.max(220, h - padTop - padBottom)
+    const laneWidth = Math.max(180, (w - padX * 2) / laneCount)
+    const totalW = laneWidth * laneCount
+
+    for (let li = 0; li < lanes.length; li++) {
+      const lane = lanes[li]
+      const laneCenterX = padX + li * laneWidth + laneWidth / 2 - (totalW - (w - padX * 2)) / 2
+      // Ordenar por año dentro del carril
+      const items = lane.nodeIds
+        .map((id) => nodesIn.find((n) => n.id === id)!)
+        .filter(Boolean)
+        .map((n) => ({ n, year: parseYear(n.meta, n.type) }))
+        .sort((a, b) => a.year - b.year)
+      const usedYPositions = new Map<number, number>() // bucket 0..yearSpan → count
+      for (const { n, year } of items) {
+        const yRel = (year - minYear) / yearSpan
+        const yBase = padTop + yRel * usableH
+        // Stagger horizontal para evitar amontonamiento en el mismo año
+        const bucket = Math.round(yRel * 40) // 40 buckets por carril
+        const count = usedYPositions.get(bucket) || 0
+        usedYPositions.set(bucket, count + 1)
+        const jitterX = ((count % 5) - 2) * 22 + (count > 4 ? (count - 4) * 8 : 0)
+        const jitterY = Math.floor(count / 5) * 24
+        positions.set(n.id, { x: laneCenterX + jitterX, y: yBase + jitterY })
+      }
+    }
+
+    return { positions, lanes }
+  }
+
+  const cartaLayoutRef = useRef<{ lanes: CartaLane[]; minYear: number; maxYear: number } | null>(null)
+
+  // Reconstruye simulación cuando cambia el subset visible o el modo.
   useEffect(() => {
     const nodes: SimNode[] = []
     const idx = new Map<string, SimNode>()
     const w = wrapRef.current?.clientWidth || 900
-    const h = 620
+    const h = canvasHeightRef.current || 620
     const cx = w / 2
     const cy = h / 2
     const ringR = Math.min(w, h) * 0.32 + 30
+
+    // Posiciones iniciales según modo
+    let cartaPositions: Map<string, { x: number; y: number }> | null = null
+    let lanesComputed: CartaLane[] | null = null
+    if (layoutMode === 'carta') {
+      const built = computeCartaLayout(visibleNodes, visibleEdges, w, h)
+      cartaPositions = built.positions
+      lanesComputed = built.lanes
+    }
+
     for (let i = 0; i < visibleNodes.length; i++) {
       const n = visibleNodes[i]
       const weight = n.weight || 1
       const r = 5 + Math.min(14, Math.sqrt(weight) * 2.6)
-      const ang = (i / Math.max(1, visibleNodes.length)) * Math.PI * 2 + 0.1
-      const rad = ringR * (0.6 + 0.4 * Math.random())
+      let x: number
+      let y: number
+      if (cartaPositions) {
+        const p = cartaPositions.get(n.id)
+        x = p?.x ?? cx
+        y = p?.y ?? cy
+      } else {
+        const ang = (i / Math.max(1, visibleNodes.length)) * Math.PI * 2 + 0.1
+        const rad = ringR * (0.6 + 0.4 * Math.random())
+        x = cx + Math.cos(ang) * rad
+        y = cy + Math.sin(ang) * rad
+      }
       const sn: SimNode = {
         id: n.id,
         type: n.type,
@@ -233,12 +453,12 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         image_url: n.image_url,
         href: n.href,
         weight,
-        x: cx + Math.cos(ang) * rad,
-        y: cy + Math.sin(ang) * rad,
+        x,
+        y,
         vx: 0,
         vy: 0,
         r,
-        fixed: false,
+        fixed: layoutMode === 'carta',
       }
       nodes.push(sn)
       idx.set(n.id, sn)
@@ -256,22 +476,41 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       adjacency.get(t.id)!.add(s.id)
     }
     simRef.current = { nodes, edges, adjacency }
-    heatRef.current = 1
+
+    if (layoutMode === 'carta') {
+      heatRef.current = 0
+      cartaLayoutRef.current = lanesComputed
+        ? (() => {
+            // Extrae min/max year observados para etiquetas del eje
+            const years = visibleNodes.map((n) => {
+              const m = n.meta || {}
+              if (typeof m.year === 'number' && m.year > 1900) return m.year
+              const era = (m.era || '').toLowerCase()
+              const match = era.match(/(19|20)\d{2}/)
+              return match ? Number(match[0]) : 2005
+            })
+            return {
+              lanes: lanesComputed,
+              minYear: Math.min(...years, 1970),
+              maxYear: Math.max(...years, new Date().getFullYear()),
+            }
+          })()
+        : null
+    } else {
+      heatRef.current = 1
+      cartaLayoutRef.current = null
+      for (let i = 0; i < 220; i++) stepSimulation(0.05)
+    }
+
     viewRef.current = { tx: 0, ty: 0, scale: 1 }
-
-    // Pre-cook: iteraciones sin render
-    for (let i = 0; i < 220; i++) stepSimulation(0.05)
-
-    // Autozoom para encajar
     autoFitView()
-
     startLoop()
 
     return () => {
       stopLoop()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleNodes, visibleEdges])
+  }, [visibleNodes, visibleEdges, layoutMode])
 
   // Image loader
   useEffect(() => {
@@ -295,7 +534,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     }
   }, [visibleNodes])
 
-  // HiDPI canvas + resize
+  // HiDPI canvas + resize (responsive height)
   useEffect(() => {
     function resize() {
       const canvas = canvasRef.current
@@ -303,7 +542,16 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       if (!canvas || !wrap) return
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       const w = wrap.clientWidth
-      const h = 620
+      const vw = window.innerWidth || 1024
+      // En móvil queremos MUCHA altura (grafos así son inusables en 300px).
+      // En desktop mantenemos 620. En tablet, valor intermedio.
+      const vh = window.innerHeight || 720
+      let h: number
+      if (vw < 640) h = Math.max(460, Math.min(Math.round(vh * 0.78), 720))
+      else if (vw < 1024) h = Math.max(520, Math.min(Math.round(vh * 0.72), 680))
+      else h = 620
+      canvasHeightRef.current = h
+      setCanvasHeight(h)
       canvas.width = w * dpr
       canvas.height = h * dpr
       canvas.style.width = `${w}px`
@@ -314,13 +562,21 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     }
     resize()
     window.addEventListener('resize', resize)
-    return () => window.removeEventListener('resize', resize)
+    window.addEventListener('orientationchange', resize)
+    return () => {
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('orientationchange', resize)
+    }
   }, [])
 
-  // Pointer handlers
+  // Pointer handlers (multitouch: pinch-zoom + pan + tap)
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    // Umbral de movimiento para decidir entre TAP vs DRAG (px de pantalla).
+    // En móvil los dedos son imprecisos: 10px es un buen compromiso.
+    const DRAG_THRESHOLD = 10
 
     function pickNode(cx: number, cy: number): SimNode | null {
       const sim = simRef.current
@@ -332,7 +588,8 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         const n = sim.nodes[i]
         const dx = n.x - wx
         const dy = n.y - wy
-        const r = n.r + 2
+        // Targets táctiles más grandes en móvil (hit radius mayor)
+        const r = n.r + 6
         if (dx * dx + dy * dy <= r * r) return n
       }
       return null
@@ -343,23 +600,54 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       return { x: (e.clientX as number) - rect.left, y: (e.clientY as number) - rect.top }
     }
 
-    function onPointerDown(e: PointerEvent) {
-      const p = clientPoint(e)
-      const node = pickNode(p.x, p.y)
-      if (node) {
-        canvas!.setPointerCapture(e.pointerId)
-        node.fixed = true
-        dragRef.current = { nodeId: node.id, pointerX: p.x, pointerY: p.y, panning: false }
-        heatRef.current = Math.max(heatRef.current, 0.5)
-      } else {
-        canvas!.setPointerCapture(e.pointerId)
-        dragRef.current = { nodeId: null, pointerX: p.x, pointerY: p.y, panning: true }
+    function updatePointer(id: number, x: number, y: number) {
+      const p = pointersRef.current.get(id)
+      if (p) {
+        p.moved += Math.abs(x - p.x) + Math.abs(y - p.y)
+        p.x = x
+        p.y = y
       }
     }
+
+    function onPointerDown(e: PointerEvent) {
+      const p = clientPoint(e)
+      canvas!.setPointerCapture(e.pointerId)
+      const node = pickNode(p.x, p.y)
+      pointersRef.current.set(e.pointerId, {
+        x: p.x,
+        y: p.y,
+        startX: p.x,
+        startY: p.y,
+        nodeId: node?.id ?? null,
+        dragging: false,
+        moved: 0,
+      })
+      // Si aparece un segundo dedo, inicializamos pinch
+      if (pointersRef.current.size === 2) {
+        const arr = Array.from(pointersRef.current.values())
+        const [a, b] = arr
+        const dx = a.x - b.x
+        const dy = a.y - b.y
+        pinchRef.current = {
+          startDist: Math.hypot(dx, dy) || 1,
+          startScale: viewRef.current.scale,
+          midX: (a.x + b.x) / 2,
+          midY: (a.y + b.y) / 2,
+        }
+        // Anula cualquier drag de nodo del primer puntero
+        pointersRef.current.forEach((p) => {
+          p.dragging = false
+          p.nodeId = null
+        })
+      }
+    }
+
     function onPointerMove(e: PointerEvent) {
       const p = clientPoint(e)
-      const drag = dragRef.current
-      if (!drag) {
+      const prev = pointersRef.current.get(e.pointerId)
+
+      // Hover (solo ratón, sin puntero presionado)
+      if (!prev && e.pointerType === 'mouse') {
         const node = pickNode(p.x, p.y)
         const newHover = node?.id ?? null
         if (hoverRef.current !== newHover) {
@@ -370,60 +658,107 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         }
         return
       }
-      if (drag.panning) {
-        viewRef.current.tx += p.x - drag.pointerX
-        viewRef.current.ty += p.y - drag.pointerY
-        drag.pointerX = p.x
-        drag.pointerY = p.y
+      if (!prev) return
+      updatePointer(e.pointerId, p.x, p.y)
+
+      // PINCH-ZOOM con 2 dedos
+      if (pointersRef.current.size === 2 && pinchRef.current) {
+        const arr = Array.from(pointersRef.current.values())
+        const [a, b] = arr
+        const dx = a.x - b.x
+        const dy = a.y - b.y
+        const dist = Math.hypot(dx, dy) || 1
+        const midX = (a.x + b.x) / 2
+        const midY = (a.y + b.y) / 2
+        const ratio = dist / pinchRef.current.startDist
+        const rawScale = pinchRef.current.startScale * ratio
+        const next = Math.max(0.25, Math.min(4, rawScale))
+        // Zoom alrededor del punto medio actual + pan por desplazamiento del midpoint
+        const view = viewRef.current
+        const prevScale = view.scale
+        const wx = (pinchRef.current.midX - view.tx) / prevScale
+        const wy = (pinchRef.current.midY - view.ty) / prevScale
+        view.scale = next
+        view.tx = midX - wx * next
+        view.ty = midY - wy * next
+        // El pinchRef se actualiza para que el pan del midpoint sea suave
+        pinchRef.current.midX = midX
+        pinchRef.current.midY = midY
+        pinchRef.current.startDist = dist
+        pinchRef.current.startScale = next
         requestRedraw()
         return
       }
-      if (drag.nodeId && simRef.current) {
-        const node = simRef.current.nodes.find((n) => n.id === drag.nodeId)
-        if (node) {
-          const { tx, ty, scale } = viewRef.current
-          node.x = (p.x - tx) / scale
-          node.y = (p.y - ty) / scale
-          node.vx = 0
-          node.vy = 0
-          drag.pointerX = p.x
-          drag.pointerY = p.y
-          heatRef.current = Math.max(heatRef.current, 0.6)
+
+      // Un solo dedo: TAP vs DRAG según umbral y tipo (nodo o pan)
+      if (pointersRef.current.size === 1) {
+        const moved = Math.abs(p.x - prev.startX) + Math.abs(p.y - prev.startY)
+        if (!prev.dragging && moved < DRAG_THRESHOLD) return // aún no decidido
+        prev.dragging = true
+
+        if (prev.nodeId && simRef.current) {
+          // Drag de nodo: solo cuando empezó en un nodo
+          const node = simRef.current.nodes.find((n) => n.id === prev.nodeId)
+          if (node) {
+            node.fixed = true
+            const { tx, ty, scale } = viewRef.current
+            node.x = (p.x - tx) / scale
+            node.y = (p.y - ty) / scale
+            node.vx = 0
+            node.vy = 0
+            heatRef.current = Math.max(heatRef.current, 0.6)
+            requestRedraw()
+          }
+        } else {
+          // Pan
+          const dx = p.x - prev.startX
+          const dy = p.y - prev.startY
+          // Aplica el delta respecto a la última posición
+          const lastDx = (prev as { lastDx?: number }).lastDx ?? 0
+          const lastDy = (prev as { lastDy?: number }).lastDy ?? 0
+          viewRef.current.tx += dx - lastDx
+          viewRef.current.ty += dy - lastDy
+          ;(prev as { lastDx?: number; lastDy?: number }).lastDx = dx
+          ;(prev as { lastDx?: number; lastDy?: number }).lastDy = dy
           requestRedraw()
         }
       }
     }
+
     function onPointerUp(e: PointerEvent) {
-      const drag = dragRef.current
-      if (drag?.nodeId && simRef.current) {
-        const node = simRef.current.nodes.find((n) => n.id === drag.nodeId)
+      const prev = pointersRef.current.get(e.pointerId)
+      try {
+        canvas!.releasePointerCapture(e.pointerId)
+      } catch {}
+      pointersRef.current.delete(e.pointerId)
+      if (pointersRef.current.size < 2) pinchRef.current = null
+
+      if (!prev) return
+
+      // Libera el nodo arrastrado (no queremos que quede pinchado)
+      if (prev.dragging && prev.nodeId && simRef.current) {
+        const node = simRef.current.nodes.find((n) => n.id === prev.nodeId)
         if (node) node.fixed = false
       }
-      const p = clientPoint(e)
-      // Click vs drag: si apenas se movió y había nodo
-      if (drag && !drag.panning && drag.nodeId) {
-        const start = { x: drag.pointerX, y: drag.pointerY }
-        const moved = Math.abs(start.x - p.x) + Math.abs(start.y - p.y)
-        if (moved < 6) {
-          const node = simRef.current?.nodes.find((n) => n.id === drag.nodeId)
-          if (node) {
-            setSelectedNode(node.id)
-          }
+
+      // Tap: cantidad mínima de movimiento y no estaba en modo drag
+      const moved = Math.abs(prev.x - prev.startX) + Math.abs(prev.y - prev.startY)
+      if (!prev.dragging && moved < DRAG_THRESHOLD) {
+        if (prev.nodeId) {
+          setSelectedNode(prev.nodeId)
+        } else if (pointersRef.current.size === 0) {
+          // Tap en vacío cierra el panel
+          setSelectedNode(null)
         }
       }
-      if (drag && drag.panning) {
-        // Nada que hacer
-      }
-      canvas!.releasePointerCapture(e.pointerId)
-      dragRef.current = null
     }
+
     function onWheel(e: WheelEvent) {
       e.preventDefault()
       const p = clientPoint(e)
       const prev = viewRef.current.scale
       const factor = Math.exp(-e.deltaY * 0.0015)
-      const next = Math.max(0.25, Math.min(3.5, prev * factor))
-      // Zoom alrededor del cursor
+      const next = Math.max(0.25, Math.min(4, prev * factor))
       const wx = (p.x - viewRef.current.tx) / prev
       const wy = (p.y - viewRef.current.ty) / prev
       viewRef.current.scale = next
@@ -431,6 +766,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       viewRef.current.ty = p.y - wy * next
       requestRedraw()
     }
+
     function onDoubleClick(e: MouseEvent) {
       const p = clientPoint(e)
       const node = pickNode(p.x, p.y)
@@ -443,6 +779,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     canvas.addEventListener('pointermove', onPointerMove)
     canvas.addEventListener('pointerup', onPointerUp)
     canvas.addEventListener('pointercancel', onPointerUp)
+    canvas.addEventListener('pointerleave', (e) => onPointerUp(e as PointerEvent))
     canvas.addEventListener('wheel', onWheel, { passive: false })
     canvas.addEventListener('dblclick', onDoubleClick)
     canvas.style.cursor = 'grab'
@@ -476,7 +813,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const bw = maxX - minX || 1
     const bh = maxY - minY || 1
     const w = wrap.clientWidth
-    const h = 620
+    const h = canvasHeightRef.current || 620
     const pad = 50
     const scale = Math.min((w - pad * 2) / bw, (h - pad * 2) / bh, 1.6)
     const safeScale = isFinite(scale) && scale > 0 ? scale : 1
@@ -589,7 +926,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     if (!ctx) return
     const wrap = wrapRef.current
     const w = wrap?.clientWidth || 900
-    const h = 620
+    const h = canvasHeightRef.current || 620
     ctx.save()
     ctx.clearRect(0, 0, w, h)
     ctx.fillStyle = PAPER
@@ -604,6 +941,105 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const focus = hover || sel
     const adj = sim.adjacency
     const focusAdj = focus ? adj.get(focus) || new Set<string>() : null
+
+    // --- Dibujo de carriles + eje temporal (solo modo Carta) ---
+    const cartaInfo = layoutMode === 'carta' ? cartaLayoutRef.current : null
+    if (cartaInfo && sim.nodes.length > 0) {
+      let minX = Infinity
+      let maxX = -Infinity
+      let minY = Infinity
+      let maxY = -Infinity
+      for (const n of sim.nodes) {
+        if (n.x < minX) minX = n.x
+        if (n.x > maxX) maxX = n.x
+        if (n.y < minY) minY = n.y
+        if (n.y > maxY) maxY = n.y
+      }
+      const padLane = 40
+      minX -= padLane
+      maxX += padLane
+      minY -= 50
+      maxY += 40
+      const { lanes, minYear, maxYear } = cartaInfo
+      const laneCount = Math.max(1, lanes.length)
+      const laneSpanX = (maxX - minX) / laneCount
+      // Bandas alternas
+      ctx.save()
+      for (let i = 0; i < laneCount; i++) {
+        const x0 = minX + i * laneSpanX
+        const x1 = x0 + laneSpanX
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(26,26,26,0.04)' : 'rgba(26,26,26,0.08)'
+        ctx.fillRect(x0, minY, x1 - x0, maxY - minY)
+      }
+      // Líneas verticales entre carriles
+      ctx.strokeStyle = 'rgba(26,26,26,0.25)'
+      ctx.lineWidth = 1 / scale
+      for (let i = 1; i < laneCount; i++) {
+        const x0 = minX + i * laneSpanX
+        ctx.beginPath()
+        ctx.moveTo(x0, minY)
+        ctx.lineTo(x0, maxY)
+        ctx.stroke()
+      }
+      // Líneas horizontales cada década
+      const decadeStart = Math.floor(minYear / 10) * 10
+      const decadeEnd = Math.ceil(maxYear / 10) * 10
+      const yearSpan = Math.max(1, maxYear - minYear)
+      ctx.strokeStyle = 'rgba(26,26,26,0.12)'
+      ctx.setLineDash([6 / scale, 6 / scale])
+      for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
+        const yRel = (yr - minYear) / yearSpan
+        const y = minY + 50 + yRel * (maxY - minY - 90)
+        ctx.beginPath()
+        ctx.moveTo(minX, y)
+        ctx.lineTo(maxX, y)
+        ctx.stroke()
+      }
+      ctx.setLineDash([])
+      // Etiquetas de carril (arriba)
+      const laneFont = 12 / scale
+      ctx.font = `900 ${laneFont}px "Unbounded", sans-serif`
+      ctx.fillStyle = '#1a1a1a'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      for (let i = 0; i < laneCount; i++) {
+        const lane = lanes[i]
+        const cx = minX + i * laneSpanX + laneSpanX / 2
+        const label = lane.label.toUpperCase()
+        const metrics = ctx.measureText(label)
+        const padX = 6 / scale
+        const padY = 3 / scale
+        ctx.fillStyle = '#e8dcc8'
+        ctx.fillRect(
+          cx - metrics.width / 2 - padX,
+          minY + 12 - padY,
+          metrics.width + padX * 2,
+          laneFont + padY * 2,
+        )
+        ctx.strokeStyle = '#1a1a1a'
+        ctx.lineWidth = 1.2 / scale
+        ctx.strokeRect(
+          cx - metrics.width / 2 - padX,
+          minY + 12 - padY,
+          metrics.width + padX * 2,
+          laneFont + padY * 2,
+        )
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillText(label, cx, minY + 12)
+      }
+      // Etiquetas de año (izquierda)
+      const yearFont = 10 / scale
+      ctx.font = `700 ${yearFont}px "Courier Prime", monospace`
+      ctx.fillStyle = 'rgba(26,26,26,0.55)'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'middle'
+      for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
+        const yRel = (yr - minYear) / yearSpan
+        const y = minY + 50 + yRel * (maxY - minY - 90)
+        ctx.fillText(String(yr), minX + 4, y)
+      }
+      ctx.restore()
+    }
 
     // Aristas
     ctx.lineWidth = 1 / scale
@@ -724,7 +1160,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const node = sim.nodes.find((n) => n.id === id)
     if (!node) return
     const w = wrap.clientWidth
-    const h = 620
+    const h = canvasHeightRef.current || 620
     const scale = Math.max(1.2, viewRef.current.scale)
     viewRef.current.scale = scale
     viewRef.current.tx = w / 2 - node.x * scale
@@ -871,6 +1307,51 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
               </div>
             ) : null}
           </div>
+          <div className="inline-flex border-[3px] border-[var(--ink)]" role="group" aria-label={dict.layout_label || 'Layout'}>
+            <button
+              type="button"
+              onClick={() => {
+                setLayoutMode('force')
+                setSelectedNode(null)
+              }}
+              aria-pressed={layoutMode === 'force'}
+              className="cursor-pointer"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: '11px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                padding: '8px 12px',
+                background: layoutMode === 'force' ? 'var(--ink)' : 'var(--paper)',
+                color: layoutMode === 'force' ? 'var(--paper)' : 'var(--ink)',
+                borderRight: '3px solid var(--ink)',
+              }}
+            >
+              {dict.layout_free || (lang === 'es' ? 'Libre' : 'Free')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLayoutMode('carta')
+                setSelectedNode(null)
+              }}
+              aria-pressed={layoutMode === 'carta'}
+              className="cursor-pointer"
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: '11px',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                padding: '8px 12px',
+                background: layoutMode === 'carta' ? 'var(--ink)' : 'var(--paper)',
+                color: layoutMode === 'carta' ? 'var(--paper)' : 'var(--ink)',
+              }}
+            >
+              {dict.layout_carta || (lang === 'es' ? 'Mapa' : 'Map')}
+            </button>
+          </div>
           <button
             type="button"
             onClick={resetView}
@@ -940,11 +1421,26 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         </p>
       ) : null}
 
+      {dict.hint_mobile ? (
+        <p
+          className="mt-2 sm:hidden"
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            letterSpacing: '0.5px',
+            lineHeight: 1.4,
+          }}
+        >
+          {dict.hint_mobile}
+        </p>
+      ) : null}
+
       {/* Canvas + overlay */}
       <div
         ref={wrapRef}
         className="relative mt-4 border-[4px] border-[var(--ink)] bg-[var(--paper)] shadow-[5px_5px_0_var(--ink)]"
-        style={{ height: 620 }}
+        style={{ height: canvasHeight, touchAction: 'none' }}
       >
         {visibleNodes.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
@@ -965,7 +1461,8 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
           ref={canvasRef}
           aria-label={`${dict.title_1} ${dict.title_2}`}
           role="img"
-          className="block w-full h-[620px]"
+          className="block w-full"
+          style={{ height: canvasHeight, touchAction: 'none' }}
         />
 
         {hoverNodeMeta && !selectedMeta ? (

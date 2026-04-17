@@ -8,21 +8,20 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreakNetworkGraph, {
   type GraphData,
-  type GraphEdge,
-  type GraphNode,
   type GraphPreset,
   type GraphPageDict,
 } from '@/components/BreakNetworkGraph'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import {
-  buildArtistSlugLookup,
-  normalizeForEntityMatch,
-  resolveArtistSlug,
-  splitRelatedArtistNames,
-} from '@/lib/artist-entity-match'
+  buildNetworkGraphData,
+  type ArtistRow,
+  type LabelRow,
+  type EventRow,
+  type SceneRow,
+  type OrgRow,
+} from '@/lib/network-graph-build'
 import {
   HOME_OG_IMAGE,
   SITE_URL,
@@ -75,68 +74,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   }
 }
 
-type ArtistRow = {
-  id: string
-  slug: string
-  name: string
-  name_display: string
-  image_url: string | null
-  country: string
-  category: string
-  styles: string[] | null
-  related_artists: string[] | null
-  labels_founded: string[] | null
-  era: string | null
-}
-
-type LabelRow = {
-  id: string
-  slug: string
-  name: string
-  image_url: string | null
-  country: string
-  founded_year: number | null
-  key_artists: string[] | null
-  organization_id: string | null
-}
-
-type EventRow = {
-  id: string
-  slug: string
-  name: string
-  image_url: string | null
-  city: string
-  country: string
-  event_type: string | null
-  date_start: string | null
-  lineup: string[] | null
-  promoter_organization_id: string | null
-}
-
-type SceneRow = {
-  id: string
-  slug: string
-  name_es: string
-  name_en: string
-  image_url: string | null
-  country: string
-  region: string | null
-  era: string | null
-  key_artists: string[] | null
-  key_labels: string[] | null
-}
-
-type OrgRow = {
-  id: string
-  slug: string
-  name: string
-  image_url: string | null
-  country: string
-  base_city: string | null
-  founded_year: number | null
-}
-
-function nodeId(type: GraphNode['type'], slug: string): string {
+function nodeId(type: 'artist' | 'label' | 'event' | 'scene' | 'organization', slug: string): string {
   return `${type}:${slug}`
 }
 
@@ -151,25 +89,29 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
     supabase
       .from('artists')
       .select(
-        'id, slug, name, name_display, image_url, country, category, styles, related_artists, labels_founded, era',
+        'id, slug, name, name_display, image_url, country, category, styles, related_artists, labels_founded, era, bio_es, bio_en, recommended_mixes, essential_tracks',
       )
       .order('slug', { ascending: true })
       .limit(2000),
     supabase
       .from('labels')
-      .select('id, slug, name, image_url, country, founded_year, key_artists, organization_id')
+      .select(
+        'id, slug, name, image_url, country, founded_year, key_artists, organization_id, description_es, description_en',
+      )
       .order('slug', { ascending: true })
       .limit(2000),
     supabase
       .from('events')
       .select(
-        'id, slug, name, image_url, city, country, event_type, date_start, lineup, promoter_organization_id',
+        'id, slug, name, image_url, city, country, event_type, date_start, lineup, promoter_organization_id, description_es, description_en',
       )
       .order('date_start', { ascending: false })
       .limit(1500),
     supabase
       .from('scenes')
-      .select('id, slug, name_es, name_en, image_url, country, region, era, key_artists, key_labels')
+      .select(
+        'id, slug, name_es, name_en, image_url, country, region, era, key_artists, key_labels, description_es, description_en',
+      )
       .order('slug', { ascending: true })
       .limit(200),
     supabase
@@ -185,202 +127,16 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
   const scenes = (scenesRes.data || []) as SceneRow[]
   const orgs = (orgsRes.data || []) as OrgRow[]
 
-  const nodes: GraphNode[] = []
-  const edges: GraphEdge[] = []
-  const nodeIndex = new Set<string>()
-
-  // Nodes
-  for (const a of artists) {
-    const id = nodeId('artist', a.slug)
-    if (nodeIndex.has(id)) continue
-    nodeIndex.add(id)
-    nodes.push({
-      id,
-      type: 'artist',
-      name: a.name_display?.trim() || a.name || a.slug,
-      image_url: displayArtistImageUrl(a.slug, a.image_url ?? null) ?? null,
-      href: `/${lang}/artists/${a.slug}`,
-      meta: { country: a.country || '', category: a.category || '', era: a.era || '' },
-    })
-  }
-  for (const l of labels) {
-    const id = nodeId('label', l.slug)
-    if (nodeIndex.has(id)) continue
-    nodeIndex.add(id)
-    nodes.push({
-      id,
-      type: 'label',
-      name: l.name || l.slug,
-      image_url: l.image_url ?? null,
-      href: `/${lang}/labels/${l.slug}`,
-      meta: { country: l.country || '', year: l.founded_year ?? undefined },
-    })
-  }
-  for (const e of events) {
-    const id = nodeId('event', e.slug)
-    if (nodeIndex.has(id)) continue
-    nodeIndex.add(id)
-    nodes.push({
-      id,
-      type: 'event',
-      name: e.name || e.slug,
-      image_url: e.image_url ?? null,
-      href: `/${lang}/events/${e.slug}`,
-      meta: {
-        country: e.country || '',
-        city: e.city || '',
-        event_type: e.event_type || '',
-        year: e.date_start ? Number(e.date_start.slice(0, 4)) || undefined : undefined,
-      },
-    })
-  }
-  for (const s of scenes) {
-    const id = nodeId('scene', s.slug)
-    if (nodeIndex.has(id)) continue
-    nodeIndex.add(id)
-    nodes.push({
-      id,
-      type: 'scene',
-      name: (es ? s.name_es : s.name_en) || s.name_en || s.name_es || s.slug,
-      image_url: s.image_url ?? null,
-      href: `/${lang}/scenes/${s.slug}`,
-      meta: { country: s.country || '', region: s.region || '', era: s.era || '' },
-    })
-  }
-  for (const o of orgs) {
-    const id = nodeId('organization', o.slug)
-    if (nodeIndex.has(id)) continue
-    nodeIndex.add(id)
-    nodes.push({
-      id,
-      type: 'organization',
-      name: o.name || o.slug,
-      image_url: o.image_url ?? null,
-      href: `/${lang}/organizations/${o.slug}`,
-      meta: { country: o.country || '', city: o.base_city || '', year: o.founded_year ?? undefined },
-    })
-  }
-
-  // Índices para resolver slugs de nombres libres
-  const artistLinkRows = artists.map((a) => ({ name: a.name, name_display: a.name_display, slug: a.slug }))
-  const artistSlugByName = buildArtistSlugLookup(artistLinkRows)
-  const labelSlugByName = new Map<string, string>()
-  for (const l of labels) {
-    const key = normalizeForEntityMatch(l.name)
-    if (key && !labelSlugByName.has(key)) labelSlugByName.set(key, l.slug)
-  }
-  const orgById = new Map(orgs.map((o) => [o.id, o.slug]))
-
-  const edgeKey = (src: string, tgt: string, kind: GraphEdge['kind']) => `${kind}|${src}|${tgt}`
-  const edgeIndex = new Set<string>()
-  function pushEdge(source: string, target: string, kind: GraphEdge['kind']) {
-    if (source === target) return
-    if (!nodeIndex.has(source) || !nodeIndex.has(target)) return
-    const a = source < target ? source : target
-    const b = source < target ? target : source
-    const k = edgeKey(a, b, kind)
-    if (edgeIndex.has(k)) return
-    edgeIndex.add(k)
-    edges.push({ source, target, kind })
-  }
-
-  // Artist ↔ Artist (related_artists, con split "A & B")
-  for (const a of artists) {
-    const src = nodeId('artist', a.slug)
-    const raw = a.related_artists
-    if (!raw?.length) continue
-    for (const entry of raw) {
-      for (const seg of splitRelatedArtistNames(entry)) {
-        const slug = resolveArtistSlug(seg, artistSlugByName)
-        if (slug && slug !== a.slug) pushEdge(src, nodeId('artist', slug), 'artist-artist')
-      }
-    }
-  }
-
-  // Artist → Label (labels_founded)
-  for (const a of artists) {
-    const src = nodeId('artist', a.slug)
-    const list = a.labels_founded
-    if (!list?.length) continue
-    for (const name of list) {
-      const key = normalizeForEntityMatch(name)
-      const slug = labelSlugByName.get(key)
-      if (slug) pushEdge(src, nodeId('label', slug), 'artist-label')
-    }
-  }
-
-  // Label → Artist (key_artists)
-  for (const l of labels) {
-    const src = nodeId('label', l.slug)
-    const list = l.key_artists
-    if (!list?.length) continue
-    for (const name of list) {
-      for (const seg of splitRelatedArtistNames(name)) {
-        const slug = resolveArtistSlug(seg, artistSlugByName)
-        if (slug) pushEdge(src, nodeId('artist', slug), 'artist-label')
-      }
-    }
-  }
-
-  // Label → Organization
-  for (const l of labels) {
-    if (!l.organization_id) continue
-    const orgSlug = orgById.get(l.organization_id)
-    if (orgSlug) pushEdge(nodeId('label', l.slug), nodeId('organization', orgSlug), 'label-org')
-  }
-
-  // Event → Artist (lineup)
-  for (const e of events) {
-    const src = nodeId('event', e.slug)
-    const list = e.lineup
-    if (!list?.length) continue
-    for (const name of list) {
-      for (const seg of splitRelatedArtistNames(name)) {
-        const slug = resolveArtistSlug(seg, artistSlugByName)
-        if (slug) pushEdge(src, nodeId('artist', slug), 'event-artist')
-      }
-    }
-  }
-
-  // Event → Organization (promoter)
-  for (const e of events) {
-    if (!e.promoter_organization_id) continue
-    const orgSlug = orgById.get(e.promoter_organization_id)
-    if (orgSlug) pushEdge(nodeId('event', e.slug), nodeId('organization', orgSlug), 'event-org')
-  }
-
-  // Scene → Artist / Label (key_artists / key_labels)
-  for (const s of scenes) {
-    const src = nodeId('scene', s.slug)
-    for (const name of s.key_artists || []) {
-      for (const seg of splitRelatedArtistNames(name)) {
-        const slug = resolveArtistSlug(seg, artistSlugByName)
-        if (slug) pushEdge(src, nodeId('artist', slug), 'scene-artist')
-      }
-    }
-    for (const name of s.key_labels || []) {
-      const key = normalizeForEntityMatch(name)
-      const slug = labelSlugByName.get(key)
-      if (slug) pushEdge(src, nodeId('label', slug), 'scene-label')
-    }
-  }
-
-  // Peso por grado (para tamaños de nodo)
-  const degree = new Map<string, number>()
-  for (const e of edges) {
-    degree.set(e.source, (degree.get(e.source) || 0) + 1)
-    degree.set(e.target, (degree.get(e.target) || 0) + 1)
-  }
-  for (const n of nodes) {
-    n.weight = degree.get(n.id) || 0
-  }
+  // --- Construcción del grafo (nodes + edges) con derivaciones ---
+  const built = buildNetworkGraphData(
+    { artists, labels, events, scenes, organizations: orgs },
+    lang,
+  )
+  const nodes = built.nodes
+  const edges = built.edges
+  const nodeIndex = new Set(nodes.map((n) => n.id))
 
   // Presets editoriales — se filtran por slug si existen; solo se publican los que tengan >= 4 nodos
-  const artistBySlug = new Map(artists.map((a) => [a.slug, a]))
-  const eventBySlug = new Map(events.map((e) => [e.slug, e]))
-  const labelBySlug = new Map(labels.map((l) => [l.slug, l]))
-  const sceneBySlug = new Map(scenes.map((s) => [s.slug, s]))
-
   function collectFromNodeIds(seed: string[], radius = 1): Set<string> {
     const set = new Set<string>()
     const adj = new Map<string, string[]>()
@@ -551,6 +307,11 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
         edges_count: 'conexiones',
         empty: 'No hay conexiones que mostrar todavía. Añade fichas al archivo.',
         back_home: 'Volver al inicio',
+        layout_label: 'Vista',
+        layout_free: 'Libre',
+        layout_carta: 'Mapa',
+        hint_mobile:
+          'Móvil: pellizca con dos dedos para zoom · arrastra con uno para mover · pulsa un nodo para verlo.',
       }
     : {
         tag: '10 — GRAPH',
@@ -585,6 +346,11 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
         edges_count: 'connections',
         empty: 'No connections to show yet. Add entries to the archive.',
         back_home: 'Back to home',
+        layout_label: 'View',
+        layout_free: 'Free',
+        layout_carta: 'Map',
+        hint_mobile:
+          'Mobile: pinch with two fingers to zoom · drag with one to pan · tap a node to inspect.',
       }
 
   const t: GraphPageDict = { ...fallbackDict, ...(graphDict || {}) }

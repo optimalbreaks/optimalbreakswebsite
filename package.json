@@ -32,6 +32,7 @@
     "db:label:photo": "node scripts/elegir-foto-sello.mjs",
     "db:events:enrich": "node scripts/enriquecer-evento.mjs",
     "db:events:poster": "node scripts/elegir-poster-evento.mjs",
+    "db:network:enrich": "node scripts/enriquecer-red.mjs",
     "db:mixes:published": "node scripts/backfill-mix-youtube-published-at.mjs",
     "db:chart": "node scripts/chart-40-breaks.mjs",
     "db:chart:artists": "node scripts/sync-chart-artists.mjs",
