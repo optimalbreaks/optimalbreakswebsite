@@ -331,6 +331,39 @@ function filterSuggestions(suggestions, catalogSlugs, minConfidence) {
   return out
 }
 
+/**
+ * Guard-rail anti-contaminación cross-país.
+ * Para escenas territoriales y sellos con país, descarta sugerencias de
+ * entidades de otro país. Imprescindible para no mezclar breakbeat UK con
+ * sellos andaluces, etc. Si el objetivo no tiene país claro, no filtra.
+ */
+function normCountryTok(c) {
+  if (!c) return ''
+  const s = String(c).trim().toUpperCase()
+  const MAP = {
+    SPAIN: 'ES', ESPAÑA: 'ES', ES: 'ES', ESP: 'ES',
+    UK: 'UK', 'UNITED KINGDOM': 'UK', 'GREAT BRITAIN': 'UK',
+    ENGLAND: 'UK', SCOTLAND: 'UK', WALES: 'UK', GB: 'UK',
+    USA: 'US', 'UNITED STATES': 'US', US: 'US',
+    AUSTRALIA: 'AU', AU: 'AU',
+    RUSSIA: 'RU', RU: 'RU',
+  }
+  return MAP[s] || s
+}
+function filterByCountry(list, targetCountry, lookupBySlug) {
+  const tc = normCountryTok(targetCountry)
+  if (!tc) return list
+  const out = []
+  for (const item of list) {
+    const row = lookupBySlug(item.slug)
+    const rc = normCountryTok(row?.country)
+    if (!rc) out.push(item)
+    else if (rc === tc) out.push(item)
+    // diferente país → se descarta silenciosamente
+  }
+  return out
+}
+
 /** Dedupa un array case-insensitive conservando el orden. */
 function uniqCI(list) {
   const seen = new Set()
@@ -506,10 +539,19 @@ async function processEntity(type, entity, ctx) {
   // No se permite autoenlace
   const selfSlug = entity.slug
   const dropSelf = (arr) => arr.filter((x) => x.slug !== selfSlug)
-  const sa = dropSelf(suggRelatedArtists)
-  const sl = dropSelf(suggLabels)
+  let sa = dropSelf(suggRelatedArtists)
+  let sl = dropSelf(suggLabels)
   const ss = dropSelf(suggScenes)
   const se = dropSelf(suggEvents)
+
+  // Guard-rail país: escenas territoriales y sellos con país no admiten cross-country.
+  if (type === 'scenes' || type === 'labels') {
+    const tc = entity.country
+    const artistBySlug = (s) => catalog.artists.find((x) => x.slug === s)
+    const labelBySlug = (s) => catalog.labels.find((x) => x.slug === s)
+    sa = filterByCountry(sa, tc, artistBySlug)
+    sl = filterByCountry(sl, tc, labelBySlug)
+  }
 
   // Mapea a nombres con los que se guarda (respetando case del catálogo)
   const namesFrom = (list, kind) =>
