@@ -223,45 +223,134 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     return data.edges.filter((e) => idSet.has(e.source) && idSet.has(e.target))
   }, [data, visibleNodes])
 
-  // --- Layout Carta: carriles por escena + tiempo en eje Y ---
-  // Devuelve posiciones deterministas por nodo visible, en coordenadas de mundo.
-  type CartaLane = { id: string; label: string; nodeIds: string[]; colorHint: string }
-  function computeCartaLayout(
+  // --- Layout Skyline: columnas "edificio" por escena con bloques anidados de sello ---
+  type SkylineLabelBlock = {
+    id: string
+    nodeId: string | null
+    name: string
+    rect: { x: number; y: number; w: number; h: number }
+    artistIds: string[]
+    isOrphan: boolean
+  }
+  type SkylineColumn = {
+    id: string
+    title: string
+    sceneNodeId: string | null
+    rect: { x: number; y: number; w: number; h: number }
+    blocks: SkylineLabelBlock[]
+    eventIds: string[]
+    orgIds: string[]
+  }
+  type SkylineLayout = {
+    columns: SkylineColumn[]
+    minYear: number
+    maxYear: number
+    positions: Map<string, { x: number; y: number }>
+  }
+
+  function parseYear(meta: GraphNode['meta'] | undefined, type: GraphNodeType): number {
+    const m = meta || {}
+    if (typeof m.year === 'number' && m.year > 1900) return m.year
+    const era = (m.era || '').toLowerCase()
+    if (era) {
+      const match = era.match(/(19|20)\d{2}/)
+      if (match) return Number(match[0])
+      if (era.includes('60s') || era.includes('1960')) return 1965
+      if (era.includes('70s') || era.includes('1970')) return 1975
+      if (era.includes('80s') || era.includes('1980')) return 1985
+      if (era.includes('90s') || era.includes('1990')) return 1995
+      if (era.includes('00s') || era.includes('2000')) return 2003
+      if (era.includes('10s') || era.includes('2010')) return 2013
+      if (era.includes('20s') || era.includes('2020')) return 2022
+      if (era.includes('pioneer') || era.includes('old')) return 1985
+      if (era.includes('golden') || era.includes('nu')) return 2001
+    }
+    if (type === 'event') return 2024
+    if (type === 'artist') {
+      const cat = (m.category || '').toLowerCase()
+      if (cat === 'pioneer') return 1975
+      if (cat === 'uk_legend' || cat === 'us_artist') return 1998
+      if (cat === 'andalusian') return 2018
+      if (cat === 'current') return 2022
+      if (cat === 'crew') return 2020
+    }
+    return 2005
+  }
+
+  function computeSkylineLayout(
     nodesIn: GraphNode[],
     edgesIn: GraphEdge[],
     w: number,
     h: number,
-  ): { positions: Map<string, { x: number; y: number }>; lanes: CartaLane[] } {
+  ): SkylineLayout {
     const positions = new Map<string, { x: number; y: number }>()
 
-    // 1) Encuentra escenas visibles
-    const sceneNodes = nodesIn.filter((n) => n.type === 'scene')
+    // --- Particionar por tipo ---
+    const scenes = nodesIn.filter((n) => n.type === 'scene')
+    const labelsAll = nodesIn.filter((n) => n.type === 'label')
+    const artistsAll = nodesIn.filter((n) => n.type === 'artist')
+    const eventsAll = nodesIn.filter((n) => n.type === 'event')
+    const orgsAll = nodesIn.filter((n) => n.type === 'organization')
 
-    // 2) Para cada nodo, contamos conexiones con cada escena
-    const sceneByNode = new Map<string, Map<string, number>>()
-    for (const n of nodesIn) sceneByNode.set(n.id, new Map())
-    const sceneIds = new Set(sceneNodes.map((s) => s.id))
+    // Adyacencia
+    const adj = new Map<string, Set<string>>()
+    for (const n of nodesIn) adj.set(n.id, new Set())
     for (const e of edgesIn) {
-      if (sceneIds.has(e.source)) {
-        const m = sceneByNode.get(e.target)
-        if (m) m.set(e.source, (m.get(e.source) || 0) + 1)
-      }
-      if (sceneIds.has(e.target)) {
-        const m = sceneByNode.get(e.source)
-        if (m) m.set(e.target, (m.get(e.source) || 0) + 1)
-      }
+      adj.get(e.source)?.add(e.target)
+      adj.get(e.target)?.add(e.source)
+    }
+    const nodeById = new Map(nodesIn.map((n) => [n.id, n]))
+
+    // --- Determinar escena primaria para cada nodo (por número de aristas hacia escenas) ---
+    const sceneIds = new Set(scenes.map((s) => s.id))
+    function primarySceneOf(nodeId: string): string | null {
+      const neigh = adj.get(nodeId)
+      if (!neigh) return null
+      const counts = new Map<string, number>()
+      neigh.forEach((nid) => {
+        if (sceneIds.has(nid)) counts.set(nid, (counts.get(nid) || 0) + 1)
+      })
+      let best: string | null = null
+      let bestC = 0
+      counts.forEach((c, sid) => {
+        if (c > bestC) {
+          bestC = c
+          best = sid
+        }
+      })
+      return best
     }
 
-    // 3) Asigna primary lane por nodo
-    function countryLaneId(country: string) {
-      const c = (country || '').trim().toUpperCase()
-      if (!c) return 'lane:misc'
-      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return 'lane:country:ES'
-      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'lane:country:UK'
-      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'lane:country:US'
-      return `lane:country:${c}`
+    // --- Sello primario de cada artista (su sello con más aristas) ---
+    const labelIds = new Set(labelsAll.map((l) => l.id))
+    function primaryLabelOf(artistId: string): string | null {
+      const neigh = adj.get(artistId)
+      if (!neigh) return null
+      const counts = new Map<string, number>()
+      neigh.forEach((nid) => {
+        if (labelIds.has(nid)) counts.set(nid, (counts.get(nid) || 0) + 1)
+      })
+      let best: string | null = null
+      let bestC = 0
+      counts.forEach((c, lid) => {
+        if (c > bestC) {
+          bestC = c
+          best = lid
+        }
+      })
+      return best
     }
-    function countryLaneLabel(country: string) {
+
+    // --- Columna por nodo ---
+    function countryColumnId(country: string) {
+      const c = (country || '').trim().toUpperCase()
+      if (!c) return 'col:misc'
+      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return 'col:country:ES'
+      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'col:country:UK'
+      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'col:country:US'
+      return `col:country:${c}`
+    }
+    function countryColumnLabel(country: string) {
       const c = (country || '').trim().toUpperCase()
       if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return lang === 'es' ? 'España' : 'Spain'
       if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'UK'
@@ -269,147 +358,215 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       return c || (lang === 'es' ? 'Varios' : 'Misc')
     }
 
-    const nodeLane = new Map<string, string>()
+    const nodeColumn = new Map<string, string>()
     for (const n of nodesIn) {
       if (n.type === 'scene') {
-        nodeLane.set(n.id, n.id) // la escena vive en su propio carril
+        nodeColumn.set(n.id, n.id)
         continue
       }
-      const counts = sceneByNode.get(n.id) || new Map<string, number>()
-      let bestScene: string | null = null
-      let bestCount = 0
-      counts.forEach((c, sid) => {
-        if (c > bestCount) {
-          bestCount = c
-          bestScene = sid
-        }
-      })
-      if (bestScene) nodeLane.set(n.id, bestScene)
-      else nodeLane.set(n.id, countryLaneId(n.meta?.country || ''))
+      const prim = primarySceneOf(n.id)
+      if (prim) nodeColumn.set(n.id, prim)
+      else nodeColumn.set(n.id, countryColumnId(n.meta?.country || ''))
     }
 
-    // 4) Carril "Otros" para organizaciones/eventos sin escena/country
-    // (ya cubierto por country; si no hay country caerá en "lane:misc")
+    // --- Ordenar columnas (escenas por densidad, luego países, luego misc) ---
+    const usedCols = new Set<string>()
+    nodeColumn.forEach((c) => usedCols.add(c))
 
-    // 5) Construir la lista de carriles (escenas + países usados)
-    const laneIds = new Set<string>()
-    nodeLane.forEach((lid) => laneIds.add(lid))
-
-    const lanes: CartaLane[] = []
-    // Primero las escenas (ordenadas por número de nodos que contienen, desc)
-    const sceneOrder = sceneNodes
-      .filter((s) => laneIds.has(s.id))
+    const sceneOrder = scenes
+      .filter((s) => usedCols.has(s.id))
       .map((s) => ({
         s,
-        count: nodesIn.filter((n) => nodeLane.get(n.id) === s.id).length,
+        count: nodesIn.filter((n) => nodeColumn.get(n.id) === s.id).length,
       }))
       .sort((a, b) => b.count - a.count)
+
+    const columnsMeta: Array<{ id: string; title: string; sceneNodeId: string | null }> = []
     for (const { s } of sceneOrder) {
-      lanes.push({ id: s.id, label: s.name, nodeIds: [], colorHint: TYPE_COLOR.scene })
+      columnsMeta.push({ id: s.id, title: s.name, sceneNodeId: s.id })
     }
-    // Luego países en uso
-    const countryLaneIds = Array.from(laneIds).filter((l) => l.startsWith('lane:country:'))
-    countryLaneIds.sort()
-    for (const lid of countryLaneIds) {
-      const country = lid.replace('lane:country:', '')
-      lanes.push({
-        id: lid,
-        label: countryLaneLabel(country),
-        nodeIds: [],
-        colorHint: '#6b7280',
+    const countryCols = Array.from(usedCols).filter((c) => c.startsWith('col:country:'))
+    countryCols.sort()
+    for (const cid of countryCols) {
+      const country = cid.replace('col:country:', '')
+      columnsMeta.push({
+        id: cid,
+        title: countryColumnLabel(country),
+        sceneNodeId: null,
       })
     }
-    // Finalmente "lane:misc"
-    if (laneIds.has('lane:misc')) {
-      lanes.push({
-        id: 'lane:misc',
-        label: lang === 'es' ? 'Varios' : 'Misc',
-        nodeIds: [],
-        colorHint: '#6b7280',
+    if (usedCols.has('col:misc')) {
+      columnsMeta.push({
+        id: 'col:misc',
+        title: lang === 'es' ? 'Varios' : 'Misc',
+        sceneNodeId: null,
       })
     }
 
-    // 6) Rellena nodeIds por carril
-    const laneIndex = new Map<string, number>()
-    lanes.forEach((l, i) => laneIndex.set(l.id, i))
-    for (const n of nodesIn) {
-      const lid = nodeLane.get(n.id) || 'lane:misc'
-      const laneIdx = laneIndex.get(lid)
-      if (laneIdx === undefined) continue
-      lanes[laneIdx].nodeIds.push(n.id)
-    }
-
-    // 7) Eje temporal: extraer año/era por nodo
-    function parseYear(meta: GraphNode['meta'] | undefined, type: GraphNodeType): number {
-      const m = meta || {}
-      if (typeof m.year === 'number' && m.year > 1900) return m.year
-      const era = (m.era || '').toLowerCase()
-      if (era) {
-        const match = era.match(/(19|20)\d{2}/)
-        if (match) return Number(match[0])
-        if (era.includes('60s') || era.includes('1960')) return 1965
-        if (era.includes('70s') || era.includes('1970')) return 1975
-        if (era.includes('80s') || era.includes('1980')) return 1985
-        if (era.includes('90s') || era.includes('1990')) return 1995
-        if (era.includes('00s') || era.includes('2000')) return 2003
-        if (era.includes('10s') || era.includes('2010')) return 2013
-        if (era.includes('20s') || era.includes('2020')) return 2022
-        if (era.includes('pioneer') || era.includes('old')) return 1985
-        if (era.includes('golden') || era.includes('nu')) return 2001
-      }
-      if (type === 'event') return 2024
-      if (type === 'artist') {
-        const cat = (m.category || '').toLowerCase()
-        if (cat === 'pioneer') return 1975
-        if (cat === 'uk_legend' || cat === 'us_artist') return 1998
-        if (cat === 'andalusian') return 2018
-        if (cat === 'current') return 2022
-        if (cat === 'crew') return 2020
-      }
-      return 2005
-    }
-
+    // --- Rango temporal global ---
     const years = nodesIn.map((n) => parseYear(n.meta, n.type))
-    const minYear = Math.min(...years, 1970)
+    const minYear = Math.min(...years, 1975)
     const maxYear = Math.max(...years, new Date().getFullYear())
     const yearSpan = Math.max(1, maxYear - minYear)
 
-    // 8) Colocar cada nodo dentro de su carril
-    const laneCount = Math.max(1, lanes.length)
-    const padX = 80
-    const padTop = 70
-    const padBottom = 60
-    const usableH = Math.max(220, h - padTop - padBottom)
-    const laneWidth = Math.max(180, (w - padX * 2) / laneCount)
-    const totalW = laneWidth * laneCount
+    // --- Dimensiones ---
+    const padX = 40
+    const padTopTitle = 60 // espacio para títulos de columna (arriba)
+    const padBottom = 100 // espacio para pie / eventos
+    const usableH = Math.max(360, h - padTopTitle - padBottom)
+    const colCount = Math.max(1, columnsMeta.length)
+    const colGap = 14
+    const colWidth = Math.max(220, (w - padX * 2 - colGap * (colCount - 1)) / colCount)
+    const blockPad = 10
+    const artistCellW = 44
+    const artistCellH = 44
+    const artistsPerRow = Math.max(2, Math.floor((colWidth - blockPad * 2 - 8) / artistCellW))
 
-    for (let li = 0; li < lanes.length; li++) {
-      const lane = lanes[li]
-      const laneCenterX = padX + li * laneWidth + laneWidth / 2 - (totalW - (w - padX * 2)) / 2
-      // Ordenar por año dentro del carril
-      const items = lane.nodeIds
-        .map((id) => nodesIn.find((n) => n.id === id)!)
-        .filter(Boolean)
-        .map((n) => ({ n, year: parseYear(n.meta, n.type) }))
-        .sort((a, b) => a.year - b.year)
-      const usedYPositions = new Map<number, number>() // bucket 0..yearSpan → count
-      for (const { n, year } of items) {
-        const yRel = (year - minYear) / yearSpan
-        const yBase = padTop + yRel * usableH
-        // Stagger horizontal para evitar amontonamiento en el mismo año
-        const bucket = Math.round(yRel * 40) // 40 buckets por carril
-        const count = usedYPositions.get(bucket) || 0
-        usedYPositions.set(bucket, count + 1)
-        const jitterX = ((count % 5) - 2) * 22 + (count > 4 ? (count - 4) * 8 : 0)
-        const jitterY = Math.floor(count / 5) * 24
-        positions.set(n.id, { x: laneCenterX + jitterX, y: yBase + jitterY })
+    const columns: SkylineColumn[] = []
+
+    for (let ci = 0; ci < columnsMeta.length; ci++) {
+      const cm = columnsMeta[ci]
+      const colX = padX + ci * (colWidth + colGap)
+      const colY = padTopTitle
+      const colH = usableH
+
+      // Nodos que viven en esta columna
+      const colNodeIds = nodesIn.filter((n) => nodeColumn.get(n.id) === cm.id).map((n) => n.id)
+      const colArtists = colNodeIds
+        .map((id) => nodeById.get(id))
+        .filter((n): n is GraphNode => !!n && n.type === 'artist')
+      const colLabels = colNodeIds
+        .map((id) => nodeById.get(id))
+        .filter((n): n is GraphNode => !!n && n.type === 'label')
+      const colEvents = colNodeIds
+        .map((id) => nodeById.get(id))
+        .filter((n): n is GraphNode => !!n && n.type === 'event')
+      const colOrgs = colNodeIds
+        .map((id) => nodeById.get(id))
+        .filter((n): n is GraphNode => !!n && n.type === 'organization')
+
+      // Asigna artistas a bloques de sello
+      const labelBuckets = new Map<string, GraphNode[]>()
+      for (const l of colLabels) labelBuckets.set(l.id, [])
+      const orphans: GraphNode[] = []
+      for (const a of colArtists) {
+        const lbl = primaryLabelOf(a.id)
+        if (lbl && labelBuckets.has(lbl)) labelBuckets.get(lbl)!.push(a)
+        else orphans.push(a)
       }
+
+      // Años de cada bloque (para ordenar arriba→abajo)
+      const blockYear = (label: GraphNode, artists: GraphNode[]): number => {
+        const ly = parseYear(label.meta, 'label')
+        if (artists.length === 0) return ly
+        const ys = artists.map((a) => parseYear(a.meta, 'artist'))
+        return Math.round((ly + ys.reduce((s, x) => s + x, 0) / ys.length) / 2)
+      }
+
+      const blocksSorted = colLabels
+        .map((l) => {
+          const artists = labelBuckets.get(l.id) || []
+          return { label: l, artists, year: blockYear(l, artists) }
+        })
+        .sort((a, b) => a.year - b.year)
+
+      // Layout vertical de bloques dentro de la columna
+      const blocks: SkylineLabelBlock[] = []
+      let cursorY = colY + 26 // deja espacio para el título de la columna
+      const availableH = colY + colH - cursorY - (orphans.length ? 0 : 0) // sitio para bloque orphan al final
+      void availableH
+
+      const pushBlock = (
+        id: string,
+        nodeId: string | null,
+        name: string,
+        artists: GraphNode[],
+        isOrphan: boolean,
+      ) => {
+        const rows = Math.max(1, Math.ceil(artists.length / artistsPerRow))
+        const headerH = 26
+        const gridH = rows * artistCellH + blockPad
+        const bh = headerH + gridH + blockPad
+        const bx = colX + 6
+        const by = cursorY
+        const bw = colWidth - 12
+        const block: SkylineLabelBlock = {
+          id,
+          nodeId,
+          name,
+          rect: { x: bx, y: by, w: bw, h: bh },
+          artistIds: artists.map((a) => a.id),
+          isOrphan,
+        }
+        // Posiciones de artistas en grid dentro del bloque
+        artists.forEach((a, i) => {
+          const row = Math.floor(i / artistsPerRow)
+          const col = i % artistsPerRow
+          const startX = bx + blockPad + artistCellW / 2
+          const startY = by + headerH + blockPad / 2 + artistCellH / 2
+          const x = startX + col * artistCellW
+          const y = startY + row * artistCellH
+          positions.set(a.id, { x, y })
+        })
+        blocks.push(block)
+        cursorY = by + bh + 8
+      }
+
+      for (const b of blocksSorted) {
+        pushBlock(b.label.id, b.label.id, b.label.name, b.artists, false)
+      }
+      if (orphans.length > 0) {
+        pushBlock(
+          `orphan:${cm.id}`,
+          null,
+          lang === 'es' ? 'Independientes' : 'Independent',
+          orphans,
+          true,
+        )
+      }
+
+      // Posición del nodo scene (punto de referencia, en la cabecera de la columna)
+      if (cm.sceneNodeId) {
+        positions.set(cm.sceneNodeId, { x: colX + colWidth / 2, y: colY - 28 })
+      }
+
+      // Eventos: marcadores en la franja derecha de la columna, ubicados por año
+      colEvents.forEach((ev, i) => {
+        const yr = parseYear(ev.meta, 'event')
+        const yRel = Math.max(0, Math.min(1, (yr - minYear) / yearSpan))
+        const py = colY + 40 + yRel * (colH - 80) + (i % 3) * 10
+        const px = colX + colWidth - 14
+        positions.set(ev.id, { x: px, y: py })
+      })
+
+      // Organizaciones: franja inferior del edificio
+      colOrgs.forEach((o, i) => {
+        const row = Math.floor(i / artistsPerRow)
+        const col = i % artistsPerRow
+        const ox = colX + 20 + col * artistCellW
+        const oy = colY + colH - 20 - row * 22
+        positions.set(o.id, { x: ox, y: oy })
+      })
+
+      // Ajusta altura real de la columna según contenido
+      const contentBottom = Math.max(cursorY, colY + colH)
+      const finalH = Math.max(colH, contentBottom - colY + 40)
+
+      columns.push({
+        id: cm.id,
+        title: cm.title,
+        sceneNodeId: cm.sceneNodeId,
+        rect: { x: colX, y: colY, w: colWidth, h: finalH },
+        blocks,
+        eventIds: colEvents.map((e) => e.id),
+        orgIds: colOrgs.map((o) => o.id),
+      })
     }
 
-    return { positions, lanes }
+    return { columns, minYear, maxYear, positions }
   }
 
-  const cartaLayoutRef = useRef<{ lanes: CartaLane[]; minYear: number; maxYear: number } | null>(null)
+  const skylineLayoutRef = useRef<SkylineLayout | null>(null)
 
   // Reconstruye simulación cuando cambia el subset visible o el modo.
   useEffect(() => {
@@ -423,11 +580,10 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
 
     // Posiciones iniciales según modo
     let cartaPositions: Map<string, { x: number; y: number }> | null = null
-    let lanesComputed: CartaLane[] | null = null
+    let skylineComputed: SkylineLayout | null = null
     if (layoutMode === 'carta') {
-      const built = computeCartaLayout(visibleNodes, visibleEdges, w, h)
-      cartaPositions = built.positions
-      lanesComputed = built.lanes
+      skylineComputed = computeSkylineLayout(visibleNodes, visibleEdges, w, h)
+      cartaPositions = skylineComputed.positions
     }
 
     for (let i = 0; i < visibleNodes.length; i++) {
@@ -479,26 +635,10 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
 
     if (layoutMode === 'carta') {
       heatRef.current = 0
-      cartaLayoutRef.current = lanesComputed
-        ? (() => {
-            // Extrae min/max year observados para etiquetas del eje
-            const years = visibleNodes.map((n) => {
-              const m = n.meta || {}
-              if (typeof m.year === 'number' && m.year > 1900) return m.year
-              const era = (m.era || '').toLowerCase()
-              const match = era.match(/(19|20)\d{2}/)
-              return match ? Number(match[0]) : 2005
-            })
-            return {
-              lanes: lanesComputed,
-              minYear: Math.min(...years, 1970),
-              maxYear: Math.max(...years, new Date().getFullYear()),
-            }
-          })()
-        : null
+      skylineLayoutRef.current = skylineComputed
     } else {
       heatRef.current = 1
-      cartaLayoutRef.current = null
+      skylineLayoutRef.current = null
       for (let i = 0; i < 220; i++) stepSimulation(0.05)
     }
 
@@ -584,13 +724,43 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       const { tx, ty, scale } = viewRef.current
       const wx = (cx - tx) / scale
       const wy = (cy - ty) / scale
+      // En modo Skyline, los artistas son los puntos, pero sellos/escenas se seleccionan por rect
+      const skyline = layoutMode === 'carta' ? skylineLayoutRef.current : null
+      // 1) primero artistas (visibles como círculos)
       for (let i = sim.nodes.length - 1; i >= 0; i--) {
         const n = sim.nodes[i]
+        if (skyline && (n.type === 'scene' || n.type === 'label')) continue
         const dx = n.x - wx
         const dy = n.y - wy
-        // Targets táctiles más grandes en móvil (hit radius mayor)
-        const r = n.r + 6
+        const r = (skyline && n.type === 'artist' ? 11 : n.r) + 6
         if (dx * dx + dy * dy <= r * r) return n
+      }
+      // 2) en Skyline, intenta por rectángulos de bloque (sellos) y de columna (escenas)
+      if (skyline) {
+        // bloques (sellos)
+        for (const col of skyline.columns) {
+          for (const b of col.blocks) {
+            const { x, y, w, h } = b.rect
+            // Solo la barra de cabecera (22 px) es clickable (el resto contiene artistas)
+            if (wx >= x && wx <= x + w && wy >= y && wy <= y + 22) {
+              if (b.nodeId) {
+                const sn = sim.nodes.find((nn) => nn.id === b.nodeId)
+                if (sn) return sn
+              }
+            }
+          }
+        }
+        // columna (escena) — cartel inferior
+        for (const col of skyline.columns) {
+          const { x, y, w, h } = col.rect
+          const titleY = y + h - 30
+          if (wx >= x && wx <= x + w && wy >= titleY && wy <= titleY + 30) {
+            if (col.sceneNodeId) {
+              const sn = sim.nodes.find((nn) => nn.id === col.sceneNodeId)
+              if (sn) return sn
+            }
+          }
+        }
       }
       return null
     }
@@ -942,109 +1112,134 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const adj = sim.adjacency
     const focusAdj = focus ? adj.get(focus) || new Set<string>() : null
 
-    // --- Dibujo de carriles + eje temporal (solo modo Carta) ---
-    const cartaInfo = layoutMode === 'carta' ? cartaLayoutRef.current : null
-    if (cartaInfo && sim.nodes.length > 0) {
-      let minX = Infinity
-      let maxX = -Infinity
-      let minY = Infinity
-      let maxY = -Infinity
-      for (const n of sim.nodes) {
-        if (n.x < minX) minX = n.x
-        if (n.x > maxX) maxX = n.x
-        if (n.y < minY) minY = n.y
-        if (n.y > maxY) maxY = n.y
-      }
-      const padLane = 40
-      minX -= padLane
-      maxX += padLane
-      minY -= 50
-      maxY += 40
-      const { lanes, minYear, maxYear } = cartaInfo
-      const laneCount = Math.max(1, lanes.length)
-      const laneSpanX = (maxX - minX) / laneCount
-      // Bandas alternas
+    // --- Dibujo Skyline: edificios (columnas escena) + bloques internos (sellos) ---
+    const skyline = layoutMode === 'carta' ? skylineLayoutRef.current : null
+    if (skyline && skyline.columns.length > 0) {
       ctx.save()
-      for (let i = 0; i < laneCount; i++) {
-        const x0 = minX + i * laneSpanX
-        const x1 = x0 + laneSpanX
-        ctx.fillStyle = i % 2 === 0 ? 'rgba(26,26,26,0.04)' : 'rgba(26,26,26,0.08)'
-        ctx.fillRect(x0, minY, x1 - x0, maxY - minY)
-      }
-      // Líneas verticales entre carriles
-      ctx.strokeStyle = 'rgba(26,26,26,0.25)'
-      ctx.lineWidth = 1 / scale
-      for (let i = 1; i < laneCount; i++) {
-        const x0 = minX + i * laneSpanX
-        ctx.beginPath()
-        ctx.moveTo(x0, minY)
-        ctx.lineTo(x0, maxY)
-        ctx.stroke()
-      }
-      // Líneas horizontales cada década
+
+      // Eje temporal tenue a la izquierda
+      const { minYear, maxYear } = skyline
+      const yearSpan = Math.max(1, maxYear - minYear)
+      const firstCol = skyline.columns[0]
+      const lastCol = skyline.columns[skyline.columns.length - 1]
+      const axisX0 = firstCol.rect.x - 30
+      const axisX1 = lastCol.rect.x + lastCol.rect.w + 30
       const decadeStart = Math.floor(minYear / 10) * 10
       const decadeEnd = Math.ceil(maxYear / 10) * 10
-      const yearSpan = Math.max(1, maxYear - minYear)
-      ctx.strokeStyle = 'rgba(26,26,26,0.12)'
-      ctx.setLineDash([6 / scale, 6 / scale])
+      // Líneas de década
+      const colTopY = Math.min(...skyline.columns.map((c) => c.rect.y))
+      const colBotY = Math.max(...skyline.columns.map((c) => c.rect.y + c.rect.h))
+      ctx.strokeStyle = 'rgba(26,26,26,0.10)'
+      ctx.lineWidth = 1 / scale
+      ctx.setLineDash([4 / scale, 6 / scale])
       for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
         const yRel = (yr - minYear) / yearSpan
-        const y = minY + 50 + yRel * (maxY - minY - 90)
+        const y = colTopY + 40 + yRel * (colBotY - colTopY - 80)
         ctx.beginPath()
-        ctx.moveTo(minX, y)
-        ctx.lineTo(maxX, y)
+        ctx.moveTo(axisX0, y)
+        ctx.lineTo(axisX1, y)
         ctx.stroke()
       }
       ctx.setLineDash([])
-      // Etiquetas de carril (arriba)
-      const laneFont = 12 / scale
-      ctx.font = `900 ${laneFont}px "Unbounded", sans-serif`
-      ctx.fillStyle = '#1a1a1a'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-      for (let i = 0; i < laneCount; i++) {
-        const lane = lanes[i]
-        const cx = minX + i * laneSpanX + laneSpanX / 2
-        const label = lane.label.toUpperCase()
-        const metrics = ctx.measureText(label)
-        const padX = 6 / scale
-        const padY = 3 / scale
-        ctx.fillStyle = '#e8dcc8'
-        ctx.fillRect(
-          cx - metrics.width / 2 - padX,
-          minY + 12 - padY,
-          metrics.width + padX * 2,
-          laneFont + padY * 2,
-        )
-        ctx.strokeStyle = '#1a1a1a'
-        ctx.lineWidth = 1.2 / scale
-        ctx.strokeRect(
-          cx - metrics.width / 2 - padX,
-          minY + 12 - padY,
-          metrics.width + padX * 2,
-          laneFont + padY * 2,
-        )
-        ctx.fillStyle = '#1a1a1a'
-        ctx.fillText(label, cx, minY + 12)
-      }
-      // Etiquetas de año (izquierda)
-      const yearFont = 10 / scale
-      ctx.font = `700 ${yearFont}px "Courier Prime", monospace`
-      ctx.fillStyle = 'rgba(26,26,26,0.55)'
+      // Años a la izquierda
+      ctx.font = `700 ${10 / scale}px "Courier Prime", monospace`
+      ctx.fillStyle = 'rgba(26,26,26,0.5)'
       ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
         const yRel = (yr - minYear) / yearSpan
-        const y = minY + 50 + yRel * (maxY - minY - 90)
-        ctx.fillText(String(yr), minX + 4, y)
+        const y = colTopY + 40 + yRel * (colBotY - colTopY - 80)
+        ctx.fillText(String(yr), axisX0 - 28, y)
       }
+
+      // Render de cada columna como edificio
+      for (const col of skyline.columns) {
+        const { x, y, w: cw, h: ch } = col.rect
+
+        // Sombra "print"
+        ctx.fillStyle = 'rgba(26,26,26,0.18)'
+        ctx.fillRect(x + 4 / scale, y + 4 / scale, cw, ch)
+
+        // Cuerpo del edificio: paper ligeramente teñido
+        ctx.fillStyle = '#f1e6cf'
+        ctx.fillRect(x, y, cw, ch)
+
+        // Borde grueso
+        ctx.strokeStyle = '#1a1a1a'
+        ctx.lineWidth = 2.5 / scale
+        ctx.strokeRect(x, y, cw, ch)
+
+        // Franja roja del "tejado" (pequeño guiño a la paleta)
+        ctx.fillStyle = '#d62828'
+        ctx.fillRect(x, y, cw, 6)
+        ctx.strokeRect(x, y, cw, 6)
+
+        // Bloques de sello dentro
+        for (const b of col.blocks) {
+          const br = b.rect
+          // Sombra interior
+          ctx.fillStyle = 'rgba(26,26,26,0.08)'
+          ctx.fillRect(br.x + 2 / scale, br.y + 2 / scale, br.w, br.h)
+
+          // Cuerpo del bloque
+          ctx.fillStyle = b.isOrphan ? '#e8dcc8' : '#ffffff'
+          ctx.fillRect(br.x, br.y, br.w, br.h)
+          ctx.strokeStyle = '#1a1a1a'
+          ctx.lineWidth = 1.5 / scale
+          ctx.strokeRect(br.x, br.y, br.w, br.h)
+
+          // Cabecera del bloque (barra negra con nombre del sello)
+          const headerH = 22
+          ctx.fillStyle = b.isOrphan ? 'rgba(26,26,26,0.55)' : '#1a1a1a'
+          ctx.fillRect(br.x, br.y, br.w, headerH)
+
+          const titleFont = 10 / scale
+          ctx.font = `900 ${titleFont}px "Unbounded", sans-serif`
+          ctx.fillStyle = '#f7efd9'
+          ctx.textAlign = 'left'
+          ctx.textBaseline = 'middle'
+          // Recorte de nombre si se pasa
+          const maxTxt = br.w - 12
+          let nm = b.name.toUpperCase()
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(br.x + 4, br.y, maxTxt, headerH)
+          ctx.clip()
+          ctx.fillText(nm, br.x + 8, br.y + headerH / 2)
+          ctx.restore()
+        }
+
+        // Cartel del edificio (nombre escena) en la base
+        const titleH = 30
+        const titleY = y + ch - titleH
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(x, titleY, cw, titleH)
+        ctx.strokeStyle = '#1a1a1a'
+        ctx.lineWidth = 2.5 / scale
+        ctx.strokeRect(x, titleY, cw, titleH)
+
+        ctx.font = `900 ${13 / scale}px "Unbounded", sans-serif`
+        ctx.fillStyle = '#f7efd9'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(x + 4, titleY, cw - 8, titleH)
+        ctx.clip()
+        ctx.fillText(col.title.toUpperCase(), x + cw / 2, titleY + titleH / 2)
+        ctx.restore()
+      }
+
       ctx.restore()
     }
 
     // Aristas
+    // En modo Skyline solo se dibujan las relacionadas con el foco (evita caos visual).
+    const isSkyline = !!skyline
     ctx.lineWidth = 1 / scale
     for (const e of sim.edges) {
       const isFocused = focus && (e.source.id === focus || e.target.id === focus)
+      if (isSkyline && !isFocused) continue
       const dim = focus && !isFocused
       ctx.strokeStyle = dim ? 'rgba(26,26,26,0.08)' : EDGE_COLOR[e.kind]
       ctx.lineWidth = isFocused ? 1.8 / scale : 1 / scale
@@ -1061,18 +1256,37 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       const dim = focus && !isFocused && !connected
       ctx.globalAlpha = dim ? 0.22 : 1
       const color = TYPE_COLOR[n.type]
-      // Imagen (si hay)
+
+      // En Skyline las escenas no se dibujan como círculos (ya son la columna entera)
+      if (isSkyline && n.type === 'scene') {
+        ctx.globalAlpha = 1
+        continue
+      }
+      // Los sellos tampoco (ya son los bloques); salvo focus directo → highlight suave
+      if (isSkyline && n.type === 'label') {
+        if (isFocused) {
+          ctx.strokeStyle = color
+          ctx.lineWidth = 3 / scale
+          // ya estaba dibujado el rect; no hago nada más aquí
+        }
+        ctx.globalAlpha = 1
+        continue
+      }
+
+      // En Skyline reducimos el radio de artistas para caber en la grid
+      const r = isSkyline && n.type === 'artist' ? Math.max(8, Math.min(13, n.r)) : n.r
+
       const cached = n.image_url ? imageCacheRef.current.get(n.image_url) : null
       const img = cached && cached !== 'error' ? cached : null
       ctx.save()
       ctx.beginPath()
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
+      ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
       if (img) {
         ctx.clip()
-        ctx.drawImage(img, n.x - n.r, n.y - n.r, n.r * 2, n.r * 2)
+        ctx.drawImage(img, n.x - r, n.y - r, r * 2, r * 2)
         ctx.restore()
         ctx.beginPath()
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
+        ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
         ctx.lineWidth = (isFocused ? 3 : 1.5) / scale
         ctx.strokeStyle = isFocused ? color : TYPE_STROKE
         ctx.stroke()
@@ -1081,7 +1295,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         ctx.fill()
         ctx.restore()
         ctx.beginPath()
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2)
+        ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
         ctx.lineWidth = (isFocused ? 3 : 1.5) / scale
         ctx.strokeStyle = TYPE_STROKE
         ctx.stroke()
@@ -1096,20 +1310,24 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const labelFontPx = 11 / scale
     ctx.font = `700 ${labelFontPx}px "Courier Prime", monospace`
     for (const n of sim.nodes) {
+      if (isSkyline && (n.type === 'scene' || n.type === 'label')) continue
       const isFocused = focus === n.id
       const connected = focusAdj?.has(n.id)
-      const show = isFocused || connected || scale > 1.15 || n.r > 9
+      // En Skyline las etiquetas de artista sólo salen con focus o mucho zoom
+      const show = isSkyline
+        ? isFocused || connected || scale > 1.8
+        : isFocused || connected || scale > 1.15 || n.r > 9
       if (!show) continue
       const label = n.name
-      const lx = n.x + n.r + 4
+      const r = isSkyline && n.type === 'artist' ? 11 : n.r
+      const lx = n.x + r + 4
       const ly = n.y
       const dim = focus && !isFocused && !connected
       if (dim) continue
-      // Fondo de etiqueta para legibilidad
       const metrics = ctx.measureText(label)
       const padX = 3 / scale
       const padY = 2 / scale
-      ctx.fillStyle = 'rgba(232,220,200,0.85)'
+      ctx.fillStyle = 'rgba(232,220,200,0.9)'
       ctx.fillRect(
         lx - padX,
         ly - labelFontPx / 2 - padY,
