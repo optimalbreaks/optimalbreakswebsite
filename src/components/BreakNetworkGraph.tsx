@@ -341,23 +341,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       return best
     }
 
-    // --- Columna por nodo ---
-    function countryColumnId(country: string) {
-      const c = (country || '').trim().toUpperCase()
-      if (!c) return 'col:misc'
-      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return 'col:country:ES'
-      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'col:country:UK'
-      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'col:country:US'
-      return `col:country:${c}`
-    }
-    function countryColumnLabel(country: string) {
-      const c = (country || '').trim().toUpperCase()
-      if (c === 'ES' || c === 'SPAIN' || c === 'ESPAÑA') return lang === 'es' ? 'España' : 'Spain'
-      if (c === 'UK' || c === 'GB' || c === 'ENGLAND' || c === 'UNITED KINGDOM') return 'UK'
-      if (c === 'US' || c === 'USA' || c === 'UNITED STATES') return 'US'
-      return c || (lang === 'es' ? 'Varios' : 'Misc')
-    }
-
+    // --- Columna por nodo: solo las escenas reales cuentan como columna ---
     const nodeColumn = new Map<string, string>()
     for (const n of nodesIn) {
       if (n.type === 'scene') {
@@ -366,10 +350,10 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       }
       const prim = primarySceneOf(n.id)
       if (prim) nodeColumn.set(n.id, prim)
-      else nodeColumn.set(n.id, countryColumnId(n.meta?.country || ''))
+      // Sin escena: no entra en ninguna columna (en modo Mapa no se muestra).
     }
 
-    // --- Ordenar columnas (escenas por densidad, luego países, luego misc) ---
+    // --- Ordenar columnas: solo escenas reales, orden cronológico ---
     const usedCols = new Set<string>()
     nodeColumn.forEach((c) => usedCols.add(c))
 
@@ -377,30 +361,14 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       .filter((s) => usedCols.has(s.id))
       .map((s) => ({
         s,
+        year: parseYear(s.meta, 'scene'),
         count: nodesIn.filter((n) => nodeColumn.get(n.id) === s.id).length,
       }))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => a.year - b.year || b.count - a.count)
 
     const columnsMeta: Array<{ id: string; title: string; sceneNodeId: string | null }> = []
     for (const { s } of sceneOrder) {
       columnsMeta.push({ id: s.id, title: s.name, sceneNodeId: s.id })
-    }
-    const countryCols = Array.from(usedCols).filter((c) => c.startsWith('col:country:'))
-    countryCols.sort()
-    for (const cid of countryCols) {
-      const country = cid.replace('col:country:', '')
-      columnsMeta.push({
-        id: cid,
-        title: countryColumnLabel(country),
-        sceneNodeId: null,
-      })
-    }
-    if (usedCols.has('col:misc')) {
-      columnsMeta.push({
-        id: 'col:misc',
-        title: lang === 'es' ? 'Varios' : 'Misc',
-        sceneNodeId: null,
-      })
     }
 
     // --- Rango temporal global ---
@@ -581,13 +549,38 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     // Posiciones iniciales según modo
     let cartaPositions: Map<string, { x: number; y: number }> | null = null
     let skylineComputed: SkylineLayout | null = null
+    // En modo Mapa, solo entran escenas + nodos conectados (dist≤2 para incluir artistas de sellos).
+    // Así no salen "huérfanos" ni columnas ficticias por país.
+    let renderNodes: GraphNode[] = visibleNodes
+    let renderEdges = visibleEdges
     if (layoutMode === 'carta') {
-      skylineComputed = computeSkylineLayout(visibleNodes, visibleEdges, w, h)
+      const sceneIds = new Set(visibleNodes.filter((n) => n.type === 'scene').map((n) => n.id))
+      const connected = new Set<string>(sceneIds)
+      // dist 1 (escena → sello/artista)
+      for (const e of visibleEdges) {
+        if (sceneIds.has(e.source)) connected.add(e.target)
+        if (sceneIds.has(e.target)) connected.add(e.source)
+      }
+      // dist 2 (sello → artista) para rescatar artistas que cuelgan de sellos-en-escena
+      const labelsInScene = new Set(
+        Array.from(connected).filter((id) => {
+          const n = visibleNodes.find((x) => x.id === id)
+          return n?.type === 'label'
+        }),
+      )
+      for (const e of visibleEdges) {
+        if (labelsInScene.has(e.source)) connected.add(e.target)
+        if (labelsInScene.has(e.target)) connected.add(e.source)
+      }
+      renderNodes = visibleNodes.filter((n) => connected.has(n.id))
+      const keepIds = new Set(renderNodes.map((n) => n.id))
+      renderEdges = visibleEdges.filter((e) => keepIds.has(e.source) && keepIds.has(e.target))
+      skylineComputed = computeSkylineLayout(renderNodes, renderEdges, w, h)
       cartaPositions = skylineComputed.positions
     }
 
-    for (let i = 0; i < visibleNodes.length; i++) {
-      const n = visibleNodes[i]
+    for (let i = 0; i < renderNodes.length; i++) {
+      const n = renderNodes[i]
       const weight = n.weight || 1
       const r = 5 + Math.min(14, Math.sqrt(weight) * 2.6)
       let x: number
@@ -597,7 +590,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         x = p?.x ?? cx
         y = p?.y ?? cy
       } else {
-        const ang = (i / Math.max(1, visibleNodes.length)) * Math.PI * 2 + 0.1
+        const ang = (i / Math.max(1, renderNodes.length)) * Math.PI * 2 + 0.1
         const rad = ringR * (0.6 + 0.4 * Math.random())
         x = cx + Math.cos(ang) * rad
         y = cy + Math.sin(ang) * rad
@@ -621,7 +614,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     }
     const edges: SimEdge[] = []
     const adjacency = new Map<string, Set<string>>()
-    for (const e of visibleEdges) {
+    for (const e of renderEdges) {
       const s = idx.get(e.source)
       const t = idx.get(e.target)
       if (!s || !t) continue
