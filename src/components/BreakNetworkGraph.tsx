@@ -152,7 +152,6 @@ function normalize(s: string): string {
     .trim()
 }
 
-type LayoutMode = 'force' | 'carta'
 
 export default function BreakNetworkGraph({ data, dict, lang }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -176,7 +175,6 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
   /** Altura actual del canvas (px). Se recalcula en resize según viewport. */
   const canvasHeightRef = useRef<number>(620)
   const [canvasHeight, setCanvasHeight] = useState<number>(620)
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>('force')
 
   // Filtros
   // En la red mostramos solo artistas, sellos y escenas. Eventos y organizaciones
@@ -223,320 +221,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     return data.edges.filter((e) => idSet.has(e.source) && idSet.has(e.target))
   }, [data, visibleNodes])
 
-  // --- Layout Skyline: columnas "edificio" por escena con bloques anidados de sello ---
-  type SkylineLabelBlock = {
-    id: string
-    nodeId: string | null
-    name: string
-    rect: { x: number; y: number; w: number; h: number }
-    artistIds: string[]
-    isOrphan: boolean
-  }
-  type SkylineColumn = {
-    id: string
-    title: string
-    sceneNodeId: string | null
-    rect: { x: number; y: number; w: number; h: number }
-    blocks: SkylineLabelBlock[]
-    eventIds: string[]
-    orgIds: string[]
-  }
-  type SkylineLayout = {
-    columns: SkylineColumn[]
-    minYear: number
-    maxYear: number
-    positions: Map<string, { x: number; y: number }>
-  }
-
-  function parseYear(meta: GraphNode['meta'] | undefined, type: GraphNodeType): number {
-    const m = meta || {}
-    if (typeof m.year === 'number' && m.year > 1900) return m.year
-    const era = (m.era || '').toLowerCase()
-    if (era) {
-      const match = era.match(/(19|20)\d{2}/)
-      if (match) return Number(match[0])
-      if (era.includes('60s') || era.includes('1960')) return 1965
-      if (era.includes('70s') || era.includes('1970')) return 1975
-      if (era.includes('80s') || era.includes('1980')) return 1985
-      if (era.includes('90s') || era.includes('1990')) return 1995
-      if (era.includes('00s') || era.includes('2000')) return 2003
-      if (era.includes('10s') || era.includes('2010')) return 2013
-      if (era.includes('20s') || era.includes('2020')) return 2022
-      if (era.includes('pioneer') || era.includes('old')) return 1985
-      if (era.includes('golden') || era.includes('nu')) return 2001
-    }
-    if (type === 'event') return 2024
-    if (type === 'artist') {
-      const cat = (m.category || '').toLowerCase()
-      if (cat === 'pioneer') return 1975
-      if (cat === 'uk_legend' || cat === 'us_artist') return 1998
-      if (cat === 'andalusian') return 2018
-      if (cat === 'current') return 2022
-      if (cat === 'crew') return 2020
-    }
-    return 2005
-  }
-
-  function computeSkylineLayout(
-    nodesIn: GraphNode[],
-    edgesIn: GraphEdge[],
-    w: number,
-    h: number,
-  ): SkylineLayout {
-    const positions = new Map<string, { x: number; y: number }>()
-
-    // --- Particionar por tipo ---
-    const scenes = nodesIn.filter((n) => n.type === 'scene')
-    const labelsAll = nodesIn.filter((n) => n.type === 'label')
-    const artistsAll = nodesIn.filter((n) => n.type === 'artist')
-    const eventsAll = nodesIn.filter((n) => n.type === 'event')
-    const orgsAll = nodesIn.filter((n) => n.type === 'organization')
-
-    // Adyacencia
-    const adj = new Map<string, Set<string>>()
-    for (const n of nodesIn) adj.set(n.id, new Set())
-    for (const e of edgesIn) {
-      adj.get(e.source)?.add(e.target)
-      adj.get(e.target)?.add(e.source)
-    }
-    const nodeById = new Map(nodesIn.map((n) => [n.id, n]))
-
-    // --- Determinar escena primaria para cada nodo (por número de aristas hacia escenas) ---
-    const sceneIds = new Set(scenes.map((s) => s.id))
-    function primarySceneOf(nodeId: string): string | null {
-      const neigh = adj.get(nodeId)
-      if (!neigh) return null
-      const counts = new Map<string, number>()
-      neigh.forEach((nid) => {
-        if (sceneIds.has(nid)) counts.set(nid, (counts.get(nid) || 0) + 1)
-      })
-      let best: string | null = null
-      let bestC = 0
-      counts.forEach((c, sid) => {
-        if (c > bestC) {
-          bestC = c
-          best = sid
-        }
-      })
-      return best
-    }
-
-    // --- Sello primario de cada artista (su sello con más aristas) ---
-    const labelIds = new Set(labelsAll.map((l) => l.id))
-    function primaryLabelOf(artistId: string): string | null {
-      const neigh = adj.get(artistId)
-      if (!neigh) return null
-      const counts = new Map<string, number>()
-      neigh.forEach((nid) => {
-        if (labelIds.has(nid)) counts.set(nid, (counts.get(nid) || 0) + 1)
-      })
-      let best: string | null = null
-      let bestC = 0
-      counts.forEach((c, lid) => {
-        if (c > bestC) {
-          bestC = c
-          best = lid
-        }
-      })
-      return best
-    }
-
-    // --- Columna por nodo: solo las escenas reales cuentan como columna ---
-    const nodeColumn = new Map<string, string>()
-    for (const n of nodesIn) {
-      if (n.type === 'scene') {
-        nodeColumn.set(n.id, n.id)
-        continue
-      }
-      const prim = primarySceneOf(n.id)
-      if (prim) nodeColumn.set(n.id, prim)
-      // Sin escena: no entra en ninguna columna (en modo Mapa no se muestra).
-    }
-
-    // --- Ordenar columnas: solo escenas reales, orden cronológico ---
-    const usedCols = new Set<string>()
-    nodeColumn.forEach((c) => usedCols.add(c))
-
-    const sceneOrder = scenes
-      .filter((s) => usedCols.has(s.id))
-      .map((s) => ({
-        s,
-        year: parseYear(s.meta, 'scene'),
-        count: nodesIn.filter((n) => nodeColumn.get(n.id) === s.id).length,
-      }))
-      .sort((a, b) => a.year - b.year || b.count - a.count)
-
-    const columnsMeta: Array<{ id: string; title: string; sceneNodeId: string | null }> = []
-    for (const { s } of sceneOrder) {
-      columnsMeta.push({ id: s.id, title: s.name, sceneNodeId: s.id })
-    }
-
-    // --- Rango temporal global ---
-    const years = nodesIn.map((n) => parseYear(n.meta, n.type))
-    const minYear = Math.min(...years, 1975)
-    const maxYear = Math.max(...years, new Date().getFullYear())
-    const yearSpan = Math.max(1, maxYear - minYear)
-
-    // --- Dimensiones ---
-    const padX = 40
-    const padTopTitle = 60 // espacio para títulos de columna (arriba)
-    const padBottom = 100 // espacio para pie / eventos
-    const usableH = Math.max(360, h - padTopTitle - padBottom)
-    const colCount = Math.max(1, columnsMeta.length)
-    const colGap = 14
-    const colWidth = Math.max(220, (w - padX * 2 - colGap * (colCount - 1)) / colCount)
-    const blockPad = 10
-    const artistCellW = 44
-    const artistCellH = 44
-    const artistsPerRow = Math.max(2, Math.floor((colWidth - blockPad * 2 - 8) / artistCellW))
-
-    const columns: SkylineColumn[] = []
-
-    for (let ci = 0; ci < columnsMeta.length; ci++) {
-      const cm = columnsMeta[ci]
-      const colX = padX + ci * (colWidth + colGap)
-      const colY = padTopTitle
-      const colH = usableH
-
-      // Nodos que viven en esta columna
-      const colNodeIds = nodesIn.filter((n) => nodeColumn.get(n.id) === cm.id).map((n) => n.id)
-      const colArtists = colNodeIds
-        .map((id) => nodeById.get(id))
-        .filter((n): n is GraphNode => !!n && n.type === 'artist')
-      const colLabels = colNodeIds
-        .map((id) => nodeById.get(id))
-        .filter((n): n is GraphNode => !!n && n.type === 'label')
-      const colEvents = colNodeIds
-        .map((id) => nodeById.get(id))
-        .filter((n): n is GraphNode => !!n && n.type === 'event')
-      const colOrgs = colNodeIds
-        .map((id) => nodeById.get(id))
-        .filter((n): n is GraphNode => !!n && n.type === 'organization')
-
-      // Asigna artistas a bloques de sello
-      const labelBuckets = new Map<string, GraphNode[]>()
-      for (const l of colLabels) labelBuckets.set(l.id, [])
-      const orphans: GraphNode[] = []
-      for (const a of colArtists) {
-        const lbl = primaryLabelOf(a.id)
-        if (lbl && labelBuckets.has(lbl)) labelBuckets.get(lbl)!.push(a)
-        else orphans.push(a)
-      }
-
-      // Años de cada bloque (para ordenar arriba→abajo)
-      const blockYear = (label: GraphNode, artists: GraphNode[]): number => {
-        const ly = parseYear(label.meta, 'label')
-        if (artists.length === 0) return ly
-        const ys = artists.map((a) => parseYear(a.meta, 'artist'))
-        return Math.round((ly + ys.reduce((s, x) => s + x, 0) / ys.length) / 2)
-      }
-
-      const blocksSorted = colLabels
-        .map((l) => {
-          const artists = labelBuckets.get(l.id) || []
-          return { label: l, artists, year: blockYear(l, artists) }
-        })
-        .sort((a, b) => a.year - b.year)
-
-      // Layout vertical de bloques dentro de la columna
-      const blocks: SkylineLabelBlock[] = []
-      let cursorY = colY + 26 // deja espacio para el título de la columna
-      const availableH = colY + colH - cursorY - (orphans.length ? 0 : 0) // sitio para bloque orphan al final
-      void availableH
-
-      const pushBlock = (
-        id: string,
-        nodeId: string | null,
-        name: string,
-        artists: GraphNode[],
-        isOrphan: boolean,
-      ) => {
-        const rows = Math.max(1, Math.ceil(artists.length / artistsPerRow))
-        const headerH = 26
-        const gridH = rows * artistCellH + blockPad
-        const bh = headerH + gridH + blockPad
-        const bx = colX + 6
-        const by = cursorY
-        const bw = colWidth - 12
-        const block: SkylineLabelBlock = {
-          id,
-          nodeId,
-          name,
-          rect: { x: bx, y: by, w: bw, h: bh },
-          artistIds: artists.map((a) => a.id),
-          isOrphan,
-        }
-        // Posiciones de artistas en grid dentro del bloque
-        artists.forEach((a, i) => {
-          const row = Math.floor(i / artistsPerRow)
-          const col = i % artistsPerRow
-          const startX = bx + blockPad + artistCellW / 2
-          const startY = by + headerH + blockPad / 2 + artistCellH / 2
-          const x = startX + col * artistCellW
-          const y = startY + row * artistCellH
-          positions.set(a.id, { x, y })
-        })
-        blocks.push(block)
-        cursorY = by + bh + 8
-      }
-
-      for (const b of blocksSorted) {
-        pushBlock(b.label.id, b.label.id, b.label.name, b.artists, false)
-      }
-      if (orphans.length > 0) {
-        pushBlock(
-          `orphan:${cm.id}`,
-          null,
-          lang === 'es' ? 'Independientes' : 'Independent',
-          orphans,
-          true,
-        )
-      }
-
-      // Posición del nodo scene (punto de referencia, en la cabecera de la columna)
-      if (cm.sceneNodeId) {
-        positions.set(cm.sceneNodeId, { x: colX + colWidth / 2, y: colY - 28 })
-      }
-
-      // Eventos: marcadores en la franja derecha de la columna, ubicados por año
-      colEvents.forEach((ev, i) => {
-        const yr = parseYear(ev.meta, 'event')
-        const yRel = Math.max(0, Math.min(1, (yr - minYear) / yearSpan))
-        const py = colY + 40 + yRel * (colH - 80) + (i % 3) * 10
-        const px = colX + colWidth - 14
-        positions.set(ev.id, { x: px, y: py })
-      })
-
-      // Organizaciones: franja inferior del edificio
-      colOrgs.forEach((o, i) => {
-        const row = Math.floor(i / artistsPerRow)
-        const col = i % artistsPerRow
-        const ox = colX + 20 + col * artistCellW
-        const oy = colY + colH - 20 - row * 22
-        positions.set(o.id, { x: ox, y: oy })
-      })
-
-      // Ajusta altura real de la columna según contenido
-      const contentBottom = Math.max(cursorY, colY + colH)
-      const finalH = Math.max(colH, contentBottom - colY + 40)
-
-      columns.push({
-        id: cm.id,
-        title: cm.title,
-        sceneNodeId: cm.sceneNodeId,
-        rect: { x: colX, y: colY, w: colWidth, h: finalH },
-        blocks,
-        eventIds: colEvents.map((e) => e.id),
-        orgIds: colOrgs.map((o) => o.id),
-      })
-    }
-
-    return { columns, minYear, maxYear, positions }
-  }
-
-  const skylineLayoutRef = useRef<SkylineLayout | null>(null)
-
-  // Reconstruye simulación cuando cambia el subset visible o el modo.
+  // Reconstruye simulación cuando cambia el subset visible.
   useEffect(() => {
     const nodes: SimNode[] = []
     const idx = new Map<string, SimNode>()
@@ -546,55 +231,15 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const cy = h / 2
     const ringR = Math.min(w, h) * 0.32 + 30
 
-    // Posiciones iniciales según modo
-    let cartaPositions: Map<string, { x: number; y: number }> | null = null
-    let skylineComputed: SkylineLayout | null = null
-    // En modo Mapa, solo entran escenas + nodos conectados (dist≤2 para incluir artistas de sellos).
-    // Así no salen "huérfanos" ni columnas ficticias por país.
-    let renderNodes: GraphNode[] = visibleNodes
-    let renderEdges = visibleEdges
-    if (layoutMode === 'carta') {
-      const sceneIds = new Set(visibleNodes.filter((n) => n.type === 'scene').map((n) => n.id))
-      const connected = new Set<string>(sceneIds)
-      // dist 1 (escena → sello/artista)
-      for (const e of visibleEdges) {
-        if (sceneIds.has(e.source)) connected.add(e.target)
-        if (sceneIds.has(e.target)) connected.add(e.source)
-      }
-      // dist 2 (sello → artista) para rescatar artistas que cuelgan de sellos-en-escena
-      const labelsInScene = new Set(
-        Array.from(connected).filter((id) => {
-          const n = visibleNodes.find((x) => x.id === id)
-          return n?.type === 'label'
-        }),
-      )
-      for (const e of visibleEdges) {
-        if (labelsInScene.has(e.source)) connected.add(e.target)
-        if (labelsInScene.has(e.target)) connected.add(e.source)
-      }
-      renderNodes = visibleNodes.filter((n) => connected.has(n.id))
-      const keepIds = new Set(renderNodes.map((n) => n.id))
-      renderEdges = visibleEdges.filter((e) => keepIds.has(e.source) && keepIds.has(e.target))
-      skylineComputed = computeSkylineLayout(renderNodes, renderEdges, w, h)
-      cartaPositions = skylineComputed.positions
-    }
-
-    for (let i = 0; i < renderNodes.length; i++) {
-      const n = renderNodes[i]
+    // Posiciones iniciales (force-directed): anillo con jitter.
+    for (let i = 0; i < visibleNodes.length; i++) {
+      const n = visibleNodes[i]
       const weight = n.weight || 1
       const r = 5 + Math.min(14, Math.sqrt(weight) * 2.6)
-      let x: number
-      let y: number
-      if (cartaPositions) {
-        const p = cartaPositions.get(n.id)
-        x = p?.x ?? cx
-        y = p?.y ?? cy
-      } else {
-        const ang = (i / Math.max(1, renderNodes.length)) * Math.PI * 2 + 0.1
-        const rad = ringR * (0.6 + 0.4 * Math.random())
-        x = cx + Math.cos(ang) * rad
-        y = cy + Math.sin(ang) * rad
-      }
+      const ang = (i / Math.max(1, visibleNodes.length)) * Math.PI * 2 + 0.1
+      const rad = ringR * (0.6 + 0.4 * Math.random())
+      const x = cx + Math.cos(ang) * rad
+      const y = cy + Math.sin(ang) * rad
       const sn: SimNode = {
         id: n.id,
         type: n.type,
@@ -607,14 +252,14 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
         vx: 0,
         vy: 0,
         r,
-        fixed: layoutMode === 'carta',
+        fixed: false,
       }
       nodes.push(sn)
       idx.set(n.id, sn)
     }
     const edges: SimEdge[] = []
     const adjacency = new Map<string, Set<string>>()
-    for (const e of renderEdges) {
+    for (const e of visibleEdges) {
       const s = idx.get(e.source)
       const t = idx.get(e.target)
       if (!s || !t) continue
@@ -626,14 +271,8 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     }
     simRef.current = { nodes, edges, adjacency }
 
-    if (layoutMode === 'carta') {
-      heatRef.current = 0
-      skylineLayoutRef.current = skylineComputed
-    } else {
-      heatRef.current = 1
-      skylineLayoutRef.current = null
-      for (let i = 0; i < 220; i++) stepSimulation(0.05)
-    }
+    heatRef.current = 1
+    for (let i = 0; i < 220; i++) stepSimulation(0.05)
 
     viewRef.current = { tx: 0, ty: 0, scale: 1 }
     autoFitView()
@@ -643,7 +282,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       stopLoop()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleNodes, visibleEdges, layoutMode])
+  }, [visibleNodes, visibleEdges])
 
   // Image loader
   useEffect(() => {
@@ -717,43 +356,13 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       const { tx, ty, scale } = viewRef.current
       const wx = (cx - tx) / scale
       const wy = (cy - ty) / scale
-      // En modo Skyline, los artistas son los puntos, pero sellos/escenas se seleccionan por rect
-      const skyline = layoutMode === 'carta' ? skylineLayoutRef.current : null
-      // 1) primero artistas (visibles como círculos)
       for (let i = sim.nodes.length - 1; i >= 0; i--) {
         const n = sim.nodes[i]
-        if (skyline && (n.type === 'scene' || n.type === 'label')) continue
         const dx = n.x - wx
         const dy = n.y - wy
-        const r = (skyline && n.type === 'artist' ? 11 : n.r) + 6
+        // Targets táctiles más grandes en móvil (hit radius mayor)
+        const r = n.r + 6
         if (dx * dx + dy * dy <= r * r) return n
-      }
-      // 2) en Skyline, intenta por rectángulos de bloque (sellos) y de columna (escenas)
-      if (skyline) {
-        // bloques (sellos)
-        for (const col of skyline.columns) {
-          for (const b of col.blocks) {
-            const { x, y, w, h } = b.rect
-            // Solo la barra de cabecera (22 px) es clickable (el resto contiene artistas)
-            if (wx >= x && wx <= x + w && wy >= y && wy <= y + 22) {
-              if (b.nodeId) {
-                const sn = sim.nodes.find((nn) => nn.id === b.nodeId)
-                if (sn) return sn
-              }
-            }
-          }
-        }
-        // columna (escena) — cartel inferior
-        for (const col of skyline.columns) {
-          const { x, y, w, h } = col.rect
-          const titleY = y + h - 30
-          if (wx >= x && wx <= x + w && wy >= titleY && wy <= titleY + 30) {
-            if (col.sceneNodeId) {
-              const sn = sim.nodes.find((nn) => nn.id === col.sceneNodeId)
-              if (sn) return sn
-            }
-          }
-        }
       }
       return null
     }
@@ -1105,134 +714,10 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const adj = sim.adjacency
     const focusAdj = focus ? adj.get(focus) || new Set<string>() : null
 
-    // --- Dibujo Skyline: edificios (columnas escena) + bloques internos (sellos) ---
-    const skyline = layoutMode === 'carta' ? skylineLayoutRef.current : null
-    if (skyline && skyline.columns.length > 0) {
-      ctx.save()
-
-      // Eje temporal tenue a la izquierda
-      const { minYear, maxYear } = skyline
-      const yearSpan = Math.max(1, maxYear - minYear)
-      const firstCol = skyline.columns[0]
-      const lastCol = skyline.columns[skyline.columns.length - 1]
-      const axisX0 = firstCol.rect.x - 30
-      const axisX1 = lastCol.rect.x + lastCol.rect.w + 30
-      const decadeStart = Math.floor(minYear / 10) * 10
-      const decadeEnd = Math.ceil(maxYear / 10) * 10
-      // Líneas de década
-      const colTopY = Math.min(...skyline.columns.map((c) => c.rect.y))
-      const colBotY = Math.max(...skyline.columns.map((c) => c.rect.y + c.rect.h))
-      ctx.strokeStyle = 'rgba(26,26,26,0.10)'
-      ctx.lineWidth = 1 / scale
-      ctx.setLineDash([4 / scale, 6 / scale])
-      for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
-        const yRel = (yr - minYear) / yearSpan
-        const y = colTopY + 40 + yRel * (colBotY - colTopY - 80)
-        ctx.beginPath()
-        ctx.moveTo(axisX0, y)
-        ctx.lineTo(axisX1, y)
-        ctx.stroke()
-      }
-      ctx.setLineDash([])
-      // Años a la izquierda
-      ctx.font = `700 ${10 / scale}px "Courier Prime", monospace`
-      ctx.fillStyle = 'rgba(26,26,26,0.5)'
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'middle'
-      for (let yr = decadeStart; yr <= decadeEnd; yr += 10) {
-        const yRel = (yr - minYear) / yearSpan
-        const y = colTopY + 40 + yRel * (colBotY - colTopY - 80)
-        ctx.fillText(String(yr), axisX0 - 28, y)
-      }
-
-      // Render de cada columna como edificio
-      for (const col of skyline.columns) {
-        const { x, y, w: cw, h: ch } = col.rect
-
-        // Sombra "print"
-        ctx.fillStyle = 'rgba(26,26,26,0.18)'
-        ctx.fillRect(x + 4 / scale, y + 4 / scale, cw, ch)
-
-        // Cuerpo del edificio: paper ligeramente teñido
-        ctx.fillStyle = '#f1e6cf'
-        ctx.fillRect(x, y, cw, ch)
-
-        // Borde grueso
-        ctx.strokeStyle = '#1a1a1a'
-        ctx.lineWidth = 2.5 / scale
-        ctx.strokeRect(x, y, cw, ch)
-
-        // Franja roja del "tejado" (pequeño guiño a la paleta)
-        ctx.fillStyle = '#d62828'
-        ctx.fillRect(x, y, cw, 6)
-        ctx.strokeRect(x, y, cw, 6)
-
-        // Bloques de sello dentro
-        for (const b of col.blocks) {
-          const br = b.rect
-          // Sombra interior
-          ctx.fillStyle = 'rgba(26,26,26,0.08)'
-          ctx.fillRect(br.x + 2 / scale, br.y + 2 / scale, br.w, br.h)
-
-          // Cuerpo del bloque
-          ctx.fillStyle = b.isOrphan ? '#e8dcc8' : '#ffffff'
-          ctx.fillRect(br.x, br.y, br.w, br.h)
-          ctx.strokeStyle = '#1a1a1a'
-          ctx.lineWidth = 1.5 / scale
-          ctx.strokeRect(br.x, br.y, br.w, br.h)
-
-          // Cabecera del bloque (barra negra con nombre del sello)
-          const headerH = 22
-          ctx.fillStyle = b.isOrphan ? 'rgba(26,26,26,0.55)' : '#1a1a1a'
-          ctx.fillRect(br.x, br.y, br.w, headerH)
-
-          const titleFont = 10 / scale
-          ctx.font = `900 ${titleFont}px "Unbounded", sans-serif`
-          ctx.fillStyle = '#f7efd9'
-          ctx.textAlign = 'left'
-          ctx.textBaseline = 'middle'
-          // Recorte de nombre si se pasa
-          const maxTxt = br.w - 12
-          let nm = b.name.toUpperCase()
-          ctx.save()
-          ctx.beginPath()
-          ctx.rect(br.x + 4, br.y, maxTxt, headerH)
-          ctx.clip()
-          ctx.fillText(nm, br.x + 8, br.y + headerH / 2)
-          ctx.restore()
-        }
-
-        // Cartel del edificio (nombre escena) en la base
-        const titleH = 30
-        const titleY = y + ch - titleH
-        ctx.fillStyle = '#1a1a1a'
-        ctx.fillRect(x, titleY, cw, titleH)
-        ctx.strokeStyle = '#1a1a1a'
-        ctx.lineWidth = 2.5 / scale
-        ctx.strokeRect(x, titleY, cw, titleH)
-
-        ctx.font = `900 ${13 / scale}px "Unbounded", sans-serif`
-        ctx.fillStyle = '#f7efd9'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.save()
-        ctx.beginPath()
-        ctx.rect(x + 4, titleY, cw - 8, titleH)
-        ctx.clip()
-        ctx.fillText(col.title.toUpperCase(), x + cw / 2, titleY + titleH / 2)
-        ctx.restore()
-      }
-
-      ctx.restore()
-    }
-
     // Aristas
-    // En modo Skyline solo se dibujan las relacionadas con el foco (evita caos visual).
-    const isSkyline = !!skyline
     ctx.lineWidth = 1 / scale
     for (const e of sim.edges) {
       const isFocused = focus && (e.source.id === focus || e.target.id === focus)
-      if (isSkyline && !isFocused) continue
       const dim = focus && !isFocused
       ctx.strokeStyle = dim ? 'rgba(26,26,26,0.08)' : EDGE_COLOR[e.kind]
       ctx.lineWidth = isFocused ? 1.8 / scale : 1 / scale
@@ -1249,25 +734,7 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
       const dim = focus && !isFocused && !connected
       ctx.globalAlpha = dim ? 0.22 : 1
       const color = TYPE_COLOR[n.type]
-
-      // En Skyline las escenas no se dibujan como círculos (ya son la columna entera)
-      if (isSkyline && n.type === 'scene') {
-        ctx.globalAlpha = 1
-        continue
-      }
-      // Los sellos tampoco (ya son los bloques); salvo focus directo → highlight suave
-      if (isSkyline && n.type === 'label') {
-        if (isFocused) {
-          ctx.strokeStyle = color
-          ctx.lineWidth = 3 / scale
-          // ya estaba dibujado el rect; no hago nada más aquí
-        }
-        ctx.globalAlpha = 1
-        continue
-      }
-
-      // En Skyline reducimos el radio de artistas para caber en la grid
-      const r = isSkyline && n.type === 'artist' ? Math.max(8, Math.min(13, n.r)) : n.r
+      const r = n.r
 
       const cached = n.image_url ? imageCacheRef.current.get(n.image_url) : null
       const img = cached && cached !== 'error' ? cached : null
@@ -1303,24 +770,19 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
     const labelFontPx = 11 / scale
     ctx.font = `700 ${labelFontPx}px "Courier Prime", monospace`
     for (const n of sim.nodes) {
-      if (isSkyline && (n.type === 'scene' || n.type === 'label')) continue
       const isFocused = focus === n.id
       const connected = focusAdj?.has(n.id)
-      // En Skyline las etiquetas de artista sólo salen con focus o mucho zoom
-      const show = isSkyline
-        ? isFocused || connected || scale > 1.8
-        : isFocused || connected || scale > 1.15 || n.r > 9
+      const show = isFocused || connected || scale > 1.15 || n.r > 9
       if (!show) continue
       const label = n.name
-      const r = isSkyline && n.type === 'artist' ? 11 : n.r
-      const lx = n.x + r + 4
+      const lx = n.x + n.r + 4
       const ly = n.y
       const dim = focus && !isFocused && !connected
       if (dim) continue
       const metrics = ctx.measureText(label)
       const padX = 3 / scale
       const padY = 2 / scale
-      ctx.fillStyle = 'rgba(232,220,200,0.9)'
+      ctx.fillStyle = 'rgba(232,220,200,0.85)'
       ctx.fillRect(
         lx - padX,
         ly - labelFontPx / 2 - padY,
@@ -1517,51 +979,6 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
                 ))}
               </div>
             ) : null}
-          </div>
-          <div className="inline-flex border-[3px] border-[var(--ink)]" role="group" aria-label={dict.layout_label || 'Layout'}>
-            <button
-              type="button"
-              onClick={() => {
-                setLayoutMode('force')
-                setSelectedNode(null)
-              }}
-              aria-pressed={layoutMode === 'force'}
-              className="cursor-pointer"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                padding: '8px 12px',
-                background: layoutMode === 'force' ? 'var(--ink)' : 'var(--paper)',
-                color: layoutMode === 'force' ? 'var(--paper)' : 'var(--ink)',
-                borderRight: '3px solid var(--ink)',
-              }}
-            >
-              {dict.layout_free || (lang === 'es' ? 'Libre' : 'Free')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setLayoutMode('carta')
-                setSelectedNode(null)
-              }}
-              aria-pressed={layoutMode === 'carta'}
-              className="cursor-pointer"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                padding: '8px 12px',
-                background: layoutMode === 'carta' ? 'var(--ink)' : 'var(--paper)',
-                color: layoutMode === 'carta' ? 'var(--paper)' : 'var(--ink)',
-              }}
-            >
-              {dict.layout_carta || (lang === 'es' ? 'Mapa' : 'Map')}
-            </button>
           </div>
           <button
             type="button"
