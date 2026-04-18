@@ -39,8 +39,8 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
     ? 'La Red del Break — grafo interactivo | Optimal Breaks'
     : 'The Break Network — interactive graph | Optimal Breaks'
   const description = es
-    ? 'Grafo interactivo de la cultura breakbeat: cómo se conectan artistas, sellos, eventos, escenas y organizaciones a lo largo del mapa del género.'
-    : 'Interactive graph of breakbeat culture: how artists, labels, events, scenes and organizations connect across the genre map.'
+    ? 'Grafo interactivo de la cultura breakbeat: cómo se conectan escenas, sellos y artistas a lo largo del mapa del género.'
+    : 'Interactive graph of breakbeat culture: how scenes, labels and artists connect across the genre map.'
   const url = `${SITE_URL}/${lang}/network`
   const ogImage = absoluteOgImage(HOME_OG_IMAGE, lang)
 
@@ -128,12 +128,20 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
   const orgs = (orgsRes.data || []) as OrgRow[]
 
   // --- Construcción del grafo (nodes + edges) con derivaciones ---
+  // En la red mostramos únicamente artistas, sellos y escenas.
+  // Los eventos y las organizaciones se excluyen a propósito: no aportan claridad
+  // en la jerarquía escena → sello → artista, y además duplican conceptos
+  // (una misma marca puede ser sello y organizador; nos quedamos con el sello).
   const built = buildNetworkGraphData(
     { artists, labels, events, scenes, organizations: orgs },
     lang,
   )
-  const nodes = built.nodes
-  const edges = built.edges
+  const ALLOWED_TYPES = new Set(['artist', 'label', 'scene'])
+  const keep = new Set(
+    built.nodes.filter((n) => ALLOWED_TYPES.has(n.type)).map((n) => n.id),
+  )
+  const nodes = built.nodes.filter((n) => keep.has(n.id))
+  const edges = built.edges.filter((e) => keep.has(e.source) && keep.has(e.target))
   const nodeIndex = new Set(nodes.map((n) => n.id))
 
   // Presets editoriales — se filtran por slug si existen; solo se publican los que tengan >= 4 nodos
@@ -184,16 +192,18 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
       id: 'andalusia',
       label_es: 'Andalucía',
       label_en: 'Andalusia',
-      description_es: 'Edad de oro andaluza y resurgimiento: Raveart, sellos, DJs y eventos.',
-      description_en: 'Andalusian golden era and revival: Raveart, labels, DJs and events.',
+      description_es: 'Edad de oro andaluza y resurgimiento: Raveart, 83, sellos y DJs.',
+      description_en: 'Andalusian golden era and revival: Raveart, 83, labels and DJs.',
       seed: [
         nodeId('scene', 'andalusian'),
-        nodeId('organization', 'raveart'),
+        nodeId('label', 'raveart'),
+        nodeId('label', '83-records'),
         nodeId('artist', 'cerbero'),
         nodeId('artist', 'bubu'),
         nodeId('artist', 'javy-groove'),
         nodeId('artist', 'yo-speed'),
         nodeId('artist', 'fran-break'),
+        nodeId('artist', 'guau'),
       ],
       radius: 1,
     },
@@ -279,7 +289,7 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
         title_1: 'LA RED',
         title_2: 'DEL BREAK',
         intro:
-          'Cómo se conectan artistas, sellos, eventos y escenas del archivo. Arrastra, haz zoom, filtra por tipo o elige un preset editorial. Pulsa un nodo para abrir su ficha.',
+          'Cómo se conectan escenas, sellos y artistas del archivo. Cada escena cría sellos, y cada sello arrastra una constelación de DJs. Arrastra, haz zoom, filtra por tipo o elige un preset editorial. Pulsa un nodo para abrir su ficha.',
         preset_label: 'Preset',
         preset_all: 'Todo',
         filter_types: 'Tipos',
@@ -318,7 +328,7 @@ export default async function NetworkPage({ params }: { params: { lang: Locale }
         title_1: 'THE BREAK',
         title_2: 'NETWORK',
         intro:
-          'How artists, labels, events and scenes in the archive connect. Drag, zoom, filter by type or pick an editorial preset. Click a node to open its page.',
+          'How scenes, labels and artists in the archive connect. Every scene breeds labels, and every label drags a constellation of DJs. Drag, zoom, filter by type or pick an editorial preset. Click a node to open its page.',
         preset_label: 'Preset',
         preset_all: 'All',
         filter_types: 'Types',

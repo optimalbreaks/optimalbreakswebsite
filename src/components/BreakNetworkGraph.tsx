@@ -179,19 +179,19 @@ export default function BreakNetworkGraph({ data, dict, lang }: Props) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('force')
 
   // Filtros
+  // En la red mostramos solo artistas, sellos y escenas. Eventos y organizaciones
+  // quedan fuera deliberadamente (se filtran aguas arriba en page.tsx).
   const typeOptions: { id: GraphNodeType; label: string; color: string }[] = useMemo(
     () => [
-      { id: 'artist', label: dict.filter_artist, color: TYPE_COLOR.artist },
-      { id: 'label', label: dict.filter_label, color: TYPE_COLOR.label },
-      { id: 'event', label: dict.filter_event, color: TYPE_COLOR.event },
       { id: 'scene', label: dict.filter_scene, color: TYPE_COLOR.scene },
-      { id: 'organization', label: dict.filter_organization, color: TYPE_COLOR.organization },
+      { id: 'label', label: dict.filter_label, color: TYPE_COLOR.label },
+      { id: 'artist', label: dict.filter_artist, color: TYPE_COLOR.artist },
     ],
     [dict],
   )
 
   const defaultTypes: Set<GraphNodeType> = useMemo(
-    () => new Set<GraphNodeType>(['artist', 'label', 'event', 'scene', 'organization']),
+    () => new Set<GraphNodeType>(['artist', 'label', 'scene']),
     [],
   )
 
