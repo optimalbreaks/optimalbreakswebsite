@@ -50,7 +50,6 @@ interface PaletteDict {
   quick_mixes: string
   quick_scenes: string
   quick_charts: string
-  quick_network: string
   quick_blog: string
 }
 
@@ -274,7 +273,6 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
     { href: `/${lang}/scenes`, label: dict.quick_scenes },
     { href: `/${lang}/charts`, label: dict.quick_charts },
     { href: `/${lang}/blog`, label: dict.quick_blog },
-    { href: `/${lang}/network`, label: dict.quick_network },
   ]
 
   const kbd = mac ? '⌘K' : 'Ctrl K'

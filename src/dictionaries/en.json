@@ -9,8 +9,7 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "About",
-    "charts": "Tracks",
-    "network": "Network"
+    "charts": "Tracks"
   },
   "search": {
     "button_short": "Search",
@@ -38,7 +37,6 @@
     "quick_mixes": "Mixes",
     "quick_scenes": "Scenes",
     "quick_charts": "Tracks",
-    "quick_network": "Network",
     "quick_blog": "Blog"
   },
   "home": {
@@ -177,11 +175,6 @@
           "href": "/scenes",
           "label": "Scenes",
           "hint": "Territories and local context"
-        },
-        {
-          "href": "/network",
-          "label": "Network",
-          "hint": "Interactive graph: who connects to whom"
         },
         {
           "href": "/blog",
