@@ -226,6 +226,14 @@ const ACTIONS = [
       'UPSERT finger-lickin-boat-party-2026: 16 may 2026 Dutch Master (Támesis), lineup Plump DJs / Krafty Kuts / A.Skillz / Soul of Man / Slyde / Jessica Joy, textos según comunicado FLR, Skiddle 42152456.',
   },
   {
+    id: 'events-patch-finger-lickin-between-the-bridges-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-finger-lickin-between-the-bridges-2026',
+    npm: 'npm run db:guia -- run events-patch-finger-lickin-between-the-bridges-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      "UPSERT finger-lickin-between-the-bridges-2026: 16 may 2026 Between the Bridges (Southbank SE1), 17:00–23:00, cartel public/images/events/finger-lickin-between-the-bridges-2026.webp, Skiddle 42363687, Freestylers + FLR lineup.",
+  },
+  {
     id: 'events-patch-dreambeach-costa-del-sol-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-dreambeach-costa-del-sol-2026',
     npm: 'npm run db:guia -- run events-patch-dreambeach-costa-del-sol-2026',
@@ -421,6 +429,7 @@ Punto de entrada unificado:
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
   events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
+  events-patch-finger-lickin-between-the-bridges-2026  Finger Lickin' at Between the Bridges, Southbank Londres 16 may 2026 (17:00–23:00)
   events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
   events-patch-iberican-breaks-festival-2026  IBÉRICAN Breaks Festival, Olvera 16 may 2026 (Terraza Manhattan, MonsterTicket)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
@@ -750,6 +759,9 @@ function main() {
       break
     case 'events-patch-finger-lickin-boat-party-2026':
       runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-boat-party-2026', ...rest])
+      break
+    case 'events-patch-finger-lickin-between-the-bridges-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-between-the-bridges-2026', ...rest])
       break
     case 'events-patch-dreambeach-costa-del-sol-2026':
       runNode('enriquecer-evento.mjs', ['--patch-dreambeach-costa-del-sol-2026', ...rest])

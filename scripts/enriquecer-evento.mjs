@@ -22,6 +22,8 @@
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
+ *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
+ *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
  *   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
  *
@@ -1374,6 +1376,100 @@ async function runPatchFingerLickinBoatParty2026(sb) {
   console.log('[patch-finger-lickin-boat-party-2026] OK:', after)
 }
 
+const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_SLUG = 'finger-lickin-between-the-bridges-2026'
+const FINGER_LICKIN_BTB_SKIDDLE =
+  'https://www.skiddle.com/whats-on/London/Between-The-Bridges-London/Finger-Lickin-At-Between-the-Bridges/42363687/'
+const FINGER_LICKIN_BTB_IMAGE = '/images/events/finger-lickin-between-the-bridges-2026.webp'
+const FINGER_LICKIN_BTB_VENUE_WEB = 'https://www.betweenthebridges.co.uk/events-btb/finger-lickin-16-may'
+
+const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_LINEUP = [
+  'Plump DJs',
+  'Krafty Kuts',
+  'A.Skillz',
+  'The Freestylers',
+  'Slyde',
+  'Stereo 8',
+  'Soul of Man',
+]
+
+const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_ROW = {
+  name: "Finger Lickin' at Between the Bridges",
+  description_en:
+    "Finger Lickin' Records brings the label lineup to Between the Bridges on the South Bank for an early-evening session on Saturday 16 May 2026 (5pm–11pm), the same day as the annual Thames boat party — which the promoter notes is sold out, with this riverside date offered so the celebration continues on land. The bill features Plump DJs, Krafty Kuts, A.Skillz, very special guests The Freestylers, Slyde, Stereo 8 and Soul of Man (label bosses), with more names to be announced — breaks, house and hip-hop in the Finger Lickin' spirit. Venue: Between the Bridges, The Queen's Walk, Southbank, London SE1 — by the Thames, a short walk from Waterloo, with bars and street food on site; the promoter highlights three years at this location. Tickets via Skiddle; link also in @finger_lickin_records Instagram bio. Venue page: betweenthebridges.co.uk.",
+  description_es:
+    "Finger Lickin' Records lleva el cartel del sello a Between the Bridges en South Bank para una sesión de tarde-noche el sábado 16 de mayo de 2026 (17:00–23:00), el mismo día que la fiesta anual en barco por el Támesis — el comunicado indica que el barco está agotado y esta cita en la ribera permite seguir la celebración en tierra. Cartel: Plump DJs, Krafty Kuts, A.Skillz, invitados especiales The Freestylers, Slyde, Stereo 8 y Soul of Man (cabezas del sello), con más nombres por confirmar — breaks, house y hip-hop en la línea del sello. Sala: Between the Bridges, The Queen's Walk, Southbank, Londres SE1, junto al Támesis y a paseo de Waterloo, con bares y street food en el recinto; el promotor destaca tres años en este espacio. Entradas en Skiddle; enlace también en la bio de Instagram @finger_lickin_records. Ficha del venue: betweenthebridges.co.uk.",
+  event_type: 'club_night',
+  date_start: '2026-05-16',
+  date_end: null,
+  location: "Between the Bridges, The Queen's Walk, Southbank, London SE1, United Kingdom",
+  city: 'London',
+  country: 'United Kingdom',
+  venue: 'Between the Bridges',
+  address: "The Queen's Walk, Southbank, London SE1",
+  website: FINGER_LICKIN_BTB_SKIDDLE,
+  tickets_url: FINGER_LICKIN_BTB_SKIDDLE,
+  image_url: FINGER_LICKIN_BTB_IMAGE,
+  lineup: FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_LINEUP,
+  tags: [
+    'finger lickin records',
+    'between the bridges',
+    'southbank',
+    'london',
+    'breakbeat',
+    'breaks',
+    'house',
+    'hip-hop',
+    'plump djs',
+    'krafty kuts',
+    'a.skillz',
+    'the freestylers',
+    'slyde',
+    'stereo 8',
+    'soul of man',
+    'skiddle',
+    '2026',
+    'daytimerave',
+    'goldenageofbreaks',
+  ],
+  socials: {
+    "Venue (Between the Bridges)": FINGER_LICKIN_BTB_VENUE_WEB,
+    'Instagram @finger_lickin_records': 'https://www.instagram.com/finger_lickin_records/',
+    'Instagram @btwthebridges': 'https://www.instagram.com/btwthebridges/',
+  },
+  age_restriction: null,
+  doors_open: '17:00',
+  doors_close: '23:00',
+}
+
+async function runPatchFingerLickinBetweenTheBridges2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-finger-lickin-between-the-bridges-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-finger-lickin-between-the-bridges-2026] OK:', after)
+}
+
 const DREAMBEACH_COSTA_DEL_SOL_2026_SLUG = 'dreambeach-costa-del-sol-2026'
 const DREAMBEACH_WEB = 'https://www.dreambeach.es/'
 
@@ -1628,6 +1724,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-finger-lickin-between-the-bridges-2026')) {
+    await runPatchFingerLickinBetweenTheBridges2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-dreambeach-costa-del-sol-2026')) {
     await runPatchDreambeachCostaDelSol2026(sb)
     return
@@ -1687,6 +1788,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
+  node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026`)
     process.exit(1)
