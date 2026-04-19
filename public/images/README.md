@@ -11,6 +11,8 @@ Si ya tienes `algo.webp` en `public/images/...` (lo guardó la IA, un export pre
 
 ### B) Subes tú un JPG, PNG, etc. a `public/` para usarlo en el sitio
 
+**Carteles en `public/images/events/`:** si la página de ventas no lista el line-up completo, léelo **del cartel (imagen)** y anótalo en la ficha **antes** de ejecutar `images:to-webp` (el JPG/PNG ayuda a leer el flyer).
+
 1. Convierte a WebP y borra el original:
 
    ```bash

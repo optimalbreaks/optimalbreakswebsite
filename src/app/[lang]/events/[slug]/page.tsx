@@ -62,6 +62,30 @@ function isMonsterTicketUrl(url: string | null | undefined): boolean {
   }
 }
 
+/** Plataformas de venta habituales (Skiddle, Dice, etc.): el CTA del hero debe mostrarse también con club_night. */
+function isKnownTicketingSiteUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false
+  try {
+    const host = new URL(url.trim()).hostname.toLowerCase()
+    if (isMonsterTicketUrl(url)) return true
+    return (
+      host === 'skiddle.com' ||
+      host.endsWith('.skiddle.com') ||
+      host === 'dice.fm' ||
+      host.endsWith('.dice.fm') ||
+      host.includes('eventbrite.') ||
+      host.includes('ticketmaster.') ||
+      host.includes('seetickets.com') ||
+      host.includes('gigantic.com') ||
+      host.includes('axs.com') ||
+      host.includes('fourvenues.com') ||
+      host.includes('see-tickets.com')
+    )
+  } catch {
+    return false
+  }
+}
+
 function parseEventDayStart(iso: string | null | undefined): number | null {
   if (!iso) return null
   const part = String(iso).slice(0, 10)
@@ -232,11 +256,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const ticketHeroHref = preferredHeroTicketUrl(event)
   const hasMonsterTicketLink =
     isMonsterTicketUrl(event.tickets_url) || isMonsterTicketUrl(event.website)
-  /** Hero: CTA rojo ancho si hay enlace de compra y (MonsterTicket o event_type upcoming), y el evento no ha pasado. */
+  const hasPartnerTicketingLink =
+    hasMonsterTicketLink ||
+    isKnownTicketingSiteUrl(event.tickets_url) ||
+    isKnownTicketingSiteUrl(event.website)
+  /** Hero: CTA rojo si hay URL de compra y (upcoming, MonsterTicket u otro ticketer conocido p. ej. Skiddle). */
   const showHeroTicketCta =
     ticketHeroHref.length > 0 &&
     !isEventPastByDate(event) &&
-    (event.event_type === 'upcoming' || hasMonsterTicketLink)
+    (event.event_type === 'upcoming' || hasPartnerTicketingLink)
 
   const scheduleByStage = new Map<string, EventScheduleSlot[]>()
   for (const slot of schedule) {
@@ -375,7 +403,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
             </div>
 
-            {/* CTA: tickets (MonsterTicket o event_type upcoming + enlace) */}
+            {/* CTA: tickets (upcoming, MonsterTicket u otros ticketers conocidos + URL) */}
             {showHeroTicketCta && (
               <a
                 href={ticketHeroHref}

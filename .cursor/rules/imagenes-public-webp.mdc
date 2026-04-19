@@ -1,5 +1,5 @@
 ---
-description: public/images: si el fichero ya es WebP, referenciar tal cual; si llega JPG/PNG, convertir a WebP y usar solo esa ruta.
+description: public/images WebP + eventos leer cartel antes de convertir si el link no trae line-up.
 alwaysApply: true
 ---
 
@@ -15,6 +15,14 @@ Si el archivo **ya existe** en el repo como `.webp` (la IA lo guardó así, un s
 ## Caso 2 — El usuario sube a `public/` un JPG, JPEG, PNG (u otro raster no WebP)
 
 Para retratos de artistas, carteles de eventos y análogos en `artists/`, `events/`, `labels/`, `scenes/`:
+
+### Carteles de eventos (`public/images/events/`) — orden obligatorio
+
+1. **Datos para la ficha** (fecha, sala, dirección si aplica, **line-up**): primero desde la página de ventas / web del promotor cuando lo liste claramente.
+2. Si el **enlace (p. ej. MonsterTicket) no muestra el line-up** o está incompleto, **extraer los artistas del texto legible en la imagen del cartel** y usar esa lista en el parche o `lineup` de la BD — **antes** de convertir a WebP (el raster original puede servir para leer el flyer con comodidad).
+3. **Después** del paso anterior, **convertir a WebP** (`npm run images:to-webp -- public/images/events/.../archivo.jpg`).
+
+### Resto de conversión
 
 1. **Convertir a WebP** (`npm run images:to-webp -- public/images/.../archivo.jpg` o el script equivalente).
 2. **Eliminar el original** (el script lo hace).

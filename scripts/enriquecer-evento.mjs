@@ -16,11 +16,17 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-elysium-sevilla-2026
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+ *   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
+ *   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
+ *   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
+ *   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
@@ -652,10 +658,20 @@ async function uploadLocalPosterToMedia(sb, slug, absPath) {
     console.warn('[upload-poster] Sin cartel local, image_url no se actualiza:', absPath)
     return null
   }
-  const normalized = `events/${slug}/poster.png`
+  const lower = absPath.toLowerCase()
+  let ext = 'png'
+  let contentType = 'image/png'
+  if (lower.endsWith('.webp')) {
+    ext = 'webp'
+    contentType = 'image/webp'
+  } else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+    ext = 'jpg'
+    contentType = 'image/jpeg'
+  }
+  const normalized = `events/${slug}/poster.${ext}`
   const buf = readFileSync(absPath)
   const { error } = await sb.storage.from('media').upload(normalized, buf, {
-    contentType: 'image/png',
+    contentType,
     upsert: true,
   })
   if (error) throw error
@@ -795,6 +811,194 @@ async function runPatchRaveartRvtBookingClubbing2026(sb) {
     .maybeSingle()
   if (e2) throw e2
   console.log('[patch-rvt-booking] OK:', after)
+}
+
+const RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_SLUG =
+  'raveart-rvt-we-love-retro-elysium-sevilla-2026'
+const RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_POSTER = join(
+  ROOT,
+  'public',
+  'images',
+  'events',
+  'rvt-by-raveart-we-love-retro--elysium-sevilla.webp',
+)
+
+const RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_ROW = {
+  name: 'RVT by Raveart: We Love Retro',
+  description_en:
+    'RVT Booking & Clubbing presents We Love Retro at Elysium Sevilla (Seville): breakbeat night with a national lineup. Saturday 9 May 2026, doors 21:00–07:00. Official contact on the flyer: info@rvtpro.com. Ticket types and pricing on MonsterTicket (free early pass until 23:00, general and VIP per listing). Tickets: monsterticket.com · rvtpro.com.',
+  description_es:
+    'RVT Booking & Clubbing presenta We Love Retro en Elysium Sevilla: noche de breakbeat con cartel nacional. Sábado 9 de mayo de 2026, 21:00h–7:00h. Contacto en el cartel: info@rvtpro.com. Tipos de entrada en MonsterTicket (early pass gratuito hasta las 23:00, general y VIP según venta). Entradas: MonsterTicket · rvtpro.com.',
+  event_type: 'club_night',
+  date_start: '2026-05-09',
+  date_end: null,
+  location: 'Elysium Sevilla, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Elysium Sevilla',
+  address: 'C/ La Red Seis, 39, Sevilla',
+  website: 'https://www.rvtpro.com/',
+  tickets_url:
+    'https://www.monsterticket.com/evento/rvt-by-raveart-we-love-retro--elysium-sevilla',
+  age_restriction: '18+',
+  doors_open: '21:00',
+  doors_close: '07:00',
+  tags: ['breakbeat', 'raveart', 'sevilla', 'rvt', 'elysium', 'we love retro'],
+  lineup: [
+    'Anuschka',
+    'Barrientos',
+    'DJ Heavy',
+    'DJ Killer',
+    'Man',
+    'Maribel',
+    'DJ Mike',
+    'Peter Paul',
+    'Ricardo del Toro',
+    'Rupe',
+    'Wally',
+    'Xema',
+  ],
+  socials: {
+    email: 'mailto:info@rvtpro.com',
+    phone: 'tel:+34657733208',
+  },
+}
+
+async function runPatchRaveartRvtWeLoveRetroElysiumSevilla2026(sb) {
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+  if (!org?.id) {
+    console.error('[patch-rvt-we-love-retro-elysium] Falta organizations.slug = raveart')
+    process.exit(1)
+  }
+
+  let imageUrl = null
+  try {
+    imageUrl = await uploadLocalPosterToMedia(
+      sb,
+      RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_SLUG,
+      RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_POSTER,
+    )
+  } catch (e) {
+    console.error('[patch-rvt-we-love-retro-elysium] Error subiendo cartel:', e.message || e)
+    throw e
+  }
+
+  const row = {
+    slug: RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_ROW,
+    image_url: imageUrl,
+    is_featured: true,
+    promoter_organization_id: org.id,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', RAVEART_RVT_WE_LOVE_RETRO_ELYSIUM_SEVILLA_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-rvt-we-love-retro-elysium] OK:', after)
+}
+
+const RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_SLUG =
+  'raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026'
+const RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_POSTER = join(
+  ROOT,
+  'public',
+  'images',
+  'events',
+  'rvt-by-raveart-summer-festival-2026-presentacion-oficial--el-tren-granada.webp',
+)
+
+const RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_ROW = {
+  name: 'RVT by Raveart: Summer Festival 2026 (Presentación oficial)',
+  description_en:
+    'Official RVT Summer Festival launch at Sala El Tren (Granada): RVT Booking & Clubbing with Deekline plus a national lineup. Saturday 9 May 2026. Flyer/ticketing mention entry with beer and the official Summer 2026 lanyard (per promoter and MonsterTicket copy). Genre breakbeat per ticket page. Contact: info@rvtpro.com. Tickets via MonsterTicket; general site: rvtpro.com.',
+  description_es:
+    'Presentación oficial del RVT Summer Festival en Sala El Tren (Granada): RVT Booking & Clubbing con Deekline y artistas nacionales. Sábado 9 de mayo de 2026. Entrada con cerveza y lanyard oficial Summer 2026 según cartel y texto de venta en MonsterTicket. Breakbeat según la ficha de entradas. Contacto: info@rvtpro.com. Venta en MonsterTicket; web: rvtpro.com.',
+  event_type: 'club_night',
+  date_start: '2026-05-09',
+  date_end: null,
+  location: 'Sala El Tren, Chana, Granada, Spain',
+  city: 'Granada',
+  country: 'Spain',
+  venue: 'Sala El Tren',
+  address: 'Ctra. de Málaga, 136, Chana, Granada',
+  website: 'https://www.rvtpro.com/',
+  tickets_url:
+    'https://www.monsterticket.com/evento/rvt-by-raveart-summer-festival-2026-presentacion-oficial--el-tren-granada',
+  age_restriction: '18+',
+  tags: ['breakbeat', 'raveart', 'granada', 'rvt', 'sala el tren', 'deekline', 'summer festival'],
+  lineup: [
+    'Deekline',
+    'Anuschka',
+    'aTRIK',
+    'Datafunk',
+    'DJ Ways',
+    'Jiro',
+    'LDP Breaks',
+    'Müme',
+    'Paket',
+    'Urbano',
+  ],
+  socials: {
+    email: 'mailto:info@rvtpro.com',
+    phone: 'tel:+34657733208',
+  },
+}
+
+async function runPatchRaveartRvtSummerFestivalPresentacionOficialElTrenGranada2026(sb) {
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+  if (!org?.id) {
+    console.error('[patch-rvt-summer-fest-present-el-tren] Falta organizations.slug = raveart')
+    process.exit(1)
+  }
+
+  let imageUrl = null
+  try {
+    imageUrl = await uploadLocalPosterToMedia(
+      sb,
+      RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_SLUG,
+      RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_POSTER,
+    )
+  } catch (e) {
+    console.error('[patch-rvt-summer-fest-present-el-tren] Error subiendo cartel:', e.message || e)
+    throw e
+  }
+
+  const row = {
+    slug: RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_ROW,
+    image_url: imageUrl,
+    is_featured: true,
+    promoter_organization_id: org.id,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', RAVEART_RVT_SUMMER_FEST_PRESENT_EL_TREN_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-rvt-summer-fest-present-el-tren] OK:', after)
 }
 
 const KULTURA_BREAKZ_II_SLUG = 'kultura-breakz-ii-aniversario-2026'
@@ -1209,6 +1413,305 @@ async function runPatchCyberBass2026(sb) {
   console.log('[patch-cyber-bass-2026] OK:', after)
 }
 
+const SAFARI_BREAK_NIGHT_2026_SLUG = 'safari-break-night-2026'
+const SAFARI_BREAK_NIGHT_TICKETS =
+  'https://www.monsterticket.com/evento/safari-break-night'
+const SAFARI_BREAK_NIGHT_IMAGE = '/images/events/safari-break-night.webp'
+
+const SAFARI_BREAK_NIGHT_2026_LINEUP = [
+  'Songbass',
+  'Skullbreakerz',
+  'Tony Line',
+  'Miss Bass',
+  'MCB Break',
+]
+
+const SAFARI_BREAK_NIGHT_2026_ROW = {
+  name: 'Safari Break Night',
+  description_en:
+    'Basshock Events (breakbeat energy) presents Safari Break Night on Saturday 25 April 2026 at Safari Club, Polígono Las Zarzas, Palomares del Río (Seville area). The poster line-up: Songbass, Skullbreakerz, Tony Line, Miss Bass, MCB Break. The official sale page on MonsterTicket states 18+ and non-nominal tickets. Address: Calle Umbrete 11, Polígono Las Zarzas, Palomares del Río. Promoter branding and sale line: “Basshock Events” on the artwork; tickets via MonsterTicket as on the flyer.',
+  description_es:
+    'Basshock Events presenta Safari Break Night el sábado 25 de abril de 2026 en Safari Club (Polígono Las Zarzas), Palomares del Río (área de Sevilla). Cartel según flyer: Songbass, Skullbreakerz, Tony Line, Miss Bass, MCB Break. La venta oficial en MonsterTicket indica prohibido el acceso a menores de 18 años y entradas no nominativas. Dirección: Calle Umbrete 11, Polígono Las Zarzas, Palomares del Río. Marca del cartel y venta en MonsterTicket como en el flyer.',
+  event_type: 'club_night',
+  date_start: '2026-04-25',
+  date_end: null,
+  location: 'Safari Club, Polígono Las Zarzas, Palomares del Río, Sevilla, Spain',
+  city: 'Palomares del Río',
+  country: 'Spain',
+  venue: 'Safari Club',
+  address: 'Calle Umbrete 11, Polígono Las Zarzas, Palomares del Río, Sevilla',
+  website: null,
+  tickets_url: SAFARI_BREAK_NIGHT_TICKETS,
+  image_url: SAFARI_BREAK_NIGHT_IMAGE,
+  lineup: SAFARI_BREAK_NIGHT_2026_LINEUP,
+  tags: [
+    'safari break night',
+    'basshock events',
+    'breakbeat',
+    'safari club',
+    'palomares del rio',
+    'sevilla',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchSafariBreakNight2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', SAFARI_BREAK_NIGHT_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-safari-break-night-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: SAFARI_BREAK_NIGHT_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...SAFARI_BREAK_NIGHT_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', SAFARI_BREAK_NIGHT_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-safari-break-night-2026] OK:', after)
+}
+
+const BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG = 'break-the-flow-w-terrie-kynd-2026'
+const BREAK_THE_FLOW_TICKETS =
+  'https://www.monsterticket.com/evento/break-the-flow-w-terrie-kynd'
+const BREAK_THE_FLOW_IMAGE = '/images/events/break-the-flow-w-terrie-kynd.webp'
+
+const BREAK_THE_FLOW_W_TERRIE_KYND_2026_LINEUP = [
+  'Terrie Kynd',
+  'Evil Crew vs Playbass',
+  'Isma Breakz',
+  'Franetik',
+  'TTBeats',
+  'Beatbreaker',
+]
+
+const BREAK_THE_FLOW_W_TERRIE_KYND_2026_ROW = {
+  name: 'Break The Flow w/ Terrie Kynd',
+  description_en:
+    'Frequency Break presents Break The Flow at Sala Teranga (Torrox Costa, Málaga province): Terrie Kynd headlines with Evil Crew vs Playbass, Isma Breakz, Franetik, TTBeats and Beatbreaker per the flyer. Saturday 2 May 2026. Official listing on MonsterTicket gives the address as Paseo Marítimo de Ferrara 3, Torrox-Costa (Málaga); 18+ and non-nominal tickets. Sale at monsterticket.com; the artwork also references advance and door pricing with drink (details on the poster).',
+  description_es:
+    'Frequency Break presenta Break The Flow en Sala Teranga (Torrox Costa, provincia de Málaga): Terrie Kynd encabeza cartel con Evil Crew vs Playbass, Isma Breakz, Franetik, TTBeats y Beatbreaker según el flyer. Sábado 2 de mayo de 2026. La ficha oficial en MonsterTicket indica dirección Paseo Marítimo de Ferrara 3, Torrox-Costa (Málaga); prohibido el acceso a menores de 18 años y entradas no nominativas. Venta en MonsterTicket; el cartel menciona precios anticipada/taquilla con copa.',
+  event_type: 'club_night',
+  date_start: '2026-05-02',
+  date_end: null,
+  location: 'Sala Teranga, Torrox Costa, Málaga, Spain',
+  city: 'Torrox',
+  country: 'Spain',
+  venue: 'Sala Teranga',
+  address: 'Paseo Marítimo de Ferrara 3, Torrox Costa, Málaga',
+  website: null,
+  tickets_url: BREAK_THE_FLOW_TICKETS,
+  image_url: BREAK_THE_FLOW_IMAGE,
+  lineup: BREAK_THE_FLOW_W_TERRIE_KYND_2026_LINEUP,
+  tags: [
+    'break the flow',
+    'frequency break',
+    'terrie kynd',
+    'breakbeat',
+    'torrox costa',
+    'málaga',
+    'sala teranga',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchBreakTheFlowWTerrieKynd2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-break-the-flow-w-terrie-kynd-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAK_THE_FLOW_W_TERRIE_KYND_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-break-the-flow-w-terrie-kynd-2026] OK:', after)
+}
+
+const EL_PINAR_BREAKS_FEST_2026_SLUG = 'el-pinar-breaks-fest-2026'
+const EL_PINAR_BREAKS_FEST_TICKETS =
+  'https://www.monsterticket.com/evento/el-pinar-breaks-fest'
+const EL_PINAR_BREAKS_FEST_IMAGE = '/images/events/el-pinar-breaks-fest.webp'
+
+const EL_PINAR_BREAKS_FEST_2026_LINEUP = [
+  'DJ Karpin',
+  'Badlegs',
+  'Aggresivnes',
+  'Mr-Fli',
+  'Kos DJ',
+  'Colombo',
+  'Jan-B',
+  'Tilla Pink',
+  'Satuxx',
+  'ONEDROIT',
+  'Breakbeat ESP',
+]
+
+const EL_PINAR_BREAKS_FEST_2026_ROW = {
+  name: 'El Pinar Breaks Fest',
+  description_en:
+    'El Pinar Breaks Fest at Sala El Pinar (Baños de la Encina, Jaén province): Saturday 9 May 2026, doors from 19:00 until closing per MonsterTicket. The posted lineup on the official flyer includes DJ Karpin, Badlegs, Aggresivnes, Mr-Fli, Kos DJ, Colombo, Jan-B, Tilla Pink, Satuxx, ONEDROIT and Breakbeat ESP. Official sale page lists non-nominal tickets, 18+, address Av. Migaldias s/n in Baños de la Encina; tiered pricing on MonsterTicket.',
+  description_es:
+    'El Pinar Breaks Fest en Sala El Pinar (Baños de la Encina, Jaén): sábado 9 de mayo de 2026, apertura desde las 19:00 hasta el cierre según MonsterTicket. Cartel según flyer oficial: DJ Karpin, Badlegs, Aggresivnes, Mr-Fli, Kos DJ, Colombo, Jan-B, Tilla Pink, Satuxx, ONEDROIT y Breakbeat ESP. Venta oficial: entradas no nominativas, prohibido menores de 18 años; dirección Av. Migaldias s/n en Baños de la Encina; precios por tramos en MonsterTicket.',
+  event_type: 'club_night',
+  date_start: '2026-05-09',
+  date_end: null,
+  location: 'Sala El Pinar, Baños de la Encina, Jaén, Spain',
+  city: 'Baños de la Encina',
+  country: 'Spain',
+  venue: 'Sala El Pinar',
+  address: 'Av. Migaldias s/n, 23711 Baños de la Encina, Jaén',
+  website: null,
+  tickets_url: EL_PINAR_BREAKS_FEST_TICKETS,
+  image_url: EL_PINAR_BREAKS_FEST_IMAGE,
+  lineup: EL_PINAR_BREAKS_FEST_2026_LINEUP,
+  tags: [
+    'el pinar breaks fest',
+    'breakbeat',
+    'breaks',
+    'baños de la encina',
+    'jaén',
+    'sala el pinar',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '19:00',
+  doors_close: null,
+}
+
+async function runPatchElPinarBreaksFest2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', EL_PINAR_BREAKS_FEST_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-el-pinar-breaks-fest-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: EL_PINAR_BREAKS_FEST_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...EL_PINAR_BREAKS_FEST_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', EL_PINAR_BREAKS_FEST_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-el-pinar-breaks-fest-2026] OK:', after)
+}
+
+const BREAKS_BLOOM_FESTIVAL_2026_SLUG = 'breaks-bloom-festival-2026'
+const BREAKS_BLOOM_FESTIVAL_TICKETS =
+  'https://www.monsterticket.com/evento/breaks-bloom-festival'
+const BREAKS_BLOOM_FESTIVAL_IMAGE = '/images/events/breaks-bloom-festival.webp'
+
+const BREAKS_BLOOM_FESTIVAL_2026_ROW = {
+  name: 'Breaks Bloom Festival',
+  description_en:
+    'Outdoor-oriented breaks event at Hacienda El Mantillo in Pilas (Seville province): Saturday 19 September 2026. The flyer and MonsterTicket listing describe terrace, gardens, chill zone and an indoor room; private parking advertised for more than 350 vehicles. Official artwork brands BackStage together with Hacienda El Mantillo (events venue). Artist lineup was not published on the poster (“coming soon”); ticket sale on MonsterTicket lists 18+ and non-nominal tickets. Address on the ticket page: Ctra. Hinojos, km 1, Pilas (Seville).',
+  description_es:
+    'Propuesta de breaks en exterior en la Hacienda El Mantillo, Pilas (Sevilla): sábado 19 de septiembre de 2026. Cartel y ficha en MonsterTicket citan terraza, jardines, chill zone y sala interior; aparcamiento privado para más de 350 vehículos según el diseño gráfico. Identidad visual: BackStage junto a Hacienda El Mantillo (espacio de eventos). Cartel sin nombres de artistas (“próximamente”); venta en MonsterTicket: mayores de 18 y entradas no nominativas. Dirección en venta: Ctra. Hinojos, km 1, Pilas (Sevilla).',
+  event_type: 'festival',
+  date_start: '2026-09-19',
+  date_end: null,
+  location: 'Hacienda El Mantillo, Pilas, Sevilla, Spain',
+  city: 'Pilas',
+  country: 'Spain',
+  venue: 'Hacienda El Mantillo',
+  address: 'Ctra. Hinojos, km 1, Pilas, Sevilla',
+  website: null,
+  tickets_url: BREAKS_BLOOM_FESTIVAL_TICKETS,
+  image_url: BREAKS_BLOOM_FESTIVAL_IMAGE,
+  lineup: [],
+  tags: [
+    'breaks bloom',
+    'breakbeat',
+    'pilas',
+    'sevilla',
+    'hacienda el mantillo',
+    'festival',
+    '2026',
+    'monsterticket',
+    'backstage',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchBreaksBloomFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', BREAKS_BLOOM_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-breaks-bloom-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BREAKS_BLOOM_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKS_BLOOM_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', BREAKS_BLOOM_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breaks-bloom-festival-2026] OK:', after)
+}
+
 const LA_CASETA_DEL_BREAKBEAT_2026_SLUG = 'la-caseta-del-breakbeat-2026'
 const LA_CASETA_DEL_BREAKBEAT_TICKETS =
   'https://site.fourvenues.com/es/dj-rokeh/events/la-caseta-del-breakbeat-25-04-2026-DGZP'
@@ -1395,9 +1898,15 @@ const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_LINEUP = [
 const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_ROW = {
   name: "Finger Lickin' at Between the Bridges",
   description_en:
-    "Finger Lickin' Records brings the label lineup to Between the Bridges on the South Bank for an early-evening session on Saturday 16 May 2026 (5pm–11pm), the same day as the annual Thames boat party — which the promoter notes is sold out, with this riverside date offered so the celebration continues on land. The bill features Plump DJs, Krafty Kuts, A.Skillz, very special guests The Freestylers, Slyde, Stereo 8 and Soul of Man (label bosses), with more names to be announced — breaks, house and hip-hop in the Finger Lickin' spirit. Venue: Between the Bridges, The Queen's Walk, Southbank, London SE1 — by the Thames, a short walk from Waterloo, with bars and street food on site; the promoter highlights three years at this location. Tickets via Skiddle; link also in @finger_lickin_records Instagram bio. Venue page: betweenthebridges.co.uk.",
+    "Finger Lickin' Records takes over Between the Bridges on the South Bank for an early-evening session on Saturday 16 May 2026 (5pm–11pm). It lands on the same day as the label’s annual Thames boat party: the boat is sold out, and this riverside slot keeps the party going on dry land for everyone who missed the boat — and for boat guests who want to roll straight into the night.\n\n" +
+    "Line-up: Plump DJs, Krafty Kuts, A.Skillz, very special guests The Freestylers, Slyde, Stereo 8 and Soul of Man (label heads), with more names to come. Expect the juiciest breaks, house and hip-hop in the Finger Lickin' mould.\n\n" +
+    "Venue: Between the Bridges — open-air beer garden and food village on The Queen's Walk, Southbank, London SE1, right by the Thames and an easy walk from Waterloo. Bars and street food on site; the promoter notes three years of Finger Lickin' dates at this spot.\n\n" +
+    "Official tickets are sold via Skiddle (see Links below). Finger Lickin Records also shares the ticket link from their Instagram.",
   description_es:
-    "Finger Lickin' Records lleva el cartel del sello a Between the Bridges en South Bank para una sesión de tarde-noche el sábado 16 de mayo de 2026 (17:00–23:00), el mismo día que la fiesta anual en barco por el Támesis — el comunicado indica que el barco está agotado y esta cita en la ribera permite seguir la celebración en tierra. Cartel: Plump DJs, Krafty Kuts, A.Skillz, invitados especiales The Freestylers, Slyde, Stereo 8 y Soul of Man (cabezas del sello), con más nombres por confirmar — breaks, house y hip-hop en la línea del sello. Sala: Between the Bridges, The Queen's Walk, Southbank, Londres SE1, junto al Támesis y a paseo de Waterloo, con bares y street food en el recinto; el promotor destaca tres años en este espacio. Entradas en Skiddle; enlace también en la bio de Instagram @finger_lickin_records. Ficha del venue: betweenthebridges.co.uk.",
+    "Finger Lickin' Records ocupa Between the Bridges en South Bank para una sesión de tarde-noche el sábado 16 de mayo de 2026 (17:00–23:00). Coincide con la fiesta anual en barco por el Támesis: el barco va agotado y esta cita en la ribera permite seguir la celebración en tierra para quien no pudo subir al barco, y para quienes bajan del barco y quieren seguir la noche.\n\n" +
+    "Cartel: Plump DJs, Krafty Kuts, A.Skillz, invitados especiales The Freestylers, Slyde, Stereo 8 y Soul of Man (cabezas del sello), con más nombres por confirmar. Sonido en clave breaks, house y hip-hop, en la línea Finger Lickin'.\n\n" +
+    "Sala: Between the Bridges — beer garden al aire libre y oferta de comida en The Queen's Walk, Southbank, Londres SE1, junto al Támesis y a pocos minutos de Waterloo. Bares y street food en el recinto; el comunicado destaca tres años de fechas Finger Lickin' en este espacio.\n\n" +
+    "Entradas oficiales en Skiddle (enlace en Links). El sello también publica el enlace en Instagram.",
   event_type: 'club_night',
   date_start: '2026-05-16',
   date_end: null,
@@ -1406,10 +1915,11 @@ const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_ROW = {
   country: 'United Kingdom',
   venue: 'Between the Bridges',
   address: "The Queen's Walk, Southbank, London SE1",
-  website: FINGER_LICKIN_BTB_SKIDDLE,
+  website: FINGER_LICKIN_BTB_VENUE_WEB,
   tickets_url: FINGER_LICKIN_BTB_SKIDDLE,
   image_url: FINGER_LICKIN_BTB_IMAGE,
   lineup: FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_LINEUP,
+  coords: { lat: 51.5056, lng: -0.1192 },
   tags: [
     'finger lickin records',
     'between the bridges',
@@ -1436,7 +1946,7 @@ const FINGER_LICKIN_BETWEEN_THE_BRIDGES_2026_ROW = {
     'Instagram @finger_lickin_records': 'https://www.instagram.com/finger_lickin_records/',
     'Instagram @btwthebridges': 'https://www.instagram.com/btwthebridges/',
   },
-  age_restriction: null,
+  age_restriction: '18+',
   doors_open: '17:00',
   doors_close: '23:00',
 }
@@ -1689,6 +2199,16 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-raveart-rvt-we-love-retro-elysium-sevilla-2026')) {
+    await runPatchRaveartRvtWeLoveRetroElysiumSevilla2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026')) {
+    await runPatchRaveartRvtSummerFestivalPresentacionOficialElTrenGranada2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-raveart-retro-halloween-2025-poster')) {
     await runPatchRaveartRetroHalloween2025Poster(sb)
     return
@@ -1711,6 +2231,26 @@ async function main() {
 
   if (argv.includes('--patch-cyber-bass-2026')) {
     await runPatchCyberBass2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-safari-break-night-2026')) {
+    await runPatchSafariBreakNight2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-break-the-flow-w-terrie-kynd-2026')) {
+    await runPatchBreakTheFlowWTerrieKynd2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-el-pinar-breaks-fest-2026')) {
+    await runPatchElPinarBreaksFest2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breaks-bloom-festival-2026')) {
+    await runPatchBreaksBloomFestival2026(sb)
     return
   }
 
@@ -1781,11 +2321,17 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-summer-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-booking-clubbing-2026
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-elysium-sevilla-2026
+  node scripts/enriquecer-evento.mjs --patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
+  node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
+  node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
+  node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
+  node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026

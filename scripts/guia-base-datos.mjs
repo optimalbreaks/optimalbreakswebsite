@@ -170,6 +170,22 @@ const ACTIONS = [
       'UPSERT raveart-rvt-booking-clubbing-elysium-2026: RVT + Freestylers, Elysium Sevilla 11 abr 2026, cartel local → Storage, rvtpro.com/entradas.',
   },
   {
+    id: 'events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT raveart-rvt-we-love-retro-elysium-sevilla-2026: We Love Retro, Elysium Sevilla 9 may 2026, cartel WebP → Storage, entradas MonsterTicket.',
+  },
+  {
+    id: 'events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026: Summer Festival presentación + Deekline, Sala El Tren 9 may 2026, MonsterTicket.',
+  },
+  {
     id: 'events-patch-raveart-retro-halloween-2025-poster',
     run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-retro-halloween-2025-poster',
     npm: 'npm run db:guia -- run events-patch-raveart-retro-halloween-2025-poster',
@@ -208,6 +224,38 @@ const ACTIONS = [
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
       'UPSERT cyber-bass-2026: 18 abr 2026 Sala Maruja Limón (Alhaurín de la Torre), GOAT Breakbeat, cartel public/images/events/cyber-bass-2026.webp, entradas MonsterTicket.',
+  },
+  {
+    id: 'events-patch-safari-break-night-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-safari-break-night-2026',
+    npm: 'npm run db:guia -- run events-patch-safari-break-night-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT safari-break-night-2026: 25 abr 2026 Safari Club Palomares del Río, Basshock Events, cartel public/images/events/safari-break-night.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-break-the-flow-w-terrie-kynd-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-break-the-flow-w-terrie-kynd-2026',
+    npm: 'npm run db:guia -- run events-patch-break-the-flow-w-terrie-kynd-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT break-the-flow-w-terrie-kynd-2026: 2 may 2026 Sala Teranga Torrox Costa, Frequency Break, cartel break-the-flow-w-terrie-kynd.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-el-pinar-breaks-fest-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-el-pinar-breaks-fest-2026',
+    npm: 'npm run db:guia -- run events-patch-el-pinar-breaks-fest-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT el-pinar-breaks-fest-2026: 9 may 2026 Sala El Pinar Baños de la Encina, line-up desde cartel, el-pinar-breaks-fest.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-breaks-bloom-festival-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breaks-bloom-festival-2026',
+    npm: 'npm run db:guia -- run events-patch-breaks-bloom-festival-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breaks-bloom-festival-2026: 19 sept 2026 Hacienda El Mantillo Pilas, lineup TBA en cartel, breaks-bloom-festival.webp, MonsterTicket.',
   },
   {
     id: 'events-patch-la-caseta-del-breakbeat-2026',
@@ -422,11 +470,17 @@ Punto de entrada unificado:
   events-patch-raveart-summer-2026     4 jul 2026 Sevilla / Chaparrejo en raveart-summer-2026
   events-patch-raveart-rvt-we-love-retro-2026  RVT We Love Retro + Freestylers, Granada 10 abr 2026
   events-patch-raveart-rvt-booking-clubbing-2026  RVT Booking & Clubbing, Elysium Sevilla 11 abr 2026
+  events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026  We Love Retro, Elysium Sevilla 9 may 2026
+  events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026  RVT Summer Festival presentación, El Tren Granada 9 may 2026
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
+  events-patch-safari-break-night-2026  Safari Break Night, Safari Club Palomares del Río 25 abr 2026
+  events-patch-break-the-flow-w-terrie-kynd-2026  Break The Flow / Terrie Kynd, Sala Teranga Torrox 2 may 2026
+  events-patch-el-pinar-breaks-fest-2026  El Pinar Breaks Fest, Baños de la Encina 9 may 2026
+  events-patch-breaks-bloom-festival-2026  Breaks Bloom Festival, Hacienda El Mantillo Pilas 19 sept 2026
   events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
   events-patch-finger-lickin-between-the-bridges-2026  Finger Lickin' at Between the Bridges, Southbank Londres 16 may 2026 (17:00–23:00)
@@ -736,6 +790,18 @@ function main() {
     case 'events-patch-raveart-rvt-booking-clubbing-2026':
       runNode('enriquecer-evento.mjs', ['--patch-raveart-rvt-booking-clubbing-2026', ...rest])
       break
+    case 'events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-raveart-rvt-we-love-retro-elysium-sevilla-2026',
+        ...rest,
+      ])
+      break
+    case 'events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026',
+        ...rest,
+      ])
+      break
     case 'events-patch-raveart-retro-halloween-2025-poster':
       runNode('enriquecer-evento.mjs', ['--patch-raveart-retro-halloween-2025-poster', ...rest])
       break
@@ -753,6 +819,18 @@ function main() {
       break
     case 'events-patch-cyber-bass-2026':
       runNode('enriquecer-evento.mjs', ['--patch-cyber-bass-2026', ...rest])
+      break
+    case 'events-patch-safari-break-night-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-safari-break-night-2026', ...rest])
+      break
+    case 'events-patch-break-the-flow-w-terrie-kynd-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-break-the-flow-w-terrie-kynd-2026', ...rest])
+      break
+    case 'events-patch-el-pinar-breaks-fest-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-el-pinar-breaks-fest-2026', ...rest])
+      break
+    case 'events-patch-breaks-bloom-festival-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breaks-bloom-festival-2026', ...rest])
       break
     case 'events-patch-la-caseta-del-breakbeat-2026':
       runNode('enriquecer-evento.mjs', ['--patch-la-caseta-del-breakbeat-2026', ...rest])
