@@ -27,6 +27,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
  *   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
  *   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
+ *   node scripts/enriquecer-evento.mjs --patch-bellota-break-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
@@ -1712,6 +1713,74 @@ async function runPatchBreaksBloomFestival2026(sb) {
   console.log('[patch-breaks-bloom-festival-2026] OK:', after)
 }
 
+const BELLOTA_BREAK_FESTIVAL_2026_SLUG = 'bellota-break-festival-2026'
+const BELLOTA_BREAK_FESTIVAL_TICKETS =
+  'https://www.monsterticket.com/evento/bellota-break-festival-2026'
+const BELLOTA_BREAK_FESTIVAL_IMAGE = '/images/events/bellota-break-festival-2026.webp'
+
+const BELLOTA_BREAK_FESTIVAL_2026_ROW = {
+  name: 'Bellota Break Festival 2026',
+  description_en:
+    'Bellota Break Festival at the Plaza de Toros in Calzadilla de los Barros (Badajoz province): Saturday 13 June 2026. MonsterTicket lists hours 19:00–07:00, minimum age 16 with a downloadable minor-authorisation form referenced on the sale page, and non-nominal tickets; advance tiers were advertised on the storefront (availability changes over time). Address per ticket listing: Calle Calvario 1, Calzadilla de los Barros. Announcement artwork does not list artists.',
+  description_es:
+    'Bellota Break Festival en la Plaza de Toros de Calzadilla de los Barros (provincia de Badajoz): sábado 13 de junio de 2026. MonsterTicket publica horario de 19:00 h a 07:00 h; acceso desde 16 años con enlace a autorización para menores según la ficha de venta; entradas no nominativas y tramos de precios en la tienda (la disponibilidad puede variar). Dirección según venta: Calle Calvario 1, Calzadilla de los Barros. El cartel promocional no incluye nombres de artistas.',
+  event_type: 'festival',
+  date_start: '2026-06-13',
+  date_end: null,
+  location: 'Plaza de Toros, Calzadilla de los Barros, Badajoz, Spain',
+  city: 'Calzadilla de los Barros',
+  country: 'Spain',
+  venue: 'Plaza de Toros',
+  address: 'Calle Calvario 1, Calzadilla de los Barros, Badajoz',
+  website: null,
+  tickets_url: BELLOTA_BREAK_FESTIVAL_TICKETS,
+  image_url: BELLOTA_BREAK_FESTIVAL_IMAGE,
+  lineup: [],
+  tags: [
+    'bellota break festival',
+    'breakbeat',
+    'calzadilla de los barros',
+    'badajoz',
+    'plaza de toros',
+    'festival',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '16+',
+  doors_open: '19:00',
+  doors_close: '07:00',
+}
+
+async function runPatchBellotaBreakFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', BELLOTA_BREAK_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-bellota-break-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BELLOTA_BREAK_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BELLOTA_BREAK_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', BELLOTA_BREAK_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-bellota-break-festival-2026] OK:', after)
+}
+
 const LA_CASETA_DEL_BREAKBEAT_2026_SLUG = 'la-caseta-del-breakbeat-2026'
 const LA_CASETA_DEL_BREAKBEAT_TICKETS =
   'https://site.fourvenues.com/es/dj-rokeh/events/la-caseta-del-breakbeat-25-04-2026-DGZP'
@@ -2254,6 +2323,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-bellota-break-festival-2026')) {
+    await runPatchBellotaBreakFestival2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-la-caseta-del-breakbeat-2026')) {
     await runPatchLaCasetaDelBreakbeat2026(sb)
     return
@@ -2332,6 +2406,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
+  node scripts/enriquecer-evento.mjs --patch-bellota-break-festival-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
