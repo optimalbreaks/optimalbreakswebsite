@@ -22,6 +22,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla
+ *   node scripts/enriquecer-evento.mjs --patch-natural-universal-retro-2026-malaga
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
@@ -1310,6 +1311,87 @@ async function runPatchPureBassline15Agosto2026Sevilla(sb) {
   console.log('[patch-pure-bassline-15-agosto] OK:', after)
 }
 
+const NATURAL_UNIVERSAL_RETRO_2026_SLUG = 'natural-universal-retro-2026-malaga'
+const NATURAL_UNIVERSAL_RETRO_TICKETS =
+  'https://www.monsterticket.com/evento/natural-universal-retro'
+const NATURAL_UNIVERSAL_RETRO_IMAGE = '/images/events/natural-universal-retro-2026-malaga.webp'
+
+const NATURAL_UNIVERSAL_RETRO_LINEUP = [
+  'Felipe Volumen',
+  'Jordi Slate',
+  'Killer',
+  'Wally',
+  'Tortu',
+  'Lady Packa',
+  'Rasco',
+  'Bartdon',
+  'Carlos Mejías (VJ)',
+]
+
+const NATURAL_UNIVERSAL_RETRO_2026_ROW = {
+  name: 'Nätural Universal Retro',
+  description_en:
+    'Nätural Universal Retro at Paris15 Málaga on Saturday 9 May 2026. Flyer-led lineup: Felipe Volumen, Jordi Slate, Killer, Wally, Tortu, Lady Packa, Rasco, Bartdon and Carlos Mejías on visuals (VJ). Space-retro artwork on the poster; 18+ only per venue and MonsterTicket. Address C/ Orotava 27. Advance tiers and non-nominative tickets on MonsterTicket; promo and first waves were listed as sold out at the time of capture—check the listing for current availability.',
+  description_es:
+    'Nätural Universal Retro en Paris15 Málaga el sábado 9 de mayo de 2026. Cartel con estética retro espacial; cabina y pista con Felipe Volumen, Jordi Slate, Killer, Wally, Tortu, Lady Packa, Rasco, Bartdon y visuales de Carlos Mejías (VJ). Prohibido menores de 18 años según sala y MonsterTicket. Dirección C/ Orotava 27. Entradas no nominativas y tramos de preventa en MonsterTicket; en la captura de venta constaban agotados el lanzamiento y el tramo 1—consultar la web para disponibilidad actual.',
+  event_type: 'club_night',
+  date_start: '2026-05-09',
+  date_end: null,
+  location: 'Paris15, Málaga',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Paris15',
+  address: 'C/ Orotava 27, Málaga',
+  website: null,
+  tickets_url: NATURAL_UNIVERSAL_RETRO_TICKETS,
+  image_url: NATURAL_UNIVERSAL_RETRO_IMAGE,
+  lineup: NATURAL_UNIVERSAL_RETRO_LINEUP,
+  tags: [
+    'natural universal retro',
+    'nätural',
+    'paris15',
+    'malaga',
+    'málaga',
+    'retro',
+    'breakbeat',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  doors_open: null,
+  doors_close: null,
+  age_restriction: '18+',
+}
+
+async function runPatchNaturalUniversalRetro2026Malaga(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', NATURAL_UNIVERSAL_RETRO_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-natural-universal-retro] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: NATURAL_UNIVERSAL_RETRO_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...NATURAL_UNIVERSAL_RETRO_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', NATURAL_UNIVERSAL_RETRO_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-natural-universal-retro] OK:', after)
+}
+
 const MALAGA_IS_BREAK_2026_SLUG = 'malaga-is-break-3-aniversario-frequency-break-2026'
 const MALAGA_IS_BREAK_TICKETS =
   'https://www.monsterticket.com/evento/malaga-is-break-3-aniversario-frequency-break'
@@ -2367,6 +2449,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-natural-universal-retro-2026-malaga')) {
+    await runPatchNaturalUniversalRetro2026Malaga(sb)
+    return
+  }
+
   if (argv.includes('--patch-malaga-is-break-3-aniversario-frequency-break-2026')) {
     await runPatchMalagaIsBreak3AniversarioFrequencyBreak2026(sb)
     return
@@ -2475,6 +2562,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla
+  node scripts/enriquecer-evento.mjs --patch-natural-universal-retro-2026-malaga
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
