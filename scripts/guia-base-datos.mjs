@@ -199,7 +199,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-kultura-breakz-ii-aniversario-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT kultura-breakz-ii-aniversario-2026: 2 may 2026 Sala Pandora Sevilla, lineup breakbeat, entradas Fourvenues, redes Kültur / Kultura Breakz.',
+      'UPSERT kultura-breakz-ii-aniversario-2026: 2 may 2026 Sala Pandora Sevilla, cartel public/images/events/kultura-breakz-ii-aniversario-2026.avif, entradas Fourvenues, redes Kültur / Kultura Breakz.',
   },
   {
     id: 'events-patch-pure-bassline-7-aniversario-2026',
@@ -208,6 +208,14 @@ const ACTIONS = [
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
       'UPSERT pure-bassline-7-aniversario-2026: 2 abr 2026 (Jueves Santo) Sala Pandora Sevilla, cartel public/images/events/Pure_bassline_2026.webp, entradas Fourvenues.',
+  },
+  {
+    id: 'events-patch-pure-bassline-15-agosto-2026-sevilla',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-pure-bassline-15-agosto-2026-sevilla',
+    npm: 'npm run db:guia -- run events-patch-pure-bassline-15-agosto-2026-sevilla',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT pure-bassline-15-agosto-2026-sevilla: 15 ago 2026 Pure Bassline Sevilla, entradas Fourvenues (Sara García Heredia); image_url null hasta WebP; lineup desde ficha.',
   },
   {
     id: 'events-patch-malaga-is-break-3-aniversario-frequency-break-2026',
@@ -483,6 +491,7 @@ Punto de entrada unificado:
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
+  events-patch-pure-bassline-15-agosto-2026-sevilla  Pure Bassline 15 ago 2026 Sevilla, Fourvenues (Sara García Heredia)
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
   events-patch-safari-break-night-2026  Safari Break Night, Safari Club Palomares del Río 25 abr 2026
@@ -819,6 +828,9 @@ function main() {
       break
     case 'events-patch-pure-bassline-7-aniversario-2026':
       runNode('enriquecer-evento.mjs', ['--patch-pure-bassline-7-aniversario-2026', ...rest])
+      break
+    case 'events-patch-pure-bassline-15-agosto-2026-sevilla':
+      runNode('enriquecer-evento.mjs', ['--patch-pure-bassline-15-agosto-2026-sevilla', ...rest])
       break
     case 'events-patch-malaga-is-break-3-aniversario-frequency-break-2026':
       runNode('enriquecer-evento.mjs', [

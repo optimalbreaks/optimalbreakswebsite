@@ -21,6 +21,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
+ *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
@@ -1040,7 +1041,7 @@ const KULTURA_BREAKZ_II_ROW = {
     '2026',
     'dj kultur',
   ],
-  image_url: '/images/events/2-aniversario-kultura-breakz--pandora.webp',
+  image_url: '/images/events/kultura-breakz-ii-aniversario-2026.avif',
   socials: {
     'TikTok @kultur.exe': 'https://www.tiktok.com/@kultur.exe',
     'Instagram @kultur.exe': 'https://www.instagram.com/kultur.exe/',
@@ -1077,7 +1078,7 @@ async function runPatchKulturaBreakzIiAniversario2026(sb) {
 
   const { data: after, error: e2 } = await sb
     .from('events')
-    .select('slug, name, date_start, city, venue, tickets_url, website')
+    .select('slug, name, date_start, city, venue, tickets_url, website, image_url')
     .eq('slug', KULTURA_BREAKZ_II_SLUG)
     .maybeSingle()
   if (e2) throw e2
@@ -1239,6 +1240,74 @@ async function runPatchPureBassline7Aniversario2026(sb) {
     .maybeSingle()
   if (e2) throw e2
   console.log('[patch-pure-bassline-7] OK:', after)
+}
+
+const PURE_BASSLINE_15_AGO_2026_SLUG = 'pure-bassline-15-agosto-2026-sevilla'
+const PURE_BASSLINE_15_AGO_2026_TICKETS =
+  'https://web.fourvenues.com/es/sara-garcia-heredia/events/pure-bassline-15-08-2026-7FFR'
+
+const PURE_BASSLINE_15_AGO_2026_ROW = {
+  name: 'Pure Bassline (15 agosto 2026)',
+  description_en:
+    'Pure Bassline club night on Saturday 15 August 2026 in Seville. Official ticket and guest-list sales via Fourvenues (Sara García Heredia). Venue, timetable and lineup are taken from the live listing on that page; the series usually runs at Sala Pandora in the same city—confirm on the ticket link before travel. Breaks / bassline focus consistent with other Pure Bassline dates.',
+  description_es:
+    'Sesión Pure Bassline el sábado 15 de agosto de 2026 en Sevilla. Venta de entradas e invitaciones en Fourvenues (enlace oficial de Sara García Heredia). Sala, horario y cartel tomados de la ficha activa en esa página; la marca suele programar en la sala Pandora de la misma ciudad—conviene confirmar en el enlace de compra antes de desplazarse. Línea breaks / bassline alineada con otras fechas Pure Bassline.',
+  event_type: 'club_night',
+  date_start: '2026-08-15',
+  date_end: null,
+  location: 'Sala Pandora, Sevilla',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Pandora',
+  website: null,
+  tickets_url: PURE_BASSLINE_15_AGO_2026_TICKETS,
+  image_url: null,
+  lineup: [],
+  stages: [],
+  schedule: [],
+  tags: [
+    'pure bassline',
+    'bassline',
+    'breaks',
+    'breakbeat',
+    'sevilla',
+    'sala pandora',
+    '2026',
+    'fourvenues',
+    'sara garcia heredia',
+  ],
+  socials: {},
+  doors_open: null,
+  doors_close: null,
+}
+
+async function runPatchPureBassline15Agosto2026Sevilla(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', PURE_BASSLINE_15_AGO_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-pure-bassline-15-agosto] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: PURE_BASSLINE_15_AGO_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...PURE_BASSLINE_15_AGO_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', PURE_BASSLINE_15_AGO_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-pure-bassline-15-agosto] OK:', after)
 }
 
 const MALAGA_IS_BREAK_2026_SLUG = 'malaga-is-break-3-aniversario-frequency-break-2026'
@@ -2293,6 +2362,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-pure-bassline-15-agosto-2026-sevilla')) {
+    await runPatchPureBassline15Agosto2026Sevilla(sb)
+    return
+  }
+
   if (argv.includes('--patch-malaga-is-break-3-aniversario-frequency-break-2026')) {
     await runPatchMalagaIsBreak3AniversarioFrequencyBreak2026(sb)
     return
@@ -2400,6 +2474,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
+  node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
