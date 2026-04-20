@@ -215,7 +215,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-pure-bassline-15-agosto-2026-sevilla',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT pure-bassline-15-agosto-2026-sevilla: 15 ago 2026 Pure Bassline Sevilla, entradas Fourvenues (Sara García Heredia); image_url null hasta WebP; lineup desde ficha.',
+      'UPSERT pure-bassline-15-agosto-2026-sevilla: 15 ago 2026 Pure Bassline Sevilla, cartel public/images/events/pure-bassline-15-agosto-2026-sevilla.avif, entradas Fourvenues (Sara García Heredia); lineup desde ficha.',
   },
   {
     id: 'events-patch-malaga-is-break-3-aniversario-frequency-break-2026',

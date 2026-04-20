@@ -1261,7 +1261,7 @@ const PURE_BASSLINE_15_AGO_2026_ROW = {
   venue: 'Sala Pandora',
   website: null,
   tickets_url: PURE_BASSLINE_15_AGO_2026_TICKETS,
-  image_url: null,
+  image_url: '/images/events/pure-bassline-15-agosto-2026-sevilla.avif',
   lineup: [],
   stages: [],
   schedule: [],
