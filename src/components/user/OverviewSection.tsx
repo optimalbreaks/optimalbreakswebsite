@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useFavoriteArtists,
   useFavoriteLabels,
@@ -204,6 +204,235 @@ function YearHistogramBars({ stats, es }: { stats: BreakbeatProfileStats; es: bo
   )
 }
 
+// =============================================
+// "Pinchando tu ADN" — modal overlay que se enseña mientras la IA trabaja.
+// La generación real tarda ~30-55s (gpt-5.4 + 2 llamadas paralelas), así que
+// mostramos una fiesta: bola de discoteca, crew bailando, barra con rayas
+// animadas y mensajes rotatorios con humor breakbeatero.
+// =============================================
+
+const PARTY_MESSAGES_ES = [
+  'Preguntando a Fatboy Slim qué opina de ti…',
+  'Midiendo tus BPMs con un metrónomo roto…',
+  'Consultando al comité andaluz de breakbeat…',
+  'Sacudiendo la maleta en busca del vinilo perfecto…',
+  'Avisando al DJ residente de tu llegada…',
+  'Calibrando el subgrave de la sala…',
+  'Desenterrando tus breaks noventeros…',
+  'Sincronizando con la bola de discoteca…',
+  'Pidiéndole permiso a Finger Lickin\' Records…',
+  'Peinando tus tracks en busca de un patrón…',
+  'Montando el lineup de tu ADN…',
+  'Abriendo la puerta de la rave mental…',
+]
+
+const PARTY_MESSAGES_EN = [
+  'Asking Fatboy Slim what he thinks of you…',
+  'Measuring your BPMs with a broken metronome…',
+  'Consulting the Andalusian breakbeat committee…',
+  'Shaking the record bag for the perfect vinyl…',
+  'Paging the resident DJ…',
+  'Calibrating the sub-bass in the room…',
+  'Digging up your 90s breaks…',
+  'Syncing with the disco ball…',
+  'Asking Finger Lickin\' Records for permission…',
+  'Combing your tracks for a pattern…',
+  'Building the lineup of your DNA…',
+  'Opening the door to the mental rave…',
+]
+
+function GeneratingPartyModal({ es, active }: { es: boolean; active: boolean }) {
+  const [progress, setProgress] = useState(0)
+  const [msgIdx, setMsgIdx] = useState(0)
+  const messages = es ? PARTY_MESSAGES_ES : PARTY_MESSAGES_EN
+
+  useEffect(() => {
+    if (!active) {
+      setProgress(0)
+      setMsgIdx(0)
+      return
+    }
+    // Curva asintótica: sube rápido al inicio y frena cerca del 95. El 100 lo
+    // dejamos para cuando la llamada termine de verdad; aquí nunca llegamos
+    // para no mentir al usuario.
+    const tickProgress = window.setInterval(() => {
+      setProgress((p) => {
+        if (p >= 95) return p
+        const step = Math.max(0.35, (95 - p) * 0.04)
+        return Math.min(95, p + step)
+      })
+    }, 350)
+    const tickMsg = window.setInterval(() => {
+      setMsgIdx((i) => (i + 1) % messages.length)
+    }, 2500)
+    return () => {
+      window.clearInterval(tickProgress)
+      window.clearInterval(tickMsg)
+    }
+  }, [active, messages.length])
+
+  if (!active) return null
+
+  const currentPct = Math.round(progress)
+  // 💃 🕺 🎧 🎛️ 🪩 (escapados para evitar problemas de encoding en el source)
+  const dancersReal = ['\u{1F483}', '\u{1F57A}', '\u{1F3A7}', '\u{1F39B}\uFE0F', '\u{1FA90}']
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      style={{ background: 'rgba(23, 23, 23, 0.92)', backdropFilter: 'blur(6px)' }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={es ? 'Generando tu ADN breakbeatero' : 'Generating your breakbeat DNA'}
+    >
+      <style>{`
+        @keyframes dnaShakeA { 0%,100% { transform: translateY(0) rotate(0deg) } 25% { transform: translateY(-8px) rotate(-10deg) } 50% { transform: translateY(0) rotate(0deg) } 75% { transform: translateY(-8px) rotate(10deg) } }
+        @keyframes dnaShakeB { 0%,100% { transform: translateY(-4px) rotate(6deg) } 50% { transform: translateY(4px) rotate(-6deg) } }
+        @keyframes dnaSpin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+        @keyframes dnaPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.55 } }
+        @keyframes dnaStripes { from { background-position: 0 0 } to { background-position: 40px 0 } }
+        @keyframes dnaFlash { 0% { filter: drop-shadow(0 0 18px var(--red)) } 25% { filter: drop-shadow(0 0 18px var(--yellow)) } 50% { filter: drop-shadow(0 0 18px var(--acid)) } 75% { filter: drop-shadow(0 0 18px var(--pink)) } 100% { filter: drop-shadow(0 0 18px var(--red)) } }
+      `}</style>
+
+      <div
+        className="w-full max-w-[520px] border-4 border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)]"
+        style={{ boxShadow: '12px 12px 0 var(--red)' }}
+      >
+        <div className="p-6 sm:p-8">
+          {/* Bola de discoteca central */}
+          <div className="flex justify-center mb-4">
+            <div
+              aria-hidden
+              style={{
+                fontSize: 74,
+                lineHeight: 1,
+                display: 'inline-block',
+                animation: 'dnaSpin 4.5s linear infinite, dnaFlash 2.4s linear infinite',
+              }}
+            >
+              {'\u{1FA90}'}
+            </div>
+          </div>
+
+          {/* Crew de bailarines */}
+          <div className="flex items-center justify-center gap-4 mb-5" aria-hidden>
+            {dancersReal.map((emoji, i) => (
+              <span
+                key={i}
+                style={{
+                  fontSize: 34,
+                  lineHeight: 1,
+                  display: 'inline-block',
+                  animation: `${i % 2 === 0 ? 'dnaShakeA' : 'dnaShakeB'} ${0.6 + (i % 3) * 0.18}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.12}s`,
+                }}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+
+          {/* Título */}
+          <div
+            className="text-center mb-2"
+            style={{
+              fontFamily: "'Unbounded', sans-serif",
+              fontWeight: 900,
+              fontSize: '20px',
+              letterSpacing: '-0.5px',
+              color: 'var(--yellow)',
+              textTransform: 'uppercase',
+            }}
+          >
+            {es ? 'PINCHANDO TU ADN...' : 'SPINNING YOUR DNA...'}
+          </div>
+          <div
+            className="text-center mb-5"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: '10px',
+              letterSpacing: '1.5px',
+              color: 'var(--paper)',
+              opacity: 0.65,
+              textTransform: 'uppercase',
+            }}
+          >
+            {es ? 'LA BOLA YA ESTÁ GIRANDO' : 'THE DISCO BALL IS SPINNING'}
+          </div>
+
+          {/* Mensaje rotatorio */}
+          <div
+            className="text-center mb-5 min-h-[48px] flex items-center justify-center px-2"
+            style={{
+              fontFamily: "'Special Elite', monospace",
+              fontSize: '14px',
+              lineHeight: 1.5,
+              color: 'var(--paper)',
+              animation: 'dnaPulse 2.5s ease-in-out infinite',
+            }}
+          >
+            {messages[msgIdx]}
+          </div>
+
+          {/* Barra de progreso con rayas en movimiento */}
+          <div
+            className="relative h-5 border-2 border-[var(--paper)] overflow-hidden mb-2"
+            style={{ background: 'rgba(255,255,255,0.08)' }}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={currentPct}
+          >
+            <div
+              className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
+              style={{
+                width: `${currentPct}%`,
+                background: 'linear-gradient(90deg, var(--red) 0%, var(--pink) 50%, var(--yellow) 100%)',
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  'repeating-linear-gradient(135deg, rgba(0,0,0,0.22) 0 10px, transparent 10px 20px)',
+                animation: 'dnaStripes 1.2s linear infinite',
+              }}
+            />
+          </div>
+          <div
+            className="flex items-center justify-between mb-4"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: '11px',
+              letterSpacing: '1.5px',
+            }}
+          >
+            <span style={{ color: 'var(--dim)' }}>{es ? 'PROGRESO' : 'PROGRESS'}</span>
+            <span style={{ color: 'var(--yellow)', fontWeight: 700 }}>{currentPct}%</span>
+          </div>
+
+          {/* Tip */}
+          <p
+            className="text-center"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: '10px',
+              letterSpacing: '0.8px',
+              color: 'var(--dim)',
+              lineHeight: 1.6,
+              textTransform: 'uppercase',
+            }}
+          >
+            {es
+              ? 'Puede tardar hasta 60 segundos · No cierres la pestaña'
+              : 'Can take up to 60 seconds · Don\'t close the tab'}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BreakbeatDNA({ lang }: { lang: string }) {
   const es = lang === 'es'
   const { profile: bpProfile, loading: bpLoading, generating, setGenerating, save: saveBP } = useBreakbeatProfile()
@@ -306,14 +535,10 @@ function BreakbeatDNA({ lang }: { lang: string }) {
         </div>
       )}
 
-      {generating && (
-        <div className="p-8 flex flex-col items-center gap-4 bg-[var(--paper-dark)]">
-          <div className="w-16 h-16 rounded-full border-4 border-[var(--ink)] border-t-[var(--red)]" style={{ animation: 'spin 1s linear infinite' }} />
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)' }}>
-            {es ? 'Analizando tu ADN breakbeatero...' : 'Analyzing your breakbeat DNA...'}
-          </p>
-        </div>
-      )}
+      {/* Mientras genera: modal fullscreen con fiesta (bola, crew bailando,
+          mensajes rotatorios y barra de progreso asintótica). El modal se
+          cierra solo cuando el fetch termina y `generating` vuelve a false. */}
+      <GeneratingPartyModal es={es} active={generating} />
 
       {error && (
         <div className="px-5 py-3 bg-[var(--red)] text-white">
