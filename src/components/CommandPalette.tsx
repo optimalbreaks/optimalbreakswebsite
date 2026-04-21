@@ -22,6 +22,8 @@ interface SearchResult {
   subtitle: string
   image_url: string | null
   href: string
+  date_start?: string | null
+  is_upcoming?: boolean
 }
 
 interface PaletteDict {
@@ -98,6 +100,25 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
     return () => window.clearTimeout(id)
   }, [value, delayMs])
   return deb
+}
+
+/**
+ * Fecha corta para el chip del palette.
+ * - Futuro este año  → "16 MAR"
+ * - Futuro otro año  → "16 MAR 27"
+ * - Pasado cualquier → "16 MAR 24"
+ * Respeta es/en (localización mensual). Sin año si es el año actual.
+ */
+function formatEventDate(iso: string, lang: Locale): string {
+  const d = new Date(`${iso}T00:00:00`)
+  if (Number.isNaN(d.getTime())) return iso
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB'
+  const day = d.getDate().toString().padStart(2, '0')
+  const month = d.toLocaleString(locale, { month: 'short' }).replace('.', '').toUpperCase()
+  const yy = d.getFullYear()
+  const now = new Date()
+  const sameYear = yy === now.getFullYear()
+  return sameYear ? `${day} ${month}` : `${day} ${month} ${String(yy).slice(2)}`
 }
 
 function isMacLike(): boolean {
@@ -425,6 +446,10 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                                   className="absolute inset-0 w-full h-full object-cover"
                                   loading="lazy"
                                   decoding="async"
+                                  // Beatport CDN (artwork de tracks) bloquea hotlink por Referer.
+                                  // Con no-referrer el navegador no envía cabecera y el CDN sirve.
+                                  // En /charts funciona porque allí usamos next/image que re-sirve server-side.
+                                  referrerPolicy="no-referrer"
                                 />
                               ) : (
                                 <div
@@ -468,20 +493,39 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                                 </div>
                               ) : null}
                             </div>
-                            <span
-                              className="shrink-0 px-2 py-[2px]"
-                              style={{
-                                background: chip.bg,
-                                color: chip.fg,
-                                fontFamily: "'Courier Prime', monospace",
-                                fontSize: '9px',
-                                letterSpacing: '2px',
-                                textTransform: 'uppercase',
-                                fontWeight: 700,
-                              }}
-                            >
-                              {typeLabel(dict, r.type)}
-                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {r.type === 'event' && r.date_start ? (
+                                <span
+                                  className="px-1.5 py-[2px] border-[2px] border-[var(--ink)]"
+                                  style={{
+                                    background: r.is_upcoming ? 'var(--yellow)' : 'var(--red)',
+                                    color: r.is_upcoming ? 'var(--ink)' : 'white',
+                                    fontFamily: "'Courier Prime', monospace",
+                                    fontSize: '10px',
+                                    letterSpacing: '1px',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                  title={r.is_upcoming ? (lang === 'es' ? 'Próximo' : 'Upcoming') : (lang === 'es' ? 'Pasado' : 'Past')}
+                                >
+                                  {formatEventDate(r.date_start, lang)}
+                                </span>
+                              ) : null}
+                              <span
+                                className="px-2 py-[2px]"
+                                style={{
+                                  background: chip.bg,
+                                  color: chip.fg,
+                                  fontFamily: "'Courier Prime', monospace",
+                                  fontSize: '9px',
+                                  letterSpacing: '2px',
+                                  textTransform: 'uppercase',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {typeLabel(dict, r.type)}
+                              </span>
+                            </div>
                           </Link>
                         )
                       })}

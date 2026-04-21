@@ -29,6 +29,10 @@ export interface SearchResult {
   subtitle: string
   image_url: string | null
   href: string
+  /** Sólo para eventos: fecha inicio YYYY-MM-DD. UI la usa como chip de fecha. */
+  date_start?: string | null
+  /** Sólo para eventos: true si date_start >= hoy. UI pinta amarillo/rojo en base a esto. */
+  is_upcoming?: boolean
 }
 
 /** Limita por IP (instancia) para parar curl/bots sin autenticación. */
@@ -271,7 +275,6 @@ export async function GET(request: NextRequest) {
     upcoming: boolean,
   ) => {
     const place = [e.city, e.country].filter(Boolean).join(', ')
-    const year = e.date_start ? e.date_start.slice(0, 4) : ''
     // Si la búsqueda no hizo match en name/slug/city, muy probablemente
     // viene del line-up: destacamos los nombres coincidentes en el subtítulo
     // para que el usuario entienda por qué aparece este evento.
@@ -290,8 +293,9 @@ export async function GET(request: NextRequest) {
         lineupHitText = `Line-up: ${shown}${rest}`
       }
     }
-    const prefix = upcoming ? '· UPCOMING' : ''
-    const parts = [prefix, place, year, lineupHitText].filter(Boolean)
+    // La fecha ya se pinta como chip con color en la UI, así que la
+    // omitimos del subtítulo para no repetir información.
+    const parts = [place, lineupHitText].filter(Boolean)
     results.push({
       type: 'event',
       id: e.id,
@@ -300,6 +304,8 @@ export async function GET(request: NextRequest) {
       subtitle: parts.join(' — '),
       image_url: (e.image_url as string | null) ?? null,
       href: base(`/events/${e.slug}`),
+      date_start: e.date_start ?? null,
+      is_upcoming: upcoming,
     })
   }
 
