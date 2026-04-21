@@ -93,6 +93,14 @@ const ACTIONS = [
       'Logos de sellos: Serp + OpenAI → Storage labels/<slug>/logo.* y UPDATE image_url. --missing-only = cola sin https en image_url.',
   },
   {
+    id: 'labels-discogs',
+    run: 'node scripts/guia-base-datos.mjs run labels-discogs [--apply] [--slug X] [--limit N] [--all] [--strict]',
+    npm: 'npm run db:labels:discogs -- [--apply]',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY; opcional DISCOGS_TOKEN',
+    description:
+      'Busca en Discogs cada sello de public.labels y, si hay match exacto por nombre, rellena discogs_id + discogs_url. Sin --apply = dry-run (solo imprime). Con --apply escribe data/labels/<slug>.json y UPSERT vía REST.',
+  },
+  {
     id: 'seed',
     run: 'node scripts/guia-base-datos.mjs run seed',
     npm: 'npm run db:seed',
@@ -482,6 +490,8 @@ Punto de entrada unificado:
   label-agent -- …       generar-sello-agente.mjs (pasar args tras --)
   photo -- …             elegir-foto-artista.mjs
   label-photo -- …       elegir-foto-sello.mjs (logos sellos)
+  labels-discogs [--apply] [--slug X] [--limit N] [--all] [--strict]
+                               discogs-find-labels.mjs (match exacto Discogs → discogs_id/_url)
   seed                   seed-supabase (solo seed)
   migrate                seed-supabase --all
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
@@ -779,6 +789,9 @@ function main() {
       break
     case 'label-photo':
       runNode('elegir-foto-sello.mjs', stripLeadingDashDash(rest))
+      break
+    case 'labels-discogs':
+      runNode('discogs-find-labels.mjs', stripLeadingDashDash(rest))
       break
     case 'seed':
       runNode('seed-supabase.mjs', [])
