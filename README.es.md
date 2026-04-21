@@ -184,7 +184,7 @@ npm run db:beatport:top -- --dry-run artist deekline 3171
 El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
 
 4. **Opcional en JSON** — Puedes añadir **`beatport_id`** y **`beatport_url`** en `data/artists/*.json` (o JSON de sellos) para que **`npm run db:artist`** / **`db:label`** los guarden; el **listado Top 10** no va en el JSON: se rellena solo con **`db:beatport:top`**.
-5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque. Las filas de cada track son **visualmente idénticas** a las del chart semanal (`PositionBadge`, artwork, título/artista/sello/año, badges BPM/key, botón BEATPORT). Al pulsar play (individual o "Play All"), aparece la **misma barra flotante inferior** que en el chart: transporte, progreso seekable, info del track. El reproductor participa en el **sistema de audio global** (`claimAudio('beatport-top')`) — se excluye mutuamente con el deck de la home, los mixes y el chart semanal (ver sección [Sistema de audio global](#sistema-de-audio-global-deckaudioprovider--claimaudio)).
+5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque. Las filas de cada track son **visualmente idénticas** a las del chart semanal (`PositionBadge`, artwork, título/artista/sello/año, badges BPM/key, botón BEATPORT). Al pulsar play (individual o "Play All"), se activa la **`MiniPreviewBar` global del `DeckAudioProvider`**: transporte, progreso seekable, info del track. El reproductor usa el modo global **`preview`** (vía `usePreviewAudio` → `playPreviewQueue`), por lo que se excluye mutuamente con el deck de la home y los mixes, y **sigue sonando al navegar** a otras páginas (ver sección [Sistema de audio global](#sistema-de-audio-global-deckaudioprovider--claimaudio)).
 
 Detalle técnico y relación con el chart semanal: **[README.md — Beatport: weekly chart vs Top 10 on profiles](./README.md#beatport-weekly-chart-vs-top-10-on-profiles)**.
 
@@ -242,7 +242,7 @@ Fallback cuando falta URL: `nm:<título>|<mix>|<artistas>`.
 
 **Cross-source real por URL.** El hook expone `isSavedByUrl(url)` y `toggleByUrl(url, {trackId, snapshot})`, usados por el "+" del Top 10 de Beatport: si ya guardaste esa canción desde un chart (40 Breaks / Novedades / Vinilo), el botón aparece ya en verde en el Top 10 **y viceversa**; al desmarcar se borran todas las filas (`chart` + `featured` + `vinyl` + `beatport_top`) que comparten esa URL canónica.
 
-**Página /mi-cuenta/tracks:** orden por artista / título / fecha de release / fecha de guardado; **Play all** + **Shuffle** sobre la cola de audio (Beatport + Bandcamp); filtro **multiselección** por fuente real de reproducción (Beatport / Bandcamp / YouTube); barra de progreso *seekable* con prev/next; dedupe cruzado para que una canción aparezca **una sola vez** aunque esté guardada desde dos fuentes. Los vídeos de YouTube se reproducen con el embed aparte (iframe de YouTube requiere pantalla visible), así que no entran en la cola de audio.
+**Página /mi-cuenta/tracks:** orden por artista / título / fecha de release / fecha de guardado; **Play all** + **Shuffle** sobre la cola de audio (Beatport + Bandcamp) usando la `MiniPreviewBar` global — si sales de la página, **la música sigue sonando** porque el `<audio>` vive en `DeckAudioProvider`; filtro **multiselección** por fuente real de reproducción (Beatport / Bandcamp / YouTube); dedupe cruzado para que una canción aparezca **una sola vez** aunque esté guardada desde dos fuentes. Los vídeos de YouTube se reproducen con el embed aparte (iframe de YouTube requiere pantalla visible), así que no entran en la cola de audio y sí se paran al navegar.
 
 **Lista pública compartible**: botón **🔗 COMPARTIR** copia `/[lang]/u/<userId>/tracks`. Otra persona puede reproducir, ordenar y filtrar esa lista en modo lectura; puede guardar canciones pero **a su propia cuenta**, no edita la del dueño. Si no tiene sesión, sale modal para registrarse. Backend: `/api/public/user-tracks` (service-role, bypasa RLS).
 
@@ -358,36 +358,33 @@ El `useEffect` de `ChartView.tsx` escucha el hash y el parámetro `play`, expand
 
 ## Sistema de audio global (`DeckAudioProvider` + `claimAudio`)
 
-La app tiene **cinco fuentes de audio** que nunca suenan a la vez:
+La app tiene **tres modos de audio** que nunca suenan a la vez, todos gestionados por **`DeckAudioProvider`** (montado en el layout raíz `[lang]/layout.tsx`):
 
-| Clave | Origen | Componente |
-|-------|--------|------------|
-| `deck` | DJ deck de la home | `DeckAudioProvider` |
-| `mix` | SoundCloud / YouTube vía mini-barra del deck | `DeckAudioProvider` |
-| `chart-preview` | Preview de un track en el chart semanal | `ChartView` (`<audio>` inline) |
-| `chart-playall` | Cola "Play All" del chart semanal | `ChartView` (barra flotante) |
-| `beatport-top` | Top 10 Beatport en ficha de artista/sello | `BeatportTopTracks` (barra flotante) |
+| Modo | Origen | Componente visible |
+|------|--------|--------------------|
+| `deck` | DJ deck de la home (4 pads) | `DJDeck` + mini-barra del provider |
+| `mix` | SoundCloud / YouTube de un mix | mini-barra del provider |
+| `preview` | Previews de canciones: chart semanal (40 Breaks + Novedades), Top 10 Beatport en ficha de artista/sello, **Mis Tracks** (propia o compartida) | `MiniPreviewBar` del provider (persistente entre rutas) |
+
+### Persistencia entre rutas
+
+El modo **`preview` es global**: la cola (`PreviewTrack[]`), el índice, el `<audio>` real y toda la UI viven dentro de `DeckAudioProvider`. Los componentes consumidores (`ChartView`, `BeatportTopTracks`, `TracksSection`) ya **no tienen `<audio>` propio** ni barra flotante local — sólo llaman a `playPreviewQueue(queue, index, groupKey)` / `togglePreview()` / `stopPreview()` vía el hook **`usePreviewAudio`**. Resultado: si empiezas a escuchar un track en `/es/artists/adam-freeland` y navegas a `/es/charts` o a `/es/mi-cuenta/tracks`, el audio **sigue sonando** y la `MiniPreviewBar` sigue visible (Beatport y Bandcamp). Los vídeos de YouTube (vinilos) siguen parándose al navegar porque son iframes ajenos.
 
 ### Exclusión mutua
 
-Al pulsar play, el componente llama a **`claimAudio(source)`** → dispara evento **`ob-audio-claim`** en `window`. Cada componente de audio escucha ese evento y **se para** si el `source` no es él mismo. Resultado: solo suena **una** fuente a la vez sin importar desde dónde se pulsa play.
+Al reclamar audio el provider llama internamente a **`claimAudio(source)`** (y acepta aliases retrocompatibles `chart-preview` / `chart-playall` / `beatport-top` / `my-tracks`, todos mapean a `preview`). Esto dispara el evento **`ob-audio-claim`** en `window`, que pausa los otros modos. Solo suena **uno** a la vez sin importar desde dónde se pulsó play.
 
-El tipo **`AudioClaimSource`** (en `DeckAudioProvider.tsx`) lista las claves válidas. Para añadir un nuevo reproductor, basta con añadir una clave ahí.
+### `MiniPreviewBar`
 
-### Barra flotante inferior (reproductor global)
+Renderizada por el provider cuando `previewQueue.length > 0` (antes se montaba en cada página). Diseño idéntico al antiguo:
 
-Tanto `ChartView` ("Play All" del chart) como `BeatportTopTracks` (Top 10 individual o "Play All") renderizan una **barra fija** en la parte inferior (`fixed bottom-0 z-50`) con diseño **idéntico**:
+- Barra de progreso seekable (clic + arrastre, `pointer events`).
+- Transporte Anterior `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Siguiente `⏭`.
+- Título + artista (si `domId` está presente y la vista actual tiene esa fila, hacer clic **hace scroll** a ella).
+- Tiempo actual / duración e `índice / total`.
+- `navigator.mediaSession` configurado con metadatos y handlers `play` / `pause` / `previoustrack` / `nexttrack` para auriculares, lockscreen y Bluetooth.
 
-- **Barra de progreso** seekable (clic + arrastre).
-- **Transporte**: Anterior `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Siguiente `⏭`.
-- **Info del track**: título (Unbounded) + artista (Courier Prime); pulsar para hacer scroll a la fila.
-- **Tiempo**: `actual / duración` + `índice / total`.
-
-La barra emite `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible.
-
-### `mediaSession`
-
-Ambos componentes (`ChartView`, `BeatportTopTracks`) configuran `navigator.mediaSession` con metadatos y handlers de `play`/`pause`/`previoustrack`/`nexttrack`, así los botones de auriculares, pantalla de bloqueo y Bluetooth funcionan.
+La barra sigue emitiendo `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible.
 
 Detalle técnico y tabla de archivos en [README.md — Global audio system](./README.md#global-audio-system-deckaudioprovider--claimaudio).
 

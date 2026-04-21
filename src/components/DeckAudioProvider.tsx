@@ -30,7 +30,7 @@ export interface DeckDict {
   crossfader: string
 }
 
-export type PlayerMode = 'idle' | 'deck' | 'mix'
+export type PlayerMode = 'idle' | 'deck' | 'mix' | 'preview'
 
 export interface MixTrack {
   id: string
@@ -39,6 +39,44 @@ export interface MixTrack {
   imageUrl?: string | null
   source: 'mp3' | 'soundcloud'
   src: string
+}
+
+/**
+ * Track del reproductor global de previews (Beatport/Bandcamp de charts,
+ * Top 10 de artistas/sellos, Mis Tracks…). El provider mantiene la cola
+ * entre navegaciones para que la reproducción siga sonando aunque el
+ * componente que originó la cola ya no esté montado en la ruta activa.
+ *
+ *   - `rowKey`: identidad estable de la fila origen (consumidor la usa
+ *     para marcarla como "reproduciéndose" cuando la página la está mostrando).
+ *   - `src`:    URL de audio ya proxyficada si hace falta.
+ *   - `domId`:  id del DOM dentro de la página origen para hacer
+ *               `scrollIntoView` desde la barra global (si la página
+ *               actual no lo contiene, no-op silencioso).
+ */
+export interface PreviewTrack {
+  rowKey: string
+  src: string
+  title: string
+  artist: string
+  artworkUrl?: string | null
+  domId?: string
+}
+
+export interface PreviewAudioApi {
+  previewMode: 'idle' | 'active'
+  previewQueue: PreviewTrack[]
+  previewIndex: number
+  previewPlaying: boolean
+  previewProgress: number
+  previewDuration: number
+  previewGroupKey: string | null
+  playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
+  togglePreview: () => void
+  stopPreview: () => void
+  previewNext: () => void
+  previewPrev: () => void
+  seekPreviewToRatio: (ratio: number) => void
 }
 
 export interface DeckSideState {
@@ -88,6 +126,19 @@ interface DeckAudioContextValue {
   toggleMixPlayback: () => void
   stopMix: () => void
   seekMixToRatio: (ratio: number) => void
+  // Preview player (chart/beatport-top/my-tracks) — persiste entre rutas
+  previewQueue: PreviewTrack[]
+  previewIndex: number
+  previewPlaying: boolean
+  previewProgress: number
+  previewDuration: number
+  previewGroupKey: string | null
+  playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
+  togglePreview: () => void
+  stopPreview: () => void
+  previewNext: () => void
+  previewPrev: () => void
+  seekPreviewToRatio: (ratio: number) => void
 }
 
 const DeckAudioContext = createContext<DeckAudioContextValue | null>(null)
@@ -98,24 +149,197 @@ export function useDeckAudio() {
   return ctx
 }
 
-export type AudioClaimSource = 'deck' | 'mix' | 'chart-preview' | 'chart-playall' | 'beatport-top' | 'my-tracks'
+/** Acceso tipado a la API del reproductor global de previews. Shortcut
+ *  para consumidores (ChartView, BeatportTopTracks, TracksSection…) que
+ *  solo necesitan esa porción del contexto. */
+export function usePreviewAudio(): PreviewAudioApi {
+  const ctx = useDeckAudio()
+  return {
+    previewMode: ctx.previewQueue.length > 0 ? 'active' : 'idle',
+    previewQueue: ctx.previewQueue,
+    previewIndex: ctx.previewIndex,
+    previewPlaying: ctx.previewPlaying,
+    previewProgress: ctx.previewProgress,
+    previewDuration: ctx.previewDuration,
+    previewGroupKey: ctx.previewGroupKey,
+    playPreviewQueue: ctx.playPreviewQueue,
+    togglePreview: ctx.togglePreview,
+    stopPreview: ctx.stopPreview,
+    previewNext: ctx.previewNext,
+    previewPrev: ctx.previewPrev,
+    seekPreviewToRatio: ctx.seekPreviewToRatio,
+  }
+}
+
+export type AudioClaimSource =
+  | 'deck'
+  | 'mix'
+  | 'preview'
+  // Alias retrocompatibles: scripts externos / hooks antiguos pueden seguir
+  // emitiendo estos `source` strings sin que nada se rompa. A efectos del
+  // provider global todos se tratan como "preview".
+  | 'chart-preview'
+  | 'chart-playall'
+  | 'beatport-top'
+  | 'my-tracks'
 
 export function claimAudio(source: AudioClaimSource) {
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
 }
 
-/** ChartView emite esto al mostrar/ocultar la barra fija de play-all (BackToTop sube el botón). */
+/** El provider emite esto al mostrar/ocultar la barra fija de preview
+ *  (chart / Top 10 / Mis Tracks) para que `BackToTop` suba el botón por
+ *  encima. Se mantiene el nombre histórico (`ob-chart-playall-bar`) por
+ *  retro-compatibilidad con consumidores antiguos. */
 export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
 
 // ─── MiniDeckBar ────────────────────────────────────────
 function MiniDeckBar({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
   const { mode, sessionActive } = ctx
-  if (mode === 'idle' && !sessionActive) return null
+  const hasPreview = ctx.previewQueue.length > 0
+  if (mode === 'idle' && !sessionActive && !hasPreview) return null
 
+  // Prioridad: preview > mix > deck. Preview va primero porque es la acción
+  // más reciente del usuario (click play en un track); deck se mantiene "en
+  // segundo plano" y vuelve a la barra cuando se cierra la preview.
+  if (hasPreview) return <MiniPreviewBar lang={lang} />
   if (mode === 'mix') return <MiniMixBar lang={lang} />
   if (sessionActive) return <MiniDeckBarInner lang={lang} />
   return null
+}
+
+function MiniPreviewBar({ lang }: { lang: Locale }) {
+  const {
+    previewQueue, previewIndex, previewPlaying,
+    previewProgress, previewDuration,
+    togglePreview, stopPreview, previewNext, previewPrev,
+    seekPreviewToRatio, fmt,
+  } = useDeckAudio()
+  const es = lang === 'es'
+  const cur = previewQueue[previewIndex]
+  if (!cur) return null
+
+  const pct = previewDuration ? (previewProgress / previewDuration) * 100 : 0
+
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const dragging = useRef(false)
+  const seek = useCallback((clientX: number) => {
+    if (!previewDuration) return
+    const bar = barRef.current
+    if (!bar) return
+    const rect = bar.getBoundingClientRect()
+    seekPreviewToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
+  }, [previewDuration, seekPreviewToRatio])
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
+  const onPointerUp = useCallback(() => { dragging.current = false }, [])
+
+  const scrollToCurrentRow = useCallback(() => {
+    const id = cur.domId
+    if (!id) return
+    const el = typeof document !== 'undefined' ? document.getElementById(id) : null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('!bg-[var(--yellow)]/25')
+    setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
+  }, [cur])
+
+  return (
+    <div
+      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
+      role="region"
+      aria-label={es ? 'Reproductor de preview' : 'Preview player'}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+    >
+      <div
+        ref={barRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
+        style={{ touchAction: 'none' }}
+        role="progressbar"
+        aria-valuenow={Math.round(pct)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+
+      <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={previewPrev}
+            disabled={previewIndex === 0}
+            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+            title={es ? 'Anterior' : 'Previous'}
+            aria-label={es ? 'Anterior' : 'Previous'}
+          >
+            ⏮
+          </button>
+          <button
+            type="button"
+            onClick={togglePreview}
+            className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
+              ${previewPlaying ? 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
+            title={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+            aria-label={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+          >
+            {previewPlaying ? '❚❚' : '▶'}
+          </button>
+          <button
+            type="button"
+            onClick={stopPreview}
+            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
+            title={es ? 'Parar' : 'Stop'}
+            aria-label={es ? 'Parar' : 'Stop'}
+          >
+            ■
+          </button>
+          <button
+            type="button"
+            onClick={previewNext}
+            disabled={previewIndex >= previewQueue.length - 1}
+            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+            title={es ? 'Siguiente' : 'Next'}
+            aria-label={es ? 'Siguiente' : 'Next'}
+          >
+            ⏭
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={scrollToCurrentRow}
+          className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
+          title={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
+        >
+          <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+            {cur.title || '—'}
+          </p>
+          <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">
+            {cur.artist || ''}
+          </p>
+        </button>
+
+        <div className="shrink-0 text-right">
+          <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+            {fmt(previewProgress)} / {previewDuration ? fmt(previewDuration) : '—'}
+          </span>
+          <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
+            {previewIndex + 1} / {previewQueue.length}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function MiniDeckBarInner({ lang }: { lang: Locale }) {
@@ -393,6 +617,16 @@ export function DeckAudioProvider({
   const mixAudioRef = useRef<HTMLAudioElement | null>(null)
   const scHandleRef = useRef<SoundCloudWidgetHandle | null>(null)
   const [scTrackUrl, setScTrackUrl] = useState<string | null>(null)
+
+  // === Preview player state (persiste entre rutas) ===
+  const [previewQueue, setPreviewQueue] = useState<PreviewTrack[]>([])
+  const [previewIndex, setPreviewIndex] = useState(0)
+  const [previewPlaying, setPreviewPlaying] = useState(false)
+  const [previewProgress, setPreviewProgress] = useState(0)
+  const [previewDuration, setPreviewDuration] = useState(0)
+  const [previewGroupKey, setPreviewGroupKey] = useState<string | null>(null)
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null)
+  const previewRafRef = useRef(0)
 
   useEffect(() => { trackIdxARef.current = trackIdxA }, [trackIdxA])
   useEffect(() => { trackIdxBRef.current = trackIdxB }, [trackIdxB])
@@ -845,6 +1079,183 @@ export function DeckAudioProvider({
     }
   }, [currentMix, mixDuration])
 
+  // === Preview player: internos ===
+  const stopPreviewInternal = useCallback(() => {
+    cancelAnimationFrame(previewRafRef.current)
+    const a = previewAudioRef.current
+    if (a) { a.pause(); a.removeAttribute('src'); a.load() }
+    setPreviewPlaying(false)
+    setPreviewQueue([])
+    setPreviewIndex(0)
+    setPreviewProgress(0)
+    setPreviewDuration(0)
+    setPreviewGroupKey(null)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('previoustrack', null)
+      navigator.mediaSession.setActionHandler('nexttrack', null)
+      navigator.mediaSession.setActionHandler('seekbackward', null)
+      navigator.mediaSession.setActionHandler('seekforward', null)
+    }
+  }, [])
+
+  const loadAndPlayPreviewAt = useCallback((queue: PreviewTrack[], idx: number) => {
+    if (!queue[idx]) return
+    if (!previewAudioRef.current) {
+      const a = new Audio()
+      a.preload = 'auto'
+      a.addEventListener('loadedmetadata', () => {
+        if (previewAudioRef.current === a) setPreviewDuration(a.duration || 0)
+      })
+      a.addEventListener('ended', () => {
+        // Avance a la siguiente pista de la cola; si se acaba, cerrar.
+        setPreviewIndex((prev) => {
+          const next = prev + 1
+          setPreviewQueue((q) => {
+            if (next >= q.length) {
+              // fin de cola
+              setTimeout(() => stopPreviewInternal(), 0)
+              return q
+            }
+            setTimeout(() => loadAndPlayPreviewAt(q, next), 0)
+            return q
+          })
+          return next
+        })
+      })
+      previewAudioRef.current = a
+    }
+    const audio = previewAudioRef.current
+    audio.src = queue[idx].src
+    audio.load()
+    audio.play()
+      .then(() => setPreviewPlaying(true))
+      .catch(() => {
+        // Si el navegador bloquea el autoplay (o la URL casca), avanzamos.
+        setPreviewPlaying(false)
+      })
+
+    // mediaSession — titular, artwork y controles.
+    if ('mediaSession' in navigator) {
+      const m = queue[idx]
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: m.title || '',
+        artist: m.artist || 'Optimal Breaks',
+        artwork: m.artworkUrl
+          ? [{ src: m.artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+          : [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+      })
+    }
+  }, [stopPreviewInternal])
+
+  const playPreviewQueue = useCallback((items: PreviewTrack[], startIndex = 0, groupKey?: string) => {
+    if (!items.length) return
+    const clampedIdx = Math.max(0, Math.min(items.length - 1, startIndex))
+
+    // Preview excluye deck y mix: claim → el handler global para las
+    // otras fuentes, y aquí mismo paramos deck/mix por si acaso.
+    claimAudio('preview')
+    if (audioRefA.current && playingA) { audioRefA.current.pause(); setPlayingA(false) }
+    if (audioRefB.current && playingB) { audioRefB.current.pause(); setPlayingB(false) }
+    if (currentMix) stopMixInternal()
+    setMode('preview')
+    setSessionActive(false)
+
+    setPreviewQueue(items)
+    setPreviewIndex(clampedIdx)
+    setPreviewGroupKey(groupKey ?? null)
+    setPreviewProgress(0)
+    setPreviewDuration(0)
+    loadAndPlayPreviewAt(items, clampedIdx)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt])
+
+  const togglePreview = useCallback(() => {
+    const a = previewAudioRef.current
+    if (!a || previewQueue.length === 0) return
+    if (a.paused) {
+      a.play().then(() => setPreviewPlaying(true)).catch(() => {})
+    } else {
+      a.pause()
+      setPreviewPlaying(false)
+    }
+  }, [previewQueue.length])
+
+  const stopPreview = useCallback(() => {
+    stopPreviewInternal()
+    setMode((m) => (m === 'preview' ? 'idle' : m))
+  }, [stopPreviewInternal])
+
+  const previewNext = useCallback(() => {
+    setPreviewIndex((prev) => {
+      const next = prev + 1
+      if (next >= previewQueue.length) return prev
+      loadAndPlayPreviewAt(previewQueue, next)
+      return next
+    })
+  }, [previewQueue, loadAndPlayPreviewAt])
+
+  const previewPrev = useCallback(() => {
+    setPreviewIndex((prev) => {
+      const next = prev - 1
+      if (next < 0) return prev
+      loadAndPlayPreviewAt(previewQueue, next)
+      return next
+    })
+  }, [previewQueue, loadAndPlayPreviewAt])
+
+  const seekPreviewToRatio = useCallback((ratio: number) => {
+    const a = previewAudioRef.current
+    if (!a || !a.duration) return
+    a.currentTime = Math.max(0, Math.min(1, ratio)) * a.duration
+    setPreviewProgress(a.currentTime)
+  }, [])
+
+  // Tick de progreso de la preview (rAF, solo mientras sea el modo activo).
+  useEffect(() => {
+    if (previewQueue.length === 0) return
+    let cancelled = false
+    const tick = () => {
+      if (cancelled) return
+      const a = previewAudioRef.current
+      if (a && a.duration && Number.isFinite(a.duration)) {
+        setPreviewProgress(a.currentTime)
+        setPreviewDuration(a.duration)
+        // Sincroniza el flag playing con el estado real del <audio>
+        setPreviewPlaying(!a.paused && !a.ended)
+      }
+      previewRafRef.current = requestAnimationFrame(tick)
+    }
+    previewRafRef.current = requestAnimationFrame(tick)
+    return () => { cancelled = true; cancelAnimationFrame(previewRafRef.current) }
+  }, [previewQueue.length, previewIndex])
+
+  // Media Session handlers específicos de preview.
+  useEffect(() => {
+    if (previewQueue.length === 0) return
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.setActionHandler('play', () => togglePreview())
+    navigator.mediaSession.setActionHandler('pause', () => togglePreview())
+    navigator.mediaSession.setActionHandler('previoustrack', () => previewPrev())
+    navigator.mediaSession.setActionHandler('nexttrack', () => previewNext())
+    navigator.mediaSession.setActionHandler('seekbackward', () => seekPreviewToRatio(Math.max(0, (previewProgress - 10) / (previewDuration || 1))))
+    navigator.mediaSession.setActionHandler('seekforward', () => seekPreviewToRatio(Math.min(1, (previewProgress + 10) / (previewDuration || 1))))
+    return () => {
+      // no-op: los handlers se re-asignan en el próximo render si sigue
+      // habiendo preview, o los limpia stopPreviewInternal al cerrar.
+    }
+  }, [previewQueue.length, previewIndex, togglePreview, previewPrev, previewNext, seekPreviewToRatio, previewProgress, previewDuration])
+
+  // Emite evento para BackToTop (compat con OB_CHART_PLAYALL_BAR_EVENT).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(
+      new CustomEvent(OB_CHART_PLAYALL_BAR_EVENT, { detail: { visible: previewQueue.length > 0 } }),
+    )
+  }, [previewQueue.length])
+
   // === Media Session action handlers (update when mix state changes) ===
   useEffect(() => {
     if (mode !== 'mix' || !('mediaSession' in navigator)) return
@@ -919,30 +1330,32 @@ export function DeckAudioProvider({
     }
   }, [mode, sessionActive, playingA, playingB, crossfader, trackA, trackB, togglePlay, switchTrack])
 
-  // === Global audio exclusion: stop deck/mix when another player claims audio ===
+  // === Global audio exclusion: only ONE player audible at a time ===
+  // Fuentes reconocidas:
+  //  - 'deck' / 'mix'        → parte del provider (DJ deck y mixes).
+  //  - 'preview'             → reproductor global de previews.
+  //  - 'chart-*', 'beatport-top', 'my-tracks' → aliases retrocompatibles
+  //                                              que equivalen a 'preview'.
   useEffect(() => {
     const handler = (e: Event) => {
       const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
-      if (src === 'deck' || src === 'mix') return
-      // An external player claimed audio → stop everything here
+      // El deck y el mix se excluyen mutuamente con preview
+      if (src === 'deck' || src === 'mix') {
+        // → parar preview
+        if (previewQueue.length > 0) stopPreviewInternal()
+        setMode((m) => (m === 'preview' ? 'idle' : m))
+        return
+      }
+      // Cualquier otra cosa la tratamos como "preview" (inclusive los alias legacy):
+      // → parar deck y mix, mantener preview.
       if (playingA && audioRefA.current) { audioRefA.current.pause(); setPlayingA(false) }
       if (playingB && audioRefB.current) { audioRefB.current.pause(); setPlayingB(false) }
       if (currentMix) stopMixInternal()
-      setMode('idle')
       setSessionActive(false)
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = null
-        navigator.mediaSession.setActionHandler('play', null)
-        navigator.mediaSession.setActionHandler('pause', null)
-        navigator.mediaSession.setActionHandler('previoustrack', null)
-        navigator.mediaSession.setActionHandler('nexttrack', null)
-        navigator.mediaSession.setActionHandler('seekbackward', null)
-        navigator.mediaSession.setActionHandler('seekforward', null)
-      }
     }
     window.addEventListener('ob-audio-claim', handler)
     return () => window.removeEventListener('ob-audio-claim', handler)
-  }, [playingA, playingB, currentMix, stopMixInternal])
+  }, [playingA, playingB, currentMix, stopMixInternal, previewQueue.length, stopPreviewInternal])
 
   // === Context value ===
   const value = useMemo<DeckAudioContextValue>(
@@ -984,6 +1397,18 @@ export function DeckAudioProvider({
       toggleMixPlayback,
       stopMix,
       seekMixToRatio,
+      previewQueue,
+      previewIndex,
+      previewPlaying,
+      previewProgress,
+      previewDuration,
+      previewGroupKey,
+      playPreviewQueue,
+      togglePreview,
+      stopPreview,
+      previewNext,
+      previewPrev,
+      seekPreviewToRatio,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -1023,10 +1448,22 @@ export function DeckAudioProvider({
       toggleMixPlayback,
       stopMix,
       seekMixToRatio,
+      previewQueue,
+      previewIndex,
+      previewPlaying,
+      previewProgress,
+      previewDuration,
+      previewGroupKey,
+      playPreviewQueue,
+      togglePreview,
+      stopPreview,
+      previewNext,
+      previewPrev,
+      seekPreviewToRatio,
     ]
   )
 
-  const showBar = mode !== 'idle' || sessionActive
+  const showBar = mode !== 'idle' || sessionActive || previewQueue.length > 0
 
   return (
     <DeckAudioContext.Provider value={value}>

@@ -8,14 +8,14 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import { claimAudio } from '@/components/DeckAudioProvider'
+import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 
 /**
@@ -90,13 +90,6 @@ function artistsToString(artists: any): string {
   return artists.map((a: any) => (a && typeof a === 'object' ? a.name : a)).filter(Boolean).join(', ')
 }
 
-function formatTime(s: number): string {
-  if (!Number.isFinite(s)) return '0:00'
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
-}
-
 type SortBy = 'added' | 'artist' | 'title' | 'release'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 const ALL_PLAYBACK_KINDS: PlaybackKind[] = ['beatport', 'bandcamp', 'youtube']
@@ -139,43 +132,33 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     () => new Set(ALL_PLAYBACK_KINDS),
   )
   const [sortBy, setSortBy] = useState<SortBy>('added')
-  // Cola de reproducción efectiva (puede estar barajada). Si está vacía se usa
-  // el orden visible al iniciar. Se fija al pulsar Play All / Shuffle / play
-  // individual, y no se re-sortea al cambiar el orden de visualización.
-  const [playbackList, setPlaybackList] = useState<UnifiedTrack[]>([])
-  const [shuffleMode, setShuffleMode] = useState(false)
   const es = lang === 'es'
 
-  // Audio element for Beatport/Bandcamp samples (shared by all rows).
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [currentKey, setCurrentKey] = useState<string | null>(null)
-  const [paused, setPaused] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const rafRef = useRef(0)
-  const barRef = useRef<HTMLDivElement | null>(null)
-  const dragRef = useRef(false)
+  // Clave del grupo dentro del provider global. Propia del usuario logueado
+  // (o del owner en listas compartidas) para que el provider sepa si la cola
+  // actual pertenece a este listado y pueda resaltar la pista activa.
+  const groupKey = useMemo(() => {
+    if (isShared && publicPayload) return `tracks:shared:${publicPayload.owner.id}`
+    return user ? `tracks:mine:${user.id}` : 'tracks:anon'
+  }, [isShared, publicPayload, user])
 
-  const seekTo = useCallback((clientX: number) => {
-    const a = audioRef.current
-    const bar = barRef.current
-    if (!a || !bar || !a.duration) return
-    const rect = bar.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    a.currentTime = ratio * a.duration
-    setProgress(ratio)
-    setCurrentTime(a.currentTime)
-  }, [])
-  const onBarPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    dragRef.current = true
-    e.currentTarget.setPointerCapture(e.pointerId)
-    seekTo(e.clientX)
-  }, [seekTo])
-  const onBarPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (dragRef.current) seekTo(e.clientX)
-  }, [seekTo])
-  const onBarPointerUp = useCallback(() => { dragRef.current = false }, [])
+  const {
+    previewQueue,
+    previewIndex,
+    previewPlaying,
+    previewGroupKey,
+    playPreviewQueue,
+    togglePreview,
+    stopPreview,
+  } = usePreviewAudio()
+
+  // Key de la pista que actualmente suena desde ESTA lista (si la hay).
+  const activeRowKey = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  // Si shuffle está activo, al reconstruir la cola por un play individual
+  // queremos mantener el orden barajado actual; en caso contrario usamos el
+  // orden visible. Sacamos el flag de si la cola activa coincide con
+  // `orderedAudioQueue` para detectarlo.
+  const [shuffleMode, setShuffleMode] = useState(false)
 
   // Load real track data for every saved ref (grouped by source).
   useEffect(() => {
@@ -340,38 +323,6 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved, loading, lang, isShared])
 
-  // Listen for external audio claims → stop my-tracks playback
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const src = (e as CustomEvent).detail?.source
-      if (src === 'my-tracks') return
-      const a = audioRef.current
-      if (a) { a.pause() }
-      setCurrentKey(null)
-      setPaused(false)
-    }
-    window.addEventListener('ob-audio-claim', handler as EventListener)
-    return () => window.removeEventListener('ob-audio-claim', handler as EventListener)
-  }, [])
-
-  // Drive progress
-  useEffect(() => {
-    if (!currentKey) { setProgress(0); setCurrentTime(0); setDuration(0); return }
-    let cancelled = false
-    const tick = () => {
-      if (cancelled) return
-      const a = audioRef.current
-      if (a && a.duration && Number.isFinite(a.duration)) {
-        setProgress(a.currentTime / a.duration)
-        setCurrentTime(a.currentTime)
-        setDuration(a.duration)
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => { cancelled = true; cancelAnimationFrame(rafRef.current) }
-  }, [currentKey, paused])
-
   const filtered = useMemo(() => {
     if (activeKinds.size === ALL_PLAYBACK_KINDS.length) return tracks
     return tracks.filter((t) => activeKinds.has(playbackOf(t)))
@@ -426,84 +377,87 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return false
   }
   const orderedAudioQueue = useMemo(() => sorted.filter(isAudioPlayable), [sorted])
-  // Si aún no se ha pulsado Play/Shuffle, la cola de reproducción sigue al orden visible.
-  const audioQueue = playbackList.length > 0 ? playbackList : orderedAudioQueue
 
-  const playTrack = useCallback((t: UnifiedTrack) => {
-    const a = audioRef.current
-    if (!a) return
-    if (currentKey === t.key) {
-      if (a.paused) { a.play().then(() => setPaused(false)).catch(() => {}) }
-      else { a.pause(); setPaused(true) }
-      return
-    }
-    claimAudio('my-tracks')
+  // Si el grupo activo es OTRO (otra lista, otro chart, otra página), el
+  // reproductor global seguirá sonando pero aquí no resaltamos ninguna fila.
+  const isGroupActive = previewGroupKey === groupKey && previewQueue.length > 0
+
+  // Si cambia la lista visible mientras seguimos siendo el grupo activo, al
+  // salir del modo shuffle queremos reflejarlo.
+  useEffect(() => {
+    if (!isGroupActive) setShuffleMode(false)
+  }, [isGroupActive])
+
+  // Convierte un UnifiedTrack a PreviewTrack del provider.
+  const toPreviewTrack = useCallback((t: UnifiedTrack): PreviewTrack | null => {
     const src = t.source === 'featured' && t.platform === 'bandcamp'
       ? previewAudioSrc('', 'bandcamp', t.external_url)
       : t.sample_url ? previewAudioSrc(t.sample_url, t.platform || undefined) : ''
-    if (!src) return
-    a.src = src
-    a.load()
-    a.play().then(() => {
-      setCurrentKey(t.key)
-      setPaused(false)
-    }).catch(() => {})
-  }, [currentKey])
+    if (!src) return null
+    return {
+      rowKey: t.key,
+      src,
+      title: t.title,
+      artist: t.artists,
+      artworkUrl: t.artwork_url ?? null,
+      // domId no aplica aquí; las filas no tienen id único en el DOM y el
+      // scroll-to-row sólo tiene sentido dentro de la misma ruta.
+    }
+  }, [])
 
-  // Play individual: si venimos de shuffle, mantener la cola barajada; si no,
-  // usar la cola ordenada visible. Esto asegura que el next/advance siga
-  // teniendo sentido incluso al pulsar play sobre un track concreto.
+  const buildQueue = useCallback((src: UnifiedTrack[]): PreviewTrack[] => {
+    const out: PreviewTrack[] = []
+    for (const t of src) {
+      const p = toPreviewTrack(t)
+      if (p) out.push(p)
+    }
+    return out
+  }, [toPreviewTrack])
+
+  // Play individual: si es la misma pista, toggle pause/resume; si no, se
+  // construye la cola usando el orden visible (o el barajado, si está
+  // activo) y se salta al índice elegido.
   const playTrackInOrdered = useCallback((t: UnifiedTrack) => {
-    if (!shuffleMode) setPlaybackList(orderedAudioQueue)
-    playTrack(t)
-  }, [shuffleMode, orderedAudioQueue, playTrack])
-
-  const advance = useCallback(() => {
-    if (!currentKey) return
-    const queue = playbackList.length > 0 ? playbackList : orderedAudioQueue
-    const idx = queue.findIndex((t) => t.key === currentKey)
-    if (idx === -1) { setCurrentKey(null); return }
-    const next = queue[idx + 1]
-    if (next) playTrack(next)
-    else setCurrentKey(null)
-  }, [currentKey, playbackList, orderedAudioQueue, playTrack])
-
-  const retreat = useCallback(() => {
-    if (!currentKey) return
-    const queue = playbackList.length > 0 ? playbackList : orderedAudioQueue
-    const idx = queue.findIndex((t) => t.key === currentKey)
-    if (idx <= 0) return
-    const prev = queue[idx - 1]
-    if (prev) playTrack(prev)
-  }, [currentKey, playbackList, orderedAudioQueue, playTrack])
+    if (activeRowKey === t.key) {
+      togglePreview()
+      return
+    }
+    const baseQueue = shuffleMode && isGroupActive ? previewQueue : buildQueue(orderedAudioQueue)
+    const idx = baseQueue.findIndex((p) => p.rowKey === t.key)
+    if (idx < 0) {
+      // No está en la cola base (p.ej. filtro distinto): reconstruye visible.
+      const queue = buildQueue(orderedAudioQueue)
+      const i = queue.findIndex((p) => p.rowKey === t.key)
+      if (i < 0) return
+      setShuffleMode(false)
+      playPreviewQueue(queue, i, groupKey)
+      return
+    }
+    playPreviewQueue(baseQueue, idx, groupKey)
+  }, [activeRowKey, togglePreview, shuffleMode, isGroupActive, previewQueue, buildQueue, orderedAudioQueue, playPreviewQueue, groupKey])
 
   const playAll = useCallback(() => {
-    if (orderedAudioQueue.length === 0) return
+    const queue = buildQueue(orderedAudioQueue)
+    if (queue.length === 0) return
     setShuffleMode(false)
-    setPlaybackList(orderedAudioQueue)
-    playTrack(orderedAudioQueue[0])
-  }, [orderedAudioQueue, playTrack])
+    playPreviewQueue(queue, 0, groupKey)
+  }, [orderedAudioQueue, buildQueue, playPreviewQueue, groupKey])
 
   const playShuffle = useCallback(() => {
-    if (orderedAudioQueue.length === 0) return
-    const arr = [...orderedAudioQueue]
-    for (let i = arr.length - 1; i > 0; i--) {
+    const queue = buildQueue(orderedAudioQueue)
+    if (queue.length === 0) return
+    for (let i = queue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      ;[queue[i], queue[j]] = [queue[j], queue[i]]
     }
     setShuffleMode(true)
-    setPlaybackList(arr)
-    playTrack(arr[0])
-  }, [orderedAudioQueue, playTrack])
+    playPreviewQueue(queue, 0, groupKey)
+  }, [orderedAudioQueue, buildQueue, playPreviewQueue, groupKey])
 
   const stopAll = useCallback(() => {
-    const a = audioRef.current
-    if (a) a.pause()
-    setCurrentKey(null)
-    setPaused(false)
+    stopPreview()
     setShuffleMode(false)
-    setPlaybackList([])
-  }, [])
+  }, [stopPreview])
 
   const counts = useMemo(() => {
     const c = { all: tracks.length, beatport: 0, bandcamp: 0, youtube: 0 }
@@ -553,8 +507,6 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
   return (
     <div>
-      <audio ref={audioRef} preload="none" onEnded={advance} className="hidden" />
-
       {isShared && publicPayload ? (
         <div className="mb-4 p-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/30 flex items-center gap-3">
           <div className="shrink-0 w-11 h-11 rounded-full border-2 border-[var(--ink)] bg-[var(--paper-dark)] overflow-hidden relative">
@@ -600,7 +552,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             </button>
           ) : null}
           {orderedAudioQueue.length > 0 && (
-            currentKey ? (
+            isGroupActive ? (
               <button
                 type="button"
                 onClick={stopAll}
@@ -748,7 +700,8 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       ) : (
         <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
           {sorted.map((t) => {
-            const isCurrent = currentKey === t.key
+            const isCurrent = activeRowKey === t.key
+            const isPausedHere = isCurrent && !previewPlaying
             const ytId = (t.source === 'vinyl' || t.youtube_url) ? extractYouTubeId(t.youtube_url || '') : null
             const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
 
@@ -786,9 +739,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         className={`h-[36px] px-2.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer
                           ${isCurrent ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
                         style={{ fontFamily: "'Courier Prime', monospace" }}
-                        title={isCurrent && !paused ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+                        title={isCurrent && !isPausedHere ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
                       >
-                        {isCurrent && !paused ? '❚❚' : '▶'}
+                        {isCurrent && !isPausedHere ? '❚❚' : '▶'}
                       </button>
                     ) : null}
                     {t.bpm ? (
@@ -840,101 +793,8 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         </div>
       )}
 
-      {/* Now-playing bar (only audio queue) */}
-      {currentKey && (() => {
-        const cur = tracks.find((t) => t.key === currentKey)
-        if (!cur) return null
-        const idx = audioQueue.findIndex((t) => t.key === currentKey)
-        const total = audioQueue.length
-        return (
-          <div className="fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
-            style={{ fontFamily: "'Courier Prime', monospace" }}>
-            <div
-              ref={barRef}
-              onPointerDown={onBarPointerDown}
-              onPointerMove={onBarPointerMove}
-              onPointerUp={onBarPointerUp}
-              onPointerCancel={onBarPointerUp}
-              className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
-              style={{ touchAction: 'none' }}
-              role="progressbar"
-              aria-valuenow={Math.round(progress * 100)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${progress * 100}%` }} />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ left: `${progress * 100}%` }}
-              />
-            </div>
-            <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-              <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={retreat}
-                  disabled={idx <= 0}
-                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                  title={es ? 'Anterior' : 'Previous'}
-                  aria-label={es ? 'Anterior' : 'Previous'}
-                >
-                  «
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const a = audioRef.current; if (!a) return
-                    if (a.paused) { a.play().then(() => setPaused(false)).catch(() => {}) }
-                    else { a.pause(); setPaused(true) }
-                  }}
-                  className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
-                    ${paused ? 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]'}`}
-                  title={paused ? (es ? 'Reproducir' : 'Play') : (es ? 'Pausar' : 'Pause')}
-                  aria-label={paused ? (es ? 'Reproducir' : 'Play') : (es ? 'Pausar' : 'Pause')}
-                >
-                  {paused ? '▶' : '❚❚'}
-                </button>
-                <button
-                  type="button"
-                  onClick={stopAll}
-                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
-                  title={es ? 'Parar' : 'Stop'}
-                  aria-label={es ? 'Parar' : 'Stop'}
-                >
-                  ■
-                </button>
-                <button
-                  type="button"
-                  onClick={advance}
-                  disabled={idx < 0 || idx >= total - 1}
-                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                  title={es ? 'Siguiente' : 'Next'}
-                  aria-label={es ? 'Siguiente' : 'Next'}
-                >
-                  »
-                </button>
-              </div>
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-                  {shuffleMode ? <span className="text-[var(--uv)] mr-1" title={es ? 'Aleatorio' : 'Shuffle'}>⇄</span> : null}
-                  {cur.title}
-                </p>
-                <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">{cur.artists}</p>
-              </div>
-              <div className="shrink-0 text-right">
-                <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-                {total > 0 ? (
-                  <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
-                    {Math.max(idx, 0) + 1} / {total}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      {/* La barra flotante de now-playing la monta `DeckAudioProvider` en
+          modo `preview` para que el audio persista al navegar entre rutas. */}
     </div>
   )
 }

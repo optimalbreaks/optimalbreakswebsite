@@ -7,13 +7,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import {
-  claimAudio,
-  OB_CHART_PLAYALL_BAR_EVENT,
-  type AudioClaimSource,
-} from '@/components/DeckAudioProvider'
+import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import type {
   ChartEdition,
   ChartFeaturedArtist,
@@ -264,15 +260,11 @@ function ArtistNames({
 // ---------------------------------------------------------------------------
 // Preview audio player
 // ---------------------------------------------------------------------------
-
-let currentPlayingAudio: HTMLAudioElement | null = null
-let currentPlayingPauser: (() => void) | null = null
-
-function formatTime(s: number): string {
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
-}
+// El `<audio>`, la cola, el avance, la barra flotante inferior y MediaSession
+// viven ahora en `DeckAudioProvider` (modo `preview`) para que la música
+// siga sonando mientras el usuario navega por la web. Aquí solo construimos
+// la cola con `PreviewTrack[]` y delegamos en `playPreviewQueue` /
+// `stopPreview`. Ver `src/components/DeckAudioProvider.tsx`.
 
 function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
   if (pick?.platform === 'bandcamp' && pick.link_url) {
@@ -547,21 +539,6 @@ function useToggleSet(initial: Set<string>) {
 }
 
 // ---------------------------------------------------------------------------
-// Play-all queue (shared across both sections)
-// ---------------------------------------------------------------------------
-
-type PlayAllTrackMeta = { title: string; artist: string; rowId?: string }
-
-type PlayAllState = {
-  key: string
-  queue: string[]
-  meta: PlayAllTrackMeta[]
-  index: number
-} | null
-
-let playAllAudio: HTMLAudioElement | null = null
-
-// ---------------------------------------------------------------------------
 // Week accordion (re-usable for both sections)
 // ---------------------------------------------------------------------------
 
@@ -763,184 +740,63 @@ export default function ChartView({
     return () => window.removeEventListener('hashchange', applyHash)
   }, [weeks, ensureOpenVinyl, ensureOpenPicks, ensureOpenForty])
 
-  // ---- Play-all state ----
-  const [playAll, setPlayAll] = useState<PlayAllState>(null)
-  const playAllRef = useRef<HTMLAudioElement | null>(null)
+  // ---- Play-all state (delegado al provider global) ----
+  const {
+    previewQueue, previewIndex, previewGroupKey,
+    playPreviewQueue, stopPreview,
+  } = usePreviewAudio()
 
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent(OB_CHART_PLAYALL_BAR_EVENT, { detail: { visible: !!playAll } }),
-    )
-  }, [playAll])
+  type PlayAllBundle = PreviewTrack[]
 
-  useEffect(() => {
-    return () => {
-      window.dispatchEvent(
-        new CustomEvent(OB_CHART_PLAYALL_BAR_EVENT, { detail: { visible: false } }),
-      )
+  const buildFeaturedBundle = useCallback((featured: ChartFeaturedTrack[]): PlayAllBundle => {
+    const out: PreviewTrack[] = []
+    for (const p of featured) {
+      let src = ''
+      if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
+      else if (p.sample_url) src = previewAudioSrc(p.sample_url)
+      if (!src) continue
+      const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
+      out.push({
+        rowKey: `chart-row-${p.id}`,
+        src,
+        title: p.title,
+        artist: artists,
+        artworkUrl: p.artwork_url || null,
+        domId: `chart-row-${p.id}`,
+      })
     }
+    return out
   }, [])
 
-  const stopPlayAll = useCallback(() => {
-    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-    const a = playAllRef.current
-    if (a) { a.pause(); a.removeAttribute('src'); a.load() }
-    playAllAudio = null
-    setPlayAll(null)
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = null
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
-      navigator.mediaSession.setActionHandler('previoustrack', null)
-      navigator.mediaSession.setActionHandler('nexttrack', null)
+  const buildTrackBundle = useCallback((tracks: ChartTrack[]): PlayAllBundle => {
+    const out: PreviewTrack[] = []
+    for (const t of tracks) {
+      if (!t.sample_url) continue
+      const artists = Array.isArray(t.artists) ? t.artists.map((a: ChartTrackArtist) => a.name).join(', ') : ''
+      out.push({
+        rowKey: `chart-row-${t.id}`,
+        src: previewAudioSrc(t.sample_url),
+        title: t.title,
+        artist: artists,
+        artworkUrl: t.artwork_url || null,
+        domId: `chart-row-${t.id}`,
+      })
     }
+    return out
   }, [])
 
-  // Listen for external audio claims → stop charts playback
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
-      if (src === 'chart-playall') return
-      // External player claimed audio → stop play-all and any individual preview
-      if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-      const a = playAllRef.current
-      if (a) { a.pause(); a.removeAttribute('src'); a.load() }
-      playAllAudio = null
-      setPlayAll(null)
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = null
-        navigator.mediaSession.setActionHandler('play', null)
-        navigator.mediaSession.setActionHandler('pause', null)
-        navigator.mediaSession.setActionHandler('previoustrack', null)
-        navigator.mediaSession.setActionHandler('nexttrack', null)
-      }
-    }
-    window.addEventListener('ob-audio-claim', handler)
-    return () => window.removeEventListener('ob-audio-claim', handler)
-  }, [])
+  const playFromIndex = useCallback((sectionKey: string, bundle: PlayAllBundle, index: number) => {
+    if (bundle.length === 0) return
+    playPreviewQueue(bundle, index, sectionKey)
+  }, [playPreviewQueue])
 
-  const advancePlayAll = useCallback(() => {
-    setPlayAll((prev) => {
-      if (!prev) return null
-      const next = prev.index + 1
-      if (next >= prev.queue.length) {
-        const a = playAllRef.current
-        if (a) { a.pause(); a.removeAttribute('src'); a.load() }
-        playAllAudio = null
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.metadata = null
-          navigator.mediaSession.setActionHandler('play', null)
-          navigator.mediaSession.setActionHandler('pause', null)
-          navigator.mediaSession.setActionHandler('previoustrack', null)
-          navigator.mediaSession.setActionHandler('nexttrack', null)
-        }
-        return null
-      }
-      return { ...prev, index: next }
-    })
-  }, [])
-
-  const goToPlayAll = useCallback((delta: number) => {
-    setPlayAll((prev) => {
-      if (!prev) return null
-      const next = prev.index + delta
-      if (next < 0 || next >= prev.queue.length) return prev
-      return { ...prev, index: next }
-    })
-  }, [])
-
-  const startPlayAll = useCallback((key: string, queue: string[], meta: PlayAllTrackMeta[]) => {
-    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-    claimAudio('chart-playall')
-    setPlayAll({ key, queue, meta, index: 0 })
-  }, [])
-
-  useEffect(() => {
-    if (!playAll) return
-    const a = playAllRef.current
-    if (!a) return
-
-    if (currentPlayingAudio && currentPlayingAudio !== a && currentPlayingPauser) {
-      currentPlayingPauser()
-    }
-
-    const src = playAll.queue[playAll.index]
-    if (!src) { stopPlayAll(); return }
-
-    a.src = src
-    a.load()
-    setPaPaused(false)
-    a.play().then(() => {
-      currentPlayingAudio = a
-      currentPlayingPauser = () => { a.pause(); setPlayAll(null) }
-      playAllAudio = a
-      if ('mediaSession' in navigator) {
-        const m = playAll.meta[playAll.index]
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: m?.title ?? '',
-          artist: m?.artist ?? 'Optimal Breaks Charts',
-          artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
-        })
-        navigator.mediaSession.setActionHandler('play', () => {
-          a.play().then(() => setPaPaused(false)).catch(() => {})
-        })
-        navigator.mediaSession.setActionHandler('pause', () => {
-          a.pause()
-          setPaPaused(true)
-        })
-        navigator.mediaSession.setActionHandler('previoustrack', () => goToPlayAll(-1))
-        navigator.mediaSession.setActionHandler('nexttrack', () => goToPlayAll(1))
-      }
-    }).catch(() => {
-      advancePlayAll()
-    })
-  }, [playAll?.key, playAll?.index, advancePlayAll, stopPlayAll, goToPlayAll]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const scrollToCurrentTrack = useCallback(() => {
-    if (!playAll) return
-    const meta = playAll.meta[playAll.index]
-    if (!meta?.rowId) return
-
-    const key = playAll.key
-    const weekDate = key.replace(/^(picks|forty)-/, '')
-    if (key.startsWith('forty-')) ensureOpenForty(weekDate)
-    else if (key.startsWith('picks-')) ensureOpenPicks(weekDate)
-
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const el = document.getElementById(meta.rowId!)
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          el.classList.add('!bg-[var(--yellow)]/25')
-          setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
-        }
-      }, 120)
-    })
-  }, [playAll, ensureOpenForty, ensureOpenPicks])
-
-  // ---- Play-all pause/resume ----
-  const [paPaused, setPaPaused] = useState(false)
-
-  const togglePaPlayback = useCallback(() => {
-    const a = playAllRef.current
-    if (!a) return
-    if (a.paused) {
-      a.play().then(() => setPaPaused(false)).catch(() => {})
+  const handlePlayAllClick = useCallback((sectionKey: string, bundle: PlayAllBundle) => {
+    if (previewGroupKey === sectionKey) {
+      stopPreview()
     } else {
-      a.pause()
-      setPaPaused(true)
+      playFromIndex(sectionKey, bundle, 0)
     }
-  }, [])
-
-  const playFromIndex = useCallback((sectionKey: string, queue: string[], meta: PlayAllTrackMeta[], index: number) => {
-    if (playAll?.key === sectionKey && playAll.index === index) {
-      togglePaPlayback()
-      return
-    }
-    if (currentPlayingAudio && currentPlayingPauser) currentPlayingPauser()
-    claimAudio('chart-playall')
-    setPlayAll({ key: sectionKey, queue, meta, index })
-  }, [playAll?.key, playAll?.index, togglePaPlayback])
+  }, [previewGroupKey, stopPreview, playFromIndex])
 
   // Ejecuta el autoplay pendiente sobre chart/featured: busca el track por id
   // en la semana ya identificada, construye el bundle como haría el render, y
@@ -955,109 +811,40 @@ export default function ChartView({
     if (kind === 'picks') {
       const sorted = sortFeaturedByArtist(week.featured, lang)
       const bundle = buildFeaturedBundle(sorted)
-      const rowId = `chart-row-${trackId}`
-      const idx = bundle.meta.findIndex((m) => m.rowId === rowId)
+      const rowKey = `chart-row-${trackId}`
+      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
-        playFromIndex(`picks-${weekDate}`, bundle.srcs, bundle.meta, idx)
+        playFromIndex(`picks-${weekDate}`, bundle, idx)
       }
     } else {
       const bundle = buildTrackBundle(week.tracks)
-      const rowId = `chart-row-${trackId}`
-      const idx = bundle.meta.findIndex((m) => m.rowId === rowId)
+      const rowKey = `chart-row-${trackId}`
+      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
-        playFromIndex(`forty-${weekDate}`, bundle.srcs, bundle.meta, idx)
+        playFromIndex(`forty-${weekDate}`, bundle, idx)
       }
     }
     setPendingPlay(null)
-  }, [pendingPlay, weeks, lang, playFromIndex])
+  }, [pendingPlay, weeks, lang, playFromIndex, buildFeaturedBundle, buildTrackBundle])
 
-  const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
-    if (playAll?.key === sectionKey) {
-      stopPlayAll()
-    } else {
-      startPlayAll(sectionKey, audioSrcs, meta)
-    }
-  }, [playAll?.key, stopPlayAll, startPlayAll])
-
-  // ---- Play-all progress tracking ----
-  const [paProgress, setPaProgress] = useState(0)
-  const [paCurrentTime, setPaCurrentTime] = useState(0)
-  const [paDuration, setPaDuration] = useState(0)
-  const paBarRef = useRef<HTMLDivElement | null>(null)
-
-  const paRafRef = useRef(0)
-  useLayoutEffect(() => {
-    if (!playAll) { setPaProgress(0); setPaCurrentTime(0); setPaDuration(0); return }
-    let cancelled = false
-    const tick = () => {
-      if (cancelled) return
-      const a = playAllRef.current
-      if (a && a.duration && Number.isFinite(a.duration)) {
-        setPaProgress(a.currentTime / a.duration)
-        setPaCurrentTime(a.currentTime)
-        setPaDuration(a.duration)
-      }
-      paRafRef.current = requestAnimationFrame(tick)
-    }
-    paRafRef.current = requestAnimationFrame(tick)
-    return () => { cancelled = true; cancelAnimationFrame(paRafRef.current) }
-  }, [playAll?.key, playAll?.index, paPaused]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const paSeekTo = useCallback((clientX: number) => {
-    const a = playAllRef.current
-    const bar = paBarRef.current
-    if (!a || !bar || !a.duration) return
-    const rect = bar.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    a.currentTime = ratio * a.duration
-    setPaProgress(ratio)
-    setPaCurrentTime(a.currentTime)
-  }, [])
-
-  const paDragRef = useRef(false)
-  const paPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { paDragRef.current = true; e.currentTarget.setPointerCapture(e.pointerId); paSeekTo(e.clientX) }, [paSeekTo])
-  const paPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (paDragRef.current) paSeekTo(e.clientX) }, [paSeekTo])
-  const paPointerUp = useCallback(() => { paDragRef.current = false }, [])
-
-  type PlayAllBundle = { srcs: string[]; meta: PlayAllTrackMeta[] }
-
-  function buildFeaturedBundle(featured: ChartFeaturedTrack[]): PlayAllBundle {
-    const srcs: string[] = []
-    const meta: PlayAllTrackMeta[] = []
-    for (const p of featured) {
-      let src = ''
-      if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
-      else if (p.sample_url) src = previewAudioSrc(p.sample_url)
-      if (!src) continue
-      srcs.push(src)
-      const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
-      meta.push({ title: p.title, artist: artists, rowId: `chart-row-${p.id}` })
-    }
-    return { srcs, meta }
-  }
-
-  function buildTrackBundle(tracks: ChartTrack[]): PlayAllBundle {
-    const srcs: string[] = []
-    const meta: PlayAllTrackMeta[] = []
-    for (const t of tracks) {
-      if (!t.sample_url) continue
-      srcs.push(previewAudioSrc(t.sample_url))
-      const artists = Array.isArray(t.artists) ? t.artists.map((a: ChartTrackArtist) => a.name).join(', ') : ''
-      meta.push({ title: t.title, artist: artists, rowId: `chart-row-${t.id}` })
-    }
-    return { srcs, meta }
-  }
+  // Dado un sectionKey, ¿es la cola actualmente activa del provider?
+  const isGroupActive = useCallback((sectionKey: string) => previewGroupKey === sectionKey, [previewGroupKey])
+  // ¿Qué rowKey se está reproduciendo ahora mismo (si coincide con este grupo)?
+  const activeRowKeyFor = useCallback((sectionKey: string): string | null => {
+    if (previewGroupKey !== sectionKey) return null
+    return previewQueue[previewIndex]?.rowKey ?? null
+  }, [previewGroupKey, previewQueue, previewIndex])
 
   function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle) {
-    if (bundle.srcs.length === 0) return undefined
-    const isActive = playAll?.key === sectionKey
-    const current = isActive ? (playAll!.index + 1) : 0
-    const total = isActive ? playAll!.queue.length : bundle.srcs.length
+    if (bundle.length === 0) return undefined
+    const isActive = isGroupActive(sectionKey)
+    const current = isActive ? (previewIndex + 1) : 0
+    const total = isActive ? previewQueue.length : bundle.length
 
     return (
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, bundle.srcs, bundle.meta) }}
+        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, bundle) }}
         className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
           ${isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]'}`}
         style={{ fontFamily: "'Courier Prime', monospace" }}
@@ -1215,9 +1002,6 @@ export default function ChartView({
 
   return (
     <div className="max-w-4xl mx-auto px-0 sm:px-4 py-6 sm:py-10">
-      {/* hidden audio element for play-all queue */}
-      <audio ref={playAllRef} preload="none" onEnded={advancePlayAll} className="hidden" />
-
       {/* ================================================================ */}
       {/* PAGE HEADER — "La radio de Optimal Breaks"                       */}
       {/* ================================================================ */}
@@ -1285,9 +1069,9 @@ export default function ChartView({
                   playAllSlot={renderPlayAllBtn(picksKey, picksBundle)}
                 >
                   {featuredSorted.map((pick) => {
-                    const rowId = `chart-row-${pick.id}`
-                    const idx = picksBundle.meta.findIndex((m) => m.rowId === rowId)
-                    const isActive = playAll?.key === picksKey && playAll.index === idx
+                    const rowKey = `chart-row-${pick.id}`
+                    const idx = picksBundle.findIndex((m) => m.rowKey === rowKey)
+                    const isActive = activeRowKeyFor(picksKey) === rowKey
                     return (
                       <FeaturedPickRow
                         key={pick.id}
@@ -1295,7 +1079,7 @@ export default function ChartView({
                         dict={dict}
                         lang={lang}
                         isPlaying={isActive}
-                        onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle.srcs, picksBundle.meta, idx) : undefined}
+                        onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
                         relatedRefs={canonicalGroups.featuredByTrack.get(pick.id)}
                       />
@@ -1372,9 +1156,9 @@ export default function ChartView({
                 )}
                 <div className="border-t-4 border-[var(--ink)]">
                   {tracks.map((track) => {
-                    const rowId = `chart-row-${track.id}`
-                    const idx = fortyBundle.meta.findIndex((m) => m.rowId === rowId)
-                    const isActive = playAll?.key === fortyKey && playAll.index === idx
+                    const rowKey = `chart-row-${track.id}`
+                    const idx = fortyBundle.findIndex((m) => m.rowKey === rowKey)
+                    const isActive = activeRowKeyFor(fortyKey) === rowKey
                     return (
                       <ChartTrackRow
                         key={track.id}
@@ -1382,7 +1166,7 @@ export default function ChartView({
                         dict={dict}
                         lang={lang}
                         isPlaying={isActive}
-                        onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle.srcs, fortyBundle.meta, idx) : undefined}
+                        onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
                         relatedRefs={canonicalGroups.chartByTrack.get(track.id)}
                       />
@@ -1490,106 +1274,8 @@ export default function ChartView({
           OPTIMAL BREAKS — 40 BREAKS VITALES
         </p>
       </footer>
-
-      {/* ================================================================ */}
-      {/* FLOATING NOW-PLAYING BAR (visible only during play-all)          */}
-      {/* ================================================================ */}
-      {playAll && (
-        <div
-          className="fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
-          style={{ fontFamily: "'Courier Prime', monospace" }}
-        >
-          {/* progress bar (seekable) */}
-          <div
-            ref={paBarRef}
-            onPointerDown={paPointerDown}
-            onPointerMove={paPointerMove}
-            onPointerUp={paPointerUp}
-            onPointerCancel={paPointerUp}
-            className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
-            style={{ touchAction: 'none' }}
-            role="progressbar"
-            aria-valuenow={Math.round(paProgress * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${paProgress * 100}%` }} />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ left: `${paProgress * 100}%` }}
-            />
-          </div>
-
-          <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-            {/* transport: prev / play-pause / stop / next */}
-            <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => goToPlayAll(-1)}
-                disabled={playAll.index === 0}
-                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                title={c.play_all_prev_title}
-                aria-label={c.play_all_prev_title}
-              >
-                {c.play_all_prev}
-              </button>
-              <button
-                type="button"
-                onClick={togglePaPlayback}
-                className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
-                  ${paPaused ? 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]'}`}
-                title={paPaused ? c.preview_play : c.preview_pause}
-                aria-label={paPaused ? c.preview_play : c.preview_pause}
-              >
-                {paPaused ? '▶' : '❚❚'}
-              </button>
-              <button
-                type="button"
-                onClick={stopPlayAll}
-                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
-                title={c.stop_all_title}
-                aria-label={c.stop_all_title}
-              >
-                ■
-              </button>
-              <button
-                type="button"
-                onClick={() => goToPlayAll(1)}
-                disabled={playAll.index >= playAll.queue.length - 1}
-                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-                title={c.play_all_next_title}
-                aria-label={c.play_all_next_title}
-              >
-                {c.play_all_next}
-              </button>
-            </div>
-
-            {/* track info — tap to scroll to position in chart */}
-            <button
-              type="button"
-              onClick={scrollToCurrentTrack}
-              className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
-            >
-              <p className="text-sm sm:text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-                {playAll.meta[playAll.index]?.title ?? '—'}
-              </p>
-              <p className="text-xs sm:text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">
-                {playAll.meta[playAll.index]?.artist ?? ''}
-              </p>
-            </button>
-
-            {/* time + counter */}
-            <div className="shrink-0 text-right">
-              <span className="block text-xs sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-                {formatTime(paCurrentTime)} / {formatTime(paDuration)}
-              </span>
-              <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
-                {playAll.index + 1} / {playAll.queue.length}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* La barra flotante de now-playing la monta `DeckAudioProvider`
+          (modo `preview`) para que siga sonando al cambiar de ruta. */}
     </div>
   )
 }
