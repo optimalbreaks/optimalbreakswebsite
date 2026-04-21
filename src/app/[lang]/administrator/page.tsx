@@ -13,6 +13,7 @@ interface Stats {
   mixes: number
   history_entries: number
   users: number
+  saved_tracks: number
 }
 
 const CARDS = [
@@ -22,6 +23,7 @@ const CARDS = [
   { key: 'blog_posts', label: 'Blog', icon: '✎', href: '/blog', accent: 'var(--acid)' },
   { key: 'scenes', label: 'Escenas', icon: '☰', href: '/scenes', accent: 'var(--cyan)' },
   { key: 'mixes', label: 'Mixes', icon: '▶', href: '/mixes', accent: 'var(--pink)' },
+  { key: 'saved_tracks', label: 'Tracks', icon: '♪', href: '/tracks', accent: 'var(--red)' },
   { key: 'history_entries', label: 'Historia', icon: '↻', href: '/history', accent: 'var(--yellow)' },
   { key: 'users', label: 'Usuarios', icon: '☻', href: '/users', accent: 'var(--paper-dark)' },
 ] as const

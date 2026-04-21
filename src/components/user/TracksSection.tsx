@@ -36,6 +36,12 @@ type UnifiedTrack = {
   platform?: string
   note?: string
   saved_at?: string | null
+  /**
+   * Refs `{source, id}` del track representativo + sus duplicados colapsados
+   * (misma canción guardada desde distintas listas). Se usa para que el
+   * botón de guardar actúe sobre TODAS las filas a la vez.
+   */
+  refs?: Array<{ source: ChartTrackSource; id: string }>
 }
 
 function previewAudioSrc(sampleUrl: string, platform?: string, linkUrl?: string | null): string {
@@ -63,11 +69,39 @@ function formatTime(s: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
+type SortBy = 'added' | 'artist' | 'title' | 'release'
+type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
+const ALL_PLAYBACK_KINDS: PlaybackKind[] = ['beatport', 'bandcamp', 'youtube']
+
+// Clasifica la fuente de reproducción real basándose en lo que realmente se
+// puede reproducir en la fila (no en el chart del que se guardó). Damos
+// prioridad al audio preview (Beatport/Bandcamp) porque es el que suena en
+// segundo plano; si no hay audio pero sí vídeo, es YouTube.
+function playbackOf(t: UnifiedTrack): PlaybackKind {
+  if (t.sample_url) return 'beatport'
+  if (t.platform === 'bandcamp' && t.external_url) return 'bandcamp'
+  if (t.youtube_url) return 'youtube'
+  if (t.source === 'vinyl') return 'youtube'
+  if (t.source === 'featured' && t.platform === 'bandcamp') return 'bandcamp'
+  return 'beatport'
+}
+
 export default function TracksSection({ lang }: { lang: string }) {
   const { saved, loading } = useSavedChartTracks()
   const [tracks, setTracks] = useState<UnifiedTrack[]>([])
   const [tracksLoading, setTracksLoading] = useState(false)
-  const [sourceFilter, setSourceFilter] = useState<'all' | ChartTrackSource>('all')
+  // Filtro multiselección. Por defecto las tres fuentes están activas
+  // (equivalente a TODO). Útil para, p.ej., elegir solo Beatport+Bandcamp
+  // cuando quieres reproducir en segundo plano sin YouTube.
+  const [activeKinds, setActiveKinds] = useState<Set<PlaybackKind>>(
+    () => new Set(ALL_PLAYBACK_KINDS),
+  )
+  const [sortBy, setSortBy] = useState<SortBy>('added')
+  // Cola de reproducción efectiva (puede estar barajada). Si está vacía se usa
+  // el orden visible al iniciar. Se fija al pulsar Play All / Shuffle / play
+  // individual, y no se re-sortea al cambiar el orden de visualización.
+  const [playbackList, setPlaybackList] = useState<UnifiedTrack[]>([])
+  const [shuffleMode, setShuffleMode] = useState(false)
   const es = lang === 'es'
 
   // Audio element for Beatport/Bandcamp samples (shared by all rows).
@@ -78,6 +112,28 @@ export default function TracksSection({ lang }: { lang: string }) {
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const rafRef = useRef(0)
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const dragRef = useRef(false)
+
+  const seekTo = useCallback((clientX: number) => {
+    const a = audioRef.current
+    const bar = barRef.current
+    if (!a || !bar || !a.duration) return
+    const rect = bar.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    a.currentTime = ratio * a.duration
+    setProgress(ratio)
+    setCurrentTime(a.currentTime)
+  }, [])
+  const onBarPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    seekTo(e.clientX)
+  }, [seekTo])
+  const onBarPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current) seekTo(e.clientX)
+  }, [seekTo])
+  const onBarPointerUp = useCallback(() => { dragRef.current = false }, [])
 
   // Load real track data for every saved ref (grouped by source).
   useEffect(() => {
@@ -145,7 +201,42 @@ export default function TracksSection({ lang }: { lang: string }) {
           return { ...t, saved_at: s.created_at ?? null }
         })
         .filter(Boolean) as UnifiedTrack[]
-      setTracks(ordered)
+
+      // Dedupe: una canción sólo puede aparecer una vez aunque esté guardada
+      // desde varias fuentes (p.ej. 40 Breaks + Novedades). Clave canónica:
+      // URL externa normalizada; fallback a título+mix+artistas.
+      const canonicalKey = (t: UnifiedTrack) => {
+        const u = (t.external_url || '').trim().toLowerCase()
+        if (u) {
+          try {
+            const url = new URL(u)
+            return `${url.host}${url.pathname.replace(/\/$/, '')}`
+          } catch {
+            return u.replace(/[?#].*$/, '').replace(/\/$/, '')
+          }
+        }
+        return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
+      }
+      const byCanon = new Map<string, UnifiedTrack>()
+      for (const t of ordered) {
+        const k = canonicalKey(t)
+        const existing = byCanon.get(k)
+        if (!existing) {
+          byCanon.set(k, { ...t, refs: [{ source: t.source, id: t.id }] })
+          continue
+        }
+        existing.refs!.push({ source: t.source, id: t.id })
+        // Enriquecemos el representativo con campos que puedan faltarle
+        // (p.ej. el vinilo aporta youtube_url; chart/featured aportan sample).
+        if (!existing.sample_url && t.sample_url) existing.sample_url = t.sample_url
+        if (!existing.youtube_url && t.youtube_url) existing.youtube_url = t.youtube_url
+        if (!existing.artwork_url && t.artwork_url) existing.artwork_url = t.artwork_url
+        if (!existing.bpm && t.bpm) existing.bpm = t.bpm
+        if (!existing.music_key && t.music_key) existing.music_key = t.music_key
+        if (!existing.note && t.note) existing.note = t.note
+      }
+      const deduped = Array.from(byCanon.values())
+      setTracks(deduped)
       setTracksLoading(false)
     })()
 
@@ -186,16 +277,61 @@ export default function TracksSection({ lang }: { lang: string }) {
   }, [currentKey, paused])
 
   const filtered = useMemo(() => {
-    if (sourceFilter === 'all') return tracks
-    return tracks.filter((t) => t.source === sourceFilter)
-  }, [tracks, sourceFilter])
+    if (activeKinds.size === ALL_PLAYBACK_KINDS.length) return tracks
+    return tracks.filter((t) => activeKinds.has(playbackOf(t)))
+  }, [tracks, activeKinds])
 
-  // Queue of audio-only (chart + featured with sample). Vinyl is YouTube → separate player.
-  const audioQueue = useMemo(() => filtered.filter((t) => {
-    if (t.source === 'vinyl') return false
-    if (t.source === 'featured' && t.platform === 'bandcamp') return !!t.external_url
-    return !!t.sample_url
-  }), [filtered])
+  const toggleKind = (k: PlaybackKind) => {
+    setActiveKinds((prev) => {
+      const next = new Set(prev)
+      if (next.has(k)) next.delete(k)
+      else next.add(k)
+      // Si el usuario deja el set vacío, recuperamos las tres fuentes.
+      if (next.size === 0) return new Set(ALL_PLAYBACK_KINDS)
+      return next
+    })
+  }
+  const selectAllKinds = () => setActiveKinds(new Set(ALL_PLAYBACK_KINDS))
+
+  const sorted = useMemo(() => {
+    const loc = es ? 'es' : 'en'
+    const arr = [...filtered]
+    switch (sortBy) {
+      case 'artist':
+        arr.sort((A, B) => (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' })
+          || (A.title || '').localeCompare(B.title || '', loc, { sensitivity: 'base' }))
+        break
+      case 'title':
+        arr.sort((A, B) => (A.title || '').localeCompare(B.title || '', loc, { sensitivity: 'base' })
+          || (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' }))
+        break
+      case 'release':
+        arr.sort((A, B) => (B.year || 0) - (A.year || 0)
+          || (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' }))
+        break
+      case 'added':
+      default:
+        arr.sort((A, B) => {
+          const a = A.saved_at || ''
+          const b = B.saved_at || ''
+          if (a === b) return 0
+          return a < b ? 1 : -1
+        })
+    }
+    return arr
+  }, [filtered, sortBy, es])
+
+  // Queue of audio-only (Beatport / Bandcamp). YouTube se reproduce con embed
+  // aparte. Se basa en los campos efectivos del track (tras dedupe), no en
+  // la fuente original.
+  const isAudioPlayable = (t: UnifiedTrack) => {
+    if (t.sample_url) return true
+    if (t.platform === 'bandcamp' && t.external_url) return true
+    return false
+  }
+  const orderedAudioQueue = useMemo(() => sorted.filter(isAudioPlayable), [sorted])
+  // Si aún no se ha pulsado Play/Shuffle, la cola de reproducción sigue al orden visible.
+  const audioQueue = playbackList.length > 0 ? playbackList : orderedAudioQueue
 
   const playTrack = useCallback((t: UnifiedTrack) => {
     const a = audioRef.current
@@ -218,33 +354,66 @@ export default function TracksSection({ lang }: { lang: string }) {
     }).catch(() => {})
   }, [currentKey])
 
+  // Play individual: si venimos de shuffle, mantener la cola barajada; si no,
+  // usar la cola ordenada visible. Esto asegura que el next/advance siga
+  // teniendo sentido incluso al pulsar play sobre un track concreto.
+  const playTrackInOrdered = useCallback((t: UnifiedTrack) => {
+    if (!shuffleMode) setPlaybackList(orderedAudioQueue)
+    playTrack(t)
+  }, [shuffleMode, orderedAudioQueue, playTrack])
+
   const advance = useCallback(() => {
     if (!currentKey) return
-    const idx = audioQueue.findIndex((t) => t.key === currentKey)
+    const queue = playbackList.length > 0 ? playbackList : orderedAudioQueue
+    const idx = queue.findIndex((t) => t.key === currentKey)
     if (idx === -1) { setCurrentKey(null); return }
-    const next = audioQueue[idx + 1]
+    const next = queue[idx + 1]
     if (next) playTrack(next)
     else setCurrentKey(null)
-  }, [audioQueue, currentKey, playTrack])
+  }, [currentKey, playbackList, orderedAudioQueue, playTrack])
+
+  const retreat = useCallback(() => {
+    if (!currentKey) return
+    const queue = playbackList.length > 0 ? playbackList : orderedAudioQueue
+    const idx = queue.findIndex((t) => t.key === currentKey)
+    if (idx <= 0) return
+    const prev = queue[idx - 1]
+    if (prev) playTrack(prev)
+  }, [currentKey, playbackList, orderedAudioQueue, playTrack])
 
   const playAll = useCallback(() => {
-    if (audioQueue.length === 0) return
-    playTrack(audioQueue[0])
-  }, [audioQueue, playTrack])
+    if (orderedAudioQueue.length === 0) return
+    setShuffleMode(false)
+    setPlaybackList(orderedAudioQueue)
+    playTrack(orderedAudioQueue[0])
+  }, [orderedAudioQueue, playTrack])
+
+  const playShuffle = useCallback(() => {
+    if (orderedAudioQueue.length === 0) return
+    const arr = [...orderedAudioQueue]
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    setShuffleMode(true)
+    setPlaybackList(arr)
+    playTrack(arr[0])
+  }, [orderedAudioQueue, playTrack])
 
   const stopAll = useCallback(() => {
     const a = audioRef.current
     if (a) a.pause()
     setCurrentKey(null)
     setPaused(false)
+    setShuffleMode(false)
+    setPlaybackList([])
   }, [])
 
-  const counts = useMemo(() => ({
-    all: tracks.length,
-    chart: tracks.filter((t) => t.source === 'chart').length,
-    featured: tracks.filter((t) => t.source === 'featured').length,
-    vinyl: tracks.filter((t) => t.source === 'vinyl').length,
-  }), [tracks])
+  const counts = useMemo(() => {
+    const c = { all: tracks.length, beatport: 0, bandcamp: 0, youtube: 0 }
+    for (const t of tracks) c[playbackOf(t)]++
+    return c
+  }, [tracks])
 
   if (loading || tracksLoading) {
     return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>{es ? 'Cargando tus tracks…' : 'Loading your tracks…'}</p>
@@ -258,40 +427,117 @@ export default function TracksSection({ lang }: { lang: string }) {
         <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
           {es ? 'MIS TRACKS' : 'MY TRACKS'} ({counts.all})
         </h2>
-        {audioQueue.length > 0 && (
-          <button
-            type="button"
-            onClick={currentKey ? stopAll : playAll}
-            className={`inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer whitespace-nowrap ${
-              currentKey ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'
-            }`}
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {currentKey ? (es ? '■ PARAR' : '■ STOP') : (es ? '▶ PLAY ALL' : '▶ PLAY ALL')}
-          </button>
+        {orderedAudioQueue.length > 0 && (
+          <div className="flex items-center gap-2">
+            {currentKey ? (
+              <button
+                type="button"
+                onClick={stopAll}
+                className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--red)] text-white transition-all cursor-pointer whitespace-nowrap"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                {es ? '■ PARAR' : '■ STOP'}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={playAll}
+                  className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all cursor-pointer whitespace-nowrap"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={es ? 'Reproducir en orden' : 'Play in order'}
+                >
+                  {es ? '▶ PLAY ALL' : '▶ PLAY ALL'}
+                </button>
+                <button
+                  type="button"
+                  onClick={playShuffle}
+                  className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--uv)] text-white hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-all cursor-pointer whitespace-nowrap"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={es ? 'Reproducir aleatorio' : 'Play shuffled'}
+                >
+                  {es ? '⇄ ALEATORIO' : '⇄ SHUFFLE'}
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
       {tracks.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {(['all', 'chart', 'featured', 'vinyl'] as const).map((k) => {
-            const label = k === 'all'
-              ? (es ? `TODO (${counts.all})` : `ALL (${counts.all})`)
-              : k === 'chart'
-                ? (es ? `40 BREAKS (${counts.chart})` : `40 BREAKS (${counts.chart})`)
-                : k === 'featured'
-                  ? (es ? `NOVEDADES (${counts.featured})` : `NEW RELEASES (${counts.featured})`)
-                  : (es ? `VINILOS (${counts.vinyl})` : `VINYL (${counts.vinyl})`)
-            const active = sourceFilter === k
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <span className="text-[10px] font-bold tracking-[2px] text-[var(--ink)]/60 mr-1" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            {es ? 'ORDENAR:' : 'SORT:'}
+          </span>
+          {(['added', 'artist', 'title', 'release'] as const).map((k) => {
+            const label = k === 'added'
+              ? (es ? 'AÑADIDO' : 'ADDED')
+              : k === 'artist'
+                ? (es ? 'ARTISTA' : 'ARTIST')
+                : k === 'title'
+                  ? (es ? 'TÍTULO' : 'TITLE')
+                  : (es ? 'RELEASE' : 'RELEASE')
+            const active = sortBy === k
             return (
               <button
                 key={k}
                 type="button"
-                onClick={() => setSourceFilter(k)}
+                onClick={() => setSortBy(k)}
+                className={`h-[28px] px-2.5 border-2 border-[var(--ink)] transition-colors cursor-pointer ${
+                  active ? 'bg-[var(--ink)] text-[var(--yellow)]' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'
+                }`}
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {tracks.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-[10px] font-bold tracking-[2px] text-[var(--ink)]/60 mr-1" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            {es ? 'FUENTE:' : 'SOURCE:'}
+          </span>
+          {(() => {
+            const allActive = activeKinds.size === ALL_PLAYBACK_KINDS.length
+            return (
+              <button
+                type="button"
+                onClick={selectAllKinds}
                 className={`h-[30px] px-3 border-2 border-[var(--ink)] transition-colors cursor-pointer ${
+                  allActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'
+                }`}
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+                title={es ? 'Mostrar todas las fuentes' : 'Show all sources'}
+              >
+                {es ? `TODO (${counts.all})` : `ALL (${counts.all})`}
+              </button>
+            )
+          })()}
+          {ALL_PLAYBACK_KINDS.map((k) => {
+            const label = k === 'beatport'
+              ? `BEATPORT (${counts.beatport})`
+              : k === 'bandcamp'
+                ? `BANDCAMP (${counts.bandcamp})`
+                : `YOUTUBE (${counts.youtube})`
+            const active = activeKinds.has(k)
+            const disabled = counts[k] === 0
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => toggleKind(k)}
+                disabled={disabled}
+                className={`h-[30px] px-3 border-2 border-[var(--ink)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                   active ? 'bg-[var(--red)] text-white' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'
                 }`}
                 style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+                aria-pressed={active}
+                title={active
+                  ? (es ? 'Click para quitar de la selección' : 'Click to remove from selection')
+                  : (es ? 'Click para añadir a la selección' : 'Click to add to selection')}
               >
                 {label}
               </button>
@@ -318,23 +564,16 @@ export default function TracksSection({ lang }: { lang: string }) {
             {es ? '▶ IR A CHARTS' : '▶ GO TO CHARTS'}
           </Link>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
           {es ? 'Nada guardado en esta categoría todavía.' : 'Nothing saved in this category yet.'}
         </p>
       ) : (
         <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
-          {filtered.map((t) => {
+          {sorted.map((t) => {
             const isCurrent = currentKey === t.key
-            const ytId = t.source === 'vinyl' ? extractYouTubeId(t.youtube_url || '') : null
-            const hasAudio = t.source !== 'vinyl' && (
-              t.sample_url || (t.source === 'featured' && t.platform === 'bandcamp' && t.external_url)
-            )
-            const sourceBadge = t.source === 'chart'
-              ? { label: es ? '40 BREAKS' : '40 BREAKS', color: 'var(--red)', fg: 'white' }
-              : t.source === 'featured'
-                ? { label: es ? 'NOVEDAD' : 'NEW RELEASE', color: 'var(--cyan)', fg: 'white' }
-                : { label: es ? 'VINILO' : 'VINYL', color: 'var(--uv)', fg: 'white' }
+            const ytId = (t.source === 'vinyl' || t.youtube_url) ? extractYouTubeId(t.youtube_url || '') : null
+            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
 
             return (
               <div key={t.key} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isCurrent ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
@@ -347,12 +586,6 @@ export default function TracksSection({ lang }: { lang: string }) {
                     ) : null}
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider border-2 border-[var(--ink)]"
-                          style={{ background: sourceBadge.color, color: sourceBadge.fg, fontFamily: "'Courier Prime', monospace" }}>
-                          {sourceBadge.label}
-                        </span>
-                      </div>
                       <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
                         {t.title}
                         {t.mix_name ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span> : null}
@@ -372,7 +605,7 @@ export default function TracksSection({ lang }: { lang: string }) {
                     {hasAudio ? (
                       <button
                         type="button"
-                        onClick={() => playTrack(t)}
+                        onClick={() => playTrackInOrdered(t)}
                         className={`h-[36px] px-2.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer
                           ${isCurrent ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
                         style={{ fontFamily: "'Courier Prime', monospace" }}
@@ -391,7 +624,13 @@ export default function TracksSection({ lang }: { lang: string }) {
                         {t.music_key}
                       </span>
                     ) : null}
-                    <SaveTrackButton source={t.source} trackId={t.id} lang={lang} size="sm" />
+                    <SaveTrackButton
+                      source={t.source}
+                      trackId={t.id}
+                      relatedRefs={t.refs && t.refs.length > 1 ? t.refs : undefined}
+                      lang={lang}
+                      size="sm"
+                    />
                     {t.external_url ? (
                       <a
                         href={t.external_url} target="_blank" rel="noopener noreferrer"
@@ -424,32 +663,93 @@ export default function TracksSection({ lang }: { lang: string }) {
       {currentKey && (() => {
         const cur = tracks.find((t) => t.key === currentKey)
         if (!cur) return null
+        const idx = audioQueue.findIndex((t) => t.key === currentKey)
+        const total = audioQueue.length
         return (
           <div className="fixed bottom-0 inset-x-0 z-50 border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
             style={{ fontFamily: "'Courier Prime', monospace" }}>
-            <div className="relative w-full h-2 bg-[var(--ink)]/10">
+            <div
+              ref={barRef}
+              onPointerDown={onBarPointerDown}
+              onPointerMove={onBarPointerMove}
+              onPointerUp={onBarPointerUp}
+              onPointerCancel={onBarPointerUp}
+              className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
+              style={{ touchAction: 'none' }}
+              role="progressbar"
+              aria-valuenow={Math.round(progress * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
               <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${progress * 100}%` }} />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ left: `${progress * 100}%` }}
+              />
             </div>
-            <div className="flex items-center gap-3 px-4 py-2.5 max-w-4xl mx-auto">
-              <div className="flex items-center gap-1 shrink-0">
-                <button type="button" onClick={() => {
-                  const a = audioRef.current; if (!a) return
-                  if (a.paused) { a.play().then(() => setPaused(false)).catch(() => {}) }
-                  else { a.pause(); setPaused(true) }
-                }} className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] transition-colors ${paused ? 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]'}`}>
+            <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+              <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={retreat}
+                  disabled={idx <= 0}
+                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                  title={es ? 'Anterior' : 'Previous'}
+                  aria-label={es ? 'Anterior' : 'Previous'}
+                >
+                  «
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const a = audioRef.current; if (!a) return
+                    if (a.paused) { a.play().then(() => setPaused(false)).catch(() => {}) }
+                    else { a.pause(); setPaused(true) }
+                  }}
+                  className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
+                    ${paused ? 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]'}`}
+                  title={paused ? (es ? 'Reproducir' : 'Play') : (es ? 'Pausar' : 'Pause')}
+                  aria-label={paused ? (es ? 'Reproducir' : 'Play') : (es ? 'Pausar' : 'Pause')}
+                >
                   {paused ? '▶' : '❚❚'}
                 </button>
-                <button type="button" onClick={stopAll} className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors">■</button>
-                <button type="button" onClick={advance} disabled={audioQueue.findIndex((t) => t.key === currentKey) >= audioQueue.length - 1}
-                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors">»</button>
+                <button
+                  type="button"
+                  onClick={stopAll}
+                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
+                  title={es ? 'Parar' : 'Stop'}
+                  aria-label={es ? 'Parar' : 'Stop'}
+                >
+                  ■
+                </button>
+                <button
+                  type="button"
+                  onClick={advance}
+                  disabled={idx < 0 || idx >= total - 1}
+                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
+                  title={es ? 'Siguiente' : 'Next'}
+                  aria-label={es ? 'Siguiente' : 'Next'}
+                >
+                  »
+                </button>
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>{cur.title}</p>
+                <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                  {shuffleMode ? <span className="text-[var(--uv)] mr-1" title={es ? 'Aleatorio' : 'Shuffle'}>⇄</span> : null}
+                  {cur.title}
+                </p>
                 <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">{cur.artists}</p>
               </div>
-              <span className="shrink-0 text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
+              <div className="shrink-0 text-right">
+                <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+                {total > 0 ? (
+                  <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
+                    {Math.max(idx, 0) + 1} / {total}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         )

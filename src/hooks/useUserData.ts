@@ -472,8 +472,64 @@ export function useSavedChartTracks() {
     }
   }
 
-  return { saved, loading, isSaved, isAnySaved, toggle, toggleGroup, refetch: fetch }
+  // ---- Variante polimórfica (refs con fuente + id) ----
+  // La misma canción puede aparecer en distintas fuentes (p.ej. mismo Beatport
+  // URL presente como fila en `chart_tracks` y en `chart_featured_tracks`).
+  // Estas funciones permiten tratar esa mezcla como un único grupo: marcarla
+  // desde cualquier fuente la deja marcada en todas y, al desmarcar, se borran
+  // todas las filas guardadas del grupo.
+  type Ref = { source: ChartTrackSource; id: string }
+
+  const isAnySavedRefs = (refs: Ref[]) =>
+    refs.some((r) => savedSet.has(makeKey(r.source, r.id)))
+
+  const toggleGroupRefs = async (primary: Ref, refs: Ref[]) => {
+    if (!user || !primary.id) return
+    const group = refs.length ? refs : [primary]
+    if (isAnySavedRefs(group)) {
+      // Borrar por fuente: agrupamos por source y hacemos una sentencia por
+      // cada una (habitualmente 1-2 fuentes, nunca más de 3).
+      const bySource = new Map<ChartTrackSource, string[]>()
+      for (const r of group) {
+        const arr = bySource.get(r.source) || []
+        arr.push(r.id)
+        bySource.set(r.source, arr)
+      }
+      await Promise.all(
+        Array.from(bySource.entries()).map(([src, ids]) =>
+          supabase
+            .from('saved_chart_tracks')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('track_source', src)
+            .in('track_id', ids)
+        )
+      )
+      setSaved((s) =>
+        s.filter((row) => {
+          const ids = bySource.get(row.track_source as ChartTrackSource)
+          return !(ids && ids.includes(row.track_id))
+        })
+      )
+    } else {
+      await toggle(primary.source, primary.id)
+    }
+  }
+
+  return {
+    saved,
+    loading,
+    isSaved,
+    isAnySaved,
+    isAnySavedRefs,
+    toggle,
+    toggleGroup,
+    toggleGroupRefs,
+    refetch: fetch,
+  }
 }
+
+export type SavedChartTrackGroupRef = { source: ChartTrackSource; id: string }
 
 // =============================================
 // USER PROFILE

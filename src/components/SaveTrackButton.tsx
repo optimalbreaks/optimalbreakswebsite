@@ -18,11 +18,18 @@ interface SaveTrackButtonProps {
   source: ChartTrackSource
   trackId: string
   /**
-   * IDs de otras filas que representan la MISMA canción (distintas semanas del chart
-   * con la misma URL canónica). Si se proporciona, el botón considera el track guardado
-   * cuando cualquiera del grupo lo está, y al desmarcar borra todo el grupo.
+   * IDs de otras filas (misma fuente) que representan la MISMA canción —
+   * distintas semanas del chart con la misma URL canónica. Si se
+   * proporciona, el botón considera el track guardado cuando cualquiera
+   * del grupo lo está, y al desmarcar borra todo el grupo.
    */
   relatedIds?: string[]
+  /**
+   * Variante polimórfica: grupo de refs `{source, id}` mezclando varias
+   * fuentes (p.ej. misma canción como fila chart y fila featured). Si se
+   * proporciona tiene prioridad sobre `relatedIds`.
+   */
+  relatedRefs?: Array<{ source: ChartTrackSource; id: string }>
   size?: 'sm' | 'md'
   lang?: string
   className?: string
@@ -37,6 +44,7 @@ export default function SaveTrackButton({
   source,
   trackId,
   relatedIds,
+  relatedRefs,
   size = 'sm',
   lang,
   className = '',
@@ -44,11 +52,23 @@ export default function SaveTrackButton({
   const pathname = usePathname()
   const resolvedLang = lang || getLang(pathname)
   const { user } = useAuth()
-  const { isSaved: isSavedFn, isAnySaved, toggleGroup } = useSavedChartTracks()
-  const groupIds = relatedIds && relatedIds.length > 0 ? relatedIds : [trackId]
-  const isSaved = relatedIds && relatedIds.length > 0
-    ? isAnySaved(source, groupIds)
-    : isSavedFn(source, trackId)
+  const {
+    isSaved: isSavedFn,
+    isAnySaved,
+    isAnySavedRefs,
+    toggleGroup,
+    toggleGroupRefs,
+  } = useSavedChartTracks()
+
+  const hasRefs = !!(relatedRefs && relatedRefs.length > 0)
+  const hasIds = !!(relatedIds && relatedIds.length > 0)
+  const groupIds = hasIds ? (relatedIds as string[]) : [trackId]
+
+  const isSaved = hasRefs
+    ? isAnySavedRefs(relatedRefs as Array<{ source: ChartTrackSource; id: string }>)
+    : hasIds
+      ? isAnySaved(source, groupIds)
+      : isSavedFn(source, trackId)
   const [showGuest, setShowGuest] = useState(false)
   const [mounted, setMounted] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -77,7 +97,14 @@ export default function SaveTrackButton({
     e.preventDefault()
     e.stopPropagation()
     if (!isLoggedIn) { setShowGuest(true); return }
-    toggleGroup(source, trackId, groupIds)
+    if (hasRefs) {
+      toggleGroupRefs(
+        { source, id: trackId },
+        relatedRefs as Array<{ source: ChartTrackSource; id: string }>,
+      )
+    } else {
+      toggleGroup(source, trackId, groupIds)
+    }
   }
 
   const iconSvg = (w: number) => (

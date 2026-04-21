@@ -169,6 +169,12 @@ export interface Database {
         Update: Partial<Pick<SavedMixRow, 'user_id' | 'mix_id'>>
         Relationships: DbRelationship[]
       }
+      saved_chart_tracks: {
+        Row: SavedChartTrackRow
+        Insert: Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id'>
+        Update: Partial<Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id'>>
+        Relationships: DbRelationship[]
+      }
       favorite_events: {
         Row: FavoriteEventRow
         Insert: Pick<FavoriteEventRow, 'user_id' | 'event_id'>
@@ -273,6 +279,14 @@ export interface SavedMixRow extends Record<string, unknown> {
   id: string
   user_id: string
   mix_id: string
+  created_at: string
+}
+
+export interface SavedChartTrackRow extends Record<string, unknown> {
+  id: string
+  user_id: string
+  track_source: 'chart' | 'featured' | 'vinyl'
+  track_id: string
   created_at: string
 }
 

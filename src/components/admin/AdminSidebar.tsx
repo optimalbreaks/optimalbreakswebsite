@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { key: 'blog', label: 'Blog', icon: '✎', path: '/blog' },
   { key: 'scenes', label: 'Escenas', icon: '☰', path: '/scenes' },
   { key: 'mixes', label: 'Mixes', icon: '▶', path: '/mixes' },
+  { key: 'tracks', label: 'Tracks', icon: '♪', path: '/tracks' },
   { key: 'history', label: 'Historia', icon: '↻', path: '/history' },
   { key: 'agent', label: 'Agentes IA', icon: '⚙', path: '/agent' },
 ]
