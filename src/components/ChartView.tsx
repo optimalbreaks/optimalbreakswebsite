@@ -1071,7 +1071,15 @@ export default function ChartView({
   }
 
   const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
-  const latestWeekDate = weeks[0]?.edition.week_date ?? ''
+  // Las ediciones del chart se pueden crear vacías a principios de semana y
+  // rellenarse a mitad de semana. Mientras estén a 0 temas NO se muestran en
+  // «40 Breaks Vitales» para no confundir al visitante (ver conversación
+  // usuario 2026-04-21: semana del 20/04 con 0 temas).
+  const weeksWithTracks = weeks.filter((w) => w.tracks.length > 0)
+  // `latestWeekDate` marca qué semana recibe la insignia «ACTUAL». Lo sacamos
+  // de `weeksWithTracks` (no de `weeks`) para que, si la semana más reciente
+  // está vacía y por tanto oculta, la insignia caiga en la última con datos.
+  const latestWeekDate = weeksWithTracks[0]?.edition.week_date ?? ''
 
   // ---- Grupos canónicos ----
   // Una misma canción puede aparecer en varias semanas del chart (40 Breaks) o
@@ -1279,7 +1287,7 @@ export default function ChartView({
         </header>
 
         <div className="flex flex-col gap-2 px-2 sm:px-0">
-          {weeks.map((bundle, index) => {
+          {weeksWithTracks.map((bundle, index) => {
             const { edition, tracks } = bundle
             const isLatest = edition.week_date === latestWeekDate
             const description = lang === 'es' ? edition.description_es : edition.description_en
