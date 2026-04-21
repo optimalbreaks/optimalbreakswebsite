@@ -343,27 +343,29 @@ export async function GET(request: NextRequest) {
     embed_url: string | null
   }>
 
-  const missingArtistIds = Array.from(
-    new Set(mixesRows.filter((m) => !m.image_url && m.artist_id).map((m) => m.artist_id as string)),
+  // El buscador siempre usa la foto del artista para mixes (ver bucle
+  // abajo), asi que precargamos TODOS los artist_id presentes (no sólo
+  // los mixes sin image_url).
+  const mixArtistIds = Array.from(
+    new Set(mixesRows.filter((m) => m.artist_id).map((m) => m.artist_id as string)),
   )
   const artistImageById = new Map<string, { slug: string; image_url: string | null }>()
-  if (missingArtistIds.length) {
+  if (mixArtistIds.length) {
     const { data: artistFallbacks } = await supabase
       .from('artists')
       .select('id, slug, image_url')
-      .in('id', missingArtistIds)
+      .in('id', mixArtistIds)
     for (const a of artistFallbacks || []) {
       artistImageById.set(a.id, { slug: a.slug, image_url: a.image_url ?? null })
     }
   }
 
-  // Como último recurso (mix sin image_url y sin artist_id resoluble), busca por nombre.
+  // Mixes sin artist_id resoluble: los buscamos por nombre en la tabla artists.
   const missingNames = Array.from(
     new Set(
       mixesRows
         .filter(
           (m) =>
-            !m.image_url &&
             (!m.artist_id || !artistImageById.has(m.artist_id)) &&
             (m.artist_name || '').trim().length > 0,
         )
@@ -400,8 +402,12 @@ export async function GET(request: NextRequest) {
 
   for (const m of mixesRows) {
     const parts = [m.artist_name, m.year ? String(m.year) : null].filter(Boolean)
-    let image: string | null = m.image_url ?? null
-    if (!image && m.artist_id) {
+    // En el buscador, las portadas propias de mixes (SoundCloud, Mixcloud,
+    // YouTube) se ignoran a proposito: vienen de dominios cross-origin
+    // que next/image no sirve y el resultado era rotura visual. Usamos
+    // siempre la foto del artista vinculado y, si no hay, el disco OB.
+    let image: string | null = null
+    if (m.artist_id) {
       const a = artistImageById.get(m.artist_id)
       image = displayArtistImageUrl(a?.slug, a?.image_url ?? null) ?? null
     }
@@ -410,7 +416,6 @@ export async function GET(request: NextRequest) {
       const a = key ? artistImageByLowerName.get(key) : null
       image = displayArtistImageUrl(a?.slug, a?.image_url ?? null) ?? null
     }
-    // Sin portada propia ni artista resoluble: disco OB en vez de YouTube.
     if (!image) image = FALLBACK_IMAGE
     results.push({
       type: 'mix',
