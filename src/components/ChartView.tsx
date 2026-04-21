@@ -1139,7 +1139,14 @@ export default function ChartView({
         push(k, { source: 'featured', id: f.id })
       }
       for (const v of w.vinyl) {
-        const k = normUrl(v.discogs_url) || fallbackKey(v.title, v.mix_name, artistsToCsv(v.artists))
+        // OJO: `discogs_url` NO identifica una canción, sino el RELEASE completo
+        // del vinilo (con varias pistas A1/A2/B1…). Si agrupásemos por ahí,
+        // guardar "A1" marcaría "A2" como ya guardada y al añadir B1 el toggle
+        // de grupo la consideraría "desmarcar todo" y borraría las anteriores
+        // (bug reportado: "a partir de 3 YouTubes me borra la última").
+        // Lo único realmente único por canción es el `youtube_url`; si no
+        // existe, caemos a título+mix+artistas (que además incluye la cara/posición).
+        const k = normUrl(v.youtube_url) || fallbackKey(v.title, v.mix_name, artistsToCsv(v.artists))
         push(k, { source: 'vinyl', id: v.id })
       }
     }

@@ -256,16 +256,28 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       // Dedupe: una canción sólo puede aparecer una vez aunque esté guardada
       // desde varias fuentes (p.ej. 40 Breaks + Novedades). Clave canónica:
       // URL externa normalizada; fallback a título+mix+artistas.
-      const canonicalKey = (t: UnifiedTrack) => {
-        const u = (t.external_url || '').trim().toLowerCase()
-        if (u) {
-          try {
-            const url = new URL(u)
-            return `${url.host}${url.pathname.replace(/\/$/, '')}`
-          } catch {
-            return u.replace(/[?#].*$/, '').replace(/\/$/, '')
-          }
+      //
+      // IMPORTANTE para vinyl: `external_url` es la URL de Discogs, que
+      // identifica el RELEASE completo (muchas canciones del mismo LP
+      // comparten discogs_url). Si lo usásemos como clave, todas las pistas
+      // del mismo vinilo colapsarían en una sola fila. Para vinyl usamos el
+      // `youtube_url`, que sí es único por canción.
+      const normalizeUrl = (u: string) => {
+        try {
+          const url = new URL(u)
+          return `${url.host}${url.pathname.replace(/\/$/, '')}`
+        } catch {
+          return u.replace(/[?#].*$/, '').replace(/\/$/, '')
         }
+      }
+      const canonicalKey = (t: UnifiedTrack) => {
+        if (t.source === 'vinyl') {
+          const yt = (t.youtube_url || '').trim().toLowerCase()
+          if (yt) return normalizeUrl(yt)
+          return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
+        }
+        const u = (t.external_url || '').trim().toLowerCase()
+        if (u) return normalizeUrl(u)
         return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
       }
       const byCanon = new Map<string, UnifiedTrack>()
