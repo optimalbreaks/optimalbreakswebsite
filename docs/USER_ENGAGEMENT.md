@@ -1,8 +1,30 @@
-# User engagement: favorites, ratings, attendance (Optimal Breaks)
+# User engagement: favorites, ratings, attendance, **saved chart tracks** (Optimal Breaks)
 
-What a **logged-in user** can do today on the public site and in **My Breaks** (`/[lang]/dashboard`), and which Supabase tables are involved.
+What a **logged-in user** can do today on the public site and in **My Breaks**, and which Supabase tables are involved.
 
 **ES:** Misma información; términos UI en inglés/español según diccionario del sitio.
+
+---
+
+## Page layout (post-refactor, April 2026)
+
+Originally "My Breaks" was a single page at `/[lang]/dashboard` with in-page tabs. It was split into an **overview page** plus one dedicated route per section so each feature can grow without the page becoming a monster:
+
+| Route | What it shows |
+|-------|----------------|
+| `/[lang]/dashboard` | Overview cards + **Breakbeat DNA** analysis + recent activity |
+| `/[lang]/mi-cuenta/favoritos` | Favorite artists, labels and events |
+| `/[lang]/mi-cuenta/vistos-en-vivo` | Artist sightings (seen live) |
+| `/[lang]/mi-cuenta/eventos` | Event attendance + favorite events |
+| `/[lang]/mi-cuenta/resenas` | Reviews: sightings + event ratings combined |
+| `/[lang]/mi-cuenta/mixes` | Saved mixes |
+| `/[lang]/mi-cuenta/tracks` | **My Tracks** (see dedicated section below) |
+| `/[lang]/mi-cuenta/perfil` | Profile editing, sign-out |
+| `/[lang]/u/<userId>/tracks` | Public, read-only version of another user's My Tracks (shareable URL) |
+
+Legacy `/[lang]/dashboard?tab=xxx` URLs redirect to the new ones via `DashboardLegacyRedirect`.
+
+The shared shell lives in `src/components/user/UserSectionShell.tsx`; each section is one component in `src/components/user/*Section.tsx`.
 
 ---
 
@@ -12,59 +34,136 @@ What a **logged-in user** can do today on the public site and in **My Breaks** (
 
 | Stars? | Entity | Why |
 |--------|--------|-----|
-| **Yes** | **Artists** | “I saw this DJ / act **live**” (`artist_sightings`). |
-| **Yes** | **Events** | “I **went to** this party / festival / club night” (`event_ratings`). |
+| **Yes** | **Artists** | "I saw this DJ / act **live**" (`artist_sightings`). |
+| **Yes** | **Events** | "I **went to** this party / festival / club night" (`event_ratings`). |
 
-**No star ratings** (bookmark / save only): **labels**, **mixes**, **blog posts**, **scenes**, etc. Favorites and saves stay **binary** (heart / save) — no numeric score. The schema and UI intentionally do **not** add `label_ratings` or `mix_ratings`.
+**No star ratings** (bookmark / save only): **labels**, **mixes**, **blog posts**, **scenes**, **chart tracks**. Favorites and saves stay **binary** (heart / save / +) — no numeric score.
 
 ---
 
 ## Summary table
 
-| Action | Stars / score? | Where in UI | Table(s) | Notes |
-|--------|----------------|-------------|----------|--------|
-| **Favorite artist** | No (binary) | Heart on artist page; Favorites tab | `favorite_artists` | Drives “fan” aggregate via `FanCounter` |
-| **Favorite label** | No | Heart on label page | `favorite_labels` | “Followers” count |
+| Action | Stars? | Where in UI | Table(s) | Notes |
+|--------|--------|-------------|----------|--------|
+| **Favorite artist** | No | Heart on artist page; Favorites section | `favorite_artists` | Drives "fan" aggregate via `FanCounter` |
+| **Favorite label** | No | Heart on label page | `favorite_labels` | "Followers" count |
 | **Favorite event** | No | Heart on event cards/pages | `favorite_events` | |
-| **Save mix** | No | Save on mixes | `saved_mixes` | “Saves” count |
-| **Seen live (artist)** | **Yes — 1–5** + optional text | **SEEN LIVE** on artist page (`SeenLiveButton`) | `artist_sightings` | Date, venue, city, country, event name, **rating**, **notes** |
-| **Event status** | No (state machine) | Event page: wishlist / going / attended | `event_attendance` | Toggles only; “interested” style counts for events |
-| **Rate + review event** | **Yes — 1–5** + optional review text | Event page: **`EventReviewButton`** (RATE / VALORAR) — same modal pattern as seen live: date, venue, city, country, stars, notes | `event_ratings` (+ optional `attended_at`, `venue`, `city`, `country` after migration **`032_event_ratings_attendance_fields.sql`**) | Dashboard **Reviews** + **Events**; apply migration on Supabase or upsert errors |
-| **Breakbeat profile** | N/A | Dashboard Overview (generate) | `breakbeat_profiles` (if used) | Needs enough favorites to unlock |
+| **Save mix** | No | Save on mixes | `saved_mixes` | "Saves" count |
+| **Save chart track** | No | "+" button on every chart row (`SaveTrackButton`) | `saved_chart_tracks` (**migration 053**) | Appears on *40 Breaks Vitales*, *New Releases* and *Retro Vinyl Picks*; see below |
+| **Seen live (artist)** | **Yes — 1–5** + optional text | **SEEN LIVE** on artist page (`SeenLiveButton`) | `artist_sightings` | Date, venue, city, country, event name, rating, notes |
+| **Event status** | No (state machine) | Event page: wishlist / going / attended | `event_attendance` | Toggles only; "interested" style counts for events |
+| **Rate + review event** | **Yes — 1–5** + optional review | Event page: `EventReviewButton` (RATE / VALORAR) | `event_ratings` (migration **`032_event_ratings_attendance_fields.sql`**) | Dashboard Reviews + Events |
+| **Breakbeat profile** | N/A | Dashboard Overview (generate) | `breakbeat_profiles` | Needs enough favorites **and** saved tracks to unlock |
 
 ---
 
-## Artist: “seen live” (valoración con estrellas)
+## My Tracks — saved chart tracks
+
+### Database
+
+**Migration:** `supabase/migrations/053_saved_chart_tracks.sql`.
+
+Polymorphic table — one row per (user, track source, track id):
+
+```
+saved_chart_tracks (
+  id UUID PK,
+  user_id UUID → profiles(id) ON DELETE CASCADE,
+  track_source TEXT CHECK IN ('chart','featured','vinyl'),
+  track_id UUID,           -- id in chart_tracks | chart_featured_tracks | chart_vinyl_tracks
+  created_at TIMESTAMPTZ,
+  UNIQUE (user_id, track_source, track_id)
+)
+```
+
+RLS keeps each user's rows private (SELECT / INSERT / DELETE). The shared read endpoint (`/api/public/user-tracks`) bypasses RLS via the **service-role** Supabase client; the payload is read-only.
+
+### Canonical grouping (song = Beatport URL = Bandcamp URL = **YouTube video**)
+
+A track can physically exist as **several rows in several tables** (same song promoted as a "New Release" one week and then hitting the "40 Breaks Vitales" top 40 another week). It can also appear as several rows in the **same** table (same song in multiple weekly editions of *40 Breaks Vitales*).
+
+To the user it's a single song. The canonical key used both in `ChartView.tsx` (`canonicalGroups`) and in `TracksSection.tsx` (dedupe on `/mi-cuenta/tracks`) is:
+
+| Source | Canonical key |
+|--------|---------------|
+| `chart` (40 Breaks Vitales) | Normalized `beatport_url` (`host + pathname`, no querystring) |
+| `featured` (New Releases) | Normalized `link_url` (Beatport/Bandcamp) |
+| `vinyl` (Retro Vinyl Picks) | **YouTube video ID** (`yt:<id>`, extracted with `extractYouTubeId`) — **NOT** `discogs_url`, because a Discogs release typically contains several songs (A1/A2/B1…) and every song is its own row. Grouping by `discogs_url` would collapse distinct songs and cause the button to treat them as one. |
+
+Fallback when URL/ID is missing: `nm:<title>|<mix>|<artists csv>` (all lowercased).
+
+Why this matters: the SAVE button uses the canonical group to decide "is this saved?" (`isAnySavedRefs`) and on toggle it either **inserts one row** (the currently visible one) or **deletes every row in the group** via a single batched query. A bad key either:
+
+- **Merges distinct songs** → saving A deletes B that was saved earlier (reported bug: *"adding more than 3 YouTubes and the last one disappears"*).
+- **Leaves the group fragmented** → saving a track in "40 Breaks" does not mark it as saved when it also appears as "New Release".
+
+### Hook: `useSavedChartTracks()` (`src/hooks/useUserData.ts`)
+
+Module-level **shared store** (`savedChartTracksCache` + listener set) — every mount of the hook across the app reads/writes the same in-memory state so that clicking a "+" button on one row instantly repaints **every other row** that represents the same song (tracks often repeat across chart weeks on the same page).
+
+Exported API:
+
+- `saved` (array of `{track_source, track_id, created_at}`)
+- `isSaved(source, id)` — single row
+- `isAnySaved(source, ids)` — same-source group (legacy)
+- `isAnySavedRefs(refs)` — cross-source group using `{source,id}` refs
+- `toggle(source, id)` — basic insert/delete
+- `toggleGroup(source, primaryId, groupIds)` — same-source batch
+- `toggleGroupRefs(primary, refs)` — cross-source batch (current default)
+- `refetch()`
+
+### UI components
+
+- **`SaveTrackButton`** (`src/components/SaveTrackButton.tsx`) — the "+" / ✓ pill. Props: `source`, `trackId`, `relatedRefs` (polymorphic, preferred) or `relatedIds` (same-source legacy). Shows a sign-up modal when the viewer is not logged in.
+- **`TracksSection`** (`src/components/user/TracksSection.tsx`) — lives at `/mi-cuenta/tracks` and also powers `/u/<user>/tracks` via the `publicPayload` prop. Features: sorting by artist / title / release date / added date; "Play all" + "Shuffle" for audio-only tracks; filter by **actual playback source** (Beatport / Bandcamp / YouTube) multi-select; seekable progress bar + prev/next; cross-source dedupe; COPY URL button to share your list.
+
+### Admin stats
+
+`/[lang]/administrator/tracks` aggregates saves **across all users** and displays:
+
+- Total saved rows; totals per source; distinct canonical tracks.
+- Top tracks / labels / artists by save count (dedupe by canonical key so cross-source copies count once).
+
+Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/administrator/tracks/page.tsx`. Also summarised on the main admin dashboard (`/administrator`) as a stat card.
+
+---
+
+## Artist: "seen live" (valoración con estrellas)
 
 - **Component:** `src/components/SeenLiveButton.tsx`
 - **Hook:** `useArtistSightings()` in `src/hooks/useUserData.ts`
-- User records that they saw the artist live, with **mandatory 1–5 rating** and optional fields (date, venue, event, **notes**).
-- Listed under dashboard **SEEN LIVE / VISTOS EN VIVO** and duplicated for readability under **REVIEWS / RESEÑAS** (with event reviews).
+- User records that they saw the artist live, with **mandatory 1–5 rating** and optional fields (date, venue, event, notes).
+- Listed under **SEEN LIVE / VISTOS EN VIVO** (`/mi-cuenta/vistos-en-vivo`) and aggregated with event ratings under **REVIEWS / RESEÑAS** (`/mi-cuenta/resenas`).
 
 ---
 
 ## Event: attendance vs rating
 
 - **Attendance** (no numeric score): `EventStatusButton` → `event_attendance` (`wishlist` | `attending` | `attended`).
-- **Rating + review:** `EventReviewButton` on **`/[lang]/events/[slug]`** calls `useEventRatings().rate(eventId, { rating, review, attended_at, venue, city, country })` → `event_ratings`. One row per user per event (upsert).
+- **Rating + review:** `EventReviewButton` on `/[lang]/events/[slug]` calls `useEventRatings().rate(eventId, { rating, review, attended_at, venue, city, country })` → `event_ratings`. One row per user per event (upsert).
 
 ---
 
-## Favorites vs ratings
+## Favorites vs ratings vs saves
 
-- **Favorite** = bookmark / “I like this” — no stars (artists, labels, events, mixes).
-- **Rating (1–5)** = **only** **seen live** (artist) and **event review** (event) — both are “I was there” experiences.
+- **Favorite** = bookmark / "I like this" — no stars (artists, labels, events, mixes).
+- **Save** = "+" on a chart row — adds it to My Tracks, no stars (`saved_chart_tracks`).
+- **Rating (1–5)** = **only** **seen live** (artist) and **event review** (event) — both are "I was there" experiences.
 
 ---
 
 ## Fan counter
 
-- `FanCounter` shows aggregate counts from favorites / attendance (events), not an extra user action.
+`FanCounter` shows aggregate counts from favorites / attendance (events), not an extra user action.
 
 ---
 
 ## Code pointers
 
-- `src/hooks/useUserData.ts` — favorites, sightings, attendance, event ratings
-- `src/app/[lang]/dashboard/DashboardClient.tsx` — tabs: Overview, Favorites, Seen Live, Events, Reviews, Mixes, Profile
-- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`
+- `src/hooks/useUserData.ts` — every user hook: favorites, sightings, attendance, event ratings, **saved_chart_tracks** (`useSavedChartTracks`).
+- `src/components/user/` — `UserSectionShell`, `OverviewSection`, `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, `ProfileSection`.
+- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**.
+- `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl) and hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`.
+- `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists.
+- `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
+- `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.

@@ -215,7 +215,33 @@ Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**. Ret
 
 ### My Breaks / interacción del usuario
 
-Política: **valoración con estrellas solo en artistas y eventos** (experiencias presenciales). **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración **`032_event_ratings_attendance_fields.sql`** para campos extra en valoración de eventos.
+Política: **valoración con estrellas solo en artistas y eventos** (experiencias presenciales). Todo lo demás es **favorito / guardar** binario. **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración **`032_event_ratings_attendance_fields.sql`** para campos extra en valoración de eventos.
+
+**Arquitectura de páginas (abril 2026):** antes era un único `/[lang]/dashboard` con pestañas; ahora hay **página de resumen** (`/[lang]/dashboard`: tarjetas + análisis *Breakbeat DNA*) y **una página por sección** bajo `/[lang]/mi-cuenta/<slug>` (`favoritos`, `vistos-en-vivo`, `eventos`, `resenas`, `mixes`, `tracks`, `perfil`). Las URLs antiguas `?tab=xxx` redirigen automáticamente. La shell compartida vive en `src/components/user/UserSectionShell.tsx`.
+
+**Mis Tracks (`/[lang]/mi-cuenta/tracks`)**. Nueva sección que permite guardar canciones de cualquiera de los tres bloques de `/charts`:
+
+- **40 Breaks Vitales** (`chart_tracks`, preview Beatport)
+- **New Releases** (`chart_featured_tracks`, Beatport o Bandcamp)
+- **Retro Vinyl Picks** (`chart_vinyl_tracks`, reproducción por YouTube)
+
+La tabla **`saved_chart_tracks`** (migración **`053_saved_chart_tracks.sql`**) es **polimórfica**: guarda `(user_id, track_source, track_id)` con `track_source ∈ {chart, featured, vinyl}` y `UNIQUE (user, source, id)`. El botón **`SaveTrackButton`** ("+") aparece en cada fila del chart; por dentro usa `useSavedChartTracks()` (`src/hooks/useUserData.ts`), que es un **store compartido a nivel módulo** — todas las instancias del botón en la página se pintan sincronizadas sin round-trips.
+
+**Agrupación canónica (canción = URL externa = vídeo de YouTube).** Una misma canción puede aparecer como fila en varias tablas y varias semanas. Para que el botón trate todas esas filas como la misma canción (y al desmarcar borre todas), `ChartView.tsx` y `TracksSection.tsx` construyen una **clave canónica** por track:
+
+| Fuente | Clave |
+|--------|-------|
+| `chart` | URL de Beatport normalizada (`host + pathname`) |
+| `featured` | URL externa normalizada |
+| `vinyl` | **ID del vídeo de YouTube** (`yt:<id>` vía `extractYouTubeId`). **No** se usa `discogs_url`, porque un mismo release de Discogs contiene varias pistas (A1/A2/B1…) y cada una es su propia fila. Usar la URL de Discogs colapsaría canciones distintas en un único grupo y al guardar una, las demás se pisarían. |
+
+Fallback cuando falta URL: `nm:<título>|<mix>|<artistas>`.
+
+**Página /mi-cuenta/tracks:** orden por artista / título / fecha de release / fecha de guardado; **Play all** + **Shuffle** sobre la cola de audio (Beatport + Bandcamp); filtro **multiselección** por fuente real de reproducción (Beatport / Bandcamp / YouTube); barra de progreso *seekable* con prev/next; dedupe cruzado para que una canción aparezca **una sola vez** aunque esté guardada desde dos fuentes. Los vídeos de YouTube se reproducen con el embed aparte (iframe de YouTube requiere pantalla visible), así que no entran en la cola de audio.
+
+**Lista pública compartible**: botón **🔗 COMPARTIR** copia `/[lang]/u/<userId>/tracks`. Otra persona puede reproducir, ordenar y filtrar esa lista en modo lectura; puede guardar canciones pero **a su propia cuenta**, no edita la del dueño. Si no tiene sesión, sale modal para registrarse. Backend: `/api/public/user-tracks` (service-role, bypasa RLS).
+
+**Admin Tracks.** `/[lang]/administrator/tracks` agrega las estadísticas de guardado de **todos los usuarios** (top tracks, sellos, artistas) aplicando la misma dedupe canónica que la UI de usuario. Backend: `src/app/api/admin/tracks/route.ts`. Resumen en el dashboard del admin.
 
 ### Vistas de listado (grande / compacto / lista)
 

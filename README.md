@@ -55,7 +55,13 @@ This split helps the site feel both like an archive and like a living magazine w
 
 ## User engagement (My Breaks)
 
-Logged-in users get **My Breaks** (`/[lang]/dashboard`): favorites, attendance, saved mixes, and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars). **Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields.
+Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated pages under `/[lang]/mi-cuenta/<slug>`): favorites, attendance, saved mixes, **saved chart tracks** (`/mi-cuenta/tracks`), and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars).
+
+**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migration **`053_saved_chart_tracks.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl`).
+
+**Public shared tracks page.** Every user can copy a public URL from `/mi-cuenta/tracks` (🔗 COMPARTIR button) that points to `/[lang]/u/<userId>/tracks`. Third parties can browse, sort, filter and play that list but cannot edit it; their own SAVE button adds tracks to **their** list (and shows a sign-up modal when logged out). Backed by `/api/public/user-tracks` using the service-role Supabase client to bypass RLS for read-only.
+
+**Admin Tracks dashboard.** `/[lang]/administrator/tracks` aggregates saved-track stats (top tracks, labels and artists) across **all users**, applying the same cross-source canonical dedupe as the user UI so a track saved from both "40 Breaks Vitales" and "New Releases" counts once. Source: `/api/admin/tracks/route.ts`.
 
 ---
 
@@ -499,7 +505,9 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Scenes | `/[lang]/scenes` | Breakbeat by territory; **three listing views** |
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views**; year / platform / search filters; **lazy embeds** (see *Directory listing views* → Mixes) |
-| Dashboard | `/[lang]/dashboard` | User area (favorites, sightings, events, mixes, profile) — requires login |
+| Dashboard (overview) | `/[lang]/dashboard` | User area landing: summary cards + Breakbeat DNA — requires login |
+| My account — sections | `/[lang]/mi-cuenta/favoritos`, `.../vistos-en-vivo`, `.../eventos`, `.../resenas`, `.../mixes`, `.../tracks`, `.../perfil` | Each user area lives in its own page (no in-page tabs). Legacy `/dashboard?tab=xxx` URLs redirect automatically. |
+| My Tracks (public) | `/[lang]/u/<userId>/tracks` | Shareable read-only version of a user's saved-tracks list; third-party visitors can play/sort/filter and save tracks to **their** list. |
 | Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
 | Reset password | `/[lang]/reset-password` | New password after recovery email; session created by `/{lang}/auth/confirm` (or repaired via `/{lang}/auth/callback` → confirm) |
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
