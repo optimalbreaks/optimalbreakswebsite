@@ -188,20 +188,24 @@ export async function GET(request: NextRequest) {
     // 40 Breaks Vitales (Beatport weekly chart). `artist_names_text` es la
     // denormalización STORED de `artists[].name` (migración 051) para que
     // `ilike` pille también el nombre del artista dentro del JSONB.
-    // Orden por `position` ASC: cuando una canción está en varias ediciones,
-    // al deduplicar en JS nos quedamos con la que tuvo mejor posición.
-    // Limit alto porque con duplicados muchas filas caen en el dedupe.
+    // Orden: primero `chart_editions.week_date` DESC (edición más reciente
+    // = la que /charts renderiza más arriba, garantizando que el deep-link
+    // `#chart-row-<id>` encuentre el DOM), después `position` ASC. Así el
+    // dedupe se queda con la fila VISIBLE más reciente del tema, no con
+    // una edición antigua que no esté renderizada.
     supabase
       .from('chart_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, artists, position')
+      .select('id, title, mix_name, label, artwork_url, release_year, artists, position, chart_editions!inner(week_date)')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .order('position', { ascending: true })
       .limit(40),
-    // New Releases (semana "fenomenal")
+    // New Releases (semana "fenomenal"): igual, priorizar edición más reciente.
     supabase
       .from('chart_featured_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, artists')
+      .select('id, title, mix_name, label, artwork_url, release_year, artists, chart_editions!inner(week_date)')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(30),
     // Retro Vinyl Picks (Discogs)
     supabase
