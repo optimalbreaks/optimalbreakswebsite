@@ -185,23 +185,27 @@ export async function GET(request: NextRequest) {
     // 40 Breaks Vitales (Beatport weekly chart). `artist_names_text` es la
     // denormalización STORED de `artists[].name` (migración 051) para que
     // `ilike` pille también el nombre del artista dentro del JSONB.
+    // Orden por `position` ASC: cuando una canción está en varias ediciones,
+    // al deduplicar en JS nos quedamos con la que tuvo mejor posición.
+    // Limit alto porque con duplicados muchas filas caen en el dedupe.
     supabase
       .from('chart_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, artists')
+      .select('id, title, mix_name, label, artwork_url, release_year, artists, position')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
-      .limit(12),
+      .order('position', { ascending: true })
+      .limit(40),
     // New Releases (semana "fenomenal")
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artwork_url, release_year, artists')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
-      .limit(10),
+      .limit(30),
     // Retro Vinyl Picks (Discogs)
     supabase
       .from('chart_vinyl_tracks')
       .select('id, title, mix_name, label, artwork_url, year, artists')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
-      .limit(12),
+      .limit(20),
   ])
 
   const results: SearchResult[] = []
@@ -509,6 +513,20 @@ export async function GET(request: NextRequest) {
     artists: unknown
   }
 
+  // Una misma canción puede aparecer varias veces: en distintas ediciones
+  // semanales (40 Breaks vitales cambia pero los temas se repiten varias
+  // semanas) y, a veces, en más de un chart (también en New Releases).
+  // Deduplicamos por firma `titulo|mix|artistas` normalizada, dando
+  // prioridad al chart principal para elegir qué entrada se queda:
+  //   1º chart_tracks (40 Breaks vitales) — más relevante
+  //   2º chart_featured_tracks (New Releases)
+  //   3º chart_vinyl_tracks (Retro Vinyl)
+  // Los `for` se ejecutan en ese orden, así que el primero que entra
+  // marca la clave y los siguientes con la misma firma se descartan.
+  const seenTrackKeys = new Set<string>()
+  const normForKey = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim()
+
   function pushTrack(
     row: TrackRow,
     kind: 'chart' | 'featured' | 'vinyl',
@@ -517,6 +535,9 @@ export async function GET(request: NextRequest) {
     const mix = (row.mix_name || '').trim()
     const fullTitle = mix ? `${title} (${mix})` : title
     const artistsText = artistsToText(row.artists)
+    const key = `${normForKey(title)}|${normForKey(mix)}|${normForKey(artistsText)}`
+    if (seenTrackKeys.has(key)) return
+    seenTrackKeys.add(key)
     const yr = kind === 'vinyl' ? row.year : row.release_year
     const parts = [
       trackTypeLabel[kind],
