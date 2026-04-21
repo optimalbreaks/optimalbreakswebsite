@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'f4.bcbits.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
     ],
   },
 

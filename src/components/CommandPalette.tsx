@@ -456,18 +456,16 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                                   unoptimized={false}
                                 />
                               ) : (
-                                <div
-                                  className="absolute inset-0 flex items-center justify-center"
-                                  style={{
-                                    fontFamily: "'Unbounded', sans-serif",
-                                    fontWeight: 900,
-                                    fontSize: '12px',
-                                    color: 'var(--ink)',
-                                  }}
+                                // Fallback: favicon Optimal Breaks. Lo usan mixes sin
+                                // portada ni artista resoluble, vinyl picks sin artwork, etc.
+                                // Es mejor que una letra neutra porque refuerza marca.
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src="/favicon.svg"
+                                  alt=""
+                                  className="absolute inset-[20%] w-[60%] h-[60%] object-contain opacity-80"
                                   aria-hidden
-                                >
-                                  {r.title.slice(0, 1).toUpperCase()}
-                                </div>
+                                />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
