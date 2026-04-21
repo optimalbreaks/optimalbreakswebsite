@@ -175,13 +175,14 @@ export default async function ChartsPage({
     }
     // Nos quedamos sólo con las claves que aparecen en el chart: el componente
     // cliente no necesita el catálogo completo y así el HTML enviado es menor.
+    // `Array.from` en vez de `for..of` sobre el `Set` por el target TS del repo.
     const filtered: Record<string, string> = {}
-    for (const key of chartArtistNames) {
+    Array.from(chartArtistNames).forEach((key) => {
       if (artistSlugMap[key]) filtered[key] = artistSlugMap[key]
       // Fallback: artista en BD sin "the" pero en chart con "the" (o viceversa).
       const withoutThe = key.startsWith('the ') ? key.slice(4) : `the ${key}`
       if (!filtered[key] && artistSlugMap[withoutThe]) filtered[key] = artistSlugMap[withoutThe]
-    }
+    })
     artistSlugMap = filtered
   }
 
