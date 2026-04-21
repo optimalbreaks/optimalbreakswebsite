@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { createBrowserSupabase } from '@/lib/supabase'
 import CommandPalette from '@/components/CommandPalette'
 import type { Locale } from '@/lib/i18n-config'
 import type { User } from '@supabase/supabase-js'
@@ -41,9 +42,24 @@ function FlagGB({ className }: { className?: string }) {
 
 function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; variant: 'desktop' | 'mobile' }) {
   const [open, setOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const { signOut } = useAuth()
   const es = lang === 'es'
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const sb = createBrowserSupabase()
+      const { data } = await sb
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (!cancelled) setIsAdmin((data as { role?: string } | null)?.role === 'admin')
+    })()
+    return () => { cancelled = true }
+  }, [user.id])
 
   useEffect(() => {
     if (!open) return
@@ -70,6 +86,19 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
       role="menu"
       className="absolute right-0 top-full min-w-[200px] bg-[var(--paper)] border-4 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] z-[200]"
     >
+      {isAdmin && (
+        <Link
+          role="menuitem"
+          href={`/${lang}/administrator`}
+          onClick={() => setOpen(false)}
+          className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] hover:text-[var(--red)]"
+          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
+          title={es ? 'Panel de administración' : 'Admin panel'}
+        >
+          <span aria-hidden style={{ marginRight: 6 }}>★</span>
+          {es ? 'Panel admin' : 'Admin panel'}
+        </Link>
+      )}
       <Link
         role="menuitem"
         href={`/${lang}/mi-cuenta/tracks`}
