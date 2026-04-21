@@ -247,7 +247,10 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
       arr.push(r)
       map.set(r.type, arr)
     }
-    const order: ResultType[] = ['artist', 'label', 'event', 'track', 'mix', 'scene', 'post', 'organization']
+    // Orden intencionalmente orientado a "favorecer escuchar música":
+    // artistas → tracks → mixes van primero (todo lo sonoro). Después
+    // eventos (upcoming, con fecha amarilla), sellos y contexto.
+    const order: ResultType[] = ['artist', 'track', 'mix', 'event', 'label', 'scene', 'post', 'organization']
     const out: { type: ResultType; items: SearchResult[] }[] = []
     for (const t of order) {
       const items = map.get(t)

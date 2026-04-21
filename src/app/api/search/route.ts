@@ -106,15 +106,15 @@ export async function GET(request: NextRequest) {
 
   const base = (path: string) => `/${lang}${path}`
 
-  // Hoy en formato YYYY-MM-DD (UTC). Sirve para dividir eventos entre
-  // "futuros/hoy" (prioritarios en el buscador) y "pasados".
+  // Hoy en formato YYYY-MM-DD (UTC). El buscador sólo muestra eventos
+  // futuros — los pasados siguen accesibles por /events pero no deben
+  // inflar los resultados del palette con el paso de los años.
   const todayIso = new Date().toISOString().slice(0, 10)
 
   const [
     artistsRes,
     labelsRes,
     eventsUpcomingRes,
-    eventsPastRes,
     mixesRes,
     scenesRes,
     postsRes,
@@ -133,11 +133,12 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, founded_year')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(8),
-    // EVENTOS FUTUROS (prioritarios): los próximos son los que más
-    // ayudan al descubrimiento, así que van arriba del bloque de eventos.
-    // `lineup_text` es una columna STORED GENERATED (migración 052) que
-    // aplana `lineup text[]` + `stages[].lineup[]`, por eso buscar
-    // "plump djs" encuentra un evento donde ese DJ figura en el cartel.
+    // SOLO EVENTOS FUTUROS: el buscador favorece la acción (ir al evento,
+    // comprar entrada). Los pasados siguen disponibles desde /events pero
+    // no ensucian los resultados del palette. `lineup_text` es una columna
+    // STORED GENERATED (migración 052) que aplana `lineup text[]` +
+    // `stages[].lineup[]`, por eso buscar "plump djs" encuentra un evento
+    // donde ese DJ figura en el cartel.
     supabase
       .from('events')
       .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
@@ -146,18 +147,7 @@ export async function GET(request: NextRequest) {
       )
       .gte('date_start', todayIso)
       .order('date_start', { ascending: true })
-      .limit(10),
-    // EVENTOS PASADOS: complementan el resultado (los icónicos siguen
-    // siendo relevantes), pero siempre detrás de los futuros.
-    supabase
-      .from('events')
-      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
-      .or(
-        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
-      )
-      .lt('date_start', todayIso)
-      .order('date_start', { ascending: false })
-      .limit(6),
+      .limit(12),
     supabase
       .from('mixes')
       .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url')
@@ -263,21 +253,20 @@ export async function GET(request: NextRequest) {
     return Array.from(out)
   }
 
-  const pushEvent = (
-    e: {
-      id: string
-      slug: string
-      name: string | null
-      image_url: string | null
-      city: string | null
-      country: string | null
-      date_start: string | null
-      event_type: string | null
-      lineup?: unknown
-      stages?: unknown
-    },
-    upcoming: boolean,
-  ) => {
+  type EventRow = {
+    id: string
+    slug: string
+    name: string | null
+    image_url: string | null
+    city: string | null
+    country: string | null
+    date_start: string | null
+    event_type: string | null
+    lineup?: unknown
+    stages?: unknown
+  }
+
+  for (const e of (eventsUpcomingRes.data || []) as EventRow[]) {
     const place = [e.city, e.country].filter(Boolean).join(', ')
     // Si la búsqueda no hizo match en name/slug/city, muy probablemente
     // viene del line-up: destacamos los nombres coincidentes en el subtítulo
@@ -297,8 +286,8 @@ export async function GET(request: NextRequest) {
         lineupHitText = `Line-up: ${shown}${rest}`
       }
     }
-    // La fecha ya se pinta como chip con color en la UI, así que la
-    // omitimos del subtítulo para no repetir información.
+    // La fecha ya se pinta como chip con color amarillo en la UI, así
+    // que la omitimos del subtítulo para no repetir información.
     const parts = [place, lineupHitText].filter(Boolean)
     results.push({
       type: 'event',
@@ -309,16 +298,8 @@ export async function GET(request: NextRequest) {
       image_url: (e.image_url as string | null) ?? null,
       href: base(`/events/${e.slug}`),
       date_start: e.date_start ?? null,
-      is_upcoming: upcoming,
+      is_upcoming: true,
     })
-  }
-
-  // Primero los futuros (ordenados asc por fecha), luego los pasados.
-  for (const e of (eventsUpcomingRes.data || []) as Parameters<typeof pushEvent>[0][]) {
-    pushEvent(e, true)
-  }
-  for (const e of (eventsPastRes.data || []) as Parameters<typeof pushEvent>[0][]) {
-    pushEvent(e, false)
   }
 
   // Para mixes sin portada propia: usa la foto del artista vinculado
