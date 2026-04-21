@@ -456,14 +456,15 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                                   unoptimized={false}
                                 />
                               ) : (
-                                // Fallback: favicon Optimal Breaks. Lo usan mixes sin
-                                // portada ni artista resoluble, vinyl picks sin artwork, etc.
-                                // Es mejor que una letra neutra porque refuerza marca.
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src="/favicon.svg"
+                                // Fallback: disco de vinilo con logo OB. Lo usan
+                                // mixes/tracks sin portada ni artista resoluble.
+                                // Mantiene coherencia visual con el resto del sitio.
+                                <Image
+                                  src="/images/disco_optimal_breaks.webp"
                                   alt=""
-                                  className="absolute inset-[20%] w-[60%] h-[60%] object-contain opacity-80"
+                                  fill
+                                  sizes="40px"
+                                  className="object-cover"
                                   aria-hidden
                                 />
                               )}

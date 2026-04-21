@@ -393,21 +393,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  function youtubeIdFromUrl(urlStr: string | null | undefined): string | null {
-    if (!urlStr) return null
-    const patterns = [
-      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-    ]
-    for (const re of patterns) {
-      const mm = urlStr.match(re)
-      if (mm) return mm[1]
-    }
-    return null
-  }
+  // Fallback visual para mixes (y otros resultados sin imagen):
+  // disco de vinilo con logo OB. Mejor que un placeholder neutro o la
+  // thumbnail de YouTube (que viene cross-origin con peor resolucion).
+  const FALLBACK_IMAGE = '/images/disco_optimal_breaks.webp'
 
   for (const m of mixesRows) {
     const parts = [m.artist_name, m.year ? String(m.year) : null].filter(Boolean)
@@ -421,10 +410,8 @@ export async function GET(request: NextRequest) {
       const a = key ? artistImageByLowerName.get(key) : null
       image = displayArtistImageUrl(a?.slug, a?.image_url ?? null) ?? null
     }
-    if (!image) {
-      const ytId = youtubeIdFromUrl(m.video_url) || youtubeIdFromUrl(m.embed_url)
-      if (ytId) image = `https://i.ytimg.com/vi/${ytId}/mqdefault.jpg`
-    }
+    // Sin portada propia ni artista resoluble: disco OB en vez de YouTube.
+    if (!image) image = FALLBACK_IMAGE
     results.push({
       type: 'mix',
       id: m.id,
