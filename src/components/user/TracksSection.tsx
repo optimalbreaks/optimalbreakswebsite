@@ -263,6 +263,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       // del mismo vinilo colapsarían en una sola fila. Para vinyl usamos el
       // `youtube_url`, que sí es único por canción.
       const normalizeUrl = (u: string) => {
+        // YouTube: el ID del vídeo está en la querystring (?v=…); host+pathname
+        // colapsaría todos los watch?v=… en la misma clave. Usamos el ID.
+        const yt = extractYouTubeId(u)
+        if (yt) return `yt:${yt}`
         try {
           const url = new URL(u)
           return `${url.host}${url.pathname.replace(/\/$/, '')}`

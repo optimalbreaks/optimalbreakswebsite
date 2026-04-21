@@ -1102,6 +1102,11 @@ export default function ChartView({
     const normUrl = (u: string | null | undefined) => {
       const s = (u || '').trim().toLowerCase()
       if (!s) return ''
+      // YouTube: el ID del vídeo va en la querystring (?v=…), así que
+      // `host + pathname` NO distingue entre dos vídeos distintos. Usamos
+      // el ID como clave.
+      const yt = extractYouTubeId(s)
+      if (yt) return `yt:${yt}`
       try {
         const url = new URL(s)
         return `${url.host}${url.pathname.replace(/\/$/, '')}`
