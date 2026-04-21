@@ -8,6 +8,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { displayImageUrl } from '@/lib/image-url'
 import type { Locale } from '@/lib/i18n-config'
@@ -442,17 +443,17 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                           >
                             <div className="relative w-10 h-10 shrink-0 border-2 border-[var(--ink)] bg-[var(--paper-dark)] overflow-hidden">
                               {img ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
+                                // next/image en vez de <img>: el proxy /_next/image
+                                // sirve la imagen desde el mismo origin y respeta CSP.
+                                // Con <img> directo el artwork de Beatport se bloqueaba
+                                // cross-origin, aunque el CDN respondiera 200.
+                                <Image
                                   src={img}
                                   alt=""
-                                  className="absolute inset-0 w-full h-full object-cover"
-                                  loading="lazy"
-                                  decoding="async"
-                                  // Beatport CDN (artwork de tracks) bloquea hotlink por Referer.
-                                  // Con no-referrer el navegador no envía cabecera y el CDN sirve.
-                                  // En /charts funciona porque allí usamos next/image que re-sirve server-side.
-                                  referrerPolicy="no-referrer"
+                                  fill
+                                  sizes="40px"
+                                  className="object-cover"
+                                  unoptimized={false}
                                 />
                               ) : (
                                 <div
