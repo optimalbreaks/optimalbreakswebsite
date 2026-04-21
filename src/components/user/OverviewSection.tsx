@@ -14,6 +14,7 @@ import {
   useArtistSightings,
   useEventAttendance,
   useBreakbeatProfile,
+  useSavedChartTracks,
 } from '@/hooks/useUserData'
 import type { BreakbeatProfileStats } from '@/types/database'
 import { decadeBucketToMidYearLabel } from '@/lib/breakbeat-profile-era'
@@ -210,10 +211,19 @@ function BreakbeatDNA({ lang }: { lang: string }) {
   const { favorites: favLabels } = useFavoriteLabels()
   const { favorites: favEvents } = useFavoriteEvents()
   const { saved: savedMixes } = useSavedMixes()
+  const { saved: savedTracks } = useSavedChartTracks()
   const { attendance } = useEventAttendance()
   const [error, setError] = useState('')
 
-  const totalInputs = favArtists.length + favLabels.length + favEvents.length + savedMixes.length + Object.keys(attendance).length
+  // "Mis Tracks" entra aquí: cada track guardada cuenta como una entrada más
+  // para desbloquear el ADN y también se envía al endpoint para moldearlo.
+  const totalInputs =
+    favArtists.length +
+    favLabels.length +
+    favEvents.length +
+    savedMixes.length +
+    savedTracks.length +
+    Object.keys(attendance).length
   const hasEnoughData = totalInputs >= 3
 
   const generate = async () => {
@@ -286,11 +296,11 @@ function BreakbeatDNA({ lang }: { lang: string }) {
           <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'var(--dim)', lineHeight: 1.7 }}>
             {!hasEnoughData
               ? (es
-                ? `Necesitas al menos 3 favoritos (artistas, sellos, eventos o mixes) para desbloquear tu perfil. Llevas ${totalInputs}.`
-                : `You need at least 3 favorites (artists, labels, events or mixes) to unlock your profile. You have ${totalInputs}.`)
+                ? `Necesitas al menos 3 elementos guardados (artistas, sellos, eventos, mixes o tracks) para desbloquear tu perfil. Llevas ${totalInputs}.`
+                : `You need at least 3 saved items (artists, labels, events, mixes or tracks) to unlock your profile. You have ${totalInputs}.`)
               : (es
-                ? 'Pulsa "ANALIZAR MI PERFIL" y nuestra IA analizará tus gustos breakbeateros: subgéneros, países, épocas, eventos y mixes.'
-                : 'Press "ANALYZE MY PROFILE" and our AI will analyze your breakbeat taste: subgenres, countries, eras, events and mixes.')
+                ? 'Pulsa "ANALIZAR MI PERFIL" y nuestra IA analizará tus gustos breakbeateros: subgéneros, países, épocas, eventos, mixes y tracks guardadas.'
+                : 'Press "ANALYZE MY PROFILE" and our AI will analyze your breakbeat taste: subgenres, countries, eras, events, mixes and saved tracks.')
             }
           </p>
         </div>

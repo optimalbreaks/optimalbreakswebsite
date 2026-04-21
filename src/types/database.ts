@@ -385,6 +385,16 @@ export interface BreakbeatProfileStats {
   sample_events?: string[]
   sample_mixes?: string[]
   sample_tracks?: string[]
+  /** Tracks que el usuario ha guardado explícitamente en "Mis Tracks"
+   *  (chart_tracks | chart_featured_tracks | chart_vinyl_tracks), formateadas
+   *  como "Artista — Título (año) [fuente]". */
+  sample_saved_chart_tracks?: string[]
+  /** Sellos que aparecen en las tracks guardadas del usuario, con conteo. */
+  saved_track_labels?: { name: string; count: number }[]
+  /** Artistas que aparecen en las tracks guardadas del usuario, con conteo. */
+  saved_track_artists?: { name: string; count: number }[]
+  /** Total de tracks guardadas en "Mis Tracks". */
+  saved_chart_tracks_count?: number
   sample_artist_releases?: string[]
   sample_label_releases?: string[]
   sample_label_artists?: string[]

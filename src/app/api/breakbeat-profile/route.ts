@@ -52,6 +52,22 @@ type MixProfileInput = {
   duration_minutes?: number | null
 }
 
+/**
+ * Track guardado por el usuario en "Mis Tracks". Unificamos las tres fuentes
+ * polimórficas (chart_tracks, chart_featured_tracks, chart_vinyl_tracks) en un
+ * único shape para que la lectura del ADN breakbeatero trate por igual a las
+ * tracks del Top 40, a las new releases y a las selecciones de retro-vinilo.
+ */
+type ChartTrackProfileInput = {
+  source: 'chart' | 'featured' | 'vinyl'
+  title: string
+  mix_name: string
+  artist_names: string[]
+  label: string
+  year: number | null
+  bpm: number | null
+}
+
 async function getAuthenticatedUser() {
   const cookieStore = await cookies()
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -178,6 +194,42 @@ function mixTasteForDataBlock(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
     .join(', ')
 }
 
+/**
+ * Etiqueta natural por fuente de track guardada.
+ * Nada de `chart_featured_tracks` visible al usuario: se traduce siempre.
+ */
+function formatChartTrackSource(source: ChartTrackProfileInput['source'], lang: 'es' | 'en'): string {
+  const map: Record<ChartTrackProfileInput['source'], { es: string; en: string }> = {
+    chart: { es: 'top semanal', en: 'weekly top' },
+    featured: { es: 'new release', en: 'new release' },
+    vinyl: { es: 'vinilo retro', en: 'retro vinyl' },
+  }
+  const row = map[source] || { es: 'track guardado', en: 'saved track' }
+  return lang === 'es' ? row.es : row.en
+}
+
+/**
+ * Línea compacta de track para el prompt:
+ *   "DJ Icey — Escape (1997) [vinilo retro]"
+ * Evita duplicar el artista cuando el título ya lo incluye.
+ */
+function chartTrackContextLine(t: ChartTrackProfileInput, lang: 'es' | 'en'): string {
+  const title = [t.title, t.mix_name].filter(Boolean).join(' — ')
+  const artistStr = t.artist_names.filter(Boolean).join(', ')
+  const year = t.year != null ? ` (${t.year})` : ''
+  const sourceLabel = ` [${formatChartTrackSource(t.source, lang)}]`
+  const label = t.label ? `, ${t.label}` : ''
+  if (artistStr && title) {
+    const tl = title.toLowerCase()
+    const al = artistStr.toLowerCase()
+    if (tl === al || tl.startsWith(`${al} —`) || tl.startsWith(`${al} -`)) {
+      return `${title}${year}${label}${sourceLabel}`
+    }
+    return `${artistStr} — ${title}${year}${label}${sourceLabel}`
+  }
+  return `${artistStr || title}${year}${label}${sourceLabel}`
+}
+
 function mixContextLine(m: MixProfileInput): string {
   const artist = (m.artist_name || '').trim()
   let title = (m.title || '').trim()
@@ -241,6 +293,7 @@ function computeStats(
   labels: LabelProfileInput[],
   events: EventProfileInput[],
   mixes: MixProfileInput[],
+  chartTracks: ChartTrackProfileInput[] = [],
 ): BreakbeatProfileStats {
   const styleCounts: Record<string, number> = {}
   const countryCounts: Record<string, number> = {}
@@ -314,6 +367,52 @@ function computeStats(
     }
   }
 
+  // =============================================
+  // TRACKS GUARDADAS POR EL USUARIO (Mis Tracks)
+  // =============================================
+  // Las tracks refuerzan con fuerza:
+  //   - el histograma de años (especialmente la sección de retro-vinilo: 80s/90s reales)
+  //   - los sellos (muchas tracks cargan label textual aunque no tengamos FK al sello)
+  //   - la firma de artistas recurrentes (crate-digging vs. one-off)
+  const trackLabelCounts: Record<string, number> = {}
+  const trackLabelDisplay: Record<string, string> = {}
+  const trackArtistCounts: Record<string, number> = {}
+  const trackArtistDisplay: Record<string, string> = {}
+  for (const t of chartTracks) {
+    if (t.year) {
+      const decade = `${Math.floor(t.year / 10) * 10}s`
+      eraCounts[decade] = (eraCounts[decade] || 0) + 1
+      bumpYear(t.year)
+    }
+    const lbl = (t.label || '').trim()
+    if (lbl) {
+      const key = lbl.toLowerCase()
+      trackLabelCounts[key] = (trackLabelCounts[key] || 0) + 1
+      if (!(key in trackLabelDisplay)) trackLabelDisplay[key] = lbl
+    }
+    for (const name of t.artist_names) {
+      const trimmed = (name || '').trim()
+      if (!trimmed) continue
+      const key = trimmed.toLowerCase()
+      trackArtistCounts[key] = (trackArtistCounts[key] || 0) + 1
+      if (!(key in trackArtistDisplay)) trackArtistDisplay[key] = trimmed
+    }
+  }
+
+  const toTopCounts = (
+    counts: Record<string, number>,
+    display: Record<string, string>,
+    limit: number,
+  ): { name: string; count: number }[] => {
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, limit)
+      .map(([k, n]) => ({ name: display[k] || k, count: n }))
+  }
+
+  const savedTrackLabels = toTopCounts(trackLabelCounts, trackLabelDisplay, 8)
+  const savedTrackArtists = toTopCounts(trackArtistCounts, trackArtistDisplay, 8)
+
   const totalEras = Object.values(eraCounts).reduce((a, b) => a + b, 0) || 1
   const eraDistribution: Record<string, number> = {}
   for (const [era, count] of Object.entries(eraCounts)) {
@@ -362,6 +461,13 @@ function computeStats(
     6,
   )
   const sampleMixContexts = takeUniqueNonEmpty(mixes.map((m) => mixContextLine(m)), 6)
+  // Contextos de "Mis Tracks": una lista en ES rica en evidencias para el prompt.
+  // El idioma concreto lo resuelve el prompt al inyectar los datos; aquí dejamos
+  // una única serialización ya legible.
+  const sampleSavedChartTracks = takeUniqueNonEmpty(
+    chartTracks.map((t) => chartTrackContextLine(t, 'es')),
+    10,
+  )
   const dominantEras = topPctEntries(eraDistribution, 5)
   const dominantYears = topYearEntries(yearDistribution, 6)
 
@@ -374,12 +480,17 @@ function computeStats(
     event_profile: { festivals, club_nights: clubNights, countries: Array.from(eventCountries) },
     mix_taste: mixTaste,
     label_decades: labelDecades,
-    total_data_points: artists.length + labels.length + events.length + mixes.length,
+    total_data_points:
+      artists.length + labels.length + events.length + mixes.length + chartTracks.length,
     sample_artists: takeUniqueNonEmpty(artists.map((a) => a.name), 6),
     sample_labels: takeUniqueNonEmpty(labels.map((l) => l.name), 5),
     sample_events: takeUniqueNonEmpty(events.map((e) => e.name), 4),
     sample_mixes: takeUniqueNonEmpty(mixes.map((m) => m.title), 4),
     sample_tracks: sampleTracks,
+    sample_saved_chart_tracks: sampleSavedChartTracks,
+    saved_track_labels: savedTrackLabels,
+    saved_track_artists: savedTrackArtists,
+    saved_chart_tracks_count: chartTracks.length,
     sample_artist_releases: sampleArtistReleases,
     sample_label_releases: sampleLabelReleases,
     sample_label_artists: sampleLabelArtists,
@@ -434,6 +545,14 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
   const eventLineupStr = stats.sample_event_lineup?.join(', ') || ''
   const eventContextsStr = stats.sample_event_contexts?.join(', ') || ''
   const mixContextsStr = stats.sample_mix_contexts?.join(', ') || ''
+  const savedChartTracksStr = stats.sample_saved_chart_tracks?.join(' | ') || ''
+  const savedTrackLabelsStr = (stats.saved_track_labels || [])
+    .map((l) => `${l.name} ×${l.count}`)
+    .join(', ')
+  const savedTrackArtistsStr = (stats.saved_track_artists || [])
+    .map((a) => `${a.name} ×${a.count}`)
+    .join(', ')
+  const savedTracksCount = stats.saved_chart_tracks_count || 0
   const dominantErasStr = (stats.dominant_eras || [])
     .map((d) => `${d.name} (${pctLabel(d.pct)})`)
     .join(', ')
@@ -475,18 +594,19 @@ REGLAS:
 - Debes mencionar al menos una escena, geografía o continuidad cultural si el perfil da pie a ello.
 - Debes mencionar artistas, sellos, eventos o mixes concretos varias veces cuando existan datos.
 - Si existen tracks, releases o lineups, debes citar algunos explícitamente.
+- Si el usuario tiene tracks guardadas en "Mis Tracks" (top semanal, new releases o vinilos retro), DEBES citar varias por título, con artista y, si existe, año. No te inventes tracks que no estén en los datos.
 - Cada párrafo, salvo el último, debe incluir al menos un nombre propio, una década o un año concreto.
 - Estructura obligatoria de los 10 párrafos:
   1) subgéneros + geografía principal;
   2) décadas dominantes y qué lectura cultural sugieren;
-  3) años concretos del histograma y cómo condensan el gusto;
-  4) artistas + tracks esenciales;
+  3) años concretos del histograma y cómo condensan el gusto (incluido el peso que aportan las tracks guardadas, sobre todo los vinilos retro);
+  4) artistas + tracks esenciales (mezcla los essential_tracks de artistas y los tracks guardadas por el usuario en Mis Tracks);
   5) releases de artistas y anclaje temporal del catálogo;
-  6) sellos + lógica de catálogo;
+  6) sellos + lógica de catálogo (incluye los sellos que emergen al contar las tracks guardadas del usuario: un sello que se repite mucho en Mis Tracks es evidencia fuerte);
   7) key artists / key releases de sellos;
   8) mixes guardados: formatos (vídeo largo, radio, club, podcast…) sin nombrar claves internas;
   9) eventos, lineups y contexto de pista o festival;
-  10) síntesis final del perfil, del arquetipo y del tipo de oyente que emerge.
+  10) síntesis final del perfil, del arquetipo y del tipo de oyente que emerge, cruzando gusto en directo, biblioteca de mixes y tracks guardadas.
 - No entregues un texto corto o vago: si no llegas a 3200 caracteres, la respuesta es inválida.
 - No pongas un máximo práctico de longitud si el contexto es rico.
 - No menciones cuántos favoritos o ítems tiene el perfil en total (p. ej. “con 59 datos”): el usuario ya lo ve en la interfaz.
@@ -515,6 +635,9 @@ DATOS DEL PERFIL:
 - Mixes guardados (muestra): ${sampleMixesStr || 'sin datos'}
 - Mixes recomendados desde artistas: ${recommendedMixesStr || 'sin datos'}
 - Contexto de mixes: ${mixContextsStr || 'sin datos'}
+- Tracks guardadas por el usuario en "Mis Tracks" (total ${savedTracksCount}; fuentes entre corchetes = top semanal / new release / vinilo retro): ${savedChartTracksStr || 'sin datos'}
+- Artistas que más se repiten en esas tracks guardadas: ${savedTrackArtistsStr || 'sin datos'}
+- Sellos que más se repiten en esas tracks guardadas: ${savedTrackLabelsStr || 'sin datos'}
 - Pistas de escena inferibles desde los datos: ${sceneHintsStr || 'sin datos suficientes'}
 
 Responde EXACTAMENTE en este formato JSON:
@@ -546,18 +669,19 @@ RULES:
 - You must mention at least one scene, geography or cultural continuity when the profile supports it.
 - You must mention artists, labels, events or mixes by name several times when data exists.
 - If tracks, releases or lineups exist, you must cite some of them explicitly.
+- If the user has saved tracks in "My Tracks" (weekly top, new releases or retro vinyl), you MUST cite several by title, with artist and year when available. Do not invent tracks that are not in the data.
 - Every paragraph except the last must contain at least one proper name, decade or concrete year.
 - Mandatory 10-paragraph structure:
   1) subgenres + main geography;
   2) dominant decades and what cultural reading they suggest;
-  3) concrete years from the histogram and how they condense the taste;
-  4) artists + essential tracks;
+  3) concrete years from the histogram and how they condense the taste (including the weight contributed by the user's saved tracks, especially retro vinyl);
+  4) artists + essential tracks (blend essential_tracks from artists and the tracks the user has saved in My Tracks);
   5) artist releases and temporal anchoring of the catalogue;
-  6) labels + catalogue logic;
+  6) labels + catalogue logic (include the labels that emerge when you count the user's saved tracks: a label that recurs in My Tracks is strong evidence);
   7) label key artists / key releases;
   8) saved mixes: formats (long video, radio, club, podcast…) without naming internal keys;
   9) events, lineups and club or festival context;
-  10) final synthesis of the profile, archetype and listener type that emerges.
+  10) final synthesis of the profile, archetype and listener type that emerges, cross-referencing live taste, mix library and saved tracks.
 - Do not return a short or vague text: if it is below 3200 characters, it is invalid.
 - Do not impose a practical upper limit when the context is rich.
 - Do not mention how many favourites or profile items there are in total (e.g. “with 59 data points”): the user already sees that in the UI.
@@ -586,6 +710,9 @@ PROFILE DATA:
 - Saved mixes (sample): ${sampleMixesStr || 'no data'}
 - Recommended mixes from artists: ${recommendedMixesStr || 'no data'}
 - Mix contexts: ${mixContextsStr || 'no data'}
+- User-saved tracks in "My Tracks" (total ${savedTracksCount}; bracketed label = weekly top / new release / retro vinyl; Spanish labels preserved for consistency): ${savedChartTracksStr || 'no data'}
+- Artists that recur most across those saved tracks: ${savedTrackArtistsStr || 'no data'}
+- Labels that recur most across those saved tracks: ${savedTrackLabelsStr || 'no data'}
 - Scene hints inferred from the data: ${sceneHintsStr || 'not enough data'}
 
 Reply EXACTLY in this JSON format:
@@ -697,6 +824,15 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
   const eventLineup = stats.sample_event_lineup?.slice(0, 8).join(', ') || ''
   const eventContexts = stats.sample_event_contexts?.slice(0, 4).join(', ') || ''
   const mixContexts = stats.sample_mix_contexts?.slice(0, 4).join(', ') || ''
+  const savedChartTracks = stats.sample_saved_chart_tracks?.slice(0, 6).join(' | ') || ''
+  const savedTrackLabels = (stats.saved_track_labels || [])
+    .slice(0, 4)
+    .map((l) => `${l.name} (${l.count})`)
+    .join(', ')
+  const savedTrackArtists = (stats.saved_track_artists || [])
+    .slice(0, 4)
+    .map((a) => `${a.name} (${a.count})`)
+    .join(', ')
   const sceneHints = stats.scene_hints?.slice(0, 2).join(isEs ? '; ' : '; ') || ''
   const mixTasteSummary = Object.entries(stats.mix_taste)
     .sort(([, a], [, b]) => b - a)
@@ -713,8 +849,8 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
     .join(', ')
 
   const text = isEs
-    ? `Lo primero que se ve en tu ADN breakbeatero es un eje concreto entre ${topStyles || topStyle.replace(/_/g, ' ')}, con un peso geográfico claro de ${cName.es || 'tu geografía principal'}. Ese mapa de estilos no es decorativo: condiciona qué tipo de grooves, qué tipo de baterías y qué tipo de cruces con electro o bass aparecen cuando bajas del concepto general al material que realmente escuchas. ${sceneHints ? `Encaja además con pistas de escena como ${sceneHints}.` : 'Aunque no todos los detalles estén cerrados, sí hay una línea de escena reconocible.'}\n\nSobre las décadas, el reparto que marca tu perfil (${topEras || topEra || 'sin un pico claro todavía'}) no es un dato administrativo: en breakbeat, cargar los 90 frente a los 2000 o los 2010 cambia si estás más cerca del big beat y la rave comercial, del nu skool técnico, del progressive breaks o de mutaciones posteriores con más presión de graves. Cuanto más polarizado está ese histograma, más se puede hablar de “canon” frente a mero eclecticismo.\n\nEn años concretos, el histograma refuerza esa lectura${topYears ? `: destacan ${topYears}` : ''}. Esos picos suelen venir de cómo se codifican épocas en artistas, sellos y mixes; sirven para anclar el gusto en fechas que se pueden contrastar con catálogos reales y con momentos históricos del género, en lugar de quedarse en la nostalgia genérica.\n\nCuando aterrizas en nombres, el mapa gana precisión. Si en tus artistas aparecen ${sampleArtists || 'varios nombres concretos'}, y además asoman cortes o referencias como ${sampleTracks || 'temas señalados en tus favoritos'}, tu perfil ya no dice solo “te gusta el breakbeat”: dice desde qué entrada musical te acercas al género y qué tipo de cortes priorizas (anthems, rarezas, cruces con big beat, líneas más club).\n\n${artistReleases ? `Los releases que aparecen en tus datos (${artistReleases}) fijan ese gusto en discos, compilaciones o momentos concretos del catálogo.` : 'Aunque no siempre haya releases detallados en la muestra, la selección de artistas ya dibuja un canon reconocible y argumentable.'} Ahí se ve si tu oído privilegia una época dorada concreta, si rema entre clásicos y material más reciente, o si mezcla ambas cosas con criterio.\n\nLos sellos también ayudan a leer el criterio. ${sampleLabels ? `Cuando guardas sellos como ${sampleLabels},` : 'Cuando el peso de los sellos entra en juego,'} la escucha parece menos impulsiva y más de archivo y continuidad. ${labelDecadesStr ? `La distribución por décadas de fundación (${labelDecadesStr}) sugiere si tu biblioteca mira más a sellos históricos o a operaciones más recientes.` : ''}\n\n${labelArtists || labelReleases ? `${labelArtists ? `Alrededor de esos sellos orbitan nombres como ${labelArtists}.` : ''} ${labelReleases ? `Y releases como ${labelReleases} cierran el círculo entre sello, artista y momento.` : ''} Así se entiende si tu oído va hacia una lógica más rave noventera, más nu skool de los 2000 o más híbrida entre club y bass posterior.` : 'Sin una muestra amplia de key artists o key releases de sellos, la lectura se apoya más en artistas sueltos y en eventos; no es un fallo, solo acota qué tan “de catálogo” se ve el perfil.'}\n\nEn la capa de mixes, lo relevante no es una etiqueta técnica sino el formato de escucha. ${mixTasteSummary ? `En tus guardados pesan: ${mixTasteSummary}.` : mixTasteFallback} ${sampleMixes ? `Ejemplos recientes en títulos: ${sampleMixes}.` : ''}${mixContexts ? ` Y en contexto: ${mixContexts}.` : ''} Eso distingue si te mueves más por sesiones largas en vídeo, por programas de radio, por sets de pista clásicos o por podcasts: son hábitos distintos aunque el género sea el mismo.\n\n${recommendedMixes ? `Los mixes recomendados desde tus artistas (${recommendedMixes}) refuerzan qué tipo de selección te están señalando los propios productores o DJs que sigues.` : 'Cuando no hay mixes recomendados en la muestra, el peso cae más en lo que tú guardas explícitamente.'} ${sampleEvents ? `En eventos entran ${sampleEvents}` : 'Si hay huella de eventos'}${eventContexts ? `, con contextos como ${eventContexts}` : ''}${eventLineup ? `, y en lineups aparecen ${eventLineup}` : ''}: ahí la lectura deja el archivo y habla de sala, festival o noche concreta, con el tipo de público y energía que eso suele implicar.\n\nEn conjunto, te acercas a un perfil ${eventBias}, probablemente entre selector y digger, pero apoyado en evidencias: décadas, años, nombres, sellos y formatos de sesión. Tu gusto no se apoya en una etiqueta amplia: se deja leer en fechas concretas, en artistas concretos, en sellos concretos y en el tipo de material que eliges guardar o al que asistes.`
-    : `The first thing your breakbeat DNA shows is a concrete axis between ${topStyles || topStyle.replace(/_/g, ' ')}, with a clear geographical weight from ${cName.en || 'your main geography'}. That style map is not decorative: it shapes which grooves, which drums and which electro or bass crossovers show up when you move from the general idea to the material you actually listen to. ${sceneHints ? `It also lines up with scene hints such as ${sceneHints}.` : 'Even if every detail is not fully closed, there is still a recognizable scene line behind it.'}\n\nOn decades, the spread in your profile (${topEras || topEra || 'no clear peak yet'}) is not an admin figure: in breakbeat, weighting the 90s versus the 2000s or 2010s shifts whether you sit closer to big beat and commercial rave, technical nu skool, progressive breaks, or later low-end mutations. The more polarised that histogram, the more you can talk about a “canon” rather than vague eclecticism.\n\nConcrete years sharpen the story${topYears ? `: standouts include ${topYears}` : ''}. Those peaks usually come from how eras are encoded across artists, labels and mixes; they anchor taste in dates you can check against real catalogues and genre history instead of generic nostalgia.\n\nOnce you land on names, the map becomes much sharper. If your artists include ${sampleArtists || 'several concrete names'}, and tracks such as ${sampleTracks || 'flagged favourites'} show up, the profile no longer means only “you like breakbeat”: it shows your entry point into the genre and whether you favour anthems, rarities, big-beat crossovers or more club-leaning lines.\n\n${artistReleases ? `Releases in your data (${artistReleases}) pin that taste to specific albums, comps or catalogue moments.` : 'Even when release detail is thin in the sample, the artist picks already sketch an arguable canon.'} That shows whether your ear privileges one golden era, rows between classics and newer material, or mixes both with intent.\n\nLabels also sharpen the reading. ${sampleLabels ? `When you save labels such as ${sampleLabels},` : 'When label weight matters,'} listening feels less impulsive and more archival. ${labelDecadesStr ? `Founding-decade spread (${labelDecadesStr}) hints whether your library leans on historic imprints or newer operations.` : ''}\n\n${labelArtists || labelReleases ? `${labelArtists ? `Those labels connect to names like ${labelArtists}.` : ''} ${labelReleases ? `Releases such as ${labelReleases} close the loop between label, artist and moment.` : ''} That makes it easier to see a 90s rave logic, a 2000s nu skool logic, or a hybrid between club breaks and later bass.` : 'Without a wide sample of label key artists or releases, the reading rests more on standalone artists and events; that is not a flaw, it just limits how “catalogue-driven” the profile looks.'}\n\nOn the mix layer, what matters is listening format, not a database tag. ${mixTasteSummary ? `In your saves, the weighting is: ${mixTasteSummary}.` : mixTasteFallback} ${sampleMixes ? `Examples in titles: ${sampleMixes}.` : ''}${mixContexts ? ` Context: ${mixContexts}.` : ''} That separates long video sessions, radio programming, classic floor sets and podcasts—different habits even when the genre is the same.\n\n${recommendedMixes ? `Recommended mixes from your artists (${recommendedMixes}) reinforce what kind of selection those producers or DJs point you toward.` : 'Without recommended mixes in the sample, more weight falls on what you explicitly save.'} ${sampleEvents ? `Events include ${sampleEvents}` : 'Where events appear'}${eventContexts ? `, with contexts like ${eventContexts}` : ''}${eventLineup ? `, and lineups feature ${eventLineup}` : ''}: the reading leaves the archive and talks about real rooms, festivals or nights and the energy that usually implies.\n\nOverall you lean toward a ${eventBias} profile, probably between selector and digger, but grounded in evidence: decades, years, names, labels and session formats. Your taste is not a broad tag—it reads through concrete dates, concrete artists, concrete labels and the material you choose to save or attend.`
+    ? `Lo primero que se ve en tu ADN breakbeatero es un eje concreto entre ${topStyles || topStyle.replace(/_/g, ' ')}, con un peso geográfico claro de ${cName.es || 'tu geografía principal'}. Ese mapa de estilos no es decorativo: condiciona qué tipo de grooves, qué tipo de baterías y qué tipo de cruces con electro o bass aparecen cuando bajas del concepto general al material que realmente escuchas. ${sceneHints ? `Encaja además con pistas de escena como ${sceneHints}.` : 'Aunque no todos los detalles estén cerrados, sí hay una línea de escena reconocible.'}\n\nSobre las décadas, el reparto que marca tu perfil (${topEras || topEra || 'sin un pico claro todavía'}) no es un dato administrativo: en breakbeat, cargar los 90 frente a los 2000 o los 2010 cambia si estás más cerca del big beat y la rave comercial, del nu skool técnico, del progressive breaks o de mutaciones posteriores con más presión de graves. Cuanto más polarizado está ese histograma, más se puede hablar de “canon” frente a mero eclecticismo.\n\nEn años concretos, el histograma refuerza esa lectura${topYears ? `: destacan ${topYears}` : ''}. Esos picos suelen venir de cómo se codifican épocas en artistas, sellos, mixes y también en las tracks que has guardado (especialmente los vinilos retro, que clavan años reales de los 80 y 90). Sirven para anclar el gusto en fechas que se pueden contrastar con catálogos reales y con momentos históricos del género, en lugar de quedarse en la nostalgia genérica.\n\nCuando aterrizas en nombres, el mapa gana precisión. Si en tus artistas aparecen ${sampleArtists || 'varios nombres concretos'}, y además asoman cortes o referencias como ${sampleTracks || 'temas señalados en tus favoritos'}, tu perfil ya no dice solo “te gusta el breakbeat”: dice desde qué entrada musical te acercas al género y qué tipo de cortes priorizas (anthems, rarezas, cruces con big beat, líneas más club). ${savedChartTracks ? `Y en "Mis Tracks" acabas de fijar la lectura con cortes concretos como ${savedChartTracks}, que son la prueba más directa de qué buscas al escuchar breakbeat semana a semana.` : 'Cuando empieces a guardar tracks desde los charts, los new releases o los vinilos retro, esa lectura se vuelve todavía más precisa.'}\n\n${artistReleases ? `Los releases que aparecen en tus datos (${artistReleases}) fijan ese gusto en discos, compilaciones o momentos concretos del catálogo.` : 'Aunque no siempre haya releases detallados en la muestra, la selección de artistas ya dibuja un canon reconocible y argumentable.'} Ahí se ve si tu oído privilegia una época dorada concreta, si rema entre clásicos y material más reciente, o si mezcla ambas cosas con criterio.\n\nLos sellos también ayudan a leer el criterio. ${sampleLabels ? `Cuando guardas sellos como ${sampleLabels},` : 'Cuando el peso de los sellos entra en juego,'} la escucha parece menos impulsiva y más de archivo y continuidad. ${labelDecadesStr ? `La distribución por décadas de fundación (${labelDecadesStr}) sugiere si tu biblioteca mira más a sellos históricos o a operaciones más recientes.` : ''}${savedTrackLabels ? ` A esto se suman los sellos que más se repiten en tus tracks guardadas: ${savedTrackLabels}. Cuando un mismo sello asoma varias veces en "Mis Tracks" ya no es casualidad, es una apuesta editorial por su sonido.` : ''}${savedTrackArtists ? ` Y entre los artistas recurrentes de esas tracks están ${savedTrackArtists}, con lo que la lectura deja de ser abstracta.` : ''}\n\n${labelArtists || labelReleases ? `${labelArtists ? `Alrededor de esos sellos orbitan nombres como ${labelArtists}.` : ''} ${labelReleases ? `Y releases como ${labelReleases} cierran el círculo entre sello, artista y momento.` : ''} Así se entiende si tu oído va hacia una lógica más rave noventera, más nu skool de los 2000 o más híbrida entre club y bass posterior.` : 'Sin una muestra amplia de key artists o key releases de sellos, la lectura se apoya más en artistas sueltos y en eventos; no es un fallo, solo acota qué tan “de catálogo” se ve el perfil.'}\n\nEn la capa de mixes, lo relevante no es una etiqueta técnica sino el formato de escucha. ${mixTasteSummary ? `En tus guardados pesan: ${mixTasteSummary}.` : mixTasteFallback} ${sampleMixes ? `Ejemplos recientes en títulos: ${sampleMixes}.` : ''}${mixContexts ? ` Y en contexto: ${mixContexts}.` : ''} Eso distingue si te mueves más por sesiones largas en vídeo, por programas de radio, por sets de pista clásicos o por podcasts: son hábitos distintos aunque el género sea el mismo.\n\n${recommendedMixes ? `Los mixes recomendados desde tus artistas (${recommendedMixes}) refuerzan qué tipo de selección te están señalando los propios productores o DJs que sigues.` : 'Cuando no hay mixes recomendados en la muestra, el peso cae más en lo que tú guardas explícitamente.'} ${sampleEvents ? `En eventos entran ${sampleEvents}` : 'Si hay huella de eventos'}${eventContexts ? `, con contextos como ${eventContexts}` : ''}${eventLineup ? `, y en lineups aparecen ${eventLineup}` : ''}: ahí la lectura deja el archivo y habla de sala, festival o noche concreta, con el tipo de público y energía que eso suele implicar.\n\nEn conjunto, te acercas a un perfil ${eventBias}, probablemente entre selector y digger, pero apoyado en evidencias: décadas, años, nombres, sellos y formatos de sesión. Tu gusto no se apoya en una etiqueta amplia: se deja leer en fechas concretas, en artistas concretos, en sellos concretos y en el tipo de material que eliges guardar o al que asistes.`
+    : `The first thing your breakbeat DNA shows is a concrete axis between ${topStyles || topStyle.replace(/_/g, ' ')}, with a clear geographical weight from ${cName.en || 'your main geography'}. That style map is not decorative: it shapes which grooves, which drums and which electro or bass crossovers show up when you move from the general idea to the material you actually listen to. ${sceneHints ? `It also lines up with scene hints such as ${sceneHints}.` : 'Even if every detail is not fully closed, there is still a recognizable scene line behind it.'}\n\nOn decades, the spread in your profile (${topEras || topEra || 'no clear peak yet'}) is not an admin figure: in breakbeat, weighting the 90s versus the 2000s or 2010s shifts whether you sit closer to big beat and commercial rave, technical nu skool, progressive breaks, or later low-end mutations. The more polarised that histogram, the more you can talk about a “canon” rather than vague eclecticism.\n\nConcrete years sharpen the story${topYears ? `: standouts include ${topYears}` : ''}. Those peaks usually come from how eras are encoded across artists, labels, mixes and the tracks you have saved (especially retro vinyl, which pins real 80s and 90s years). They anchor taste in dates you can check against real catalogues and genre history instead of generic nostalgia.\n\nOnce you land on names, the map becomes much sharper. If your artists include ${sampleArtists || 'several concrete names'}, and tracks such as ${sampleTracks || 'flagged favourites'} show up, the profile no longer means only “you like breakbeat”: it shows your entry point into the genre and whether you favour anthems, rarities, big-beat crossovers or more club-leaning lines. ${savedChartTracks ? `And in "My Tracks" you just nailed the reading with concrete cuts like ${savedChartTracks}, which are the most direct evidence of what you look for week after week.` : 'When you start saving tracks from the charts, new releases or retro vinyl, that reading becomes even sharper.'}\n\n${artistReleases ? `Releases in your data (${artistReleases}) pin that taste to specific albums, comps or catalogue moments.` : 'Even when release detail is thin in the sample, the artist picks already sketch an arguable canon.'} That shows whether your ear privileges one golden era, rows between classics and newer material, or mixes both with intent.\n\nLabels also sharpen the reading. ${sampleLabels ? `When you save labels such as ${sampleLabels},` : 'When label weight matters,'} listening feels less impulsive and more archival. ${labelDecadesStr ? `Founding-decade spread (${labelDecadesStr}) hints whether your library leans on historic imprints or newer operations.` : ''}${savedTrackLabels ? ` On top of that, the labels that recur in your saved tracks are ${savedTrackLabels}. When the same label shows up multiple times across "My Tracks" it is no accident: it is a deliberate bet on that sound.` : ''}${savedTrackArtists ? ` And the recurring artists across those tracks include ${savedTrackArtists}, which turns abstract taste into concrete evidence.` : ''}\n\n${labelArtists || labelReleases ? `${labelArtists ? `Those labels connect to names like ${labelArtists}.` : ''} ${labelReleases ? `Releases such as ${labelReleases} close the loop between label, artist and moment.` : ''} That makes it easier to see a 90s rave logic, a 2000s nu skool logic, or a hybrid between club breaks and later bass.` : 'Without a wide sample of label key artists or releases, the reading rests more on standalone artists and events; that is not a flaw, it just limits how “catalogue-driven” the profile looks.'}\n\nOn the mix layer, what matters is listening format, not a database tag. ${mixTasteSummary ? `In your saves, the weighting is: ${mixTasteSummary}.` : mixTasteFallback} ${sampleMixes ? `Examples in titles: ${sampleMixes}.` : ''}${mixContexts ? ` Context: ${mixContexts}.` : ''} That separates long video sessions, radio programming, classic floor sets and podcasts—different habits even when the genre is the same.\n\n${recommendedMixes ? `Recommended mixes from your artists (${recommendedMixes}) reinforce what kind of selection those producers or DJs point you toward.` : 'Without recommended mixes in the sample, more weight falls on what you explicitly save.'} ${sampleEvents ? `Events include ${sampleEvents}` : 'Where events appear'}${eventContexts ? `, with contexts like ${eventContexts}` : ''}${eventLineup ? `, and lineups feature ${eventLineup}` : ''}: the reading leaves the archive and talks about real rooms, festivals or nights and the energy that usually implies.\n\nOverall you lean toward a ${eventBias} profile, probably between selector and digger, but grounded in evidence: decades, years, names, labels and session formats. Your taste is not a broad tag—it reads through concrete dates, concrete artists, concrete labels and the material you choose to save or attend.`
 
   return { text, archetype, method: 'rules' }
 }
@@ -730,12 +866,13 @@ export async function POST(request: NextRequest) {
     const lang: 'es' | 'en' = body.lang === 'en' ? 'en' : 'es'
 
     // Fetch all user data in parallel
-    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes] = await Promise.all([
+    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes, savedTracksRes] = await Promise.all([
       supabase.from('favorite_artists').select('artist_id').eq('user_id', user.id),
       supabase.from('favorite_labels').select('label_id').eq('user_id', user.id),
       supabase.from('event_attendance').select('event_id, status').eq('user_id', user.id),
       supabase.from('favorite_events').select('event_id').eq('user_id', user.id),
       supabase.from('saved_mixes').select('mix_id').eq('user_id', user.id),
+      supabase.from('saved_chart_tracks').select('track_source, track_id').eq('user_id', user.id),
     ])
 
     const artistIds = favArtistsRes.data?.map((d: any) => d.artist_id) || []
@@ -746,19 +883,27 @@ export async function POST(request: NextRequest) {
     ]))
     const mixIds = savedMixesRes.data?.map((d: any) => d.mix_id) || []
 
-    const allIds = [...artistIds, ...labelIds, ...eventIds, ...mixIds]
+    // Desglose polimórfico de "Mis Tracks" por tabla origen.
+    const savedTrackRows: Array<{ track_source: 'chart' | 'featured' | 'vinyl'; track_id: string }> =
+      (savedTracksRes.data as any[])?.map((r: any) => ({ track_source: r.track_source, track_id: r.track_id })) || []
+    const chartTrackIds = savedTrackRows.filter((r) => r.track_source === 'chart').map((r) => r.track_id)
+    const featuredTrackIds = savedTrackRows.filter((r) => r.track_source === 'featured').map((r) => r.track_id)
+    const vinylTrackIds = savedTrackRows.filter((r) => r.track_source === 'vinyl').map((r) => r.track_id)
+    const savedTrackIds = savedTrackRows.map((r) => `track:${r.track_source}:${r.track_id}`)
+
+    const allIds = [...artistIds, ...labelIds, ...eventIds, ...mixIds, ...savedTrackIds]
     if (allIds.length < 3) {
       return NextResponse.json({
         error: lang === 'es'
-          ? 'Necesitas al menos 3 favoritos para generar tu perfil breakbeatero'
-          : 'You need at least 3 favorites to generate your breakbeat profile',
+          ? 'Necesitas al menos 3 elementos guardados (artistas, sellos, eventos, mixes o tracks) para generar tu perfil breakbeatero'
+          : 'You need at least 3 saved items (artists, labels, events, mixes or tracks) to generate your breakbeat profile',
       }, { status: 400 })
     }
 
     const currentHash = hashInputs(allIds)
 
     // Fetch entity details in parallel
-    const [artistsRes, labelsRes, eventsRes, mixesRes] = await Promise.all([
+    const [artistsRes, labelsRes, eventsRes, mixesRes, chartTracksRes, featuredTracksRes, vinylTracksRes] = await Promise.all([
       artistIds.length > 0
         ? supabase.from('artists').select('name, styles, country, era, category, essential_tracks, recommended_mixes, key_releases').in('id', artistIds)
         : { data: [] },
@@ -771,13 +916,70 @@ export async function POST(request: NextRequest) {
       mixIds.length > 0
         ? supabase.from('mixes').select('title, artist_name, mix_type, year, platform, duration_minutes').in('id', mixIds)
         : { data: [] },
+      chartTrackIds.length > 0
+        ? supabase.from('chart_tracks').select('id, title, mix_name, artists, label, bpm, release_year').in('id', chartTrackIds)
+        : { data: [] },
+      featuredTrackIds.length > 0
+        ? supabase.from('chart_featured_tracks').select('id, title, artists, label, release_year').in('id', featuredTrackIds)
+        : { data: [] },
+      vinylTrackIds.length > 0
+        ? supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year').in('id', vinylTrackIds)
+        : { data: [] },
     ])
+
+    /**
+     * Normaliza la columna `artists` (JSONB: [{ name, url?, ... }]) a una lista
+     * plana de strings. Tolerante a null y a elementos malformados.
+     */
+    const artistsToNames = (raw: unknown): string[] => {
+      if (!Array.isArray(raw)) return []
+      return raw
+        .map((a) => {
+          if (!a) return ''
+          if (typeof a === 'string') return a
+          if (typeof a === 'object' && a && 'name' in (a as any)) return String((a as any).name || '')
+          return ''
+        })
+        .map((s) => s.trim())
+        .filter(Boolean)
+    }
+
+    const chartTracksInput: ChartTrackProfileInput[] = [
+      ...((chartTracksRes.data as any[]) || []).map((t) => ({
+        source: 'chart' as const,
+        title: t.title || '',
+        mix_name: t.mix_name || '',
+        artist_names: artistsToNames(t.artists),
+        label: t.label || '',
+        year: t.release_year ?? null,
+        bpm: t.bpm ?? null,
+      })),
+      ...((featuredTracksRes.data as any[]) || []).map((t) => ({
+        source: 'featured' as const,
+        title: t.title || '',
+        mix_name: '',
+        artist_names: artistsToNames(t.artists),
+        label: t.label || '',
+        year: t.release_year ?? null,
+        bpm: null,
+      })),
+      ...((vinylTracksRes.data as any[]) || []).map((t) => ({
+        source: 'vinyl' as const,
+        title: t.title || '',
+        mix_name: t.mix_name || '',
+        artist_names: artistsToNames(t.artists),
+        label: t.label || '',
+        year: t.year ?? null,
+        bpm: null,
+      })),
+    ]
 
     const stats = computeStats(
       (artistsRes.data as any[]) || [],
       (labelsRes.data as any[]) || [],
       (eventsRes.data as any[]) || [],
       (mixesRes.data as any[]) || [],
+      chartTracksInput,
     )
 
     // Generate text in both languages
