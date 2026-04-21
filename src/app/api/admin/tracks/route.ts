@@ -9,10 +9,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 
-type ChartTrackSource = 'chart' | 'featured' | 'vinyl'
+type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 
-type SavedRow = { user_id: string; track_source: ChartTrackSource; track_id: string; created_at: string | null }
+type SavedRow = {
+  user_id: string
+  track_source: ChartTrackSource
+  track_id: string
+  canonical_url: string | null
+  snapshot: Record<string, unknown> | null
+  created_at: string | null
+}
 
 type ChartRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }
 type FeatRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; artwork_url: string | null; link_url: string | null; platform: string | null; sample_url: string | null }
@@ -26,6 +33,8 @@ function artistsToString(a: unknown): string {
 function normalizeUrl(u: string | null | undefined): string {
   const s = (u || '').trim().toLowerCase()
   if (!s) return ''
+  const ytMatch = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-z0-9_-]{11})/i)
+  if (ytMatch) return `yt:${ytMatch[1]}`
   try {
     const url = new URL(s)
     return `${url.host}${url.pathname.replace(/\/$/, '')}`
@@ -69,7 +78,7 @@ export async function GET(request: NextRequest) {
 
   const { data: savedData, error: savedErr } = await sb
     .from('saved_chart_tracks')
-    .select('user_id, track_source, track_id, created_at')
+    .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
 
   const saved = ((savedData as unknown) as SavedRow[]) || []
@@ -119,11 +128,30 @@ export async function GET(request: NextRequest) {
     })
   }
   for (const v of ((vinylRes.data || []) as VinylRow[])) {
-    const canonical_key = normalizeUrl(v.discogs_url) || normalizeUrl(v.youtube_url) || `t:vinyl:${v.id}`
+    const canonical_key = normalizeUrl(v.youtube_url) || `t:vinyl:${v.id}`
     byRefKey.set(`vinyl:${v.id}`, {
       title: v.title, mix_name: v.mix_name, artists: artistsToString(v.artists), label: v.label, year: v.year,
       artwork_url: v.artwork_url, external_url: v.discogs_url || v.youtube_url, playback_kind: 'youtube',
       canonical_key, source: 'vinyl', id: v.id,
+    })
+  }
+
+  // Beatport Top 10: no tiene fila propia. Usamos el snapshot embebido.
+  for (const s of saved) {
+    if (s.track_source !== 'beatport_top') continue
+    const snap = (s.snapshot || {}) as Record<string, unknown>
+    const title = String(snap.title || '')
+    const mix_name = (snap.mix_name as string | null) ?? null
+    const artists = String(snap.artists || '')
+    const label = (snap.label as string | null) ?? null
+    const year = (typeof snap.year === 'number' ? (snap.year as number) : null)
+    const artwork_url = (snap.artwork_url as string | null) ?? null
+    const beatport_url = (snap.beatport_url as string | null) || s.canonical_url
+    const canonical_key = normalizeUrl(beatport_url) || `t:beatport_top:${s.track_id}`
+    byRefKey.set(`beatport_top:${s.track_id}`, {
+      title, mix_name, artists, label, year,
+      artwork_url, external_url: beatport_url, playback_kind: 'beatport',
+      canonical_key, source: 'beatport_top', id: s.track_id,
     })
   }
 

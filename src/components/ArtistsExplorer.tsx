@@ -18,6 +18,32 @@ interface ArtistRow {
   is_featured: boolean
   sort_order: number
   image_url: string | null
+  has_beatport_top?: boolean
+}
+
+/* ─── Beatport Top 10 Badge ─── */
+
+function BeatportBadge({ size = 'sm' }: { size?: 'xs' | 'sm' }) {
+  const isXs = size === 'xs'
+  return (
+    <span
+      className="inline-flex items-center gap-[3px] bg-[var(--red)] text-white border-2 border-[var(--ink)] shrink-0"
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        fontWeight: 900,
+        fontSize: isXs ? '7px' : '8px',
+        letterSpacing: '1px',
+        textTransform: 'uppercase',
+        padding: isXs ? '1px 4px' : '1px 5px',
+        lineHeight: 1.1,
+      }}
+      title="Top 10 Beatport"
+      aria-label="Top 10 Beatport"
+    >
+      <span aria-hidden>★</span>
+      <span>BP10</span>
+    </span>
+  )
 }
 
 interface ArtistDict {
@@ -347,9 +373,10 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
                   </span>
                 ))}
               </div>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 items-center">
                 <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
                 <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
+                {a.has_beatport_top && <span className="ml-auto"><BeatportBadge /></span>}
               </div>
             </div>
           </Link>
@@ -383,8 +410,9 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
                   </span>
                 ))}
               </div>
-              <div className="flex gap-1 mt-1">
+              <div className="flex gap-1 mt-1 items-center">
                 <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{a.country}</span>
+                {a.has_beatport_top && <span className="ml-auto"><BeatportBadge size="xs" /></span>}
               </div>
             </div>
           </Link>
@@ -420,9 +448,10 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
                 ))}
               </div>
             </div>
-            <div className="hidden sm:flex gap-2 shrink-0">
+            <div className="hidden sm:flex gap-2 shrink-0 items-center">
               <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
               <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
+              {a.has_beatport_top && <BeatportBadge />}
             </div>
           </Link>
           <FavoriteButton type="artist" entityId={a.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />

@@ -100,6 +100,7 @@ export default async function LabelDetailPage({ params }: Props) {
                 beatportUrl={label.beatport_url}
                 lang={lang}
                 entityName={label.name}
+                origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
               />
             ) : null}
             {/* CTA destacado a Discogs: fuente rica de info (catálogo completo, artistas, fechas, reviews).

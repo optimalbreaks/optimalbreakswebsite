@@ -9,11 +9,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 
-type ChartTrackSource = 'chart' | 'featured' | 'vinyl'
+type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
 type SavedRow = {
   track_source: ChartTrackSource
   track_id: string
+  canonical_url: string | null
+  snapshot: Record<string, unknown> | null
   created_at: string | null
 }
 
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
 
   const { data: savedData, error: savedErr } = await sb
     .from('saved_chart_tracks')
-    .select('track_source, track_id, created_at')
+    .select('track_source, track_id, canonical_url, snapshot, created_at')
     .eq('user_id', owner.id)
     .order('created_at', { ascending: false })
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })

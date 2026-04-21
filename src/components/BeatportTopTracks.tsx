@@ -7,13 +7,49 @@ import {
   OB_CHART_PLAYALL_BAR_EVENT,
   type AudioClaimSource,
 } from '@/components/DeckAudioProvider'
-import type { BeatportTopTrack } from '@/types/database'
+import SaveTrackButton from '@/components/SaveTrackButton'
+import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
   tracks: BeatportTopTrack[]
   beatportUrl?: string | null
   lang: 'en' | 'es'
   entityName: string
+  /** Contexto "de dónde viene" la canción (artista/sello). Se embebe en el
+   *  snapshot del save para reconstruir la tarjeta en /mi-cuenta/tracks. */
+  origin?: {
+    kind: 'artist' | 'label'
+    id: string
+    slug?: string
+    name?: string
+  }
+}
+
+// Extrae el ID numérico de Beatport de una URL (.../track/<slug>/<id>)
+// Si no puede, devuelve null.
+function extractBeatportTrackId(url: string | null | undefined): string | null {
+  if (!url) return null
+  const m = url.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
+  return m ? m[1] : null
+}
+
+function buildSnapshot(
+  t: BeatportTopTrack,
+  origin?: Props['origin'],
+): SavedChartTrackSnapshot {
+  return {
+    title: t.title,
+    mix_name: t.mix_name || null,
+    artists: t.artists.map((a) => a.name).join(', '),
+    label: t.label || null,
+    year: t.release_year ?? null,
+    bpm: t.bpm ?? null,
+    music_key: t.key || null,
+    artwork_url: t.artwork_url || null,
+    sample_url: t.sample_url || null,
+    beatport_url: t.beatport_url || null,
+    origin,
+  }
 }
 
 function proxyUrl(sampleUrl: string): string {
@@ -58,7 +94,7 @@ type PlayState = {
   index: number
 } | null
 
-export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityName }: Props) {
+export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityName, origin }: Props) {
   const [expanded, setExpanded] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playAll, setPlayAll] = useState<PlayState>(null)
@@ -381,6 +417,16 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                     </div>
 
                     <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                      {t.beatport_url && (
+                        <SaveTrackButton
+                          externalUrl={t.beatport_url}
+                          externalTrackId={extractBeatportTrackId(t.beatport_url) ?? undefined}
+                          canonicalUrl={t.beatport_url}
+                          snapshot={buildSnapshot(t, origin)}
+                          lang={lang}
+                          size="sm"
+                        />
+                      )}
                       {t.sample_url && sampleIdx >= 0 && (
                         <button
                           type="button"

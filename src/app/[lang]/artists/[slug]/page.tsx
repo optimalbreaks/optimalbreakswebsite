@@ -247,6 +247,12 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   beatportUrl={artist.beatport_url}
                   lang={lang}
                   entityName={artist.name_display || artist.name}
+                  origin={{
+                    kind: 'artist',
+                    id: artist.id,
+                    slug: artist.slug,
+                    name: artist.name_display || artist.name,
+                  }}
                 />
               ) : null}
             </div>

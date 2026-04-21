@@ -13,8 +13,21 @@ import Link from 'next/link'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import { i18n } from '@/lib/i18n-config'
+import type { SavedChartTrackSnapshot } from '@/types/database'
 
-interface SaveTrackButtonProps {
+interface SaveTrackButtonPropsBase {
+  size?: 'sm' | 'md'
+  lang?: string
+  className?: string
+  /**
+   * URL canónica (Beatport/Bandcamp/YouTube/Discogs) de la canción. Si se
+   * proporciona, el botón aparece en verde cuando el usuario ya tiene
+   * guardada una canción con la misma URL, aunque proceda de otra fuente.
+   */
+  canonicalUrl?: string | null
+}
+
+type SaveTrackButtonRefMode = SaveTrackButtonPropsBase & {
   source: ChartTrackSource
   trackId: string
   /**
@@ -30,45 +43,81 @@ interface SaveTrackButtonProps {
    * proporciona tiene prioridad sobre `relatedIds`.
    */
   relatedRefs?: Array<{ source: ChartTrackSource; id: string }>
-  size?: 'sm' | 'md'
-  lang?: string
-  className?: string
+  externalUrl?: never
+  snapshot?: never
 }
+
+type SaveTrackButtonUrlMode = SaveTrackButtonPropsBase & {
+  /**
+   * Modo "URL" — para entradas sin fila propia en ninguna tabla de charts
+   * (p.ej. Beatport Top 10 de artistas/sellos, almacenado como JSONB).
+   * El save se guarda como `beatport_top` + snapshot y se deduplica
+   * cross-source por `canonicalUrl`.
+   */
+  externalUrl: string
+  snapshot?: SavedChartTrackSnapshot
+  /** Id estable opcional (p.ej. beatport_id). Por defecto usa la URL normalizada. */
+  externalTrackId?: string
+  source?: never
+  trackId?: never
+  relatedIds?: never
+  relatedRefs?: never
+}
+
+type SaveTrackButtonProps = SaveTrackButtonRefMode | SaveTrackButtonUrlMode
 
 function getLang(pathname: string) {
   const seg = pathname.split('/')[1]
   return i18n.locales.includes(seg as any) ? seg : i18n.defaultLocale
 }
 
-export default function SaveTrackButton({
-  source,
-  trackId,
-  relatedIds,
-  relatedRefs,
-  size = 'sm',
-  lang,
-  className = '',
-}: SaveTrackButtonProps) {
+export default function SaveTrackButton(props: SaveTrackButtonProps) {
+  const {
+    size = 'sm',
+    lang,
+    className = '',
+    canonicalUrl,
+  } = props
+  const isUrlMode = 'externalUrl' in props && !!props.externalUrl
+  const source = isUrlMode ? undefined : (props as SaveTrackButtonRefMode).source
+  const trackId = isUrlMode ? undefined : (props as SaveTrackButtonRefMode).trackId
+  const relatedIds = isUrlMode ? undefined : (props as SaveTrackButtonRefMode).relatedIds
+  const relatedRefs = isUrlMode ? undefined : (props as SaveTrackButtonRefMode).relatedRefs
+  const externalUrl = isUrlMode ? (props as SaveTrackButtonUrlMode).externalUrl : undefined
+  const snapshot = isUrlMode ? (props as SaveTrackButtonUrlMode).snapshot : undefined
+  const externalTrackId = isUrlMode ? (props as SaveTrackButtonUrlMode).externalTrackId : undefined
+
   const pathname = usePathname()
   const resolvedLang = lang || getLang(pathname)
   const { user } = useAuth()
   const {
     isSaved: isSavedFn,
+    isSavedByUrl,
     isAnySaved,
     isAnySavedRefs,
     toggleGroup,
     toggleGroupRefs,
+    toggleByUrl,
   } = useSavedChartTracks()
 
-  const hasRefs = !!(relatedRefs && relatedRefs.length > 0)
-  const hasIds = !!(relatedIds && relatedIds.length > 0)
-  const groupIds = hasIds ? (relatedIds as string[]) : [trackId]
+  const hasRefs = !isUrlMode && !!(relatedRefs && relatedRefs.length > 0)
+  const hasIds = !isUrlMode && !!(relatedIds && relatedIds.length > 0)
+  const groupIds = hasIds ? (relatedIds as string[]) : (trackId ? [trackId] : [])
 
-  const isSaved = hasRefs
-    ? isAnySavedRefs(relatedRefs as Array<{ source: ChartTrackSource; id: string }>)
-    : hasIds
-      ? isAnySaved(source, groupIds)
-      : isSavedFn(source, trackId)
+  // URL match cross-source: si el usuario ya tiene la misma canción (por URL
+  // canónica) guardada desde OTRA lista, el botón aparece en verde aunque
+  // aquí sea una fila/ref que no está en su lista.
+  const matchByUrl = isUrlMode
+    ? isSavedByUrl(externalUrl as string)
+    : (canonicalUrl ? isSavedByUrl(canonicalUrl) : false)
+
+  const isSaved = isUrlMode
+    ? matchByUrl
+    : (hasRefs
+      ? isAnySavedRefs(relatedRefs as Array<{ source: ChartTrackSource; id: string }>)
+      : hasIds
+        ? isAnySaved(source as ChartTrackSource, groupIds)
+        : (trackId ? isSavedFn(source as ChartTrackSource, trackId) : false)) || matchByUrl
   const [showGuest, setShowGuest] = useState(false)
   const [mounted, setMounted] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
@@ -97,13 +146,29 @@ export default function SaveTrackButton({
     e.preventDefault()
     e.stopPropagation()
     if (!isLoggedIn) { setShowGuest(true); return }
+    if (isUrlMode) {
+      toggleByUrl(externalUrl as string, {
+        trackId: externalTrackId,
+        snapshot,
+      })
+      return
+    }
+    // Si el toggle lo dispara una coincidencia por URL canónica (p.ej. este
+    // botón de chart estaba verde sólo porque otra instancia lo guardó), al
+    // hacer click queremos borrar TODAS las coincidencias por URL para que
+    // el botón quede blanco. Usamos toggleByUrl como desempate.
+    if (matchByUrl && canonicalUrl && !(hasRefs ? isAnySavedRefs(relatedRefs as Array<{ source: ChartTrackSource; id: string }>) : (hasIds ? isAnySaved(source as ChartTrackSource, groupIds) : isSavedFn(source as ChartTrackSource, trackId as string)))) {
+      toggleByUrl(canonicalUrl)
+      return
+    }
     if (hasRefs) {
       toggleGroupRefs(
-        { source, id: trackId },
+        { source: source as ChartTrackSource, id: trackId as string },
         relatedRefs as Array<{ source: ChartTrackSource; id: string }>,
+        canonicalUrl ?? null,
       )
     } else {
-      toggleGroup(source, trackId, groupIds)
+      toggleGroup(source as ChartTrackSource, trackId as string, groupIds)
     }
   }
 

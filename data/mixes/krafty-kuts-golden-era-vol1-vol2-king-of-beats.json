@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "krafty-kuts-golden-era-of-breakbeat-vol-1-soundcloud",
+    "title": "Golden Era of Breakbeat Vol. 1 (podcast)",
+    "artist_name": "Krafty Kuts",
+    "description_en": "First volume of Krafty Kuts’ Golden Era of Breakbeat series on SoundCloud: podcast-style session through classic breakbeat territory.",
+    "description_es": "Primer volumen de la serie Golden Era of Breakbeat de Krafty Kuts en SoundCloud: sesión en formato podcast por territorio breakbeat clásico.",
+    "mix_type": "podcast",
+    "year": 2015,
+    "published_at": "2015-10-15T12:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/kraftykuts/krafty-kuts-a-golden-era-of-breakbeat-vol1-podcast-1",
+    "image_url": "https://i1.sndcdn.com/artworks-000132817605-1ovf5v-t500x500.jpg",
+    "is_featured": false
+  },
+  {
+    "slug": "krafty-kuts-golden-era-of-breakbeat-vol-2-mix-only",
+    "title": "Golden Era of Breakbeat Vol. 2 (mix only)",
+    "artist_name": "Krafty Kuts",
+    "description_en": "Second Golden Era of Breakbeat instalment: mix-only cut from Krafty Kuts on SoundCloud.",
+    "description_es": "Segunda entrega de Golden Era of Breakbeat: versión solo mezcla de Krafty Kuts en SoundCloud.",
+    "mix_type": "classic_set",
+    "year": 2019,
+    "published_at": "2019-12-06T12:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/kraftykuts/krafty-kuts-golden-era-of-breakbeat-vol2-mix-only",
+    "image_url": "https://i1.sndcdn.com/artworks-000648035002-0bnrbt-t500x500.jpg",
+    "is_featured": false
+  },
+  {
+    "slug": "krafty-kuts-king-of-the-beats-dj-mix",
+    "title": "King of the Beats DJ mix",
+    "artist_name": "Krafty Kuts",
+    "description_en": "DJ mix from Krafty Kuts celebrating break-driven cuts in a king-of-the-beats spirit (SoundCloud).",
+    "description_es": "Sesión DJ de Krafty Kuts en clave breaks y rey del beat (SoundCloud).",
+    "mix_type": "classic_set",
+    "year": 2022,
+    "published_at": "2022-03-10T12:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/kraftykuts/king-of-the-beats-dj-mix",
+    "image_url": "https://i1.sndcdn.com/artworks-UnaCoBwN3XX6sJ31-wJqZuw-t500x500.jpg",
+    "is_featured": false
+  }
+]

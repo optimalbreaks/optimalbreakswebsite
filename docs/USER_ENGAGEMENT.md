@@ -49,7 +49,7 @@ The shared shell lives in `src/components/user/UserSectionShell.tsx`; each secti
 | **Favorite label** | No | Heart on label page | `favorite_labels` | "Followers" count |
 | **Favorite event** | No | Heart on event cards/pages | `favorite_events` | |
 | **Save mix** | No | Save on mixes | `saved_mixes` | "Saves" count |
-| **Save chart track** | No | "+" button on every chart row (`SaveTrackButton`) | `saved_chart_tracks` (**migration 053**) | Appears on *40 Breaks Vitales*, *New Releases* and *Retro Vinyl Picks*; see below |
+| **Save chart track** | No | "+" button on every chart row (`SaveTrackButton`) | `saved_chart_tracks` (**migration 053** + **054**) | Appears on *40 Breaks Vitales*, *New Releases*, *Retro Vinyl Picks* and the **Beatport Top 10** of artists/labels; see below |
 | **Seen live (artist)** | **Yes — 1–5** + optional text | **SEEN LIVE** on artist page (`SeenLiveButton`) | `artist_sightings` | Date, venue, city, country, event name, rating, notes |
 | **Event status** | No (state machine) | Event page: wishlist / going / attended | `event_attendance` | Toggles only; "interested" style counts for events |
 | **Rate + review event** | **Yes — 1–5** + optional review | Event page: `EventReviewButton` (RATE / VALORAR) | `event_ratings` (migration **`032_event_ratings_attendance_fields.sql`**) | Dashboard Reviews + Events |
@@ -61,7 +61,7 @@ The shared shell lives in `src/components/user/UserSectionShell.tsx`; each secti
 
 ### Database
 
-**Migration:** `supabase/migrations/053_saved_chart_tracks.sql`.
+**Migrations:** `supabase/migrations/053_saved_chart_tracks.sql` and `supabase/migrations/054_saved_chart_tracks_beatport_top.sql`.
 
 Polymorphic table — one row per (user, track source, track id):
 
@@ -69,12 +69,16 @@ Polymorphic table — one row per (user, track source, track id):
 saved_chart_tracks (
   id UUID PK,
   user_id UUID → profiles(id) ON DELETE CASCADE,
-  track_source TEXT CHECK IN ('chart','featured','vinyl'),
-  track_id UUID,           -- id in chart_tracks | chart_featured_tracks | chart_vinyl_tracks
+  track_source TEXT CHECK IN ('chart','featured','vinyl','beatport_top'),
+  track_id TEXT,             -- 053 → UUID; 054 → TEXT (to fit beatport_top ids)
+  canonical_url TEXT NULL,   -- 054 — normalized canonical URL (Beatport / Bandcamp / YouTube / Discogs)
+  snapshot JSONB NULL,       -- 054 — embedded metadata for rows with no source table (e.g. beatport_top)
   created_at TIMESTAMPTZ,
   UNIQUE (user_id, track_source, track_id)
 )
 ```
+
+Migration **054** also **back-fills `canonical_url`** for every pre-existing save by joining each row against its source table (`chart_tracks.beatport_url`, `chart_featured_tracks.link_url`, `chart_vinyl_tracks.youtube_url`). This is what allows the cross-source "already saved" detection to work for rows saved **before** the migration.
 
 RLS keeps each user's rows private (SELECT / INSERT / DELETE). The shared read endpoint (`/api/public/user-tracks`) bypasses RLS via the **service-role** Supabase client; the payload is read-only.
 
@@ -89,6 +93,7 @@ To the user it's a single song. The canonical key used both in `ChartView.tsx` (
 | `chart` (40 Breaks Vitales) | Normalized `beatport_url` (`host + pathname`, no querystring) |
 | `featured` (New Releases) | Normalized `link_url` (Beatport/Bandcamp) |
 | `vinyl` (Retro Vinyl Picks) | **YouTube video ID** (`yt:<id>`, extracted with `extractYouTubeId`) — **NOT** `discogs_url`, because a Discogs release typically contains several songs (A1/A2/B1…) and every song is its own row. Grouping by `discogs_url` would collapse distinct songs and cause the button to treat them as one. |
+| `beatport_top` (artist / label Top 10) | Normalized `beatport_url` (stored as `canonical_url` + `snapshot` in the saved row itself — no source table). |
 
 Fallback when URL/ID is missing: `nm:<title>|<mix>|<artists csv>` (all lowercased).
 
@@ -103,19 +108,25 @@ Module-level **shared store** (`savedChartTracksCache` + listener set) — every
 
 Exported API:
 
-- `saved` (array of `{track_source, track_id, created_at}`)
+- `saved` (array of `{track_source, track_id, canonical_url, snapshot, created_at}`)
 - `isSaved(source, id)` — single row
+- `isSavedByUrl(url)` — **URL-based cross-source check** (used by the Beatport Top 10 "+" on artist/label pages to light up when the same song is already saved from a chart, and vice-versa).
 - `isAnySaved(source, ids)` — same-source group (legacy)
 - `isAnySavedRefs(refs)` — cross-source group using `{source,id}` refs
-- `toggle(source, id)` — basic insert/delete
+- `toggle(source, id, canonicalUrl?)` — basic insert/delete; `canonicalUrl` is stored on insert.
 - `toggleGroup(source, primaryId, groupIds)` — same-source batch
-- `toggleGroupRefs(primary, refs)` — cross-source batch (current default)
+- `toggleGroupRefs(primary, refs, canonicalUrl?)` — cross-source batch (current default)
+- `toggleByUrl(url, { trackId?, snapshot? })` — **URL-based toggle**. If any row already matches by canonical URL it deletes them all; otherwise inserts a `beatport_top` row with `canonical_url = url`, `track_id = trackId || normalized url` and the supplied `snapshot`. Used by the Beatport Top 10 button and by any "+" click that was only green because of a cross-source URL match (not a direct id hit).
 - `refetch()`
 
 ### UI components
 
-- **`SaveTrackButton`** (`src/components/SaveTrackButton.tsx`) — the "+" / ✓ pill. Props: `source`, `trackId`, `relatedRefs` (polymorphic, preferred) or `relatedIds` (same-source legacy). Shows a sign-up modal when the viewer is not logged in.
-- **`TracksSection`** (`src/components/user/TracksSection.tsx`) — lives at `/mi-cuenta/tracks` and also powers `/u/<user>/tracks` via the `publicPayload` prop. Features: sorting by artist / title / release date / added date; "Play all" + "Shuffle" for audio-only tracks; filter by **actual playback source** (Beatport / Bandcamp / YouTube) multi-select; seekable progress bar + prev/next; cross-source dedupe; COPY URL button to share your list.
+- **`SaveTrackButton`** (`src/components/SaveTrackButton.tsx`) — the "+" / ✓ pill. Two modes:
+  - **Ref mode** (charts / featured / vinyl): `source`, `trackId`, `relatedRefs` (polymorphic, preferred) or `relatedIds` (same-source legacy). Optional `canonicalUrl` prop so the button also lights up when the same song is saved from another source purely by URL.
+  - **URL mode** (Beatport Top 10 on artist/label pages): `externalUrl`, `externalTrackId` (numeric Beatport id), `snapshot` (title, artists, label, artwork, bpm, key, sample_url, origin…). Uses `toggleByUrl` so the save is stored as a `beatport_top` row with the snapshot embedded.
+  - Shows a sign-up modal when the viewer is not logged in.
+- **`BeatportTopTracks`** (`src/components/BeatportTopTracks.tsx`) — renders a `SaveTrackButton` in URL mode on every row of the artist/label Top 10 accordion. Snapshot includes an `origin` object (`{kind: 'artist'|'label', id, slug, name}`) so My Tracks can later show where the song came from.
+- **`TracksSection`** (`src/components/user/TracksSection.tsx`) — lives at `/mi-cuenta/tracks` and also powers `/u/<user>/tracks` via the `publicPayload` prop. Hydrates `beatport_top` rows directly from their embedded `snapshot` (no source-table JOIN needed). Features: sorting by artist / title / release date / added date; "Play all" + "Shuffle" for audio-only tracks; filter by **actual playback source** (Beatport / Bandcamp / YouTube) multi-select; seekable progress bar + prev/next; cross-source dedupe; COPY URL button to share your list.
 
 ### Admin stats
 

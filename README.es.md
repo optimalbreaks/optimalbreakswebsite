@@ -225,17 +225,22 @@ Política: **valoración con estrellas solo en artistas y eventos** (experiencia
 - **New Releases** (`chart_featured_tracks`, Beatport o Bandcamp)
 - **Retro Vinyl Picks** (`chart_vinyl_tracks`, reproducción por YouTube)
 
-La tabla **`saved_chart_tracks`** (migración **`053_saved_chart_tracks.sql`**) es **polimórfica**: guarda `(user_id, track_source, track_id)` con `track_source ∈ {chart, featured, vinyl}` y `UNIQUE (user, source, id)`. El botón **`SaveTrackButton`** ("+") aparece en cada fila del chart; por dentro usa `useSavedChartTracks()` (`src/hooks/useUserData.ts`), que es un **store compartido a nivel módulo** — todas las instancias del botón en la página se pintan sincronizadas sin round-trips.
+La tabla **`saved_chart_tracks`** (migraciones **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`**) es **polimórfica**: guarda `(user_id, track_source, track_id)` con `track_source ∈ {chart, featured, vinyl, beatport_top}` y `UNIQUE (user, source, id)`. La migración 054 añade además `canonical_url` (URL normalizada de la canción) y `snapshot` (JSONB) para cubrir casos como el **Top 10 de Beatport** en fichas de artista/sello, que vive como **JSONB** dentro de `artists.beatport_top_tracks` y no tiene fila propia en ninguna tabla de charts. Un backfill del mismo script rellena `canonical_url` para los saves antiguos de `chart / featured / vinyl`.
 
-**Agrupación canónica (canción = URL externa = vídeo de YouTube).** Una misma canción puede aparecer como fila en varias tablas y varias semanas. Para que el botón trate todas esas filas como la misma canción (y al desmarcar borre todas), `ChartView.tsx` y `TracksSection.tsx` construyen una **clave canónica** por track:
+El botón **`SaveTrackButton`** ("+") aparece en cada fila del chart y también en cada fila del **Top 10 de Beatport** en `/[lang]/artists/[slug]` y `/[lang]/labels/[slug]`. Por dentro usa `useSavedChartTracks()` (`src/hooks/useUserData.ts`), que es un **store compartido a nivel módulo** — todas las instancias del botón en la página se pintan sincronizadas sin round-trips.
+
+**Agrupación canónica (canción = URL externa = vídeo de YouTube).** Una misma canción puede aparecer como fila en varias tablas y varias semanas, **o como entrada del Top 10 de un artista / sello**. Para que el botón trate todas esas filas como la misma canción (y al desmarcar borre todas), `ChartView.tsx`, `TracksSection.tsx` y el propio hook construyen una **clave canónica** por track:
 
 | Fuente | Clave |
 |--------|-------|
 | `chart` | URL de Beatport normalizada (`host + pathname`) |
-| `featured` | URL externa normalizada |
+| `featured` | URL externa normalizada (Beatport / Bandcamp) |
 | `vinyl` | **ID del vídeo de YouTube** (`yt:<id>` vía `extractYouTubeId`). **No** se usa `discogs_url`, porque un mismo release de Discogs contiene varias pistas (A1/A2/B1…) y cada una es su propia fila. Usar la URL de Discogs colapsaría canciones distintas en un único grupo y al guardar una, las demás se pisarían. |
+| `beatport_top` | URL de Beatport normalizada del track (almacenada en `canonical_url` + metadatos en `snapshot`; sin fila en ninguna tabla origen). |
 
 Fallback cuando falta URL: `nm:<título>|<mix>|<artistas>`.
+
+**Cross-source real por URL.** El hook expone `isSavedByUrl(url)` y `toggleByUrl(url, {trackId, snapshot})`, usados por el "+" del Top 10 de Beatport: si ya guardaste esa canción desde un chart (40 Breaks / Novedades / Vinilo), el botón aparece ya en verde en el Top 10 **y viceversa**; al desmarcar se borran todas las filas (`chart` + `featured` + `vinyl` + `beatport_top`) que comparten esa URL canónica.
 
 **Página /mi-cuenta/tracks:** orden por artista / título / fecha de release / fecha de guardado; **Play all** + **Shuffle** sobre la cola de audio (Beatport + Bandcamp); filtro **multiselección** por fuente real de reproducción (Beatport / Bandcamp / YouTube); barra de progreso *seekable* con prev/next; dedupe cruzado para que una canción aparezca **una sola vez** aunque esté guardada desde dos fuentes. Los vídeos de YouTube se reproducen con el embed aparte (iframe de YouTube requiere pantalla visible), así que no entran en la cola de audio.
 

@@ -31,7 +31,13 @@ export type PublicTracksPayload = {
     avatar_url: string | null
     country: string | null
   }
-  saved: Array<{ track_source: ChartTrackSource; track_id: string; created_at: string | null }>
+  saved: Array<{
+    track_source: ChartTrackSource
+    track_id: string
+    canonical_url: string | null
+    snapshot: Record<string, any> | null
+    created_at: string | null
+  }>
   tracks: {
     chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }>
     featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null }>
@@ -241,6 +247,29 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           artwork_url: v.artwork_url, external_url: v.discogs_url, external_label: 'DISCOGS',
           youtube_url: v.youtube_url,
           note: lang === 'es' ? v.note_es : v.note_en,
+        })
+      }
+
+      // Beatport Top 10: no hay fila en ninguna tabla de charts — la info
+      // viene embebida en `snapshot` del propio saved_chart_tracks.
+      for (const s of saved) {
+        if (s.track_source !== 'beatport_top') continue
+        const snap = (s.snapshot || {}) as Record<string, any>
+        byKey.set(`beatport_top:${s.track_id}`, {
+          key: `beatport_top:${s.track_id}`,
+          source: 'beatport_top',
+          id: s.track_id,
+          title: snap.title || '',
+          mix_name: snap.mix_name || undefined,
+          artists: snap.artists || '',
+          label: snap.label || undefined,
+          year: snap.year ?? null,
+          bpm: snap.bpm ?? null,
+          music_key: snap.music_key || undefined,
+          artwork_url: snap.artwork_url || null,
+          external_url: snap.beatport_url || s.canonical_url || null,
+          external_label: 'BEATPORT',
+          sample_url: snap.sample_url || null,
         })
       }
 
@@ -779,6 +808,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                          la lista, no al espectador: pasamos solo el ref primario
                          para que el botón opere sobre la lista del visitante. */
                       relatedRefs={!isShared && t.refs && t.refs.length > 1 ? t.refs : undefined}
+                      canonicalUrl={t.external_url || t.youtube_url || null}
                       lang={lang}
                       size="sm"
                     />

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
-type ChartTrackSource = 'chart' | 'featured' | 'vinyl'
+type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
 interface TopTrack {
   canonical_key: string
@@ -97,7 +97,7 @@ export default function AdminTracksPage() {
         className="text-sm text-[var(--ink)]/60 -mt-4 mb-6 max-w-2xl"
         style={{ fontFamily: "'Courier Prime', monospace" }}
       >
-        Ranking de canciones de los charts (40 Breaks, Novedades y Vinilos) que
+        Ranking de canciones (40 Breaks, Novedades, Vinilos y Beatport Top 10) que
         los usuarios están guardando en «Mis Tracks». Se agrupan por URL canónica
         para contar una sola vez aunque el mismo tema aparezca en varios listados.
       </p>

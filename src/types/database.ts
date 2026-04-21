@@ -171,8 +171,11 @@ export interface Database {
       }
       saved_chart_tracks: {
         Row: SavedChartTrackRow
-        Insert: Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id'>
-        Update: Partial<Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id'>>
+        Insert: Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id'> & {
+          canonical_url?: string | null
+          snapshot?: SavedChartTrackSnapshot | null
+        }
+        Update: Partial<Pick<SavedChartTrackRow, 'user_id' | 'track_source' | 'track_id' | 'canonical_url' | 'snapshot'>>
         Relationships: DbRelationship[]
       }
       favorite_events: {
@@ -282,11 +285,33 @@ export interface SavedMixRow extends Record<string, unknown> {
   created_at: string
 }
 
+export interface SavedChartTrackSnapshot {
+  title?: string
+  mix_name?: string | null
+  artists?: string
+  label?: string | null
+  year?: number | null
+  bpm?: number | null
+  music_key?: string | null
+  artwork_url?: string | null
+  sample_url?: string | null
+  beatport_url?: string | null
+  // Contexto opcional (desde dónde se guardó)
+  origin?: {
+    kind: 'artist' | 'label'
+    id: string
+    slug?: string
+    name?: string
+  }
+}
+
 export interface SavedChartTrackRow extends Record<string, unknown> {
   id: string
   user_id: string
-  track_source: 'chart' | 'featured' | 'vinyl'
+  track_source: 'chart' | 'featured' | 'vinyl' | 'beatport_top'
   track_id: string
+  canonical_url: string | null
+  snapshot: SavedChartTrackSnapshot | null
   created_at: string
 }
 

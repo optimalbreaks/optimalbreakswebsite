@@ -386,19 +386,41 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
 }
 
 // =============================================
-// SAVED CHART TRACKS  (polymorphic: chart | featured | vinyl)
-// Stored in saved_chart_tracks (migration 053).
+// SAVED CHART TRACKS  (polymorphic: chart | featured | vinyl | beatport_top)
+// Stored in saved_chart_tracks (migraciones 053 + 054).
 // =============================================
-export type ChartTrackSource = 'chart' | 'featured' | 'vinyl'
+export type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
+
+import type { SavedChartTrackSnapshot } from '@/types/database'
 
 export interface SavedChartTrackRef {
   track_source: ChartTrackSource
   track_id: string
+  canonical_url?: string | null
+  snapshot?: SavedChartTrackSnapshot | null
   created_at?: string
 }
 
 function makeKey(source: ChartTrackSource, id: string) {
   return `${source}:${id}`
+}
+
+// Normaliza URLs para comparar canónicamente entre fuentes distintas.
+// Para YouTube usamos el ID de vídeo (el `watch?v=…` queda en el querystring
+// y un simple `host + pathname` colapsaría todos los vídeos en la misma clave).
+function normalizeCanonicalUrl(u: string | null | undefined): string {
+  const s = (u || '').trim().toLowerCase()
+  if (!s) return ''
+  const ytMatch = s.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-z0-9_-]{11})/i,
+  )
+  if (ytMatch) return `yt:${ytMatch[1]}`
+  try {
+    const url = new URL(s)
+    return `${url.host}${url.pathname.replace(/\/$/, '')}`
+  } catch {
+    return s.replace(/[?#].*$/, '').replace(/\/$/, '')
+  }
 }
 
 // =============================================
@@ -444,7 +466,7 @@ export function useSavedChartTracks() {
     }
     const { data } = await supabase
       .from('saved_chart_tracks')
-      .select('track_source, track_id, created_at')
+      .select('track_source, track_id, canonical_url, snapshot, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
     savedChartTracksUserId = user.id
@@ -465,9 +487,28 @@ export function useSavedChartTracks() {
 
   const savedSet = new Set(saved.map((s) => makeKey(s.track_source, s.track_id)))
 
+  // Set de URLs canónicas de todos los saves del usuario (cualquier fuente).
+  // Se usa para mostrar en verde un botón "+" cuyo Beatport URL coincida con
+  // una canción ya guardada desde otra lista (p.ej. 40 Breaks Vitales vs
+  // Beatport Top 10 de un artista).
+  const savedUrlSet = new Set(
+    saved
+      .map((s) => normalizeCanonicalUrl(s.canonical_url))
+      .filter((s): s is string => !!s),
+  )
+
   const isSaved = (source: ChartTrackSource, id: string) => savedSet.has(makeKey(source, id))
 
-  const toggle = async (source: ChartTrackSource, id: string) => {
+  const isSavedByUrl = (url: string | null | undefined) => {
+    const key = normalizeCanonicalUrl(url)
+    return !!key && savedUrlSet.has(key)
+  }
+
+  const toggle = async (
+    source: ChartTrackSource,
+    id: string,
+    canonicalUrl?: string | null,
+  ) => {
     if (!user || !id) return
     if (isSaved(source, id)) {
       await supabase
@@ -478,12 +519,18 @@ export function useSavedChartTracks() {
         .eq('track_id', id)
       setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
     } else {
+      const insert: Record<string, unknown> = { user_id: user.id, track_source: source, track_id: id }
+      if (canonicalUrl) insert.canonical_url = canonicalUrl
       const { data } = await supabase
         .from('saved_chart_tracks')
-        .insert({ user_id: user.id, track_source: source, track_id: id })
-        .select('track_source, track_id, created_at')
+        .insert(insert)
+        .select('track_source, track_id, canonical_url, snapshot, created_at')
         .single()
-      const row = (data as SavedChartTrackRef | null) || { track_source: source, track_id: id }
+      const row = (data as SavedChartTrackRef | null) || {
+        track_source: source,
+        track_id: id,
+        canonical_url: canonicalUrl ?? null,
+      }
       setSavedChartTracksCache((s) => [row, ...s])
     }
   }
@@ -527,7 +574,11 @@ export function useSavedChartTracks() {
   const isAnySavedRefs = (refs: Ref[]) =>
     refs.some((r) => savedSet.has(makeKey(r.source, r.id)))
 
-  const toggleGroupRefs = async (primary: Ref, refs: Ref[]) => {
+  const toggleGroupRefs = async (
+    primary: Ref,
+    refs: Ref[],
+    canonicalUrl?: string | null,
+  ) => {
     if (!user || !primary.id) return
     const group = refs.length ? refs : [primary]
     if (isAnySavedRefs(group)) {
@@ -556,19 +607,96 @@ export function useSavedChartTracks() {
         })
       )
     } else {
-      await toggle(primary.source, primary.id)
+      await toggle(primary.source, primary.id, canonicalUrl ?? null)
     }
+  }
+
+  // ---- Variante por URL canónica (beatport_top y otros sin id de tabla) ----
+  // Si CUALQUIER save ya coincide por URL canónica con `url`, se borran todos
+  // (cross-source). Si no, se inserta una fila con source='beatport_top' y
+  // `track_id` = id provisto (p.ej. beatport_id numérico en texto) o la URL.
+  const toggleByUrl = async (
+    url: string,
+    opts: {
+      trackId?: string
+      snapshot?: SavedChartTrackSnapshot
+    } = {},
+  ) => {
+    if (!user || !url) return
+    const normalized = normalizeCanonicalUrl(url)
+    if (!normalized) return
+
+    // Buscar TODAS las filas cuya URL canónica normalizada coincide, sin
+    // importar la fuente. Un insert por URL coincidente es un borrado total.
+    const matching = saved.filter(
+      (r) => !!r.canonical_url && normalizeCanonicalUrl(r.canonical_url) === normalized,
+    )
+
+    if (matching.length > 0) {
+      // Desmarca cross-source: borramos por pares (source, track_id) de todo
+      // lo que comparte la misma URL canónica.
+      const bySource = new Map<ChartTrackSource, string[]>()
+      for (const r of matching) {
+        const arr = bySource.get(r.track_source) || []
+        arr.push(r.track_id)
+        bySource.set(r.track_source, arr)
+      }
+      await Promise.all(
+        Array.from(bySource.entries()).map(([src, ids]) =>
+          supabase
+            .from('saved_chart_tracks')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('track_source', src)
+            .in('track_id', ids),
+        ),
+      )
+      setSavedChartTracksCache((s) =>
+        s.filter((row) => {
+          const ids = bySource.get(row.track_source)
+          return !(ids && ids.includes(row.track_id))
+        }),
+      )
+      return
+    }
+
+    // Insertar como beatport_top con snapshot. track_id = beatport numeric id
+    // o fallback a la URL normalizada (sirve de clave única).
+    const track_id = opts.trackId || normalized
+    const insert = {
+      user_id: user.id,
+      track_source: 'beatport_top' as const,
+      track_id,
+      canonical_url: url,
+      snapshot: opts.snapshot ?? null,
+    }
+    const { data } = await supabase
+      .from('saved_chart_tracks')
+      .insert(insert)
+      .select('track_source, track_id, canonical_url, snapshot, created_at')
+      .single()
+    const row =
+      (data as SavedChartTrackRef | null) ||
+      {
+        track_source: 'beatport_top' as ChartTrackSource,
+        track_id,
+        canonical_url: url,
+        snapshot: opts.snapshot ?? null,
+      }
+    setSavedChartTracksCache((s) => [row, ...s])
   }
 
   return {
     saved,
     loading,
     isSaved,
+    isSavedByUrl,
     isAnySaved,
     isAnySavedRefs,
     toggle,
     toggleGroup,
     toggleGroupRefs,
+    toggleByUrl,
     refetch: fetch,
   }
 }

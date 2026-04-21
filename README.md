@@ -57,7 +57,7 @@ This split helps the site feel both like an archive and like a living magazine w
 
 Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated pages under `/[lang]/mi-cuenta/<slug>`): favorites, attendance, saved mixes, **saved chart tracks** (`/mi-cuenta/tracks`), and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars).
 
-**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migration **`053_saved_chart_tracks.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl`).
+**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migrations **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl | beatport_top`, plus `canonical_url` + `snapshot` columns so the artist/label **Beatport Top 10** can be saved cross-source with a single URL-based canonical key).
 
 **Public shared tracks page.** Every user can copy a public URL from `/mi-cuenta/tracks` (🔗 COMPARTIR button) that points to `/[lang]/u/<userId>/tracks`. Third parties can browse, sort, filter and play that list but cannot edit it; their own SAVE button adds tracks to **their** list (and shows a sign-up modal when logged out). Backed by `/api/public/user-tracks` using the service-role Supabase client to bypass RLS for read-only.
 

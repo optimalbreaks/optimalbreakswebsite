@@ -79,17 +79,18 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
   const supabase = createServerSupabase()
   const { data: artists } = await supabase
     .from('artists')
-    .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url')
+    .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, beatport_top_tracks')
     .order('name_display', { ascending: true })
 
   type ArtistListRow = Pick<
     Artist,
-    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
+    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url' | 'beatport_top_tracks'
   >
   const list = (artists || []) as ArtistListRow[]
-  const listForUi = list.map((a) => ({
+  const listForUi = list.map(({ beatport_top_tracks, ...a }) => ({
     ...a,
     image_url: displayArtistImageUrl(a.slug, a.image_url) ?? null,
+    has_beatport_top: Array.isArray(beatport_top_tracks) && beatport_top_tracks.length > 0,
   }))
   return (
     <div className="lined min-h-screen">
