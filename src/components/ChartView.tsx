@@ -295,7 +295,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
   )
 }
 
-function VinylTrackRow({ track, dict, lang }: { track: ChartVinylTrack; dict: any; lang: Locale }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
@@ -359,6 +359,7 @@ function VinylTrackRow({ track, dict, lang }: { track: ChartVinylTrack; dict: an
             videoId={ytId}
             title={`${track.title} — ${artists.map((a: ChartVinylArtist) => a.name).join(', ')}`}
             className="border-[3px] border-[var(--ink)]"
+            autoplay={autoplay}
           />
         </div>
       )}
@@ -579,16 +580,33 @@ export default function ChartView({
   const [openVinyl, toggleVinyl, ensureOpenVinyl] = useToggleSet(new Set<string>())
   const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
 
+  // ID de vinilo cuya fila YouTube debe arrancar con autoplay=1 tras la
+  // navegación desde el buscador global (⌘K) con `?play=1`.
+  const [autoplayVinylId, setAutoplayVinylId] = useState<string | null>(null)
+
+  // Petición pendiente de autoplay sobre chart/featured: guardamos la
+  // «coordenada» (sección + semana + trackId) y la ejecutamos en un efecto
+  // separado cuando el bundle de preview-audio ya está montado.
+  const [pendingPlay, setPendingPlay] = useState<
+    | { kind: 'forty' | 'picks'; weekDate: string; trackId: string }
+    | null
+  >(null)
+
   // ---- Deep-link por hash: abrir acordeón correcto y hacer scroll al track ----
   // El buscador global (⌘K) enlaza a /charts#chart-row-<id> (40 Breaks o
-  // New Releases) o a /charts#chart-vinyl-row-<id> (Retro Vinyl Picks).
-  // Al montar, resolvemos el target: expandimos semana/año que contiene el
+  // New Releases) o a /charts#chart-vinyl-row-<id> (Retro Vinyl Picks). Si la
+  // URL trae `?play=1`, además iniciamos reproducción: `playFromIndex(...)`
+  // para chart/featured o autoplay del iframe de YouTube para vinyl.
+  // Al montar resolvemos el target: expandimos semana/año que contiene el
   // track, hacemos scrollIntoView y destacamos la fila.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const applyHash = () => {
       const raw = window.location.hash.replace(/^#/, '')
       if (!raw) return
+      const wantsPlay =
+        new URLSearchParams(window.location.search).get('play') === '1'
+
       let kind: 'chart' | 'vinyl' | null = null
       let trackId = ''
       if (raw.startsWith('chart-vinyl-row-')) {
@@ -610,6 +628,7 @@ export default function ChartView({
           }
         }
         if (yearKey) ensureOpenVinyl(yearKey)
+        if (wantsPlay) setAutoplayVinylId(trackId)
       } else {
         let weekDate: string | null = null
         let inFeatured = false
@@ -627,6 +646,24 @@ export default function ChartView({
         if (weekDate) {
           if (inFeatured) ensureOpenPicks(weekDate)
           else ensureOpenForty(weekDate)
+          if (wantsPlay) {
+            setPendingPlay({
+              kind: inFeatured ? 'picks' : 'forty',
+              weekDate,
+              trackId,
+            })
+          }
+        }
+      }
+
+      // Limpia `?play=1` de la URL para que un refresh no vuelva a disparar.
+      if (wantsPlay) {
+        try {
+          const u = new URL(window.location.href)
+          u.searchParams.delete('play')
+          window.history.replaceState({}, '', u.toString())
+        } catch {
+          /* noop */
         }
       }
 
@@ -825,6 +862,35 @@ export default function ChartView({
     claimAudio('chart-playall')
     setPlayAll({ key: sectionKey, queue, meta, index })
   }, [playAll?.key, playAll?.index, togglePaPlayback])
+
+  // Ejecuta el autoplay pendiente sobre chart/featured: busca el track por id
+  // en la semana ya identificada, construye el bundle como haría el render, y
+  // llama `playFromIndex` con el índice que le toque. Corre cuando cambia la
+  // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
+  useEffect(() => {
+    if (!pendingPlay) return
+    const { kind, weekDate, trackId } = pendingPlay
+    const week = weeks.find((w) => w.edition.week_date === weekDate)
+    if (!week) return
+
+    if (kind === 'picks') {
+      const sorted = sortFeaturedByArtist(week.featured, lang)
+      const bundle = buildFeaturedBundle(sorted)
+      const rowId = `chart-row-${trackId}`
+      const idx = bundle.meta.findIndex((m) => m.rowId === rowId)
+      if (idx >= 0) {
+        playFromIndex(`picks-${weekDate}`, bundle.srcs, bundle.meta, idx)
+      }
+    } else {
+      const bundle = buildTrackBundle(week.tracks)
+      const rowId = `chart-row-${trackId}`
+      const idx = bundle.meta.findIndex((m) => m.rowId === rowId)
+      if (idx >= 0) {
+        playFromIndex(`forty-${weekDate}`, bundle.srcs, bundle.meta, idx)
+      }
+    }
+    setPendingPlay(null)
+  }, [pendingPlay, weeks, lang, playFromIndex])
 
   const handlePlayAllClick = useCallback((sectionKey: string, audioSrcs: string[], meta: PlayAllTrackMeta[]) => {
     if (playAll?.key === sectionKey) {
@@ -1216,6 +1282,7 @@ export default function ChartView({
                           track={track}
                           dict={dict}
                           lang={lang}
+                          autoplay={autoplayVinylId === track.id}
                         />
                       ))}
                     </div>

@@ -23,17 +23,29 @@ export function LazyYouTubeEmbed({
   title,
   className = '',
   iframeId,
+  autoplay = false,
 }: {
   videoId: string
   title: string
   className?: string
   iframeId?: string
+  /**
+   * Si `true`, monta el iframe inmediatamente (sin esperar IntersectionObserver)
+   * y añade `autoplay=1` al src. Lo usa el buscador global (⌘K) cuando el
+   * usuario llega a la página con `?play=1` en la URL: queremos que el vídeo
+   * arranque sin que tenga que volver a hacer clic en «play».
+   */
+  autoplay?: boolean
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
-  const [mountIframe, setMountIframe] = useState(false)
+  const [mountIframe, setMountIframe] = useState(autoplay)
   const [embedSrc, setEmbedSrc] = useState<string | null>(null)
 
   useEffect(() => {
+    if (autoplay) {
+      setMountIframe(true)
+      return
+    }
     const el = rootRef.current
     if (!el || mountIframe) return
     const obs = new IntersectionObserver(
@@ -47,14 +59,15 @@ export function LazyYouTubeEmbed({
     )
     obs.observe(el)
     return () => obs.disconnect()
-  }, [mountIframe])
+  }, [mountIframe, autoplay])
 
   useEffect(() => {
     if (!mountIframe) return
+    const auto = autoplay ? '&autoplay=1' : ''
     setEmbedSrc(
-      `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`,
+      `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1${auto}&origin=${encodeURIComponent(window.location.origin)}`,
     )
-  }, [mountIframe, videoId])
+  }, [mountIframe, videoId, autoplay])
 
   return (
     <div ref={rootRef} className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>

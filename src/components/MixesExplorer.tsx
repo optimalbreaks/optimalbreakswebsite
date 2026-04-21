@@ -20,11 +20,13 @@ function LazyYouTubeEmbed({
   title,
   className = '',
   mixId,
+  autoplay = false,
 }: {
   videoId: string
   title: string
   className?: string
   mixId?: string
+  autoplay?: boolean
 }) {
   const iframeId = mixId ? `ob-yt-${mixId}` : undefined
 
@@ -76,6 +78,7 @@ function LazyYouTubeEmbed({
       title={title}
       className={className}
       iframeId={iframeId}
+      autoplay={autoplay}
     />
   )
 }
@@ -322,8 +325,71 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [search, setSearch] = useState('')
   const [yearFilter, setYearFilter] = useState<YearFilterValue>('all')
   const [platform, setPlatform] = useState<'all' | Mix['platform']>('all')
+  // ID del mix cuyo iframe de YouTube debe arrancar con autoplay=1 tras la
+  // navegación desde el buscador global (⌘K) con `?play=1`.
+  const [autoplayMixId, setAutoplayMixId] = useState<string | null>(null)
+  const { playMix } = useDeckAudio()
 
   const mf = dict.mix_filter
+
+  // ---- Deep-link por hash: el buscador global enlaza a /mixes#mix-<id> y
+  // añade `?play=1` para autoplay. Limpiamos filtros (para garantizar que la
+  // tarjeta esté visible), hacemos scroll y, si el mix tiene audio mp3 o
+  // SoundCloud, disparamos `playMix` contra el deck global; si es YouTube,
+  // marcamos el id para que su `LazyYouTubeEmbed` monte con `autoplay=1`.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const applyHash = () => {
+      const raw = window.location.hash.replace(/^#/, '')
+      if (!raw.startsWith('mix-')) return
+      const mixId = raw.slice('mix-'.length)
+      if (!mixId) return
+      const target = mixes.find((m) => m.id === mixId)
+      if (!target) return
+
+      const wantsPlay =
+        new URLSearchParams(window.location.search).get('play') === '1'
+
+      // Quita cualquier filtro que pudiera ocultar la tarjeta.
+      setSearch('')
+      setYearFilter('all')
+      setPlatform('all')
+
+      if (wantsPlay) {
+        const track = getMixTrack(target)
+        if (track) {
+          // mp3 / SoundCloud track URL → reproducción desde el deck global.
+          playMix(track)
+        } else if (extractYouTubeId(target.video_url)) {
+          // YouTube embebido → autoplay=1 en el iframe de esa tarjeta.
+          setAutoplayMixId(mixId)
+        }
+        // Limpia `?play=1` para que un refresh no vuelva a disparar.
+        try {
+          const u = new URL(window.location.href)
+          u.searchParams.delete('play')
+          window.history.replaceState({}, '', u.toString())
+        } catch {
+          /* noop */
+        }
+      }
+
+      // Espera a que el render tras limpiar filtros coloque la tarjeta.
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const el = document.getElementById(`mix-${mixId}`)
+          if (!el) return
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('!bg-[var(--yellow)]/25')
+          setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1800)
+        }, 160)
+      })
+    }
+
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [mixes, playMix])
 
   const distinctPlatforms = useMemo(() => {
     const s = new Set<Mix['platform']>()
@@ -533,11 +599,11 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
                   {title}
                 </h2>
                 {view === 'large' ? (
-                  <LargeGrid mixes={items} lang={lang} isMixVisible={isMixVisible} />
+                  <LargeGrid mixes={items} lang={lang} isMixVisible={isMixVisible} autoplayMixId={autoplayMixId} />
                 ) : view === 'compact' ? (
-                  <CompactGrid mixes={items} lang={lang} isMixVisible={isMixVisible} />
+                  <CompactGrid mixes={items} lang={lang} isMixVisible={isMixVisible} autoplayMixId={autoplayMixId} />
                 ) : (
-                  <ListView mixes={items} lang={lang} isMixVisible={isMixVisible} />
+                  <ListView mixes={items} lang={lang} isMixVisible={isMixVisible} autoplayMixId={autoplayMixId} />
                 )}
               </section>
             )
@@ -569,10 +635,12 @@ function LargeGrid({
   mixes,
   lang,
   isMixVisible,
+  autoplayMixId,
 }: {
   mixes: Mix[]
   lang: string
   isMixVisible: (m: Mix) => boolean
+  autoplayMixId?: string | null
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
@@ -583,6 +651,7 @@ function LargeGrid({
         return (
           <div
             key={m.id}
+            id={`mix-${m.id}`}
             className={
               visible
                 ? 'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group'
@@ -591,7 +660,7 @@ function LargeGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} autoplay={autoplayMixId === m.id} />
             ) : scTrackUrl ? (
               <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} mixId={m.id} />
             ) : (
@@ -646,10 +715,12 @@ function CompactGrid({
   mixes,
   lang,
   isMixVisible,
+  autoplayMixId,
 }: {
   mixes: Mix[]
   lang: string
   isMixVisible: (m: Mix) => boolean
+  autoplayMixId?: string | null
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
@@ -660,6 +731,7 @@ function CompactGrid({
         return (
           <div
             key={m.id}
+            id={`mix-${m.id}`}
             className={
               visible
                 ? 'border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative'
@@ -668,7 +740,7 @@ function CompactGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} />
             ) : scTrackUrl ? (
               <LazySoundCloudEmbed
                 trackUrl={scTrackUrl}
@@ -720,10 +792,12 @@ function ListView({
   mixes,
   lang,
   isMixVisible,
+  autoplayMixId,
 }: {
   mixes: Mix[]
   lang: string
   isMixVisible: (m: Mix) => boolean
+  autoplayMixId?: string | null
 }) {
   return (
     <div className="border-4 border-[var(--ink)]">
@@ -735,6 +809,7 @@ function ListView({
           return (
             <div
               key={m.id}
+              id={`mix-${m.id}`}
               className={
                 visible
                   ? 'border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative'
@@ -773,7 +848,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
+                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} />
                 </div>
               </div>
             </div>
@@ -783,6 +858,7 @@ function ListView({
           return (
             <div
               key={m.id}
+              id={`mix-${m.id}`}
               className={
                 visible
                   ? 'border-b-[2px] border-[var(--ink)] px-4 sm:px-6 py-4 sm:py-5 transition-all duration-150 hover:bg-[var(--yellow)]/40 relative'
@@ -830,6 +906,7 @@ function ListView({
         return (
           <div
             key={m.id}
+            id={`mix-${m.id}`}
             className={
               visible
                 ? 'flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group relative'
