@@ -10,6 +10,12 @@ import { artistEraToReferenceYear, normalizeArtistEraToDecade } from '@/lib/brea
 // Generates the user's breakbeat DNA profile
 // =============================================
 
+// Los modelos "reasoning" (gpt-5, o1, o3) tardan 20-40s en responder y aquí
+// lanzamos DOS llamadas en paralelo (ES y EN). El tiempo total es max(ES,EN)
+// pero con margen de cola puede acercarse a 50s. Ampliamos el timeout a 60s
+// para evitar que Vercel corte la función antes de que respondan.
+export const maxDuration = 60
+
 // Permite overridear el modelo del ADN breakbeatero con una env var específica
 // (OPENAI_MODEL_PROFILE) sin afectar al resto de agentes. Si falla por modelo
 // inexistente/forbidden, reintentamos con OPENAI_MODEL_PROFILE_FALLBACK (por
@@ -758,21 +764,31 @@ Reply EXACTLY in this JSON format:
     | { ok: false; reason: string; retryWithFallback: boolean }
   > => {
     try {
+      // Detecta modelos de la familia nueva (GPT-5, o1, o3, ...) que ya NO
+      // aceptan `max_tokens` ni una `temperature != 1`. Para esos usamos
+      // `max_completion_tokens` y omitimos `temperature` (queda en default).
+      const isReasoningFamily = /^(gpt-5|o1|o3|o4)/i.test(model)
+      const body: Record<string, unknown> = {
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }
+      if (isReasoningFamily) {
+        body.max_completion_tokens = 5600
+      } else {
+        body.max_tokens = 5600
+        body.temperature = 0.55
+      }
+
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          temperature: 0.55,
-          max_tokens: 5600,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (!res.ok) {
