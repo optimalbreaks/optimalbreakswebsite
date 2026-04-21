@@ -859,8 +859,26 @@ export default function ChartView({
   }
 
   const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
-  const weeksWithVinyl = weeks.filter((w) => w.vinyl.length > 0)
   const latestWeekDate = weeks[0]?.edition.week_date ?? ''
+
+  // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
+  // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
+  const UNKNOWN_YEAR_KEY = '__unknown_year__'
+  const vinylByYear = new Map<string, ChartVinylTrack[]>()
+  for (const w of weeks) {
+    for (const v of w.vinyl) {
+      const key = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
+      const arr = vinylByYear.get(key) ?? []
+      arr.push(v)
+      vinylByYear.set(key, arr)
+    }
+  }
+  // Orden ascendente por año (más antiguo primero); "sin año" al final.
+  const sortedVinylYears = Array.from(vinylByYear.keys()).sort((a, b) => {
+    if (a === UNKNOWN_YEAR_KEY) return 1
+    if (b === UNKNOWN_YEAR_KEY) return -1
+    return Number(a) - Number(b)
+  })
 
   if (weeks.length === 0) {
     return (
@@ -1053,9 +1071,10 @@ export default function ChartView({
       </section>
 
       {/* ================================================================ */}
-      {/* SECTION 3 — Retro Vinyl Picks (Discogs + YouTube)              */}
+      {/* SECTION 3 — Retro Vinyl Picks (Discogs + YouTube)                */}
+      {/* Agrupado por año de lanzamiento (archivo histórico), no por semana */}
       {/* ================================================================ */}
-      {weeksWithVinyl.length > 0 && (
+      {sortedVinylYears.length > 0 && (
         <section className="mb-12 sm:mb-16">
           <header className="px-4 sm:px-0 mb-6 sm:mb-8">
             <span
@@ -1079,33 +1098,59 @@ export default function ChartView({
           </header>
 
           <div className="flex flex-col gap-2 px-2 sm:px-0">
-            {weeksWithVinyl.map((bundle, index) => {
-              const { edition, vinyl } = bundle
-              const isLatest = edition.week_date === weeksWithVinyl[0].edition.week_date
-              const vinylSorted = sortVinylByArtist(vinyl, lang)
+            {sortedVinylYears.map((yearKey) => {
+              const tracks = sortVinylByArtist(vinylByYear.get(yearKey) ?? [], lang)
+              const expanded = openVinyl.has(yearKey)
+              const yearLabel = yearKey === UNKNOWN_YEAR_KEY ? c.vinyl_year_unknown : yearKey
+              const panelId = `vinyl-year-panel-${yearKey}`
+              const triggerId = `vinyl-year-trigger-${yearKey}`
 
               return (
-                <WeekAccordion
-                  key={`vinyl-${edition.id}`}
-                  weekDate={edition.week_date}
-                  lang={lang}
-                  isLatest={isLatest}
-                  editionNumber={index + 1}
-                  count={vinylSorted.length}
-                  expanded={openVinyl.has(edition.week_date)}
-                  onToggle={() => toggleVinyl(edition.week_date)}
-                  label="vinyl"
-                  dict={dict}
+                <section
+                  key={`vinyl-year-${yearKey}`}
+                  className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden"
                 >
-                  {vinylSorted.map((track) => (
-                    <VinylTrackRow
-                      key={track.id}
-                      track={track}
-                      dict={dict}
-                      lang={lang}
-                    />
-                  ))}
-                </WeekAccordion>
+                  <button
+                    type="button"
+                    id={triggerId}
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                    onClick={() => toggleVinyl(yearKey)}
+                    className="w-full flex items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                    title={expanded ? c.vinyl_toggle_hide : c.vinyl_toggle_show}
+                  >
+                    <span
+                      className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0"
+                      style={{ fontFamily: "'Unbounded', sans-serif" }}
+                      aria-hidden
+                    >
+                      {expanded ? '▼' : '▶'}
+                    </span>
+                    <span
+                      className="text-base sm:text-lg font-black tracking-wide text-[var(--ink)] flex-1 tabular-nums"
+                      style={{ fontFamily: "'Unbounded', sans-serif" }}
+                    >
+                      {yearLabel}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">
+                      {c.vinyl_count.replace('{n}', String(tracks.length))}
+                    </span>
+                  </button>
+
+                  {expanded && (
+                    <div id={panelId} role="region" aria-labelledby={triggerId}>
+                      {tracks.map((track) => (
+                        <VinylTrackRow
+                          key={track.id}
+                          track={track}
+                          dict={dict}
+                          lang={lang}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
               )
             })}
           </div>
