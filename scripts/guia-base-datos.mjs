@@ -101,6 +101,14 @@ const ACTIONS = [
       'Busca en Discogs cada sello de public.labels y, si hay match exacto por nombre, rellena discogs_id + discogs_url. Sin --apply = dry-run (solo imprime). Con --apply escribe data/labels/<slug>.json y UPSERT vía REST.',
   },
   {
+    id: 'labels-discogs-images',
+    run: 'node scripts/guia-base-datos.mjs run labels-discogs-images [--apply] [--slug X] [--limit N] [--all]',
+    npm: 'npm run db:labels:discogs:images -- [--apply]',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY; recomendado DISCOGS_TOKEN',
+    description:
+      'Para cada sello con discogs_id pero sin image_url, descarga la imagen de /labels/<id>, la sube al bucket media (labels/<slug>/logo.*) y UPSERT image_url. Recupera logos perdidos usando Discogs como fuente.',
+  },
+  {
     id: 'seed',
     run: 'node scripts/guia-base-datos.mjs run seed',
     npm: 'npm run db:seed',
@@ -492,6 +500,8 @@ Punto de entrada unificado:
   label-photo -- …       elegir-foto-sello.mjs (logos sellos)
   labels-discogs [--apply] [--slug X] [--limit N] [--all] [--strict]
                                discogs-find-labels.mjs (match exacto Discogs → discogs_id/_url)
+  labels-discogs-images [--apply] [--slug X] [--limit N] [--all]
+                               discogs-labels-images.mjs (logo Discogs → bucket media → image_url)
   seed                   seed-supabase (solo seed)
   migrate                seed-supabase --all
   push-hibrida-fest      push-hibrida-fest.mjs (API service role)
@@ -792,6 +802,9 @@ function main() {
       break
     case 'labels-discogs':
       runNode('discogs-find-labels.mjs', stripLeadingDashDash(rest))
+      break
+    case 'labels-discogs-images':
+      runNode('discogs-labels-images.mjs', stripLeadingDashDash(rest))
       break
     case 'seed':
       runNode('seed-supabase.mjs', [])

@@ -38,6 +38,9 @@ interface ChartViewProps {
   defaultExpandedWeekDate: string
 }
 
+// Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
+const UNKNOWN_YEAR_KEY = '__unknown_year__'
+
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
@@ -300,7 +303,7 @@ function VinylTrackRow({ track, dict, lang }: { track: ChartVinylTrack; dict: an
   const ytId = extractYouTubeId(track.youtube_url)
 
   return (
-    <div className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-vinyl-row-${track.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {track.artwork_url ? (
@@ -573,8 +576,76 @@ export default function ChartView({
   const c = dict.charts
 
   const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(new Set<string>())
-  const [openVinyl, toggleVinyl] = useToggleSet(new Set<string>())
+  const [openVinyl, toggleVinyl, ensureOpenVinyl] = useToggleSet(new Set<string>())
   const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
+
+  // ---- Deep-link por hash: abrir acordeón correcto y hacer scroll al track ----
+  // El buscador global (⌘K) enlaza a /charts#chart-row-<id> (40 Breaks o
+  // New Releases) o a /charts#chart-vinyl-row-<id> (Retro Vinyl Picks).
+  // Al montar, resolvemos el target: expandimos semana/año que contiene el
+  // track, hacemos scrollIntoView y destacamos la fila.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const applyHash = () => {
+      const raw = window.location.hash.replace(/^#/, '')
+      if (!raw) return
+      let kind: 'chart' | 'vinyl' | null = null
+      let trackId = ''
+      if (raw.startsWith('chart-vinyl-row-')) {
+        kind = 'vinyl'
+        trackId = raw.slice('chart-vinyl-row-'.length)
+      } else if (raw.startsWith('chart-row-')) {
+        kind = 'chart'
+        trackId = raw.slice('chart-row-'.length)
+      }
+      if (!kind || !trackId) return
+
+      if (kind === 'vinyl') {
+        let yearKey: string | null = null
+        for (const w of weeks) {
+          const hit = w.vinyl.find((v) => v.id === trackId)
+          if (hit) {
+            yearKey = typeof hit.year === 'number' && Number.isFinite(hit.year) ? String(hit.year) : UNKNOWN_YEAR_KEY
+            break
+          }
+        }
+        if (yearKey) ensureOpenVinyl(yearKey)
+      } else {
+        let weekDate: string | null = null
+        let inFeatured = false
+        for (const w of weeks) {
+          if (w.featured.some((p) => p.id === trackId)) {
+            weekDate = w.edition.week_date
+            inFeatured = true
+            break
+          }
+          if (w.tracks.some((t) => t.id === trackId)) {
+            weekDate = w.edition.week_date
+            break
+          }
+        }
+        if (weekDate) {
+          if (inFeatured) ensureOpenPicks(weekDate)
+          else ensureOpenForty(weekDate)
+        }
+      }
+
+      // Espera a que el acordeón renderice antes de hacer scroll+highlight.
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const el = document.getElementById(raw)
+          if (!el) return
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('!bg-[var(--yellow)]/25')
+          setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1800)
+        }, 160)
+      })
+    }
+
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [weeks, ensureOpenVinyl, ensureOpenPicks, ensureOpenForty])
 
   // ---- Play-all state ----
   const [playAll, setPlayAll] = useState<PlayAllState>(null)
@@ -863,7 +934,6 @@ export default function ChartView({
 
   // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
   // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
-  const UNKNOWN_YEAR_KEY = '__unknown_year__'
   const vinylByYear = new Map<string, ChartVinylTrack[]>()
   for (const w of weeks) {
     for (const v of w.vinyl) {

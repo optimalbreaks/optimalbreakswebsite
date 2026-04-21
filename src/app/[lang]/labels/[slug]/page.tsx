@@ -135,7 +135,7 @@ export default async function LabelDetailPage({ params }: Props) {
               href={label.discogs_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="cutout outline no-underline text-[var(--ink)]"
+              className="cutout fill no-underline"
               title={lang === 'es' ? 'Catálogo en Discogs' : 'Catalogue on Discogs'}
             >
               ↗ DISCOGS

@@ -27,6 +27,7 @@
     "type_scene": "Scene",
     "type_post": "Blog",
     "type_organization": "Organization",
+    "type_track": "Track",
     "groups_all": "All",
     "shortcut_open": "Open search",
     "shortcut_close": "Close",

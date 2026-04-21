@@ -19,6 +19,7 @@ type ResultType =
   | 'scene'
   | 'post'
   | 'organization'
+  | 'track'
 
 export interface SearchResult {
   type: ResultType
@@ -109,6 +110,9 @@ export async function GET(request: NextRequest) {
     scenesRes,
     postsRes,
     orgsRes,
+    chartTracksRes,
+    chartFeaturedRes,
+    chartVinylRes,
   ] = await Promise.all([
     supabase
       .from('artists')
@@ -150,6 +154,24 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, base_city')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(4),
+    // 40 Breaks Vitales (Beatport weekly chart)
+    supabase
+      .from('chart_tracks')
+      .select('id, title, mix_name, label, artwork_url, release_year, artists')
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
+      .limit(8),
+    // New Releases (semana "fenomenal")
+    supabase
+      .from('chart_featured_tracks')
+      .select('id, title, mix_name, label, artwork_url, release_year, artists')
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
+      .limit(6),
+    // Retro Vinyl Picks (Discogs)
+    supabase
+      .from('chart_vinyl_tracks')
+      .select('id, title, mix_name, label, artwork_url, year, artists')
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
+      .limit(8),
   ])
 
   const results: SearchResult[] = []
@@ -346,7 +368,77 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const deduped = byType(results, 60)
+  // ----------------------------------------------------------------
+  // Chart tracks: 40 Breaks, New Releases y Retro Vinyl (página /charts).
+  // El href lleva a /charts#chart-row-<id> (o #chart-vinyl-row-<id>);
+  // ChartView detecta el hash al montar, expande el acordeón que toque
+  // (semana o año) y hace scroll + highlight sobre la fila.
+  // ----------------------------------------------------------------
+  function artistsToText(raw: unknown): string {
+    if (!Array.isArray(raw)) return ''
+    const names = raw
+      .map((a) => {
+        if (typeof a === 'string') return a
+        if (a && typeof a === 'object') {
+          const n = (a as { name?: unknown }).name
+          return typeof n === 'string' ? n : ''
+        }
+        return ''
+      })
+      .map((s) => s.trim())
+      .filter(Boolean)
+    return names.join(', ')
+  }
+
+  const trackTypeLabel = {
+    chart: lang === 'es' ? '40 BREAKS' : '40 BREAKS',
+    featured: lang === 'es' ? 'NEW RELEASES' : 'NEW RELEASES',
+    vinyl: lang === 'es' ? 'RETRO VINYL' : 'RETRO VINYL',
+  }
+
+  type TrackRow = {
+    id: string
+    title: string | null
+    mix_name: string | null
+    label: string | null
+    artwork_url: string | null
+    release_year?: number | null
+    year?: number | null
+    artists: unknown
+  }
+
+  function pushTrack(
+    row: TrackRow,
+    kind: 'chart' | 'featured' | 'vinyl',
+  ) {
+    const title = (row.title || '').trim() || '—'
+    const mix = (row.mix_name || '').trim()
+    const fullTitle = mix ? `${title} (${mix})` : title
+    const artistsText = artistsToText(row.artists)
+    const yr = kind === 'vinyl' ? row.year : row.release_year
+    const parts = [
+      trackTypeLabel[kind],
+      artistsText,
+      row.label,
+      yr ? String(yr) : null,
+    ].filter(Boolean)
+    const anchor = kind === 'vinyl' ? `chart-vinyl-row-${row.id}` : `chart-row-${row.id}`
+    results.push({
+      type: 'track',
+      id: row.id,
+      slug: row.id,
+      title: fullTitle,
+      subtitle: parts.join(' — '),
+      image_url: (row.artwork_url as string | null) ?? null,
+      href: `${base('/charts')}#${anchor}`,
+    })
+  }
+
+  for (const t of (chartTracksRes.data || []) as TrackRow[]) pushTrack(t, 'chart')
+  for (const t of (chartFeaturedRes.data || []) as TrackRow[]) pushTrack(t, 'featured')
+  for (const t of (chartVinylRes.data || []) as TrackRow[]) pushTrack(t, 'vinyl')
+
+  const deduped = byType(results, 80)
   return NextResponse.json(
     { results: deduped },
     {

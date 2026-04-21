@@ -12,7 +12,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { displayImageUrl } from '@/lib/image-url'
 import type { Locale } from '@/lib/i18n-config'
 
-type ResultType = 'artist' | 'label' | 'event' | 'mix' | 'scene' | 'post' | 'organization'
+type ResultType = 'artist' | 'label' | 'event' | 'mix' | 'scene' | 'post' | 'organization' | 'track'
 
 interface SearchResult {
   type: ResultType
@@ -40,6 +40,7 @@ interface PaletteDict {
   type_scene: string
   type_post: string
   type_organization: string
+  type_track: string
   groups_all: string
   shortcut_open: string
   shortcut_close: string
@@ -66,6 +67,7 @@ const TYPE_COLOR: Record<ResultType, { bg: string; fg: string }> = {
   scene: { bg: 'var(--acid)', fg: 'var(--ink)' },
   post: { bg: 'var(--blue)', fg: 'white' },
   organization: { bg: 'var(--orange)', fg: 'white' },
+  track: { bg: 'var(--yellow)', fg: 'var(--ink)' },
 }
 
 function typeLabel(dict: PaletteDict, t: ResultType): string {
@@ -84,6 +86,8 @@ function typeLabel(dict: PaletteDict, t: ResultType): string {
       return dict.type_post
     case 'organization':
       return dict.type_organization
+    case 'track':
+      return dict.type_track
   }
 }
 
@@ -222,7 +226,7 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
       arr.push(r)
       map.set(r.type, arr)
     }
-    const order: ResultType[] = ['artist', 'label', 'event', 'mix', 'scene', 'post', 'organization']
+    const order: ResultType[] = ['artist', 'label', 'event', 'track', 'mix', 'scene', 'post', 'organization']
     const out: { type: ResultType; items: SearchResult[] }[] = []
     for (const t of order) {
       const items = map.get(t)
