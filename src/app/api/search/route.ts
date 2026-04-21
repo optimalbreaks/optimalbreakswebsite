@@ -106,15 +106,17 @@ export async function GET(request: NextRequest) {
 
   const base = (path: string) => `/${lang}${path}`
 
-  // Hoy en formato YYYY-MM-DD (UTC). El buscador sólo muestra eventos
-  // futuros — los pasados siguen accesibles por /events pero no deben
-  // inflar los resultados del palette con el paso de los años.
+  // Hoy en formato YYYY-MM-DD (UTC). El buscador siempre carga futuros
+  // y pasados, pero los pasados sólo se muestran si la búsqueda es
+  // claramente "de eventos" (no hay ningún otro tipo de resultado) —
+  // la regla se aplica al final, antes de responder.
   const todayIso = new Date().toISOString().slice(0, 10)
 
   const [
     artistsRes,
     labelsRes,
     eventsUpcomingRes,
+    eventsPastRes,
     mixesRes,
     scenesRes,
     postsRes,
@@ -133,9 +135,7 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, founded_year')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(8),
-    // SOLO EVENTOS FUTUROS: el buscador favorece la acción (ir al evento,
-    // comprar entrada). Los pasados siguen disponibles desde /events pero
-    // no ensucian los resultados del palette. `lineup_text` es una columna
+    // EVENTOS FUTUROS: siempre se muestran. `lineup_text` es una columna
     // STORED GENERATED (migración 052) que aplana `lineup text[]` +
     // `stages[].lineup[]`, por eso buscar "plump djs" encuentra un evento
     // donde ese DJ figura en el cartel.
@@ -148,6 +148,19 @@ export async function GET(request: NextRequest) {
       .gte('date_start', todayIso)
       .order('date_start', { ascending: true })
       .limit(12),
+    // EVENTOS PASADOS: se cargan pero solo se devuelven cuando la
+    // búsqueda es claramente "de eventos" (p.ej. "winter festival"):
+    // si hay cualquier otro tipo de resultado (artista, track, sello…)
+    // los pasados se descartan para no pervertir la búsqueda de música.
+    supabase
+      .from('events')
+      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
+      .or(
+        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
+      )
+      .lt('date_start', todayIso)
+      .order('date_start', { ascending: false })
+      .limit(10),
     supabase
       .from('mixes')
       .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url')
@@ -266,7 +279,7 @@ export async function GET(request: NextRequest) {
     stages?: unknown
   }
 
-  for (const e of (eventsUpcomingRes.data || []) as EventRow[]) {
+  const buildEventResult = (e: EventRow, upcoming: boolean): SearchResult => {
     const place = [e.city, e.country].filter(Boolean).join(', ')
     // Si la búsqueda no hizo match en name/slug/city, muy probablemente
     // viene del line-up: destacamos los nombres coincidentes en el subtítulo
@@ -286,10 +299,10 @@ export async function GET(request: NextRequest) {
         lineupHitText = `Line-up: ${shown}${rest}`
       }
     }
-    // La fecha ya se pinta como chip con color amarillo en la UI, así
-    // que la omitimos del subtítulo para no repetir información.
+    // La fecha ya se pinta como chip con color en la UI (amarillo
+    // futuro / rojo pasado), así que la omitimos del subtítulo.
     const parts = [place, lineupHitText].filter(Boolean)
-    results.push({
+    return {
       type: 'event',
       id: e.id,
       slug: e.slug,
@@ -298,8 +311,20 @@ export async function GET(request: NextRequest) {
       image_url: (e.image_url as string | null) ?? null,
       href: base(`/events/${e.slug}`),
       date_start: e.date_start ?? null,
-      is_upcoming: true,
-    })
+      is_upcoming: upcoming,
+    }
+  }
+
+  // Futuros se añaden siempre.
+  for (const e of (eventsUpcomingRes.data || []) as EventRow[]) {
+    results.push(buildEventResult(e, true))
+  }
+
+  // Pasados los guardamos aparte: sólo se añaden al final si la búsqueda
+  // es claramente "de eventos" (no hay ningún otro tipo de resultado).
+  const pastEventResults: SearchResult[] = []
+  for (const e of (eventsPastRes.data || []) as EventRow[]) {
+    pastEventResults.push(buildEventResult(e, false))
   }
 
   // Para mixes sin portada propia: usa la foto del artista vinculado
@@ -544,6 +569,17 @@ export async function GET(request: NextRequest) {
   for (const t of (chartTracksRes.data || []) as TrackRow[]) pushTrack(t, 'chart')
   for (const t of (chartFeaturedRes.data || []) as TrackRow[]) pushTrack(t, 'featured')
   for (const t of (chartVinylRes.data || []) as TrackRow[]) pushTrack(t, 'vinyl')
+
+  // Regla: los eventos pasados sólo aparecen cuando la búsqueda es
+  // claramente "de eventos" (p.ej. "winter festival" → todos los
+  // matches son eventos). Si hay cualquier otro tipo (artista, track,
+  // mix, sello, etc.) los pasados se descartan: el buscador favorece
+  // la acción y no debe pervertirse llenando de archivo antiguo las
+  // búsquedas de música.
+  const hasNonEventResults = results.some((r) => r.type !== 'event')
+  if (!hasNonEventResults && pastEventResults.length > 0) {
+    for (const p of pastEventResults) results.push(p)
+  }
 
   const deduped = byType(results, 80)
   return NextResponse.json(
