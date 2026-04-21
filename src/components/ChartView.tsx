@@ -7,7 +7,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import {
   claimAudio,
@@ -297,7 +297,7 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
-function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string> }) {
+function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, relatedIds }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedIds?: string[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -353,7 +353,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap }:
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <SaveTrackButton source="featured" trackId={pick.id} lang={lang} size="sm" />
+          <SaveTrackButton source="featured" trackId={pick.id} relatedIds={relatedIds} lang={lang} size="sm" />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -367,7 +367,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap }:
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string> }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, relatedIds }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; relatedIds?: string[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
@@ -415,7 +415,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap }: {
               {c.vinyl_open_youtube}
             </a>
           )}
-          <SaveTrackButton source="vinyl" trackId={track.id} lang={lang} size="sm" />
+          <SaveTrackButton source="vinyl" trackId={track.id} relatedIds={relatedIds} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -440,7 +440,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap }: {
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, relatedIds }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; relatedIds?: string[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
 
@@ -501,7 +501,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang }: 
               {track.music_key}
             </span>
           )}
-          <SaveTrackButton source="chart" trackId={track.id} lang={lang} size="sm" />
+          <SaveTrackButton source="chart" trackId={track.id} relatedIds={relatedIds} lang={lang} size="sm" />
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"
@@ -1073,6 +1073,55 @@ export default function ChartView({
   const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
   const latestWeekDate = weeks[0]?.edition.week_date ?? ''
 
+  // ---- Grupos canónicos ----
+  // Una misma canción puede aparecer en varias semanas del chart (40 Breaks) o
+  // en varios picks editoriales. Agrupamos por URL canónica (Beatport /
+  // link_url / Discogs) para que el botón «Guardar» reconozca la canción como
+  // ya guardada independientemente de desde qué semana se guardase. Tracks sin
+  // URL canónica se tratan como únicos (grupo de un solo id).
+  const canonicalGroups = useMemo(() => {
+    const normalize = (u: string | null | undefined) => (u || '').trim().toLowerCase()
+    const chart = new Map<string, string[]>()
+    const featured = new Map<string, string[]>()
+    const vinyl = new Map<string, string[]>()
+    const chartByTrack = new Map<string, string[]>()
+    const featuredByTrack = new Map<string, string[]>()
+    const vinylByTrack = new Map<string, string[]>()
+
+    const pushGroup = (m: Map<string, string[]>, k: string, id: string) => {
+      const arr = m.get(k)
+      if (arr) arr.push(id)
+      else m.set(k, [id])
+    }
+
+    for (const w of weeks) {
+      for (const t of w.tracks) {
+        const k = normalize(t.beatport_url)
+        if (k) pushGroup(chart, k, t.id)
+      }
+      for (const f of w.featured) {
+        const k = normalize(f.link_url)
+        if (k) pushGroup(featured, k, f.id)
+      }
+      for (const v of w.vinyl) {
+        const k = normalize(v.discogs_url)
+        if (k) pushGroup(vinyl, k, v.id)
+      }
+    }
+
+    const expand = (m: Map<string, string[]>, byTrack: Map<string, string[]>) => {
+      Array.from(m.values()).forEach((ids) => {
+        if (ids.length < 2) return
+        for (const id of ids) byTrack.set(id, ids)
+      })
+    }
+    expand(chart, chartByTrack)
+    expand(featured, featuredByTrack)
+    expand(vinyl, vinylByTrack)
+
+    return { chartByTrack, featuredByTrack, vinylByTrack }
+  }, [weeks])
+
   // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
   // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
   const vinylByYear = new Map<string, ChartVinylTrack[]>()
@@ -1188,6 +1237,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle.srcs, picksBundle.meta, idx) : undefined}
                         artistSlugMap={artistSlugMap}
+                        relatedIds={canonicalGroups.featuredByTrack.get(pick.id)}
                       />
                     )
                   })}
@@ -1274,6 +1324,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle.srcs, fortyBundle.meta, idx) : undefined}
                         artistSlugMap={artistSlugMap}
+                        relatedIds={canonicalGroups.chartByTrack.get(track.id)}
                       />
                     )
                   })}
@@ -1362,6 +1413,7 @@ export default function ChartView({
                           lang={lang}
                           autoplay={autoplayVinylId === track.id}
                           artistSlugMap={artistSlugMap}
+                          relatedIds={canonicalGroups.vinylByTrack.get(track.id)}
                         />
                       ))}
                     </div>

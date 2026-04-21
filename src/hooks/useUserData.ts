@@ -444,7 +444,35 @@ export function useSavedChartTracks() {
     }
   }
 
-  return { saved, loading, isSaved, toggle, refetch: fetch }
+  // Considera guardado el grupo si CUALQUIER id del grupo está guardado.
+  // Útil para tracks que aparecen en varias semanas (misma URL canónica).
+  const isAnySaved = (source: ChartTrackSource, ids: string[]) =>
+    ids.some((id) => savedSet.has(makeKey(source, id)))
+
+  // Alterna todo un grupo canónico (distintos id que representan la misma
+  // canción). Al desmarcar borra todas las filas del grupo en una sola
+  // sentencia. Al marcar inserta solo `primaryId` (el de la fila visible).
+  const toggleGroup = async (
+    source: ChartTrackSource,
+    primaryId: string,
+    groupIds: string[],
+  ) => {
+    if (!user || !primaryId) return
+    const ids = groupIds.length ? groupIds : [primaryId]
+    if (isAnySaved(source, ids)) {
+      await supabase
+        .from('saved_chart_tracks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('track_source', source)
+        .in('track_id', ids)
+      setSaved((s) => s.filter((r) => !(r.track_source === source && ids.includes(r.track_id))))
+    } else {
+      await toggle(source, primaryId)
+    }
+  }
+
+  return { saved, loading, isSaved, isAnySaved, toggle, toggleGroup, refetch: fetch }
 }
 
 // =============================================
