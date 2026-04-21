@@ -6,6 +6,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -36,10 +37,49 @@ interface ChartViewProps {
   dict: any
   weeks: ChartWeekBundle[]
   defaultExpandedWeekDate: string
+  /**
+   * Mapa `nombreNormalizado → slug` de artistas existentes en `public.artists`.
+   * Se construye en `src/app/[lang]/charts/page.tsx` recogiendo todos los nombres
+   * de los tracks visibles y consultando Supabase una sola vez. Permite que los
+   * nombres de artista en las filas del chart sean enlaces INTERNOS a su ficha
+   * cuando el artista existe en la base de datos (en vez de ir siempre a Beatport).
+   */
+  artistSlugMap?: Record<string, string>
 }
 
 // Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
 const UNKNOWN_YEAR_KEY = '__unknown_year__'
+
+/**
+ * Normalización compartida con `src/app/[lang]/charts/page.tsx` y `/api/search`:
+ * minúsculas, quita acentos, colapsa separadores. El mapa `artistSlugMap` se
+ * indexa con esta misma función, así que `findArtistSlug` puede mirar sin
+ * preocuparse de mayúsculas/acentos/puntuación.
+ */
+function normalizeArtistKey(raw: string): string {
+  return (raw || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+/**
+ * Busca slug de artista tolerando prefijo "The" (muy habitual: "The Freestylers"
+ * en el track, "freestylers" en BD). Si no hay match exacto, prueba con/sin "the".
+ */
+function findArtistSlug(
+  name: string,
+  slugMap: Record<string, string> | undefined,
+): string | null {
+  if (!slugMap || !name) return null
+  const n = normalizeArtistKey(name)
+  if (!n) return null
+  if (slugMap[n]) return slugMap[n]
+  const noThe = n.startsWith('the ') ? n.slice(4) : `the ${n}`
+  return slugMap[noThe] || null
+}
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -159,16 +199,46 @@ function MovementIndicator({
   )
 }
 
-function ArtistNames({ artists }: { artists: (ChartTrackArtist | ChartFeaturedArtist)[] }) {
+/**
+ * Renderiza la lista de artistas de una fila del chart. Preferencia de enlace:
+ *   1. Link INTERNO `/{lang}/artists/{slug}` si el artista existe en `public.artists`
+ *      (detectado vía `slugMap`). Así descubres al DJ dentro del sitio.
+ *   2. Enlace EXTERNO a su Beatport (`beatport_url`) o a su perfil genérico (`url`)
+ *      si no hay ficha interna.
+ *   3. Texto plano si no hay ninguna URL.
+ * Acepta los tres tipos de artista de charts (`ChartTrackArtist`, `ChartFeaturedArtist`,
+ * `ChartVinylArtist`) porque todos comparten `name` + URL opcional.
+ */
+function ArtistNames({
+  artists,
+  slugMap,
+  lang,
+}: {
+  artists: (ChartTrackArtist | ChartFeaturedArtist | ChartVinylArtist)[]
+  slugMap?: Record<string, string>
+  lang?: Locale
+}) {
   return (
     <span className="text-[var(--ink)]/70">
       {artists.map((a, i) => {
-        const href = ('beatport_url' in a && a.beatport_url) || ('url' in a && a.url) || ''
+        const internalSlug = findArtistSlug(a.name, slugMap)
+        const externalHref =
+          ('beatport_url' in a && (a as ChartTrackArtist).beatport_url) ||
+          ('url' in a && (a as ChartFeaturedArtist | ChartVinylArtist).url) ||
+          ''
         return (
           <span key={i}>
-            {href ? (
+            {internalSlug && lang ? (
+              <Link
+                href={`/${lang}/artists/${internalSlug}`}
+                className="text-[var(--red)] font-bold hover:underline decoration-2 underline-offset-2 transition-colors"
+                title={a.name}
+              >
+                {a.name}
+              </Link>
+            ) : externalHref ? (
               <a
-                href={href}
+                href={externalHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-[var(--red)] transition-colors underline decoration-dotted"
@@ -226,7 +296,7 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
-function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void }) {
+function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string> }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -250,7 +320,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
               {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} />
+              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
               {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{pick.label}</span></> : null}
               {pick.release_year != null && pick.release_year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{pick.release_year}</span></> : null}
             </p>
@@ -295,7 +365,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay }: { pick: ChartF
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string> }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
@@ -318,7 +388,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false }: { track: ChartVi
               {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} />
+              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
               {track.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></> : null}
               {track.year != null && track.year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{track.year}</span></> : null}
             </p>
@@ -367,7 +437,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false }: { track: ChartVi
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
 
@@ -397,7 +467,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay }: { track: ChartTrack; 
               {track.mix_name && <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{track.mix_name}</span>}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} />
+              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
               {track.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></>}
               {track.release_year != null && track.release_year > 0 && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{track.release_year}</span></>}
             </p>
@@ -573,6 +643,7 @@ export default function ChartView({
   lang,
   dict,
   weeks,
+  artistSlugMap,
 }: ChartViewProps) {
   const c = dict.charts
 
@@ -1112,6 +1183,7 @@ export default function ChartView({
                         lang={lang}
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle.srcs, picksBundle.meta, idx) : undefined}
+                        artistSlugMap={artistSlugMap}
                       />
                     )
                   })}
@@ -1194,8 +1266,10 @@ export default function ChartView({
                         key={track.id}
                         track={track}
                         dict={dict}
+                        lang={lang}
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle.srcs, fortyBundle.meta, idx) : undefined}
+                        artistSlugMap={artistSlugMap}
                       />
                     )
                   })}
@@ -1283,6 +1357,7 @@ export default function ChartView({
                           dict={dict}
                           lang={lang}
                           autoplay={autoplayVinylId === track.id}
+                          artistSlugMap={artistSlugMap}
                         />
                       ))}
                     </div>
