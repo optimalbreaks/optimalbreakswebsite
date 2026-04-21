@@ -386,6 +386,68 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
 }
 
 // =============================================
+// SAVED CHART TRACKS  (polymorphic: chart | featured | vinyl)
+// Stored in saved_chart_tracks (migration 053).
+// =============================================
+export type ChartTrackSource = 'chart' | 'featured' | 'vinyl'
+
+export interface SavedChartTrackRef {
+  track_source: ChartTrackSource
+  track_id: string
+  created_at?: string
+}
+
+function makeKey(source: ChartTrackSource, id: string) {
+  return `${source}:${id}`
+}
+
+export function useSavedChartTracks() {
+  const { user } = useAuth()
+  const [saved, setSaved] = useState<SavedChartTrackRef[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    if (!user) { setSaved([]); setLoading(false); return }
+    const { data } = await supabase
+      .from('saved_chart_tracks')
+      .select('track_source, track_id, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    setSaved((data as SavedChartTrackRef[]) || [])
+    setLoading(false)
+  }, [user])
+
+  useEffect(() => { fetch() }, [fetch])
+
+  const savedSet = new Set(saved.map((s) => makeKey(s.track_source, s.track_id)))
+
+  const isSaved = (source: ChartTrackSource, id: string) => savedSet.has(makeKey(source, id))
+
+  const toggle = async (source: ChartTrackSource, id: string) => {
+    if (!user || !id) return
+    if (isSaved(source, id)) {
+      await supabase
+        .from('saved_chart_tracks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('track_source', source)
+        .eq('track_id', id)
+      setSaved((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
+    } else {
+      const { data } = await supabase
+        .from('saved_chart_tracks')
+        .insert({ user_id: user.id, track_source: source, track_id: id })
+        .select('track_source, track_id, created_at')
+        .single()
+      const row = (data as SavedChartTrackRef | null) || { track_source: source, track_id: id }
+      setSaved((s) => [row, ...s])
+    }
+  }
+
+  return { saved, loading, isSaved, toggle, refetch: fetch }
+}
+
+// =============================================
 // USER PROFILE
 // =============================================
 export type UserProfile = ProfileRow

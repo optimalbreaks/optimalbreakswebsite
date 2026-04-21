@@ -81,7 +81,7 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
       </Link>
       <Link
         role="menuitem"
-        href={`/${lang}/dashboard?tab=profile`}
+        href={`/${lang}/mi-cuenta/perfil`}
         onClick={() => setOpen(false)}
         className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]"
         style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}

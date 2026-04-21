@@ -24,6 +24,7 @@ import type {
   ChartVinylTrack,
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import SaveTrackButton from '@/components/SaveTrackButton'
 
 type ChartWeekBundle = {
   edition: ChartEdition
@@ -352,6 +353,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap }:
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
+          <SaveTrackButton source="featured" trackId={pick.id} lang={lang} size="sm" />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -413,6 +415,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap }: {
               {c.vinyl_open_youtube}
             </a>
           )}
+          <SaveTrackButton source="vinyl" trackId={track.id} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -498,6 +501,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang }: 
               {track.music_key}
             </span>
           )}
+          <SaveTrackButton source="chart" trackId={track.id} lang={lang} size="sm" />
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"
