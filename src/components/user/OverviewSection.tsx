@@ -274,110 +274,200 @@ function GeneratingPartyModal({ es, active }: { es: boolean; active: boolean }) 
   if (!active) return null
 
   const currentPct = Math.round(progress)
-  // 💃 🕺 🎧 🎛️ 🪩 (escapados para evitar problemas de encoding en el source)
-  const dancersReal = ['\u{1F483}', '\u{1F57A}', '\u{1F3A7}', '\u{1F39B}\uFE0F', '\u{1FA90}']
+
+  // Equalizer: 9 barras verticales monocromas que suben y bajan a contratiempo.
+  // Cero gradientes, cero brillos: negro sobre paper, estética fanzine.
+  const eqBars = [
+    { dur: 0.48, delay: 0.00 },
+    { dur: 0.62, delay: 0.08 },
+    { dur: 0.38, delay: 0.18 },
+    { dur: 0.72, delay: 0.02 },
+    { dur: 0.50, delay: 0.24 },
+    { dur: 0.44, delay: 0.12 },
+    { dur: 0.66, delay: 0.30 },
+    { dur: 0.40, delay: 0.06 },
+    { dur: 0.56, delay: 0.20 },
+  ]
+
+  // Cinta superior tipo "caution tape" con el mismo texto repetido en loop.
+  const tapeTextEs = 'ANALIZANDO · NO EJECT · OPTIMAL BREAKS · SIDE A — RAW DATA · ANALIZANDO · NO EJECT · OPTIMAL BREAKS · SIDE A — RAW DATA · '
+  const tapeTextEn = 'ANALYZING · NO EJECT · OPTIMAL BREAKS · SIDE A — RAW DATA · ANALYZING · NO EJECT · OPTIMAL BREAKS · SIDE A — RAW DATA · '
+  const tapeText = es ? tapeTextEs : tapeTextEn
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center px-4"
-      style={{ background: 'rgba(23, 23, 23, 0.92)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'var(--ink)', opacity: 0.995 }}
       role="dialog"
       aria-modal="true"
       aria-label={es ? 'Generando tu ADN breakbeatero' : 'Generating your breakbeat DNA'}
     >
       <style>{`
-        @keyframes dnaShakeA { 0%,100% { transform: translateY(0) rotate(0deg) } 25% { transform: translateY(-8px) rotate(-10deg) } 50% { transform: translateY(0) rotate(0deg) } 75% { transform: translateY(-8px) rotate(10deg) } }
-        @keyframes dnaShakeB { 0%,100% { transform: translateY(-4px) rotate(6deg) } 50% { transform: translateY(4px) rotate(-6deg) } }
-        @keyframes dnaSpin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-        @keyframes dnaPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.55 } }
-        @keyframes dnaStripes { from { background-position: 0 0 } to { background-position: 40px 0 } }
-        @keyframes dnaFlash { 0% { filter: drop-shadow(0 0 18px var(--red)) } 25% { filter: drop-shadow(0 0 18px var(--yellow)) } 50% { filter: drop-shadow(0 0 18px var(--acid)) } 75% { filter: drop-shadow(0 0 18px var(--pink)) } 100% { filter: drop-shadow(0 0 18px var(--red)) } }
+        @keyframes dnaEq {
+          0%, 100% { transform: scaleY(0.18) }
+          50% { transform: scaleY(1) }
+        }
+        @keyframes dnaTape {
+          from { transform: translateX(0) }
+          to   { transform: translateX(-50%) }
+        }
+        @keyframes dnaStripes {
+          from { background-position: 0 0 }
+          to   { background-position: 40px 0 }
+        }
+        @keyframes dnaBlink {
+          0%, 100% { opacity: 1 }
+          50% { opacity: 0 }
+        }
       `}</style>
 
       <div
-        className="w-full max-w-[520px] border-4 border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)]"
-        style={{ boxShadow: '12px 12px 0 var(--red)' }}
+        className="w-full max-w-[560px] border-[6px] border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)]"
+        style={{ boxShadow: '10px 10px 0 var(--red)' }}
       >
-        <div className="p-6 sm:p-8">
-          {/* Bola de discoteca central */}
-          <div className="flex justify-center mb-4">
-            <div
-              aria-hidden
-              style={{
-                fontSize: 74,
-                lineHeight: 1,
-                display: 'inline-block',
-                animation: 'dnaSpin 4.5s linear infinite, dnaFlash 2.4s linear infinite',
-              }}
-            >
-              {'\u{1FA90}'}
+        {/* Cinta cabecera: caution tape con texto scrolleando */}
+        <div
+          className="relative overflow-hidden border-b-[6px] border-[var(--ink)]"
+          style={{ background: 'var(--yellow)', height: 34 }}
+          aria-hidden
+        >
+          <div
+            className="absolute inset-y-0 left-0 flex items-center whitespace-nowrap"
+            style={{
+              fontFamily: "'Courier Prime', monospace",
+              fontWeight: 700,
+              fontSize: '11px',
+              letterSpacing: '2px',
+              color: 'var(--ink)',
+              animation: 'dnaTape 18s linear infinite',
+              minWidth: '200%',
+            }}
+          >
+            <span>{tapeText.repeat(2)}</span>
+          </div>
+        </div>
+
+        <div className="px-6 sm:px-8 pt-6 pb-7">
+          {/* REC indicator + SIDE label */}
+          <div className="flex items-center justify-between mb-5" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px' }}>
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden
+                style={{
+                  display: 'inline-block',
+                  width: 10,
+                  height: 10,
+                  background: 'var(--red)',
+                  animation: 'dnaBlink 1s steps(1,end) infinite',
+                }}
+              />
+              <span style={{ color: 'var(--ink)', fontWeight: 700 }}>REC</span>
             </div>
+            <span style={{ color: 'var(--ink)', opacity: 0.6 }}>// TRK 01 — SIDE A</span>
           </div>
 
-          {/* Crew de bailarines */}
-          <div className="flex items-center justify-center gap-4 mb-5" aria-hidden>
-            {dancersReal.map((emoji, i) => (
+          {/* Equalizer: 9 barras verticales negras sobre paper */}
+          <div
+            className="mx-auto mb-6 flex items-end justify-center gap-[6px] border-[3px] border-[var(--ink)] p-3"
+            style={{ height: 120, background: 'var(--paper-dark, #e8dcc8)' }}
+            aria-hidden
+          >
+            {eqBars.map((b, i) => (
               <span
                 key={i}
                 style={{
-                  fontSize: 34,
-                  lineHeight: 1,
                   display: 'inline-block',
-                  animation: `${i % 2 === 0 ? 'dnaShakeA' : 'dnaShakeB'} ${0.6 + (i % 3) * 0.18}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.12}s`,
+                  width: 14,
+                  height: '100%',
+                  background: 'var(--ink)',
+                  transformOrigin: 'bottom',
+                  animation: `dnaEq ${b.dur}s ease-in-out ${b.delay}s infinite`,
                 }}
-              >
-                {emoji}
-              </span>
+              />
             ))}
           </div>
 
-          {/* Título */}
+          {/* Título brutalista */}
           <div
-            className="text-center mb-2"
+            className="mb-1"
             style={{
               fontFamily: "'Unbounded', sans-serif",
               fontWeight: 900,
-              fontSize: '20px',
-              letterSpacing: '-0.5px',
-              color: 'var(--yellow)',
+              fontSize: 'clamp(22px, 5vw, 30px)',
+              letterSpacing: '-1.2px',
+              lineHeight: 1,
+              color: 'var(--ink)',
               textTransform: 'uppercase',
             }}
           >
-            {es ? 'PINCHANDO TU ADN...' : 'SPINNING YOUR DNA...'}
+            {es ? 'Pinchando tu ADN' : 'Spinning your DNA'}
           </div>
           <div
-            className="text-center mb-5"
+            className="mb-5"
             style={{
               fontFamily: "'Courier Prime', monospace",
-              fontSize: '10px',
-              letterSpacing: '1.5px',
-              color: 'var(--paper)',
-              opacity: 0.65,
+              fontSize: '11px',
+              letterSpacing: '2px',
+              color: 'var(--ink)',
+              opacity: 0.55,
               textTransform: 'uppercase',
             }}
           >
-            {es ? 'LA BOLA YA ESTÁ GIRANDO' : 'THE DISCO BALL IS SPINNING'}
+            // {es ? 'Análisis en curso — no cierres la pestaña' : 'Analysis in progress — do not close tab'}
           </div>
 
-          {/* Mensaje rotatorio */}
+          {/* Mensaje rotatorio: bloque duro con borde negro y fondo amarillo */}
           <div
-            className="text-center mb-5 min-h-[48px] flex items-center justify-center px-2"
-            style={{
-              fontFamily: "'Special Elite', monospace",
-              fontSize: '14px',
-              lineHeight: 1.5,
-              color: 'var(--paper)',
-              animation: 'dnaPulse 2.5s ease-in-out infinite',
-            }}
+            className="border-[3px] border-[var(--ink)] mb-6 px-3 py-3 flex items-start gap-2 min-h-[64px]"
+            style={{ background: 'var(--yellow)' }}
           >
-            {messages[msgIdx]}
+            <span
+              aria-hidden
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontWeight: 900,
+                fontSize: '14px',
+                color: 'var(--red)',
+                lineHeight: 1.45,
+                flexShrink: 0,
+              }}
+            >
+              &gt;
+            </span>
+            <span
+              style={{
+                fontFamily: "'Special Elite', monospace",
+                fontSize: '14px',
+                lineHeight: 1.45,
+                color: 'var(--ink)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {messages[msgIdx]}
+            </span>
           </div>
 
-          {/* Barra de progreso con rayas en movimiento */}
+          {/* Barra de progreso: caja con borde grueso + relleno negro + caution stripes */}
+          <div className="flex items-end justify-between mb-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '2px' }}>
+            <span style={{ color: 'var(--ink)', opacity: 0.55 }}>{es ? 'PROGRESO' : 'PROGRESS'}</span>
+            <span
+              style={{
+                fontFamily: "'Unbounded', sans-serif",
+                fontWeight: 900,
+                fontSize: '22px',
+                letterSpacing: '-1px',
+                color: 'var(--red)',
+                lineHeight: 1,
+              }}
+            >
+              {String(currentPct).padStart(2, '0')}%
+            </span>
+          </div>
+
           <div
-            className="relative h-5 border-2 border-[var(--paper)] overflow-hidden mb-2"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
+            className="relative h-6 border-[3px] border-[var(--ink)] overflow-hidden"
+            style={{ background: 'var(--paper)' }}
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -385,48 +475,35 @@ function GeneratingPartyModal({ es, active }: { es: boolean; active: boolean }) 
           >
             <div
               className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
-              style={{
-                width: `${currentPct}%`,
-                background: 'linear-gradient(90deg, var(--red) 0%, var(--pink) 50%, var(--yellow) 100%)',
-              }}
+              style={{ width: `${currentPct}%`, background: 'var(--ink)' }}
             />
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  'repeating-linear-gradient(135deg, rgba(0,0,0,0.22) 0 10px, transparent 10px 20px)',
-                animation: 'dnaStripes 1.2s linear infinite',
+                  'repeating-linear-gradient(45deg, var(--yellow) 0 8px, transparent 8px 16px)',
+                animation: 'dnaStripes 0.9s linear infinite',
+                mixBlendMode: 'normal',
+                opacity: currentPct > 0 ? 0.55 : 0,
               }}
             />
           </div>
-          <div
-            className="flex items-center justify-between mb-4"
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: '11px',
-              letterSpacing: '1.5px',
-            }}
-          >
-            <span style={{ color: 'var(--dim)' }}>{es ? 'PROGRESO' : 'PROGRESS'}</span>
-            <span style={{ color: 'var(--yellow)', fontWeight: 700 }}>{currentPct}%</span>
-          </div>
 
-          {/* Tip */}
-          <p
-            className="text-center"
-            style={{
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: '10px',
-              letterSpacing: '0.8px',
-              color: 'var(--dim)',
-              lineHeight: 1.6,
-              textTransform: 'uppercase',
-            }}
+          {/* Footer: tip estilo ticker */}
+          <div
+            className="mt-5 pt-3 border-t-[3px] border-[var(--ink)] flex items-center justify-between gap-3 flex-wrap"
+            style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', letterSpacing: '1.5px', color: 'var(--ink)' }}
           >
-            {es
-              ? 'Puede tardar hasta 60 segundos · No cierres la pestaña'
-              : 'Can take up to 60 seconds · Don\'t close the tab'}
-          </p>
+            <span style={{ opacity: 0.65 }}>
+              [ {es ? 'HASTA 60 SEGUNDOS' : 'UP TO 60 SECONDS'} ]
+            </span>
+            <span style={{ opacity: 0.65 }}>
+              [ {es ? 'NO EJECT' : 'NO EJECT'} ]
+            </span>
+            <span style={{ opacity: 0.65 }}>
+              [ AI / OB — {new Date().getFullYear()} ]
+            </span>
+          </div>
         </div>
       </div>
     </div>
