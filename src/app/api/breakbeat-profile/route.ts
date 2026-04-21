@@ -548,7 +548,10 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
   method: 'openai' | 'rules'
 }> {
   const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return generateRulesText(stats, lang)
+  if (!apiKey) {
+    console.warn(`[breakbeat-profile] OPENAI_API_KEY missing (${lang}); falling back to rules. Configura OPENAI_API_KEY en tu .env / Vercel para activar el LLM.`)
+    return generateRulesText(stats, lang)
+  }
 
   const stylesStr = stats.top_styles.map(s => `${s.name} (${Math.round(s.pct * 100)}%)`).join(', ')
   const countriesStr = stats.top_countries.map(c => `${c.name} (${Math.round(c.pct * 100)}%)`).join(', ')
@@ -775,11 +778,11 @@ Reply EXACTLY in this JSON format:
       if (!res.ok) {
         const errText = await res.text().catch(() => '')
         console.warn(`[breakbeat-profile] OpenAI error (${model}, ${lang}):`, res.status, errText.slice(0, 400))
-        const retryable =
-          res.status === 404 ||
-          res.status === 400 ||
-          /model.*(not.*found|does not exist|unavailable|access)/i.test(errText)
-        return { ok: false, reason: `openai_http_${res.status}`, retryWithFallback: retryable }
+        // Políticamente: retry siempre que el primario falle HTTP y haya
+        // fallback disponible. El coste es una llamada extra en el peor caso
+        // (uno falla, otro funciona), pero evita caer a la plantilla por un
+        // problema puntual de modelo, cuota o rate-limit transitorio.
+        return { ok: false, reason: `openai_http_${res.status}`, retryWithFallback: true }
       }
 
       const data = await res.json()
