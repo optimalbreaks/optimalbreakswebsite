@@ -102,6 +102,23 @@ export default async function LabelDetailPage({ params }: Props) {
                 entityName={label.name}
               />
             ) : null}
+            {/* CTA destacado a Discogs: fuente rica de info (catálogo completo, artistas, fechas, reviews).
+                Va debajo del Top 10 Beatport para darle protagonismo como referencia externa. */}
+            {label.discogs_url && (
+              <a
+                href={label.discogs_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 md:mt-4 inline-flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-3.5 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white no-underline font-black tracking-[2px] uppercase hover:bg-[var(--ink)] transition-colors"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}
+                title={lang === 'es' ? 'Ver catálogo completo en Discogs' : 'View full catalogue on Discogs'}
+              >
+                <span aria-hidden>↗</span>
+                <span>
+                  {lang === 'es' ? 'Ver catálogo en Discogs' : 'View catalogue on Discogs'}
+                </span>
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -117,30 +134,17 @@ export default async function LabelDetailPage({ params }: Props) {
         )}
       </div>
 
-      {(label.website || label.discogs_url) && (
+      {label.website && (
         <div className="flex flex-wrap gap-2 mb-8">
-          {label.website && (
-            <a
-              href={label.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cutout outline no-underline text-[var(--ink)]"
-              title={lang === 'es' ? 'Web oficial del sello' : 'Official label website'}
-            >
-              {lang === 'es' ? '↗ WEB' : '↗ WEBSITE'}
-            </a>
-          )}
-          {label.discogs_url && (
-            <a
-              href={label.discogs_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cutout fill no-underline"
-              title={lang === 'es' ? 'Catálogo en Discogs' : 'Catalogue on Discogs'}
-            >
-              ↗ DISCOGS
-            </a>
-          )}
+          <a
+            href={label.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cutout outline no-underline text-[var(--ink)]"
+            title={lang === 'es' ? 'Web oficial del sello' : 'Official label website'}
+          >
+            {lang === 'es' ? '↗ WEB' : '↗ WEBSITE'}
+          </a>
         </div>
       )}
       <div className="max-w-[700px] space-y-5">
