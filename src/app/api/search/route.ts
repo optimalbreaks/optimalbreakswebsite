@@ -102,10 +102,15 @@ export async function GET(request: NextRequest) {
 
   const base = (path: string) => `/${lang}${path}`
 
+  // Hoy en formato YYYY-MM-DD (UTC). Sirve para dividir eventos entre
+  // "futuros/hoy" (prioritarios en el buscador) y "pasados".
+  const todayIso = new Date().toISOString().slice(0, 10)
+
   const [
     artistsRes,
     labelsRes,
-    eventsRes,
+    eventsUpcomingRes,
+    eventsPastRes,
     mixesRes,
     scenesRes,
     postsRes,
@@ -124,12 +129,31 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, founded_year')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(8),
+    // EVENTOS FUTUROS (prioritarios): los próximos son los que más
+    // ayudan al descubrimiento, así que van arriba del bloque de eventos.
+    // `lineup_text` es una columna STORED GENERATED (migración 052) que
+    // aplana `lineup text[]` + `stages[].lineup[]`, por eso buscar
+    // "plump djs" encuentra un evento donde ese DJ figura en el cartel.
     supabase
       .from('events')
-      .select('id, slug, name, image_url, city, country, date_start, event_type')
-      .or(`name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike}`)
+      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
+      .or(
+        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
+      )
+      .gte('date_start', todayIso)
+      .order('date_start', { ascending: true })
+      .limit(10),
+    // EVENTOS PASADOS: complementan el resultado (los icónicos siguen
+    // siendo relevantes), pero siempre detrás de los futuros.
+    supabase
+      .from('events')
+      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
+      .or(
+        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
+      )
+      .lt('date_start', todayIso)
       .order('date_start', { ascending: false })
-      .limit(8),
+      .limit(6),
     supabase
       .from('mixes')
       .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url')
@@ -205,10 +229,69 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  for (const e of eventsRes.data || []) {
+  // qLower: para hacer matching en el line-up del lado JS y poder mostrar
+  // los DJs que coinciden en el subtítulo del resultado (mejor contexto).
+  const qLower = qRaw.toLowerCase()
+
+  // collectLineupNames aplana `lineup text[]` + `stages[].lineup[]` igual
+  // que la función SQL events_lineup_to_text, pero en memoria para poder
+  // destacar coincidencias.
+  const collectLineupNames = (
+    lineup: unknown,
+    stages: unknown,
+  ): string[] => {
+    const out = new Set<string>()
+    if (Array.isArray(lineup)) {
+      for (const n of lineup) if (typeof n === 'string' && n.trim()) out.add(n)
+    }
+    if (Array.isArray(stages)) {
+      for (const st of stages) {
+        const sl = (st as { lineup?: unknown })?.lineup
+        if (Array.isArray(sl)) {
+          for (const n of sl) if (typeof n === 'string' && n.trim()) out.add(n)
+        }
+      }
+    }
+    return Array.from(out)
+  }
+
+  const pushEvent = (
+    e: {
+      id: string
+      slug: string
+      name: string | null
+      image_url: string | null
+      city: string | null
+      country: string | null
+      date_start: string | null
+      event_type: string | null
+      lineup?: unknown
+      stages?: unknown
+    },
+    upcoming: boolean,
+  ) => {
     const place = [e.city, e.country].filter(Boolean).join(', ')
     const year = e.date_start ? e.date_start.slice(0, 4) : ''
-    const parts = [place, year].filter(Boolean)
+    // Si la búsqueda no hizo match en name/slug/city, muy probablemente
+    // viene del line-up: destacamos los nombres coincidentes en el subtítulo
+    // para que el usuario entienda por qué aparece este evento.
+    const nameHit =
+      (e.name || '').toLowerCase().includes(qLower) ||
+      (e.slug || '').toLowerCase().includes(qLower) ||
+      (e.city || '').toLowerCase().includes(qLower)
+    let lineupHitText = ''
+    if (!nameHit && qLower) {
+      const matches = collectLineupNames(e.lineup, e.stages).filter((n) =>
+        n.toLowerCase().includes(qLower),
+      )
+      if (matches.length > 0) {
+        const shown = matches.slice(0, 2).join(', ')
+        const rest = matches.length > 2 ? ` +${matches.length - 2}` : ''
+        lineupHitText = `Line-up: ${shown}${rest}`
+      }
+    }
+    const prefix = upcoming ? '· UPCOMING' : ''
+    const parts = [prefix, place, year, lineupHitText].filter(Boolean)
     results.push({
       type: 'event',
       id: e.id,
@@ -218,6 +301,14 @@ export async function GET(request: NextRequest) {
       image_url: (e.image_url as string | null) ?? null,
       href: base(`/events/${e.slug}`),
     })
+  }
+
+  // Primero los futuros (ordenados asc por fecha), luego los pasados.
+  for (const e of (eventsUpcomingRes.data || []) as Parameters<typeof pushEvent>[0][]) {
+    pushEvent(e, true)
+  }
+  for (const e of (eventsPastRes.data || []) as Parameters<typeof pushEvent>[0][]) {
+    pushEvent(e, false)
   }
 
   // Para mixes sin portada propia: usa la foto del artista vinculado
@@ -325,7 +416,10 @@ export async function GET(request: NextRequest) {
       title: (m.title || m.slug) as string,
       subtitle: parts.join(' — '),
       image_url: image,
-      href: base(`/mixes#${m.slug}`),
+      // `?play=1` activa autoplay en MixesExplorer (clear filters + scroll +
+      // playMix/autoplay del iframe). El hash usa `mix-<id>` en vez del slug
+      // porque el id es estable y no colisiona con otros anchors.
+      href: base(`/mixes?play=1#mix-${m.id}`),
     })
   }
 
@@ -432,7 +526,10 @@ export async function GET(request: NextRequest) {
       title: fullTitle,
       subtitle: parts.join(' — '),
       image_url: (row.artwork_url as string | null) ?? null,
-      href: `${base('/charts')}#${anchor}`,
+      // `?play=1` dispara autoplay en ChartView: para chart/featured arranca
+      // `playFromIndex(...)` y para vinyl inyecta `autoplay=1` en el iframe
+      // de YouTube de esa fila.
+      href: `${base('/charts')}?play=1#${anchor}`,
     })
   }
 
