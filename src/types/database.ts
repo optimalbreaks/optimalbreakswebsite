@@ -454,6 +454,8 @@ export interface Label extends Record<string, unknown> {
   beatport_url: string | null
   beatport_top_tracks: BeatportTopTrack[]
   beatport_top_tracks_updated_at: string | null
+  discogs_id: number | null
+  discogs_url: string | null
 }
 
 export type OrganizationRole = 'label' | 'promoter' | 'booking' | 'media' | 'community'

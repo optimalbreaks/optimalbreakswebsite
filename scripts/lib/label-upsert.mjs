@@ -27,6 +27,9 @@ const ALL_COLUMNS = [
   /** Opcional: ficha Beatport; Top 10 vía `npm run db:beatport:top`. */
   'beatport_id',
   'beatport_url',
+  /** Opcional: ficha Discogs del sello (id numérico + URL canónica). */
+  'discogs_id',
+  'discogs_url',
 ]
 
 export function validateLabelRow(data) {

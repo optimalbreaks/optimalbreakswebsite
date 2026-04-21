@@ -106,7 +106,7 @@ export default async function LabelDetailPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-4">
         <span className="cutout fill">{label.country}</span>
         {label.founded_year && <span className="cutout outline">Est. {label.founded_year}</span>}
         <span className={`cutout ${label.is_active ? 'acid' : 'red'}`}>{label.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
@@ -116,6 +116,33 @@ export default async function LabelDetailPage({ params }: Props) {
           </Link>
         )}
       </div>
+
+      {(label.website || label.discogs_url) && (
+        <div className="flex flex-wrap gap-2 mb-8">
+          {label.website && (
+            <a
+              href={label.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cutout outline no-underline text-[var(--ink)]"
+              title={lang === 'es' ? 'Web oficial del sello' : 'Official label website'}
+            >
+              {lang === 'es' ? '↗ WEB' : '↗ WEBSITE'}
+            </a>
+          )}
+          {label.discogs_url && (
+            <a
+              href={label.discogs_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cutout outline no-underline text-[var(--ink)]"
+              title={lang === 'es' ? 'Catálogo en Discogs' : 'Catalogue on Discogs'}
+            >
+              ↗ DISCOGS
+            </a>
+          )}
+        </div>
+      )}
       <div className="max-w-[700px] space-y-5">
         {splitBioParagraphs(lang === 'es' ? label.description_es : label.description_en).map((para, i) => (
           <p
