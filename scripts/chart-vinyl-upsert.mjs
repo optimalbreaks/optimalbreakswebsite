@@ -4,6 +4,8 @@
  * Solo lee el JSON que pases: no consulta Discogs ni YouTube.
  *
  *   node scripts/chart-vinyl-upsert.mjs data/charts/vinyl/2026-04-06.json
+ *   node scripts/chart-vinyl-upsert.mjs data/charts/vinyl/2026-04-20.json --create-edition-if-missing
+ *     (crea chart_editions publicada mínima si aún no existe; p. ej. vinilo antes del chart 40)
  *
  * Formato JSON:
  * {
@@ -91,9 +93,10 @@ function requireSupabase() {
 }
 
 async function main() {
+  const createEditionIfMissing = process.argv.includes('--create-edition-if-missing')
   const rel = process.argv[2]
-  if (!rel) {
-    console.error('Uso: node scripts/chart-vinyl-upsert.mjs <ruta-json>')
+  if (!rel || rel.startsWith('--')) {
+    console.error('Uso: node scripts/chart-vinyl-upsert.mjs <ruta-json> [--create-edition-if-missing]')
     console.error('  Ej: node scripts/chart-vinyl-upsert.mjs data/charts/vinyl/2026-04-06.json')
     process.exit(1)
   }
@@ -121,19 +124,38 @@ async function main() {
   const vinyl = Array.isArray(data.vinyl) ? data.vinyl : []
   const supabase = requireSupabase()
 
-  const { data: edition, error: edErr } = await supabase
+  const { data: editionRow, error: edErr } = await supabase
     .from('chart_editions')
     .select('id')
     .eq('week_date', weekDate)
     .maybeSingle()
 
   if (edErr) throw new Error(`chart_editions: ${edErr.message}`)
-  if (!edition?.id) {
-    console.error(`No hay chart_editions con week_date=${weekDate}. Crea/publica primero esa semana.`)
-    process.exit(1)
-  }
 
-  const editionId = edition.id
+  let editionId = editionRow?.id
+  if (!editionId) {
+    if (!createEditionIfMissing) {
+      console.error(`No hay chart_editions con week_date=${weekDate}. Crea/publica primero esa semana.`)
+      process.exit(1)
+    }
+    const title = `40 Breaks Vitales — ${weekDate}`
+    const { data: inserted, error: insEdErr } = await supabase
+      .from('chart_editions')
+      .insert({
+        week_date: weekDate,
+        title,
+        description_en: `The 40 breakbeat tracks defining the week of ${weekDate}.`,
+        description_es: `Los 40 temas de breakbeat que definen la semana del ${weekDate}.`,
+        sources: [],
+        is_published: true,
+        published_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+    if (insEdErr) throw new Error(`Insert chart_edition: ${insEdErr.message}`)
+    editionId = inserted.id
+    console.log(`  ↳ Creada chart_editions para week_date=${weekDate} (edición vacía hasta publicar el 40).`)
+  }
 
   const { error: delErr } = await supabase
     .from('chart_vinyl_tracks')
