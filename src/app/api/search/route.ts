@@ -486,6 +486,24 @@ export async function GET(request: NextRequest) {
   // ChartView detecta el hash al montar, expande el acordeón que toque
   // (semana o año) y hace scroll + highlight sobre la fila.
   // ----------------------------------------------------------------
+  /**
+   * Devuelve el primer nombre de artista del array JSONB, normalizado sin
+   * acentos ni espacios extra. Sirve para deduplicar canciones: un mismo
+   * tema registrado a veces como "Guau" y otras como "Guau, Lutolsky"
+   * comparte `Guau` como primer artista y no genera filas duplicadas.
+   */
+  function firstArtistName(raw: unknown): string {
+    if (!Array.isArray(raw)) return ''
+    for (const a of raw) {
+      if (typeof a === 'string' && a.trim()) return a.trim()
+      if (a && typeof a === 'object') {
+        const n = (a as { name?: unknown }).name
+        if (typeof n === 'string' && n.trim()) return n.trim()
+      }
+    }
+    return ''
+  }
+
   function artistsToText(raw: unknown): string {
     if (!Array.isArray(raw)) return ''
     const names = raw
@@ -541,7 +559,11 @@ export async function GET(request: NextRequest) {
     const mix = (row.mix_name || '').trim()
     const fullTitle = mix ? `${title} (${mix})` : title
     const artistsText = artistsToText(row.artists)
-    const key = `${normForKey(title)}|${normForKey(mix)}|${normForKey(artistsText)}`
+    // Dedupe por titulo+mix+PRIMER artista (no todos). Una misma
+    // cancion puede aparecer en distintas ediciones con feats variables
+    // ("Guau" vs "Guau, Lutolsky"). Usando solo el primer artista, que
+    // suele ser el principal, ambas se consideran la misma.
+    const key = `${normForKey(title)}|${normForKey(mix)}|${normForKey(firstArtistName(row.artists))}`
     if (seenTrackKeys.has(key)) return
     seenTrackKeys.add(key)
     const yr = kind === 'vinyl' ? row.year : row.release_year
