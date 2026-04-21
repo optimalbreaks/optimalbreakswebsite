@@ -692,39 +692,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                 : (es ? '🔗 COMPARTIR' : '🔗 SHARE')}
             </button>
           ) : null}
-          {orderedAudioQueue.length > 0 && (
-            isGroupActive ? (
-              <button
-                type="button"
-                onClick={stopAll}
-                className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--red)] text-white transition-all cursor-pointer whitespace-nowrap"
-                style={{ fontFamily: "'Courier Prime', monospace" }}
-              >
-                {es ? '■ PARAR' : '■ STOP'}
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={playAll}
-                  className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all cursor-pointer whitespace-nowrap"
-                  style={{ fontFamily: "'Courier Prime', monospace" }}
-                  title={es ? 'Reproducir en orden' : 'Play in order'}
-                >
-                  {es ? '▶ PLAY ALL' : '▶ PLAY ALL'}
-                </button>
-                <button
-                  type="button"
-                  onClick={playShuffle}
-                  className="inline-flex items-center gap-1.5 min-h-[36px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--uv)] text-white hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-all cursor-pointer whitespace-nowrap"
-                  style={{ fontFamily: "'Courier Prime', monospace" }}
-                  title={es ? 'Reproducir aleatorio' : 'Play shuffled'}
-                >
-                  {es ? '⇄ ALEATORIO' : '⇄ SHUFFLE'}
-                </button>
-              </>
-            )
-          )}
+          {/*
+            PLAY ALL / ALEATORIO / PARAR se han movido a la barra contextual
+            situada justo sobre la lista (más abajo), para que el botón y
+            las pistas que va a reproducir queden visualmente juntos. Esto
+            evita la duda de "¿estoy reproduciendo todas o las filtradas?".
+          */}
         </div>
       </div>
 
@@ -851,30 +824,92 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         </p>
       ) : (
         <>
-          {sorted.length < tracks.length ? (
-            <div
-              className="mb-2 px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] flex items-center justify-between gap-3"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
-              role="status"
-              aria-live="polite"
-            >
-              <span>
-                {es ? 'FILTRADAS' : 'FILTERED'} ({sorted.length} / {tracks.length})
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveKinds(new Set(ALL_PLAYBACK_KINDS))
-                  if (yearBounds) setYearRange([yearBounds.min, yearBounds.max])
-                }}
-                className="h-[22px] px-2 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-colors cursor-pointer"
-                style={{ fontSize: '10px', letterSpacing: '1px' }}
-                title={es ? 'Limpiar filtros' : 'Clear filters'}
+          {(() => {
+            const isFiltered = sorted.length < tracks.length
+            const audioN = orderedAudioQueue.length
+            const hasAudio = audioN > 0
+            const clearFilters = () => {
+              setActiveKinds(new Set(ALL_PLAYBACK_KINDS))
+              if (yearBounds) setYearRange([yearBounds.min, yearBounds.max])
+            }
+            // La barra se muestra siempre que haya algo que controlar: pistas
+            // con audio reproducible, o filtros activos aunque no haya audio
+            // (para que el usuario siempre pueda pulsar LIMPIAR).
+            if (!hasAudio && !isFiltered) return null
+            return (
+              <div
+                className={`mb-2 px-3 py-2 border-[3px] border-[var(--ink)] flex items-center justify-between gap-3 flex-wrap ${
+                  isFiltered ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--paper-dark)] text-[var(--ink)]'
+                }`}
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
+                role="status"
+                aria-live="polite"
               >
-                {es ? '✕ LIMPIAR' : '✕ CLEAR'}
-              </button>
-            </div>
-          ) : null}
+                <span className="shrink-0">
+                  {isFiltered
+                    ? `${es ? 'FILTRADAS' : 'FILTERED'} (${sorted.length} / ${tracks.length})`
+                    : `${es ? 'TODAS' : 'ALL'} (${tracks.length})`}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {hasAudio ? (
+                    isGroupActive ? (
+                      <button
+                        type="button"
+                        onClick={stopAll}
+                        className="inline-flex items-center gap-1.5 min-h-[32px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--red)] text-white transition-all cursor-pointer whitespace-nowrap"
+                        style={{ fontFamily: "'Courier Prime', monospace" }}
+                        title={es ? 'Parar reproducción' : 'Stop playback'}
+                      >
+                        {es ? '■ PARAR' : '■ STOP'}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={playAll}
+                          className="inline-flex items-center gap-1.5 min-h-[32px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all cursor-pointer whitespace-nowrap"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={isFiltered
+                            ? (es ? 'Reproducir las filtradas en orden' : 'Play filtered tracks in order')
+                            : (es ? 'Reproducir todas en orden' : 'Play all in order')}
+                        >
+                          {isFiltered
+                            ? `▶ ${es ? 'PLAY FILTRADAS' : 'PLAY FILTERED'} (${audioN})`
+                            : `▶ ${es ? 'PLAY ALL' : 'PLAY ALL'} (${audioN})`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={playShuffle}
+                          className="inline-flex items-center gap-1.5 min-h-[32px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--uv)] text-white hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-all cursor-pointer whitespace-nowrap"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={isFiltered
+                            ? (es ? 'Aleatorio sobre las filtradas' : 'Shuffle filtered tracks')
+                            : (es ? 'Reproducir aleatorio' : 'Play shuffled')}
+                        >
+                          {`⇄ ${es ? 'ALEATORIO' : 'SHUFFLE'} (${audioN})`}
+                        </button>
+                      </>
+                    )
+                  ) : isFiltered ? (
+                    <span className="text-[10px] text-[var(--ink)]/60" style={{ letterSpacing: '1px' }}>
+                      {es ? 'SIN AUDIO REPRODUCIBLE' : 'NO PLAYABLE AUDIO'}
+                    </span>
+                  ) : null}
+                  {isFiltered ? (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="h-[32px] px-2.5 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-colors cursor-pointer"
+                      style={{ fontSize: '10px', letterSpacing: '1px' }}
+                      title={es ? 'Limpiar filtros' : 'Clear filters'}
+                    >
+                      {es ? '✕ LIMPIAR' : '✕ CLEAR'}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })()}
           <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
           {sorted.map((t) => {
             const isCurrent = activeRowKey === t.key
