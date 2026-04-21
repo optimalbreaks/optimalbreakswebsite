@@ -466,15 +466,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return c
   }, [tracks])
 
-  if (loading || tracksLoading) {
-    return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
-      {isShared
-        ? (es ? 'Cargando tracks…' : 'Loading tracks…')
-        : (es ? 'Cargando tus tracks…' : 'Loading your tracks…')}
-    </p>
-  }
-
   // URL pública compartible de mi lista (solo en modo propio).
+  // IMPORTANTE: este `useMemo` y el `useCallback` siguiente deben quedarse
+  // por encima del early-return de abajo; si no, React cambia la cantidad de
+  // hooks entre renders y lanza el error #310.
   const shareUrl = useMemo(() => {
     if (isShared || !user) return ''
     if (typeof window === 'undefined') return ''
@@ -502,6 +497,14 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       setTimeout(() => setCopiedUrl(false), 1800)
     } catch { /* ignora */ }
   }, [shareUrl])
+
+  if (loading || tracksLoading) {
+    return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
+      {isShared
+        ? (es ? 'Cargando tracks…' : 'Loading tracks…')
+        : (es ? 'Cargando tus tracks…' : 'Loading your tracks…')}
+    </p>
+  }
 
   return (
     <div>
