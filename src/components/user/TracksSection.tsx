@@ -850,7 +850,32 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           {es ? 'Nada guardado en esta categoría todavía.' : 'Nothing saved in this category yet.'}
         </p>
       ) : (
-        <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
+        <>
+          {sorted.length < tracks.length ? (
+            <div
+              className="mb-2 px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] flex items-center justify-between gap-3"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
+              role="status"
+              aria-live="polite"
+            >
+              <span>
+                {es ? 'FILTRADAS' : 'FILTERED'} ({sorted.length} / {tracks.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveKinds(new Set(ALL_PLAYBACK_KINDS))
+                  if (yearBounds) setYearRange([yearBounds.min, yearBounds.max])
+                }}
+                className="h-[22px] px-2 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-colors cursor-pointer"
+                style={{ fontSize: '10px', letterSpacing: '1px' }}
+                title={es ? 'Limpiar filtros' : 'Clear filters'}
+              >
+                {es ? '✕ LIMPIAR' : '✕ CLEAR'}
+              </button>
+            </div>
+          ) : null}
+          <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
           {sorted.map((t) => {
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
@@ -942,7 +967,8 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
               </div>
             )
           })}
-        </div>
+          </div>
+        </>
       )}
 
       {/* La barra flotante de now-playing la monta `DeckAudioProvider` en
