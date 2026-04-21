@@ -401,23 +401,67 @@ function makeKey(source: ChartTrackSource, id: string) {
   return `${source}:${id}`
 }
 
+// =============================================
+// Store compartido a nivel módulo para saved_chart_tracks.
+// Cada instancia de `useSavedChartTracks()` lee/escribe de este único store,
+// así todas las filas de la página (muchísimas en /charts, por ejemplo) se
+// mantienen sincronizadas sin hacer un round-trip a Supabase por cada render.
+// Cuando una instancia muta el estado (toggle/toggleGroup/toggleGroupRefs),
+// se notifica a todas las demás para que repinten al instante.
+// =============================================
+let savedChartTracksCache: SavedChartTrackRef[] = []
+let savedChartTracksUserId: string | null = null
+const savedChartTracksListeners = new Set<(rows: SavedChartTrackRef[]) => void>()
+
+function setSavedChartTracksCache(
+  next: SavedChartTrackRef[] | ((prev: SavedChartTrackRef[]) => SavedChartTrackRef[]),
+) {
+  savedChartTracksCache =
+    typeof next === 'function'
+      ? (next as (prev: SavedChartTrackRef[]) => SavedChartTrackRef[])(savedChartTracksCache)
+      : next
+  savedChartTracksListeners.forEach((l) => l(savedChartTracksCache))
+}
+
 export function useSavedChartTracks() {
   const { user } = useAuth()
-  const [saved, setSaved] = useState<SavedChartTrackRef[]>([])
+  const [saved, setSaved] = useState<SavedChartTrackRef[]>(savedChartTracksCache)
   const [loading, setLoading] = useState(true)
 
+  // Suscripción al store: cada cambio global propaga el nuevo array a este hook.
+  useEffect(() => {
+    const listener = (rows: SavedChartTrackRef[]) => setSaved(rows)
+    savedChartTracksListeners.add(listener)
+    return () => { savedChartTracksListeners.delete(listener) }
+  }, [])
+
   const fetch = useCallback(async () => {
-    if (!user) { setSaved([]); setLoading(false); return }
+    if (!user) {
+      savedChartTracksUserId = null
+      setSavedChartTracksCache([])
+      setLoading(false)
+      return
+    }
     const { data } = await supabase
       .from('saved_chart_tracks')
       .select('track_source, track_id, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    setSaved((data as SavedChartTrackRef[]) || [])
+    savedChartTracksUserId = user.id
+    setSavedChartTracksCache((data as SavedChartTrackRef[]) || [])
     setLoading(false)
   }, [user])
 
-  useEffect(() => { fetch() }, [fetch])
+  useEffect(() => {
+    // Solo refetch de red si cambia el usuario; si ya tenemos cache válida,
+    // nos basta con suscribirnos. Evita "loading…" y parpadeos entre rutas.
+    if (user && user.id === savedChartTracksUserId) {
+      setSaved(savedChartTracksCache)
+      setLoading(false)
+      return
+    }
+    fetch()
+  }, [fetch, user])
 
   const savedSet = new Set(saved.map((s) => makeKey(s.track_source, s.track_id)))
 
@@ -432,7 +476,7 @@ export function useSavedChartTracks() {
         .eq('user_id', user.id)
         .eq('track_source', source)
         .eq('track_id', id)
-      setSaved((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
+      setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
     } else {
       const { data } = await supabase
         .from('saved_chart_tracks')
@@ -440,7 +484,7 @@ export function useSavedChartTracks() {
         .select('track_source, track_id, created_at')
         .single()
       const row = (data as SavedChartTrackRef | null) || { track_source: source, track_id: id }
-      setSaved((s) => [row, ...s])
+      setSavedChartTracksCache((s) => [row, ...s])
     }
   }
 
@@ -466,7 +510,7 @@ export function useSavedChartTracks() {
         .eq('user_id', user.id)
         .eq('track_source', source)
         .in('track_id', ids)
-      setSaved((s) => s.filter((r) => !(r.track_source === source && ids.includes(r.track_id))))
+      setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && ids.includes(r.track_id))))
     } else {
       await toggle(source, primaryId)
     }
@@ -505,7 +549,7 @@ export function useSavedChartTracks() {
             .in('track_id', ids)
         )
       )
-      setSaved((s) =>
+      setSavedChartTracksCache((s) =>
         s.filter((row) => {
           const ids = bySource.get(row.track_source as ChartTrackSource)
           return !(ids && ids.includes(row.track_id))

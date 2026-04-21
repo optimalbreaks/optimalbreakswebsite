@@ -25,6 +25,10 @@ import type {
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import type { ChartTrackSource } from '@/hooks/useUserData'
+
+/** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
+type CanonRef = { source: ChartTrackSource; id: string }
 
 type ChartWeekBundle = {
   edition: ChartEdition
@@ -297,7 +301,7 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
-function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, relatedIds }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedIds?: string[] }) {
+function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -353,7 +357,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, r
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <SaveTrackButton source="featured" trackId={pick.id} relatedIds={relatedIds} lang={lang} size="sm" />
+          <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -367,7 +371,7 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, r
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, relatedIds }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; relatedIds?: string[] }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
@@ -415,7 +419,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
               {c.vinyl_open_youtube}
             </a>
           )}
-          <SaveTrackButton source="vinyl" trackId={track.id} relatedIds={relatedIds} lang={lang} size="sm" />
+          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -440,7 +444,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, relatedIds }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; relatedIds?: string[] }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
 
@@ -501,7 +505,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, re
               {track.music_key}
             </span>
           )}
-          <SaveTrackButton source="chart" trackId={track.id} relatedIds={relatedIds} lang={lang} size="sm" />
+          <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"
@@ -1082,50 +1086,86 @@ export default function ChartView({
   const latestWeekDate = weeksWithTracks[0]?.edition.week_date ?? ''
 
   // ---- Grupos canónicos ----
-  // Una misma canción puede aparecer en varias semanas del chart (40 Breaks) o
-  // en varios picks editoriales. Agrupamos por URL canónica (Beatport /
-  // link_url / Discogs) para que el botón «Guardar» reconozca la canción como
-  // ya guardada independientemente de desde qué semana se guardase. Tracks sin
-  // URL canónica se tratan como únicos (grupo de un solo id).
+  // Agrupación canónica CRUZADA entre las tres tablas (chart_tracks,
+  // chart_featured_tracks, chart_vinyl_tracks). La misma canción puede estar
+  // dada de alta como "New Release" (featured) y luego aparecer como #N en
+  // los 40 Breaks Vitales (chart_tracks) de otra semana; son filas distintas
+  // en distintas tablas, pero apuntan a la misma canción (misma URL de
+  // Beatport / Bandcamp / Discogs). Agrupamos por URL canónica normalizada
+  // (host + path, sin querystring ni trailing slash), y caemos a
+  // título+mix+artistas cuando no hay URL. Producimos un mapa por source con
+  // las refs polimórficas `{source, id}` del grupo completo, para pasárselo
+  // a `SaveTrackButton` vía `relatedRefs`: así, si el usuario guarda una
+  // instancia, las demás también se ven como guardadas; y al desmarcar se
+  // borran todas a la vez de `saved_chart_tracks`.
   const canonicalGroups = useMemo(() => {
-    const normalize = (u: string | null | undefined) => (u || '').trim().toLowerCase()
-    const chart = new Map<string, string[]>()
-    const featured = new Map<string, string[]>()
-    const vinyl = new Map<string, string[]>()
-    const chartByTrack = new Map<string, string[]>()
-    const featuredByTrack = new Map<string, string[]>()
-    const vinylByTrack = new Map<string, string[]>()
+    const normUrl = (u: string | null | undefined) => {
+      const s = (u || '').trim().toLowerCase()
+      if (!s) return ''
+      try {
+        const url = new URL(s)
+        return `${url.host}${url.pathname.replace(/\/$/, '')}`
+      } catch {
+        return s.replace(/[?#].*$/, '').replace(/\/$/, '')
+      }
+    }
+    const artistsToCsv = (arr: unknown): string => {
+      if (!Array.isArray(arr)) return ''
+      return arr
+        .map((a) => (a && typeof a === 'object' ? (a as { name?: string }).name : a))
+        .filter(Boolean)
+        .join(', ')
+        .trim()
+        .toLowerCase()
+    }
+    const fallbackKey = (title: string | null | undefined, mix: string | null | undefined, artistsCsv: string) =>
+      `nm:${(title || '').trim().toLowerCase()}|${(mix || '').trim().toLowerCase()}|${artistsCsv}`
 
-    const pushGroup = (m: Map<string, string[]>, k: string, id: string) => {
-      const arr = m.get(k)
-      if (arr) arr.push(id)
-      else m.set(k, [id])
+    const byKey = new Map<string, CanonRef[]>()
+    const push = (k: string, ref: CanonRef) => {
+      if (!k) return
+      const arr = byKey.get(k)
+      if (arr) arr.push(ref)
+      else byKey.set(k, [ref])
     }
 
     for (const w of weeks) {
       for (const t of w.tracks) {
-        const k = normalize(t.beatport_url)
-        if (k) pushGroup(chart, k, t.id)
+        const k = normUrl(t.beatport_url) || fallbackKey(t.title, t.mix_name, artistsToCsv(t.artists))
+        push(k, { source: 'chart', id: t.id })
       }
       for (const f of w.featured) {
-        const k = normalize(f.link_url)
-        if (k) pushGroup(featured, k, f.id)
+        const k = normUrl(f.link_url) || fallbackKey(f.title, f.mix_name, artistsToCsv(f.artists))
+        push(k, { source: 'featured', id: f.id })
       }
       for (const v of w.vinyl) {
-        const k = normalize(v.discogs_url)
-        if (k) pushGroup(vinyl, k, v.id)
+        const k = normUrl(v.discogs_url) || fallbackKey(v.title, v.mix_name, artistsToCsv(v.artists))
+        push(k, { source: 'vinyl', id: v.id })
       }
     }
 
-    const expand = (m: Map<string, string[]>, byTrack: Map<string, string[]>) => {
-      Array.from(m.values()).forEach((ids) => {
-        if (ids.length < 2) return
-        for (const id of ids) byTrack.set(id, ids)
-      })
-    }
-    expand(chart, chartByTrack)
-    expand(featured, featuredByTrack)
-    expand(vinyl, vinylByTrack)
+    const chartByTrack = new Map<string, CanonRef[]>()
+    const featuredByTrack = new Map<string, CanonRef[]>()
+    const vinylByTrack = new Map<string, CanonRef[]>()
+
+    Array.from(byKey.values()).forEach((refs) => {
+      if (refs.length < 2) return
+      // Dedupe refs idénticas (misma canción repetida en varias semanas pero con mismo id).
+      const seen = new Set<string>()
+      const unique: CanonRef[] = []
+      for (const r of refs) {
+        const id = `${r.source}:${r.id}`
+        if (seen.has(id)) continue
+        seen.add(id)
+        unique.push(r)
+      }
+      if (unique.length < 2) return
+      for (const r of unique) {
+        if (r.source === 'chart') chartByTrack.set(r.id, unique)
+        else if (r.source === 'featured') featuredByTrack.set(r.id, unique)
+        else if (r.source === 'vinyl') vinylByTrack.set(r.id, unique)
+      }
+    })
 
     return { chartByTrack, featuredByTrack, vinylByTrack }
   }, [weeks])
@@ -1245,7 +1285,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle.srcs, picksBundle.meta, idx) : undefined}
                         artistSlugMap={artistSlugMap}
-                        relatedIds={canonicalGroups.featuredByTrack.get(pick.id)}
+                        relatedRefs={canonicalGroups.featuredByTrack.get(pick.id)}
                       />
                     )
                   })}
@@ -1332,7 +1372,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle.srcs, fortyBundle.meta, idx) : undefined}
                         artistSlugMap={artistSlugMap}
-                        relatedIds={canonicalGroups.chartByTrack.get(track.id)}
+                        relatedRefs={canonicalGroups.chartByTrack.get(track.id)}
                       />
                     )
                   })}
@@ -1421,7 +1461,7 @@ export default function ChartView({
                           lang={lang}
                           autoplay={autoplayVinylId === track.id}
                           artistSlugMap={artistSlugMap}
-                          relatedIds={canonicalGroups.vinylByTrack.get(track.id)}
+                          relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
                         />
                       ))}
                     </div>
