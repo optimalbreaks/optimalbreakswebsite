@@ -154,24 +154,26 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, base_city')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(4),
-    // 40 Breaks Vitales (Beatport weekly chart)
+    // 40 Breaks Vitales (Beatport weekly chart). `artist_names_text` es la
+    // denormalización STORED de `artists[].name` (migración 051) para que
+    // `ilike` pille también el nombre del artista dentro del JSONB.
     supabase
       .from('chart_tracks')
       .select('id, title, mix_name, label, artwork_url, release_year, artists')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
-      .limit(8),
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+      .limit(12),
     // New Releases (semana "fenomenal")
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artwork_url, release_year, artists')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
-      .limit(6),
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+      .limit(10),
     // Retro Vinyl Picks (Discogs)
     supabase
       .from('chart_vinyl_tracks')
       .select('id, title, mix_name, label, artwork_url, year, artists')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike}`)
-      .limit(8),
+      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+      .limit(12),
   ])
 
   const results: SearchResult[] = []
