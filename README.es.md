@@ -275,6 +275,56 @@ Tras el núcleo (`001`–`006`): **`007`** rol admin, **`008`–`009`** artistas
 
 ---
 
+## Buscador global (⌘K / Ctrl+K)
+
+El `CommandPalette` (icono de lupa en el header, atajo **⌘K** / **Ctrl+K**) consulta **`/api/search`** (`src/app/api/search/route.ts`) y mezcla resultados de **nueve orígenes** en una sola lista. El objetivo es **favorecer la reproducción de música**: si buscas un artista, deben aparecer sus tracks dondequiera que estén en los charts para que puedas ir a oírlos.
+
+### Qué busca y dónde
+
+| Tipo | Tabla / origen | Campos consultados (`ilike`) |
+|------|----------------|------------------------------|
+| `artist` | `artists` | `name`, `name_display`, `slug` |
+| `track` | `chart_tracks` | `title`, `mix_name`, `label`, `artist_names_text` ([migración **051**](./supabase/migrations/051_chart_tracks_artist_names_text.sql)) |
+| `track` | `chart_featured_tracks` (New Releases) | mismos campos |
+| `track` | `chart_vinyl_tracks` (Retro Vinyl Picks) | mismos campos |
+| `mix` | `mixes` | `title`, `artist` |
+| `event` | `events` | `title`, `slug`, `city`, `venue`, `lineup_text` ([migración **052**](./supabase/migrations/052_events_lineup_text.sql): aplana `lineup text[]` + `stages[].lineup` en una columna `STORED GENERATED`) |
+| `label` | `labels` | `name`, `slug` |
+| `scene` | `scenes` | `title`, `slug`, `city` |
+| `post` | `posts` | `title`, `slug` |
+| `organization` | `organizations` | `name`, `slug` |
+
+### Reglas de presentación
+
+- **Orden de grupos en la UI** (favorece la música): `artist → track → mix → event → label → scene → post → organization`.
+- **Eventos futuros vs. pasados:** los **pasados se descartan por defecto**. Sólo se muestran si la búsqueda es **claramente de eventos** (p. ej. buscas "Winter Festival" y **todos** los otros resultados están vacíos): en ese caso sí aparecen también los pasados. Si hay cualquier otro tipo de resultado (un track, un artista…), sólo se muestran eventos **futuros** (`date_start >= hoy`, orden ascendente).
+- **Chip de fecha en eventos:** junto al chip de tipo se pinta `formatEventDate` en **amarillo** para próximos (`is_upcoming: true`) y **rojo** para pasados.
+- **Deduplicado de tracks:** una misma canción puede estar en varias ediciones del chart. Se deduplica con la clave `normalize(title) | normalize(mix_name) | normalize(primer_artista)` y se **prioriza `chart_tracks` > `chart_featured_tracks` > `chart_vinyl_tracks`**. Dentro de cada tabla, las filas vienen ordenadas por **`chart_editions.week_date` DESC** primero y `position` ASC después, así la ocurrencia que sobrevive al dedupe es siempre la de la **edición más reciente** (la que /charts renderiza arriba). Esto garantiza que el `href` del resultado apunte a una fila que **sí existe** en el DOM, para que el deep-link + autoplay no fallen.
+- **Carátulas:**
+  - **Tracks** → `next/image` con la `artwork_url` de Beatport (proxy de Next.js para sortear hotlink/CSP).
+  - **Mixes** → se **ignora** la portada propia del mix (YouTube/SoundCloud) y siempre se usa primero la foto del artista; si no hay, fallback a **`/images/disco_optimal_breaks.webp`**.
+  - **Artistas** → `displayArtistImageUrl` (mismo helper que el resto del sitio).
+- **Rate limit:** 120 peticiones / minuto por IP (instancia), respuesta `429` si se excede.
+
+### Deep-linking al hacer clic
+
+Los `href` que devuelve la API llevan **hash + `?play=1`** para que la vista destino abra el acordeón correcto, haga scroll a la fila exacta y arranque reproducción:
+
+- `/{lang}/charts#chart-row-<id>?play=1` — 40 Breaks Vitales y New Releases (`ChartView`).
+- `/{lang}/charts#chart-vinyl-row-<id>?play=1` — Retro Vinyl Picks (YouTube autoplay del iframe).
+- `/{lang}/mixes#mix-<id>?play=1` — `MixesExplorer` (MP3/SoundCloud directos, YouTube vía autoplay).
+
+El `useEffect` de `ChartView.tsx` escucha el hash y el parámetro `play`, expande el acordeón de año/semana correspondiente, hace scroll, destaca la fila y lanza play. Al terminar, limpia `?play=1` con `history.replaceState` para que un refresh no vuelva a dispararlo.
+
+### Ficheros clave
+
+- `src/app/api/search/route.ts` — API REST del buscador (queries paralelas, dedupe, orden).
+- `src/components/CommandPalette.tsx` — UI del palette (atajos de teclado, grupos, render).
+- `supabase/migrations/051_chart_tracks_artist_names_text.sql` — `artist_names_text` generado a partir del JSONB `artists` en las tres tablas de charts.
+- `supabase/migrations/052_events_lineup_text.sql` — `lineup_text` generado a partir de `events.lineup` + `events.stages[].lineup`.
+
+---
+
 ## Sistema de audio global (`DeckAudioProvider` + `claimAudio`)
 
 La app tiene **cinco fuentes de audio** que nunca suenan a la vez:
@@ -338,7 +388,7 @@ Al navegar entre **`/en` y `/es`**, el proveedor de audio se **vuelve a montar**
 ## Roadmap (resumen)
 
 Hecho: Supabase en listados, miniaturas y Storage, auth (login, **`/auth/confirm`**, callback OAuth, recuperación → **`/reset-password`**, plantillas en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
-Pendiente: búsqueda global, OG por sección, RSS, modo oscuro, etc.
+Pendiente: OG por sección, RSS, modo oscuro, etc. **Búsqueda global** ya hecha (ver sección *Buscador global*).
 
 ---
 
