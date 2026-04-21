@@ -72,9 +72,18 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
     >
       <Link
         role="menuitem"
+        href={`/${lang}/mi-cuenta/tracks`}
+        onClick={() => setOpen(false)}
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--yellow)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
+      >
+        {es ? 'Mis tracks' : 'My Tracks'}
+      </Link>
+      <Link
+        role="menuitem"
         href={`/${lang}/dashboard`}
         onClick={() => setOpen(false)}
-        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]"
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--yellow)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
         style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
       >
         {es ? 'Mis breaks' : 'My Breaks'}
@@ -83,7 +92,7 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
         role="menuitem"
         href={`/${lang}/mi-cuenta/perfil`}
         onClick={() => setOpen(false)}
-        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]"
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--yellow)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
         style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
       >
         {es ? 'Mi perfil' : 'Profile'}
