@@ -1098,6 +1098,8 @@ export function DeckAudioProvider({
       navigator.mediaSession.setActionHandler('nexttrack', null)
       navigator.mediaSession.setActionHandler('seekbackward', null)
       navigator.mediaSession.setActionHandler('seekforward', null)
+      try { navigator.mediaSession.setActionHandler('seekto', null) } catch { /* no-op */ }
+      try { navigator.mediaSession.playbackState = 'none' } catch { /* no-op */ }
     }
   }, [])
 
@@ -1107,7 +1109,20 @@ export function DeckAudioProvider({
       const a = new Audio()
       a.preload = 'auto'
       a.addEventListener('loadedmetadata', () => {
-        if (previewAudioRef.current === a) setPreviewDuration(a.duration || 0)
+        if (previewAudioRef.current === a) {
+          setPreviewDuration(a.duration || 0)
+          // Anuncia la duración al SO para pintar la barra de progreso
+          // en la lockscreen (Android Chrome / iOS PWA).
+          if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: Number.isFinite(a.duration) ? a.duration : 0,
+                playbackRate: 1,
+                position: 0,
+              })
+            } catch { /* setPositionState puede no estar soportado */ }
+          }
+        }
       })
       a.addEventListener('ended', () => {
         // Avance a la siguiente pista de la cola; si se acaba, cerrar.
@@ -1147,6 +1162,9 @@ export function DeckAudioProvider({
           ? [{ src: m.artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
           : [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
       })
+      // Señala al SO que estamos reproduciendo (icono correcto en la
+      // lockscreen; también ayuda a iOS a NO inferir ±10 s por sí solo).
+      try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
   }, [stopPreviewInternal])
 
@@ -1176,10 +1194,18 @@ export function DeckAudioProvider({
     const a = previewAudioRef.current
     if (!a || previewQueue.length === 0) return
     if (a.paused) {
-      a.play().then(() => setPreviewPlaying(true)).catch(() => {})
+      a.play().then(() => {
+        setPreviewPlaying(true)
+        if ('mediaSession' in navigator) {
+          try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+        }
+      }).catch(() => {})
     } else {
       a.pause()
       setPreviewPlaying(false)
+      if ('mediaSession' in navigator) {
+        try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
+      }
     }
   }, [previewQueue.length])
 
@@ -1233,6 +1259,13 @@ export function DeckAudioProvider({
   }, [previewQueue.length, previewIndex])
 
   // Media Session handlers específicos de preview.
+  //
+  // IMPORTANTE: en iOS (y en algunos Android) la pantalla de bloqueo
+  // muestra `seekbackward`/`seekforward` (±10 s) cuando están registrados,
+  // *a costa* de ocultar `previoustrack`/`nexttrack`. Como aquí la cola
+  // tiene varias canciones, preferimos prev/next y explícitamente
+  // **ponemos a null** los de seek para que el SO muestre los botones
+  // de pista.
   useEffect(() => {
     if (previewQueue.length === 0) return
     if (!('mediaSession' in navigator)) return
@@ -1240,13 +1273,23 @@ export function DeckAudioProvider({
     navigator.mediaSession.setActionHandler('pause', () => togglePreview())
     navigator.mediaSession.setActionHandler('previoustrack', () => previewPrev())
     navigator.mediaSession.setActionHandler('nexttrack', () => previewNext())
-    navigator.mediaSession.setActionHandler('seekbackward', () => seekPreviewToRatio(Math.max(0, (previewProgress - 10) / (previewDuration || 1))))
-    navigator.mediaSession.setActionHandler('seekforward', () => seekPreviewToRatio(Math.min(1, (previewProgress + 10) / (previewDuration || 1))))
+    try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch { /* no-op */ }
+    try { navigator.mediaSession.setActionHandler('seekforward', null) } catch { /* no-op */ }
+    // `seekto` sí lo dejamos activo: permite al usuario arrastrar la
+    // chincheta del progress en la lockscreen cuando el navegador la
+    // pinta (Android Chrome), sin ocupar uno de los slots de botón.
+    try {
+      navigator.mediaSession.setActionHandler('seekto', (details: MediaSessionActionDetails) => {
+        if (typeof details.seekTime !== 'number') return
+        const dur = previewDuration || 1
+        seekPreviewToRatio(Math.max(0, Math.min(1, details.seekTime / dur)))
+      })
+    } catch { /* seekto puede no estar soportado */ }
     return () => {
-      // no-op: los handlers se re-asignan en el próximo render si sigue
-      // habiendo preview, o los limpia stopPreviewInternal al cerrar.
+      // Limpieza al desmontar o al salir del preview: los handlers se
+      // re-asignan desde `stopPreviewInternal` si corresponde.
     }
-  }, [previewQueue.length, previewIndex, togglePreview, previewPrev, previewNext, seekPreviewToRatio, previewProgress, previewDuration])
+  }, [previewQueue.length, previewIndex, togglePreview, previewPrev, previewNext, seekPreviewToRatio, previewDuration])
 
   // Emite evento para BackToTop (compat con OB_CHART_PLAYALL_BAR_EVENT).
   useEffect(() => {
