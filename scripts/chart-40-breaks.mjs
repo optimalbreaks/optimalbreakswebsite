@@ -181,6 +181,7 @@ function parseBeatportNextData(html) {
       sample_url: t.sample_url || null,
       waveform_url: waveformUrlFromBeatportEntity(t),
       release_year: beatportReleaseYear(t),
+      release_date: beatportReleaseDate(t),
     }
   })
 
@@ -209,6 +210,16 @@ function beatportReleaseYear(t) {
   const y = parseInt(m[1], 10)
   if (!Number.isFinite(y) || y < 1970 || y > 2100) return null
   return y
+}
+
+/** Fecha YYYY-MM-DD desde publish_date / new_release_date en payload Beatport. */
+function beatportReleaseDate(t) {
+  const raw = t.publish_date || t.new_release_date
+  if (raw == null || raw === '') return null
+  const s = String(raw).trim()
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  return `${m[1]}-${m[2]}-${m[3]}`
 }
 
 /** URL cuadrada de carátula (release preferido sobre imagen de track). */
@@ -242,18 +253,33 @@ function mergeBeatportMetadata(curated, beatportTracks) {
   }
   let filled = 0
   const out = curated.map((t) => {
-    const { artwork_url: _a, sample_url: _s, release_year: _y, waveform_url: _w, ...rest } = t
+    const {
+      artwork_url: _a,
+      sample_url: _s,
+      release_year: _y,
+      release_date: _d,
+      waveform_url: _w,
+      ...rest
+    } = t
     const id = beatportTrackIdFromUrl(rest.beatport_url)
     const src = id ? byId.get(id) : null
     if (!src) {
-      return { ...rest, artwork_url: null, sample_url: null, waveform_url: null, release_year: null }
+      return {
+        ...rest,
+        artwork_url: null,
+        sample_url: null,
+        waveform_url: null,
+        release_year: null,
+        release_date: null,
+      }
     }
     const artwork_url = src.artwork_url ?? null
     const sample_url = src.sample_url ?? null
     const waveform_url = src.waveform_url ?? null
     const release_year = src.release_year ?? null
+    const release_date = src.release_date ?? null
     if (artwork_url) filled++
-    return { ...rest, artwork_url, sample_url, waveform_url, release_year }
+    return { ...rest, artwork_url, sample_url, waveform_url, release_year, release_date }
   })
   console.log(`  ↳ Carátula + sample + año (Beatport por id): ${filled}/${out.length} con imagen`)
   return out
@@ -280,6 +306,7 @@ function parseBeatportHtmlFallback(html) {
       sample_url: null,
       waveform_url: null,
       release_year: null,
+      release_date: null,
     })
   }
   console.log(`  ↳ Fallback parsed ${tracks.length} tracks`)
@@ -547,6 +574,7 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
     sample_url: t.sample_url || null,
     waveform_url: t.waveform_url || null,
     release_year: t.release_year ?? null,
+    release_date: t.release_date ?? null,
     previous_position: t.previous_position ?? null,
     weeks_in_chart: t.weeks_in_chart || 1,
   }))
