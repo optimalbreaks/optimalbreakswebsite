@@ -115,6 +115,101 @@ interface TracksSectionProps {
   publicPayload?: PublicTracksPayload
 }
 
+/**
+ * Slider dual (rango min-max) para filtrar por años. Estilo Optimal Breaks:
+ * pista neutra con el tramo activo en rojo, dos pomos negros. Implementado
+ * con dos <input type="range"> apilados que se reparten el eje; el CSS vive
+ * en `tracks-year-slider.css` (clases `.ob-range`).
+ */
+function YearRangeSlider({
+  bounds, value, onChange, es,
+}: {
+  bounds: { min: number; max: number }
+  value: [number, number]
+  onChange: (v: [number, number]) => void
+  es: boolean
+}) {
+  const min = bounds.min
+  const max = bounds.max
+  const [lo, hi] = value
+  const span = Math.max(1, max - min)
+  const pctLo = ((lo - min) / span) * 100
+  const pctHi = ((hi - min) / span) * 100
+  const reset = () => onChange([min, max])
+  const isFull = lo === min && hi === max
+
+  return (
+    <div className="w-full" style={{ fontFamily: "'Courier Prime', monospace" }}>
+      <div className="flex items-center gap-3 mb-2">
+        <span className="text-[10px] font-bold tracking-[2px] text-[var(--ink)]/60">
+          {es ? 'AÑOS:' : 'YEARS:'}
+        </span>
+        <span
+          className="h-[24px] px-2 inline-flex items-center border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] tabular-nums"
+          style={{ fontWeight: 700, fontSize: '11px', letterSpacing: '1px' }}
+        >
+          {lo} – {hi}
+        </span>
+        {!isFull && (
+          <button
+            type="button"
+            onClick={reset}
+            className="h-[24px] px-2 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors cursor-pointer"
+            style={{ fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+            title={es ? 'Restablecer rango completo' : 'Reset to full range'}
+          >
+            {es ? 'TODO' : 'ALL'}
+          </button>
+        )}
+      </div>
+
+      {max === min ? (
+        <p className="text-[10px] text-[var(--ink)]/40" style={{ letterSpacing: '1px' }}>
+          {es ? `SOLO UN AÑO PRESENTE: ${min}` : `ONLY ONE YEAR: ${min}`}
+        </p>
+      ) : (
+        <div className="ob-range-wrap">
+          <div className="ob-range-track" />
+          <div
+            className="ob-range-fill"
+            style={{ left: `${pctLo}%`, right: `${100 - pctHi}%` }}
+          />
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={1}
+            value={lo}
+            onChange={(e) => {
+              const v = Math.min(Number(e.target.value), hi)
+              onChange([v, hi])
+            }}
+            className="ob-range ob-range-lo"
+            aria-label={es ? 'Año mínimo' : 'Min year'}
+          />
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={1}
+            value={hi}
+            onChange={(e) => {
+              const v = Math.max(Number(e.target.value), lo)
+              onChange([lo, v])
+            }}
+            className="ob-range ob-range-hi"
+            aria-label={es ? 'Año máximo' : 'Max year'}
+          />
+          <div className="flex justify-between mt-1 text-[9px] text-[var(--ink)]/40 tabular-nums" style={{ letterSpacing: '1px' }}>
+            <span>{min}</span>
+            <span>{max}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TracksSection({ lang, publicPayload }: TracksSectionProps) {
   const isShared = !!publicPayload
   const { user } = useAuth()
@@ -131,6 +226,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const [activeKinds, setActiveKinds] = useState<Set<PlaybackKind>>(
     () => new Set(ALL_PLAYBACK_KINDS),
   )
+  // Rango de años seleccionado. `null` = todavía no calculado (o sin datos).
+  // Se inicializa automáticamente al `{min, max}` real en cuanto tenemos los
+  // tracks; el usuario luego puede acotarlo arrastrando los pomos del slider.
+  const [yearRange, setYearRange] = useState<[number, number] | null>(null)
   const [sortBy, setSortBy] = useState<SortBy>('added')
   const es = lang === 'es'
 
@@ -323,10 +422,52 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved, loading, lang, isShared])
 
+  // Años mín / máx presentes en el conjunto de tracks (ignora los que no
+  // tienen año). Sirve para fijar los topes del slider de rango.
+  const yearBounds = useMemo(() => {
+    let min = Infinity
+    let max = -Infinity
+    for (const t of tracks) {
+      if (typeof t.year === 'number' && Number.isFinite(t.year)) {
+        if (t.year < min) min = t.year
+        if (t.year > max) max = t.year
+      }
+    }
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return null
+    return { min, max }
+  }, [tracks])
+
+  // Auto-ajusta el rango seleccionado cuando los topes cambian: si el usuario
+  // tenía un rango que queda fuera, lo recortamos; si nunca tocó el slider,
+  // lo inicializamos al rango completo.
+  useEffect(() => {
+    if (!yearBounds) { setYearRange(null); return }
+    setYearRange((prev) => {
+      if (!prev) return [yearBounds.min, yearBounds.max]
+      const lo = Math.max(yearBounds.min, Math.min(prev[0], yearBounds.max))
+      const hi = Math.min(yearBounds.max, Math.max(prev[1], yearBounds.min))
+      return [Math.min(lo, hi), Math.max(lo, hi)]
+    })
+  }, [yearBounds])
+
+  // `true` si el slider está en los topes (no filtra nada por año).
+  const yearRangeIsFull = !!yearBounds && !!yearRange
+    && yearRange[0] === yearBounds.min && yearRange[1] === yearBounds.max
+
   const filtered = useMemo(() => {
-    if (activeKinds.size === ALL_PLAYBACK_KINDS.length) return tracks
-    return tracks.filter((t) => activeKinds.has(playbackOf(t)))
-  }, [tracks, activeKinds])
+    let out = tracks
+    if (activeKinds.size !== ALL_PLAYBACK_KINDS.length) {
+      out = out.filter((t) => activeKinds.has(playbackOf(t)))
+    }
+    // Filtro por año sólo si el usuario acotó el rango. Los tracks sin año
+    // se muestran únicamente cuando el slider está en el rango completo, para
+    // no descartarlos sin querer al tocar los pomos.
+    if (yearRange && yearBounds && !yearRangeIsFull) {
+      const [lo, hi] = yearRange
+      out = out.filter((t) => typeof t.year === 'number' && t.year >= lo && t.year <= hi)
+    }
+    return out
+  }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull])
 
   const toggleKind = (k: PlaybackKind) => {
     setActiveKinds((prev) => {
@@ -668,6 +809,17 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           })}
         </div>
       )}
+
+      {tracks.length > 0 && yearBounds && yearRange ? (
+        <div className="mb-4 p-3 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
+          <YearRangeSlider
+            bounds={yearBounds}
+            value={yearRange}
+            onChange={setYearRange}
+            es={es}
+          />
+        </div>
+      ) : null}
 
       {tracks.length === 0 ? (
         <div className="p-5 border-4 border-[var(--ink)] bg-[var(--paper-dark)]">

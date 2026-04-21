@@ -693,3 +693,89 @@ select.admin-input {
   box-shadow: none !important;
   border-bottom: 2px solid var(--ink) !important;
 }
+
+/* ============================================
+   Dual-handle range slider (YearRangeSlider)
+   Usado en /mi-cuenta/tracks para filtrar por año.
+   Dos <input type="range"> superpuestos comparten
+   la misma pista; los pomos reciben pointer events
+   directamente.
+   ============================================ */
+.ob-range-wrap {
+  position: relative;
+  width: 100%;
+  height: 28px;
+}
+.ob-range-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  background: rgba(26, 26, 26, 0.15);
+  border: 2px solid var(--ink);
+  pointer-events: none;
+}
+.ob-range-fill {
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  background: var(--red);
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  pointer-events: none;
+}
+.ob-range {
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  /* Dejamos pasar los clics en la pista, pero los pomos sí reciben */
+  pointer-events: none;
+}
+.ob-range::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 28px;
+  border: 0;
+}
+.ob-range::-moz-range-track {
+  background: transparent;
+  height: 28px;
+  border: 0;
+}
+.ob-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
+  cursor: grab;
+  margin-top: 0;
+}
+.ob-range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
+  cursor: grab;
+}
+.ob-range:active::-webkit-slider-thumb { cursor: grabbing; background: var(--red); }
+.ob-range:active::-moz-range-thumb     { cursor: grabbing; background: var(--red); }
+/* El pomo HI va por encima para que, cuando coinciden, se pueda agarrar */
+.ob-range-hi { z-index: 2; }
+.ob-range-lo { z-index: 1; }
