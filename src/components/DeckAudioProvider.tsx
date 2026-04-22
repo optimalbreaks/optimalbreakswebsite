@@ -209,6 +209,52 @@ function MiniDeckBar({ lang }: { lang: Locale }) {
   return null
 }
 
+/**
+ * Cabecera común para las tres mini barras (Preview / Deck / Mix).
+ *
+ * En móvil, cuando el reproductor está pegado al fondo, tocar cerca del borde
+ * superior del componente caía a menudo fuera (sobre enlaces de la página que
+ * están justo detrás) y la barra de progreso finita también se cruzaba con
+ * esos enlaces. Esta cabecera negra actúa como "colchón" visual y como zona
+ * segura de click: identifica el reproductor, separa del contenido y deja
+ * claro dónde empieza el player.
+ */
+function MiniBarHeader({ subtitle, live }: { subtitle: string; live?: boolean }) {
+  return (
+    <>
+      <style>{`@keyframes obRadioBlink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }`}</style>
+      <div
+        className="flex items-center justify-between px-3 sm:px-4 bg-[var(--ink)] text-[var(--yellow)]"
+        style={{
+          fontFamily: "'Courier Prime', monospace",
+          fontSize: '9px',
+          letterSpacing: '2px',
+          textTransform: 'uppercase',
+          height: 22,
+          lineHeight: '22px',
+        }}
+        aria-hidden
+      >
+        <span className="inline-flex items-center gap-2">
+          {live && (
+            <span
+              style={{
+                display: 'inline-block',
+                width: 7,
+                height: 7,
+                background: 'var(--red)',
+                animation: 'obRadioBlink 1s steps(1,end) infinite',
+              }}
+            />
+          )}
+          <span style={{ fontWeight: 700 }}>OPTIMAL BREAKS RADIO</span>
+        </span>
+        <span style={{ fontWeight: 700, opacity: 0.55 }}>{subtitle}</span>
+      </div>
+    </>
+  )
+}
+
 function MiniPreviewBar({ lang }: { lang: Locale }) {
   const {
     previewQueue, previewIndex, previewPlaying,
@@ -250,26 +296,39 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={es ? 'Reproductor de preview' : 'Preview player'}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        // Safe area para el notch / barra del navegador en móvil.
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
+      <MiniBarHeader subtitle={es ? 'PREVIEW' : 'PREVIEW'} live />
+      {/* Hitbox vertical extendido para evitar clicks accidentales sobre
+          enlaces de la página que quedan justo detrás de la barra fina. */}
       <div
         ref={barRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="group relative w-full h-3 sm:h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
-        style={{ touchAction: 'none' }}
+        className="group relative w-full cursor-pointer touch-manipulation select-none"
+        style={{
+          touchAction: 'none',
+          paddingTop: 10,
+          paddingBottom: 6,
+        }}
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ left: `${pct}%` }}
-        />
+        <div className="relative w-full h-2 sm:h-1.5 bg-[var(--ink)]/10">
+          <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `${pct}%` }}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
@@ -365,30 +424,37 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
       className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={es ? 'Reproductor del deck' : 'Deck player'}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
-      {/* seekable progress bar */}
+      <MiniBarHeader subtitle={es ? 'DECK' : 'DECK'} live />
+      {/* seekable progress bar: hitbox con padding vertical para evitar
+          clicks accidentales sobre enlaces de la página debajo. */}
       <div
         ref={barRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="group relative w-full h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
-        style={{ touchAction: 'none' }}
+        className="group relative w-full cursor-pointer touch-manipulation select-none"
+        style={{ touchAction: 'none', paddingTop: 10, paddingBottom: 6 }}
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ left: `${pct}%` }}
-        />
+        <div className="relative w-full h-2 sm:h-1.5 bg-[var(--ink)]/10">
+          <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `${pct}%` }}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+      <div className="flex items-center gap-2 sm:gap-3 px-3 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
         {/* transport: prev / play-stop / next */}
         <div className="flex items-center gap-1 shrink-0">
           <button
@@ -473,30 +539,37 @@ function MiniMixBar({ lang }: { lang: Locale }) {
       className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={es ? 'Reproductor de mix' : 'Mix player'}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
-      {/* seekable progress bar */}
+      <MiniBarHeader subtitle={es ? 'MIX' : 'MIX'} live />
+      {/* seekable progress bar: hitbox extendido para evitar clicks
+          accidentales sobre enlaces de la página. */}
       <div
         ref={barRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        className="group relative w-full h-2 cursor-pointer touch-manipulation select-none bg-[var(--ink)]/10"
-        style={{ touchAction: 'none' }}
+        className="group relative w-full cursor-pointer touch-manipulation select-none"
+        style={{ touchAction: 'none', paddingTop: 10, paddingBottom: 6 }}
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ left: `${pct}%` }}
-        />
+        <div className="relative w-full h-2 sm:h-1.5 bg-[var(--ink)]/10">
+          <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `${pct}%` }}
+          />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
+      <div className="flex items-center gap-2 sm:gap-3 px-3 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
         {/* transport: play-pause / stop */}
         <div className="flex items-center gap-1 shrink-0">
           <button
