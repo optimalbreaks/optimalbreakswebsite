@@ -17,6 +17,7 @@ import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import type { SavedChartTrackSnapshot } from '@/types/database'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -70,6 +71,19 @@ type UnifiedTrack = {
    * botón de guardar actúe sobre TODAS las filas a la vez.
    */
   refs?: Array<{ source: ChartTrackSource; id: string }>
+  /**
+   * Snapshot serializado de la canción. Obligatorio para las tracks
+   * `beatport_top` (que no tienen fila en ninguna tabla de charts) y también
+   * útil en listas compartidas para que el visitante, al clonar la track a
+   * su propia lista, preserve el título/artista/artwork/origin originales.
+   */
+  snapshot?: SavedChartTrackSnapshot | null
+  /**
+   * URL canónica almacenada en `saved_chart_tracks.canonical_url`. Sirve
+   * para deduplicar cross-source por URL cuando el visitante guarda la
+   * track desde una lista compartida.
+   */
+  canonical_url?: string | null
 }
 
 function previewAudioSrc(sampleUrl: string, platform?: string, linkUrl?: string | null): string {
@@ -360,7 +374,17 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         .map((s) => {
           const t = byKey.get(`${s.track_source}:${s.track_id}`)
           if (!t) return null
-          return { ...t, saved_at: s.created_at ?? null }
+          // Propagamos snapshot y canonical_url del registro original a la
+          // UnifiedTrack. Esto es lo que permite que, desde una lista
+          // compartida, el visitante pueda clonar la track a su propia
+          // lista con toda la info necesaria (crítico para beatport_top,
+          // que no tiene fila en ninguna tabla de charts).
+          return {
+            ...t,
+            saved_at: s.created_at ?? null,
+            snapshot: (s.snapshot as SavedChartTrackSnapshot | null) ?? null,
+            canonical_url: s.canonical_url ?? null,
+          }
         })
         .filter(Boolean) as UnifiedTrack[]
 
@@ -412,6 +436,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         if (!existing.bpm && t.bpm) existing.bpm = t.bpm
         if (!existing.music_key && t.music_key) existing.music_key = t.music_key
         if (!existing.note && t.note) existing.note = t.note
+        // Preservamos snapshot / canonical_url si el representativo no los
+        // tiene pero un duplicado sí (típicamente: representativo es chart y
+        // se fusiona con su gemela beatport_top que sí trae snapshot).
+        if (!existing.snapshot && t.snapshot) existing.snapshot = t.snapshot
+        if (!existing.canonical_url && t.canonical_url) existing.canonical_url = t.canonical_url
       }
       const deduped = Array.from(byCanon.values())
       setTracks(deduped)
@@ -966,17 +995,36 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         {t.music_key}
                       </span>
                     ) : null}
-                    <SaveTrackButton
-                      source={t.source}
-                      trackId={t.id}
-                      /* En la lista compartida, los refs pertenecen al dueño de
-                         la lista, no al espectador: pasamos solo el ref primario
-                         para que el botón opere sobre la lista del visitante. */
-                      relatedRefs={!isShared && t.refs && t.refs.length > 1 ? t.refs : undefined}
-                      canonicalUrl={t.external_url || t.youtube_url || null}
-                      lang={lang}
-                      size="sm"
-                    />
+                    {isShared && t.source === 'beatport_top' && (t.external_url || t.canonical_url) ? (
+                      /* Lista compartida + Beatport Top 10 del dueño: la track no
+                         tiene fila en ninguna tabla de charts (la info vive en
+                         `snapshot`). Si usáramos modo ref, al visitante se le
+                         guardaría una fila sin snapshot y luego aparecería en
+                         blanco en su lista. Usamos modo URL + snapshot para
+                         clonar toda la info del dueño a la lista del visitante,
+                         igual que hace BeatportTopTracks cuando se guarda por
+                         primera vez. */
+                      <SaveTrackButton
+                        externalUrl={(t.external_url || t.canonical_url) as string}
+                        externalTrackId={t.id}
+                        snapshot={t.snapshot ?? undefined}
+                        canonicalUrl={t.external_url || t.canonical_url || null}
+                        lang={lang}
+                        size="sm"
+                      />
+                    ) : (
+                      <SaveTrackButton
+                        source={t.source}
+                        trackId={t.id}
+                        /* En la lista compartida, los refs pertenecen al dueño de
+                           la lista, no al espectador: pasamos solo el ref primario
+                           para que el botón opere sobre la lista del visitante. */
+                        relatedRefs={!isShared && t.refs && t.refs.length > 1 ? t.refs : undefined}
+                        canonicalUrl={t.external_url || t.youtube_url || t.canonical_url || null}
+                        lang={lang}
+                        size="sm"
+                      />
+                    )}
                     {t.external_url ? (
                       <a
                         href={t.external_url} target="_blank" rel="noopener noreferrer"
