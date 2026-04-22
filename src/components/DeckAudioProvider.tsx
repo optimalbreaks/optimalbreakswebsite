@@ -255,155 +255,55 @@ function MiniBarHeader({ subtitle, live }: { subtitle: string; live?: boolean })
   )
 }
 
-function MiniPreviewBar({ lang }: { lang: Locale }) {
-  const {
-    previewQueue, previewIndex, previewPlaying,
-    previewProgress, previewDuration,
-    togglePreview, stopPreview, previewNext, previewPrev,
-    seekPreviewToRatio, fmt,
-  } = useDeckAudio()
-  const es = lang === 'es'
-  const cur = previewQueue[previewIndex]
-  if (!cur) return null
+// ─── Estilos compartidos de los mini-botones del reproductor ────────────
+// Unificamos tamaños (antes unos eran w-9 y otros w-10) para que los tres
+// reproductores se sientan iguales al tacto en móvil.
+const MINI_BTN_BASE = 'w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] transition-colors touch-manipulation'
+const MINI_BTN_GHOST = `${MINI_BTN_BASE} bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed`
+const MINI_BTN_PLAY = `${MINI_BTN_BASE} font-black bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white`
+const MINI_BTN_PAUSE_YELLOW = `${MINI_BTN_BASE} font-black bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]`
+const MINI_BTN_PAUSE_RED = `${MINI_BTN_BASE} font-black bg-[var(--red)] text-white hover:bg-[var(--ink)]`
+const MINI_BTN_STOP_RED = `${MINI_BTN_BASE} font-black bg-[var(--red)] text-white hover:bg-[var(--ink)]`
+const MINI_BTN_CLOSE = `${MINI_BTN_BASE} font-black bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white`
 
-  const pct = previewDuration ? (previewProgress / previewDuration) * 100 : 0
-
-  const barRef = useRef<HTMLDivElement | null>(null)
-  const dragging = useRef(false)
-  const seek = useCallback((clientX: number) => {
-    if (!previewDuration) return
-    const bar = barRef.current
-    if (!bar) return
-    const rect = bar.getBoundingClientRect()
-    seekPreviewToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
-  }, [previewDuration, seekPreviewToRatio])
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
-  const onPointerUp = useCallback(() => { dragging.current = false }, [])
-
-  const scrollToCurrentRow = useCallback(() => {
-    const id = cur.domId
-    if (!id) return
-    const el = typeof document !== 'undefined' ? document.getElementById(id) : null
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    el.classList.add('!bg-[var(--yellow)]/25')
-    setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
-  }, [cur])
-
-  return (
-    <div
-      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
-      role="region"
-      aria-label={es ? 'Reproductor de preview' : 'Preview player'}
-      style={{
-        fontFamily: "'Courier Prime', monospace",
-        // Safe area para el notch / barra del navegador en móvil.
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      <MiniBarHeader subtitle={es ? 'PREVIEW' : 'PREVIEW'} live />
-      {/* Hitbox vertical extendido para evitar clicks accidentales sobre
-          enlaces de la página que quedan justo detrás de la barra fina. */}
-      <div
-        ref={barRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="group relative w-full cursor-pointer touch-manipulation select-none"
-        style={{
-          touchAction: 'none',
-          paddingTop: 10,
-          paddingBottom: 6,
-        }}
-        role="progressbar"
-        aria-valuenow={Math.round(pct)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div className="relative w-full h-2 sm:h-1.5 bg-[var(--ink)]/10">
-          <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ left: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 px-4 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={previewPrev}
-            disabled={previewIndex === 0}
-            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-            title={es ? 'Anterior' : 'Previous'}
-            aria-label={es ? 'Anterior' : 'Previous'}
-          >
-            ⏮
-          </button>
-          <button
-            type="button"
-            onClick={togglePreview}
-            className={`w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
-              ${previewPlaying ? 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
-            title={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
-            aria-label={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
-          >
-            {previewPlaying ? '❚❚' : '▶'}
-          </button>
-          <button
-            type="button"
-            onClick={stopPreview}
-            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm font-black border-2 border-[var(--ink)] bg-[var(--red)] text-white hover:bg-[var(--ink)] transition-colors touch-manipulation"
-            title={es ? 'Parar' : 'Stop'}
-            aria-label={es ? 'Parar' : 'Stop'}
-          >
-            ■
-          </button>
-          <button
-            type="button"
-            onClick={previewNext}
-            disabled={previewIndex >= previewQueue.length - 1}
-            className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-base sm:text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] disabled:opacity-25 disabled:cursor-not-allowed transition-colors touch-manipulation"
-            title={es ? 'Siguiente' : 'Next'}
-            aria-label={es ? 'Siguiente' : 'Next'}
-          >
-            ⏭
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={scrollToCurrentRow}
-          className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
-          title={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
-        >
-          <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {cur.title || '—'}
-          </p>
-          <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">
-            {cur.artist || ''}
-          </p>
-        </button>
-
-        <div className="shrink-0 text-right">
-          <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-            {fmt(previewProgress)} / {previewDuration ? fmt(previewDuration) : '—'}
-          </span>
-          <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
-            {previewIndex + 1} / {previewQueue.length}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MiniDeckBarInner({ lang }: { lang: Locale }) {
-  const { isPlaying, togglePlay, initAudio, switchTrack, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
-  const es = lang === 'es'
+/**
+ * Shell común para las tres mini-barras del reproductor global.
+ *
+ * Unifica el contenedor fixed, la safe-area, la cabecera "OPTIMAL BREAKS
+ * RADIO", la barra de progreso seekable con hitbox ampliado y el layout
+ * [controles] [título/artista] [tiempo + extra]. Cada barra concreta
+ * (Preview / Deck / Mix) es un adapter diminuto que le pasa los datos del
+ * contexto y los botones específicos como `controls`.
+ */
+function MiniPlayerShell({
+  ariaLabel,
+  subtitle,
+  progress,
+  duration,
+  onSeekRatio,
+  fmt,
+  controls,
+  title,
+  subtitleBelow,
+  onTitleClick,
+  titleClickHint,
+  counter,
+  extraRight,
+}: {
+  ariaLabel: string
+  subtitle: string
+  progress: number
+  duration: number
+  onSeekRatio: (ratio: number) => void
+  fmt: (s: number) => string
+  controls: ReactNode
+  title: string
+  subtitleBelow?: ReactNode
+  onTitleClick?: () => void
+  titleClickHint?: string
+  counter?: string
+  extraRight?: ReactNode
+}) {
   const pct = duration ? (progress / duration) * 100 : 0
 
   const barRef = useRef<HTMLDivElement | null>(null)
@@ -413,25 +313,37 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
     const bar = barRef.current
     if (!bar) return
     const rect = bar.getBoundingClientRect()
-    seekToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
-  }, [duration, seekToRatio])
+    onSeekRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
+  }, [duration, onSeekRatio])
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
   const onPointerUp = useCallback(() => { dragging.current = false }, [])
+
+  const titleInner = (
+    <>
+      <p className="text-sm font-black text-[var(--ink)] truncate leading-snug" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+        {title || '—'}
+      </p>
+      {subtitleBelow ? (
+        <p className="text-xs text-[var(--ink)]/60 truncate leading-snug mt-0.5">{subtitleBelow}</p>
+      ) : null}
+    </>
+  )
 
   return (
     <div
       className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
-      aria-label={es ? 'Reproductor del deck' : 'Deck player'}
+      aria-label={ariaLabel}
       style={{
         fontFamily: "'Courier Prime', monospace",
+        // Safe area para el notch / home-bar iOS y la barra del navegador móvil.
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <MiniBarHeader subtitle={es ? 'DECK' : 'DECK'} live />
-      {/* seekable progress bar: hitbox con padding vertical para evitar
-          clicks accidentales sobre enlaces de la página debajo. */}
+      <MiniBarHeader subtitle={subtitle} live />
+      {/* Hitbox vertical extendido para evitar clicks accidentales sobre
+          enlaces de la página que quedan justo detrás de la barra fina. */}
       <div
         ref={barRef}
         onPointerDown={onPointerDown}
@@ -454,167 +366,212 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 px-3 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-        {/* transport: prev / play-stop / next */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => { initAudio(); switchTrack(-1) }}
-            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors touch-manipulation"
-            title={es ? 'Pista anterior' : 'Previous track'}
-            aria-label={es ? 'Pista anterior' : 'Previous track'}
-          >
-            ⏮
-          </button>
-          <button
-            type="button"
-            onClick={() => { initAudio(); togglePlay() }}
-            className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
-              ${isPlaying ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
-            title={isPlaying ? 'Stop' : 'Play'}
-            aria-label={isPlaying ? 'Stop' : 'Play'}
-          >
-            {isPlaying ? '■' : '▶'}
-          </button>
-          <button
-            type="button"
-            onClick={() => { initAudio(); switchTrack(1) }}
-            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors touch-manipulation"
-            title={es ? 'Siguiente pista' : 'Next track'}
-            aria-label={es ? 'Siguiente pista' : 'Next track'}
-          >
-            ⏭
-          </button>
-        </div>
+      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-2.5 max-w-4xl mx-auto">
+        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">{controls}</div>
 
-        {/* track info */}
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {track.title}
-          </p>
-          <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
-            OB DECK
-          </p>
-        </div>
+        {onTitleClick ? (
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
+            title={titleClickHint}
+          >
+            {titleInner}
+          </button>
+        ) : (
+          <div className="flex-1 min-w-0 overflow-hidden">{titleInner}</div>
+        )}
 
-        {/* time + link */}
         <div className="shrink-0 flex items-center gap-2">
-          <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-            {fmt(progress)} / {duration ? fmt(duration) : '—'}
-          </span>
-          <Link
-            href={`/${lang}#dj-deck`}
-            className="hidden sm:inline-flex items-center justify-center px-2 py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors no-underline touch-manipulation"
-          >
-            {es ? 'AL DECK' : 'FULL DECK'}
-          </Link>
+          <div className="text-right">
+            <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
+              {fmt(progress)} / {duration ? fmt(duration) : '—'}
+            </span>
+            {counter ? (
+              <span className="block text-[10px] sm:text-[9px] text-[var(--ink)]/35 font-bold tabular-nums">
+                {counter}
+              </span>
+            ) : null}
+          </div>
+          {extraRight}
         </div>
       </div>
     </div>
   )
 }
 
+// ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────
+function MiniPreviewBar({ lang }: { lang: Locale }) {
+  const {
+    previewQueue, previewIndex, previewPlaying,
+    previewProgress, previewDuration,
+    togglePreview, stopPreview, previewNext, previewPrev,
+    seekPreviewToRatio, fmt,
+  } = useDeckAudio()
+  const es = lang === 'es'
+  const cur = previewQueue[previewIndex]
+
+  // Nota: este callback va ANTES del early-return para no romper el orden
+  // de hooks entre renders (en la versión previa estaba después y era un
+  // bug latente).
+  const scrollToCurrentRow = useCallback(() => {
+    const id = cur?.domId
+    if (!id) return
+    const el = typeof document !== 'undefined' ? document.getElementById(id) : null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.classList.add('!bg-[var(--yellow)]/25')
+    setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
+  }, [cur])
+
+  if (!cur) return null
+
+  return (
+    <MiniPlayerShell
+      ariaLabel={es ? 'Reproductor de preview' : 'Preview player'}
+      subtitle="PREVIEW"
+      progress={previewProgress}
+      duration={previewDuration}
+      onSeekRatio={seekPreviewToRatio}
+      fmt={fmt}
+      title={cur.title || '—'}
+      subtitleBelow={cur.artist || ''}
+      onTitleClick={cur.domId ? scrollToCurrentRow : undefined}
+      titleClickHint={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
+      counter={`${previewIndex + 1} / ${previewQueue.length}`}
+      controls={
+        <>
+          <button
+            type="button"
+            onClick={previewPrev}
+            disabled={previewIndex === 0}
+            className={MINI_BTN_GHOST}
+            title={es ? 'Anterior' : 'Previous'}
+            aria-label={es ? 'Anterior' : 'Previous'}
+          >⏮</button>
+          <button
+            type="button"
+            onClick={togglePreview}
+            className={previewPlaying ? MINI_BTN_PAUSE_YELLOW : MINI_BTN_PLAY}
+            title={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+            aria-label={previewPlaying ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
+          >{previewPlaying ? '❚❚' : '▶'}</button>
+          <button
+            type="button"
+            onClick={stopPreview}
+            className={MINI_BTN_STOP_RED}
+            title={es ? 'Parar' : 'Stop'}
+            aria-label={es ? 'Parar' : 'Stop'}
+          >■</button>
+          <button
+            type="button"
+            onClick={previewNext}
+            disabled={previewIndex >= previewQueue.length - 1}
+            className={MINI_BTN_GHOST}
+            title={es ? 'Siguiente' : 'Next'}
+            aria-label={es ? 'Siguiente' : 'Next'}
+          >⏭</button>
+        </>
+      }
+    />
+  )
+}
+
+// ─── Adapter: DJ Deck (home, dual-deck A/B) ──────────────────────────────
+function MiniDeckBarInner({ lang }: { lang: Locale }) {
+  const { isPlaying, togglePlay, initAudio, switchTrack, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
+  const es = lang === 'es'
+
+  return (
+    <MiniPlayerShell
+      ariaLabel={es ? 'Reproductor del deck' : 'Deck player'}
+      subtitle="DECK"
+      progress={progress}
+      duration={duration}
+      onSeekRatio={seekToRatio}
+      fmt={fmt}
+      title={track.title}
+      subtitleBelow="OB DECK"
+      extraRight={
+        <Link
+          href={`/${lang}#dj-deck`}
+          className="hidden sm:inline-flex items-center justify-center px-2 py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] transition-colors no-underline touch-manipulation"
+        >
+          {es ? 'AL DECK' : 'FULL DECK'}
+        </Link>
+      }
+      controls={
+        <>
+          <button
+            type="button"
+            onClick={() => { initAudio(); switchTrack(-1) }}
+            className={MINI_BTN_GHOST}
+            title={es ? 'Pista anterior' : 'Previous track'}
+            aria-label={es ? 'Pista anterior' : 'Previous track'}
+          >⏮</button>
+          <button
+            type="button"
+            onClick={() => { initAudio(); togglePlay() }}
+            className={isPlaying ? MINI_BTN_PAUSE_RED : MINI_BTN_PLAY}
+            title={isPlaying ? 'Stop' : 'Play'}
+            aria-label={isPlaying ? 'Stop' : 'Play'}
+          >{isPlaying ? '■' : '▶'}</button>
+          <button
+            type="button"
+            onClick={() => { initAudio(); switchTrack(1) }}
+            className={MINI_BTN_GHOST}
+            title={es ? 'Siguiente pista' : 'Next track'}
+            aria-label={es ? 'Siguiente pista' : 'Next track'}
+          >⏭</button>
+        </>
+      }
+    />
+  )
+}
+
+// ─── Adapter: Mix (SoundCloud / MP3 largos) ──────────────────────────────
 function MiniMixBar({ lang }: { lang: Locale }) {
   const { currentMix, mixPlaying, mixProgress, mixDuration, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
   const es = lang === 'es'
   if (!currentMix) return null
 
-  const pct = mixDuration ? (mixProgress / mixDuration) * 100 : 0
-
-  const barRef = useRef<HTMLDivElement | null>(null)
-  const dragging = useRef(false)
-  const seek = useCallback((clientX: number) => {
-    if (!mixDuration) return
-    const bar = barRef.current
-    if (!bar) return
-    const rect = bar.getBoundingClientRect()
-    seekMixToRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
-  }, [mixDuration, seekMixToRatio])
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
-  const onPointerUp = useCallback(() => { dragging.current = false }, [])
-
   return (
-    <div
-      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
-      role="region"
-      aria-label={es ? 'Reproductor de mix' : 'Mix player'}
-      style={{
-        fontFamily: "'Courier Prime', monospace",
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      <MiniBarHeader subtitle={es ? 'MIX' : 'MIX'} live />
-      {/* seekable progress bar: hitbox extendido para evitar clicks
-          accidentales sobre enlaces de la página. */}
-      <div
-        ref={barRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="group relative w-full cursor-pointer touch-manipulation select-none"
-        style={{ touchAction: 'none', paddingTop: 10, paddingBottom: 6 }}
-        role="progressbar"
-        aria-valuenow={Math.round(pct)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div className="relative w-full h-2 sm:h-1.5 bg-[var(--ink)]/10">
-          <div className="absolute inset-y-0 left-0 bg-[var(--red)]" style={{ width: `${pct}%` }} />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-3 sm:h-3 rounded-full bg-[var(--red)] border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ left: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 sm:gap-3 px-3 py-3 sm:px-4 sm:py-2.5 max-w-4xl mx-auto">
-        {/* transport: play-pause / stop */}
-        <div className="flex items-center gap-1 shrink-0">
+    <MiniPlayerShell
+      ariaLabel={es ? 'Reproductor de mix' : 'Mix player'}
+      subtitle="MIX"
+      progress={mixProgress}
+      duration={mixDuration}
+      onSeekRatio={seekMixToRatio}
+      fmt={fmt}
+      title={currentMix.title}
+      subtitleBelow={
+        <>
+          {currentMix.artist}
+          <span className="ml-1.5 text-[var(--ink)]/30">·</span>
+          <span className="ml-1.5 text-[9px] font-bold tracking-wider uppercase text-[var(--ink)]/35">
+            {currentMix.source === 'soundcloud' ? 'SoundCloud' : 'MP3'}
+          </span>
+        </>
+      }
+      controls={
+        <>
           <button
             type="button"
             onClick={toggleMixPlayback}
-            className={`w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] transition-colors touch-manipulation
-              ${mixPlaying ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)]' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
+            className={mixPlaying ? MINI_BTN_PAUSE_RED : MINI_BTN_PLAY}
             title={mixPlaying ? 'Pause' : 'Play'}
             aria-label={mixPlaying ? 'Pause' : 'Play'}
-          >
-            {mixPlaying ? '❚❚' : '▶'}
-          </button>
+          >{mixPlaying ? '❚❚' : '▶'}</button>
           <button
             type="button"
             onClick={stopMix}
-            className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-colors touch-manipulation"
+            className={MINI_BTN_CLOSE}
             title={es ? 'Cerrar' : 'Close'}
             aria-label={es ? 'Cerrar' : 'Close'}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* track info */}
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <p className="text-xs sm:text-sm font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {currentMix.title}
-          </p>
-          <p className="text-[10px] sm:text-xs text-[var(--ink)]/60 truncate leading-tight">
-            {currentMix.artist}
-            <span className="ml-1.5 text-[var(--ink)]/30">·</span>
-            <span className="ml-1.5 text-[9px] font-bold tracking-wider uppercase text-[var(--ink)]/35">
-              {currentMix.source === 'soundcloud' ? 'SoundCloud' : 'MP3'}
-            </span>
-          </p>
-        </div>
-
-        {/* time */}
-        <div className="shrink-0 text-right">
-          <span className="block text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
-            {fmt(mixProgress)} / {mixDuration ? fmt(mixDuration) : '—'}
-          </span>
-        </div>
-      </div>
-    </div>
+          >✕</button>
+        </>
+      }
+    />
   )
 }
 
