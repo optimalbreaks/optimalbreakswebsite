@@ -10,25 +10,41 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { getDictionary } from '@/lib/dictionaries'
+import { detailPageMetadata } from '@/lib/seo'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
 
 export async function generateMetadata({ params }: { params: { lang: Locale; handle: string } }): Promise<Metadata> {
   const { lang, handle } = await params
+  const dict = await getDictionary(lang)
+  const seo = dict.seo as { site_name: string; default_keywords: string }
+  const siteName = seo.site_name
+  const defaultKw = seo.default_keywords.split(',').map((k) => k.trim())
   const payload = await fetchPayload(handle)
-  if (!payload) return { title: 'Shared tracks — Optimal Breaks', robots: { index: false, follow: true } }
-  const name = payload.owner.display_name || payload.owner.username || 'Breaker'
-  const count = payload.saved.length
   const es = lang === 'es'
-  const title = es ? `Tracks de ${name} — Optimal Breaks` : `${name}'s tracks — Optimal Breaks`
+  const path = `/u/${handle}/tracks`
+
+  if (!payload) {
+    const title = es ? 'Lista de tracks' : 'Track list'
+    const description = es
+      ? 'Lista compartida de tracks en Optimal Breaks.'
+      : 'Shared track list on Optimal Breaks.'
+    return {
+      ...detailPageMetadata(lang, path, siteName, title, description, 'website', null, defaultKw),
+      robots: { index: false, follow: true },
+    }
+  }
+
+  const name = payload.owner.display_name || payload.owner.username || (es ? 'Breaker' : 'Breaker')
+  const count = payload.saved.length
+  const title = es ? `Tracks de ${name}` : `${name}'s tracks`
   const description = es
     ? `${count} ${count === 1 ? 'track guardado' : 'tracks guardados'} por ${name}. Escucha y añádelos a tu lista.`
     : `${count} ${count === 1 ? 'saved track' : 'saved tracks'} by ${name}. Listen and add them to your list.`
+
   return {
-    title,
-    description,
+    ...detailPageMetadata(lang, path, siteName, title, description, 'website', null, defaultKw),
     robots: { index: false, follow: true },
-    openGraph: { title, description },
-    twitter: { card: 'summary', title, description },
   }
 }
 
