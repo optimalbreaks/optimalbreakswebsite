@@ -151,6 +151,8 @@ Single URL scheme per source:
 
 Net effect: when you paste the URL into WhatsApp / X / Signal, the preview shows the **track artwork and name** (not a generic chart / profile card), and clicking it lands on Optimal Breaks with the song already playing.
 
+**Autoplay fallback.** Browsers block `audio.play()` with `NotAllowedError` when a shared link is opened in a new tab without prior user interaction on the site (Chrome MEI / Safari autoplay policy). `DeckAudioProvider` catches that specific error and flips `previewBlocked: true` (exposed on the context + `usePreviewAudio` hook). While `previewBlocked` is true the provider renders a full-screen `PreviewAutoplayOverlay` — a single "▶ TAP TO PLAY" card with the track artwork, title and artist. One tap calls `togglePreview()`, which counts as a gesture so `audio.play()` resolves and the overlay self-dismisses (`previewBlocked` is cleared on both a successful play and on `stopPreview`). Any other play error (bad URL, CORS, etc.) does **not** trigger the overlay.
+
 ### Admin stats
 
 `/[lang]/administrator/tracks` aggregates saves **across all users** and displays:

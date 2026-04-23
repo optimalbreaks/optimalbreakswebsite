@@ -71,6 +71,10 @@ export interface PreviewAudioApi {
   previewProgress: number
   previewDuration: number
   previewGroupKey: string | null
+  /** true cuando `audio.play()` falló por NotAllowedError (autoplay bloqueado
+   *  por el navegador tras un deep-link). La UI usa esto para pintar el
+   *  overlay "Toca para escuchar" y recuperar con un gesto del usuario. */
+  previewBlocked: boolean
   playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
   togglePreview: () => void
   stopPreview: () => void
@@ -133,6 +137,7 @@ interface DeckAudioContextValue {
   previewProgress: number
   previewDuration: number
   previewGroupKey: string | null
+  previewBlocked: boolean
   playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
   togglePreview: () => void
   stopPreview: () => void
@@ -162,6 +167,7 @@ export function usePreviewAudio(): PreviewAudioApi {
     previewProgress: ctx.previewProgress,
     previewDuration: ctx.previewDuration,
     previewGroupKey: ctx.previewGroupKey,
+    previewBlocked: ctx.previewBlocked,
     playPreviewQueue: ctx.playPreviewQueue,
     togglePreview: ctx.togglePreview,
     stopPreview: ctx.stopPreview,
@@ -194,6 +200,63 @@ export function claimAudio(source: AudioClaimSource) {
 export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
 
 // ─── MiniDeckBar ────────────────────────────────────────
+/**
+ * Overlay que se pinta encima de la página cuando `audio.play()` falla con
+ * NotAllowedError (política de autoplay) tras un deep-link compartido. Permite
+ * arrancar la reproducción con un único tap del usuario. Se auto-cierra cuando
+ * `previewBlocked` vuelve a false (togglePreview/ stopPreview lo limpian).
+ */
+function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
+  const ctx = useDeckAudio()
+  const { previewBlocked, previewQueue, previewIndex, togglePreview } = ctx
+  if (!previewBlocked || previewQueue.length === 0) return null
+  const track = previewQueue[previewIndex]
+  if (!track) return null
+  const es = lang === 'es'
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={es ? 'Toca para escuchar el track' : 'Tap to play the track'}
+    >
+      <button
+        type="button"
+        onClick={togglePreview}
+        className="flex items-center gap-3 sm:gap-4 bg-[var(--paper)] border-[4px] border-[var(--ink)] px-3 sm:px-5 py-3 sm:py-4 max-w-[520px] w-full hover:bg-[var(--yellow)] active:bg-[var(--yellow)] transition-colors cursor-pointer touch-manipulation text-left"
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+      >
+        {track.artworkUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={track.artworkUrl} alt="" className="w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] object-cover shrink-0" />
+        ) : (
+          <div className="w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] sm:text-xs font-black tracking-widest text-[var(--red)] mb-0.5 sm:mb-1">
+            {es ? '▶ TOCA PARA ESCUCHAR' : '▶ TAP TO PLAY'}
+          </div>
+          <div
+            className="text-sm sm:text-base font-black text-[var(--ink)] truncate leading-tight"
+            style={{ fontFamily: "'Unbounded', sans-serif" }}
+          >
+            {track.title}
+          </div>
+          {track.artist && (
+            <div className="text-[11px] sm:text-xs text-[var(--ink)]/70 truncate">{track.artist}</div>
+          )}
+        </div>
+        <span
+          className="shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white text-lg font-black"
+          aria-hidden
+        >
+          ▶
+        </span>
+      </button>
+    </div>
+  )
+}
+
 function MiniDeckBar({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
   const { mode, sessionActive } = ctx
@@ -655,6 +718,10 @@ export function DeckAudioProvider({
   const [previewProgress, setPreviewProgress] = useState(0)
   const [previewDuration, setPreviewDuration] = useState(0)
   const [previewGroupKey, setPreviewGroupKey] = useState<string | null>(null)
+  // true cuando `audio.play()` fue rechazado por NotAllowedError (autoplay
+  // bloqueado al aterrizar vía link compartido en pestaña nueva, sin gesto).
+  // El overlay `PreviewAutoplayOverlay` lo lee para pedirle al usuario un tap.
+  const [previewBlocked, setPreviewBlocked] = useState(false)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
   const previewRafRef = useRef(0)
 
@@ -1111,6 +1178,7 @@ export function DeckAudioProvider({
 
   // === Preview player: internos ===
   const stopPreviewInternal = useCallback(() => {
+    setPreviewBlocked(false)
     cancelAnimationFrame(previewRafRef.current)
     const a = previewAudioRef.current
     if (a) { a.pause(); a.removeAttribute('src'); a.load() }
@@ -1176,10 +1244,17 @@ export function DeckAudioProvider({
     audio.src = queue[idx].src
     audio.load()
     audio.play()
-      .then(() => setPreviewPlaying(true))
-      .catch(() => {
-        // Si el navegador bloquea el autoplay (o la URL casca), avanzamos.
+      .then(() => {
+        setPreviewPlaying(true)
+        setPreviewBlocked(false)
+      })
+      .catch((err: unknown) => {
         setPreviewPlaying(false)
+        // NotAllowedError = política de autoplay del navegador (link compartido
+        // abierto en pestaña nueva, sin gesto previo). Mantenemos la cola
+        // cargada y pedimos al usuario un tap en el overlay para arrancar.
+        const name = (err && typeof err === 'object' && 'name' in err) ? (err as { name?: string }).name : ''
+        setPreviewBlocked(name === 'NotAllowedError')
       })
 
     // mediaSession — titular, artwork y controles.
@@ -1226,6 +1301,7 @@ export function DeckAudioProvider({
     if (a.paused) {
       a.play().then(() => {
         setPreviewPlaying(true)
+        setPreviewBlocked(false)
         if ('mediaSession' in navigator) {
           try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
         }
@@ -1476,6 +1552,7 @@ export function DeckAudioProvider({
       previewProgress,
       previewDuration,
       previewGroupKey,
+      previewBlocked,
       playPreviewQueue,
       togglePreview,
       stopPreview,
@@ -1527,6 +1604,7 @@ export function DeckAudioProvider({
       previewProgress,
       previewDuration,
       previewGroupKey,
+      previewBlocked,
       playPreviewQueue,
       togglePreview,
       stopPreview,
@@ -1542,6 +1620,7 @@ export function DeckAudioProvider({
     <DeckAudioContext.Provider value={value}>
       <div className={showBar ? 'pb-[4.75rem] sm:pb-[5rem]' : undefined}>{children}</div>
       <MiniDeckBar lang={lang} />
+      <PreviewAutoplayOverlay lang={lang} />
       {scTrackUrl && (
         <SoundCloudWidget
           trackUrl={scTrackUrl}

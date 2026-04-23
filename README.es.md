@@ -256,6 +256,8 @@ Helpers y parser en **`src/lib/share-track.ts`** (`buildTrackSharePath`, `buildB
 
 **OG dinámico por track.** `generateMetadata` en `charts/page.tsx`, `artists/[slug]/page.tsx` y `labels/[slug]/page.tsx` lee el `?play=` en SSR: si resuelve a un track real, sobreescribe `og:title` (`"Título (Mix) — Artistas"`), `og:description` (`"Escucha este track en Optimal Breaks · Sello · Año"`) y `og:image` (el `artwork_url` del tema). Así los previews de WhatsApp/X muestran la canción concreta y no una tarjeta genérica de chart o ficha. Detalle en **`docs/USER_ENGAGEMENT.md`** (*Track-level deep-linking*).
 
+**Fallback de autoplay.** Chrome/Safari bloquean `audio.play()` con `NotAllowedError` cuando se abre un link compartido en pestaña nueva (no hay gesto del usuario en esa pestaña). `DeckAudioProvider` detecta ese error concreto y activa `previewBlocked`; entonces pinta un overlay a pantalla completa `PreviewAutoplayOverlay` con la portada + título + botón "▶ TOCA PARA ESCUCHAR". Un toque llama a `togglePreview()` ya con gesto válido → el audio arranca y el overlay se cierra solo. Otros errores (URL rota, CORS…) no disparan el overlay.
+
 **Admin Tracks.** `/[lang]/administrator/tracks` agrega las estadísticas de guardado de **todos los usuarios** (top tracks, sellos, artistas) aplicando la misma dedupe canónica que la UI de usuario. Backend: `src/app/api/admin/tracks/route.ts`. Resumen en el dashboard del admin.
 
 ### Vistas de listado (grande / compacto / lista)

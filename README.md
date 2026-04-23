@@ -571,6 +571,8 @@ Every song surface (`ChartView`, `TracksSection` and `BeatportTopTracks`) render
 
 **Server OG overrides.** `generateMetadata` on `charts/page.tsx`, `artists/[slug]/page.tsx` and `labels/[slug]/page.tsx` reads `?play=` during SSR: if it resolves to an actual track it rewrites `og:title` (`"Title (Mix) — Artists"`), `og:description` (`"Listen to this track on Optimal Breaks · Label · Year"`) and `og:image` (the track `artwork_url`), falling back to the normal profile/chart OG when it doesn't. So sharing a link on WhatsApp/X shows the **song** as the preview, not the generic chart or profile card.
 
+**Autoplay fallback.** When a shared link is opened in a fresh tab, Chrome/Safari routinely block `audio.play()` with `NotAllowedError` (no user gesture in the new tab). `DeckAudioProvider` intercepts the specific error and flips `previewBlocked` on the context; a full-screen `PreviewAutoplayOverlay` renders a single "▶ TAP TO PLAY" card with artwork + title. One tap calls `togglePreview()` (now inside a user gesture) and the overlay self-dismisses. Other playback errors (bad URL, CORS…) do not trigger the overlay.
+
 ### Key files
 
 - `src/app/api/search/route.ts` — REST API (parallel queries, dedupe, ordering).
