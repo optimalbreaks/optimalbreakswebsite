@@ -5,6 +5,7 @@
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
+import { parsePlayParam } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -16,13 +17,21 @@ import FavoriteButton from '@/components/FavoriteButton'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = {
+  params: { lang: Locale; slug: string }
+  searchParams?: Record<string, string | string[] | undefined>
+}
 type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
 type LabelPageRow = Label & {
   organization: Pick<Organization, 'slug' | 'name'> | null
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+function firstSearchParam(v: string | string[] | undefined): string | undefined {
+  if (v === undefined) return undefined
+  return Array.isArray(v) ? v[0] : v
+}
+
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
   const { data: raw } = await supabase.from('labels').select('name, description_en, description_es, image_url, og_image_url').eq('slug', slug).single()
@@ -31,7 +40,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: lang === 'es' ? 'Sello no encontrado' : 'Label not found', robots: { index: false, follow: true } }
   const siteName = await siteNameForLang(lang)
   const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
-  return detailPageMetadata(lang, `/labels/${slug}`, siteName, data.name, description, 'website', data.og_image_url || data.image_url)
+  const defaultOgImage = data.og_image_url || data.image_url
+
+  // Si la URL compartida lleva ?play=beatport:<id>, sobreescribimos OG con
+  // la portada y título del track concreto del Top 10 del sello.
+  const sp = searchParams ?? {}
+  const parsedPlay = parsePlayParam(firstSearchParam(sp.play))
+  if (parsedPlay?.kind === 'beatport') {
+    const { data: topRow } = await supabase.from('labels').select('beatport_top_tracks').eq('slug', slug).single()
+    const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
+    const track = list.find((t) => {
+      const m = t.beatport_url?.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
+      return m && m[1] === parsedPlay.id
+    })
+    if (track) {
+      const artistsStr = track.artists.map((a) => a.name).filter(Boolean).join(', ')
+      const trackTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
+      const bits: string[] = []
+      if (track.label) bits.push(track.label)
+      if (track.release_year && track.release_year > 0) bits.push(String(track.release_year))
+      const listenPrefix = lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
+      const trackDesc = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
+      return detailPageMetadata(
+        lang,
+        `/labels/${slug}`,
+        siteName,
+        `${trackTitle} | ${siteName}`,
+        trackDesc,
+        'website',
+        track.artwork_url || defaultOgImage,
+      )
+    }
+  }
+
+  return detailPageMetadata(lang, `/labels/${slug}`, siteName, data.name, description, 'website', defaultOgImage)
 }
 
 export default async function LabelDetailPage({ params }: Props) {

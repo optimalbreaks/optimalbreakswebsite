@@ -15,9 +15,11 @@ import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TrackShareButton from '@/components/TrackShareButton'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
+import type { Locale } from '@/lib/i18n-config'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -40,8 +42,8 @@ export type PublicTracksPayload = {
     created_at: string | null
   }>
   tracks: {
-    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }>
-    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null }>
+    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null; week_date?: string | null }>
+    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
     vinyl: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }>
   }
 }
@@ -65,6 +67,12 @@ type UnifiedTrack = {
   platform?: string
   note?: string
   saved_at?: string | null
+  /**
+   * Fecha ISO (YYYY-MM-DD) de la edición del chart a la que pertenece esta
+   * track (solo `chart` y `featured`). Null para vinyl y beatport_top.
+   * La usa `TrackShareButton` para construir /charts?week=..&play=..
+   */
+  week_date?: string | null
   /**
    * Refs `{source, id}` del track representativo + sus duplicados colapsados
    * (misma canción guardada desde distintas listas). Se usa para que el
@@ -300,10 +308,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
         const [chartRes, featRes, vinylRes] = await Promise.all([
           chartIds.length
-            ? supabase.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
+            ? supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
             : Promise.resolve({ data: [] as any[] }),
           featuredIds.length
-            ? supabase.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featuredIds)
+            ? supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featuredIds)
             : Promise.resolve({ data: [] as any[] }),
           vinylIds.length
             ? supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
@@ -312,6 +320,28 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         chartData = chartRes.data || []
         featData = featRes.data || []
         vinylData = vinylRes.data || []
+
+        // Resolvemos week_date de las ediciones implicadas para poder generar
+        // links compartibles "/charts?week=..&play=<source>:<id>" sin consulta
+        // extra por fila.
+        const editionIds = Array.from(new Set(
+          [
+            ...chartData.map((c: any) => c.chart_edition_id as string | null).filter((x): x is string => !!x),
+            ...featData.map((f: any) => f.chart_edition_id as string | null).filter((x): x is string => !!x),
+          ],
+        ))
+        if (editionIds.length) {
+          const { data: edData } = await supabase
+            .from('chart_editions')
+            .select('id, week_date')
+            .in('id', editionIds)
+          const weekBy = new Map<string, string>()
+          for (const e of ((edData as Array<{ id: string; week_date: string }> | null) || [])) {
+            weekBy.set(e.id, e.week_date)
+          }
+          chartData = chartData.map((c: any) => ({ ...c, week_date: c.chart_edition_id ? weekBy.get(c.chart_edition_id) ?? null : null }))
+          featData = featData.map((f: any) => ({ ...f, week_date: f.chart_edition_id ? weekBy.get(f.chart_edition_id) ?? null : null }))
+        }
       }
 
       const byKey = new Map<string, UnifiedTrack>()
@@ -322,6 +352,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           label: c.label, year: c.release_year, bpm: c.bpm, music_key: c.music_key,
           artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
           sample_url: c.sample_url,
+          week_date: c.week_date ?? null,
         })
       }
       for (const f of featData) {
@@ -333,6 +364,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
           sample_url: f.sample_url, platform: f.platform,
           note: lang === 'es' ? f.note_es : f.note_en,
+          week_date: f.week_date ?? null,
         })
       }
       for (const v of vinylData) {
@@ -441,6 +473,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         // se fusiona con su gemela beatport_top que sí trae snapshot).
         if (!existing.snapshot && t.snapshot) existing.snapshot = t.snapshot
         if (!existing.canonical_url && t.canonical_url) existing.canonical_url = t.canonical_url
+        // week_date del representativo puede venir null si es un beatport_top
+        // que se fusiona con un chart/featured de una semana concreta: en ese
+        // caso nos quedamos con la semana del duplicado (para que el botón
+        // "compartir" pueda apuntar al chart).
+        if (!existing.week_date && t.week_date) existing.week_date = t.week_date
       }
       const deduped = Array.from(byCanon.values())
       setTracks(deduped)
@@ -1025,6 +1062,15 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         size="sm"
                       />
                     )}
+                    {(t.source === 'chart' || t.source === 'featured') && t.week_date ? (
+                      <TrackShareButton
+                        source={t.source}
+                        trackId={t.id}
+                        weekDate={t.week_date}
+                        lang={lang as Locale}
+                        shareTitle={`${t.title}${t.artists ? ` — ${t.artists}` : ''}`}
+                      />
+                    ) : null}
                     {t.external_url ? (
                       <a
                         href={t.external_url} target="_blank" rel="noopener noreferrer"

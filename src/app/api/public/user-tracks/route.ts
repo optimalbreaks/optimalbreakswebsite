@@ -27,9 +27,10 @@ type ProfileMini = {
   country: string | null
 }
 
-type ChartRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }
-type FeatRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null }
+type ChartRow = { id: string; chart_edition_id: string | null; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }
+type FeatRow = { id: string; chart_edition_id: string | null; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null }
 type VinylRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }
+type EditionRow = { id: string; week_date: string }
 
 function artistsToString(a: unknown): string {
   if (!Array.isArray(a)) return ''
@@ -74,27 +75,42 @@ export async function GET(request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
+      ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featIds)
+      ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featIds)
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
       ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
 
+  // Resolver week_date de chart/featured en un lote para construir los links
+  // compartibles "/charts?week=...&play=<source>:<id>" sin forzar al cliente
+  // a un round-trip extra.
+  const editionIdSet = new Set<string>()
+  for (const c of (chartRes.data || []) as ChartRow[]) if (c.chart_edition_id) editionIdSet.add(c.chart_edition_id)
+  for (const f of (featRes.data || []) as FeatRow[]) if (f.chart_edition_id) editionIdSet.add(f.chart_edition_id)
+  const editionIds = Array.from(editionIdSet)
+  const editionRes = editionIds.length
+    ? await sb.from('chart_editions').select('id, week_date').in('id', editionIds)
+    : { data: [] as EditionRow[], error: null }
+  const weekByEdition = new Map<string, string>()
+  for (const e of ((editionRes.data || []) as EditionRow[])) weekByEdition.set(e.id, e.week_date)
+
   const tracks = {
     chart: ((chartRes.data || []) as ChartRow[]).map((c) => ({
       id: c.id, title: c.title, mix_name: c.mix_name, artists: artistsToString(c.artists),
       label: c.label, year: c.release_year, bpm: c.bpm, music_key: c.music_key,
       artwork_url: c.artwork_url, beatport_url: c.beatport_url, sample_url: c.sample_url,
+      week_date: c.chart_edition_id ? weekByEdition.get(c.chart_edition_id) || null : null,
     })),
     featured: ((featRes.data || []) as FeatRow[]).map((f) => ({
       id: f.id, title: f.title, mix_name: f.mix_name, artists: artistsToString(f.artists),
       label: f.label, year: f.release_year, bpm: f.bpm, music_key: f.music_key,
       artwork_url: f.artwork_url, link_url: f.link_url, link_label: f.link_label,
       platform: f.platform, sample_url: f.sample_url, note_en: f.note_en, note_es: f.note_es,
+      week_date: f.chart_edition_id ? weekByEdition.get(f.chart_edition_id) || null : null,
     })),
     vinyl: ((vinylRes.data || []) as VinylRow[]).map((v) => ({
       id: v.id, title: v.title, mix_name: v.mix_name, artists: artistsToString(v.artists),

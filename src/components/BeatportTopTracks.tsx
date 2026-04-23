@@ -1,9 +1,12 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TrackShareButton from '@/components/TrackShareButton'
+import { buildBeatportSharePath, parsePlayParam } from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
@@ -77,6 +80,7 @@ function PositionBadge({ position }: { position: number }) {
 
 export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityName, origin }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey,
     playPreviewQueue, stopPreview,
@@ -129,6 +133,46 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
     if (!myQueueActive) return false
     return previewQueue[previewIndex]?.rowKey === `bp-${t.position}`
   }, [myQueueActive, previewQueue, previewIndex])
+
+  // Deep-link: ?play=beatport:<id>
+  // Cuando alguien abre un link compartido de una canción de este Top 10,
+  // expandimos el panel, hacemos scroll a la fila y arrancamos la cola global
+  // desde esa canción. Solo se ejecuta una vez por montaje.
+  const didAutoPlayRef = useRef(false)
+  useEffect(() => {
+    if (didAutoPlayRef.current) return
+    if (typeof window === 'undefined') return
+    if (!tracks.length) return
+    const params = new URLSearchParams(window.location.search)
+    const parsed = parsePlayParam(params.get('play'))
+    if (!parsed || parsed.kind !== 'beatport') return
+    const target = tracks.find((t) => extractBeatportTrackId(t.beatport_url) === parsed.id)
+    if (!target) return
+    const queue = playableTracks.map<PreviewTrack>((t) => ({
+      rowKey: `bp-${t.position}`,
+      src: proxyUrl(t.sample_url!),
+      title: t.title,
+      artist: t.artists.map((a) => a.name).join(', '),
+      artworkUrl: t.artwork_url || null,
+      domId: `bp-row-${t.position}`,
+    }))
+    const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
+    didAutoPlayRef.current = true
+    setExpanded(true)
+    // Pequeño delay para esperar a que el panel expanda antes de hacer scroll.
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`bp-row-${target.position}`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-4', 'ring-[var(--red)]')
+        window.setTimeout(() => el.classList.remove('ring-4', 'ring-[var(--red)]'), 2200)
+      }
+      if (idx >= 0 && target.sample_url) {
+        playPreviewQueue(queue, idx, groupKey)
+      }
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [tracks, playableTracks, groupKey, playPreviewQueue])
 
   if (!tracks.length) return null
 
@@ -273,6 +317,17 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                           {t.key}
                         </span>
                       )}
+                      {(() => {
+                        const bpId = extractBeatportTrackId(t.beatport_url)
+                        if (!bpId || !pathname) return null
+                        return (
+                          <TrackShareButton
+                            path={buildBeatportSharePath(pathname, bpId)}
+                            lang={lang}
+                            shareTitle={`${t.title}${t.mix_name ? ` (${t.mix_name})` : ''} — ${t.artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                          />
+                        )
+                      })()}
                       {t.beatport_url && (
                         <a
                           href={t.beatport_url}

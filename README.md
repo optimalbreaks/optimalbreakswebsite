@@ -61,6 +61,8 @@ Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated p
 
 **Public shared tracks page.** Every user can copy a public URL from `/mi-cuenta/tracks` (🔗 COMPARTIR button) that points to `/[lang]/u/<userId>/tracks`. Third parties can browse, sort, filter and play that list but cannot edit it; their own SAVE button adds tracks to **their** list (and shows a sign-up modal when logged out). Backed by `/api/public/user-tracks` using the service-role Supabase client to bypass RLS for read-only.
 
+**Per-track sharing.** Every row on chart, saved-tracks and Beatport Top 10 lists carries a per-song `TrackShareButton` (🔗) that copies a URL of the form `/charts?week=…&play=<chart|featured>:<uuid>` or `/<artists|labels>/<slug>?play=beatport:<beatportId>`. Opening that URL lands on Optimal Breaks with the song already playing and the preview card (artwork + title) rendered on social media via server-side OG overrides. Details in *[Per-track sharing](#per-track-sharing-open--autoplay-on-optimal-breaks)* and `docs/USER_ENGAGEMENT.md`.
+
 **Admin Tracks dashboard.** `/[lang]/administrator/tracks` aggregates saved-track stats (top tracks, labels and artists) across **all users**, applying the same cross-source canonical dedupe as the user UI so a track saved from both "40 Breaks Vitales" and "New Releases" counts once. Source: `/api/admin/tracks/route.ts`.
 
 ---
@@ -556,6 +558,18 @@ The `href` values returned by the API carry both a **hash** and **`?play=1`** so
 - `/{lang}/mixes#mix-<id>?play=1` — `MixesExplorer` (direct MP3/SoundCloud, YouTube via autoplay).
 
 The `useEffect` in `ChartView.tsx` listens for hash + `play`, expands the matching year/week accordion, scrolls, highlights the row and triggers play. When done it strips `?play=1` via `history.replaceState` so a refresh doesn’t fire playback again.
+
+### Per-track sharing (open + autoplay on Optimal Breaks)
+
+Every song surface (`ChartView`, `TracksSection` and `BeatportTopTracks`) renders a tiny 🔗 button per row — `TrackShareButton` (`src/components/TrackShareButton.tsx`) — that uses `navigator.share` on mobile and `clipboard.writeText` (with ✓ feedback) as fallback. URL shapes:
+
+- `/{lang}/charts?week=<YYYY-MM-DD>&play=chart:<uuid>` — **40 Breaks Vitales** row in a specific edition.
+- `/{lang}/charts?week=<YYYY-MM-DD>&play=featured:<uuid>` — **New Releases** row in a specific edition.
+- `/{lang}/artists/<slug>?play=beatport:<beatportId>` / `/{lang}/labels/<slug>?play=beatport:<beatportId>` — row inside the **Beatport Top 10** of a profile (stable `beatportId` extracted from `beatport_url`).
+
+`parsePlayParam` in `src/lib/share-track.ts` normalises the three shapes plus the legacy `?play=1`. Retro Vinyl Picks are **not** shared this way — they stay on their Discogs / YouTube links because iframe-only playback makes autoplay via arbitrary share links unreliable.
+
+**Server OG overrides.** `generateMetadata` on `charts/page.tsx`, `artists/[slug]/page.tsx` and `labels/[slug]/page.tsx` reads `?play=` during SSR: if it resolves to an actual track it rewrites `og:title` (`"Title (Mix) — Artists"`), `og:description` (`"Listen to this track on Optimal Breaks · Label · Year"`) and `og:image` (the track `artwork_url`), falling back to the normal profile/chart OG when it doesn't. So sharing a link on WhatsApp/X shows the **song** as the preview, not the generic chart or profile card.
 
 ### Key files
 

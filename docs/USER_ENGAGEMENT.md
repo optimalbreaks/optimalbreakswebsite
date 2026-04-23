@@ -127,6 +127,29 @@ Exported API:
   - Shows a sign-up modal when the viewer is not logged in.
 - **`BeatportTopTracks`** (`src/components/BeatportTopTracks.tsx`) — renders a `SaveTrackButton` in URL mode on every row of the artist/label Top 10 accordion. Snapshot includes an `origin` object (`{kind: 'artist'|'label', id, slug, name}`) so My Tracks can later show where the song came from.
 - **`TracksSection`** (`src/components/user/TracksSection.tsx`) — lives at `/mi-cuenta/tracks` and also powers `/u/<user>/tracks` via the `publicPayload` prop. Hydrates `beatport_top` rows directly from their embedded `snapshot` (no source-table JOIN needed). Features: sorting by artist / title / release date / added date; "Play all" + "Shuffle" for audio-only tracks; filter by **actual playback source** (Beatport / Bandcamp / YouTube) multi-select; seekable progress bar + prev/next; cross-source dedupe; COPY URL button to share your list.
+- **`TrackShareButton`** (`src/components/TrackShareButton.tsx`) — small 🔗 icon rendered **per row** on every surface that lists songs: `ChartView` (40 Breaks + New Releases), `TracksSection` (own list + `/u/<user>/tracks` public list) and `BeatportTopTracks` (artist + label Top 10). Prioritises `navigator.share` on mobile and falls back to `clipboard.writeText` with a ✓ confirmation. Helpers live in `src/lib/share-track.ts` (`buildTrackSharePath`, `buildBeatportSharePath`, `parsePlayParam`).
+
+### Track-level deep-linking (share → autoplay on Optimal Breaks)
+
+Problem this solves: sharing a song via Beatport / Bandcamp links sends the receiver **off** the site. The goal is that every shared song opens inside Optimal Breaks and starts playing immediately.
+
+Single URL scheme per source:
+
+| Source | Shared URL | Destination component |
+|--------|-----------|------------------------|
+| `chart` (40 Breaks Vitales) | `/[lang]/charts?week=<YYYY-MM-DD>&play=chart:<uuid>` | `ChartView` opens the matching weekly edition, scrolls + highlights the row and calls `playPreviewQueue` |
+| `featured` (New Releases) | `/[lang]/charts?week=<YYYY-MM-DD>&play=featured:<uuid>` | same as above |
+| `beatport_top` (artist / label Top 10) | `/[lang]/<artists|labels>/<slug>?play=beatport:<beatportId>` | `BeatportTopTracks` expands the Top 10 accordion on that profile, scrolls to the row and calls `playPreviewQueue` |
+| `vinyl` (Retro Vinyl Picks) | — no internal share — | stays on the external Discogs / YouTube link (iframe-only playback makes an autoplay link unreliable) |
+
+`parsePlayParam` is defensive: accepts `1` (legacy autoplay flag from ⌘K), `chart:<uuid>`, `featured:<uuid>`, `beatport:<digits>`; anything else returns `null` and the page renders normally.
+
+**Server-side OG overrides.** The same `?play=<source>:<id>` is consumed by `generateMetadata`:
+
+- `/[lang]/charts/page.tsx` → queries the `chart_tracks` / `chart_featured_tracks` row to build OG title `"Title (Mix) — Artists"`, description `"Listen to this track on Optimal Breaks · Label · Year"`, `og:image = artwork_url`.
+- `/[lang]/artists/[slug]/page.tsx` and `/[lang]/labels/[slug]/page.tsx` → look up the track inside the cached `beatport_top_tracks` JSONB column and apply the same overrides (artwork, title, description) only when `?play=beatport:<id>` resolves; otherwise fall back to the default profile OG.
+
+Net effect: when you paste the URL into WhatsApp / X / Signal, the preview shows the **track artwork and name** (not a generic chart / profile card), and clicking it lands on Optimal Breaks with the song already playing.
 
 ### Admin stats
 
@@ -173,8 +196,10 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 
 - `src/hooks/useUserData.ts` — every user hook: favorites, sightings, attendance, event ratings, **saved_chart_tracks** (`useSavedChartTracks`).
 - `src/components/user/` — `UserSectionShell`, `OverviewSection`, `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, `ProfileSection`.
-- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**.
-- `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl) and hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`.
-- `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists.
+- `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**, **`TrackShareButton.tsx`**.
+- `src/lib/share-track.ts` — builders + parser for `?play=<source>:<id>` URLs (chart / featured / beatport).
+- `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl), hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`, and resolves `?week=…&play=<source>:<id>` deep-links into scroll + highlight + `playPreviewQueue`.
+- `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
+- `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.

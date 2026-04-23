@@ -15,6 +15,7 @@ import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
+import { parsePlayParam } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -85,7 +86,7 @@ function buildArtistKeywords(artist: ArtistSeoRow, lang: Locale): string[] {
   return Array.from(new Set([...specific, ...base]))
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug: rawSlug } = await params
   redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
   const slug = sanitizeSlug(rawSlug)
@@ -112,6 +113,44 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     meta.og_image_url?.trim() ||
     displayArtistImageUrl(slug, meta.image_url) ||
     meta.image_url
+
+  // Si la URL compartida lleva ?play=beatport:<id>, sobreescribimos OG con
+  // la portada y título del track concreto, para que WhatsApp/redes muestren
+  // la canción específica en vez de la ficha entera del artista.
+  const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
+  const playRaw = firstSearchParam(sp.play)
+  const parsedPlay = parsePlayParam(playRaw)
+  if (parsedPlay?.kind === 'beatport') {
+    const { data: topRow } = await supabase
+      .from('artists')
+      .select('beatport_top_tracks')
+      .eq('slug', slug)
+      .single()
+    const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
+    const track = list.find((t) => {
+      const m = t.beatport_url?.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
+      return m && m[1] === parsedPlay.id
+    })
+    if (track) {
+      const artistsStr = track.artists.map((a) => a.name).filter(Boolean).join(', ')
+      const trackTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
+      const bits: string[] = []
+      if (track.label) bits.push(track.label)
+      if (track.release_year && track.release_year > 0) bits.push(String(track.release_year))
+      const listenPrefix = lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
+      const trackDesc = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
+      return detailPageMetadata(
+        lang,
+        `/artists/${slug}`,
+        siteName,
+        `${trackTitle} | ${siteName}`,
+        trackDesc,
+        'profile',
+        track.artwork_url || ogPortrait,
+        keywords,
+      )
+    }
+  }
 
   return detailPageMetadata(
     lang,

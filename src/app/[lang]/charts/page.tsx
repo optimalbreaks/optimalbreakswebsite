@@ -7,8 +7,9 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, ChartFeaturedArtist, ChartTrackArtist, ChartVinylArtist } from '@/types/database'
 import type { Metadata } from 'next'
-import { staticPageMetadata } from '@/lib/seo'
+import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
+import { parsePlayParam } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -32,14 +33,72 @@ const CHARTS_KEYWORDS: Record<Locale, string[]> = {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: { lang: Locale }
+  searchParams?: { play?: string; week?: string }
 }): Promise<Metadata> {
-  return staticPageMetadata(params.lang, '/charts', 'charts', {
-    ogImagePath: sectionOgImagePath('charts'),
-    ogImageAlt: sectionOgImageAlt('charts', params.lang),
-    extraKeywords: CHARTS_KEYWORDS[params.lang],
-  })
+  const { lang } = params
+  const fallback = () =>
+    staticPageMetadata(lang, '/charts', 'charts', {
+      ogImagePath: sectionOgImagePath('charts'),
+      ogImageAlt: sectionOgImageAlt('charts', lang),
+      extraKeywords: CHARTS_KEYWORDS[lang],
+    })
+
+  const parsed = parsePlayParam(searchParams?.play)
+  if (!parsed || parsed.kind !== 'track') return fallback()
+
+  // Link compartido apuntando a una canción concreta: construimos un OG con
+  // la portada y los metadatos reales del tema para que el preview en
+  // WhatsApp/X/Facebook tenga el nombre y el artwork correctos.
+  try {
+    const supabase = createServerSupabase()
+    const table = parsed.source === 'chart' ? 'chart_tracks' : 'chart_featured_tracks'
+    const { data } = await supabase
+      .from(table)
+      .select('title, mix_name, artists, label, artwork_url, release_year')
+      .eq('id', parsed.id)
+      .maybeSingle()
+    const row = data as null | {
+      title: string | null
+      mix_name: string | null
+      artists: ChartTrackArtist[] | ChartFeaturedArtist[] | null
+      label: string | null
+      artwork_url: string | null
+      release_year: number | null
+    }
+    if (!row?.title) return fallback()
+
+    const artistsText = Array.isArray(row.artists)
+      ? row.artists.map((a) => a?.name).filter(Boolean).join(', ')
+      : ''
+    const mix = (row.mix_name || '').trim()
+    const title = `${row.title}${mix ? ` (${mix})` : ''}${artistsText ? ` — ${artistsText}` : ''}`
+    const descParts: string[] = []
+    if (row.label) descParts.push(row.label)
+    if (row.release_year && row.release_year > 0) descParts.push(String(row.release_year))
+    const description = (lang === 'es'
+      ? `Escucha esta canción en Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`
+      : `Listen to this track on Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`)
+
+    const week = searchParams?.week ? `&week=${encodeURIComponent(searchParams.week)}` : ''
+    const path = `/charts?play=${encodeURIComponent(parsed.source)}:${parsed.id}${week}`
+    const siteName = await siteNameForLang(lang)
+
+    return detailPageMetadata(
+      lang,
+      path,
+      siteName,
+      title,
+      description,
+      'website',
+      row.artwork_url,
+      CHARTS_KEYWORDS[lang],
+    )
+  } catch {
+    return fallback()
+  }
 }
 
 export default async function ChartsPage({

@@ -246,6 +246,16 @@ Fallback cuando falta URL: `nm:<título>|<mix>|<artistas>`.
 
 **Lista pública compartible**: botón **🔗 COMPARTIR** copia `/[lang]/u/<userId>/tracks`. Otra persona puede reproducir, ordenar y filtrar esa lista en modo lectura; puede guardar canciones pero **a su propia cuenta**, no edita la del dueño. Si no tiene sesión, sale modal para registrarse. Backend: `/api/public/user-tracks` (service-role, bypasa RLS).
 
+**Compartir una canción concreta (abre y suena en Optimal Breaks).** Cada fila de canción — en `ChartView` (40 Breaks + New Releases), en `TracksSection` (propia y la pública `/u/<userId>/tracks`) y en el Top 10 de Beatport de artistas/sellos (`BeatportTopTracks`) — tiene un botón 🔗 compacto (`src/components/TrackShareButton.tsx`) que prioriza `navigator.share` en móvil y copia al portapapeles como fallback con feedback ✓. Esquema de URLs:
+
+- `/[lang]/charts?week=<YYYY-MM-DD>&play=chart:<uuid>` → fila de **40 Breaks Vitales** en esa edición.
+- `/[lang]/charts?week=<YYYY-MM-DD>&play=featured:<uuid>` → fila de **New Releases** en esa edición.
+- `/[lang]/artists/<slug>?play=beatport:<beatportId>` / `/[lang]/labels/<slug>?play=beatport:<beatportId>` → fila dentro del **Top 10 de Beatport** de esa ficha (el `beatportId` se extrae de `beatport_url`).
+
+Helpers y parser en **`src/lib/share-track.ts`** (`buildTrackSharePath`, `buildBeatportSharePath`, `parsePlayParam`). Al abrir el enlace, `ChartView` o `BeatportTopTracks` detectan `?play=` al montar, abren el acordeón correcto, hacen scroll a la fila, la destacan y lanzan `playPreviewQueue` en la cola global. Los vinilos **no** se comparten así (mantienen enlace externo a Discogs/YouTube porque el iframe no admite autoplay arbitrario).
+
+**OG dinámico por track.** `generateMetadata` en `charts/page.tsx`, `artists/[slug]/page.tsx` y `labels/[slug]/page.tsx` lee el `?play=` en SSR: si resuelve a un track real, sobreescribe `og:title` (`"Título (Mix) — Artistas"`), `og:description` (`"Escucha este track en Optimal Breaks · Sello · Año"`) y `og:image` (el `artwork_url` del tema). Así los previews de WhatsApp/X muestran la canción concreta y no una tarjeta genérica de chart o ficha. Detalle en **`docs/USER_ENGAGEMENT.md`** (*Track-level deep-linking*).
+
 **Admin Tracks.** `/[lang]/administrator/tracks` agrega las estadísticas de guardado de **todos los usuarios** (top tracks, sellos, artistas) aplicando la misma dedupe canónica que la UI de usuario. Backend: `src/app/api/admin/tracks/route.ts`. Resumen en el dashboard del admin.
 
 ### Vistas de listado (grande / compacto / lista)

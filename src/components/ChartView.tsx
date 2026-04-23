@@ -21,6 +21,8 @@ import type {
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TrackShareButton from '@/components/TrackShareButton'
+import { parsePlayParam } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
@@ -293,7 +295,7 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
-function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artistSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -350,6 +352,13 @@ function FeaturedPickRow({ pick, dict, lang, isPlaying, onPlay, artistSlugMap, r
             </span>
           ) : null}
           <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
+          <TrackShareButton
+            source="featured"
+            trackId={pick.id}
+            weekDate={weekDate}
+            lang={lang}
+            shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+          />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -436,7 +445,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; relatedRefs?: CanonRef[] }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
 
@@ -498,6 +507,15 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, re
             </span>
           )}
           <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
+          {lang && (
+            <TrackShareButton
+              source="chart"
+              trackId={track.id}
+              weekDate={weekDate}
+              lang={lang}
+              shareTitle={`${track.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+            />
+          )}
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"
@@ -648,30 +666,59 @@ export default function ChartView({
     | null
   >(null)
 
-  // ---- Deep-link por hash: abrir acordeón correcto y hacer scroll al track ----
-  // El buscador global (⌘K) enlaza a /charts#chart-row-<id> (40 Breaks o
-  // New Releases) o a /charts#chart-vinyl-row-<id> (Retro Vinyl Picks). Si la
-  // URL trae `?play=1`, además iniciamos reproducción: `playFromIndex(...)`
-  // para chart/featured o autoplay del iframe de YouTube para vinyl.
+  // ---- Deep-link: abrir acordeón correcto, hacer scroll al track y (opcional)
+  // iniciar reproducción -----------------------------------------------------
+  //
+  // Dos fuentes posibles:
+  //
+  //   a) Hash del buscador global (⌘K): /charts#chart-row-<id> (40 Breaks o
+  //      New Releases) o /charts#chart-vinyl-row-<id> (Retro Vinyl Picks).
+  //      Si además lleva `?play=1`, arrancamos preview.
+  //
+  //   b) Link compartido de una canción: /charts?play=chart:<id> o
+  //      `?play=featured:<id>` (sin hash). Viene de `TrackShareButton`. En
+  //      este caso siempre iniciamos reproducción.
+  //
   // Al montar resolvemos el target: expandimos semana/año que contiene el
   // track, hacemos scrollIntoView y destacamos la fila.
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const applyHash = () => {
-      const raw = window.location.hash.replace(/^#/, '')
-      if (!raw) return
-      const wantsPlay =
-        new URLSearchParams(window.location.search).get('play') === '1'
+    const applyDeepLink = () => {
+      const rawHash = window.location.hash.replace(/^#/, '')
+      const search = new URLSearchParams(window.location.search)
+      const playRaw = search.get('play')
+      const parsed = parsePlayParam(playRaw)
 
+      // Determina kind/id/domId y si tenemos que arrancar el player.
       let kind: 'chart' | 'vinyl' | null = null
       let trackId = ''
-      if (raw.startsWith('chart-vinyl-row-')) {
+      let domId = ''
+      // `wantsPlay` = URL pide que arranque audio, por hash+?play=1 (legacy)
+      // o por ?play=<source>:<id> (link compartido).
+      let wantsPlay = false
+      // `forceFeatured`: si viene de ?play=featured:<id>, evita ambigüedad
+      // cuando el id NO existe (caería a chart como default). Para chart
+      // también podemos forzarlo así aunque el id no esté en `weeks`.
+      let forceForty: 'chart' | 'featured' | null = null
+
+      if (rawHash.startsWith('chart-vinyl-row-')) {
         kind = 'vinyl'
-        trackId = raw.slice('chart-vinyl-row-'.length)
-      } else if (raw.startsWith('chart-row-')) {
+        trackId = rawHash.slice('chart-vinyl-row-'.length)
+        domId = rawHash
+        if (parsed?.kind === 'legacy') wantsPlay = true
+      } else if (rawHash.startsWith('chart-row-')) {
         kind = 'chart'
-        trackId = raw.slice('chart-row-'.length)
+        trackId = rawHash.slice('chart-row-'.length)
+        domId = rawHash
+        if (parsed?.kind === 'legacy') wantsPlay = true
+      } else if (parsed?.kind === 'track') {
+        kind = 'chart'
+        trackId = parsed.id
+        domId = `chart-row-${trackId}`
+        wantsPlay = true
+        forceForty = parsed.source
       }
+
       if (!kind || !trackId) return
 
       if (kind === 'vinyl') {
@@ -686,19 +733,42 @@ export default function ChartView({
         if (yearKey) ensureOpenVinyl(yearKey)
         if (wantsPlay) setAutoplayVinylId(trackId)
       } else {
+        // Prefer la semana indicada en ?week= si coincide con el id; si no,
+        // busca por id en todas las semanas cargadas.
+        const preferredWeek = search.get('week') || ''
         let weekDate: string | null = null
-        let inFeatured = false
-        for (const w of weeks) {
-          if (w.featured.some((p) => p.id === trackId)) {
-            weekDate = w.edition.week_date
-            inFeatured = true
-            break
-          }
-          if (w.tracks.some((t) => t.id === trackId)) {
-            weekDate = w.edition.week_date
-            break
+        let inFeatured = forceForty === 'featured'
+
+        if (preferredWeek) {
+          const w = weeks.find((x) => x.edition.week_date === preferredWeek)
+          if (w) {
+            if (forceForty === 'featured' && w.featured.some((p) => p.id === trackId)) {
+              weekDate = w.edition.week_date
+            } else if (forceForty === 'chart' && w.tracks.some((t) => t.id === trackId)) {
+              weekDate = w.edition.week_date
+              inFeatured = false
+            } else if (!forceForty) {
+              if (w.featured.some((p) => p.id === trackId)) { weekDate = w.edition.week_date; inFeatured = true }
+              else if (w.tracks.some((t) => t.id === trackId)) { weekDate = w.edition.week_date; inFeatured = false }
+            }
           }
         }
+
+        if (!weekDate) {
+          for (const w of weeks) {
+            if ((!forceForty || forceForty === 'featured') && w.featured.some((p) => p.id === trackId)) {
+              weekDate = w.edition.week_date
+              inFeatured = true
+              break
+            }
+            if ((!forceForty || forceForty === 'chart') && w.tracks.some((t) => t.id === trackId)) {
+              weekDate = w.edition.week_date
+              inFeatured = false
+              break
+            }
+          }
+        }
+
         if (weekDate) {
           if (inFeatured) ensureOpenPicks(weekDate)
           else ensureOpenForty(weekDate)
@@ -712,11 +782,14 @@ export default function ChartView({
         }
       }
 
-      // Limpia `?play=1` de la URL para que un refresh no vuelva a disparar.
-      if (wantsPlay) {
+      // Limpia `?play=...` (y `?week=` si lo consumimos vía share link) para
+      // que un refresh no vuelva a disparar. Conservamos `?week=` cuando solo
+      // se usó para navegación manual del chart.
+      if (parsed) {
         try {
           const u = new URL(window.location.href)
           u.searchParams.delete('play')
+          if (parsed.kind === 'track') u.searchParams.delete('week')
           window.history.replaceState({}, '', u.toString())
         } catch {
           /* noop */
@@ -726,7 +799,7 @@ export default function ChartView({
       // Espera a que el acordeón renderice antes de hacer scroll+highlight.
       requestAnimationFrame(() => {
         setTimeout(() => {
-          const el = document.getElementById(raw)
+          const el = document.getElementById(domId)
           if (!el) return
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
           el.classList.add('!bg-[var(--yellow)]/25')
@@ -735,9 +808,9 @@ export default function ChartView({
       })
     }
 
-    applyHash()
-    window.addEventListener('hashchange', applyHash)
-    return () => window.removeEventListener('hashchange', applyHash)
+    applyDeepLink()
+    window.addEventListener('hashchange', applyDeepLink)
+    return () => window.removeEventListener('hashchange', applyDeepLink)
   }, [weeks, ensureOpenVinyl, ensureOpenPicks, ensureOpenForty])
 
   // ---- Play-all state (delegado al provider global) ----
@@ -1078,6 +1151,7 @@ export default function ChartView({
                         pick={pick}
                         dict={dict}
                         lang={lang}
+                        weekDate={edition.week_date}
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
@@ -1165,6 +1239,7 @@ export default function ChartView({
                         track={track}
                         dict={dict}
                         lang={lang}
+                        weekDate={edition.week_date}
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
