@@ -17,6 +17,7 @@ import {
 } from 'react'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import type { Locale } from '@/lib/i18n-config'
+import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 
@@ -209,10 +210,15 @@ export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
 function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
   const { previewBlocked, previewQueue, previewIndex, togglePreview } = ctx
-  if (!previewBlocked || previewQueue.length === 0) return null
+  const [artworkFailed, setArtworkFailed] = useState(false)
   const track = previewQueue[previewIndex]
-  if (!track) return null
+  const artworkUrl = track?.artworkUrl || ''
+  // Reset del fallback si cambia la pista actual; así un tema siguiente vuelve
+  // a intentar cargar su portada en vez de mostrar para siempre el placeholder.
+  useEffect(() => { setArtworkFailed(false) }, [artworkUrl])
+  if (!previewBlocked || !track) return null
   const es = lang === 'es'
+  const showArtwork = !!artworkUrl && !artworkFailed
   return (
     <div
       className="fixed inset-0 z-[95] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
@@ -226,12 +232,29 @@ function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
         className="flex items-center gap-3 sm:gap-4 bg-[var(--paper)] border-[4px] border-[var(--ink)] px-3 sm:px-5 py-3 sm:py-4 max-w-[520px] w-full hover:bg-[var(--yellow)] active:bg-[var(--yellow)] transition-colors cursor-pointer touch-manipulation text-left"
         style={{ fontFamily: "'Courier Prime', monospace" }}
       >
-        {track.artworkUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={track.artworkUrl} alt="" className="w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] object-cover shrink-0" />
-        ) : (
-          <div className="w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] shrink-0" />
-        )}
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] shrink-0 overflow-hidden">
+          {showArtwork ? (
+            // Sin `unoptimized`: Next proxy (/_next/image) evita el hotlink-block
+            // que Beatport aplica a algunas URLs cuando se cargan con <img>
+            // directo (403 / Referer). `onError` muestra el placeholder si el
+            // dominio no está listado en `next.config.js` → remotePatterns.
+            <Image
+              src={artworkUrl}
+              alt=""
+              fill
+              sizes="64px"
+              className="object-cover"
+              onError={() => setArtworkFailed(true)}
+            />
+          ) : (
+            <span
+              className="absolute inset-0 flex items-center justify-center text-[var(--ink)]/50 text-xl font-black"
+              aria-hidden
+            >
+              ♪
+            </span>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="text-[10px] sm:text-xs font-black tracking-widest text-[var(--red)] mb-0.5 sm:mb-1">
             {es ? '▶ TOCA PARA ESCUCHAR' : '▶ TAP TO PLAY'}
