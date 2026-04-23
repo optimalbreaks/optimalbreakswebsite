@@ -44,8 +44,12 @@ export function buildArtistSlugLookup(rows: ArtistLinkRow[]): Map<string, string
   const extraKeysToSlug: [string, string][] = [
     ['defkline', 'deekline'],
     ['aqua sky', 'aquasky'],
-    ['master blaster', 'master-blaster'],
-    ['masterblaster', 'master-blaster'],
+    ['master blaster', 'aquasky-vs-masterblaster'],
+    ['masterblaster', 'aquasky-vs-masterblaster'],
+    ['master blaster aquasky', 'aquasky-vs-masterblaster'],
+    ['aquasky vs masterblaster', 'aquasky-vs-masterblaster'],
+    ['aquasky vs. masterblaster', 'aquasky-vs-masterblaster'],
+    ['aquasky & masterblaster', 'aquasky-vs-masterblaster'],
   ]
   for (const [aliasNorm, slug] of extraKeysToSlug) {
     if (!map.has(aliasNorm)) map.set(aliasNorm, slug)

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================
 // OPTIMAL BREAKS — OG para páginas de listado (artists, labels, …)
-// Salida final 1200×1000 (ratio 1.2:1). gpt-image-1 → 1536×1024 + sharp (recorte + marco crema).
+// Salida final 1200×1000 (ratio 1.2:1). gpt-image-2 → 1536×1024 + sharp (recorte + marco crema).
 // ============================================
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
@@ -201,7 +201,7 @@ const SECTION_KEYS = Object.keys(SECTION_PROMPTS)
 
 async function generateOgImage(prompt) {
   const key = env('OPENAI_API_KEY')
-  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-1'
+  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-2'
 
   const body = {
     model,

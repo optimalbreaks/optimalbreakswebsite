@@ -2,7 +2,7 @@
 // ============================================
 // OPTIMAL BREAKS — Generador de imágenes OpenGraph con OpenAI
 // Genera portadas OG 1200×630 para artistas, eventos, labels, scenes y blog
-// usando gpt-image-1, las sube a Supabase Storage y actualiza og_image_url.
+// usando gpt-image-2, las sube a Supabase Storage y actualiza og_image_url.
 // ============================================
 
 import { createClient } from '@supabase/supabase-js'
@@ -135,7 +135,7 @@ const SELECT_FIELDS = {
 
 async function generateOgImage(prompt) {
   const key = env('OPENAI_API_KEY')
-  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-1'
+  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-2'
 
   const body = {
     model,

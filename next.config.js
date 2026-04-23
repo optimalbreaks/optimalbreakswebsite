@@ -47,6 +47,12 @@ const nextConfig = {
         destination: 'https://www.optimalbreaks.com/:path*',
         permanent: true,
       },
+      /** Slug antiguo del perfil Masterblaster (rebrand a nombre real Aquasky Vs Masterblaster) */
+      {
+        source: '/:lang/artists/master-blaster',
+        destination: '/:lang/artists/aquasky-vs-masterblaster',
+        permanent: true,
+      },
     ]
   },
 

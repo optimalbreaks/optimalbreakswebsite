@@ -423,18 +423,24 @@ async function curateWithAI(beatportTracks, junoTracks = []) {
 // Previous edition comparison
 // ---------------------------------------------------------------------------
 
-async function getPreviousEdition(supabase) {
-  const { data } = await supabase
+async function getPreviousEdition(supabase, currentWeekDate) {
+  // IMPORTANTE: la edición "anterior" debe ser estrictamente ANTES de la
+  // semana que estamos publicando. Si `currentWeekDate` ya existe en la BD
+  // (p. ej. porque el upsert de vinilos creó la fila vacía, o porque es un
+  // re-run), NO debemos compararnos contra nosotros mismos: eso produciría
+  // "NEW" en todos los tracks y rompería los movimientos (▲/▼/═) y el
+  // contador `weeks_in_chart`.
+  let q = supabase
     .from('chart_editions')
     .select('id, week_date')
     .eq('is_published', true)
-    .order('week_date', { ascending: false })
-    .limit(1)
+  if (currentWeekDate) q = q.lt('week_date', currentWeekDate)
+  const { data } = await q.order('week_date', { ascending: false }).limit(1)
   if (!data?.[0]) return { edition: null, tracks: [] }
 
   const { data: tracks } = await supabase
     .from('chart_tracks')
-    .select('title, artists, position')
+    .select('title, artists, position, weeks_in_chart')
     .eq('chart_edition_id', data[0].id)
     .order('position')
 
@@ -644,10 +650,16 @@ Fuentes disponibles: beatport, juno
   curated = curated.slice(0, 40).map((t, i) => ({ ...t, position: i + 1 }))
   curated = mergeBeatportMetadata(curated, beatportTracks)
 
-  // 3. Historical comparison
+  // 3. Historical comparison (siempre contra la edición ESTRICTAMENTE anterior
+  //    a `weekDate`, aunque la propia `weekDate` ya exista en la BD).
   if (confirm) {
     const supabase = requireSupabase()
-    const { tracks: prevTracks } = await getPreviousEdition(supabase)
+    const { edition: prevEd, tracks: prevTracks } = await getPreviousEdition(supabase, weekDate)
+    if (prevEd) {
+      console.log(`  ↳ Comparando movimientos contra edición previa: ${prevEd.week_date} (${prevTracks.length} tracks)`)
+    } else {
+      console.log(`  ↳ No hay edición previa a ${weekDate}; todos los tracks serán NEW.`)
+    }
     curated = enrichWithHistory(curated, prevTracks)
   } else {
     curated = curated.map((t) => ({ ...t, previous_position: null, weeks_in_chart: 1 }))

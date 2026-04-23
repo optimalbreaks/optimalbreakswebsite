@@ -454,7 +454,7 @@ ${snippet}`
 
 async function generateCoverImage(prompt) {
   const key = env('OPENAI_API_KEY')
-  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-1'
+  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-2'
   const full = (prompt + IMAGE_SUFFIX).slice(0, MAX_PROMPT_LEN)
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',

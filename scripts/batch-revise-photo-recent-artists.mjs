@@ -42,7 +42,7 @@ const ARTISTS = [
   ['shockillaz', 'Shockillaz'],
   ['yankee', 'Yankee'],
   ['ed-solo', 'Ed Solo breakbeat'],
-  ['master-blaster', 'Master Blaster Aquasky'],
+  ['aquasky-vs-masterblaster', 'Aquasky Vs Masterblaster'],
   ['deekline', 'Deekline'],
   ['aquasky', 'Aquasky'],
 ]
