@@ -11,8 +11,15 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getDictionary } from '@/lib/dictionaries'
-import { detailPageMetadata } from '@/lib/seo'
+import { SITE_URL, ogAlternateLocales } from '@/lib/seo'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
+
+const TRACKS_OG_IMAGE = {
+  url: `${SITE_URL}/images/opengraph_home_OB.jpg`,
+  width: 1024,
+  height: 571,
+  type: 'image/jpeg',
+} as const
 
 export async function generateMetadata({ params }: { params: { lang: Locale; handle: string } }): Promise<Metadata> {
   const { lang, handle } = await params
@@ -23,27 +30,61 @@ export async function generateMetadata({ params }: { params: { lang: Locale; han
   const payload = await fetchPayload(handle)
   const es = lang === 'es'
   const path = `/u/${handle}/tracks`
+  const url = `${SITE_URL}/${lang}${path}`
 
-  if (!payload) {
-    const title = es ? 'Lista de tracks' : 'Track list'
-    const description = es
+  const name = payload
+    ? payload.owner.display_name || payload.owner.username || (es ? 'Breaker' : 'Breaker')
+    : null
+  const count = payload?.saved.length ?? 0
+
+  const title = payload
+    ? es
+      ? `Tracks de ${name}`
+      : `${name}'s tracks`
+    : es
+      ? 'Lista de tracks'
+      : 'Track list'
+
+  const description = payload
+    ? es
+      ? `${count} ${count === 1 ? 'track guardado' : 'tracks guardados'} por ${name}. Escucha y añádelos a tu lista.`
+      : `${count} ${count === 1 ? 'saved track' : 'saved tracks'} by ${name}. Listen and add them to your list.`
+    : es
       ? 'Lista compartida de tracks en Optimal Breaks.'
       : 'Shared track list on Optimal Breaks.'
-    return {
-      ...detailPageMetadata(lang, path, siteName, title, description, 'website', null, defaultKw),
-      robots: { index: false, follow: true },
-    }
-  }
 
-  const name = payload.owner.display_name || payload.owner.username || (es ? 'Breaker' : 'Breaker')
-  const count = payload.saved.length
-  const title = es ? `Tracks de ${name}` : `${name}'s tracks`
-  const description = es
-    ? `${count} ${count === 1 ? 'track guardado' : 'tracks guardados'} por ${name}. Escucha y añádelos a tu lista.`
-    : `${count} ${count === 1 ? 'saved track' : 'saved tracks'} by ${name}. Listen and add them to your list.`
+  const imageAlt = es
+    ? 'Optimal Breaks — cabina DJ con dos platos y mezcladora'
+    : 'Optimal Breaks — two-deck DJ mixer artwork'
 
   return {
-    ...detailPageMetadata(lang, path, siteName, title, description, 'website', null, defaultKw),
+    title,
+    description,
+    keywords: defaultKw,
+    alternates: {
+      canonical: url,
+      languages: {
+        es: `${SITE_URL}/es${path}`,
+        en: `${SITE_URL}/en${path}`,
+        'x-default': `${SITE_URL}/en${path}`,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      url,
+      title,
+      description,
+      siteName,
+      locale: lang === 'es' ? 'es_ES' : 'en_US',
+      alternateLocale: ogAlternateLocales(lang),
+      images: [{ ...TRACKS_OG_IMAGE, alt: imageAlt }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [TRACKS_OG_IMAGE.url],
+    },
     robots: { index: false, follow: true },
   }
 }
