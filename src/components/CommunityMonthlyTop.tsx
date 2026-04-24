@@ -186,21 +186,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
 
-  // Selector de mes: además del histograma, garantizamos al menos los
-  // últimos 6 meses aunque tengan 0 saves (con disabled).
+  // Selector de mes: solo mostramos meses con saves reales. Si el mes
+  // actualmente seleccionado no tuviera saves (caso típico: primer fetch del
+  // mes en curso aún vacío) lo añadimos manualmente para que el chip activo
+  // siempre sea visible. La lista se ordena de más reciente a más antiguo.
   const monthOptions = useMemo(() => {
     const have = new Map((data?.available_months || []).map((m) => [m.month, m.saves]))
-    const today = new Date()
-    today.setUTCDate(1)
-    const list: { month: string; saves: number; disabled: boolean }[] = []
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1))
-      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-      const saves = have.get(key) ?? 0
-      list.push({ month: key, saves, disabled: saves === 0 })
-    }
-    return list
-  }, [data?.available_months])
+    if (month && !have.has(month)) have.set(month, 0)
+    return Array.from(have.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([m, saves]) => ({ month: m, saves }))
+  }, [data?.available_months, month])
 
   return (
     <section id="community-monthly-top" className="mb-12 sm:mb-16 scroll-mt-24">
@@ -225,31 +221,36 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         </p>
       </header>
 
-      {/* Selector de mes */}
+      {/* Selector de mes — flex-wrap (no overflow-x) para que el tap en PWA
+          móvil no se confunda con un pan horizontal y se cancele el click. */}
       <div className="px-2 sm:px-0 mb-4">
         <div
-          className="flex gap-1.5 overflow-x-auto pb-2"
+          className="flex flex-wrap gap-1.5"
           style={{ fontFamily: "'Courier Prime', monospace" }}
         >
+          {monthOptions.length === 0 && !loading && (
+            <span className="text-[11px] text-[var(--ink)]/50" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {cm.empty || 'Aún no hay saves este mes.'}
+            </span>
+          )}
           {monthOptions.map((opt) => {
             const isActive = opt.month === month
+            const empty = opt.saves === 0
             return (
               <button
                 key={opt.month}
                 type="button"
                 onClick={() => fetchData(opt.month)}
-                disabled={opt.disabled && !isActive}
-                title={opt.disabled ? cm.month_empty || 'Sin saves este mes' : `${opt.saves} saves`}
-                className={`shrink-0 px-2.5 py-1.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all touch-manipulation whitespace-nowrap
+                title={empty ? (cm.month_empty || 'Sin saves este mes') : `${opt.saves} saves`}
+                className={`min-h-[40px] px-3 py-2 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all touch-manipulation cursor-pointer select-none whitespace-nowrap
                   ${isActive
                     ? 'bg-[var(--red)] text-white'
-                    : opt.disabled
-                      ? 'bg-[var(--paper-dark)] text-[var(--ink)]/30 cursor-not-allowed'
-                      : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'}
+                    : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}
                 `}
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               >
                 {formatMonth(opt.month, lang)}
-                {!opt.disabled && (
+                {!empty && (
                   <span className="ml-1.5 text-[9px] opacity-70 tabular-nums">{opt.saves}</span>
                 )}
               </button>
