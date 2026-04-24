@@ -501,7 +501,20 @@
     "vinyl_year_label": "Year",
     "vinyl_year_unknown": "Unknown year",
     "vinyl_format_label": "Format",
-    "vinyl_catalog_label": "Cat."
+    "vinyl_catalog_label": "Cat.",
+    "community_monthly": {
+      "kicker": "COMMUNITY TOP",
+      "title": "Community monthly top",
+      "subtitle": "The most-saved tracks across the whole community this month. Computed live from actual saves — no polls, no votes.",
+      "month_label": "Month",
+      "summary": "{tracks} tracks · {users} fans · {saves} saves",
+      "loading": "Loading ranking…",
+      "error": "Could not load the top",
+      "empty": "No saves yet this month. Save your first tracks and come back.",
+      "month_empty": "No saves this month",
+      "saves_tooltip": "People who saved this track",
+      "repeats": "{n} saves total"
+    }
   },
   "mixes": {
     "title": "Mixes & Sets",

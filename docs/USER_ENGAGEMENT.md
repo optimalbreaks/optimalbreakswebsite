@@ -19,7 +19,8 @@ Originally "My Breaks" was a single page at `/[lang]/dashboard` with in-page tab
 | `/[lang]/mi-cuenta/resenas` | Reviews: sightings + event ratings combined |
 | `/[lang]/mi-cuenta/mixes` | Saved mixes |
 | `/[lang]/mi-cuenta/tracks` | **My Tracks** (see dedicated section below) |
-| `/[lang]/mi-cuenta/perfil` | Profile editing, sign-out |
+| `/[lang]/mi-cuenta/almas-gemelas` | **Soulmates** — top 10 users with highest affinity + recommendations (see *Soulmates* section below) |
+| `/[lang]/mi-cuenta/perfil` | Profile editing, sign-out, **privacy toggle** for Soulmates / Monthly Top |
 | `/[lang]/u/<userId>/tracks` | Public, read-only version of another user's My Tracks (shareable URL) |
 
 Legacy `/[lang]/dashboard?tab=xxx` URLs redirect to the new ones via `DashboardLegacyRedirect`.
@@ -164,6 +165,32 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 
 ---
 
+## Community Monthly Top (public)
+
+Public, on-demand ranking of the most-saved tracks for a calendar month, rendered inside `ChartView` **after** *Retro Vinyl Picks*.
+
+- **Endpoint:** `GET /api/public/charts/community-monthly?month=YYYY-MM&limit=N` (default `month` = current UTC month, `limit` 30, max 100).
+- **Component:** `src/components/CommunityMonthlyTop.tsx`. Selector with the last 12 months (months without saves are disabled), play-all of available previews and `SaveTrackButton` per row so a logged-in user can add the track to their own list with one click.
+- **Aggregation:** reads every row of `saved_chart_tracks` whose `created_at` falls inside the requested month, hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Sorting: **unique users first**, then total saves, then alphabetical.
+- **Privacy:** users with `profiles.is_tracks_public = false` are excluded from both the ranking and the available-months histogram. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index for monthly windowing.
+
+---
+
+## Soulmates ("Almas Gemelas")
+
+User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's saved tracks are crossed against everyone else's to surface the people whose lists overlap the most, plus the tracks those people have that the user is missing.
+
+- **Page:** `/[lang]/mi-cuenta/almas-gemelas` → `src/app/[lang]/mi-cuenta/almas-gemelas/page.tsx` mounting `SoulmatesSection` inside `UserSectionShell`.
+- **Component:** `src/components/user/SoulmatesSection.tsx` — top 10 cards with avatar, % Jaccard, common-count, sample of common tracks and CTA to the public list (`/u/<id>/tracks`); plus a "What you're missing" list with up to 25 recommended tracks.
+- **Endpoint:** `GET /api/breakbeat/soulmates` (authenticated). Builds, per public user, the set of canonical keys they have saved and computes Jaccard against the requester's set. Thresholds: requester ≥ 5 saves, candidate ≥ 3 saves, intersection ≥ 2 tracks. Recommendations require ≥ 2 soulmates having the track.
+- **Privacy contract:**
+  - The user must have `profiles.is_tracks_public = TRUE` themselves (otherwise the endpoint returns `disabled: true` + reason `'private'` and the UI renders an "Activate" button that flips the flag).
+  - Only candidates with `is_tracks_public = TRUE` are considered.
+  - The detailed list is **never** included in the soulmates payload — only counts, percentages and a small sample of common-track titles. Anyone wanting the full list still has to follow the public link `/u/<id>/tracks` (which is itself opt-out via the same flag, since it's already public-by-link only).
+- **UI controls:** the toggle lives on `/[lang]/mi-cuenta/perfil` ("Lista pública para Almas Gemelas y Top Mensual"). It writes `profiles.is_tracks_public` via `useProfile().update`.
+
+---
+
 ## Artist: "seen live" (valoración con estrellas)
 
 - **Component:** `src/components/SeenLiveButton.tsx`
@@ -197,11 +224,14 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 ## Code pointers
 
 - `src/hooks/useUserData.ts` — every user hook: favorites, sightings, attendance, event ratings, **saved_chart_tracks** (`useSavedChartTracks`).
-- `src/components/user/` — `UserSectionShell`, `OverviewSection`, `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, `ProfileSection`.
+- `src/components/user/` — `UserSectionShell`, `OverviewSection`, `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, **`SoulmatesSection`**, `ProfileSection`.
 - `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**, **`TrackShareButton.tsx`**.
 - `src/lib/share-track.ts` — builders + parser for `?play=<source>:<id>` URLs (chart / featured / beatport).
 - `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl), hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`, and resolves `?week=…&play=<source>:<id>` deep-links into scroll + highlight + `playPreviewQueue`.
 - `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
 - `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Monthly Top (public).
+- `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
+- `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.

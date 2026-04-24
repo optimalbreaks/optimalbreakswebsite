@@ -18,6 +18,7 @@ export type UserSectionKey =
   | 'reviews'
   | 'mixes'
   | 'tracks'
+  | 'soulmates'
   | 'profile'
 
 const NAV: Array<{ key: UserSectionKey; href: (lang: string) => string; icon: string; label_en: string; label_es: string }> = [
@@ -28,6 +29,7 @@ const NAV: Array<{ key: UserSectionKey; href: (lang: string) => string; icon: st
   { key: 'reviews',   href: (l) => `/${l}/mi-cuenta/resenas`,        icon: '📝', label_en: 'REVIEWS',      label_es: 'RESEÑAS' },
   { key: 'mixes',     href: (l) => `/${l}/mi-cuenta/mixes`,          icon: '🎧', label_en: 'SAVED MIXES',  label_es: 'MIXES GUARDADOS' },
   { key: 'tracks',    href: (l) => `/${l}/mi-cuenta/tracks`,         icon: '♪', label_en: 'MY TRACKS',     label_es: 'MIS TRACKS' },
+  { key: 'soulmates', href: (l) => `/${l}/mi-cuenta/almas-gemelas`,  icon: '⌬', label_en: 'SOULMATES',     label_es: 'ALMAS GEMELAS' },
   { key: 'profile',   href: (l) => `/${l}/mi-cuenta/perfil`,         icon: '⚙', label_en: 'PROFILE',       label_es: 'PERFIL' },
 ]
 

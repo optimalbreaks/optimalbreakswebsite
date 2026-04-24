@@ -22,6 +22,7 @@ import type {
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
+import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
 import { parsePlayParam } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
@@ -1343,6 +1344,14 @@ export default function ChartView({
           </div>
         </section>
       )}
+
+      {/* ================================================================ */}
+      {/* SECTION 4 — Top Mensual de la Comunidad                          */}
+      {/* Las canciones más añadidas a "Mis Tracks" por toda la comunidad.  */}
+      {/* Hace fetch a /api/public/charts/community-monthly y permite cambiar */}
+      {/* de mes con un selector. Ver `CommunityMonthlyTop.tsx`.            */}
+      {/* ================================================================ */}
+      <CommunityMonthlyTop lang={lang} dict={dict} />
 
       <footer className="px-4 sm:px-0 mt-8 text-center">
         <p className="text-[10px] text-[var(--ink)]/30 tracking-[3px] font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>

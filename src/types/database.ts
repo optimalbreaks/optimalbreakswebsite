@@ -378,6 +378,13 @@ export interface ProfileRow extends Record<string, unknown> {
   total_events_attended: number
   total_events_wishlist: number
   role: 'user' | 'admin'
+  /**
+   * Si TRUE, los saves del usuario en `saved_chart_tracks` se utilizan al
+   * calcular Almas Gemelas y aparecen en el Top Mensual de la Comunidad.
+   * Si FALSE, su lista no se cruza con nadie. La página pública
+   * `/[lang]/u/<id>/tracks` sigue siendo accesible vía link directo.
+   */
+  is_tracks_public: boolean
 }
 
 export interface BreakbeatProfileRow extends Record<string, unknown> {
