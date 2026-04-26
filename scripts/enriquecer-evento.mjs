@@ -30,6 +30,8 @@
  *   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
  *   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-bellota-break-festival-2026
+ *   node scripts/enriquecer-evento.mjs --patch-oshun-festival-2026
+ *   node scripts/enriquecer-evento.mjs --patch-mas-ruido-black-hole-360-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
@@ -1932,6 +1934,157 @@ async function runPatchBellotaBreakFestival2026(sb) {
   console.log('[patch-bellota-break-festival-2026] OK:', after)
 }
 
+const OSHUN_FESTIVAL_2026_SLUG = 'oshun-festival-2026'
+const OSHUN_FESTIVAL_TICKETS = 'https://www.monsterticket.com/evento/oshun-festival-2026'
+const OSHUN_FESTIVAL_IMAGE = '/images/events/oshun-festival-2026.webp'
+
+const OSHUN_FESTIVAL_2026_ROW = {
+  name: 'Oshun Festival 2026',
+  description_en:
+    'Oshun Festival 2026 at Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz province), Saturday 15 August 2026. Promotional artwork highlights a beachside site, breakbeat focus, and format “17:00–07:00” as on the official flyer. MonsterTicket lists 18+ access, non-nominal tickets, and the venue as Recinto Ferial Barbate; a launch offer for the first hundred tickets with official T-shirt is described on the artwork and the storefront (availability varies). Organisers cited on the art: Oshun and Made In Sur. Sale URL without tracking: monsterticket.com/oshun-festival-2026.',
+  description_es:
+    'Oshun Festival 2026 en Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz), sábado 15 de agosto de 2026. El cartel anuncia formato largo 17:00h–07:00h, sonido 100% breakbeat y recinto junto a la playa; actividades citadas (espuma, food trucks, merchandising) según material gráfico. En MonsterTicket: acceso 18+ y entradas no nominativas; dirección: Recinto Ferial Barbate. Oferta de las primeras entradas con camiseta según cartel y venta (disponibilidad sujeta a cambio). Marca: Oshun y Made In Sur. Enlace de venta sin parámetros de RRPP: monsterticket.com/oshun-festival-2026.',
+  event_type: 'festival',
+  date_start: '2026-08-15',
+  date_end: null,
+  location: 'Carpas Yerbabuena, Recinto Ferial Barbate, Barbate, Cádiz, Spain',
+  city: 'Barbate',
+  country: 'Spain',
+  venue: 'Carpas Yerbabuena',
+  address: 'Recinto Ferial Barbate, Barbate, Cádiz',
+  website: null,
+  tickets_url: OSHUN_FESTIVAL_TICKETS,
+  image_url: OSHUN_FESTIVAL_IMAGE,
+  lineup: [],
+  tags: [
+    'oshun festival',
+    'breakbeat',
+    'barbate',
+    'cádiz',
+    'yerbabuena',
+    'carpas',
+    'festival',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {
+    instagram: 'https://www.instagram.com/salaoshun/',
+    instagram_made_in_sur: 'https://www.instagram.com/made.in.sur.events/',
+  },
+  age_restriction: '18+',
+  doors_open: '17:00',
+  doors_close: '07:00',
+}
+
+async function runPatchOshunFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', OSHUN_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-oshun-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: OSHUN_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...OSHUN_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', OSHUN_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-oshun-festival-2026] OK:', after)
+}
+
+const MAS_RUIDO_BLACK_HOLE_360_2026_SLUG = 'mas-ruido-black-hole-360-2026'
+const MAS_RUIDO_BLACK_HOLE_360_TICKETS =
+  'https://www.monsterticket.com/evento/mas-ruido-black-hole-360'
+const MAS_RUIDO_BLACK_HOLE_360_IMAGE = '/images/events/mas-ruido-black-hole-360.webp'
+
+const MAS_RUIDO_BLACK_HOLE_360_2026_LINEUP = [
+  'Aldo Ferrari',
+  'Elle Skull',
+  'FM-3',
+  'Mutantbreakz',
+  'Pray For Bass',
+  'Shade K',
+  'Tortu',
+  'Yo Speed',
+  'Cellux MC',
+]
+
+const MAS_RUIDO_BLACK_HOLE_360_2026_ROW = {
+  name: "+Ruido! - Black Hole 360",
+  description_en:
+    '+Ruido! Black Hole 360 at Sala O’Farrell (San Fernando, Cádiz): the flyer bills “the black breakbeat night” (la fiesta de negro del breakbeat) with 360 stage, LED screens and production nods (Megatron, FX) per artwork. Saturday 18 April 2026, 23:00–07:00. Official lineup on the poster: Aldo Ferrari, Elle Skull, FM-3, Mutantbreakz, Pray For Bass, Shade K, Tortu, Yo Speed; host Cellux MC. Address on the art: C/ Ajustadores 10, by Bahía Sur. MonsterTicket lists 18+, non-nominal tickets, no all-sportswear entry, and at times showed online sales closed — verify current availability with the promoter. Tickets/RRPP as per flyer.',
+  description_es:
+    '+Ruido! Black Hole 360 en Sala O’Farrell (San Fernando, Cádiz): el cartel presenta “la fiesta de negro del breakbeat” con escenario 360, pantallas LED y elementos de puesta (Megatron, FX, etc.) según el diseño. Sábado 18 de abril de 2026, 23:00h a 7:00h. Line-up en el flyer: Aldo Ferrari, Elle Skull, FM-3, Mutantbreakz, Pray For Bass, Shade K, Tortu, Yo Speed; presentación con Cellux MC. Dirección en el cartel: C/ Ajustadores 10, junto a Bahía Sur. Ficha de MonsterTicket: 18+ y entradas no nominativas; prohibido acceder con ropa totalmente deportiva. La venta online puede constar como cerrada en un momento dado: confirmar con el promotor. Enlace de venta sin parámetros RRPP.',
+  event_type: 'club_night',
+  date_start: '2026-04-18',
+  date_end: null,
+  location: "Sala O'Farrell, San Fernando, Cádiz, Spain",
+  city: 'San Fernando',
+  country: 'Spain',
+  venue: "Sala O'Farrell",
+  address: 'C/ Ajustadores 10, San Fernando, Cádiz',
+  website: null,
+  tickets_url: MAS_RUIDO_BLACK_HOLE_360_TICKETS,
+  image_url: MAS_RUIDO_BLACK_HOLE_360_IMAGE,
+  lineup: MAS_RUIDO_BLACK_HOLE_360_2026_LINEUP,
+  tags: [
+    'mas ruido',
+    'black hole 360',
+    'breakbeat',
+    "o'farrell",
+    'san fernando',
+    'cádiz',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '23:00',
+  doors_close: '07:00',
+}
+
+async function runPatchMasRuidoBlackHole3602026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', MAS_RUIDO_BLACK_HOLE_360_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-mas-ruido-black-hole-360-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: MAS_RUIDO_BLACK_HOLE_360_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...MAS_RUIDO_BLACK_HOLE_360_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', MAS_RUIDO_BLACK_HOLE_360_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-mas-ruido-black-hole-360-2026] OK:', after)
+}
+
 const LA_CASETA_DEL_BREAKBEAT_2026_SLUG = 'la-caseta-del-breakbeat-2026'
 const LA_CASETA_DEL_BREAKBEAT_TICKETS =
   'https://site.fourvenues.com/es/dj-rokeh/events/la-caseta-del-breakbeat-25-04-2026-DGZP'
@@ -2489,6 +2642,16 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-oshun-festival-2026')) {
+    await runPatchOshunFestival2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-mas-ruido-black-hole-360-2026')) {
+    await runPatchMasRuidoBlackHole3602026(sb)
+    return
+  }
+
   if (argv.includes('--patch-la-caseta-del-breakbeat-2026')) {
     await runPatchLaCasetaDelBreakbeat2026(sb)
     return
@@ -2570,6 +2733,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
   node scripts/enriquecer-evento.mjs --patch-bellota-break-festival-2026
+  node scripts/enriquecer-evento.mjs --patch-oshun-festival-2026
+  node scripts/enriquecer-evento.mjs --patch-mas-ruido-black-hole-360-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026

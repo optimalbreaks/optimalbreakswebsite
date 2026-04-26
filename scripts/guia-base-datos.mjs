@@ -298,6 +298,22 @@ const ACTIONS = [
       'UPSERT bellota-break-festival-2026: 13 jun 2026 Plaza de Toros Calzadilla de los Barros, 16+, bellota-break-festival-2026.webp, MonsterTicket.',
   },
   {
+    id: 'events-patch-oshun-festival-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-oshun-festival-2026',
+    npm: 'npm run db:guia -- run events-patch-oshun-festival-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT oshun-festival-2026: 15 ago 2026 Carpas Yerbabuena Barbate, lineup TBA, oshun-festival-2026.webp, entradas sin parámetros RRPP.',
+  },
+  {
+    id: 'events-patch-mas-ruido-black-hole-360-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-mas-ruido-black-hole-360-2026',
+    npm: 'npm run db:guia -- run events-patch-mas-ruido-black-hole-360-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT mas-ruido-black-hole-360-2026: 18 abr 2026 Sala O’Farrell San Fernando, line-up cartel, mas-ruido-black-hole-360.webp, MonsterTicket.',
+  },
+  {
     id: 'events-patch-la-caseta-del-breakbeat-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-la-caseta-del-breakbeat-2026',
     npm: 'npm run db:guia -- run events-patch-la-caseta-del-breakbeat-2026',
@@ -528,6 +544,8 @@ Punto de entrada unificado:
   events-patch-el-pinar-breaks-fest-2026  El Pinar Breaks Fest, Baños de la Encina 9 may 2026
   events-patch-breaks-bloom-festival-2026  Breaks Bloom Festival, Hacienda El Mantillo Pilas 19 sept 2026
   events-patch-bellota-break-festival-2026  Bellota Break Festival, Calzadilla de los Barros 13 jun 2026
+  events-patch-oshun-festival-2026  Oshun Festival, Carpas Yerbabuena Barbate 15 ago 2026
+  events-patch-mas-ruido-black-hole-360-2026  +Ruido! Black Hole 360, O’Farrell San Fernando 18 abr 2026
   events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
   events-patch-finger-lickin-between-the-bridges-2026  Finger Lickin' at Between the Bridges, Southbank Londres 16 may 2026 (17:00–23:00)
@@ -893,6 +911,12 @@ function main() {
       break
     case 'events-patch-bellota-break-festival-2026':
       runNode('enriquecer-evento.mjs', ['--patch-bellota-break-festival-2026', ...rest])
+      break
+    case 'events-patch-oshun-festival-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-oshun-festival-2026', ...rest])
+      break
+    case 'events-patch-mas-ruido-black-hole-360-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-mas-ruido-black-hole-360-2026', ...rest])
       break
     case 'events-patch-la-caseta-del-breakbeat-2026':
       runNode('enriquecer-evento.mjs', ['--patch-la-caseta-del-breakbeat-2026', ...rest])
