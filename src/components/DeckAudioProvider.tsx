@@ -401,9 +401,29 @@ function MiniPlayerShell({
     const rect = bar.getBoundingClientRect()
     onSeekRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
   }, [duration, onSeekRatio])
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); seek(e.clientX) }, [seek])
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => { if (dragging.current) seek(e.clientX) }, [seek])
-  const onPointerUp = useCallback(() => { dragging.current = false }, [])
+
+  /** Libera captura explícitamente: si el navegador no envía pointerup (touch
+   *  roto, cambio de pestaña, etc.), los clics siguen yendo al seek y los
+   *  enlaces del sitio «no responden» hasta desmontar el player (p. ej. Stop). */
+  const endSeekPointer = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragging.current = false
+    const el = e.currentTarget
+    try {
+      el.releasePointerCapture(e.pointerId)
+    } catch {
+      /* no estaba capturando este pointerId */
+    }
+  }, [])
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragging.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    seek(e.clientX)
+  }, [seek])
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragging.current) seek(e.clientX)
+  }, [seek])
 
   const titleInner = (
     <>
@@ -434,8 +454,9 @@ function MiniPlayerShell({
         ref={barRef}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        onPointerUp={endSeekPointer}
+        onPointerCancel={endSeekPointer}
+        onLostPointerCapture={() => { dragging.current = false }}
         className="group relative w-full cursor-pointer touch-manipulation select-none"
         style={{ touchAction: 'none', paddingTop: 10, paddingBottom: 6 }}
         role="progressbar"
