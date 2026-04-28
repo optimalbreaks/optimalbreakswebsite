@@ -207,13 +207,31 @@ async function main() {
     console.log(`  ↳ Creada chart_editions week_date=${weekDate} (id=${editionId}). Publica el 40 cuando toque.`)
   }
 
-  const { error: delErr } = await supabase
+  // Picks vivos en la semana (los necesitamos ANTES de cualquier mutación
+  // para poder hacer rebind por link_url y NO regenerar UUIDs en cada run.
+  // Borrar + insertar destruye los `chart_featured_tracks.id` y orfana los
+  // saves de los usuarios en `saved_chart_tracks` que apuntan a esos UUIDs.
+  const { data: existingRows, error: exErr } = await supabase
     .from('chart_featured_tracks')
-    .delete()
+    .select('id, link_url')
     .eq('chart_edition_id', editionId)
-  if (delErr) throw new Error(`delete chart_featured_tracks: ${delErr.message}`)
+  if (exErr) throw new Error(`load chart_featured_tracks: ${exErr.message}`)
+
+  const existingByKey = new Map()
+  for (const r of existingRows || []) {
+    const k = dedupeKeyForFeaturedLink(r.link_url || '')
+    if (!k) continue
+    if (!existingByKey.has(k)) existingByKey.set(k, r.id)
+  }
 
   if (picks.length === 0) {
+    if ((existingRows || []).length > 0) {
+      const { error: delAllErr } = await supabase
+        .from('chart_featured_tracks')
+        .delete()
+        .eq('chart_edition_id', editionId)
+      if (delAllErr) throw new Error(`delete chart_featured_tracks (semana vacía): ${delAllErr.message}`)
+    }
     console.log(`  ↳ Semana ${weekDate}: lista vacía (picks borrados).`)
     return
   }
@@ -245,7 +263,7 @@ async function main() {
     dedupedPicks.push(p)
   }
 
-  const rows = dedupedPicks.map((p, idx) => {
+  const buildRow = (p, idx) => {
     const title = (p.title || '').trim()
     const link_url = (p.link_url || '').trim()
     const bpmRaw = p.bpm
@@ -275,14 +293,57 @@ async function main() {
       note_en: (p.note_en || '').trim(),
       note_es: (p.note_es || '').trim(),
     }
-  })
+  }
 
+  const rows = dedupedPicks.map(buildRow)
   warnSharedArtworkClusters(rows)
 
-  const { error: insErr } = await supabase.from('chart_featured_tracks').insert(rows)
-  if (insErr) throw new Error(`insert chart_featured_tracks: ${insErr.message}`)
+  // Sync estable: separa la lista en updates/inserts/deletes contra la BD
+  // viva. NO borramos filas vivas que sigan siendo válidas → sus UUIDs y los
+  // saves del usuario que las referencian se preservan.
+  const newKeys = new Set()
+  const updates = []
+  const inserts = []
+  for (const row of rows) {
+    const k = dedupeKeyForFeaturedLink(row.link_url)
+    newKeys.add(k)
+    const liveId = existingByKey.get(k)
+    if (liveId) updates.push({ id: liveId, data: row })
+    else inserts.push(row)
+  }
 
-  console.log(`  ↳ Semana ${weekDate}: ${rows.length} picks guardados.`)
+  const toDelete = []
+  for (const [k, id] of existingByKey.entries()) {
+    if (!newKeys.has(k)) toDelete.push(id)
+  }
+
+  if (toDelete.length > 0) {
+    const { error: delErr } = await supabase
+      .from('chart_featured_tracks')
+      .delete()
+      .in('id', toDelete)
+    if (delErr) throw new Error(`delete chart_featured_tracks (no presentes): ${delErr.message}`)
+  }
+
+  for (const u of updates) {
+    const { error: upErr } = await supabase
+      .from('chart_featured_tracks')
+      .update(u.data)
+      .eq('id', u.id)
+    if (upErr) throw new Error(`update ${u.id}: ${upErr.message}`)
+  }
+
+  if (inserts.length > 0) {
+    const { error: insErr } = await supabase
+      .from('chart_featured_tracks')
+      .insert(inserts)
+    if (insErr) throw new Error(`insert chart_featured_tracks: ${insErr.message}`)
+  }
+
+  console.log(
+    `  ↳ Semana ${weekDate}: ${rows.length} picks vigentes ` +
+    `(${updates.length} actualizados, ${inserts.length} nuevos, ${toDelete.length} eliminados).`,
+  )
 }
 
 main().catch((e) => {

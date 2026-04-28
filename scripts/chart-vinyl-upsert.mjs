@@ -157,13 +157,30 @@ async function main() {
     console.log(`  ↳ Creada chart_editions para week_date=${weekDate} (edición vacía hasta publicar el 40).`)
   }
 
-  const { error: delErr } = await supabase
+  // Sync estable: NO borramos en bloque para no destruir los UUIDs y orfanar
+  // los `saved_chart_tracks` de los usuarios (track_source='vinyl'). Hacemos
+  // diff por `discogs_url` (clave estable de cada vinilo).
+  const normalizeDiscogs = (u) => (u || '').trim().toLowerCase().replace(/\/$/, '')
+  const { data: existingRows, error: exErr } = await supabase
     .from('chart_vinyl_tracks')
-    .delete()
+    .select('id, discogs_url')
     .eq('chart_edition_id', editionId)
-  if (delErr) throw new Error(`delete chart_vinyl_tracks: ${delErr.message}`)
+  if (exErr) throw new Error(`load chart_vinyl_tracks: ${exErr.message}`)
+
+  const existingByKey = new Map()
+  for (const r of existingRows || []) {
+    const k = normalizeDiscogs(r.discogs_url)
+    if (k && !existingByKey.has(k)) existingByKey.set(k, r.id)
+  }
 
   if (vinyl.length === 0) {
+    if ((existingRows || []).length > 0) {
+      const { error: delAllErr } = await supabase
+        .from('chart_vinyl_tracks')
+        .delete()
+        .eq('chart_edition_id', editionId)
+      if (delAllErr) throw new Error(`delete chart_vinyl_tracks (semana vacía): ${delAllErr.message}`)
+    }
     console.log(`  ↳ Semana ${weekDate}: lista vacía (vinyl borrados).`)
     return
   }
@@ -199,10 +216,46 @@ async function main() {
     }
   })
 
-  const { error: insErr } = await supabase.from('chart_vinyl_tracks').insert(rows)
-  if (insErr) throw new Error(`insert chart_vinyl_tracks: ${insErr.message}`)
+  const newKeys = new Set()
+  const updates = []
+  const inserts = []
+  for (const row of rows) {
+    const k = normalizeDiscogs(row.discogs_url)
+    newKeys.add(k)
+    const liveId = existingByKey.get(k)
+    if (liveId) updates.push({ id: liveId, data: row })
+    else inserts.push(row)
+  }
+  const toDelete = []
+  for (const [k, id] of existingByKey.entries()) {
+    if (!newKeys.has(k)) toDelete.push(id)
+  }
 
-  console.log(`  ↳ Semana ${weekDate}: ${rows.length} retro vinyl picks guardados.`)
+  if (toDelete.length > 0) {
+    const { error: delErr } = await supabase
+      .from('chart_vinyl_tracks')
+      .delete()
+      .in('id', toDelete)
+    if (delErr) throw new Error(`delete chart_vinyl_tracks (no presentes): ${delErr.message}`)
+  }
+  for (const u of updates) {
+    const { error: upErr } = await supabase
+      .from('chart_vinyl_tracks')
+      .update(u.data)
+      .eq('id', u.id)
+    if (upErr) throw new Error(`update vinyl ${u.id}: ${upErr.message}`)
+  }
+  if (inserts.length > 0) {
+    const { error: insErr } = await supabase
+      .from('chart_vinyl_tracks')
+      .insert(inserts)
+    if (insErr) throw new Error(`insert chart_vinyl_tracks: ${insErr.message}`)
+  }
+
+  console.log(
+    `  ↳ Semana ${weekDate}: ${rows.length} vinilos vigentes ` +
+    `(${updates.length} actualizados, ${inserts.length} nuevos, ${toDelete.length} eliminados).`,
+  )
 }
 
 main().catch((e) => {

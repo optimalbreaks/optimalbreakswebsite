@@ -531,11 +531,6 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
   if (existing) {
     editionId = existing.id
     await supabase
-      .from('chart_tracks')
-      .delete()
-      .eq('chart_edition_id', editionId)
-
-    await supabase
       .from('chart_editions')
       .update({
         title,
@@ -544,7 +539,6 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
         published_at: new Date().toISOString(),
       })
       .eq('id', editionId)
-
     console.log(`  ↳ Updated existing edition ${editionId}`)
   } else {
     const { data: inserted, error } = await supabase
@@ -585,10 +579,65 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
     weeks_in_chart: t.weeks_in_chart || 1,
   }))
 
-  const { error: insertErr } = await supabase.from('chart_tracks').insert(rows)
-  if (insertErr) throw new Error(`Insert chart_tracks: ${insertErr.message}`)
+  // Sync estable por `beatport_url`: no borramos+reinsertamos para no destruir
+  // los UUIDs de `chart_tracks.id` y orfanar los `saved_chart_tracks` de los
+  // usuarios (track_source='chart').
+  const normalizeBeatport = (u) => {
+    const s = (u || '').trim().toLowerCase()
+    if (!s) return ''
+    const m = s.match(/\/track\/[^/]+\/(\d+)$/)
+    return m ? `beatport:${m[1]}` : s.replace(/\/$/, '')
+  }
+  const { data: existingRows, error: exErr } = await supabase
+    .from('chart_tracks')
+    .select('id, beatport_url')
+    .eq('chart_edition_id', editionId)
+  if (exErr) throw new Error(`load chart_tracks: ${exErr.message}`)
 
-  console.log(`  ↳ Inserted ${rows.length} tracks`)
+  const existingByKey = new Map()
+  for (const r of existingRows || []) {
+    const k = normalizeBeatport(r.beatport_url)
+    if (k && !existingByKey.has(k)) existingByKey.set(k, r.id)
+  }
+
+  const newKeys = new Set()
+  const updates = []
+  const inserts = []
+  for (const row of rows) {
+    const k = normalizeBeatport(row.beatport_url)
+    if (k) newKeys.add(k)
+    const liveId = k ? existingByKey.get(k) : null
+    if (liveId) updates.push({ id: liveId, data: row })
+    else inserts.push(row)
+  }
+  const toDelete = []
+  for (const [k, id] of existingByKey.entries()) {
+    if (!newKeys.has(k)) toDelete.push(id)
+  }
+
+  if (toDelete.length > 0) {
+    const { error: delErr } = await supabase
+      .from('chart_tracks')
+      .delete()
+      .in('id', toDelete)
+    if (delErr) throw new Error(`delete chart_tracks (no presentes): ${delErr.message}`)
+  }
+  for (const u of updates) {
+    const { error: upErr } = await supabase
+      .from('chart_tracks')
+      .update(u.data)
+      .eq('id', u.id)
+    if (upErr) throw new Error(`update chart_tracks ${u.id}: ${upErr.message}`)
+  }
+  if (inserts.length > 0) {
+    const { error: insertErr } = await supabase.from('chart_tracks').insert(inserts)
+    if (insertErr) throw new Error(`Insert chart_tracks: ${insertErr.message}`)
+  }
+
+  console.log(
+    `  ↳ Sync ${rows.length} tracks ` +
+    `(${updates.length} actualizados, ${inserts.length} nuevos, ${toDelete.length} eliminados)`,
+  )
   return editionId
 }
 
