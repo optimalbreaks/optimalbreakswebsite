@@ -536,10 +536,17 @@ export async function GET(request: NextRequest) {
     primary: a.primary,
   }))
 
+  // Solo contamos lo que de verdad se renderiza en el ranking. Los saves
+  // huérfanos sin meta ni snapshot se descartan (no aparecen como tema en
+  // el top, así que tampoco deben sumar al contador). Esto mantiene la
+  // identidad: Σ save_count == totals.saves.
+  const totalSavesVisible = aggregates.reduce((acc, a) => acc + a.save_count, 0)
+  const usersVisible = new Set<string>()
+  for (const a of aggregates) a._users.forEach((uid) => usersVisible.add(uid))
   const totals = {
-    saves: saved.length,
+    saves: totalSavesVisible,
     unique_tracks: aggregates.length,
-    unique_users: new Set(saved.map((s) => s.user_id)).size,
+    unique_users: usersVisible.size,
   }
 
   return NextResponse.json({
