@@ -23,7 +23,7 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
-import { parsePlayParam } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
@@ -306,7 +306,7 @@ function snapshotFromArtists(arr: Array<{ name?: string }> | unknown): string {
 function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
   return {
     title: p.title, mix_name: p.mix_name || null, artists: snapshotFromArtists(p.artists),
-    label: p.label || null, year: p.release_year || null, bpm: p.bpm || null, music_key: p.music_key || null,
+    label: p.label || null, year: p.release_year || null, release_date: p.release_date ?? null, bpm: p.bpm || null, music_key: p.music_key || null,
     artwork_url: p.artwork_url || null, sample_url: p.sample_url || null,
     beatport_url: p.link_url || null,
   }
@@ -314,7 +314,7 @@ function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
 function buildChartSnapshot(t: ChartTrack) {
   return {
     title: t.title, mix_name: t.mix_name || null, artists: snapshotFromArtists(t.artists),
-    label: t.label || null, year: t.release_year || null, bpm: t.bpm || null, music_key: t.music_key || null,
+    label: t.label || null, year: t.release_year || null, release_date: t.release_date ?? null, bpm: t.bpm || null, music_key: t.music_key || null,
     artwork_url: t.artwork_url || null, sample_url: t.sample_url || null,
     beatport_url: t.beatport_url || null,
   }
@@ -335,6 +335,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
   const hasSample = !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
+  const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
   return (
     <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
@@ -354,7 +355,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
             <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
               {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{pick.label}</span></> : null}
-              {pick.release_year != null && pick.release_year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{pick.release_year}</span></> : null}
+              {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>
             {note ? <p className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>{note}</p> : null}
           </div>
@@ -481,6 +482,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
 function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
+  const releaseDisp = formatTrackReleaseDisplay(track.release_date, track.release_year)
 
   return (
     <div id={`chart-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
@@ -510,7 +512,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, we
             <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
               {track.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></>}
-              {track.release_year != null && track.release_year > 0 && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{track.release_year}</span></>}
+              {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>
           </div>
         </div>

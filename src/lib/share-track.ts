@@ -86,3 +86,63 @@ export function parsePlayParam(
   if (bp) return { kind: 'beatport', id: bp[1] }
   return null
 }
+
+/** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
+export function formatTrackReleaseDisplay(
+  releaseDate: string | null | undefined,
+  releaseYear: number | null | undefined,
+): string | null {
+  const d = (releaseDate || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d
+  if (releaseYear != null && releaseYear > 0) return String(releaseYear)
+  return null
+}
+
+/** Año natural para filtros / orden: desde release_date o release_year. */
+export function effectiveReleaseYear(
+  releaseDate: string | null | undefined,
+  releaseYear: number | null | undefined,
+): number | null {
+  const d = (releaseDate || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const y = parseInt(d.slice(0, 4), 10)
+    return Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : null
+  }
+  if (releaseYear != null && releaseYear > 0) return releaseYear
+  return null
+}
+
+/**
+ * Marca de tiempo UTC para ordenar por lanzamiento (más reciente = mayor número).
+ * Con `YYYY-MM-DD` usa el día; con solo año usa 15-jun de ese año para encajar con fechas del mismo año.
+ * Sin fecha → 0 (van al final al ordenar descendente).
+ */
+export function releaseSortTimestampMs(
+  releaseDate: string | null | undefined,
+  releaseYear: number | null | undefined,
+): number {
+  const d = (releaseDate || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const y = parseInt(d.slice(0, 4), 10)
+    const mo = parseInt(d.slice(5, 7), 10) - 1
+    const day = parseInt(d.slice(8, 10), 10)
+    if (
+      Number.isFinite(y) &&
+      Number.isFinite(mo) &&
+      Number.isFinite(day) &&
+      y >= 1970 &&
+      y <= 2100 &&
+      mo >= 0 &&
+      mo <= 11 &&
+      day >= 1 &&
+      day <= 31
+    ) {
+      const t = Date.UTC(y, mo, day, 12, 0, 0)
+      return Number.isFinite(t) ? t : 0
+    }
+  }
+  if (releaseYear != null && releaseYear > 0 && releaseYear >= 1970 && releaseYear <= 2100) {
+    return Date.UTC(releaseYear, 5, 15, 12, 0, 0)
+  }
+  return 0
+}

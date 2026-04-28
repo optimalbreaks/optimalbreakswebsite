@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { buildBeatportSharePath, parsePlayParam } from '@/lib/share-track'
+import { buildBeatportSharePath, parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
@@ -42,6 +42,7 @@ function buildSnapshot(
     artists: t.artists.map((a) => a.name).join(', '),
     label: t.label || null,
     year: t.release_year ?? null,
+    release_date: t.release_date ?? null,
     bpm: t.bpm ?? null,
     music_key: t.key || null,
     artwork_url: t.artwork_url || null,
@@ -260,6 +261,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
               const isActive = isPlayingTrack(t)
               const rowId = `bp-row-${t.position}`
               const canPlay = !!t.sample_url
+              const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.release_year)
               return (
                 <div
                   key={`${t.beatport_url}-${i}`}
@@ -296,7 +298,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                             ))}
                           </span>
                           {t.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></>}
-                          {t.release_year != null && t.release_year > 0 && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{t.release_year}</span></>}
+                          {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{releaseDisp}</span></> : null}
                         </p>
                       </div>
                     </div>

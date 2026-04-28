@@ -2,9 +2,10 @@
  * OPTIMAL BREAKS — Backfill retrospectivo de "New Releases" a partir del 40 Breaks Vitales
  *
  * Toma los chart_tracks ya publicados (universo = 3 ediciones × 40 = 120 pistas aprox.)
- * y, para los que tienen beatport_url pero aún no tienen release_date en DB, consulta la
- * página individual del track en Beatport para extraer publish_date (__NEXT_DATA__) y
- * rellena chart_tracks.release_date.
+ * y, para los que tienen URL de tienda (`beatport_url`: Beatport o Bandcamp) pero aún no tienen
+ * release_date en DB, consulta la página del track y rellena chart_tracks.release_date.
+ *
+ * Beatport: __NEXT_DATA__ (publish_date). Bandcamp: data-tralbum (album_release_date).
  *
  * Para cada track cuya release_date caiga en la ventana (por defecto las últimas 5
  * semanas), calcula el lunes ISO de esa fecha. Si esa semana ya tiene chart_edition
@@ -17,11 +18,11 @@
  *   node scripts/backfill-new-releases-from-40breaks.mjs                 # dry-run
  *   node scripts/backfill-new-releases-from-40breaks.mjs --confirm        # escribe DB
  *   node scripts/backfill-new-releases-from-40breaks.mjs --weeks=6        # ventana en semanas
- *   node scripts/backfill-new-releases-from-40breaks.mjs --no-enrich      # saltar fetch Beatport
+ *   node scripts/backfill-new-releases-from-40breaks.mjs --no-enrich      # saltar fetch tiendas
  *   node scripts/backfill-new-releases-from-40breaks.mjs --only-enrich    # solo enriquecer release_date
  *   node scripts/backfill-new-releases-from-40breaks.mjs --no-create-editions
  *                                                                        # no crea semanas que no existan
- *   node scripts/backfill-new-releases-from-40breaks.mjs --limit-fetch=30 # tope de fetches Beatport
+ *   node scripts/backfill-new-releases-from-40breaks.mjs --limit-fetch=30 # tope de fetches tienda
  *
  * Deduplica por ID numérico de track Beatport:
  *  - Descarta si el track ya está en chart_tracks (top 40) de esa misma semana.
@@ -214,6 +215,67 @@ async function fetchBeatportPublishDate(trackUrl) {
   }
 }
 
+async function fetchBandcampReleaseDateFromTrackPage(trackUrl) {
+  try {
+    let parsed
+    try {
+      parsed = new URL(trackUrl)
+    } catch {
+      return { ok: false, error: 'URL inválida' }
+    }
+    if (!parsed.hostname.toLowerCase().endsWith('.bandcamp.com')) {
+      return { ok: false, error: 'no es bandcamp.com' }
+    }
+    const res = await fetch(trackUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    const html = await res.text()
+    const tralbum = html.match(/data-tralbum="([^"]*)"/)
+    if (!tralbum) return { ok: false, error: 'no data-tralbum' }
+    const decoded = tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+    const obj = JSON.parse(decoded)
+    const raw = obj.album_release_date || obj.release_date
+    if (typeof raw !== 'string' || !raw.trim()) {
+      return { ok: false, error: 'sin album_release_date en tralbum' }
+    }
+    const d = new Date(raw.trim())
+    if (Number.isNaN(d.getTime())) return { ok: false, error: 'fecha no parseable' }
+    const y = d.getUTCFullYear()
+    const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    if (y < 1970 || y > 2100) return { ok: false, error: 'año fuera de rango' }
+    return { ok: true, date: `${y}-${mo}-${day}` }
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+function isBeatportTrackUrl(u) {
+  const s = (u || '').trim().toLowerCase()
+  return /beatport\.com\/track\/[^/]+\/\d+/.test(s)
+}
+
+function isBandcampTrackUrl(u) {
+  const s = (u || '').trim().toLowerCase()
+  return /\.bandcamp\.com\/track\//.test(s)
+}
+
+async function fetchStoreReleaseDate(storeUrl) {
+  let u = (storeUrl || '').trim().replace(/^http:\/\//i, 'https://')
+  if (isBeatportTrackUrl(u)) {
+    u = u.replace(/^https:\/\/(www\.)?beatport\.com/i, 'https://www.beatport.com')
+    return fetchBeatportPublishDate(u)
+  }
+  if (isBandcampTrackUrl(u)) return fetchBandcampReleaseDateFromTrackPage(u)
+  return { ok: false, error: 'URL no es track Beatport ni Bandcamp' }
+}
+
 // ---------------------------------------------------------------------------
 // Main pipeline
 // ---------------------------------------------------------------------------
@@ -225,7 +287,7 @@ async function main() {
   console.log(`\n▸ Backfill New Releases ← 40 Breaks Vitales`)
   console.log(`  Modo: ${flags.confirm ? 'CONFIRM (escribe DB)' : 'DRY-RUN (solo lee)'}`)
   console.log(`  Ventana: últimas ${flags.weeks} semanas`)
-  console.log(`  Enriquecer release_date desde Beatport: ${flags.enrich ? 'sí' : 'no'}`)
+  console.log(`  Enriquecer release_date (Beatport/Bandcamp): ${flags.enrich ? 'sí' : 'no'}`)
   console.log(`  Crear chart_editions faltantes (solo para New Releases): ${flags.createMissingEditions ? 'sí' : 'no'}`)
   if (flags.onlyEnrich) console.log(`  Modo solo-enriquecer activo (no inserta picks)`)
 
@@ -269,22 +331,24 @@ async function main() {
   if (!tracks) throw new Error('chart_tracks: sin datos')
   console.log(`  ↳ ${tracks.length} tracks cargados.`)
 
-  // 3) Enriquecer release_date en chart_tracks que lo tengan NULL (vía Beatport).
+  // 3) Enriquecer release_date en chart_tracks que lo tengan NULL (URLs Beatport o Bandcamp en beatport_url).
   let enrichedCount = 0
   let fetchErrors = 0
   if (flags.enrich) {
     const missing = tracks.filter(
-      (t) => !t.release_date && t.beatport_url && typeof t.beatport_url === 'string',
+      (t) =>
+        !t.release_date &&
+        t.beatport_url &&
+        typeof t.beatport_url === 'string' &&
+        (isBeatportTrackUrl(t.beatport_url) || isBandcampTrackUrl(t.beatport_url)),
     )
-    const toFetch = Number.isFinite(flags.limitFetch)
-      ? missing.slice(0, flags.limitFetch)
-      : missing
+    const toFetch = Number.isFinite(flags.limitFetch) ? missing.slice(0, flags.limitFetch) : missing
     console.log(
-      `\n[3/5] Enriqueciendo release_date vía Beatport (${toFetch.length}/${missing.length} sin fecha)...`,
+      `\n[3/5] Enriqueciendo release_date (${toFetch.length}/${missing.length} sin fecha, Beatport o Bandcamp)...`,
     )
     for (let i = 0; i < toFetch.length; i++) {
       const t = toFetch[i]
-      const res = await fetchBeatportPublishDate(t.beatport_url)
+      const res = await fetchStoreReleaseDate(t.beatport_url)
       if (res.ok) {
         t.release_date = res.date
         enrichedCount++

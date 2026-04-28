@@ -411,7 +411,7 @@ const ACTIONS = [
   },
   {
     id: 'chart-featured-file',
-    run: 'node scripts/guia-base-datos.mjs run chart-featured-file data/charts/picks/<semana>.json',
+    run: 'node scripts/guia-base-datos.mjs run chart-featured-file data/charts/picks/<semana>.json [--enrich-release-dates --write-json]',
     npm: 'npm run db:chart:featured -- data/charts/picks/2026-03-30.json',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
@@ -990,7 +990,7 @@ function main() {
         console.error('No existe:', p)
         process.exit(1)
       }
-      runNode('chart-featured-upsert.mjs', [rel])
+      runNode('chart-featured-upsert.mjs', [rel, ...rest.slice(1)])
       break
     }
     case 'chart-vinyl-file': {

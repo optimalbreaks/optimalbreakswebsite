@@ -51,6 +51,8 @@ export type ChartFeaturedTrack = {
   bpm: number | null
   music_key: string
   release_year: number | null
+  /** Fecha de lanzamiento Beatport (YYYY-MM-DD). Null si no hay dato. */
+  release_date: string | null
   note_en: string
   note_es: string
 }
@@ -68,6 +70,8 @@ export type ChartTrack = {
   music_key: string
   /** Año de publicación en Beatport (lanzamiento), null si no hay dato. */
   release_year: number | null
+  /** Fecha completa de release según Beatport (YYYY-MM-DD). */
+  release_date: string | null
   beatport_url: string | null
   artwork_url: string | null
   sample_url: string | null
@@ -291,6 +295,8 @@ export interface SavedChartTrackSnapshot {
   artists?: string
   label?: string | null
   year?: number | null
+  /** Fecha de lanzamiento cuando existe (YYYY-MM-DD). */
+  release_date?: string | null
   bpm?: number | null
   music_key?: string | null
   artwork_url?: string | null
@@ -457,6 +463,8 @@ export interface BeatportTopTrack {
   artwork_url: string | null
   sample_url: string | null
   release_year: number | null
+  /** Fecha de release Beatport cuando está disponible (YYYY-MM-DD). */
+  release_date: string | null
 }
 
 export interface Artist extends Record<string, unknown> {

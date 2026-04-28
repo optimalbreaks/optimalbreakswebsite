@@ -49,6 +49,7 @@ type ChartRow = {
   artists: unknown
   label: string | null
   release_year: number | null
+  release_date: string | null
   bpm: number | null
   music_key: string | null
   artwork_url: string | null
@@ -63,6 +64,7 @@ type FeatRow = {
   artists: unknown
   label: string | null
   release_year: number | null
+  release_date: string | null
   bpm: number | null
   music_key: string | null
   artwork_url: string | null
@@ -130,6 +132,7 @@ interface Aggregate {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   bpm: number | null
   music_key: string | null
   artwork_url: string | null
@@ -226,13 +229,13 @@ export async function GET(request: NextRequest) {
     chartIds.length
       ? sb
           .from('chart_tracks')
-          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url')
+          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url')
           .in('id', chartIds)
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
       ? sb
           .from('chart_featured_tracks')
-          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url')
+          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url')
           .in('id', featIds)
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
@@ -255,10 +258,10 @@ export async function GET(request: NextRequest) {
   if (orphChart.length || orphFeat.length || orphVinyl.length) {
     const [extraChart, extraFeat, extraVinyl] = await Promise.all([
       orphChart.length
-        ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', orphChart.map((o) => o.canonical_url as string))
+        ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', orphChart.map((o) => o.canonical_url as string))
         : Promise.resolve({ data: [] as ChartRow[], error: null }),
       orphFeat.length
-        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', orphFeat.map((o) => o.canonical_url as string))
+        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', orphFeat.map((o) => o.canonical_url as string))
         : Promise.resolve({ data: [] as FeatRow[], error: null }),
       orphVinyl.length
         ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('discogs_url', orphVinyl.map((o) => o.canonical_url as string))
@@ -310,6 +313,7 @@ export async function GET(request: NextRequest) {
     artists: string
     label: string | null
     year: number | null
+    release_date: string | null
     bpm: number | null
     music_key: string | null
     artwork_url: string | null
@@ -331,6 +335,7 @@ export async function GET(request: NextRequest) {
       artists: artistsToString(c.artists),
       label: c.label,
       year: c.release_year,
+      release_date: c.release_date,
       bpm: c.bpm,
       music_key: c.music_key,
       artwork_url: c.artwork_url,
@@ -352,6 +357,7 @@ export async function GET(request: NextRequest) {
       artists: artistsToString(f.artists),
       label: f.label,
       year: f.release_year,
+      release_date: f.release_date,
       bpm: f.bpm,
       music_key: f.music_key,
       artwork_url: f.artwork_url,
@@ -372,6 +378,7 @@ export async function GET(request: NextRequest) {
       artists: artistsToString(v.artists),
       label: v.label,
       year: v.year,
+      release_date: null,
       bpm: null,
       music_key: null,
       artwork_url: v.artwork_url,
@@ -403,6 +410,10 @@ export async function GET(request: NextRequest) {
       artists: String(snap.artists || ''),
       label: (snap.label as string | null) ?? null,
       year: typeof snap.year === 'number' ? (snap.year as number) : null,
+      release_date:
+        typeof snap.release_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test((snap.release_date as string).trim().slice(0, 10))
+          ? (snap.release_date as string).trim().slice(0, 10)
+          : null,
       bpm: typeof snap.bpm === 'number' ? (snap.bpm as number) : null,
       music_key: (snap.music_key as string | null) ?? null,
       artwork_url: (snap.artwork_url as string | null) ?? null,
@@ -430,6 +441,10 @@ export async function GET(request: NextRequest) {
       artists: String(snap.artists || ''),
       label: (snap.label as string | null) ?? null,
       year: typeof snap.year === 'number' ? (snap.year as number) : null,
+      release_date:
+        typeof snap.release_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test((snap.release_date as string).trim().slice(0, 10))
+          ? (snap.release_date as string).trim().slice(0, 10)
+          : null,
       bpm: typeof snap.bpm === 'number' ? (snap.bpm as number) : null,
       music_key: (snap.music_key as string | null) ?? null,
       artwork_url: (snap.artwork_url as string | null) ?? null,
@@ -461,6 +476,7 @@ export async function GET(request: NextRequest) {
         artists: meta.artists,
         label: meta.label,
         year: meta.year,
+        release_date: meta.release_date,
         bpm: meta.bpm,
         music_key: meta.music_key,
         artwork_url: meta.artwork_url,
@@ -490,6 +506,8 @@ export async function GET(request: NextRequest) {
       if (!existing.bpm && meta.bpm) existing.bpm = meta.bpm
       if (!existing.music_key && meta.music_key) existing.music_key = meta.music_key
       if (!existing.year && meta.year) existing.year = meta.year
+      const hasRd = (v: string | null) => !!(v && /^\d{4}-\d{2}-\d{2}$/.test(v.trim().slice(0, 10)))
+      if (!hasRd(existing.release_date) && hasRd(meta.release_date)) existing.release_date = meta.release_date
       if (!existing.sample_url && meta.sample_url) existing.sample_url = meta.sample_url
       // Preferir un primary que sea reproducible y enlazable a /charts.
       if (
@@ -522,6 +540,7 @@ export async function GET(request: NextRequest) {
     artists: a.artists,
     label: a.label,
     year: a.year,
+    release_date: a.release_date,
     bpm: a.bpm,
     music_key: a.music_key,
     artwork_url: a.artwork_url,

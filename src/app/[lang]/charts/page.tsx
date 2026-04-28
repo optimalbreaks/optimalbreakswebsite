@@ -9,7 +9,7 @@ import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, Cha
 import type { Metadata } from 'next'
 import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
-import { parsePlayParam } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -57,7 +57,7 @@ export async function generateMetadata({
     const table = parsed.source === 'chart' ? 'chart_tracks' : 'chart_featured_tracks'
     const { data } = await supabase
       .from(table)
-      .select('title, mix_name, artists, label, artwork_url, release_year')
+      .select('title, mix_name, artists, label, artwork_url, release_year, release_date')
       .eq('id', parsed.id)
       .maybeSingle()
     const row = data as null | {
@@ -67,6 +67,7 @@ export async function generateMetadata({
       label: string | null
       artwork_url: string | null
       release_year: number | null
+      release_date: string | null
     }
     if (!row?.title) return fallback()
 
@@ -77,7 +78,8 @@ export async function generateMetadata({
     const title = `${row.title}${mix ? ` (${mix})` : ''}${artistsText ? ` — ${artistsText}` : ''}`
     const descParts: string[] = []
     if (row.label) descParts.push(row.label)
-    if (row.release_year && row.release_year > 0) descParts.push(String(row.release_year))
+    const relDisp = formatTrackReleaseDisplay(row.release_date, row.release_year)
+    if (relDisp) descParts.push(relDisp)
     const description = (lang === 'es'
       ? `Escucha esta canción en Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`
       : `Listen to this track on Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`)

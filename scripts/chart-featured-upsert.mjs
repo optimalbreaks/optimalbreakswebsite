@@ -1,10 +1,20 @@
 /**
  * OPTIMAL BREAKS — Picks «New releases» por semana (chart_featured_tracks)
  *
- * Solo lee el JSON que pases: no consulta Beatport, Bandcamp ni ninguna otra fuente.
+ * Por defecto solo lee el JSON. Opcionalmente obtiene `release_date` (YYYY-MM-DD)
+ * desde la tienda: Beatport (__NEXT_DATA__) o Bandcamp (`data-tralbum` → album_release_date).
  *
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-03-30.json
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-20.json --create-edition
+ *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-27.json --enrich-release-dates --write-json
+ *
+ * Flags:
+ *   --enrich-release-dates    (alias: --enrich-beatport-dates) Rellena `release_date` vía URL del pick.
+ *   --write-json              Tras enriquecer, guarda de nuevo el JSON (pretty-print).
+ *   --force-release-dates     (alias: --force-beatport-dates) Fuerza refetch aunque ya haya fecha válida.
+ *
+ * NOTA — «eliminados» en el log: solo se borran filas de chart_featured_tracks de ESTA semana
+ * que ya no están en el JSON (no se borran artistas, chart_tracks 40 Breaks ni otras tablas).
  *
  * Formato JSON:
  * {
@@ -24,6 +34,7 @@
  *       "bpm": 135,
  *       "music_key": "G Minor",
  *       "release_year": 2026,
+ *       "release_date": "2026-04-18",
  *       "note_en": "",
  *       "note_es": ""
  *     }
@@ -41,7 +52,7 @@
  * se inserta una edición publicada mínima (igual que chart-vinyl-upsert) si aún no hay fila.
  */
 
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
@@ -126,6 +137,169 @@ function warnSharedArtworkClusters(rows) {
   }
 }
 
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+/** Fecha YYYY-MM-DD desde la página pública del track (publish_date / new_release_date en NEXT_DATA). */
+async function fetchBeatportPublishDate(trackUrl) {
+  try {
+    const res = await fetch(trackUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    const html = await res.text()
+    const marker = '__NEXT_DATA__'
+    const idx = html.indexOf(marker)
+    if (idx === -1) return { ok: false, error: 'no __NEXT_DATA__' }
+    const start = html.indexOf('>', idx) + 1
+    const end = html.indexOf('</script>', start)
+    const nextData = JSON.parse(html.slice(start, end).trim())
+
+    const queries = nextData?.props?.pageProps?.dehydratedState?.queries || []
+    for (const q of queries) {
+      const d = q?.state?.data
+      if (!d || typeof d !== 'object') continue
+      const candidates = [d, d.track, d.results, d.data]
+      for (const c of candidates) {
+        if (!c) continue
+        const arr = Array.isArray(c) ? c : [c]
+        for (const obj of arr) {
+          if (!obj || typeof obj !== 'object') continue
+          const raw = obj.publish_date || obj.new_release_date
+          if (typeof raw === 'string') {
+            const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+            if (m) return { ok: true, date: `${m[1]}-${m[2]}-${m[3]}` }
+          }
+        }
+      }
+    }
+    return { ok: false, error: 'publish_date no encontrado en NEXT_DATA' }
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+/** Fecha del lanzamiento (YYYY-MM-DD) desde la página del track en Bandcamp. */
+async function fetchBandcampReleaseDateFromTrackPage(trackUrl) {
+  try {
+    let parsed
+    try {
+      parsed = new URL(trackUrl)
+    } catch {
+      return { ok: false, error: 'URL inválida' }
+    }
+    if (!parsed.hostname.toLowerCase().endsWith('.bandcamp.com')) {
+      return { ok: false, error: 'no es bandcamp.com' }
+    }
+    const res = await fetch(trackUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    const html = await res.text()
+    const tralbum = html.match(/data-tralbum="([^"]*)"/)
+    if (!tralbum) return { ok: false, error: 'no data-tralbum' }
+    const decoded = tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+    const obj = JSON.parse(decoded)
+    const raw = obj.album_release_date || obj.release_date
+    if (typeof raw !== 'string' || !raw.trim()) {
+      return { ok: false, error: 'sin album_release_date en tralbum' }
+    }
+    const d = new Date(raw.trim())
+    if (Number.isNaN(d.getTime())) return { ok: false, error: 'fecha no parseable' }
+    const y = d.getUTCFullYear()
+    const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    if (y < 1970 || y > 2100) return { ok: false, error: 'año fuera de rango' }
+    return { ok: true, date: `${y}-${mo}-${day}` }
+  } catch (err) {
+    return { ok: false, error: err.message || String(err) }
+  }
+}
+
+async function fetchPickReleaseDateFromStoreUrl(url) {
+  const n = normalizeFeaturedLinkUrl(url).replace(/^https:\/\//, '')
+  if (/^www\.beatport\.com\/track\//.test(n) || /^beatport\.com\/track\//.test(n)) {
+    let u = (url || '').trim().replace(/^http:\/\//i, 'https://')
+    u = u.replace(/^https:\/\/(www\.)?beatport\.com/i, 'https://www.beatport.com')
+    return fetchBeatportPublishDate(u)
+  }
+  if (/\.bandcamp\.com\/track\//.test(n)) {
+    return fetchBandcampReleaseDateFromTrackPage(url.trim())
+  }
+  return { ok: false, error: 'URL no es track Beatport ni Bandcamp' }
+}
+
+function isBeatportTrackUrl(u) {
+  const s = (u || '').trim().toLowerCase()
+  return /beatport\.com\/track\/[^/]+\/\d+/.test(s)
+}
+
+function isBandcampTrackUrl(u) {
+  const s = (u || '').trim().toLowerCase()
+  return /\.bandcamp\.com\/track\//.test(s)
+}
+
+function isEnrichableStoreUrl(u) {
+  return isBeatportTrackUrl(u) || isBandcampTrackUrl(u)
+}
+
+function hasValidReleaseDate(p) {
+  const r = p.release_date
+  if (r == null || r === '') return false
+  const s = String(r).trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(s)
+}
+
+async function enrichPicksStoreReleaseDates(picks, { force, verbose }) {
+  let ok = 0
+  let fail = 0
+  const need = picks.filter((p) => {
+    const url = (p.link_url || '').trim()
+    if (!isEnrichableStoreUrl(url)) return false
+    if (force) return true
+    return !hasValidReleaseDate(p)
+  })
+  if (need.length === 0) {
+    console.log(
+      '  ↳ Tiendas: ningún pick con URL Beatport/Bandcamp necesita release_date (--force-release-dates para repetir).',
+    )
+    return
+  }
+  console.log(`  ↳ Tiendas (Beatport/Bandcamp): obteniendo release_date para ${need.length} pick(s)...`)
+  for (let i = 0; i < need.length; i++) {
+    const p = need[i]
+    const url = (p.link_url || '').trim()
+    const res = await fetchPickReleaseDateFromStoreUrl(url)
+    if (res.ok) {
+      p.release_date = res.date
+      const y = parseInt(res.date.slice(0, 4), 10)
+      if (Number.isFinite(y) && y >= 1970 && y <= 2100) {
+        if (p.release_year == null || !Number.isFinite(Number(p.release_year))) {
+          p.release_year = y
+        }
+      }
+      ok++
+      if (verbose) console.log(`     ✓ [${i + 1}/${need.length}] ${(p.title || '').slice(0, 48)} → ${res.date}`)
+    } else {
+      fail++
+      console.warn(`     ✗ [${i + 1}/${need.length}] ${(p.title || '?').slice(0, 40)}: ${res.error}`)
+    }
+    await sleep(550)
+  }
+  console.log(`  ↳ Tiendas: ${ok} fechas OK, ${fail} fallos.`)
+}
+
 function requireSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const key = (
@@ -142,11 +316,18 @@ function requireSupabase() {
 async function main() {
   const argv = process.argv.slice(2)
   const createEditionIfMissing = argv.includes('--create-edition')
+  const enrichReleaseDates =
+    argv.includes('--enrich-release-dates') || argv.includes('--enrich-beatport-dates')
+  const writeJson = argv.includes('--write-json')
+  const forceReleaseDates =
+    argv.includes('--force-release-dates') || argv.includes('--force-beatport-dates')
+  const verboseEnrich = argv.includes('--verbose')
+
   const rel = argv.find((a) => !a.startsWith('--'))
   if (!rel) {
-    console.error('Uso: node scripts/chart-featured-upsert.mjs <ruta-desde-raíz-repo.json> [--create-edition]')
-    console.error('  Ej: node scripts/chart-featured-upsert.mjs data/charts/picks/2026-03-30.json')
-    console.error('  Ej: node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-20.json --create-edition')
+    console.error('Uso: node scripts/chart-featured-upsert.mjs <ruta-desde-raíz-repo.json> [flags]')
+    console.error('  --create-edition')
+    console.error('  --enrich-release-dates  --write-json  --force-release-dates  --verbose')
     process.exit(1)
   }
 
@@ -171,6 +352,17 @@ async function main() {
   }
 
   const picks = Array.isArray(data.picks) ? data.picks : []
+
+  if (enrichReleaseDates) {
+    await enrichPicksStoreReleaseDates(picks, { force: forceReleaseDates, verbose: verboseEnrich })
+    if (writeJson) {
+      writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
+      console.log(`  ↳ JSON actualizado: ${rel}`)
+    }
+  } else if (writeJson && !enrichReleaseDates) {
+    console.warn('  ⚠ --write-json sin --enrich-release-dates: no se escribe nada.')
+  }
+
   const supabase = requireSupabase()
 
   const { data: edition, error: edErr } = await supabase
@@ -263,6 +455,13 @@ async function main() {
     dedupedPicks.push(p)
   }
 
+  function parseJsonReleaseDate(p) {
+    const r = p.release_date
+    if (r == null || r === '') return null
+    const s = String(r).trim().slice(0, 10)
+    return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null
+  }
+
   const buildRow = (p, idx) => {
     const title = (p.title || '').trim()
     const link_url = (p.link_url || '').trim()
@@ -290,6 +489,7 @@ async function main() {
         p.release_year != null && Number.isFinite(Number(p.release_year))
           ? Number(p.release_year)
           : null,
+      release_date: parseJsonReleaseDate(p),
       note_en: (p.note_en || '').trim(),
       note_es: (p.note_es || '').trim(),
     }

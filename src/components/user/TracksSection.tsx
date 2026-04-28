@@ -20,6 +20,7 @@ import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvid
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
+import { formatTrackReleaseDisplay, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -42,8 +43,8 @@ export type PublicTracksPayload = {
     created_at: string | null
   }>
   tracks: {
-    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null; week_date?: string | null }>
-    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
+    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null; week_date?: string | null }>
+    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
     vinyl: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }>
   }
 }
@@ -57,6 +58,8 @@ type UnifiedTrack = {
   artists: string
   label?: string
   year?: number | null
+  /** YYYY-MM-DD cuando existe (chart / featured / beatport_top). */
+  release_date?: string | null
   bpm?: number | null
   music_key?: string
   artwork_url?: string | null
@@ -297,8 +300,8 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       let vinylData: any[] = []
       if (isShared) {
         const p = publicPayload!
-        chartData = p.tracks.chart.map((c) => ({ ...c, release_year: c.year, artists: c.artists }))
-        featData = p.tracks.featured.map((f) => ({ ...f, release_year: f.year, artists: f.artists }))
+        chartData = p.tracks.chart.map((c) => ({ ...c, release_year: c.year, release_date: c.release_date ?? null, artists: c.artists }))
+        featData = p.tracks.featured.map((f) => ({ ...f, release_year: f.year, release_date: f.release_date ?? null, artists: f.artists }))
         vinylData = p.tracks.vinyl.map((v) => ({ ...v, artists: v.artists }))
       } else {
         const supabase = createBrowserSupabase()
@@ -308,10 +311,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
         const [chartRes, featRes, vinylRes] = await Promise.all([
           chartIds.length
-            ? supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
+            ? supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
             : Promise.resolve({ data: [] as any[] }),
           featuredIds.length
-            ? supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featuredIds)
+            ? supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featuredIds)
             : Promise.resolve({ data: [] as any[] }),
           vinylIds.length
             ? supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
@@ -349,7 +352,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         byKey.set(`chart:${c.id}`, {
           key: `chart:${c.id}`, source: 'chart', id: c.id,
           title: c.title, mix_name: c.mix_name, artists: typeof c.artists === 'string' ? c.artists : artistsToString(c.artists),
-          label: c.label, year: c.release_year, bpm: c.bpm, music_key: c.music_key,
+          label: c.label, year: c.release_year, release_date: c.release_date ?? null, bpm: c.bpm, music_key: c.music_key,
           artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
           sample_url: c.sample_url,
           week_date: c.week_date ?? null,
@@ -359,7 +362,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         byKey.set(`featured:${f.id}`, {
           key: `featured:${f.id}`, source: 'featured', id: f.id,
           title: f.title, mix_name: f.mix_name, artists: typeof f.artists === 'string' ? f.artists : artistsToString(f.artists),
-          label: f.label, year: f.release_year, bpm: f.bpm, music_key: f.music_key,
+          label: f.label, year: f.release_year, release_date: f.release_date ?? null, bpm: f.bpm, music_key: f.music_key,
           artwork_url: f.artwork_url, external_url: f.link_url,
           external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
           sample_url: f.sample_url, platform: f.platform,
@@ -392,6 +395,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           artists: snap.artists || '',
           label: snap.label || undefined,
           year: snap.year ?? null,
+          release_date: snap.release_date ?? null,
           bpm: snap.bpm ?? null,
           music_key: snap.music_key || undefined,
           artwork_url: snap.artwork_url || null,
@@ -478,6 +482,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         // caso nos quedamos con la semana del duplicado (para que el botón
         // "compartir" pueda apuntar al chart).
         if (!existing.week_date && t.week_date) existing.week_date = t.week_date
+        if (!(existing.release_date || '').trim() && (t.release_date || '').trim()) existing.release_date = t.release_date
       }
       const deduped = Array.from(byCanon.values())
       setTracks(deduped)
@@ -494,9 +499,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     let min = Infinity
     let max = -Infinity
     for (const t of tracks) {
-      if (typeof t.year === 'number' && Number.isFinite(t.year)) {
-        if (t.year < min) min = t.year
-        if (t.year > max) max = t.year
+      const y = effectiveReleaseYear(t.release_date, t.year)
+      if (typeof y === 'number' && Number.isFinite(y)) {
+        if (y < min) min = y
+        if (y > max) max = y
       }
     }
     if (!Number.isFinite(min) || !Number.isFinite(max)) return null
@@ -530,7 +536,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     // no descartarlos sin querer al tocar los pomos.
     if (yearRange && yearBounds && !yearRangeIsFull) {
       const [lo, hi] = yearRange
-      out = out.filter((t) => typeof t.year === 'number' && t.year >= lo && t.year <= hi)
+      out = out.filter((t) => {
+        const y = effectiveReleaseYear(t.release_date, t.year)
+        return typeof y === 'number' && y >= lo && y <= hi
+      })
     }
     return out
   }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull])
@@ -560,8 +569,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           || (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' }))
         break
       case 'release':
-        arr.sort((A, B) => (B.year || 0) - (A.year || 0)
-          || (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' }))
+        arr.sort(
+          (A, B) =>
+            releaseSortTimestampMs(B.release_date, B.year) - releaseSortTimestampMs(A.release_date, A.year)
+            || (A.artists || '').localeCompare(B.artists || '', loc, { sensitivity: 'base' }),
+        )
         break
       case 'added':
       default:
@@ -1007,6 +1019,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             const isPausedHere = isCurrent && !previewPlaying
             const ytId = (t.source === 'vinyl' || t.youtube_url) ? extractYouTubeId(t.youtube_url || '') : null
             const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
+            const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
             return (
               <div key={t.key} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isCurrent ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
@@ -1026,7 +1039,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                       <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
                         <span className="text-[var(--ink)]/70">{t.artists || '—'}</span>
                         {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
-                        {t.year ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{t.year}</span></> : null}
+                        {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{releaseDisp}</span></> : null}
                       </p>
                       {t.note ? (
                         <p className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>{t.note}</p>

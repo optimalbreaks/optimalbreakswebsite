@@ -44,7 +44,8 @@
       "music_key": "F Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 3,
@@ -65,7 +66,8 @@
       "music_key": "Ab Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 4,
@@ -86,7 +88,8 @@
       "music_key": "F Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 5,
@@ -107,7 +110,8 @@
       "music_key": "E Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 6,
@@ -128,7 +132,8 @@
       "music_key": "B Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-26"
     },
     {
       "sort_order": 7,
@@ -149,7 +154,8 @@
       "music_key": "Gb Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 8,
@@ -170,7 +176,8 @@
       "music_key": "D Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-26"
     },
     {
       "sort_order": 9,
@@ -191,7 +198,8 @@
       "music_key": "Gb Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 10,
@@ -212,7 +220,8 @@
       "music_key": "F Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-03-27"
     },
     {
       "sort_order": 11,
@@ -236,7 +245,8 @@
       "music_key": "B Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-03"
     },
     {
       "sort_order": 12,
@@ -257,7 +267,8 @@
       "music_key": "Gb Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-03"
     },
     {
       "sort_order": 13,
@@ -278,7 +289,8 @@
       "music_key": "Eb Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-03"
     },
     {
       "sort_order": 14,
@@ -302,7 +314,8 @@
       "music_key": "G Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-03"
     },
     {
       "sort_order": 15,
@@ -323,7 +336,8 @@
       "music_key": "F Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-02"
     },
     {
       "sort_order": 16,
@@ -344,7 +358,8 @@
       "music_key": "G Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-02"
     },
     {
       "sort_order": 17,
@@ -365,7 +380,8 @@
       "music_key": "A Major",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-02"
     },
     {
       "sort_order": 18,
@@ -386,7 +402,8 @@
       "music_key": "Ab Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-17"
     },
     {
       "sort_order": 19,
@@ -411,7 +428,8 @@
       "music_key": "F Minor",
       "release_year": 2026,
       "note_en": "",
-      "note_es": ""
+      "note_es": "",
+      "release_date": "2026-04-03"
     }
   ]
 }

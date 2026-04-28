@@ -115,6 +115,15 @@ function releaseYear(t) {
   return (y >= 1970 && y <= 2100) ? y : null
 }
 
+function releaseDateIso(t) {
+  const raw = t.publish_date || t.new_release_date
+  if (!raw) return null
+  const m = String(raw).trim().match(/^(\d{4}-\d{2}-\d{2})/)
+  if (!m) return null
+  const y = parseInt(m[1].slice(0, 4), 10)
+  return (y >= 1970 && y <= 2100) ? m[1] : null
+}
+
 // ---------------------------------------------------------------------------
 // Scrape top-10 tracks
 // ---------------------------------------------------------------------------
@@ -163,6 +172,7 @@ async function scrapeTopTracks(type, slug, beatportId) {
       artwork_url: artworkUrl(t.release?.image) || artworkUrl(t.image),
       sample_url: t.sample_url || null,
       release_year: releaseYear(t),
+      release_date: releaseDateIso(t),
     }
   })
 

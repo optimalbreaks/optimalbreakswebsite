@@ -1,0 +1,159 @@
+{
+  "week_date": "2026-04-27",
+  "picks": [
+    {
+      "title": "Bypass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "S&S"
+        }
+      ],
+      "label": "HA8",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bypass/28589584",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b2426ac0-1ea0-45e0-a593-b645aec2309d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/963d9026-d9fd-4b46-90b2-cd65dd31d090.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "Lacteus",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SellRude"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lacteus/28342239",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aa4faf0e-9757-4c7c-91d2-4e01959490ac.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2d5a3f7e-3432-4068-9b72-203b1d14fd87.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "On The Move",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "This Is Fun"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/on-the-move/28214369",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e9ab0252-b760-471a-a086-a45a4c127439.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8cb75eb9-9b7f-4b6d-9472-d01f76d04743.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "Your Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "GODINO"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/your-love/27443453",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b4af8c53-6580-406c-b625-da9e3c1c7e81.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8bec1b93-e10c-413d-8201-071beab8c508.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "Mystery",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Woter"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mystery/26906905",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5093279c-99ec-4293-a131-58166ff0dee0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d3273e95-f47c-4798-815e-9f755c92f227.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "Never Give Up Now",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kritycal System"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/never-give-up-now/26789287",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/407f5666-f94f-4428-8483-ae1ddc3af20b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/486f2be3-a7fe-4f6e-8ccc-f2bb9d06ccfd.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6,
+      "release_date": "2026-04-27"
+    },
+    {
+      "title": "Muzic",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/muzic/24529668",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9a35efc7-880f-4f74-aa02-22cce58ffc52.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1a7c0902-4966-4b85-a2e2-c69a76e30d28.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7,
+      "release_date": "2026-04-27"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
+import { formatTrackReleaseDisplay } from '@/lib/share-track'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -29,6 +30,7 @@ interface CommunityTopTrack {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   bpm: number | null
   music_key: string | null
   artwork_url: string | null
@@ -88,6 +90,7 @@ function snapshotForBeatportTop(t: CommunityTopTrack) {
     artists: t.artists,
     label: t.label,
     year: t.year,
+    release_date: t.release_date,
     bpm: t.bpm,
     music_key: t.music_key,
     artwork_url: t.artwork_url,
@@ -357,6 +360,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 return 'BEATPORT'
               })()
 
+              const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
+
               return (
                 <div
                   key={t.canonical_key}
@@ -399,7 +404,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         <p className="text-xs sm:text-sm mt-0.5 sm:truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
                           <span className="text-[var(--ink)]/70">{t.artists || '—'}</span>
                           {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
-                          {t.year != null && t.year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{t.year}</span></> : null}
+                          {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums">{releaseDisp}</span></> : null}
                         </p>
                       </div>
                     </div>
