@@ -37,6 +37,21 @@ function artistsToString(a: unknown): string {
   return a.map((x) => (x && typeof x === 'object' ? (x as { name?: string }).name : x)).filter(Boolean).join(', ')
 }
 
+// Misma normalización que `community-monthly` para que un save con `canonical_url`
+// se case con la fila viva aunque su `track_id` UUID haya cambiado tras un upsert.
+function normalizeUrlKey(u: string | null | undefined): string {
+  const s = (u || '').trim().toLowerCase()
+  if (!s) return ''
+  const ytMatch = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-z0-9_-]{11})/i)
+  if (ytMatch) return `yt:${ytMatch[1]}`
+  try {
+    const url = new URL(s)
+    return `${url.host}${url.pathname.replace(/\/$/, '')}`
+  } catch {
+    return s.replace(/[?#].*$/, '').replace(/\/$/, '')
+  }
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function GET(request: NextRequest) {
@@ -84,6 +99,78 @@ export async function GET(request: NextRequest) {
       ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
+
+  // Auto-rebind por `canonical_url`: si una save tiene URL canónica pero el
+  // `track_id` ya no devuelve fila viva (porque un upsert pasado regeneró
+  // UUIDs), buscamos la fila por URL y arreglamos el track_id en BD para que
+  // futuras peticiones sean directas. Sólo se ejecuta para huérfanos con URL.
+  const liveChartIds = new Set(((chartRes.data || []) as ChartRow[]).map((r) => r.id))
+  const liveFeatIds = new Set(((featRes.data || []) as FeatRow[]).map((r) => r.id))
+  const liveVinylIds = new Set(((vinylRes.data || []) as VinylRow[]).map((r) => r.id))
+
+  const orphChart = saved.filter((s) => s.track_source === 'chart' && !liveChartIds.has(s.track_id) && !!s.canonical_url)
+  const orphFeat = saved.filter((s) => s.track_source === 'featured' && !liveFeatIds.has(s.track_id) && !!s.canonical_url)
+  const orphVinyl = saved.filter((s) => s.track_source === 'vinyl' && !liveVinylIds.has(s.track_id) && !!s.canonical_url)
+
+  if (orphChart.length || orphFeat.length || orphVinyl.length) {
+    const collect = async <T extends { id: string }>(table: string, columns: string, urlCol: string, urls: string[]) => {
+      if (!urls.length) return [] as T[]
+      const { data } = await sb.from(table).select(columns).in(urlCol, urls)
+      return ((data as unknown) as T[]) || []
+    }
+    const [extraChart, extraFeat, extraVinyl] = await Promise.all([
+      collect<ChartRow>('chart_tracks', 'id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url', 'beatport_url', orphChart.map((o) => o.canonical_url as string)),
+      collect<FeatRow>('chart_featured_tracks', 'id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es', 'link_url', orphFeat.map((o) => o.canonical_url as string)),
+      collect<VinylRow>('chart_vinyl_tracks', 'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es', 'discogs_url', orphVinyl.map((o) => o.canonical_url as string)),
+    ])
+
+    const indexBy = <T extends { id: string }>(rows: T[], pick: (r: T) => string | null | undefined) => {
+      const m = new Map<string, T>()
+      for (const r of rows) {
+        const k = normalizeUrlKey(pick(r))
+        if (k) m.set(k, r)
+      }
+      return m
+    }
+    const chartIdx = indexBy<ChartRow>(extraChart, (r) => r.beatport_url)
+    const featIdx = indexBy<FeatRow>(extraFeat, (r) => r.link_url)
+    const vinylIdx = indexBy<VinylRow>(extraVinyl, (r) => r.discogs_url)
+
+    type RebindRow = { src: ChartTrackSource; oldId: string; newId: string }
+    const rebinds: RebindRow[] = []
+    const pushRebind = (src: ChartTrackSource, oldId: string, hit: { id: string } | undefined) => {
+      if (hit && hit.id !== oldId) rebinds.push({ src, oldId, newId: hit.id })
+    }
+    for (const o of orphChart) pushRebind('chart', o.track_id, chartIdx.get(normalizeUrlKey(o.canonical_url)))
+    for (const o of orphFeat) pushRebind('featured', o.track_id, featIdx.get(normalizeUrlKey(o.canonical_url)))
+    for (const o of orphVinyl) pushRebind('vinyl', o.track_id, vinylIdx.get(normalizeUrlKey(o.canonical_url)))
+
+    if (rebinds.length) {
+      // Auto-heal serializado: actualizamos cada save al nuevo track_id. Si
+      // ya existía una fila duplicada para el mismo (src, newId) borramos la
+      // huérfana original para evitar un constraint unique.
+      const existingPair = new Set(saved.map((s) => `${s.track_source}:${s.track_id}`))
+      for (const r of rebinds) {
+        const newKey = `${r.src}:${r.newId}`
+        if (existingPair.has(newKey)) {
+          await sb.from('saved_chart_tracks').delete().eq('user_id', owner.id).eq('track_source', r.src).eq('track_id', r.oldId)
+        } else {
+          const { error: updErr } = await sb.from('saved_chart_tracks').update({ track_id: r.newId }).eq('user_id', owner.id).eq('track_source', r.src).eq('track_id', r.oldId)
+          if (updErr) {
+            // Probable colisión de unique. Al menos no rompemos la respuesta.
+            await sb.from('saved_chart_tracks').delete().eq('user_id', owner.id).eq('track_source', r.src).eq('track_id', r.oldId)
+          }
+          existingPair.add(newKey)
+        }
+        const idx = saved.findIndex((s) => s.track_source === r.src && s.track_id === r.oldId)
+        if (idx !== -1) saved[idx] = { ...saved[idx], track_id: r.newId }
+      }
+      // Mezclamos las filas vivas recién encontradas en los buckets res.data.
+      ;(chartRes.data as unknown as ChartRow[]).push(...extraChart.filter((r) => !liveChartIds.has(r.id)))
+      ;(featRes.data as unknown as FeatRow[]).push(...extraFeat.filter((r) => !liveFeatIds.has(r.id)))
+      ;(vinylRes.data as unknown as VinylRow[]).push(...extraVinyl.filter((r) => !liveVinylIds.has(r.id)))
+    }
+  }
 
   // Resolver week_date de chart/featured en un lote para construir los links
   // compartibles "/charts?week=...&play=<source>:<id>" sin forzar al cliente

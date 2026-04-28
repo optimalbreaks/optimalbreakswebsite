@@ -352,7 +352,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
+          <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} canonicalUrl={pick.link_url} lang={lang} size="sm" />
           <TrackShareButton
             source="featured"
             trackId={pick.id}
@@ -421,7 +421,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
               {c.vinyl_open_youtube}
             </a>
           )}
-          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
+          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -507,7 +507,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, we
               {track.music_key}
             </span>
           )}
-          <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} lang={lang} size="sm" />
+          <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.beatport_url} lang={lang} size="sm" />
           {lang && (
             <TrackShareButton
               source="chart"

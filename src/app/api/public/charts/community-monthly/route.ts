@@ -243,6 +243,56 @@ export async function GET(request: NextRequest) {
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
 
+  // Auto-resolución de huérfanos por canonical_url: para saves cuyo track_id
+  // ya no existe pero que tienen URL canónica, buscamos la fila viva por URL
+  // y la añadimos a las listas (sin auto-heal aquí, eso lo hace user-tracks).
+  const liveChartIds = new Set(((chartRes.data || []) as ChartRow[]).map((r) => r.id))
+  const liveFeatIds = new Set(((featRes.data || []) as FeatRow[]).map((r) => r.id))
+  const liveVinylIds = new Set(((vinylRes.data || []) as VinylRow[]).map((r) => r.id))
+  const orphChart = saved.filter((s) => s.track_source === 'chart' && !liveChartIds.has(s.track_id) && !!s.canonical_url)
+  const orphFeat = saved.filter((s) => s.track_source === 'featured' && !liveFeatIds.has(s.track_id) && !!s.canonical_url)
+  const orphVinyl = saved.filter((s) => s.track_source === 'vinyl' && !liveVinylIds.has(s.track_id) && !!s.canonical_url)
+  if (orphChart.length || orphFeat.length || orphVinyl.length) {
+    const [extraChart, extraFeat, extraVinyl] = await Promise.all([
+      orphChart.length
+        ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', orphChart.map((o) => o.canonical_url as string))
+        : Promise.resolve({ data: [] as ChartRow[], error: null }),
+      orphFeat.length
+        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', orphFeat.map((o) => o.canonical_url as string))
+        : Promise.resolve({ data: [] as FeatRow[], error: null }),
+      orphVinyl.length
+        ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('discogs_url', orphVinyl.map((o) => o.canonical_url as string))
+        : Promise.resolve({ data: [] as VinylRow[], error: null }),
+    ])
+    type R = { id: string }
+    const remap = <T extends R>(rows: T[], pick: (r: T) => string | null | undefined) => {
+      const m = new Map<string, T>()
+      for (const r of rows) {
+        const k = normalizeUrl(pick(r))
+        if (k) m.set(k, r)
+      }
+      return m
+    }
+    const cIdx = remap<ChartRow>(((extraChart.data || []) as ChartRow[]), (r) => r.beatport_url)
+    const fIdx = remap<FeatRow>(((extraFeat.data || []) as FeatRow[]), (r) => r.link_url)
+    const vIdx = remap<VinylRow>(((extraVinyl.data || []) as VinylRow[]), (r) => r.discogs_url)
+    for (const o of orphChart) {
+      const live = cIdx.get(normalizeUrl(o.canonical_url))
+      if (live && !liveChartIds.has(live.id)) { (chartRes.data as unknown as ChartRow[]).push(live); liveChartIds.add(live.id) }
+      if (live) o.track_id = live.id
+    }
+    for (const o of orphFeat) {
+      const live = fIdx.get(normalizeUrl(o.canonical_url))
+      if (live && !liveFeatIds.has(live.id)) { (featRes.data as unknown as FeatRow[]).push(live); liveFeatIds.add(live.id) }
+      if (live) o.track_id = live.id
+    }
+    for (const o of orphVinyl) {
+      const live = vIdx.get(normalizeUrl(o.canonical_url))
+      if (live && !liveVinylIds.has(live.id)) { (vinylRes.data as unknown as VinylRow[]).push(live); liveVinylIds.add(live.id) }
+      if (live) o.track_id = live.id
+    }
+  }
+
   // Resolver week_date para los chart/featured (se usa en los enlaces /charts?week=…&play=…).
   const editionIdSet = new Set<string>()
   for (const c of (chartRes.data || []) as ChartRow[]) if (c.chart_edition_id) editionIdSet.add(c.chart_edition_id)

@@ -23,6 +23,9 @@ data/events/discovered*.json
 # Notas temporales del agente (chart → enrich)
 tmp-chart-agent-notes/
 
+# Catálogos de saves huérfanos (PII de usuarios — no versionar)
+data/orphans/
+
 # Debug / logs de agentes (no versionar)
 batch-agent-artists.log
 photo-artists-images.log
