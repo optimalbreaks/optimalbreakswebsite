@@ -508,6 +508,7 @@ export function useSavedChartTracks() {
     source: ChartTrackSource,
     id: string,
     canonicalUrl?: string | null,
+    snapshot?: SavedChartTrackSnapshot | null,
   ) => {
     if (!user || !id) return
     if (isSaved(source, id)) {
@@ -521,6 +522,7 @@ export function useSavedChartTracks() {
     } else {
       const insert: Record<string, unknown> = { user_id: user.id, track_source: source, track_id: id }
       if (canonicalUrl) insert.canonical_url = canonicalUrl
+      if (snapshot) insert.snapshot = snapshot
       const { data } = await supabase
         .from('saved_chart_tracks')
         .insert(insert)
@@ -578,6 +580,7 @@ export function useSavedChartTracks() {
     primary: Ref,
     refs: Ref[],
     canonicalUrl?: string | null,
+    snapshot?: SavedChartTrackSnapshot | null,
   ) => {
     if (!user || !primary.id) return
     const group = refs.length ? refs : [primary]
@@ -607,7 +610,7 @@ export function useSavedChartTracks() {
         })
       )
     } else {
-      await toggle(primary.source, primary.id, canonicalUrl ?? null)
+      await toggle(primary.source, primary.id, canonicalUrl ?? null, snapshot ?? null)
     }
   }
 

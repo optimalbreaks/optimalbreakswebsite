@@ -385,6 +385,37 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Capa 3 — fallback final por SNAPSHOT: si una save de chart/featured/vinyl
+  // sigue sin fila viva tras el rebind por URL pero contiene snapshot,
+  // sintetizamos un Meta para que la canción cuente en el ranking. Protege
+  // contra DELETE total de las tablas chart_*_tracks.
+  for (const s of saved) {
+    if (s.track_source === 'beatport_top') continue
+    if (byRefKey.has(`${s.track_source}:${s.track_id}`)) continue
+    const snap = (s.snapshot || {}) as Record<string, unknown>
+    if (!snap || !snap.title) continue
+    const externalUrl = (snap.beatport_url as string | null) || s.canonical_url
+    const canonical_key = normalizeUrl(externalUrl as string | null) || `t:${s.track_source}:${s.track_id}`
+    const kind: PlaybackKind = s.track_source === 'vinyl' ? 'youtube' : 'beatport'
+    byRefKey.set(`${s.track_source}:${s.track_id}`, {
+      title: String(snap.title || ''),
+      mix_name: (snap.mix_name as string | null) ?? null,
+      artists: String(snap.artists || ''),
+      label: (snap.label as string | null) ?? null,
+      year: typeof snap.year === 'number' ? (snap.year as number) : null,
+      bpm: typeof snap.bpm === 'number' ? (snap.bpm as number) : null,
+      music_key: (snap.music_key as string | null) ?? null,
+      artwork_url: (snap.artwork_url as string | null) ?? null,
+      external_url: externalUrl as string | null,
+      sample_url: (snap.sample_url as string | null) ?? null,
+      playback_kind: kind,
+      canonical_key,
+      source: s.track_source,
+      id: s.track_id,
+      week_date: null,
+    })
+  }
+
   // Saves "beatport_top" guardan los metadatos en el snapshot, no tienen
   // fila propia. Construimos su Meta usando el snapshot.
   for (const s of saved) {

@@ -25,6 +25,12 @@ interface SaveTrackButtonPropsBase {
    * guardada una canción con la misma URL, aunque proceda de otra fuente.
    */
   canonicalUrl?: string | null
+  /**
+   * Snapshot inmutable con los metadatos esenciales de la canción. Si se
+   * proporciona, se persiste con el save y permite renderizar la fila en
+   * "Mis Tracks" aunque la canción desaparezca de las tablas chart_*_tracks.
+   */
+  snapshot?: SavedChartTrackSnapshot | null
 }
 
 type SaveTrackButtonRefMode = SaveTrackButtonPropsBase & {
@@ -44,7 +50,6 @@ type SaveTrackButtonRefMode = SaveTrackButtonPropsBase & {
    */
   relatedRefs?: Array<{ source: ChartTrackSource; id: string }>
   externalUrl?: never
-  snapshot?: never
 }
 
 type SaveTrackButtonUrlMode = SaveTrackButtonPropsBase & {
@@ -55,7 +60,6 @@ type SaveTrackButtonUrlMode = SaveTrackButtonPropsBase & {
    * cross-source por `canonicalUrl`.
    */
   externalUrl: string
-  snapshot?: SavedChartTrackSnapshot
   /** Id estable opcional (p.ej. beatport_id). Por defecto usa la URL normalizada. */
   externalTrackId?: string
   source?: never
@@ -77,6 +81,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
     lang,
     className = '',
     canonicalUrl,
+    snapshot: refSnapshot,
   } = props
   const isUrlMode = 'externalUrl' in props && !!props.externalUrl
   const source = isUrlMode ? undefined : (props as SaveTrackButtonRefMode).source
@@ -149,7 +154,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
     if (isUrlMode) {
       toggleByUrl(externalUrl as string, {
         trackId: externalTrackId,
-        snapshot,
+        snapshot: snapshot ?? undefined,
       })
       return
     }
@@ -166,6 +171,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
         { source: source as ChartTrackSource, id: trackId as string },
         relatedRefs as Array<{ source: ChartTrackSource; id: string }>,
         canonicalUrl ?? null,
+        refSnapshot ?? null,
       )
     } else {
       toggleGroup(source as ChartTrackSource, trackId as string, groupIds)

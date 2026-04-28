@@ -296,6 +296,38 @@ function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): str
   return c.picks_open_link
 }
 
+// Construye el snapshot inmutable que viaja con cada save (capa 3 de
+// protección). Mantiene visibles título/artista/artwork/URL aunque la fila
+// viva se borre completamente de la BD.
+function snapshotFromArtists(arr: Array<{ name?: string }> | unknown): string {
+  if (!Array.isArray(arr)) return ''
+  return arr.map((x) => (x && typeof x === 'object' ? (x as { name?: string }).name : x)).filter(Boolean).join(', ')
+}
+function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
+  return {
+    title: p.title, mix_name: p.mix_name || null, artists: snapshotFromArtists(p.artists),
+    label: p.label || null, year: p.release_year || null, bpm: p.bpm || null, music_key: p.music_key || null,
+    artwork_url: p.artwork_url || null, sample_url: p.sample_url || null,
+    beatport_url: p.link_url || null,
+  }
+}
+function buildChartSnapshot(t: ChartTrack) {
+  return {
+    title: t.title, mix_name: t.mix_name || null, artists: snapshotFromArtists(t.artists),
+    label: t.label || null, year: t.release_year || null, bpm: t.bpm || null, music_key: t.music_key || null,
+    artwork_url: t.artwork_url || null, sample_url: t.sample_url || null,
+    beatport_url: t.beatport_url || null,
+  }
+}
+function buildVinylSnapshot(v: ChartVinylTrack) {
+  return {
+    title: v.title, mix_name: v.mix_name || null, artists: snapshotFromArtists(v.artists),
+    label: v.label || null, year: v.year || null, bpm: null, music_key: null,
+    artwork_url: v.artwork_url || null, sample_url: null,
+    beatport_url: v.discogs_url || null,
+  }
+}
+
 function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artistSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
@@ -352,7 +384,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
               {(pick.music_key || '').trim()}
             </span>
           ) : null}
-          <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} canonicalUrl={pick.link_url} lang={lang} size="sm" />
+          <SaveTrackButton source="featured" trackId={pick.id} relatedRefs={relatedRefs} canonicalUrl={pick.link_url} snapshot={buildFeaturedSnapshot(pick)} lang={lang} size="sm" />
           <TrackShareButton
             source="featured"
             trackId={pick.id}
@@ -421,7 +453,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
               {c.vinyl_open_youtube}
             </a>
           )}
-          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} lang={lang} size="sm" />
+          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} snapshot={buildVinylSnapshot(track)} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -507,7 +539,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, we
               {track.music_key}
             </span>
           )}
-          <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.beatport_url} lang={lang} size="sm" />
+          <SaveTrackButton source="chart" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.beatport_url} snapshot={buildChartSnapshot(track)} lang={lang} size="sm" />
           {lang && (
             <TrackShareButton
               source="chart"
