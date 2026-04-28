@@ -415,7 +415,12 @@ async function main() {
         '--notes',
         notePath,
       ],
-      { cwd: ROOT, stdio: 'inherit', env: process.env, shell: false },
+      {
+        cwd: ROOT,
+        stdio: 'inherit',
+        env: { ...process.env, OPENAI_MODEL: process.env.OPENAI_MODEL?.trim() || 'gpt-5.4' },
+        shell: false,
+      },
     )
     try {
       unlinkSync(notePath)

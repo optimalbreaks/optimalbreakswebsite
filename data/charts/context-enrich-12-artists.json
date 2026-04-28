@@ -1,0 +1,71 @@
+{
+  "week_date": "2026-04-28",
+  "tracks": [
+    {
+      "title": "I Am Your Master",
+      "mix_name": "OnDaMike Remix",
+      "artists": [{ "name": "JDOUBLE" }],
+      "label": "Ravesta Records"
+    },
+    {
+      "title": "Swipe (ft. Isis Salam)",
+      "mix_name": "Extended Mix",
+      "artists": [
+        { "name": "Benson" },
+        { "name": "Prozak" },
+        { "name": "Isis Salam" }
+      ],
+      "label": "Bluepress"
+    }
+  ],
+  "picks": [
+    {
+      "title": "South Roots",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "Jiro" }],
+      "label": "Raveart Records"
+    },
+    {
+      "title": "Click Clack",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "BLOW (SP)" }],
+      "label": "DIRTY KITCHEN RAVE"
+    },
+    {
+      "title": "Hello There",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "DJ ShaL" }],
+      "label": "DistroKid"
+    },
+    {
+      "title": "Lost",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "FL-2" }],
+      "label": "ElectroBreakz"
+    },
+    {
+      "title": "Back It",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "Mkbreaks" }],
+      "label": "Frequency Fusion Records"
+    },
+    {
+      "title": "Freefall",
+      "mix_name": "2026 Remastered Version — CFUNK 009AA",
+      "artists": [{ "name": "The Breakfasterz" }],
+      "label": "Cyberfunk Recordings"
+    },
+    {
+      "title": "Toxic Steps",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "Luis Pitti" }],
+      "label": "Funktasty Crew Records"
+    },
+    {
+      "title": "Venus or Not",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "Cherry Aka Breakntune" }],
+      "label": "DistroKid"
+    }
+  ]
+}

@@ -237,69 +237,6 @@
     },
     {
       "sort_order": 12,
-      "title": "Bassline Part 2 Side B",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DJ CJ"
-        }
-      ],
-      "label": "DistroKid",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/bassline-part-2-side-b/28336041",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/46c77402-ebf6-4e42-87ed-51a7696c9b51.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/ccdca7fc-ebf1-407b-b131-14d24d8616e9.LOFI.mp3",
-      "bpm": 131,
-      "music_key": "Eb Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": ""
-    },
-    {
-      "sort_order": 13,
-      "title": "He Is Electro Side B",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DJ CJ"
-        }
-      ],
-      "label": "DistroKid",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/he-is-electro-side-b/28361516",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6e17fbbd-0de4-4273-9f58-13c7e03504f5.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/8b4d3d06-89ca-4568-a7d7-507681154e87.LOFI.mp3",
-      "bpm": 139,
-      "music_key": "F Minor",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": ""
-    },
-    {
-      "sort_order": 14,
-      "title": "On 2 Turntables Breaks Edit",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DJ CJ"
-        }
-      ],
-      "label": "DistroKid",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/on-2-turntables-breaks-edit/28337988",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7a4ed0f1-57de-4857-8f55-b45dbd809d64.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/9ca7c177-b91d-4a6f-880b-b7992fcbdfd1.LOFI.mp3",
-      "bpm": 138,
-      "music_key": "Eb Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": ""
-    },
-    {
-      "sort_order": 15,
       "title": "Kamaka",
       "mix_name": "Original Mix",
       "artists": [
@@ -323,7 +260,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 16,
+      "sort_order": 13,
       "title": "Hello There",
       "mix_name": "Original Mix",
       "artists": [
@@ -344,7 +281,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 17,
+      "sort_order": 14,
       "title": "Rave Chant",
       "mix_name": "Original Mix",
       "artists": [
@@ -365,7 +302,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 18,
+      "sort_order": 15,
       "title": "Cut & Run (Flip-it)",
       "mix_name": "Flip-it",
       "artists": [
@@ -389,7 +326,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 19,
+      "sort_order": 16,
       "title": "Freak",
       "mix_name": "Original Mix",
       "artists": [
@@ -410,7 +347,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 20,
+      "sort_order": 17,
       "title": "Beatdown",
       "mix_name": "Perpetual Present Remix",
       "artists": [
@@ -431,7 +368,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 21,
+      "sort_order": 18,
       "title": "Lost",
       "mix_name": "Original Mix",
       "artists": [
@@ -452,7 +389,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 22,
+      "sort_order": 19,
       "title": "Love to Hate",
       "mix_name": "Original Mix",
       "artists": [
@@ -473,7 +410,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 23,
+      "sort_order": 20,
       "title": "Night Frequency",
       "mix_name": "Original Mix",
       "artists": [
@@ -494,7 +431,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 24,
+      "sort_order": 21,
       "title": "Freed From Desire",
       "mix_name": "Suga7 Breakbeat Remix (Intro)",
       "artists": [
@@ -518,7 +455,7 @@
       "note_es": "Tema en Bandcamp — breakbeat desde Canarias."
     },
     {
-      "sort_order": 25,
+      "sort_order": 22,
       "title": "Iso",
       "mix_name": "Original Mix",
       "artists": [
@@ -539,7 +476,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 26,
+      "sort_order": 23,
       "title": "Morning Light",
       "mix_name": "Original Mix",
       "artists": [
@@ -560,7 +497,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 27,
+      "sort_order": 24,
       "title": "Green Lion",
       "mix_name": "Fortuny, Jordaz (ESP) Remix",
       "artists": [
@@ -584,7 +521,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 28,
+      "sort_order": 25,
       "title": "Green Lion",
       "mix_name": "Original Mix",
       "artists": [
@@ -608,7 +545,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 29,
+      "sort_order": 26,
       "title": "South Roots",
       "mix_name": "Original Mix",
       "artists": [
@@ -629,7 +566,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 30,
+      "sort_order": 27,
       "title": "Move Fast",
       "mix_name": "Original Mix",
       "artists": [
@@ -650,7 +587,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 31,
+      "sort_order": 28,
       "title": "Serious Reese",
       "mix_name": "Original Mix",
       "artists": [
@@ -671,7 +608,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 32,
+      "sort_order": 29,
       "title": "Tu's Trouble",
       "mix_name": "Original Mix",
       "artists": [
@@ -692,7 +629,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 33,
+      "sort_order": 30,
       "title": "Back It",
       "mix_name": "Original Mix",
       "artists": [
@@ -713,7 +650,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 34,
+      "sort_order": 31,
       "title": "Fogo",
       "mix_name": "Original Mix",
       "artists": [
@@ -734,7 +671,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 35,
+      "sort_order": 32,
       "title": "Ok",
       "mix_name": "Original Mix",
       "artists": [
@@ -755,7 +692,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 36,
+      "sort_order": 33,
       "title": "Blastor",
       "mix_name": "Original Mix",
       "artists": [
@@ -776,7 +713,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 37,
+      "sort_order": 34,
       "title": "Caught Up",
       "mix_name": "The Return Good Remix",
       "artists": [
@@ -797,7 +734,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 38,
+      "sort_order": 35,
       "title": "Aliens",
       "mix_name": "Original Mix",
       "artists": [
@@ -818,7 +755,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 39,
+      "sort_order": 36,
       "title": "Boobs",
       "mix_name": "Original Mix",
       "artists": [
@@ -839,7 +776,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 40,
+      "sort_order": 37,
       "title": "Tricks",
       "mix_name": "Original Mix",
       "artists": [
@@ -860,7 +797,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 41,
+      "sort_order": 38,
       "title": "Phenomena",
       "mix_name": "Original Mix",
       "artists": [
@@ -884,7 +821,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 42,
+      "sort_order": 39,
       "title": "Elastic Groove",
       "mix_name": "Original Mix",
       "artists": [
@@ -905,7 +842,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 43,
+      "sort_order": 40,
       "title": "18 Miles",
       "mix_name": "Original Mix",
       "artists": [
@@ -929,7 +866,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 44,
+      "sort_order": 41,
       "title": "Freefall",
       "mix_name": "2026 Remastered Version — CFUNK 009AA",
       "artists": [
@@ -950,7 +887,7 @@
       "note_es": "Del EP The Breakfastaz — Psycho / Freefall (DJ QUEST)."
     },
     {
-      "sort_order": 45,
+      "sort_order": 42,
       "title": "Psycho",
       "mix_name": "2026 Remastered Version — CFUNK 009A",
       "artists": [
@@ -971,7 +908,7 @@
       "note_es": "Del EP The Breakfastaz — Psycho / Freefall (DJ QUEST)."
     },
     {
-      "sort_order": 46,
+      "sort_order": 43,
       "title": "Daydreamer",
       "mix_name": "Original Mix",
       "artists": [
@@ -992,7 +929,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 47,
+      "sort_order": 44,
       "title": "Do my things",
       "mix_name": "Original Mix",
       "artists": [
@@ -1013,7 +950,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 48,
+      "sort_order": 45,
       "title": "Roll Out",
       "mix_name": "Original Mix",
       "artists": [
@@ -1034,7 +971,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 49,
+      "sort_order": 46,
       "title": "Heatwave",
       "mix_name": "Original Mix",
       "artists": [
@@ -1058,7 +995,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 50,
+      "sort_order": 47,
       "title": "Acid show",
       "mix_name": "Original Mix",
       "artists": [
@@ -1079,7 +1016,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 51,
+      "sort_order": 48,
       "title": "New flow",
       "mix_name": "Original Mix",
       "artists": [
@@ -1100,7 +1037,7 @@
       "note_es": ""
     },
     {
-      "sort_order": 52,
+      "sort_order": 49,
       "title": "Crazy",
       "mix_name": "2026 Remaster — CFUNK 012A",
       "artists": [
@@ -1121,7 +1058,7 @@
       "note_es": "Del bundle The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp)."
     },
     {
-      "sort_order": 53,
+      "sort_order": 50,
       "title": "Method Of Doubt",
       "mix_name": "2026 Remaster — CFUNK 012AA",
       "artists": [
