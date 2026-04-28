@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { formatTrackReleaseDisplay } from '@/lib/share-track'
 
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
@@ -14,6 +15,7 @@ interface TopTrack {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   artwork_url: string | null
   external_url: string | null
   playback_kind: PlaybackKind
@@ -218,7 +220,7 @@ export default function AdminTracksPage() {
                     </td>
                     <td className="px-3 py-2 text-[var(--ink)]/75">{t.artists || '—'}</td>
                     <td className="px-3 py-2 text-[var(--ink)]/60">{t.label || '—'}</td>
-                    <td className="px-3 py-2 text-center text-[var(--ink)]/60 tabular-nums">{t.year ?? '—'}</td>
+                    <td className="px-3 py-2 text-center text-[var(--ink)]/60 tabular-nums whitespace-nowrap">{formatTrackReleaseDisplay(t.release_date, t.year) ?? '—'}</td>
                     <td className="px-3 py-2 text-center">
                       <span
                         className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider border-2 border-[var(--ink)]"

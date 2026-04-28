@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
     // una edición antigua que no esté renderizada.
     supabase
       .from('chart_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, artists, position, chart_editions!inner(week_date)')
+      .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, position, chart_editions!inner(week_date)')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .order('position', { ascending: true })
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
     // New Releases (semana "fenomenal"): igual, priorizar edición más reciente.
     supabase
       .from('chart_featured_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, artists, chart_editions!inner(week_date)')
+      .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, chart_editions!inner(week_date)')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(30),
@@ -529,6 +529,7 @@ export async function GET(request: NextRequest) {
     label: string | null
     artwork_url: string | null
     release_year?: number | null
+    release_date?: string | null
     year?: number | null
     artists: unknown
   }
@@ -563,11 +564,15 @@ export async function GET(request: NextRequest) {
     if (seenTrackKeys.has(key)) return
     seenTrackKeys.add(key)
     const yr = kind === 'vinyl' ? row.year : row.release_year
+    const rd = kind !== 'vinyl' && row.release_date && /^\d{4}-\d{2}-\d{2}$/.test(row.release_date.slice(0, 10))
+      ? row.release_date.slice(0, 10)
+      : null
+    const dateLabel = rd || (yr ? String(yr) : null)
     const parts = [
       trackTypeLabel[kind],
       artistsText,
       row.label,
-      yr ? String(yr) : null,
+      dateLabel,
     ].filter(Boolean)
     const anchor = kind === 'vinyl' ? `chart-vinyl-row-${row.id}` : `chart-row-${row.id}`
     results.push({

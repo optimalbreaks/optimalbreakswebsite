@@ -60,6 +60,7 @@ type ChartRow = {
   artists: unknown
   label: string | null
   release_year: number | null
+  release_date: string | null
   artwork_url: string | null
   beatport_url: string | null
 }
@@ -71,6 +72,7 @@ type FeatRow = {
   artists: unknown
   label: string | null
   release_year: number | null
+  release_date: string | null
   artwork_url: string | null
   link_url: string | null
   platform: string | null
@@ -136,6 +138,7 @@ interface CanonicalMeta {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   artwork_url: string | null
   external_url: string | null
   primary: { source: ChartTrackSource; id: string; week_date: string | null }
@@ -205,10 +208,10 @@ export async function GET(_request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, artwork_url, beatport_url').in('id', chartIds)
+      ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url').in('id', chartIds)
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, artwork_url, link_url, platform').in('id', featIds)
+      ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform').in('id', featIds)
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
       ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', vinylIds)
@@ -235,6 +238,7 @@ export async function GET(_request: NextRequest) {
       artists: artistsToString(c.artists),
       label: c.label,
       year: c.release_year,
+      release_date: c.release_date,
       artwork_url: c.artwork_url,
       external_url: c.beatport_url,
       primary: { source: 'chart', id: c.id, week_date: c.chart_edition_id ? weekByEdition.get(c.chart_edition_id) || null : null },
@@ -249,6 +253,7 @@ export async function GET(_request: NextRequest) {
       artists: artistsToString(f.artists),
       label: f.label,
       year: f.release_year,
+      release_date: f.release_date,
       artwork_url: f.artwork_url,
       external_url: f.link_url,
       primary: { source: 'featured', id: f.id, week_date: f.chart_edition_id ? weekByEdition.get(f.chart_edition_id) || null : null },
@@ -263,6 +268,7 @@ export async function GET(_request: NextRequest) {
       artists: artistsToString(v.artists),
       label: v.label,
       year: v.year,
+      release_date: null,
       artwork_url: v.artwork_url,
       external_url: v.discogs_url || v.youtube_url,
       primary: { source: 'vinyl', id: v.id, week_date: null },
@@ -275,6 +281,8 @@ export async function GET(_request: NextRequest) {
     const snap = (s.snapshot || {}) as Record<string, unknown>
     const beatport_url = (snap.beatport_url as string | null) || s.canonical_url
     const canonical_key = normalizeUrl(beatport_url) || `t:beatport_top:${s.track_id}`
+    const release_date_raw = typeof snap.release_date === 'string' ? snap.release_date.trim().slice(0, 10) : ''
+    const release_date_v = /^\d{4}-\d{2}-\d{2}$/.test(release_date_raw) ? release_date_raw : null
     metaByRefKey.set(`beatport_top:${s.track_id}`, {
       canonical_key,
       title: String(snap.title || ''),
@@ -282,6 +290,7 @@ export async function GET(_request: NextRequest) {
       artists: String(snap.artists || ''),
       label: (snap.label as string | null) ?? null,
       year: typeof snap.year === 'number' ? (snap.year as number) : null,
+      release_date: release_date_v,
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: beatport_url,
       primary: { source: 'beatport_top', id: s.track_id, week_date: null },
@@ -413,6 +422,7 @@ export async function GET(_request: NextRequest) {
       artists: r.meta!.artists,
       label: r.meta!.label,
       year: r.meta!.year,
+      release_date: r.meta!.release_date,
       artwork_url: r.meta!.artwork_url,
       external_url: r.meta!.external_url,
       soulmates_count: r.info.count,

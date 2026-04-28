@@ -15,6 +15,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useProfile } from '@/hooks/useUserData'
+import { formatTrackReleaseDisplay } from '@/lib/share-track'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -53,6 +54,7 @@ interface RecommendedTrack {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   artwork_url: string | null
   external_url: string | null
   soulmates_count: number
@@ -367,10 +369,13 @@ export default function SoulmatesSection({ lang }: Props) {
                       ) : t.title}
                       {t.mix_name && <span className="font-normal text-[10px] text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span>}
                     </h4>
-                    <p className="text-[11px] text-[var(--ink)]/60 truncate" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                    <p className="text-[11px] text-[var(--ink)]/60 sm:break-words break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
                       {t.artists || '—'}
                       {t.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span>{t.label}</>}
-                      {t.year && <><span className="mx-1.5 text-[var(--ink)]/30">|</span>{t.year}</>}
+                      {(() => {
+                        const rd = formatTrackReleaseDisplay(t.release_date, t.year)
+                        return rd ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="whitespace-nowrap tabular-nums">{rd}</span></> : null
+                      })()}
                     </p>
                   </div>
                   {t.external_url && (

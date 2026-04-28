@@ -21,8 +21,8 @@ type SavedRow = {
   created_at: string | null
 }
 
-type ChartRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }
-type FeatRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; artwork_url: string | null; link_url: string | null; platform: string | null; sample_url: string | null }
+type ChartRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; artwork_url: string | null; beatport_url: string | null; sample_url: string | null }
+type FeatRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; artwork_url: string | null; link_url: string | null; platform: string | null; sample_url: string | null }
 type VinylRow = { id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null }
 
 function artistsToString(a: unknown): string {
@@ -50,6 +50,7 @@ interface Aggregate {
   artists: string
   label: string | null
   year: number | null
+  release_date: string | null
   artwork_url: string | null
   external_url: string | null
   playback_kind: PlaybackKind
@@ -98,22 +99,22 @@ export async function GET(request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, artwork_url, beatport_url, sample_url').in('id', chartIds)
+      ? sb.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url, sample_url').in('id', chartIds)
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, artwork_url, link_url, platform, sample_url').in('id', featIds)
+      ? sb.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform, sample_url').in('id', featIds)
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
       ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', vinylIds)
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
 
-  const byRefKey = new Map<string, { title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; external_url: string | null; playback_kind: PlaybackKind; canonical_key: string; source: ChartTrackSource; id: string }>()
+  const byRefKey = new Map<string, { title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date: string | null; artwork_url: string | null; external_url: string | null; playback_kind: PlaybackKind; canonical_key: string; source: ChartTrackSource; id: string }>()
 
   for (const c of ((chartRes.data || []) as ChartRow[])) {
     const canonical_key = normalizeUrl(c.beatport_url) || `t:chart:${c.id}`
     byRefKey.set(`chart:${c.id}`, {
-      title: c.title, mix_name: c.mix_name, artists: artistsToString(c.artists), label: c.label, year: c.release_year,
+      title: c.title, mix_name: c.mix_name, artists: artistsToString(c.artists), label: c.label, year: c.release_year, release_date: c.release_date,
       artwork_url: c.artwork_url, external_url: c.beatport_url, playback_kind: 'beatport',
       canonical_key, source: 'chart', id: c.id,
     })
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
     const kind: PlaybackKind = f.platform === 'bandcamp' ? 'bandcamp' : 'beatport'
     const canonical_key = normalizeUrl(f.link_url) || `t:featured:${f.id}`
     byRefKey.set(`featured:${f.id}`, {
-      title: f.title, mix_name: f.mix_name, artists: artistsToString(f.artists), label: f.label, year: f.release_year,
+      title: f.title, mix_name: f.mix_name, artists: artistsToString(f.artists), label: f.label, year: f.release_year, release_date: f.release_date,
       artwork_url: f.artwork_url, external_url: f.link_url, playback_kind: kind,
       canonical_key, source: 'featured', id: f.id,
     })
@@ -130,7 +131,7 @@ export async function GET(request: NextRequest) {
   for (const v of ((vinylRes.data || []) as VinylRow[])) {
     const canonical_key = normalizeUrl(v.youtube_url) || `t:vinyl:${v.id}`
     byRefKey.set(`vinyl:${v.id}`, {
-      title: v.title, mix_name: v.mix_name, artists: artistsToString(v.artists), label: v.label, year: v.year,
+      title: v.title, mix_name: v.mix_name, artists: artistsToString(v.artists), label: v.label, year: v.year, release_date: null,
       artwork_url: v.artwork_url, external_url: v.discogs_url || v.youtube_url, playback_kind: 'youtube',
       canonical_key, source: 'vinyl', id: v.id,
     })
@@ -145,11 +146,13 @@ export async function GET(request: NextRequest) {
     const artists = String(snap.artists || '')
     const label = (snap.label as string | null) ?? null
     const year = (typeof snap.year === 'number' ? (snap.year as number) : null)
+    const release_date_raw = typeof snap.release_date === 'string' ? snap.release_date.trim().slice(0, 10) : ''
+    const release_date = /^\d{4}-\d{2}-\d{2}$/.test(release_date_raw) ? release_date_raw : null
     const artwork_url = (snap.artwork_url as string | null) ?? null
     const beatport_url = (snap.beatport_url as string | null) || s.canonical_url
     const canonical_key = normalizeUrl(beatport_url) || `t:beatport_top:${s.track_id}`
     byRefKey.set(`beatport_top:${s.track_id}`, {
-      title, mix_name, artists, label, year,
+      title, mix_name, artists, label, year, release_date,
       artwork_url, external_url: beatport_url, playback_kind: 'beatport',
       canonical_key, source: 'beatport_top', id: s.track_id,
     })
@@ -172,6 +175,7 @@ export async function GET(request: NextRequest) {
         artists: meta.artists,
         label: meta.label,
         year: meta.year,
+        release_date: meta.release_date,
         artwork_url: meta.artwork_url,
         external_url: meta.external_url,
         playback_kind: meta.playback_kind,
@@ -197,6 +201,8 @@ export async function GET(request: NextRequest) {
       if (!existing.artwork_url && meta.artwork_url) existing.artwork_url = meta.artwork_url
       if (!existing.external_url && meta.external_url) existing.external_url = meta.external_url
       if (!existing.year && meta.year) existing.year = meta.year
+      const isValidRd = (v: string | null) => !!(v && /^\d{4}-\d{2}-\d{2}$/.test(v))
+      if (!isValidRd(existing.release_date) && isValidRd(meta.release_date)) existing.release_date = meta.release_date
       // Preferimos un playback reproducible en segundo plano como "primario":
       // si tenemos un chart/featured con beatport/bandcamp, gana frente a youtube.
       if (existing.playback_kind === 'youtube' && meta.playback_kind !== 'youtube') {
@@ -218,6 +224,7 @@ export async function GET(request: NextRequest) {
     artists: a.artists,
     label: a.label,
     year: a.year,
+    release_date: a.release_date,
     artwork_url: a.artwork_url,
     external_url: a.external_url,
     playback_kind: a.playback_kind,

@@ -58,7 +58,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       const trackTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
       const bits: string[] = []
       if (track.label) bits.push(track.label)
-      if (track.release_year && track.release_year > 0) bits.push(String(track.release_year))
+      const rd = (track.release_date || '').trim().slice(0, 10)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) {
+        bits.push(rd)
+      } else if (track.release_year && track.release_year > 0) {
+        bits.push(String(track.release_year))
+      }
       const listenPrefix = lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
       const trackDesc = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
       return detailPageMetadata(
