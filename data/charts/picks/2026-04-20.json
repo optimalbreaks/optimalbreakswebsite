@@ -617,27 +617,6 @@
       "sort_order": 29
     },
     {
-      "title": "Sick Cow",
-      "mix_name": "Extended mix",
-      "artists": [
-        {
-          "name": "Ivan Oaks"
-        }
-      ],
-      "label": "Oaks Sound",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/sick-cow/28543123",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0e8dee7-8271-46be-b3c0-4b9281e6dda6.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/71d45dde-1234-460b-9f51-4bdab71eb2ac.LOFI.mp3",
-      "bpm": 135,
-      "music_key": "B Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 30
-    },
-    {
       "title": "Keep It",
       "mix_name": "Original Mix",
       "artists": [
