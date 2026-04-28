@@ -482,8 +482,13 @@ function MiniPlayerShell({
       aria-label={ariaLabel}
       style={{
         fontFamily: "'Courier Prime', monospace",
-        // Safe area para el notch / home-bar iOS y la barra del navegador móvil.
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        // Safe area para el notch / home-bar iOS y la barra del navegador
+        // móvil + 10px extra. En iPhones (sobre todo la home-bar) el
+        // `safe-area-inset-bottom` por sí solo deja los botones de
+        // transporte casi pegados al borde inferior visible; añadimos un
+        // colchón fijo de 10px para que el play/pause y los ⏮ ⏭ no se
+        // sientan recortados.
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)',
       }}
     >
       <MiniBarHeader subtitle={subtitle} live />
@@ -1738,9 +1743,18 @@ export function DeckAudioProvider({
 
   const showBar = mode !== 'idle' || sessionActive || previewQueue.length > 0
 
+  // El wrapper reserva espacio bajo la página para que la última fila no
+  // quede tapada por la barra fija. Antes era estático (4.75rem / 5rem) y
+  // se quedaba corto en iPhones porque no contaba la `safe-area-inset-bottom`
+  // de la home-bar. Con calc() incluimos esa zona segura más los mismos
+  // 10px de colchón que añade el reproductor a su `paddingBottom`.
+  const wrapperPb = showBar
+    ? 'pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)] sm:pb-[calc(5rem+env(safe-area-inset-bottom,0px)+10px)]'
+    : undefined
+
   return (
     <DeckAudioContext.Provider value={value}>
-      <div className={showBar ? 'pb-[4.75rem] sm:pb-[5rem]' : undefined}>{children}</div>
+      <div className={wrapperPb}>{children}</div>
       <MiniDeckBar lang={lang} />
       <PreviewAutoplayOverlay lang={lang} />
       {scTrackUrl && (
