@@ -99,6 +99,11 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
   // Solo los tracks con preview audible van a la cola global.
   const playableTracks = useMemo(() => tracks.filter(t => t.sample_url), [tracks])
 
+  // Cada track del Top 10 lleva su propio `save` para que el botón "+/✓"
+  // del MiniPreviewBar opere sobre la misma URL canónica que el botón de
+  // la fila visible. El Top 10 no tiene fila propia en `chart_*_tracks`,
+  // así que usamos modo URL + snapshot, exactamente igual que en el
+  // <SaveTrackButton> de la lista expandida.
   const buildQueue = useCallback((): PreviewTrack[] => {
     return playableTracks.map((t) => ({
       rowKey: `bp-${t.position}`,
@@ -107,8 +112,17 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       artist: t.artists.map(a => a.name).join(', '),
       artworkUrl: t.artwork_url || null,
       domId: `bp-row-${t.position}`,
+      save: t.beatport_url
+        ? {
+            mode: 'url' as const,
+            externalUrl: t.beatport_url,
+            externalTrackId: extractBeatportTrackId(t.beatport_url) ?? undefined,
+            canonicalUrl: t.beatport_url,
+            snapshot: buildSnapshot(t, origin),
+          }
+        : undefined,
     }))
-  }, [playableTracks])
+  }, [playableTracks, origin])
 
   const playFromTrack = useCallback((t: BeatportTopTrack) => {
     const queue = buildQueue()
@@ -155,6 +169,15 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       artist: t.artists.map((a) => a.name).join(', '),
       artworkUrl: t.artwork_url || null,
       domId: `bp-row-${t.position}`,
+      save: t.beatport_url
+        ? {
+            mode: 'url',
+            externalUrl: t.beatport_url,
+            externalTrackId: extractBeatportTrackId(t.beatport_url) ?? undefined,
+            canonicalUrl: t.beatport_url,
+            snapshot: buildSnapshot(t, origin),
+          }
+        : undefined,
     }))
     const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
     didAutoPlayRef.current = true

@@ -147,6 +147,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   }, [fetchData])
 
   // Construye la cola de previews con los samples disponibles del top.
+  // Adjuntamos `save` con la misma lógica que la fila visible: modo URL
+  // para los tracks cuya fuente primaria es `beatport_top` (no tienen fila
+  // propia, viven solo como JSONB) y modo ref para el resto.
   const previewBundle = useMemo<PreviewTrack[]>(() => {
     const out: PreviewTrack[] = []
     if (!data) return out
@@ -161,6 +164,20 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
         domId: `community-monthly-${t.canonical_key}`,
+        save: t.primary.source === 'beatport_top' && t.external_url
+          ? {
+              mode: 'url',
+              externalUrl: t.external_url,
+              externalTrackId: t.primary.id,
+              canonicalUrl: t.external_url,
+              snapshot: snapshotForBeatportTop(t),
+            }
+          : {
+              mode: 'ref',
+              source: t.primary.source,
+              trackId: t.primary.id,
+              canonicalUrl: t.external_url || null,
+            },
       })
     }
     return out

@@ -20,6 +20,9 @@ import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
+import SaveTrackButton from '@/components/SaveTrackButton'
+import type { ChartTrackSource } from '@/hooks/useUserData'
+import type { SavedChartTrackSnapshot } from '@/types/database'
 
 export interface DeckDict {
   play: string
@@ -43,6 +46,39 @@ export interface MixTrack {
 }
 
 /**
+ * Datos que el productor de la cola adjunta a cada `PreviewTrack` para que
+ * el botón "+/✓" del MiniPreviewBar (añadir/quitar de Mis Tracks) sepa
+ * sobre qué fila de qué tabla operar. Reproduce las dos variantes que
+ * acepta `<SaveTrackButton>`:
+ *  - `mode: 'ref'`  → tracks con fila propia en `chart_tracks` /
+ *    `chart_featured_tracks` / `chart_vinyl_tracks` (y también las del
+ *    propio `saved_chart_tracks` cuando ya están guardadas, p.ej.
+ *    `beatport_top` con id estable).
+ *  - `mode: 'url'`  → tracks de Beatport Top 10 que solo viven como
+ *    JSONB en la respuesta API; el save se deduplica por URL canónica.
+ *
+ * Cuando `save` no está presente, el botón simplemente no se renderiza
+ * (p.ej. el deck o las pistas del DJ que no tienen ficha guardable).
+ */
+export type PreviewSaveData =
+  | {
+      mode: 'ref'
+      source: ChartTrackSource
+      trackId: string
+      relatedRefs?: Array<{ source: ChartTrackSource; id: string }>
+      relatedIds?: string[]
+      canonicalUrl?: string | null
+      snapshot?: SavedChartTrackSnapshot | null
+    }
+  | {
+      mode: 'url'
+      externalUrl: string
+      externalTrackId?: string
+      canonicalUrl?: string | null
+      snapshot?: SavedChartTrackSnapshot | null
+    }
+
+/**
  * Track del reproductor global de previews (Beatport/Bandcamp de charts,
  * Top 10 de artistas/sellos, Mis Tracks…). El provider mantiene la cola
  * entre navegaciones para que la reproducción siga sonando aunque el
@@ -54,6 +90,8 @@ export interface MixTrack {
  *   - `domId`:  id del DOM dentro de la página origen para hacer
  *               `scrollIntoView` desde la barra global (si la página
  *               actual no lo contiene, no-op silencioso).
+ *   - `save`:   datos opcionales para pintar el botón "Añadir a Mis
+ *               Tracks" en la barra del reproductor; ver `PreviewSaveData`.
  */
 export interface PreviewTrack {
   rowKey: string
@@ -62,6 +100,7 @@ export interface PreviewTrack {
   artist: string
   artworkUrl?: string | null
   domId?: string
+  save?: PreviewSaveData
 }
 
 export interface PreviewAudioApi {
@@ -507,6 +546,44 @@ function MiniPlayerShell({
   )
 }
 
+/**
+ * Botón "+/✓" para añadir/quitar la pista actualmente sonando de "Mis
+ * Tracks" sin tener que volver a la fila de la lista. Lo renderizamos
+ * dentro del `MiniPreviewBar` cuando el productor de la cola adjuntó
+ * `save` al `PreviewTrack`. Reutiliza exactamente el mismo
+ * `SaveTrackButton` (tamaño `sm`, redondo blanco/verde) que aparece en
+ * cada fila de los charts, Mis Tracks y los Top 10, así que el estado
+ * (verde/blanco) está sincronizado con el resto de la UI vía
+ * `useSavedChartTracks()`.
+ */
+function PreviewSaveSlot({ save, lang }: { save?: PreviewSaveData; lang: Locale }) {
+  if (!save) return null
+  if (save.mode === 'url') {
+    return (
+      <SaveTrackButton
+        externalUrl={save.externalUrl}
+        externalTrackId={save.externalTrackId}
+        canonicalUrl={save.canonicalUrl ?? null}
+        snapshot={save.snapshot ?? null}
+        lang={lang}
+        size="sm"
+      />
+    )
+  }
+  return (
+    <SaveTrackButton
+      source={save.source}
+      trackId={save.trackId}
+      relatedRefs={save.relatedRefs}
+      relatedIds={save.relatedIds}
+      canonicalUrl={save.canonicalUrl ?? null}
+      snapshot={save.snapshot ?? null}
+      lang={lang}
+      size="sm"
+    />
+  )
+}
+
 // ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────
 function MiniPreviewBar({ lang }: { lang: Locale }) {
   const {
@@ -546,6 +623,7 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       onTitleClick={cur.domId ? scrollToCurrentRow : undefined}
       titleClickHint={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
       counter={`${previewIndex + 1} / ${previewQueue.length}`}
+      extraRight={<PreviewSaveSlot save={cur.save} lang={lang} />}
       controls={
         <>
           <button

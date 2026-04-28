@@ -596,11 +596,17 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   }, [isGroupActive])
 
   // Convierte un UnifiedTrack a PreviewTrack del provider.
+  // Adjuntamos `save` con la misma lógica que la fila de la lista (URL mode
+  // para `beatport_top` en lista compartida, ref mode con `relatedRefs` en
+  // la lista propia) para que el botón "+/✓" del MiniPreviewBar opere
+  // exactamente sobre el mismo registro al añadir o quitar la pista que
+  // está sonando en ese momento.
   const toPreviewTrack = useCallback((t: UnifiedTrack): PreviewTrack | null => {
     const src = t.source === 'featured' && t.platform === 'bandcamp'
       ? previewAudioSrc('', 'bandcamp', t.external_url)
       : t.sample_url ? previewAudioSrc(t.sample_url, t.platform || undefined) : ''
     if (!src) return null
+    const useUrlMode = isShared && t.source === 'beatport_top' && !!(t.external_url || t.canonical_url)
     return {
       rowKey: t.key,
       src,
@@ -609,8 +615,27 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       artworkUrl: t.artwork_url ?? null,
       // domId no aplica aquí; las filas no tienen id único en el DOM y el
       // scroll-to-row sólo tiene sentido dentro de la misma ruta.
+      save: useUrlMode
+        ? {
+            mode: 'url',
+            externalUrl: (t.external_url || t.canonical_url) as string,
+            externalTrackId: t.id,
+            canonicalUrl: t.external_url || t.canonical_url || null,
+            snapshot: t.snapshot ?? null,
+          }
+        : {
+            mode: 'ref',
+            source: t.source,
+            trackId: t.id,
+            // En la lista compartida, los refs pertenecen al dueño, no al
+            // visitante: pasamos solo el primario para que el botón opere
+            // sobre la lista del que mira. (Mismo criterio que la fila.)
+            relatedRefs: !isShared && t.refs && t.refs.length > 1 ? t.refs : undefined,
+            canonicalUrl: t.external_url || t.youtube_url || t.canonical_url || null,
+            snapshot: t.snapshot ?? null,
+          },
     }
-  }, [])
+  }, [isShared])
 
   const buildQueue = useCallback((src: UnifiedTrack[]): PreviewTrack[] => {
     const out: PreviewTrack[] = []

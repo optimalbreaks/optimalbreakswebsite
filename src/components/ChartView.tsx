@@ -854,130 +854,6 @@ export default function ChartView({
 
   type PlayAllBundle = PreviewTrack[]
 
-  const buildFeaturedBundle = useCallback((featured: ChartFeaturedTrack[]): PlayAllBundle => {
-    const out: PreviewTrack[] = []
-    for (const p of featured) {
-      let src = ''
-      if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
-      else if (p.sample_url) src = previewAudioSrc(p.sample_url)
-      if (!src) continue
-      const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
-      out.push({
-        rowKey: `chart-row-${p.id}`,
-        src,
-        title: p.title,
-        artist: artists,
-        artworkUrl: p.artwork_url || null,
-        domId: `chart-row-${p.id}`,
-      })
-    }
-    return out
-  }, [])
-
-  const buildTrackBundle = useCallback((tracks: ChartTrack[]): PlayAllBundle => {
-    const out: PreviewTrack[] = []
-    for (const t of tracks) {
-      if (!t.sample_url) continue
-      const artists = Array.isArray(t.artists) ? t.artists.map((a: ChartTrackArtist) => a.name).join(', ') : ''
-      out.push({
-        rowKey: `chart-row-${t.id}`,
-        src: previewAudioSrc(t.sample_url),
-        title: t.title,
-        artist: artists,
-        artworkUrl: t.artwork_url || null,
-        domId: `chart-row-${t.id}`,
-      })
-    }
-    return out
-  }, [])
-
-  const playFromIndex = useCallback((sectionKey: string, bundle: PlayAllBundle, index: number) => {
-    if (bundle.length === 0) return
-    playPreviewQueue(bundle, index, sectionKey)
-  }, [playPreviewQueue])
-
-  const handlePlayAllClick = useCallback((sectionKey: string, bundle: PlayAllBundle) => {
-    if (previewGroupKey === sectionKey) {
-      stopPreview()
-    } else {
-      playFromIndex(sectionKey, bundle, 0)
-    }
-  }, [previewGroupKey, stopPreview, playFromIndex])
-
-  // Ejecuta el autoplay pendiente sobre chart/featured: busca el track por id
-  // en la semana ya identificada, construye el bundle como haría el render, y
-  // llama `playFromIndex` con el índice que le toque. Corre cuando cambia la
-  // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
-  useEffect(() => {
-    if (!pendingPlay) return
-    const { kind, weekDate, trackId } = pendingPlay
-    const week = weeks.find((w) => w.edition.week_date === weekDate)
-    if (!week) return
-
-    if (kind === 'picks') {
-      const sorted = sortFeaturedByArtist(week.featured, lang)
-      const bundle = buildFeaturedBundle(sorted)
-      const rowKey = `chart-row-${trackId}`
-      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
-      if (idx >= 0) {
-        playFromIndex(`picks-${weekDate}`, bundle, idx)
-      }
-    } else {
-      const bundle = buildTrackBundle(week.tracks)
-      const rowKey = `chart-row-${trackId}`
-      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
-      if (idx >= 0) {
-        playFromIndex(`forty-${weekDate}`, bundle, idx)
-      }
-    }
-    setPendingPlay(null)
-  }, [pendingPlay, weeks, lang, playFromIndex, buildFeaturedBundle, buildTrackBundle])
-
-  // Dado un sectionKey, ¿es la cola actualmente activa del provider?
-  const isGroupActive = useCallback((sectionKey: string) => previewGroupKey === sectionKey, [previewGroupKey])
-  // ¿Qué rowKey se está reproduciendo ahora mismo (si coincide con este grupo)?
-  const activeRowKeyFor = useCallback((sectionKey: string): string | null => {
-    if (previewGroupKey !== sectionKey) return null
-    return previewQueue[previewIndex]?.rowKey ?? null
-  }, [previewGroupKey, previewQueue, previewIndex])
-
-  function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle) {
-    if (bundle.length === 0) return undefined
-    const isActive = isGroupActive(sectionKey)
-    const current = isActive ? (previewIndex + 1) : 0
-    const total = isActive ? previewQueue.length : bundle.length
-
-    return (
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, bundle) }}
-        className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
-          ${isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]'}`}
-        style={{ fontFamily: "'Courier Prime', monospace" }}
-        title={isActive ? c.stop_all_title : c.play_all_title}
-        aria-label={isActive ? c.stop_all_title : c.play_all_title}
-      >
-        {isActive ? c.stop_all : c.play_all}
-        {isActive && (
-          <span className="text-[9px] font-bold opacity-80 tabular-nums">
-            {c.play_all_counter.replace('{current}', String(current)).replace('{total}', String(total))}
-          </span>
-        )}
-      </button>
-    )
-  }
-
-  const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
-  // Las ediciones del chart se pueden crear vacías a principios de semana y
-  // rellenarse a mitad de semana. Mientras estén a 0 temas NO se muestran en
-  // «40 Breaks Vitales» para no confundir al visitante (ver conversación
-  // usuario 2026-04-21: semana del 20/04 con 0 temas).
-  const weeksWithTracks = weeks.filter((w) => w.tracks.length > 0)
-  // `latestWeekDate` marca qué semana recibe la insignia «ACTUAL». Lo sacamos
-  // de `weeksWithTracks` (no de `weeks`) para que, si la semana más reciente
-  // está vacía y por tanto oculta, la insignia caiga en la última con datos.
-  const latestWeekDate = weeksWithTracks[0]?.edition.week_date ?? ''
-
   // ---- Grupos canónicos ----
   // Agrupación canónica CRUZADA entre las tres tablas (chart_tracks,
   // chart_featured_tracks, chart_vinyl_tracks). La misma canción puede estar
@@ -991,13 +867,13 @@ export default function ChartView({
   // a `SaveTrackButton` vía `relatedRefs`: así, si el usuario guarda una
   // instancia, las demás también se ven como guardadas; y al desmarcar se
   // borran todas a la vez de `saved_chart_tracks`.
+  // (Definido aquí arriba — antes que los builders y el efecto de autoplay —
+  // para poder pasar `groups` al `<SaveTrackButton>` que pinta la barra
+  // global del reproductor sobre la pista actualmente sonando.)
   const canonicalGroups = useMemo(() => {
     const normUrl = (u: string | null | undefined) => {
       const s = (u || '').trim().toLowerCase()
       if (!s) return ''
-      // YouTube: el ID del vídeo va en la querystring (?v=…), así que
-      // `host + pathname` NO distingue entre dos vídeos distintos. Usamos
-      // el ID como clave.
       const yt = extractYouTubeId(s)
       if (yt) return `yt:${yt}`
       try {
@@ -1055,7 +931,6 @@ export default function ChartView({
 
     Array.from(byKey.values()).forEach((refs) => {
       if (refs.length < 2) return
-      // Dedupe refs idénticas (misma canción repetida en varias semanas pero con mismo id).
       const seen = new Set<string>()
       const unique: CanonRef[] = []
       for (const r of refs) {
@@ -1074,6 +949,165 @@ export default function ChartView({
 
     return { chartByTrack, featuredByTrack, vinylByTrack }
   }, [weeks])
+
+  /**
+   * Cada `PreviewTrack` lleva su propio paquete `save` con `relatedRefs` y
+   * `snapshot`, exactamente igual a lo que recibe el `<SaveTrackButton>` en
+   * la fila visible. Así, el botón "+/✓" del MiniPreviewBar opera sobre la
+   * misma agrupación canónica que la fila origen y se mantiene sincronizado
+   * cuando el usuario marca/desmarca desde una u otra. Recibimos el mapa
+   * canónico como argumento (en vez de cerrarlo en el `useCallback`) para
+   * mantener estos builders puros y reutilizables desde el efecto de
+   * autoplay y desde el render.
+   */
+  const buildFeaturedBundle = useCallback((
+    featured: ChartFeaturedTrack[],
+    groups?: Map<string, CanonRef[]>,
+  ): PlayAllBundle => {
+    const out: PreviewTrack[] = []
+    for (const p of featured) {
+      let src = ''
+      if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
+      else if (p.sample_url) src = previewAudioSrc(p.sample_url)
+      if (!src) continue
+      const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
+      out.push({
+        rowKey: `chart-row-${p.id}`,
+        src,
+        title: p.title,
+        artist: artists,
+        artworkUrl: p.artwork_url || null,
+        domId: `chart-row-${p.id}`,
+        save: {
+          mode: 'ref',
+          source: 'featured',
+          trackId: p.id,
+          relatedRefs: groups?.get(p.id),
+          canonicalUrl: p.link_url || null,
+          snapshot: buildFeaturedSnapshot(p),
+        },
+      })
+    }
+    return out
+  }, [])
+
+  const buildTrackBundle = useCallback((
+    tracks: ChartTrack[],
+    groups?: Map<string, CanonRef[]>,
+  ): PlayAllBundle => {
+    const out: PreviewTrack[] = []
+    for (const t of tracks) {
+      if (!t.sample_url) continue
+      const artists = Array.isArray(t.artists) ? t.artists.map((a: ChartTrackArtist) => a.name).join(', ') : ''
+      out.push({
+        rowKey: `chart-row-${t.id}`,
+        src: previewAudioSrc(t.sample_url),
+        title: t.title,
+        artist: artists,
+        artworkUrl: t.artwork_url || null,
+        domId: `chart-row-${t.id}`,
+        save: {
+          mode: 'ref',
+          source: 'chart',
+          trackId: t.id,
+          relatedRefs: groups?.get(t.id),
+          canonicalUrl: t.beatport_url || null,
+          snapshot: buildChartSnapshot(t),
+        },
+      })
+    }
+    return out
+  }, [])
+
+  const playFromIndex = useCallback((sectionKey: string, bundle: PlayAllBundle, index: number) => {
+    if (bundle.length === 0) return
+    playPreviewQueue(bundle, index, sectionKey)
+  }, [playPreviewQueue])
+
+  const handlePlayAllClick = useCallback((sectionKey: string, bundle: PlayAllBundle) => {
+    if (previewGroupKey === sectionKey) {
+      stopPreview()
+    } else {
+      playFromIndex(sectionKey, bundle, 0)
+    }
+  }, [previewGroupKey, stopPreview, playFromIndex])
+
+  // Ejecuta el autoplay pendiente sobre chart/featured: busca el track por id
+  // en la semana ya identificada, construye el bundle como haría el render, y
+  // llama `playFromIndex` con el índice que le toque. Corre cuando cambia la
+  // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
+  useEffect(() => {
+    if (!pendingPlay) return
+    const { kind, weekDate, trackId } = pendingPlay
+    const week = weeks.find((w) => w.edition.week_date === weekDate)
+    if (!week) return
+
+    if (kind === 'picks') {
+      const sorted = sortFeaturedByArtist(week.featured, lang)
+      const bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack)
+      const rowKey = `chart-row-${trackId}`
+      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
+      if (idx >= 0) {
+        playFromIndex(`picks-${weekDate}`, bundle, idx)
+      }
+    } else {
+      const bundle = buildTrackBundle(week.tracks, canonicalGroups.chartByTrack)
+      const rowKey = `chart-row-${trackId}`
+      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
+      if (idx >= 0) {
+        playFromIndex(`forty-${weekDate}`, bundle, idx)
+      }
+    }
+    setPendingPlay(null)
+    // canonicalGroups sale del propio render y depende de `weeks`; no hace
+    // falta meterlo en deps porque `weeks` ya lo recalcula.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPlay, weeks, lang, playFromIndex, buildFeaturedBundle, buildTrackBundle])
+
+  // Dado un sectionKey, ¿es la cola actualmente activa del provider?
+  const isGroupActive = useCallback((sectionKey: string) => previewGroupKey === sectionKey, [previewGroupKey])
+  // ¿Qué rowKey se está reproduciendo ahora mismo (si coincide con este grupo)?
+  const activeRowKeyFor = useCallback((sectionKey: string): string | null => {
+    if (previewGroupKey !== sectionKey) return null
+    return previewQueue[previewIndex]?.rowKey ?? null
+  }, [previewGroupKey, previewQueue, previewIndex])
+
+  function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle) {
+    if (bundle.length === 0) return undefined
+    const isActive = isGroupActive(sectionKey)
+    const current = isActive ? (previewIndex + 1) : 0
+    const total = isActive ? previewQueue.length : bundle.length
+
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, bundle) }}
+        className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
+          ${isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]'}`}
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+        title={isActive ? c.stop_all_title : c.play_all_title}
+        aria-label={isActive ? c.stop_all_title : c.play_all_title}
+      >
+        {isActive ? c.stop_all : c.play_all}
+        {isActive && (
+          <span className="text-[9px] font-bold opacity-80 tabular-nums">
+            {c.play_all_counter.replace('{current}', String(current)).replace('{total}', String(total))}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
+  // Las ediciones del chart se pueden crear vacías a principios de semana y
+  // rellenarse a mitad de semana. Mientras estén a 0 temas NO se muestran en
+  // «40 Breaks Vitales» para no confundir al visitante (ver conversación
+  // usuario 2026-04-21: semana del 20/04 con 0 temas).
+  const weeksWithTracks = weeks.filter((w) => w.tracks.length > 0)
+  // `latestWeekDate` marca qué semana recibe la insignia «ACTUAL». Lo sacamos
+  // de `weeksWithTracks` (no de `weeks`) para que, si la semana más reciente
+  // está vacía y por tanto oculta, la insignia caiga en la última con datos.
+  const latestWeekDate = weeksWithTracks[0]?.edition.week_date ?? ''
 
   // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
   // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
@@ -1157,7 +1191,7 @@ export default function ChartView({
               const { edition, featured } = bundle
               const isLatest = edition.week_date === weeksWithFeatured[0].edition.week_date
               const featuredSorted = sortFeaturedByArtist(featured, lang)
-              const picksBundle = buildFeaturedBundle(featuredSorted)
+              const picksBundle = buildFeaturedBundle(featuredSorted, canonicalGroups.featuredByTrack)
               const picksKey = `picks-${edition.week_date}`
 
               return (
@@ -1234,7 +1268,7 @@ export default function ChartView({
             const { edition, tracks } = bundle
             const isLatest = edition.week_date === latestWeekDate
             const description = lang === 'es' ? edition.description_es : edition.description_en
-            const fortyBundle = buildTrackBundle(tracks)
+            const fortyBundle = buildTrackBundle(tracks, canonicalGroups.chartByTrack)
             const fortyKey = `forty-${edition.week_date}`
 
             return (
