@@ -10,6 +10,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CookieBanner from '@/components/CookieBanner'
+import ChartsPromoModal from '@/components/ChartsPromoModal'
 import { AuthProvider } from '@/components/AuthProvider'
 import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
@@ -148,6 +149,7 @@ export default async function LangLayout({
             <BackToTop ariaLabel={dict.a11y.backToTop} />
           </DeckAudioProvider>
           <CookieBanner lang={lang} />
+          <ChartsPromoModal lang={lang} dict={dict.charts_promo} />
           <ServiceWorkerRegistration />
           <GoogleAnalytics />
         </AuthProvider>

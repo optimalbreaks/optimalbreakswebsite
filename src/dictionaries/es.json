@@ -418,6 +418,22 @@
       "repeats": "{n} saves en total"
     }
   },
+  "charts_promo": {
+    "kicker": "RADIO DE BREAKS · ONLINE",
+    "title": "¿Aún no has escuchado nuestras listas?",
+    "subtitle": "Los Charts de Optimal Breaks son tu cabina abierta: dale al play, descubre nuevas joyas, guarda tus tracks favoritos y ayuda a marcar el ritmo de la escena breakbeat.",
+    "bullets": [
+      "<strong>40 Breaks Vitales</strong> — chart semanal curado del Top 100 de Beatport.",
+      "<strong>New Releases</strong> — selección semanal de nuevos lanzamientos.",
+      "<strong>Retro Vinyl Picks</strong> — vinilos históricos del breakbeat por año.",
+      "<strong>Top de la Comunidad</strong> — el ranking que sale de tus saves.",
+      "<strong>Reto:</strong> guarda tus 10 imprescindibles en «Mis Tracks»."
+    ],
+    "cta_primary": "Escuchar ahora",
+    "cta_secondary": "Más tarde",
+    "close": "Cerrar",
+    "image_alt": "Cartel fanzine punk brutalist promocionando los charts de breakbeat de Optimal Breaks: 40 Breaks Vitales, chart semanal, new releases, retro vinyl picks y top de la comunidad."
+  },
   "mixes": {
     "title": "Mixes y Sets",
     "subtitle": "Sets esenciales, radio, podcasts y continuidad digital de la escena",

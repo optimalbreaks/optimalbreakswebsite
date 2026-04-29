@@ -516,6 +516,22 @@
       "repeats": "{n} saves total"
     }
   },
+  "charts_promo": {
+    "kicker": "BREAKS RADIO · ONLINE",
+    "title": "Have you heard our lists yet?",
+    "subtitle": "The Optimal Breaks Charts are your open booth: hit play, dig new gems, save your favourite tracks and help shape the rhythm of the breakbeat scene.",
+    "bullets": [
+      "<strong>40 Breaks Vitales</strong> — weekly chart curated from Beatport's Top 100.",
+      "<strong>New Releases</strong> — weekly pick of fresh breakbeat drops.",
+      "<strong>Retro Vinyl Picks</strong> — historic breakbeat vinyl, sorted by year.",
+      "<strong>Community Top</strong> — the ranking that comes from your saves.",
+      "<strong>Challenge:</strong> save your 10 essentials to «My Tracks»."
+    ],
+    "cta_primary": "Listen now",
+    "cta_secondary": "Maybe later",
+    "close": "Close",
+    "image_alt": "Punk brutalist fanzine poster promoting Optimal Breaks' breakbeat charts: 40 Breaks Vitales, weekly chart, new releases, retro vinyl picks and community top."
+  },
   "mixes": {
     "title": "Mixes & Sets",
     "subtitle": "Essential sets, radio, podcasts and the scene’s digital continuity",
