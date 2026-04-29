@@ -221,7 +221,7 @@ Guía detallada: **[`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md)**. Ret
 
 Política: **valoración con estrellas solo en artistas y eventos** (experiencias presenciales). Todo lo demás es **favorito / guardar** binario. **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)**. Migración **`032_event_ratings_attendance_fields.sql`** para campos extra en valoración de eventos.
 
-**Arquitectura de páginas (abril 2026):** antes era un único `/[lang]/dashboard` con pestañas; ahora hay **página de resumen** (`/[lang]/dashboard`: tarjetas + análisis *Breakbeat DNA*) y **una página por sección** bajo `/[lang]/mi-cuenta/<slug>` (`favoritos`, `vistos-en-vivo`, `eventos`, `resenas`, `mixes`, `tracks`, `perfil`). Las URLs antiguas `?tab=xxx` redirigen automáticamente. La shell compartida vive en `src/components/user/UserSectionShell.tsx`.
+**Arquitectura de páginas (abril 2026):** antes era un único `/[lang]/dashboard` con pestañas; ahora hay **página de resumen** (`/[lang]/dashboard`: tarjetas + análisis *Breakbeat DNA*) y **una página por sección** bajo `/[lang]/mi-cuenta/<slug>` (`favoritos`, `vistos-en-vivo`, `eventos`, `resenas`, `mixes`, `tracks`, `almas-gemelas`, `perfil`). Las URLs antiguas `?tab=xxx` redirigen automáticamente. La shell compartida vive en `src/components/user/UserSectionShell.tsx`.
 
 **Mis Tracks (`/[lang]/mi-cuenta/tracks`)**. Nueva sección que permite guardar canciones de cualquiera de los tres bloques de `/charts`:
 
@@ -263,6 +263,10 @@ Helpers y parser en **`src/lib/share-track.ts`** (`buildTrackSharePath`, `buildB
 **Fallback de autoplay.** Chrome/Safari bloquean `audio.play()` con `NotAllowedError` cuando se abre un link compartido en pestaña nueva (no hay gesto del usuario en esa pestaña). `DeckAudioProvider` detecta ese error concreto y activa `previewBlocked`; entonces pinta un overlay a pantalla completa `PreviewAutoplayOverlay` con la portada + título + botón "▶ TOCA PARA ESCUCHAR". Un toque llama a `togglePreview()` ya con gesto válido → el audio arranca y el overlay se cierra solo. Otros errores (URL rota, CORS…) no disparan el overlay.
 
 **Admin Tracks.** `/[lang]/administrator/tracks` agrega las estadísticas de guardado de **todos los usuarios** (top tracks, sellos, artistas) aplicando la misma dedupe canónica que la UI de usuario. Backend: `src/app/api/admin/tracks/route.ts`. Resumen en el dashboard del admin.
+
+**Top Mensual de la Comunidad (`/[lang]/charts`).** Tras la sección *Retro Vinyl Picks*, **`CommunityMonthlyTop`** pide datos a **`GET /api/public/charts/community-monthly`** (mes `YYYY-MM`, `limit` opcional). Ranking por saves del mes con agrupación canónica; el selector de mes solo muestra **meses con al menos un save** cualificado; chips en **`flex-wrap`** (sin scroll horizontal) para que los taps funcionen bien en **PWA iOS**. Detalle en inglés: [README.md — User engagement](./README.md#user-engagement-my-breaks).
+
+**Almas Gemelas (`/[lang]/mi-cuenta/almas-gemelas`).** **`GET /api/breakbeat/soulmates`** (sesión autenticada) calcula similitud **Jaccard** sobre claves canónicas frente a otros usuarios que siguen en el cómputo; umbral mínimo de saves en perfil; recomendaciones cruzadas. Migración **`056_community_top_and_soulmates.sql`**: columna **`profiles.is_tracks_public`** (por defecto activa; si es `FALSE`, el usuario no entra en los cruces ni en el top mensual agregado). Toggle en **`/mi-cuenta/perfil`**. Documentación completa: **`docs/USER_ENGAGEMENT.md`** (*Community Monthly Top*, *Soulmates*).
 
 ### Vistas de listado (grande / compacto / lista)
 
@@ -398,9 +402,11 @@ Renderizada por el provider cuando `previewQueue.length > 0` (antes se montaba e
 - Transporte Anterior `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Siguiente `⏭`.
 - Título + artista (si `domId` está presente y la vista actual tiene esa fila, hacer clic **hace scroll** a ella).
 - Tiempo actual / duración e `índice / total`.
+- **Botón guardar (`+` / ✓)** — mismo `SaveTrackButton` (tamaño `sm`) que aparece en cada fila de chart / Top 10 / Mis Tracks, ahora también a la derecha del contador de tiempo del reproductor. Cada `PreviewTrack` lleva su propio `save` (`mode: 'ref'` para tracks con fila propia en `chart_*_tracks`, `mode: 'url'` para entradas del Top 10 de Beatport que viven solo como JSONB), así el botón opera sobre la misma agrupación canónica que la fila origen y se mantiene sincronizado vía el store compartido `useSavedChartTracks`. Permite añadir/quitar la canción que está sonando sin tener que volver a su fila.
 - `navigator.mediaSession` configurado con metadatos y handlers `play` / `pause` / `previoustrack` / `nexttrack` para auriculares, lockscreen y Bluetooth.
+- **Safe area móvil** — `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 10px)` para que en iPhones los botones de transporte no rocen la home-bar (la `safe-area` por sí sola los dejaba demasiado pegados al borde inferior). El wrapper de la página reserva la misma altura con `pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)]` para que la última fila no quede tapada.
 
-La barra sigue emitiendo `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible.
+La barra sigue emitiendo `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible (su offset también lleva los `+10px` para encajar con la nueva altura).
 
 Detalle técnico y tabla de archivos en [README.md — Global audio system](./README.md#global-audio-system-deckaudioprovider--claimaudio).
 

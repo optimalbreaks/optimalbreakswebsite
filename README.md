@@ -55,9 +55,13 @@ This split helps the site feel both like an archive and like a living magazine w
 
 ## User engagement (My Breaks)
 
-Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated pages under `/[lang]/mi-cuenta/<slug>`): favorites, attendance, saved mixes, **saved chart tracks** (`/mi-cuenta/tracks`), and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars).
+Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated pages under `/[lang]/mi-cuenta/<slug>`): favorites, attendance, saved mixes, **saved chart tracks** (`/mi-cuenta/tracks`), **Soulmates** (`/mi-cuenta/almas-gemelas`), and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars).
 
-**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migrations **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl | beatport_top`, plus `canonical_url` + `snapshot` columns so the artist/label **Beatport Top 10** can be saved cross-source with a single URL-based canonical key).
+**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migrations **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl | beatport_top`, plus `canonical_url` + `snapshot` columns so the artist/label **Beatport Top 10** can be saved cross-source with a single URL-based canonical key). Migration **`056_community_top_and_soulmates.sql`** adds **`profiles.is_tracks_public`** (default `TRUE`; users who set it to `FALSE` are excluded from **Soulmates** affinity matching and from **Community Monthly Top** aggregates) plus **`idx_sct_created`** on `saved_chart_tracks.created_at` for cheap monthly windows.
+
+**Community Monthly Top** (`/[lang]/charts`, section below *Retro Vinyl Picks*): `CommunityMonthlyTop.tsx` calls **`GET /api/public/charts/community-monthly`** (`month=YYYY-MM`, optional `limit`). Same canonical dedupe as the admin Tracks dashboard; month chips list **only months that have at least one qualifying save** (flex-wrap + no horizontal scroll so taps work reliably on iOS PWA).
+
+**Soulmates** (`/[lang]/mi-cuenta/almas-gemelas`): **`GET /api/breakbeat/soulmates`** (authenticated cookie session) computes **Jaccard similarity** over canonical keys vs other users who opted in; returns top matches plus cross-user recommendations. Toggle **public list for Soulmates / Monthly Top** on `/mi-cuenta/perfil`.
 
 **Public shared tracks page.** Every user can copy a public URL from `/mi-cuenta/tracks` (🔗 COMPARTIR button) that points to `/[lang]/u/<userId>/tracks`. Third parties can browse, sort, filter and play that list but cannot edit it; their own SAVE button adds tracks to **their** list (and shows a sign-up modal when logged out). Backed by `/api/public/user-tracks` using the service-role Supabase client to bypass RLS for read-only.
 
@@ -507,8 +511,9 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Scenes | `/[lang]/scenes` | Breakbeat by territory; **three listing views** |
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views**; year / platform / search filters; **lazy embeds** (see *Directory listing views* → Mixes) |
+| Charts | `/[lang]/charts` | *40 Breaks Vitales*, *New Releases*, *Retro Vinyl Picks*; **Community Monthly Top** (ranking of saves across users for a calendar month) appears **after** Retro Vinyl Picks |
 | Dashboard (overview) | `/[lang]/dashboard` | User area landing: summary cards + Breakbeat DNA — requires login |
-| My account — sections | `/[lang]/mi-cuenta/favoritos`, `.../vistos-en-vivo`, `.../eventos`, `.../resenas`, `.../mixes`, `.../tracks`, `.../perfil` | Each user area lives in its own page (no in-page tabs). Legacy `/dashboard?tab=xxx` URLs redirect automatically. |
+| My account — sections | `/[lang]/mi-cuenta/favoritos`, `.../vistos-en-vivo`, `.../eventos`, `.../resenas`, `.../mixes`, `.../tracks`, `.../almas-gemelas`, `.../perfil` | Each user area lives in its own page (no in-page tabs). Legacy `/dashboard?tab=xxx` URLs redirect automatically. Soulmates + privacy toggle: [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). |
 | My Tracks (public) | `/[lang]/u/<userId>/tracks` | Shareable read-only version of a user's saved-tracks list; third-party visitors can play/sort/filter and save tracks to **their** list. |
 | Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
 | Reset password | `/[lang]/reset-password` | New password after recovery email; session created by `/{lang}/auth/confirm` (or repaired via `/{lang}/auth/callback` → confirm) |
@@ -610,9 +615,11 @@ Rendered by the provider whenever `previewQueue.length > 0`. Same visual layout 
 - **Transport** — Previous `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Next `⏭`.
 - **Track info** — title (Unbounded) + artist (Courier Prime). If the current `PreviewTrack` has a `domId` and the visible page contains that row, tapping the info scrolls to it.
 - **Time & counter** — `currentTime / duration` + `index / total`.
+- **Save toggle (`+` / ✓)** — same `SaveTrackButton` (size `sm`) that lives on every chart / Top 10 / My Tracks row, rendered to the right of the time. Each `PreviewTrack` carries its own `save` payload (`mode: 'ref'` for tracks that have a row in `chart_*_tracks`, `mode: 'url'` for Beatport Top 10 entries that only live as JSONB) so the button operates on the same canonical group as the source row and stays in sync via the shared `useSavedChartTracks` store. Lets the user add or remove the song that is currently playing without having to scroll back to its row.
 - **`mediaSession`** — `metadata` (title, artist, artwork) + `play` / `pause` / `previoustrack` / `nexttrack` handlers for hardware media keys, lock screen and Bluetooth.
+- **Mobile safe-area** — `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 10px)` so the transport buttons keep ~10 px of breathing room above the iPhone home-bar even when the system reports 0 px of inset (and the page wrapper reserves the same height with `pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)]` so the last row never sits under the bar).
 
-The bar still dispatches **`OB_CHART_PLAYALL_BAR_EVENT`** (`ob-chart-playall-bar`) so that `BackToTop.tsx` can offset its scroll-to-top button while the bar is visible.
+The bar still dispatches **`OB_CHART_PLAYALL_BAR_EVENT`** (`ob-chart-playall-bar`) so that `BackToTop.tsx` can offset its scroll-to-top button while the bar is visible. `BackToTop`'s offset matches the new height (`bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px)+10px)]` / `7rem+…` on `sm`), so the up-arrow keeps sitting just above the player.
 
 ### `MiniDeckBar` (home deck / mix)
 
@@ -622,11 +629,12 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 | File | Role |
 |------|------|
-| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, `usePreviewAudio` hook, `MiniPreviewBar`, `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT` |
-| `src/components/ChartView.tsx` | Weekly chart (`WeekAccordion`, `ChartTrackRow`, `FeaturedPickRow`). Builds `PreviewTrack[]` bundles and calls `playPreviewQueue`. No local audio. |
-| `src/components/BeatportTopTracks.tsx` | Top 10 accordion. Builds `PreviewTrack[]` and calls `playPreviewQueue`. No local audio. |
-| `src/components/user/TracksSection.tsx` | My Tracks page (own/shared). Play-all + shuffle for the audio subset; YouTube embeds for vinyls rendered inline. |
-| `src/components/BackToTop.tsx` | Listens for `OB_CHART_PLAYALL_BAR_EVENT` to offset the scroll button |
+| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, `usePreviewAudio` hook, `MiniPreviewBar` (with the in-bar save toggle and the iOS safe-area + 10 px padding), `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT`. Also exports the **`PreviewSaveData`** discriminated union (`mode: 'ref'` / `mode: 'url'`) consumed by every queue producer below. |
+| `src/components/ChartView.tsx` | Weekly chart (`WeekAccordion`, `ChartTrackRow`, `FeaturedPickRow`). Builds `PreviewTrack[]` bundles (with `relatedRefs` from `canonicalGroups` baked into each `save`) and calls `playPreviewQueue`. No local audio. |
+| `src/components/BeatportTopTracks.tsx` | Top 10 accordion. Builds `PreviewTrack[]` (URL-mode `save` with `externalUrl` + snapshot) and calls `playPreviewQueue`. No local audio. |
+| `src/components/CommunityMonthlyTop.tsx` | Monthly community top. Builds `PreviewTrack[]` with mixed-mode `save` (URL for `beatport_top` primaries, ref for the rest) and calls `playPreviewQueue`. |
+| `src/components/user/TracksSection.tsx` | My Tracks page (own/shared). Play-all + shuffle for the audio subset; YouTube embeds for vinyls rendered inline. `toPreviewTrack` mirrors the per-row save logic (URL mode for shared `beatport_top`, ref mode with `relatedRefs` on the owner's list). |
+| `src/components/BackToTop.tsx` | Listens for `OB_CHART_PLAYALL_BAR_EVENT` to offset the scroll button (matches the new player height: `safe-area + 10 px`). |
 | `src/app/api/audio-proxy/route.ts` | Server-side proxy for `geo-samples.beatport.com` / `geo-media.beatport.com` (prevents hotlink blocks) |
 
 ---
@@ -655,7 +663,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 - **scenes** — name (EN/ES), country, region, key artists/labels/venues, era, `image_url`
 - **mixes** — title, artist, type, year, duration, embed URL, platform, `image_url`
 - **history_entries** — title, content (EN/ES), section, year range, sort order
-- **profiles**, **favorite_artists**, **favorite_labels**, and related user tables — see `003_user_system.sql` and follow-up migrations
+- **profiles**, **favorite_artists**, **favorite_labels**, and related user tables — see `003_user_system.sql` and follow-up migrations; **`056_community_top_and_soulmates.sql`** adds **`is_tracks_public`** on **`profiles`** for Soulmates / Monthly Top opt-out
 
 ---
 
@@ -678,6 +686,7 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `010_raveart_organizations.sql` | Table **`organizations`**, FKs on **`labels.organization_id`** and **`events.promoter_organization_id`**, RLS read policy; seed **Raveart**, **Raveart Records**, first **Summer/Winter** (+ **Summer 2026** placeholder) |
 | `011_raveart_gallery_events.sql` | More **Raveart** events to match [galería oficial](https://www.raveart.es/galeria/) (**Winter 2019**, **Winter 2022**, **Retro Halloween** 2022–2025); SQL comment for filling **`image_url`** after Storage upload |
 | `046_beatport_top_tracks.sql` | **`artists`** and **`labels`**: `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, default `[]`), `beatport_top_tracks_updated_at` — powers the **Beatport Top 10** accordion on profile pages |
+| `056_community_top_and_soulmates.sql` | **`profiles.is_tracks_public`** (default `TRUE`; when `FALSE`, user excluded from **Soulmates** + **Community Monthly Top** aggregates); **`idx_sct_created`** on **`saved_chart_tracks.created_at`** |
 | `057_chart_featured_tracks_release_date.sql` | **`chart_featured_tracks.release_date DATE`** + index. Stores **full publish day** (YYYY-MM-DD) from Beatport / Bandcamp alongside `release_year`; rendered everywhere via `formatTrackReleaseDisplay` (see below) |
 
 ---
