@@ -35,6 +35,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Scratchpads del agente y listas semanales sueltas en la raíz
+# (logs de scripts puntuales, notas de trabajo, drafts no canónicos)
+tmp-*.log
+tmp-*.txt
+tmp-*.json
+listaseman*.txt
+listasemana*.txt
+
 # IDE
 .vscode/
 .idea/
