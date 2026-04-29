@@ -26,6 +26,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
+ *   node scripts/enriquecer-evento.mjs --patch-solaris-fest-matalascanas-2026
  *   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
  *   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
  *   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
@@ -1641,6 +1642,87 @@ async function runPatchSafariBreakNight2026(sb) {
   console.log('[patch-safari-break-night-2026] OK:', after)
 }
 
+const SOLARIS_FEST_MATALASCANAS_2026_SLUG = 'solaris-fest-matalascanas-2026'
+const SOLARIS_FEST_MATALASCANAS_TICKETS =
+  'https://www.monsterticket.com/evento/solaris-fest-matalascanas'
+const SOLARIS_FEST_MATALASCANAS_IMAGE =
+  '/images/events/solaris-fest-matalascanas-2026.webp'
+
+const SOLARIS_FEST_MATALASCANAS_2026_LINEUP = [
+  'Anuschka',
+  'Sekret Shadow',
+  'Hankook',
+  'Perfect Kombo',
+  'Basstyler',
+  'The BJ Crew',
+  'Dany BS',
+  'Nileb vs Olmedbreak',
+  'Benjamin VJ - LJ',
+]
+
+const SOLARIS_FEST_MATALASCANAS_2026_ROW = {
+  name: 'Solaris Fest',
+  description_en:
+    'Solaris Fest at Centro de Ocio Surfasaurus in Matalascañas (Huelva province), about 100 m from Playa de Doñana: breakbeat festival with a summer vibe. Saturday 20 June 2026, doors 17:00-close 03:00. Line-up poster: Anuschka, Sekret Shadow, Hankook, Perfect Kombo, Basstyler, The BJ Crew, Dany BS; guest set Nileb vs Olmedbreak; visuals and lighting Benjamin VJ - LJ. Two parking areas; food and drink outlets on site. Official sale on MonsterTicket (advance 15 euros per listing when last checked); non-named tickets and 18+ as stated on ticketing. Venue address Sector Somormujo 31 (per MonsterTicket).',
+  description_es:
+    'Solaris Fest en el Centro de Ocio Surfasaurus de Matalascañas (Huelva), a unos 100 metros de la playa de Doñana: festival de break beat con vibes de verano. Sábado 20 de junio de 2026, de 17:00 a 03:00 h (apertura y cierre según comunicado oficial). Cartel: Anuschka, Sekret Shadow, Hankook, Perfect Kombo, Basstyler, The BJ Crew y Dany BS; invitados Nileb vs Olmedbreak; vídeo e iluminación con Benjamin VJ - LJ. Dos zonas de parking y bares y zonas para comer en el recinto. Venta en MonsterTicket: entrada anticipada 15 euros según la ficha; entradas no nominativas; prohibido el acceso a menores de 18 años según MonsterTicket. Dirección: Sector Somormujo 31, Matalascañas.',
+  event_type: 'festival',
+  date_start: '2026-06-20',
+  date_end: null,
+  location: 'Centro de Ocio Surfasaurus, Sector Somormujo 31, Matalascañas, Huelva, Spain',
+  city: 'Matalascañas',
+  country: 'Spain',
+  venue: 'Centro de Ocio Surfasaurus',
+  address: 'Sector Somormujo, 31, Matalascañas, Huelva',
+  website: null,
+  tickets_url: SOLARIS_FEST_MATALASCANAS_TICKETS,
+  doors_open: '17:00',
+  doors_close: '03:00',
+  image_url: SOLARIS_FEST_MATALASCANAS_IMAGE,
+  lineup: SOLARIS_FEST_MATALASCANAS_2026_LINEUP,
+  tags: [
+    'solaris fest',
+    'matalascañas',
+    'huelva',
+    'breakbeat',
+    'surfasaurus',
+    'doñana',
+    'monsterticket',
+    '2026',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchSolarisFestMatalascanas2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', SOLARIS_FEST_MATALASCANAS_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-solaris-fest-matalascanas-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: SOLARIS_FEST_MATALASCANAS_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...SOLARIS_FEST_MATALASCANAS_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, address')
+    .eq('slug', SOLARIS_FEST_MATALASCANAS_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-solaris-fest-matalascanas-2026] OK:', after)
+}
+
 const BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG = 'break-the-flow-w-terrie-kynd-2026'
 const BREAK_THE_FLOW_TICKETS =
   'https://www.monsterticket.com/evento/break-the-flow-w-terrie-kynd'
@@ -2622,6 +2704,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-solaris-fest-matalascanas-2026')) {
+    await runPatchSolarisFestMatalascanas2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-break-the-flow-w-terrie-kynd-2026')) {
     await runPatchBreakTheFlowWTerrieKynd2026(sb)
     return
@@ -2729,6 +2816,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-malaga-is-break-3-aniversario-frequency-break-2026
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
+  node scripts/enriquecer-evento.mjs --patch-solaris-fest-matalascanas-2026
   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
