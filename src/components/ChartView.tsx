@@ -23,7 +23,7 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
-import { parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, isBeatportArtworkUrl } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
@@ -343,7 +343,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-              <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+              <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(pick.artwork_url)} />
             </div>
           ) : null}
 
@@ -419,7 +419,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {track.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(track.artwork_url)} />
             </div>
           ) : null}
 
@@ -492,7 +492,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, we
 
           {track.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(track.artwork_url)} />
             </div>
           ) : null}
 
