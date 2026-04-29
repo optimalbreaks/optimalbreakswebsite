@@ -631,11 +631,23 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 ---
 
+## Editorial vetoes (entities **not** to create)
+
+A short, hard-coded list of names that look like a label or artist on Beatport / Bandcamp but **must not** become a profile on Optimal Breaks:
+
+| Name | Why | What to do |
+|------|-----|------------|
+| **DistroKid** (Beatport label id `66449`) | Mass-market **distributor / aggregator**, not a curated breakbeat label. Showing it as a label dilutes the catalog and its "top tracks" are random genres. | Leave the string `"DistroKid"` on individual chart picks (it appears in many JSON picks because Beatport reports it as the label of self-published tracks) but **do not** run `db:label`, `db:label:agent` or any UPSERT that would create a row in `labels` for it. The chart UI shows the text; the Beatport button still links to the track; no `/labels/distrokid` profile is generated. |
+
+Add to this table only after explicit user confirmation. The aim is to keep a small, discoverable list rather than a separate document.
+
+---
+
 ## Database Schema
 
 Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
-- **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
+- **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs, **each with `release_date YYYY-MM-DD`** when scrapeable), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
 - **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`). Same optional Beatport columns as artists (`046`).
 - **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are **created manually** (admin UI or Cursor agent) and then **enriched** with `npm run db:events:enrich -- <slug>` (SerpAPI + OpenAI fill missing fields). Enricher system prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt) (see [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md))
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
@@ -666,6 +678,26 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `010_raveart_organizations.sql` | Table **`organizations`**, FKs on **`labels.organization_id`** and **`events.promoter_organization_id`**, RLS read policy; seed **Raveart**, **Raveart Records**, first **Summer/Winter** (+ **Summer 2026** placeholder) |
 | `011_raveart_gallery_events.sql` | More **Raveart** events to match [galería oficial](https://www.raveart.es/galeria/) (**Winter 2019**, **Winter 2022**, **Retro Halloween** 2022–2025); SQL comment for filling **`image_url`** after Storage upload |
 | `046_beatport_top_tracks.sql` | **`artists`** and **`labels`**: `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, default `[]`), `beatport_top_tracks_updated_at` — powers the **Beatport Top 10** accordion on profile pages |
+| `057_chart_featured_tracks_release_date.sql` | **`chart_featured_tracks.release_date DATE`** + index. Stores **full publish day** (YYYY-MM-DD) from Beatport / Bandcamp alongside `release_year`; rendered everywhere via `formatTrackReleaseDisplay` (see below) |
+
+---
+
+## Track release dates (full day vs year)
+
+All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, Beatport Top 10 on artist/label profiles, **My Tracks** own + public, Community Monthly Top, Soulmates recommendations, admin Tracks dashboard, ⌘K search) display the **full publish date** in `YYYY-MM-DD` when available, falling back to the year only when the day is unknown.
+
+- **Storage:** `chart_tracks.release_date`, `chart_featured_tracks.release_date` (migration **`057`**), and per-track `release_date` inside the JSONB columns `artists.beatport_top_tracks` / `labels.beatport_top_tracks`. `chart_vinyl_tracks` keeps year only (vinyls rarely have a sourceable day). `saved_chart_tracks.snapshot` carries the field for `beatport_top` rows so My Tracks renders the day even after the source row is gone.
+- **Helpers (`src/lib/share-track.ts`):**
+  - `formatTrackReleaseDisplay(release_date, release_year)` — returns `YYYY-MM-DD` if valid, else the year as string, else `null`. Use this **everywhere** a song row prints its date.
+  - `effectiveReleaseYear(release_date, release_year)` — extracts the year for filters / sorting fallbacks.
+  - `releaseSortTimestampMs(release_date, release_year)` — UTC ms for "newest first" ordering on `My Tracks → release` (day precision when present, Jan 1 of the year otherwise).
+  - `isBeatportArtworkUrl(url)` — kept around even though the live site uses Vercel's image optimizer (Pro plan); occasionally useful when wanting to bypass the proxy for small thumbnails.
+- **Scraping:**
+  - Beatport: `__NEXT_DATA__` → `publish_date` / `new_release_date`.
+  - Bandcamp: `data-tralbum` → `album_release_date` / `release_date`.
+  - Used by `chart-featured-upsert.mjs` (flag **`--enrich-release-dates`** + optional `--write-json` to persist), `chart-40-breaks.mjs`, `beatport-top-tracks.mjs` and `backfill-new-releases-from-40breaks.mjs`.
+- **Backfill of saved snapshots:** `scripts/saved-tracks-backfill.mjs` includes `release_date` in its **additive merge** — for every existing `saved_chart_tracks.snapshot` it fills `release_date` (and other missing fields) without overwriting user-visible data. Flag **`--scrape-beatport`** falls back to scraping Beatport directly for `beatport_top` saves whose snapshot has no date and whose source artist/label JSONB no longer carries the track.
+- **CSS rule:** in every component the date span uses `whitespace-nowrap` (so `2026-04-27` does not break across `2026-` / `04-27`) inside an info paragraph that uses `break-words`. Removing `sm:truncate` was deliberate — title + label + date now wrap to a second line on narrow profile / sidebar columns instead of clipping.
 
 ---
 

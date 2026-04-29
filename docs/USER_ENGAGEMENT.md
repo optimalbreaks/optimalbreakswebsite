@@ -235,3 +235,14 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.
+- `supabase/migrations/057_chart_featured_tracks_release_date.sql` — `chart_featured_tracks.release_date DATE` (full publish day for *New Releases*; complements the existing `release_year`). The same field also lives in `chart_tracks.release_date` and inside `artists.beatport_top_tracks` / `labels.beatport_top_tracks` JSONB so every list (including *My Tracks*, the public shared list, Community Monthly Top, Soulmates recommendations and admin stats) can render `YYYY-MM-DD`.
+
+### Release-date display in saved snapshots
+
+Every consumer of `saved_chart_tracks` (My Tracks own + public, Community Monthly Top, Soulmates recommendations, admin Tracks dashboard) renders the full publish day via the helper **`formatTrackReleaseDisplay(release_date, release_year)`** in `src/lib/share-track.ts`. The fallbacks are explicit:
+
+1. `release_date` matches `YYYY-MM-DD` → render `YYYY-MM-DD`.
+2. Else `release_year` → render the year as string.
+3. Else `null` → render nothing.
+
+`saved_chart_tracks.snapshot` carries `release_date` for `beatport_top` saves so the date survives even after the source row is rotated out of `artists.beatport_top_tracks`. The reverse path (filling `release_date` on **pre-existing** snapshots) is `scripts/saved-tracks-backfill.mjs`, which performs an **additive merge** (`mergeSnapshotAdditive`): only missing fields get written, user-visible metadata is never overwritten. Flag **`--scrape-beatport`** scrapes Beatport directly for `beatport_top` saves whose snapshot lacks the date and whose origin artist/label JSONB no longer carries the track. Sorting on `My Tracks → release` is deterministic via **`releaseSortTimestampMs`** (UTC milliseconds: day precision when known, Jan 1 of the year otherwise) so two saves added the same week sort by **release date**, not by `created_at`.
