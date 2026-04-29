@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { buildBeatportSharePath, parsePlayParam, formatTrackReleaseDisplay, isBeatportArtworkUrl } from '@/lib/share-track'
+import { buildBeatportSharePath, parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
@@ -274,7 +274,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
 
                       {t.artwork_url && (
                         <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(t.artwork_url)} />
+                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
                         </div>
                       )}
 

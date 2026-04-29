@@ -20,7 +20,7 @@ import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvid
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
-import { formatTrackReleaseDisplay, effectiveReleaseYear, releaseSortTimestampMs, isBeatportArtworkUrl } from '@/lib/share-track'
+import { formatTrackReleaseDisplay, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -1027,7 +1027,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     {t.artwork_url ? (
                       <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(t.artwork_url)} />
+                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
                       </div>
                     ) : null}
 

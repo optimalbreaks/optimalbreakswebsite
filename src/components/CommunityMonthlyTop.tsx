@@ -17,7 +17,7 @@ import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { formatTrackReleaseDisplay, isBeatportArtworkUrl } from '@/lib/share-track'
+import { formatTrackReleaseDisplay } from '@/lib/share-track'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -375,7 +375,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
                       {t.artwork_url ? (
                         <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={isBeatportArtworkUrl(t.artwork_url)} />
+                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
                         </div>
                       ) : null}
 

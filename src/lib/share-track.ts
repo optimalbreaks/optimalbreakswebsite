@@ -87,24 +87,6 @@ export function parsePlayParam(
   return null
 }
 
-/**
- * `true` si la URL apunta al CDN de imágenes de Beatport. Cualquier <Image>
- * con un artwork de ese host debe ir con `unoptimized` para no consumir cuota
- * del optimizador de Vercel: son thumbnails de 56-64 px (no se gana nada
- * optimizándolos) y, sobre todo, en cuanto la cuota mensual del proyecto se
- * agota Vercel devuelve HTTP 402 a las imágenes nuevas y los thumbnails
- * recién añadidos a /charts (o a los Top 10 de fichas) salen vacíos.
- */
-export function isBeatportArtworkUrl(url: string | null | undefined): boolean {
-  if (!url) return false
-  try {
-    const host = new URL(url).hostname.toLowerCase()
-    return host === 'geo-media.beatport.com'
-  } catch {
-    return false
-  }
-}
-
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
 export function formatTrackReleaseDisplay(
   releaseDate: string | null | undefined,

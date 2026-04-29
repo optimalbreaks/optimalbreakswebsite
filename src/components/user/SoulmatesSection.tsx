@@ -15,7 +15,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useProfile } from '@/hooks/useUserData'
-import { formatTrackReleaseDisplay, isBeatportArtworkUrl } from '@/lib/share-track'
+import { formatTrackReleaseDisplay } from '@/lib/share-track'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -359,7 +359,7 @@ export default function SoulmatesSection({ lang }: Props) {
                   </span>
                   {t.artwork_url && (
                     <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                      <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="56px" unoptimized={isBeatportArtworkUrl(t.artwork_url)} />
+                      <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="56px" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">

@@ -154,50 +154,6 @@
       "note_es": "",
       "sort_order": 7,
       "release_date": "2026-04-27"
-    },
-    {
-      "title": "Street Rider",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DOPE-M"
-        }
-      ],
-      "label": "SLANGANG BEATS RECORDS",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/street-rider/28228018",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c734e607-e0ec-4037-9d61-ccd476ced279.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/70f156e9-628e-4fa1-854c-72001566d46f.LOFI.mp3",
-      "bpm": 130,
-      "music_key": "C Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 8,
-      "release_date": "2026-04-28"
-    },
-    {
-      "title": "All Night",
-      "mix_name": "Extended",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/all-night-extended/28311094",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0731737-989f-4bc5-9787-c3f954839c1b.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/4c24e430-c452-454a-a7dd-2818d5c48501.LOFI.mp3",
-      "bpm": 136,
-      "music_key": "Eb Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 9,
-      "release_date": "2026-05-01"
     }
   ]
 }
