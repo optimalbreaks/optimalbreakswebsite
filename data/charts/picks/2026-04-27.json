@@ -154,6 +154,28 @@
       "note_es": "",
       "sort_order": 7,
       "release_date": "2026-04-27"
+    },
+    {
+      "title": "Out",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Mutantbreakz"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/out/27816091",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3b647056-ad07-4853-a4e6-284ebc329082.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c26fd57b-ebd9-47f5-947d-501b8a4bfe37.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8,
+      "release_date": "2026-04-30"
     }
   ]
 }
