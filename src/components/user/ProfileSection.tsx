@@ -33,7 +33,7 @@ export default function ProfileSection({ lang }: { lang: string }) {
     setEditing(false)
   }
 
-  // Toggle de visibilidad para Almas Gemelas / Top mensual.
+  // Toggle de visibilidad para Almas Gemelas / Top de la Comunidad.
   // Si la columna aún no existe en BD (migración no aplicada) tratamos
   // `undefined` como `true` (default del DEFAULT en SQL) para no romper
   // el render. Al guardar mandamos boolean explícito.
@@ -121,16 +121,16 @@ export default function ProfileSection({ lang }: { lang: string }) {
               style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}
             >
               {es
-                ? 'Lista pública para Almas Gemelas y Top Mensual'
-                : 'Public list for Soulmates and Monthly Top'}
+                ? 'Lista pública para Almas Gemelas y Top de la Comunidad'
+                : 'Public list for Soulmates and Community Top'}
             </span>
             <span
               className="block text-[12px] text-[var(--ink)]/60 mt-1"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
               {es
-                ? 'Al estar activado, tus saves de "Mis Tracks" se cuentan en el Top Mensual de la Comunidad y permiten calcular tus Almas Gemelas. Si lo desactivas, tu lista detallada en /u/<id>/tracks sigue siendo accesible vía link directo, pero no apareces en cruces de afinidad ni en rankings agregados.'
-                : 'When enabled, your saves count toward the community Monthly Top and feed Soulmates affinity. When disabled, your detailed list at /u/<id>/tracks is still reachable via direct link, but you’re excluded from affinity matches and aggregate rankings.'}
+                ? 'Al estar activado, tus saves de "Mis Tracks" se cuentan en el Top de la Comunidad y permiten calcular tus Almas Gemelas. Si lo desactivas, tu lista detallada en /u/<id>/tracks sigue siendo accesible vía link directo, pero no apareces en cruces de afinidad ni en rankings agregados.'
+                : 'When enabled, your saves count toward the Community Top and feed Soulmates affinity. When disabled, your detailed list at /u/<id>/tracks is still reachable via direct link, but you’re excluded from affinity matches and aggregate rankings.'}
             </span>
           </span>
         </label>

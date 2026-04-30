@@ -1,26 +1,31 @@
 // ============================================
-// OPTIMAL BREAKS — Top mensual de la comunidad
+// OPTIMAL BREAKS — Top de la comunidad (all-time)
 // ----------------------------------------------
-// Devuelve el ranking de canciones más añadidas a "Mis Tracks" (tabla
-// `saved_chart_tracks`) durante un mes calendario concreto. Reutiliza la
-// lógica de claves canónicas del endpoint admin (`/api/admin/tracks`) para
-// que las tres tablas de origen (chart_tracks, chart_featured_tracks,
-// chart_vinyl_tracks) y los saves estilo `beatport_top` se agreguen como
-// la misma canción si comparten URL canónica.
+// Devuelve el ranking acumulado de canciones más añadidas a "Mis Tracks"
+// (tabla `saved_chart_tracks`) por toda la comunidad, sin ventana temporal.
+// Reutiliza la lógica de claves canónicas del endpoint admin
+// (`/api/admin/tracks`) para que las cuatro fuentes de origen
+// (chart_tracks, chart_featured_tracks, chart_vinyl_tracks y los saves
+// estilo `beatport_top` con metadatos en snapshot) se agreguen como la
+// misma canción si comparten URL canónica.
 //
-// Uso: GET /api/public/charts/community-monthly[?month=YYYY-MM][&limit=N]
+// Uso: GET /api/public/charts/community-monthly[?limit=N]
 //
-//   - month: opcional. Si falta, se usa el mes actual (UTC).
-//   - limit: opcional, 5–100 (default 30).
+//   - limit: opcional, 5–100 (default 40).
 //
 // Respuesta:
 //   {
-//     month: 'YYYY-MM',
-//     range: { from: ISO, to: ISO },
+//     scope: 'all_time',
 //     totals: { saves, unique_tracks, unique_users },
-//     top_tracks: TopTrack[],
-//     available_months: [{ month: 'YYYY-MM', saves: number }, ...] // últimos 24 meses con actividad
+//     top_tracks: TopTrack[]
 //   }
+//
+// Nota histórica: el endpoint y el archivo mantienen el slug
+// `community-monthly` por compatibilidad — antes este top era mensual y
+// se cambió a all-time tras detectar que la ventana de mes calendario
+// secaba el ranking en cuanto la base de usuarios «agotaba» el catálogo
+// del mes (ver decisión en chat). El selector de mes y el histograma
+// `available_months` desaparecieron con ese cambio.
 //
 // Bypassa RLS vía service-role porque `saved_chart_tracks` solo permite
 // leer los propios y aquí necesitamos ver los de toda la comunidad.
@@ -107,24 +112,6 @@ function normalizeUrl(u: string | null | undefined): string {
   }
 }
 
-const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/
-
-function parseMonth(input: string | null): { month: string; from: string; to: string } {
-  // Devuelve [from, to) como ISO en UTC.
-  const now = new Date()
-  let year = now.getUTCFullYear()
-  let monthZeroIndex = now.getUTCMonth()
-  if (input && MONTH_RE.test(input)) {
-    const [y, m] = input.split('-').map(Number)
-    year = y
-    monthZeroIndex = m - 1
-  }
-  const from = new Date(Date.UTC(year, monthZeroIndex, 1, 0, 0, 0, 0))
-  const to = new Date(Date.UTC(year, monthZeroIndex + 1, 1, 0, 0, 0, 0))
-  const monthStr = `${year}-${String(monthZeroIndex + 1).padStart(2, '0')}`
-  return { month: monthStr, from: from.toISOString(), to: to.toISOString() }
-}
-
 interface Aggregate {
   canonical_key: string
   title: string
@@ -150,9 +137,7 @@ interface Aggregate {
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
-  const monthParam = url.searchParams.get('month')
-  const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 30))
-  const { month, from, to } = parseMonth(monthParam)
+  const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 40))
 
   let sb: ReturnType<typeof createServiceSupabase>
   try {
@@ -161,22 +146,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Servidor no configurado' }, { status: 503 })
   }
 
-  // Saves del mes solicitado (excluimos a perfiles privados: ese flag manda
-  // sobre todo el cómputo de afinidad y, por consistencia, también ocultamos
-  // a esos usuarios del Top mensual).
-  const { data: savedData, error: savedErr } = await sb
-    .from('saved_chart_tracks')
-    .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
-    .gte('created_at', from)
-    .lt('created_at', to)
-  if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
-
-  const savedRaw = ((savedData as unknown) as SavedRow[]) || []
-
-  // Lista global de perfiles "privados" (is_tracks_public = false) para
-  // excluirlos tanto del top mensual como del histograma de meses
-  // disponibles. La consulta es barata porque la mayoría de perfiles deja
-  // el flag en true (default).
+  // Lista global de perfiles "privados" (is_tracks_public = false): se
+  // excluyen del cómputo del top, igual que en el cálculo de afinidad.
   const { data: privateProfiles } = await sb
     .from('profiles')
     .select('id')
@@ -185,39 +156,29 @@ export async function GET(request: NextRequest) {
     ((privateProfiles as { id: string }[] | null) ?? []).map((p) => p.id),
   )
 
-  const saved = savedRaw.filter((s) => !privateSet.has(s.user_id))
-
-  // Histograma de meses con actividad (últimos 24 meses) para construir el
-  // selector en el cliente. Excluye también a perfiles privados.
-  const sinceISO = (() => {
-    const d = new Date()
-    d.setUTCDate(1)
-    d.setUTCMonth(d.getUTCMonth() - 23)
-    d.setUTCHours(0, 0, 0, 0)
-    return d.toISOString()
-  })()
-  const { data: bucketRows } = await sb
-    .from('saved_chart_tracks')
-    .select('user_id, created_at')
-    .gte('created_at', sinceISO)
-  const bucketCounts = new Map<string, number>()
-  for (const r of (bucketRows as { user_id: string; created_at: string | null }[] | null) ?? []) {
-    if (!r.created_at) continue
-    if (privateSet.has(r.user_id)) continue
-    const m = r.created_at.slice(0, 7)
-    bucketCounts.set(m, (bucketCounts.get(m) || 0) + 1)
+  // Saves de toda la historia. Paginamos a mano para no toparnos con el
+  // límite por defecto del cliente Supabase (1000) cuando la tabla crezca.
+  const PAGE = 1000
+  const savedRaw: SavedRow[] = []
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await sb
+      .from('saved_chart_tracks')
+      .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+      .order('created_at', { ascending: true })
+      .range(offset, offset + PAGE - 1)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const rows = ((data as unknown) as SavedRow[]) || []
+    savedRaw.push(...rows)
+    if (rows.length < PAGE) break
   }
-  const available_months = Array.from(bucketCounts.entries())
-    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-    .map(([m, saves]) => ({ month: m, saves }))
+
+  const saved = savedRaw.filter((s) => !privateSet.has(s.user_id))
 
   if (saved.length === 0) {
     return NextResponse.json({
-      month,
-      range: { from, to },
+      scope: 'all_time',
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
-      available_months,
     })
   }
 
@@ -509,7 +470,6 @@ export async function GET(request: NextRequest) {
       const hasRd = (v: string | null) => !!(v && /^\d{4}-\d{2}-\d{2}$/.test(v.trim().slice(0, 10)))
       if (!hasRd(existing.release_date) && hasRd(meta.release_date)) existing.release_date = meta.release_date
       if (!existing.sample_url && meta.sample_url) existing.sample_url = meta.sample_url
-      // Preferir un primary que sea reproducible y enlazable a /charts.
       if (
         (existing.primary.source === 'beatport_top' && meta.source !== 'beatport_top') ||
         (existing.playback_kind === 'youtube' && meta.playback_kind !== 'youtube')
@@ -523,12 +483,14 @@ export async function GET(request: NextRequest) {
   const aggregates = Array.from(aggByKey.values())
   aggregates.forEach((a) => { a.unique_users = a._users.size })
   // Ordenamos por usuarios únicos primero (un mismo usuario no infla el ranking
-  // re-guardando la canción en otra fuente), después por save_count y por
-  // título alfabético.
+  // re-guardando la canción en otra fuente), después por save_count, después
+  // por save más reciente (desempate que premia ligeramente lo que sigue
+  // moviéndose) y finalmente por título alfabético.
   aggregates.sort(
     (a, b) =>
       b.unique_users - a.unique_users ||
       b.save_count - a.save_count ||
+      (b.last_saved_at || '').localeCompare(a.last_saved_at || '') ||
       (a.title || '').localeCompare(b.title || ''),
   )
 
@@ -569,10 +531,8 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
-    month,
-    range: { from, to },
+    scope: 'all_time',
     totals,
     top_tracks,
-    available_months,
   })
 }

@@ -1414,10 +1414,10 @@ export default function ChartView({
       )}
 
       {/* ================================================================ */}
-      {/* SECTION 4 — Top Mensual de la Comunidad                          */}
+      {/* SECTION 4 — Top de la Comunidad (all-time)                       */}
       {/* Las canciones más añadidas a "Mis Tracks" por toda la comunidad.  */}
-      {/* Hace fetch a /api/public/charts/community-monthly y permite cambiar */}
-      {/* de mes con un selector. Ver `CommunityMonthlyTop.tsx`.            */}
+      {/* Hace fetch a /api/public/charts/community-monthly (slug histórico, */}
+      {/* ahora devuelve all-time). Ver `CommunityMonthlyTop.tsx`.          */}
       {/* ================================================================ */}
       <CommunityMonthlyTop lang={lang} dict={dict} />
 

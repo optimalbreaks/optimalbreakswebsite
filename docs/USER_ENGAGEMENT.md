@@ -20,7 +20,7 @@ Originally "My Breaks" was a single page at `/[lang]/dashboard` with in-page tab
 | `/[lang]/mi-cuenta/mixes` | Saved mixes |
 | `/[lang]/mi-cuenta/tracks` | **My Tracks** (see dedicated section below) |
 | `/[lang]/mi-cuenta/almas-gemelas` | **Soulmates** — top 10 users with highest affinity + recommendations (see *Soulmates* section below) |
-| `/[lang]/mi-cuenta/perfil` | Profile editing, sign-out, **privacy toggle** for Soulmates / Monthly Top |
+| `/[lang]/mi-cuenta/perfil` | Profile editing, sign-out, **privacy toggle** for Soulmates / Community Top |
 | `/[lang]/u/<userId>/tracks` | Public, read-only version of another user's My Tracks (shareable URL) |
 
 Legacy `/[lang]/dashboard?tab=xxx` URLs redirect to the new ones via `DashboardLegacyRedirect`.
@@ -168,14 +168,14 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 
 ---
 
-## Community Monthly Top (public)
+## Community Top (public, all-time)
 
-Public, on-demand ranking of the most-saved tracks for a calendar month, rendered inside `ChartView` **after** *Retro Vinyl Picks*.
+Public, on-demand ranking of the most-saved tracks **across all time**, rendered inside `ChartView` **after** *Retro Vinyl Picks*. Originally launched as a monthly window; switched to an all-time accumulator after we noticed that calendar months kept "drying up" the ranking once active users had emptied that month's catalogue into their lists. The slug `community-monthly` is preserved for compatibility — both the endpoint and the component file keep the historical name even though they no longer expose any monthly window.
 
-- **Endpoint:** `GET /api/public/charts/community-monthly?month=YYYY-MM&limit=N` (default `month` = current UTC month, `limit` 30, max 100).
-- **Component:** `src/components/CommunityMonthlyTop.tsx`. Month chips list **only calendar months that have at least one qualifying save** (histogram from the API), plus the currently selected month if it would otherwise be missing (e.g. empty current month). **`flex-wrap`** (no horizontal scroll container) so taps register reliably on **iOS / PWA** — horizontal `overflow-x-auto` was dropping clicks when the finger moved slightly. Play-all of available previews and `SaveTrackButton` per row so a logged-in user can add the track to their own list with one click. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
-- **Aggregation:** reads every row of `saved_chart_tracks` whose `created_at` falls inside the requested month, hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Sorting: **unique users first**, then total saves, then alphabetical.
-- **Privacy:** users with `profiles.is_tracks_public = false` are excluded from both the ranking and the available-months histogram. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index for monthly windowing.
+- **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100). No `month` parameter — the response is always the all-time aggregate.
+- **Component:** `src/components/CommunityMonthlyTop.tsx`. Single-section layout (no month selector): header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row so a logged-in user can add the track to their own list with one click. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
+- **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Sorting: **unique users first**, then total saves, then **most-recent save** (light tie-break that nudges fresher tracks above stagnant ones with the same vote count), then alphabetical.
+- **Privacy:** users with `profiles.is_tracks_public = false` are excluded from the ranking. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
 
 ---
 
@@ -190,7 +190,7 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
   - The user must have `profiles.is_tracks_public = TRUE` themselves (otherwise the endpoint returns `disabled: true` + reason `'private'` and the UI renders an "Activate" button that flips the flag).
   - Only candidates with `is_tracks_public = TRUE` are considered.
   - The detailed list is **never** included in the soulmates payload — only counts, percentages and a small sample of common-track titles. Anyone wanting the full list still has to follow the public link `/u/<id>/tracks` (which is itself opt-out via the same flag, since it's already public-by-link only).
-- **UI controls:** the toggle lives on `/[lang]/mi-cuenta/perfil` ("Lista pública para Almas Gemelas y Top Mensual"). It writes `profiles.is_tracks_public` via `useProfile().update`.
+- **UI controls:** the toggle lives on `/[lang]/mi-cuenta/perfil` ("Lista pública para Almas Gemelas y Top de la Comunidad"). It writes `profiles.is_tracks_public` via `useProfile().update`.
 
 ---
 
@@ -235,15 +235,15 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
 - `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
-- `src/app/api/public/charts/community-monthly/route.ts` — Community Monthly Top (public).
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved for compatibility).
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.
-- `supabase/migrations/057_chart_featured_tracks_release_date.sql` — `chart_featured_tracks.release_date DATE` (full publish day for *New Releases*; complements the existing `release_year`). The same field also lives in `chart_tracks.release_date` and inside `artists.beatport_top_tracks` / `labels.beatport_top_tracks` JSONB so every list (including *My Tracks*, the public shared list, Community Monthly Top, Soulmates recommendations and admin stats) can render `YYYY-MM-DD`.
+- `supabase/migrations/057_chart_featured_tracks_release_date.sql` — `chart_featured_tracks.release_date DATE` (full publish day for *New Releases*; complements the existing `release_year`). The same field also lives in `chart_tracks.release_date` and inside `artists.beatport_top_tracks` / `labels.beatport_top_tracks` JSONB so every list (including *My Tracks*, the public shared list, Community Top, Soulmates recommendations and admin stats) can render `YYYY-MM-DD`.
 
 ### Release-date display in saved snapshots
 
-Every consumer of `saved_chart_tracks` (My Tracks own + public, Community Monthly Top, Soulmates recommendations, admin Tracks dashboard) renders the full publish day via the helper **`formatTrackReleaseDisplay(release_date, release_year)`** in `src/lib/share-track.ts`. The fallbacks are explicit:
+Every consumer of `saved_chart_tracks` (My Tracks own + public, Community Top, Soulmates recommendations, admin Tracks dashboard) renders the full publish day via the helper **`formatTrackReleaseDisplay(release_date, release_year)`** in `src/lib/share-track.ts`. The fallbacks are explicit:
 
 1. `release_date` matches `YYYY-MM-DD` → render `YYYY-MM-DD`.
 2. Else `release_year` → render the year as string.

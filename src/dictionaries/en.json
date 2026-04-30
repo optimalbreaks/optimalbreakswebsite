@@ -504,14 +504,14 @@
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
       "kicker": "COMMUNITY TOP",
-      "title": "Community monthly top",
-      "subtitle": "The most-saved tracks across the whole community this month. Computed live from actual saves — no polls, no votes.",
-      "month_label": "Month",
+      "title": "Community top",
+      "subtitle": "The most-saved tracks across the whole Optimal Breaks community. All-time ranking — no polls, no votes, just real saves.",
+      "scope_label": "Scope",
+      "all_time": "All time",
       "summary": "{tracks} tracks · {users} fans · {saves} saves",
       "loading": "Loading ranking…",
       "error": "Could not load the top",
-      "empty": "No saves yet this month. Save your first tracks and come back.",
-      "month_empty": "No saves this month",
+      "empty": "No community saves yet. Save your first tracks and come back.",
       "saves_tooltip": "People who saved this track",
       "repeats": "{n} saves total"
     }

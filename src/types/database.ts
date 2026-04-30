@@ -386,7 +386,7 @@ export interface ProfileRow extends Record<string, unknown> {
   role: 'user' | 'admin'
   /**
    * Si TRUE, los saves del usuario en `saved_chart_tracks` se utilizan al
-   * calcular Almas Gemelas y aparecen en el Top Mensual de la Comunidad.
+   * calcular Almas Gemelas y aparecen en el Top de la Comunidad.
    * Si FALSE, su lista no se cruza con nadie. La página pública
    * `/[lang]/u/<id>/tracks` sigue siendo accesible vía link directo.
    */

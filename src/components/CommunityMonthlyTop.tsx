@@ -1,9 +1,10 @@
 // ============================================
-// OPTIMAL BREAKS — Top Mensual de la Comunidad
+// OPTIMAL BREAKS — Top de la comunidad (all-time)
 // ----------------------------------------------
-// Renderiza el ranking del mes con las canciones más añadidas a "Mis Tracks"
-// por la comunidad. Hace fetch a `/api/public/charts/community-monthly` y
-// permite cambiar de mes con un selector horizontal.
+// Renderiza el ranking acumulado con las canciones más añadidas a "Mis
+// Tracks" por toda la comunidad de Optimal Breaks. Hace fetch a
+// `/api/public/charts/community-monthly` (que ahora devuelve all-time;
+// el slug se conserva por compatibilidad — ver cabecera del endpoint).
 //
 // Se monta dentro de `ChartView`, justo debajo de Retro Vinyl Picks.
 // ============================================
@@ -46,27 +47,14 @@ interface CommunityTopTrack {
 }
 
 interface ApiResponse {
-  month: string
-  range: { from: string; to: string }
+  scope: 'all_time'
   totals: { saves: number; unique_tracks: number; unique_users: number }
   top_tracks: CommunityTopTrack[]
-  available_months: { month: string; saves: number }[]
 }
 
 interface Props {
   lang: Locale
   dict: any
-}
-
-function formatMonth(monthStr: string, lang: Locale): string {
-  // monthStr = 'YYYY-MM'
-  const [y, m] = monthStr.split('-').map(Number)
-  const d = new Date(Date.UTC(y, (m || 1) - 1, 1))
-  return d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
 }
 
 function previewAudioSrc(sampleUrl: string, kind: PlaybackKind, externalUrl: string | null): string {
@@ -123,21 +111,18 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [month, setMonth] = useState<string>('')
 
-  const fetchData = useCallback(async (target?: string) => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const qs = target ? `?month=${encodeURIComponent(target)}` : ''
-      const res = await fetch(`/api/public/charts/community-monthly${qs}`, { cache: 'no-store' })
+      const res = await fetch(`/api/public/charts/community-monthly`, { cache: 'no-store' })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         throw new Error(j.error || `HTTP ${res.status}`)
       }
       const json = (await res.json()) as ApiResponse
       setData(json)
-      setMonth(json.month)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -161,12 +146,12 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
       const src = previewAudioSrc(t.sample_url, t.playback_kind, t.external_url)
       if (!src) continue
       out.push({
-        rowKey: `community-monthly-${t.canonical_key}`,
+        rowKey: `community-top-${t.canonical_key}`,
         src,
         title: t.title,
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
-        domId: `community-monthly-${t.canonical_key}`,
+        domId: `community-top-${t.canonical_key}`,
         save: t.primary.source === 'beatport_top' && t.external_url
           ? {
               mode: 'url',
@@ -186,7 +171,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     return out
   }, [data])
 
-  const groupKey = `community-monthly-${month}`
+  const groupKey = 'community-top-all-time'
 
   const {
     previewQueue, previewIndex, previewGroupKey,
@@ -206,20 +191,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
 
-  // Selector de mes: solo mostramos meses con saves reales. Si el mes
-  // actualmente seleccionado no tuviera saves (caso típico: primer fetch del
-  // mes en curso aún vacío) lo añadimos manualmente para que el chip activo
-  // siempre sea visible. La lista se ordena de más reciente a más antiguo.
-  const monthOptions = useMemo(() => {
-    const have = new Map((data?.available_months || []).map((m) => [m.month, m.saves]))
-    if (month && !have.has(month)) have.set(month, 0)
-    return Array.from(have.entries())
-      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .map(([m, saves]) => ({ month: m, saves }))
-  }, [data?.available_months, month])
-
   return (
-    <section id="community-monthly-top" className="mb-12 sm:mb-16 scroll-mt-24">
+    <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24">
       <header className="px-4 sm:px-0 mb-6 sm:mb-8">
         <span
           className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] mb-3"
@@ -231,53 +204,15 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
           style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
         >
-          {cm.title || 'Top mensual de la comunidad'}
+          {cm.title || 'Top de la comunidad'}
         </h2>
         <p
           className="text-sm sm:text-base text-[var(--ink)]/60"
           style={{ fontFamily: "'Courier Prime', monospace" }}
         >
-          {cm.subtitle || 'Las canciones más añadidas a "Mis Tracks" por toda la comunidad este mes. Calculado a partir de los saves reales — sin votos ni encuestas.'}
+          {cm.subtitle || 'Las canciones más añadidas a "Mis Tracks" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.'}
         </p>
       </header>
-
-      {/* Selector de mes — flex-wrap (no overflow-x) para que el tap en PWA
-          móvil no se confunda con un pan horizontal y se cancele el click. */}
-      <div className="px-2 sm:px-0 mb-4">
-        <div
-          className="flex flex-wrap gap-1.5"
-          style={{ fontFamily: "'Courier Prime', monospace" }}
-        >
-          {monthOptions.length === 0 && !loading && (
-            <span className="text-[11px] text-[var(--ink)]/50" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              {cm.empty || 'Aún no hay saves este mes.'}
-            </span>
-          )}
-          {monthOptions.map((opt) => {
-            const isActive = opt.month === month
-            const empty = opt.saves === 0
-            return (
-              <button
-                key={opt.month}
-                type="button"
-                onClick={() => fetchData(opt.month)}
-                title={empty ? (cm.month_empty || 'Sin saves este mes') : `${opt.saves} saves`}
-                className={`min-h-[40px] px-3 py-2 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all touch-manipulation cursor-pointer select-none whitespace-nowrap
-                  ${isActive
-                    ? 'bg-[var(--red)] text-white'
-                    : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}
-                `}
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              >
-                {formatMonth(opt.month, lang)}
-                {!empty && (
-                  <span className="ml-1.5 text-[9px] opacity-70 tabular-nums">{opt.saves}</span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
 
       <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden mx-2 sm:mx-0">
         <div
@@ -285,7 +220,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           style={{ fontFamily: "'Courier Prime', monospace" }}
         >
           <span className="text-xs sm:text-sm font-bold tracking-wide text-[var(--ink)] flex-1 min-w-[10rem]">
-            {cm.month_label || 'Mes'}: <span className="font-black uppercase">{month ? formatMonth(month, lang) : '—'}</span>
+            {cm.scope_label || 'Histórico'}: <span className="font-black uppercase">{cm.all_time || 'Todo el tiempo'}</span>
           </span>
           {data && data.totals.saves > 0 && (
             <span className="text-[10px] sm:text-xs text-[var(--ink)]/60 font-bold tabular-nums">
@@ -330,14 +265,14 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
         {!loading && !error && data && data.top_tracks.length === 0 && (
           <div className="p-8 text-center text-sm text-[var(--ink)]/50" style={{ fontFamily: "'Courier Prime', monospace" }}>
-            {cm.empty || 'Aún no hay saves este mes. Añade tus primeros temas a Mis Tracks y vuelve.'}
+            {cm.empty || 'Aún no hay saves en la comunidad. Añade tus primeros temas a Mis Tracks y vuelve.'}
           </div>
         )}
 
         {!loading && !error && data && data.top_tracks.length > 0 && (
           <div>
             {data.top_tracks.map((t) => {
-              const rowKey = `community-monthly-${t.canonical_key}`
+              const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
               const idx = previewBundle.findIndex((m) => m.rowKey === rowKey)
               const hasSample = idx >= 0

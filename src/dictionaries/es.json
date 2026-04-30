@@ -406,14 +406,14 @@
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
       "kicker": "TOP DE LA COMUNIDAD",
-      "title": "Top mensual de la comunidad",
-      "subtitle": "Las canciones más añadidas a \"Mis Tracks\" por toda la comunidad este mes. Calculado en directo a partir de los saves reales — sin votos ni encuestas.",
-      "month_label": "Mes",
+      "title": "Top de la comunidad",
+      "subtitle": "Las canciones más añadidas a \"Mis Tracks\" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.",
+      "scope_label": "Histórico",
+      "all_time": "Todo el tiempo",
       "summary": "{tracks} temas · {users} fans · {saves} saves",
       "loading": "Cargando ranking…",
       "error": "No se pudo cargar el top",
-      "empty": "Aún no hay saves este mes. Añade tus primeros temas a Mis Tracks y vuelve.",
-      "month_empty": "Sin saves este mes",
+      "empty": "Aún no hay saves en la comunidad. Añade tus primeros temas a Mis Tracks y vuelve.",
       "saves_tooltip": "Personas que han guardado este tema",
       "repeats": "{n} saves en total"
     }
