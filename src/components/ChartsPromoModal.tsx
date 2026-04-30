@@ -152,14 +152,18 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
 
       {/* Caja principal. shake muy sutil al entrar (animación ya definida en globals.css). */}
       <div
-        className="relative z-10 w-full max-w-3xl border-[5px] sm:border-[6px] border-[var(--ink)] bg-[var(--paper)] shadow-[10px_10px_0_rgba(0,0,0,0.35)] max-h-[92vh] overflow-y-auto motion-safe:animate-[stamp_0.45s_ease-out]"
+        className="relative z-10 w-full max-w-4xl border-[5px] sm:border-[6px] border-[var(--ink)] bg-[var(--paper)] shadow-[10px_10px_0_rgba(0,0,0,0.35)] max-h-[92vh] overflow-y-auto motion-safe:animate-[stamp_0.45s_ease-out]"
       >
         {/* Tira de peligro arriba */}
         <div className="danger-bar" />
 
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-          {/* Imagen */}
-          <div className="relative bg-[var(--paper-dark)] border-b-[5px] md:border-b-0 md:border-r-[5px] border-[var(--ink)] aspect-[4/5] md:aspect-auto md:min-h-[420px]">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Imagen — móvil: object-cover (al usuario le gusta así).
+                     desktop: object-contain para no recortar las
+                     palabras del cartel ("VINYL PICKS", "SAVE",
+                     "COMMUNITY LIST"); el fondo `paper-dark` rellena
+                     los laterales en la misma paleta. */}
+          <div className="relative bg-[var(--paper-dark)] border-b-[5px] md:border-b-0 md:border-r-[5px] border-[var(--ink)] aspect-[4/5] md:aspect-auto md:min-h-[520px]">
             <Image
               src={
                 lang === 'en'
@@ -169,8 +173,8 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               alt={dict.image_alt}
               fill
               priority
-              sizes="(min-width: 768px) 420px, 100vw"
-              className="object-cover"
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover md:object-contain"
             />
             {/* Pegatina rotada para reforzar el "fanzine" */}
             <div
