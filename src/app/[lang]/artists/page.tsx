@@ -66,7 +66,7 @@ const FEATURED_ARTIST_DESCRIPTIONS: Record<string, { es: string; en: string; cou
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/artists', 'artists', {
-    ogImagePath: sectionOgImagePath('artists'),
+    ogImagePath: sectionOgImagePath('artists', lang),
     ogImageAlt: sectionOgImageAlt('artists', lang),
   })
 }

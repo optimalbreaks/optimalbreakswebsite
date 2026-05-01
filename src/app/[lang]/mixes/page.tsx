@@ -104,7 +104,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/mixes', 'mixes', {
-    ogImagePath: sectionOgImagePath('mixes'),
+    ogImagePath: sectionOgImagePath('mixes', lang),
     ogImageAlt: sectionOgImageAlt('mixes', lang),
   })
 }

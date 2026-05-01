@@ -96,7 +96,7 @@ const FALLBACK_EVENTS: FallbackEvent[] = [
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/events', 'events', {
-    ogImagePath: sectionOgImagePath('events'),
+    ogImagePath: sectionOgImagePath('events', lang),
     ogImageAlt: sectionOgImageAlt('events', lang),
   })
 }

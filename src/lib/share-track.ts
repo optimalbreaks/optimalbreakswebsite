@@ -87,6 +87,31 @@ export function parsePlayParam(
   return null
 }
 
+/**
+ * Reescribe la URL de artwork de un track a una resolución apta para OG en
+ * redes (mínimo 600×315 según Facebook; recomendado ≥1200×1200).
+ *
+ * Beatport sirve sus artworks con el patrón
+ *   `https://geo-media.beatport.com/image_size/<W>x<H>/<uuid>.jpg`
+ * y por defecto se guarda el thumbnail `250x250` en `chart_*.artwork_url`.
+ * Esa imagen es DEMASIADO PEQUEÑA para Facebook/WhatsApp y la previsualización
+ * cae al fallback (sin imagen del track). Aquí la reescribimos a 1400×1400,
+ * tamaño que Beatport sí ofrece. Para URLs de otras fuentes se devuelve la
+ * URL tal cual (no se intenta adivinar).
+ */
+export function upscaleTrackArtworkForOg(
+  rawUrl: string | null | undefined,
+): string | null {
+  const u = rawUrl?.trim()
+  if (!u) return null
+  // Beatport: image_size/<NxN>/...  →  image_size/1400x1400/...
+  if (/geo-media\.beatport\.com/i.test(u)) {
+    const replaced = u.replace(/image_size\/\d+x\d+\//i, 'image_size/1400x1400/')
+    return replaced
+  }
+  return u
+}
+
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
 export function formatTrackReleaseDisplay(
   releaseDate: string | null | undefined,

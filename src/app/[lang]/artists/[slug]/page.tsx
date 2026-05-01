@@ -15,7 +15,7 @@ import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
-import { parsePlayParam } from '@/lib/share-track'
+import { parsePlayParam, upscaleTrackArtworkForOg } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -151,7 +151,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         `${trackTitle} | ${siteName}`,
         trackDesc,
         'profile',
-        track.artwork_url || ogPortrait,
+        upscaleTrackArtworkForOg(track.artwork_url) || ogPortrait,
         keywords,
       )
     }

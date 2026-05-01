@@ -236,7 +236,7 @@ function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/blog', 'blog', {
-    ogImagePath: sectionOgImagePath('blog'),
+    ogImagePath: sectionOgImagePath('blog', lang),
     ogImageAlt: sectionOgImageAlt('blog', lang),
   })
 }

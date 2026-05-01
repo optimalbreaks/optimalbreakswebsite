@@ -11,7 +11,7 @@ import type { Metadata } from 'next'
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/about', 'about', {
-    ogImagePath: sectionOgImagePath('about'),
+    ogImagePath: sectionOgImagePath('about', lang),
     ogImageAlt: sectionOgImageAlt('about', lang),
   })
 }

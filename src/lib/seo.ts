@@ -175,6 +175,13 @@ export function detailPageMetadata(
   ogType: 'website' | 'article' | 'profile' = 'website',
   ogImageUrl?: string | null,
   keywords?: string[],
+  /**
+   * Si true, no se incluyen `images` en `openGraph` ni `twitter`. Útil cuando
+   * la ruta tiene su propio `opengraph-image.tsx` / `twitter-image.tsx`
+   * dinámico, ya que Next.js solo lo aplica si los metadatos no sobreescriben
+   * `openGraph.images`.
+   */
+  omitImages?: boolean,
 ): Metadata {
   const url = `${SITE_URL}/${lang}${path}`
   const desc = description ? smartTruncate(description) : ''
@@ -204,13 +211,13 @@ export function detailPageMetadata(
       locale: lang === 'es' ? 'es_ES' : 'en_US',
       alternateLocale: ogAlternateLocales(lang),
       type: ogType,
-      images: [ogImageMeta],
+      ...(omitImages ? {} : { images: [ogImageMeta] }),
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description: desc || undefined,
-      images: [ogImage],
+      ...(omitImages ? {} : { images: [ogImage] }),
     },
   }
 }

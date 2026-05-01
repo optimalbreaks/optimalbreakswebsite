@@ -5,7 +5,7 @@
 
 import { createServerSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
-import { parsePlayParam } from '@/lib/share-track'
+import { parsePlayParam, upscaleTrackArtworkForOg } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -73,7 +73,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
         `${trackTitle} | ${siteName}`,
         trackDesc,
         'website',
-        track.artwork_url || defaultOgImage,
+        upscaleTrackArtworkForOg(track.artwork_url) || defaultOgImage,
       )
     }
   }

@@ -75,7 +75,7 @@ const FALLBACK_SCENES: FallbackScene[] = [
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/scenes', 'scenes', {
-    ogImagePath: sectionOgImagePath('scenes'),
+    ogImagePath: sectionOgImagePath('scenes', lang),
     ogImageAlt: sectionOgImageAlt('scenes', lang),
   })
 }

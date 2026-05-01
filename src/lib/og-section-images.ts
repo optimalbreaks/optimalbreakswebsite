@@ -37,6 +37,17 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   about: 'about-og-alternate.png',
 }
 
+/**
+ * Variantes en inglés (sufijo `-en` antes de la extensión). Si la entrada
+ * existe (generada por `npm run og:promo`), se sirve en `/en/<sección>`;
+ * si no, se cae al archivo principal (compatibilidad con assets antiguos).
+ *
+ * El runtime no comprueba existencia (los meta tags se construyen estáticos):
+ * es responsabilidad del script de generación dejar siempre las dos variantes
+ * cuando un asset se actualiza al nuevo flujo bilingüe.
+ */
+const SECTION_OG_LANG_OVERRIDES: Partial<Record<SectionOgKey, true>> = {}
+
 /** Dimensiones reales del PNG servido (Meta og:image width/height). */
 export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: number }> = {
   artists: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
@@ -84,8 +95,24 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
   },
 }
 
-export function sectionOgImagePath(key: SectionOgKey): string {
-  return `${SECTION_OG_BASE}/${SECTION_OG_FILE[key]}`
+export function sectionOgImagePath(key: SectionOgKey, lang?: Locale): string {
+  const file = SECTION_OG_FILE[key]
+  if (lang === 'en' && SECTION_OG_LANG_OVERRIDES[key]) {
+    const dot = file.lastIndexOf('.')
+    if (dot > 0) {
+      return `${SECTION_OG_BASE}/${file.slice(0, dot)}-en${file.slice(dot)}`
+    }
+  }
+  return `${SECTION_OG_BASE}/${file}`
+}
+
+/**
+ * Marca una sección como "tiene variante EN ya generada". El script
+ * `generar-og-promo.mjs` añadirá la sección aquí mediante codemod cuando
+ * exporte la versión EN; por ahora se gestiona manualmente.
+ */
+export function hasEnglishVariant(key: SectionOgKey): boolean {
+  return Boolean(SECTION_OG_LANG_OVERRIDES[key])
 }
 
 export function sectionOgImageAlt(key: SectionOgKey, lang: Locale): string {

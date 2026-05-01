@@ -200,7 +200,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   const siteName = await siteNameForLang(lang)
   const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
-  return detailPageMetadata(lang, `/events/${slug}`, siteName, data.name, description, 'website', data.og_image_url || data.image_url)
+  return detailPageMetadata(
+    lang,
+    `/events/${slug}`,
+    siteName,
+    data.name,
+    description,
+    'website',
+    null,
+    undefined,
+    true,
+  )
 }
 
 function firstSearchParam(v: string | string[] | undefined): string | undefined {

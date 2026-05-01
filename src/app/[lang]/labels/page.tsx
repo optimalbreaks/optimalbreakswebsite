@@ -75,7 +75,7 @@ const FALLBACK_LABELS: FallbackLabel[] = [
 export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/labels', 'labels', {
-    ogImagePath: sectionOgImagePath('labels'),
+    ogImagePath: sectionOgImagePath('labels', lang),
     ogImageAlt: sectionOgImageAlt('labels', lang),
   })
 }
