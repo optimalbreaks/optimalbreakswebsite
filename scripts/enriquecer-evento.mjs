@@ -1953,12 +1953,35 @@ const BELLOTA_BREAK_FESTIVAL_TICKETS =
   'https://www.monsterticket.com/evento/bellota-break-festival-2026'
 const BELLOTA_BREAK_FESTIVAL_IMAGE = '/images/events/bellota-break-festival-2026.webp'
 
+const BELLOTA_BREAK_FESTIVAL_2026_LINEUP = [
+  'The Brainkiller',
+  'Tortu',
+  'José Rodríguez',
+  'Yo Speed',
+  'Hankook',
+  'Jotta Frank',
+  'Madam Dee',
+  'Maribel',
+  'Four Motion',
+  'V. Aparicio',
+  'JN Cruz',
+  'Maxuka',
+  'Kill II Beat',
+  'Frex Collective',
+  'Moraobreak',
+  'Boti-K',
+  'Sukla\'s',
+  'La Bestia 333',
+  'Skinwalker',
+  'Cellux MC',
+]
+
 const BELLOTA_BREAK_FESTIVAL_2026_ROW = {
   name: 'Bellota Break Festival 2026',
   description_en:
-    'Bellota Break Festival at the Plaza de Toros in Calzadilla de los Barros (Badajoz province): Saturday 13 June 2026. MonsterTicket lists hours 19:00–07:00, minimum age 16 with a downloadable minor-authorisation form referenced on the sale page, and non-nominal tickets; advance tiers were advertised on the storefront (availability changes over time). Address per ticket listing: Calle Calvario 1, Calzadilla de los Barros. Announcement artwork does not list artists.',
+    'Bellota Break Festival at the Plaza de Toros in Calzadilla de los Barros (Badajoz province), Saturday 13 June 2026, 19:00–07:00. Official flyer line-up mixes retro and contemporary breakbeat acts: The Brainkiller, Tortu, José Rodríguez, Yo Speed, Hankook, Jotta Frank, Madam Dee, Maribel, Four Motion, V. Aparicio, JN Cruz, Maxuka, Kill II Beat, Frex Collective, Moraobreak, Boti-K, Sukla\'s, La Bestia 333, Skinwalker; host Cellux MC. Collaborators on the artwork include the town council (Ayto. Calzadilla de los Barros), Rural Breaks, Dreambreak Fest, Frex Collective, Extremadura Break, Sentimiento Break Beat and MonsterTicket. Advance tickets via promoters and MonsterTicket. MonsterTicket listing: hours as above; access from age 16 with minor-authorisation form linked on sale page; non-nominal ticket tiers change over time; address Calle Calvario 1.',
   description_es:
-    'Bellota Break Festival en la Plaza de Toros de Calzadilla de los Barros (provincia de Badajoz): sábado 13 de junio de 2026. MonsterTicket publica horario de 19:00 h a 07:00 h; acceso desde 16 años con enlace a autorización para menores según la ficha de venta; entradas no nominativas y tramos de precios en la tienda (la disponibilidad puede variar). Dirección según venta: Calle Calvario 1, Calzadilla de los Barros. El cartel promocional no incluye nombres de artistas.',
+    'Bellota Break Festival en la Plaza de Toros de Calzadilla de los Barros (Badajoz), sábado 13 de junio de 2026, 19:00 h a 07:00 h. Cartel oficial (retro / actual): The Brainkiller, Tortu, José Rodríguez, Yo Speed, Hankook, Jotta Frank, Madam Dee, Maribel, Four Motion, V. Aparicio, JN Cruz, Maxuka, Kill II Beat, Frex Collective, Moraobreak, Boti-K, Sukla\'s, La Bestia 333 y Skinwalker; presentador Cellux MC. El cartel cita la colaboración del Ayuntamiento de Calzadilla de los Barros y marcas asociadas (Rural Breaks, Dreambreak Fest, Frex Collective, Extremadura Break, Sentimiento Break Beat, MonsterTicket). Venta anticipada por RRPP y Monsterticket. En MonsterTicket: horario indicado; acceso desde 16 años con autorización para menores según ficha; entradas no nominativas; dirección de venta: Calle Calvario 1.',
   event_type: 'festival',
   date_start: '2026-06-13',
   date_end: null,
@@ -1970,7 +1993,7 @@ const BELLOTA_BREAK_FESTIVAL_2026_ROW = {
   website: null,
   tickets_url: BELLOTA_BREAK_FESTIVAL_TICKETS,
   image_url: BELLOTA_BREAK_FESTIVAL_IMAGE,
-  lineup: [],
+  lineup: BELLOTA_BREAK_FESTIVAL_2026_LINEUP,
   tags: [
     'bellota break festival',
     'breakbeat',
@@ -1980,6 +2003,10 @@ const BELLOTA_BREAK_FESTIVAL_2026_ROW = {
     'festival',
     '2026',
     'monsterticket',
+    'rural breaks',
+    'dreambreak fest',
+    'frex collective',
+    'extremadura break',
   ],
   socials: {},
   age_restriction: '16+',
