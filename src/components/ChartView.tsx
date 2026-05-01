@@ -1122,11 +1122,11 @@ export default function ChartView({
       vinylByYear.set(key, arr)
     }
   }
-  // Orden ascendente por año (más antiguo primero); "sin año" al final.
+  // Orden descendente por año (más reciente primero); "sin año" al final.
   const sortedVinylYears = Array.from(vinylByYear.keys()).sort((a, b) => {
     if (a === UNKNOWN_YEAR_KEY) return 1
     if (b === UNKNOWN_YEAR_KEY) return -1
-    return Number(a) - Number(b)
+    return Number(b) - Number(a)
   })
 
   if (weeks.length === 0) {
