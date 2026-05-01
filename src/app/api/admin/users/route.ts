@@ -6,6 +6,46 @@ function sanitizeSearch(raw: string): string {
   return raw.replace(/[%_\\]/g, '').trim().slice(0, 80)
 }
 
+type CountMap = Record<string, number>
+
+async function tallyByUserId(
+  sb: ReturnType<typeof createServiceSupabase>,
+  table: 'favorite_artists' | 'favorite_labels' | 'favorite_events' | 'saved_chart_tracks' | 'saved_mixes',
+  userIds: string[],
+): Promise<CountMap> {
+  if (userIds.length === 0) return {}
+  const { data, error } = await sb.from(table).select('user_id').in('user_id', userIds)
+  if (error || !data) return {}
+  const out: CountMap = {}
+  for (const row of data as Array<{ user_id: string }>) {
+    out[row.user_id] = (out[row.user_id] ?? 0) + 1
+  }
+  return out
+}
+
+async function buildEngagementCounts(
+  sb: ReturnType<typeof createServiceSupabase>,
+  userIds: string[],
+): Promise<Record<string, { favorites: number; mixes: number; tracks: number }>> {
+  if (userIds.length === 0) return {}
+  const [favA, favL, favE, mixes, tracks] = await Promise.all([
+    tallyByUserId(sb, 'favorite_artists', userIds),
+    tallyByUserId(sb, 'favorite_labels', userIds),
+    tallyByUserId(sb, 'favorite_events', userIds),
+    tallyByUserId(sb, 'saved_mixes', userIds),
+    tallyByUserId(sb, 'saved_chart_tracks', userIds),
+  ])
+  const out: Record<string, { favorites: number; mixes: number; tracks: number }> = {}
+  for (const id of userIds) {
+    out[id] = {
+      favorites: (favA[id] ?? 0) + (favL[id] ?? 0) + (favE[id] ?? 0),
+      mixes: mixes[id] ?? 0,
+      tracks: tracks[id] ?? 0,
+    }
+  }
+  return out
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
@@ -49,7 +89,15 @@ export async function GET(request: NextRequest) {
         }),
       )
 
-      return NextResponse.json({ data: rows, count: count ?? 0, page, limit })
+      const counts = await buildEngagementCounts(sb, rows.map((r) => r.id))
+      const rowsWithCounts = rows.map((r) => ({
+        ...r,
+        favorites_count: counts[r.id]?.favorites ?? 0,
+        mixes_count: counts[r.id]?.mixes ?? 0,
+        tracks_count: counts[r.id]?.tracks ?? 0,
+      }))
+
+      return NextResponse.json({ data: rowsWithCounts, count: count ?? 0, page, limit })
     }
 
     const { data: listPayload, error: listErr } = await sb.auth.admin.listUsers({ page, perPage: limit })
@@ -87,7 +135,15 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ data: rows, count: total, page, limit })
+    const counts = await buildEngagementCounts(sb, rows.map((r) => r.id))
+    const rowsWithCounts = rows.map((r) => ({
+      ...r,
+      favorites_count: counts[r.id]?.favorites ?? 0,
+      mixes_count: counts[r.id]?.mixes ?? 0,
+      tracks_count: counts[r.id]?.tracks ?? 0,
+    }))
+
+    return NextResponse.json({ data: rowsWithCounts, count: total, page, limit })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error listando usuarios'
     return NextResponse.json({ error: msg }, { status: 500 })

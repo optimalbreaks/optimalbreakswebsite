@@ -139,6 +139,9 @@ export type AdminUserRow = {
   role: 'user' | 'admin'
   created_at: string
   last_sign_in_at: string | null
+  favorites_count: number
+  mixes_count: number
+  tracks_count: number
 }
 
 export async function adminListUsers(opts: {

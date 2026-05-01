@@ -14,6 +14,18 @@ function fmtDate(iso: string | null) {
   }
 }
 
+function fmtCount(n: number | null | undefined) {
+  const v = typeof n === 'number' ? n : 0
+  return (
+    <span
+      className={v === 0 ? 'text-[var(--text-muted)]' : 'font-bold text-[var(--ink)]'}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+    >
+      {v}
+    </span>
+  )
+}
+
 const columns = [
   { key: 'email', label: 'Email' },
   { key: 'display_name', label: 'Nombre' },
@@ -24,6 +36,21 @@ const columns = [
     render: (v: string) => (
       <span className={v === 'admin' ? 'font-bold text-[var(--red)]' : ''}>{v === 'admin' ? 'Admin' : 'Usuario'}</span>
     ),
+  },
+  {
+    key: 'favorites_count',
+    label: 'Favoritos',
+    render: (_: unknown, row: AdminUserRow) => fmtCount(row.favorites_count),
+  },
+  {
+    key: 'mixes_count',
+    label: 'Mixes',
+    render: (_: unknown, row: AdminUserRow) => fmtCount(row.mixes_count),
+  },
+  {
+    key: 'tracks_count',
+    label: 'Tracks',
+    render: (_: unknown, row: AdminUserRow) => fmtCount(row.tracks_count),
   },
   {
     key: 'last_sign_in_at',
@@ -56,7 +83,8 @@ export default function AdminUsersPage() {
       <h1 className="admin-page-title">Usuarios</h1>
       <p className="admin-muted mb-6 max-w-2xl">
         Cuentas registradas (Auth + perfil). Puedes asignar o quitar el rol de administrador. La búsqueda filtra por
-        nombre visible o nombre de usuario en el perfil.
+        nombre visible o nombre de usuario en el perfil. <strong>Favoritos</strong> = artistas + sellos + eventos con
+        corazón; <strong>Mixes</strong> = mixes guardados; <strong>Tracks</strong> = canciones en su lista My Tracks.
       </p>
       <AdminTable
         columns={columns}
