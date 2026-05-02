@@ -362,6 +362,14 @@ const ACTIONS = [
       'UPSERT solaris-fest-matalascanas-2026: 20 jun 2026 Centro de Ocio Surfasaurus Matalascañas; MonsterTicket; cartel public/images/events/solaris-fest-matalascanas-2026.webp.',
   },
   {
+    id: 'events-patch-floridance-festival-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-floridance-festival-2026',
+    npm: 'npm run db:guia -- run events-patch-floridance-festival-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT floridance-festival-2026: 5 sept Rota Estadio Monago Animalia; avance lineup cartel floridance-festival-2026.webp; MonsterTicket.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -560,6 +568,7 @@ Punto de entrada unificado:
   events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
   events-patch-iberican-breaks-festival-2026  IBÉRICAN Breaks Festival, Olvera 16 may 2026 (Terraza Manhattan, MonsterTicket)
   events-patch-solaris-fest-matalascanas-2026  Solaris Fest, Matalascañas 20 jun 2026 (Surfasaurus, MonsterTicket, cartel local WebP)
+  events-patch-floridance-festival-2026  Floridance Festival 2026, Rota 5 sept Estadio Monago (Animalia, MonsterTicket)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -944,6 +953,9 @@ function main() {
       break
     case 'events-patch-solaris-fest-matalascanas-2026':
       runNode('enriquecer-evento.mjs', ['--patch-solaris-fest-matalascanas-2026', ...rest])
+      break
+    case 'events-patch-floridance-festival-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-floridance-festival-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

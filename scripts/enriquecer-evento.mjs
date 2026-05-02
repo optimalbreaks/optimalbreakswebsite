@@ -27,6 +27,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
  *   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
  *   node scripts/enriquecer-evento.mjs --patch-solaris-fest-matalascanas-2026
+ *   node scripts/enriquecer-evento.mjs --patch-floridance-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
  *   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
  *   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
@@ -1723,6 +1724,85 @@ async function runPatchSolarisFestMatalascanas2026(sb) {
   console.log('[patch-solaris-fest-matalascanas-2026] OK:', after)
 }
 
+const FLORIDANCE_FESTIVAL_2026_SLUG = 'floridance-festival-2026'
+const FLORIDANCE_FESTIVAL_TICKETS =
+  'https://www.monsterticket.com/evento/floridance-festival-2026'
+const FLORIDANCE_FESTIVAL_IMAGE = '/images/events/floridance-festival-2026.webp'
+
+const FLORIDANCE_FESTIVAL_2026_LINEUP = [
+  'Leeroy Thornhill (ex-Prodigy)',
+  'Anuschka',
+  'Norbak',
+  'Yo Speed',
+  'Wally',
+  'Tilla Pink',
+  'Kill II Beat',
+  'Deekbass',
+]
+
+const FLORIDANCE_FESTIVAL_2026_ROW = {
+  name: 'Floridance Festival 2026',
+  description_en:
+    'Floridance Festival 2026 is presented by Animalia El Bicho Producciones at Estadio Municipal Antonio Pazos Puyana "Monago" in Rota (Cádiz). Saturday 5 September 2026. Official artwork "Avance line-up #1" lists Leeroy Thornhill (ex-Prodigy), Anuschka, Norbak, Yo Speed, Wally, Tilla Pink, Kill II Beat and Deekbass; fuller line-up follows on later drops. Sponsor call-outs on the art include Cutty Sark whisky and Negrita rum; partners cited include Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario and Locura energy drink (per flyer). MonsterTicket lists genre breakbeat, hours 18:00-07:00, venue Av. de la Diputación 164, 18+ access and named ticket types (general/VIP tiers on the storefront; details may update). Casual dress and food trucks are noted on sale copy.',
+  description_es:
+    'Floridance Festival 2026, producido por Animalia El Bicho Producciones, en el Estadio Municipal Antonio Pazos Puyana "Monago" de Rota (Cádiz), sábado 5 de septiembre de 2026. El cartel marca "Avance line-up #1" con Leeroy Thornhill (ex-Prodigy), Anuschka, Norbak, Yo Speed, Wally, Tilla Pink, Kill II Beat y Deekbass (se irán sumando más nombres en siguientes comunicados). En el flyer figuran como patrocinio Cutty Sark y ron Negrita; entre colaboradores Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario y Locura (bebida energética). MonsterTicket publica género breakbeat, horario 18:00h a 07:00h, dirección Av. de la Diputación 164, acceso desde 18 años y entradas nominativas con tipologías general/VIP según tienda.',
+  event_type: 'festival',
+  date_start: '2026-09-05',
+  date_end: null,
+  location: 'Estadio Municipal Antonio Pazos Puyana "Monago", Rota, Cádiz, Spain',
+  city: 'Rota',
+  country: 'Spain',
+  venue: 'Estadio Antonio Pazos Puyana "Monago"',
+  address: 'Av. de la Diputación, 164, Rota, Cádiz',
+  website: null,
+  tickets_url: FLORIDANCE_FESTIVAL_TICKETS,
+  doors_open: '18:00',
+  doors_close: '07:00',
+  image_url: FLORIDANCE_FESTIVAL_IMAGE,
+  lineup: FLORIDANCE_FESTIVAL_2026_LINEUP,
+  tags: [
+    'floridance festival',
+    'animalia el bicho producciones',
+    'rota',
+    'cadiz',
+    'breakbeat',
+    'antonio pazos puyana',
+    'monsterticket',
+    '2026',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchFloridanceFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', FLORIDANCE_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-floridance-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: FLORIDANCE_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FLORIDANCE_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, address')
+    .eq('slug', FLORIDANCE_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-floridance-festival-2026] OK:', after)
+}
+
 const BREAK_THE_FLOW_W_TERRIE_KYND_2026_SLUG = 'break-the-flow-w-terrie-kynd-2026'
 const BREAK_THE_FLOW_TICKETS =
   'https://www.monsterticket.com/evento/break-the-flow-w-terrie-kynd'
@@ -2736,6 +2816,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-floridance-festival-2026')) {
+    await runPatchFloridanceFestival2026(sb)
+    return
+  }
+
   if (argv.includes('--patch-break-the-flow-w-terrie-kynd-2026')) {
     await runPatchBreakTheFlowWTerrieKynd2026(sb)
     return
@@ -2844,6 +2929,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-cyber-bass-2026
   node scripts/enriquecer-evento.mjs --patch-safari-break-night-2026
   node scripts/enriquecer-evento.mjs --patch-solaris-fest-matalascanas-2026
+  node scripts/enriquecer-evento.mjs --patch-floridance-festival-2026
   node scripts/enriquecer-evento.mjs --patch-break-the-flow-w-terrie-kynd-2026
   node scripts/enriquecer-evento.mjs --patch-el-pinar-breaks-fest-2026
   node scripts/enriquecer-evento.mjs --patch-breaks-bloom-festival-2026
