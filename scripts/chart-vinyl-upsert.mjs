@@ -159,18 +159,24 @@ async function main() {
 
   // Sync estable: NO borramos en bloque para no destruir los UUIDs y orfanar
   // los `saved_chart_tracks` de los usuarios (track_source='vinyl'). Hacemos
-  // diff por `discogs_url` (clave estable de cada vinilo).
+  // diff por clave compuesta: mismo release en Discogs puede contener varias
+  // pistas → discogs_url + title + mix_name (normalizados).
   const normalizeDiscogs = (u) => (u || '').trim().toLowerCase().replace(/\/$/, '')
+  const normalizeText = (s) => (s || '').trim().toLowerCase()
+  const trackKey = (discogsUrl, title, mixName) =>
+    `${normalizeDiscogs(discogsUrl)}::${normalizeText(title)}::${normalizeText(mixName)}`
+
   const { data: existingRows, error: exErr } = await supabase
     .from('chart_vinyl_tracks')
-    .select('id, discogs_url')
+    .select('id, discogs_url, title, mix_name')
     .eq('chart_edition_id', editionId)
   if (exErr) throw new Error(`load chart_vinyl_tracks: ${exErr.message}`)
 
-  const existingByKey = new Map()
+  const existingByTrackKey = new Map()
   for (const r of existingRows || []) {
-    const k = normalizeDiscogs(r.discogs_url)
-    if (k && !existingByKey.has(k)) existingByKey.set(k, r.id)
+    const k = trackKey(r.discogs_url, r.title, r.mix_name ?? '')
+    if (!normalizeDiscogs(r.discogs_url)) continue
+    if (!existingByTrackKey.has(k)) existingByTrackKey.set(k, r.id)
   }
 
   if (vinyl.length === 0) {
@@ -220,15 +226,16 @@ async function main() {
   const updates = []
   const inserts = []
   for (const row of rows) {
-    const k = normalizeDiscogs(row.discogs_url)
+    const k = trackKey(row.discogs_url, row.title, row.mix_name)
     newKeys.add(k)
-    const liveId = existingByKey.get(k)
+    const liveId = existingByTrackKey.get(k)
     if (liveId) updates.push({ id: liveId, data: row })
     else inserts.push(row)
   }
   const toDelete = []
-  for (const [k, id] of existingByKey.entries()) {
-    if (!newKeys.has(k)) toDelete.push(id)
+  for (const r of existingRows || []) {
+    const k = trackKey(r.discogs_url, r.title, r.mix_name ?? '')
+    if (!newKeys.has(k)) toDelete.push(r.id)
   }
 
   if (toDelete.length > 0) {

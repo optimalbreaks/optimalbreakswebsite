@@ -41,29 +41,80 @@ const EXT_MIME: Record<string, string> = {
   '.gif': 'image/gif',
 }
 
+/** Formatos que Satori (motor de `next/og`) **no** sabe decodificar y hay que
+ * convertir a PNG antes de pasarlos al `<img>`. WebP/AVIF revientan el
+ * `ImageResponse` con 500. */
+const NEEDS_RENCODE = new Set(['image/webp', 'image/avif'])
+
 function mimeFromUrl(url: string): string {
   const clean = url.split('?')[0].split('#')[0].toLowerCase()
   const ext = path.extname(clean)
   return EXT_MIME[ext] ?? 'image/jpeg'
 }
 
+/** Re-encode WebP/AVIF a PNG con `sharp`. Cualquier otro formato pasa intacto.
+ * Aprovechamos para redimensionar al tamaño real del slot del cartel
+ * (600×630, fit cover) y bajar drásticamente el peso del data URL que se
+ * inyecta en `ImageResponse`. Cualquier error se contiene devolviendo `null`
+ * (el OG cae al placeholder "OB" en vez de tirar la ruta con 500). */
+async function ensureSatoriCompatible(
+  buf: Buffer,
+  mime: string,
+): Promise<{ buf: Buffer; mime: string } | null> {
+  try {
+    const sharpMod = await import('sharp')
+    const sharp = (sharpMod as { default?: typeof import('sharp') }).default ?? (sharpMod as unknown as typeof import('sharp'))
+    const needsRencode = NEEDS_RENCODE.has(mime)
+    const pipeline = sharp(buf).resize({
+      width: 600,
+      height: 630,
+      fit: 'cover',
+      position: 'centre',
+      withoutEnlargement: false,
+    })
+    if (needsRencode) {
+      const png = await pipeline.png({ compressionLevel: 9 }).toBuffer()
+      return { buf: png, mime: 'image/png' }
+    }
+    if (mime === 'image/jpeg') {
+      const jpg = await pipeline.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+      return { buf: jpg, mime: 'image/jpeg' }
+    }
+    if (mime === 'image/png') {
+      const png = await pipeline.png({ compressionLevel: 9 }).toBuffer()
+      return { buf: png, mime: 'image/png' }
+    }
+    return { buf, mime }
+  } catch {
+    if (NEEDS_RENCODE.has(mime)) return null
+    return { buf, mime }
+  }
+}
+
 async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<string | null> {
   const url = rawUrl?.trim()
   if (!url) return null
   try {
+    let buf: Buffer | null = null
+    let mime: string = mimeFromUrl(url)
+
     if (url.startsWith('/')) {
       const filePath = path.join(process.cwd(), 'public', url.replace(/^\/+/, ''))
-      const buf = await fs.readFile(filePath)
-      return `data:${mimeFromUrl(url)};base64,${buf.toString('base64')}`
-    }
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+      buf = await fs.readFile(filePath)
+    } else if (url.startsWith('http://') || url.startsWith('https://')) {
       const res = await fetch(url, { cache: 'force-cache' })
       if (!res.ok) return null
-      const ct = res.headers.get('content-type')?.split(';')[0]?.trim() || mimeFromUrl(url)
+      const ct = res.headers.get('content-type')?.split(';')[0]?.trim()
+      if (ct) mime = ct
       const ab = await res.arrayBuffer()
-      return `data:${ct};base64,${Buffer.from(ab).toString('base64')}`
+      buf = Buffer.from(ab)
+    } else {
+      return null
     }
-    return null
+
+    const safe = await ensureSatoriCompatible(buf, mime)
+    if (!safe) return null
+    return `data:${safe.mime};base64,${safe.buf.toString('base64')}`
   } catch {
     return null
   }
