@@ -6,6 +6,8 @@
 
 **Spanish summary:** [README.es.md](./README.es.md)
 
+**Repository root:** Clone or open the directory that contains **`package.json`** at the top level (for example the folder named **`web optimalbreaks`** on your machine). That folder is the Git and **npm** root: run all install/dev/DB commands from there, and keep **`.env.local`** beside `package.json`. Parent folders that only wrap this project are not the repo root.
+
 ---
 
 ## What is Optimal Breaks?
@@ -195,8 +197,10 @@ Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your d
 
 ## Project Structure
 
+Layout below is relative to the **repo root** (the directory that contains `package.json`; local folder name may differ, e.g. `web optimalbreaks`).
+
 ```
-OptimalBreaks/
+<repo-root>/
 ├── docs/
 │   ├── README.md               # Doc index + maintenance audit (what each .md covers)
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)

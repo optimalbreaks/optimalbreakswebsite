@@ -4,6 +4,8 @@
 
 La documentación técnica completa está en inglés en [**README.md**](./README.md). Aquí va un resumen en español **y el flujo recomendado para actualizar artistas**.
 
+**Raíz del repositorio:** Abre en el IDE (y usa como cwd en terminal) la carpeta donde está **`package.json`** en la raíz (en muchos equipos se llama **`web optimalbreaks`**). Ahí está el `.git` y deben ejecutarse **`npm install`**, **`npm run dev`**, scripts de base de datos y el fichero **`.env.local`**. Una carpeta padre que solo envuelva el proyecto no es la raíz Git/npm.
+
 ---
 
 ## Qué es
@@ -307,6 +309,8 @@ Helpers en código: `src/lib/supabase-storage.ts`, `src/lib/supabase-admin.ts`.
 ---
 
 ## Puesta en marcha (rápida)
+
+Desde la **raíz del repo** (misma carpeta que `package.json`; ver nota arriba).
 
 ```bash
 npm install
