@@ -174,6 +174,8 @@ export function EventOgImage({ lang, name, posterDataUrl, dateLabel, locationLab
           </div>
           <div
             style={{
+              display: 'flex',
+              flexDirection: 'row',
               fontSize: 18,
               fontWeight: 800,
               letterSpacing: 2,

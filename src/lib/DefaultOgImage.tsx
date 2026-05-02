@@ -59,6 +59,8 @@ export function DefaultOgImage({ lang }: { lang: Locale }) {
       </div>
       <div
         style={{
+          display: 'flex',
+          flexDirection: 'row',
           fontSize: 86,
           fontWeight: 900,
           lineHeight: 0.95,
