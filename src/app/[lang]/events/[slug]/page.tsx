@@ -25,7 +25,19 @@ type Props = {
   params: Promise<{ lang: Locale; slug: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
-type EventSeoRow = Pick<BreakEvent, 'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
+type EventSeoRow = Pick<
+  BreakEvent,
+  | 'name'
+  | 'description_en'
+  | 'description_es'
+  | 'image_url'
+  | 'og_image_url'
+  | 'date_start'
+  | 'date_end'
+  | 'venue'
+  | 'city'
+  | 'country'
+>
 type EventPageRow = BreakEvent & {
   promoter: Pick<Organization, 'slug' | 'name'> | null
 }
@@ -184,12 +196,54 @@ function dateStampParts(dateStr: string | null, lang: Locale): { day: string; mo
   }
 }
 
+/** Fecha corta para meta description: "5 sept 2026" o "5–7 sept 2026". */
+function metaDateLabel(start: string | null, end: string | null, lang: Locale): string {
+  if (!start) return ''
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB'
+  try {
+    const dStart = new Date(start + 'T12:00:00')
+    if (Number.isNaN(dStart.getTime())) return ''
+    const fmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+    const startLabel = fmt.format(dStart).replace('.', '')
+    if (end && end !== start) {
+      const dEnd = new Date(end + 'T12:00:00')
+      if (!Number.isNaN(dEnd.getTime())) {
+        const sameMonthYear =
+          dEnd.getFullYear() === dStart.getFullYear() && dEnd.getMonth() === dStart.getMonth()
+        if (sameMonthYear) {
+          return `${dStart.getDate()}–${fmt.format(dEnd).replace('.', '')}`
+        }
+        return `${startLabel} → ${fmt.format(dEnd).replace('.', '')}`
+      }
+    }
+    return startLabel
+  } catch {
+    return ''
+  }
+}
+
+/** "Venue, City, Country" sin duplicados (algunos eventos repiten city en venue). */
+function metaPlaceLabel(venue: string | null, city: string | null, country: string | null): string {
+  const bits = [venue, city, country].map((s) => s?.trim() || '').filter(Boolean)
+  const seen = new Set<string>()
+  return bits
+    .filter((b) => {
+      const k = b.toLowerCase()
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    .join(', ')
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
   const { data: raw } = await supabase
     .from('events')
-    .select('name, description_en, description_es, image_url, og_image_url')
+    .select(
+      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country',
+    )
     .eq('slug', slug)
     .single()
   const data = raw as EventSeoRow | null
@@ -199,7 +253,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       robots: { index: false, follow: true },
     }
   const siteName = await siteNameForLang(lang)
-  const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
+
+  const dateLabel = metaDateLabel(data.date_start ?? null, data.date_end ?? null, lang)
+  const placeLabel = metaPlaceLabel(data.venue ?? null, data.city ?? null, data.country ?? null)
+  const head = [dateLabel, placeLabel].filter(Boolean).join(' · ')
+  const longDesc = (lang === 'es' ? data.description_es : data.description_en)?.trim() || ''
+  // Componemos "FECHA · LUGAR — descripción larga". detailPageMetadata aplica
+  // smartTruncate(160) sin cortar palabras: la cabecera siempre se conserva
+  // y se recorta primero la descripción larga, que es lo "que quepa".
+  const description = [head, longDesc].filter(Boolean).join(' — ') || undefined
+
   return detailPageMetadata(
     lang,
     `/events/${slug}`,

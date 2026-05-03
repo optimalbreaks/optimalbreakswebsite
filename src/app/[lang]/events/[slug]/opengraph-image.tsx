@@ -1,16 +1,15 @@
 // ============================================
 // OPTIMAL BREAKS — Open Graph image dinámica por evento
 // /:lang/events/:slug/opengraph-image  →  PNG 1200×630
-// Compone una tarjeta con el cartel del evento (decodificando WebP/AVIF
-// internamente) + nombre, fecha y ubicación, y emite PNG estándar válido
-// para Facebook / WhatsApp / LinkedIn (donde WebP suele fallar).
+// Sirve directamente el cartel del evento: la imagen se decodifica
+// internamente (WebP/AVIF → PNG vía sharp) y se centra con `contain`
+// sobre fondo INK, así carteles cuadrados/verticales/horizontales se
+// muestran completos sin recortes en Facebook / WhatsApp / LinkedIn / X.
 // ============================================
 
 import { ImageResponse } from 'next/og'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import type { Locale } from '@/lib/i18n-config'
-import { i18n } from '@/lib/i18n-config'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { EventOgImage } from '@/lib/EventOgImage'
 
@@ -22,12 +21,6 @@ export const runtime = 'nodejs'
 type Props = { params: Promise<{ lang: string; slug: string }> }
 
 type EventOgRow = {
-  name: string | null
-  date_start: string | null
-  date_end: string | null
-  city: string | null
-  country: string | null
-  venue: string | null
   image_url: string | null
   og_image_url: string | null
 }
@@ -53,8 +46,9 @@ function mimeFromUrl(url: string): string {
 }
 
 /** Re-encode WebP/AVIF a PNG con `sharp`. Cualquier otro formato pasa intacto.
- * Aprovechamos para redimensionar al tamaño real del slot del cartel
- * (600×630, fit cover) y bajar drásticamente el peso del data URL que se
+ * Aprovechamos para redimensionar al frame del OG (1200×630, fit inside) para
+ * que el cartel quepa entero respetando su aspect ratio (centrado por CSS
+ * `object-fit: contain` sobre fondo INK) y bajar el peso del data URL que se
  * inyecta en `ImageResponse`. Cualquier error se contiene devolviendo `null`
  * (el OG cae al placeholder "OB" en vez de tirar la ruta con 500). */
 async function ensureSatoriCompatible(
@@ -66,10 +60,9 @@ async function ensureSatoriCompatible(
     const sharp = (sharpMod as { default?: typeof import('sharp') }).default ?? (sharpMod as unknown as typeof import('sharp'))
     const needsRencode = NEEDS_RENCODE.has(mime)
     const pipeline = sharp(buf).resize({
-      width: 600,
+      width: 1200,
       height: 630,
-      fit: 'cover',
-      position: 'centre',
+      fit: 'inside',
       withoutEnlargement: false,
     })
     if (needsRencode) {
@@ -120,73 +113,23 @@ async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<str
   }
 }
 
-function formatDateLabel(start: string | null, end: string | null, lang: Locale): string | null {
-  const s = start?.trim() || null
-  const e = end?.trim() || null
-  if (!s) return null
-  const locale = lang === 'es' ? 'es-ES' : 'en-US'
-  try {
-    const dStart = new Date(s)
-    if (Number.isNaN(dStart.getTime())) return null
-    const fmt = new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' })
-    const startLabel = fmt.format(dStart).toUpperCase()
-    if (e) {
-      const dEnd = new Date(e)
-      if (!Number.isNaN(dEnd.getTime()) && dEnd.getTime() !== dStart.getTime()) {
-        const sameYear = dEnd.getFullYear() === dStart.getFullYear()
-        const sameMonth = sameYear && dEnd.getMonth() === dStart.getMonth()
-        if (sameMonth) {
-          const dayFmt = new Intl.DateTimeFormat(locale, { day: '2-digit' })
-          return `${dayFmt.format(dStart)}–${fmt.format(dEnd).toUpperCase()}`
-        }
-        return `${startLabel} → ${fmt.format(dEnd).toUpperCase()}`
-      }
-    }
-    return startLabel
-  } catch {
-    return null
-  }
-}
-
-function buildLocationLabel(row: EventOgRow): string {
-  const bits = [row.venue, row.city, row.country].map((v) => v?.trim() || '').filter(Boolean)
-  const seen = new Set<string>()
-  const dedup = bits.filter((b) => {
-    const k = b.toLowerCase()
-    if (seen.has(k)) return false
-    seen.add(k)
-    return true
-  })
-  return dedup.join(' · ')
-}
-
 export default async function Image({ params }: Props) {
-  const { lang: rawLang, slug } = await params
-  const lang: Locale = i18n.locales.includes(rawLang as Locale) ? (rawLang as Locale) : i18n.defaultLocale
+  const { slug } = await params
 
   const supabase = createServerSupabase()
   const { data } = await supabase
     .from('events')
-    .select('name, date_start, date_end, city, country, venue, image_url, og_image_url')
+    .select('image_url, og_image_url')
     .eq('slug', slug)
     .single()
   const row = (data as EventOgRow | null) ?? null
 
-  const name = row?.name?.trim() || slug.replace(/-/g, ' ').toUpperCase()
   const posterSource = row?.og_image_url || row?.image_url || null
   const posterDataUrl = await loadPosterDataUrl(posterSource)
-  const dateLabel = formatDateLabel(row?.date_start ?? null, row?.date_end ?? null, lang)
-  const locationLabel = row ? buildLocationLabel(row) : ''
 
   return new ImageResponse(
     (
-      <EventOgImage
-        lang={lang}
-        name={name}
-        posterDataUrl={posterDataUrl}
-        dateLabel={dateLabel}
-        locationLabel={locationLabel}
-      />
+      <EventOgImage posterDataUrl={posterDataUrl} />
     ),
     { ...size },
   )
