@@ -147,6 +147,37 @@ Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplo
 
 ---
 
+## Open Graph images & social previews
+
+All OG images are declared **1200 × 630 PNG** (Meta's recommended size, `1.91:1`). Sources:
+
+| Route | Component | Notes |
+|-------|-----------|-------|
+| `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Branded fanzine card for the home + fallback for every page that doesn't override. Satori JSX — every container with multiple children sets `display: flex` (required by Satori; missing it causes a 500 on the route). |
+| `/:lang/events/[slug]/opengraph-image` | `EventOgImage` (`src/lib/EventOgImage.tsx`) | **The event poster itself**. Full 1200×630 frame with the poster shown via `object-fit: contain` on an INK (`#1a1a1a`) background, so square / vertical / horizontal flyers are never cropped. No Satori text composition: date, venue, lineup all live in the HTML/OG description instead. `sharp` pipeline: WebP/AVIF → PNG, `resize({ width: 1200, height: 630, fit: 'inside' })` to keep the original aspect ratio and trim the base64 data URL size. |
+| `/:lang/<charts\|mixes>` (static) | `public/images/opengraph/sections/<charts\|mixes>-screenshot.png` | Section screenshots generated via `npm run og:sections`. Copy keys under `seo.charts` / `seo.mixes` in dictionaries. |
+| `/:lang/<charts\|artists\|labels>?play=…` | `generateMetadata` overrides (see **Per-track sharing**) | Rewrites `og:title` / `og:description` / `og:image` to the shared track (Beatport `artwork_url`) when the query carries `?play=<source>:<id>`. |
+
+**Event `description` meta tag.** `generateMetadata` in `src/app/[lang]/events/[slug]/page.tsx` composes the description as `"FECHA · VENUE, CIUDAD, PAÍS — descripción"`:
+
+- `metaDateLabel(date_start, date_end, lang)` → short range: `"5 sept 2026"` or `"5–7 sept 2026"` (same locale as the UI).
+- `metaPlaceLabel(venue, city, country)` → deduped by lowercase (avoids `"Granada, Granada, Spain"` when `venue` already contains the city).
+- Long description is the localised `description_es` / `description_en`.
+- `detailPageMetadata` applies **`smartTruncate(160)`** so the head (date + place) is preserved and only the long description is clipped, never mid-word.
+
+### Vercel Firewall: bypass for OG scrapers
+
+Even with `robots.txt` allowing `facebookexternalhit`, Meta's Sharing Debugger will still show **403** if Vercel's **DDoS Mitigation** (always active) or **Bot Protection** (optional) treats the scraper IPs as automated traffic. **Fix is not in code** — it's a one-time allowlist in the Vercel dashboard:
+
+1. Project → **Settings → Firewall** → **Add New… → System Bypass** (`0 / 25`).
+2. Condition group `Matches any`, all rows = `Request Header` · `User-Agent` · `Contains`, one row per UA: `facebookexternalhit`, `Facebot`, `meta-externalagent`, `WhatsApp`, `Twitterbot`, `LinkedInBot`, `Slackbot-LinkExpanding`, `TelegramBot`, `Discordbot`. (Or a single `Matches Regex` row if your plan exposes it.)
+3. Save. *System Bypass* is the correct action: it skips **managed rulesets** (DDoS + Bot Protection) without disabling them for anyone else. Custom `Rule` → `Bypass` also works but isn't as explicit about skipping the system layer. `Rule` → `Log` / `Allow` / `Challenge` do **not** fix a 403 from DDoS Mitigation.
+4. After saving, re-run [Meta Sharing Debugger](https://developers.facebook.com/tools/debug/) and use [Batch Invalidator](https://developers.facebook.com/tools/debug/sharing/batch/) on the URLs you want re-scraped.
+
+The same allowlist is mirrored at `robots.txt` level in `src/app/robots.ts` (`OG_CRAWLER_USER_AGENTS`), so both layers stay in sync.
+
+---
+
 ## Supabase Storage (`media` bucket)
 
 SQL migration: `supabase/migrations/005_storage_media.sql`
@@ -771,7 +802,7 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 - [ ] Richer SoundCloud/YouTube/Mixcloud embeds in mixes section
 - [x] Dynamic sitemap (`src/app/sitemap.ts`, includes `/organizations/*`) + robots rules (`src/app/robots.ts`) for SEO basics
 - [x] Google Analytics 4 (`@next/third-parties/google` + Consent Mode v2 + `CookieBanner`)
-- [ ] OG images per section
+- [x] OG images per section (home / mixes / charts screenshots; **events = poster itself**; per-track overrides on charts, artists and labels — see *Open Graph images & social previews*)
 - [ ] RSS feed for blog
 - [ ] Newsletter subscription
 - [ ] Community submissions (suggest artist, submit event)

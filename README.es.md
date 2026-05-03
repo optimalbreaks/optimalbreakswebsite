@@ -286,6 +286,37 @@ Componentes: `ViewToggle.tsx` más `ArtistsExplorer`, `LabelsExplorer`, `EventsE
 
 **Ficha de evento (`/[lang]/events/[slug]`):** CTA ancha de compra en el **hero** si hay URL de entradas o web, el evento **no está pasado** por fecha (último día del evento antes que hoy) y además **`event_type === 'upcoming'`** o el enlace es **MonsterTicket** (`monsterticket.com` / `.es` y subdominios). Se prioriza URL MonsterTicket. Textos acordados para MonsterTicket: **«Compra de entradas»** / **«Buy tickets»**; enlaces genéricos: **«Comprar entradas»** / **«Get tickets»**. Detalle en inglés: [README.md — Directory listing views](./README.md#directory-listing-views-artists-labels-events-scenes-mixes).
 
+---
+
+## Open Graph (previews en redes)
+
+Todas las imágenes OG son **PNG 1200 × 630** (tamaño recomendado por Meta, `1.91:1`). Fuentes:
+
+| Ruta | Componente / origen | Notas |
+|------|---------------------|-------|
+| `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Tarjeta fanzine de marca — home + fallback cuando una página no sobreescribe OG. Es JSX de Satori: **todo `<div>` con varios hijos necesita `display: flex`** (sin eso la ruta devuelve 500). |
+| `/:lang/events/[slug]/opengraph-image` | `EventOgImage` (`src/lib/EventOgImage.tsx`) | **El propio cartel del evento**. 1200×630 con el cartel mostrado vía `object-fit: contain` sobre fondo INK (`#1a1a1a`), así **nunca se recortan** flyers cuadrados, verticales u horizontales. **Sin texto compuesto con Satori** — fecha, recinto y lineup salen en la descripción OG (meta) y en la ficha HTML. Pipeline `sharp`: WebP/AVIF → PNG, `resize({ width: 1200, height: 630, fit: 'inside' })` para respetar el aspect ratio y reducir el peso del data URL. |
+| `/:lang/<charts\|mixes>` (estática) | `public/images/opengraph/sections/<charts\|mixes>-screenshot.png` | Capturas generadas con `npm run og:sections`. Textos en `seo.charts` / `seo.mixes` de los diccionarios. |
+| `/:lang/<charts\|artists\|labels>?play=…` | Sobreescritura dinámica en `generateMetadata` (ver **Compartir canción**) | Reescribe `og:title` / `og:description` / `og:image` al track compartido (artwork de Beatport). |
+
+**Meta description del evento.** `generateMetadata` en `src/app/[lang]/events/[slug]/page.tsx` compone `"FECHA · RECINTO, CIUDAD, PAÍS — descripción"`:
+
+- `metaDateLabel(date_start, date_end, lang)` → rango corto: `"5 sept 2026"` o `"5–7 sept 2026"` (locale equivalente al de la UI).
+- `metaPlaceLabel(venue, city, country)` → deduplicado por minúsculas (evita `"Granada, Granada, Spain"` si `venue` ya contiene la ciudad).
+- Descripción larga = `description_es` / `description_en`.
+- `detailPageMetadata` aplica **`smartTruncate(160)`** sin cortar palabras: la **cabecera fecha+lugar siempre se conserva** y solo se recorta la cola de la descripción larga.
+
+### Firewall de Vercel: *System Bypass* para scrapers OG
+
+Aunque `robots.txt` permita a `facebookexternalhit`, el **Sharing Debugger de Meta** seguirá mostrando **403** si **DDoS Mitigation** (siempre activo en Vercel) o **Bot Protection** (opcional) consideran las IPs del scraper como tráfico automatizado. **Esto no se arregla con código** — es una excepción en el panel de Vercel, gratuita y permanente:
+
+1. Proyecto → **Settings → Firewall → Add New… → System Bypass** (cupo `0 / 25`).
+2. Grupo `Matches any`, una fila por UA con `Request Header` · `User-Agent` · `Contains`: `facebookexternalhit`, `Facebot`, `meta-externalagent`, `WhatsApp`, `Twitterbot`, `LinkedInBot`, `Slackbot-LinkExpanding`, `TelegramBot`, `Discordbot` (o una sola fila `Matches Regex` si tu plan lo permite).
+3. Guardar. **`System Bypass`** es la acción correcta: salta **managed rulesets** (DDoS + Bot Protection) sin desactivarlos para el resto del tráfico. Un `Rule` con acción `Bypass` también vale; `Rule` con acción `Log` / `Allow` / `Challenge` **no** arreglan el 403 de DDoS Mitigation.
+4. Tras guardar, re-ejecutar [Meta Sharing Debugger](https://developers.facebook.com/tools/debug/) y pasar las URLs afectadas por el [Batch Invalidator](https://developers.facebook.com/tools/debug/sharing/batch/) para forzar re-scrape.
+
+La misma lista de UAs está reflejada en `robots.txt` (`src/app/robots.ts` → `OG_CRAWLER_USER_AGENTS`) para que ambas capas coincidan.
+
 **Mixes (`MixesExplorer`, `/[lang]/mixes`):** Filtros por **año**, **plataforma** (YouTube, SoundCloud, …) y **búsqueda** en título + artista. La lógica de filtrado para el usuario es la misma; por debajo se mantiene **montado todo el catálogo** y las filas que no cumplen el filtro usan la clase **`hidden` de Tailwind** (no basta el atributo HTML `hidden` en el mismo nodo que `display: flex`, porque el estilo del autor gana y pueden seguir viéndose tarjetas incorrectas). Así los **embeds no se destruyen** al quitar filtros. **YouTube y SoundCloud** se cargan **bajo demanda** con `IntersectionObserver` cuando la tarjeta se acerca al viewport (en el DOM los años van **de más reciente a más antiguo**); el iframe lleva `loading="lazy"`. SoundCloud sigue el player visual (URLs como en `SoundCloudVisualEmbed`; el envoltorio lazy está en `MixesExplorer`).
 
 ---
@@ -449,7 +480,7 @@ Al navegar entre **`/en` y `/es`**, el proveedor de audio se **vuelve a montar**
 ## Roadmap (resumen)
 
 Hecho: Supabase en listados, miniaturas y Storage, auth (login, **`/auth/confirm`**, callback OAuth, recuperación → **`/reset-password`**, plantillas en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
-Pendiente: OG por sección, RSS, modo oscuro, etc. **Búsqueda global** ya hecha (ver sección *Buscador global*).
+Pendiente: RSS, modo oscuro, etc. Ya hechos: **Búsqueda global** (*Buscador global*), **OG por sección** — home/mixes/charts (screenshots), **eventos = cartel a pantalla completa**, y overrides por canción (ver *Open Graph*).
 
 ---
 
