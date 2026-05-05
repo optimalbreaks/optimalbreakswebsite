@@ -4,7 +4,13 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { absoluteOgImage, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
+import {
+  blogPostingJsonLd,
+  breadcrumbJsonLd,
+  detailPageMetadata,
+  siteNameForLang,
+  SITE_URL,
+} from '@/lib/seo'
 import { sanitizeHtml, sanitizeSlug, validateLocale } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
 import type { BlogPost } from '@/types/database'
@@ -66,42 +72,90 @@ export default async function BlogPostPage({ params }: Props) {
   const title = safeLang === 'es' ? post.title_es : post.title_en
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
-  const articleUrl = `${SITE_URL}/${safeLang}/blog/${safeSlug}`
-  const articleLd = {
+  const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
+  // wordCount aproximado para BlogPosting (sumando contenido sanitizado + tags
+  // suelen sobrar; restamos rudimentariamente las etiquetas HTML).
+  const wordCount = content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
+
+  const articleLd = blogPostingJsonLd(
+    {
+      slug: safeSlug,
+      title,
+      description: excerpt,
+      datePublished: post.published_at,
+      // BlogPost actual no expone updated_at; usamos datePublished como
+      // dateModified hasta tener un campo dedicado en la BD.
+      dateModified: post.published_at,
+      authorName: post.author || null,
+      imageUrl: post.image_url || post.og_image_url || null,
+      category: post.category || null,
+      tags: post.tags ?? [],
+      inLanguage: safeLang,
+      wordCount,
+    },
+    safeLang,
+  )
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: safeLang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${safeLang}` },
+    { name: safeLang === 'es' ? 'Blog' : 'Blog', url: `${SITE_URL}/${safeLang}/blog` },
+    { name: title, url: `${SITE_URL}/${safeLang}/blog/${safeSlug}` },
+  ])
+  const jsonLdGraph = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: title,
-    author: { '@type': 'Person', name: post.author || 'Optimal Breaks' },
-    datePublished: post.published_at,
-    image: absoluteOgImage(post.image_url, safeLang),
-    mainEntityOfPage: { '@type': 'WebPage', '@id': articleUrl },
-    inLanguage: safeLang,
+    '@graph': [articleLd, breadcrumbLd],
   }
+
+  // Fecha legible + atributo ISO para `<time datetime="...">` (Google extrae
+  // mejor las fechas con datetime explícito).
+  const dateIso = post.published_at ?? ''
+  const dateLabel = post.published_at
+    ? new Date(post.published_at).toLocaleDateString(safeLang === 'es' ? 'es-ES' : 'en-GB', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : ''
+
+  // alt enriquecido para la portada del artículo.
+  const coverAlt = safeLang === 'es'
+    ? `Imagen de portada del artículo: ${title}`
+    : `Cover image: ${title}`
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20 max-w-[800px] mx-auto">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }} />
       <Link href={`/${safeLang}/blog`} className="btn-back"><span className="arrow">←</span> {safeLang === 'es' ? 'Volver al Blog' : 'Back to Blog'}</Link>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
         <span className="cutout red">{post.category}</span>
-        <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
-          {new Date(post.published_at).toLocaleDateString(safeLang === 'es' ? 'es-ES' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </span>
+        {dateIso && (
+          <time
+            dateTime={dateIso}
+            style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}
+          >
+            {dateLabel}
+          </time>
+        )}
       </div>
 
       <h1 className="sec-title text-[clamp(24px,5vw,44px)] mb-2"><span className="hl">{title}</span></h1>
 
       {/* Share row */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '2px', color: 'var(--dim)' }}>
-          {safeLang === 'es' ? 'POR' : 'BY'} {post.author?.toUpperCase()}
-        </div>
+        {post.author && (
+          <address
+            className="not-italic"
+            style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '2px', color: 'var(--dim)' }}
+          >
+            {safeLang === 'es' ? 'POR' : 'BY'}{' '}
+            <span itemProp="author">{post.author.toUpperCase()}</span>
+          </address>
+        )}
         <ShareButtons url={`/${safeLang}/blog/${safeSlug}`} title={`${title} | Optimal Breaks`} lang={safeLang} />
       </div>
 
       <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden">
-        <CardThumbnail src={post.image_url} alt={title} aspectClass="aspect-[16/9] sm:aspect-[21/9]" frameClass="border-0" />
+        <CardThumbnail src={post.image_url} alt={coverAlt} aspectClass="aspect-[16/9] sm:aspect-[21/9]" frameClass="border-0" />
       </div>
 
       {post.tags?.length > 0 && (

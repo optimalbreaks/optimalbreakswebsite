@@ -3,7 +3,7 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
+import { breadcrumbJsonLd, detailPageMetadata, eventJsonLd, siteNameForLang, SITE_URL } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
 import type { Metadata } from 'next'
@@ -236,17 +236,51 @@ function metaPlaceLabel(venue: string | null, city: string | null, country: stri
     .join(', ')
 }
 
+/** Title corto y rico: "Nombre — fecha · ciudad". Trunca el nombre si hace
+ *  falta para que el `<title>` total quepa en el ancho típico de SERP (≈60). */
+function buildEventSeoTitle(
+  name: string,
+  dateLabel: string,
+  city: string | null,
+  siteName: string,
+): string {
+  const cityBit = city?.trim() || ''
+  const tail = [dateLabel, cityBit].filter(Boolean).join(' · ')
+  // Reservamos ~13 chars para " | Optimal Breaks". Total objetivo ≤ 65.
+  const room = 65 - (siteName.length + 3) // " | "
+  const head = tail ? `${name} — ${tail}` : name
+  if (head.length <= room) return `${head} | ${siteName}`
+  // Si no cabe, sacrificamos primero el city, luego la fecha; nunca el nombre.
+  const onlyDate = dateLabel ? `${name} — ${dateLabel}` : name
+  if (onlyDate.length <= room) return `${onlyDate} | ${siteName}`
+  return `${name} | ${siteName}`
+}
+
+/** ISO local (sin Z) para `event:start_time` / `event:end_time` (Open Graph). */
+function ogEventDateTime(date: string | null | undefined, time: string | null | undefined): string | null {
+  if (!date) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  if (!time) return date
+  const m = String(time).match(/^(\d{1,2}):(\d{2})/)
+  if (!m) return date
+  const hh = String(parseInt(m[1] ?? '0', 10)).padStart(2, '0')
+  const mm = (m[2] ?? '00').padStart(2, '0')
+  return `${date}T${hh}:${mm}:00`
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
   const { data: raw } = await supabase
     .from('events')
     .select(
-      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country',
+      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country, doors_open, doors_close',
     )
     .eq('slug', slug)
     .single()
-  const data = raw as EventSeoRow | null
+  const data = raw as
+    | (EventSeoRow & { doors_open: string | null; doors_close: string | null })
+    | null
   if (!data?.name)
     return {
       title: lang === 'es' ? 'Evento no encontrado' : 'Event not found',
@@ -263,16 +297,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // y se recorta primero la descripción larga, que es lo "que quepa".
   const description = [head, longDesc].filter(Boolean).join(' — ') || undefined
 
+  const seoTitle = buildEventSeoTitle(data.name, dateLabel, data.city ?? null, siteName)
+
+  // OG events: emitir `event:start_time` / `event:end_time` cuando hay datos.
+  const ogStart = ogEventDateTime(data.date_start, data.doors_open)
+  const ogEnd = ogEventDateTime(data.date_end ?? data.date_start, data.doors_close)
+  const extraOgTags: Record<string, string> = {}
+  if (ogStart) extraOgTags['event:start_time'] = ogStart
+  if (ogEnd && ogEnd !== ogStart) extraOgTags['event:end_time'] = ogEnd
+
   return detailPageMetadata(
     lang,
     `/events/${slug}`,
     siteName,
-    data.name,
+    seoTitle,
     description,
-    'website',
+    'event',
     null,
     undefined,
     true,
+    extraOgTags,
   )
 }
 
@@ -327,6 +371,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const tags = (event.tags ?? []) as string[]
   const mapLink = mapsUrl(event.coords as { lat: number; lng: number } | null, event.address ?? event.location)
   const ticketHeroHref = preferredHeroTicketUrl(event)
+  // Texto descriptivo del cartel para alt + Google Images: "Cartel de X · Ciudad · 4 julio 2026".
+  const posterDateLabel = metaDateLabel(event.date_start, event.date_end, lang)
+  const posterAltBits = [
+    lang === 'es' ? `Cartel de ${event.name}` : `${event.name} poster`,
+    event.city || null,
+    posterDateLabel || null,
+  ].filter(Boolean) as string[]
+  const posterAlt = posterAltBits.join(' · ')
   const hasMonsterTicketLink =
     isMonsterTicketUrl(event.tickets_url) || isMonsterTicketUrl(event.website)
   const hasPartnerTicketingLink =
@@ -362,6 +414,47 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   }
 
   const rawDesc = lang === 'es' ? event.description_es : event.description_en
+
+  // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList ──
+  const performersForLd = Array.from(allArtistNames).map((name) => ({
+    name,
+    slug: artistSlugs.get(name) ?? null,
+  }))
+  const eventLd = eventJsonLd(
+    {
+      slug: event.slug,
+      name: event.name,
+      description: rawDesc,
+      dateStart: event.date_start,
+      dateEnd: event.date_end,
+      doorsOpen: event.doors_open,
+      doorsClose: event.doors_close,
+      city: event.city,
+      country: event.country,
+      venue: event.venue,
+      address: event.address ?? event.location ?? null,
+      coords: (event.coords as { lat: number; lng: number } | null) ?? null,
+      imageUrl: event.og_image_url || event.image_url || null,
+      ticketsUrl: event.tickets_url,
+      website: event.website,
+      capacity: event.capacity,
+      eventType: event.event_type,
+      promoterName: event.promoter?.name ?? null,
+      promoterSlug: event.promoter?.slug ?? null,
+      performers: performersForLd,
+    },
+    lang,
+  )
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: lang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
+    { name: lang === 'es' ? 'Eventos' : 'Events', url: `${SITE_URL}/${lang}/events` },
+    { name: event.name, url: `${SITE_URL}/${lang}/events/${slug}` },
+  ])
+  const jsonLdGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [eventLd, breadcrumbLd],
+  }
+
   let festivalSections = splitFestivalDescriptionSections(rawDesc, lang === 'es' ? 'es' : 'en')
   const lineupDupTitles =
     lang === 'es'
@@ -381,7 +474,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const stamp = dateStampParts(event.date_start, lang)
 
   return (
-    <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+      />
+      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
       <Link href={`/${lang}/events`} className="btn-back">
         <span className="arrow">←</span> {lang === 'es' ? 'Volver a Eventos' : 'Back to Events'}
       </Link>
@@ -393,7 +491,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           <div className="w-full max-w-[min(100%,360px)] sm:max-w-[400px] md:max-w-[min(420px,40vw)] shrink-0 mx-auto md:mx-0">
             <EventPosterLightbox
               src={event.image_url}
-              alt={event.name}
+              alt={posterAlt}
               zoomAria={ev.poster_zoom_aria}
               closeLabel={ev.poster_close}
               lightboxTitle={ev.poster_lightbox_title}
@@ -557,9 +655,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stages.map((stage, i) => (
               <div key={i} className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', color: 'var(--yellow)', marginBottom: '4px' }}>
+                <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', color: 'var(--yellow)', marginBottom: '4px', marginTop: 0 }}>
                   {stage.name}
-                </div>
+                </h3>
                 {(lang === 'es' ? stage.description_es : stage.description_en) && (
                   <div className="mb-4 space-y-3">
                     {splitBioParagraphs(lang === 'es' ? stage.description_es : stage.description_en).map((para, pi) => (
@@ -607,9 +705,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             {Array.from(scheduleByStage.entries()).map(([stageName, slots]) => (
               <div key={stageName} className="border-4 border-[var(--ink)] overflow-hidden">
                 <div className="bg-[var(--ink)] px-4 py-2">
-                  <span style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)' }}>
+                  <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', margin: 0 }}>
                     {stageName}
-                  </span>
+                  </h3>
                 </div>
                 <div className="divide-y divide-[var(--ink)]/15">
                   {slots.map((slot, i) => (
@@ -658,9 +756,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               <div className="flex-1 min-w-0">
                 {event.venue && (
-                  <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px' }}>
+                  <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', margin: 0 }}>
                     {event.venue}
-                  </div>
+                  </h3>
                 )}
                 <div className="mt-1" style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.7, color: 'var(--dim)' }}>
                   {event.address || event.location}
@@ -734,6 +832,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         </section>
       )}
     </div>
+    </>
   )
 }
 
@@ -960,11 +1059,12 @@ function EventFestivalPulse({
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="mb-4"
-      style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(20px, 3.5vw, 26px)', letterSpacing: '2px' }}
-    >
-      {children}
+    <div className="mb-4">
+      <h2
+        style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(20px, 3.5vw, 26px)', letterSpacing: '2px', margin: 0 }}
+      >
+        {children}
+      </h2>
       <div className="mt-1 h-[3px] w-12 bg-[var(--red)]" />
     </div>
   )

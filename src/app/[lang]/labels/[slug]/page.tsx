@@ -4,7 +4,14 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
+import {
+  breadcrumbJsonLd,
+  countryNameFromCode,
+  detailPageMetadata,
+  musicLabelJsonLd,
+  siteNameForLang,
+  SITE_URL,
+} from '@/lib/seo'
 import { parsePlayParam, upscaleTrackArtworkForOg } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
@@ -21,9 +28,24 @@ type Props = {
   params: { lang: Locale; slug: string }
   searchParams?: Record<string, string | string[] | undefined>
 }
-type LabelSeoRow = Pick<Label, 'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
+type LabelSeoRow = Pick<
+  Label,
+  'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url' | 'country' | 'founded_year'
+>
 type LabelPageRow = Label & {
   organization: Pick<Organization, 'slug' | 'name'> | null
+}
+
+function buildLabelKeywords(label: LabelSeoRow, lang: Locale): string[] {
+  const base = lang === 'es'
+    ? ['breakbeat', 'sello discográfico', 'electrónica', 'música electrónica']
+    : ['breakbeat', 'record label', 'electronic music']
+  const specific = [
+    label.name,
+    label.country ? countryNameFromCode(label.country, lang) || label.country : null,
+    label.founded_year ? String(label.founded_year) : null,
+  ].filter(Boolean) as string[]
+  return Array.from(new Set([...specific, ...base]))
 }
 
 function firstSearchParam(v: string | string[] | undefined): string | undefined {
@@ -34,13 +56,27 @@ function firstSearchParam(v: string | string[] | undefined): string | undefined 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
-  const { data: raw } = await supabase.from('labels').select('name, description_en, description_es, image_url, og_image_url').eq('slug', slug).single()
+  const { data: raw } = await supabase
+    .from('labels')
+    .select('name, description_en, description_es, image_url, og_image_url, country, founded_year')
+    .eq('slug', slug)
+    .single()
   const data = raw as LabelSeoRow | null
   if (!data?.name)
     return { title: lang === 'es' ? 'Sello no encontrado' : 'Label not found', robots: { index: false, follow: true } }
   const siteName = await siteNameForLang(lang)
-  const description = (lang === 'es' ? data.description_es : data.description_en)?.slice(0, 160)
+  // Pasamos la descripción entera y dejamos que `smartTruncate` (interno de
+  // `detailPageMetadata`) recorte sin partir palabras. `slice(0,160)` cortaba
+  // "Alcalá" → "Alcal", típico de meta description rota.
+  const description = lang === 'es' ? data.description_es : data.description_en
   const defaultOgImage = data.og_image_url || data.image_url
+  // Title enriquecido: "Nombre — País (est. AAAA) | Optimal Breaks".
+  const countryNice = countryNameFromCode(data.country, lang)
+  const titleTail = [countryNice, data.founded_year ? `est. ${data.founded_year}` : null]
+    .filter(Boolean)
+    .join(' · ')
+  const seoTitle = titleTail ? `${data.name} — ${titleTail} | ${siteName}` : `${data.name} | ${siteName}`
+  const keywords = buildLabelKeywords(data, lang)
 
   // Si la URL compartida lleva ?play=beatport:<id>, sobreescribimos OG con
   // la portada y título del track concreto del Top 10 del sello.
@@ -78,7 +114,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     }
   }
 
-  return detailPageMetadata(lang, `/labels/${slug}`, siteName, data.name, description, 'website', defaultOgImage)
+  return detailPageMetadata(lang, `/labels/${slug}`, siteName, seoTitle, description, 'website', defaultOgImage, keywords)
 }
 
 export default async function LabelDetailPage({ params }: Props) {
@@ -115,7 +151,50 @@ export default async function LabelDetailPage({ params }: Props) {
     )
   }
 
+  // ── JSON-LD: MusicLabel + BreadcrumbList ──
+  const labelLd = musicLabelJsonLd(
+    {
+      slug: label.slug,
+      name: label.name,
+      description: lang === 'es' ? label.description_es : label.description_en,
+      imageUrl: label.og_image_url || label.image_url || null,
+      country: label.country,
+      foundedYear: label.founded_year,
+      website: label.website,
+      discogsUrl: label.discogs_url,
+      beatportUrl: label.beatport_url,
+      // El tipo `Label` no expone `socials` directamente (las redes viven en
+      // la organización vinculada, no en la fila del sello). Se deja vacío
+      // y el helper se apoya en website/discogs/beatport para `sameAs`.
+      socials: null,
+    },
+    lang,
+  )
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: lang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
+    { name: lang === 'es' ? 'Sellos' : 'Labels', url: `${SITE_URL}/${lang}/labels` },
+    { name: label.name, url: `${SITE_URL}/${lang}/labels/${slug}` },
+  ])
+  const jsonLdGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [labelLd, breadcrumbLd],
+  }
+  // alt enriquecido para el logo: "Logo del sello Skint (Reino Unido, est. 1995)".
+  const countryNice = countryNameFromCode(label.country, lang)
+  const logoAltBits = [
+    lang === 'es' ? `Logo del sello ${label.name}` : `${label.name} record label logo`,
+    [countryNice, label.founded_year ? (lang === 'es' ? `est. ${label.founded_year}` : `est. ${label.founded_year}`) : null]
+      .filter(Boolean)
+      .join(', '),
+  ].filter(Boolean) as string[]
+  const logoAlt = logoAltBits.filter((s) => s.trim()).join(' · ')
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+      />
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
       <Link href={`/${lang}/labels`} className="btn-back"><span className="arrow">←</span> {lang === 'es' ? 'Volver a Sellos' : 'Back to Labels'}</Link>
 
@@ -125,7 +204,7 @@ export default async function LabelDetailPage({ params }: Props) {
           <div className="w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(400px,40vw)] shrink-0 mx-auto md:mx-0">
             <CardThumbnail
               src={label.image_url}
-              alt={label.name}
+              alt={logoAlt}
               aspectClass="aspect-square w-full"
               frameClass="border-[3px] border-[var(--ink)]"
               fit="contain"
@@ -209,7 +288,7 @@ export default async function LabelDetailPage({ params }: Props) {
 
       {label.key_artists?.length > 0 && (
         <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</div>
+          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px', marginTop: 0 }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</h2>
           <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => {
             const artistSlug = artistSlugs.get(a)
             return artistSlug
@@ -220,11 +299,12 @@ export default async function LabelDetailPage({ params }: Props) {
       )}
       {label.key_releases?.length > 0 && (
         <div className="mt-4 p-4 sm:p-6 border-4 border-[var(--ink)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px' }}>{lang === 'es' ? 'RELEASES CLAVE' : 'KEY RELEASES'}</div>
+          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px', marginTop: 0 }}>{lang === 'es' ? 'RELEASES CLAVE' : 'KEY RELEASES'}</h2>
           <div className="flex flex-wrap gap-2">{label.key_releases.map((r: string, i: number) => <span key={i} className="cutout fill">{r}</span>)}</div>
         </div>
       )}
 
     </div>
+    </>
   )
 }

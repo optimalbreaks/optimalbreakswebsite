@@ -233,12 +233,47 @@ function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
   )
 }
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: Locale }>
+  searchParams?: Promise<{ page?: string | string[] }>
+}): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/blog', 'blog', {
+  const sp = await (searchParams ?? Promise.resolve({} as { page?: string | string[] }))
+  const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page
+  const parsed = parseInt(rawPage || '1', 10)
+  const pageNum = Number.isFinite(parsed) && parsed >= 2 ? parsed : 1
+
+  const base = await staticPageMetadata(lang, '/blog', 'blog', {
     ogImagePath: sectionOgImagePath('blog', lang),
     ogImageAlt: sectionOgImageAlt('blog', lang),
   })
+
+  // Para `?page=N` (N≥2) ajustamos canonical y title para evitar duplicar
+  // contenido contra `/blog`. La página 1 se queda como la canónica del
+  // listado: /blog (sin querystring).
+  if (pageNum === 1) return base
+
+  const SITE = 'https://www.optimalbreaks.com'
+  const paginatedUrl = `${SITE}/${lang}/blog?page=${pageNum}`
+  const titleSuffix = lang === 'es' ? `Página ${pageNum}` : `Page ${pageNum}`
+  const baseTitle = typeof base.title === 'string' ? base.title : ''
+
+  return {
+    ...base,
+    title: baseTitle ? `${baseTitle} — ${titleSuffix}` : titleSuffix,
+    alternates: {
+      ...(base.alternates ?? {}),
+      canonical: paginatedUrl,
+      languages: {
+        es: `${SITE}/es/blog?page=${pageNum}`,
+        en: `${SITE}/en/blog?page=${pageNum}`,
+        'x-default': `${SITE}/en/blog?page=${pageNum}`,
+      },
+    },
+  }
 }
 
 const BLOG_SELECT =

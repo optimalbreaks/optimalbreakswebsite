@@ -11,7 +11,7 @@ import {
   resolveArtistSlug,
   splitRelatedArtistNames,
 } from '@/lib/artist-entity-match'
-import { detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
+import { breadcrumbJsonLd, countryNameFromCode, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
@@ -54,10 +54,27 @@ type ArtistSeoRow = Pick<Artist, 'name' | 'bio_en' | 'bio_es' | 'image_url' | 'o
 
 const SOLO_CATEGORIES = new Set(['pioneer', 'us_artist', 'current'])
 
+/** Primer párrafo de la bio = "lead" para meta description y JSON-LD. */
+function bioLead(bio: string | null | undefined, max = 300): string | undefined {
+  const paras = splitBioParagraphs(bio)
+  const first = paras[0] || (bio ? bio.trim() : '')
+  if (!first) return undefined
+  return first.length <= max ? first : first.slice(0, max).replace(/\s+\S*$/, '') + '…'
+}
+
 function buildJsonLd(artist: Artist, lang: Locale, slug: string) {
   const isSolo = SOLO_CATEGORIES.has(artist.category)
   const url = `${SITE_URL}/${lang}/artists/${slug}`
   const imageUrl = displayArtistImageUrl(slug, artist.image_url)
+  const countryName = countryNameFromCode(artist.country, lang)
+
+  // sameAs: redes sociales + web oficial. La web personal del artista se
+  // referencia aquí (NO en mainEntityOfPage, que debe apuntar a la canónica
+  // de la propia ficha — corrección sobre la versión anterior).
+  const sameAs = [
+    artist.website,
+    ...(artist.socials ? Object.values(artist.socials) : []),
+  ].filter((v): v is string => Boolean(v && String(v).trim()))
 
   return {
     '@context': 'https://schema.org',
@@ -65,11 +82,11 @@ function buildJsonLd(artist: Artist, lang: Locale, slug: string) {
     name: artist.name_display || artist.name,
     url,
     ...(imageUrl && { image: imageUrl }),
-    ...(artist.country && { nationality: artist.country }),
+    ...(countryName && { nationality: countryName }),
     genre: artist.styles?.join(', ') || 'Breakbeat',
-    description: (lang === 'es' ? artist.bio_es : artist.bio_en)?.slice(0, 300),
-    sameAs: artist.socials ? Object.values(artist.socials).filter(Boolean) : [],
-    ...(artist.website && { mainEntityOfPage: artist.website }),
+    description: bioLead(lang === 'es' ? artist.bio_es : artist.bio_en, 300),
+    ...(sameAs.length > 0 ? { sameAs: Array.from(new Set(sameAs)) } : {}),
+    mainEntityOfPage: url,
   }
 }
 
@@ -106,7 +123,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 
   const siteName = await siteNameForLang(lang)
-  const description = lang === 'es' ? meta.bio_es : meta.bio_en
+  // El primer párrafo (lead) suele ser introductorio; mejor para meta/OG que
+  // pasar la bio entera y dejar que `smartTruncate` recorte por la mitad.
+  const description = bioLead(lang === 'es' ? meta.bio_es : meta.bio_en, 220)
   const keywords = buildArtistKeywords(meta, lang)
 
   const ogPortrait =
@@ -226,6 +245,24 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const bio = lang === 'es' ? artist.bio_es : artist.bio_en
   const bioBlocks = splitBioParagraphs(bio)
   const jsonLd = buildJsonLd(artist, lang, slug)
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: lang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
+    { name: lang === 'es' ? 'Artistas' : 'Artists', url: `${SITE_URL}/${lang}/artists` },
+    { name: artist.name_display || artist.name, url: `${SITE_URL}/${lang}/artists/${slug}` },
+  ])
+  const jsonLdGraph = {
+    '@context': 'https://schema.org',
+    '@graph': [jsonLd, breadcrumbLd],
+  }
+  // alt enriquecido para el retrato: "Retrato de Fatboy Slim — DJ y productor (UK)"
+  const portraitAltBits = [
+    lang === 'es'
+      ? `Retrato de ${artist.name_display || artist.name}`
+      : `${artist.name_display || artist.name} portrait`,
+    artist.styles?.[0] || null,
+    countryNameFromCode(artist.country, lang),
+  ].filter(Boolean) as string[]
+  const portraitAlt = portraitAltBits.join(' · ')
   const keyReleases = (artist.key_releases || []) as ArtistKeyRelease[]
   const labelsArr = artist.labels_founded || []
 
@@ -233,7 +270,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
       />
 
       <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
@@ -247,7 +284,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             <div className="w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(400px,40vw)] shrink-0 mx-auto md:mx-0">
               <CardThumbnail
                 src={displayArtistImageUrl(slug, artist.image_url)}
-                alt={artist.name_display || artist.name}
+                alt={portraitAlt}
                 aspectClass="aspect-square w-full"
                 frameClass="border-[3px] border-[var(--ink)]"
               />
@@ -331,9 +368,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Essential tracks */}
             {artist.essential_tracks?.length > 0 && (
               <div className="mb-6">
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
+                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
                   {lang === 'es' ? 'TRACKS ESENCIALES' : 'ESSENTIAL TRACKS'}
-                </div>
+                </h2>
                 {artist.essential_tracks.map((t: string, i: number) => (
                   <div key={i} className="py-1 border-b border-dashed border-white/10" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'rgba(232,220,200,0.6)' }}>
                     {t}
@@ -345,9 +382,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Key releases */}
             {keyReleases.length > 0 && (
               <div className="mb-6">
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
+                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
                   {lang === 'es' ? 'LANZAMIENTOS CLAVE' : 'KEY RELEASES'}
-                </div>
+                </h2>
                 {keyReleases.map((r, i) => (
                   <div key={i} className="py-2 border-b border-dashed border-white/10">
                     <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'rgba(232,220,200,0.85)', fontWeight: 700 }}>
@@ -366,9 +403,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Labels founded */}
             {labelsArr.length > 0 && (
               <div className="mb-6">
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
+                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
                   {lang === 'es' ? 'SELLOS FUNDADOS' : 'LABELS FOUNDED'}
-                </div>
+                </h2>
                 <div className="flex flex-wrap gap-1">
                   {labelsArr.map((labelText, i) => {
                     const labelSlug = labelSlugByName.get(normalizeForEntityMatch(labelText))
@@ -406,9 +443,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Related artists (excluye nombres que coinciden con sellos en BD) */}
             {relatedArtistsForDisplay.length > 0 && (
               <div className="mb-6">
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>
+                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
                   {lang === 'es' ? 'ARTISTAS RELACIONADOS' : 'RELATED ARTISTS'}
-                </div>
+                </h2>
                 <div className="flex flex-col gap-0">
                   {relatedArtistsForDisplay.map((relatedName: string, i: number) => {
                     const segments = splitRelatedArtistNames(relatedName)
@@ -452,7 +489,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Socials / Links */}
             {artist.socials && Object.keys(artist.socials).length > 0 && (
               <div>
-                <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px' }}>LINKS</div>
+                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>LINKS</h2>
                 {artist.website && (
                   <a href={artist.website} target="_blank" rel="noopener noreferrer" className="block py-1 text-[var(--cyan)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                     WEB →
