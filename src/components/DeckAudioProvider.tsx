@@ -957,14 +957,34 @@ export function DeckAudioProvider({
   }, [createDeckAudio])
 
   // === Animation tick: update progress + platter rotation ===
+  // OJO con la frecuencia de los `setState` de progreso: cada uno cambia el
+  // valor del context (`useMemo` lo incluye en deps) y eso re-renderiza a
+  // TODOS los consumidores de `useDeckAudio` (TracksSection, ChartView,
+  // BeatportTopTracks, BackToTop…). En React 18 + App Router las
+  // navegaciones de `next/link` viven dentro de una transición
+  // interrumpible: si llegan `setState` de alta prioridad (como aquí, desde
+  // un rAF a 60 fps) más rápido de lo que la transición tarda en commitear
+  // el árbol nuevo, la transición se reinicia indefinidamente y la página
+  // destino nunca aparece (síntoma reportado: "el menú no funciona, pulso
+  // STOP y entonces carga la página"). Por eso el progreso se actualiza
+  // throttled cada ~120 ms (≈8 fps, plenty para una barra fina) en lugar
+  // de cada frame.
+  const lastProgressFlushRef = useRef<{ A: number; B: number }>({ A: 0, B: 0 })
+  const PROGRESS_FLUSH_MS = 120
   useEffect(() => {
     const tick = (time: number) => {
       if (!lastTickRef.current) lastTickRef.current = time
       const deltaMs = time - lastTickRef.current
       lastTickRef.current = time
 
-      if (audioRefA.current && playingA) setProgressA(audioRefA.current.currentTime)
-      if (audioRefB.current && playingB) setProgressB(audioRefB.current.currentTime)
+      if (audioRefA.current && playingA && time - lastProgressFlushRef.current.A >= PROGRESS_FLUSH_MS) {
+        lastProgressFlushRef.current.A = time
+        setProgressA(audioRefA.current.currentTime)
+      }
+      if (audioRefB.current && playingB && time - lastProgressFlushRef.current.B >= PROGRESS_FLUSH_MS) {
+        lastProgressFlushRef.current.B = time
+        setProgressB(audioRefB.current.currentTime)
+      }
 
       const rpm = 33.33
       const degreesPerSec = (rpm / 60) * 360
@@ -1517,16 +1537,26 @@ export function DeckAudioProvider({
   }, [])
 
   // Tick de progreso de la preview (rAF, solo mientras sea el modo activo).
+  // Throttled a ~120 ms — ver la nota larga del rAF del deck arriba: si
+  // hacemos `setPreviewProgress` cada frame, todos los consumidores del
+  // context se re-renderizan a 60 fps y las transiciones de `next/link`
+  // no llegan nunca a commitear (el menú "no funciona" hasta pulsar STOP).
+  // 8 fps es más que suficiente para una barra de progreso y elimina por
+  // completo la avalancha de re-renders contra la transición de Next.
   useEffect(() => {
     if (previewQueue.length === 0) return
     let cancelled = false
-    const tick = () => {
+    let lastFlush = 0
+    const PREVIEW_FLUSH_MS = 120
+    const tick = (time: number) => {
       if (cancelled) return
       const a = previewAudioRef.current
-      if (a && a.duration && Number.isFinite(a.duration)) {
+      if (a && a.duration && Number.isFinite(a.duration) && time - lastFlush >= PREVIEW_FLUSH_MS) {
+        lastFlush = time
+        // setState con el mismo valor hace bail-out en React, así que no
+        // pasa nada por incluir duration y playing aunque casi nunca cambien.
         setPreviewProgress(a.currentTime)
         setPreviewDuration(a.duration)
-        // Sincroniza el flag playing con el estado real del <audio>
         setPreviewPlaying(!a.paused && !a.ended)
       }
       previewRafRef.current = requestAnimationFrame(tick)
