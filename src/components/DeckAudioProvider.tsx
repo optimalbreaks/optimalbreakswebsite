@@ -432,7 +432,10 @@ function MiniPlayerShell({
   const pct = duration ? (progress / duration) * 100 : 0
 
   const barRef = useRef<HTMLDivElement | null>(null)
-  const dragging = useRef(false)
+  const draggingPointerId = useRef<number | null>(null)
+  const moveListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
+  const upListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
+
   const seek = useCallback((clientX: number) => {
     if (!duration) return
     const bar = barRef.current
@@ -441,28 +444,67 @@ function MiniPlayerShell({
     onSeekRatio(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)))
   }, [duration, onSeekRatio])
 
-  /** Libera captura explícitamente: si el navegador no envía pointerup (touch
-   *  roto, cambio de pestaña, etc.), los clics siguen yendo al seek y los
-   *  enlaces del sitio «no responden» hasta desmontar el player (p. ej. Stop). */
-  const endSeekPointer = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    dragging.current = false
-    const el = e.currentTarget
-    try {
-      el.releasePointerCapture(e.pointerId)
-    } catch {
-      /* no estaba capturando este pointerId */
+  // Drag con listeners a nivel de `document`. Importante: NO usamos
+  // `setPointerCapture` sobre el `<div>` de la barra porque el reproductor es
+  // un overlay `position: fixed` que persiste entre rutas. Si la navegación
+  // (Next.js Link → cambio de árbol) o un cambio de pestaña interrumpe el
+  // gesto antes del `pointerup`, la captura quedaba viva y todos los clics
+  // posteriores se enrutaban al seek bar — bloqueando el menú/footer hasta
+  // refrescar. Con listeners en `document` no hay captura: si el gesto se
+  // interrumpe, el efecto de limpieza (abajo) los desmonta y el resto de la
+  // página vuelve a recibir clicks/taps con normalidad.
+  const stopDragging = useCallback(() => {
+    draggingPointerId.current = null
+    if (moveListenerRef.current) {
+      document.removeEventListener('pointermove', moveListenerRef.current)
+      moveListenerRef.current = null
+    }
+    if (upListenerRef.current) {
+      document.removeEventListener('pointerup', upListenerRef.current)
+      document.removeEventListener('pointercancel', upListenerRef.current)
+      upListenerRef.current = null
     }
   }, [])
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    dragging.current = true
-    e.currentTarget.setPointerCapture(e.pointerId)
+    // Sólo botón principal del ratón; en touch/pen no hay `button`.
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    // Si quedó algún listener de un gesto anterior (no debería), lo limpiamos.
+    stopDragging()
+    draggingPointerId.current = e.pointerId
     seek(e.clientX)
-  }, [seek])
 
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (dragging.current) seek(e.clientX)
-  }, [seek])
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== draggingPointerId.current) return
+      seek(ev.clientX)
+    }
+    const onUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== draggingPointerId.current) return
+      stopDragging()
+    }
+    moveListenerRef.current = onMove
+    upListenerRef.current = onUp
+    document.addEventListener('pointermove', onMove)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onUp)
+  }, [seek, stopDragging])
+
+  // Red de seguridad: si la pestaña se oculta o el navegador anuncia
+  // `pagehide` (p. ej. transición SPA agresiva en iOS), abortamos el drag.
+  // Y al desmontar el shell, garantizamos cero listeners colgando.
+  useEffect(() => {
+    const onVisibility = () => { if (document.hidden) stopDragging() }
+    const onPageHide = () => stopDragging()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('blur', stopDragging)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('blur', stopDragging)
+      stopDragging()
+    }
+  }, [stopDragging])
 
   const titleInner = (
     <>
@@ -493,14 +535,16 @@ function MiniPlayerShell({
     >
       <MiniBarHeader subtitle={subtitle} live />
       {/* Hitbox vertical extendido para evitar clicks accidentales sobre
-          enlaces de la página que quedan justo detrás de la barra fina. */}
+          enlaces de la página que quedan justo detrás de la barra fina.
+          OJO: NO usamos `setPointerCapture` aquí — el drag se gestiona con
+          listeners en `document` (ver `onPointerDown`/`stopDragging` arriba).
+          Así, si una navegación (o un cambio de pestaña) interrumpe el
+          gesto, no quedan eventos «secuestrados» a este overlay y los
+          enlaces del menú/footer siguen respondiendo sin tener que
+          refrescar la página. */}
       <div
         ref={barRef}
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endSeekPointer}
-        onPointerCancel={endSeekPointer}
-        onLostPointerCapture={() => { dragging.current = false }}
         className="group relative w-full cursor-pointer touch-manipulation select-none"
         style={{ touchAction: 'none', paddingTop: 10, paddingBottom: 6 }}
         role="progressbar"
