@@ -16,6 +16,9 @@
  *   node scripts/beatport-top-tracks.mjs label  83       54171
  *   node scripts/beatport-top-tracks.mjs --all-artists     # todos los que tienen beatport_id
  *   node scripts/beatport-top-tracks.mjs --all-labels       # todos los que tienen beatport_id
+ *   node scripts/beatport-top-tracks.mjs --all-artists --missing-only  # solo sin Top 10 (vacío/null)
+ *   node scripts/beatport-top-tracks.mjs --fill-missing-artists       # ↑ + busca Beatport si falta beatport_id
+ *   node scripts/beatport-top-tracks.mjs --fill-missing-artists --limit=30
  *   node scripts/beatport-top-tracks.mjs --dry-run artist yo-speed 526398
  *
  * Documentación en repo: README.md / README.es.md (sección Beatport Top 10).
@@ -124,6 +127,94 @@ function releaseDateIso(t) {
   return (y >= 1970 && y <= 2100) ? m[1] : null
 }
 
+function isTopTracksEmpty(v) {
+  if (v == null) return true
+  if (!Array.isArray(v)) return true
+  return v.length === 0
+}
+
+/** Slug en la URL canónica de Beatport (distinto del slug OB en algunos artistas). */
+function parseBeatportSlugFromUrl(beatportUrl, kind) {
+  if (!beatportUrl || typeof beatportUrl !== 'string') return null
+  const re = kind === 'artist'
+    ? /\/artist\/([a-z0-9-]+)\/\d+/i
+    : /\/label\/([a-z0-9-]+)\/\d+/i
+  const m = beatportUrl.match(re)
+  return m ? m[1] : null
+}
+
+function nameToBeatportSlugGuess(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/\p{M}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+async function searchBeatportArtistByExactName(displayName) {
+  const q = encodeURIComponent(displayName.trim())
+  const searchUrl = `https://www.beatport.com/search?q=${q}`
+  const res = await fetch(searchUrl, {
+    headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
+  })
+  if (!res.ok) return null
+  const html = await res.text()
+  const marker = '__NEXT_DATA__'
+  const idx = html.indexOf(marker)
+  if (idx === -1) return null
+  const start = html.indexOf('>', idx) + 1
+  const end = html.indexOf('</script>', start)
+  let nd
+  try {
+    nd = JSON.parse(html.slice(start, end).trim())
+  } catch {
+    return null
+  }
+  const queries = nd?.props?.pageProps?.dehydratedState?.queries || []
+  const targetLower = displayName.toLowerCase().trim()
+
+  for (const query of queries) {
+    const artistsArr = query?.state?.data?.artists?.data || []
+    for (const r of artistsArr) {
+      const rName = (r.artist_name || r.name || '').toLowerCase().trim()
+      const rId = r.artist_id || r.id
+      if (rName === targetLower && rId) {
+        const nm = r.artist_name || r.name
+        const slugBp = (typeof r.slug === 'string' && r.slug.trim())
+          ? r.slug.trim().toLowerCase()
+          : nameToBeatportSlugGuess(nm)
+        const idNum = typeof rId === 'number' ? rId : parseInt(String(rId), 10)
+        if (slugBp && Number.isFinite(idNum))
+          return { slug: slugBp, id: idNum, name: nm }
+      }
+    }
+    const genericResults = query?.state?.data?.results || []
+    for (const r of genericResults) {
+      if (r.slug && typeof r.id === 'number') {
+        const rName = (r.name || '').toLowerCase().trim()
+        if (rName === targetLower)
+          return { slug: r.slug, id: r.id, name: r.name }
+      }
+    }
+  }
+
+  const artistPattern = /\/artist\/([a-z0-9-]+)\/(\d+)/gi
+  const seen = new Set()
+  let match
+  while ((match = artistPattern.exec(html)) !== null) {
+    const [, aSlug, aId] = match
+    if (seen.has(aSlug)) continue
+    seen.add(aSlug)
+    const cleanSlug = aSlug.replace(/-/g, ' ').toLowerCase()
+    const targetClean = displayName.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/[^a-z0-9 ]/g, '').trim()
+    // Solo coincidencia fuerte (evita falsos positivos con partial match)
+    if (cleanSlug === targetClean)
+      return { slug: aSlug, id: parseInt(aId, 10), name: displayName }
+  }
+
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Scrape top-10 tracks
 // ---------------------------------------------------------------------------
@@ -199,21 +290,28 @@ async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, t
 // ---------------------------------------------------------------------------
 // Batch mode: all artists / labels that have beatport_id set
 // ---------------------------------------------------------------------------
-async function batchUpdate(supabase, table, dryRun) {
+async function batchUpdate(supabase, table, dryRun, { missingOnly = false } = {}) {
   const { data: rows, error } = await supabase
     .from(table)
-    .select('slug, beatport_id')
+    .select('slug, beatport_id, beatport_url, beatport_top_tracks')
     .not('beatport_id', 'is', null)
     .order('slug')
   if (error) throw new Error(`Supabase select ${table}: ${error.message}`)
   if (!rows?.length) { console.log(`  No rows with beatport_id in ${table}`); return }
 
-  console.log(`\n  Found ${rows.length} ${table} with beatport_id\n`)
-  const type = table === 'artists' ? 'artist' : 'label'
+  const kind = table === 'artists' ? 'artist' : 'label'
+  const todo = missingOnly ? rows.filter((r) => isTopTracksEmpty(r.beatport_top_tracks)) : rows
+  if (!todo.length) {
+    console.log(`\n  ${table}: ninguna fila${missingOnly ? ' sin Top 10' : ''}; nada que hacer.\n`)
+    return
+  }
 
-  for (const row of rows) {
+  console.log(`\n  ${table}: ${todo.length} filas a procesar${missingOnly ? ' (solo sin lista Top 10)' : ''}\n`)
+
+  for (const row of todo) {
     try {
-      const { tracks, beatport_url } = await scrapeTopTracks(type, row.slug, row.beatport_id)
+      const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, kind) || row.slug
+      const { tracks, beatport_url } = await scrapeTopTracks(kind, bpSlug, row.beatport_id)
       if (!dryRun) {
         await upsertTopTracks(supabase, table, row.slug, beatport_url, row.beatport_id, tracks)
       } else {
@@ -227,6 +325,95 @@ async function batchUpdate(supabase, table, dryRun) {
   }
 }
 
+async function fillMissingArtists(supabase, dryRun, maxTotal = Infinity) {
+  const { data: all, error } = await supabase
+    .from('artists')
+    .select('slug, name, beatport_id, beatport_url, beatport_top_tracks')
+    .order('slug')
+  if (error) throw new Error(`Supabase select artists: ${error.message}`)
+  const emptyTop = (all || []).filter((a) => isTopTracksEmpty(a.beatport_top_tracks))
+  const withId = emptyTop.filter((a) => a.beatport_id != null)
+  const withoutId = emptyTop.filter((a) => a.beatport_id == null && (a.name || '').trim())
+
+  console.log(`
+  Beatport Top 10 — relleno de faltantes (artistas)
+  Sin lista o vacío: ${emptyTop.length}
+    · con beatport_id: ${withId.length}
+    · sin beatport_id (se intentará buscar por nombre exacto): ${withoutId.length}
+${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
+`)
+
+  let processed = 0
+  const delays = { afterScrapeMs: 1500, afterSearchMs: 900 }
+
+  for (const row of withId) {
+    if (processed >= maxTotal) break
+    try {
+      const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, 'artist') || row.slug
+      console.log(`\n  [${processed + 1}] ${row.slug} (id ${row.beatport_id}) slug BP: ${bpSlug}`)
+      const { tracks, beatport_url } = await scrapeTopTracks('artist', bpSlug, row.beatport_id)
+      if (!dryRun) {
+        await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, row.beatport_id, tracks)
+      } else {
+        console.log(`  [dry-run] ${row.slug}: ${tracks.length} tracks`)
+      }
+      processed++
+      await sleep(delays.afterScrapeMs)
+    } catch (err) {
+      console.error(`  ✗ ${row.slug}: ${err.message}`)
+    }
+  }
+
+  for (const row of withoutId) {
+    if (processed >= maxTotal) break
+    try {
+      const nm = row.name.trim()
+      process.stdout.write(`\n  [${processed + 1}] ${row.slug} — buscar «${nm}» en Beatport...`)
+      const bp = await searchBeatportArtistByExactName(nm)
+      if (!bp) {
+        console.log(' ✗ sin coincidencia exacta')
+        await sleep(delays.afterSearchMs)
+        continue
+      }
+      console.log(` → artist/${bp.slug}/${bp.id}`)
+      const { tracks, beatport_url } = await scrapeTopTracks('artist', bp.slug, bp.id)
+      if (!dryRun) {
+        if (tracks.length) {
+          await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, bp.id, tracks)
+        } else {
+          const { error: upErr } = await supabase.from('artists').update({
+            beatport_url,
+            beatport_id: bp.id,
+            beatport_top_tracks: [],
+            beatport_top_tracks_updated_at: new Date().toISOString(),
+          }).eq('slug', row.slug)
+          if (upErr) throw new Error(upErr.message)
+          console.log(`  ✓ artists.${row.slug}: sin Top 10 en Beatport; guardados id/url`)
+        }
+      } else {
+        console.log(`  [dry-run] tracks: ${tracks.length}`)
+      }
+      processed++
+      await sleep(delays.afterScrapeMs)
+    } catch (err) {
+      console.error(`  ✗ ${row.slug}: ${err.message}`)
+    }
+  }
+
+  console.log(`\n  Hecho — operaciones ejecutadas / intentadas: ${processed}`)
+}
+
+function parseLimitArg(filtered) {
+  const raw = filtered.find((a) => a.startsWith('--limit='))
+  if (!raw) return Infinity
+  const n = parseInt(raw.split('=')[1], 10)
+  return Number.isFinite(n) && n > 0 ? n : Infinity
+}
+
+function stripLimitArg(filtered) {
+  return filtered.filter((a) => !a.startsWith('--limit='))
+}
+
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
 // ---------------------------------------------------------------------------
@@ -235,15 +422,40 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 async function main() {
   const args = process.argv.slice(2)
   const dryRun = args.includes('--dry-run')
-  const filtered = args.filter(a => a !== '--dry-run')
+  let filtered = args.filter(a => a !== '--dry-run')
+  const missingOnly = filtered.includes('--missing-only')
+  filtered = filtered.filter((a) => a !== '--missing-only')
+
+  const maxTotal = parseLimitArg(filtered)
+  filtered = stripLimitArg(filtered)
 
   if (filtered.includes('--all-artists')) {
+    filtered = filtered.filter((a) => a !== '--all-artists')
+    if (filtered.length) {
+      console.error('Argumentos extra tras --all-artists:', filtered.join(' '))
+      process.exit(1)
+    }
     const supabase = requireSupabase()
-    return batchUpdate(supabase, 'artists', dryRun)
+    return batchUpdate(supabase, 'artists', dryRun, { missingOnly })
   }
   if (filtered.includes('--all-labels')) {
+    filtered = filtered.filter((a) => a !== '--all-labels')
+    if (filtered.length) {
+      console.error('Argumentos extra tras --all-labels:', filtered.join(' '))
+      process.exit(1)
+    }
     const supabase = requireSupabase()
-    return batchUpdate(supabase, 'labels', dryRun)
+    return batchUpdate(supabase, 'labels', dryRun, { missingOnly })
+  }
+
+  if (filtered.includes('--fill-missing-artists')) {
+    filtered = filtered.filter((a) => a !== '--fill-missing-artists')
+    if (filtered.length) {
+      console.error('Argumentos extra tras --fill-missing-artists:', filtered.join(' '))
+      process.exit(1)
+    }
+    const supabase = requireSupabase()
+    return fillMissingArtists(supabase, dryRun, maxTotal)
   }
 
   if (filtered.length < 3) {
@@ -253,8 +465,9 @@ async function main() {
   Uso:
     node scripts/beatport-top-tracks.mjs artist <slug> <beatport_id>
     node scripts/beatport-top-tracks.mjs label  <slug> <beatport_id>
-    node scripts/beatport-top-tracks.mjs --all-artists [--dry-run]
-    node scripts/beatport-top-tracks.mjs --all-labels  [--dry-run]
+    node scripts/beatport-top-tracks.mjs --all-artists [--missing-only] [--dry-run]
+    node scripts/beatport-top-tracks.mjs --all-labels [--missing-only] [--dry-run]
+    node scripts/beatport-top-tracks.mjs --fill-missing-artists [--limit=N] [--dry-run]
 
   Ejemplo:
     node scripts/beatport-top-tracks.mjs artist yo-speed 526398

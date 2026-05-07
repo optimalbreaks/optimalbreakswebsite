@@ -370,6 +370,14 @@ const ACTIONS = [
       'UPSERT floridance-festival-2026: 5 sept Rota Estadio Monago Animalia; avance lineup cartel floridance-festival-2026.webp; MonsterTicket.',
   },
   {
+    id: 'events-patch-electrolunch-xxl-picnic-76-sevilla-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-electrolunch-xxl-picnic-76-sevilla-2026',
+    npm: 'npm run db:guia -- run events-patch-electrolunch-xxl-picnic-76-sevilla-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT electrolunch-xxl-picnic-76-sevilla-2026: 9 may 2026 Parque Magallanes Sevilla (Rocknrolla Producciones), main stage Stanton Warriors + Ylia, Jade Tansa, Magma, Luis Soldevilla; cartel public/images/events/electrolunch-xxl-picnic-76-sevilla-2026.webp; entrada gratuita hasta 17:00, pases ultimaentrada.com.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -451,7 +459,7 @@ const ACTIONS = [
   },
   {
     id: 'chart-artists-agent',
-    run: 'node scripts/guia-base-datos.mjs run chart-artists-agent [--week=…] [--file=…] [--force] [--dry-run] [--limit=N] [--delay-ms=…]',
+    run: 'node scripts/guia-base-datos.mjs run chart-artists-agent [--week=…] [--file=…] [--force] [--dry-run] [--limit=N] [--delay-ms=…] [--bootstrap-min-freq=N] [--bootstrap-only]',
     npm: 'npm run db:chart:artists:agent -- [flags]',
     creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI_API_KEY',
     description:
@@ -463,7 +471,7 @@ const ACTIONS = [
     npm: 'npm run db:beatport:top -- artist yo-speed 526398',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Scrapea el Top 10 de ventas de Beatport para un artista o sello y guarda en beatport_top_tracks (JSONB). --all-artists / --all-labels para batch. --dry-run para ver sin escribir.',
+      'Scrapea el Top 10 de ventas de Beatport y guarda JSONB en beatport_top_tracks. --all-artists / --all-labels (con --missing-only solo quienes tienen lista vacía). --fill-missing-artists rellena huecos y busca beatport_id por nombre exacto en la búsqueda de Beatport cuando falta. --limit=N, --dry-run.',
   },
   {
     id: 'verify',
@@ -569,6 +577,7 @@ Punto de entrada unificado:
   events-patch-iberican-breaks-festival-2026  IBÉRICAN Breaks Festival, Olvera 16 may 2026 (Terraza Manhattan, MonsterTicket)
   events-patch-solaris-fest-matalascanas-2026  Solaris Fest, Matalascañas 20 jun 2026 (Surfasaurus, MonsterTicket, cartel local WebP)
   events-patch-floridance-festival-2026  Floridance Festival 2026, Rota 5 sept Estadio Monago (Animalia, MonsterTicket)
+  events-patch-electrolunch-xxl-picnic-76-sevilla-2026  Electrolunch XXL · Picnic 76, Parque Magallanes Sevilla 9 may 2026 (Stanton Warriors + locales, ultimaentrada.com)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -582,7 +591,8 @@ Punto de entrada unificado:
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
   beatport-top artist <slug> <beatport_id>  beatport-top-tracks.mjs (Top 10 ventas Beatport → JSONB en BD)
   beatport-top label <slug> <beatport_id>   idem para sellos
-  beatport-top --all-artists | --all-labels [--dry-run]  batch para todos los que tienen beatport_id
+  beatport-top --all-artists | --all-labels [--missing-only] [--dry-run]  batch (--missing-only solo sin Top 10)
+  beatport-top --fill-missing-artists [--limit=N] [--dry-run]  artistas sin lista (+ búsqueda Beatport si no hay beatport_id)
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -660,7 +670,9 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
   Scrapea __NEXT_DATA__ de la ficha pública, extrae los 10 tracks más vendidos
   (con sample_url para preview) y guarda en beatport_top_tracks (JSONB).
   run beatport-top artist yo-speed 526398 | label 83 54171. Batch: --all-artists
-  / --all-labels (todos los que tienen beatport_id). Las fichas web de artista/sello
+  / --all-labels (--missing-only solo filas con beatport_top_tracks vacío);
+  --fill-missing-artists (prioriza esa cola + busca nombre exacto si falta beatport_id);
+  opcional --limit=N. Las fichas web de artista/sello
   muestran el bloque «BEATPORT TOP 10» como acordeón en el hero: filas idénticas
   al chart semanal (PositionBadge, artwork, artista|sello|año, BPM, key, BEATPORT)
   y barra flotante inferior compartida (transporte, progreso, mediaSession). El
@@ -956,6 +968,12 @@ function main() {
       break
     case 'events-patch-floridance-festival-2026':
       runNode('enriquecer-evento.mjs', ['--patch-floridance-festival-2026', ...rest])
+      break
+    case 'events-patch-electrolunch-xxl-picnic-76-sevilla-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-electrolunch-xxl-picnic-76-sevilla-2026',
+        ...rest,
+      ])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

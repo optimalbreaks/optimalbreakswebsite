@@ -183,7 +183,10 @@ Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `c
 ```bash
 npm run db:beatport:top -- artist deekline 3171
 npm run db:beatport:top -- label <slug-sello> <id-beatport>
-npm run db:beatport:top -- --all-artists   # solo filas que ya tienen beatport_id
+npm run db:beatport:top -- --all-artists            # todas las filas con beatport_id
+npm run db:beatport:top -- --all-artists --missing-only  # solo lista Top 10 vacía
+npm run db:beatport:top -- --fill-missing-artists   # rellena vacíos + busca Beatport si falta id
+npm run db:beatport:top -- --fill-missing-artists --limit=20  # prueba en lote corto
 npm run db:beatport:top -- --dry-run artist deekline 3171
 ```
 

@@ -1,7 +1,8 @@
 {
-  "week_date": "2026-04-27",
+  "week_date": "2026-05-05",
   "sources": [
-    "beatport"
+    "beatport",
+    "juno"
   ],
   "tracks": [
     {
@@ -11,7 +12,7 @@
       "artists": [
         {
           "name": "MPH",
-          "beatport_url": "https://www.beatport.com/artist/mph/"
+          "beatport_url": "https://www.beatport.com/artist/mph/123456"
         }
       ],
       "label": "Black Book Records",
@@ -24,7 +25,7 @@
       "release_year": 2026,
       "release_date": "2026-02-27",
       "previous_position": 1,
-      "weeks_in_chart": 4
+      "weeks_in_chart": 5
     },
     {
       "position": 2,
@@ -33,7 +34,7 @@
       "artists": [
         {
           "name": "Yo Speed",
-          "beatport_url": "https://www.beatport.com/artist/yo-speed/"
+          "beatport_url": "https://www.beatport.com/artist/yo-speed/123456"
         }
       ],
       "label": "83",
@@ -45,8 +46,8 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/9a38f01c-3481-4f19-adf2-7657884879c5.png",
       "release_year": 2025,
       "release_date": "2025-07-16",
-      "previous_position": 3,
-      "weeks_in_chart": 4
+      "previous_position": 2,
+      "weeks_in_chart": 5
     },
     {
       "position": 3,
@@ -55,11 +56,11 @@
       "artists": [
         {
           "name": "Redlight",
-          "beatport_url": "https://www.beatport.com/artist/redlight/"
+          "beatport_url": "https://www.beatport.com/artist/redlight/123456"
         },
         {
           "name": "NOTION",
-          "beatport_url": "https://www.beatport.com/artist/notion/"
+          "beatport_url": "https://www.beatport.com/artist/notion/123456"
         }
       ],
       "label": "Polydor Records",
@@ -71,43 +72,21 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/ff55efbd-c9b4-417c-a8d6-bf721e327c15.png",
       "release_year": 2026,
       "release_date": "2026-02-20",
-      "previous_position": 2,
-      "weeks_in_chart": 4
+      "previous_position": 3,
+      "weeks_in_chart": 5
     },
     {
       "position": 4,
-      "title": "Show Me",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Nokaut",
-          "beatport_url": "https://www.beatport.com/artist/nokaut/"
-        }
-      ],
-      "label": "Elektroshok Records",
-      "bpm": 134,
-      "key": "D Major",
-      "beatport_url": "https://www.beatport.com/track/show-me/27064424",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c7016e61-e0ff-4c6f-847d-232afcee0fd8.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/0b1fdaf9-5f63-49b0-b7bb-5ae84700e12f.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/0b1fdaf9-5f63-49b0-b7bb-5ae84700e12f.png",
-      "release_year": 2026,
-      "release_date": "2026-04-23",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 5,
       "title": "Raw Flava",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "J Wax",
-          "beatport_url": "https://www.beatport.com/artist/j-wax/"
+          "beatport_url": "https://www.beatport.com/artist/j-wax/123456"
         },
         {
           "name": "Seah",
-          "beatport_url": "https://www.beatport.com/artist/seah/"
+          "beatport_url": "https://www.beatport.com/artist/seah/123456"
         }
       ],
       "label": "No Instruction",
@@ -119,39 +98,47 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/6ded9e42-d230-47ec-9dc9-a8d3535b4548.png",
       "release_year": 2026,
       "release_date": "2026-04-24",
+      "previous_position": 5,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 5,
+      "title": "Curveball",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Max Dean",
+          "beatport_url": "https://www.beatport.com/artist/max-dean/123456"
+        },
+        {
+          "name": "Luke Dean",
+          "beatport_url": "https://www.beatport.com/artist/luke-dean/123456"
+        },
+        {
+          "name": "Locky (UK)",
+          "beatport_url": "https://www.beatport.com/artist/locky-uk/123456"
+        }
+      ],
+      "label": "neXup recz",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/curveball/20305519",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/59a83438-1cae-4c36-97fb-ac072afb0c18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e204ab10-85cc-40c3-9179-4a2c4391911c.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/e204ab10-85cc-40c3-9179-4a2c4391911c.png",
+      "release_year": 2025,
+      "release_date": "2025-04-18",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
       "position": 6,
-      "title": "Dat Fiya",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Ondamike",
-          "beatport_url": "https://www.beatport.com/artist/ondamike/"
-        }
-      ],
-      "label": "Ravesta Records",
-      "bpm": 134,
-      "key": "E Minor",
-      "beatport_url": "https://www.beatport.com/track/dat-fiya/24394941",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/752dc373-3375-46ad-ab1c-3a635af26d35.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/8e11f881-48af-49ac-9909-8ead603a03e9.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/8e11f881-48af-49ac-9909-8ead603a03e9.png",
-      "release_year": 2026,
-      "release_date": "2026-04-17",
-      "previous_position": 5,
-      "weeks_in_chart": 2
-    },
-    {
-      "position": 7,
       "title": "Keep It Ruff",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Guau",
-          "beatport_url": "https://www.beatport.com/artist/guau/"
+          "beatport_url": "https://www.beatport.com/artist/guau/123456"
         }
       ],
       "label": "83",
@@ -163,21 +150,65 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/eb31b7ee-8a89-4489-83b0-9f1e62c4b365.png",
       "release_year": 2026,
       "release_date": "2026-04-17",
-      "previous_position": 6,
-      "weeks_in_chart": 2
+      "previous_position": 7,
+      "weeks_in_chart": 3
+    },
+    {
+      "position": 7,
+      "title": "All Night (Extended)",
+      "mix_name": "Extended",
+      "artists": [
+        {
+          "name": "Krafty Kuts",
+          "beatport_url": "https://www.beatport.com/artist/krafty-kuts/123456"
+        }
+      ],
+      "label": "Against The Grain",
+      "bpm": 136,
+      "key": "Eb Major",
+      "beatport_url": "https://www.beatport.com/track/all-night-extended/28311094",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0731737-989f-4bc5-9787-c3f954839c1b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4c24e430-c452-454a-a7dd-2818d5c48501.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/b5e683aa-d148-4825-8fdf-e3532f1e96cb.png",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "previous_position": null,
+      "weeks_in_chart": 1
     },
     {
       "position": 8,
+      "title": "Dat Fiya",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/artist/ondamike/123456"
+        }
+      ],
+      "label": "Ravesta Records",
+      "bpm": 134,
+      "key": "E Minor",
+      "beatport_url": "https://www.beatport.com/track/dat-fiya/24394941",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/752dc373-3375-46ad-ab1c-3a635af26d35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8e11f881-48af-49ac-9909-8ead603a03e9.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/8e11f881-48af-49ac-9909-8ead603a03e9.png",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "previous_position": 6,
+      "weeks_in_chart": 3
+    },
+    {
+      "position": 9,
       "title": "Phenomena",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "SeekFlow",
-          "beatport_url": "https://www.beatport.com/artist/seekflow/"
+          "beatport_url": "https://www.beatport.com/artist/seekflow/123456"
         },
         {
           "name": "Jose Rodríguez (Spain)",
-          "beatport_url": "https://www.beatport.com/artist/jose-rodriguez-spain/"
+          "beatport_url": "https://www.beatport.com/artist/jose-rodriguez-spain/123456"
         }
       ],
       "label": "Distorsion Records",
@@ -189,239 +220,43 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/6a9b6730-de1e-4c4a-8c6c-be8ffaa68808.png",
       "release_year": 2026,
       "release_date": "2026-04-07",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 9,
-      "title": "Elastic Groove",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Sekret Chadow",
-          "beatport_url": "https://www.beatport.com/artist/sekret-chadow/"
-        }
-      ],
-      "label": "Elektroshok Records",
-      "bpm": 136,
-      "key": "F Minor",
-      "beatport_url": "https://www.beatport.com/track/elastic-groove/26770725",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/94daf892-1da0-4771-a89d-9be0f6b1e759.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/8ab1900f-78ce-4532-b94f-b87502b3626e.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/8ab1900f-78ce-4532-b94f-b87502b3626e.png",
-      "release_year": 2026,
-      "release_date": "2026-04-09",
-      "previous_position": 7,
-      "weeks_in_chart": 3
+      "previous_position": 8,
+      "weeks_in_chart": 2
     },
     {
       "position": 10,
-      "title": "AI Killer",
+      "title": "Show Me",
       "mix_name": "Original Mix",
       "artists": [
         {
-          "name": "Aggresivnes",
-          "beatport_url": "https://www.beatport.com/artist/aggresivnes/"
+          "name": "Nokaut",
+          "beatport_url": "https://www.beatport.com/artist/nokaut/123456"
         }
       ],
       "label": "Elektroshok Records",
-      "bpm": 137,
-      "key": "Eb Major",
-      "beatport_url": "https://www.beatport.com/track/ai-killer/27079772",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/443c968e-95be-41d7-96c7-97e56135fe2d.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/3bd04248-00aa-47f8-af43-61091f844c4e.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/3bd04248-00aa-47f8-af43-61091f844c4e.png",
+      "bpm": 134,
+      "key": "D Major",
+      "beatport_url": "https://www.beatport.com/track/show-me/27064424",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c7016e61-e0ff-4c6f-847d-232afcee0fd8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0b1fdaf9-5f63-49b0-b7bb-5ae84700e12f.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/0b1fdaf9-5f63-49b0-b7bb-5ae84700e12f.png",
       "release_year": 2026,
-      "release_date": "2026-04-15",
-      "previous_position": 15,
+      "release_date": "2026-04-23",
+      "previous_position": 4,
       "weeks_in_chart": 2
     },
     {
       "position": 11,
-      "title": "Wicked & Crisp (Eloquin Extended Remix)",
-      "mix_name": "Extended Remix",
-      "artists": [
-        {
-          "name": "1111",
-          "beatport_url": "https://www.beatport.com/artist/1111/"
-        }
-      ],
-      "label": "Fly Boy Records",
-      "bpm": 138,
-      "key": "F Minor",
-      "beatport_url": "https://www.beatport.com/track/wicked-crisp/27750066",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6b3f16a6-857a-4284-a517-bb74d5c2a6bc.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/7d78406a-0234-4599-afa0-899c0e9db4ac.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/7d78406a-0234-4599-afa0-899c0e9db4ac.png",
-      "release_year": 2026,
-      "release_date": "2026-04-10",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 12,
-      "title": "Tribal",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Pavane",
-          "beatport_url": "https://www.beatport.com/artist/pavane/"
-        },
-        {
-          "name": "Rhades",
-          "beatport_url": "https://www.beatport.com/artist/rhades/"
-        }
-      ],
-      "label": "Banana Club",
-      "bpm": 136,
-      "key": "Gb Minor",
-      "beatport_url": "https://www.beatport.com/track/tribal/26964817",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7c6ac202-e2e4-4e2e-8b3c-440f5540924e.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/4ffd05c3-bd78-4474-bf52-570c5493c6e3.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/4ffd05c3-bd78-4474-bf52-570c5493c6e3.png",
-      "release_year": 2026,
-      "release_date": "2026-04-22",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 13,
-      "title": "NXTU (PhoenixRising Remix)",
-      "mix_name": "Remix",
-      "artists": [
-        {
-          "name": "Huda Hudia",
-          "beatport_url": "https://www.beatport.com/artist/huda-hudia/"
-        },
-        {
-          "name": "Menges",
-          "beatport_url": "https://www.beatport.com/artist/menges/"
-        },
-        {
-          "name": "Gruv42",
-          "beatport_url": "https://www.beatport.com/artist/gruv42/"
-        }
-      ],
-      "label": "Kaleidoscope Music",
-      "bpm": 132,
-      "key": "E Minor",
-      "beatport_url": "https://www.beatport.com/track/nxtu/27484744",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/121f360c-8341-479e-a08f-d2a628e4c1cf.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/007fabd1-7b24-4e81-8ac5-58b2fe966180.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/007fabd1-7b24-4e81-8ac5-58b2fe966180.png",
-      "release_year": 2026,
-      "release_date": "2026-04-24",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 14,
-      "title": "Das Da Shi",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Luke Dean",
-          "beatport_url": "https://www.beatport.com/artist/luke-dean/"
-        },
-        {
-          "name": "Locky (UK)",
-          "beatport_url": "https://www.beatport.com/artist/locky-uk/"
-        }
-      ],
-      "label": "Dance Traxx LDN",
-      "bpm": 135,
-      "key": "F Minor",
-      "beatport_url": "https://www.beatport.com/track/das-da-shi/21993440",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/21456f1e-7b0d-4d79-ab4e-97f20e687907.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/d04e7a14-61bb-4d9c-99af-83bf6f412c40.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/22ae7f8b-8b32-4885-bae4-e454a351bcda.png",
-      "release_year": 2025,
-      "release_date": "2025-10-17",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 15,
-      "title": "I Can Feel U",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Yo Speed",
-          "beatport_url": "https://www.beatport.com/artist/yo-speed/"
-        }
-      ],
-      "label": "83",
-      "bpm": 145,
-      "key": "C Minor",
-      "beatport_url": "https://www.beatport.com/track/i-can-feel-u/24028316",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03b643ed-64e3-4066-8b5c-631b07413584.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/7e61c74d-1a88-42ed-9627-5fd91aa44fd9.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/7e61c74d-1a88-42ed-9627-5fd91aa44fd9.png",
-      "release_year": 2026,
-      "release_date": "2026-03-19",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 16,
-      "title": "Forever",
-      "mix_name": "Extended Mix",
-      "artists": [
-        {
-          "name": "ZULAN",
-          "beatport_url": "https://www.beatport.com/artist/zulan/"
-        }
-      ],
-      "label": "ZULAN",
-      "bpm": 135,
-      "key": "B Minor",
-      "beatport_url": "https://www.beatport.com/track/forever/20368979",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2a79872d-c353-4536-befe-bf2dbebfe9e6.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/b920fd1b-8b77-472f-add7-23a842b2d978.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/fe742edb-a461-4935-98a6-ae67674a65b8.png",
-      "release_year": 2025,
-      "release_date": "2025-04-11",
-      "previous_position": 9,
-      "weeks_in_chart": 2
-    },
-    {
-      "position": 17,
-      "title": "Rump Shaker",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Digital Base",
-          "beatport_url": "https://www.beatport.com/artist/digital-base/"
-        },
-        {
-          "name": "Andy Vibes",
-          "beatport_url": "https://www.beatport.com/artist/andy-vibes/"
-        }
-      ],
-      "label": "Old Skool Records",
-      "bpm": 130,
-      "key": "D Major",
-      "beatport_url": "https://www.beatport.com/track/rump-shaker/27910276",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3d690a69-7fad-4640-bcd2-a17e61d70ec4.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/2f224c35-08c7-4768-b571-2b8909cbc0a4.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/2f224c35-08c7-4768-b571-2b8909cbc0a4.png",
-      "release_year": 2026,
-      "release_date": "2026-04-16",
-      "previous_position": 10,
-      "weeks_in_chart": 2
-    },
-    {
-      "position": 18,
       "title": "I Need This",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Douvelle19",
-          "beatport_url": "https://www.beatport.com/artist/douvelle19/"
+          "beatport_url": "https://www.beatport.com/artist/douvelle19/123456"
         },
         {
           "name": "DJ Motu",
-          "beatport_url": "https://www.beatport.com/artist/dj-motu/"
+          "beatport_url": "https://www.beatport.com/artist/dj-motu/123456"
         }
       ],
       "label": "ATW Records",
@@ -433,17 +268,73 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/5dfc1bb6-020c-4545-8bda-2ba02a61ddb4.png",
       "release_year": 2026,
       "release_date": "2026-04-24",
+      "previous_position": 18,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 12,
+      "title": "Troublemakers EP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Stacy McClure",
+          "beatport_url": "https://www.beatport.com/artist/stacy-mcclure/123456"
+        },
+        {
+          "name": "ShenaniGoons",
+          "beatport_url": "https://www.beatport.com/artist/shenanigoons/123456"
+        },
+        {
+          "name": "Sir1",
+          "beatport_url": "https://www.beatport.com/artist/sir1/123456"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/troublemakers-ep/24470930",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5fd161ee-1955-4274-a92a-1f18d101c41b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3a8189b0-41cb-485e-a11c-2b006f6fc931.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/3a8189b0-41cb-485e-a11c-2b006f6fc931.png",
+      "release_year": 2026,
+      "release_date": "2026-04-13",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
-      "position": 19,
+      "position": 13,
+      "title": "Hold It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Guau",
+          "beatport_url": "https://www.beatport.com/artist/guau/123456"
+        },
+        {
+          "name": "Lototskiy",
+          "beatport_url": "https://www.beatport.com/artist/lototskiy/123456"
+        }
+      ],
+      "label": "83",
+      "bpm": 140,
+      "key": "Db Minor",
+      "beatport_url": "https://www.beatport.com/track/hold-it/24214500",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c3cb82a8-d3db-48d9-ab7e-75c2276feb40.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50375e9a-84de-4b57-b5aa-cd894c916803.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/50375e9a-84de-4b57-b5aa-cd894c916803.png",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 14,
       "title": "Let's Get Filthy",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Ondamike",
-          "beatport_url": "https://www.beatport.com/artist/ondamike/"
+          "beatport_url": "https://www.beatport.com/artist/ondamike/123456"
         }
       ],
       "label": "Ravesta Records",
@@ -455,469 +346,187 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/bf61d83e-7609-4fec-8dec-59682081a152.png",
       "release_year": 2025,
       "release_date": "2025-12-31",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 20,
-      "title": "Bussin - Krafty Kuts Remix",
-      "mix_name": "Remix",
-      "artists": [
-        {
-          "name": "Krafty Kuts",
-          "beatport_url": "https://www.beatport.com/artist/krafty-kuts/"
-        },
-        {
-          "name": "Amp Live",
-          "beatport_url": "https://www.beatport.com/artist/amp-live/"
-        },
-        {
-          "name": "The Gaff",
-          "beatport_url": "https://www.beatport.com/artist/the-gaff/"
-        },
-        {
-          "name": "Johanna Phraze",
-          "beatport_url": "https://www.beatport.com/artist/johanna-phraze/"
-        },
-        {
-          "name": "MVPZ",
-          "beatport_url": "https://www.beatport.com/artist/mvpz/"
-        }
-      ],
-      "label": "Most Valuable Records",
-      "bpm": 136,
-      "key": "B Minor",
-      "beatport_url": "https://www.beatport.com/track/bussin-krafty-kuts-remix/20525591",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5d4ab877-a01a-4ecb-8cc7-3a35e4c6ec1d.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/e44ca1bf-3d69-4e88-af3d-44ea2a45ece6.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/fed641e0-5285-4031-b1b4-b6c3136cd439.png",
-      "release_year": 2025,
-      "release_date": "2025-05-15",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 21,
-      "title": "Echoes of the Mind",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "SeekFlow",
-          "beatport_url": "https://www.beatport.com/artist/seekflow/"
-        }
-      ],
-      "label": "Raveart Records",
-      "bpm": 140,
-      "key": "Ab Minor",
-      "beatport_url": "https://www.beatport.com/track/echoes-of-the-mind/26803614",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/68795142-52b8-4f9f-9b2b-d51aa7968229.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/8f8a93df-200c-418d-8162-0fbd316e1867.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/8f8a93df-200c-418d-8162-0fbd316e1867.png",
-      "release_year": 2026,
-      "release_date": "2026-04-22",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 22,
-      "title": "Flight FM",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Joy Orbison",
-          "beatport_url": "https://www.beatport.com/artist/joy-orbison/"
-        }
-      ],
-      "label": "XL Recordings",
-      "bpm": 140,
-      "key": "D Major",
-      "beatport_url": "https://www.beatport.com/track/flight-fm/18574695",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d48e1505-6b04-474e-a6de-53647a848dba.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/241d2113-b7ca-4b5e-a4ea-0a6722285b20.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/4561d039-2c55-48a8-97b9-153c31007842.png",
-      "release_year": 2024,
-      "release_date": "2024-01-17",
-      "previous_position": 4,
+      "previous_position": 19,
       "weeks_in_chart": 2
     },
     {
-      "position": 23,
-      "title": "How We Feelin'",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Fonzo",
-          "beatport_url": "https://www.beatport.com/artist/fonzo/"
-        }
-      ],
-      "label": "Hardline Sounds",
-      "bpm": 83,
-      "key": "C Minor",
-      "beatport_url": "https://www.beatport.com/track/how-we-feelin/18085215",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f7f6e11e-4ec1-42bf-943f-601a9bae66b8.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/460703f7-a236-4f8e-bdec-fd4fff890578.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/460703f7-a236-4f8e-bdec-fd4fff890578.png",
-      "release_year": 2023,
-      "release_date": "2023-10-06",
-      "previous_position": 39,
-      "weeks_in_chart": 3
-    },
-    {
-      "position": 24,
-      "title": "Nighthawk",
-      "mix_name": "Extended Mix",
-      "artists": [
-        {
-          "name": "Freestylers",
-          "beatport_url": "https://www.beatport.com/artist/freestylers/"
-        },
-        {
-          "name": "Krafty Kuts",
-          "beatport_url": "https://www.beatport.com/artist/krafty-kuts/"
-        },
-        {
-          "name": "Plump DJs",
-          "beatport_url": "https://www.beatport.com/artist/plump-djs/"
-        },
-        {
-          "name": "King of the Beats",
-          "beatport_url": "https://www.beatport.com/artist/king-of-the-beats/"
-        }
-      ],
-      "label": "Speaker Freaker",
-      "bpm": 132,
-      "key": "Eb Minor",
-      "beatport_url": "https://www.beatport.com/track/nighthawk/20790826",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b472f904-6d30-467e-abb0-073117a2437d.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/437313ca-107b-46d5-a753-3257620ab49f.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/15390652-ec89-47bd-a133-7fddb98b086e.png",
-      "release_year": 2025,
-      "release_date": "2025-08-15",
-      "previous_position": 26,
-      "weeks_in_chart": 4
-    },
-    {
-      "position": 25,
-      "title": "Make Me",
-      "mix_name": "Extended",
-      "artists": [
-        {
-          "name": "Borai & Denham Audio",
-          "beatport_url": "https://www.beatport.com/artist/borai-denham-audio/"
-        }
-      ],
-      "label": "Columbia (Sony)",
-      "bpm": 130,
-      "key": "Bb Minor",
-      "beatport_url": "https://www.beatport.com/track/make-me/17367614",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b959431a-d959-4330-a4eb-aa1f1a3e5e22.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/b8198e60-99da-4334-87e4-ce86713a3df7.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/b8198e60-99da-4334-87e4-ce86713a3df7.png",
-      "release_year": 2023,
-      "release_date": "2023-02-17",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 26,
-      "title": "Handle With Care",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Conducta",
-          "beatport_url": "https://www.beatport.com/artist/conducta/"
-        }
-      ],
-      "label": "Conducta",
-      "bpm": 128,
-      "key": "D Minor",
-      "beatport_url": "https://www.beatport.com/track/handle-with-care/20171745",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e1ec3a8-4711-44b0-bbfc-ad62c603fefa.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/2f4e6b61-2de9-4635-9a57-50c72c1fa985.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/9eadaa13-c22e-4bfa-8b76-c21af6242d6a.png",
-      "release_year": 2025,
-      "release_date": "2025-03-05",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 27,
-      "title": "Cardboard Break",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DJ Icey",
-          "beatport_url": "https://www.beatport.com/artist/dj-icey/"
-        }
-      ],
-      "label": "Zone Records",
-      "bpm": 130,
-      "key": "G Minor",
-      "beatport_url": "https://www.beatport.com/track/cardboard-break/26942380",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eaafe6d1-2e61-4487-aca0-288d1930b57e.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/bca26212-549c-402c-8a62-1263f83f7a1b.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/bca26212-549c-402c-8a62-1263f83f7a1b.png",
-      "release_year": 2026,
-      "release_date": "2026-04-10",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 28,
-      "title": "Freedom 2",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Joy Orbison",
-          "beatport_url": "https://www.beatport.com/artist/joy-orbison/"
-        },
-        {
-          "name": "Overmono",
-          "beatport_url": "https://www.beatport.com/artist/overmono/"
-        },
-        {
-          "name": "Kwengface",
-          "beatport_url": "https://www.beatport.com/artist/kwengface/"
-        }
-      ],
-      "label": "Kwengface LTD",
-      "bpm": 70,
-      "key": "B Minor",
-      "beatport_url": "https://www.beatport.com/track/freedom-2/17998365",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/81c7a043-1849-4533-b04a-ea7689ca9b2c.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/0fba4c65-2505-4dd9-a612-2abd20604325.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/0fba4c65-2505-4dd9-a612-2abd20604325.png",
-      "release_year": 2023,
-      "release_date": "2023-07-27",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 29,
-      "title": "Freak",
+      "position": 15,
+      "title": "Down Low",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Dub Elements",
-          "beatport_url": "https://www.beatport.com/artist/dub-elements/"
+          "beatport_url": "https://www.beatport.com/artist/dub-elements/123456"
         }
       ],
-      "label": "DEB",
+      "label": "83",
       "bpm": 134,
-      "key": "C Minor",
-      "beatport_url": "https://www.beatport.com/track/freak/24275120",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/90c7789e-dfc9-4a9b-ae3e-f0252329f0d7.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/480e4431-7d34-4305-89d1-422227cb5439.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/480e4431-7d34-4305-89d1-422227cb5439.png",
-      "release_year": 2026,
-      "release_date": "2026-04-10",
-      "previous_position": 22,
-      "weeks_in_chart": 3
-    },
-    {
-      "position": 30,
-      "title": "Shake It Up",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "DJ Genesis",
-          "beatport_url": "https://www.beatport.com/artist/dj-genesis/"
-        }
-      ],
-      "label": "Gigabeat Records",
-      "bpm": 132,
-      "key": "Eb Minor",
-      "beatport_url": "https://www.beatport.com/track/shake-it-up/24527857",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/df1d4107-b867-4b8f-b5a7-283ca1a358d6.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/bef45c8a-b7af-4fa9-b9f1-f00b5b8cd947.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/bef45c8a-b7af-4fa9-b9f1-f00b5b8cd947.png",
-      "release_year": 2026,
-      "release_date": "2026-04-03",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 31,
-      "title": "What?",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Mary Droppinz",
-          "beatport_url": "https://www.beatport.com/artist/mary-droppinz/"
-        },
-        {
-          "name": "Neumonic",
-          "beatport_url": "https://www.beatport.com/artist/neumonic/"
-        }
-      ],
-      "label": "Deadbeats",
-      "bpm": 142,
-      "key": "F Major",
-      "beatport_url": "https://www.beatport.com/track/what/23436476",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/612b1182-d6bd-4d36-8dea-4d12edc04daa.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/ac307a60-1931-4030-a576-38ec94f988a1.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/ac307a60-1931-4030-a576-38ec94f988a1.png",
-      "release_year": 2026,
-      "release_date": "2026-01-21",
-      "previous_position": 25,
-      "weeks_in_chart": 2
-    },
-    {
-      "position": 32,
-      "title": "Low Rider",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Hatori Hanso",
-          "beatport_url": "https://www.beatport.com/artist/hatori-hanso/"
-        }
-      ],
-      "label": "Pilot (UK)",
-      "bpm": 135,
-      "key": "F Major",
-      "beatport_url": "https://www.beatport.com/track/low-rider/18938434",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/01d91b75-83ef-4bea-b775-9bd137b1316d.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/ff4e6dd3-abc0-424f-83d5-1f82dbb3f3aa.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/ff4e6dd3-abc0-424f-83d5-1f82dbb3f3aa.png",
-      "release_year": 2024,
-      "release_date": "2024-05-24",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 33,
-      "title": "Left Right Left (Charlie Shell Remix)",
-      "mix_name": "Remix",
-      "artists": [
-        {
-          "name": "Eloquin",
-          "beatport_url": "https://www.beatport.com/artist/eloquin/"
-        },
-        {
-          "name": "Charlie Shell",
-          "beatport_url": "https://www.beatport.com/artist/charlie-shell/"
-        }
-      ],
-      "label": "Primitive UK",
-      "bpm": 140,
-      "key": "D Minor",
-      "beatport_url": "https://www.beatport.com/track/left-right-left/19648195",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b4dc5ab8-04b4-4e34-8416-bc99b0afa303.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/f7ef8586-d553-4bd4-ab1a-fa968b9c35eb.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/888e4aab-bf9f-48f9-a2f6-71d671109058.png",
-      "release_year": 2024,
-      "release_date": "2024-11-08",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 34,
-      "title": "Electric Night",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "AndrewFx",
-          "beatport_url": "https://www.beatport.com/artist/andrewfx/"
-        },
-        {
-          "name": "Devis Hard",
-          "beatport_url": "https://www.beatport.com/artist/devis-hard/"
-        }
-      ],
-      "label": "Zyn Records",
-      "bpm": 140,
-      "key": "Gb Minor",
-      "beatport_url": "https://www.beatport.com/track/electric-night/28388834",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bfc64d86-c2dd-46c7-aa4d-f302af062b03.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/76b393a6-142a-4077-ad13-1f8e319a9d43.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/76b393a6-142a-4077-ad13-1f8e319a9d43.png",
-      "release_year": 2026,
-      "release_date": "2026-04-15",
-      "previous_position": null,
-      "weeks_in_chart": 1
-    },
-    {
-      "position": 35,
-      "title": "IT'S ALRIGHT",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Afghan Headspin",
-          "beatport_url": "https://www.beatport.com/artist/afghan-headspin/"
-        },
-        {
-          "name": "DJ Brownie",
-          "beatport_url": "https://www.beatport.com/artist/dj-brownie/"
-        }
-      ],
-      "label": "Raveart Records",
-      "bpm": 140,
       "key": "F Minor",
-      "beatport_url": "https://www.beatport.com/track/its-alright/26803615",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/54048639-c77a-44c3-98e9-63eeef265bac.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/ef56eebe-d447-43c9-a597-7727917bcadd.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/ef56eebe-d447-43c9-a597-7727917bcadd.png",
+      "beatport_url": "https://www.beatport.com/track/down-low/27915462",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3422b209-e767-4869-9063-04ada0e19675.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5226bc9f-129b-4161-836b-0e9522102c44.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/5226bc9f-129b-4161-836b-0e9522102c44.png",
       "release_year": 2026,
-      "release_date": "2026-04-21",
+      "release_date": "2026-05-01",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
-      "position": 36,
-      "title": "Promise",
+      "position": 16,
+      "title": "Alive",
       "mix_name": "Original Mix",
       "artists": [
         {
-          "name": "ance.",
-          "beatport_url": "https://www.beatport.com/artist/ance/"
+          "name": "Prato",
+          "beatport_url": "https://www.beatport.com/artist/prato/123456"
+        },
+        {
+          "name": "Ryan Blake",
+          "beatport_url": "https://www.beatport.com/artist/ryan-blake/123456"
         }
       ],
-      "label": "Hot Cakes",
-      "bpm": 136,
-      "key": "F Major",
-      "beatport_url": "https://www.beatport.com/track/promise/26924992",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/88a63389-db5b-40ac-84a2-5fb9c26939a8.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/970827b3-8627-4ec3-b261-a3996f567d27.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/970827b3-8627-4ec3-b261-a3996f567d27.png",
+      "label": "83",
+      "bpm": 132,
+      "key": "C Major",
+      "beatport_url": "https://www.beatport.com/track/alive/27084555",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3ade0a5a-0b88-4064-98e0-9931ea61a748.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f4f77098-bc39-4c81-896c-956e54386a4d.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/f4f77098-bc39-4c81-896c-956e54386a4d.png",
+      "release_year": 2026,
+      "release_date": "2026-04-24",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 17,
+      "title": "Lose My Mind (Keith MacKenzie 808 Mix)",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Krafty Kuts",
+          "beatport_url": "https://www.beatport.com/artist/krafty-kuts/123456"
+        }
+      ],
+      "label": "Illeven Eleven",
+      "bpm": 130,
+      "key": "E Minor",
+      "beatport_url": "https://www.beatport.com/track/lose-my-mind/24135457",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/922bbdc2-caad-40c3-ab96-7dc72b6083b2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cfe2a06e-ee7c-4c30-888f-89cc9a955c61.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/5dcaf71b-56a6-45ff-bc4c-ea3a97bbb607.png",
       "release_year": 2026,
       "release_date": "2026-03-27",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
-      "position": 37,
-      "title": "Nighty",
+      "position": 18,
+      "title": "Forever",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "ZULAN",
+          "beatport_url": "https://www.beatport.com/artist/zulan/123456"
+        }
+      ],
+      "label": "ZULAN",
+      "bpm": 135,
+      "key": "B Minor",
+      "beatport_url": "https://www.beatport.com/track/forever/20368979",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2a79872d-c353-4536-befe-bf2dbebfe9e6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b920fd1b-8b77-472f-add7-23a842b2d978.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/fe742edb-a461-4935-98a6-ae67674a65b8.png",
+      "release_year": 2025,
+      "release_date": "2025-04-11",
+      "previous_position": 16,
+      "weeks_in_chart": 3
+    },
+    {
+      "position": 19,
+      "title": "Pop Dat (OnDaMiKe 2026 Remix)",
       "mix_name": "Original Mix",
       "artists": [
         {
-          "name": "Shade K",
-          "beatport_url": "https://www.beatport.com/artist/shade-k/"
+          "name": "DJ Fixx",
+          "beatport_url": "https://www.beatport.com/artist/dj-fixx/123456"
+        },
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/artist/ondamike/123456"
         }
       ],
-      "label": "Elektroshok Records",
-      "bpm": 130,
-      "key": "G Major",
-      "beatport_url": "https://www.beatport.com/track/nighty/23609006",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a131c8a5-8879-41a8-af07-23c818e8e081.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/e95c4ab6-fbe4-4106-affd-673d6f5a5abb.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/e95c4ab6-fbe4-4106-affd-673d6f5a5abb.png",
+      "label": "Ravesta Records",
+      "bpm": 135,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/pop-dat/24395856",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d80b1013-f0ce-4740-8622-c1ece0e23308.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9dc0b619-c476-4a93-bd9e-8879abcf8c4c.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/9dc0b619-c476-4a93-bd9e-8879abcf8c4c.png",
       "release_year": 2026,
-      "release_date": "2026-02-25",
+      "release_date": "2026-05-01",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
-      "position": 38,
+      "position": 20,
+      "title": "AI Killer",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Aggresivnes",
+          "beatport_url": "https://www.beatport.com/artist/aggresivnes/123456"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "bpm": 137,
+      "key": "Eb Major",
+      "beatport_url": "https://www.beatport.com/track/ai-killer/27079772",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/443c968e-95be-41d7-96c7-97e56135fe2d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3bd04248-00aa-47f8-af43-61091f844c4e.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/3bd04248-00aa-47f8-af43-61091f844c4e.png",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "previous_position": 10,
+      "weeks_in_chart": 3
+    },
+    {
+      "position": 21,
+      "title": "Rump Shaker",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Digital Base",
+          "beatport_url": "https://www.beatport.com/artist/digital-base/123456"
+        },
+        {
+          "name": "Andy Vibes",
+          "beatport_url": "https://www.beatport.com/artist/andy-vibes/123456"
+        }
+      ],
+      "label": "Old Skool Records",
+      "bpm": 130,
+      "key": "D Major",
+      "beatport_url": "https://www.beatport.com/track/rump-shaker/27910276",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3d690a69-7fad-4640-bcd2-a17e61d70ec4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2f224c35-08c7-4768-b571-2b8909cbc0a4.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/2f224c35-08c7-4768-b571-2b8909cbc0a4.png",
+      "release_year": 2026,
+      "release_date": "2026-04-16",
+      "previous_position": 17,
+      "weeks_in_chart": 3
+    },
+    {
+      "position": 22,
       "title": "Find Me",
       "mix_name": "Original Mix",
       "artists": [
         {
           "name": "Jem Haynes",
-          "beatport_url": "https://www.beatport.com/artist/jem-haynes/"
+          "beatport_url": "https://www.beatport.com/artist/jem-haynes/123456"
         },
         {
           "name": "Dominic B UK",
-          "beatport_url": "https://www.beatport.com/artist/dominic-b-uk/"
+          "beatport_url": "https://www.beatport.com/artist/dominic-b-uk/123456"
         }
       ],
       "label": "Rebel Bass",
@@ -929,50 +538,442 @@
       "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/dd70af2f-eb26-4d55-a5d4-c39a4f55c086.png",
       "release_year": 2025,
       "release_date": "2025-08-01",
+      "previous_position": 38,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 23,
+      "title": "Vechornytsi",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Organism",
+          "beatport_url": "https://www.beatport.com/artist/the-organism/123456"
+        },
+        {
+          "name": "Antai",
+          "beatport_url": "https://www.beatport.com/artist/antai/123456"
+        },
+        {
+          "name": "The Kode",
+          "beatport_url": "https://www.beatport.com/artist/the-kode/123456"
+        },
+        {
+          "name": "Morelyubovi",
+          "beatport_url": "https://www.beatport.com/artist/morelyubovi/123456"
+        }
+      ],
+      "label": "Organic Tunes",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/vechornytsi/28490062",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3bde087f-cbc6-4951-976b-7529221b97a3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cadef43a-ec33-4dbc-8ebf-3e1c771fe8e4.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/cadef43a-ec33-4dbc-8ebf-3e1c771fe8e4.png",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 24,
+      "title": "Mystic (Devis Hard Remix)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Jiro",
+          "beatport_url": "https://www.beatport.com/artist/jiro/123456"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "bpm": 135,
+      "key": "Ab Minor",
+      "beatport_url": "https://www.beatport.com/track/mystic/27181012",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a83bca4-eda1-452f-9bd7-c674bb2fdf06.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0b00fbc2-388d-4b72-9558-e9e9b114153e.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/0b00fbc2-388d-4b72-9558-e9e9b114153e.png",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 25,
+      "title": "Batata",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "MBreaks",
+          "beatport_url": "https://www.beatport.com/artist/mbreaks/123456"
+        }
+      ],
+      "label": "Banana Club",
+      "bpm": 140,
+      "key": "E Major",
+      "beatport_url": "https://www.beatport.com/track/batata/26908997",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/70aa3bf4-a568-47b2-b37c-2fea5430e2c7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/80e79719-1957-43bd-9a89-35ce54b1aa2d.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/80e79719-1957-43bd-9a89-35ce54b1aa2d.png",
+      "release_year": 2026,
+      "release_date": "2026-04-16",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 26,
+      "title": "Bounce N Shake",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/123456"
+        },
+        {
+          "name": "Amber Jane",
+          "beatport_url": "https://www.beatport.com/artist/amber-jane/123456"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "bpm": 135,
+      "key": "Bb Major",
+      "beatport_url": "https://www.beatport.com/track/bounce-n-shake/28343506",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1ba10bfe-7ecb-4071-a791-9d90f5a3118a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5e229217-0481-4a17-9bdf-0d105af4de99.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/5e229217-0481-4a17-9bdf-0d105af4de99.png",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 27,
+      "title": "808 Pulse",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Stacy McClure",
+          "beatport_url": "https://www.beatport.com/artist/stacy-mcclure/123456"
+        },
+        {
+          "name": "ShenaniGoons",
+          "beatport_url": "https://www.beatport.com/artist/shenanigoons/123456"
+        },
+        {
+          "name": "Sir1",
+          "beatport_url": "https://www.beatport.com/artist/sir1/123456"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/808-pulse/28395168",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/38d1bcc3-7083-4f5a-ab7e-6b9d0bb75b0c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9017789e-e58e-47c6-8357-e76122995f55.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/51e38f01-fe65-4bfa-a604-0a68aecf7c2f.png",
+      "release_year": 2026,
+      "release_date": "2026-04-30",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 28,
+      "title": "LIKE THAT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "EUROCLUB",
+          "beatport_url": "https://www.beatport.com/artist/euroclub/123456"
+        }
+      ],
+      "label": "Universal Music Italia srL.",
+      "bpm": 140,
+      "key": "E Major",
+      "beatport_url": "https://www.beatport.com/track/like-that/28488333",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82a68410-1107-4ef6-b7d3-a55bc37ce43a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3a72775-03b5-4e81-85ac-17e33140d5ba.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/e3a72775-03b5-4e81-85ac-17e33140d5ba.png",
+      "release_year": 2026,
+      "release_date": "2026-04-24",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 29,
+      "title": "All In",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "X Prod",
+          "beatport_url": "https://www.beatport.com/artist/x-prod/123456"
+        }
+      ],
+      "label": "83",
+      "bpm": 133,
+      "key": "G Major",
+      "beatport_url": "https://www.beatport.com/track/all-in/27064417",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/92dfce1e-c7a6-4b41-9eda-f90d47db89ac.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f29020f6-fdc3-4993-b225-82d42d6d4e17.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/f29020f6-fdc3-4993-b225-82d42d6d4e17.png",
+      "release_year": 2026,
+      "release_date": "2026-04-23",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 30,
+      "title": "Wicked & Crisp (Eloquin Extended Remix)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "1111",
+          "beatport_url": "https://www.beatport.com/artist/1111/123456"
+        }
+      ],
+      "label": "Fly Boy Records",
+      "bpm": 138,
+      "key": "F Minor",
+      "beatport_url": "https://www.beatport.com/track/wicked-crisp/27750066",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6b3f16a6-857a-4284-a517-bb74d5c2a6bc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7d78406a-0234-4599-afa0-899c0e9db4ac.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/7d78406a-0234-4599-afa0-899c0e9db4ac.png",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "previous_position": 11,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 31,
+      "title": "How We Feelin'",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Fonzo",
+          "beatport_url": "https://www.beatport.com/artist/fonzo/123456"
+        }
+      ],
+      "label": "Hardline Sounds",
+      "bpm": 83,
+      "key": "C Minor",
+      "beatport_url": "https://www.beatport.com/track/how-we-feelin/18085215",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f7f6e11e-4ec1-42bf-943f-601a9bae66b8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/460703f7-a236-4f8e-bdec-fd4fff890578.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/460703f7-a236-4f8e-bdec-fd4fff890578.png",
+      "release_year": 2023,
+      "release_date": "2023-10-06",
+      "previous_position": 23,
+      "weeks_in_chart": 4
+    },
+    {
+      "position": 32,
+      "title": "Nighthawk",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Freestylers",
+          "beatport_url": "https://www.beatport.com/artist/freestylers/123456"
+        },
+        {
+          "name": "Krafty Kuts",
+          "beatport_url": "https://www.beatport.com/artist/krafty-kuts/123456"
+        },
+        {
+          "name": "Plump DJs",
+          "beatport_url": "https://www.beatport.com/artist/plump-djs/123456"
+        },
+        {
+          "name": "King of the Beats",
+          "beatport_url": "https://www.beatport.com/artist/king-of-the-beats/123456"
+        }
+      ],
+      "label": "Speaker Freaker",
+      "bpm": 132,
+      "key": "Eb Minor",
+      "beatport_url": "https://www.beatport.com/track/nighthawk/20790826",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b472f904-6d30-467e-abb0-073117a2437d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/437313ca-107b-46d5-a753-3257620ab49f.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/15390652-ec89-47bd-a133-7fddb98b086e.png",
+      "release_year": 2025,
+      "release_date": "2025-08-15",
+      "previous_position": 24,
+      "weeks_in_chart": 5
+    },
+    {
+      "position": 33,
+      "title": "Tribal",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Pavane",
+          "beatport_url": "https://www.beatport.com/artist/pavane/123456"
+        },
+        {
+          "name": "Rhades",
+          "beatport_url": "https://www.beatport.com/artist/rhades/123456"
+        }
+      ],
+      "label": "Banana Club",
+      "bpm": 136,
+      "key": "Gb Minor",
+      "beatport_url": "https://www.beatport.com/track/tribal/26964817",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7c6ac202-e2e4-4e2e-8b3c-440f5540924e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4ffd05c3-bd78-4474-bf52-570c5493c6e3.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/4ffd05c3-bd78-4474-bf52-570c5493c6e3.png",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "previous_position": 12,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 34,
+      "title": "The One",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Helicopter",
+          "beatport_url": "https://www.beatport.com/artist/helicopter/123456"
+        }
+      ],
+      "label": "Raveart Records",
+      "bpm": 135,
+      "key": "G Minor",
+      "beatport_url": "https://www.beatport.com/track/the-one/26803638",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ca780e97-41e8-4bf3-9792-3692021160a4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/87f4d8b5-eeed-46ef-99bc-ddf316630086.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/87f4d8b5-eeed-46ef-99bc-ddf316630086.png",
+      "release_year": 2026,
+      "release_date": "2026-04-14",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 35,
+      "title": "Cardboard Break",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Icey",
+          "beatport_url": "https://www.beatport.com/artist/dj-icey/123456"
+        }
+      ],
+      "label": "Zone Records",
+      "bpm": 130,
+      "key": "G Minor",
+      "beatport_url": "https://www.beatport.com/track/cardboard-break/26942380",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eaafe6d1-2e61-4487-aca0-288d1930b57e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bca26212-549c-402c-8a62-1263f83f7a1b.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/bca26212-549c-402c-8a62-1263f83f7a1b.png",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "previous_position": 27,
+      "weeks_in_chart": 2
+    },
+    {
+      "position": 36,
+      "title": "Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bowser",
+          "beatport_url": "https://www.beatport.com/artist/bowser/123456"
+        }
+      ],
+      "label": "83",
+      "bpm": 140,
+      "key": "Ab Minor",
+      "beatport_url": "https://www.beatport.com/track/pressure/26770711",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/923f8822-5cc8-47f4-91aa-8369d35f3e28.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/78dd9fb7-89c1-4e84-bf4d-fc8e1cbc0017.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/78dd9fb7-89c1-4e84-bf4d-fc8e1cbc0017.png",
+      "release_year": 2026,
+      "release_date": "2026-04-09",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 37,
+      "title": "Lets Hit Em With The 808s",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Stacy McClure",
+          "beatport_url": "https://www.beatport.com/artist/stacy-mcclure/123456"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "bpm": 134,
+      "key": "Eb Major",
+      "beatport_url": "https://www.beatport.com/track/lets-hit-em-with-the-808s/24519068",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/59f1b0f1-71df-4c64-9d0b-7ac22c759a77.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7c22d8ba-f330-4e13-bbef-5b857cd77ea4.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/7c22d8ba-f330-4e13-bbef-5b857cd77ea4.png",
+      "release_year": 2026,
+      "release_date": "2026-04-03",
+      "previous_position": null,
+      "weeks_in_chart": 1
+    },
+    {
+      "position": 38,
+      "title": "Excelsior",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sans",
+          "beatport_url": "https://www.beatport.com/artist/sans/123456"
+        }
+      ],
+      "label": "83",
+      "bpm": 137,
+      "key": "Gb Major",
+      "beatport_url": "https://www.beatport.com/track/excelsior/23948401",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5d1dae40-13ad-4462-bee4-fa10aeb3ac19.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ad6ed5f5-7b2f-4b6d-8c8f-461a7950be9e.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/ad6ed5f5-7b2f-4b6d-8c8f-461a7950be9e.png",
+      "release_year": 2026,
+      "release_date": "2026-03-12",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
       "position": 39,
-      "title": "Fogo",
-      "mix_name": "Original Mix",
+      "title": "Only Thing",
+      "mix_name": "Extended Mix",
       "artists": [
         {
-          "name": "Yo Speed",
-          "beatport_url": "https://www.beatport.com/artist/yo-speed/"
+          "name": "Debba",
+          "beatport_url": "https://www.beatport.com/artist/debba/123456"
         }
       ],
-      "label": "83",
-      "bpm": 137,
-      "key": "C Minor",
-      "beatport_url": "https://www.beatport.com/track/fogo/21621990",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/25a78f14-3271-442d-8390-1881e3999f46.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/2b2efd3a-41d3-47d8-99bd-3832822ca03f.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/2b2efd3a-41d3-47d8-99bd-3832822ca03f.png",
-      "release_year": 2025,
-      "release_date": "2025-10-17",
+      "label": "SubSoul",
+      "bpm": 135,
+      "key": "B Minor",
+      "beatport_url": "https://www.beatport.com/track/only-thing/28525281",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0fd9a280-38bf-47be-a4b2-a28f0e9746ba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f16e794c-f79a-4dd2-9155-52097c2008af.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/90472f28-2474-400d-860e-941b19095997.png",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
       "previous_position": null,
       "weeks_in_chart": 1
     },
     {
       "position": 40,
-      "title": "How Deep Is Your Love",
+      "title": "Kill Da",
       "mix_name": "Original Mix",
       "artists": [
         {
-          "name": "Brothers Of Funk",
-          "beatport_url": "https://www.beatport.com/artist/brothers-of-funk/"
+          "name": "RAFFFAEL",
+          "beatport_url": "https://www.beatport.com/artist/rafffael/123456"
         }
       ],
-      "label": "ElectroBreakz",
-      "bpm": 134,
-      "key": "E Minor",
-      "beatport_url": "https://www.beatport.com/track/how-deep-is-your-love/26915264",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64584937-e9d9-4013-adf0-7fdfebfee499.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/5a01c5f8-06ff-4ea7-8fe7-675f74c5960f.LOFI.mp3",
-      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/5a01c5f8-06ff-4ea7-8fe7-675f74c5960f.png",
+      "label": "Elektroshok Records",
+      "bpm": 140,
+      "key": "C Major",
+      "beatport_url": "https://www.beatport.com/track/kill-da/27915713",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6fd02f1f-aa42-494d-a704-9fa5407d4090.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d132370c-009d-4b10-80bb-471664ec3870.LOFI.mp3",
+      "waveform_url": "https://geo-media.beatport.com/image_size/1500x250/d132370c-009d-4b10-80bb-471664ec3870.png",
       "release_year": 2026,
-      "release_date": "2026-04-03",
+      "release_date": "2026-05-01",
       "previous_position": null,
       "weeks_in_chart": 1
     }

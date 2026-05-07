@@ -39,6 +39,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
  *   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
+ *   node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -2716,6 +2717,93 @@ async function runPatchIbericanBreaksFestival2026(sb) {
   console.log('[patch-iberican-breaks-festival-2026] OK:', after)
 }
 
+const ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_SLUG =
+  'electrolunch-xxl-picnic-76-sevilla-2026'
+const ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_TICKETS = 'https://www.ultimaentrada.com/'
+const ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_IMAGE =
+  '/images/events/electrolunch-xxl-picnic-76-sevilla-2026.webp'
+
+const ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_LINEUP = [
+  'Stanton Warriors',
+  'Ylia',
+  'Jade Tansa',
+  'Magma',
+  'Luis Soldevilla',
+]
+
+const ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_ROW = {
+  name: 'Electrolunch XXL · Picnic 76 (Stanton Warriors)',
+  description_en:
+    'Electrolunch XXL returns to Parque Magallanes (next to Torre Sevilla) on Saturday 9 May 2026, edition number 76 ("Picnic 76") of the long-running open-air series promoted by Rocknrolla Producciones. Doors at 12:00; free entry until 17:00 and then special passes via ultimaentrada.com. The Main Stage is headlined by UK breakbeat pioneers Stanton Warriors — two decades of festivals and clubs worldwide in the breaks/bass canon — with national support from Ylia, Jade Tansa, Magma and Luis Soldevilla. Electrolunch keeps its usual all-ages, family-friendly daytime format: electronic music, workshops, artisan market, food trucks and activities for children in the shaded picnic zone.',
+  description_es:
+    'Electrolunch XXL regresa al Parque Magallanes (junto a Torre Sevilla) el sábado 9 de mayo de 2026, edición número 76 («Picnic 76») de la serie al aire libre que promueve Rocknrolla Producciones. Apertura a las 12:00 h; entrada gratuita hasta las 17:00 h y luego pases especiales en ultimaentrada.com. Directos desde Reino Unido, Stanton Warriors — pioneros del breakbeat con décadas reventando pistas en todo el mundo — encabezan el Main Stage, con refuerzo nacional de Ylia, Jade Tansa, Magma y Luis Soldevilla. Se mantiene el formato habitual de Electrolunch: música electrónica, talleres, mercadillo de artesanos, food trucks y actividades infantiles en la zona picnic con sombra.',
+  event_type: 'festival',
+  date_start: '2026-05-09',
+  date_end: null,
+  location: 'Parque Magallanes, Isla de la Cartuja, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Parque Magallanes',
+  address: 'Parque Magallanes, junto a Torre Sevilla, Isla de la Cartuja, Sevilla',
+  website: 'https://www.instagram.com/electrolvnch/',
+  tickets_url: ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_TICKETS,
+  image_url: ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_IMAGE,
+  lineup: ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_LINEUP,
+  tags: [
+    'electrolunch',
+    'electrolunch xxl',
+    'picnic 76',
+    'breakbeat',
+    'breaks',
+    'bass',
+    'stanton warriors',
+    'sevilla',
+    'parque magallanes',
+    'torre sevilla',
+    'rocknrolla producciones',
+    'open air',
+    '2026',
+  ],
+  socials: {
+    'Instagram @electrolvnch': 'https://www.instagram.com/electrolvnch/',
+    'Facebook ElectroLvnch': 'https://www.facebook.com/ElectroLvnch/',
+    'Tickets ultimaentrada.com': 'https://www.ultimaentrada.com/',
+  },
+  age_restriction: 'Todos los públicos',
+  doors_open: '12:00',
+  doors_close: null,
+  coords: { lat: 37.4003, lng: -6.0013 },
+}
+
+async function runPatchElectrolunchXxlPicnic76Sevilla2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-electrolunch-xxl-picnic-76] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_ROW,
+    is_featured: true,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, age_restriction')
+    .eq('slug', ELECTROLUNCH_XXL_PICNIC_76_SEVILLA_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-electrolunch-xxl-picnic-76] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -2876,6 +2964,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-electrolunch-xxl-picnic-76-sevilla-2026')) {
+    await runPatchElectrolunchXxlPicnic76Sevilla2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -2940,7 +3033,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
-  node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026`)
+  node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
+  node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026`)
     process.exit(1)
   }
 
