@@ -438,7 +438,7 @@ Al reclamar audio el provider llama internamente a **`claimAudio(source)`** (y a
 
 Renderizada por el provider cuando `previewQueue.length > 0` (antes se montaba en cada página). Diseño idéntico al antiguo:
 
-- Barra de progreso seekable (clic + arrastre, `pointer events`).
+- Barra de progreso seekable (clic + arrastre con listeners en `document`, sin `setPointerCapture` — ver [Navegación segura con la música sonando](#navegación-segura-con-la-música-sonando) más abajo para el porqué).
 - Transporte Anterior `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Siguiente `⏭`.
 - Título + artista (si `domId` está presente y la vista actual tiene esa fila, hacer clic **hace scroll** a ella).
 - Tiempo actual / duración e `índice / total`.
@@ -446,6 +446,15 @@ Renderizada por el provider cuando `previewQueue.length > 0` (antes se montaba e
 - `navigator.mediaSession` configurado con metadatos y handlers `play` / `pause` / `previoustrack` / `nexttrack` para auriculares, lockscreen y Bluetooth.
 - **Pantalla de bloqueo / “Reproduciendo ahora”** — La web solo puede enviar a iOS/Android los campos estándar de `MediaMetadata` (`title`, `artist`, `album`, `artwork`) y el estado de posición para la barra. **No existe un campo de “año de publicación”** para el sistema. Para que el año saliera habría que meterlo dentro del título o del artista, con **mucho truncado** en pantallas pequeñas. **Decisión:** dejamos esas cadenas limpias; año y fecha completos siguen en la **propia web** (`MiniPreviewBar`, filas del chart), no duplicados en `mediaSession`.
 - **Safe area móvil** — `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 10px)` para que en iPhones los botones de transporte no rocen la home-bar (la `safe-area` por sí sola los dejaba demasiado pegados al borde inferior). El wrapper de la página reserva la misma altura con `pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)]` para que la última fila no quede tapada.
+
+### Navegación segura con la música sonando
+
+El mini reproductor es un overlay `position: fixed` que **persiste entre rutas** (vive dentro de `DeckAudioProvider`, fuera de `<main>`). Esa persistencia provocaba dos clases de bug que ya están corregidas:
+
+- **Pointer capture pegado (menú/footer dejaban de responder).** Antes la barra de seek llamaba a `setPointerCapture(pointerId)` en cada `pointerdown`. Si una navegación de Next.js (o un cambio de pestaña / iOS WebView) reemplazaba el árbol React **antes** de que llegara `pointerup`, la captura quedaba viva sobre el `<div>` del seek y **todos** los clicks siguientes iban a parar ahí en vez de a la página: el síntoma era "los enlaces del menú no van, tengo que pulsar STOP para que vuelvan". **Solución:** la barra ya no usa `setPointerCapture`; en `pointerdown` registra `pointermove`/`pointerup`/`pointercancel` sobre `document` con el `pointerId` del gesto, y los desmonta al terminar. Una segunda red de seguridad (`visibilitychange` / `pagehide` / `blur`) aborta el drag si la pestaña se oculta.
+- **Lluvia de re-renders del rAF que bloqueaba las transiciones de `next/link`.** El tick de progreso usaba `requestAnimationFrame` con `setPreviewProgress(audio.currentTime)` ~60 veces por segundo. Como `previewProgress` forma parte del valor del contexto, **cada consumidor de `useDeckAudio` se re-renderizaba en cada frame** (`TracksSection`, `ChartView`, `BeatportTopTracks`, `BackToTop`…). En React 18 + App Router las navegaciones de `next/link` viven dentro de una transición interrumpible: si llegan `setState`s de alta prioridad más rápido de lo que el árbol nuevo puede comprometer, la transición se reinicia indefinidamente y la página de destino **nunca llega a montar**. El síntoma exacto era *"sigue sonando la música, el menú no responde, en cuanto le doy a STOP la página a la que quería navegar carga de golpe"*. **Solución:** el rAF de preview tira `setState` como mucho cada ~120 ms (≈8 fps, más que suficiente para una barra fina); el del deck hace lo mismo con `setProgressA/B` (la rotación del plato sí sigue a 60 fps porque solo se ve en `/`). Con ~7× menos updates de contexto, el scheduler de transiciones tiene tiempo de respirar y las rutas se montan limpiamente mientras la música sigue sonando.
+
+Todo está en `src/components/DeckAudioProvider.tsx` (función `MiniPlayerShell` para el pointer, los dos `useEffect` con `requestAnimationFrame` para el throttle).
 
 ### `PreviewAutoplayOverlay` (autoplay con enlace compartido)
 

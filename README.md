@@ -648,7 +648,7 @@ The **`preview` mode is global**: the queue (`PreviewTrack[]`), the current inde
 
 Rendered by the provider whenever `previewQueue.length > 0`. Same visual layout as the old per-page floating bar:
 
-- **Progress bar** — seekable click/drag (`pointer events`), red fill on a neutral track.
+- **Progress bar** — seekable click/drag with `document`-level pointer listeners (no `setPointerCapture` — see [Safe navigation while audio is playing](#safe-navigation-while-audio-is-playing) below for why), red fill on a neutral track.
 - **Transport** — Previous `⏮` / Play-Pause `▶ ❚❚` / Stop `■` / Next `⏭`.
 - **Track info** — title (Unbounded) + artist (Courier Prime). If the current `PreviewTrack` has a `domId` and the visible page contains that row, tapping the info scrolls to it.
 - **Time & counter** — `currentTime / duration` + `index / total`.
@@ -656,6 +656,15 @@ Rendered by the provider whenever `previewQueue.length > 0`. Same visual layout 
 - **`mediaSession`** — `metadata` (title, artist, artwork) + `play` / `pause` / `previoustrack` / `nexttrack` handlers for hardware media keys, lock screen and Bluetooth.
 - **OS “Now Playing” / lock screen** — The Web **Media Session** API only exposes standard `MediaMetadata` text fields (`title`, `artist`, `album`, `artwork`) plus position state for the scrubber. **There is no dedicated release-year field** for the system UI. The only way to show a year on the phone lock screen would be to concatenate it into `title` / `artist` / `album`, which competes for space and is **heavily truncated** on iOS. We intentionally keep those strings **clean**; release year and full date stay in the **in-app** UI (`MiniPreviewBar`, chart rows), not duplicated into `mediaSession`.
 - **Mobile safe-area** — `paddingBottom: calc(env(safe-area-inset-bottom, 0px) + 10px)` so the transport buttons keep ~10 px of breathing room above the iPhone home-bar even when the system reports 0 px of inset (and the page wrapper reserves the same height with `pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)]` so the last row never sits under the bar).
+
+### Safe navigation while audio is playing
+
+The mini-player is a `position: fixed` overlay that **persists across routes** (it lives inside `DeckAudioProvider`, outside `<main>`), so two whole classes of bugs used to be possible:
+
+- **Pointer capture leaks (menu/footer becomes unclickable).** Originally the seek bar called `setPointerCapture(pointerId)` on every `pointerdown`. If a Next.js navigation (or a tab change / iOS WebView quirk) replaced the React tree before `pointerup` fired, the capture stayed live on the seek `<div>` and **all** subsequent clicks were routed to it instead of to the page — the user had to press STOP to unmount the player and recover navigation. **Fix:** the seek bar no longer calls `setPointerCapture`. On `pointerdown` it registers `pointermove`/`pointerup`/`pointercancel` listeners on `document`, scoped to the originating `pointerId`, and tears them down at the end of the gesture. A second-line cleanup runs on `visibilitychange` / `pagehide` / `blur` so any orphaned drag is aborted automatically.
+- **rAF re-render storm blocking `next/link` transitions.** The progress tick used `requestAnimationFrame` with `setPreviewProgress(audio.currentTime)` ~60 fps. Because `previewProgress` is part of the memoised context value, **every consumer of `useDeckAudio` re-rendered every frame** (`TracksSection`, `ChartView`, `BeatportTopTracks`, `BackToTop`…). Under React 18 + App Router, `next/link` navigations live inside an interruptible transition: if high-priority `setState`s arrive faster than the new tree can commit, the transition restarts indefinitely and the destination page **never renders** — the symptom was *"music keeps playing, the menu doesn't respond, hitting STOP makes the page I had clicked finally appear"*. **Fix:** the preview rAF throttles its `setState` to ~120 ms (≈8 fps, plenty for a thin progress bar); the deck rAF throttles its `setProgressA/B` the same way (deck platter rotation stays at 60 fps because it only ever matters on `/`). With ~7× fewer context updates the transition scheduler isn't starved and routes commit cleanly while music keeps playing.
+
+Both behaviours live in `src/components/DeckAudioProvider.tsx` (function `MiniPlayerShell` for the pointer logic, the two `useEffect`s with `requestAnimationFrame` for the throttling).
 
 ### `PreviewAutoplayOverlay` (shared-link autoplay)
 
@@ -671,7 +680,7 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 | File | Role |
 |------|------|
-| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, `usePreviewAudio` hook, `MiniPreviewBar` (with the in-bar save toggle and the iOS safe-area + 10 px padding), `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT`. Also exports the **`PreviewSaveData`** discriminated union (`mode: 'ref'` / `mode: 'url'`) consumed by every queue producer below. |
+| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, `usePreviewAudio` hook, `MiniPreviewBar` (with the in-bar save toggle, the iOS safe-area + 10 px padding, and the `document`-level seek-drag handlers from [Safe navigation while audio is playing](#safe-navigation-while-audio-is-playing)), `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT`. The two `requestAnimationFrame` ticks (preview progress + deck progress) flush React state at most every ~120 ms so high-frequency context updates don't starve `next/link` transitions. Also exports the **`PreviewSaveData`** discriminated union (`mode: 'ref'` / `mode: 'url'`) consumed by every queue producer below. |
 | `src/components/ChartView.tsx` | Weekly chart (`WeekAccordion`, `ChartTrackRow`, `FeaturedPickRow`). Builds `PreviewTrack[]` bundles (with `relatedRefs` from `canonicalGroups` baked into each `save`) and calls `playPreviewQueue`. No local audio. |
 | `src/components/BeatportTopTracks.tsx` | Top 10 accordion. Builds `PreviewTrack[]` (URL-mode `save` with `externalUrl` + snapshot) and calls `playPreviewQueue`. No local audio. |
 | `src/components/CommunityMonthlyTop.tsx` | All-time community top (slug kept for compatibility). Builds `PreviewTrack[]` with mixed-mode `save` (URL for `beatport_top` primaries, ref for the rest) and calls `playPreviewQueue`. |
