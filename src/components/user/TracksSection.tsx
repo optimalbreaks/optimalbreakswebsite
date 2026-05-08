@@ -1100,15 +1100,40 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         size="sm"
                       />
                     )}
-                    {(t.source === 'chart' || t.source === 'featured') && t.week_date ? (
-                      <TrackShareButton
-                        source={t.source}
-                        trackId={t.id}
-                        weekDate={t.week_date}
-                        lang={lang as Locale}
-                        shareTitle={`${t.title}${t.artists ? ` — ${t.artists}` : ''}`}
-                      />
-                    ) : null}
+                    {(() => {
+                      // Botón compartir por fila — disponible para TODAS las
+                      // fuentes, eligiendo el mejor enlace:
+                      //   · chart / featured con week_date → deep-link al chart
+                      //     (`/[lang]/charts?week=…&play=…`) con autoplay.
+                      //   · vinyl → URL externa (YouTube canónico cuando hay,
+                      //     fallback a Discogs / external_url).
+                      //   · beatport_top → URL canónica del track (Beatport).
+                      //   · chart / featured sin week_date (raro) → external_url
+                      //     como último recurso.
+                      const shareTitle = `${t.title}${t.artists ? ` — ${t.artists}` : ''}`
+                      if ((t.source === 'chart' || t.source === 'featured') && t.week_date) {
+                        return (
+                          <TrackShareButton
+                            source={t.source}
+                            trackId={t.id}
+                            weekDate={t.week_date}
+                            lang={lang as Locale}
+                            shareTitle={shareTitle}
+                          />
+                        )
+                      }
+                      const externalUrl = t.source === 'vinyl'
+                        ? (t.youtube_url || t.external_url || t.canonical_url || '')
+                        : (t.external_url || t.canonical_url || '')
+                      if (!externalUrl) return null
+                      return (
+                        <TrackShareButton
+                          externalUrl={externalUrl}
+                          lang={lang as Locale}
+                          shareTitle={shareTitle}
+                        />
+                      )
+                    })()}
                     {t.external_url ? (
                       <a
                         href={t.external_url} target="_blank" rel="noopener noreferrer"

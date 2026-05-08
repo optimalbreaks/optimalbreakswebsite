@@ -5,10 +5,12 @@
 // Para páginas de detalle (artista/sello/mix) seguimos usando el bloque
 // grande X/WA/FB: `src/components/ShareButtons.tsx`.
 //
-// Dos modos de uso:
+// Tres modos de uso:
 //  1) Charts (40 Breaks / New Releases): `source` + `trackId` + `weekDate`.
-//  2) Top Beatport en ficha (artista/sello) o cualquier link ya construido:
-//     `path` directo (p.ej. `/es/artists/prodigy?play=beatport:123456`).
+//  2) Top Beatport en ficha (artista/sello) o cualquier link interno ya
+//     construido: `path` directo (p.ej. `/es/artists/prodigy?play=beatport:123456`).
+//  3) URL absoluta externa (vinyl con YouTube, beatport_top sin contexto
+//     interno, etc.): `externalUrl` con http(s)://… ; se copia/comparte tal cual.
 // ============================================
 
 'use client'
@@ -30,6 +32,7 @@ interface ChartModeProps extends BaseProps {
   /** Fecha ISO (YYYY-MM-DD) de la edición del chart a la que pertenece. */
   weekDate: string
   path?: never
+  externalUrl?: never
 }
 
 interface PathModeProps extends BaseProps {
@@ -38,17 +41,28 @@ interface PathModeProps extends BaseProps {
   source?: never
   trackId?: never
   weekDate?: never
+  externalUrl?: never
 }
 
-type Props = ChartModeProps | PathModeProps
+interface ExternalUrlModeProps extends BaseProps {
+  /** URL absoluta (http(s)://…). Se copia/comparte tal cual sin prefijar SITE_URL. */
+  externalUrl: string
+  source?: never
+  trackId?: never
+  weekDate?: never
+  path?: never
+}
+
+type Props = ChartModeProps | PathModeProps | ExternalUrlModeProps
 
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
   const es = props.lang === 'es'
-  const path = 'path' in props && props.path
-    ? props.path
-    : buildTrackSharePath(props.lang, props.source!, props.trackId!, props.weekDate!)
-  const fullUrl = `${SITE_URL}${path}`
+  const fullUrl = 'externalUrl' in props && props.externalUrl
+    ? props.externalUrl
+    : `${SITE_URL}${'path' in props && props.path
+        ? props.path
+        : buildTrackSharePath(props.lang, props.source!, props.trackId!, props.weekDate!)}`
 
   async function onClick() {
     const nav = typeof navigator !== 'undefined' ? navigator : null

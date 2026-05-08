@@ -5,8 +5,9 @@
  * bloque "Top Ten Tracks" desde __NEXT_DATA__ y guarda el resultado como
  * JSONB en Supabase (columnas beatport_top_tracks en artists / labels).
  *
- * El slug y el ID numérico deben coincidir con la URL canónica de Beatport:
+ * El slug y el ID numérico deben coincidir con la URL en Beatport — con o sin locale:
  *   https://www.beatport.com/artist/<slug>/<id>
+ *   https://www.beatport.com/es/artist/<slug>/<id>
  *   https://www.beatport.com/label/<slug>/<id>
  * Ej.: Deekline → artist/deekline/3171. Si no conoces el ID, abre la ficha
  * del artista o sello en beatport.com y copia los dos últimos segmentos.
@@ -85,11 +86,102 @@ function requireSupabase() {
 // ---------------------------------------------------------------------------
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
-async function fetchBeatportPage(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml', 'Accept-Language': 'en-US,en;q=0.9' },
+/**
+ * Modo navegador opcional con Playwright para sortear Cloudflare cuando un fetch
+ * directo devuelve 403 (rate-limit / bot management). Se activa con --headless,
+ * o automáticamente cuando el fetch HTTP plano falla y BEATPORT_HEADLESS_FALLBACK=1.
+ */
+let _headlessBrowser = null
+async function getHeadlessBrowser() {
+  if (_headlessBrowser) return _headlessBrowser
+  /**
+   * Beatport está protegido por Cloudflare. Para sortear «Just a moment…» se
+   * necesita Chrome real (canal `chrome`) y, sobre todo, una IP que Cloudflare
+   * no tenga marcada. Tras un batch grande (~200 scrapes) la IP se queda en
+   * lista negra varias horas: en ese caso ni `--headless` consigue pasar y hay
+   * que reintentar más tarde desde la misma IP o desde otra.
+   */
+  const { chromium } = await import('playwright')
+  const args = [
+    '--disable-blink-features=AutomationControlled',
+    '--disable-dev-shm-usage',
+    '--no-sandbox',
+  ]
+  try {
+    _headlessBrowser = await chromium.launch({ channel: 'chrome', headless: true, args })
+  } catch (err) {
+    console.log(`  ↳ canal chrome no disponible (${err.message?.slice(0, 80)}); fallback chromium`)
+    _headlessBrowser = await chromium.launch({ headless: true, args })
+  }
+  return _headlessBrowser
+}
+
+async function closeHeadlessBrowser() {
+  if (_headlessBrowser) {
+    try { await _headlessBrowser.close() } catch {}
+    _headlessBrowser = null
+  }
+}
+
+async function fetchBeatportPageHeadless(url) {
+  const browser = await getHeadlessBrowser()
+  const ctx = await browser.newContext({
+    userAgent: UA,
+    locale: url.includes('/es/') ? 'es-ES' : 'en-US',
+    viewport: { width: 1366, height: 800 },
+    extraHTTPHeaders: { 'Accept-Language': url.includes('/es/') ? 'es,en-US;q=0.9' : 'en-US,en;q=0.9' },
   })
-  if (!res.ok) throw new Error(`Beatport HTTP ${res.status} for ${url}`)
+  // Anti-detección básica: navigator.webdriver = false, plugins, languages.
+  await ctx.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false })
+    Object.defineProperty(navigator, 'languages', { get: () => ['es-ES', 'es', 'en'] })
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] })
+  })
+  const page = await ctx.newPage()
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
+    /** Cloudflare challenge interstitial — bucle largo: el browser real tarda en pasar el reto. */
+    const deadline = Date.now() + 180000
+    let lastTitle = ''
+    while (Date.now() < deadline) {
+      const has = await page.evaluate(() => !!document.querySelector('script#__NEXT_DATA__')).catch(() => false)
+      if (has) break
+      const title = await page.title().catch(() => '')
+      if (title !== lastTitle) {
+        console.log(`    · esperando challenge — title="${title}"`)
+        lastTitle = title
+      }
+      await page.waitForTimeout(1500).catch(() => {})
+    }
+    const has = await page.evaluate(() => !!document.querySelector('script#__NEXT_DATA__')).catch(() => false)
+    if (!has) {
+      const title = await page.title().catch(() => '?')
+      throw new Error(`__NEXT_DATA__ no apareció en 180s (title="${title}")`)
+    }
+    const html = await page.content()
+    return html
+  } finally {
+    await ctx.close()
+  }
+}
+
+async function fetchBeatportPage(url, { headless = false, autoFallback = false } = {}) {
+  if (headless) return fetchBeatportPageHeadless(url)
+  const acceptLang = url.includes('/es/') ? 'es,en-US;q=0.9,en;q=0.8' : 'en-US,en;q=0.9'
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': UA,
+      Accept: 'text/html,application/xhtml+xml',
+      'Accept-Language': acceptLang,
+    },
+  })
+  if (!res.ok) {
+    if (autoFallback && (res.status === 403 || res.status === 503)) {
+      console.log(`  ↳ HTTP ${res.status} → reintentando con navegador headless`)
+      return fetchBeatportPageHeadless(url)
+    }
+    throw new Error(`Beatport HTTP ${res.status} for ${url}`)
+  }
   return res.text()
 }
 
@@ -225,50 +317,71 @@ async function searchBeatportArtistByExactName(displayName) {
  * @param {number} beatportId
  * @returns {Promise<{tracks: object[], beatport_url: string}>}
  */
-async function scrapeTopTracks(type, slug, beatportId) {
-  const beatportUrl = `https://www.beatport.com/${type}/${slug}/${beatportId}`
-  console.log(`  ↳ Fetching ${beatportUrl}`)
-  const html = await fetchBeatportPage(beatportUrl)
-  const nextData = extractNextData(html)
-  if (!nextData) throw new Error('__NEXT_DATA__ not found')
+async function scrapeTopTracks(type, slug, beatportId, { headless = false } = {}) {
+  const seg = type === 'artist' ? 'artist' : 'label'
+  /** Primero locale ES (ficha p.ej. /es/artist/slug/id), luego sin prefijo (Beatport redirige pero el HTML puede variar). */
+  const candidateUrls = [
+    `https://www.beatport.com/es/${seg}/${slug}/${beatportId}`,
+    `https://www.beatport.com/${seg}/${slug}/${beatportId}`,
+  ]
 
-  const queries = nextData.props?.pageProps?.dehydratedState?.queries || []
+  let lastEmpty = { tracks: [], beatport_url: candidateUrls[0] }
+  let lastError = null
+  const autoFallback = process.env.BEATPORT_HEADLESS_FALLBACK === '1'
 
-  const topQuery = queries.find((q) => {
-    const key = Array.isArray(q.queryKey) ? q.queryKey[0] : String(q.queryKey ?? '')
-    return key.includes(`${type === 'artist' ? 'artist' : 'label'}-${beatportId}-top-10-tracks`)
-  })
+  for (const beatportUrl of candidateUrls) {
+    try {
+      console.log(`  ↳ Fetching ${beatportUrl}${headless ? ' [headless]' : ''}`)
+      const html = await fetchBeatportPage(beatportUrl, { headless, autoFallback })
+      const nextData = extractNextData(html)
+      if (!nextData) throw new Error('__NEXT_DATA__ not found')
 
-  if (!topQuery) {
-    console.log(`  ↳ No top-10-tracks query found. Available:`, queries.map(q => JSON.stringify(q.queryKey).slice(0, 100)))
-    return { tracks: [], beatport_url: beatportUrl }
+      const queries = nextData.props?.pageProps?.dehydratedState?.queries || []
+
+      const topQuery = queries.find((q) => {
+        const key = Array.isArray(q.queryKey) ? q.queryKey[0] : String(q.queryKey ?? '')
+        return key.includes(`${type === 'artist' ? 'artist' : 'label'}-${beatportId}-top-10-tracks`)
+      })
+
+      if (!topQuery) {
+        console.log(`  ↳ No top-10-tracks query for this URL. Keys:`, queries.map(q => JSON.stringify(q.queryKey).slice(0, 100)))
+        lastEmpty = { tracks: [], beatport_url: beatportUrl }
+        continue
+      }
+
+      const results = topQuery.state?.data?.results || []
+      const tracks = results.map((t, i) => {
+        const artists = (t.artists || []).map((a) => ({
+          name: a.name,
+          beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
+        }))
+        const label = t.release?.label || t.label
+        return {
+          position: i + 1,
+          title: (t.name || '').trim(),
+          mix_name: (t.mix_name || '').trim(),
+          artists,
+          label: label?.name || '',
+          bpm: t.bpm || null,
+          key: t.key?.name || '',
+          beatport_url: `https://www.beatport.com/track/${t.slug}/${t.id}`,
+          artwork_url: artworkUrl(t.release?.image) || artworkUrl(t.image),
+          sample_url: t.sample_url || null,
+          release_year: releaseYear(t),
+          release_date: releaseDateIso(t),
+        }
+      })
+
+      console.log(`  ↳ Parsed ${tracks.length} top tracks`)
+      return { tracks, beatport_url: beatportUrl }
+    } catch (err) {
+      lastError = err
+      console.log(`  ↳ Fallback (${err.message})`)
+    }
   }
 
-  const results = topQuery.state?.data?.results || []
-  const tracks = results.map((t, i) => {
-    const artists = (t.artists || []).map((a) => ({
-      name: a.name,
-      beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
-    }))
-    const label = t.release?.label || t.label
-    return {
-      position: i + 1,
-      title: (t.name || '').trim(),
-      mix_name: (t.mix_name || '').trim(),
-      artists,
-      label: label?.name || '',
-      bpm: t.bpm || null,
-      key: t.key?.name || '',
-      beatport_url: `https://www.beatport.com/track/${t.slug}/${t.id}`,
-      artwork_url: artworkUrl(t.release?.image) || artworkUrl(t.image),
-      sample_url: t.sample_url || null,
-      release_year: releaseYear(t),
-      release_date: releaseDateIso(t),
-    }
-  })
-
-  console.log(`  ↳ Parsed ${tracks.length} top tracks`)
-  return { tracks, beatport_url: beatportUrl }
+  if (lastError) console.log(`  ↳ Sin datos Top 10 en ninguna URL; último error: ${lastError.message}`)
+  return lastEmpty
 }
 
 // ---------------------------------------------------------------------------
@@ -290,7 +403,7 @@ async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, t
 // ---------------------------------------------------------------------------
 // Batch mode: all artists / labels that have beatport_id set
 // ---------------------------------------------------------------------------
-async function batchUpdate(supabase, table, dryRun, { missingOnly = false } = {}) {
+async function batchUpdate(supabase, table, dryRun, { missingOnly = false, headless = false } = {}) {
   const { data: rows, error } = await supabase
     .from(table)
     .select('slug, beatport_id, beatport_url, beatport_top_tracks')
@@ -311,7 +424,7 @@ async function batchUpdate(supabase, table, dryRun, { missingOnly = false } = {}
   for (const row of todo) {
     try {
       const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, kind) || row.slug
-      const { tracks, beatport_url } = await scrapeTopTracks(kind, bpSlug, row.beatport_id)
+      const { tracks, beatport_url } = await scrapeTopTracks(kind, bpSlug, row.beatport_id, { headless })
       if (!dryRun) {
         await upsertTopTracks(supabase, table, row.slug, beatport_url, row.beatport_id, tracks)
       } else {
@@ -325,7 +438,7 @@ async function batchUpdate(supabase, table, dryRun, { missingOnly = false } = {}
   }
 }
 
-async function fillMissingArtists(supabase, dryRun, maxTotal = Infinity) {
+async function fillMissingArtists(supabase, dryRun, maxTotal = Infinity, { headless = false } = {}) {
   const { data: all, error } = await supabase
     .from('artists')
     .select('slug, name, beatport_id, beatport_url, beatport_top_tracks')
@@ -351,7 +464,7 @@ ${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
     try {
       const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, 'artist') || row.slug
       console.log(`\n  [${processed + 1}] ${row.slug} (id ${row.beatport_id}) slug BP: ${bpSlug}`)
-      const { tracks, beatport_url } = await scrapeTopTracks('artist', bpSlug, row.beatport_id)
+      const { tracks, beatport_url } = await scrapeTopTracks('artist', bpSlug, row.beatport_id, { headless })
       if (!dryRun) {
         await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, row.beatport_id, tracks)
       } else {
@@ -376,7 +489,7 @@ ${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
         continue
       }
       console.log(` → artist/${bp.slug}/${bp.id}`)
-      const { tracks, beatport_url } = await scrapeTopTracks('artist', bp.slug, bp.id)
+      const { tracks, beatport_url } = await scrapeTopTracks('artist', bp.slug, bp.id, { headless })
       if (!dryRun) {
         if (tracks.length) {
           await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, bp.id, tracks)
@@ -425,6 +538,8 @@ async function main() {
   let filtered = args.filter(a => a !== '--dry-run')
   const missingOnly = filtered.includes('--missing-only')
   filtered = filtered.filter((a) => a !== '--missing-only')
+  const headless = filtered.includes('--headless')
+  filtered = filtered.filter((a) => a !== '--headless')
 
   const maxTotal = parseLimitArg(filtered)
   filtered = stripLimitArg(filtered)
@@ -436,7 +551,7 @@ async function main() {
       process.exit(1)
     }
     const supabase = requireSupabase()
-    return batchUpdate(supabase, 'artists', dryRun, { missingOnly })
+    return batchUpdate(supabase, 'artists', dryRun, { missingOnly, headless })
   }
   if (filtered.includes('--all-labels')) {
     filtered = filtered.filter((a) => a !== '--all-labels')
@@ -445,7 +560,7 @@ async function main() {
       process.exit(1)
     }
     const supabase = requireSupabase()
-    return batchUpdate(supabase, 'labels', dryRun, { missingOnly })
+    return batchUpdate(supabase, 'labels', dryRun, { missingOnly, headless })
   }
 
   if (filtered.includes('--fill-missing-artists')) {
@@ -455,7 +570,7 @@ async function main() {
       process.exit(1)
     }
     const supabase = requireSupabase()
-    return fillMissingArtists(supabase, dryRun, maxTotal)
+    return fillMissingArtists(supabase, dryRun, maxTotal, { headless })
   }
 
   if (filtered.length < 3) {
@@ -463,11 +578,15 @@ async function main() {
   OPTIMAL BREAKS — Beatport Top 10 Tracks
 
   Uso:
-    node scripts/beatport-top-tracks.mjs artist <slug> <beatport_id>
-    node scripts/beatport-top-tracks.mjs label  <slug> <beatport_id>
-    node scripts/beatport-top-tracks.mjs --all-artists [--missing-only] [--dry-run]
-    node scripts/beatport-top-tracks.mjs --all-labels [--missing-only] [--dry-run]
-    node scripts/beatport-top-tracks.mjs --fill-missing-artists [--limit=N] [--dry-run]
+    node scripts/beatport-top-tracks.mjs artist <slug> <beatport_id> [--headless]
+    node scripts/beatport-top-tracks.mjs label  <slug> <beatport_id> [--headless]
+    node scripts/beatport-top-tracks.mjs --all-artists [--missing-only] [--headless] [--dry-run]
+    node scripts/beatport-top-tracks.mjs --all-labels [--missing-only] [--headless] [--dry-run]
+    node scripts/beatport-top-tracks.mjs --fill-missing-artists [--limit=N] [--headless] [--dry-run]
+
+  --headless: usa Playwright + Chromium (resiste el muro Cloudflare cuando el
+  fetch HTTP plano devuelve 403). Requiere "npm i -D playwright" + "npx playwright install chromium".
+  También se puede activar fallback automático con BEATPORT_HEADLESS_FALLBACK=1.
 
   Ejemplo:
     node scripts/beatport-top-tracks.mjs artist yo-speed 526398
@@ -488,9 +607,9 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`\n  Beatport Top 10 — ${type}: ${slug} (id ${beatportId})${dryRun ? ' [DRY-RUN]' : ''}\n`)
+  console.log(`\n  Beatport Top 10 — ${type}: ${slug} (id ${beatportId})${dryRun ? ' [DRY-RUN]' : ''}${headless ? ' [HEADLESS]' : ''}\n`)
 
-  const { tracks, beatport_url } = await scrapeTopTracks(type, slug, beatportId)
+  const { tracks, beatport_url } = await scrapeTopTracks(type, slug, beatportId, { headless })
 
   for (const t of tracks) {
     const artists = t.artists.map(a => a.name).join(', ')
@@ -506,7 +625,10 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(`\n  ✗ Error: ${err.message}`)
-  process.exit(1)
-})
+main()
+  .then(() => closeHeadlessBrowser())
+  .catch(async (err) => {
+    console.error(`\n  ✗ Error: ${err.message}`)
+    await closeHeadlessBrowser()
+    process.exit(1)
+  })

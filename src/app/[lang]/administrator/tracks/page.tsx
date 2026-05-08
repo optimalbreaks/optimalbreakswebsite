@@ -1,9 +1,27 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
+
+type ImportSummary = {
+  procesadas: number
+  insertadas: number
+  saltadas_multi: number
+  saltadas_duplicado: number
+  fallidas: number
+}
+
+type ImportResponse = {
+  ok?: boolean
+  error?: string
+  summary?: ImportSummary
+  added?: { url: string; title: string; week_date: string; link_url: string }[]
+  skipped_multi?: { url: string; count: number; titles: string[] }[]
+  skipped_dupe?: { url: string; title?: string }[]
+  failed?: { url: string; reason: string }[]
+}
 
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
@@ -62,6 +80,34 @@ export default function AdminTracksPage() {
   const [search, setSearch] = useState('')
   const [kindFilter, setKindFilter] = useState<'all' | PlaybackKind>('all')
 
+  const [featuredWeek, setFeaturedWeek] = useState('')
+  const [featuredUrls, setFeaturedUrls] = useState('')
+  const [featuredCreateEdition, setFeaturedCreateEdition] = useState(true)
+  const [featuredPauseMs, setFeaturedPauseMs] = useState(2200)
+  const [featuredBusy, setFeaturedBusy] = useState(false)
+  const [featuredMsg, setFeaturedMsg] = useState<string | null>(null)
+  const [featuredResult, setFeaturedResult] = useState<ImportResponse | null>(null)
+  const [recentEditions, setRecentEditions] = useState<{ week_date: string; title?: string | null }[]>([])
+
+  const weekPresetDone = useRef(false)
+
+  useEffect(() => {
+    fetch('/api/admin/featured-import', { credentials: 'same-origin' })
+      .then(async (r) => {
+        const j = (await r.json()) as {
+          editions?: { week_date: string; title?: string | null }[]
+          error?: string
+        }
+        if (!r.ok) return
+        setRecentEditions(j.editions ?? [])
+        if (!weekPresetDone.current && j.editions?.[0]?.week_date) {
+          weekPresetDone.current = true
+          setFeaturedWeek(j.editions[0].week_date)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     fetch('/api/admin/tracks?limit=100')
       .then(async (r) => {
@@ -92,6 +138,42 @@ export default function AdminTracksPage() {
 
   const maxSave = useMemo(() => filtered.reduce((m, t) => Math.max(m, t.save_count), 0), [filtered])
 
+  async function submitFeaturedBulkImport(ev: React.FormEvent) {
+    ev.preventDefault()
+    setFeaturedBusy(true)
+    setFeaturedMsg(null)
+    setFeaturedResult(null)
+    try {
+      const r = await fetch('/api/admin/featured-import', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          urls_text: featuredUrls,
+          default_week_date: featuredWeek.trim() ? featuredWeek.trim() : null,
+          create_edition_if_missing: featuredCreateEdition,
+          pause_ms: featuredPauseMs,
+        }),
+      })
+      const j = (await r.json()) as ImportResponse
+      if (!r.ok) {
+        setFeaturedMsg(j.error || r.statusText)
+        return
+      }
+      setFeaturedResult(j)
+      const s = j.summary
+      setFeaturedMsg(
+        s
+          ? `Listo · insertadas ${s.insertadas}, saltadas (EP) ${s.saltadas_multi}, duplicados ${s.saltadas_duplicado}, fallos ${s.fallidas}`
+          : 'Importación finalizada',
+      )
+    } catch (e) {
+      setFeaturedMsg(e instanceof Error ? e.message : String(e))
+    } finally {
+      setFeaturedBusy(false)
+    }
+  }
+
   return (
     <div>
       <h1 className="admin-page-title">Tracks</h1>
@@ -103,6 +185,131 @@ export default function AdminTracksPage() {
         los usuarios están guardando en «Mis Tracks». Se agrupan por URL canónica
         para contar una sola vez aunque el mismo tema aparezca en varios listados.
       </p>
+
+      <div className="admin-panel !p-6 mb-8 border-[3px] border-[var(--uv)]">
+        <h2
+          className="text-sm font-black uppercase mb-2 flex items-center gap-2"
+          style={{ fontFamily: "'Unbounded', sans-serif" }}
+        >
+          <span className="inline-block w-3 h-3 bg-[var(--uv)]" />
+          Importar New Releases (Beatport)
+        </h2>
+        <p className="text-xs text-[var(--ink)]/65 mb-4 max-w-3xl leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>
+          Pega URLs de <strong>/release/</strong> o <strong>/track/</strong>. Solo se insertan singles (un corte); los EPs de varias pistas salen como «saltados». Peticiones en serie con pausa de{' '}
+          {featuredPauseMs} ms. Máximo <strong>50</strong> por envío. Si el servidor responde <strong>403</strong>, prueba desde script local con Playwright o más tarde; en navegador no cambia tu acceso.
+        </p>
+        <form onSubmit={submitFeaturedBulkImport} className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 min-w-[160px]">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/55">
+                Semana por defecto
+              </span>
+              <input
+                type="text"
+                value={featuredWeek}
+                onChange={(e) => setFeaturedWeek(e.target.value)}
+                placeholder="YYYY-MM-DD (ej. 2026-05-04)"
+                className="h-10 px-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] w-full sm:w-48"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: 13 }}
+                list="admin-chart-weeks"
+              />
+              <datalist id="admin-chart-weeks">
+                {recentEditions.map((ed) => (
+                  <option key={ed.week_date} value={ed.week_date} />
+                ))}
+              </datalist>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/55">
+                Pausa (ms)
+              </span>
+              <input
+                type="number"
+                min={800}
+                max={6000}
+                step={100}
+                value={featuredPauseMs}
+                onChange={(e) => setFeaturedPauseMs(Number(e.target.value) || 2200)}
+                className="h-10 px-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] w-28 tabular-nums"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: 13 }}
+              />
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
+              <input
+                type="checkbox"
+                checked={featuredCreateEdition}
+                onChange={(e) => setFeaturedCreateEdition(e.target.checked)}
+                className="size-4 accent-[var(--red)]"
+              />
+              <span className="text-xs font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                Crear edición si no existe
+              </span>
+            </label>
+          </div>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/55">
+              URLs (una por línea)
+            </span>
+            <textarea
+              value={featuredUrls}
+              onChange={(e) => setFeaturedUrls(e.target.value)}
+              rows={8}
+              placeholder={'https://www.beatport.com/es/release/…\n# Multisemana opcional:\n# 2026-04-27 https://www.beatport.com/es/track/…'}
+              className="w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] text-xs"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={featuredBusy || !featuredUrls.trim()}
+              className="h-10 px-5 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white font-black text-[10px] tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-95"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {featuredBusy ? 'Importando…' : 'Importar a Supabase'}
+            </button>
+            <Link
+              href={`/${lang}/charts`}
+              className="text-xs underline text-[var(--ink)]/70 font-bold"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              Ver /charts
+            </Link>
+          </div>
+          {featuredMsg && (
+            <p className="text-xs font-bold text-[var(--ink)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {featuredMsg}
+            </p>
+          )}
+          {featuredResult?.failed && featuredResult.failed.length > 0 && (
+            <details className="text-xs border-[2px] border-[var(--ink)]/15 p-3 bg-[var(--paper)]">
+              <summary className="cursor-pointer font-black">Fallos ({featuredResult.failed.length})</summary>
+              <ul className="mt-2 space-y-1 list-disc pl-4 text-[var(--ink)]/85">
+                {featuredResult.failed.map((f) => (
+                  <li key={f.url}>
+                    <span className="break-all">{f.url}</span> — {f.reason}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {featuredResult?.skipped_multi && featuredResult.skipped_multi.length > 0 && (
+            <details className="text-xs border-[2px] border-[var(--yellow)]/40 p-3 bg-[#fffef6]">
+              <summary className="cursor-pointer font-black">
+                Saltados multi-track ({featuredResult.skipped_multi.length})
+              </summary>
+              <ul className="mt-2 space-y-2 list-disc pl-4">
+                {featuredResult.skipped_multi.map((m) => (
+                  <li key={m.url} className="break-all">
+                    {m.url} ({m.count} pistas){' '}
+                    <span className="opacity-75">— {m.titles.join(' · ')}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </form>
+      </div>
 
       {loading && (
         <div className="admin-panel !p-8 text-center">

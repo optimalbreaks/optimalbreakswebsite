@@ -107,7 +107,6 @@ export const ARTIST_ERAS: readonly ArtistEra[] = [
       'De La Soul',
       'Public Enemy',
       'N.W.A.',
-      'Fast Eddie',
       'Tyree',
       'The KLF',
       'Orbital',

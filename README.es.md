@@ -190,6 +190,22 @@ npm run db:beatport:top -- --fill-missing-artists --limit=20  # prueba en lote c
 npm run db:beatport:top -- --dry-run artist deekline 3171
 ```
 
+Si Beatport responde **`403` (Cloudflare «Un momento…»)** — típico tras un batch grande que deja la IP marcada varias horas — añade **`--headless`** para que el script abra Chrome con Playwright y pase el challenge JS:
+
+```bash
+npm i -D playwright && npx playwright install chrome
+npm run db:beatport:top -- artist ed209 24421 --headless
+```
+
+Si la IP del runner está fuertemente bloqueada por CF, el `--headless` también puede recibir el challenge sin resolverlo: en ese caso esperar varias horas y reintentar (la propia IP del usuario suele estar limpia y resuelve en segundos).
+
+**TLS `UNABLE_TO_VERIFY_LEAF_SIGNATURE` ("fetch failed" en Node)** — En redes con **SSL inspection** (típico en oficinas: Acttax, VPN/firewall corporativos), el certificado que ve Node está re-firmado por una CA interna. Node 20+ **no usa el truststore del SO por defecto**, así que `fetch` muere con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (visible como **"fetch failed"**) en **todos** los scripts que pegan a Beatport por HTTP: `chart-40-breaks`, `beatport-top-tracks`, `chart-featured-upsert --enrich-release-dates`, ad-hoc bajo `scripts/_*`, etc. **Solución limpia (sin desactivar TLS):** lanzar **`node --use-system-ca`** (lee la CA de Windows/macOS).
+
+- Invocar con `node` directo: `node --use-system-ca scripts/<archivo>.mjs …`
+- **Atención: `NODE_OPTIONS=--use-system-ca` rompe `npm`** (`--use-system-ca is not allowed in NODE_OPTIONS`). Por eso en lugar de `npm run db:beatport:top -- …` invoca directamente `node --use-system-ca scripts/beatport-top-tracks.mjs …`.
+- Alternativa persistente que **sí** acepta npm: variable de SO **`NODE_EXTRA_CA_CERTS=C:\ruta\ca-corporativa.pem`** apuntando al `.pem` exportado del proxy.
+- **No recomendado:** `NODE_TLS_REJECT_UNAUTHORIZED=0` (desactiva TLS para todo el proceso).
+
 El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
 
 4. **Opcional en JSON** — Puedes añadir **`beatport_id`** y **`beatport_url`** en `data/artists/*.json` (o JSON de sellos) para que **`npm run db:artist`** / **`db:label`** los guarden; el **listado Top 10** no va en el JSON: se rellena solo con **`db:beatport:top`**.

@@ -33,6 +33,13 @@ const SCRIPTS = join(ROOT, 'scripts')
 /** @type {{ id: string, run: string, npm?: string, creds: string, description: string }[]} */
 const ACTIONS = [
   {
+    id: 'delete-artist-slug',
+    run: 'node scripts/guia-base-datos.mjs run delete-artist-slug <slug>',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET); solo API REST',
+    description:
+      'Elimina un artista por slug en Supabase. Pone mixes.artist_id a NULL antes del DELETE (FK sin CASCADE).',
+  },
+  {
     id: 'artist-json',
     run: 'node scripts/guia-base-datos.mjs run artist-json <slug>',
     npm: 'npm run db:guia -- run artist-json <slug>',
@@ -442,6 +449,14 @@ const ACTIONS = [
       'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
   },
   {
+    id: 'featured-import-admin',
+    run: 'UI: /[lang]/administrator/tracks → bloque «Importar New Releases (Beatport)». API GET/POST /api/admin/featured-import (sesión admin). Hasta 50 URLs, pausa en serie, crear chart_editions opcional.',
+    npm: '—',
+    creds: 'Cookie admin + vars servidor (Supabase service)',
+    description:
+      'Importa singles desde URLs Beatport a chart_featured_tracks. Multi-semana: prefijo YYYY-MM-DD en cada línea. Sin Playwright en servidor (403 → script local).',
+  },
+  {
     id: 'chart-vinyl-file',
     run: 'node scripts/guia-base-datos.mjs run chart-vinyl-file data/charts/vinyl/<semana>.json',
     npm: 'npm run db:chart:vinyl -- data/charts/vinyl/2026-04-06.json',
@@ -471,7 +486,7 @@ const ACTIONS = [
     npm: 'npm run db:beatport:top -- artist yo-speed 526398',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Scrapea el Top 10 de ventas de Beatport y guarda JSONB en beatport_top_tracks. --all-artists / --all-labels (con --missing-only solo quienes tienen lista vacía). --fill-missing-artists rellena huecos y busca beatport_id por nombre exacto en la búsqueda de Beatport cuando falta. --limit=N, --dry-run.',
+      'Scrapea el Top 10 de ventas de Beatport y guarda JSONB en beatport_top_tracks. --all-artists / --all-labels (con --missing-only solo quienes tienen lista vacía). --fill-missing-artists rellena huecos y busca beatport_id por nombre exacto en la búsqueda de Beatport cuando falta. --limit=N, --dry-run. Ante bloqueo Cloudflare (challenge "Just a moment…"): --headless usa Playwright + Chrome para sortearlo (requiere "npm i -D playwright" + "npx playwright install chromium"; tras un batch grande la IP queda en lista negra de CF varias horas y conviene esperar antes de reintentar).',
   },
   {
     id: 'verify',
@@ -586,6 +601,7 @@ Punto de entrada unificado:
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
+  featured-import-admin           panel /administrator/tracks + POST /api/admin/featured-import (URLs Beatport → Supabase)
   chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Retro Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
@@ -593,6 +609,7 @@ Punto de entrada unificado:
   beatport-top label <slug> <beatport_id>   idem para sellos
   beatport-top --all-artists | --all-labels [--missing-only] [--dry-run]  batch (--missing-only solo sin Top 10)
   beatport-top --fill-missing-artists [--limit=N] [--dry-run]  artistas sin lista (+ búsqueda Beatport si no hay beatport_id)
+  beatport-top … --headless  fuerza navegador (Chrome) para pasar el challenge Cloudflare cuando da 403
   verify                 seed-supabase --verify
   timeline [args]        sync-timeline-artists.mjs
   timeline-sql [args]    sync-timeline-artists.mjs --sql
@@ -646,6 +663,9 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 • ensure-artist-json-in-db.mjs — «¿El JSON y la BD dicen lo mismo?». Lee la BD,
   compara bios/real_name con el JSON; si no coinciden, llama a actualizar-artista
   y escribe en base.
+
+• delete-artist-by-slug.mjs — Borrar fila artists por slug (API REST): pone
+  mixes.artist_id a NULL si apunta al artista y luego DELETE. run delete-artist-slug <slug>.
 
 • seed-supabase.mjs — «Migraciones SQL y semilla». Ejecuta .sql contra Postgres
   (--all, --files, o solo seed). Modo --verify: solo lee conteos (anon), no escribe.
@@ -723,7 +743,7 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 
 Resumen «¿escribe en la tabla artists?»: sí → actualizar-artista, generar-artista-agente
 (salvo --json-only/--stdout), ensure (si hay desajuste), sync-timeline (sin --sql),
-sync-user-list, elegir-foto (salvo --json-only). no (solo) → elegir-foto
+sync-user-list, elegir-foto (salvo --json-only), delete-artist-slug (borrar fila). No (solo) → elegir-foto
 --json-only, sync-timeline --sql (solo archivo), verify, guia.
 
 Resumen «¿escribe en la tabla labels?»: sí → actualizar-sello, generar-sello-agente
@@ -785,6 +805,15 @@ function main() {
   }
 
   switch (sub) {
+    case 'delete-artist-slug': {
+      const slugDel = (rest[0] || '').trim()
+      if (!slugDel) {
+        console.error('Uso: run delete-artist-slug <slug>')
+        process.exit(1)
+      }
+      runNode('delete-artist-by-slug.mjs', [slugDel])
+      break
+    }
     case 'artist-json': {
       const slug = (rest[0] || '').replace(/\.json$/i, '').trim()
       if (!slug) {
