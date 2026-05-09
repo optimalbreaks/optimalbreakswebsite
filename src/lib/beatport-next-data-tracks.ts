@@ -137,6 +137,12 @@ export function dedupeKeyForFeaturedLink(linkUrl: string): string {
   return n
 }
 
+/** true si la URL es ficha de release o track en beatport.com (con o sin prefijo /es/, /en/, …). */
+export function isBeatportTrackOrReleaseUrl(url: string): boolean {
+  const u = url.replace(/^http:\/\//i, 'https://').trim()
+  return /^https:\/\/(www\.)?beatport\.com\/(?:[a-z]{2}\/)?(?:release|track)\//i.test(u)
+}
+
 export async function fetchBeatportPageHtml(url: string): Promise<string> {
   const acceptLang = url.includes('/es/') ? 'es,en-US;q=0.9,en;q=0.8' : 'en-US,en;q=0.9'
   const res = await fetch(url.replace(/^http:\/\//i, 'https://'), {
@@ -152,23 +158,36 @@ export async function fetchBeatportPageHtml(url: string): Promise<string> {
   return res.text()
 }
 
-export function parseBeatportImportLines(
-  text: string,
-  defaultWeekDate: string | null,
-): { week_date: string; url: string }[] {
-  const out: { week_date: string; url: string }[] = []
+/** Lunes de la semana del calendario local para una fecha YYYY-MM-DD (misma regla que chart-40-breaks.mjs → currentWeekMonday). */
+export function chartEditionWeekMondayFromPublish(isoYYYYMMDD: string | null | undefined): string | null {
+  if (isoYYYYMMDD == null || isoYYYYMMDD === '') return null
+  const s = String(isoYYYYMMDD).trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return null
+  const day = d.getDay()
+  const diff = day === 0 ? 6 : day - 1
+  d.setDate(d.getDate() - diff)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Líneas con prefijo `YYYY-MM-DD URL` fuerzan la edición semanal.
+ * URLs sueltas: week_date_override = null → el API usa el lunes de la semana del lanzamiento en Beatport.
+ */
+export function parseBeatportImportLines(text: string): { week_date_override: string | null; url: string }[] {
+  const out: { week_date_override: string | null; url: string }[] = []
   const weekRe = /^(\d{4}-\d{2}-\d{2})\s+(https?:\/\/\S+)/i
   for (const line of text.split('\n')) {
     const t = line.trim()
     if (!t || t.startsWith('#')) continue
     const m = t.match(weekRe)
     if (m) {
-      out.push({ week_date: m[1], url: m[2].replace(/\/+$/, '') })
+      out.push({ week_date_override: m[1], url: m[2].replace(/\/+$/, '') })
       continue
     }
     if (/^https?:\/\//i.test(t)) {
-      if (!defaultWeekDate) continue
-      out.push({ week_date: defaultWeekDate, url: t.replace(/\/+$/, '') })
+      out.push({ week_date_override: null, url: t.replace(/\/+$/, '') })
     }
   }
   return out

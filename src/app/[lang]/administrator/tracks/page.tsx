@@ -195,14 +195,15 @@ export default function AdminTracksPage() {
           Importar New Releases (Beatport)
         </h2>
         <p className="text-xs text-[var(--ink)]/65 mb-4 max-w-3xl leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>
-          Pega URLs de <strong>/release/</strong> o <strong>/track/</strong>. Solo se insertan singles (un corte); los EPs de varias pistas salen como «saltados». Peticiones en serie con pausa de{' '}
-          {featuredPauseMs} ms. Máximo <strong>50</strong> por envío. Si el servidor responde <strong>403</strong>, prueba desde script local con Playwright o más tarde; en navegador no cambia tu acceso.
+          Pega URLs tipo <strong>beatport.com/es/release/…</strong> o <strong>…/track/…</strong> (con o sin <strong>/es/</strong>). Solo <strong>singles</strong>; los EPs saltan. La edición es el <strong>lunes de la semana del lanzamiento en Beatport</strong>; fuerza con <strong>YYYY-MM-DD URL</strong> en la línea. «Semana de respaldo» solo si Beatport no trae fecha.
+          {' '}
+          Pausa {featuredPauseMs} ms; máximo <strong>50</strong> por envío. Si el servidor devuelve <strong>403</strong>, prueba el script local con Playwright.
         </p>
         <form onSubmit={submitFeaturedBulkImport} className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-3 items-end">
             <label className="flex flex-col gap-1 min-w-[160px]">
               <span className="text-[10px] font-black uppercase tracking-wider text-[var(--ink)]/55">
-                Semana por defecto
+                Semana de respaldo (opcional)
               </span>
               <input
                 type="text"

@@ -8,8 +8,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import {
+  chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
   fetchBeatportPageHtml,
+  isBeatportTrackOrReleaseUrl,
   parseBeatportImportLines,
   resolveTracksFromBeatportHtml,
 } from '@/lib/beatport-next-data-tracks'
@@ -33,17 +35,6 @@ function isoWeekDate(s: string): string | null {
   const t = s.trim()
   if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null
   return t
-}
-
-function bareUrlLinesNeedDefault(text: string): boolean {
-  const weekRe = /^(\d{4}-\d{2}-\d{2})\s+https?:\/\//i
-  for (const line of text.split('\n')) {
-    const t = line.trim()
-    if (!t || t.startsWith('#')) continue
-    if (weekRe.test(t)) continue
-    if (/^https?:\/\//i.test(t)) return true
-  }
-  return false
 }
 
 async function ensureEditionId(
@@ -151,33 +142,24 @@ export async function POST(request: NextRequest) {
 
   const urlsText = typeof body.urls_text === 'string' ? body.urls_text : ''
   const defaultWeekRaw = body.default_week_date ?? null
-  const default_week_date = defaultWeekRaw ? isoWeekDate(String(defaultWeekRaw)) : null
+  const fallback_week_date = defaultWeekRaw ? isoWeekDate(String(defaultWeekRaw)) : null
   const createEdition = !!body.create_edition_if_missing
   const pauseMs = Math.min(6000, Math.max(800, Number(body.pause_ms) || 2200))
 
-  if (bareUrlLinesNeedDefault(urlsText) && !default_week_date) {
-    return NextResponse.json(
-      {
-        error:
-          'Las líneas sin fecha requieren «Semana (YYYY-MM-DD)». O prefija cada línea con la fecha.',
-      },
-      { status: 400 },
-    )
-  }
-
-  const items = parseBeatportImportLines(urlsText, default_week_date)
+  const items = parseBeatportImportLines(urlsText)
   if (!items.length) {
     return NextResponse.json({ error: 'No hay URLs Beatport válidas' }, { status: 400 })
   }
 
   const beatportUrls = items.filter((i) =>
-    /https?:\/\/(www\.)?beatport\.com\/(release|track)\//i.test(
-      i.url.replace(/^http:\/\//i, 'https://'),
-    ),
+    isBeatportTrackOrReleaseUrl(i.url.replace(/^http:\/\//i, 'https://')),
   )
   if (!beatportUrls.length) {
     return NextResponse.json(
-      { error: 'Solo se aceptan URLs de Beatport (/release/ o /track/)' },
+      {
+        error:
+          'Solo se aceptan URLs de Beatport (rutas /release/… o /track/…, con o sin /es/ u otro idioma en la ruta).',
+      },
       { status: 400 },
     )
   }
@@ -197,13 +179,19 @@ export async function POST(request: NextRequest) {
     return state
   }
 
-  const added: { url: string; title: string; week_date: string; link_url: string }[] = []
+  const added: {
+    url: string
+    title: string
+    week_date: string
+    week_source: 'linea' | 'beatport' | 'respaldo'
+    link_url: string
+  }[] = []
   const skipped_multi: { url: string; count: number; titles: string[] }[] = []
   const skipped_dupe: { url: string; title?: string }[] = []
   const failed: { url: string; reason: string }[] = []
 
   for (let i = 0; i < beatportUrls.length; i++) {
-    const { week_date: wd, url } = beatportUrls[i]
+    const { week_date_override, url } = beatportUrls[i]
     try {
       const normalized = url
         .replace(/^http:\/\//i, 'https://')
@@ -222,14 +210,35 @@ export async function POST(request: NextRequest) {
       } else {
         const pick = tracks[0]
         const key = dedupeKeyForFeaturedLink(pick.link_url)
-        const state = await getEditionState(wd)
+
+        let targetWeek: string | null = week_date_override
+          ? isoWeekDate(week_date_override)
+          : null
+        let weekSource: 'linea' | 'beatport' | 'respaldo' = 'linea'
+
+        if (!targetWeek) {
+          targetWeek = chartEditionWeekMondayFromPublish(pick.release_date)
+          weekSource = 'beatport'
+        }
+        if (!targetWeek && fallback_week_date) {
+          targetWeek = fallback_week_date
+          weekSource = 'respaldo'
+        }
+        if (!targetWeek) {
+          failed.push({
+            url,
+            reason:
+              'Beatport no devolvió fecha de publicación; rellena «Semana de respaldo» o usa «YYYY-MM-DD URL» en la línea.',
+          })
+        } else {
+        const state = await getEditionState(targetWeek)
 
         if (state.keys.has(key)) {
           skipped_dupe.push({ url, title: pick.title })
         } else if (state.nextSort > FEAT_MAX_SORT) {
           failed.push({
             url,
-            reason: `La semana ${wd} ya tiene sort_order máximo (${FEAT_MAX_SORT})`,
+            reason: `La semana ${targetWeek} ya tiene sort_order máximo (${FEAT_MAX_SORT})`,
           })
         } else {
           const { error: insErr } = await sb.from('chart_featured_tracks').insert({
@@ -258,11 +267,13 @@ export async function POST(request: NextRequest) {
             state.nextSort++
             added.push({
               url,
-              week_date: wd,
+              week_date: targetWeek,
+              week_source: weekSource,
               title: pick.title,
               link_url: pick.link_url,
             })
           }
+        }
         }
       }
     } catch (e) {
