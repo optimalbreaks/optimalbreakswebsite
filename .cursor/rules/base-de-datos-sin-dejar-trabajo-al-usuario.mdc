@@ -22,4 +22,6 @@ Objetivo: cuando pida un cambio en datos persistidos, **el usuario no deba hacer
 
 **Carteles de eventos (`elegir-poster-evento` / `run events-poster`):** SerpAPI Google Imágenes + OpenAI; sube a `media/events/<slug>/poster.*` y actualiza `events.image_url`. Entrada: `npm run db:events:poster -- <slug>` o `--missing-only --limit N`.
 
+**New Releases (/charts — `chart_featured_tracks`):** El JSON `data/charts/picks/*.json` y `scripts/_append-batch-nr-from-releases.mjs` **no** actualizan la web solos. Cuando el usuario pida meter / añadir temas ahí tras un flujo local, **hay que ejecutar también** `npm run db:chart:featured -- <json>` (o `run chart-featured-file`) con service role si el objetivo es producción — salvo que use solo el admin `featured-import` (ese ya escribe BD). Detalle obligatorio para el agente: regla **`charts-new-releases-supabase`**.
+
 **Imágenes en `public/images/` (artistas, eventos, etc.):** ver **imagenes-public-webp** y `public/images/README.md`: si **ya** hay `.webp` en repo, `image_url` = esa ruta tal cual; si el usuario sube JPG/PNG, **convertir** a WebP, borrar el original y referenciar el `.webp` (`npm run images:to-webp -- <ruta>`).

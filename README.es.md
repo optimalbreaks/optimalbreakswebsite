@@ -172,6 +172,16 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 
 ---
 
+## New Releases (novedades editoriales en `/charts`)
+
+- **Qué muestra producción:** filas **`chart_featured_tracks`** en Supabase (por **`chart_editions.week_date`**). La ruta **`/[lang]/charts` no lee** `data/charts/picks/*.json`.
+- **Solo disco / repo:** Editar **`data/charts/picks/<semana>.json`** o ejecutar **`scripts/_append-batch-nr-from-releases.mjs`** (lista de URLs Beatport → singles en ese JSON): **solo actualiza Git**, no las filas que ve la web.
+- **Publicar en Supabase (obligatorio para que el sitio muestre los nuevos picks):** **`npm run db:chart:featured -- data/charts/picks/<semana>.json`** (equiv.: `node scripts/guia-base-datos.mjs run chart-featured-file …`). Opciones en `chart-featured-upsert.mjs`: **`--create-edition`**, **`--enrich-release-dates --write-json`**, etc. En red con SSL inspection usa **`node --use-system-ca scripts/chart-featured-upsert.mjs …`** (`NODE_OPTIONS` con `--use-system-ca` rompe npm).
+- **Sin paso JSON:** importación Beatport en **`/[lang]/administrator/tracks`** (API **`/api/admin/featured-import`**): escribe directamente en **`chart_featured_tracks`**.
+- **Otros comandos relacionados:** **`npm run db:chart:vinyl`** (vinilos retrospectivos desde JSON); **`npm run db:chart:backfill-new-releases`** (relleno histórico desde 40 Breaks). Más contexto en inglés: [README.md — Beatport (incluye New Releases)](./README.md#beatport-weekly-chart-vs-top-10-on-profiles).
+
+---
+
 ## Beatport: Top 10 en fichas de artista y sello
 
 Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**.

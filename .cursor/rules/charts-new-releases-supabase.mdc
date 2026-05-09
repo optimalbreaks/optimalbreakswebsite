@@ -1,0 +1,27 @@
+---
+description: New Releases (/charts): JSON local vs Supabase; el agente debe publicar picks en BD cuando el usuario pida añadir temas.
+alwaysApply: true
+---
+
+# Charts — New Releases (`chart_featured_tracks`)
+
+## Fuente en producción
+
+- La página **`/[lang]/charts`** lee **`chart_featured_tracks`** en Supabase (por edición **`chart_editions.week_date`**). **No** lee `data/charts/picks/*.json`.
+
+## Si el usuario pide añadir temas / «los míos» en New Releases desde Beatport o JSON
+
+1. **Si el flujo empieza en JSON local** (p. ej. `scripts/_append-batch-nr-from-releases.mjs` tras editarlo, o edits manuales en `data/charts/picks/YYYY-MM-DD.json`): ese paso solo actualiza disco/Git. **Obligatorio en el mismo trabajo:** ejecutar el UPSERT a Supabase si hay credenciales:
+   - `npm run db:chart:featured -- data/charts/picks/<semana>.json`
+   - o `node scripts/guia-base-datos.mjs run chart-featured-file data/charts/picks/<semana>.json`
+   - redes con SSL inspection: `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<semana>.json` (npm no permite `--use-system-ca` en NODE_OPTIONS).
+
+2. **Si usa el panel admin:** `/[lang]/administrator/tracks` → import Beatport (**`/api/admin/featured-import`**): escribe directamente en **`chart_featured_tracks`**; no hace falta `db:chart:featured` después de esa importación (salvo mantener Git al día con commits del JSON como copia opcional).
+
+3. **No** dar por cerrada la petición solo con «JSON guardado» o «script batch hecho». Regla **`base-de-datos-sin-dejar-trabajo-al-usuario`**: publicar datos en BD como parte del trabajo.
+
+## Referencia rápida
+
+- Guía BD: entrada **`chart-featured-file`** / **`featured-import-admin`** en `scripts/guia-base-datos.mjs`.
+- README (EN): sección **New Releases (editorial picks)** junto al bloque Beatport charts.
+- README (ES): sección correspondiente ante **Beatport: Top 10**.

@@ -251,6 +251,11 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   ├── elegir-foto-artista.mjs      # npm run db:artist:photo — SerpAPI + OpenAI → Storage + UPSERT
 │   ├── sync-artist-public-portrait-urls.mjs  # db:artist:sync-public-portraits — map + public/images/artists → image_url
 │   ├── upload-storage-media.mjs     # npm run media:upload — local file → bucket `media`
+│   ├── chart-40-breaks.mjs           # npm run db:chart — weekly 40 Breaks
+│   ├── chart-featured-upsert.mjs     # npm run db:chart:featured — New Releases (JSON → Supabase)
+│   ├── chart-vinyl-upsert.mjs        # npm run db:chart:vinyl — Retro Vinyl Picks
+│   ├── beatport-top-tracks.mjs      # npm run db:beatport:top — Top 10 on artist/label pages
+│   ├── guia-base-datos.mjs          # npm run db:guia — scripted DB task index (`run chart-featured-file`, …)
 │   ├── sync-timeline-artists.mjs    # db:timeline / db:timeline:sql
 │   ├── sync-user-list-artists.mjs   # db:user-list — starter rows for extended name list
 │   └── prompts/                # System prompts: artist, label, event enrich, revision modes
@@ -763,6 +768,16 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 
 ## Beatport: weekly chart vs Top 10 on profiles
 
+### New Releases (editorial picks on `/charts`)
+
+- **What the live site reads:** **`chart_featured_tracks`** in Supabase (`chart_editions.week_date`). The route **`/[lang]/charts`** never reads **`data/charts/picks/*.json`** directly.
+- **Git / JSON-only updates:** Editing `data/charts/picks/<week>.json` or running **`scripts/_append-batch-nr-from-releases.mjs`** (Beatport crawl → singles into that JSON) updates **repository files only**. Production row counts stay stale until Supabase is synced.
+- **Publish picks to Supabase:** `npm run db:chart:featured -- data/charts/picks/<week>.json` (same as **`run chart-featured-file`** via `npm run db:guia`). Optional flags on `chart-featured-upsert.mjs`: `--create-edition`, `--enrich-release-dates`, `--write-json`, `--verbose`. On corporate TLS inspection use `node --use-system-ca scripts/chart-featured-upsert.mjs …` (npm cannot pass `--use-system-ca` via `NODE_OPTIONS`).
+- **Admin path (writes DB directly):** `/[lang]/administrator/tracks` → Beatport URL import (**`/api/admin/featured-import`**). No mandatory JSON upsert afterward.
+- **Vinyl editorial block:** **`npm run db:chart:vinyl -- …`** (`chart-vinyl-upsert.mjs`). **Backfill New Releases from 40 Breaks history:** **`npm run db:chart:backfill-new-releases`**.
+
+---
+
 - **Weekly chart (“40 Breaks Vitales”)** — `npm run db:chart` runs `scripts/chart-40-breaks.mjs` (Beatport genre top 100 + editorial pipeline). Separate from per-artist sales widgets.
 - **Top 10 sales on Beatport** — `npm run db:beatport:top -- artist <slug> <beatport_id>` or `label <slug> <beatport_id>` runs `scripts/beatport-top-tracks.mjs`: fetches the public Beatport page, reads embedded **`__NEXT_DATA__`**, extracts the **top-10-tracks** query, and **`UPDATE`s** the matching row in **`artists`** or **`labels`** by `slug` (`beatport_url`, `beatport_id`, `beatport_top_tracks`, `beatport_top_tracks_updated_at`). Requires migration **`046_beatport_top_tracks.sql`** and **`NEXT_PUBLIC_SUPABASE_URL` + service role / secret key**.
 - **Finding `beatport_id`** — Open the artist or label on [Beatport](https://www.beatport.com); the canonical URL is `/artist/<slug>/<id>` or `/label/<slug>/<id>`. Pass the same `slug` as in Optimal Breaks (e.g. `deekline` → `https://www.beatport.com/artist/deekline/3171` → `3171`).
@@ -803,6 +818,9 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 | `npm run media:upload -- <local-file> <path-in-bucket>` | Upload a file to Storage bucket **`media`** (service/secret key); prints public URL + sample SQL for `image_url`. |
 | `npm run db:beatport:top -- artist <slug> <beatport_id>` | Scrape Beatport **Top 10** for that **artist** → update `beatport_top_tracks` (+ URL/ID/timestamp) in Supabase. Same pattern: `label <slug> <id>`. Flags: `--all-artists`, `--all-labels`, `--missing-only`, `--fill-missing-artists [--limit=N]`, `--dry-run`. See **Beatport: weekly chart vs Top 10 on profiles**. |
 | `npm run db:chart` | Weekly **genre chart** pipeline (`chart-40-breaks.mjs`); not the same as per-profile Top 10. |
+| `npm run db:chart:featured -- data/charts/picks/<week>.json` | **New Releases** UPSERT (`chart-featured-upsert.mjs` → `chart_featured_tracks`). Required after batch/JSON edits for production. |
+| `npm run db:chart:vinyl -- …` | **Retro Vinyl Picks** from JSON (`chart-vinyl-upsert.mjs`). |
+| `npm run db:chart:backfill-new-releases` | Backfill **`chart_featured_tracks`** from historical 40 Breaks picks (`backfill-new-releases-from-40breaks.mjs`). |
 
 ---
 

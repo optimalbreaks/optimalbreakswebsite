@@ -9,6 +9,16 @@
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
  *   BEATPORT_BATCH_PAUSE_MS — pausa después de cada URL (default 2200).
  *
+ * ┌─ Importante — NO es la web en producción ──────────────────────────────────┐
+ * │ Este script solo escribe **PICKS_PATH** (JSON en repo). `/charts` lee **     │
+ * │ chart_featured_tracks en Supabase**. Tras ejecutar este script (o cualquier│
+ * │ cambio manual al mismo JSON), publicar picks en BD con:                     │
+ * │   npm run db:chart:featured -- data/charts/picks/YYYY-MM-DD.json             │
+ * │ o: node scripts/guia-base-datos.mjs run chart-featured-file <ese-json>       │
+ * │ (SSL corporativo: `node --use-system-ca scripts/chart-featured-upsert.mjs`.) │
+ * │ Panel admin Tracks → import Beatport ya escribe en BD; no necesita ese paso.│
+ * └────────────────────────────────────────────────────────────────────────────┘
+ *
  * Borrar tras ejecutar.
  */
 // IMPORTANTE — TLS:
