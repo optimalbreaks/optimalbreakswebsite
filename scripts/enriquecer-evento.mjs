@@ -35,6 +35,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-oshun-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-mas-ruido-black-hole-360-2026
  *   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
+ *   node scripts/enriquecer-evento.mjs --patch-fruity-loops-03-06-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
  *   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
@@ -1769,22 +1770,25 @@ const FLORIDANCE_FESTIVAL_TICKETS =
 const FLORIDANCE_FESTIVAL_IMAGE = '/images/events/floridance-festival-2026.webp'
 
 const FLORIDANCE_FESTIVAL_2026_LINEUP = [
+  'La Gore',
+  'Atomic Hooligan',
+  'DJ Man vs DJ Shemma',
+  'Tortu / Bad Legs',
+  'Aldo Ferrari / Perfect Kombo',
+  'Maribel / Rueda / Killerblitz',
   'Leeroy Thornhill (ex-Prodigy)',
-  'Anuschka',
-  'Norbak',
-  'Yo Speed',
-  'Wally',
-  'Tilla Pink',
-  'Kill II Beat',
+  'Anuschka / Norbak',
+  'Yo Speed / Wally',
+  'Tilla Pink / Kill2beat',
   'Deekbass',
 ]
 
 const FLORIDANCE_FESTIVAL_2026_ROW = {
   name: 'Floridance Festival 2026',
   description_en:
-    'Floridance Festival 2026 is presented by Animalia El Bicho Producciones at Estadio Municipal Antonio Pazos Puyana "Monago" in Rota (Cádiz). Saturday 5 September 2026. Official artwork "Avance line-up #1" lists Leeroy Thornhill (ex-Prodigy), Anuschka, Norbak, Yo Speed, Wally, Tilla Pink, Kill II Beat and Deekbass; fuller line-up follows on later drops. Sponsor call-outs on the art include Cutty Sark whisky and Negrita rum; partners cited include Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario and Locura energy drink (per flyer). MonsterTicket lists genre breakbeat, hours 18:00-07:00, venue Av. de la Diputación 164, 18+ access and named ticket types (general/VIP tiers on the storefront; details may update). Casual dress and food trucks are noted on sale copy.',
+    'Floridance Festival 2026 is presented by Animalia El Bicho Producciones at Estadio Municipal Antonio Pazos Puyana "Monago" in Rota (Cádiz). Saturday 5 September 2026. Official artwork "Avance line-up #2" adds La Gore, Atomic Hooligan, DJ Man vs DJ Shemma (first Animalia event tribute on the flyer), Tortu / Bad Legs, Aldo Ferrari / Perfect Kombo, Maribel / Rueda / Killerblitz alongside Leeroy Thornhill (ex-Prodigy), Anuschka / Norbak, Yo Speed / Wally, Tilla Pink / Kill2beat and Deekbass; more names may follow. Sponsor call-outs on the art include Cutty Sark whisky and Negrita rum; partners cited include Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario and Locura energy drink (per flyer). MonsterTicket lists genre breakbeat, hours 18:00-07:00, venue Av. de la Diputación 164, 18+ access and named ticket types (general/VIP tiers on the storefront; details may update). Casual dress and food trucks are noted on sale copy.',
   description_es:
-    'Floridance Festival 2026, producido por Animalia El Bicho Producciones, en el Estadio Municipal Antonio Pazos Puyana "Monago" de Rota (Cádiz), sábado 5 de septiembre de 2026. El cartel marca "Avance line-up #1" con Leeroy Thornhill (ex-Prodigy), Anuschka, Norbak, Yo Speed, Wally, Tilla Pink, Kill II Beat y Deekbass (se irán sumando más nombres en siguientes comunicados). En el flyer figuran como patrocinio Cutty Sark y ron Negrita; entre colaboradores Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario y Locura (bebida energética). MonsterTicket publica género breakbeat, horario 18:00h a 07:00h, dirección Av. de la Diputación 164, acceso desde 18 años y entradas nominativas con tipologías general/VIP según tienda.',
+    'Floridance Festival 2026, producido por Animalia El Bicho Producciones, en el Estadio Municipal Antonio Pazos Puyana "Monago" de Rota (Cádiz), sábado 5 de septiembre de 2026. El cartel marca "Avance line-up #2" con La Gore, Atomic Hooligan, DJ Man vs DJ Shemma (homenaje al primer evento Animalia en el flyer), Tortu / Bad Legs, Aldo Ferrari / Perfect Kombo, Maribel / Rueda / Killerblitz, Leeroy Thornhill (ex-Prodigy), Anuschka / Norbak, Yo Speed / Wally, Tilla Pink / Kill2beat y Deekbass (se irán sumando más nombres en siguientes comunicados). En el flyer figuran como patrocinio Cutty Sark y ron Negrita; entre colaboradores Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario y Locura (bebida energética). MonsterTicket publica género breakbeat, horario 18:00h a 07:00h, dirección Av. de la Diputación 164, acceso desde 18 años y entradas nominativas con tipologías general/VIP según tienda.',
   event_type: 'festival',
   date_start: '2026-09-05',
   date_end: null,
@@ -2395,6 +2399,64 @@ async function runPatchLaCasetaDelBreakbeat2026(sb) {
   console.log('[patch-la-caseta-del-breakbeat-2026] OK:', after)
 }
 
+const FRUITY_LOOPS_03062026_SLUG = 'fruity-loops-03-06-2026'
+const FRUITY_LOOPS_TICKETS =
+  'https://site.fourvenues.com/es/iaramargafatimagmailcom/events/fruity-loops-03-06-2026-MU2X'
+const FRUITY_LOOPS_IMAGE = '/images/events/fruity-loops-03-06-2026.avif'
+
+const FRUITY_LOOPS_03062026_LINEUP = []
+
+const FRUITY_LOOPS_03062026_ROW = {
+  name: 'Fruity Loops',
+  description_en:
+    'Fruity Loops on Wednesday 3 June 2026. Tickets, venue, timetable and lineup are published on the organizer Fourvenues storefront (site.fourvenues.com). Poster in the repo matches the listing artwork.',
+  description_es:
+    'Fruity Loops el miércoles 3 de junio de 2026. Entradas, sala, horario y artistas figuran en la venta oficial de Fourvenues (site.fourvenues.com). El cartel en el repositorio coincide con el arte de la ficha.',
+  event_type: 'club_night',
+  date_start: '2026-06-03',
+  date_end: null,
+  location: '',
+  city: '',
+  country: 'Spain',
+  venue: null,
+  address: null,
+  website: null,
+  tickets_url: FRUITY_LOOPS_TICKETS,
+  image_url: FRUITY_LOOPS_IMAGE,
+  lineup: FRUITY_LOOPS_03062026_LINEUP,
+  tags: ['fruity loops', 'fourvenues', 'breakbeat', '2026', 'site.fourvenues.com'],
+  socials: {},
+}
+
+async function runPatchFruityLoops03062026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', FRUITY_LOOPS_03062026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-fruity-loops-03-06-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: FRUITY_LOOPS_03062026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FRUITY_LOOPS_03062026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', FRUITY_LOOPS_03062026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-fruity-loops-03-06-2026] OK:', after)
+}
+
 const FINGER_LICKIN_BOAT_PARTY_2026_SLUG = 'finger-lickin-boat-party-2026'
 const FINGER_LICKIN_SKIDDLE =
   'https://www.skiddle.com/whats-on/London/Dutch-Master-Party-Boat/Finger-Lickin-Boat-Party/42152456/'
@@ -2982,6 +3044,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-fruity-loops-03-06-2026')) {
+    await runPatchFruityLoops03062026(sb)
+    return
+  }
+
   if (argv.includes('--patch-finger-lickin-boat-party-2026')) {
     await runPatchFingerLickinBoatParty2026(sb)
     return
@@ -3068,6 +3135,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-oshun-festival-2026
   node scripts/enriquecer-evento.mjs --patch-mas-ruido-black-hole-360-2026
   node scripts/enriquecer-evento.mjs --patch-la-caseta-del-breakbeat-2026
+  node scripts/enriquecer-evento.mjs --patch-fruity-loops-03-06-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-boat-party-2026
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026

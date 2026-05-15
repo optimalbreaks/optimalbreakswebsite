@@ -16,6 +16,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY  (siempre)
  */
 
+import { execFileSync } from 'child_process'
 import { readFileSync, existsSync, writeFileSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
@@ -125,18 +126,49 @@ async function openAiJson({ system, user }) {
 // Scraping: Beatport Top 100 Breaks/Breakbeat/UK Bass (genre 9)
 // ---------------------------------------------------------------------------
 
+const BEATPORT_TOP100_URL =
+  'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/top-100'
+
+const BEATPORT_FETCH_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
+/** Redes con proxy TLS o huella undici → Beatport devuelve 403; curl -k suele funcionar. */
+function fetchBeatportHtmlViaCurl(url) {
+  try {
+    return execFileSync(
+      'curl',
+      ['-k', '-sL', '--compressed', '-A', BEATPORT_FETCH_UA, url],
+      { encoding: 'utf8', maxBuffer: 25 * 1024 * 1024 },
+    )
+  } catch (e) {
+    throw new Error(`Beatport (curl): ${e.message}`)
+  }
+}
+
 async function scrapeBeatport() {
-  const url = 'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/top-100'
   console.log(`  ↳ Fetching Beatport Top 100...`)
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml',
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-  })
-  if (!res.ok) throw new Error(`Beatport HTTP ${res.status}`)
-  const html = await res.text()
+  let html
+  try {
+    const res = await fetch(BEATPORT_TOP100_URL, {
+      headers: {
+        'User-Agent': BEATPORT_FETCH_UA,
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+    if (!res.ok) {
+      console.log(`  ↳ Beatport HTTP ${res.status}, reintentando con curl -k…`)
+      html = fetchBeatportHtmlViaCurl(BEATPORT_TOP100_URL)
+    } else {
+      html = await res.text()
+    }
+  } catch (err) {
+    console.log(`  ↳ Beatport fetch: ${err.message} — curl -k…`)
+    html = fetchBeatportHtmlViaCurl(BEATPORT_TOP100_URL)
+  }
+  if (!html || html.length < 500) {
+    throw new Error('Beatport: HTML vacío o demasiado corto tras fetch/curl')
+  }
   return parseBeatportNextData(html)
 }
 
@@ -283,6 +315,36 @@ function mergeBeatportMetadata(curated, beatportTracks) {
   })
   console.log(`  ↳ Carátula + sample + año (Beatport por id): ${filled}/${out.length} con imagen`)
   return out
+}
+
+/** La IA a veces repite el mismo `beatport_url`. Unifica por id y rellena hasta `n` desde el Top 100. */
+function dedupeCuratedTracks(curated, beatportTracks, n = 40) {
+  const seen = new Set()
+  const out = []
+  const push = (row) => {
+    const id = beatportTrackIdFromUrl(row.beatport_url)
+    if (!id || seen.has(id)) return
+    seen.add(id)
+    out.push(row)
+  }
+  const aiIds = curated.slice(0, n).map((r) => beatportTrackIdFromUrl(r.beatport_url)).filter(Boolean)
+  if (aiIds.length > new Set(aiIds).size) {
+    console.log(`  ↳ Dedupe: la IA duplicó track(s) por id Beatport; reordenando + relleno desde Top 100.`)
+  }
+  for (const row of curated) {
+    push(row)
+    if (out.length >= n) break
+  }
+  if (out.length < n) {
+    for (const t of beatportTracks) {
+      push(t)
+      if (out.length >= n) break
+    }
+  }
+  if (out.length < n) {
+    console.log(`  ⚠ Tras dedupe + relleno hay solo ${out.length}/${n} tracks.`)
+  }
+  return out.slice(0, n)
 }
 
 function parseBeatportHtmlFallback(html) {
@@ -518,6 +580,85 @@ function printChart(tracks, weekDate) {
 // Supabase UPSERT
 // ---------------------------------------------------------------------------
 
+/** Reordena posiciones (1..40) usando huecos libres; evita UNIQUE sin migración 058. */
+function computeChartTrackPositionMoves(positions, target, empty) {
+  const pos = new Map(positions)
+  const holes = new Set(empty)
+  const moves = []
+  const maxIter = 10000
+  let iter = 0
+  const mismatch = () => [...target.entries()].find(([id, tp]) => pos.get(id) !== tp)
+  while (mismatch()) {
+    if (++iter > maxIter) throw new Error('computeChartTrackPositionMoves: demasiadas iteraciones')
+    const [id, want] = mismatch()
+    const cur = pos.get(id)
+    if (holes.has(want)) {
+      moves.push({ id, position: want })
+      holes.delete(want)
+      holes.add(cur)
+      pos.set(id, want)
+      continue
+    }
+    const blockerId = [...pos.entries()].find(([i, p]) => i !== id && p === want)?.[0]
+    if (blockerId === undefined) {
+      throw new Error(`chart_tracks: sin ocupante en posición ${want}`)
+    }
+    const temp = [...holes][0]
+    if (temp === undefined) throw new Error('chart_tracks: sin hueco libre para reordenar')
+    moves.push({ id: blockerId, position: temp })
+    holes.delete(temp)
+    holes.add(pos.get(blockerId))
+    pos.set(blockerId, temp)
+  }
+  return moves
+}
+
+/** Con huecos (p. ej. tras borrar filas antes de insertar nuevas): solo UPDATE position + datos. */
+async function syncChartTrackUpdatesWithFreeSlots(supabase, editionId, updates) {
+  const ids = updates.map((u) => u.id)
+  const { data: dbRows, error } = await supabase
+    .from('chart_tracks')
+    .select('id, position')
+    .eq('chart_edition_id', editionId)
+    .in('id', ids)
+  if (error) throw new Error(`chart_tracks positions: ${error.message}`)
+  const positions = new Map(dbRows.map((r) => [r.id, r.position]))
+  const target = new Map(updates.map((u) => [u.id, u.data.position]))
+  const used = new Set(positions.values())
+  const holes = new Set()
+  for (let p = 1; p <= 40; p++) {
+    if (!used.has(p)) holes.add(p)
+  }
+  if (holes.size === 0) return false
+  const moves = computeChartTrackPositionMoves(positions, target, holes)
+  for (const m of moves) {
+    const { error: upErr } = await supabase
+      .from('chart_tracks')
+      .update({ position: m.position })
+      .eq('id', m.id)
+    if (upErr) throw new Error(`reorder chart_tracks ${m.id}: ${upErr.message}`)
+  }
+  for (const u of updates) {
+    const { error: upErr } = await supabase.from('chart_tracks').update(u.data).eq('id', u.id)
+    if (upErr) throw new Error(`update chart_tracks ${u.id}: ${upErr.message}`)
+  }
+  return true
+}
+
+/** Sin huecos (permutación pura): una transacción en BD con UNIQUE DEFERRABLE (migración 058). */
+async function applyChartTrackRowUpdatesRpc(supabase, updates) {
+  const payload = updates.map((u) => ({ id: u.id, ...u.data }))
+  const { error: rpcErr } = await supabase.rpc('apply_chart_tracks_row_updates', {
+    p_updates: payload,
+  })
+  if (rpcErr) {
+    throw new Error(
+      `apply_chart_tracks_row_updates: ${rpcErr.message}. ` +
+        'Aplica supabase/migrations/058_chart_tracks_position_unique_deferrable.sql en el proyecto.',
+    )
+  }
+}
+
 async function uploadToSupabase(supabase, tracks, weekDate, sources) {
   const title = `40 Breaks Vitales — ${weekDate}`
 
@@ -622,12 +763,9 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
       .in('id', toDelete)
     if (delErr) throw new Error(`delete chart_tracks (no presentes): ${delErr.message}`)
   }
-  for (const u of updates) {
-    const { error: upErr } = await supabase
-      .from('chart_tracks')
-      .update(u.data)
-      .eq('id', u.id)
-    if (upErr) throw new Error(`update chart_tracks ${u.id}: ${upErr.message}`)
+  if (updates.length > 0) {
+    const usedFreeSlots = await syncChartTrackUpdatesWithFreeSlots(supabase, editionId, updates)
+    if (!usedFreeSlots) await applyChartTrackRowUpdatesRpc(supabase, updates)
   }
   if (inserts.length > 0) {
     const { error: insertErr } = await supabase.from('chart_tracks').insert(inserts)
@@ -696,7 +834,8 @@ Fuentes disponibles: beatport, juno
 
   // 2. AI curation
   let curated = await curateWithAI(beatportTracks, junoTracks)
-  curated = curated.slice(0, 40).map((t, i) => ({ ...t, position: i + 1 }))
+  curated = dedupeCuratedTracks(curated, beatportTracks, 40)
+  curated = curated.map((t, i) => ({ ...t, position: i + 1 }))
   curated = mergeBeatportMetadata(curated, beatportTracks)
 
   // 3. Historical comparison (siempre contra la edición ESTRICTAMENTE anterior

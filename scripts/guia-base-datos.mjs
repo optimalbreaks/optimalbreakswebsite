@@ -329,6 +329,14 @@ const ACTIONS = [
       'UPSERT la-caseta-del-breakbeat-2026: 25 abr 2026 Sala Pandora Sevilla (calle Gramil 2), cartel public/images/events/la_caseta_del_breakbeat.webp, entradas Fourvenues.',
   },
   {
+    id: 'events-patch-fruity-loops-03-06-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-fruity-loops-03-06-2026',
+    npm: 'npm run db:guia -- run events-patch-fruity-loops-03-06-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT fruity-loops-03-06-2026: 3 jun 2026, cartel AVIF fruity-loops-03-06-2026.avif, venta site.fourvenues.com (slug iaramargafatimagmailcom/events/…-MU2X).',
+  },
+  {
     id: 'events-patch-finger-lickin-boat-party-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-finger-lickin-boat-party-2026',
     npm: 'npm run db:guia -- run events-patch-finger-lickin-boat-party-2026',
@@ -374,7 +382,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-floridance-festival-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT floridance-festival-2026: 5 sept Rota Estadio Monago Animalia; avance lineup cartel floridance-festival-2026.webp; MonsterTicket.',
+      'UPSERT floridance-festival-2026: 5 sept Rota Estadio Monago Animalia; avance lineup #2 cartel floridance-festival-2026.webp; MonsterTicket.',
   },
   {
     id: 'events-patch-electrolunch-xxl-picnic-76-sevilla-2026',
@@ -586,6 +594,7 @@ Punto de entrada unificado:
   events-patch-oshun-festival-2026  Oshun Festival, Carpas Yerbabuena Barbate 15 ago 2026
   events-patch-mas-ruido-black-hole-360-2026  +Ruido! Black Hole 360, O’Farrell San Fernando 18 abr 2026
   events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
+  events-patch-fruity-loops-03-06-2026  Fruity Loops, 3 jun 2026, entradas Fourvenues; cartel public/images/events/fruity-loops-03-06-2026.avif
   events-patch-finger-lickin-boat-party-2026  Finger Lickin Boat Party, Dutch Master Londres 16 may 2026
   events-patch-finger-lickin-between-the-bridges-2026  Finger Lickin' at Between the Bridges, Southbank Londres 16 may 2026 (17:00–23:00)
   events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
@@ -772,7 +781,15 @@ function runNode(scriptName, args) {
     console.error('Script no encontrado:', scriptPath)
     process.exit(1)
   }
-  const r = spawnSync(process.execPath, [scriptPath, ...args], {
+  // Redes con inspección SSL: el padre puede tener --use-system-ca pero el hijo no hereda ese
+  // argumento de argv. Sin esto, fetch() a Supabase falla (p. ej. UNABLE_TO_VERIFY_LEAF_SIGNATURE).
+  // Desactivar: OB_NO_SYSTEM_CA=1
+  const nodeMajor = Number((process.versions.node || '0').split('.')[0])
+  const argv =
+    nodeMajor >= 20 && String(process.env.OB_NO_SYSTEM_CA || '').trim() !== '1'
+      ? ['--use-system-ca', scriptPath, ...args]
+      : [scriptPath, ...args]
+  const r = spawnSync(process.execPath, argv, {
     cwd: ROOT,
     stdio: 'inherit',
     env: process.env,
@@ -979,6 +996,9 @@ function main() {
       break
     case 'events-patch-la-caseta-del-breakbeat-2026':
       runNode('enriquecer-evento.mjs', ['--patch-la-caseta-del-breakbeat-2026', ...rest])
+      break
+    case 'events-patch-fruity-loops-03-06-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-fruity-loops-03-06-2026', ...rest])
       break
     case 'events-patch-finger-lickin-boat-party-2026':
       runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-boat-party-2026', ...rest])
