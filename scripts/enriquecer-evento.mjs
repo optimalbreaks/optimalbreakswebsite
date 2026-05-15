@@ -2170,12 +2170,22 @@ const OSHUN_FESTIVAL_2026_SLUG = 'oshun-festival-2026'
 const OSHUN_FESTIVAL_TICKETS = 'https://www.monsterticket.com/evento/oshun-festival-2026'
 const OSHUN_FESTIVAL_IMAGE = '/images/events/oshun-festival-2026.webp'
 
+const OSHUN_FESTIVAL_2026_LINEUP = [
+  'Baymont Bross',
+  'Yo Speed',
+  'Bad Legs',
+  'Bowser',
+  'Darkbass',
+  'Xano',
+  '… más artistas por confirmar',
+]
+
 const OSHUN_FESTIVAL_2026_ROW = {
   name: 'Oshun Festival 2026',
   description_en:
-    'Oshun Festival 2026 at Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz province), Saturday 15 August 2026. Promotional artwork highlights a beachside site, breakbeat focus, and format “17:00–07:00” as on the official flyer. MonsterTicket lists 18+ access, non-nominal tickets, and the venue as Recinto Ferial Barbate; a launch offer for the first hundred tickets with official T-shirt is described on the artwork and the storefront (availability varies). Organisers cited on the art: Oshun and Made In Sur. Sale URL without tracking: monsterticket.com/oshun-festival-2026.',
+    'Oshun Festival 2026 at Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz province), Saturday 15 August 2026. First lineup wave (“Primer avance”) on the flyer: Baymont Bross, Yo Speed, Bad Legs, Bowser, Darkbass, Xano, plus more acts TBA—100% breakbeat, foam cannon, beachside site, food trucks and merchandising as promoted. Doors 17:00–close 07:00; 18+ only. MonsterTicket: non-nominal tickets; launch tranches for first entries + T-shirt sold out at times—check the storefront. Organisers on the art: Sala Oshun and Made In Sur (@salaoshun, @made.in.sur.events). Sale URL without RRPP tracking: monsterticket.com/oshun-festival-2026.',
   description_es:
-    'Oshun Festival 2026 en Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz), sábado 15 de agosto de 2026. El cartel anuncia formato largo 17:00h–07:00h, sonido 100% breakbeat y recinto junto a la playa; actividades citadas (espuma, food trucks, merchandising) según material gráfico. En MonsterTicket: acceso 18+ y entradas no nominativas; dirección: Recinto Ferial Barbate. Oferta de las primeras entradas con camiseta según cartel y venta (disponibilidad sujeta a cambio). Marca: Oshun y Made In Sur. Enlace de venta sin parámetros de RRPP: monsterticket.com/oshun-festival-2026.',
+    'Oshun Festival 2026 en Carpas Yerbabuena, Recinto Ferial Barbate (Cádiz), sábado 15 de agosto de 2026. Primer avance de cartel: Baymont Bross, Yo Speed, Bad Legs, Bowser, Darkbass, Xano y más confirmaciones pendientes; festival 100% breakbeat con cañón de espuma, junto a la playa, food trucks y merchandising según flyer. Horario 17:00h–07:00h; acceso prohibido a menores de 18 años. En MonsterTicket: entradas no nominativas; tramos promocionales (p. ej. primeras entradas + camiseta) pueden agotarse—consultar taquilla. Organizadores en el arte: Sala Oshun y Made In Sur. Enlace de venta sin parámetros RRPP: monsterticket.com/oshun-festival-2026.',
   event_type: 'festival',
   date_start: '2026-08-15',
   date_end: null,
@@ -2187,7 +2197,7 @@ const OSHUN_FESTIVAL_2026_ROW = {
   website: null,
   tickets_url: OSHUN_FESTIVAL_TICKETS,
   image_url: OSHUN_FESTIVAL_IMAGE,
-  lineup: [],
+  lineup: OSHUN_FESTIVAL_2026_LINEUP,
   tags: [
     'oshun festival',
     'breakbeat',
@@ -2230,7 +2240,7 @@ async function runPatchOshunFestival2026(sb) {
 
   const { data: after, error: e2 } = await sb
     .from('events')
-    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
     .eq('slug', OSHUN_FESTIVAL_2026_SLUG)
     .maybeSingle()
   if (e2) throw e2

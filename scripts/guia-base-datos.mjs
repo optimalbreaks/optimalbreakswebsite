@@ -310,7 +310,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-oshun-festival-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT oshun-festival-2026: 15 ago 2026 Carpas Yerbabuena Barbate, lineup TBA, oshun-festival-2026.webp, entradas sin parámetros RRPP.',
+      'UPSERT oshun-festival-2026: 15 ago 2026 Carpas Yerbabuena Barbate, primer avance lineup (Baymont Bross, Yo Speed, Bad Legs, Bowser, Darkbass, Xano…), oshun-festival-2026.webp, entradas sin parámetros RRPP.',
   },
   {
     id: 'events-patch-mas-ruido-black-hole-360-2026',
