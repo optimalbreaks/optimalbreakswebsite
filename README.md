@@ -774,6 +774,7 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 - **Git / JSON-only updates:** Editing `data/charts/picks/<week>.json` or running **`scripts/_append-batch-nr-from-releases.mjs`** (Beatport crawl → singles into that JSON) updates **repository files only**. Production row counts stay stale until Supabase is synced.
 - **Publish picks to Supabase:** `npm run db:chart:featured -- data/charts/picks/<week>.json` (same as **`run chart-featured-file`** via `npm run db:guia`). Optional flags on `chart-featured-upsert.mjs`: `--create-edition`, `--enrich-release-dates`, `--write-json`, `--verbose`. On corporate TLS inspection use `node --use-system-ca scripts/chart-featured-upsert.mjs …` (npm cannot pass `--use-system-ca` via `NODE_OPTIONS`).
 - **Admin path (writes DB directly):** `/[lang]/administrator/tracks` → Beatport URL import (**`/api/admin/featured-import`**). No mandatory JSON upsert afterward.
+- **Friday release-day congestion:** Labels worldwide often ship on **Fridays**, so Beatport sees **heavy traffic + scraping load**. Expect **more `403`/timeouts/flaky headless** than mid-week; retry **Saturday morning** or raise **`BEATPORT_BATCH_PAUSE_MS`** — same batches often succeed the next day without code changes.
 - **Vinyl editorial block:** **`npm run db:chart:vinyl -- …`** (`chart-vinyl-upsert.mjs`). **Backfill New Releases from 40 Breaks history:** **`npm run db:chart:backfill-new-releases`**.
 
 ---

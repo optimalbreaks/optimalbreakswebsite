@@ -20,6 +20,12 @@ alwaysApply: true
 
 3. **No** dar por cerrada la petición solo con «JSON guardado» o «script batch hecho». Regla **`base-de-datos-sin-dejar-trabajo-al-usuario`**: publicar datos en BD como parte del trabajo.
 
+## Beatport — viernes / día fuerte de lanzamientos
+
+- Muchos sellos publican **viernes**; Beatport recibe **mucho más tráfico y scraping** ese día. Cloudflare / rate-limit suelen **fallar más** (`403`, timeouts, headless inestable) que entre semana o **el sábado por la mañana**.
+- **No tratar como bug del repo** si el mismo batch funcionó al día siguiente (experiencia editorial repetida).
+- **Salidas:** esperar y reintentar con **`BEATPORT_BATCH_PAUSE_MS`** más alto (p. ej. `4000–6000`); otro día u horario; otra red/IP; import por **admin** (`featured-import`) desde red que no esté marcada.
+
 ## Referencia rápida
 
 - Guía BD: entrada **`chart-featured-file`** / **`featured-import-admin`** en `scripts/guia-base-datos.mjs`.

@@ -8,6 +8,10 @@
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
  *   BEATPORT_BATCH_PAUSE_MS — pausa después de cada URL (default 2200).
+ *   NR_APPEND_FORCE_PLAYWRIGHT=1 — usar solo Playwright (omitir Patchright) si headless cierra al instante con CF.
+ *
+ * Operativa — **viernes (día de lanzamientos):** Beatport suele ir más cargado; `403`/fallos intermitentes
+ * son normales. Si falla todo el día, **reintentar al día siguiente** o subir la pausa; no implica que el script esté roto.
  *
  * ┌─ Importante — NO es la web en producción ──────────────────────────────────┐
  * │ Este script solo escribe **PICKS_PATH** (JSON en repo). `/charts` lee **     │
@@ -36,53 +40,42 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
 const URLS_RAW = `
-https://www.beatport.com/es/release/kinetic/6756323
-https://www.beatport.com/es/release/military-march/6652196
-https://www.beatport.com/es/release/my-apocolypse/6393847
-https://www.beatport.com/es/release/tricycle/6024665
-https://www.beatport.com/es/release/invisible/5945800
-https://www.beatport.com/es/release/fire-startr/5944059
-https://www.beatport.com/es/release/can-you/6771072
-https://www.beatport.com/es/release/drop/6764610
-https://www.beatport.com/es/release/i-dont-kno/6756353
-https://www.beatport.com/es/release/explosion/6899683
-https://www.beatport.com/es/release/as-as/6897104
-https://www.beatport.com/es/release/go/6895706
-https://www.beatport.com/es/release/clan-terrie-kynd-remix/6882492
-https://www.beatport.com/es/release/xray/6866170
-https://www.beatport.com/es/release/pump-the-base/6860382
-https://www.beatport.com/es/release/shake-the-room/6859267
-https://www.beatport.com/es/track/brand-new-vibe/28548419
-https://www.beatport.com/es/track/on-the-floor/28548420
-https://www.beatport.com/es/release/rave-funk/6857628
-https://www.beatport.com/es/release/sonic-shift/6822466
-https://www.beatport.com/es/release/scarlet/6806858
-https://www.beatport.com/es/release/foghorns-lasers-bassbins-ep/6800218
-https://www.beatport.com/es/release/go-towards-the-light/6795811
-https://www.beatport.com/es/release/gotta-crush/6795360
-https://www.beatport.com/es/release/heartbeat/6795581
-https://www.beatport.com/es/release/days-with-you/6791109
-https://www.beatport.com/es/release/the-over-take-mine/6787632
-https://www.beatport.com/es/release/shake-it-baby/6787606
-https://www.beatport.com/es/release/solar-hallucinate/6783171
-https://www.beatport.com/es/release/feels-like/6780433
+https://www.beatport.com/es/release/adrenaline-spoken/6405135
+https://www.beatport.com/es/release/enter-the-breakmode/6934189
+https://www.beatport.com/es/release/uninvited/6905108
+https://www.beatport.com/es/release/foot-on-the-gas/6842850
+https://www.beatport.com/es/release/hey-buck/6725678
+https://www.beatport.com/es/track/back-to-the-old-school/26833950
+https://www.beatport.com/es/track/kick-the-bass/26833951
+https://www.beatport.com/es/release/voltage/6893093
+https://www.beatport.com/es/release/bounce-attack/6882579
+https://www.beatport.com/es/release/trappin/6860360
+https://www.beatport.com/es/release/steps/6818621
+https://www.beatport.com/es/release/pressure/6901398
+https://www.beatport.com/es/release/dissonant/6922604
+https://www.beatport.com/es/track/being-rude/28349463
+https://www.beatport.com/es/track/being-rude/28349464
+https://www.beatport.com/es/release/let-it-go/6882578
+https://www.beatport.com/es/release/monster/6810826
+https://www.beatport.com/es/release/loose-control/6749193
 `
 
-const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-04.json')
+const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-11.json')
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
-let _browser = null
-async function getBrowser() {
-  if (_browser) return _browser
+async function launchChromiumBrowser() {
   let chromium
-  let usingPatchright = false
-  try {
-    ;({ chromium } = await import('patchright'))
-    usingPatchright = true
-  } catch {
+  const forcePw = String(process.env.NR_APPEND_FORCE_PLAYWRIGHT || '').trim() === '1'
+  if (forcePw) {
     ;({ chromium } = await import('playwright'))
+  } else {
+    try {
+      ;({ chromium } = await import('patchright'))
+    } catch {
+      ;({ chromium } = await import('playwright'))
+    }
   }
   const args = [
     '--disable-blink-features=AutomationControlled',
@@ -90,60 +83,65 @@ async function getBrowser() {
     '--no-sandbox',
   ]
   try {
-    _browser = await chromium.launch({ channel: 'chrome', headless: true, args })
-  } catch (err) {
-    console.log(`  ↳ canal chrome no disponible (${(err.message || '').slice(0, 60)}); fallback chromium`)
-    _browser = await chromium.launch({ headless: true, args })
-  }
-  console.log(`  ↳ navegador headless: ${usingPatchright ? 'patchright' : 'playwright'}`)
-  return _browser
-}
-async function closeBrowser() {
-  if (_browser) {
-    try { await _browser.close() } catch {}
-    _browser = null
+    return await chromium.launch({ channel: 'chrome', headless: true, args })
+  } catch {
+    return await chromium.launch({ headless: true, args })
   }
 }
 
-async function fetchHeadless(url) {
-  const browser = await getBrowser()
-  const ctx = await browser.newContext({
-    userAgent: UA,
-    locale: url.includes('/es/') ? 'es-ES' : 'en-US',
-    viewport: { width: 1366, height: 800 },
-    extraHTTPHeaders: {
-      'Accept-Language': url.includes('/es/') ? 'es,en-US;q=0.9' : 'en-US,en;q=0.9',
-    },
-  })
-  await ctx.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-    Object.defineProperty(navigator, 'languages', { get: () => ['es-ES', 'es', 'en'] })
-    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] })
-  })
-  const page = await ctx.newPage()
+async function closeBrowser() {}
+
+/** Quita `/xx/` de locale en path (p. ej. `/es/release/` → `/release/`) — suele mejorar respuestas frente a rutas `/es/`. */
+function beatportCanonicalFetchUrl(originalUrl) {
+  const u = (originalUrl || '').trim().replace(/^http:\/\//i, 'https://')
+  return u.replace(/^(https:\/\/www\.beatport\.com)\/[a-z]{2}\//i, '$1/')
+}
+
+async function fetchHeadless(originalUrl) {
+  const url = beatportCanonicalFetchUrl(originalUrl)
+  const browser = await launchChromiumBrowser()
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
-    /** Mismo orden de magnitud que `beatport-top-tracks.mjs` para el challenge de CF */
-    const deadline = Date.now() + 180000
-    while (Date.now() < deadline) {
-      const has = await page
+    const ctx = await browser.newContext({
+      userAgent: UA,
+      locale: 'en-US',
+      viewport: { width: 1366, height: 800 },
+      extraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
+    })
+    await ctx.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false })
+      Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] })
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] })
+    })
+    const page = await ctx.newPage()
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
+      const deadline = Date.now() + 180000
+      while (Date.now() < deadline) {
+        const has = await page
+          .evaluate(() => !!document.querySelector('script#__NEXT_DATA__'))
+          .catch(() => false)
+        if (has) break
+        await page.waitForTimeout(1500).catch(() => {})
+      }
+      const ok = await page
         .evaluate(() => !!document.querySelector('script#__NEXT_DATA__'))
         .catch(() => false)
-      if (has) break
-      await page.waitForTimeout(1500).catch(() => {})
+      if (!ok) throw new Error('__NEXT_DATA__ no apareció')
+      return await page.content()
+    } finally {
+      await ctx.close().catch(() => {})
     }
-    const ok = await page
-      .evaluate(() => !!document.querySelector('script#__NEXT_DATA__'))
-      .catch(() => false)
-    if (!ok) throw new Error('__NEXT_DATA__ no apareció')
-    return page.content()
   } finally {
-    await ctx.close()
+    try {
+      await browser.close()
+    } catch {}
   }
 }
 
-async function fetchHttp(url) {
-  const acceptLang = url.includes('/es/') ? 'es,en-US;q=0.9,en;q=0.8' : 'en-US,en;q=0.9'
+async function fetchHttp(originalUrl) {
+  const url = beatportCanonicalFetchUrl(originalUrl)
+  /** `Accept-Language` con `es` delante a veces devuelve 403 a `fetch` desde Node frente a Cloudflare. */
+  const acceptLang = 'en-US,en;q=0.9'
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': acceptLang },
@@ -151,7 +149,7 @@ async function fetchHttp(url) {
     if (!res.ok) {
       if (res.status === 403 || res.status === 503) {
         console.log(`  ↳ HTTP ${res.status} → headless`)
-        return fetchHeadless(url)
+        return fetchHeadless(originalUrl)
       }
       throw new Error(`HTTP ${res.status}`)
     }
@@ -166,7 +164,7 @@ async function fetchHttp(url) {
       msg.includes('socket')
     ) {
       console.log(`  ↳ fetch fallback → headless (${(err.message || '').slice(0, 60)})`)
-      return fetchHeadless(url)
+      return fetchHeadless(originalUrl)
     }
     throw err
   }

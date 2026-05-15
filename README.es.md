@@ -178,6 +178,7 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 - **Solo disco / repo:** Editar **`data/charts/picks/<semana>.json`** o ejecutar **`scripts/_append-batch-nr-from-releases.mjs`** (lista de URLs Beatport → singles en ese JSON): **solo actualiza Git**, no las filas que ve la web.
 - **Publicar en Supabase (obligatorio para que el sitio muestre los nuevos picks):** **`npm run db:chart:featured -- data/charts/picks/<semana>.json`** (equiv.: `node scripts/guia-base-datos.mjs run chart-featured-file …`). Opciones en `chart-featured-upsert.mjs`: **`--create-edition`**, **`--enrich-release-dates --write-json`**, etc. En red con SSL inspection usa **`node --use-system-ca scripts/chart-featured-upsert.mjs …`** (`NODE_OPTIONS` con `--use-system-ca` rompe npm).
 - **Sin paso JSON:** importación Beatport en **`/[lang]/administrator/tracks`** (API **`/api/admin/featured-import`**): escribe directamente en **`chart_featured_tracks`**.
+- **Viernes (día de lanzamientos):** Beatport lleva **mucho más tráfico**; Cloudflare y límites suelen **fallar más** (`403`, timeouts). Suele ir mejor **al día siguiente** o con **`BEATPORT_BATCH_PAUSE_MS`** más alto; no es necesariamente un fallo del código.
 - **Otros comandos relacionados:** **`npm run db:chart:vinyl`** (vinilos retrospectivos desde JSON); **`npm run db:chart:backfill-new-releases`** (relleno histórico desde 40 Breaks). Más contexto en inglés: [README.md — Beatport (incluye New Releases)](./README.md#beatport-weekly-chart-vs-top-10-on-profiles).
 
 ---

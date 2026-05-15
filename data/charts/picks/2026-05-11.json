@@ -1,0 +1,425 @@
+{
+  "week_date": "2026-05-11",
+  "picks": [
+    {
+      "title": "Adrenaline Spoken",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kaos Beat"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/adrenaline-spoken/26832848",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/71b2c434-0a2d-4b9d-a17a-6e44c14a5870.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af1b4a2f-6ca6-49bc-944b-392a21afdfb6.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Enter the Breakmode",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Black Knight"
+        }
+      ],
+      "label": "TuneCore",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/enter-the-breakmode/28925480",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0ed93178-19d0-4107-af58-664e9d9511e1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ccdc4b67-f9fe-44f7-9a3d-fa882396c031.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Uninvited",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Susana Villegas"
+        }
+      ],
+      "label": "Retracker Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/uninvited/28836291",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/86c885ac-5920-43a3-8356-19eaca77612d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/944d59b4-139a-4231-90fe-683e54826f23.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Foot On The Gas",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Pote"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/foot-on-the-gas/28622143",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6ca33239-56ea-4379-a92f-518fb2bc7560.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cece4d0a-16e9-4b92-a1b8-51f39a51af3a.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Hey Buck",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ WAVS"
+        },
+        {
+          "name": "DOPE-M"
+        },
+        {
+          "name": "Lex Banger"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hey-buck/28228915",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7dc0843a-b134-4233-95ab-cc5ff4151f7d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/54bcf849-914b-4d1e-95b4-9cc82a83ad6f.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Back To The Old School",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Macho"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-the-old-school/26833950",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/758e0aca-ac97-4a9c-b611-6daac41c5f18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fd8a52db-5756-4b93-be85-ade01ac128d2.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Kick The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Macho"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kick-the-bass/26833951",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/758e0aca-ac97-4a9c-b611-6daac41c5f18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fd37f866-7461-480e-a45f-ec6ac2d5b711.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Voltage",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "dj zuko"
+        }
+      ],
+      "label": "Zyn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/voltage/28802725",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/70ef37b1-bec1-465e-970e-b8c4691ffb5f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5f99cf9a-a120-4f13-babb-8581e0e286bd.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Bounce Attack",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Perfect Kombo"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bounce-attack/28767968",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9e6dcb8f-8942-4a83-8028-a1045fafa184.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fadbac2e-cc98-4c39-9baa-f582fd696baa.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Trappin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Paket"
+        },
+        {
+          "name": "Devis Hard"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trappin/28688529",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c1ddbbe7-7ab7-4402-a88a-b08367ba0142.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c1e75778-0457-48bf-a04c-ce4bc2b6bc0f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Steps",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/steps/28531346",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ad501e54-bee7-4451-ad6e-9510cebd8e94.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ac06e8cd-a02d-453e-87b9-ebeec1c20609.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Prodigy Kids"
+        }
+      ],
+      "label": "Ring Mode Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pressure/28825378",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e253f67a-6e8b-41ec-ad73-c428bdf273d2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c69e7ad9-0c4c-447b-b3d5-e899cf6b77b6.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "Dissonant",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Noise Directive"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dissonant/28894059",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ed3f9ed0-46fb-4427-90ce-05d6a78140ea.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/85ade81d-fd95-4914-8859-ade6cb5216a9.LOFI.mp3",
+      "bpm": 139,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "BEING RUDE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "Queen of Breakbeat (Dirty D)"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/being-rude/28349463",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23fa012e-eee8-4197-9409-5e58a516c3dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7df4f729-3158-4c21-bf31-f04794b2e05a.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "BEING RUDE",
+      "mix_name": "FLIP-IT",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "Queen of Breakbeat (Dirty D)"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/being-rude/28349464",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23fa012e-eee8-4197-9409-5e58a516c3dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9f518d6a-915a-48e2-9d9a-218bb52bf191.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Let It Go",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Miron"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/let-it-go/28767967",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ce89a8a5-e8df-4dcb-a44b-e49afa70d6cc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bf226223-c1dc-43b7-a8ef-70924a49643b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "Monster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FunkyBitz"
+        },
+        {
+          "name": "Vital Drums"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/monster/28506351",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6b36b592-9bf2-4ddd-a1e3-56b939e6653a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f2802b3d-b404-4414-9cf8-a05d4bd8c4e7.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Loose Control",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "NeuroziZ"
+        },
+        {
+          "name": "G$Montana"
+        },
+        {
+          "name": "GN"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loose-control/28302025",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b21c59f8-a770-46d3-81de-240b56895548.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/da34a1c7-fc01-4e39-b2c4-60ce1bb5052e.LOFI.mp3",
+      "bpm": 83,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    }
+  ]
+}
