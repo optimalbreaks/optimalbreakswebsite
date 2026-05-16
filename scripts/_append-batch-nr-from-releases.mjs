@@ -43,7 +43,7 @@ const URLS_RAW = `
 `
 
 /** Tras ejecutar el lote; la próxima semana será otro archivo en `data/charts/picks/`. */
-const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-18.json')
+const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-25.json')
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
