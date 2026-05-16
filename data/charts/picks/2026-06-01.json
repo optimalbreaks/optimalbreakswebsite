@@ -1,0 +1,444 @@
+{
+  "week_date": "2026-06-01",
+  "picks": [
+    {
+      "title": "Anything Goes",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Kaleena Zanders"
+        }
+      ],
+      "label": "Helix Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/anything-goes/28406327",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/29021ffd-e59a-4565-9024-4aaa060e90c3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7a51f5ae-785c-477c-bef0-6383919f2d1c.LOFI.mp3",
+      "bpm": 70,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Call Out My Name",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Kaleena Zanders"
+        }
+      ],
+      "label": "Helix Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/call-out-my-name/28406330",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/29021ffd-e59a-4565-9024-4aaa060e90c3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/47f2cc13-13a4-4603-887e-f86970ebde3f.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Supreme",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "3 Wise Men"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/supreme/28346636",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/65ebf302-6454-4625-b12c-1d733492249d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3444ac4-e041-4f82-9cdb-fe7e3a2e8eac.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Supreme",
+      "mix_name": "Sploo's Oldschool Retreat",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "3 Wise Men"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/supreme/28346635",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/65ebf302-6454-4625-b12c-1d733492249d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/10b96fa1-91ef-486f-9379-964e545f9c8f.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Supreme",
+      "mix_name": "GHOST REMIX",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "3 Wise Men"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/supreme/28346637",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/65ebf302-6454-4625-b12c-1d733492249d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/140a9337-ec3f-4a13-8a24-acb03fe837ac.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Supreme",
+      "mix_name": "Rollin' Instrumental",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "3 Wise Men"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/supreme/28346638",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/65ebf302-6454-4625-b12c-1d733492249d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8401044c-bb83-47b5-bc89-636a7c0b1e44.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "When I Move My Body",
+      "mix_name": "SluG (FL) Remix",
+      "artists": [
+        {
+          "name": "Huda Hudia"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/when-i-move-my-body/28343500",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f61d7810-2d3a-45d0-9836-c1009f4b9f40.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a3b4d798-8b43-4f69-8f37-379b87af83fd.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Better Off",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SellRude"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/better-off/28229205",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8215a9ba-de47-4214-a6be-9a00f256a6ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4d61dee0-6c9b-4f82-a927-946da068fb51.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "That Look",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Vadim Shantor"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/that-look/27441600",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/076c9c88-eb7a-430a-be41-616b850e5c9f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7f723979-845b-4bc1-932c-1bf1d2b8f41d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Devil On Your Shoulder",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Ghost Channels"
+        },
+        {
+          "name": "Yësac"
+        }
+      ],
+      "label": "Decypher",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/devil-on-your-shoulder/27078733",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/be9d096a-9ada-444b-9239-fc02ffbb04dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bed7edf7-f50d-4943-89bd-e43f7ec64bb6.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Bubuus",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Spucnik"
+        }
+      ],
+      "label": "Warriors Beat Return",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bubuus/26876154",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4efd4d93-d67a-433b-acb6-e37af7a7a138.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dd1a7d54-6935-4fea-af14-d1954ca51829.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "1, 2, 3, To Tha",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/1-2-3-to-tha/26805430",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23060414-26a1-479e-9d7d-fa3c31c53bcb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7e8738b4-2579-4f87-8648-50079dccdac5.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "UP!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "LOOKATME!"
+        }
+      ],
+      "label": "HIGRND",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/up/26802567",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfeb6c3f-a5e4-41c9-afe2-df126c619b41.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e5c87bc4-832a-4988-be4a-7ab56a19c29f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "So Far Vip",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Atomic Groove"
+        }
+      ],
+      "label": "Super Plastic Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/so-far-vip/24419047",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ef533ab9-2fe9-4fd8-a597-7886ab07943f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7f219b28-e21b-468a-b5d8-6aeb1a3d820b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Turn back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bios Destruction"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/turn-back/24205770",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/20470612-05b1-4222-aca0-2fcb219f1237.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/82ac5385-9378-436c-9b08-6e607662e1a8.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Another Fantasy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "GODINO"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/another-fantasy/24156734",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf766f76-1bc3-4344-9e84-160e25faddc3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3bafbdf6-796c-480f-a950-df9aed91acd9.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "Fourth Kind",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Wutam"
+        }
+      ],
+      "label": "Prism Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fourth-kind/23639520",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5511375a-f774-41e6-85e7-3fae7d4e259f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8d787eef-a9f2-41e4-a245-2f6899572301.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Acid Jungle",
+      "mix_name": "DJ Pencil and Penda's Breaks ready mix",
+      "artists": [
+        {
+          "name": "The Cut Up Boys"
+        },
+        {
+          "name": "Dj Pencil"
+        },
+        {
+          "name": "Penda"
+        }
+      ],
+      "label": "STEP2 DARK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-jungle/22358679",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aa907ab4-0e3b-49e9-9701-272f872f292b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/34ac7eb4-28ea-44f2-b0b6-e6ebb323a7aa.LOFI.mp3",
+      "bpm": 142,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Spend My Day",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Asida Aya"
+        }
+      ],
+      "label": "Basseffect",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/spend-my-day/28822382",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5b95038a-5d68-49ae-987d-2bfeb440fd63.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/38e5c311-52bd-4433-aee4-12f0594432e5.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19
+    }
+  ]
+}
