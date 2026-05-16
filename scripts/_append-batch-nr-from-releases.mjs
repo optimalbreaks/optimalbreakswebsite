@@ -40,27 +40,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
 const URLS_RAW = `
-https://www.beatport.com/es/release/adrenaline-spoken/6405135
-https://www.beatport.com/es/release/enter-the-breakmode/6934189
-https://www.beatport.com/es/release/uninvited/6905108
-https://www.beatport.com/es/release/foot-on-the-gas/6842850
-https://www.beatport.com/es/release/hey-buck/6725678
-https://www.beatport.com/es/track/back-to-the-old-school/26833950
-https://www.beatport.com/es/track/kick-the-bass/26833951
-https://www.beatport.com/es/release/voltage/6893093
-https://www.beatport.com/es/release/bounce-attack/6882579
-https://www.beatport.com/es/release/trappin/6860360
-https://www.beatport.com/es/release/steps/6818621
-https://www.beatport.com/es/release/pressure/6901398
-https://www.beatport.com/es/release/dissonant/6922604
-https://www.beatport.com/es/track/being-rude/28349463
-https://www.beatport.com/es/track/being-rude/28349464
-https://www.beatport.com/es/release/let-it-go/6882578
-https://www.beatport.com/es/release/monster/6810826
-https://www.beatport.com/es/release/loose-control/6749193
 `
 
-const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-11.json')
+/** Tras ejecutar el lote; la próxima semana será otro archivo en `data/charts/picks/`. */
+const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-05-18.json')
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
