@@ -2,6 +2,28 @@
   "week_date": "2026-04-13",
   "picks": [
     {
+      "sort_order": 1,
+      "title": "Keep It Ruff",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Guau"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-it-ruff/27483612",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d176c682-37e4-4c3f-9cd3-a1157cf051a8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eb31b7ee-8a89-4489-83b0-9f1e62c4b365.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "release_date": "2026-04-17"
+    },
+    {
       "title": "AI Killer",
       "mix_name": "Original Mix",
       "artists": [
@@ -20,7 +42,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 1,
+      "sort_order": 2,
       "release_date": "2026-04-15"
     },
     {
@@ -45,7 +67,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 2,
+      "sort_order": 3,
       "release_date": "2026-04-15"
     },
     {
@@ -67,7 +89,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 3,
+      "sort_order": 4,
       "release_date": "2026-04-17"
     },
     {
@@ -92,7 +114,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 4,
+      "sort_order": 5,
       "release_date": "2026-04-17"
     },
     {
@@ -117,7 +139,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 5,
+      "sort_order": 6,
       "release_date": "2026-04-17"
     },
     {
@@ -139,7 +161,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 6,
+      "sort_order": 7,
       "release_date": "2026-04-17"
     },
     {
@@ -161,7 +183,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 7,
+      "sort_order": 8,
       "release_date": "2026-04-17"
     },
     {
@@ -183,7 +205,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 8,
+      "sort_order": 9,
       "release_date": "2026-04-16"
     },
     {
@@ -205,7 +227,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 9,
+      "sort_order": 10,
       "release_date": "2026-04-17"
     },
     {
@@ -227,7 +249,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 10,
+      "sort_order": 11,
       "release_date": "2026-04-15"
     },
     {
@@ -252,7 +274,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 11,
+      "sort_order": 12,
       "release_date": "2026-04-16"
     },
     {
@@ -274,7 +296,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 12,
+      "sort_order": 13,
       "release_date": "2026-04-17"
     },
     {
@@ -296,7 +318,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 13,
+      "sort_order": 14,
       "release_date": "2026-04-17"
     },
     {
@@ -318,7 +340,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 14,
+      "sort_order": 15,
       "release_date": "2026-04-17"
     },
     {
@@ -343,7 +365,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 15,
+      "sort_order": 16,
       "release_date": "2026-04-13"
     },
     {
@@ -365,7 +387,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 16,
+      "sort_order": 17,
       "release_date": "2026-04-16"
     },
     {
@@ -387,7 +409,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 17,
+      "sort_order": 18,
       "release_date": "2026-04-16"
     },
     {
@@ -412,7 +434,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 18,
+      "sort_order": 19,
       "release_date": "2026-04-14"
     },
     {
@@ -434,7 +456,7 @@
       "release_year": 2026,
       "note_en": "",
       "note_es": "",
-      "sort_order": 19,
+      "sort_order": 20,
       "release_date": "2026-04-16"
     },
     {
@@ -453,28 +475,6 @@
       "sample_url": "https://geo-samples.beatport.com/track/faaba6bb-1235-4253-8d5a-022885586279.LOFI.mp3",
       "bpm": 132,
       "music_key": "D Major",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 20,
-      "release_date": "2026-04-17"
-    },
-    {
-      "title": "Keep It Ruff",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Guau"
-        }
-      ],
-      "label": "83",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/keep-it-ruff/27483612",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d176c682-37e4-4c3f-9cd3-a1157cf051a8.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/eb31b7ee-8a89-4489-83b0-9f1e62c4b365.LOFI.mp3",
-      "bpm": 138,
-      "music_key": "Ab Minor",
       "release_year": 2026,
       "note_en": "",
       "note_es": "",

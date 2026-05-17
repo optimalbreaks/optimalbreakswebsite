@@ -9,8 +9,8 @@
 //  1) Charts (40 Breaks / New Releases): `source` + `trackId` + `weekDate`.
 //  2) Top Beatport en ficha (artista/sello) o cualquier link interno ya
 //     construido: `path` directo (p.ej. `/es/artists/prodigy?play=beatport:123456`).
-//  3) URL absoluta externa (vinyl con YouTube, beatport_top sin contexto
-//     interno, etc.): `externalUrl` con http(s)://… ; se copia/comparte tal cual.
+//  3) URL absoluta externa (beatport_top sin contexto OB interno): `externalUrl`.
+//     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
 // ============================================
 
 'use client'

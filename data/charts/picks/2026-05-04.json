@@ -2,78 +2,6 @@
   "week_date": "2026-05-04",
   "picks": [
     {
-      "title": "DRONE",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Dj Sploo"
-        },
-        {
-          "name": "B33B33"
-        }
-      ],
-      "label": "Hoodwink Records",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/drone/28434009",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e37adff-9a0c-4286-b353-b234ceafa5cf.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/81db552b-2686-4c82-b90d-95c8f9717823.LOFI.mp3",
-      "bpm": 135,
-      "music_key": "F Minor",
-      "release_year": 2026,
-      "release_date": "2026-05-02",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 1
-    },
-    {
-      "title": "NECTAR",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Dj Sploo"
-        },
-        {
-          "name": "B33B33"
-        }
-      ],
-      "label": "Hoodwink Records",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/nectar/28434010",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e37adff-9a0c-4286-b353-b234ceafa5cf.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/952f9ec4-126d-414e-9684-f92bc9810868.LOFI.mp3",
-      "bpm": 137,
-      "music_key": "E Minor",
-      "release_year": 2026,
-      "release_date": "2026-05-02",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 2
-    },
-    {
-      "title": "Gina",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Bzrnt"
-        }
-      ],
-      "label": "Br8kn Records",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/gina/28375381",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69cc7794-dbb4-48db-9b6b-7d39181a9527.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/1ab0a88b-4b38-4129-8196-1471afc43cec.LOFI.mp3",
-      "bpm": 134,
-      "music_key": "D Minor",
-      "release_year": 2026,
-      "release_date": "2026-05-03",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 3
-    },
-    {
       "title": "All Day",
       "mix_name": "Original Mix",
       "artists": [
@@ -93,7 +21,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 4
+      "sort_order": 1
     },
     {
       "title": "Invokation",
@@ -115,7 +43,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 5
+      "sort_order": 2
     },
     {
       "title": "Transformation",
@@ -137,7 +65,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 6
+      "sort_order": 3
     },
     {
       "title": "Sweet Hell",
@@ -159,7 +87,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 7
+      "sort_order": 4
     },
     {
       "title": "Loose Control",
@@ -181,7 +109,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 8
+      "sort_order": 5
     },
     {
       "title": "Off The Wall",
@@ -203,7 +131,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 9
+      "sort_order": 6
     },
     {
       "title": "Renacer",
@@ -228,7 +156,7 @@
       "release_date": "2026-05-04",
       "note_en": "",
       "note_es": "",
-      "sort_order": 10
+      "sort_order": 7
     },
     {
       "title": "Rise up",
@@ -250,7 +178,7 @@
       "release_date": "2026-05-05",
       "note_en": "",
       "note_es": "",
-      "sort_order": 11
+      "sort_order": 8
     },
     {
       "title": "GreenLight",
@@ -272,7 +200,7 @@
       "release_date": "2026-05-05",
       "note_en": "",
       "note_es": "",
-      "sort_order": 12
+      "sort_order": 9
     },
     {
       "title": "I Can´t Stop",
@@ -297,7 +225,7 @@
       "release_date": "2026-05-05",
       "note_en": "",
       "note_es": "",
-      "sort_order": 13
+      "sort_order": 10
     },
     {
       "title": "Las Palmas",
@@ -319,7 +247,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 14
+      "sort_order": 11
     },
     {
       "title": "Don GorGan",
@@ -344,7 +272,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 15
+      "sort_order": 12
     },
     {
       "title": "Temporary Situation",
@@ -366,7 +294,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 16
+      "sort_order": 13
     },
     {
       "title": "Lights",
@@ -388,7 +316,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 17
+      "sort_order": 14
     },
     {
       "title": "Moving",
@@ -410,7 +338,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 18
+      "sort_order": 15
     },
     {
       "title": "Atium",
@@ -432,7 +360,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 19
+      "sort_order": 16
     },
     {
       "title": "Bocao",
@@ -454,7 +382,7 @@
       "release_date": "2026-05-06",
       "note_en": "",
       "note_es": "",
-      "sort_order": 20
+      "sort_order": 17
     },
     {
       "title": "Suthe",
@@ -476,7 +404,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 21
+      "sort_order": 18
     },
     {
       "title": "There With You",
@@ -498,7 +426,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 22
+      "sort_order": 19
     },
     {
       "title": "Riot Frequency",
@@ -520,7 +448,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 23
+      "sort_order": 20
     },
     {
       "title": "Exponent",
@@ -542,7 +470,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 24
+      "sort_order": 21
     },
     {
       "title": "Brazil",
@@ -564,7 +492,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 25
+      "sort_order": 22
     },
     {
       "title": "Kilimanjaro",
@@ -589,7 +517,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 26
+      "sort_order": 23
     },
     {
       "title": "Bullshit",
@@ -617,7 +545,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 27
+      "sort_order": 24
     },
     {
       "title": "Rave",
@@ -639,7 +567,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 28
+      "sort_order": 25
     },
     {
       "title": "Rudboi",
@@ -661,7 +589,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 29
+      "sort_order": 26
     },
     {
       "title": "Shakers",
@@ -683,7 +611,7 @@
       "release_date": "2026-05-07",
       "note_en": "",
       "note_es": "",
-      "sort_order": 30
+      "sort_order": 27
     },
     {
       "title": "Kinetic",
@@ -705,7 +633,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 31
+      "sort_order": 28
     },
     {
       "title": "Military March",
@@ -727,7 +655,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 32
+      "sort_order": 29
     },
     {
       "title": "My apocolypse",
@@ -749,7 +677,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 33
+      "sort_order": 30
     },
     {
       "title": "Tricycle",
@@ -774,7 +702,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 34
+      "sort_order": 31
     },
     {
       "title": "Invisible",
@@ -799,7 +727,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 35
+      "sort_order": 32
     },
     {
       "title": "Fire Startr",
@@ -821,7 +749,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 36
+      "sort_order": 33
     },
     {
       "title": "Can You",
@@ -843,7 +771,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 37
+      "sort_order": 34
     },
     {
       "title": "Drop",
@@ -865,7 +793,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 38
+      "sort_order": 35
     },
     {
       "title": "I Don't Kno",
@@ -887,7 +815,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 39
+      "sort_order": 36
     },
     {
       "title": "Explosion",
@@ -909,7 +837,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 40
+      "sort_order": 37
     },
     {
       "title": "AS AS",
@@ -931,7 +859,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 41
+      "sort_order": 38
     },
     {
       "title": "Go",
@@ -953,7 +881,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 42
+      "sort_order": 39
     },
     {
       "title": "Clan",
@@ -975,7 +903,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 43
+      "sort_order": 40
     },
     {
       "title": "XRAY",
@@ -997,7 +925,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 44
+      "sort_order": 41
     },
     {
       "title": "Pump The Base",
@@ -1019,7 +947,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 45
+      "sort_order": 42
     },
     {
       "title": "Shake The Room",
@@ -1041,7 +969,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 46
+      "sort_order": 43
     },
     {
       "title": "Brand New Vibe",
@@ -1066,7 +994,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 47
+      "sort_order": 44
     },
     {
       "title": "On The Floor",
@@ -1091,7 +1019,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 48
+      "sort_order": 45
     },
     {
       "title": "Rave funk",
@@ -1113,7 +1041,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 49
+      "sort_order": 46
     },
     {
       "title": "Sonic Shift",
@@ -1135,7 +1063,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 50
+      "sort_order": 47
     },
     {
       "title": "Scarlet",
@@ -1157,7 +1085,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 51
+      "sort_order": 48
     },
     {
       "title": "Go Towards The Light",
@@ -1179,7 +1107,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 52
+      "sort_order": 49
     },
     {
       "title": "Gotta Crush",
@@ -1201,7 +1129,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 53
+      "sort_order": 50
     },
     {
       "title": "Heartbeat",
@@ -1223,7 +1151,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 54
+      "sort_order": 51
     },
     {
       "title": "Days With You",
@@ -1248,7 +1176,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 55
+      "sort_order": 52
     },
     {
       "title": "Shake It Baby",
@@ -1270,7 +1198,7 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
-      "sort_order": 56
+      "sort_order": 53
     },
     {
       "title": "Feels Like",
@@ -1292,7 +1220,101 @@
       "release_date": "2026-05-08",
       "note_en": "",
       "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Prodigy Kids"
+        }
+      ],
+      "label": "Ring Mode Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pressure/28825378",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e253f67a-6e8b-41ec-ad73-c428bdf273d2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c69e7ad9-0c4c-447b-b3d5-e899cf6b77b6.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
+    },
+    {
+      "title": "Dissonant",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Noise Directive"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dissonant/28894059",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ed3f9ed0-46fb-4427-90ce-05d6a78140ea.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/85ade81d-fd95-4914-8859-ade6cb5216a9.LOFI.mp3",
+      "bpm": 139,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 56
+    },
+    {
+      "title": "BEING RUDE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "Queen of Breakbeat (Dirty D)"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/being-rude/28349463",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23fa012e-eee8-4197-9409-5e58a516c3dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7df4f729-3158-4c21-bf31-f04794b2e05a.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
       "sort_order": 57
+    },
+    {
+      "title": "BEING RUDE",
+      "mix_name": "FLIP-IT",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "Queen of Breakbeat (Dirty D)"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/being-rude/28349464",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23fa012e-eee8-4197-9409-5e58a516c3dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9f518d6a-915a-48e2-9d9a-218bb52bf191.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
     }
   ]
 }

@@ -8,7 +8,8 @@
 //    (ficha de artista o sello), con ?play=beatport:<beatportId>. La URL
 //    base se pasa como `pageHref` porque el ID de beatport es estable,
 //    pero el "top" es de cada entidad.
-// Vinyl NO se comparte por aquí: mantiene su enlace externo a Discogs/YouTube.
+// Vinyl (Retro Vinyl Picks): `?play=vinyl:<uuid>` en /charts — ChartView abre
+// el acordeón del año, scroll y autoplay del embed YouTube de esa fila.
 // ============================================
 
 import type { Locale } from '@/lib/i18n-config'
@@ -21,12 +22,14 @@ export function buildTrackSharePath(
   lang: Locale,
   source: 'chart' | 'featured',
   trackId: string,
-  weekDate: string,
+  /** Si falta, se omite `week=`; ChartView resuelve la edición buscando el id. */
+  weekDate?: string | null,
 ): string {
   const params = new URLSearchParams({
-    week: weekDate,
     play: `${source}:${trackId}`,
   })
+  const w = (weekDate || '').trim()
+  if (w) params.set('week', w)
   return `/${lang}/charts?${params.toString()}`
 }
 
@@ -34,17 +37,29 @@ export function buildTrackShareUrl(
   lang: Locale,
   source: 'chart' | 'featured',
   trackId: string,
-  weekDate: string,
+  weekDate?: string | null,
 ): string {
   return `${SITE_URL}${buildTrackSharePath(lang, source, trackId, weekDate)}`
+}
+
+/** Deep link a Retro Vinyl Picks en /charts (misma fila que `#chart-vinyl-row-`). */
+export function buildVinylSharePath(lang: Locale, trackId: string): string {
+  const params = new URLSearchParams({ play: `vinyl:${trackId}` })
+  return `/${lang}/charts?${params.toString()}`
+}
+
+/** Extrae el ID numérico de un track Beatport desde su URL (.../track/<slug>/<id>). */
+export function extractBeatportTrackId(url: string | null | undefined): string | null {
+  if (!url) return null
+  const m = url.match(/beatport\.com\/(?:[a-z]{2}\/)?track\/[^/]+\/(\d+)/i)
+  return m ? m[1] : null
 }
 
 /**
  * Compone un path compartible para un track del Top Beatport de una ficha
  * (artista/sello). `pageHref` debe ser el path relativo de la ficha donde
  * vive la lista, por ejemplo `/es/artists/prodigy`. `beatportId` es el ID
- * numérico que extraemos de la `beatport_url` (función `extractBeatportTrackId`
- * en `BeatportTopTracks`).
+ * numérico que extraemos de la `beatport_url` (`extractBeatportTrackId`).
  */
 export function buildBeatportSharePath(
   pageHref: string,
@@ -67,6 +82,7 @@ export function buildBeatportShareUrl(
  * - `"1"` → play legacy del buscador global (⌘K) en ChartView.
  * - `"chart:<uuid>"` / `"featured:<uuid>"` → aterriza en una fila de un chart.
  * - `"beatport:<digits>"` → aterriza en una fila del Top 10 de la ficha actual.
+ * - `"vinyl:<uuid>"` → fila Retro Vinyl en /charts.
  * - Cualquier otra cosa → `null` (se ignora, no crashea).
  */
 export function parsePlayParam(
@@ -74,6 +90,7 @@ export function parsePlayParam(
 ):
   | { kind: 'legacy' }
   | { kind: 'track'; source: 'chart' | 'featured'; id: string }
+  | { kind: 'vinyl'; id: string }
   | { kind: 'beatport'; id: string }
   | null {
   if (!value) return null
@@ -82,6 +99,8 @@ export function parsePlayParam(
   if (chart) {
     return { kind: 'track', source: chart[1].toLowerCase() as 'chart' | 'featured', id: chart[2] }
   }
+  const vinyl = /^vinyl:([0-9a-f-]{6,})$/i.exec(value)
+  if (vinyl) return { kind: 'vinyl', id: vinyl[1] }
   const bp = /^beatport:(\d{3,})$/i.exec(value)
   if (bp) return { kind: 'beatport', id: bp[1] }
   return null

@@ -5,9 +5,18 @@ alwaysApply: true
 
 # Charts — New Releases (`chart_featured_tracks`)
 
+> **Invariante (no negociable):** un pick entra en la semana editorial **`chart_editions.week_date`** porque su **fecha de release** (primero **`publish_date` / release day en Beatport** vía `__NEXT_DATA__`, o fecha explícita en la tienda) cae dentro de esa **semana ISO cuyo lunes es ese `week_date`**. Ni la fecha ni el ritmo del chat («tercer mensaje hoy»), ni «incrementar una semana respecto al último JSON», ni quién pegue enlaces o cuándo, pueden decidir la semana por sí solos. Si no coincide con Beatport/release real, está mal clasificado salvo **`YYYY-MM-DD URL`** en línea o **`NR_BATCH_FALLBACK_WEEK`** cuando Beatport **no** devuelve día.
+
 ## Fuente en producción
 
 - La página **`/[lang]/charts`** lee **`chart_featured_tracks`** en Supabase (por edición **`chart_editions.week_date`**). **No** lee `data/charts/picks/*.json`.
+
+## Semana de la edición (no usar «la siguiente» ni la fecha del mensaje)
+
+- Cada tema va en el **`chart_editions.week_date`** = **lunes ISO** de la **semana del release en Beatport** (`publish_date` / día de lanzamiento en `__NEXT_DATA__`), igual que `chartEditionWeekMondayFromPublish` en app y **`/api/admin/featured-import`**.
+- **Prohibido** inferir semana porque el usuario pegó tres tandas seguidas, porque «hoy» es viernes o porque «el último JSON era Monday X y sumo +7**.
+- Opcional línea **`YYYY-MM-DD URL`** fuerza ese lunes; sin fecha en Beatport: **`NR_BATCH_FALLBACK_WEEK`** (alias `PICKS_FALLBACK_WEEK`).
+- **`scripts/_append-batch-nr-from-releases.mjs`** puede crear o tocar **varios** ficheros **`data/charts/picks/<lunes>.json`** en un solo pegado si los Beatport-release caen en semanas distintas.
 
 ## Si el usuario pide añadir temas / «los míos» en New Releases desde Beatport o JSON
 

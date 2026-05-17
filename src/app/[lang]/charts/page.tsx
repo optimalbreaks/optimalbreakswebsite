@@ -47,7 +47,58 @@ export async function generateMetadata({
     })
 
   const parsed = parsePlayParam(searchParams?.play)
-  if (!parsed || parsed.kind !== 'track') return fallback()
+  if (!parsed) return fallback()
+
+  if (parsed.kind === 'vinyl') {
+    try {
+      const supabase = createServerSupabase()
+      const { data } = await supabase
+        .from('chart_vinyl_tracks')
+        .select('title, mix_name, artists, label, artwork_url, year')
+        .eq('id', parsed.id)
+        .maybeSingle()
+      const row = data as null | {
+        title: string | null
+        mix_name: string | null
+        artists: ChartVinylArtist[] | null
+        label: string | null
+        artwork_url: string | null
+        year: number | null
+      }
+      if (!row?.title) return fallback()
+
+      const artistsText = Array.isArray(row.artists)
+        ? row.artists.map((a) => a?.name).filter(Boolean).join(', ')
+        : ''
+      const mix = (row.mix_name || '').trim()
+      const title = `${row.title}${mix ? ` (${mix})` : ''}${artistsText ? ` — ${artistsText}` : ''}`
+      const descParts: string[] = []
+      if (row.label) descParts.push(row.label)
+      const relDisp = formatTrackReleaseDisplay(null, row.year)
+      if (relDisp) descParts.push(relDisp)
+      const description = (lang === 'es'
+        ? `Escucha esta canción en Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`
+        : `Listen to this track on Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`)
+
+      const path = `/charts?play=${encodeURIComponent(`vinyl:${parsed.id}`)}`
+      const siteName = await siteNameForLang(lang)
+
+      return detailPageMetadata(
+        lang,
+        path,
+        siteName,
+        title,
+        description,
+        'website',
+        upscaleTrackArtworkForOg(row.artwork_url),
+        CHARTS_KEYWORDS[lang],
+      )
+    } catch {
+      return fallback()
+    }
+  }
+
+  if (parsed.kind !== 'track') return fallback()
 
   // Link compartido apuntando a una canción concreta: construimos un OG con
   // la portada y los metadatos reales del tema para que el preview en

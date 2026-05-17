@@ -174,8 +174,11 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 
 ## New Releases (novedades editoriales en `/charts`)
 
+> **Regla invariante:** los picks se **clasifican por semana según la fecha de release del tema en la tienda** (para Beatport: el día que esa tienda muestra como release / `publish_date` en scrape). **`week_date` en JSON = lunes ISO de esa semana de release.** Nada más (ni el día en que pegas URLs ni “la siguiente fila temporal del repo”) determina esa semana; ver `.cursor/rules/charts-new-releases-supabase.mdc`.
+
 - **Qué muestra producción:** filas **`chart_featured_tracks`** en Supabase (por **`chart_editions.week_date`**). La ruta **`/[lang]/charts` no lee** `data/charts/picks/*.json`.
-- **Solo disco / repo:** Editar **`data/charts/picks/<semana>.json`** o ejecutar **`scripts/_append-batch-nr-from-releases.mjs`** (lista de URLs Beatport → singles en ese JSON): **solo actualiza Git**, no las filas que ve la web.
+- **Qué fichero usar:** la **`week_date`** de la edición es el **lunes** de la **semana del release en Beatport** (campo día del lanzamiento que devuelve la tienda). **No** se elige por la fecha del chat ni por «incrementar una semana respecto al último JSON**.
+- **Solo disco / repo:** editar **`data/charts/picks/<semana>.json`** o ejecutar **`scripts/_append-batch-nr-from-releases.mjs`** (URLs Beatport → singles; puede escribir **uno o más** `<lunes>.json`): **solo actualiza Git**, no las filas que ve la web.
 - **Publicar en Supabase (obligatorio para que el sitio muestre los nuevos picks):** **`npm run db:chart:featured -- data/charts/picks/<semana>.json`** (equiv.: `node scripts/guia-base-datos.mjs run chart-featured-file …`). Opciones en `chart-featured-upsert.mjs`: **`--create-edition`**, **`--enrich-release-dates --write-json`**, etc. En red con SSL inspection usa **`node --use-system-ca scripts/chart-featured-upsert.mjs …`** (`NODE_OPTIONS` con `--use-system-ca` rompe npm).
 - **Sin paso JSON:** importación Beatport en **`/[lang]/administrator/tracks`** (API **`/api/admin/featured-import`**): escribe directamente en **`chart_featured_tracks`**.
 - **Viernes (día de lanzamientos):** Beatport lleva **mucho más tráfico**; Cloudflare y límites suelen **fallar más** (`403`, timeouts). Suele ir mejor **al día siguiente** o con **`BEATPORT_BATCH_PAUSE_MS`** más alto; no es necesariamente un fallo del código.

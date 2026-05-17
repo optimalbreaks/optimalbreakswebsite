@@ -1,6 +1,10 @@
 /**
  * OPTIMAL BREAKS — Picks «New releases» por semana (chart_featured_tracks)
  *
+ * Este script **UPSERT creyendo la `week_date` del JSON** (lunes editorial). Quien genera ese JSON debe
+ * respetar el invariante: **misma semana que la fecha de release del tema en la tienda**
+ * (`release_date` en JSON; típico Beatport vía scrape). Agrupación por mes/chat/sucesión arbitraria NO.
+ *
  * Por defecto solo lee el JSON. Opcionalmente obtiene `release_date` (YYYY-MM-DD)
  * desde la tienda: Beatport (__NEXT_DATA__) o Bandcamp (`data-tralbum` → album_release_date).
  *
@@ -523,6 +527,26 @@ async function main() {
       .delete()
       .in('id', toDelete)
     if (delErr) throw new Error(`delete chart_featured_tracks (no presentes): ${delErr.message}`)
+  }
+
+  // Evitar violación UNIQUE (chart_edition_id, sort_order) al reordenar: primero valores
+  // intermedios grandes, luego PATCH final en la segunda pasada (misma regla útil tras reubicaciones).
+  if (updates.length > 0) {
+    // Zona alta por encima del máximo habitual de lista (≤200 antes de 059): evita UNIQUE+CHECK
+    // al reordenar mientras Postgres aplica PATCHs uno a uno desde el cliente REST.
+    let bump = 0
+    const TEMP_SORT_START = Math.min(
+      32100,
+      32767 - Math.max(1, updates.length) - 1,
+    )
+    for (const u of updates) {
+      bump++
+      const { error } = await supabase
+        .from('chart_featured_tracks')
+        .update({ sort_order: TEMP_SORT_START + bump })
+        .eq('id', u.id)
+      if (error) throw new Error(`prep sort_order ${u.id}: ${error.message}`)
+    }
   }
 
   for (const u of updates) {

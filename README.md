@@ -770,8 +770,11 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 
 ### New Releases (editorial picks on `/charts`)
 
+> **Invariant rule:** each featured pick belongs in the **`week_date`** edition, defined as **the ISO Monday of the calendar week that contains that track's release date** from the store (Beatport: `publish_date` in scraped `__NEXT_DATA__`). The day you paste URLs, chat cadence, or “the next timeline row” does **not** choose the bucket; see `.cursor/rules/charts-new-releases-supabase.mdc`.
+
 - **What the live site reads:** **`chart_featured_tracks`** in Supabase (`chart_editions.week_date`). The route **`/[lang]/charts`** never reads **`data/charts/picks/*.json`** directly.
-- **Git / JSON-only updates:** Editing `data/charts/picks/<week>.json` or running **`scripts/_append-batch-nr-from-releases.mjs`** (Beatport crawl → singles into that JSON) updates **repository files only**. Production row counts stay stale until Supabase is synced.
+- **`chart_editions.week_date` is the ISO Monday starting the Beatport release week** (store `publish_date` from embedded `__NEXT_DATA__`). Do **not** derive it from chat cadence (“latest JSON + 7 days”) or the day pasted URLs arrive.
+- **Git / JSON-only updates:** Editing `data/charts/picks/<week>.json` or running **`scripts/_append-batch-nr-from-releases.mjs`** (Beatport crawl → singles into one **or multiple** `<monday>.json` files when release weeks differ) updates **repository files only**. Production row counts stay stale until Supabase is synced.
 - **Publish picks to Supabase:** `npm run db:chart:featured -- data/charts/picks/<week>.json` (same as **`run chart-featured-file`** via `npm run db:guia`). Optional flags on `chart-featured-upsert.mjs`: `--create-edition`, `--enrich-release-dates`, `--write-json`, `--verbose`. On corporate TLS inspection use `node --use-system-ca scripts/chart-featured-upsert.mjs …` (npm cannot pass `--use-system-ca` via `NODE_OPTIONS`).
 - **Admin path (writes DB directly):** `/[lang]/administrator/tracks` → Beatport URL import (**`/api/admin/featured-import`**). No mandatory JSON upsert afterward.
 - **Friday release-day congestion:** Labels worldwide often ship on **Fridays**, so Beatport sees **heavy traffic + scraping load**. Expect **more `403`/timeouts/flaky headless** than mid-week; retry **Saturday morning** or raise **`BEATPORT_BATCH_PAUSE_MS`** — same batches often succeed the next day without code changes.

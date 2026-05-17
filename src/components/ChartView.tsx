@@ -710,9 +710,9 @@ export default function ChartView({
   //      New Releases) o /charts#chart-vinyl-row-<id> (Retro Vinyl Picks).
   //      Si además lleva `?play=1`, arrancamos preview.
   //
-  //   b) Link compartido de una canción: /charts?play=chart:<id> o
-  //      `?play=featured:<id>` (sin hash). Viene de `TrackShareButton`. En
-  //      este caso siempre iniciamos reproducción.
+  //   b) Link compartido de una canción: /charts?play=chart:<id>,
+  //      `?play=featured:<id>` o `?play=vinyl:<id>` (sin hash). Viene de
+  //      `TrackShareButton`. En este caso siempre iniciamos reproducción.
   //
   // Al montar resolvemos el target: expandimos semana/año que contiene el
   // track, hacemos scrollIntoView y destacamos la fila.
@@ -752,6 +752,11 @@ export default function ChartView({
         domId = `chart-row-${trackId}`
         wantsPlay = true
         forceForty = parsed.source
+      } else if (parsed?.kind === 'vinyl') {
+        kind = 'vinyl'
+        trackId = parsed.id
+        domId = `chart-vinyl-row-${trackId}`
+        wantsPlay = true
       }
 
       if (!kind || !trackId) return

@@ -1699,6 +1699,78 @@
       "note_es": "",
       "sort_order": 73,
       "release_date": "2026-05-01"
+    },
+    {
+      "title": "DRONE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "B33B33"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drone/28434009",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e37adff-9a0c-4286-b353-b234ceafa5cf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/81db552b-2686-4c82-b90d-95c8f9717823.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "NECTAR",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Sploo"
+        },
+        {
+          "name": "B33B33"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nectar/28434010",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e37adff-9a0c-4286-b353-b234ceafa5cf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/952f9ec4-126d-414e-9684-f92bc9810868.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "Gina",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bzrnt"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gina/28375381",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69cc7794-dbb4-48db-9b6b-7d39181a9527.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1ab0a88b-4b38-4129-8196-1471afc43cec.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
     }
   ]
 }

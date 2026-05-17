@@ -20,7 +20,15 @@ import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvid
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
-import { formatTrackReleaseDisplay, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
+import {
+  formatTrackReleaseDisplay,
+  effectiveReleaseYear,
+  releaseSortTimestampMs,
+  buildBeatportSharePath,
+  buildTrackSharePath,
+  buildVinylSharePath,
+  extractBeatportTrackId,
+} from '@/lib/share-track'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -1103,29 +1111,60 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                     {(() => {
                       // Botón compartir por fila — disponible para TODAS las
                       // fuentes, eligiendo el mejor enlace:
-                      //   · chart / featured con week_date → deep-link al chart
-                      //     (`/[lang]/charts?week=…&play=…`) con autoplay.
-                      //   · vinyl → URL externa (YouTube canónico cuando hay,
-                      //     fallback a Discogs / external_url).
-                      //   · beatport_top → URL canónica del track (Beatport).
-                      //   · chart / featured sin week_date (raro) → external_url
-                      //     como último recurso.
+                      //   · chart / featured → /charts?play=chart|featured:<uuid>
+                      //     (week= opcional; sin ella ChartView localiza la edición).
+                      //   · beatport_top → ficha artista/sello ?play=beatport:<id>
+                      //   · vinyl → /charts?play=vinyl:<uuid> (Retro Vinyl Picks).
+                      //   · beatport_top sin contexto / id → último recurso: Beatport.
                       const shareTitle = `${t.title}${t.artists ? ` — ${t.artists}` : ''}`
-                      if ((t.source === 'chart' || t.source === 'featured') && t.week_date) {
+                      if (t.source === 'chart' || t.source === 'featured') {
                         return (
                           <TrackShareButton
-                            source={t.source}
-                            trackId={t.id}
-                            weekDate={t.week_date}
+                            path={buildTrackSharePath(lang as Locale, t.source, t.id, t.week_date ?? null)}
                             lang={lang as Locale}
                             shareTitle={shareTitle}
                           />
                         )
                       }
-                      const externalUrl = t.source === 'vinyl'
-                        ? (t.youtube_url || t.external_url || t.canonical_url || '')
-                        : (t.external_url || t.canonical_url || '')
-                      if (!externalUrl) return null
+                      if (t.source === 'beatport_top') {
+                        const snap = t.snapshot
+                        const origin = snap?.origin
+                        const bpUrl =
+                          (typeof snap?.beatport_url === 'string' && snap.beatport_url) ||
+                          t.external_url ||
+                          t.canonical_url
+                        const bpId = extractBeatportTrackId(bpUrl)
+                        if (
+                          origin?.kind &&
+                          origin.slug &&
+                          bpId &&
+                          (origin.kind === 'artist' || origin.kind === 'label')
+                        ) {
+                          const folder = origin.kind === 'artist' ? 'artists' : 'labels'
+                          const path = buildBeatportSharePath(
+                            `/${lang}/${folder}/${origin.slug}`,
+                            bpId,
+                          )
+                          return (
+                            <TrackShareButton
+                              path={path}
+                              lang={lang as Locale}
+                              shareTitle={shareTitle}
+                            />
+                          )
+                        }
+                      }
+                      if (t.source === 'vinyl') {
+                        return (
+                          <TrackShareButton
+                            path={buildVinylSharePath(lang as Locale, t.id)}
+                            lang={lang as Locale}
+                            shareTitle={shareTitle}
+                          />
+                        )
+                      }
+                      const externalUrl = (t.external_url || t.canonical_url || '').trim()
+                      if (t.source !== 'beatport_top' || !externalUrl) return null
                       return (
                         <TrackShareButton
                           externalUrl={externalUrl}

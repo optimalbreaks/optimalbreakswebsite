@@ -6,7 +6,12 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { buildBeatportSharePath, parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
+import {
+  buildBeatportSharePath,
+  parsePlayParam,
+  formatTrackReleaseDisplay,
+  extractBeatportTrackId,
+} from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
@@ -22,14 +27,6 @@ interface Props {
     slug?: string
     name?: string
   }
-}
-
-// Extrae el ID numérico de Beatport de una URL (.../track/<slug>/<id>)
-// Si no puede, devuelve null.
-function extractBeatportTrackId(url: string | null | undefined): string | null {
-  if (!url) return null
-  const m = url.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
-  return m ? m[1] : null
 }
 
 function buildSnapshot(

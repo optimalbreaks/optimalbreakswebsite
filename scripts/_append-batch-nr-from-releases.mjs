@@ -1,9 +1,21 @@
 /**
- * Uso puntual: añade picks a la semana vigente desde URLs Beatport.
+ * Batch local: nuevos lanzamientos → `data/charts/picks/<lunes>.json` + luego UPSERT a Supabase (no lo hace solo).
  *
- * Modo actual: SOLO añade releases con UNA pista (singles).
- * Los releases con varias pistas se listan al final pero NO se añaden.
- * Acepta URLs /release/... o /track/... (release → lista de pistas desde NEXT_DATA).
+ * INVARIANTE (memorízalo igual que tatuaje): cada tema va al JSON cuyo **lunes (`week_date`)**
+ * sea el de la **semana ISO del release day que devuelve Beatport** (`publish_date`).
+ * Ni la fecha en que pegas URLs ni cuántos mensajes seguidos envíes eligen la carpeta/semana—solo ese release_date
+ * (+ override explícito `YYYY-MM-DD URL` por línea, o `NR_BATCH_FALLBACK_WEEK` si falta fecha en scrape).
+ *
+ * **Semana de destino (no se adivina “la siguiente” en el calendario del repo):**
+ *   Por defecto: **lunes de la semana del `release_date` que devuelve Beatport** (`publish_date`), misma idea que
+ *   `chartEditionWeekMondayFromPublish` / import admin `featured-import`.
+ *   Opcional por línea: `2026-05-25 https://www.beatport.com/es/track/foo/123` fuerza ese lunes de edición.
+ *   Sin fecha en Beatport: `NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD` (cualquier día → se corrige al lunes de esa semana).
+ *
+ * Un mismo pegado puede abrir/rellenar **varios** JSON si los temas caen en lunes distintos.
+ *
+ * Modo actual: SOLO singles (releases multipista se listan pero no se insertan).
+ * Acepta /release/ o /track/.
  *
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
@@ -14,11 +26,10 @@
  * son normales. Si falla todo el día, **reintentar al día siguiente** o subir la pausa; no implica que el script esté roto.
  *
  * ┌─ Importante — NO es la web en producción ──────────────────────────────────┐
- * │ Este script solo escribe **PICKS_PATH** (JSON en repo). `/charts` lee **     │
- * │ chart_featured_tracks en Supabase**. Tras ejecutar este script (o cualquier│
- * │ cambio manual al mismo JSON), publicar picks en BD con:                     │
- * │   npm run db:chart:featured -- data/charts/picks/YYYY-MM-DD.json             │
- * │ o: node scripts/guia-base-datos.mjs run chart-featured-file <ese-json>       │
+ * │ Este script solo escribe JSON(s) por **lunes** detectado (`data/charts/...`).│
+ * │ `/charts` lee `chart_featured_tracks`. Tras el batch ejecuta UPSERT por     │
+ * │ **cada** fichero tocado (o la guía `chart-featured-file` por archivo):       │
+ * │   npm run db:chart:featured -- data/charts/picks/<lunes>.json                │
  * │ (SSL corporativo: `node --use-system-ca scripts/chart-featured-upsert.mjs`.) │
  * │ Panel admin Tracks → import Beatport ya escribe en BD; no necesita ese paso.│
  * └────────────────────────────────────────────────────────────────────────────┘
@@ -32,7 +43,7 @@
 //   Lanzar este script SIEMPRE como:
 //     node --use-system-ca scripts/_append-batch-nr-from-releases.mjs
 //   (npm NO acepta --use-system-ca en NODE_OPTIONS, por eso no usamos npm aquí).
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -42,8 +53,77 @@ const ROOT = resolve(__dirname, '..')
 const URLS_RAW = `
 `
 
-/** Tras ejecutar el lote; la próxima semana será otro archivo en `data/charts/picks/`. */
-const PICKS_PATH = resolve(ROOT, 'data/charts/picks/2026-06-01.json')
+/** Lunes ISO de la semana del lanzamiento (`src/lib/beatport-next-data-tracks.ts`, misma que admin import). */
+function chartEditionWeekMondayFromPublish(isoYYYYMMDD) {
+  if (isoYYYYMMDD == null || isoYYYYMMDD === '') return null
+  const s = String(isoYYYYMMDD).trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return null
+  const day = d.getDay()
+  const diff = day === 0 ? 6 : day - 1
+  d.setDate(d.getDate() - diff)
+  return d.toISOString().slice(0, 10)
+}
+
+function weekMondayFromOverrideOrFallback(overrideOrDay) {
+  if (overrideOrDay == null || String(overrideOrDay).trim() === '') return null
+  return chartEditionWeekMondayFromPublish(String(overrideOrDay).trim().slice(0, 10))
+}
+
+/** Una URL por línea, o `YYYY-MM-DD URL` como en `/api/admin/featured-import`. */
+function parseImportLines(text) {
+  const weekRe = /^(\d{4}-\d{2}-\d{2})\s+(https?:\/\/\S+)/i
+  const out = []
+  const seen = new Set()
+  for (const line of text.split('\n')) {
+    const t = line.trim()
+    if (!t || t.startsWith('#')) continue
+    const m = t.match(weekRe)
+    let urlRaw
+    let weekOverride = null
+    if (m) {
+      weekOverride = m[1]
+      urlRaw = m[2]
+    } else if (/^https?:\/\//i.test(t)) {
+      urlRaw = t
+    } else continue
+    const url = urlRaw.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://')
+    if (seen.has(url)) continue
+    seen.add(url)
+    out.push({ weekOverride, url })
+  }
+  return out
+}
+
+function resolveEditionMondayForPick(pick, weekOverride) {
+  const fromLine = weekMondayFromOverrideOrFallback(weekOverride)
+  if (fromLine) return fromLine
+  const fromBeatport = chartEditionWeekMondayFromPublish(pick.release_date)
+  if (fromBeatport) return fromBeatport
+  const fb =
+    process.env.NR_BATCH_FALLBACK_WEEK?.trim() ||
+    process.env.PICKS_FALLBACK_WEEK?.trim() ||
+    ''
+  return weekMondayFromOverrideOrFallback(fb)
+}
+
+function loadOrInitPicksFile(weekMonday) {
+  const path = resolve(ROOT, 'data/charts/picks', `${weekMonday}.json`)
+  if (!existsSync(path)) {
+    return { path, data: { week_date: weekMonday, picks: [] } }
+  }
+  const data = JSON.parse(readFileSync(path, 'utf8'))
+  const wd = data.week_date
+  if (wd !== weekMonday) {
+    console.warn(
+      `  ⚠ JSON ${weekMonday}.json tiene week_date=${wd}; normalizamos picks a esta edición.`,
+    )
+    data.week_date = weekMonday
+  }
+  if (!Array.isArray(data.picks)) data.picks = []
+  return { path, data }
+}
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -251,28 +331,46 @@ async function fetchTracks(url) {
   return findAllTracksFromReleaseNextData(nd)
 }
 
-const uniqUrls = []
-const seenUrls = new Set()
-for (const line of URLS_RAW.split('\n')) {
-  const t = line.trim()
-  if (!t || !t.includes('beatport')) continue
-  const c = t.replace(/^http:\/\//i, 'https://')
-  if (seenUrls.has(c)) continue
-  seenUrls.add(c)
-  uniqUrls.push(c)
+const importEntries = parseImportLines(URLS_RAW)
+
+const uniqQueue = []
+const queueSeenUrl = new Set()
+for (const row of importEntries) {
+  if (!/beatport\.com/i.test(row.url || '')) continue
+  const u = String(row.url).replace(/^http:\/\//i, 'https://').replace(/\/+$/, '')
+  if (queueSeenUrl.has(u)) continue
+  queueSeenUrl.add(u)
+  uniqQueue.push({ url: u, weekOverride: row.weekOverride })
 }
 
-const data = JSON.parse(readFileSync(PICKS_PATH, 'utf8'))
-const existing = new Set((data.picks || []).map((p) => dedupeKey(p.link_url)))
-let nextSort =
-  Math.max(
-    0,
-    ...(data.picks || []).map((p) =>
-      Number.isFinite(Number(p.sort_order)) ? Number(p.sort_order) : 0,
-    ),
-  ) + 1
+/** @typedef {{ path: string, data: Record<string, unknown>, dirty: boolean, existingKeys: Set<string>, nextSort: number, addedHere: number }} WeekState */
 
-let added = 0
+const weekStates = new Map()
+
+function ensureWeek(monday) {
+  if (!weekStates.has(monday)) {
+    const { path, data } = loadOrInitPicksFile(monday)
+    const existingKeys = new Set((data.picks || []).map((p) => dedupeKey(p.link_url)))
+    const nextSort =
+      Math.max(
+        0,
+        ...(data.picks || []).map((p) =>
+          Number.isFinite(Number(p.sort_order)) ? Number(p.sort_order) : 0,
+        ),
+      ) + 1
+    weekStates.set(monday, {
+      path,
+      data,
+      dirty: false,
+      existingKeys,
+      nextSort,
+      addedHere: 0,
+    })
+  }
+  return weekStates.get(monday)
+}
+
+let addedSinglesTotal = 0
 const albums = []
 const failed = []
 
@@ -280,17 +378,17 @@ const BATCH_PAUSE_MS = Math.max(
   0,
   Number.parseInt(String(process.env.BEATPORT_BATCH_PAUSE_MS || '2200').trim(), 10) || 2200,
 )
-const total = uniqUrls.length
+const total = uniqQueue.length
 
 if (total > 0) {
   console.log(
     `  ↳ Ritmo: 1 URL a la vez, pausa ${BATCH_PAUSE_MS} ms entre cada una ` +
-      `(override: BEATPORT_BATCH_PAUSE_MS=3000 ...)`,
+      `(override: BEATPORT_BATCH_PAUSE_MS=3000 …)`,
   )
 }
 
-for (let i = 0; i < uniqUrls.length; i++) {
-  const url = uniqUrls[i]
+for (let i = 0; i < uniqQueue.length; i++) {
+  const { url, weekOverride } = uniqQueue[i]
   const idx = i + 1
   console.log(`  [${idx}/${total}] ${url}`)
   try {
@@ -306,36 +404,63 @@ for (let i = 0; i < uniqUrls.length; i++) {
       albums.push({ url, count: tracks.length, titles: tracks.map((t) => t.title) })
     } else {
       const pick = tracks[0]
-      const k = dedupeKey(pick.link_url)
-      if (existing.has(k)) {
-        console.warn(`    [${idx}/${total}] · ya estaba: ${pick.title}`)
+      const monday = resolveEditionMondayForPick(pick, weekOverride)
+      if (!monday) {
+        const detail =
+          'sin release_date en Beatport; usa fecha en línea (YYYY-MM-DD URL) o env NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD'
+        console.warn(`    [${idx}/${total}] · ${detail}`)
+        failed.push({ url, reason: detail })
       } else {
-        existing.add(k)
-        pick.sort_order = nextSort++
-        data.picks.push(pick)
-        added++
-        console.log(
-          `    [${idx}/${total}] + ${pick.title}${pick.mix_name ? ` (${pick.mix_name})` : ''} — ${(pick.artists || [])
-            .map((a) => a.name)
-            .join(', ')}`,
-        )
+        const st = ensureWeek(monday)
+        const k = dedupeKey(pick.link_url)
+        if (st.existingKeys.has(k)) {
+          console.warn(
+            `    [${idx}/${total}] · ya estaba en ${monday}: ${pick.title}`,
+          )
+        } else {
+          st.existingKeys.add(k)
+          pick.sort_order = st.nextSort++
+          st.data.picks.push(pick)
+          st.dirty = true
+          st.addedHere++
+          addedSinglesTotal++
+          console.log(
+            `    [${idx}/${total}] + [${monday}] ${pick.title}${
+              pick.mix_name ? ` (${pick.mix_name})` : ''
+            } — ${(pick.artists || [])
+              .map((a) => a.name)
+              .join(', ')}`,
+          )
+        }
       }
     }
   } catch (e) {
     console.error(`    [${idx}/${total}] Fallo: ${url} → ${e.message || e}`)
     failed.push({ url, reason: e.message || String(e) })
   }
-  if (i + 1 < uniqUrls.length && BATCH_PAUSE_MS > 0) {
+  if (i + 1 < uniqQueue.length && BATCH_PAUSE_MS > 0) {
     await new Promise((r) => setTimeout(r, BATCH_PAUSE_MS))
   }
 }
 
-if (added > 0) {
-  writeFileSync(PICKS_PATH, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
+for (const [monday, st] of weekStates) {
+  if (st.dirty) {
+    writeFileSync(st.path, `${JSON.stringify(st.data, null, 2)}\n`, 'utf8')
+    console.log(`  ↳ Guardado picks/${monday}.json (${st.data.picks.length} entradas, +${st.addedHere} nuevos)`)
+  }
 }
 
 console.log(`\n=== RESUMEN ===`)
-console.log(`Singles añadidos: ${added}`)
+console.log(`Singles añadidos (suma todas las semanas): ${addedSinglesTotal}`)
+if (weekStates.size) {
+  console.log(`Semanas tocadas (${weekStates.size}):`)
+  for (const monday of [...weekStates.keys()].sort()) {
+    const st = weekStates.get(monday)
+    console.log(
+      `  · ${monday}: archivo ${st.path.split(/[/\\]/).slice(-3).join('/')} picks=${st.data.picks?.length ?? 0} (+${st.addedHere})`,
+    )
+  }
+}
 console.log(`Álbumes (varias pistas, NO añadidos): ${albums.length}`)
 for (const a of albums) {
   console.log(`  · ${a.url} → ${a.count} pistas`)
@@ -344,6 +469,5 @@ if (failed.length) {
   console.log(`Fallos: ${failed.length}`)
   for (const f of failed) console.log(`  · ${f.url}: ${f.reason}`)
 }
-console.log(`Total picks en JSON: ${data.picks.length}`)
 
 await closeBrowser()

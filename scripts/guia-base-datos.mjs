@@ -457,6 +457,14 @@ const ACTIONS = [
       'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
   },
   {
+    id: 'purge-featured-week-dates',
+    run: 'node scripts/guia-base-datos.mjs run purge-featured-week-dates YYYY-MM-DD […] [--dry-run] [--keep-empty-editions]',
+    npm: '—',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Quita todas las filas chart_featured_tracks de esos lunes (`chart_editions.week_date`). chart_tracks del 40 y vinilo siguen igual. Si la edición queda huérfana (sin 40 ni vinilo), la borra (salvo `--keep-empty-editions`).',
+  },
+  {
     id: 'featured-import-admin',
     run: 'UI: /[lang]/administrator/tracks → bloque «Importar New Releases (Beatport)». API GET/POST /api/admin/featured-import (sesión admin). Hasta 50 URLs, pausa en serie, crear chart_editions opcional.',
     npm: '—',
@@ -610,6 +618,7 @@ Punto de entrada unificado:
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
   chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
+  purge-featured-week-dates <YYYY-MM-DD …> [--dry-run] [--keep-empty-editions]  purge-chart-featured-by-week-date.mjs (quita NR; no toca el 40)
   featured-import-admin           panel /administrator/tracks + POST /api/admin/featured-import (URLs Beatport → Supabase)
   chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Retro Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
@@ -1082,6 +1091,16 @@ function main() {
         process.exit(1)
       }
       runNode('chart-featured-upsert.mjs', [rel, ...rest.slice(1)])
+      break
+    }
+    case 'purge-featured-week-dates': {
+      if (!rest.filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x)).length) {
+        console.error(
+          'Uso: run purge-featured-week-dates YYYY-MM-DD [YYYY-MM-DD …] [--dry-run] [--keep-empty-editions]',
+        )
+        process.exit(1)
+      }
+      runNode('purge-chart-featured-by-week-date.mjs', rest)
       break
     }
     case 'chart-vinyl-file': {
