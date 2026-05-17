@@ -87,13 +87,11 @@ function LazyYouTubeEmbed({
 function LazySoundCloudEmbed({
   trackUrl,
   title,
-  height = 300,
   className = '',
   mixId,
 }: {
   trackUrl: string
   title: string
-  height?: number
   className?: string
   mixId?: string
 }) {
@@ -149,8 +147,7 @@ function LazySoundCloudEmbed({
   return (
     <div
       ref={rootRef}
-      className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${className}`}
-      style={{ height, minHeight: height }}
+      className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] aspect-video ${className}`}
     >
       {mountIframe ? (
         <iframe
@@ -662,9 +659,9 @@ function LargeGrid({
             {ytId ? (
               <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} autoplay={autoplayMixId === m.id} />
             ) : scTrackUrl ? (
-              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} mixId={m.id} />
+              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} mixId={m.id} />
             ) : (
-              <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
+              <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
             )}
             <div className="p-5 sm:p-7 relative">
               <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
@@ -745,12 +742,11 @@ function CompactGrid({
               <LazySoundCloudEmbed
                 trackUrl={scTrackUrl}
                 title={m.title}
-                height={220}
                 className="border-b-[3px] border-[var(--ink)]"
                 mixId={m.id}
               />
             ) : (
-              <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />
+              <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
             )}
             <div className="p-3 flex flex-col flex-grow min-h-0">
               <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>
@@ -897,7 +893,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} height={300} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
+                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
                 </div>
               </div>
             </div>

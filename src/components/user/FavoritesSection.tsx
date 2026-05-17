@@ -302,9 +302,9 @@ export default function FavoritesSection({ lang }: { lang: string }) {
                   {ytId ? (
                     <YouTubeIframe videoId={ytId} title={m.title} />
                   ) : scTrackUrl ? (
-                    <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} height={300} />
+                    <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} />
                   ) : (
-                    <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
+                    <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
                   )}
                   <div className="p-5 sm:p-7 relative">
                     <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
@@ -333,7 +333,7 @@ export default function FavoritesSection({ lang }: { lang: string }) {
               return (
                 <div key={m.id} className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative">
                   <FavoriteButton type="mix" entityId={m.id} lang={lang} />
-                  {ytId ? <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />}
+                  {ytId ? <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" /> : <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />}
                   <div className="p-3 flex flex-col flex-grow min-h-0">
                     <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{m.artist_name}</div>
                     <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>{m.title}</div>

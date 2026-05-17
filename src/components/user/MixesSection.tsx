@@ -69,9 +69,9 @@ export default function MixesSection({ lang }: { lang: string }) {
                 {ytId ? (
                   <YouTubeIframe videoId={ytId} title={m.title} />
                 ) : scTrackUrl ? (
-                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} height={300} />
+                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} />
                 ) : (
-                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-[16/10]" />
+                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
                 )}
                 <div className="p-5 sm:p-7 relative">
                   <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
@@ -108,9 +108,9 @@ export default function MixesSection({ lang }: { lang: string }) {
                 {ytId ? (
                   <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
                 ) : scTrackUrl ? (
-                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} height={220} className="border-b-[3px] border-[var(--ink)]" />
+                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
                 ) : (
-                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-square" />
+                  <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
                 )}
                 <div className="p-3 flex flex-col flex-grow min-h-0">
                   <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>{m.artist_name}</div>

@@ -31,19 +31,16 @@ export function buildSoundCloudVisualPlayerSrc(trackUrl: string): string {
 export default function SoundCloudVisualEmbed({
   trackUrl,
   title,
-  height = 300,
   className = '',
 }: {
   trackUrl: string
   title: string
-  height?: number
   className?: string
 }) {
   const src = buildSoundCloudVisualPlayerSrc(trackUrl)
   return (
     <div
-      className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${className}`}
-      style={{ height, minHeight: height }}
+      className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] aspect-video ${className}`}
     >
       <iframe
         title={title}
