@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "gruv42-frostedbreaks226",
+    "title": "Frosted Breaks — Live stream (18 Feb 2026)",
+    "artist_name": "Gruv42",
+    "description_en": "Live stream from 18 February 2026. Gruv42 plays Frosted Breaks every Wednesday, 5–7pm EST (Twitch: gruv42).",
+    "description_es": "Directo del 18 de febrero de 2026. Gruv42 en Frosted Breaks cada miércoles, 17:00–19:00 hora del Este (Twitch: gruv42).",
+    "mix_type": "radio_show",
+    "year": 2026,
+    "published_at": "2026-02-18T17:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/gruv42/frostedbreaks226",
+    "image_url": "https://i1.sndcdn.com/artworks-z4O2WY81BatO9fPS-g3YWPA-t500x500.jpg",
+    "is_featured": false
+  },
+  {
+    "slug": "gruv42-frostedbreaksdjmix",
+    "title": "Frosted Breaks — 18 March 2026",
+    "artist_name": "Gruv42",
+    "description_en": "Frosted Breaks stream from 18 March 2026. Wednesdays on Twitch, 5–7pm EST.",
+    "description_es": "Sesión Frosted Breaks del 18 de marzo de 2026. Miércoles en Twitch, 17:00–19:00 hora del Este.",
+    "mix_type": "radio_show",
+    "year": 2026,
+    "published_at": "2026-03-18T17:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/gruv42/frostedbreaksdjmix",
+    "image_url": "https://i1.sndcdn.com/artworks-dr40LtfSXyYJ6Kdz-PPNCUQ-t500x500.jpg",
+    "is_featured": false
+  },
+  {
+    "slug": "gruv42-summer-2025",
+    "title": "Dirty Kitchen Raid Train (16 Jun 2025)",
+    "artist_name": "Gruv42",
+    "description_en": "Live from the Dirty Kitchen Raid Train — production set (16 June 2025) with UKG, bass, bassline, breaks and more. Full tracklist on SoundCloud; several tunes were still unreleased at the time.",
+    "description_es": "Directo del raid train Dirty Kitchen (16 de junio de 2025): set de producción con UKG, bass, bassline, breaks y más. Tracklist completa en SoundCloud; varios temas seguían sin publicar en la fecha.",
+    "mix_type": "classic_set",
+    "year": 2025,
+    "published_at": "2025-06-16T12:00:00.000Z",
+    "duration_minutes": null,
+    "platform": "soundcloud",
+    "video_url": null,
+    "embed_url": "https://soundcloud.com/gruv42/summer-2025",
+    "image_url": "https://i1.sndcdn.com/artworks-Yaddm9fz7TDd7F1a-eiVDDg-t500x500.jpg",
+    "is_featured": false
+  }
+]

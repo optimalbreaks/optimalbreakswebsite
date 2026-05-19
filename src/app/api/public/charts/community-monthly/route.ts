@@ -37,6 +37,9 @@ import { createServiceSupabase } from '@/lib/supabase-admin'
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 
+/** Desde `snapshot.origin` de saves `beatport_top` — emite el API para compartir ficha OB. */
+type BeatportShareOrigin = { kind: 'artist' | 'label'; slug: string }
+
 type SavedRow = {
   user_id: string
   track_source: ChartTrackSource
@@ -132,7 +135,25 @@ interface Aggregate {
   last_saved_at: string | null
   sources: ChartTrackSource[]
   primary: { source: ChartTrackSource; id: string; week_date: string | null }
+  /** Mejor `snapshot.origin` visto entre saves beatport_top del grupo (misma canción). */
+  beatport_share_origin: BeatportShareOrigin | null
   _users: Set<string>
+}
+
+function beatportShareOriginFromSnapshot(snap: Record<string, unknown> | null | undefined): BeatportShareOrigin | null {
+  if (!snap || typeof snap !== 'object') return null
+  const o = snap.origin as Record<string, unknown> | undefined
+  if (!o || typeof o !== 'object') return null
+  const kind = o.kind
+  const slug = o.slug
+  if (kind !== 'artist' && kind !== 'label') return null
+  if (typeof slug !== 'string' || !slug.trim()) return null
+  return { kind, slug: slug.trim() }
+}
+
+function beatportShareOriginFromSavedRow(s: SavedRow): BeatportShareOrigin | null {
+  if (s.track_source !== 'beatport_top') return null
+  return beatportShareOriginFromSnapshot((s.snapshot || {}) as Record<string, unknown>)
 }
 
 export async function GET(request: NextRequest) {
@@ -450,11 +471,16 @@ export async function GET(request: NextRequest) {
         last_saved_at: created,
         sources: [meta.source],
         primary: { source: meta.source, id: meta.id, week_date: meta.week_date },
+        beatport_share_origin: beatportShareOriginFromSavedRow(s),
         _users: new Set([s.user_id]),
       })
     } else {
       existing.save_count += 1
       existing._users.add(s.user_id)
+      if (!existing.beatport_share_origin) {
+        const oo = beatportShareOriginFromSavedRow(s)
+        if (oo) existing.beatport_share_origin = oo
+      }
       if (!existing.sources.includes(meta.source)) existing.sources.push(meta.source)
       if (created) {
         if (!existing.first_saved_at || created < existing.first_saved_at) existing.first_saved_at = created
@@ -515,6 +541,7 @@ export async function GET(request: NextRequest) {
     last_saved_at: a.last_saved_at,
     sources: a.sources,
     primary: a.primary,
+    beatport_share_origin: a.beatport_share_origin,
   }))
 
   // Solo contamos lo que de verdad se renderiza en el ranking. Los saves

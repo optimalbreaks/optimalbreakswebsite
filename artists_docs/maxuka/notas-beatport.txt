@@ -1,0 +1,8 @@
+Fuente editorial obligatoria — ficha Beatport del artista:
+https://www.beatport.com/es/artist/maxuka/1280569
+
+En el JSON de salida incluir exactamente:
+- beatport_id: 1280569
+- beatport_url: https://www.beatport.com/artist/maxuka/1280569  (URL canónica HTTPS sin prefijo /es/ en el path si es posible)
+
+Nombre artístico en Beatport: Maxuka (slug maxuka).

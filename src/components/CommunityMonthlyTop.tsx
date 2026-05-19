@@ -18,7 +18,14 @@ import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { formatTrackReleaseDisplay } from '@/lib/share-track'
+import {
+  formatTrackReleaseDisplay,
+  buildTrackSharePath,
+  buildVinylSharePath,
+  buildBeatportSharePath,
+  extractBeatportTrackId,
+} from '@/lib/share-track'
+import type { SavedChartTrackSnapshot } from '@/types/database'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -44,6 +51,8 @@ interface CommunityTopTrack {
   last_saved_at: string | null
   sources: ChartTrackSource[]
   primary: { source: ChartTrackSource; id: string; week_date: string | null }
+  /** Origen OB agregado desde saves beatport_top con `snapshot.origin` (API community-monthly). */
+  beatport_share_origin: { kind: 'artist' | 'label'; slug: string } | null
 }
 
 interface ApiResponse {
@@ -70,9 +79,8 @@ function previewAudioSrc(sampleUrl: string, kind: PlaybackKind, externalUrl: str
   return sampleUrl
 }
 
-function snapshotForBeatportTop(t: CommunityTopTrack) {
-  // Usado solo cuando primary.source === 'beatport_top' para el toggle por URL.
-  return {
+function snapshotForBeatportTop(t: CommunityTopTrack): SavedChartTrackSnapshot {
+  const snap: SavedChartTrackSnapshot = {
     title: t.title,
     mix_name: t.mix_name,
     artists: t.artists,
@@ -85,6 +93,14 @@ function snapshotForBeatportTop(t: CommunityTopTrack) {
     beatport_url: t.external_url,
     sample_url: t.sample_url,
   }
+  if (t.beatport_share_origin) {
+    snap.origin = {
+      kind: t.beatport_share_origin.kind,
+      slug: t.beatport_share_origin.slug,
+      id: '',
+    }
+  }
+  return snap
 }
 
 function SaveCountBadge({ count, label }: { count: number; label: string }) {
@@ -280,11 +296,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               // enlazamos a /charts?week=...&play=<source>:<id>; si no, al
               // external_url.
               const internalHref = (() => {
-                if (t.primary.source === 'chart' && t.primary.week_date) {
-                  return `/${lang}/charts?week=${t.primary.week_date}&play=chart:${t.primary.id}`
+                if (t.primary.source === 'chart') {
+                  const p = `play=chart:${t.primary.id}`
+                  return t.primary.week_date
+                    ? `/${lang}/charts?week=${t.primary.week_date}&${p}`
+                    : `/${lang}/charts?${p}`
                 }
-                if (t.primary.source === 'featured' && t.primary.week_date) {
-                  return `/${lang}/charts?week=${t.primary.week_date}&play=featured:${t.primary.id}`
+                if (t.primary.source === 'featured') {
+                  const p = `play=featured:${t.primary.id}`
+                  return t.primary.week_date
+                    ? `/${lang}/charts?week=${t.primary.week_date}&${p}`
+                    : `/${lang}/charts?${p}`
                 }
                 return null
               })()
@@ -387,15 +409,49 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           size="sm"
                         />
                       )}
-                      {(t.primary.source === 'chart' || t.primary.source === 'featured') && t.primary.week_date && (
+                      {(t.primary.source === 'chart' || t.primary.source === 'featured') && (
                         <TrackShareButton
-                          source={t.primary.source}
-                          trackId={t.primary.id}
-                          weekDate={t.primary.week_date}
+                          path={buildTrackSharePath(lang, t.primary.source, t.primary.id, t.primary.week_date ?? null)}
                           lang={lang}
                           shareTitle={`${t.title} — ${t.artists}`}
                         />
                       )}
+                      {t.primary.source === 'vinyl' && (
+                        <TrackShareButton
+                          path={buildVinylSharePath(lang, t.primary.id)}
+                          lang={lang}
+                          shareTitle={`${t.title} — ${t.artists}`}
+                        />
+                      )}
+                      {t.primary.source === 'beatport_top' && (() => {
+                        const shareTitle = `${t.title} — ${t.artists}`
+                        const bpId = extractBeatportTrackId(t.external_url)
+                        const o = t.beatport_share_origin
+                        if (
+                          o?.slug &&
+                          bpId &&
+                          (o.kind === 'artist' || o.kind === 'label')
+                        ) {
+                          const folder = o.kind === 'artist' ? 'artists' : 'labels'
+                          return (
+                            <TrackShareButton
+                              path={buildBeatportSharePath(`/${lang}/${folder}/${o.slug}`, bpId)}
+                              lang={lang}
+                              shareTitle={shareTitle}
+                            />
+                          )
+                        }
+                        if (t.external_url) {
+                          return (
+                            <TrackShareButton
+                              externalUrl={t.external_url}
+                              lang={lang}
+                              shareTitle={shareTitle}
+                            />
+                          )
+                        }
+                        return null
+                      })()}
                       {t.external_url && (
                         <a
                           href={t.external_url}
