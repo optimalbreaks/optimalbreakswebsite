@@ -201,6 +201,72 @@ function artworkUrl(img) {
   return null
 }
 
+/** Hero del artista en geo-media; subimos versión grande al bucket. */
+function upscaleBeatportArtistImageUrl(url) {
+  if (!url || typeof url !== 'string') return null
+  return url.replace(/image_size\/\d+x\d+\//i, 'image_size/1400x1400/')
+}
+
+/** Imagen de ficha en dehydratedState (query distinta a top-10-tracks). */
+function extractArtistHeroImageFromNextData(nextData, beatportId) {
+  if (!nextData || beatportId == null) return null
+  const queries = nextData.props?.pageProps?.dehydratedState?.queries || []
+  const idStr = String(beatportId)
+  for (const q of queries) {
+    const keyRaw = Array.isArray(q.queryKey) ? q.queryKey[0] : String(q.queryKey ?? '')
+    const key = String(keyRaw)
+    if (!key.includes(`artist-${idStr}`)) continue
+    if (key.includes('top-10-tracks')) continue
+    const u = pickArtistImageFromPayload(q.state?.data, beatportId)
+    if (u) return upscaleBeatportArtistImageUrl(u)
+  }
+  for (const q of queries) {
+    const u = pickArtistImageFromPayload(q.state?.data, beatportId)
+    if (u) return upscaleBeatportArtistImageUrl(u)
+  }
+  return null
+}
+
+function pickArtistImageFromPayload(node, beatportId, depth = 0) {
+  if (depth > 14 || node == null) return null
+  if (typeof node !== 'object') return null
+  if (Array.isArray(node)) {
+    for (const x of node) {
+      const u = pickArtistImageFromPayload(x, beatportId, depth + 1)
+      if (u) return u
+    }
+    return null
+  }
+  const id = node.id ?? node.artist_id
+  const idMatch =
+    id === beatportId ||
+    String(id) === String(beatportId) ||
+    (typeof id === 'number' && Number.isFinite(Number(beatportId)) && id === Number(beatportId))
+  if (idMatch && node.image) {
+    const u = artworkUrl(node.image)
+    if (u && /geo-media\.beatport\.com/i.test(u)) return u
+  }
+  for (const k of Object.keys(node)) {
+    const u = pickArtistImageFromPayload(node[k], beatportId, depth + 1)
+    if (u) return u
+  }
+  return null
+}
+
+async function maybeUploadArtistPortraitFromBeatport(supabase, obSlug, sourceUrl, { dryRun = false } = {}) {
+  if (!sourceUrl || dryRun) return
+  const { data: row, error: selErr } = await supabase.from('artists').select('image_url').eq('slug', obSlug).maybeSingle()
+  if (selErr) throw new Error(selErr.message)
+  const cur = (row?.image_url || '').trim()
+  if (cur.startsWith('https://') || cur.startsWith('/images/')) return
+
+  const { uploadArtistPortraitFromUrl } = await import('./lib/upload-artist-portrait-to-storage.mjs')
+  const publicUrl = await uploadArtistPortraitFromUrl({ slug: obSlug, sourceUrl, quiet: false })
+  const { error: upErr } = await supabase.from('artists').update({ image_url: publicUrl }).eq('slug', obSlug)
+  if (upErr) throw new Error(upErr.message)
+  console.log(`  ✓ Portrait synced from Beatport → Storage (${obSlug})`)
+}
+
 function releaseYear(t) {
   const raw = t.publish_date || t.new_release_date
   if (!raw) return null
@@ -325,7 +391,7 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false } = {}
     `https://www.beatport.com/${seg}/${slug}/${beatportId}`,
   ]
 
-  let lastEmpty = { tracks: [], beatport_url: candidateUrls[0] }
+  let lastEmpty = { tracks: [], beatport_url: candidateUrls[0], artistHeroImageUrl: null }
   let lastError = null
   const autoFallback = process.env.BEATPORT_HEADLESS_FALLBACK === '1'
 
@@ -345,7 +411,8 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false } = {}
 
       if (!topQuery) {
         console.log(`  ↳ No top-10-tracks query for this URL. Keys:`, queries.map(q => JSON.stringify(q.queryKey).slice(0, 100)))
-        lastEmpty = { tracks: [], beatport_url: beatportUrl }
+        const hero = type === 'artist' ? extractArtistHeroImageFromNextData(nextData, beatportId) : null
+        lastEmpty = { tracks: [], beatport_url: beatportUrl, artistHeroImageUrl: hero }
         continue
       }
 
@@ -373,7 +440,8 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false } = {}
       })
 
       console.log(`  ↳ Parsed ${tracks.length} top tracks`)
-      return { tracks, beatport_url: beatportUrl }
+      const artistHeroImageUrl = type === 'artist' ? extractArtistHeroImageFromNextData(nextData, beatportId) : null
+      return { tracks, beatport_url: beatportUrl, artistHeroImageUrl }
     } catch (err) {
       lastError = err
       console.log(`  ↳ Fallback (${err.message})`)
@@ -387,7 +455,8 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false } = {}
 // ---------------------------------------------------------------------------
 // Upsert to Supabase
 // ---------------------------------------------------------------------------
-async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, tracks) {
+async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, tracks, extra = {}) {
+  const { artistHeroImageUrl = null, dryRun = false } = extra
   const payload = {
     beatport_url: beatportUrl,
     beatport_id: beatportId,
@@ -398,6 +467,10 @@ async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, t
   const { error } = await supabase.from(table).update(payload).eq('slug', slug)
   if (error) throw new Error(`Supabase update ${table}.${slug}: ${error.message}`)
   console.log(`  ✓ ${table}.${slug} updated (${tracks.length} tracks)`)
+
+  if (table === 'artists' && artistHeroImageUrl) {
+    await maybeUploadArtistPortraitFromBeatport(supabase, slug, artistHeroImageUrl, { dryRun })
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -424,9 +497,12 @@ async function batchUpdate(supabase, table, dryRun, { missingOnly = false, headl
   for (const row of todo) {
     try {
       const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, kind) || row.slug
-      const { tracks, beatport_url } = await scrapeTopTracks(kind, bpSlug, row.beatport_id, { headless })
+      const { tracks, beatport_url, artistHeroImageUrl } = await scrapeTopTracks(kind, bpSlug, row.beatport_id, { headless })
       if (!dryRun) {
-        await upsertTopTracks(supabase, table, row.slug, beatport_url, row.beatport_id, tracks)
+        await upsertTopTracks(supabase, table, row.slug, beatport_url, row.beatport_id, tracks, {
+          artistHeroImageUrl: kind === 'artist' ? artistHeroImageUrl : null,
+          dryRun,
+        })
       } else {
         console.log(`  [dry-run] ${row.slug}: ${tracks.length} tracks`)
         if (tracks.length) console.log(`    #1: ${tracks[0].title} — ${tracks[0].artists.map(a => a.name).join(', ')}`)
@@ -464,9 +540,12 @@ ${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
     try {
       const bpSlug = parseBeatportSlugFromUrl(row.beatport_url, 'artist') || row.slug
       console.log(`\n  [${processed + 1}] ${row.slug} (id ${row.beatport_id}) slug BP: ${bpSlug}`)
-      const { tracks, beatport_url } = await scrapeTopTracks('artist', bpSlug, row.beatport_id, { headless })
+      const { tracks, beatport_url, artistHeroImageUrl } = await scrapeTopTracks('artist', bpSlug, row.beatport_id, { headless })
       if (!dryRun) {
-        await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, row.beatport_id, tracks)
+        await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, row.beatport_id, tracks, {
+          artistHeroImageUrl,
+          dryRun,
+        })
       } else {
         console.log(`  [dry-run] ${row.slug}: ${tracks.length} tracks`)
       }
@@ -489,10 +568,13 @@ ${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
         continue
       }
       console.log(` → artist/${bp.slug}/${bp.id}`)
-      const { tracks, beatport_url } = await scrapeTopTracks('artist', bp.slug, bp.id, { headless })
+      const { tracks, beatport_url, artistHeroImageUrl } = await scrapeTopTracks('artist', bp.slug, bp.id, { headless })
       if (!dryRun) {
         if (tracks.length) {
-          await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, bp.id, tracks)
+          await upsertTopTracks(supabase, 'artists', row.slug, beatport_url, bp.id, tracks, {
+            artistHeroImageUrl,
+            dryRun,
+          })
         } else {
           const { error: upErr } = await supabase.from('artists').update({
             beatport_url,
@@ -609,7 +691,7 @@ async function main() {
 
   console.log(`\n  Beatport Top 10 — ${type}: ${slug} (id ${beatportId})${dryRun ? ' [DRY-RUN]' : ''}${headless ? ' [HEADLESS]' : ''}\n`)
 
-  const { tracks, beatport_url } = await scrapeTopTracks(type, slug, beatportId, { headless })
+  const { tracks, beatport_url, artistHeroImageUrl } = await scrapeTopTracks(type, slug, beatportId, { headless })
 
   for (const t of tracks) {
     const artists = t.artists.map(a => a.name).join(', ')
@@ -619,7 +701,10 @@ async function main() {
   if (!dryRun) {
     const supabase = requireSupabase()
     const table = type === 'artist' ? 'artists' : 'labels'
-    await upsertTopTracks(supabase, table, slug, beatport_url, beatportId, tracks)
+    await upsertTopTracks(supabase, table, slug, beatport_url, beatportId, tracks, {
+      artistHeroImageUrl: type === 'artist' ? artistHeroImageUrl : null,
+      dryRun,
+    })
   } else {
     console.log(`\n  [dry-run] No se escribe en BD`)
   }
