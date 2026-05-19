@@ -9,7 +9,7 @@ import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, Cha
 import type { Metadata } from 'next'
 import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
-import { parsePlayParam, formatTrackReleaseDisplay, upscaleTrackArtworkForOg } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -90,7 +90,7 @@ export async function generateMetadata({
         title,
         description,
         'website',
-        upscaleTrackArtworkForOg(row.artwork_url),
+        publicOgArtworkUrl(row.artwork_url),
         CHARTS_KEYWORDS[lang],
       )
     } catch {
@@ -146,7 +146,7 @@ export async function generateMetadata({
       title,
       description,
       'website',
-      upscaleTrackArtworkForOg(row.artwork_url),
+      publicOgArtworkUrl(row.artwork_url),
       CHARTS_KEYWORDS[lang],
     )
   } catch {

@@ -131,6 +131,17 @@ export function upscaleTrackArtworkForOg(
   return u
 }
 
+/**
+ * URL para `<meta property="og:image">`: Facebot no suele poder descargar
+ * `geo-media.beatport.com` directo; sirve misma JPEG vía `/api/og/image-proxy`.
+ */
+export function publicOgArtworkUrl(rawUrl: string | null | undefined): string | null {
+  const u = upscaleTrackArtworkForOg(rawUrl)?.trim()
+  if (!u) return null
+  if (!/geo-media\.beatport\.com/i.test(u)) return u
+  return `${SITE_URL}/api/og/image-proxy?${new URLSearchParams({ src: u })}`
+}
+
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
 export function formatTrackReleaseDisplay(
   releaseDate: string | null | undefined,
