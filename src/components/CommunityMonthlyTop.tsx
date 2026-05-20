@@ -15,7 +15,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudio, type PreviewTrack, type PreviewShareData } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import {
@@ -150,6 +150,34 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     fetchData()
   }, [fetchData])
 
+  // Calcula el share del mini reproductor con la MISMA lógica que la fila
+  // visible (ver render: chart/featured → /charts?play=..; vinyl → vinyl;
+  // beatport_top con origen → ficha; sin origen → URL externa). Sin esto
+  // el "🔗" no aparece en el player cuando el usuario navega a otra ruta.
+  const shareForCommunityTop = useCallback((t: CommunityTopTrack): PreviewShareData | undefined => {
+    if (t.primary.source === 'chart' || t.primary.source === 'featured') {
+      return {
+        mode: 'chart',
+        source: t.primary.source,
+        trackId: t.primary.id,
+        weekDate: t.primary.week_date ?? null,
+      }
+    }
+    if (t.primary.source === 'vinyl') {
+      return { mode: 'path', path: buildVinylSharePath(lang, t.primary.id) }
+    }
+    if (t.primary.source === 'beatport_top') {
+      const bpId = extractBeatportTrackId(t.external_url)
+      const o = t.beatport_share_origin
+      if (o?.slug && bpId && (o.kind === 'artist' || o.kind === 'label')) {
+        const folder = o.kind === 'artist' ? 'artists' : 'labels'
+        return { mode: 'path', path: buildBeatportSharePath(`/${lang}/${folder}/${o.slug}`, bpId) }
+      }
+      if (t.external_url) return { mode: 'url', externalUrl: t.external_url }
+    }
+    return undefined
+  }, [lang])
+
   // Construye la cola de previews con los samples disponibles del top.
   // Adjuntamos `save` con la misma lógica que la fila visible: modo URL
   // para los tracks cuya fuente primaria es `beatport_top` (no tienen fila
@@ -182,10 +210,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               trackId: t.primary.id,
               canonicalUrl: t.external_url || null,
             },
+        share: shareForCommunityTop(t),
       })
     }
     return out
-  }, [data])
+  }, [data, shareForCommunityTop])
 
   const groupKey = 'community-top-all-time'
 

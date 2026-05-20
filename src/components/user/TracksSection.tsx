@@ -16,7 +16,7 @@ import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudio, type PreviewTrack, type PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
@@ -621,6 +621,49 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // la lista propia) para que el botón "+/✓" del MiniPreviewBar opere
   // exactamente sobre el mismo registro al añadir o quitar la pista que
   // está sonando en ese momento.
+  // Calcula los datos de "compartir" para el mini reproductor reusando la
+  // MISMA lógica que la fila visible (ver el bloque `TrackShareButton` en
+  // el render). El reproductor persiste entre rutas; sin esto, el usuario
+  // ya no tiene la fila a mano para copiar el enlace de lo que suena.
+  const toPreviewShare = useCallback((t: UnifiedTrack): PreviewShareData | undefined => {
+    if (!lang) return undefined
+    if (t.source === 'chart' || t.source === 'featured') {
+      return {
+        mode: 'chart',
+        source: t.source,
+        trackId: t.id,
+        weekDate: t.week_date ?? null,
+      }
+    }
+    if (t.source === 'vinyl') {
+      return { mode: 'path', path: buildVinylSharePath(lang as Locale, t.id) }
+    }
+    if (t.source === 'beatport_top') {
+      const snap = t.snapshot
+      const origin = snap?.origin
+      const bpUrl =
+        (typeof snap?.beatport_url === 'string' && snap.beatport_url) ||
+        t.external_url ||
+        t.canonical_url
+      const bpId = extractBeatportTrackId(bpUrl)
+      if (
+        origin?.kind &&
+        origin.slug &&
+        bpId &&
+        (origin.kind === 'artist' || origin.kind === 'label')
+      ) {
+        const folder = origin.kind === 'artist' ? 'artists' : 'labels'
+        return {
+          mode: 'path',
+          path: buildBeatportSharePath(`/${lang}/${folder}/${origin.slug}`, bpId),
+        }
+      }
+      const externalUrl = (t.external_url || t.canonical_url || '').trim()
+      if (externalUrl) return { mode: 'url', externalUrl }
+    }
+    return undefined
+  }, [lang])
+
   const toPreviewTrack = useCallback((t: UnifiedTrack): PreviewTrack | null => {
     const src = t.source === 'featured' && t.platform === 'bandcamp'
       ? previewAudioSrc('', 'bandcamp', t.external_url)
@@ -654,8 +697,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             canonicalUrl: t.external_url || t.youtube_url || t.canonical_url || null,
             snapshot: t.snapshot ?? null,
           },
+      share: toPreviewShare(t),
     }
-  }, [isShared])
+  }, [isShared, toPreviewShare])
 
   const buildQueue = useCallback((src: UnifiedTrack[]): PreviewTrack[] => {
     const out: PreviewTrack[] = []

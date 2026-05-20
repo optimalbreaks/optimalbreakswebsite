@@ -21,6 +21,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
@@ -79,6 +80,33 @@ export type PreviewSaveData =
     }
 
 /**
+ * Datos opcionales para pintar el botón "🔗 compartir" dentro del mini
+ * reproductor, junto al "+/✓" de Mis Tracks. Reflejan los tres modos de
+ * `<TrackShareButton>` para que el productor de la cola (ChartView,
+ * BeatportTopTracks, TracksSection, CommunityMonthlyTop…) pase exactamente
+ * la misma URL canónica que pasa el botón de la fila origen:
+ *
+ *  - `mode: 'chart'`  → enlace a `/[lang]/charts?week=&play=chart|featured:<id>`.
+ *  - `mode: 'path'`   → path relativo ya construido (Beatport Top de
+ *                       artista/sello, Retro Vinyl Picks, etc.).
+ *  - `mode: 'url'`    → URL absoluta externa (último recurso, p.ej.
+ *                       Beatport Top compartido sin contexto OB interno).
+ *
+ * Si `share` no está presente, el slot del compartir simplemente no se
+ * renderiza (p.ej. el deck o las pistas del DJ que no son piezas
+ * compartibles individualmente).
+ */
+export type PreviewShareData =
+  | {
+      mode: 'chart'
+      source: 'chart' | 'featured'
+      trackId: string
+      weekDate?: string | null
+    }
+  | { mode: 'path'; path: string }
+  | { mode: 'url'; externalUrl: string }
+
+/**
  * Track del reproductor global de previews (Beatport/Bandcamp de charts,
  * Top 10 de artistas/sellos, Mis Tracks…). El provider mantiene la cola
  * entre navegaciones para que la reproducción siga sonando aunque el
@@ -101,6 +129,11 @@ export interface PreviewTrack {
   artworkUrl?: string | null
   domId?: string
   save?: PreviewSaveData
+  /** Datos opcionales para pintar "🔗 compartir" en el mini reproductor.
+   *  El productor pasa la misma URL canónica que renderiza en la fila origen
+   *  (`<TrackShareButton>`) para que el usuario pueda compartir lo que está
+   *  sonando sin tener que volver a la lista. */
+  share?: PreviewShareData
 }
 
 export interface PreviewAudioApi {
@@ -633,6 +666,47 @@ function PreviewSaveSlot({ save, lang }: { save?: PreviewSaveData; lang: Locale 
   )
 }
 
+/**
+ * Botón "🔗" para compartir la canción que está sonando ahora mismo desde
+ * el mini reproductor. Reutiliza exactamente el mismo `<TrackShareButton>`
+ * que pinta cada fila de los charts / Mis Tracks / Top 10, así que el
+ * enlace que copia/comparte es idéntico al de la lista origen.
+ *
+ * Necesario porque la barra del reproductor persiste entre rutas: el
+ * usuario puede haber empezado a sonar un tema en una página y, al
+ * navegar, ya no tiene la fila a mano para compartirlo. Con esto el
+ * "🔗" viaja con la canción.
+ */
+function PreviewShareSlot({
+  share,
+  title,
+  artist,
+  lang,
+}: {
+  share?: PreviewShareData
+  title: string
+  artist: string
+  lang: Locale
+}) {
+  if (!share) return null
+  const shareTitle = artist ? `${title} — ${artist}` : title
+  if (share.mode === 'chart') {
+    return (
+      <TrackShareButton
+        source={share.source}
+        trackId={share.trackId}
+        weekDate={share.weekDate ?? ''}
+        lang={lang}
+        shareTitle={shareTitle}
+      />
+    )
+  }
+  if (share.mode === 'path') {
+    return <TrackShareButton path={share.path} lang={lang} shareTitle={shareTitle} />
+  }
+  return <TrackShareButton externalUrl={share.externalUrl} lang={lang} shareTitle={shareTitle} />
+}
+
 // ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────
 function MiniPreviewBar({ lang }: { lang: Locale }) {
   const {
@@ -672,7 +746,17 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       onTitleClick={cur.domId ? scrollToCurrentRow : undefined}
       titleClickHint={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
       counter={`${previewIndex + 1} / ${previewQueue.length}`}
-      extraRight={<PreviewSaveSlot save={cur.save} lang={lang} />}
+      extraRight={
+        <>
+          <PreviewShareSlot
+            share={cur.share}
+            title={cur.title || ''}
+            artist={cur.artist || ''}
+            lang={lang}
+          />
+          <PreviewSaveSlot save={cur.save} lang={lang} />
+        </>
+      }
       controls={
         <>
           <button

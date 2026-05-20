@@ -970,6 +970,7 @@ export default function ChartView({
   const buildFeaturedBundle = useCallback((
     featured: ChartFeaturedTrack[],
     groups?: Map<string, CanonRef[]>,
+    weekDate?: string | null,
   ): PlayAllBundle => {
     const out: PreviewTrack[] = []
     for (const p of featured) {
@@ -993,6 +994,12 @@ export default function ChartView({
           canonicalUrl: p.link_url || null,
           snapshot: buildFeaturedSnapshot(p),
         },
+        share: {
+          mode: 'chart',
+          source: 'featured',
+          trackId: p.id,
+          weekDate: weekDate ?? null,
+        },
       })
     }
     return out
@@ -1001,6 +1008,7 @@ export default function ChartView({
   const buildTrackBundle = useCallback((
     tracks: ChartTrack[],
     groups?: Map<string, CanonRef[]>,
+    weekDate?: string | null,
   ): PlayAllBundle => {
     const out: PreviewTrack[] = []
     for (const t of tracks) {
@@ -1020,6 +1028,12 @@ export default function ChartView({
           relatedRefs: groups?.get(t.id),
           canonicalUrl: t.beatport_url || null,
           snapshot: buildChartSnapshot(t),
+        },
+        share: {
+          mode: 'chart',
+          source: 'chart',
+          trackId: t.id,
+          weekDate: weekDate ?? null,
         },
       })
     }
@@ -1051,14 +1065,14 @@ export default function ChartView({
 
     if (kind === 'picks') {
       const sorted = sortFeaturedByArtist(week.featured, lang)
-      const bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack)
+      const bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack, weekDate)
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
         playFromIndex(`picks-${weekDate}`, bundle, idx)
       }
     } else {
-      const bundle = buildTrackBundle(week.tracks, canonicalGroups.chartByTrack)
+      const bundle = buildTrackBundle(week.tracks, canonicalGroups.chartByTrack, weekDate)
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
@@ -1198,7 +1212,7 @@ export default function ChartView({
               const { edition, featured } = bundle
               const isLatest = edition.week_date === weeksWithFeatured[0].edition.week_date
               const featuredSorted = sortFeaturedByArtist(featured, lang)
-              const picksBundle = buildFeaturedBundle(featuredSorted, canonicalGroups.featuredByTrack)
+              const picksBundle = buildFeaturedBundle(featuredSorted, canonicalGroups.featuredByTrack, edition.week_date)
               const picksKey = `picks-${edition.week_date}`
 
               return (
@@ -1275,7 +1289,7 @@ export default function ChartView({
             const { edition, tracks } = bundle
             const isLatest = edition.week_date === latestWeekDate
             const description = lang === 'es' ? edition.description_es : edition.description_en
-            const fortyBundle = buildTrackBundle(tracks, canonicalGroups.chartByTrack)
+            const fortyBundle = buildTrackBundle(tracks, canonicalGroups.chartByTrack, edition.week_date)
             const fortyKey = `forty-${edition.week_date}`
 
             return (

@@ -103,24 +103,35 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
   // así que usamos modo URL + snapshot, exactamente igual que en el
   // <SaveTrackButton> de la lista expandida.
   const buildQueue = useCallback((): PreviewTrack[] => {
-    return playableTracks.map((t) => ({
-      rowKey: `bp-${t.position}`,
-      src: proxyUrl(t.sample_url!),
-      title: t.title,
-      artist: t.artists.map(a => a.name).join(', '),
-      artworkUrl: t.artwork_url || null,
-      domId: `bp-row-${t.position}`,
-      save: t.beatport_url
-        ? {
-            mode: 'url' as const,
-            externalUrl: t.beatport_url,
-            externalTrackId: extractBeatportTrackId(t.beatport_url) ?? undefined,
-            canonicalUrl: t.beatport_url,
-            snapshot: buildSnapshot(t, origin),
-          }
-        : undefined,
-    }))
-  }, [playableTracks, origin])
+    return playableTracks.map((t) => {
+      const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
+      const sharePath = bpId && pathname
+        ? buildBeatportSharePath(pathname, bpId)
+        : null
+      return {
+        rowKey: `bp-${t.position}`,
+        src: proxyUrl(t.sample_url!),
+        title: t.title,
+        artist: t.artists.map(a => a.name).join(', '),
+        artworkUrl: t.artwork_url || null,
+        domId: `bp-row-${t.position}`,
+        save: t.beatport_url
+          ? {
+              mode: 'url' as const,
+              externalUrl: t.beatport_url,
+              externalTrackId: bpId,
+              canonicalUrl: t.beatport_url,
+              snapshot: buildSnapshot(t, origin),
+            }
+          : undefined,
+        share: sharePath
+          ? { mode: 'path' as const, path: sharePath }
+          : t.beatport_url
+            ? { mode: 'url' as const, externalUrl: t.beatport_url }
+            : undefined,
+      }
+    })
+  }, [playableTracks, origin, pathname])
 
   const playFromTrack = useCallback((t: BeatportTopTrack) => {
     const queue = buildQueue()
@@ -160,23 +171,34 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
     if (!parsed || parsed.kind !== 'beatport') return
     const target = tracks.find((t) => extractBeatportTrackId(t.beatport_url) === parsed.id)
     if (!target) return
-    const queue = playableTracks.map<PreviewTrack>((t) => ({
-      rowKey: `bp-${t.position}`,
-      src: proxyUrl(t.sample_url!),
-      title: t.title,
-      artist: t.artists.map((a) => a.name).join(', '),
-      artworkUrl: t.artwork_url || null,
-      domId: `bp-row-${t.position}`,
-      save: t.beatport_url
-        ? {
-            mode: 'url',
-            externalUrl: t.beatport_url,
-            externalTrackId: extractBeatportTrackId(t.beatport_url) ?? undefined,
-            canonicalUrl: t.beatport_url,
-            snapshot: buildSnapshot(t, origin),
-          }
-        : undefined,
-    }))
+    const queue = playableTracks.map<PreviewTrack>((t) => {
+      const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
+      const sharePath = bpId && pathname
+        ? buildBeatportSharePath(pathname, bpId)
+        : null
+      return {
+        rowKey: `bp-${t.position}`,
+        src: proxyUrl(t.sample_url!),
+        title: t.title,
+        artist: t.artists.map((a) => a.name).join(', '),
+        artworkUrl: t.artwork_url || null,
+        domId: `bp-row-${t.position}`,
+        save: t.beatport_url
+          ? {
+              mode: 'url',
+              externalUrl: t.beatport_url,
+              externalTrackId: bpId,
+              canonicalUrl: t.beatport_url,
+              snapshot: buildSnapshot(t, origin),
+            }
+          : undefined,
+        share: sharePath
+          ? { mode: 'path', path: sharePath }
+          : t.beatport_url
+            ? { mode: 'url', externalUrl: t.beatport_url }
+            : undefined,
+      }
+    })
     const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
     didAutoPlayRef.current = true
     setExpanded(true)
@@ -193,7 +215,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       }
     }, 120)
     return () => window.clearTimeout(t)
-  }, [tracks, playableTracks, groupKey, playPreviewQueue])
+  }, [tracks, playableTracks, groupKey, playPreviewQueue, pathname, origin])
 
   if (!tracks.length) return null
 
