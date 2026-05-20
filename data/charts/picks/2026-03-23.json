@@ -94,6 +94,28 @@
     },
     {
       "sort_order": 5,
+      "title": "Bass Shaker",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Stanton Warriors"
+        }
+      ],
+      "label": "Punks Music",
+      "platform": "bandcamp",
+      "link_url": "https://stantonwarriors.bandcamp.com/track/bass-shaker",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a3325993747_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "note_en": "",
+      "note_es": "",
+      "release_date": "2026-03-26"
+    },
+    {
+      "sort_order": 6,
       "title": "Can't Stop It ",
       "mix_name": "Original Mix",
       "artists": [
@@ -115,7 +137,7 @@
       "release_date": "2026-03-26"
     },
     {
-      "sort_order": 6,
+      "sort_order": 7,
       "title": "Carpet Muncha",
       "mix_name": "2026 Remaster",
       "artists": [
@@ -137,7 +159,7 @@
       "release_date": "2026-03-27"
     },
     {
-      "sort_order": 7,
+      "sort_order": 8,
       "title": "Torenza",
       "mix_name": "Original Mix",
       "artists": [
@@ -159,7 +181,7 @@
       "release_date": "2026-03-26"
     },
     {
-      "sort_order": 8,
+      "sort_order": 9,
       "title": "Missed Call ",
       "mix_name": "Original Mix",
       "artists": [
@@ -181,7 +203,7 @@
       "release_date": "2026-03-27"
     },
     {
-      "sort_order": 9,
+      "sort_order": 10,
       "title": "Hold On ",
       "mix_name": "Original Mix",
       "artists": [

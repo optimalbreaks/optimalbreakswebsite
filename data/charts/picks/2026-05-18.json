@@ -154,6 +154,342 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 7
+    },
+    {
+      "title": "The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Guanxe"
+        }
+      ],
+      "label": "Zyn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-bass/28903252",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c2f13247-6230-44db-a3cf-5d864c2d7943.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bab58553-3568-4c2c-9ecf-dbd576dbe24d.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Lonely Trip",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Warriors Beat Return",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lonely-trip/27748160",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e68ee04-1a86-46d3-9258-7d95dfc7a95b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a7675dc7-0790-414b-a3c1-cfccae8831c2.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "AFFRICAN",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "WelderB"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/affrican/28229204",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db0cbf36-9a17-4f16-938e-f071ca68fd5e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7f3aa656-e565-46bf-a5e5-39de218b4d07.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Tauro",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Cude"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tauro/28463490",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/71d7a637-fbcb-40b6-b578-a0ad16b73a16.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/95410ab0-a538-4436-8978-1b8a69d98048.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Lift-off",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Eddy Beneteau"
+        }
+      ],
+      "label": "Break Beat Connection",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lift-off/28490157",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cab340a2-9317-48a6-92cc-057904ac0e27.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0f8c344e-ee7b-42bb-b94c-ee97a140967c.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "The Push",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Eddy Beneteau"
+        }
+      ],
+      "label": "Break Beat Connection",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-push/28490158",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cab340a2-9317-48a6-92cc-057904ac0e27.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fe9b7119-04d1-42d5-b70b-59f5dedef940.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "Kouche",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Forufreezer"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kouche/28543284",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8997686f-51aa-4a1c-aa4b-798cb3eb34fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e03d73b-6893-45a3-825b-72f1926f3c2f.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Big Smile",
+      "mix_name": "Jubilee & QRTR Remix",
+      "artists": [
+        {
+          "name": "Jubilee"
+        },
+        {
+          "name": "QRTR"
+        }
+      ],
+      "label": "Broken Levee",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-smile/28625143",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/18fc454e-50a4-471a-91f4-0e4cc10b0619.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0217bdd0-3994-4652-a42c-78def876aaa0.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "I Will Never Leave",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "WeZ WhaTevR"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-will-never-leave/28629287",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/139f96e2-365b-4fc1-bc3d-c927990d1543.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8229b45f-a6a0-4e4b-8ac2-9f5b2c6f832f.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "Let It Be",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Afghan Headspin"
+        },
+        {
+          "name": "PERCYBASS"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/let-it-be/28629290",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/139f96e2-365b-4fc1-bc3d-c927990d1543.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5cc70cd8-32d3-4d1c-a53e-be6e982e4533.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Don't You Care",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Jack Mono"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-you-care/28629293",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/139f96e2-365b-4fc1-bc3d-c927990d1543.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9116492-8c0f-4932-aa98-5b2a22b414ee.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Liquid Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SL 83"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/liquid-night/28629294",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/139f96e2-365b-4fc1-bc3d-c927990d1543.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/464544b2-f1d6-41d3-8ce8-466f5e71873b.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19
+    },
+    {
+      "title": "Like This",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xana"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/like-this/28629296",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/139f96e2-365b-4fc1-bc3d-c927990d1543.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/29e40f75-5aaf-4eea-8ce1-de8b36233bd0.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
+    },
+    {
+      "title": "Like This",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "AndrewFx"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/like-this/28792651",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9355885a-22e8-4d81-a32f-a44b23b351aa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b578c2a9-2a0f-4226-8bf3-dbe06e7fd69d.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
+    },
+    {
+      "title": "Brew",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Vital Drums"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brew/28797707",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0eb69611-dd28-420f-9d7b-3be0a96bf2d0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/657f7ff1-3434-4349-8d7b-8fcf943bcbea.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 22
     }
   ]
 }

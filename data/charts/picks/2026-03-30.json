@@ -3,27 +3,6 @@
   "picks": [
     {
       "sort_order": 1,
-      "title": "Bass Shaker",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Stanton Warriors"
-        }
-      ],
-      "label": "Punks Music",
-      "platform": "bandcamp",
-      "link_url": "https://stantonwarriors.bandcamp.com/track/bass-shaker",
-      "link_label": "",
-      "artwork_url": "https://f4.bcbits.com/img/a3325993747_10.jpg",
-      "sample_url": "",
-      "bpm": null,
-      "music_key": "",
-      "release_year": 2026,
-      "note_en": "",
-      "note_es": ""
-    },
-    {
-      "sort_order": 2,
       "title": "Planet Love",
       "mix_name": "Original Mix",
       "artists": [
@@ -48,7 +27,7 @@
       "release_date": "2026-04-03"
     },
     {
-      "sort_order": 3,
+      "sort_order": 2,
       "title": "Deadly Memories",
       "mix_name": "Original Mix",
       "artists": [
@@ -70,7 +49,7 @@
       "release_date": "2026-04-03"
     },
     {
-      "sort_order": 4,
+      "sort_order": 3,
       "title": "Shake It Up",
       "mix_name": "Original Mix",
       "artists": [
@@ -92,7 +71,7 @@
       "release_date": "2026-04-03"
     },
     {
-      "sort_order": 5,
+      "sort_order": 4,
       "title": "You Got Me",
       "mix_name": "Original Mix",
       "artists": [
@@ -117,7 +96,7 @@
       "release_date": "2026-04-03"
     },
     {
-      "sort_order": 6,
+      "sort_order": 5,
       "title": "Bounce",
       "mix_name": "Original Mix",
       "artists": [
@@ -139,7 +118,7 @@
       "release_date": "2026-04-02"
     },
     {
-      "sort_order": 7,
+      "sort_order": 6,
       "title": "Underground Queen",
       "mix_name": "Original Mix",
       "artists": [
@@ -161,7 +140,7 @@
       "release_date": "2026-04-02"
     },
     {
-      "sort_order": 8,
+      "sort_order": 7,
       "title": "Don't Stop The Beat Rocking",
       "mix_name": "Original Mix",
       "artists": [
@@ -183,7 +162,7 @@
       "release_date": "2026-04-02"
     },
     {
-      "sort_order": 9,
+      "sort_order": 8,
       "title": "People Are You Ready",
       "mix_name": "Inner Realms Remix",
       "artists": [
