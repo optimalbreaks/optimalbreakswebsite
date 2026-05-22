@@ -70,7 +70,7 @@
     "section_history": {
       "tag": "02 — TIMELINE",
       "title_1": "HISTORY OF",
-      "title_2": "THE BREAK",
+      "title_2": "BREAKBEAT",
       "items": [
         {
           "year": "1973—1986",
@@ -126,20 +126,20 @@
     },
     "section_artists": {
       "tag": "03 — KEY FIGURES",
-      "title_1": "KEY",
+      "title_1": "BREAKBEAT",
       "title_2": "ARTISTS",
       "see_all": "FULL ARTIST MAP"
     },
     "section_events": {
       "tag": "04 — CALENDAR",
       "title_1": "UPCOMING",
-      "title_2": "EVENTS",
+      "title_2": "BREAKBEAT EVENTS",
       "see_all": "FULL CALENDAR"
     },
     "section_explore": {
       "tag": "05 — EXPLORE",
-      "title_1": "FOLLOW THE",
-      "title_2": "THREAD",
+      "title_1": "EXPLORE",
+      "title_2": "BREAKBEAT",
       "intro": "Each section goes deeper into the map — from the Bronx and UK rave to Andalusia, Australia and the Beatport era. Browse, bookmark and come back; the archive grows.",
       "items": [
         {
@@ -191,14 +191,14 @@
     },
     "section_blog": {
       "tag": "06 — BLOG",
-      "title_1": "FEATURED",
+      "title_1": "BREAKBEAT",
       "title_2": "READS",
       "see_all": "FULL BLOG"
     },
     "timeline_footer": "Full history: chapters, nuance and sources",
     "cta": {
-      "title_1": "BREAK",
-      "title_2": "THE BEAT",
+      "title_1": "BREAK THE",
+      "title_2": "BREAKBEAT",
       "sub": "Living breakbeat documentation: open the timeline or the blog and stay a while.",
       "button": "FULL HISTORY",
       "secondary": "Editorial blog"
