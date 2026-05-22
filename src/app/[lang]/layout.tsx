@@ -4,9 +4,9 @@
 // ============================================
 
 import type { Metadata, Viewport } from 'next'
-import '@fontsource/unbounded/700.css'
-import '@fontsource/unbounded/900.css'
-import '@fontsource/special-elite/400.css'
+import '@fontsource/unbounded/latin-700.css'
+import '@fontsource/unbounded/latin-900.css'
+import unbounded900LatinWoff2 from '@fontsource/unbounded/files/unbounded-latin-900-normal.woff2'
 import '../globals.css'
 import { i18n, type Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/dictionaries'
@@ -135,6 +135,13 @@ export default async function LangLayout({
   return (
     <html lang={lang}>
       <head>
+        <link
+          rel="preload"
+          href={unbounded900LatinWoff2}
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link rel="icon" href="/images/favicon_punk_brutalism.png" type="image/png" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/images/favicon_punk_brutalism.png" />

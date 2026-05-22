@@ -128,6 +128,14 @@ const nextConfig = {
 
   // Disable x-powered-by header
   poweredByHeader: false,
+
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.woff2$/i,
+      type: 'asset/resource',
+    })
+    return config
+  },
 }
 
 module.exports = nextConfig

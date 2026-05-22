@@ -2,12 +2,15 @@
 
 import { useEffect } from 'react'
 
-/** Fuentes no críticas: fuera de la ruta de render (Courier, Darker Grotesque, Unbounded 400). */
+/** Fuentes fuera del CSS bloqueante inicial (Special Elite, Courier, Darker Grotesque, Unbounded 400). */
 export default function DeferredFonts() {
   useEffect(() => {
     const loadCss = (specifier: string) => {
       void import(specifier)
     }
+
+    // Cuerpo / prose: fuera del layout crítico pero lo pedimos enseguida tras hidratar.
+    loadCss('@fontsource/special-elite/400.css')
 
     const load = () => {
       loadCss('@fontsource/unbounded/400.css')

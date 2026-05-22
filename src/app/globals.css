@@ -3,7 +3,7 @@
    Fanzine Club Edition
    ============================================ */
 
-/* Fuentes self-hosted vía @fontsource en `[lang]/layout.tsx` (sin Google Fonts CDN). */
+/* Fuentes: Unbounded latin 700/900 en layout (LCP); Special Elite y resto vía DeferredFonts. */
 
 @tailwind base;
 @tailwind components;
