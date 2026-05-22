@@ -3,7 +3,7 @@
    Fanzine Club Edition
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&family=Darker+Grotesque:wght@400;700;900&family=Special+Elite&display=swap');
+/* Fuentes self-hosted vía @fontsource en `[lang]/layout.tsx` (sin Google Fonts CDN). */
 
 @tailwind base;
 @tailwind components;

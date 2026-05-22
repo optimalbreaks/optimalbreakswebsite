@@ -4,6 +4,15 @@
 // ============================================
 
 import type { Metadata, Viewport } from 'next'
+import '@fontsource/unbounded/400.css'
+import '@fontsource/unbounded/700.css'
+import '@fontsource/unbounded/900.css'
+import '@fontsource/courier-prime/400.css'
+import '@fontsource/courier-prime/700.css'
+import '@fontsource/darker-grotesque/400.css'
+import '@fontsource/darker-grotesque/700.css'
+import '@fontsource/darker-grotesque/900.css'
+import '@fontsource/special-elite/400.css'
 import '../globals.css'
 import { i18n, type Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/dictionaries'
@@ -112,6 +121,10 @@ export default async function LangLayout({
         '@id': `${SITE_URL}/#website`,
         url: SITE_URL,
         name: siteName,
+        description:
+          lang === 'es'
+            ? 'Archivo y referencia del breakbeat: historia, artistas, escenas, sellos y eventos.'
+            : 'Breakbeat archive and reference: history, artists, scenes, labels and events.',
         inLanguage: lang === 'es' ? 'es' : 'en',
         publisher: { '@id': `${SITE_URL}/#organization` },
       },

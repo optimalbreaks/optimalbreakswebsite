@@ -57,6 +57,10 @@
     "db:translate:scenes": "npx tsx scripts/traducir-bd-en.ts scenes"
   },
   "dependencies": {
+    "@fontsource/courier-prime": "^5.2.8",
+    "@fontsource/darker-grotesque": "^5.2.8",
+    "@fontsource/special-elite": "^5.2.8",
+    "@fontsource/unbounded": "^5.2.8",
     "@next/third-parties": "^16.2.1",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",

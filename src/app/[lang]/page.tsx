@@ -6,17 +6,26 @@
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import { HOME_OG_IMAGE, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
+import { HOME_OG_IMAGE, SITE_URL, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
 import type { Artist, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
-import DjDeck from '@/components/DjDeck'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
 import ArtistCard from '@/components/ArtistCard'
 import EventFlyer from '@/components/EventFlyer'
+
+const DjDeck = dynamic(() => import('@/components/DjDeck'), {
+  loading: () => (
+    <div
+      className="relative z-[2] w-full min-w-0 max-w-[960px] mx-auto min-h-[320px] sm:min-h-[380px] bg-[#1a1a1c] rounded-lg border-[4px] border-[var(--ink)] shadow-[10px_10px_0_rgba(0,0,0,0.3)]"
+      aria-hidden
+    />
+  ),
+})
 
 type HomeExplore = {
   tag: string
@@ -47,6 +56,11 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   return staticPageMetadata(lang, '', 'home', {
     ogImagePath: HOME_OG_IMAGE,
     ogImageAlt: homeOgImageAlt(lang),
+    extraKeywords: [
+      'breakbeat',
+      lang === 'es' ? 'música breakbeat' : 'breakbeat music',
+      lang === 'es' ? 'historia breakbeat' : 'breakbeat history',
+    ],
   })
 }
 
@@ -225,8 +239,33 @@ export default async function HomePage({
       ? (h as { section_blog: { tag: string; title_1: string; title_2: string; see_all: string } }).section_blog
       : null
 
+  const seoHome = dict.seo.home as { title: string; description: string }
+  const homeJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/${lang}#webpage`,
+        url: `${SITE_URL}/${lang}`,
+        name: seoHome.title,
+        description: seoHome.description,
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        about: {
+          '@type': 'Thing',
+          name: 'Breakbeat',
+          sameAs: 'https://en.wikipedia.org/wiki/Breakbeat',
+        },
+        inLanguage: lang === 'es' ? 'es-ES' : 'en-US',
+      },
+    ],
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
+      />
       {/* ===== HERO ===== */}
       <section className="lined relative px-3 sm:px-6 pt-6 sm:pt-10 pb-6 sm:pb-8 border-b-[5px] border-[var(--ink)]">
         {/* Stamp — desktop only */}
@@ -259,6 +298,7 @@ export default async function HomePage({
               lineHeight: 1,
             }}
           >
+            <span className="sr-only">{lang === 'es' ? 'Breakbeat — ' : 'Breakbeat — '}</span>
             <span
               className="inline"
               style={{
@@ -306,7 +346,7 @@ export default async function HomePage({
               ● {h.live}
             </span>
           </p>
-          <div className="mt-5 sm:mt-6 mb-6 sm:mb-8 animate-bounce">
+          <div className="mt-5 sm:mt-6 mb-6 sm:mb-8">
             <span
               className="inline-block border-[3px] border-[var(--ink)] shadow-[4px_4px_0_var(--ink)]"
               style={{
