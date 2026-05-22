@@ -18,7 +18,6 @@ import { i18n, type Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/dictionaries'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import CookieBanner from '@/components/CookieBanner'
 import { AuthProvider } from '@/components/AuthProvider'
 import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
@@ -36,6 +35,7 @@ import {
 } from '@/lib/seo'
 
 const ChartsPromoModal = nextDynamic(() => import('@/components/ChartsPromoModal'), { ssr: false })
+const CookieBanner = nextDynamic(() => import('@/components/CookieBanner'), { ssr: false })
 
 export const viewport: Viewport = {
   width: 'device-width',

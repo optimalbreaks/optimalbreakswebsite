@@ -17,6 +17,10 @@ export type CookieConsent = {
 
 const COOKIE_NAME = 'ob_consent'
 const COOKIE_MAX_AGE = 34_164_000 // ~13 months (EU max)
+/** Espera antes de mostrar el banner en 1ª visita (LCP = hero, no este texto). */
+const CONSENT_SHOW_DELAY_MS = 4500
+/** Margen tras registrar LCP antes de abrir el banner. */
+const CONSENT_AFTER_LCP_MS = 600
 
 /* ── helpers ───────────────────────────────────────── */
 
@@ -47,20 +51,54 @@ export default function CookieBanner({ lang }: { lang: string }) {
 
   useEffect(() => {
     const saved = readConsent()
-    if (!saved) {
-      setVisible(true)
-    } else {
+    if (saved) {
       setAnalytics(saved.analytics)
+      return
+    }
+
+    let cancelled = false
+    let delayTimer: ReturnType<typeof setTimeout> | null = null
+    let lcpTimer: ReturnType<typeof setTimeout> | null = null
+    let lcpObserver: PerformanceObserver | null = null
+
+    const showFirstVisit = () => {
+      if (cancelled) return
+      setVisible(true)
+    }
+
+    const scheduleAfterLcp = () => {
+      if (delayTimer) clearTimeout(delayTimer)
+      lcpTimer = setTimeout(showFirstVisit, CONSENT_AFTER_LCP_MS)
+    }
+
+    delayTimer = setTimeout(showFirstVisit, CONSENT_SHOW_DELAY_MS)
+
+    if (typeof PerformanceObserver !== 'undefined') {
+      try {
+        lcpObserver = new PerformanceObserver((list) => {
+          if (list.getEntries().length > 0) scheduleAfterLcp()
+        })
+        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true })
+      } catch {
+        /* LCP API no disponible */
+      }
     }
 
     const openBanner = () => {
-      const saved = readConsent()
-      if (saved) setAnalytics(saved.analytics)
+      const current = readConsent()
+      if (current) setAnalytics(current.analytics)
       setShowSettings(true)
       setVisible(true)
     }
     window.addEventListener('ob-open-cookie-banner', openBanner)
-    return () => window.removeEventListener('ob-open-cookie-banner', openBanner)
+
+    return () => {
+      cancelled = true
+      if (delayTimer) clearTimeout(delayTimer)
+      if (lcpTimer) clearTimeout(lcpTimer)
+      lcpObserver?.disconnect()
+      window.removeEventListener('ob-open-cookie-banner', openBanner)
+    }
   }, [])
 
   const save = useCallback((consent: CookieConsent) => {
@@ -76,12 +114,12 @@ export default function CookieBanner({ lang }: { lang: string }) {
   const rejectAll = () => save({ necessary: true, analytics: false })
   const saveSelection = () => save({ necessary: true, analytics })
 
-  // Reabierto desde footer: no bloquear con overlay
+  // Reabierto desde footer vs 1ª visita (animación distinta).
   const isReopen = visible && readConsent() !== null
 
   if (!visible) return null
 
-  const font = { fontFamily: "'Courier Prime', monospace" } as const
+  const font = { fontFamily: 'ui-monospace, "Courier Prime", monospace' } as const
   const btnBase =
     'px-5 py-2.5 border-[3px] border-[var(--ink)] text-center transition-all'
   const btnOutline = `${btnBase} text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]`
@@ -90,37 +128,27 @@ export default function CookieBanner({ lang }: { lang: string }) {
   const btnStyle = { ...font, fontSize: '12px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }
 
   return (
-    <>
-      {/* Overlay + centrado (solo primera visita) */}
-      {!isReopen && (
-        <div className="fixed inset-0 z-[199] bg-black/60 backdrop-blur-[2px]" aria-hidden="true" />
-      )}
-
+    <div
+      className="fixed bottom-0 left-0 right-0 z-[200]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={es ? 'Consentimiento de cookies' : 'Cookie consent'}
+    >
       <div
-        className={`fixed z-[200] ${
-          isReopen
-            ? 'bottom-0 left-0 right-0'
-            : 'inset-0 flex items-center justify-center p-4'
-        }`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={es ? 'Consentimiento de cookies' : 'Cookie consent'}
-      >
-      <div
-        className={`bg-[var(--paper)] text-[var(--ink)] border-[6px] border-[var(--ink)] shadow-[8px_8px_0_rgba(0,0,0,0.25)] ${
-          isReopen ? 'border-x-0 border-b-0' : 'w-full max-w-lg'
+        className={`bg-[var(--paper)] text-[var(--ink)] border-t-[6px] border-[var(--ink)] shadow-[0_-6px_0_rgba(0,0,0,0.12)] ${
+          isReopen ? '' : 'motion-safe:animate-[cookie-bar-in_0.35s_ease-out]'
         }`}
       >
-        <div className="p-5 sm:p-7">
+        <div className="p-4 sm:p-5 max-w-4xl mx-auto">
           <h3
-            className="font-black text-lg sm:text-xl uppercase tracking-tight mb-3 text-center"
-            style={{ fontFamily: "'Unbounded', sans-serif" }}
+            className="font-black text-base sm:text-lg uppercase tracking-tight mb-2 text-center sm:text-left"
+            style={{ fontFamily: 'system-ui, "Unbounded", sans-serif' }}
           >
             {es ? 'Privacidad y Cookies' : 'Privacy & Cookies'}
           </h3>
 
           <p
-            className="text-[13px] leading-relaxed text-[var(--text-muted)] mb-5 text-center"
+            className="text-[12px] sm:text-[13px] leading-relaxed text-[var(--text-muted)] mb-4 text-center sm:text-left"
             style={font}
           >
             {es
@@ -189,34 +217,31 @@ export default function CookieBanner({ lang }: { lang: string }) {
           )}
 
           {/* ── buttons ── */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
             {showSettings ? (
-              <button onClick={saveSelection} className={btnSave} style={btnStyle}>
+              <button onClick={saveSelection} className={`${btnSave} sm:flex-1`} style={btnStyle}>
                 {es ? 'Guardar preferencias' : 'Save preferences'}
               </button>
             ) : (
               <>
-                <button onClick={acceptAll} className={btnAccept} style={{ ...btnStyle, fontSize: '14px', padding: '14px 20px' }}>
+                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={{ ...btnStyle, fontSize: '13px', padding: '12px 16px' }}>
                   {es ? 'Aceptar todas' : 'Accept all'}
                 </button>
-                <div className="flex gap-2">
-                  <button onClick={rejectAll} className={`${btnOutline} flex-1`} style={btnStyle}>
-                    {es ? 'Rechazar' : 'Reject'}
-                  </button>
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className={`${btnOutline} flex-1`}
-                    style={btnStyle}
-                  >
-                    {es ? 'Configurar' : 'Customize'}
-                  </button>
-                </div>
+                <button onClick={rejectAll} className={`${btnOutline} sm:flex-1`} style={btnStyle}>
+                  {es ? 'Rechazar' : 'Reject'}
+                </button>
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className={`${btnOutline} sm:flex-1`}
+                  style={btnStyle}
+                >
+                  {es ? 'Configurar' : 'Customize'}
+                </button>
               </>
             )}
           </div>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   )
 }

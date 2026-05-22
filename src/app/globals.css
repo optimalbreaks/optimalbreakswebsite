@@ -143,6 +143,11 @@ body::before {
   to { transform: scale(1) rotate(-12deg); opacity: 1; }
 }
 
+@keyframes cookie-bar-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes shake {
   0%, 100% { transform: rotate(0); }
   25% { transform: rotate(-0.5deg); }
