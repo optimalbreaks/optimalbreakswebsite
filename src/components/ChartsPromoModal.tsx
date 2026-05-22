@@ -1,9 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — Modal promocional CHARTS
-// Aparece en la primera visita (a los 1.5 s) y se vuelve a
-// mostrar cada 5 min mientras el usuario navega por el sitio,
-// salvo en /[lang]/charts (ya está dentro).
-// Estética fanzine/brutalist (cream + ink + red + yellow).
+// Solo tras engagement real (2ª página o 40 s en el sitio),
+// no en la primera pantalla — evita LCP/CLS en PageSpeed y no
+// interrumpe la home. Reapertura cada 5 min mientras navega;
+// nunca en /[lang]/charts.
 // ============================================
 
 'use client'
@@ -14,13 +14,17 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /** ms desde la última vez que mostramos el modal hasta volver a mostrarlo. */
-const PROMO_REOPEN_MS = 5 * 60 * 1000 // 5 minutos
-/** retraso antes de la primera apertura (deja respirar al hero). */
-const FIRST_SHOW_DELAY_MS = 1500
-/** cada cuánto comprobamos si toca reabrir mientras el modal está cerrado. */
-const POLL_INTERVAL_MS = 30 * 1000
+const PROMO_REOPEN_MS = 5 * 60 * 1000
+/** Pequeño respiro tras cumplir engagement antes de abrir. */
+const SHOW_DELAY_MS = 800
+/** Segundos acumulados en el sitio antes de poder mostrar (1ª visita). */
+const MIN_SESSION_MS = 40 * 1000
+/** Cada cuánto comprobamos si ya toca abrir. */
+const POLL_INTERVAL_MS = 5 * 1000
 
 const LS_LAST_SHOWN = 'ob_charts_promo_last_shown_at'
+const SS_SESSION_START = 'ob_charts_promo_session_start'
+const SS_PAGE_VIEWS = 'ob_charts_promo_page_views'
 
 export interface ChartsPromoDict {
   kicker: string
@@ -55,66 +59,113 @@ function writeLastShown(ts: number) {
   try {
     window.localStorage.setItem(LS_LAST_SHOWN, String(ts))
   } catch {
-    /* localStorage puede estar bloqueado (modo incógnito ZIP, iframe, etc.) */
+    /* localStorage puede estar bloqueado */
   }
+}
+
+function sessionStart(): number {
+  if (typeof window === 'undefined') return Date.now()
+  try {
+    const raw = window.sessionStorage.getItem(SS_SESSION_START)
+    if (raw) {
+      const n = Number(raw)
+      if (Number.isFinite(n) && n > 0) return n
+    }
+    const now = Date.now()
+    window.sessionStorage.setItem(SS_SESSION_START, String(now))
+    return now
+  } catch {
+    return Date.now()
+  }
+}
+
+function bumpPageViews(): number {
+  if (typeof window === 'undefined') return 1
+  try {
+    const prev = Number(window.sessionStorage.getItem(SS_PAGE_VIEWS) || '0')
+    const next = Number.isFinite(prev) && prev > 0 ? prev + 1 : 1
+    window.sessionStorage.setItem(SS_PAGE_VIEWS, String(next))
+    return next
+  } catch {
+    return 1
+  }
+}
+
+function readPageViews(): number {
+  if (typeof window === 'undefined') return 0
+  try {
+    const n = Number(window.sessionStorage.getItem(SS_PAGE_VIEWS) || '0')
+    return Number.isFinite(n) && n > 0 ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+/** Usuario con intención: al menos 2 páginas en la sesión o 40 s en el sitio. */
+function hasEngaged(): boolean {
+  const views = readPageViews()
+  const elapsed = Date.now() - sessionStart()
+  return views >= 2 || elapsed >= MIN_SESSION_MS
+}
+
+function cooldownElapsed(): boolean {
+  const last = readLastShown()
+  if (last == null) return true
+  return Date.now() - last >= PROMO_REOPEN_MS
+}
+
+function canShowNow(): boolean {
+  return hasEngaged() && cooldownElapsed()
 }
 
 export default function ChartsPromoModal({ lang, dict }: Props) {
   const pathname = usePathname() || ''
-  // Si ya está en la página de charts, no tiene sentido empujar nada.
   const onChartsPage = pathname.includes(`/${lang}/charts`) || pathname.endsWith('/charts')
 
   const [open, setOpen] = useState(false)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
+  const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const showNow = useCallback(() => {
+    if (!canShowNow()) return
     setOpen(true)
     writeLastShown(Date.now())
   }, [])
 
   const close = useCallback(() => {
     setOpen(false)
-    // Al cerrar, marcamos que se acaba de ver para que el siguiente
-    // ciclo de 5 min cuente desde ahora, no desde la apertura.
     writeLastShown(Date.now())
   }, [])
 
-  // Apertura inicial + polling para reabrir cada PROMO_REOPEN_MS.
+  const scheduleShowIfReady = useCallback(() => {
+    if (onChartsPage || open) return
+    if (!canShowNow()) return
+    if (showTimerRef.current) clearTimeout(showTimerRef.current)
+    showTimerRef.current = setTimeout(showNow, SHOW_DELAY_MS)
+  }, [onChartsPage, open, showNow])
+
+  // Contabilizar vistas de página en la sesión (cada ruta distinta cuenta).
   useEffect(() => {
     if (onChartsPage) return
-    let timer: ReturnType<typeof setTimeout> | null = null
-    let interval: ReturnType<typeof setInterval> | null = null
+    bumpPageViews()
+    scheduleShowIfReady()
+  }, [pathname, onChartsPage, scheduleShowIfReady])
 
-    const last = readLastShown()
-    const now = Date.now()
+  // Polling: abrir cuando cumpla 40 s aunque no haya cambiado de página.
+  useEffect(() => {
+    if (onChartsPage) return
 
-    if (last == null) {
-      timer = setTimeout(showNow, FIRST_SHOW_DELAY_MS)
-    } else {
-      const remaining = PROMO_REOPEN_MS - (now - last)
-      if (remaining <= 0) {
-        timer = setTimeout(showNow, FIRST_SHOW_DELAY_MS)
-      } else {
-        timer = setTimeout(showNow, remaining)
-      }
-    }
-
-    interval = setInterval(() => {
+    const interval = setInterval(() => {
       if (open) return
-      const last2 = readLastShown()
-      if (last2 == null) return
-      if (Date.now() - last2 >= PROMO_REOPEN_MS) showNow()
+      scheduleShowIfReady()
     }, POLL_INTERVAL_MS)
 
     return () => {
-      if (timer) clearTimeout(timer)
-      if (interval) clearInterval(interval)
+      clearInterval(interval)
+      if (showTimerRef.current) clearTimeout(showTimerRef.current)
     }
-    // showNow + open son referencias estables / leídas dentro; sólo dependemos de la ruta.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChartsPage])
+  }, [onChartsPage, open, scheduleShowIfReady])
 
-  // ESC para cerrar + bloqueo de scroll del body mientras está abierto.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -123,7 +174,6 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
     window.addEventListener('keydown', onKey)
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    // Foco al cerrar: accesibilidad.
     closeBtnRef.current?.focus()
     return () => {
       window.removeEventListener('keydown', onKey)
@@ -142,7 +192,6 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
       aria-modal="true"
       aria-labelledby="charts-promo-title"
     >
-      {/* Overlay: clic fuera cierra. */}
       <button
         type="button"
         aria-label={dict.close}
@@ -150,19 +199,10 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
         className="absolute inset-0 bg-black/65 backdrop-blur-[2px] cursor-default"
       />
 
-      {/* Caja principal. shake muy sutil al entrar (animación ya definida en globals.css). */}
-      <div
-        className="relative z-10 w-full max-w-4xl border-[5px] sm:border-[6px] border-[var(--ink)] bg-[var(--paper)] shadow-[10px_10px_0_rgba(0,0,0,0.35)] max-h-[92vh] overflow-y-auto motion-safe:animate-[stamp_0.45s_ease-out]"
-      >
-        {/* Tira de peligro arriba */}
+      <div className="relative z-10 w-full max-w-4xl border-[5px] sm:border-[6px] border-[var(--ink)] bg-[var(--paper)] shadow-[10px_10px_0_rgba(0,0,0,0.35)] max-h-[92vh] overflow-y-auto motion-safe:animate-[stamp_0.45s_ease-out]">
         <div className="danger-bar" />
 
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Imagen — móvil: object-cover (al usuario le gusta así).
-                     desktop: object-contain para no recortar las
-                     palabras del cartel ("VINYL PICKS", "SAVE",
-                     "COMMUNITY LIST"); el fondo `paper-dark` rellena
-                     los laterales en la misma paleta. */}
           <div className="relative bg-[var(--paper-dark)] border-b-[5px] md:border-b-0 md:border-r-[5px] border-[var(--ink)] aspect-[4/5] md:aspect-auto md:min-h-[520px]">
             <Image
               src={
@@ -172,11 +212,9 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               }
               alt={dict.image_alt}
               fill
-              priority
               sizes="(min-width: 768px) 50vw, 100vw"
               className="object-cover md:object-contain"
             />
-            {/* Pegatina rotada para reforzar el "fanzine" */}
             <div
               className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-[var(--yellow)] border-[3px] border-[var(--ink)] px-3 py-1 rotate-[-6deg] shadow-[3px_3px_0_var(--ink)]"
               style={{
@@ -191,9 +229,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
             </div>
           </div>
 
-          {/* Texto + CTAs */}
           <div className="p-5 sm:p-7 flex flex-col gap-4 relative">
-            {/* Cerrar (X) — esquina superior derecha del bloque */}
             <button
               ref={closeBtnRef}
               type="button"
@@ -236,7 +272,6 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               {dict.subtitle}
             </p>
 
-            {/* Bullets de listas */}
             <ul className="grid gap-2 mt-1">
               {dict.bullets.map((line, i) => (
                 <li
@@ -256,7 +291,6 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               ))}
             </ul>
 
-            {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <Link
                 href={`/${lang}/charts`}
@@ -290,7 +324,6 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
           </div>
         </div>
 
-        {/* Tira de peligro abajo */}
         <div className="danger-bar" />
       </div>
     </div>

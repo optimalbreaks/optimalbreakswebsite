@@ -19,12 +19,12 @@ import { getDictionary } from '@/lib/dictionaries'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CookieBanner from '@/components/CookieBanner'
-import ChartsPromoModal from '@/components/ChartsPromoModal'
 import { AuthProvider } from '@/components/AuthProvider'
 import { DeckAudioProvider } from '@/components/DeckAudioProvider'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import BackToTop from '@/components/BackToTop'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import nextDynamic from 'next/dynamic'
 import {
   absoluteOgImage,
   DEFAULT_OG_IMAGE_PATH,
@@ -34,6 +34,8 @@ import {
   SITE_URL,
   smartTruncate,
 } from '@/lib/seo'
+
+const ChartsPromoModal = nextDynamic(() => import('@/components/ChartsPromoModal'), { ssr: false })
 
 export const viewport: Viewport = {
   width: 'device-width',
