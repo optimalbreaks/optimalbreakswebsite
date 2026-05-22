@@ -393,6 +393,14 @@ const ACTIONS = [
       'UPSERT electrolunch-xxl-picnic-76-sevilla-2026: 9 may 2026 Parque Magallanes Sevilla (Rocknrolla Producciones), main stage Stanton Warriors + Ylia, Jade Tansa, Magma, Luis Soldevilla; cartel public/images/events/electrolunch-xxl-picnic-76-sevilla-2026.webp; entrada gratuita hasta 17:00, pases ultimaentrada.com.',
   },
   {
+    id: 'events-patch-breakdown-orlando-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breakdown-orlando-2026',
+    npm: 'npm run db:guia -- run events-patch-breakdown-orlando-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breakdown-orlando-2026: BREAKDOWN, sáb 27 jun 2026 Broken Strings Brewery (1012 W Church St, Orlando FL), Fully Loaded + Rave Royalty present; headliner Huda Hudia (Kaleidoscope Music) + Soltek, Robotic, Matrix, Supagroover, Beezie, Axel V, Andres Morales; doors 20:00–23:30, all ages; cartel public/images/events/breakdown-orlando-2026.webp; tickets Eventbrite.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -610,6 +618,7 @@ Punto de entrada unificado:
   events-patch-solaris-fest-matalascanas-2026  Solaris Fest, Matalascañas 20 jun 2026 (Surfasaurus, MonsterTicket, cartel local WebP)
   events-patch-floridance-festival-2026  Floridance Festival 2026, Rota 5 sept Estadio Monago (Animalia, MonsterTicket)
   events-patch-electrolunch-xxl-picnic-76-sevilla-2026  Electrolunch XXL · Picnic 76, Parque Magallanes Sevilla 9 may 2026 (Stanton Warriors + locales, ultimaentrada.com)
+  events-patch-breakdown-orlando-2026  BREAKDOWN (Huda Hudia), Broken Strings Brewery Orlando 27 jun 2026 (Fully Loaded + Rave Royalty, Eventbrite)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -1032,6 +1041,9 @@ function main() {
         '--patch-electrolunch-xxl-picnic-76-sevilla-2026',
         ...rest,
       ])
+      break
+    case 'events-patch-breakdown-orlando-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breakdown-orlando-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

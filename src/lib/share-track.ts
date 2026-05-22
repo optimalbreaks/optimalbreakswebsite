@@ -14,6 +14,7 @@
 
 import type { Locale } from '@/lib/i18n-config'
 import { SITE_URL } from '@/lib/seo'
+import type { BeatportTopTrack } from '@/types/database'
 
 export type ShareTrackSource = 'chart' | 'featured' | 'beatport'
 
@@ -75,6 +76,51 @@ export function buildBeatportShareUrl(
   beatportId: string,
 ): string {
   return `${SITE_URL}${buildBeatportSharePath(pageHref, beatportId)}`
+}
+
+/** Busca una fila del Top 10 Beatport por ID numérico estable. */
+export function findBeatportTopTrackById(
+  tracks: BeatportTopTrack[] | null | undefined,
+  beatportId: string,
+): BeatportTopTrack | undefined {
+  const id = beatportId.trim()
+  if (!id) return undefined
+  return (tracks ?? []).find((t) => extractBeatportTrackId(t.beatport_url) === id)
+}
+
+/** Path relativo sin prefijo `/{lang}` — para `detailPageMetadata`. */
+export function beatportTrackDetailPath(
+  folder: 'artists' | 'labels',
+  slug: string,
+  beatportId: string,
+): string {
+  const params = new URLSearchParams({ play: `beatport:${beatportId}` })
+  return `/${folder}/${slug}?${params.toString()}`
+}
+
+/** Título, descripción y carátula OG de un track del Top Beatport. */
+export function beatportTrackOpenGraphCopy(
+  track: BeatportTopTrack,
+  lang: Locale,
+): { pageTitle: string; description: string; artworkUrl: string | null } {
+  const artistsStr = track.artists.map((a) => a.name).filter(Boolean).join(', ')
+  const pageTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
+  const bits: string[] = []
+  if (track.label) bits.push(track.label)
+  const rd = (track.release_date || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) {
+    bits.push(rd)
+  } else if (track.release_year && track.release_year > 0) {
+    bits.push(String(track.release_year))
+  }
+  const listenPrefix =
+    lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
+  const description = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
+  return {
+    pageTitle,
+    description,
+    artworkUrl: publicOgArtworkUrl(track.artwork_url),
+  }
 }
 
 /**

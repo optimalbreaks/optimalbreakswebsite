@@ -15,7 +15,12 @@ import { breadcrumbJsonLd, countryNameFromCode, detailPageMetadata, siteNameForL
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
-import { parsePlayParam, publicOgArtworkUrl } from '@/lib/share-track'
+import {
+  parsePlayParam,
+  findBeatportTopTrackById,
+  beatportTrackDetailPath,
+  beatportTrackOpenGraphCopy,
+} from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -146,31 +151,17 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       .eq('slug', slug)
       .single()
     const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
-    const track = list.find((t) => {
-      const m = t.beatport_url?.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
-      return m && m[1] === parsedPlay.id
-    })
+    const track = findBeatportTopTrackById(list, parsedPlay.id)
     if (track) {
-      const artistsStr = track.artists.map((a) => a.name).filter(Boolean).join(', ')
-      const trackTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
-      const bits: string[] = []
-      if (track.label) bits.push(track.label)
-      const rd = (track.release_date || '').trim().slice(0, 10)
-      if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) {
-        bits.push(rd)
-      } else if (track.release_year && track.release_year > 0) {
-        bits.push(String(track.release_year))
-      }
-      const listenPrefix = lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
-      const trackDesc = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
+      const og = beatportTrackOpenGraphCopy(track, lang)
       return detailPageMetadata(
         lang,
-        `/artists/${slug}`,
+        beatportTrackDetailPath('artists', slug, parsedPlay.id),
         siteName,
-        `${trackTitle} | ${siteName}`,
-        trackDesc,
-        'profile',
-        publicOgArtworkUrl(track.artwork_url) || ogPortrait,
+        `${og.pageTitle} | ${siteName}`,
+        og.description,
+        'website',
+        og.artworkUrl || ogPortrait,
         keywords,
       )
     }

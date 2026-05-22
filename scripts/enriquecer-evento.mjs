@@ -41,6 +41,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
  *   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026
+ *   node scripts/enriquecer-evento.mjs --patch-breakdown-orlando-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -2920,6 +2921,97 @@ async function runPatchElectrolunchXxlPicnic76Sevilla2026(sb) {
   console.log('[patch-electrolunch-xxl-picnic-76] OK:', after)
 }
 
+const BREAKDOWN_ORLANDO_2026_SLUG = 'breakdown-orlando-2026'
+const BREAKDOWN_ORLANDO_2026_TICKETS =
+  'https://www.eventbrite.com/e/breakdown-tickets-1988005787827'
+const BREAKDOWN_ORLANDO_2026_IMAGE = '/images/events/breakdown-orlando-2026.webp'
+
+const BREAKDOWN_ORLANDO_2026_LINEUP = [
+  'Huda Hudia',
+  'Soltek',
+  'Robotic',
+  'Matrix',
+  'Supagroover',
+  'Beezie',
+  'Axel V',
+  'Andres Morales',
+]
+
+const BREAKDOWN_ORLANDO_2026_ROW = {
+  name: 'BREAKDOWN (Huda Hudia · Orlando)',
+  description_en:
+    'Fully Loaded & Rave Royalty present BREAKDOWN on Saturday 27 June 2026 at Broken Strings Brewery, downtown Orlando (1012 W Church St). An all-ages indoor/outdoor breakbeat & bass night with craft beers, cocktails, food vendors and state-of-the-art production lighting and sound. Headlining: Huda Hudia (Kaleidoscope Music) — Florida breakbeat veteran and Kaleidoscope label boss. Local & guest support from Soltek, Robotic, Matrix, Supagroover, Beezie, Axel V and Andres Morales. Doors 20:00, closing 23:30. Free parking. Co-presented by 808 Life Music, Rave Royalty, Fully Loaded Productions (FLP), Broken Strings Brewery and Next Level Productions.',
+  description_es:
+    'Fully Loaded y Rave Royalty presentan BREAKDOWN el sábado 27 de junio de 2026 en Broken Strings Brewery, en el centro de Orlando (1012 W Church St). Noche de breakbeat y bass para todos los públicos en formato indoor/outdoor, con cervezas artesanas, cócteles, food trucks y producción de sonido e iluminación de primer nivel. Cabeza de cartel: Huda Hudia (Kaleidoscope Music), veterano del breakbeat de Florida y jefe del sello Kaleidoscope. Refuerzo local con Soltek, Robotic, Matrix, Supagroover, Beezie, Axel V y Andres Morales. Apertura 20:00, cierre 23:30. Parking gratuito. Coorganizado por 808 Life Music, Rave Royalty, Fully Loaded Productions (FLP), Broken Strings Brewery y Next Level Productions.',
+  event_type: 'club_night',
+  date_start: '2026-06-27',
+  date_end: null,
+  location: 'Broken Strings Brewery, 1012 W Church St, Orlando, FL 32805',
+  city: 'Orlando',
+  country: 'United States',
+  venue: 'Broken Strings Brewery',
+  address: '1012 W Church St, Orlando, FL 32805',
+  website: 'https://www.eventbrite.com/e/breakdown-tickets-1988005787827',
+  tickets_url: BREAKDOWN_ORLANDO_2026_TICKETS,
+  image_url: BREAKDOWN_ORLANDO_2026_IMAGE,
+  lineup: BREAKDOWN_ORLANDO_2026_LINEUP,
+  tags: [
+    'breakdown',
+    'huda hudia',
+    'kaleidoscope music',
+    'breakbeat',
+    'breaks',
+    'bass',
+    'orlando',
+    'florida',
+    'fully loaded',
+    'rave royalty',
+    '808 life music',
+    'broken strings brewery',
+    'next level productions',
+    '2026',
+  ],
+  socials: {
+    'Eventbrite tickets': BREAKDOWN_ORLANDO_2026_TICKETS,
+    'Broken Strings Brewery': 'https://brokenstringsbrewery.com/',
+    'Instagram @huda_hudia': 'https://www.instagram.com/huda_hudia/',
+    'Instagram @kaleidoscope.music': 'https://www.instagram.com/kaleidoscope.music/',
+  },
+  age_restriction: 'All ages',
+  doors_open: '20:00',
+  doors_close: '23:30',
+  coords: { lat: 28.5413, lng: -81.3911 },
+}
+
+async function runPatchBreakdownOrlando2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', BREAKDOWN_ORLANDO_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-breakdown-orlando-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BREAKDOWN_ORLANDO_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKDOWN_ORLANDO_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, age_restriction')
+    .eq('slug', BREAKDOWN_ORLANDO_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breakdown-orlando-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -3090,6 +3182,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-breakdown-orlando-2026')) {
+    await runPatchBreakdownOrlando2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -3156,7 +3253,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-finger-lickin-between-the-bridges-2026
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
-  node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026`)
+  node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026
+  node scripts/enriquecer-evento.mjs --patch-breakdown-orlando-2026`)
     process.exit(1)
   }
 

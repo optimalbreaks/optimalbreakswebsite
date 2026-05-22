@@ -12,7 +12,12 @@ import {
   siteNameForLang,
   SITE_URL,
 } from '@/lib/seo'
-import { parsePlayParam, publicOgArtworkUrl } from '@/lib/share-track'
+import {
+  parsePlayParam,
+  findBeatportTopTrackById,
+  beatportTrackDetailPath,
+  beatportTrackOpenGraphCopy,
+} from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -28,6 +33,9 @@ type Props = {
   params: { lang: Locale; slug: string }
   searchParams?: Record<string, string | string[] | undefined>
 }
+
+/** `?play=beatport:<id>` debe influir en OG en tiempo de petición. */
+export const dynamic = 'force-dynamic'
 type LabelSeoRow = Pick<
   Label,
   'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url' | 'country' | 'founded_year'
@@ -85,31 +93,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (parsedPlay?.kind === 'beatport') {
     const { data: topRow } = await supabase.from('labels').select('beatport_top_tracks').eq('slug', slug).single()
     const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
-    const track = list.find((t) => {
-      const m = t.beatport_url?.match(/beatport\.com\/track\/[^/]+\/(\d+)/i)
-      return m && m[1] === parsedPlay.id
-    })
+    const track = findBeatportTopTrackById(list, parsedPlay.id)
     if (track) {
-      const artistsStr = track.artists.map((a) => a.name).filter(Boolean).join(', ')
-      const trackTitle = `${track.title}${track.mix_name ? ` (${track.mix_name})` : ''} — ${artistsStr}`
-      const bits: string[] = []
-      if (track.label) bits.push(track.label)
-      const rd = (track.release_date || '').trim().slice(0, 10)
-      if (/^\d{4}-\d{2}-\d{2}$/.test(rd)) {
-        bits.push(rd)
-      } else if (track.release_year && track.release_year > 0) {
-        bits.push(String(track.release_year))
-      }
-      const listenPrefix = lang === 'es' ? 'Escucha este track en Optimal Breaks' : 'Listen to this track on Optimal Breaks'
-      const trackDesc = bits.length ? `${listenPrefix} · ${bits.join(' · ')}.` : `${listenPrefix}.`
+      const og = beatportTrackOpenGraphCopy(track, lang)
       return detailPageMetadata(
         lang,
-        `/labels/${slug}`,
+        beatportTrackDetailPath('labels', slug, parsedPlay.id),
         siteName,
-        `${trackTitle} | ${siteName}`,
-        trackDesc,
+        `${og.pageTitle} | ${siteName}`,
+        og.description,
         'website',
-        publicOgArtworkUrl(track.artwork_url) || defaultOgImage,
+        og.artworkUrl || defaultOgImage,
+        keywords,
       )
     }
   }
