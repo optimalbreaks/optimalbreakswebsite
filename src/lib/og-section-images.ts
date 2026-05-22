@@ -1,7 +1,7 @@
 // ============================================
 // OPTIMAL BREAKS — Open Graph estático por sección (listados)
 // Imágenes en public/images/opengraph/sections/*.png
-// Generación: npm run og:sections
+// Generación: npm run og:sections (arte IA) · npm run og:screenshot (mixes/charts captura)
 // ============================================
 
 import type { Locale } from '@/lib/i18n-config'

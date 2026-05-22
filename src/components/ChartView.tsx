@@ -627,7 +627,13 @@ function WeekAccordion({
   const triggerId = `${label}-trigger-${weekDate}`
 
   return (
-    <section className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
+    <section
+      className={
+        isLatest
+          ? 'border-[4px] border-[var(--red)] bg-[var(--paper)] overflow-hidden shadow-[4px_4px_0_0_rgba(214,40,40,0.25)]'
+          : 'border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden'
+      }
+    >
       <div className="flex items-center">
         <button
           type="button"
