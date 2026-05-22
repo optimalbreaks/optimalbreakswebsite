@@ -9,7 +9,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import type {
   ChartEdition,
   ChartFeaturedArtist,
@@ -863,7 +864,7 @@ export default function ChartView({
   const {
     previewQueue, previewIndex, previewGroupKey,
     playPreviewQueue, stopPreview,
-  } = usePreviewAudio()
+  } = usePreviewAudioGated()
 
   type PlayAllBundle = PreviewTrack[]
 

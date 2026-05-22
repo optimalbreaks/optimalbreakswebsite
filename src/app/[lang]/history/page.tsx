@@ -55,6 +55,9 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   return staticPageMetadata(lang, '/history', 'history')
 }
 
+/** ISR: contenido histórico cambia poco; evita SSR en cada visita. */
+export const revalidate = 300
+
 const SECTION_COLORS: Record<string, string> = {
   origins: 'var(--yellow)',
   uk_breakbeat: 'var(--red)',

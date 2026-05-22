@@ -6,7 +6,9 @@
 'use client'
 
 import { useState, type CSSProperties } from 'react'
-import { useDeckAudio, type DeckDict, type DeckSideState } from '@/components/DeckAudioProvider'
+import { DECK_TRACKS } from '@/lib/deck-tracks'
+import { useAudioEngineGate } from '@/components/LazyDeckAudioProvider'
+import { useDeckAudioMaybe, type DeckDict, type DeckSideState } from '@/components/DeckAudioProvider'
 
 interface DjDeckProps {
   dict: Record<string, unknown> & {
@@ -21,6 +23,7 @@ interface DjDeckProps {
 }
 
 export default function DjDeck({ dict }: DjDeckProps) {
+  const deck = useDjDeckControl(dict)
   const {
     dict: d,
     crossfader,
@@ -41,7 +44,7 @@ export default function DjDeck({ dict }: DjDeckProps) {
     trackB,
     switchTrackOnSide,
     togglePlaySide,
-  } = useDeckAudio()
+  } = deck
 
   const h = dict
 
@@ -407,4 +410,58 @@ function Knob({ label, colorClass, compact = false }: { label: string; colorClas
       </div>
     </div>
   )
+}
+
+function fmtTime(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = Math.floor(s % 60)
+  return `${m}:${sec.toString().padStart(2, '0')}`
+}
+
+const IDLE_SIDE: DeckSideState = { trackIdx: 0, progress: 0, duration: 0, playing: false }
+
+function useDjDeckControl(propDict: DjDeckProps['dict']) {
+  const gate = useAudioEngineGate()
+  const live = useDeckAudioMaybe()
+  const [crossfader, setCrossfader] = useState(50)
+
+  if (live) return live
+
+  const d: DeckDict = {
+    play: 'PLAY',
+    stop: 'STOP',
+    deck_brand: propDict.deck_brand,
+    deck_model: propDict.deck_model,
+    mixer: propDict.mixer,
+    bpm: propDict.bpm,
+    crossfader: propDict.crossfader,
+  }
+
+  return {
+    dict: d,
+    crossfader,
+    setCrossfader,
+    scratchingLeft: false,
+    scratchingRight: false,
+    leftRotation: 0,
+    rightRotation: 0,
+    fmt: fmtTime,
+    deckA: IDLE_SIDE,
+    deckB: IDLE_SIDE,
+    activeSide: 'A' as const,
+    trackA: DECK_TRACKS[0],
+    trackB: DECK_TRACKS[1],
+    initAudio: () => {
+      void gate.requestLoad()
+    },
+    handleScratchStart: () => {},
+    handleScratchMove: () => {},
+    handleScratchEnd: () => {},
+    switchTrackOnSide: (side: 'A' | 'B', direction: -1 | 1) => {
+      void gate.requestLoad({ kind: 'deck-switch', side, direction })
+    },
+    togglePlaySide: (side: 'A' | 'B') => {
+      void gate.requestLoad({ kind: 'deck-toggle', side })
+    },
+  }
 }

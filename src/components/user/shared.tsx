@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useDeckAudio } from '@/components/DeckAudioProvider'
+import { useMixAudioGated } from '@/hooks/useGatedDeckAudio'
 import { getMixTrack } from '@/components/MixesExplorer'
 import type { ViewMode } from '@/components/ViewToggle'
 import ViewToggle from '@/components/ViewToggle'
@@ -59,7 +59,7 @@ export function YouTubeIframe({ videoId, title, className = '' }: { videoId: str
  * Uses the global DeckAudioProvider to avoid multiple audio sources at once.
  */
 export function DashboardMixPlayButton({ m }: { m: any }) {
-  const { playMix, currentMix, mixPlaying } = useDeckAudio()
+  const { playMix, currentMix, mixPlaying } = useMixAudioGated()
   const track = getMixTrack(m)
   if (!track) return null
 

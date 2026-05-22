@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { usePreviewAudio, type PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import {
@@ -82,7 +83,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
   const {
     previewQueue, previewIndex, previewGroupKey,
     playPreviewQueue, stopPreview,
-  } = usePreviewAudio()
+  } = usePreviewAudioGated()
 
   // groupKey estable para identificar "mi" cola dentro del provider global.
   // Distingue artista de sello y así, si navegas entre fichas, cada Top 10

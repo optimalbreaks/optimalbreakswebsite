@@ -17,8 +17,11 @@
 
 import { useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import { SITE_URL } from '@/lib/seo'
-import { buildTrackSharePath } from '@/lib/share-track'
+import {
+  buildAbsoluteShareUrl,
+  buildTrackSharePath,
+  copyShareLink,
+} from '@/lib/share-track'
 
 interface BaseProps {
   lang: Locale
@@ -55,14 +58,22 @@ interface ExternalUrlModeProps extends BaseProps {
 
 type Props = ChartModeProps | PathModeProps | ExternalUrlModeProps
 
+function resolveFullUrl(props: Props): string {
+  if ('externalUrl' in props && props.externalUrl) {
+    return buildAbsoluteShareUrl(props.externalUrl)
+  }
+  if ('path' in props && props.path) {
+    return buildAbsoluteShareUrl(props.path)
+  }
+  return buildAbsoluteShareUrl(
+    buildTrackSharePath(props.lang, props.source!, props.trackId!, props.weekDate!),
+  )
+}
+
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
   const es = props.lang === 'es'
-  const fullUrl = 'externalUrl' in props && props.externalUrl
-    ? props.externalUrl
-    : `${SITE_URL}${'path' in props && props.path
-        ? props.path
-        : buildTrackSharePath(props.lang, props.source!, props.trackId!, props.weekDate!)}`
+  const fullUrl = resolveFullUrl(props)
 
   async function onClick() {
     const nav = typeof navigator !== 'undefined' ? navigator : null
@@ -74,18 +85,11 @@ export default function TrackShareButton(props: Props) {
         // Cancelación del usuario: silencio. Si es error real, cae al copy.
       }
     }
-    try {
-      await nav?.clipboard?.writeText(fullUrl)
-    } catch {
-      const textarea = document.createElement('textarea')
-      textarea.value = fullUrl
-      document.body.appendChild(textarea)
-      textarea.select()
-      try { document.execCommand('copy') } catch {}
-      document.body.removeChild(textarea)
+    const ok = await copyShareLink(fullUrl)
+    if (ok) {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
     }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
   }
 
   const base =

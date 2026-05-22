@@ -72,7 +72,7 @@ body {
 }
 
 body {
-  font-family: 'Special Elite', monospace;
+  font-family: 'Special Elite', ui-monospace, 'Courier New', Courier, monospace;
   background: var(--paper);
   color: var(--ink);
 }
@@ -259,7 +259,7 @@ body::before {
 }
 
 .sec-title {
-  font-family: 'Unbounded', sans-serif;
+  font-family: 'Unbounded', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-weight: 900;
   font-size: clamp(26px, 7.5vw, 80px);
   line-height: 0.95;

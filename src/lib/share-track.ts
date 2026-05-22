@@ -247,3 +247,69 @@ export function releaseSortTimestampMs(
   }
   return 0
 }
+
+// ─── Social share (client-safe: solo llamar desde componentes 'use client') ───
+
+/** Path relativo (`/es/artists/foo`) o URL absoluta → URL canónica para compartir. */
+export function buildAbsoluteShareUrl(pathOrUrl: string): string {
+  const raw = pathOrUrl.trim()
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
+  const path = raw.startsWith('/') ? raw : `/${raw}`
+  return `${SITE_URL.replace(/\/$/, '')}${path}`
+}
+
+/** Copia texto al portapapeles; devuelve true si tuvo éxito. */
+export async function copyShareLink(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch { /* fallback abajo */ }
+  }
+  if (typeof document === 'undefined') return false
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Facebook: popup con tamaño fijo; si el navegador lo bloquea (o devuelve about:blank), caer a pestaña nueva. */
+export function openFacebookShareDialog(
+  fullUrl: string,
+  e?: { preventDefault(): void },
+): void {
+  e?.preventDefault()
+  if (typeof window === 'undefined') return
+
+  const href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullUrl)}`
+  const width = 626
+  const height = 436
+  const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2))
+  const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2))
+  const features = `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+  const popup = window.open(href, 'fb_share', features)
+
+  if (popup == null) {
+    window.open(href, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  try {
+    popup.opener = null
+    if (popup.location.href === 'about:blank') {
+      popup.close()
+      window.open(href, '_blank', 'noopener,noreferrer')
+    }
+  } catch {
+    // Navegó a facebook.com (cross-origin): popup OK.
+  }
+}

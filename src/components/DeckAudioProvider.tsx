@@ -16,6 +16,7 @@ import {
   type ReactNode,
 } from 'react'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
+import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -227,11 +228,48 @@ export function useDeckAudio() {
   return ctx
 }
 
+/** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
+export function useDeckAudioMaybe(): DeckAudioContextValue | null {
+  return useContext(DeckAudioContext)
+}
+
+/** Para UI global (BackToTop) cuando el provider aún no ha cargado en rutas ligeras. */
+export function useOptionalDeckAudio(): Pick<DeckAudioContextValue, 'sessionActive' | 'mode'> {
+  const ctx = useContext(DeckAudioContext)
+  return {
+    sessionActive: ctx?.sessionActive ?? false,
+    mode: ctx?.mode ?? 'idle',
+  }
+}
+
 /** Acceso tipado a la API del reproductor global de previews. Shortcut
  *  para consumidores (ChartView, BeatportTopTracks, TracksSection…) que
  *  solo necesitan esa porción del contexto. */
 export function usePreviewAudio(): PreviewAudioApi {
-  const ctx = useDeckAudio()
+  const ctx = useContext(DeckAudioContext)
+  if (!ctx) throw new Error('usePreviewAudio must be used within DeckAudioProvider')
+  return {
+    previewMode: ctx.previewQueue.length > 0 ? 'active' : 'idle',
+    previewQueue: ctx.previewQueue,
+    previewIndex: ctx.previewIndex,
+    previewPlaying: ctx.previewPlaying,
+    previewProgress: ctx.previewProgress,
+    previewDuration: ctx.previewDuration,
+    previewGroupKey: ctx.previewGroupKey,
+    previewBlocked: ctx.previewBlocked,
+    playPreviewQueue: ctx.playPreviewQueue,
+    togglePreview: ctx.togglePreview,
+    stopPreview: ctx.stopPreview,
+    previewNext: ctx.previewNext,
+    previewPrev: ctx.previewPrev,
+    seekPreviewToRatio: ctx.seekPreviewToRatio,
+  }
+}
+
+/** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
+export function usePreviewAudioMaybe(): PreviewAudioApi | null {
+  const ctx = useContext(DeckAudioContext)
+  if (!ctx) return null
   return {
     previewMode: ctx.previewQueue.length > 0 ? 'active' : 'idle',
     previewQueue: ctx.previewQueue,
@@ -982,6 +1020,18 @@ export function DeckAudioProvider({
 
   useEffect(() => { trackIdxARef.current = trackIdxA }, [trackIdxA])
   useEffect(() => { trackIdxBRef.current = trackIdxB }, [trackIdxB])
+
+  useEffect(() => {
+    try {
+      if (sessionActive || mode !== 'idle' || previewQueue.length > 0) {
+        sessionStorage.setItem(AUDIO_SESSION_KEY, '1')
+      } else {
+        sessionStorage.removeItem(AUDIO_SESSION_KEY)
+      }
+    } catch {
+      /* sessionStorage no disponible */
+    }
+  }, [sessionActive, mode, previewQueue.length])
 
   // Helper to create and wire an audio element through a GainNode
   const createDeckAudio = useCallback((

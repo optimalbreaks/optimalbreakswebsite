@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { OB_CHART_PLAYALL_BAR_EVENT, useDeckAudio } from '@/components/DeckAudioProvider'
+import { OB_CHART_PLAYALL_BAR_EVENT, useOptionalDeckAudio } from '@/components/DeckAudioProvider'
 
 type Props = {
   ariaLabel?: string
 }
 
 export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
-  const { sessionActive, mode } = useDeckAudio()
+  const { sessionActive, mode } = useOptionalDeckAudio()
   const [isVisible, setIsVisible] = useState(false)
   const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
 

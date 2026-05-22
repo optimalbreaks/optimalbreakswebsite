@@ -16,13 +16,16 @@ import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { usePreviewAudio, type PreviewTrack, type PreviewShareData } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
   formatTrackReleaseDisplay,
   effectiveReleaseYear,
+  buildAbsoluteShareUrl,
+  copyShareLink,
   releaseSortTimestampMs,
   buildBeatportSharePath,
   buildTrackSharePath,
@@ -282,7 +285,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     playPreviewQueue,
     togglePreview,
     stopPreview,
-  } = usePreviewAudio()
+  } = usePreviewAudioGated()
 
   // Key de la pista que actualmente suena desde ESTA lista (si la hay).
   const activeRowKey = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
@@ -767,31 +770,30 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // hooks entre renders y lanza el error #310.
   const shareUrl = useMemo(() => {
     if (isShared || !user) return ''
-    if (typeof window === 'undefined') return ''
-    const origin = window.location.origin
     const handle = user.id // UUID como handle; el endpoint también acepta username
-    return `${origin}/${lang}/u/${handle}/tracks`
+    return buildAbsoluteShareUrl(`/${lang}/u/${handle}/tracks`)
   }, [isShared, user, lang])
 
   const onCopyShareUrl = useCallback(async () => {
     if (!shareUrl) return
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareUrl)
-      } else {
-        const ta = document.createElement('textarea')
-        ta.value = shareUrl
-        ta.style.position = 'fixed'
-        ta.style.opacity = '0'
-        document.body.appendChild(ta)
-        ta.select()
-        document.execCommand('copy')
-        document.body.removeChild(ta)
+    const nav = typeof navigator !== 'undefined' ? navigator : null
+    if (nav?.share) {
+      try {
+        await nav.share({
+          title: es ? 'Mis tracks en Optimal Breaks' : 'My tracks on Optimal Breaks',
+          url: shareUrl,
+        })
+        return
+      } catch {
+        // Cancelado o no disponible → copiar.
       }
+    }
+    const ok = await copyShareLink(shareUrl)
+    if (ok) {
       setCopiedUrl(true)
       setTimeout(() => setCopiedUrl(false), 1800)
-    } catch { /* ignora */ }
-  }, [shareUrl])
+    }
+  }, [shareUrl, es])
 
   if (loading || tracksLoading) {
     return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>

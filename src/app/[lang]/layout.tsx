@@ -4,14 +4,8 @@
 // ============================================
 
 import type { Metadata, Viewport } from 'next'
-import '@fontsource/unbounded/400.css'
 import '@fontsource/unbounded/700.css'
 import '@fontsource/unbounded/900.css'
-import '@fontsource/courier-prime/400.css'
-import '@fontsource/courier-prime/700.css'
-import '@fontsource/darker-grotesque/400.css'
-import '@fontsource/darker-grotesque/700.css'
-import '@fontsource/darker-grotesque/900.css'
 import '@fontsource/special-elite/400.css'
 import '../globals.css'
 import { i18n, type Locale } from '@/lib/i18n-config'
@@ -19,10 +13,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { AuthProvider } from '@/components/AuthProvider'
-import { DeckAudioProvider } from '@/components/DeckAudioProvider'
-import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
-import BackToTop from '@/components/BackToTop'
-import GoogleAnalytics from '@/components/GoogleAnalytics'
+import LazyDeckAudioProvider from '@/components/LazyDeckAudioProvider'
 import nextDynamic from 'next/dynamic'
 import {
   absoluteOgImage,
@@ -36,15 +27,16 @@ import {
 
 const ChartsPromoModal = nextDynamic(() => import('@/components/ChartsPromoModal'), { ssr: false })
 const CookieBanner = nextDynamic(() => import('@/components/CookieBanner'), { ssr: false })
+const DeferredFonts = nextDynamic(() => import('@/components/DeferredFonts'), { ssr: false })
+const BackToTop = nextDynamic(() => import('@/components/BackToTop'), { ssr: false })
+const GoogleAnalytics = nextDynamic(() => import('@/components/GoogleAnalytics'), { ssr: false })
+const ServiceWorkerRegistration = nextDynamic(() => import('@/components/ServiceWorkerRegistration'), { ssr: false })
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#e8dcc8',
 }
-
-/** Datos de Supabase y rutas con contenido vivo: cada petición renderiza de nuevo (no HTML del build). */
-export const dynamic = 'force-dynamic'
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ lang: locale }))
@@ -155,14 +147,15 @@ export default async function LangLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <AuthProvider>
+          <DeferredFonts />
           <Header dict={dict} lang={lang} />
-          <DeckAudioProvider key={lang} lang={lang} dict={deckDict}>
+          <LazyDeckAudioProvider lang={lang} dict={deckDict}>
             <div className="danger-bar" />
             <main className="relative z-[1] min-w-0 w-full max-w-full">{children}</main>
             <div className="danger-bar" />
             <Footer dict={dict} lang={lang} />
             <BackToTop ariaLabel={dict.a11y.backToTop} />
-          </DeckAudioProvider>
+          </LazyDeckAudioProvider>
           <CookieBanner lang={lang} />
           <ChartsPromoModal lang={lang} dict={dict.charts_promo} />
           <ServiceWorkerRegistration />

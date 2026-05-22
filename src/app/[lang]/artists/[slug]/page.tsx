@@ -167,13 +167,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     }
   }
 
+  // `website` (no `profile`): Meta/WhatsApp priorizan og:image del track/ficha;
+  // con `profile` a veces ignoran la carátula y el preview en Facebook queda roto.
   return detailPageMetadata(
     lang,
     `/artists/${slug}`,
     siteName,
     `${meta.name} | ${siteName}`,
     description,
-    'profile',
+    'website',
     ogPortrait,
     keywords,
   )

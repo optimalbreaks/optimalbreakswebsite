@@ -15,7 +15,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
-import { usePreviewAudio, type PreviewTrack, type PreviewShareData } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import {
@@ -221,7 +222,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const {
     previewQueue, previewIndex, previewGroupKey,
     playPreviewQueue, stopPreview,
-  } = usePreviewAudio()
+  } = usePreviewAudioGated()
 
   const isGroupActive = previewGroupKey === groupKey
   const playFromIndex = useCallback((idx: number) => {

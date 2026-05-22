@@ -5,7 +5,8 @@ import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
-import { useDeckAudio, type MixTrack } from '@/components/DeckAudioProvider'
+import { useMixAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { MixTrack } from '@/components/DeckAudioProvider'
 import { buildSoundCloudVisualPlayerSrc, isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import {
   loadSoundCloudWidgetAPI,
@@ -198,7 +199,7 @@ function getMixTrack(m: Mix): MixTrack | null {
 }
 
 function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'xs' }) {
-  const { playMix, currentMix, mixPlaying } = useDeckAudio()
+  const { playMix, currentMix, mixPlaying } = useMixAudioGated()
   const track = getMixTrack(mix)
   if (!track) return null
 
@@ -325,7 +326,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
   // ID del mix cuyo iframe de YouTube debe arrancar con autoplay=1 tras la
   // navegación desde el buscador global (⌘K) con `?play=1`.
   const [autoplayMixId, setAutoplayMixId] = useState<string | null>(null)
-  const { playMix } = useDeckAudio()
+  const { playMix } = useMixAudioGated()
 
   const mf = dict.mix_filter
 
