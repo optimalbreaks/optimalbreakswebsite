@@ -80,10 +80,10 @@ Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated p
 - **Styling**: Tailwind CSS 3.4 + custom CSS variables
 - **Database**: Supabase (PostgreSQL) + Row Level Security
 - **Storage**: Supabase Storage (public bucket `media` for content images — see below)
-- **i18n**: Custom middleware with `/es` and `/en` prefixed routes + hreflang tags; global **deck / mix audio** remounts on locale change (`DeckAudioProvider` `key={lang}` in `[lang]/layout.tsx`) so one playback session per language
-- **Analytics**: Google Analytics 4 via **`@next/third-parties/google`** (`GoogleAnalytics` component) + **Consent Mode v2** aligned with `CookieBanner` (see [Analytics (GA4)](#analytics-google-analytics-4))
-- **Audio**: Web Audio API with scratch simulation
-- **Fonts**: Unbounded, Courier Prime, Special Elite, Darker Grotesque
+- **i18n**: Custom middleware with `/es` and `/en` prefixed routes + hreflang tags; navigating between locales **remounts** the `[lang]` layout (including **`LazyDeckAudioProvider`**) so playback does not bleed across languages once the audio engine is loaded
+- **Analytics**: Google Analytics 4 via **`@next/third-parties/google`** (`GoogleAnalytics` component, **`next/dynamic` `ssr: false`**) + **Consent Mode v2** aligned with `CookieBanner` (see [Analytics (GA4)](#analytics-google-analytics-4))
+- **Audio**: Web Audio API with scratch simulation; **`DeckAudioProvider`** is **lazy-loaded** on first Play (or when resuming an active session) — see [Global audio system](#global-audio-system-lazydeckaudioprovider--deckaudioprovider)
+- **Fonts**: Self-hosted via **`@fontsource`** (no Google Fonts CDN). **Critical path:** Unbounded **latin** 700/900 + preload of the **900** `.woff2` (home H1 / LCP). **Deferred:** Special Elite, Courier Prime, Darker Grotesque, Unbounded 400 via **`DeferredFonts`** (`requestIdleCallback` / timeout). See [Performance & Core Web Vitals](#performance--core-web-vitals)
 
 ---
 
@@ -96,7 +96,7 @@ Optional measurement ID (public env var, safe in the browser):
 Implementation:
 
 - **`src/components/GoogleAnalytics.tsx`** — loads **`GoogleAnalytics`** from **`@next/third-parties/google`** (official Next.js integration: gtag.js + automatic **page_view** tracking on App Router navigations). A small inline **`Script`** runs first to set **Consent Mode v2** defaults (`analytics_storage` and ad-related flags **denied** until the user accepts analytics cookies).
-- **`src/components/CookieBanner.tsx`** — persists choices and dispatches **`ob-cookie-consent`**; `GoogleAnalytics` listens and calls **`gtag('consent', 'update', …)`** when analytics is granted or revoked.
+- **`src/components/CookieBanner.tsx`** — persists choices and dispatches **`ob-cookie-consent`**; `GoogleAnalytics` listens and calls **`gtag('consent', 'update', …)`** when analytics is granted or revoked. Loaded with **`next/dynamic` (`ssr: false`)**; mounts as a **bottom bar** after LCP (waits for `largest-contentful-paint` via `PerformanceObserver`, max ~4.5 s) so it does not compete for LCP on first paint.
 
 CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-analytics.com` in `connect-src` / `script-src` as needed.
 
@@ -147,7 +147,47 @@ Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplo
 
 ---
 
-## Open Graph images & social previews
+## Performance & Core Web Vitals
+
+Optimisations target **mobile Lighthouse** (LCP, CLS, unused JS) without changing product behaviour once the user presses Play.
+
+### Lazy global audio (`LazyDeckAudioProvider`)
+
+**`DeckAudioProvider`** (~1900 lines, preview queue, mini-bars, Web Audio deck) is **not** in the initial JS bundle on most routes. **`LazyDeckAudioProvider`** wraps the app in `src/app/[lang]/layout.tsx` and dynamically `import()`s the real provider when:
+
+1. The user triggers playback (**deck**, **mix**, or **preview**) — via **`useAudioEngineGate().requestLoad(action)`** and **`PendingActionRunner`** (runs the pending action once the provider mounts), or
+2. **`sessionStorage`** key **`ob_audio_active`** is set (audio was active; reloads the engine after navigation or refresh).
+
+Until then, consumers use **gated hooks** that enqueue the first action without throwing:
+
+| Hook | Used by |
+|------|---------|
+| **`usePreviewAudioGated`** (`src/hooks/useGatedDeckAudio.ts`) | `ChartView`, `BeatportTopTracks`, `TracksSection`, `CommunityMonthlyTop` |
+| **`useMixAudioGated`** | `MixesExplorer`, `DashboardMixPlayButton` in `user/shared.tsx` |
+| **`useDjDeckControl`** (inline in `DjDeck.tsx`) | Home DJ deck UI (static placeholder until first Play) |
+
+**`useOptionalDeckAudio`** / **`useDeckAudioMaybe`** return safe defaults when the engine is not mounted (`BackToTop`, etc.).
+
+### Fonts & render-blocking CSS
+
+- **Layout imports:** `@fontsource/unbounded/latin-700.css`, `@fontsource/unbounded/latin-900.css` only (latin subsets, not full multi-script CSS).
+- **Preload:** `<link rel="preload">` for **`unbounded-latin-900-normal.woff2`** (home hero H1 — typical LCP element).
+- **`DeferredFonts`:** loads Special Elite (body/prose), Courier Prime, Darker Grotesque, Unbounded 400 after hydration (Special Elite immediately; others on idle). **`body`** uses monospace fallbacks until Special Elite arrives.
+- **`next.config.js`:** webpack rule `type: 'asset/resource'` for `.woff2` imports used in the preload path.
+
+### Other layout / route optimisations
+
+- **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads).
+- **`ChartsPromoModal`:** `ssr: false`; opens only after **2nd page view** in the session or **40 s** on site — not on first paint.
+- **`BackToTop`**, **`GoogleAnalytics`**, **`ServiceWorkerRegistration`:** dynamic client imports in `[lang]/layout.tsx`.
+- **`/[lang]/history`:** `export const revalidate = 300` (ISR) where applicable.
+- **Removed** `export const dynamic = 'force-dynamic'` from `[lang]/layout.tsx` so static/ISR pages can cache HTML when data allows.
+
+### Home SEO (breakbeat)
+
+- Home metadata and JSON-LD lead with **breakbeat**; visible H1 includes **`sr-only`** “Breakbeat —” plus **OPTIMAL BREAKS** styling; section H2s in dictionaries include **breakbeat** in the highlighted span. See commits on `main` (May 2026).
+
+---
 
 All OG images are declared **1200 × 630 PNG** (Meta's recommended size, `1.91:1`). Sources:
 
@@ -273,8 +313,8 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   │   ├── globals.css         # Global styles, animations, grain overlay
 │   │   ├── layout.tsx          # Root layout with metadata
 │   │   └── [lang]/
-│   │       ├── layout.tsx      # Lang layout: Header + Footer + hreflang
-│   │       ├── page.tsx        # HOME — hero, deck, marquee, timeline, artists, events, CTA
+│   │       ├── layout.tsx      # Lang layout: Header, LazyDeckAudioProvider, deferred fonts, dynamic GA/cookies
+│   │       ├── page.tsx        # HOME — hero, deck (dynamic), marquee, timeline, artists, events, CTA
 │   │       ├── history/        # Full breakbeat history by era
 │   │       ├── artists/        # Artist directory (+ Supabase / fallback)
 │   │       │   ├── layout.tsx  # No fetch/Data Cache; no-store headers for this segment
@@ -309,16 +349,21 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   │   ├── ScenesExplorer.tsx  # Scenes: three views
 │   │   ├── MixesExplorer.tsx   # Mixes: three views, filters, lazy YT/SC embeds
 │   │   ├── CardThumbnail.tsx   # Shared image / placeholder for cards & heroes
-│   │   ├── DjDeck.tsx          # Interactive DJ controller with audio + scratch
+│   │   ├── DjDeck.tsx          # Interactive DJ controller (uses gated deck API until engine loads)
+│   │   ├── LazyDeckAudioProvider.tsx  # Dynamic import gate for DeckAudioProvider
+│   │   ├── PendingActionRunner.tsx    # Runs first play action after engine mounts
+│   │   ├── DeferredFonts.tsx   # Non-critical @fontsource CSS after hydration
+│   │   ├── ChartsPromoModal.tsx # Charts promo; deferred until engagement
 │   │   ├── Marquee.tsx         # Tape strip with infinite scroll
 │   │   ├── Timeline.tsx        # Dark section timeline
 │   │   ├── ArtistCard.tsx      # Home / grid artist card (with thumbnail)
 │   │   ├── EventFlyer.tsx      # Event flyer with tape decoration + thumbnail
 │   │   ├── AuthProvider.tsx    # Supabase auth context
 │   │   ├── GoogleAnalytics.tsx # GA4 via @next/third-parties + Consent Mode v2
-│   │   ├── CookieBanner.tsx    # Cookie UI + consent events for GA
+│   │   ├── CookieBanner.tsx    # Cookie UI + consent events for GA (LCP-deferred bottom bar)
 │   │   └── ShareButtons.tsx    # Social share on detail pages
 │   ├── hooks/
+│   │   ├── useGatedDeckAudio.ts # usePreviewAudioGated / useMixAudioGated
 │   │   └── useUserData.ts      # Favorites, sightings, saved mixes, etc.
 │   ├── dictionaries/
 │   │   ├── en.json             # English translations
@@ -333,6 +378,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   │   ├── artist-entity-match.ts  # Resolve related-artist names → slugs for internal links
 │   │   ├── auth-callback.ts    # Safe redirect paths; parse token_hash from broken callback URLs
 │   │   ├── seo.ts              # Metadata helpers
+│   │   ├── audio-engine-pending.ts  # Pending play actions + sessionStorage key for lazy audio
 │   │   └── security.ts         # Slug / locale sanitization
 │   ├── types/
 │   │   └── database.ts         # Full DB types: artists, labels, events, blog, scenes, mixes, history, profiles, …
@@ -388,7 +434,7 @@ The hero section includes a fully interactive DJ controller:
 - **Tonearms** — move when playing/stopped
 - **Touch support** — works on mobile
 - **Auto-advance** — next track plays when current one ends
-- **Locale switch (ES/EN)** — `DeckAudioProvider` is mounted with **`key={lang}`** in `src/app/[lang]/layout.tsx`. Navigating between `/en` and `/es` **remounts** the audio context (home vinyl deck, mini bar, SoundCloud/mix mode). Playback from the previous locale does **not** continue in the background.
+- **Locale switch (ES/EN)** — navigating between `/en` and `/es` **remounts** the `[lang]` layout (including **`LazyDeckAudioProvider`**). Any in-memory playback state is dropped; if `sessionStorage` still marks an active session, the engine may **reload** on the new locale without restoring the previous queue automatically.
 
 ---
 
@@ -629,9 +675,9 @@ Every song surface (`ChartView`, `TracksSection` and `BeatportTopTracks`) render
 
 ---
 
-## Global audio system (`DeckAudioProvider` + `claimAudio`)
+## Global audio system (`LazyDeckAudioProvider` + `DeckAudioProvider` + `claimAudio`)
 
-All audio in the app is owned by a single provider — **`DeckAudioProvider`**, mounted in `src/app/[lang]/layout.tsx`. It exposes **three mutually-exclusive modes**:
+All audio in the app is owned by a single provider — **`DeckAudioProvider`**, loaded **lazily** through **`LazyDeckAudioProvider`** in `src/app/[lang]/layout.tsx`. Until the engine loads, UI surfaces use **gated hooks** (`usePreviewAudioGated`, `useMixAudioGated`, offline deck controls in `DjDeck`) that call **`requestLoad(action)`** on first Play. Once mounted, the provider exposes **three mutually-exclusive modes**:
 
 | Mode | Origin | Visible component |
 |------|--------|-------------------|
@@ -641,7 +687,7 @@ All audio in the app is owned by a single provider — **`DeckAudioProvider`**, 
 
 ### Persistence across navigation
 
-The **`preview` mode is global**: the queue (`PreviewTrack[]`), the current index, the real `<audio>` element and the now-playing UI all live inside `DeckAudioProvider`. Consumer components (`ChartView`, `BeatportTopTracks`, `TracksSection`) **no longer have their own `<audio>` or floating bar** — they just call `playPreviewQueue(queue, index, groupKey)` / `togglePreview()` / `stopPreview()` via the **`usePreviewAudio`** hook. This means if you start a preview on `/es/artists/adam-freeland` and navigate to `/es/charts` or `/es/mi-cuenta/tracks`, **audio keeps playing** and the `MiniPreviewBar` stays visible (for Beatport/Bandcamp samples). YouTube embeds (vinyl tracks) still stop on navigation since they're third-party iframes.
+The **`preview` mode is global**: the queue (`PreviewTrack[]`), the current index, the real `<audio>` element and the now-playing UI all live inside `DeckAudioProvider`. Consumer components (`ChartView`, `BeatportTopTracks`, `TracksSection`, `CommunityMonthlyTop`) **no longer have their own `<audio>` or floating bar** — they call `playPreviewQueue` / `togglePreview` / `stopPreview` via **`usePreviewAudioGated`** (which delegates to **`usePreviewAudio`** once the engine is mounted). This means if you start a preview on `/es/artists/adam-freeland` and navigate to `/es/charts` or `/es/mi-cuenta/tracks`, **audio keeps playing** and the `MiniPreviewBar` stays visible (for Beatport/Bandcamp samples). YouTube embeds (vinyl tracks) still stop on navigation since they're third-party iframes.
 
 ### How mutual exclusion works
 
@@ -685,7 +731,12 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 | File | Role |
 |------|------|
-| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, `usePreviewAudio` hook, `MiniPreviewBar` (with the in-bar save toggle, the iOS safe-area + 10 px padding, and the `document`-level seek-drag handlers from [Safe navigation while audio is playing](#safe-navigation-while-audio-is-playing)), `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT`. The two `requestAnimationFrame` ticks (preview progress + deck progress) flush React state at most every ~120 ms so high-frequency context updates don't starve `next/link` transitions. Also exports the **`PreviewSaveData`** discriminated union (`mode: 'ref'` / `mode: 'url'`) consumed by every queue producer below. |
+| `src/components/LazyDeckAudioProvider.tsx` | **`AudioEngineGate`**, dynamic `import()` of `DeckAudioProvider`, `useAudioEngineGate()`, session resume via `ob_audio_active`. |
+| `src/components/PendingActionRunner.tsx` | Executes the first queued play action after the provider mounts. |
+| `src/hooks/useGatedDeckAudio.ts` | **`usePreviewAudioGated`**, **`useMixAudioGated`** for pages that must work before the engine loads. |
+| `src/lib/audio-engine-pending.ts` | Types for pending actions + **`AUDIO_SESSION_KEY`**. |
+| `src/components/DeckAudioProvider.tsx` | Context + `<audio>` for `preview`, `playPreviewQueue`/`togglePreview`/`stopPreview`, **`usePreviewAudio`** / **`usePreviewAudioMaybe`**, `MiniPreviewBar` (with the in-bar save toggle, the iOS safe-area + 10 px padding, and the `document`-level seek-drag handlers from [Safe navigation while audio is playing](#safe-navigation-while-audio-is-playing)), `MiniDeckBar`, `claimAudio`, `AudioClaimSource`, `OB_CHART_PLAYALL_BAR_EVENT`. The two `requestAnimationFrame` ticks (preview progress + deck progress) flush React state at most every ~120 ms so high-frequency context updates don't starve `next/link` transitions. Also exports the **`PreviewSaveData`** discriminated union (`mode: 'ref'` / `mode: 'url'`) consumed by every queue producer below. |
+| `src/components/DjDeck.tsx` | Home deck UI; **`useDjDeckControl`** gates play until `requestLoad`. |
 | `src/components/ChartView.tsx` | Weekly chart (`WeekAccordion`, `ChartTrackRow`, `FeaturedPickRow`). Builds `PreviewTrack[]` bundles (with `relatedRefs` from `canonicalGroups` baked into each `save`) and calls `playPreviewQueue`. No local audio. |
 | `src/components/BeatportTopTracks.tsx` | Top 10 accordion. Builds `PreviewTrack[]` (URL-mode `save` with `externalUrl` + snapshot) and calls `playPreviewQueue`. No local audio. |
 | `src/components/CommunityMonthlyTop.tsx` | All-time community top (slug kept for compatibility). Builds `PreviewTrack[]` with mixed-mode `save` (URL for `beatport_top` primaries, ref for the rest) and calls `playPreviewQueue`. |
@@ -793,7 +844,7 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
   - Para los entry-points que se llaman vía `npm run …`: NO se puede usar `NODE_OPTIONS=--use-system-ca` porque **npm rechaza ese flag** (`--use-system-ca is not allowed in NODE_OPTIONS`). Workaround: invocar directamente con `node --use-system-ca scripts/<archivo>.mjs <args>` (saltándose npm), o configurar `NODE_EXTRA_CA_CERTS` a nivel de SO apuntando al `.pem` de la CA del proxy.
   - Alternativa: variable persistente del SO **`NODE_EXTRA_CA_CERTS=C:\ruta\ca-corporativa.pem`** (esa sí la acepta npm).
   - **No recomendado:** `NODE_TLS_REJECT_UNAUTHORIZED=0` (desactiva la verificación TLS para todo el proceso).
-- **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart. Track rows are **visually identical** to `ChartTrackRow` (same `PositionBadge`, artwork size, title/artist/label/year layout, BPM/key badges, BEATPORT button). Playback uses the **global `preview` mode** via `usePreviewAudio` → the persistent `MiniPreviewBar` (see [Global audio system](#global-audio-system-deckaudioprovider--claimaudio)). The **`+`** save button is also wired (same canonical dedupe as charts): saving a Top 10 track adds it to the user's **My Tracks**, and a track saved elsewhere already appears in green here.
+- **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart. Track rows are **visually identical** to `ChartTrackRow` (same `PositionBadge`, artwork size, title/artist/label/year layout, BPM/key badges, BEATPORT button). Playback uses the **global `preview` mode** via **`usePreviewAudioGated`** → the persistent `MiniPreviewBar` (see [Global audio system](#global-audio-system-lazydeckaudioprovider--deckaudioprovider)). The **`+`** save button is also wired (same canonical dedupe as charts): saving a Top 10 track adds it to the user's **My Tracks**, and a track saved elsewhere already appears in green here.
 - **JSON upsert** — Optional `beatport_id` and `beatport_url` on `data/artists/*.json` / label JSON are passed through **`npm run db:artist` / `db:label`** (`scripts/lib/artist-upsert.mjs`, `label-upsert.mjs`). They do **not** include `beatport_top_tracks`; refresh rankings with **`db:beatport:top`** after setting the ID.
 
 ---
@@ -839,7 +890,8 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 - [x] Global search (⌘K `CommandPalette` + `/api/search`: artists, tracks across all charts, mixes, events by lineup, labels, scenes, posts, organizations — see **Global search**)
 - [ ] Richer SoundCloud/YouTube/Mixcloud embeds in mixes section
 - [x] Dynamic sitemap (`src/app/sitemap.ts`, includes `/organizations/*`) + robots rules (`src/app/robots.ts`) for SEO basics
-- [x] Google Analytics 4 (`@next/third-parties/google` + Consent Mode v2 + `CookieBanner`)
+- [x] Google Analytics 4 (`@next/third-parties/google` + Consent Mode v2 + LCP-deferred `CookieBanner`)
+- [x] Core Web Vitals pass (May 2026): lazy `DeckAudioProvider`, deferred fonts, Unbounded 900 preload, charts promo + cookie bar off critical path, home SEO for **breakbeat**
 - [x] OG images per section (home / mixes / charts screenshots; **events = poster itself**; per-track overrides on charts, artists and labels — see *Open Graph images & social previews*)
 - [ ] RSS feed for blog
 - [ ] Newsletter subscription

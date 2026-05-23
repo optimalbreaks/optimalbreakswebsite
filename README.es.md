@@ -33,8 +33,8 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 - **Next.js 14** (App Router), **TypeScript**, **Tailwind** 3.4
 - **Supabase**: PostgreSQL + autenticación + **Storage** (bucket público `media` para fotos de contenido)
 - **Analítica (opcional)**: **Google Analytics 4** con el paquete oficial **`@next/third-parties/google`** y **Consent Mode v2** enlazado al banner de cookies (`CookieBanner` + `GoogleAnalytics`). Detalle en [README.md — Analytics](./README.md#analytics-google-analytics-4) y en la sección [Analítica (GA4)](#analítica-ga4) de este archivo.
-- Rutas `/es` y `/en` con middleware propio; el audio global del **deck / mixes** se **reinicia** al cambiar de idioma (`DeckAudioProvider` con `key={lang}` en `[lang]/layout.tsx`), una sesión por idioma
-- Tipografías: Unbounded, Courier Prime, Special Elite, Darker Grotesque
+- Rutas `/es` y `/en` con middleware propio; al cambiar de idioma se **remonta** el layout `[lang]` (incluido **`LazyDeckAudioProvider`**) — la sesión en memoria no cruza locales
+- Tipografías **self-hosted** (`@fontsource`, sin CDN de Google Fonts): en el camino crítico solo **Unbounded latin 700/900** + **preload** del `.woff2` del 900 (H1 de portada / LCP); **Special Elite**, Courier, Darker Grotesque y Unbounded 400 vía **`DeferredFonts`**. Detalle: [README.md — Performance & Core Web Vitals](./README.md#performance--core-web-vitals)
 
 ---
 
@@ -48,7 +48,18 @@ El bloque oscuro **Timeline** de la portada (`src/components/Timeline.tsx`) toma
 
 ---
 
-## Autenticación y correos (Supabase)
+## Rendimiento y Core Web Vitals (resumen)
+
+Optimizaciones para **Lighthouse móvil** (LCP, CLS, JS no usado) sin cambiar el comportamiento tras pulsar Play.
+
+- **Audio global diferido:** **`LazyDeckAudioProvider`** en el layout; **`DeckAudioProvider`** solo se importa al **primer Play** (deck, mix, preview) o si **`sessionStorage`** (`ob_audio_active`) indica sesión activa. Hooks **`usePreviewAudioGated`** / **`useMixAudioGated`** en charts, Top 10, mixes y Mis Tracks; cabina home con controles offline hasta el primer gesto.
+- **Fuentes:** subsets **latin** de Unbounded en layout + **preload** del woff2 del 900; Special Elite fuera del CSS bloqueante (`DeferredFonts`).
+- **Otros:** `DjDeck` con `dynamic()`; modal de charts solo tras engagement (2ª página o 40 s); GA/SW/BackToTop dinámicos; **`/history`** con revalidate 300; quitado `force-dynamic` del layout global.
+- **SEO home:** metadatos y H2 orientados a **breakbeat** (mayo 2026).
+
+Detalle técnico en inglés: **[README.md — Performance & Core Web Vitals](./README.md#performance--core-web-vitals)**.
+
+---
 
 - **`/{lang}/login`** — registro, entrada y «¿Olvidaste tu contraseña?» (Supabase envía el correo).
 - **`/{lang}/reset-password`** — pantalla donde el usuario **escribe la contraseña nueva** tras un enlace de recuperación válido (es el destino final del flujo).
@@ -69,7 +80,7 @@ Documentación en inglés: [README.md — Authentication](README.md#authenticati
 ## Analítica (GA4)
 
 - Variable **`NEXT_PUBLIC_GA_MEASUREMENT_ID`** (ID de medición `G-…`): en `.env.local` y en **Vercel → Environment Variables** para que producción cargue gtag. Si no está definida, no se carga Google Analytics.
-- Código: **`src/components/GoogleAnalytics.tsx`** (componente `GoogleAnalytics` de `@next/third-parties/google` + script previo de consentimiento) y **`src/components/CookieBanner.tsx`** (evento `ob-cookie-consent` al aceptar o rechazar cookies analíticas).
+- Código: **`src/components/GoogleAnalytics.tsx`** (componente `GoogleAnalytics` de `@next/third-parties/google` + script previo de consentimiento; import dinámico) y **`src/components/CookieBanner.tsx`** (evento `ob-cookie-consent`; barra inferior **diferida** tras LCP — `PerformanceObserver` o máx. ~4,5 s — para no competir con el primer render).
 
 Más contexto (CSP, flujo): [README.md — Analytics](./README.md#analytics-google-analytics-4).
 
@@ -223,7 +234,7 @@ Si la IP del runner está fuertemente bloqueada por CF, el `--headless` también
 El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
 
 4. **Opcional en JSON** — Puedes añadir **`beatport_id`** y **`beatport_url`** en `data/artists/*.json` (o JSON de sellos) para que **`npm run db:artist`** / **`db:label`** los guarden; el **listado Top 10** no va en el JSON: se rellena solo con **`db:beatport:top`**.
-5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque. Las filas de cada track son **visualmente idénticas** a las del chart semanal (`PositionBadge`, artwork, título/artista/sello/año, badges BPM/key, botón BEATPORT). Al pulsar play (individual o "Play All"), se activa la **`MiniPreviewBar` global del `DeckAudioProvider`**: transporte, progreso seekable, info del track. El reproductor usa el modo global **`preview`** (vía `usePreviewAudio` → `playPreviewQueue`), por lo que se excluye mutuamente con el deck de la home y los mixes, y **sigue sonando al navegar** a otras páginas (ver sección [Sistema de audio global](#sistema-de-audio-global-deckaudioprovider--claimaudio)).
+5. **Web** — Si `beatport_top_tracks` tiene entradas, en el **hero** de la ficha aparece el acordeón **`BeatportTopTracks`** (previews vía **`/api/audio-proxy`**). Si está vacío, no se muestra bloque. Las filas de cada track son **visualmente idénticas** a las del chart semanal (`PositionBadge`, artwork, título/artista/sello/año, badges BPM/key, botón BEATPORT). Al pulsar play (individual o "Play All"), se activa la **`MiniPreviewBar` global del `DeckAudioProvider`**: transporte, progreso seekable, info del track. El reproductor usa el modo global **`preview`** (vía **`usePreviewAudioGated`** → `playPreviewQueue` una vez cargado el motor), por lo que se excluye mutuamente con el deck de la home y los mixes, y **sigue sonando al navegar** a otras páginas (ver sección [Sistema de audio global](#sistema-de-audio-global-lazydeckaudioprovider--deckaudioprovider)).
 
 Detalle técnico y relación con el chart semanal: **[README.md — Beatport: weekly chart vs Top 10 on profiles](./README.md#beatport-weekly-chart-vs-top-10-on-profiles)**.
 
@@ -446,9 +457,9 @@ El `useEffect` de `ChartView.tsx` escucha el hash y el parámetro `play`, expand
 
 ---
 
-## Sistema de audio global (`DeckAudioProvider` + `claimAudio`)
+## Sistema de audio global (`LazyDeckAudioProvider` + `DeckAudioProvider` + `claimAudio`)
 
-La app tiene **tres modos de audio** que nunca suenan a la vez, todos gestionados por **`DeckAudioProvider`** (montado en el layout raíz `[lang]/layout.tsx`):
+La app tiene **tres modos de audio** que nunca suenan a la vez, gestionados por **`DeckAudioProvider`**, cargado **en diferido** vía **`LazyDeckAudioProvider`** en `src/app/[lang]/layout.tsx`. Hasta que el motor carga, la UI usa hooks **con gate** (`usePreviewAudioGated`, `useMixAudioGated`, cabina offline en `DjDeck`) que encolan la primera acción con **`requestLoad`**.
 
 | Modo | Origen | Componente visible |
 |------|--------|--------------------|
@@ -458,7 +469,7 @@ La app tiene **tres modos de audio** que nunca suenan a la vez, todos gestionado
 
 ### Persistencia entre rutas
 
-El modo **`preview` es global**: la cola (`PreviewTrack[]`), el índice, el `<audio>` real y toda la UI viven dentro de `DeckAudioProvider`. Los componentes consumidores (`ChartView`, `BeatportTopTracks`, `TracksSection`) ya **no tienen `<audio>` propio** ni barra flotante local — sólo llaman a `playPreviewQueue(queue, index, groupKey)` / `togglePreview()` / `stopPreview()` vía el hook **`usePreviewAudio`**. Resultado: si empiezas a escuchar un track en `/es/artists/adam-freeland` y navegas a `/es/charts` o a `/es/mi-cuenta/tracks`, el audio **sigue sonando** y la `MiniPreviewBar` sigue visible (Beatport y Bandcamp). Los vídeos de YouTube (vinilos) siguen parándose al navegar porque son iframes ajenos.
+El modo **`preview` es global**: la cola (`PreviewTrack[]`), el índice, el `<audio>` real y toda la UI viven dentro de `DeckAudioProvider`. Los componentes consumidores (`ChartView`, `BeatportTopTracks`, `TracksSection`, `CommunityMonthlyTop`) ya **no tienen `<audio>` propio** ni barra flotante local — llaman a `playPreviewQueue` / `togglePreview` / `stopPreview` vía **`usePreviewAudioGated`** (que delega en **`usePreviewAudio`** cuando el motor está montado). Resultado: si empiezas a escuchar un track en `/es/artists/adam-freeland` y navegas a `/es/charts` o a `/es/mi-cuenta/tracks`, el audio **sigue sonando** y la `MiniPreviewBar` sigue visible (Beatport y Bandcamp). Los vídeos de YouTube (vinilos) siguen parándose al navegar porque son iframes ajenos.
 
 ### Exclusión mutua
 
@@ -492,7 +503,7 @@ Si `loadAndPlayPreviewAt` recibe **`NotAllowedError`** (política de autoplay al
 
 La barra sigue emitiendo `OB_CHART_PLAYALL_BAR_EVENT` para que `BackToTop` suba su botón de scroll mientras está visible (su offset también lleva los `+10px` para encajar con la nueva altura).
 
-Detalle técnico y tabla de archivos en [README.md — Global audio system](./README.md#global-audio-system-deckaudioprovider--claimaudio).
+Detalle técnico y tabla de archivos en [README.md — Global audio system](./README.md#global-audio-system-lazydeckaudioprovider--deckaudioprovider).
 
 ---
 
@@ -515,13 +526,13 @@ Aplica `supabase/migrations/` en **orden alfabético**. El README en inglés inc
 
 ## Deck e idioma
 
-Al navegar entre **`/en` y `/es`**, el proveedor de audio se **vuelve a montar** (`key={lang}`): se para el sonido del idioma anterior y el mini reproductor coincide con la sesión actual (mismo criterio si había un mix en curso).
+Al navegar entre **`/en` y `/es`**, se **remonta** el segmento `[lang]` (incluido **`LazyDeckAudioProvider`**). El estado de reproducción en memoria no se conserva entre locales; si `sessionStorage` marca sesión activa, el bundle de audio puede volver a cargarse en el nuevo idioma sin restaurar la cola anterior automáticamente.
 
 ---
 
 ## Roadmap (resumen)
 
-Hecho: Supabase en listados, miniaturas y Storage, auth (login, **`/auth/confirm`**, callback OAuth, recuperación → **`/reset-password`**, plantillas en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies).  
+Hecho: Supabase en listados, miniaturas y Storage, auth (login, **`/auth/confirm`**, callback OAuth, recuperación → **`/reset-password`**, plantillas en `mailing/supabase/`), dashboard, **JSON + `db:artist`**, **`/administrator`**, **vistas de listado** en las cinco secciones de referencia, **sitemap + robots** (`sitemap.ts`, `robots.ts`), segmento `/artists` sin caché agresiva de HTML, **GA4** (`@next/third-parties/google` + Consent Mode y cookies), **optimización CWV** (audio lazy, fuentes diferidas, preload Unbounded 900, banner cookies/modal charts fuera del LCP, SEO home breakbeat).  
 Pendiente: RSS, modo oscuro, etc. Ya hechos: **Búsqueda global** (*Buscador global*), **OG por sección** — home/mixes/charts (screenshots), **eventos = cartel a pantalla completa**, y overrides por canción (ver *Open Graph*).
 
 ---

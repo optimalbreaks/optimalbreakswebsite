@@ -6,15 +6,16 @@
 'use client'
 
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react'
+import { DeckAudioContext } from '@/components/deck-audio-context'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
 import type { Locale } from '@/lib/i18n-config'
@@ -220,22 +221,26 @@ interface DeckAudioContextValue {
   seekPreviewToRatio: (ratio: number) => void
 }
 
-const DeckAudioContext = createContext<DeckAudioContextValue | null>(null)
+export type DeckAudioShellBind = {
+  value: DeckAudioContextValue
+  wrapperPb?: string
+  overlays: ReactNode
+}
 
 export function useDeckAudio() {
-  const ctx = useContext(DeckAudioContext)
+  const ctx = useContext(DeckAudioContext) as DeckAudioContextValue | null
   if (!ctx) throw new Error('useDeckAudio must be used within DeckAudioProvider')
   return ctx
 }
 
 /** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
 export function useDeckAudioMaybe(): DeckAudioContextValue | null {
-  return useContext(DeckAudioContext)
+  return useContext(DeckAudioContext) as DeckAudioContextValue | null
 }
 
 /** Para UI global (BackToTop) cuando el provider aún no ha cargado en rutas ligeras. */
 export function useOptionalDeckAudio(): Pick<DeckAudioContextValue, 'sessionActive' | 'mode'> {
-  const ctx = useContext(DeckAudioContext)
+  const ctx = useContext(DeckAudioContext) as DeckAudioContextValue | null
   return {
     sessionActive: ctx?.sessionActive ?? false,
     mode: ctx?.mode ?? 'idle',
@@ -246,7 +251,7 @@ export function useOptionalDeckAudio(): Pick<DeckAudioContextValue, 'sessionActi
  *  para consumidores (ChartView, BeatportTopTracks, TracksSection…) que
  *  solo necesitan esa porción del contexto. */
 export function usePreviewAudio(): PreviewAudioApi {
-  const ctx = useContext(DeckAudioContext)
+  const ctx = useContext(DeckAudioContext) as DeckAudioContextValue | null
   if (!ctx) throw new Error('usePreviewAudio must be used within DeckAudioProvider')
   return {
     previewMode: ctx.previewQueue.length > 0 ? 'active' : 'idle',
@@ -268,7 +273,7 @@ export function usePreviewAudio(): PreviewAudioApi {
 
 /** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
 export function usePreviewAudioMaybe(): PreviewAudioApi | null {
-  const ctx = useContext(DeckAudioContext)
+  const ctx = useContext(DeckAudioContext) as DeckAudioContextValue | null
   if (!ctx) return null
   return {
     previewMode: ctx.previewQueue.length > 0 ? 'active' : 'idle',
@@ -936,10 +941,15 @@ export function DeckAudioProvider({
   children,
   lang,
   dict,
+  engineOnly,
+  onBind,
 }: {
-  children: ReactNode
+  children?: ReactNode
   lang: Locale
   dict: DeckDict
+  /** Monta solo el motor (sin envolver children) para LazyDeckAudioProvider. */
+  engineOnly?: boolean
+  onBind?: (bind: DeckAudioShellBind) => void
 }) {
   // === Dual-deck audio refs ===
   const audioRefA = useRef<HTMLAudioElement | null>(null)
@@ -1960,22 +1970,47 @@ export function DeckAudioProvider({
     ? 'pb-[calc(4.75rem+env(safe-area-inset-bottom,0px)+10px)] sm:pb-[calc(5rem+env(safe-area-inset-bottom,0px)+10px)]'
     : undefined
 
+  const overlays = useMemo(
+    () => (
+      <>
+        <MiniDeckBar lang={lang} />
+        <PreviewAutoplayOverlay lang={lang} />
+        {scTrackUrl && (
+          <SoundCloudWidget
+            trackUrl={scTrackUrl}
+            onReady={handleScReady}
+            onPlay={handleScPlay}
+            onPause={handleScPause}
+            onFinish={handleScFinish}
+            onProgress={handleScProgress}
+            handleRef={handleScHandleRef}
+          />
+        )}
+      </>
+    ),
+    [
+      lang,
+      scTrackUrl,
+      handleScReady,
+      handleScPlay,
+      handleScPause,
+      handleScFinish,
+      handleScProgress,
+      handleScHandleRef,
+    ],
+  )
+
+  useLayoutEffect(() => {
+    if (!engineOnly || !onBind) return
+    onBind({ value, wrapperPb, overlays })
+  }, [engineOnly, onBind, value, wrapperPb, overlays])
+
+  if (engineOnly) return null
+
   return (
     <DeckAudioContext.Provider value={value}>
       <div className={wrapperPb}>{children}</div>
-      <MiniDeckBar lang={lang} />
-      <PreviewAutoplayOverlay lang={lang} />
-      {scTrackUrl && (
-        <SoundCloudWidget
-          trackUrl={scTrackUrl}
-          onReady={handleScReady}
-          onPlay={handleScPlay}
-          onPause={handleScPause}
-          onFinish={handleScFinish}
-          onProgress={handleScProgress}
-          handleRef={handleScHandleRef}
-        />
-      )}
+      {overlays}
     </DeckAudioContext.Provider>
   )
 }
