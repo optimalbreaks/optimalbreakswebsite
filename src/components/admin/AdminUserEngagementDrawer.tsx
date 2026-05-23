@@ -13,6 +13,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { displayImageUrl } from '@/lib/image-url'
 import {
   adminGetUserEngagement,
   type AdminFavoriteArtist,
@@ -22,6 +24,9 @@ import {
   type AdminSavedTrack,
   type AdminUserEngagement,
 } from '@/lib/admin-api'
+
+/** Marca de sitio cuando no hay carátula (igual que en las vistas públicas). */
+const MISSING_IMAGE_FALLBACK = '/images/opengraph_OB_punk.png'
 
 type Tab = 'favorites' | 'mixes' | 'tracks'
 
@@ -231,16 +236,48 @@ function SectionTitle({ children, count }: { children: React.ReactNode; count: n
   )
 }
 
-function Thumb({ src, alt, square }: { src: string | null; alt: string; square?: boolean }) {
-  const aspect = square ? 'aspect-square' : 'aspect-[4/3]'
+/**
+ * Carátula pequeña para listados del drawer admin.
+ *
+ * Pasa por `next/image` (mismo proxy que usa la sección pública de Tracks):
+ *  - resuelve hotlink-protection de `geo-media.beatport.com` y similares,
+ *  - mantiene el aspect ratio del marco aunque la URL falle,
+ *  - cae al fallback de marca (`opengraph_OB_punk.png`) si no hay `src`
+ *    o si la carga da error.
+ */
+function Thumb({
+  src,
+  alt,
+  fit = 'cover',
+}: {
+  src: string | null
+  alt: string
+  fit?: 'cover' | 'contain'
+}) {
+  const url = displayImageUrl(src)
+  const [broken, setBroken] = useState(false)
+  useEffect(() => {
+    setBroken(false)
+  }, [url])
+
+  const showFallback = !url || broken
+  const finalSrc = showFallback ? MISSING_IMAGE_FALLBACK : (url as string)
+  const objectFit = fit === 'contain' ? 'object-contain' : 'object-cover'
+
   return (
-    <div className={`w-12 h-12 sm:w-14 sm:h-14 shrink-0 ${aspect} overflow-hidden border-[2px] border-[var(--ink)] bg-[var(--paper-dark)]`}>
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} className="w-full h-full object-cover" loading="lazy" />
-      ) : (
-        <div className="w-full h-full bg-[var(--paper-dark)]" />
-      )}
+    <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 overflow-hidden border-[2px] border-[var(--ink)] bg-[var(--paper-dark)]">
+      <Image
+        src={finalSrc}
+        alt={showFallback ? '' : alt}
+        fill
+        sizes="(max-width: 640px) 56px, 64px"
+        className={`${objectFit} object-center`}
+        onError={() => setBroken(true)}
+        unoptimized={false}
+      />
+      {showFallback ? (
+        <div className="absolute inset-0 bg-[var(--paper-dark)]/40 pointer-events-none" aria-hidden />
+      ) : null}
     </div>
   )
 }
@@ -360,7 +397,7 @@ function FavoritesView({
               <ItemRow
                 key={a.id}
                 href={`/${lang}/artists/${a.slug}`}
-                thumb={<Thumb src={a.image_url} alt={a.name_display || a.name} square />}
+                thumb={<Thumb src={a.image_url} alt={a.name_display || a.name} />}
                 primary={a.name_display || a.name}
                 secondary={[a.country, a.era].filter(Boolean).join(' · ') || null}
                 meta={fmtDateShort(a.saved_at)}
@@ -380,7 +417,7 @@ function FavoritesView({
               <ItemRow
                 key={l.id}
                 href={`/${lang}/labels/${l.slug}`}
-                thumb={<Thumb src={l.image_url} alt={l.name} square />}
+                thumb={<Thumb src={l.image_url} alt={l.name} />}
                 primary={l.name}
                 secondary={[l.country, l.founded_year ? `Est. ${l.founded_year}` : null].filter(Boolean).join(' · ') || null}
                 meta={fmtDateShort(l.saved_at)}
@@ -400,7 +437,7 @@ function FavoritesView({
               <ItemRow
                 key={e.id}
                 href={`/${lang}/events/${e.slug}`}
-                thumb={<Thumb src={e.image_url} alt={e.name} />}
+                thumb={<Thumb src={e.image_url} alt={e.name} fit="contain" />}
                 primary={e.name}
                 secondary={[fmtDate(e.date_start), [e.city, e.country].filter(Boolean).join(', ')]
                   .filter(Boolean)
@@ -507,7 +544,7 @@ function TracksView({
             key={`${t.track_source}-${t.track_id}`}
             href={t.canonical_url}
             external
-            thumb={<Thumb src={t.artwork_url} alt={t.title} square />}
+            thumb={<Thumb src={t.artwork_url} alt={t.title} />}
             primary={
               <span>
                 <span
