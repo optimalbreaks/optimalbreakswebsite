@@ -246,6 +246,8 @@ export type AdminSavedTrack = {
   year: number | null
   artwork_url: string | null
   canonical_url: string | null
+  /** Solo para `chart` y `featured`: lunes ISO de la edición; permite construir `/charts?week=…&play=…`. */
+  week_date: string | null
 }
 
 export type AdminUserEngagement =

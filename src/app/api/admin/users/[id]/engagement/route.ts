@@ -247,7 +247,7 @@ export async function GET(
         ? sb
             .from('chart_tracks')
             .select(
-              'id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url',
+              'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url',
             )
             .in('id', chartIds)
         : Promise.resolve({ data: [], error: null }),
@@ -255,7 +255,7 @@ export async function GET(
         ? sb
             .from('chart_featured_tracks')
             .select(
-              'id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform',
+              'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform',
             )
             .in('id', featIds)
         : Promise.resolve({ data: [], error: null }),
@@ -278,6 +278,28 @@ export async function GET(
     const liveVinyl = new Map(
       ((vinylRes.data || []) as Array<{ id: string }>).map((r) => [r.id, r]),
     )
+
+    // Resolvemos week_date de cada chart_edition implicada para que el drawer
+    // construya enlaces internos `/charts?week=...&play=<source>:<id>` en
+    // lugar de mandar al admin fuera del sitio (Beatport, Discogs, etc.).
+    const editionIdSet = new Set<string>()
+    for (const c of (chartRes.data || []) as Array<{ chart_edition_id: string | null }>) {
+      if (c.chart_edition_id) editionIdSet.add(c.chart_edition_id)
+    }
+    for (const f of (featRes.data || []) as Array<{ chart_edition_id: string | null }>) {
+      if (f.chart_edition_id) editionIdSet.add(f.chart_edition_id)
+    }
+    const editionIds = Array.from(editionIdSet)
+    const weekByEdition = new Map<string, string>()
+    if (editionIds.length) {
+      const { data: editions } = await sb
+        .from('chart_editions')
+        .select('id, week_date')
+        .in('id', editionIds)
+      for (const e of ((editions || []) as Array<{ id: string; week_date: string }>)) {
+        weekByEdition.set(e.id, e.week_date)
+      }
+    }
 
     const tracks = saved.map((s) => {
       const snap = (s.snapshot || {}) as Record<string, unknown>
@@ -315,6 +337,12 @@ export async function GET(
             null
       }
 
+      let week_date: string | null = null
+      if (live && (s.track_source === 'chart' || s.track_source === 'featured')) {
+        const eid = (live as Record<string, unknown>).chart_edition_id as string | null | undefined
+        if (eid) week_date = weekByEdition.get(eid) || null
+      }
+
       return {
         track_source: s.track_source,
         track_id: s.track_id,
@@ -327,6 +355,7 @@ export async function GET(
         year,
         artwork_url,
         canonical_url,
+        week_date,
       }
     })
 

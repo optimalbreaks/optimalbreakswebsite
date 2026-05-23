@@ -15,6 +15,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { displayImageUrl } from '@/lib/image-url'
+import { buildTrackSharePath, buildVinylSharePath } from '@/lib/share-track'
+import type { Locale } from '@/lib/i18n-config'
 import {
   adminGetUserEngagement,
   type AdminFavoriteArtist,
@@ -201,7 +203,7 @@ export default function AdminUserEngagementDrawer({
 
           {tab === 'mixes' && mixes ? <MixesView data={mixes} lang={lang} /> : null}
 
-          {tab === 'tracks' && tracks ? <TracksView data={tracks} /> : null}
+          {tab === 'tracks' && tracks ? <TracksView data={tracks} lang={lang} /> : null}
         </div>
       </div>
 
@@ -518,10 +520,43 @@ function trackSourceClass(src: AdminSavedTrack['track_source']): string {
   }
 }
 
+/**
+ * Devuelve el link al que debe llevar la pista, priorizando rutas internas
+ * de Optimal Breaks (la página real donde vive la canción) sobre el enlace
+ * externo a Beatport / Discogs / YouTube. Solo cae a `canonical_url` si la
+ * pista es huérfana sin contexto suficiente para reconstruir el deep-link.
+ *
+ *  - chart    → `/[lang]/charts?week=YYYY-MM-DD&play=chart:<id>`
+ *  - featured → `/[lang]/charts?week=YYYY-MM-DD&play=featured:<id>`
+ *  - vinyl    → `/[lang]/charts?play=vinyl:<id>`
+ *  - beatport_top → no tiene página dedicada en el sitio (vive dentro del Top
+ *    10 de la ficha de artista/sello), así que caemos a `canonical_url`.
+ */
+function trackInternalHref(
+  t: AdminSavedTrack,
+  lang: Locale,
+): { href: string; external: boolean } | null {
+  if (t.is_live && (t.track_source === 'chart' || t.track_source === 'featured')) {
+    return {
+      href: buildTrackSharePath(lang, t.track_source, t.track_id, t.week_date),
+      external: false,
+    }
+  }
+  if (t.is_live && t.track_source === 'vinyl') {
+    return { href: buildVinylSharePath(lang, t.track_id), external: false }
+  }
+  if (t.canonical_url) {
+    return { href: t.canonical_url, external: true }
+  }
+  return null
+}
+
 function TracksView({
   data,
+  lang,
 }: {
   data: Extract<AdminUserEngagement, { type: 'tracks' }>
+  lang: string
 }) {
   if (data.tracks.length === 0) {
     return <EmptyHint>Este usuario no ha guardado ninguna pista.</EmptyHint>
@@ -539,41 +574,44 @@ function TracksView({
         </span>
       </SectionTitle>
       <div className="border-[2px] border-[var(--ink)] bg-[var(--paper)]">
-        {data.tracks.map((t: AdminSavedTrack) => (
-          <ItemRow
-            key={`${t.track_source}-${t.track_id}`}
-            href={t.canonical_url}
-            external
-            thumb={<Thumb src={t.artwork_url} alt={t.title} />}
-            primary={
-              <span>
-                <span
-                  className={`mr-2 inline-block px-1.5 py-[1px] align-middle ${trackSourceClass(t.track_source)}`}
-                  style={{
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: '8px',
-                    fontWeight: 700,
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {trackSourceLabel(t.track_source)}
+        {data.tracks.map((t: AdminSavedTrack) => {
+          const link = trackInternalHref(t, lang as Locale)
+          return (
+            <ItemRow
+              key={`${t.track_source}-${t.track_id}`}
+              href={link?.href}
+              external={link?.external}
+              thumb={<Thumb src={t.artwork_url} alt={t.title} />}
+              primary={
+                <span>
+                  <span
+                    className={`mr-2 inline-block px-1.5 py-[1px] align-middle ${trackSourceClass(t.track_source)}`}
+                    style={{
+                      fontFamily: "'Courier Prime', monospace",
+                      fontSize: '8px',
+                      fontWeight: 700,
+                      letterSpacing: '1px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {trackSourceLabel(t.track_source)}
+                  </span>
+                  {t.title}
+                  {t.mix_name ? <span className="opacity-70"> ({t.mix_name})</span> : null}
                 </span>
-                {t.title}
-                {t.mix_name ? <span className="opacity-70"> ({t.mix_name})</span> : null}
-              </span>
-            }
-            secondary={
-              <span>
-                <strong>{t.artists || '—'}</strong>
-                {t.label ? ` · ${t.label}` : ''}
-                {t.year ? ` · ${t.year}` : ''}
-                {!t.is_live ? <span className="text-[var(--red)]"> · snapshot</span> : null}
-              </span>
-            }
-            meta={fmtDateShort(t.saved_at)}
-          />
-        ))}
+              }
+              secondary={
+                <span>
+                  <strong>{t.artists || '—'}</strong>
+                  {t.label ? ` · ${t.label}` : ''}
+                  {t.year ? ` · ${t.year}` : ''}
+                  {!t.is_live ? <span className="text-[var(--red)]"> · snapshot</span> : null}
+                </span>
+              }
+              meta={fmtDateShort(t.saved_at)}
+            />
+          )
+        })}
       </div>
     </section>
   )
