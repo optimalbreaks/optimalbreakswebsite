@@ -179,3 +179,99 @@ export async function adminUpdateUserRole(id: string, role: 'user' | 'admin'): P
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
   return res.json()
 }
+
+// --- Detalle de engagement (qué hay detrás de los números de la tabla) ---
+
+export type AdminFavoriteArtist = {
+  id: string
+  slug: string
+  name: string
+  name_display: string | null
+  country: string | null
+  image_url: string | null
+  styles: string[] | null
+  era: string | null
+  saved_at: string | null
+}
+
+export type AdminFavoriteLabel = {
+  id: string
+  slug: string
+  name: string
+  country: string | null
+  founded_year: number | null
+  image_url: string | null
+  is_active: boolean | null
+  saved_at: string | null
+}
+
+export type AdminFavoriteEvent = {
+  id: string
+  slug: string
+  name: string
+  date_start: string | null
+  city: string | null
+  country: string | null
+  venue: string | null
+  event_type: string | null
+  image_url: string | null
+  saved_at: string | null
+}
+
+export type AdminSavedMix = {
+  id: string
+  slug: string | null
+  title: string
+  artist_name: string | null
+  mix_type: string | null
+  image_url: string | null
+  video_url: string | null
+  embed_url: string | null
+  platform: string | null
+  published_at: string | null
+  year: number | null
+  duration_minutes: number | null
+  saved_at: string | null
+}
+
+export type AdminSavedTrack = {
+  track_source: 'chart' | 'featured' | 'vinyl' | 'beatport_top'
+  track_id: string
+  saved_at: string | null
+  is_live: boolean
+  title: string
+  mix_name: string | null
+  artists: string
+  label: string | null
+  year: number | null
+  artwork_url: string | null
+  canonical_url: string | null
+}
+
+export type AdminUserEngagement =
+  | {
+      type: 'favorites'
+      counts: { artists: number; labels: number; events: number; total: number }
+      artists: AdminFavoriteArtist[]
+      labels: AdminFavoriteLabel[]
+      events: AdminFavoriteEvent[]
+    }
+  | {
+      type: 'mixes'
+      counts: { total: number }
+      mixes: AdminSavedMix[]
+    }
+  | {
+      type: 'tracks'
+      counts: { total: number; chart: number; featured: number; vinyl: number; beatport_top: number }
+      tracks: AdminSavedTrack[]
+    }
+
+export async function adminGetUserEngagement(
+  userId: string,
+  type: 'favorites' | 'mixes' | 'tracks',
+): Promise<AdminUserEngagement> {
+  const res = await fetch(`${BASE}/users/${userId}/engagement?type=${type}`)
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
