@@ -512,6 +512,34 @@ function MiniPlayerShell({
   const moveListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const upListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
 
+  // iOS PWA standalone: tras lock/unlock o cambio de barra del sistema, el
+  // `visualViewport` puede desincronizarse con `position: fixed; bottom: 0`
+  // y dejar la barra "flotando" en mitad de la pantalla. Compensamos con un
+  // offset calculado a partir de `visualViewport.offsetTop + height`.
+  const [vvOffset, setVvOffset] = useState(0)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+    const vv = window.visualViewport
+    let raf = 0
+    const update = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const diff = window.innerHeight - (vv.height + vv.offsetTop)
+        setVvOffset(diff > 0.5 ? Math.round(diff) : 0)
+      })
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    window.addEventListener('pageshow', update)
+    return () => {
+      cancelAnimationFrame(raf)
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      window.removeEventListener('pageshow', update)
+    }
+  }, [])
+
   const seek = useCallback((clientX: number) => {
     if (!duration) return
     const bar = barRef.current
@@ -595,11 +623,16 @@ function MiniPlayerShell({
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
+      className="fixed inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={ariaLabel}
       style={{
         fontFamily: "'Courier Prime', monospace",
+        // `bottom` dinámico: en navegador normal y la mayoría de PWAs vale 0;
+        // en iOS standalone tras lock/unlock compensamos el desfase del
+        // `visualViewport` para que la barra siga pegada al borde visible
+        // de la pantalla en lugar de quedar flotando a mitad de página.
+        bottom: vvOffset ? `${vvOffset}px` : 0,
         // Safe area para el notch / home-bar iOS y la barra del navegador
         // móvil + 10px extra. En iPhones (sobre todo la home-bar) el
         // `safe-area-inset-bottom` por sí solo deja los botones de
@@ -607,6 +640,9 @@ function MiniPlayerShell({
         // colchón fijo de 10px para que el play/pause y los ⏮ ⏭ no se
         // sientan recortados.
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)',
+        // Hint al compositor para evitar reflow del resto al desplazar el
+        // bottom durante un resize del visual viewport.
+        willChange: 'transform',
       }}
     >
       <MiniBarHeader subtitle={subtitle} live />

@@ -11,6 +11,17 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
   const { sessionActive, mode } = useOptionalDeckAudio()
   const [isVisible, setIsVisible] = useState(false)
   const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
+  const [vvOffset, setVvOffset] = useState(0)
+  const [isSm, setIsSm] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia('(min-width: 640px)')
+    const sync = () => setIsSm(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   const bottomBarVisible =
     sessionActive || mode !== 'idle' || chartPlayAllBar
@@ -26,7 +37,6 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      // Show button when page is scrolled down 300px
       if (window.scrollY > 300) {
         setIsVisible(true)
       } else {
@@ -38,6 +48,32 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
     return () => window.removeEventListener('scroll', toggleVisibility)
   }, [])
 
+  // iOS PWA standalone: compensa el desfase del visualViewport tras lock/unlock
+  // para que el botón siga anclado al borde visible (igual lógica que el
+  // reproductor en `MiniPlayerShell`).
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+    const vv = window.visualViewport
+    let raf = 0
+    const update = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const diff = window.innerHeight - (vv.height + vv.offsetTop)
+        setVvOffset(diff > 0.5 ? Math.round(diff) : 0)
+      })
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    window.addEventListener('pageshow', update)
+    return () => {
+      cancelAnimationFrame(raf)
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+      window.removeEventListener('pageshow', update)
+    }
+  }, [])
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -47,15 +83,19 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
 
   if (!isVisible) return null
 
+  const baseBottom = isSm
+    ? bottomBarVisible
+      ? 'calc(7rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      : 'calc(2rem + env(safe-area-inset-bottom, 0px))'
+    : bottomBarVisible
+      ? 'calc(6.75rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))'
+
   return (
     <button
       type="button"
       onClick={scrollToTop}
-      className={`fixed right-4 sm:right-8 z-[200] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation ${
-        bottomBarVisible
-          ? 'bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px)+10px)] sm:bottom-[calc(7rem+env(safe-area-inset-bottom,0px)+10px)]'
-          : 'bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(2rem+env(safe-area-inset-bottom,0px))]'
-      }`}
+      className="fixed right-4 sm:right-8 z-[200] bg-[var(--yellow)] text-[var(--ink)] border-4 border-[var(--ink)] w-12 h-12 flex items-center justify-center transition-all duration-200 hover:bg-[var(--red)] hover:text-white hover:-translate-y-1 shadow-[4px_4px_0_var(--ink)] cursor-pointer touch-manipulation"
       style={{
         fontFamily: "'Courier Prime', monospace",
         fontSize: '20px',
@@ -63,7 +103,10 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
         WebkitAppearance: 'none',
         MozAppearance: 'none',
         appearance: 'none',
-        color: 'var(--ink)' /* Forzamos el color para que no se ponga blanco en iOS/Safari */
+        color: 'var(--ink)',
+        bottom: vvOffset
+          ? `calc(${baseBottom} + ${vvOffset}px)`
+          : baseBottom,
       }}
       aria-label={ariaLabel}
     >
