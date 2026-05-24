@@ -32,6 +32,11 @@ import FavoriteButton from '@/components/FavoriteButton'
 import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
+import {
+  fetchArtistRelatedContent,
+  normalizeTrackTitleKey,
+  resolveRecommendedMixHref,
+} from '@/lib/artist-related-content'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -218,9 +223,10 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     )
   }
 
-  const [{ data: labelRows }, allArtistLinkRows] = await Promise.all([
+  const [{ data: labelRows }, allArtistLinkRows, relatedContent] = await Promise.all([
     supabase.from('labels').select('name, slug'),
     fetchAllArtistLinkRows(supabase),
+    fetchArtistRelatedContent(supabase, artist, lang),
   ])
 
   const labelSlugByName = new Map<string, string>()
@@ -258,6 +264,35 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const portraitAlt = portraitAltBits.join(' · ')
   const keyReleases = (artist.key_releases || []) as ArtistKeyRelease[]
   const labelsArr = artist.labels_founded || []
+  const recommendedMixes = artist.recommended_mixes || []
+  const { chartLinks, mixLinks, upcomingEvents, trackHrefByTitle } = relatedContent
+  const hasOnSiteBlock =
+    chartLinks.length > 0 || mixLinks.length > 0 || upcomingEvents.length > 0
+  const hasLinksBlock =
+    Boolean(artist.website?.trim()) ||
+    Boolean(artist.beatport_url?.trim()) ||
+    Boolean(artist.socials && Object.keys(artist.socials).length > 0)
+  const beatportInSocials = Object.keys(artist.socials || {}).some(
+    (k) => k.toLowerCase() === 'beatport',
+  )
+
+  const sidebarHeadingStyle = {
+    fontFamily: "'Darker Grotesque', sans-serif",
+    fontWeight: 900,
+    fontSize: '16px',
+    color: 'var(--yellow)',
+    marginBottom: '8px',
+    marginTop: 0,
+  } as const
+  const sidebarRowStyle = {
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '12px',
+    color: 'rgba(232,220,200,0.6)',
+  } as const
+  const sidebarLinkStyle = {
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '12px',
+  } as const
 
   return (
     <>
@@ -358,24 +393,126 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
 
           {/* Sidebar */}
           <div className="p-6 sm:p-8 bg-[var(--ink)] text-[var(--paper)]">
+            {/* Cross-links dinámicos: charts, mixes, eventos futuros */}
+            {hasOnSiteBlock && (
+              <div className="mb-6">
+                <h2 style={sidebarHeadingStyle}>
+                  {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
+                </h2>
+                {chartLinks.map((link) => (
+                  <div key={`chart-${link.id}-${link.kind}`} className="py-2 border-b border-dashed border-white/10">
+                    <Link
+                      href={link.href}
+                      className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                      style={{ ...sidebarLinkStyle, fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
+                    >
+                      {link.title}
+                    </Link>
+                    <div style={{ ...sidebarRowStyle, fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px', marginTop: '2px' }}>
+                      {link.subtitle}
+                    </div>
+                  </div>
+                ))}
+                {mixLinks.map((mix) => (
+                  <div key={`mix-${mix.slug}`} className="py-2 border-b border-dashed border-white/10">
+                    <Link
+                      href={mix.href}
+                      className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                      style={{ ...sidebarLinkStyle, fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
+                    >
+                      {lang === 'es' ? 'Mix' : 'Mix'}: {mix.title}
+                    </Link>
+                    {mix.year && (
+                      <div style={{ ...sidebarRowStyle, fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px', marginTop: '2px' }}>
+                        {mix.year}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {upcomingEvents.map((ev) => (
+                  <div key={`event-${ev.slug}`} className="py-2 border-b border-dashed border-white/10">
+                    <Link
+                      href={ev.href}
+                      className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                      style={{ ...sidebarLinkStyle, fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
+                    >
+                      {ev.name}
+                    </Link>
+                    <div style={{ ...sidebarRowStyle, fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px', marginTop: '2px' }}>
+                      {[
+                        ev.dateStart
+                          ? new Date(`${ev.dateStart.slice(0, 10)}T12:00:00`).toLocaleDateString(
+                              lang === 'es' ? 'es-ES' : 'en-GB',
+                              { day: 'numeric', month: 'short', year: 'numeric' },
+                            )
+                          : null,
+                        ev.city,
+                        lang === 'es' ? 'Próximo evento' : 'Upcoming event',
+                      ].filter(Boolean).join(' · ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Essential tracks */}
             {artist.essential_tracks?.length > 0 && (
               <div className="mb-6">
-                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
+                <h2 style={sidebarHeadingStyle}>
                   {lang === 'es' ? 'TRACKS ESENCIALES' : 'ESSENTIAL TRACKS'}
                 </h2>
-                {artist.essential_tracks.map((t: string, i: number) => (
-                  <div key={i} className="py-1 border-b border-dashed border-white/10" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'rgba(232,220,200,0.6)' }}>
-                    {t}
-                  </div>
-                ))}
+                {artist.essential_tracks.map((t: string, i: number) => {
+                  const chartHref = trackHrefByTitle.get(normalizeTrackTitleKey(t))
+                  return (
+                    <div key={i} className="py-1 border-b border-dashed border-white/10" style={sidebarRowStyle}>
+                      {chartHref ? (
+                        <Link
+                          href={chartHref}
+                          className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                          style={sidebarLinkStyle}
+                        >
+                          {t}
+                        </Link>
+                      ) : (
+                        t
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Recommended mixes (editorial) */}
+            {recommendedMixes.length > 0 && (
+              <div className="mb-6">
+                <h2 style={sidebarHeadingStyle}>
+                  {lang === 'es' ? 'MIXES RECOMENDADOS' : 'RECOMMENDED MIXES'}
+                </h2>
+                {recommendedMixes.map((mixLabel: string, i: number) => {
+                  const mixHref = resolveRecommendedMixHref(mixLabel, mixLinks)
+                  return (
+                    <div key={i} className="py-1 border-b border-dashed border-white/10" style={sidebarRowStyle}>
+                      {mixHref ? (
+                        <Link
+                          href={mixHref}
+                          className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                          style={sidebarLinkStyle}
+                        >
+                          {mixLabel}
+                        </Link>
+                      ) : (
+                        mixLabel
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
 
             {/* Key releases */}
             {keyReleases.length > 0 && (
               <div className="mb-6">
-                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
+                <h2 style={sidebarHeadingStyle}>
                   {lang === 'es' ? 'LANZAMIENTOS CLAVE' : 'KEY RELEASES'}
                 </h2>
                 {keyReleases.map((r, i) => (
@@ -396,7 +533,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Labels founded */}
             {labelsArr.length > 0 && (
               <div className="mb-6">
-                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
+                <h2 style={sidebarHeadingStyle}>
                   {lang === 'es' ? 'SELLOS FUNDADOS' : 'LABELS FOUNDED'}
                 </h2>
                 <div className="flex flex-wrap gap-1">
@@ -436,7 +573,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             {/* Related artists (excluye nombres que coinciden con sellos en BD) */}
             {relatedArtistsForDisplay.length > 0 && (
               <div className="mb-6">
-                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>
+                <h2 style={sidebarHeadingStyle}>
                   {lang === 'es' ? 'ARTISTAS RELACIONADOS' : 'RELATED ARTISTS'}
                 </h2>
                 <div className="flex flex-col gap-0">
@@ -480,15 +617,20 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
             )}
 
             {/* Socials / Links */}
-            {artist.socials && Object.keys(artist.socials).length > 0 && (
+            {hasLinksBlock && (
               <div>
-                <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '16px', color: 'var(--yellow)', marginBottom: '8px', marginTop: 0 }}>LINKS</h2>
+                <h2 style={sidebarHeadingStyle}>LINKS</h2>
                 {artist.website && (
                   <a href={artist.website} target="_blank" rel="noopener noreferrer" className="block py-1 text-[var(--cyan)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                     WEB →
                   </a>
                 )}
-                {Object.entries(artist.socials).map(([key, url]) => (
+                {artist.beatport_url && !beatportInSocials && (
+                  <a href={artist.beatport_url} target="_blank" rel="noopener noreferrer" className="block py-1 text-[var(--cyan)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    BEATPORT →
+                  </a>
+                )}
+                {Object.entries(artist.socials || {}).map(([key, url]) => (
                   <a key={key} href={url as string} target="_blank" rel="noopener noreferrer" className="block py-1 text-[var(--cyan)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                     {key} →
                   </a>
