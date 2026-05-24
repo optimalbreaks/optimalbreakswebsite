@@ -12,6 +12,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { displayImageUrl } from '@/lib/image-url'
@@ -77,6 +78,11 @@ export default function AdminUserEngagementDrawer({
   const [favorites, setFavorites] = useState<Extract<AdminUserEngagement, { type: 'favorites' }> | null>(null)
   const [mixes, setMixes] = useState<Extract<AdminUserEngagement, { type: 'mixes' }> | null>(null)
   const [tracks, setTracks] = useState<Extract<AdminUserEngagement, { type: 'tracks' }> | null>(null)
+  /** El layout `[lang]` envuelve todo en `<main className="relative z-[1]">` y el `<Footer>` también lleva `z-[1]`; eso atrapa cualquier `z-index` interno y el footer dibuja por encima del drawer. Renderizar con un portal a `document.body` escapa ese contexto de apilamiento. */
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const load = useCallback(
     async (which: Tab) => {
@@ -123,7 +129,9 @@ export default function AdminUserEngagementDrawer({
     }
   }, [favorites, mixes, tracks])
 
-  return (
+  if (!mounted) return null
+
+  const node = (
     <div
       className="fixed inset-0 z-[1000] flex items-stretch justify-end"
       role="dialog"
@@ -215,6 +223,8 @@ export default function AdminUserEngagementDrawer({
       `}</style>
     </div>
   )
+
+  return createPortal(node, document.body)
 }
 
 /* ---------- Subvistas ---------- */
