@@ -41,6 +41,8 @@ export type ArtistChartLink = {
   position: number | null
   subtitle: string
   href: string
+  artistsText: string
+  artistNames: string[]
 }
 
 export type ArtistMixLink = {
@@ -73,7 +75,21 @@ type ChartRow = {
   label: string | null
   position?: number | null
   year?: number | null
+  artists?: unknown
   chart_editions?: { week_date: string } | { week_date: string }[] | null
+}
+
+function extractArtistNames(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const names: string[] = []
+  for (const a of raw) {
+    if (typeof a === 'string' && a.trim()) names.push(a.trim())
+    else if (a && typeof a === 'object') {
+      const n = (a as { name?: unknown }).name
+      if (typeof n === 'string' && n.trim()) names.push(n.trim())
+    }
+  }
+  return names
 }
 
 function weekDateFromRow(row: ChartRow): string | null {
@@ -123,6 +139,7 @@ function dedupeChartRows(
   featuredRows: ChartRow[],
   vinylRows: ChartRow[],
   lang: Locale,
+  cap = 8,
 ): ArtistChartLink[] {
   const seen = new Set<string>()
   const out: ArtistChartLink[] = []
@@ -138,6 +155,7 @@ function dedupeChartRows(
     const position = kind === 'chart' ? (row.position ?? null) : null
     const year = kind === 'vinyl' ? (row.year ?? null) : null
     const displayTitle = mix ? `${title} (${mix})` : title
+    const artistNames = extractArtistNames(row.artists)
 
     out.push({
       id: row.id,
@@ -147,6 +165,8 @@ function dedupeChartRows(
       position,
       subtitle: chartSubtitle(kind, lang, position, weekDate, year),
       href: buildChartHref(lang, row.id, weekDate, kind),
+      artistsText: artistNames.join(', '),
+      artistNames,
     })
   }
 
@@ -154,7 +174,7 @@ function dedupeChartRows(
   for (const row of featuredRows) push(row, 'featured')
   for (const row of vinylRows) push(row, 'vinyl')
 
-  return out.slice(0, 8)
+  return out.slice(0, cap)
 }
 
 function artistSearchTerms(name: string, nameDisplay: string | null | undefined): string[] {
@@ -188,20 +208,20 @@ export async function fetchArtistRelatedContent(
       .limit(6),
     supabase
       .from('chart_tracks')
-      .select('id, title, mix_name, label, position, chart_editions!inner(week_date)')
+      .select('id, title, mix_name, label, position, artists, chart_editions!inner(week_date)')
       .ilike('artist_names_text', ilike)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .order('position', { ascending: true })
       .limit(20),
     supabase
       .from('chart_featured_tracks')
-      .select('id, title, mix_name, label, chart_editions!inner(week_date)')
+      .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
       .ilike('artist_names_text', ilike)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(20),
     supabase
       .from('chart_vinyl_tracks')
-      .select('id, title, mix_name, label, year')
+      .select('id, title, mix_name, label, year, artists')
       .ilike('artist_names_text', ilike)
       .limit(10),
     supabase
@@ -245,6 +265,45 @@ export async function fetchArtistRelatedContent(
   }))
 
   return { chartLinks, mixLinks, upcomingEvents, trackHrefByTitle }
+}
+
+export async function fetchLabelChartLinks(
+  supabase: SupabaseClient<Database>,
+  label: { name: string },
+  lang: Locale,
+): Promise<ArtistChartLink[]> {
+  const primaryTerm = escIlike(label.name)
+  if (primaryTerm.length < 2) return []
+  const ilike = `%${primaryTerm}%`
+
+  const [chartRes, featuredRes, vinylRes] = await Promise.all([
+    supabase
+      .from('chart_tracks')
+      .select('id, title, mix_name, label, position, artists, chart_editions!inner(week_date)')
+      .ilike('label', ilike)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+      .order('position', { ascending: true })
+      .limit(24),
+    supabase
+      .from('chart_featured_tracks')
+      .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
+      .ilike('label', ilike)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+      .limit(24),
+    supabase
+      .from('chart_vinyl_tracks')
+      .select('id, title, mix_name, label, year, artists')
+      .ilike('label', ilike)
+      .limit(12),
+  ])
+
+  return dedupeChartRows(
+    (chartRes.data || []) as unknown as ChartRow[],
+    (featuredRes.data || []) as unknown as ChartRow[],
+    (vinylRes.data || []) as unknown as ChartRow[],
+    lang,
+    12,
+  )
 }
 
 /** Intenta enlazar un texto editorial de mix con una fila del catálogo. */

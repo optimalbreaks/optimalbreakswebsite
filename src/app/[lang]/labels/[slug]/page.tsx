@@ -4,6 +4,14 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
+import { createSimpleSupabase } from '@/lib/supabase'
+import {
+  buildArtistSlugLookup,
+  fetchAllArtistLinkRows,
+  normalizeForEntityMatch,
+  resolveArtistSlug,
+} from '@/lib/artist-entity-match'
+import { fetchLabelChartLinks } from '@/lib/artist-related-content'
 import {
   breadcrumbJsonLd,
   countryNameFromCode,
@@ -115,6 +123,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function LabelDetailPage({ params }: Props) {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
+  const readSupabase = createSimpleSupabase()
   const { data: rawLabel } = await supabase
     .from('labels')
     .select('*, organization:organizations!labels_organization_id_fkey(slug, name)')
@@ -123,14 +132,19 @@ export default async function LabelDetailPage({ params }: Props) {
   const label = rawLabel as LabelPageRow | null
 
   const artistSlugs = new Map<string, string>()
-  if (label?.key_artists?.length) {
-    const { data: matchedArtists } = await supabase
-      .from('artists')
-      .select('name, slug')
-      .in('name', label.key_artists)
-    const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
-    for (const a of rows) artistSlugs.set(a.name, a.slug)
-  }
+  const [{ data: matchedArtists }, allArtistLinkRows, labelChartLinks] = await Promise.all([
+    label?.key_artists?.length
+      ? supabase.from('artists').select('name, slug').in('name', label.key_artists)
+      : Promise.resolve({ data: [] as Pick<Artist, 'name' | 'slug'>[] }),
+    fetchAllArtistLinkRows(readSupabase),
+    label ? fetchLabelChartLinks(readSupabase, { name: label.name }, lang) : Promise.resolve([]),
+  ])
+  const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
+  for (const a of rows) artistSlugs.set(a.name, a.slug)
+  const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+  const keyArtistsInCharts = new Set(
+    labelChartLinks.flatMap((link) => link.artistNames.map((n) => normalizeForEntityMatch(n))),
+  )
 
   if (!label) {
     return (
@@ -281,14 +295,69 @@ export default async function LabelDetailPage({ params }: Props) {
         ))}
       </div>
 
+      {labelChartLinks.length > 0 && (
+        <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
+          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px', marginTop: 0 }}>
+            {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
+          </h2>
+          {labelChartLinks.map((link) => (
+            <div key={`${link.kind}-${link.id}`} className="py-2 border-b border-dashed border-white/10 last:border-b-0">
+              <Link
+                href={link.href}
+                className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
+              >
+                {link.title}
+              </Link>
+              <div
+                className="flex flex-wrap items-baseline gap-x-1 gap-y-0 mt-1"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px' }}
+              >
+                {link.artistNames.length > 0 ? (
+                  <>
+                    {link.artistNames.map((artistName, ai) => {
+                      const artistSlug = resolveArtistSlug(artistName, artistSlugByName)
+                      const showComma = ai < link.artistNames.length - 1
+                      return (
+                        <span key={`${link.id}-artist-${ai}`} className="inline-flex items-baseline gap-x-0">
+                          {artistSlug ? (
+                            <Link
+                              href={`/${lang}/artists/${artistSlug}`}
+                              className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px' }}
+                            >
+                              {artistName}
+                            </Link>
+                          ) : (
+                            <span>{artistName}</span>
+                          )}
+                          {showComma && <span aria-hidden>,&nbsp;</span>}
+                        </span>
+                      )
+                    })}
+                    <span aria-hidden>&nbsp;·&nbsp;</span>
+                  </>
+                ) : null}
+                <span>{link.subtitle}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {label.key_artists?.length > 0 && (
         <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
           <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px', marginTop: 0 }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</h2>
           <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => {
-            const artistSlug = artistSlugs.get(a)
+            const artistSlug = artistSlugs.get(a) || resolveArtistSlug(a, artistSlugByName)
+            const inCharts = keyArtistsInCharts.has(normalizeForEntityMatch(a))
             return artistSlug
-              ? <Link key={i} href={`/${lang}/artists/${artistSlug}`} className="cutout red no-underline">{a}</Link>
-              : <span key={i} className="cutout red">{a}</span>
+              ? (
+                <Link key={i} href={`/${lang}/artists/${artistSlug}`} className="cutout red no-underline" title={inCharts ? (lang === 'es' ? 'Aparece en charts de Optimal Breaks' : 'Featured in Optimal Breaks charts') : undefined}>
+                  {a}{inCharts ? ' ★' : ''}
+                </Link>
+              )
+              : <span key={i} className="cutout red">{a}{inCharts ? ' ★' : ''}</span>
           })}</div>
         </div>
       )}
