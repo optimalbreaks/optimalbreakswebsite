@@ -18,6 +18,7 @@ import {
 import { DeckAudioContext } from '@/components/deck-audio-context'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
+import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -512,33 +513,15 @@ function MiniPlayerShell({
   const moveListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const upListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
 
-  // iOS PWA standalone: tras lock/unlock o cambio de barra del sistema, el
+  // iOS PWA standalone: tras lock/unlock, orientación, foco perdido (Web
+  // Share / volver de Facebook…) o cambio de barra del sistema, el
   // `visualViewport` puede desincronizarse con `position: fixed; bottom: 0`
-  // y dejar la barra "flotando" en mitad de la pantalla. Compensamos con un
-  // offset calculado a partir de `visualViewport.offsetTop + height`.
-  const [vvOffset, setVvOffset] = useState(0)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return
-    const vv = window.visualViewport
-    let raf = 0
-    const update = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const diff = window.innerHeight - (vv.height + vv.offsetTop)
-        setVvOffset(diff > 0.5 ? Math.round(diff) : 0)
-      })
-    }
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    window.addEventListener('pageshow', update)
-    return () => {
-      cancelAnimationFrame(raf)
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-      window.removeEventListener('pageshow', update)
-    }
-  }, [])
+  // y dejar la barra "flotando" en mitad de la pantalla. El hook compensa
+  // con la diferencia entre `innerHeight` y `visualViewport.height + offsetTop`,
+  // escuchando además `visibilitychange` / `focus` (que es cuando ocurre el
+  // caso de Web Share desde la PWA) y re-midiendo a 80/250/600 ms tras cada
+  // "despertar" porque iOS tarda algunos frames en reportar el valor real.
+  const vvOffset = useViewportBottomOffset()
 
   const seek = useCallback((clientX: number) => {
     if (!duration) return

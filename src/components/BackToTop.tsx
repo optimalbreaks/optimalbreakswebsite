@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { OB_CHART_PLAYALL_BAR_EVENT, useOptionalDeckAudio } from '@/components/DeckAudioProvider'
+import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 
 type Props = {
   ariaLabel?: string
@@ -11,7 +12,7 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
   const { sessionActive, mode } = useOptionalDeckAudio()
   const [isVisible, setIsVisible] = useState(false)
   const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
-  const [vvOffset, setVvOffset] = useState(0)
+  const vvOffset = useViewportBottomOffset()
   const [isSm, setIsSm] = useState(false)
 
   useEffect(() => {
@@ -46,32 +47,6 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
 
     window.addEventListener('scroll', toggleVisibility)
     return () => window.removeEventListener('scroll', toggleVisibility)
-  }, [])
-
-  // iOS PWA standalone: compensa el desfase del visualViewport tras lock/unlock
-  // para que el botón siga anclado al borde visible (igual lógica que el
-  // reproductor en `MiniPlayerShell`).
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return
-    const vv = window.visualViewport
-    let raf = 0
-    const update = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const diff = window.innerHeight - (vv.height + vv.offsetTop)
-        setVvOffset(diff > 0.5 ? Math.round(diff) : 0)
-      })
-    }
-    update()
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    window.addEventListener('pageshow', update)
-    return () => {
-      cancelAnimationFrame(raf)
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-      window.removeEventListener('pageshow', update)
-    }
   }, [])
 
   const scrollToTop = () => {
