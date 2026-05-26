@@ -16,6 +16,62 @@ import CardThumbnail from '@/components/CardThumbnail'
 type Props = { params: { lang: Locale; slug: string } }
 type SceneSeoRow = Pick<Scene, 'name_en' | 'name_es' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function linkSceneDescriptionHtml(
+  html: string,
+  lang: Locale,
+  artistSlugs: Map<string, string>,
+  labelSlugs: Map<string, string>,
+) {
+  const entries = [
+    ...Array.from(artistSlugs.entries()).flatMap(([name, slug]) => {
+      const href = `/${lang}/artists/${slug}`
+      const aliases = name.startsWith('The ') ? [name.slice(4)] : []
+      return [name, ...aliases].map((alias) => ({ name: alias, href }))
+    }),
+    ...Array.from(labelSlugs.entries()).flatMap(([name, slug]) => {
+      const href = `/${lang}/labels/${slug}`
+      const aliases = name.endsWith(' Records') ? [name.slice(0, -8)] : []
+      return [name, ...aliases].map((alias) => ({ name: alias, href }))
+    }),
+  ]
+    .filter(({ name }) => name.trim().length > 2)
+    .sort((a, b) => b.name.length - a.name.length)
+
+  const byName = new Map<string, string>()
+  for (const { name, href } of entries) {
+    const key = name.toLocaleLowerCase()
+    if (!byName.has(key)) byName.set(key, href)
+  }
+
+  const names = Array.from(byName.keys()).sort((a, b) => b.length - a.length)
+  if (!names.length) return html
+
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])(${names.map(escapeRegExp).join('|')})(?=$|[^\\p{L}\\p{N}])`, 'giu')
+  let insideAnchor = false
+
+  return html
+    .split(/(<[^>]+>)/g)
+    .map((part) => {
+      if (part.startsWith('<')) {
+        if (/^<a\b/i.test(part)) insideAnchor = true
+        if (/^<\/a>/i.test(part)) insideAnchor = false
+        return part
+      }
+      if (insideAnchor) return part
+
+      return part.replace(pattern, (match, prefix: string, name: string) => {
+        const href = byName.get(name.toLocaleLowerCase())
+        if (!href) return match
+        return `${prefix}<a href="${href}">${name}</a>`
+      })
+    })
+    .join('')
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
   const supabase = createServerSupabase()
@@ -75,6 +131,9 @@ export default async function SceneDetailPage({ params }: Props) {
   const sceneName = lang === 'es' ? scene.name_es : scene.name_en
   const sceneDescription = lang === 'es' ? scene.description_es : scene.description_en
   const sceneBodyIsHtml = descriptionLooksLikeHtml(sceneDescription)
+  const linkedSceneDescription = sceneBodyIsHtml
+    ? linkSceneDescriptionHtml(sceneDescription ?? '', lang, artistSlugs, labelSlugs)
+    : sceneDescription
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
@@ -104,7 +163,7 @@ export default async function SceneDetailPage({ params }: Props) {
       {sceneBodyIsHtml ? (
         <article
           className="max-w-[700px] mb-8 prose-ob prose-ob-blog text-[var(--ink)]"
-          dangerouslySetInnerHTML={{ __html: sceneDescription ?? '' }}
+          dangerouslySetInnerHTML={{ __html: linkedSceneDescription ?? '' }}
         />
       ) : (
         <div className="max-w-[700px] mb-8 space-y-5">

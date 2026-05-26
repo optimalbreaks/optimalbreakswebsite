@@ -1,0 +1,105 @@
+{
+  "week_date": "2026-05-25",
+  "picks": [
+    {
+      "title": "Places",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Slip187"
+        },
+        {
+          "name": "NeuroziZ"
+        },
+        {
+          "name": "G$Montana"
+        },
+        {
+          "name": "GN"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/places/28787115",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9e9c6d98-2b50-42a1-b118-932ed666a0cb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/25afef24-2490-4810-b64e-78ae5ae43e90.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Push This Vibe SIDE A",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "ESSIGI"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/push-this-vibe-side-a/29066589",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e1de48b-0162-4227-9028-b25f81c13b1a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4c8333d8-88a9-4fb9-985e-0bc3576c49fd.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "1961",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bzrnt"
+        },
+        {
+          "name": "BlidZer"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/1961/27444077",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/23e0d15f-2660-4f94-9d10-e22f6128e2ba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c11af724-52a9-4c14-960d-826041985691.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Back On The Keep",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Vital Drums"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-on-the-keep/26850916",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a79c6f46-fd8e-4746-a0cd-14c5547985cf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a6468065-c4c5-4f40-87e7-e881bebfa028.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    }
+  ]
+}

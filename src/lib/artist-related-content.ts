@@ -5,6 +5,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
+import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
 
 function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
@@ -58,12 +59,14 @@ export type ArtistEventLink = {
   dateStart: string
   city: string | null
   href: string
+  isUpcoming: boolean
 }
 
 export type ArtistRelatedContent = {
   chartLinks: ArtistChartLink[]
   mixLinks: ArtistMixLink[]
-  upcomingEvents: ArtistEventLink[]
+  /** Próximos primero; después eventos recientes (12 meses). */
+  artistEvents: ArtistEventLink[]
   /** Título normalizado → href en /charts (para tracks esenciales). */
   trackHrefByTitle: Map<string, string>
 }
@@ -177,29 +180,120 @@ function dedupeChartRows(
   return out.slice(0, cap)
 }
 
-function artistSearchTerms(name: string, nameDisplay: string | null | undefined): string[] {
+function artistSearchTerms(
+  artist: { name: string; name_display?: string | null; slug?: string },
+): string[] {
   const terms = new Set<string>()
-  for (const raw of [name, nameDisplay]) {
-    const t = escIlike((raw || '').trim())
-    if (t.length >= 2) terms.add(t)
+  const addTerm = (raw: string) => {
+    const t = escIlike(raw.trim())
+    if (t.length < 2) return
+    terms.add(t)
+    const depref = escIlike(t.replace(/^(dj|mc|the)\s+/i, '').trim())
+    if (depref.length >= 2) terms.add(depref)
   }
+  addTerm(artist.name)
+  if (artist.name_display) addTerm(artist.name_display)
+  if (artist.slug) addTerm(artist.slug.replace(/-/g, ' '))
   return Array.from(terms)
+}
+
+function buildArtistMatchKeys(
+  artist: { name: string; name_display?: string | null; slug?: string },
+): Set<string> {
+  const keys = new Set<string>()
+  for (const term of artistSearchTerms(artist)) {
+    const n = normalizeForEntityMatch(term)
+    if (n.length >= 2) keys.add(n)
+  }
+  return keys
+}
+
+function orIlikeFilter(column: string, terms: string[]): string {
+  return terms.map((t) => `${column}.ilike.%${t}%`).join(',')
+}
+
+type EventRow = {
+  slug: string
+  name: string
+  date_start: string | null
+  city: string | null
+  lineup?: unknown
+  stages?: unknown
+}
+
+function collectLineupNames(lineup: unknown, stages: unknown): string[] {
+  const out = new Set<string>()
+  if (Array.isArray(lineup)) {
+    for (const n of lineup) if (typeof n === 'string' && n.trim()) out.add(n)
+  }
+  if (Array.isArray(stages)) {
+    for (const st of stages) {
+      const sl = (st as { lineup?: unknown })?.lineup
+      if (Array.isArray(sl)) {
+        for (const n of sl) if (typeof n === 'string' && n.trim()) out.add(n)
+      }
+    }
+  }
+  return Array.from(out)
+}
+
+function lineupEntryMatchesArtist(lineupName: string, matchKeys: Set<string>): boolean {
+  const n = normalizeForEntityMatch(lineupName)
+  if (!n) return false
+  if (matchKeys.has(n)) return true
+  const depref = n.replace(/^(dj|mc|the)\s+/, '')
+  return depref !== n && matchKeys.has(depref)
+}
+
+function eventRowMatchesArtist(row: EventRow, matchKeys: Set<string>): boolean {
+  return collectLineupNames(row.lineup, row.stages).some((name) =>
+    lineupEntryMatchesArtist(name, matchKeys),
+  )
+}
+
+function mapArtistEvents(
+  rows: EventRow[],
+  matchKeys: Set<string>,
+  base: (path: string) => string,
+  isUpcoming: boolean,
+  cap: number,
+  seenSlugs: Set<string>,
+): ArtistEventLink[] {
+  const out: ArtistEventLink[] = []
+  for (const e of rows) {
+    if (out.length >= cap) break
+    if (!eventRowMatchesArtist(e, matchKeys)) continue
+    if (seenSlugs.has(e.slug)) continue
+    seenSlugs.add(e.slug)
+    out.push({
+      slug: e.slug,
+      name: e.name,
+      dateStart: e.date_start || '',
+      city: e.city ?? null,
+      href: base(`/events/${e.slug}`),
+      isUpcoming,
+    })
+  }
+  return out
 }
 
 export async function fetchArtistRelatedContent(
   supabase: SupabaseClient<Database>,
-  artist: { id: string; name: string; name_display?: string | null },
+  artist: { id: string; name: string; name_display?: string | null; slug: string },
   lang: Locale,
 ): Promise<ArtistRelatedContent> {
   const base = (path: string) => `/${lang}${path}`
   const todayIso = new Date().toISOString().slice(0, 10)
-  const terms = artistSearchTerms(artist.name, artist.name_display)
-  const primaryTerm = terms[0] || escIlike(artist.name)
-  const ilike = `%${primaryTerm}%`
+  const pastCutoff = new Date()
+  pastCutoff.setFullYear(pastCutoff.getFullYear() - 1)
+  const pastCutoffIso = pastCutoff.toISOString().slice(0, 10)
+  const terms = artistSearchTerms(artist)
+  const matchKeys = buildArtistMatchKeys(artist)
+  const artistNamesOr = orIlikeFilter('artist_names_text', terms)
+  const lineupOr = orIlikeFilter('lineup_text', terms)
+  const mixOr = [`artist_id.eq.${artist.id}`, ...terms.map((t) => `artist_name.ilike.%${t}%`)].join(',')
 
-  const mixOr = [`artist_id.eq.${artist.id}`, `artist_name.ilike.${ilike}`].join(',')
-
-  const [mixesRes, chartRes, featuredRes, vinylRes, eventsRes] = await Promise.all([
+  const [mixesRes, chartRes, featuredRes, vinylRes, upcomingEventsRes, pastEventsRes] = await Promise.all([
     supabase
       .from('mixes')
       .select('slug, title, year')
@@ -209,28 +303,36 @@ export async function fetchArtistRelatedContent(
     supabase
       .from('chart_tracks')
       .select('id, title, mix_name, label, position, artists, chart_editions!inner(week_date)')
-      .ilike('artist_names_text', ilike)
+      .or(artistNamesOr)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .order('position', { ascending: true })
       .limit(20),
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
-      .ilike('artist_names_text', ilike)
+      .or(artistNamesOr)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(20),
     supabase
       .from('chart_vinyl_tracks')
       .select('id, title, mix_name, label, year, artists')
-      .ilike('artist_names_text', ilike)
+      .or(artistNamesOr)
       .limit(10),
     supabase
       .from('events')
-      .select('slug, name, date_start, city')
-      .ilike('lineup_text', ilike)
+      .select('slug, name, date_start, city, lineup, stages')
+      .or(lineupOr)
       .gte('date_start', todayIso)
       .order('date_start', { ascending: true })
-      .limit(5),
+      .limit(20),
+    supabase
+      .from('events')
+      .select('slug, name, date_start, city, lineup, stages')
+      .or(lineupOr)
+      .lt('date_start', todayIso)
+      .gte('date_start', pastCutoffIso)
+      .order('date_start', { ascending: false })
+      .limit(12),
   ])
 
   const chartLinks = dedupeChartRows(
@@ -256,15 +358,27 @@ export async function fetchArtistRelatedContent(
     href: base(`/mixes/${m.slug}`),
   }))
 
-  const upcomingEvents: ArtistEventLink[] = (eventsRes.data || []).map((e) => ({
-    slug: e.slug,
-    name: e.name,
-    dateStart: e.date_start || '',
-    city: e.city ?? null,
-    href: base(`/events/${e.slug}`),
-  }))
+  const seenEventSlugs = new Set<string>()
+  const artistEvents = [
+    ...mapArtistEvents(
+      (upcomingEventsRes.data || []) as EventRow[],
+      matchKeys,
+      base,
+      true,
+      5,
+      seenEventSlugs,
+    ),
+    ...mapArtistEvents(
+      (pastEventsRes.data || []) as EventRow[],
+      matchKeys,
+      base,
+      false,
+      4,
+      seenEventSlugs,
+    ),
+  ]
 
-  return { chartLinks, mixLinks, upcomingEvents, trackHrefByTitle }
+  return { chartLinks, mixLinks, artistEvents, trackHrefByTitle }
 }
 
 export async function fetchLabelChartLinks(

@@ -1937,6 +1937,94 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 86
+    },
+    {
+      "title": "Chill Breaks.",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Miguel con G"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/chill-breaks/29056840",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/14d691a9-27ea-46ac-b035-3b29d02f4023.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fb13b942-3482-4c02-9501-b90d8dc8c945.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "LockJaw Rhythm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "LucyLondon"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lockjaw-rhythm/27186546",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2a7c0ea2-f087-463b-8f4f-bb06d9cba634.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9414905a-b867-499d-a28f-c05d8d22ce91.LOFI.mp3",
+      "bpm": 141,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
+    },
+    {
+      "title": "Industrial Citrus",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "3D-L"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/industrial-citrus/29065216",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/133f2197-a47d-40a7-912e-c9ffb7dec9a1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/53e1384b-53a8-4161-82b3-4854b9edcdad.LOFI.mp3",
+      "bpm": 89,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
+    },
+    {
+      "title": "Another Dimension",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "3D-L"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/another-dimension/29065217",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/133f2197-a47d-40a7-912e-c9ffb7dec9a1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c29f68b8-dfc9-41cf-9a65-2b0639d44338.LOFI.mp3",
+      "bpm": 129,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90
     }
   ]
 }

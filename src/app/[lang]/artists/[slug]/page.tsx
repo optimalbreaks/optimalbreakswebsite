@@ -265,9 +265,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const keyReleases = (artist.key_releases || []) as ArtistKeyRelease[]
   const labelsArr = artist.labels_founded || []
   const recommendedMixes = artist.recommended_mixes || []
-  const { chartLinks, mixLinks, upcomingEvents, trackHrefByTitle } = relatedContent
+  const { chartLinks, mixLinks, artistEvents, trackHrefByTitle } = relatedContent
   const hasOnSiteBlock =
-    chartLinks.length > 0 || mixLinks.length > 0 || upcomingEvents.length > 0
+    chartLinks.length > 0 || mixLinks.length > 0 || artistEvents.length > 0
   const hasLinksBlock =
     Boolean(artist.website?.trim()) ||
     Boolean(artist.beatport_url?.trim()) ||
@@ -429,8 +429,8 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                     )}
                   </div>
                 ))}
-                {upcomingEvents.map((ev) => (
-                  <div key={`event-${ev.slug}`} className="py-2 border-b border-dashed border-white/10">
+                {artistEvents.map((ev) => (
+                  <div key={`event-${ev.slug}-${ev.isUpcoming ? 'up' : 'past'}`} className="py-2 border-b border-dashed border-white/10">
                     <Link
                       href={ev.href}
                       className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
@@ -447,7 +447,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                             )
                           : null,
                         ev.city,
-                        lang === 'es' ? 'Próximo evento' : 'Upcoming event',
+                        ev.isUpcoming
+                          ? (lang === 'es' ? 'Próximo evento' : 'Upcoming event')
+                          : (lang === 'es' ? 'Evento reciente' : 'Recent event'),
                       ].filter(Boolean).join(' · ')}
                     </div>
                   </div>

@@ -96,14 +96,69 @@ Layout: The label name "${row.name}" as dominant typographic element. Include su
 Mood: Record store, vinyl stacks, label catalog energy. Use abstract shapes, vinyl grooves, press stamps, halftone patterns. No photographs of real people. Bold typography only.`
 }
 
+const SCENE_IMAGE_SUFFIX =
+  ' Formato panorámico 16:9, fotografía hiperrealista editorial, nitidez alta, sin texto legible ni logotipos ni marcas de agua. Personas solo anónimas, lejanas, de espaldas o desenfocadas. Evita subexponer: debe haber detalle en sombras. Sin collage gráfico, sin tipografía, sin pósters legibles.'
+
+/** Referencias visuales por escena territorial (memoria de club, no cartel gráfico). */
+const SCENE_VISUAL_BY_SLUG = {
+  'uk-breakbeat': `Sujeto:
+Interior de warehouse rave británico o club underground londinense: stacks de sound system, humo ligero, luces láser cyan y magenta, vigas industriales, sensación de rave UK 1990s–2000s sin iconos turísticos obvios.
+
+Ambiente y detalle:
+Vinilos y fundas genéricas fuera de foco, cableado, atmósfera de Fabric/Camden/pirate radio — cultura soundsystem y breakbeat hardcore.`,
+  'us-breaks': `Sujeto:
+Club nocturno de Florida o costa oeste estadounidense: neón cálido, palmeras borrosas al fondo, energía electro-breaks y bass rave americana, sensación Orlando/Miami/Tampa sin carteles legibles.
+
+Ambiente y detalle:
+Luces de festival regional, bocinas potentes, ambiente húmedo nocturno típico de breaks estadounidenses.`,
+  'andalusian-breakbeat': `Sujeto:
+Noche andaluza en recinto multitudinario o plaza adaptada a sesión: calor mediterráneo, luces cálidas ámbar y rojo, multitud joven anónima de espaldas, sensación de fenómeno de masas Sevilla/Málaga/Cádiz 1992–2002.
+
+Ambiente y detalle:
+Arquitectura española borrosa al fondo, energía de radio club y cultura juvenil andaluza del breakbeat sin referencias a tragedias concretas.`,
+  'australian-breaks': `Sujeto:
+Festival o club australiano de breaks: estructura industrial al aire libre o hangar, luz crepuscular, sensación Perth/Melbourne/Sydney, Breakfest y escena persistente post-2001.
+
+Ambiente y detalle:
+Polvo en el aire, rig de luces robusto, mezcla entre paisaje oceánico distante y cultura de club australiana.`,
+  'russian-eastern-europe': `Sujeto:
+Warehouse o club de Moscú/San Petersburgo: arquitectura industrial soviética desenfocada, interior frío con contraste cálido de luces de pista, escena breaks ruso-oriental 2000s–presente.
+
+Ambiente y detalle:
+Radio club, comunidad online y festival dedicado sugeridos por equipamiento y multitud anónima, sin banderas ni símbolos políticos legibles.`,
+  'latin-america-breaks': `Sujeto:
+Rooftop o club latinoamericano nocturno (Ciudad de México, Bogotá o Buenos Aires sugeridos de forma genérica): luces vibrantes, mezcla digital-era y cultura de club local, escena emergente 2010s–presente.
+
+Ambiente y detalle:
+Laptop y mesa de mezclas en penumbra, skyline urbano latino desenfocado, conexión global con sonidos UK bass/breaks.`,
+}
+
 function buildScenePrompt(row) {
   const nameEn = row.name_en || row.name_es || 'Scene'
   const country = row.country || ''
+  const region = row.region || ''
   const era = row.era || ''
-  return `Create a striking 1200×630 OpenGraph social media preview image for the breakbeat music scene "${nameEn}".
-Style direction: Bold neo-brutalist editorial with punk zine aesthetic. Palette: cream (#e8dcc8), black (#1a1a1a), red (#d62828), optional cyan (#00b4d8) or yellow (#f0c808).
-Layout: "${nameEn}" as dominant headline. Visual references to ${country ? `the ${country} scene` : 'underground music culture'}${era ? `, era: ${era}` : ''}. "OPTIMAL BREAKS" small bottom-left, "www.optimalbreaks.com" bottom-right.
-Mood: Regional identity, local club culture, city skyline abstractions, map fragments. No real people photos. Geometric patterns, halftone dots, bold stencil type.`
+  const place = [region, country].filter(Boolean).join(', ')
+  const visual =
+    SCENE_VISUAL_BY_SLUG[row.slug] ||
+    `Sujeto:
+Escena nocturna de club breakbeat en ${place || 'un territorio concreto'}, atmósfera auténtica de cultura de pista y memoria local.
+
+Ambiente y detalle:
+Luces de cabina, humo ligero, equipo de DJ anónimo, multitud desenfocada de espaldas.`
+
+  return `Imagen fotográfica hiperrealista de calidad editorial para la escena territorial de breakbeat "${nameEn}"${place ? ` (${place})` : ''}${era ? `, era ${era}` : ''}.
+
+${visual}
+
+Encuadre y composición:
+Plano amplio cinematográfico 16:9, profundidad de campo selectiva, composición equilibrada para tarjeta editorial web de archivo musical.
+
+Iluminación y color:
+Iluminación documental de nightlife con contraste realista y color grading cinematográfico acorde al territorio.
+
+Estilo:
+Fotoperiodismo musical, hiperrealismo editorial, sensación de cultura de club, archivo vivo y memoria de escena.${SCENE_IMAGE_SUFFIX}`
 }
 
 function buildBlogPrompt(row) {
@@ -127,7 +182,7 @@ const SELECT_FIELDS = {
   artists: 'slug, name, name_display, country, styles, era, og_image_url',
   events: 'slug, name, city, country, venue, event_type, date_start, og_image_url',
   labels: 'slug, name, country, founded_year, og_image_url',
-  scenes: 'slug, name_en, name_es, country, era, og_image_url',
+  scenes: 'slug, name_en, name_es, country, region, era, og_image_url',
   blog_posts: 'slug, title_en, title_es, category, og_image_url',
 }
 
