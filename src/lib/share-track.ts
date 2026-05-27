@@ -184,8 +184,10 @@ export function upscaleTrackArtworkForOg(
 export function publicOgArtworkUrl(rawUrl: string | null | undefined): string | null {
   const u = upscaleTrackArtworkForOg(rawUrl)?.trim()
   if (!u) return null
-  if (!/geo-media\.beatport\.com/i.test(u)) return u
-  return `${SITE_URL}/api/og/image-proxy?${new URLSearchParams({ src: u })}`
+  if (/geo-media\.beatport\.com/i.test(u) || /i\.discogs\.com/i.test(u)) {
+    return `${SITE_URL}/api/og/image-proxy?${new URLSearchParams({ src: u })}`
+  }
+  return u
 }
 
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */

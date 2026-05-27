@@ -42,6 +42,7 @@
     "db:chart:featured": "node scripts/chart-featured-upsert.mjs",
     "db:chart:backfill-new-releases": "node scripts/backfill-new-releases-from-40breaks.mjs",
     "db:chart:vinyl": "node scripts/chart-vinyl-upsert.mjs",
+    "db:chart:vinyl:discogs": "node scripts/chart-vinyl-from-discogs.mjs",
     "db:beatport:top": "node scripts/beatport-top-tracks.mjs",
     "images:to-webp": "node scripts/convert-public-image-to-webp.mjs",
     "og:generate": "node scripts/generar-og-image.mjs",

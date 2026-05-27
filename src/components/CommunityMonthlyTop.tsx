@@ -28,6 +28,8 @@ import {
 } from '@/lib/share-track'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
+const COMMUNITY_TOP_LIMIT = 100
+
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
 
@@ -128,12 +130,13 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [shuffleMode, setShuffleMode] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/public/charts/community-monthly`, { cache: 'no-store' })
+      const res = await fetch(`/api/public/charts/community-monthly?limit=${COMMUNITY_TOP_LIMIT}`, { cache: 'no-store' })
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         throw new Error(j.error || `HTTP ${res.status}`)
@@ -225,15 +228,41 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   } = usePreviewAudioGated()
 
   const isGroupActive = previewGroupKey === groupKey
-  const playFromIndex = useCallback((idx: number) => {
-    if (previewBundle.length === 0) return
-    playPreviewQueue(previewBundle, idx, groupKey)
-  }, [previewBundle, playPreviewQueue, groupKey])
+  const playFromIndex = useCallback((bundleIdx: number) => {
+    const rowKey = previewBundle[bundleIdx]?.rowKey
+    if (!rowKey) return
+    const baseQueue = shuffleMode && isGroupActive ? previewQueue : previewBundle
+    const idx = baseQueue.findIndex((m) => m.rowKey === rowKey)
+    if (idx < 0) {
+      setShuffleMode(false)
+      playPreviewQueue(previewBundle, bundleIdx, groupKey)
+      return
+    }
+    if (!shuffleMode || !isGroupActive) setShuffleMode(false)
+    playPreviewQueue(baseQueue, idx, groupKey)
+  }, [previewBundle, previewQueue, shuffleMode, isGroupActive, playPreviewQueue, groupKey])
+
+  const onStop = useCallback(() => {
+    stopPreview()
+    setShuffleMode(false)
+  }, [stopPreview])
 
   const onPlayAll = useCallback(() => {
-    if (isGroupActive) stopPreview()
-    else playFromIndex(0)
-  }, [isGroupActive, stopPreview, playFromIndex])
+    if (previewBundle.length === 0) return
+    setShuffleMode(false)
+    playPreviewQueue(previewBundle, 0, groupKey)
+  }, [previewBundle, playPreviewQueue, groupKey])
+
+  const onPlayShuffle = useCallback(() => {
+    if (previewBundle.length === 0) return
+    const queue = [...previewBundle]
+    for (let i = queue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[queue[i], queue[j]] = [queue[j], queue[i]]
+    }
+    setShuffleMode(true)
+    playPreviewQueue(queue, 0, groupKey)
+  }, [previewBundle, playPreviewQueue, groupKey])
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
 
@@ -244,13 +273,13 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] mb-3"
           style={{ fontFamily: "'Courier Prime', monospace" }}
         >
-          {cm.kicker || 'TOP DE LA COMUNIDAD'}
+          {cm.kicker || 'TOP 100 DE LA COMUNIDAD'}
         </span>
         <h2
           className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
           style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
         >
-          {cm.title || 'Top de la comunidad'}
+          {cm.title || 'Top 100 de la comunidad'}
         </h2>
         <p
           className="text-sm sm:text-base text-[var(--ink)]/60"
@@ -277,23 +306,43 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             </span>
           )}
           {previewBundle.length > 0 && (
-            <button
-              type="button"
-              onClick={onPlayAll}
-              className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
-                ${isGroupActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white'}`}
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-              title={isGroupActive ? c.stop_all_title : c.play_all_title}
-            >
-              {isGroupActive ? c.stop_all : c.play_all}
-              {isGroupActive && (
+            isGroupActive ? (
+              <button
+                type="button"
+                onClick={onStop}
+                className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--red)] text-white transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+                title={c.stop_all_title}
+              >
+                {c.stop_all}
                 <span className="text-[9px] font-bold opacity-80 tabular-nums">
                   {c.play_all_counter
                     .replace('{current}', String(previewIndex + 1))
                     .replace('{total}', String(previewQueue.length))}
                 </span>
-              )}
-            </button>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onPlayAll}
+                  className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={c.play_all_title}
+                >
+                  {c.play_all}
+                </button>
+                <button
+                  type="button"
+                  onClick={onPlayShuffle}
+                  className="inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--uv)] text-white hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={cm.play_shuffle_title || c.play_all_title}
+                >
+                  {cm.play_shuffle || '⇄ SHUFFLE'}
+                </button>
+              </>
+            )
           )}
         </div>
 

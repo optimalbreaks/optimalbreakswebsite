@@ -503,8 +503,8 @@
     "vinyl_format_label": "Format",
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
-      "kicker": "COMMUNITY TOP",
-      "title": "Community top",
+      "kicker": "COMMUNITY TOP 100",
+      "title": "Community Top 100",
       "subtitle": "The most-saved tracks across the whole Optimal Breaks community. All-time ranking — no polls, no votes, just real saves.",
       "scope_label": "Scope",
       "all_time": "All time",
@@ -513,7 +513,9 @@
       "error": "Could not load the top",
       "empty": "No community saves yet. Save your first tracks and come back.",
       "saves_tooltip": "People who saved this track",
-      "repeats": "{n} saves total"
+      "repeats": "{n} saves total",
+      "play_shuffle": "⇄ SHUFFLE",
+      "play_shuffle_title": "Play previews in random order"
     }
   },
   "charts_promo": {
@@ -524,13 +526,13 @@
       "<strong>40 Breaks Vitales</strong> — weekly chart curated from Beatport's Top 100.",
       "<strong>New Releases</strong> — weekly pick of fresh breakbeat drops.",
       "<strong>Retro Vinyl Picks</strong> — historic breakbeat vinyl, sorted by year.",
-      "<strong>Community Top</strong> — the ranking that comes from your saves.",
+      "<strong>Community Top 100</strong> — the ranking that comes from your saves.",
       "<strong>Challenge:</strong> save your 10 essentials to «My Tracks»."
     ],
     "cta_primary": "Listen now",
     "cta_secondary": "Maybe later",
     "close": "Close",
-    "image_alt": "Punk brutalist fanzine poster promoting Optimal Breaks' breakbeat charts: 40 Breaks Vitales, weekly chart, new releases, retro vinyl picks and community top."
+    "image_alt": "Punk brutalist fanzine poster promoting Optimal Breaks' breakbeat charts: 40 Breaks Vitales, weekly chart, new releases, retro vinyl picks and community top 100."
   },
   "mixes": {
     "title": "Mixes & Sets",

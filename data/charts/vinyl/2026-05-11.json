@@ -105,6 +105,66 @@
       "artwork_url": "",
       "note_en": "UK white-label 12\" (RAP ONE, 2004) — breaks rerub built around Busta Rhymes vocals with Koma & Bones in the blend; a staple unofficial DJ weapon from the era.",
       "note_es": "White label británico (RAP ONE, 2004) — reelaboración breaks sobre vocales de Busta Rhymes con Koma & Bones en la mezcla; arma no oficial muy pinchada en la época."
+    },
+    {
+      "sort_order": 8,
+      "title": "Flesh Eater",
+      "mix_name": "",
+      "artists": [{ "name": "The Autobots" }, { "name": "Screwface" }],
+      "label": "Broke Breaks",
+      "catalog_number": "BROKE 004",
+      "year": 2005,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/484533-The-Autobots-Vs-Screwface-3-CTRL-Z-Flesh-Eater-Space-Dementia",
+      "youtube_url": "https://www.youtube.com/watch?v=R8lEjMB_gUc",
+      "artwork_url": "",
+      "note_en": "A-side of the Broke Breaks split 12\" (BROKE 004, UK 2005) — The Autobots vs. Screwface on Flesh Eater, with CTRL-Z's Space Dementia on the AA.",
+      "note_es": "Cara A del 12\" compartido de Broke Breaks (BROKE 004, UK 2005) — The Autobots vs. Screwface en Flesh Eater, y Space Dementia de CTRL-Z en la AA."
+    },
+    {
+      "sort_order": 9,
+      "title": "King of the Bongo",
+      "mix_name": "Breaks Mix",
+      "artists": [{ "name": "Manu Chao" }],
+      "label": "Cut & Run",
+      "catalog_number": "car 005",
+      "year": 2005,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/470134-Manu-Chao-Portishead-King-Of-The-Bongo-Breaks-Mix-Over-DnB-Mix",
+      "youtube_url": "https://www.youtube.com/watch?v=Vo81-r_UYv4",
+      "artwork_url": "",
+      "note_en": "A-side of Cut & Run's unofficial split 12\" (car 005, UK 2005) — breaks rebuild of Manu Chao's carnival anthem; Portishead \"Over\" as a DnB flip on the AA.",
+      "note_es": "Cara A del 12\" no oficial de Cut & Run (car 005, UK 2005) — revisión breaks del himno de Manu Chao; «Over» de Portishead en versión DnB en la AA."
+    },
+    {
+      "sort_order": 10,
+      "title": "Bass Phenomenon",
+      "mix_name": "DJ Friction Remix",
+      "artists": [{ "name": "Krafty Kuts" }, { "name": "Tim Deluxe" }],
+      "label": "Against The Grain",
+      "catalog_number": "ATG016R",
+      "year": 2006,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/10148616-Krafty-Kuts-Bass-Phenomenom",
+      "youtube_url": "https://www.youtube.com/watch?v=ClIn_wY1afg",
+      "artwork_url": "",
+      "note_en": "Against The Grain promo white-label 12\" (ATG016R): DJ Friction's Drum & Bass mix of Krafty Kuts & Tim Deluxe's Bass Phenomenon on the A; Tim Deluxe original \"The Funk Is\" on the flip — catalogue companion to the main ATG016 package.",
+      "note_es": "White label promocional Against The Grain (ATG016R): remix drum & bass de DJ Friction a Krafty Kuts & Tim Deluxe en la cara A; el original «The Funk Is» de Tim Deluxe en la B — complemento catálogo del lanzamiento principal ATG016."
+    },
+    {
+      "sort_order": 11,
+      "title": "Get A Life",
+      "mix_name": "Original Mix",
+      "artists": [{ "name": "Freestylers" }],
+      "label": "Against The Grain",
+      "catalog_number": "ATG008",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/224550-Freestylers-Get-A-Life",
+      "youtube_url": "https://www.youtube.com/watch?v=TUp3JtQu-cs",
+      "artwork_url": "",
+      "note_en": "A-side of the 2004 Against The Grain 12\" (ATG008) — title track from the Freestylers' Against The Grain era; Roni Size's mix on the B.",
+      "note_es": "Cara A del 12\" de Against The Grain (ATG008, 2004) — tema titular de la etapa Freestylers en el sello; remix de Roni Size en la B."
     }
   ]
 }

@@ -489,6 +489,14 @@ const ACTIONS = [
       'Retro Vinyl Picks semanales en /charts: UPSERT manual desde JSON (chart_vinyl_tracks). Datos de Discogs + YouTube. La edición week_date debe existir.',
   },
   {
+    id: 'chart-vinyl-discogs',
+    run: 'node scripts/guia-base-datos.mjs run chart-vinyl-discogs --label 5838 --week 2026-05-11 --limit 5 [--merge] [--write] [--apply]',
+    npm: 'npm run db:chart:vinyl:discogs -- --label 5838 --week 2026-05-11 --limit 5 --merge --write --apply',
+    creds: 'DISCOGS_TOKEN (opcional). Con --apply: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Borrador Retro Vinyl desde Discogs (--master id|url o --label id|url) + búsqueda YouTube. --merge fusiona con JSON de la semana; --write/--apply publican en Supabase.',
+  },
+  {
     id: 'chart-artists',
     run: 'node scripts/guia-base-datos.mjs run chart-artists [--week=YYYY-MM-DD] [--all-published] [--file=ruta.json] [--dry-run]',
     npm: 'npm run db:chart:artists -- [--week=… | --all-published | --file=… | --dry-run]',
@@ -630,6 +638,7 @@ Punto de entrada unificado:
   purge-featured-week-dates <YYYY-MM-DD …> [--dry-run] [--keep-empty-editions]  purge-chart-featured-by-week-date.mjs (quita NR; no toca el 40)
   featured-import-admin           panel /administrator/tracks + POST /api/admin/featured-import (URLs Beatport → Supabase)
   chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Retro Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
+  chart-vinyl-discogs [--master|--label] … [--week=…] [--merge] [--write] [--apply]  chart-vinyl-from-discogs.mjs
   chart-artists [--week=…|--all-published|--file=…] [--dry-run]  sync-chart-artists.mjs (catálogo ↔ nombres del chart)
   chart-artists-agent [--week=…|--file=…] [--force] [--dry-run] [--limit=N]  enrich-chart-artists-agent.mjs (agente + notas con sellos/títulos)
   beatport-top artist <slug> <beatport_id>  beatport-top-tracks.mjs (Top 10 ventas Beatport → JSONB en BD)
@@ -1130,6 +1139,9 @@ function main() {
       runNode('chart-vinyl-upsert.mjs', [rel])
       break
     }
+    case 'chart-vinyl-discogs':
+      runNode('chart-vinyl-from-discogs.mjs', rest)
+      break
     case 'chart-artists':
       runNode('sync-chart-artists.mjs', rest)
       break

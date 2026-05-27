@@ -7,7 +7,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
@@ -24,11 +24,74 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
-import { parsePlayParam, formatTrackReleaseDisplay } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
 type CanonRef = { source: ChartTrackSource; id: string }
+
+/** URLs de carátula vinilo en orden de preferencia (Discogs → YouTube → logo sello). */
+function vinylArtworkCandidates(
+  track: ChartVinylTrack,
+  labelImageMap?: Record<string, string>,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (u: string | null | undefined) => {
+    const s = (u || '').trim()
+    if (!s || seen.has(s)) return
+    seen.add(s)
+    out.push(s)
+  }
+  push(track.artwork_url)
+  const ytId = extractYouTubeId(track.youtube_url)
+  if (ytId) push(`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`)
+  const labelKey = normalizeArtistKey(track.label || '')
+  if (labelKey && labelImageMap?.[labelKey]) push(labelImageMap[labelKey])
+  return out
+}
+
+/** i.discogs.com usa URLs firmadas: el optimizador de Next suele fallar; el navegador no. */
+function vinylArtworkUnoptimized(url: string): boolean {
+  return /i\.discogs\.com/i.test(url) || /i\.ytimg\.com/i.test(url)
+}
+
+function VinylArtwork({
+  track,
+  labelImageMap,
+}: {
+  track: ChartVinylTrack
+  labelImageMap?: Record<string, string>
+}) {
+  const candidates = useMemo(
+    () => vinylArtworkCandidates(track, labelImageMap),
+    [track, labelImageMap],
+  )
+  const [idx, setIdx] = useState(0)
+
+  useEffect(() => {
+    setIdx(0)
+  }, [track.id, track.artwork_url, track.youtube_url, track.label])
+
+  const src = candidates[idx] ?? null
+  if (!src) return null
+
+  return (
+    <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+      <Image
+        src={src}
+        alt=""
+        fill
+        className="object-cover"
+        sizes="(max-width: 640px) 56px, 64px"
+        unoptimized={vinylArtworkUnoptimized(src)}
+        onError={() => {
+          if (idx + 1 < candidates.length) setIdx((i) => i + 1)
+        }}
+      />
+    </div>
+  )
+}
 
 type ChartWeekBundle = {
   edition: ChartEdition
@@ -50,6 +113,8 @@ interface ChartViewProps {
    * cuando el artista existe en la base de datos (en vez de ir siempre a Beatport).
    */
   artistSlugMap?: Record<string, string>
+  /** `nombreNormalizado → image_url` de sellos con logo en BD (fallback vinilo). */
+  labelImageMap?: Record<string, string>
 }
 
 // Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
@@ -407,22 +472,35 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, labelImageMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; labelImageMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
   const mixName = (track.mix_name || '').trim()
   const ytId = extractYouTubeId(track.youtube_url)
+  const hasArtwork = vinylArtworkCandidates(track, labelImageMap).length > 0
+  const embedRef = useRef<HTMLDivElement>(null)
+  const [showPlayer, setShowPlayer] = useState(autoplay)
+
+  useEffect(() => {
+    if (autoplay) setShowPlayer(true)
+  }, [autoplay])
+
+  const togglePlayer = useCallback(() => {
+    setShowPlayer((prev) => {
+      if (prev) return false
+      requestAnimationFrame(() => {
+        embedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      })
+      return true
+    })
+  }, [])
 
   return (
-    <div id={`chart-vinyl-row-${track.id}`} className="flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10 transition-colors">
+    <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${showPlayer ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          {track.artwork_url ? (
-            <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-              <Image src={track.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
-            </div>
-          ) : null}
+          {hasArtwork ? <VinylArtwork track={track} labelImageMap={labelImageMap} /> : null}
 
           <div className="flex-1 min-w-0">
             <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
@@ -446,6 +524,25 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
         </div>
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+          {ytId && (
+            <button
+              type="button"
+              onClick={togglePlayer}
+              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                ${showPlayer ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title={showPlayer ? c.preview_pause : c.preview_play}
+              aria-label={showPlayer ? c.preview_pause : c.preview_play}
+            >
+              {showPlayer ? '❚❚' : '▶'}
+            </button>
+          )}
+          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} snapshot={buildVinylSnapshot(track)} lang={lang} size="sm" />
+          <TrackShareButton
+            path={buildVinylSharePath(lang, track.id)}
+            lang={lang}
+            shareTitle={`${track.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+          />
           {track.youtube_url && (
             <a
               href={track.youtube_url} target="_blank" rel="noopener noreferrer"
@@ -455,7 +552,6 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
               {c.vinyl_open_youtube}
             </a>
           )}
-          <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} snapshot={buildVinylSnapshot(track)} lang={lang} size="sm" />
           <a
             href={track.discogs_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -466,13 +562,13 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, rel
         </div>
       </div>
 
-      {ytId && (
-        <div className="w-full max-w-sm">
+      {ytId && showPlayer && (
+        <div ref={embedRef} className="w-full max-w-sm">
           <LazyYouTubeEmbed
             videoId={ytId}
             title={`${track.title} — ${artists.map((a: ChartVinylArtist) => a.name).join(', ')}`}
             className="border-[3px] border-[var(--ink)]"
-            autoplay={autoplay}
+            autoplay
           />
         </div>
       )}
@@ -689,6 +785,7 @@ export default function ChartView({
   dict,
   weeks,
   artistSlugMap,
+  labelImageMap,
 }: ChartViewProps) {
   const c = dict.charts
 
@@ -1427,6 +1524,7 @@ export default function ChartView({
                           lang={lang}
                           autoplay={autoplayVinylId === track.id}
                           artistSlugMap={artistSlugMap}
+                          labelImageMap={labelImageMap}
                           relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
                         />
                       ))}

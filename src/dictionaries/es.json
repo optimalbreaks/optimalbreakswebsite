@@ -405,8 +405,8 @@
     "vinyl_format_label": "Formato",
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
-      "kicker": "TOP DE LA COMUNIDAD",
-      "title": "Top de la comunidad",
+      "kicker": "TOP 100 DE LA COMUNIDAD",
+      "title": "Top 100 de la comunidad",
       "subtitle": "Las canciones más añadidas a \"Mis Tracks\" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.",
       "scope_label": "Histórico",
       "all_time": "Todo el tiempo",
@@ -415,7 +415,9 @@
       "error": "No se pudo cargar el top",
       "empty": "Aún no hay saves en la comunidad. Añade tus primeros temas a Mis Tracks y vuelve.",
       "saves_tooltip": "Personas que han guardado este tema",
-      "repeats": "{n} saves en total"
+      "repeats": "{n} saves en total",
+      "play_shuffle": "⇄ ALEATORIO",
+      "play_shuffle_title": "Reproducir previews en orden aleatorio"
     }
   },
   "charts_promo": {
@@ -426,13 +428,13 @@
       "<strong>40 Breaks Vitales</strong> — chart semanal curado del Top 100 de Beatport.",
       "<strong>New Releases</strong> — selección semanal de nuevos lanzamientos.",
       "<strong>Retro Vinyl Picks</strong> — vinilos históricos del breakbeat por año.",
-      "<strong>Top de la Comunidad</strong> — el ranking que sale de tus saves.",
+      "<strong>Top 100 de la Comunidad</strong> — el ranking que sale de tus saves.",
       "<strong>Reto:</strong> guarda tus 10 imprescindibles en «Mis Tracks»."
     ],
     "cta_primary": "Escuchar ahora",
     "cta_secondary": "Más tarde",
     "close": "Cerrar",
-    "image_alt": "Cartel fanzine punk brutalist promocionando los charts de breakbeat de Optimal Breaks: 40 Breaks Vitales, chart semanal, new releases, retro vinyl picks y top de la comunidad."
+    "image_alt": "Cartel fanzine punk brutalist promocionando los charts de breakbeat de Optimal Breaks: 40 Breaks Vitales, chart semanal, new releases, retro vinyl picks y top 100 de la comunidad."
   },
   "mixes": {
     "title": "Mixes y Sets",

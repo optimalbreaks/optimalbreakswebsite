@@ -298,6 +298,33 @@ export default async function ChartsPage({
     artistSlugMap = filtered
   }
 
+  const chartLabelNames = new Set<string>()
+  for (const t of allVinyl) {
+    const key = normalizeArtistKey(t.label || '')
+    if (key) chartLabelNames.add(key)
+  }
+
+  let labelImageMap: Record<string, string> = {}
+  if (chartLabelNames.size > 0) {
+    const { data: dbLabels } = await supabase
+      .from('labels')
+      .select('name, image_url')
+      .not('image_url', 'is', null)
+      .limit(5000)
+    const labelRows = (dbLabels as { name: string | null; image_url: string | null }[] | null) ?? []
+    const allByName: Record<string, string> = {}
+    for (const r of labelRows) {
+      const img = (r.image_url || '').trim()
+      const key = normalizeArtistKey(r.name || '')
+      if (key && img && !allByName[key]) allByName[key] = img
+    }
+    const filteredLabels: Record<string, string> = {}
+    Array.from(chartLabelNames).forEach((key) => {
+      if (allByName[key]) filteredLabels[key] = allByName[key]
+    })
+    labelImageMap = filteredLabels
+  }
+
   return (
     <main className="min-h-screen bg-[var(--paper)]">
       <ChartView
@@ -306,6 +333,7 @@ export default async function ChartsPage({
         weeks={weeks}
         defaultExpandedWeekDate={defaultExpandedWeekDate}
         artistSlugMap={artistSlugMap}
+        labelImageMap={labelImageMap}
       />
     </main>
   )
