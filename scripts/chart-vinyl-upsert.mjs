@@ -161,21 +161,22 @@ async function main() {
   // los `saved_chart_tracks` de los usuarios (track_source='vinyl'). Hacemos
   // diff por clave compuesta: mismo release en Discogs puede contener varias
   // pistas → discogs_url + title + mix_name (normalizados).
-  const normalizeDiscogs = (u) => (u || '').trim().toLowerCase().replace(/\/$/, '')
-  const normalizeText = (s) => (s || '').trim().toLowerCase()
-  const trackKey = (discogsUrl, title, mixName) =>
-    `${normalizeDiscogs(discogsUrl)}::${normalizeText(title)}::${normalizeText(mixName)}`
+  const norm = (s) => (s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim()
+  const normMix = (m) => { const n = norm(m); return (!n || n === 'originalmix' || n === 'original') ? '' : n }
+  const trackKey = (title, mixName, artists) => {
+    const a = (artists || []).map((x) => norm(typeof x === 'string' ? x : x?.name || '')).sort().join(',')
+    return `${a}::${norm(title)}::${normMix(mixName)}`
+  }
 
   const { data: existingRows, error: exErr } = await supabase
     .from('chart_vinyl_tracks')
-    .select('id, discogs_url, title, mix_name')
+    .select('id, discogs_url, title, mix_name, artists')
     .eq('chart_edition_id', editionId)
   if (exErr) throw new Error(`load chart_vinyl_tracks: ${exErr.message}`)
 
   const existingByTrackKey = new Map()
   for (const r of existingRows || []) {
-    const k = trackKey(r.discogs_url, r.title, r.mix_name ?? '')
-    if (!normalizeDiscogs(r.discogs_url)) continue
+    const k = trackKey(r.title, r.mix_name ?? '', r.artists)
     if (!existingByTrackKey.has(k)) existingByTrackKey.set(k, r.id)
   }
 
@@ -226,7 +227,7 @@ async function main() {
   const updates = []
   const inserts = []
   for (const row of rows) {
-    const k = trackKey(row.discogs_url, row.title, row.mix_name)
+    const k = trackKey(row.title, row.mix_name, row.artists)
     newKeys.add(k)
     const liveId = existingByTrackKey.get(k)
     if (liveId) updates.push({ id: liveId, data: row })
@@ -234,7 +235,7 @@ async function main() {
   }
   const toDelete = []
   for (const r of existingRows || []) {
-    const k = trackKey(r.discogs_url, r.title, r.mix_name ?? '')
+    const k = trackKey(r.title, r.mix_name ?? '', r.artists)
     if (!newKeys.has(k)) toDelete.push(r.id)
   }
 

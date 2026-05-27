@@ -5,14 +5,18 @@
       "sort_order": 1,
       "title": "Next Level",
       "mix_name": "",
-      "artists": [{ "name": "Ils" }],
+      "artists": [
+        {
+          "name": "Ils"
+        }
+      ],
       "label": "Marine Parade",
       "catalog_number": "MAPA012",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/75084-Ils-Next-Level-Music",
       "youtube_url": "https://www.youtube.com/watch?v=ZjFtxz-BGOE",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/ZjFtxz-BGOE/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -20,14 +24,18 @@
       "sort_order": 2,
       "title": "Music",
       "mix_name": "",
-      "artists": [{ "name": "Ils" }],
+      "artists": [
+        {
+          "name": "Ils"
+        }
+      ],
       "label": "Marine Parade",
       "catalog_number": "MAPA012",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/75084-Ils-Next-Level-Music",
       "youtube_url": "https://www.youtube.com/watch?v=vxoPVzdNeNI",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/vxoPVzdNeNI/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     }

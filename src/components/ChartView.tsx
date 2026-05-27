@@ -74,21 +74,105 @@ function VinylArtwork({
   }, [track.id, track.artwork_url, track.youtube_url, track.label])
 
   const src = candidates[idx] ?? null
-  if (!src) return null
+  const allFailed = !src
 
   return (
     <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-      <Image
-        src={src}
-        alt=""
-        fill
-        className="object-cover"
-        sizes="(max-width: 640px) 56px, 64px"
-        unoptimized={vinylArtworkUnoptimized(src)}
-        onError={() => {
-          if (idx + 1 < candidates.length) setIdx((i) => i + 1)
-        }}
-      />
+      {allFailed ? (
+        <span className="absolute inset-0 flex items-center justify-center text-[var(--ink)]/30 text-2xl font-black select-none" aria-hidden>♪</span>
+      ) : vinylArtworkUnoptimized(src) ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={src}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (idx + 1 < candidates.length) setIdx((i) => i + 1)
+            else setIdx(candidates.length)
+          }}
+        />
+      ) : (
+        <Image
+          src={src}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 56px, 64px"
+          onError={() => {
+            if (idx + 1 < candidates.length) setIdx((i) => i + 1)
+            else setIdx(candidates.length)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+type PendingVinylPlay = { trackId: string; yearKey: string; track: ChartVinylTrack }
+
+function VinylAutoplayOverlay({
+  pending,
+  lang,
+  onPlay,
+  onDismiss,
+}: {
+  pending: PendingVinylPlay
+  lang: Locale
+  onPlay: () => void
+  onDismiss: () => void
+}) {
+  const { track } = pending
+  const artists = Array.isArray(track.artists) ? track.artists : []
+  const artistText = artists.map((a) => a.name).filter(Boolean).join(', ')
+  const artSrc = (track.artwork_url || '').trim()
+  const es = lang === 'es'
+  const [artFailed, setArtFailed] = useState(false)
+  const showArt = !!artSrc && !artFailed
+
+  useEffect(() => { setArtFailed(false) }, [artSrc])
+
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={es ? 'Toca para escuchar el vinilo' : 'Tap to play the vinyl'}
+      onClick={onDismiss}
+    >
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onPlay() }}
+        className="flex items-center gap-3 sm:gap-4 bg-[var(--paper)] border-[4px] border-[var(--ink)] px-3 sm:px-5 py-3 sm:py-4 max-w-[520px] w-full hover:bg-[var(--yellow)] active:bg-[var(--yellow)] transition-colors cursor-pointer touch-manipulation text-left"
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+      >
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] shrink-0 overflow-hidden">
+          {showArt ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={artSrc}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setArtFailed(true)}
+            />
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center text-[var(--ink)]/50 text-xl font-black" aria-hidden>♪</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] sm:text-xs font-black tracking-widest text-[var(--red)] mb-0.5 sm:mb-1">
+            {es ? '▶ TOCA PARA ESCUCHAR' : '▶ TAP TO PLAY'}
+          </div>
+          <div className="text-sm sm:text-base font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+            {track.title}
+            {(track.mix_name || '').trim() ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{track.mix_name}</span> : null}
+          </div>
+          {artistText && <div className="text-[11px] sm:text-xs text-[var(--ink)]/70 truncate">{artistText}</div>}
+        </div>
+        <span className="shrink-0 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white text-lg font-black" aria-hidden>▶</span>
+      </button>
     </div>
   )
 }
@@ -478,7 +562,6 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
   const note = lang === 'es' ? track.note_es : track.note_en
   const mixName = (track.mix_name || '').trim()
   const ytId = extractYouTubeId(track.youtube_url)
-  const hasArtwork = vinylArtworkCandidates(track, labelImageMap).length > 0
   const embedRef = useRef<HTMLDivElement>(null)
   const [showPlayer, setShowPlayer] = useState(autoplay)
 
@@ -500,7 +583,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
     <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${showPlayer ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          {hasArtwork ? <VinylArtwork track={track} labelImageMap={labelImageMap} /> : null}
+          <VinylArtwork track={track} labelImageMap={labelImageMap} />
 
           <div className="flex-1 min-w-0">
             <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
@@ -793,13 +876,11 @@ export default function ChartView({
   const [openVinyl, toggleVinyl, ensureOpenVinyl] = useToggleSet(new Set<string>())
   const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
 
-  // ID de vinilo cuya fila YouTube debe arrancar con autoplay=1 tras la
-  // navegación desde el buscador global (⌘K) con `?play=1`.
   const [autoplayVinylId, setAutoplayVinylId] = useState<string | null>(null)
 
-  // Petición pendiente de autoplay sobre chart/featured: guardamos la
-  // «coordenada» (sección + semana + trackId) y la ejecutamos en un efecto
-  // separado cuando el bundle de preview-audio ya está montado.
+  // Overlay "Toca para escuchar" pendiente para vinyl deep-links.
+  const [pendingVinylPlay, setPendingVinylPlay] = useState<PendingVinylPlay | null>(null)
+
   const [pendingPlay, setPendingPlay] = useState<
     | { kind: 'forty' | 'picks'; weekDate: string; trackId: string }
     | null
@@ -867,15 +948,21 @@ export default function ChartView({
 
       if (kind === 'vinyl') {
         let yearKey: string | null = null
+        let hitTrack: ChartVinylTrack | undefined
         for (const w of weeks) {
           const hit = w.vinyl.find((v) => v.id === trackId)
           if (hit) {
+            hitTrack = hit
             yearKey = typeof hit.year === 'number' && Number.isFinite(hit.year) ? String(hit.year) : UNKNOWN_YEAR_KEY
             break
           }
         }
         if (yearKey) ensureOpenVinyl(yearKey)
-        if (wantsPlay) setAutoplayVinylId(trackId)
+        if (wantsPlay && hitTrack && yearKey) {
+          setPendingVinylPlay({ trackId, yearKey, track: hitTrack })
+        } else if (wantsPlay) {
+          setAutoplayVinylId(trackId)
+        }
       } else {
         // Prefer la semana indicada en ?week= si coincide con el id; si no,
         // busca por id en todas las semanas cargadas.
@@ -1552,6 +1639,20 @@ export default function ChartView({
       </footer>
       {/* La barra flotante de now-playing la monta `DeckAudioProvider`
           (modo `preview`) para que siga sonando al cambiar de ruta. */}
+
+      {pendingVinylPlay && (
+        <VinylAutoplayOverlay
+          pending={pendingVinylPlay}
+          lang={lang}
+          onPlay={() => {
+            const { trackId, yearKey } = pendingVinylPlay
+            ensureOpenVinyl(yearKey)
+            setAutoplayVinylId(trackId)
+            setPendingVinylPlay(null)
+          }}
+          onDismiss={() => setPendingVinylPlay(null)}
+        />
+      )}
     </div>
   )
 }

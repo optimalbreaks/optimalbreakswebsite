@@ -154,11 +154,15 @@ function artistsFromRelease(release, track) {
   return main.length ? main : [{ name: 'Unknown' }]
 }
 
-function trackKey(discogsUrl, title, mixName) {
-  const d = (discogsUrl || '').trim().toLowerCase().replace(/\/$/, '')
-  const t = (title || '').trim().toLowerCase()
-  const m = (mixName || '').trim().toLowerCase()
-  return `${d}::${t}::${m}`
+function trackKey(discogsUrl, title, mixName, artists) {
+  const t = norm(title)
+  const m = norm(mixName)
+  const a = (artists || [])
+    .map((x) => norm(typeof x === 'string' ? x : x?.name || ''))
+    .filter(Boolean)
+    .sort()
+    .join(',')
+  return `${a}::${t}::${m}`
 }
 
 function norm(s) {
@@ -291,11 +295,13 @@ async function processReleaseTracks(release, opts, sortRef, out, seenKeys) {
 
   for (const track of tracks) {
     if (opts.limit != null && out.length >= opts.limit) return
+    if (!(track.title || '').trim()) continue
     const { title, mix_name } = splitTitleMix(track.title)
-    const k = trackKey(discogsUrl, title, mix_name)
+    const trackArtists = artistsFromRelease(release, track)
+    const k = trackKey(null, title, mix_name, trackArtists)
     if (seenKeys.has(k)) continue
 
-    const artistNames = artistsFromRelease(release, track).map((a) => a.name)
+    const artistNames = trackArtists.map((a) => a.name)
     let youtube = ''
     if (!opts.noYoutube) {
       try {
@@ -399,11 +405,11 @@ async function tracksFromLabel(labelId, opts, seenKeys) {
 }
 
 function mergeVinyl(existing, incoming) {
-  const keys = new Set((existing || []).map((r) => trackKey(r.discogs_url, r.title, r.mix_name)))
+  const keys = new Set((existing || []).map((r) => trackKey(null, r.title, r.mix_name, r.artists)))
   const merged = [...(existing || [])]
   let nextSort = merged.reduce((m, r) => Math.max(m, Number(r.sort_order) || 0), 0) + 1
   for (const row of incoming) {
-    const k = trackKey(row.discogs_url, row.title, row.mix_name)
+    const k = trackKey(null, row.title, row.mix_name, row.artists)
     if (keys.has(k)) continue
     merged.push({ ...row, sort_order: nextSort++ })
     keys.add(k)
@@ -418,7 +424,7 @@ async function main() {
     const outPath = join(ROOT, 'data', 'charts', 'vinyl', `${opts.week}.json`)
     if (existsSync(outPath)) {
       const prev = JSON.parse(readFileSync(outPath, 'utf8'))
-      for (const r of prev.vinyl || []) seenKeys.add(trackKey(r.discogs_url, r.title, r.mix_name))
+      for (const r of prev.vinyl || []) seenKeys.add(trackKey(null, r.title, r.mix_name, r.artists))
     }
   }
 

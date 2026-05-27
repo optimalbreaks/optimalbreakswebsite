@@ -5,14 +5,18 @@
       "sort_order": 1,
       "title": "Echo Babylon",
       "mix_name": "Atomic Hooligan Remix",
-      "artists": [{ "name": "Chris Carter" }],
+      "artists": [
+        {
+          "name": "Chris Carter"
+        }
+      ],
       "label": "Botchit Breaks",
       "catalog_number": "bbv011",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/37708-Chris-Carter-Echo-Babylon",
       "youtube_url": "https://www.youtube.com/watch?v=ucIrE3af2u0",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/ucIrE3af2u0/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -20,14 +24,21 @@
       "sort_order": 2,
       "title": "New On The Man",
       "mix_name": "DJ Nitro Remix",
-      "artists": [{ "name": "DJ Nitro" }, { "name": "DJ Jas" }],
+      "artists": [
+        {
+          "name": "DJ Nitro"
+        },
+        {
+          "name": "DJ Jas"
+        }
+      ],
       "label": "Break Beat Boom Records",
       "catalog_number": "BBBR-101",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/958313-DJ-Nitro-DJ-Jas-New-On-The-Man",
       "youtube_url": "https://www.youtube.com/watch?v=1CodnTNqqhs",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/1CodnTNqqhs/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -36,9 +47,15 @@
       "title": "Bunker Buster",
       "mix_name": "",
       "artists": [
-        { "name": "Ed Solo" },
-        { "name": "Krafty Kuts" },
-        { "name": "T.C. Izlam" }
+        {
+          "name": "Ed Solo"
+        },
+        {
+          "name": "Krafty Kuts"
+        },
+        {
+          "name": "T.C. Izlam"
+        }
       ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
@@ -46,7 +63,7 @@
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=fwKIZfDb30I",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/fwKIZfDb30I/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA.",
       "note_es": "Heavy Weight Breaks (SCMLP01): documento sonoro del Funky Buddha Lounge (Brighton); familia Supercharged / Against The Grain — en el ADN, FreQ Nasty, Deekline y la primera ola nu-skool breaks."
     },
@@ -55,9 +72,15 @@
       "title": "Life Gets Better",
       "mix_name": "",
       "artists": [
-        { "name": "Ed Solo" },
-        { "name": "Skool Of Thought" },
-        { "name": "Darrison" }
+        {
+          "name": "Ed Solo"
+        },
+        {
+          "name": "Skool Of Thought"
+        },
+        {
+          "name": "Darrison"
+        }
       ],
       "label": "Against The Grain",
       "catalog_number": "ATG030",
@@ -65,7 +88,7 @@
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1249506-Ed-Solo-Skool-Of-Thought-When-I-Was-A-Yout-Krafty-Kuts-Remix",
       "youtube_url": "https://www.youtube.com/watch?v=4dPvJtn80cE",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/4dPvJtn80cE/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -73,14 +96,18 @@
       "sort_order": 5,
       "title": "Electronic Love",
       "mix_name": "",
-      "artists": [{ "name": "Envelope" }],
+      "artists": [
+        {
+          "name": "Envelope"
+        }
+      ],
       "label": "Totem Tanz Records",
       "catalog_number": "LOVE1",
       "year": 1999,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1234276-Various-Love-Envelope",
       "youtube_url": "https://www.youtube.com/watch?v=wM48GtGhigA",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/wM48GtGhigA/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -88,14 +115,18 @@
       "sort_order": 6,
       "title": "Hardcore B-Boy Shit",
       "mix_name": "",
-      "artists": [{ "name": "LL Cagoul J" }],
+      "artists": [
+        {
+          "name": "LL Cagoul J"
+        }
+      ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=5Iw7LJeoawk",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/5Iw7LJeoawk/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA.",
       "note_es": "Heavy Weight Breaks (SCMLP01): documento sonoro del Funky Buddha Lounge (Brighton); familia Supercharged / Against The Grain — en el ADN, FreQ Nasty, Deekline y la primera ola nu-skool breaks."
     },
@@ -103,14 +134,18 @@
       "sort_order": 7,
       "title": "Diablo",
       "mix_name": "",
-      "artists": [{ "name": "Mach One" }],
+      "artists": [
+        {
+          "name": "Mach One"
+        }
+      ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=catLVBYdDgU",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/catLVBYdDgU/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA.",
       "note_es": "Heavy Weight Breaks (SCMLP01): documento sonoro del Funky Buddha Lounge (Brighton); familia Supercharged / Against The Grain — en el ADN, FreQ Nasty, Deekline y la primera ola nu-skool breaks."
     },
@@ -118,14 +153,18 @@
       "sort_order": 8,
       "title": "Music Is Music",
       "mix_name": "",
-      "artists": [{ "name": "Skool Of Thought" }],
+      "artists": [
+        {
+          "name": "Skool Of Thought"
+        }
+      ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=p_aB_VppZeQ",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/p_aB_VppZeQ/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA.",
       "note_es": "Heavy Weight Breaks (SCMLP01): documento sonoro del Funky Buddha Lounge (Brighton); familia Supercharged / Against The Grain — en el ADN, FreQ Nasty, Deekline y la primera ola nu-skool breaks."
     },
@@ -133,14 +172,21 @@
       "sort_order": 9,
       "title": "Music Is Music",
       "mix_name": "Short edit (reissue upload)",
-      "artists": [{ "name": "Skool Of Thought" }, { "name": "Ed Solo" }],
+      "artists": [
+        {
+          "name": "Skool Of Thought"
+        },
+        {
+          "name": "Ed Solo"
+        }
+      ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=3Y5ED2D1dlk",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/3Y5ED2D1dlk/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA. Extra YouTube cut linked on Discogs (digital-era upload).",
       "note_es": "Mismo tema; corte extra enlazado en Discogs (subida digital posterior al vinilo). Mismo contexto Heavy Weight Breaks / Supercharged."
     },
@@ -148,14 +194,18 @@
       "sort_order": 10,
       "title": "World Of Music",
       "mix_name": "Ed Solo Mix",
-      "artists": [{ "name": "Skool Of Thought" }],
+      "artists": [
+        {
+          "name": "Skool Of Thought"
+        }
+      ],
       "label": "Super Charged",
       "catalog_number": "SCMLP01",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/119391-Skool-Of-Thought-Heavy-Weight-Breaks",
       "youtube_url": "https://www.youtube.com/watch?v=KirG6Zqfepc",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/KirG6Zqfepc/hqdefault.jpg",
       "note_en": "Heavy Weight Breaks (SCMLP01): documented Funky Buddha Lounge (Brighton) era; Supercharged Music & Against The Grain family — FreQ Nasty, Deekline & early nu skool breaks DNA.",
       "note_es": "Heavy Weight Breaks (SCMLP01): documento sonoro del Funky Buddha Lounge (Brighton); familia Supercharged / Against The Grain — en el ADN, FreQ Nasty, Deekline y la primera ola nu-skool breaks."
     },
@@ -163,14 +213,18 @@
       "sort_order": 11,
       "title": "Raw As F**k",
       "mix_name": "",
-      "artists": [{ "name": "Freestylers" }],
+      "artists": [
+        {
+          "name": "Freestylers"
+        }
+      ],
       "label": "Against The Grain",
       "catalog_number": "ATGLP001",
       "year": 2004,
       "format": "3×LP",
       "discogs_url": "https://www.discogs.com/release/315508-Freestylers-Raw-As-Fk",
       "youtube_url": "https://www.youtube.com/watch?v=GSOHCFxvs8k",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/GSOHCFxvs8k/hqdefault.jpg",
       "note_en": "Title track of Freestylers' third album (2004), the first full-length release on Against The Grain — Aston Harvey & Matt Cantor's own label — and a cornerstone of UK big-beat / nu skool breaks alongside the Plump DJs and Krafty Kuts era.",
       "note_es": "Tema que da título al tercer álbum de Freestylers (2004), primer largo publicado en Against The Grain —sello propio de Aston Harvey y Matt Cantor— y piedra angular del big-beat / nu-skool breaks británico junto a Plump DJs y Krafty Kuts."
     },
@@ -178,14 +232,18 @@
       "sort_order": 12,
       "title": "Sousounde",
       "mix_name": "Freq Nasty vs. Blim Remix",
-      "artists": [{ "name": "Métisse" }],
+      "artists": [
+        {
+          "name": "Métisse"
+        }
+      ],
       "label": "Dioula",
       "catalog_number": "JAZZREG 01",
       "year": 1999,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/802169-M%C3%A9tisse-Sousound%C3%A9",
       "youtube_url": "https://www.youtube.com/watch?v=nuaaR88gzuM",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/nuaaR88gzuM/hqdefault.jpg",
       "note_en": "A2 cut of the 1999 Dioula 12\" (JAZZREG 01) that also carried 4 Hero and DJ Cam remixes — Freq Nasty & B.L.I.M. flipping Métisse's Afro-tinged original into a heavyweight UK nu skool breaks weapon.",
       "note_es": "Cara A2 del 12\" de Dioula (JAZZREG 01, 1999), que además traía remixes de 4 Hero y DJ Cam: Freq Nasty y B.L.I.M. llevan el original afro de Métisse al terreno del nu-skool breaks británico más contundente."
     },
@@ -193,14 +251,18 @@
       "sort_order": 13,
       "title": "The Highs And Lows",
       "mix_name": "",
-      "artists": [{ "name": "Atomic Hooligan" }],
+      "artists": [
+        {
+          "name": "Atomic Hooligan"
+        }
+      ],
       "label": "Botchit & Scarper",
       "catalog_number": "bos2lp 017",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/149080-Various-Botchit-Breaks-5-Part-1",
       "youtube_url": "https://www.youtube.com/watch?v=vRDwGWTQ0ek",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/vRDwGWTQ0ek/hqdefault.jpg",
       "note_en": "A-side of the 2002 Botchit & Scarper compilation Botchit Breaks 5 (Part 1) — Atomic Hooligan (Matt Welch & Terry Ryan) delivering peak nu skool breaks on Rennie Pilgrem's label, alongside Mindmuggaz, Si Begg and LBJ.",
       "note_es": "Cara A del recopilatorio Botchit Breaks 5 (Part 1) de Botchit & Scarper (2002) — Atomic Hooligan (Matt Welch y Terry Ryan) en pleno momento nu-skool breaks, en el sello de Rennie Pilgrem junto a Mindmuggaz, Si Begg y LBJ."
     },
@@ -208,14 +270,18 @@
       "sort_order": 14,
       "title": "Under The Sky",
       "mix_name": "Original Version",
-      "artists": [{ "name": "Mr. Fli" }],
+      "artists": [
+        {
+          "name": "Mr. Fli"
+        }
+      ],
       "label": "Break Beat Boom Records",
       "catalog_number": "BBBR-104",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/917393-Mr-Fli-2-Revive",
       "youtube_url": "https://www.youtube.com/watch?v=8JfFqRDER6k",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/8JfFqRDER6k/hqdefault.jpg",
       "note_en": "B-side of the 2 Revive 12\" on Break Beat Boom Records (Spain, 2002) — Rafael Ortiz Jurado aka Mr. Fli, one of the defining Spanish nu skool breaks producers of the early 2000s (also featured on the Beat Dis! 2003 compilation on Reflex Musik).",
       "note_es": "Cara B del 12\" 2 Revive en Break Beat Boom Records (España, 2002) — Rafael Ortiz Jurado alias Mr. Fli, uno de los productores clave del nu-skool breaks español de principios de los 2000 (también presente en el recopilatorio Beat Dis! 2003 de Reflex Musik)."
     },
@@ -223,14 +289,18 @@
       "sort_order": 15,
       "title": "They Call It Flip Flop",
       "mix_name": "",
-      "artists": [{ "name": "Cut & Run" }],
+      "artists": [
+        {
+          "name": "Cut & Run"
+        }
+      ],
       "label": "Crisp Biscuit",
       "catalog_number": "CB-09",
       "year": 2007,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1176248-Cut-Run-Street-Life-They-Call-It-Flip-Flop",
       "youtube_url": "https://www.youtube.com/watch?v=U-lmE78yABg",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/U-lmE78yABg/hqdefault.jpg",
       "note_en": "B-side of the 2007 Crisp Biscuit 12\" (CB-09) — an unofficial white-label paired with Cut & Run's Street Life edit. They Call It Flip Flop is the duo's breakbeat rework of Dead Prez's It's Bigger Than Hip Hop, a staple in the A.Skillz / Krafty Kuts / Stanton Warriors booty-breaks era.",
       "note_es": "Cara B del 12\" de Crisp Biscuit (CB-09, 2007) — white label no oficial emparejado con el edit Street Life de Cut & Run. They Call It Flip Flop es su reelaboración breakbeat de It's Bigger Than Hip Hop de Dead Prez, un clásico de la era booty-breaks (A.Skillz, Krafty Kuts, Stanton Warriors)."
     },
@@ -238,14 +308,18 @@
       "sort_order": 16,
       "title": "Don't Want You Anyway",
       "mix_name": "Aquasky Remix",
-      "artists": [{ "name": "Dylan Rhymes" }],
+      "artists": [
+        {
+          "name": "Dylan Rhymes"
+        }
+      ],
       "label": "Kingsize",
       "catalog_number": "KS100",
       "year": 2005,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/599921-Dylan-Rhymes-Dont-Want-You-Anyway",
       "youtube_url": "https://www.youtube.com/watch?v=9hpSS9BQE-c",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/9hpSS9BQE-c/hqdefault.jpg",
       "note_en": "B-side of Dylan Rhymes' 2005 Kingsize 12\" (KS100) — Aquasky turning the soulful original into a rolling nu skool breaks weapon, one of the UK scene's standout vocal-breaks moments of the mid-2000s.",
       "note_es": "Cara B del 12\" de Dylan Rhymes en Kingsize (KS100, 2005) — Aquasky transforma el original soul en una demoledora pieza nu-skool breaks, uno de los grandes momentos de la escena británica de vocal breaks de mediados de los 2000."
     },
@@ -253,14 +327,18 @@
       "sort_order": 17,
       "title": "Inside Your Soul",
       "mix_name": "Infiniti Remix",
-      "artists": [{ "name": "Rick West" }],
+      "artists": [
+        {
+          "name": "Rick West"
+        }
+      ],
       "label": "Painted Puppy Productions",
       "catalog_number": "PP003",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/316901-Rick-West-Inside-Your-Soul",
       "youtube_url": "https://www.youtube.com/watch?v=gkYRQVxm6X8",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/gkYRQVxm6X8/hqdefault.jpg",
       "note_en": "B-side of Rick West's Inside Your Soul 12\" on Painted Puppy Productions (PP003, 2001), alongside Jeffee's Jungle Mix on A2 — DJ Infiniti's remix became a Florida breaks classic, later remastered for his 2006 Collector's Edition series on BreakBeat Alliance.",
       "note_es": "Cara B del 12\" Inside Your Soul de Rick West en Painted Puppy Productions (PP003, 2001), junto al Jungle Mix de Jeffee en A2 — el remix de DJ Infiniti es un clásico del Florida breaks, más tarde remasterizado para su Collector's Edition Vol. 2 en BreakBeat Alliance (2006)."
     },
@@ -268,14 +346,18 @@
       "sort_order": 18,
       "title": "Happiness",
       "mix_name": "Original Mix",
-      "artists": [{ "name": "Kultür" }],
+      "artists": [
+        {
+          "name": "Kultür"
+        }
+      ],
       "label": "Tone Three Records",
       "catalog_number": "TT-003",
       "year": 2006,
       "format": "Digital",
       "discogs_url": "https://www.discogs.com/release/1242808",
       "youtube_url": "https://www.youtube.com/watch?v=My83ZUW-evI",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/My83ZUW-evI/hqdefault.jpg",
       "note_en": "Kultür (Francisco Gil, Málaga) — key figure of the Spanish breakbeat scene and curator of the Beat Dis! series on Reflex Musik. Happiness is one of his defining productions: deep, hypnotic nu skool breaks with a strong melodic feel.",
       "note_es": "Kultür (Francisco Gil, Málaga) — figura clave de la escena española de breakbeat y curador de la serie Beat Dis! en Reflex Musik. Happiness es una de sus producciones más definitorias: nu-skool breaks profundo e hipnótico con un gran peso melódico."
     },
@@ -283,14 +365,18 @@
       "sort_order": 19,
       "title": "Faint",
       "mix_name": "",
-      "artists": [{ "name": "Cut & Run" }],
+      "artists": [
+        {
+          "name": "Cut & Run"
+        }
+      ],
       "label": "Cut & Run",
       "catalog_number": "CAR034",
       "year": 2009,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1701302-Cut-Run-Worriers-Dance-Faint",
       "youtube_url": "https://www.youtube.com/watch?v=5hQ2Sodn3Dg",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/5hQ2Sodn3Dg/hqdefault.jpg",
       "note_en": "B-side of the 2009 self-released Cut & Run 12\" (CAR034) — Faint showcases the duo's later, deeper sound: rolling breaks with a subdued, atmospheric feel, a step beyond their earlier Crisp Biscuit booty-edit era.",
       "note_es": "Cara B del 12\" autoeditado de Cut & Run (CAR034, 2009) — Faint muestra el sonido más maduro y profundo del dúo: breaks oscuros y envolventes, un paso más allá de la etapa de edits de Crisp Biscuit."
     },
@@ -298,14 +384,18 @@
       "sort_order": 20,
       "title": "Travelling On",
       "mix_name": "Koma And Bones Remix",
-      "artists": [{ "name": "Beber & Tamra" }],
+      "artists": [
+        {
+          "name": "Beber & Tamra"
+        }
+      ],
       "label": "Mob Records",
       "catalog_number": "MOB TX 005",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/133874-Beber-Tamra-Travelling-On-Remixes",
       "youtube_url": "https://www.youtube.com/watch?v=on4reryh72s",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/on4reryh72s/hqdefault.jpg",
       "note_en": "A-side remix of Mob Records' Travelling On 12\" (MOB TX 005, UK 2001) — Koma & Bones delivering a driving nu skool breaks rework alongside Meat Katie's vocal flip on the B-side.",
       "note_es": "Cara A del 12\" Travelling On de Mob Records (MOB TX 005, UK 2001) — Koma & Bones firman un rework nu-skool breaks de gran empuje, con el vocal flip de Meat Katie en la cara B."
     },
@@ -313,14 +403,18 @@
       "sort_order": 21,
       "title": "Black Satsuma",
       "mix_name": "",
-      "artists": [{ "name": "Koma & Bones" }],
+      "artists": [
+        {
+          "name": "Koma & Bones"
+        }
+      ],
       "label": "Thursday Club Recordings",
       "catalog_number": "RENN3077",
       "year": 2003,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/182052-Koma-Bones-Black-Satsuma",
       "youtube_url": "https://www.youtube.com/watch?v=tEQVQYNcgpk",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/tEQVQYNcgpk/hqdefault.jpg",
       "note_en": "A-side of Koma & Bones' 2003 Thursday Club Recordings 12\" (RENN3077) — Black Satsuma is a landmark UK nu skool breaks track, pure 2003 StreetBeat / Thursday Club-era energy with pounding low-end and raw percussion.",
       "note_es": "Cara A del 12\" de Koma & Bones en Thursday Club Recordings (RENN3077, 2003) — Black Satsuma es un hito del nu-skool breaks británico, con toda la energía de la era StreetBeat / Thursday Club: bajo contundente y percusión cruda."
     },
@@ -328,14 +422,18 @@
       "sort_order": 22,
       "title": "U Got 2 Know",
       "mix_name": "KJ Brothers Breaks Remix",
-      "artists": [{ "name": "Cappella" }],
+      "artists": [
+        {
+          "name": "Cappella"
+        }
+      ],
       "label": "Mutant Records",
       "catalog_number": "MUT12007",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1064441-Cappella-U-Got-2-Know-KJ-Brothers-Remixes",
       "youtube_url": "https://www.youtube.com/watch?v=HRl5_YH8_kA",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/HRl5_YH8_kA/hqdefault.jpg",
       "note_en": "A-side of the Mutant Records white-label (MUT12007, Spain 2001) — KJ Brothers is the alias of Kultür + Jan-B, flipping Cappella's 1993 eurodance classic into a heavy nu skool breaks weapon on Málaga's flagship breaks imprint.",
       "note_es": "Cara A del white-label de Mutant Records (MUT12007, España 2001) — KJ Brothers es el alias de Kultür + Jan-B, que transforman el clásico eurodance de Cappella de 1993 en una potente pieza nu-skool breaks en el sello breaks por excelencia de Málaga."
     },
@@ -343,14 +441,18 @@
       "sort_order": 23,
       "title": "Schö",
       "mix_name": "Kultür Elektro Remix",
-      "artists": [{ "name": "Marmion" }],
+      "artists": [
+        {
+          "name": "Marmion"
+        }
+      ],
       "label": "Mutant Records",
       "catalog_number": "MUT12002",
       "year": 2000,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1064455-Marmion-Yves-Deruyter-Sch%C3%B6-Out",
       "youtube_url": "https://www.youtube.com/watch?v=Rf2S7ZjOznE",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Rf2S7ZjOznE/hqdefault.jpg",
       "note_en": "A-side of Mutant Records MUT12002 (Spain 2000), sharing the release with Yves Deruyter's Out — Kultür's elektro remix of Marmion's 1994 trance classic, one of the earliest examples of the Reflex Musik / Mutant Records scene in Málaga.",
       "note_es": "Cara A de Mutant Records MUT12002 (España 2000), compartiendo el 12\" con Out de Yves Deruyter — el remix elektro de Kultür al clásico trance de Marmion de 1994, uno de los primeros documentos de la escena Reflex Musik / Mutant Records en Málaga."
     },
@@ -358,14 +460,18 @@
       "sort_order": 24,
       "title": "Ok Run!",
       "mix_name": "",
-      "artists": [{ "name": "Crack DJ's" }],
+      "artists": [
+        {
+          "name": "Crack DJ's"
+        }
+      ],
       "label": "Reflex Musik",
       "catalog_number": "REF001DLP2",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/224762-Various-Beat-Dis-2001-Volume-2",
       "youtube_url": "https://www.youtube.com/watch?v=2Zgii3SO4_Y",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/2Zgii3SO4_Y/hqdefault.jpg",
       "note_en": "Track F1 on the Beat Dis! 2001 Volume 2 vinyl (REF001DLP2, Spain 2001) — a limited-edition 4×12\" companion to the CD compilation, featuring Crack DJ's alongside Maschu, Cool K. & Nojey D., Beat Factory and Beat Brokers.",
       "note_es": "Pista F1 del vinilo Beat Dis! 2001 Volume 2 (REF001DLP2, España 2001) — edición limitada 4×12\" como complemento al CD recopilatorio, con Crack DJ's junto a Maschu, Cool K. & Nojey D., Beat Factory y Beat Brokers."
     },
@@ -373,14 +479,18 @@
       "sort_order": 25,
       "title": "You Belong 2 Me",
       "mix_name": "",
-      "artists": [{ "name": "Mr. Fli" }],
+      "artists": [
+        {
+          "name": "Mr. Fli"
+        }
+      ],
       "label": "Break Beat Boom Records",
       "catalog_number": "",
       "year": 2003,
       "format": "Digital",
       "discogs_url": "https://www.discogs.com/artist/289461-Mr-Fli",
       "youtube_url": "https://www.youtube.com/watch?v=_U7YslKCgcs",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/_U7YslKCgcs/hqdefault.jpg",
       "note_en": "Mr. Fli (Rafael Ortiz Jurado) — a soulful, vocal-breaks cut from one of the key figures of the Spanish nu skool breaks scene, regular on Reflex Musik and Break Beat Boom Records.",
       "note_es": "Mr. Fli (Rafael Ortiz Jurado) — corte soul-breaks con voz, de uno de los nombres clave del nu-skool breaks español, habitual de Reflex Musik y Break Beat Boom Records."
     },
@@ -388,14 +498,18 @@
       "sort_order": 26,
       "title": "Voco Me",
       "mix_name": "Kultür Edit",
-      "artists": [{ "name": "I.C.O.N." }],
+      "artists": [
+        {
+          "name": "I.C.O.N."
+        }
+      ],
       "label": "Mutant Records",
       "catalog_number": "MUT12001",
       "year": 2000,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1581817-DJ-ICON-Voco-Me",
       "youtube_url": "https://www.youtube.com/watch?v=sOivxwUzAWA",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/sOivxwUzAWA/hqdefault.jpg",
       "note_en": "A-side of Mutant Records' very first release (MUT12001, Spain 2000) — Kultür's edit of I.C.O.N.'s 1999 trance hit Voco Me, marking the founding moment of the Málaga breaks imprint that would launch the Spanish nu skool scene.",
       "note_es": "Cara A del primer release de Mutant Records (MUT12001, España 2000) — el edit de Kultür del hit trance de I.C.O.N. de 1999, el momento fundacional del sello breaks malagueño que lanzaría la escena nu-skool española."
     },
@@ -403,14 +517,18 @@
       "sort_order": 27,
       "title": "Are You Ready?",
       "mix_name": "Original Mix",
-      "artists": [{ "name": "Player One" }],
+      "artists": [
+        {
+          "name": "Player One"
+        }
+      ],
       "label": "Air Dog Records",
       "catalog_number": "ILL1024",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/85511-Player-One-Are-You-Ready",
       "youtube_url": "https://www.youtube.com/watch?v=7__ZMWAo2Ns",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/7__ZMWAo2Ns/hqdefault.jpg",
       "note_en": "A-side of Player One's Air Dog Records 12\" (ILL1024, UK 2002) — a punchy, driving nu skool breaks track with a Technique Remix on the flip side.",
       "note_es": "Cara A del 12\" de Player One en Air Dog Records (ILL1024, UK 2002) — nu-skool breaks directo y contundente, con un Technique Remix en la cara B."
     },
@@ -418,14 +536,18 @@
       "sort_order": 28,
       "title": "No No No (You Don't Love Me)",
       "mix_name": "",
-      "artists": [{ "name": "The Wildlife Collective" }],
+      "artists": [
+        {
+          "name": "The Wildlife Collective"
+        }
+      ],
       "label": "Jungle Cakes",
       "catalog_number": "JC 002",
       "year": 2009,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1907484-The-Wildlife-Collective-No-No-No-You-Dont-Love-Me-Hail-Up-The-Lion",
       "youtube_url": "https://www.youtube.com/watch?v=kzOrf_SGpyk",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/kzOrf_SGpyk/hqdefault.jpg",
       "note_en": "A-side of Deekline & Ed Solo's 2009 Jungle Cakes 12\" (JC 002) — credited as The Wildlife Collective, a reggae-breaks flip of Dawn Penn's yard classic built for festival stacks; B-side Hail Up The Lion features Morgan Heritage.",
       "note_es": "Cara A del 12\" de Deekline & Ed Solo en Jungle Cakes (JC 002, 2009) — acreditados como The Wildlife Collective, un ride reggae-breaks sobre el yard clásico de Dawn Penn para pista y festival; en la B, Hail Up The Lion con Morgan Heritage."
     },
@@ -433,14 +555,18 @@
       "sort_order": 29,
       "title": "Bam Bam",
       "mix_name": "Benny Page & Deekline Remix",
-      "artists": [{ "name": "Deekline & Ed Solo" }],
+      "artists": [
+        {
+          "name": "Deekline & Ed Solo"
+        }
+      ],
       "label": "Jungle Cakes",
       "catalog_number": "JC107/113",
       "year": 2020,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/16249717",
       "youtube_url": "https://www.youtube.com/watch?v=swVYsf6ol0w",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/swVYsf6ol0w/hqdefault.jpg",
       "note_en": "B-side of the 2020 Jungle Cakes 12\" JC107/113 — Benny Page & Deekline slam Sister Nancy's Bam Bam into a modern dancefloor weapon, sharing the vinyl with their Bad Boys rework (Ben Snow & Jappa Remix) on the A.",
       "note_es": "Cara B del 12\" Jungle Cakes JC107/113 (2020) — Benny Page & Deekline convierten el Bam Bam de Sister Nancy en un arma de pista actual, compartiendo vinilo con el remake de Bad Boys (Ben Snow & Jappa Remix) en la A."
     }

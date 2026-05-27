@@ -5,14 +5,18 @@
       "sort_order": 1,
       "title": "Crazy",
       "mix_name": "",
-      "artists": [{ "name": "The Breakfastaz" }],
+      "artists": [
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
       "label": "Cyberfunk Records",
       "catalog_number": "CFUNK012",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/260508-The-Breakfastaz-Big-Breakfast-Part-1",
       "youtube_url": "https://www.youtube.com/watch?v=Vk_Ew-YMpaA",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Vk_Ew-YMpaA/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     },
@@ -20,14 +24,18 @@
       "sort_order": 2,
       "title": "Method Of Doubt",
       "mix_name": "",
-      "artists": [{ "name": "The Breakfastaz" }],
+      "artists": [
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
       "label": "Cyberfunk Records",
       "catalog_number": "CFUNK012",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/260508-The-Breakfastaz-Big-Breakfast-Part-1",
       "youtube_url": "https://www.youtube.com/watch?v=QseZgMDWAuc",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/QseZgMDWAuc/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
     }

@@ -90,7 +90,7 @@ export async function generateMetadata({
         title,
         description,
         'website',
-        publicOgArtworkUrl(row.artwork_url),
+        sectionOgImagePath('charts', lang),
         CHARTS_KEYWORDS[lang],
       )
     } catch {

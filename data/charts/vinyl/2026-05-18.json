@@ -236,44 +236,6 @@
     },
     {
       "sort_order": 12,
-      "title": "Security",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG024 PROMO",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/8118152-Freestylers-Security",
-      "youtube_url": "https://www.youtube.com/watch?v=0eSjsZZZUV0",
-      "artwork_url": "https://i.discogs.com/xmzKSbxAsnYZdOulLVTp6xNzz3Fk-OBCj9zo1nxktSg/rs:fit/g:sm/q:90/h:600/w:450/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTgxMTgx/NTItMTYyNzMzMTg4/Ni0zMzQ1LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG024 PROMO (2007) — Security (Original).",
-      "note_es": "Cara A del release Against The Grain ATG024 PROMO (2007) — Security (Original)."
-    },
-    {
-      "sort_order": 13,
-      "title": "Security",
-      "mix_name": "CTRL-Z Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG024 PROMO",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/8118152-Freestylers-Security",
-      "youtube_url": "https://www.youtube.com/watch?v=WzuJewp8nGI",
-      "artwork_url": "https://i.discogs.com/xmzKSbxAsnYZdOulLVTp6xNzz3Fk-OBCj9zo1nxktSg/rs:fit/g:sm/q:90/h:600/w:450/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTgxMTgx/NTItMTYyNzMzMTg4/Ni0zMzQ1LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG024 PROMO (2007) — Security (CTRL-Z Remix).",
-      "note_es": "Cara B del release Against The Grain ATG024 PROMO (2007) — Security (CTRL-Z Remix)."
-    },
-    {
-      "sort_order": 14,
       "title": "Can't You See",
       "mix_name": "",
       "artists": [
@@ -292,7 +254,7 @@
       "note_es": "Cara A del release Against The Grain 001 (2001) — Can't You See."
     },
     {
-      "sort_order": 15,
+      "sort_order": 13,
       "title": "Street Freaks",
       "mix_name": "",
       "artists": [
@@ -311,7 +273,7 @@
       "note_es": "Cara B del release Against The Grain 001 (2001) — Street Freaks."
     },
     {
-      "sort_order": 16,
+      "sort_order": 14,
       "title": "Push Up",
       "mix_name": "Plump DJ's Remix",
       "artists": [
@@ -330,7 +292,7 @@
       "note_es": "Cara A del release [PIAS] 449.3004.131 (2004) — Push Up (Plump DJ's Remix)."
     },
     {
-      "sort_order": 17,
+      "sort_order": 15,
       "title": "Push Up",
       "mix_name": "DJ Bomba & J Paolo Remix",
       "artists": [
@@ -349,7 +311,7 @@
       "note_es": "Cara B del release [PIAS] 449.3004.131 (2004) — Push Up (DJ Bomba & J Paolo Remix)."
     },
     {
-      "sort_order": 18,
+      "sort_order": 16,
       "title": "Crumper",
       "mix_name": "",
       "artists": [
@@ -363,12 +325,12 @@
       "format": "Vinyl, 12\\\", Test Pressing",
       "discogs_url": "https://www.discogs.com/release/2319162-Krafty-Kuts-The-Funk-Is-Crumper",
       "youtube_url": "https://www.youtube.com/watch?v=9grBdczd89M",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/9grBdczd89M/hqdefault.jpg",
       "note_en": "Side C on Against The Grain ATG 001 (2001) — Crumper.",
       "note_es": "Cara C del release Against The Grain ATG 001 (2001) — Crumper."
     },
     {
-      "sort_order": 19,
+      "sort_order": 17,
       "title": "The Funk Is",
       "mix_name": "",
       "artists": [
@@ -382,12 +344,12 @@
       "format": "Vinyl, 12\\\", Test Pressing",
       "discogs_url": "https://www.discogs.com/release/2319162-Krafty-Kuts-The-Funk-Is-Crumper",
       "youtube_url": "https://www.youtube.com/watch?v=Fn_pqJeotZw",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Fn_pqJeotZw/hqdefault.jpg",
       "note_en": "Side D on Against The Grain ATG 001 (2001) — The Funk Is.",
       "note_es": "Cara D del release Against The Grain ATG 001 (2001) — The Funk Is."
     },
     {
-      "sort_order": 20,
+      "sort_order": 18,
       "title": "Hook You Up",
       "mix_name": "",
       "artists": [
@@ -406,7 +368,7 @@
       "note_es": "Cara A del release Against The Grain ATG 003 (2001) — Hook You Up."
     },
     {
-      "sort_order": 21,
+      "sort_order": 19,
       "title": "Stoned",
       "mix_name": "",
       "artists": [
@@ -425,7 +387,7 @@
       "note_es": "Cara AA del release Against The Grain ATG 003 (2001) — Stoned."
     },
     {
-      "sort_order": 22,
+      "sort_order": 20,
       "title": "Bass Phenomenon",
       "mix_name": "",
       "artists": [
@@ -447,7 +409,7 @@
       "note_es": "Cara A del release Against The Grain ATG-016 (2006) — Bass Phenomenon."
     },
     {
-      "sort_order": 23,
+      "sort_order": 21,
       "title": "Bass Phenomenon",
       "mix_name": "Jesse Rose Remix",
       "artists": [
@@ -469,29 +431,7 @@
       "note_es": "Cara B del release Against The Grain ATG-016 (2006) — Bass Phenomenon (Jesse Rose Remix)."
     },
     {
-      "sort_order": 24,
-      "title": "Bass Phenomenon",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "Tim Deluxe"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG-016",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", Promo, Single Sided, 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/4724743-Krafty-Kuts-Tim-Deluxe-Bass-Phenomenon",
-      "youtube_url": "https://www.youtube.com/watch?v=npM4od5xOsE",
-      "artwork_url": "https://i.discogs.com/X12Rv6TumAeyNKTiVSzI9ASmeKQjMI7CbMIfW8WvdmE/rs:fit/g:sm/q:90/h:400/w:400/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ3MjQ3/NDMtMTQ2MjQ3Mjg0/MC0yMDgyLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG-016 (2006) — Bass Phenomenon.",
-      "note_es": "Cara A del release Against The Grain ATG-016 (2006) — Bass Phenomenon."
-    },
-    {
-      "sort_order": 25,
+      "sort_order": 22,
       "title": "Street Freaks",
       "mix_name": "",
       "artists": [
@@ -510,7 +450,7 @@
       "note_es": "Cara A del release Against The Grain ATG001 (2001) — Street Freaks."
     },
     {
-      "sort_order": 26,
+      "sort_order": 23,
       "title": "Get Funky",
       "mix_name": "",
       "artists": [
@@ -529,7 +469,7 @@
       "note_es": "Cara B del release Against The Grain ATG001 (2001) — Get Funky."
     },
     {
-      "sort_order": 27,
+      "sort_order": 24,
       "title": "Funky Ass Beats",
       "mix_name": "Ed Solo Breakbeat Remix",
       "artists": [
@@ -548,7 +488,7 @@
       "note_es": "Cara C del release Against The Grain ATG001 (2001) — Funky Ass Beats (Ed Solo Breakbeat Remix)."
     },
     {
-      "sort_order": 28,
+      "sort_order": 25,
       "title": "Don't Stop",
       "mix_name": "",
       "artists": [
@@ -567,7 +507,7 @@
       "note_es": "Cara D del release Against The Grain ATG001 (2001) — Don't Stop."
     },
     {
-      "sort_order": 29,
+      "sort_order": 26,
       "title": "Funky Ass Beats",
       "mix_name": "Ed Solo Remix",
       "artists": [
@@ -586,8 +526,8 @@
       "note_es": "Cara C del release Against The Grain ATG001 (2001) — Funky Ass Beats (Ed Solo Remix)."
     },
     {
-      "sort_order": 30,
-      "title": "Don't Stop",
+      "sort_order": 27,
+      "title": "Lock The Hype",
       "mix_name": "",
       "artists": [
         {
@@ -595,378 +535,112 @@
         }
       ],
       "label": "Against The Grain",
-      "catalog_number": "ATG001",
+      "catalog_number": "ATG002",
       "year": 2001,
-      "format": "Vinyl, 12\\\", White Label",
-      "discogs_url": "https://www.discogs.com/release/2552253-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=qMoYDZUwbqM",
-      "artwork_url": "https://i.discogs.com/r632c8Jm0EtXqPYdevUDNMoGcN2AZIccw6bjRN_EHMk/rs:fit/g:sm/q:90/h:450/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI1NTIy/NTMtMTQ2MjA2NjIx/My0yNzgwLmpwZWc.jpeg",
-      "note_en": "Side D on Against The Grain ATG001 (2001) — Don't Stop.",
-      "note_es": "Cara D del release Against The Grain ATG001 (2001) — Don't Stop."
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/107552-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
+      "youtube_url": "https://www.youtube.com/watch?v=K9hqimX1eQ4",
+      "artwork_url": "https://i.discogs.com/3lI8CmXiEPzI3QaHDjF_LQZyxPV5FEAg2zvdpbIzhzo/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNzU1/Mi0xMjA2NDg0MzQ2/LmpwZWc.jpeg",
+      "note_en": "Side A on Against The Grain ATG002 (2001) — Lock The Hype.",
+      "note_es": "Cara A del release Against The Grain ATG002 (2001) — Lock The Hype."
+    },
+    {
+      "sort_order": 28,
+      "title": "Smash Your Breaks",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Krafty Kuts"
+        }
+      ],
+      "label": "Against The Grain",
+      "catalog_number": "ATG002",
+      "year": 2001,
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/107552-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
+      "youtube_url": "https://www.youtube.com/watch?v=Jm9zqjvfgLg",
+      "artwork_url": "https://i.discogs.com/3lI8CmXiEPzI3QaHDjF_LQZyxPV5FEAg2zvdpbIzhzo/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNzU1/Mi0xMjA2NDg0MzQ2/LmpwZWc.jpeg",
+      "note_en": "Side AA on Against The Grain ATG002 (2001) — Smash Your Breaks.",
+      "note_es": "Cara AA del release Against The Grain ATG002 (2001) — Smash Your Breaks."
+    },
+    {
+      "sort_order": 29,
+      "title": "Punks",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Raw As F**k"
+        }
+      ],
+      "label": "Against The Grain",
+      "catalog_number": "ATG004",
+      "year": 2002,
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/91917-Raw-As-Fk-Punks-Demon-Beats",
+      "youtube_url": "https://www.youtube.com/watch?v=BP9S0CCgyM4",
+      "artwork_url": "https://i.discogs.com/kl_7MsvGziHehW1ui5jUTmNlSa-rCQVbiNuHRyQ8ZHk/rs:fit/g:sm/q:90/h:220/w:220/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxOTE3/LTEyNjcyMTk3ODcu/anBlZw.jpeg",
+      "note_en": "Side A on Against The Grain ATG004 (2002) — Punks.",
+      "note_es": "Cara A del release Against The Grain ATG004 (2002) — Punks."
+    },
+    {
+      "sort_order": 30,
+      "title": "Demon Beats",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Raw As F**k"
+        }
+      ],
+      "label": "Against The Grain",
+      "catalog_number": "ATG004",
+      "year": 2002,
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/91917-Raw-As-Fk-Punks-Demon-Beats",
+      "youtube_url": "https://www.youtube.com/watch?v=9vITBSWCDKQ",
+      "artwork_url": "https://i.discogs.com/kl_7MsvGziHehW1ui5jUTmNlSa-rCQVbiNuHRyQ8ZHk/rs:fit/g:sm/q:90/h:220/w:220/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxOTE3/LTEyNjcyMTk3ODcu/anBlZw.jpeg",
+      "note_en": "Side B on Against The Grain ATG004 (2002) — Demon Beats.",
+      "note_es": "Cara B del release Against The Grain ATG004 (2002) — Demon Beats."
     },
     {
       "sort_order": 31,
-      "title": "Street Freaks",
+      "title": "The Slammer",
       "mix_name": "",
       "artists": [
         {
-          "name": "Krafty Kuts"
+          "name": "Raw As F**k"
         }
       ],
       "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label",
-      "discogs_url": "https://www.discogs.com/release/2554457-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=Vb1ntJmmMi0",
-      "artwork_url": "",
-      "note_en": "Side A on Against The Grain ATG001 (2001) — Street Freaks.",
-      "note_es": "Cara A del release Against The Grain ATG001 (2001) — Street Freaks."
+      "catalog_number": "ATG005",
+      "year": 2002,
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/96782-Raw-As-Fk-The-Slammer-Theme-From-Raw",
+      "youtube_url": "https://www.youtube.com/watch?v=i7Cu9oEirrc",
+      "artwork_url": "https://i.discogs.com/dt1nZ_i-2QBy0Mswt2nDm4vXEPARcjM4Rde-RVQXnI4/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTk2Nzgy/LTEzODYwMjI4OTYt/ODU5NC5qcGVn.jpeg",
+      "note_en": "Side A on Against The Grain ATG005 (2002) — The Slammer.",
+      "note_es": "Cara A del release Against The Grain ATG005 (2002) — The Slammer."
     },
     {
       "sort_order": 32,
-      "title": "Get Funky",
+      "title": "Theme From Raw",
       "mix_name": "",
       "artists": [
         {
-          "name": "Krafty Kuts"
+          "name": "Raw As F**k"
         }
       ],
       "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label",
-      "discogs_url": "https://www.discogs.com/release/2554457-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=Tm-VYMsYWds",
-      "artwork_url": "",
-      "note_en": "Side B on Against The Grain ATG001 (2001) — Get Funky.",
-      "note_es": "Cara B del release Against The Grain ATG001 (2001) — Get Funky."
+      "catalog_number": "ATG005",
+      "year": 2002,
+      "format": "Vinyl, 12\\\"",
+      "discogs_url": "https://www.discogs.com/release/96782-Raw-As-Fk-The-Slammer-Theme-From-Raw",
+      "youtube_url": "https://www.youtube.com/watch?v=ZHdt8_ZcypY",
+      "artwork_url": "https://i.discogs.com/dt1nZ_i-2QBy0Mswt2nDm4vXEPARcjM4Rde-RVQXnI4/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTk2Nzgy/LTEzODYwMjI4OTYt/ODU5NC5qcGVn.jpeg",
+      "note_en": "Side AA on Against The Grain ATG005 (2002) — Theme From Raw.",
+      "note_es": "Cara AA del release Against The Grain ATG005 (2002) — Theme From Raw."
     },
     {
       "sort_order": 33,
-      "title": "Street Freaks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", EP, White Label",
-      "discogs_url": "https://www.discogs.com/release/18903238-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=Vb1ntJmmMi0",
-      "artwork_url": "",
-      "note_en": "Side A on Against The Grain ATG001 (2001) — Street Freaks.",
-      "note_es": "Cara A del release Against The Grain ATG001 (2001) — Street Freaks."
-    },
-    {
-      "sort_order": 34,
-      "title": "Get Funky",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", EP, White Label",
-      "discogs_url": "https://www.discogs.com/release/18903238-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=Tm-VYMsYWds",
-      "artwork_url": "",
-      "note_en": "Side B on Against The Grain ATG001 (2001) — Get Funky.",
-      "note_es": "Cara B del release Against The Grain ATG001 (2001) — Get Funky."
-    },
-    {
-      "sort_order": 35,
-      "title": "Funky Ass Beats",
-      "mix_name": "Ed Solo Breakbeat Remix",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", EP, White Label",
-      "discogs_url": "https://www.discogs.com/release/18903238-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=YZv5a4oq75g",
-      "artwork_url": "",
-      "note_en": "Side C on Against The Grain ATG001 (2001) — Funky Ass Beats (Ed Solo Breakbeat Remix).",
-      "note_es": "Cara C del release Against The Grain ATG001 (2001) — Funky Ass Beats (Ed Solo Breakbeat Remix)."
-    },
-    {
-      "sort_order": 36,
-      "title": "Don't Stop",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG001",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", EP, White Label",
-      "discogs_url": "https://www.discogs.com/release/18903238-Krafty-Kuts-Lost-Plates-EP",
-      "youtube_url": "https://www.youtube.com/watch?v=qMoYDZUwbqM",
-      "artwork_url": "",
-      "note_en": "Side D on Against The Grain ATG001 (2001) — Don't Stop.",
-      "note_es": "Cara D del release Against The Grain ATG001 (2001) — Don't Stop."
-    },
-    {
-      "sort_order": 37,
-      "title": "Lock The Hype",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG002",
-      "year": 2001,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/107552-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=K9hqimX1eQ4",
-      "artwork_url": "https://i.discogs.com/3lI8CmXiEPzI3QaHDjF_LQZyxPV5FEAg2zvdpbIzhzo/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNzU1/Mi0xMjA2NDg0MzQ2/LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG002 (2001) — Lock The Hype.",
-      "note_es": "Cara A del release Against The Grain ATG002 (2001) — Lock The Hype."
-    },
-    {
-      "sort_order": 38,
-      "title": "Smash Your Breaks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG002",
-      "year": 2001,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/107552-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=Jm9zqjvfgLg",
-      "artwork_url": "https://i.discogs.com/3lI8CmXiEPzI3QaHDjF_LQZyxPV5FEAg2zvdpbIzhzo/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNzU1/Mi0xMjA2NDg0MzQ2/LmpwZWc.jpeg",
-      "note_en": "Side AA on Against The Grain ATG002 (2001) — Smash Your Breaks.",
-      "note_es": "Cara AA del release Against The Grain ATG002 (2001) — Smash Your Breaks."
-    },
-    {
-      "sort_order": 39,
-      "title": "Lock The Hype",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG002",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label, Promo",
-      "discogs_url": "https://www.discogs.com/release/1238921-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=K9hqimX1eQ4",
-      "artwork_url": "https://i.discogs.com/nObC8xCr1Ul0yLL7CJsriTli0FPtRNYNa2aUoGMbBok/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMzg5/MjEtMTI3MzY3MjA0/MS5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG002 (2001) — Lock The Hype.",
-      "note_es": "Cara A del release Against The Grain ATG002 (2001) — Lock The Hype."
-    },
-    {
-      "sort_order": 40,
-      "title": "Smash Your Breaks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG002",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label, Promo",
-      "discogs_url": "https://www.discogs.com/release/1238921-Krafty-Kuts-Lock-The-Hype-Smash-Your-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=Jm9zqjvfgLg",
-      "artwork_url": "https://i.discogs.com/nObC8xCr1Ul0yLL7CJsriTli0FPtRNYNa2aUoGMbBok/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMzg5/MjEtMTI3MzY3MjA0/MS5qcGVn.jpeg",
-      "note_en": "Side AA on Against The Grain ATG002 (2001) — Smash Your Breaks.",
-      "note_es": "Cara AA del release Against The Grain ATG002 (2001) — Smash Your Breaks."
-    },
-    {
-      "sort_order": 41,
-      "title": "Punks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG004",
-      "year": 2002,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/91917-Raw-As-Fk-Punks-Demon-Beats",
-      "youtube_url": "https://www.youtube.com/watch?v=BP9S0CCgyM4",
-      "artwork_url": "https://i.discogs.com/kl_7MsvGziHehW1ui5jUTmNlSa-rCQVbiNuHRyQ8ZHk/rs:fit/g:sm/q:90/h:220/w:220/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxOTE3/LTEyNjcyMTk3ODcu/anBlZw.jpeg",
-      "note_en": "Side A on Against The Grain ATG004 (2002) — Punks.",
-      "note_es": "Cara A del release Against The Grain ATG004 (2002) — Punks."
-    },
-    {
-      "sort_order": 42,
-      "title": "Demon Beats",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG004",
-      "year": 2002,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/91917-Raw-As-Fk-Punks-Demon-Beats",
-      "youtube_url": "https://www.youtube.com/watch?v=9vITBSWCDKQ",
-      "artwork_url": "https://i.discogs.com/kl_7MsvGziHehW1ui5jUTmNlSa-rCQVbiNuHRyQ8ZHk/rs:fit/g:sm/q:90/h:220/w:220/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxOTE3/LTEyNjcyMTk3ODcu/anBlZw.jpeg",
-      "note_en": "Side B on Against The Grain ATG004 (2002) — Demon Beats.",
-      "note_es": "Cara B del release Against The Grain ATG004 (2002) — Demon Beats."
-    },
-    {
-      "sort_order": 43,
-      "title": "Punks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG004",
-      "year": 2002,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2554517-Raw-As-Fk-Punks-Demon-Beats",
-      "youtube_url": "https://www.youtube.com/watch?v=BP9S0CCgyM4",
-      "artwork_url": "https://i.discogs.com/9Q7s_ysdS-zkbYtJWQG1g1jWCPo6zm1mNSmBrbrP9Gg/rs:fit/g:sm/q:90/h:591/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI1NTQ1/MTctMTUwMzIzNDky/OS03Mzc4LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG004 (2002) — Punks.",
-      "note_es": "Cara A del release Against The Grain ATG004 (2002) — Punks."
-    },
-    {
-      "sort_order": 44,
-      "title": "Demon Beats",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG004",
-      "year": 2002,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2554517-Raw-As-Fk-Punks-Demon-Beats",
-      "youtube_url": "https://www.youtube.com/watch?v=9vITBSWCDKQ",
-      "artwork_url": "https://i.discogs.com/9Q7s_ysdS-zkbYtJWQG1g1jWCPo6zm1mNSmBrbrP9Gg/rs:fit/g:sm/q:90/h:591/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI1NTQ1/MTctMTUwMzIzNDky/OS03Mzc4LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG004 (2002) — Demon Beats.",
-      "note_es": "Cara B del release Against The Grain ATG004 (2002) — Demon Beats."
-    },
-    {
-      "sort_order": 45,
-      "title": "The Slammer",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG005",
-      "year": 2002,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/96782-Raw-As-Fk-The-Slammer-Theme-From-Raw",
-      "youtube_url": "https://www.youtube.com/watch?v=i7Cu9oEirrc",
-      "artwork_url": "https://i.discogs.com/dt1nZ_i-2QBy0Mswt2nDm4vXEPARcjM4Rde-RVQXnI4/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTk2Nzgy/LTEzODYwMjI4OTYt/ODU5NC5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG005 (2002) — The Slammer.",
-      "note_es": "Cara A del release Against The Grain ATG005 (2002) — The Slammer."
-    },
-    {
-      "sort_order": 46,
-      "title": "Theme From Raw",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG005",
-      "year": 2002,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/96782-Raw-As-Fk-The-Slammer-Theme-From-Raw",
-      "youtube_url": "https://www.youtube.com/watch?v=ZHdt8_ZcypY",
-      "artwork_url": "https://i.discogs.com/dt1nZ_i-2QBy0Mswt2nDm4vXEPARcjM4Rde-RVQXnI4/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTk2Nzgy/LTEzODYwMjI4OTYt/ODU5NC5qcGVn.jpeg",
-      "note_en": "Side AA on Against The Grain ATG005 (2002) — Theme From Raw.",
-      "note_es": "Cara AA del release Against The Grain ATG005 (2002) — Theme From Raw."
-    },
-    {
-      "sort_order": 47,
-      "title": "The Slammer",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG005",
-      "year": 2002,
-      "format": "Vinyl, 12\\\", 45 RPM, Promo",
-      "discogs_url": "https://www.discogs.com/release/2535076-Raw-As-Fk-The-Slammer-Theme-From-Raw",
-      "youtube_url": "https://www.youtube.com/watch?v=i7Cu9oEirrc",
-      "artwork_url": "https://i.discogs.com/IhA9dkZJvhn1UhQ_j6_i06KbQlU6sysuH2xJ675BqZQ/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI1MzUw/NzYtMTQ2MTA5MTU3/Ni0yODcxLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG005 (2002) — The Slammer.",
-      "note_es": "Cara A del release Against The Grain ATG005 (2002) — The Slammer."
-    },
-    {
-      "sort_order": 48,
-      "title": "Theme From Raw",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG005",
-      "year": 2002,
-      "format": "Vinyl, 12\\\", 45 RPM, Promo",
-      "discogs_url": "https://www.discogs.com/release/2535076-Raw-As-Fk-The-Slammer-Theme-From-Raw",
-      "youtube_url": "https://www.youtube.com/watch?v=ZHdt8_ZcypY",
-      "artwork_url": "https://i.discogs.com/IhA9dkZJvhn1UhQ_j6_i06KbQlU6sysuH2xJ675BqZQ/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI1MzUw/NzYtMTQ2MTA5MTU3/Ni0yODcxLmpwZWc.jpeg",
-      "note_en": "Side AA on Against The Grain ATG005 (2002) — Theme From Raw.",
-      "note_es": "Cara AA del release Against The Grain ATG005 (2002) — Theme From Raw."
-    },
-    {
-      "sort_order": 49,
-      "title": "The Slammer",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Raw As F**k"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG005",
-      "year": 2002,
-      "format": "Vinyl, 12\\\", Test Pressing, Stereo",
-      "discogs_url": "https://www.discogs.com/release/15677510-Raw-As-Fk-The-Slammer",
-      "youtube_url": "https://www.youtube.com/watch?v=i7Cu9oEirrc",
-      "artwork_url": "https://i.discogs.com/opacDZoJYQyOOq6_jpOgLwMjzicodYGprrl1tQ5hCSU/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE1Njc3/NTEwLTE1OTU3NDcw/OTUtNTg2NC5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG005 (2002) — The Slammer.",
-      "note_es": "Cara A del release Against The Grain ATG005 (2002) — The Slammer."
-    },
-    {
-      "sort_order": 50,
       "title": "The Theme From Raw",
       "mix_name": "",
       "artists": [
@@ -985,7 +659,7 @@
       "note_es": "Cara AA del release Against The Grain ATG005 (2002) — The Theme From Raw."
     },
     {
-      "sort_order": 51,
+      "sort_order": 34,
       "title": "No Replica",
       "mix_name": "",
       "artists": [
@@ -1007,7 +681,7 @@
       "note_es": "Cara A del release Against The Grain ATG006 (2003) — No Replica."
     },
     {
-      "sort_order": 52,
+      "sort_order": 35,
       "title": "No Replica",
       "mix_name": "Deep Impact Dub Mix",
       "artists": [
@@ -1029,7 +703,7 @@
       "note_es": "Cara B1 del release Against The Grain ATG006 (2003) — No Replica (Deep Impact Dub Mix)."
     },
     {
-      "sort_order": 53,
+      "sort_order": 36,
       "title": "No Replica",
       "mix_name": "Deep Thought Mix",
       "artists": [
@@ -1051,73 +725,7 @@
       "note_es": "Cara B2 del release Against The Grain ATG006 (2003) — No Replica (Deep Thought Mix)."
     },
     {
-      "sort_order": 54,
-      "title": "No Replica",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Million Dan"
-        },
-        {
-          "name": "Raw As F**K"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG006",
-      "year": 2003,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/3049694-Million-Dan-vs-Raw-As-FK-No-Replica",
-      "youtube_url": "https://www.youtube.com/watch?v=-LKdEOV3Fso",
-      "artwork_url": "https://i.discogs.com/iGnH8X38KSEkeVfQq2wZRDDC7MhlShiFwYD6kYo-W6s/rs:fit/g:sm/q:90/h:574/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTMwNDk2/OTQtMTY5MTQzOTcw/MS00NTk4LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG006 (2003) — No Replica.",
-      "note_es": "Cara A del release Against The Grain ATG006 (2003) — No Replica."
-    },
-    {
-      "sort_order": 55,
-      "title": "No Replica",
-      "mix_name": "Deep Impact Dub Mix",
-      "artists": [
-        {
-          "name": "Million Dan"
-        },
-        {
-          "name": "Raw As F**K"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG006",
-      "year": 2003,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/3049694-Million-Dan-vs-Raw-As-FK-No-Replica",
-      "youtube_url": "https://www.youtube.com/watch?v=Pwzm68XFq1Q",
-      "artwork_url": "https://i.discogs.com/iGnH8X38KSEkeVfQq2wZRDDC7MhlShiFwYD6kYo-W6s/rs:fit/g:sm/q:90/h:574/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTMwNDk2/OTQtMTY5MTQzOTcw/MS00NTk4LmpwZWc.jpeg",
-      "note_en": "Side B1 on Against The Grain ATG006 (2003) — No Replica (Deep Impact Dub Mix).",
-      "note_es": "Cara B1 del release Against The Grain ATG006 (2003) — No Replica (Deep Impact Dub Mix)."
-    },
-    {
-      "sort_order": 56,
-      "title": "No Replica",
-      "mix_name": "Deep Thought Mix",
-      "artists": [
-        {
-          "name": "Million Dan"
-        },
-        {
-          "name": "Raw As F**K"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG006",
-      "year": 2003,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/3049694-Million-Dan-vs-Raw-As-FK-No-Replica",
-      "youtube_url": "https://www.youtube.com/watch?v=7itdBJy01Kk",
-      "artwork_url": "https://i.discogs.com/iGnH8X38KSEkeVfQq2wZRDDC7MhlShiFwYD6kYo-W6s/rs:fit/g:sm/q:90/h:574/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTMwNDk2/OTQtMTY5MTQzOTcw/MS00NTk4LmpwZWc.jpeg",
-      "note_en": "Side B2 on Against The Grain ATG006 (2003) — No Replica (Deep Thought Mix).",
-      "note_es": "Cara B2 del release Against The Grain ATG006 (2003) — No Replica (Deep Thought Mix)."
-    },
-    {
-      "sort_order": 57,
+      "sort_order": 37,
       "title": "Take It",
       "mix_name": "Vocal Mix",
       "artists": [
@@ -1139,7 +747,7 @@
       "note_es": "Cara A del release Against The Grain ATG007 (2003) — Take It (Vocal Mix)."
     },
     {
-      "sort_order": 58,
+      "sort_order": 38,
       "title": "Take It",
       "mix_name": "Instrumental",
       "artists": [
@@ -1161,70 +769,7 @@
       "note_es": "Cara B del release Against The Grain ATG007 (2003) — Take It (Instrumental)."
     },
     {
-      "sort_order": 59,
-      "title": "Take It",
-      "mix_name": "Vocal Mix",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "C5 Joyriders"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG007",
-      "year": 2003,
-      "format": "Vinyl, 12\\\", Test Pressing",
-      "discogs_url": "https://www.discogs.com/release/3060741-Krafty-Kuts-C5-Joyriders-Take-It",
-      "youtube_url": "https://www.youtube.com/watch?v=mBUdaw-Te18",
-      "artwork_url": "",
-      "note_en": "Side A on Against The Grain ATG007 (2003) — Take It (Vocal Mix).",
-      "note_es": "Cara A del release Against The Grain ATG007 (2003) — Take It (Vocal Mix)."
-    },
-    {
-      "sort_order": 60,
-      "title": "Take It",
-      "mix_name": "Instrumental",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "C5 Joyriders"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG007",
-      "year": 2003,
-      "format": "Vinyl, 12\\\", Test Pressing",
-      "discogs_url": "https://www.discogs.com/release/3060741-Krafty-Kuts-C5-Joyriders-Take-It",
-      "youtube_url": "https://www.youtube.com/watch?v=7vo4-SmxxX8",
-      "artwork_url": "",
-      "note_en": "Side B on Against The Grain ATG007 (2003) — Take It (Instrumental).",
-      "note_es": "Cara B del release Against The Grain ATG007 (2003) — Take It (Instrumental)."
-    },
-    {
-      "sort_order": 61,
-      "title": "Get A Life",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG008",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 33 ⅓ RPM, 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/224550-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=Y7U5JJs3Egs",
-      "artwork_url": "https://i.discogs.com/D5YV2leHsLqbnAjmVcsrBJyghYWZ-HJAEcK6nu2a3fE/rs:fit/g:sm/q:90/h:600/w:599/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIyNDU1/MC0xMzk2MzE2OTgw/LTgyODUuanBlZw.jpeg",
-      "note_en": "Side A on Against The Grain ATG008 (2004) — Get A Life.",
-      "note_es": "Cara A del release Against The Grain ATG008 (2004) — Get A Life."
-    },
-    {
-      "sort_order": 62,
+      "sort_order": 39,
       "title": "Get A Life",
       "mix_name": "Roni Size Mix",
       "artists": [
@@ -1243,45 +788,7 @@
       "note_es": "Cara B del release Against The Grain ATG008 (2004) — Get A Life (Roni Size Mix)."
     },
     {
-      "sort_order": 63,
-      "title": "Get A Life",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG008",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2154984-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=Y7U5JJs3Egs",
-      "artwork_url": "https://i.discogs.com/YD9VfJCKYnIC_iJB1ChOQOsVWxBkGZ-T75BeEHf-46Y/rs:fit/g:sm/q:90/h:600/w:591/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIxNTQ5/ODQtMTU0NzcxMTU5/NC00NDQxLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG008 (2004) — Get A Life.",
-      "note_es": "Cara A del release Against The Grain ATG008 (2004) — Get A Life."
-    },
-    {
-      "sort_order": 64,
-      "title": "Get A Life",
-      "mix_name": "Roni Size Mix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG008",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2154984-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=MI4x7txxgMQ",
-      "artwork_url": "https://i.discogs.com/YD9VfJCKYnIC_iJB1ChOQOsVWxBkGZ-T75BeEHf-46Y/rs:fit/g:sm/q:90/h:600/w:591/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIxNTQ5/ODQtMTU0NzcxMTU5/NC00NDQxLmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG008 (2004) — Get A Life (Roni Size Mix).",
-      "note_es": "Cara B del release Against The Grain ATG008 (2004) — Get A Life (Roni Size Mix)."
-    },
-    {
-      "sort_order": 65,
+      "sort_order": 40,
       "title": "Get a Life",
       "mix_name": "Poxy Music Remix",
       "artists": [
@@ -1300,7 +807,7 @@
       "note_es": "Cara A del release Against The Grain ATG008R (2004) — Get a Life (Poxy Music Remix)."
     },
     {
-      "sort_order": 66,
+      "sort_order": 41,
       "title": "Punks",
       "mix_name": "Krafty Kuts Remix",
       "artists": [
@@ -1319,45 +826,7 @@
       "note_es": "Cara B del release Against The Grain ATG008R (2004) — Punks (Krafty Kuts Remix)."
     },
     {
-      "sort_order": 67,
-      "title": "Get A Life",
-      "mix_name": "Poxy Music Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG008R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4871000-Freestylers-Get-A-Life-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=eWBw9PElVcc",
-      "artwork_url": "https://i.discogs.com/WIQFkxsjgOUJfrrYSZhFDpE1jIv0l7xldeSYqbatJRk/rs:fit/g:sm/q:90/h:600/w:595/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ4NzEw/MDAtMTQwNzA3MjMy/Ni02OTE5LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG008R (2004) — Get A Life (Poxy Music Remix).",
-      "note_es": "Cara A del release Against The Grain ATG008R (2004) — Get A Life (Poxy Music Remix)."
-    },
-    {
-      "sort_order": 68,
-      "title": "Punks",
-      "mix_name": "Krafty Kuts Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG008R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4871000-Freestylers-Get-A-Life-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=r-Azj9kj67M",
-      "artwork_url": "https://i.discogs.com/WIQFkxsjgOUJfrrYSZhFDpE1jIv0l7xldeSYqbatJRk/rs:fit/g:sm/q:90/h:600/w:595/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ4NzEw/MDAtMTQwNzA3MjMy/Ni02OTE5LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG008R (2004) — Punks (Krafty Kuts Remix).",
-      "note_es": "Cara B del release Against The Grain ATG008R (2004) — Punks (Krafty Kuts Remix)."
-    },
-    {
-      "sort_order": 69,
+      "sort_order": 42,
       "title": "Push Up",
       "mix_name": "Original",
       "artists": [
@@ -1376,7 +845,7 @@
       "note_es": "Cara A del release Against The Grain ATG009 (2004) — Push Up (Original)."
     },
     {
-      "sort_order": 70,
+      "sort_order": 43,
       "title": "The Slammer",
       "mix_name": "Clipz Remix",
       "artists": [
@@ -1395,235 +864,7 @@
       "note_es": "Cara B del release Against The Grain ATG009 (2004) — The Slammer (Clipz Remix)."
     },
     {
-      "sort_order": 71,
-      "title": "Push Up",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4671642-Freestylers-Push-Up-The-Slammer",
-      "youtube_url": "https://www.youtube.com/watch?v=GyhBIE6dsos",
-      "artwork_url": "https://i.discogs.com/FTrN4Meh6OSqzHz3tGYCmUb1hpmtgWecsfT_o0d9BAU/rs:fit/g:sm/q:90/h:600/w:452/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ2NzE2/NDItMTY5NjUzNDc3/My0xMTIzLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG009 (2004) — Push Up (Original).",
-      "note_es": "Cara A del release Against The Grain ATG009 (2004) — Push Up (Original)."
-    },
-    {
-      "sort_order": 72,
-      "title": "The Slammer",
-      "mix_name": "Clipz Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4671642-Freestylers-Push-Up-The-Slammer",
-      "youtube_url": "https://www.youtube.com/watch?v=GnEUvp4f15M",
-      "artwork_url": "https://i.discogs.com/FTrN4Meh6OSqzHz3tGYCmUb1hpmtgWecsfT_o0d9BAU/rs:fit/g:sm/q:90/h:600/w:452/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQ2NzE2/NDItMTY5NjUzNDc3/My0xMTIzLmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG009 (2004) — The Slammer (Clipz Remix).",
-      "note_es": "Cara B del release Against The Grain ATG009 (2004) — The Slammer (Clipz Remix)."
-    },
-    {
-      "sort_order": 73,
-      "title": "Push Up",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/5666854-Freestylers-Push-Up-The-Slammer",
-      "youtube_url": "https://www.youtube.com/watch?v=GyhBIE6dsos",
-      "artwork_url": "",
-      "note_en": "Side A on Against The Grain ATG009 (2004) — Push Up (Original).",
-      "note_es": "Cara A del release Against The Grain ATG009 (2004) — Push Up (Original)."
-    },
-    {
-      "sort_order": 74,
-      "title": "The Slammer",
-      "mix_name": "Clipz Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/5666854-Freestylers-Push-Up-The-Slammer",
-      "youtube_url": "https://www.youtube.com/watch?v=GnEUvp4f15M",
-      "artwork_url": "",
-      "note_en": "Side B on Against The Grain ATG009 (2004) — The Slammer (Clipz Remix).",
-      "note_es": "Cara B del release Against The Grain ATG009 (2004) — The Slammer (Clipz Remix)."
-    },
-    {
-      "sort_order": 75,
-      "title": "Push Up",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, Test Pressing",
-      "discogs_url": "https://www.discogs.com/release/32178957-Freestylers-Push-Up",
-      "youtube_url": "https://www.youtube.com/watch?v=GyhBIE6dsos",
-      "artwork_url": "https://i.discogs.com/XVGmB5_HyDhCGiAmuwPP8qVGengkfs5kVaDIMCAXPh0/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTMyMTc4/OTU3LTE3MzA1Njk5/NjktODI0NS5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG009 (2004) — Push Up (Original).",
-      "note_es": "Cara A del release Against The Grain ATG009 (2004) — Push Up (Original)."
-    },
-    {
-      "sort_order": 76,
-      "title": "Push Up",
-      "mix_name": "Plump DJ's Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, Test Pressing",
-      "discogs_url": "https://www.discogs.com/release/32178957-Freestylers-Push-Up",
-      "youtube_url": "https://www.youtube.com/watch?v=6iUwVOyTHwE",
-      "artwork_url": "https://i.discogs.com/XVGmB5_HyDhCGiAmuwPP8qVGengkfs5kVaDIMCAXPh0/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTMyMTc4/OTU3LTE3MzA1Njk5/NjktODI0NS5qcGVn.jpeg",
-      "note_en": "Side AA on Against The Grain ATG009 (2004) — Push Up (Plump DJ's Remix).",
-      "note_es": "Cara AA del release Against The Grain ATG009 (2004) — Push Up (Plump DJ's Remix)."
-    },
-    {
-      "sort_order": 77,
-      "title": "Push Up",
-      "mix_name": "Plump DJ's Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/284689-Freestylers-Push-Up",
-      "youtube_url": "https://www.youtube.com/watch?v=pBmQPU1yzGY",
-      "artwork_url": "https://i.discogs.com/QTMzAJDRV37QXlAx_z2uqM4-mMWg6Tc6Fes7W9DWEZM/rs:fit/g:sm/q:90/h:409/w:400/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI4NDY4/OS0xMTQyMTI3MDk1/LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix).",
-      "note_es": "Cara A del release Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix)."
-    },
-    {
-      "sort_order": 78,
-      "title": "Push Up",
-      "mix_name": "DJ Bomba & J Paolo Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/284689-Freestylers-Push-Up",
-      "youtube_url": "https://www.youtube.com/watch?v=jBgqGl2xArI",
-      "artwork_url": "https://i.discogs.com/QTMzAJDRV37QXlAx_z2uqM4-mMWg6Tc6Fes7W9DWEZM/rs:fit/g:sm/q:90/h:409/w:400/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTI4NDY4/OS0xMTQyMTI3MDk1/LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix).",
-      "note_es": "Cara B del release Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix)."
-    },
-    {
-      "sort_order": 79,
-      "title": "Push Up",
-      "mix_name": "Plump DJ's Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2036423-Freestylers-Push-Up-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=pBmQPU1yzGY",
-      "artwork_url": "https://i.discogs.com/wf2JER41dqL-04MEpzJE-I3wB8Qf5cthjXc8rzgGusQ/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIwMzY0/MjMtMTY2MDAxMTA2/My0xMzYwLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix).",
-      "note_es": "Cara A del release Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix)."
-    },
-    {
-      "sort_order": 80,
-      "title": "Push Up",
-      "mix_name": "DJ Bomba & J Paolo Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/2036423-Freestylers-Push-Up-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=jBgqGl2xArI",
-      "artwork_url": "https://i.discogs.com/wf2JER41dqL-04MEpzJE-I3wB8Qf5cthjXc8rzgGusQ/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTIwMzY0/MjMtMTY2MDAxMTA2/My0xMzYwLmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix).",
-      "note_es": "Cara B del release Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix)."
-    },
-    {
-      "sort_order": 81,
-      "title": "Push Up",
-      "mix_name": "Plump DJ's Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/12160274-Freestylers-Push-Up-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=pBmQPU1yzGY",
-      "artwork_url": "https://i.discogs.com/Lm3K27aYlLVsntAEcbeFgc9aCk8gn_v597dOi4ykcEs/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMTYw/Mjc0LTE1Mjk1MTI0/NjEtNzM3Ny5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix).",
-      "note_es": "Cara A del release Against The Grain ATG009R (2004) — Push Up (Plump DJ's Remix)."
-    },
-    {
-      "sort_order": 82,
-      "title": "Push Up",
-      "mix_name": "DJ Bomba & J Paolo Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG009R",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/12160274-Freestylers-Push-Up-Remixes",
-      "youtube_url": "https://www.youtube.com/watch?v=jBgqGl2xArI",
-      "artwork_url": "https://i.discogs.com/Lm3K27aYlLVsntAEcbeFgc9aCk8gn_v597dOi4ykcEs/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMTYw/Mjc0LTE1Mjk1MTI0/NjEtNzM3Ny5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix).",
-      "note_es": "Cara B del release Against The Grain ATG009R (2004) — Push Up (DJ Bomba & J Paolo Remix)."
-    },
-    {
-      "sort_order": 83,
+      "sort_order": 44,
       "title": "Boom Blast",
       "mix_name": "Original",
       "artists": [
@@ -1645,7 +886,7 @@
       "note_es": "Cara A del release Against The Grain ATG010 (2005) — Boom Blast (Original)."
     },
     {
-      "sort_order": 84,
+      "sort_order": 45,
       "title": "Boom Blast",
       "mix_name": "Deekline & Wizard Remix",
       "artists": [
@@ -1667,51 +908,7 @@
       "note_es": "Cara B del release Against The Grain ATG010 (2005) — Boom Blast (Deekline & Wizard Remix)."
     },
     {
-      "sort_order": 85,
-      "title": "Boom Blast",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Freestylers"
-        },
-        {
-          "name": "Million Dan"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG010",
-      "year": 2005,
-      "format": "Vinyl, 12\\\", 45 RPM, White Label",
-      "discogs_url": "https://www.discogs.com/release/36946359-Freestylers-Feat-Million-Dan-Boom-Blast",
-      "youtube_url": "https://www.youtube.com/watch?v=eG6NZ1_DGO4",
-      "artwork_url": "https://i.discogs.com/AFN52jZFIUbOR4ucBn7YWj7c7380oI4Zc6TKQbsgfnc/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM2OTQ2/MzU5LTE3NzUwNzcy/NzktODM3OC5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG010 (2005) — Boom Blast (Original).",
-      "note_es": "Cara A del release Against The Grain ATG010 (2005) — Boom Blast (Original)."
-    },
-    {
-      "sort_order": 86,
-      "title": "Boom Blast",
-      "mix_name": "Deekline & Wizard Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        },
-        {
-          "name": "Million Dan"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG010",
-      "year": 2005,
-      "format": "Vinyl, 12\\\", 45 RPM, White Label",
-      "discogs_url": "https://www.discogs.com/release/36946359-Freestylers-Feat-Million-Dan-Boom-Blast",
-      "youtube_url": "https://www.youtube.com/watch?v=wDreqMw7O_4",
-      "artwork_url": "https://i.discogs.com/AFN52jZFIUbOR4ucBn7YWj7c7380oI4Zc6TKQbsgfnc/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM2OTQ2/MzU5LTE3NzUwNzcy/NzktODM3OC5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG010 (2005) — Boom Blast (Deekline & Wizard Remix).",
-      "note_es": "Cara B del release Against The Grain ATG010 (2005) — Boom Blast (Deekline & Wizard Remix)."
-    },
-    {
-      "sort_order": 87,
+      "sort_order": 46,
       "title": "Boom Blast",
       "mix_name": "John B Remix",
       "artists": [
@@ -1730,7 +927,7 @@
       "note_es": "Cara A del release Against The Grain ATG010R (2005) — Boom Blast (John B Remix)."
     },
     {
-      "sort_order": 88,
+      "sort_order": 47,
       "title": "Warrior Charge",
       "mix_name": "The Breakfastaz Remix",
       "artists": [
@@ -1749,7 +946,7 @@
       "note_es": "Cara B del release Against The Grain ATG010R (2005) — Warrior Charge (The Breakfastaz Remix)."
     },
     {
-      "sort_order": 89,
+      "sort_order": 48,
       "title": "Midnight",
       "mix_name": "",
       "artists": [
@@ -1768,7 +965,7 @@
       "note_es": "Cara A del release Against The Grain ATG011 (2005) — Midnight."
     },
     {
-      "sort_order": 90,
+      "sort_order": 49,
       "title": "Midnight",
       "mix_name": "J Majik & Wickerman Remix",
       "artists": [
@@ -1787,7 +984,7 @@
       "note_es": "Cara B del release Against The Grain ATG011 (2005) — Midnight (J Majik & Wickerman Remix)."
     },
     {
-      "sort_order": 91,
+      "sort_order": 50,
       "title": "Midnight",
       "mix_name": "Koma & Bones Remix",
       "artists": [
@@ -1806,7 +1003,7 @@
       "note_es": "Cara A del release Against The Grain ATG011R (2005) — Midnight (Koma & Bones Remix)."
     },
     {
-      "sort_order": 92,
+      "sort_order": 51,
       "title": "Lift Me Up",
       "mix_name": "",
       "artists": [
@@ -1825,7 +1022,7 @@
       "note_es": "Cara B del release Against The Grain ATG011R (2005) — Lift Me Up."
     },
     {
-      "sort_order": 93,
+      "sort_order": 52,
       "title": "On My Mind",
       "mix_name": "Original Mix",
       "artists": [
@@ -1844,7 +1041,7 @@
       "note_es": "Cara A del release Against The Grain ATG012 (2005) — On My Mind (Original Mix)."
     },
     {
-      "sort_order": 94,
+      "sort_order": 53,
       "title": "On My Mind",
       "mix_name": "Drumattic Twins Remix",
       "artists": [
@@ -1863,7 +1060,7 @@
       "note_es": "Cara AA del release Against The Grain ATG012 (2005) — On My Mind (Drumattic Twins Remix)."
     },
     {
-      "sort_order": 95,
+      "sort_order": 54,
       "title": "Soul Roll",
       "mix_name": "",
       "artists": [
@@ -1882,7 +1079,7 @@
       "note_es": "Cara A del release Against The Grain ATG013 (2005) — Soul Roll."
     },
     {
-      "sort_order": 96,
+      "sort_order": 55,
       "title": "Both Knees",
       "mix_name": "Breakfastaz Remix",
       "artists": [
@@ -1901,7 +1098,7 @@
       "note_es": "Cara B del release Against The Grain ATG013 (2005) — Both Knees (Breakfastaz Remix)."
     },
     {
-      "sort_order": 97,
+      "sort_order": 56,
       "title": "Here On Business",
       "mix_name": "",
       "artists": [
@@ -1920,7 +1117,7 @@
       "note_es": "Cara A del release Against The Grain ATG014 (2005) — Here On Business."
     },
     {
-      "sort_order": 98,
+      "sort_order": 57,
       "title": "Them & You",
       "mix_name": "",
       "artists": [
@@ -1939,7 +1136,7 @@
       "note_es": "Cara B del release Against The Grain ATG014 (2005) — Them & You."
     },
     {
-      "sort_order": 99,
+      "sort_order": 58,
       "title": "When I Rock",
       "mix_name": "",
       "artists": [
@@ -1958,7 +1155,7 @@
       "note_es": "Cara C del release Against The Grain ATG014 (2005) — When I Rock."
     },
     {
-      "sort_order": 100,
+      "sort_order": 59,
       "title": "Check It Stereo",
       "mix_name": "",
       "artists": [
@@ -1977,7 +1174,7 @@
       "note_es": "Cara D del release Against The Grain ATG014 (2005) — Check It Stereo."
     },
     {
-      "sort_order": 101,
+      "sort_order": 60,
       "title": "KFC",
       "mix_name": "Future Funk Squad Remix",
       "artists": [
@@ -1996,7 +1193,7 @@
       "note_es": "Cara A del release Against The Grain ATG015 (2006) — KFC (Future Funk Squad Remix)."
     },
     {
-      "sort_order": 102,
+      "sort_order": 61,
       "title": "Freakfunk",
       "mix_name": "",
       "artists": [
@@ -2015,73 +1212,7 @@
       "note_es": "Cara B del release Against The Grain ATG015 (2006) — Freakfunk."
     },
     {
-      "sort_order": 103,
-      "title": "Bass Phenomenon",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "Tim Deluxe"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG016",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/660110-Krafty-Kuts-Tim-Deluxe-Bass-Phenomenon",
-      "youtube_url": "https://www.youtube.com/watch?v=RgUQj3yvGhc",
-      "artwork_url": "https://i.discogs.com/auYLwC2UxxvZfCIls8xR9T915lGI_n8wsevjnBzgbP8/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTY2MDEx/MC0xMTg5ODMyMDQ1/LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG016 (2006) — Bass Phenomenon.",
-      "note_es": "Cara A del release Against The Grain ATG016 (2006) — Bass Phenomenon."
-    },
-    {
-      "sort_order": 104,
-      "title": "Bass Phenomenon",
-      "mix_name": "Jesse Rose Remix",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "Tim Deluxe"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG016",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/660110-Krafty-Kuts-Tim-Deluxe-Bass-Phenomenon",
-      "youtube_url": "https://www.youtube.com/watch?v=BDT7LMxFAQ0",
-      "artwork_url": "https://i.discogs.com/auYLwC2UxxvZfCIls8xR9T915lGI_n8wsevjnBzgbP8/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTY2MDEx/MC0xMTg5ODMyMDQ1/LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG016 (2006) — Bass Phenomenon (Jesse Rose Remix).",
-      "note_es": "Cara B del release Against The Grain ATG016 (2006) — Bass Phenomenon (Jesse Rose Remix)."
-    },
-    {
-      "sort_order": 105,
-      "title": "Bass Phenomenon",
-      "mix_name": "DJ Friction Remix",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        },
-        {
-          "name": "Tim Deluxe"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG016R",
-      "year": 2006,
-      "format": "Vinyl, 12\\\"",
-      "discogs_url": "https://www.discogs.com/release/695055-Krafty-Kuts-Tim-Deluxe-Bass-Phenomenon-DJ-Friction-Remix-The-Funk-Is",
-      "youtube_url": "https://www.youtube.com/watch?v=ClIn_wY1afg",
-      "artwork_url": "https://i.discogs.com/aicOyAPSHra4aviMenulZVdVwaCcAp0V33d_1chGMSE/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTY5NTA1/NS0xNDcwNTE1MzQ0/LTUwMTguanBlZw.jpeg",
-      "note_en": "Side A on Against The Grain ATG016R (2006) — Bass Phenomenon (DJ Friction Remix).",
-      "note_es": "Cara A del release Against The Grain ATG016R (2006) — Bass Phenomenon (DJ Friction Remix)."
-    },
-    {
-      "sort_order": 106,
+      "sort_order": 62,
       "title": "The Funk Is",
       "mix_name": "",
       "artists": [
@@ -2103,7 +1234,7 @@
       "note_es": "Cara B del release Against The Grain ATG016R (2006) — The Funk Is."
     },
     {
-      "sort_order": 107,
+      "sort_order": 63,
       "title": "DJ FRICTION REMIX",
       "mix_name": "",
       "artists": [
@@ -2122,26 +1253,7 @@
       "note_es": "Cara A del release Against The Grain ATG016R (?) — DJ FRICTION REMIX."
     },
     {
-      "sort_order": 108,
-      "title": "'THE FUNK IS'",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Krafty Kuts"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG016R",
-      "year": null,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/10148616-Krafty-Kuts-Bass-Phenomenom",
-      "youtube_url": "https://www.youtube.com/watch?v=Fn_pqJeotZw",
-      "artwork_url": "https://i.discogs.com/J8wAio_x4WxahKQ0vLNsePAJvg8YMonqXXX7OhzW_QI/rs:fit/g:sm/q:90/h:600/w:450/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwMTQ4/NjE2LTE2MjcyNTA5/MjYtNTk1Mi5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG016R (?) — 'THE FUNK IS'.",
-      "note_es": "Cara B del release Against The Grain ATG016R (?) — 'THE FUNK IS'."
-    },
-    {
-      "sort_order": 109,
+      "sort_order": 64,
       "title": "Love Your Life",
       "mix_name": "Original",
       "artists": [
@@ -2163,7 +1275,7 @@
       "note_es": "Cara A del release Against The Grain ATG017 (2006) — Love Your Life (Original)."
     },
     {
-      "sort_order": 110,
+      "sort_order": 65,
       "title": "Love Your Life",
       "mix_name": "Tayo Meets Acid Rockers Remix",
       "artists": [
@@ -2185,51 +1297,7 @@
       "note_es": "Cara B del release Against The Grain ATG017 (2006) — Love Your Life (Tayo Meets Acid Rockers Remix)."
     },
     {
-      "sort_order": 111,
-      "title": "Love Your Life",
-      "mix_name": "Original",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        },
-        {
-          "name": "MC Darrison"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG017",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", Promo, White Label, Stereo",
-      "discogs_url": "https://www.discogs.com/release/15677527-Ed-Solo-Skool-Of-Thought-Featuring-Darrison-Love-Your-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=Xy4Zs3ZUuBs",
-      "artwork_url": "https://i.discogs.com/b45H_O89W68eFuqq7TMsOSRD8Ldj58kDlyg6GVxzwkY/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE1Njc3/NTI3LTE1OTU3NDc0/MDMtODk1Ny5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG017 (2006) — Love Your Life (Original).",
-      "note_es": "Cara A del release Against The Grain ATG017 (2006) — Love Your Life (Original)."
-    },
-    {
-      "sort_order": 112,
-      "title": "Love Your Life",
-      "mix_name": "Tayo Meets Acid Rockers Remix",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        },
-        {
-          "name": "MC Darrison"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG017",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", Promo, White Label, Stereo",
-      "discogs_url": "https://www.discogs.com/release/15677527-Ed-Solo-Skool-Of-Thought-Featuring-Darrison-Love-Your-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=DjIedCyKFUk",
-      "artwork_url": "https://i.discogs.com/b45H_O89W68eFuqq7TMsOSRD8Ldj58kDlyg6GVxzwkY/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTE1Njc3/NTI3LTE1OTU3NDc0/MDMtODk1Ny5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG017 (2006) — Love Your Life (Tayo Meets Acid Rockers Remix).",
-      "note_es": "Cara B del release Against The Grain ATG017 (2006) — Love Your Life (Tayo Meets Acid Rockers Remix)."
-    },
-    {
-      "sort_order": 113,
+      "sort_order": 66,
       "title": "Tell Me How You Feel",
       "mix_name": "",
       "artists": [
@@ -2251,7 +1319,7 @@
       "note_es": "Cara A del release Against The Grain ATG018 (2006) — Tell Me How You Feel."
     },
     {
-      "sort_order": 114,
+      "sort_order": 67,
       "title": "Basketball Jam",
       "mix_name": "",
       "artists": [
@@ -2273,7 +1341,7 @@
       "note_es": "Cara B del release Against The Grain ATG018 (2006) — Basketball Jam."
     },
     {
-      "sort_order": 115,
+      "sort_order": 68,
       "title": "Tell Me How You Feel",
       "mix_name": "Young Punx Remix",
       "artists": [
@@ -2295,7 +1363,7 @@
       "note_es": "Cara A del release Against The Grain ATG018R (2006) — Tell Me How You Feel (Young Punx Remix)."
     },
     {
-      "sort_order": 116,
+      "sort_order": 69,
       "title": "Tell Me How You Feel",
       "mix_name": "Kid Kenobe v Rogue Element Remix",
       "artists": [
@@ -2317,7 +1385,7 @@
       "note_es": "Cara B del release Against The Grain ATG018R (2006) — Tell Me How You Feel (Kid Kenobe v Rogue Element Remix)."
     },
     {
-      "sort_order": 117,
+      "sort_order": 70,
       "title": "Tell Me How You Feel",
       "mix_name": "Young Punx Remix",
       "artists": [
@@ -2331,12 +1399,12 @@
       "format": "Vinyl, 12\\\", Promo, White Label",
       "discogs_url": "https://www.discogs.com/release/1900755-Krafty-Kuts-Tell-Me-How-You-Feel-Remixes",
       "youtube_url": "https://www.youtube.com/watch?v=UbZAe-n6C8k",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/UbZAe-n6C8k/hqdefault.jpg",
       "note_en": "Side A on Against The Grain ATG018R (2006) — Tell Me How You Feel (Young Punx Remix).",
       "note_es": "Cara A del release Against The Grain ATG018R (2006) — Tell Me How You Feel (Young Punx Remix)."
     },
     {
-      "sort_order": 118,
+      "sort_order": 71,
       "title": "Tell Me How You Feel",
       "mix_name": "Kid Kenobe v Rogue Element Remix",
       "artists": [
@@ -2350,62 +1418,12 @@
       "format": "Vinyl, 12\\\", Promo, White Label",
       "discogs_url": "https://www.discogs.com/release/1900755-Krafty-Kuts-Tell-Me-How-You-Feel-Remixes",
       "youtube_url": "https://www.youtube.com/watch?v=BA79sQMfFh4",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/BA79sQMfFh4/hqdefault.jpg",
       "note_en": "Side B on Against The Grain ATG018R (2006) — Tell Me How You Feel (Kid Kenobe v Rogue Element Remix).",
       "note_es": "Cara B del release Against The Grain ATG018R (2006) — Tell Me How You Feel (Kid Kenobe v Rogue Element Remix)."
     },
     {
-      "sort_order": 119,
-      "title": "Painkiller",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        },
-        {
-          "name": "Pendulum (3)"
-        },
-        {
-          "name": "MC Sirreal"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG019",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", 45 RPM, Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/12112823-Freestylers-Feat-Pendulum-3-Sirreal-Painkiller",
-      "youtube_url": "https://www.youtube.com/watch?v=oGmVqQ4q1Vo",
-      "artwork_url": "https://i.discogs.com/knZ-p7x2Kk1WzxUWrpYWRIEi8Z-hM6hHbu_6bVNSn8k/rs:fit/g:sm/q:90/h:594/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMTEy/ODIzLTE1MzEyNTY3/MzAtNzQ1Mi5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG019 (2006) — Painkiller.",
-      "note_es": "Cara A del release Against The Grain ATG019 (2006) — Painkiller."
-    },
-    {
-      "sort_order": 120,
-      "title": "Jump N Twist",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        },
-        {
-          "name": "Pendulum (3)"
-        },
-        {
-          "name": "MC Sirreal"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG019",
-      "year": 2006,
-      "format": "Vinyl, 12\\\", 45 RPM, Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/12112823-Freestylers-Feat-Pendulum-3-Sirreal-Painkiller",
-      "youtube_url": "https://www.youtube.com/watch?v=Uyezg3MCMsA",
-      "artwork_url": "https://i.discogs.com/knZ-p7x2Kk1WzxUWrpYWRIEi8Z-hM6hHbu_6bVNSn8k/rs:fit/g:sm/q:90/h:594/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEyMTEy/ODIzLTE1MzEyNTY3/MzAtNzQ1Mi5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG019 (2006) — Jump N Twist.",
-      "note_es": "Cara B del release Against The Grain ATG019 (2006) — Jump N Twist."
-    },
-    {
-      "sort_order": 121,
+      "sort_order": 72,
       "title": "In Love With You",
       "mix_name": "Rogue Element Remix",
       "artists": [
@@ -2424,7 +1442,7 @@
       "note_es": "Cara A del release Against The Grain ATG020R (2006) — In Love With You (Rogue Element Remix)."
     },
     {
-      "sort_order": 122,
+      "sort_order": 73,
       "title": "In Love With You",
       "mix_name": "DJ Bomba & Senor Remix",
       "artists": [
@@ -2443,7 +1461,7 @@
       "note_es": "Cara B del release Against The Grain ATG020R (2006) — In Love With You (DJ Bomba & Senor Remix)."
     },
     {
-      "sort_order": 123,
+      "sort_order": 74,
       "title": "Babylon Breaks",
       "mix_name": "",
       "artists": [
@@ -2462,7 +1480,7 @@
       "note_es": "Cara A del release Against The Grain ATG021 (2007) — Babylon Breaks."
     },
     {
-      "sort_order": 124,
+      "sort_order": 75,
       "title": "Believe In The Funk",
       "mix_name": "",
       "artists": [
@@ -2481,83 +1499,7 @@
       "note_es": "Cara B del release Against The Grain ATG021 (2007) — Believe In The Funk."
     },
     {
-      "sort_order": 125,
-      "title": "Babylon Breaks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG021",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/2956792-Ed-Solo-Skool-Of-Thought-Babylon-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=vZgdrwZvHPs",
-      "artwork_url": "",
-      "note_en": "Side A on Against The Grain ATG021 (2007) — Babylon Breaks.",
-      "note_es": "Cara A del release Against The Grain ATG021 (2007) — Babylon Breaks."
-    },
-    {
-      "sort_order": 126,
-      "title": "Believe In The Funk",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG021",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo, White Label",
-      "discogs_url": "https://www.discogs.com/release/2956792-Ed-Solo-Skool-Of-Thought-Babylon-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=eqP3I2OKIAc",
-      "artwork_url": "",
-      "note_en": "Side B on Against The Grain ATG021 (2007) — Believe In The Funk.",
-      "note_es": "Cara B del release Against The Grain ATG021 (2007) — Believe In The Funk."
-    },
-    {
-      "sort_order": 127,
-      "title": "Babylon Breaks",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG021",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/6418424-Ed-Solo-Skool-Of-Thought-Babylon-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=vZgdrwZvHPs",
-      "artwork_url": "https://i.discogs.com/2G1qn8NrM_tjDyFQ6knIA-ai7c5pzUX-AmvfKG8FRIA/rs:fit/g:sm/q:90/h:600/w:596/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTY0MTg0/MjQtMTYwMzg4OTE2/MC01NDQ2LmpwZWc.jpeg",
-      "note_en": "Side 1. on Against The Grain ATG021 (2007) — Babylon Breaks.",
-      "note_es": "Cara 1. del release Against The Grain ATG021 (2007) — Babylon Breaks."
-    },
-    {
-      "sort_order": 128,
-      "title": "Believe In The Funk",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG021",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/6418424-Ed-Solo-Skool-Of-Thought-Babylon-Breaks",
-      "youtube_url": "https://www.youtube.com/watch?v=eqP3I2OKIAc",
-      "artwork_url": "https://i.discogs.com/2G1qn8NrM_tjDyFQ6knIA-ai7c5pzUX-AmvfKG8FRIA/rs:fit/g:sm/q:90/h:600/w:596/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTY0MTg0/MjQtMTYwMzg4OTE2/MC01NDQ2LmpwZWc.jpeg",
-      "note_en": "Side 2. on Against The Grain ATG021 (2007) — Believe In The Funk.",
-      "note_es": "Cara 2. del release Against The Grain ATG021 (2007) — Believe In The Funk."
-    },
-    {
-      "sort_order": 129,
+      "sort_order": 76,
       "title": "There They Go",
       "mix_name": "",
       "artists": [
@@ -2579,7 +1521,7 @@
       "note_es": "Cara A1 del release Against The Grain ATG022 (2007) — There They Go."
     },
     {
-      "sort_order": 130,
+      "sort_order": 77,
       "title": "There They Go",
       "mix_name": "Acapella",
       "artists": [
@@ -2601,7 +1543,7 @@
       "note_es": "Cara A2 del release Against The Grain ATG022 (2007) — There They Go (Acapella)."
     },
     {
-      "sort_order": 131,
+      "sort_order": 78,
       "title": "There They Go",
       "mix_name": "Body Snatchers 'Pimp My Vocal' Remix",
       "artists": [
@@ -2623,7 +1565,7 @@
       "note_es": "Cara B1 del release Against The Grain ATG022 (2007) — There They Go (Body Snatchers 'Pimp My Vocal' Remix)."
     },
     {
-      "sort_order": 132,
+      "sort_order": 79,
       "title": "Electrified",
       "mix_name": "",
       "artists": [
@@ -2654,7 +1596,7 @@
       "note_es": "Cara A1 del release Against The Grain ATG023 (2006) — Electrified."
     },
     {
-      "sort_order": 133,
+      "sort_order": 80,
       "title": "Old Skool Fool",
       "mix_name": "",
       "artists": [
@@ -2685,7 +1627,7 @@
       "note_es": "Cara A2 del release Against The Grain ATG023 (2006) — Old Skool Fool."
     },
     {
-      "sort_order": 134,
+      "sort_order": 81,
       "title": "Electrified",
       "mix_name": "Deepcut Remix",
       "artists": [
@@ -2716,7 +1658,7 @@
       "note_es": "Cara B del release Against The Grain ATG023 (2006) — Electrified (Deepcut Remix)."
     },
     {
-      "sort_order": 135,
+      "sort_order": 82,
       "title": "Electrified",
       "mix_name": "Sam La More Remix",
       "artists": [
@@ -2735,7 +1677,7 @@
       "note_es": "Cara A del release Against The Grain ATG025 (2007) — Electrified (Sam La More Remix)."
     },
     {
-      "sort_order": 136,
+      "sort_order": 83,
       "title": "Security",
       "mix_name": "Lee Coombs Remix",
       "artists": [
@@ -2754,45 +1696,7 @@
       "note_es": "Cara B del release Against The Grain ATG025 (2007) — Security (Lee Coombs Remix)."
     },
     {
-      "sort_order": 137,
-      "title": "Electrified",
-      "mix_name": "Sam La More Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG025 PROMO",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/11363752-Freestylers-House-Mixes",
-      "youtube_url": "https://www.youtube.com/watch?v=arXQq4uf2Oo",
-      "artwork_url": "https://i.discogs.com/kMNU-U5xO0DSIhzXqy7n4qJK-IJS10_n8ZYB0S-jc-8/rs:fit/g:sm/q:90/h:600/w:592/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTExMzYz/NzUyLTE1MTUwMzE5/OTMtNTI0NS5qcGVn.jpeg",
-      "note_en": "Side A on Against The Grain ATG025 PROMO (2007) — Electrified (Sam La More Remix).",
-      "note_es": "Cara A del release Against The Grain ATG025 PROMO (2007) — Electrified (Sam La More Remix)."
-    },
-    {
-      "sort_order": 138,
-      "title": "Security",
-      "mix_name": "Lee Coombs Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG025 PROMO",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/11363752-Freestylers-House-Mixes",
-      "youtube_url": "https://www.youtube.com/watch?v=I-mi7WV9Sis",
-      "artwork_url": "https://i.discogs.com/kMNU-U5xO0DSIhzXqy7n4qJK-IJS10_n8ZYB0S-jc-8/rs:fit/g:sm/q:90/h:600/w:592/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTExMzYz/NzUyLTE1MTUwMzE5/OTMtNTI0NS5qcGVn.jpeg",
-      "note_en": "Side B on Against The Grain ATG025 PROMO (2007) — Security (Lee Coombs Remix).",
-      "note_es": "Cara B del release Against The Grain ATG025 PROMO (2007) — Security (Lee Coombs Remix)."
-    },
-    {
-      "sort_order": 139,
+      "sort_order": 84,
       "title": "Freakshow",
       "mix_name": "Remix",
       "artists": [
@@ -2811,7 +1715,7 @@
       "note_es": "Cara A1 del release Against The Grain ATG026 (2007) — Freakshow (Remix)."
     },
     {
-      "sort_order": 140,
+      "sort_order": 85,
       "title": "Bring Back The Funk",
       "mix_name": "",
       "artists": [
@@ -2830,7 +1734,7 @@
       "note_es": "Cara B1 del release Against The Grain ATG026 (2007) — Bring Back The Funk."
     },
     {
-      "sort_order": 141,
+      "sort_order": 86,
       "title": "DJ Tools, Samples And Scratches",
       "mix_name": "",
       "artists": [
@@ -2849,7 +1753,7 @@
       "note_es": "Cara B2 del release Against The Grain ATG026 (2007) — DJ Tools, Samples And Scratches."
     },
     {
-      "sort_order": 142,
+      "sort_order": 87,
       "title": "Always There",
       "mix_name": "",
       "artists": [
@@ -2868,7 +1772,7 @@
       "note_es": "Cara A del release Against The Grain ATG027 (2007) — Always There."
     },
     {
-      "sort_order": 143,
+      "sort_order": 88,
       "title": "Sludge",
       "mix_name": "",
       "artists": [
@@ -2887,45 +1791,7 @@
       "note_es": "Cara B del release Against The Grain ATG027 (2007) — Sludge."
     },
     {
-      "sort_order": 144,
-      "title": "Always There",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG027",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4190728-Ed-Solo-Skool-Of-Thought-Always-There",
-      "youtube_url": "https://www.youtube.com/watch?v=e6fM_CaeNNg",
-      "artwork_url": "https://i.discogs.com/bEQqN4C3UroQp0UfLETg1uX0RvPvMYJtR4RD0mlwCOg/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQxOTA3/MjgtMTU0ODYxMzI3/Mi03MDkyLmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG027 (2007) — Always There.",
-      "note_es": "Cara A del release Against The Grain ATG027 (2007) — Always There."
-    },
-    {
-      "sort_order": 145,
-      "title": "Sludge",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Ed Solo & Skool Of Thought"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG027",
-      "year": 2007,
-      "format": "Vinyl, 12\\\", Promo",
-      "discogs_url": "https://www.discogs.com/release/4190728-Ed-Solo-Skool-Of-Thought-Always-There",
-      "youtube_url": "https://www.youtube.com/watch?v=rbtuLmwnD-U",
-      "artwork_url": "https://i.discogs.com/bEQqN4C3UroQp0UfLETg1uX0RvPvMYJtR4RD0mlwCOg/rs:fit/g:sm/q:90/h:600/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTQxOTA3/MjgtMTU0ODYxMzI3/Mi03MDkyLmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG027 (2007) — Sludge.",
-      "note_es": "Cara B del release Against The Grain ATG027 (2007) — Sludge."
-    },
-    {
-      "sort_order": 146,
+      "sort_order": 89,
       "title": "Frequency Rebel",
       "mix_name": "",
       "artists": [
@@ -2944,7 +1810,7 @@
       "note_es": "Cara A del release Against The Grain ATG028 (2007) — Frequency Rebel."
     },
     {
-      "sort_order": 147,
+      "sort_order": 90,
       "title": "Keep Running",
       "mix_name": "",
       "artists": [
@@ -2963,7 +1829,7 @@
       "note_es": "Cara B del release Against The Grain ATG028 (2007) — Keep Running."
     },
     {
-      "sort_order": 148,
+      "sort_order": 91,
       "title": "Babylon",
       "mix_name": "",
       "artists": [
@@ -2985,7 +1851,7 @@
       "note_es": "Cara A del release Against The Grain ATG029 (2008) — Babylon."
     },
     {
-      "sort_order": 149,
+      "sort_order": 92,
       "title": "Babylon",
       "mix_name": "Instrumental",
       "artists": [
@@ -3007,45 +1873,7 @@
       "note_es": "Cara AA del release Against The Grain ATG029 (2008) — Babylon (Instrumental)."
     },
     {
-      "sort_order": 150,
-      "title": "Hook You Up",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Disco Assassins"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG03",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label, Promo",
-      "discogs_url": "https://www.discogs.com/release/3400812-Disco-Assassins-Hook-You-Up-Stoned",
-      "youtube_url": "https://www.youtube.com/watch?v=oNO7POQ29dM",
-      "artwork_url": "https://i.discogs.com/QMA2mfV3b9aRht54Z2txj9Cn_l3B9ILdzsMk-I8qvtM/rs:fit/g:sm/q:90/h:599/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM0MDA4/MTItMTY5NTA0Njcw/Mi05ODU0LmpwZWc.jpeg",
-      "note_en": "Side A on Against The Grain ATG03 (2001) — Hook You Up.",
-      "note_es": "Cara A del release Against The Grain ATG03 (2001) — Hook You Up."
-    },
-    {
-      "sort_order": 151,
-      "title": "Stoned",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Disco Assassins"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "ATG03",
-      "year": 2001,
-      "format": "Vinyl, 12\\\", White Label, Promo",
-      "discogs_url": "https://www.discogs.com/release/3400812-Disco-Assassins-Hook-You-Up-Stoned",
-      "youtube_url": "https://www.youtube.com/watch?v=3njejrojAV4",
-      "artwork_url": "https://i.discogs.com/QMA2mfV3b9aRht54Z2txj9Cn_l3B9ILdzsMk-I8qvtM/rs:fit/g:sm/q:90/h:599/w:600/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM0MDA4/MTItMTY5NTA0Njcw/Mi05ODU0LmpwZWc.jpeg",
-      "note_en": "Side B on Against The Grain ATG03 (2001) — Stoned.",
-      "note_es": "Cara B del release Against The Grain ATG03 (2001) — Stoned."
-    },
-    {
-      "sort_order": 152,
+      "sort_order": 93,
       "title": "When I Was A Yout",
       "mix_name": "Krafty Kuts Remix",
       "artists": [
@@ -3064,7 +1892,7 @@
       "note_es": "Cara A del release Against The Grain ATG030 (2008) — When I Was A Yout (Krafty Kuts Remix)."
     },
     {
-      "sort_order": 153,
+      "sort_order": 94,
       "title": "Life Gets Better",
       "mix_name": "",
       "artists": [
@@ -3083,7 +1911,7 @@
       "note_es": "Cara B del release Against The Grain ATG030 (2008) — Life Gets Better."
     },
     {
-      "sort_order": 154,
+      "sort_order": 95,
       "title": "Electricity",
       "mix_name": "",
       "artists": [
@@ -3102,7 +1930,7 @@
       "note_es": "Cara A del release Against The Grain ATG031 (2008) — Electricity."
     },
     {
-      "sort_order": 155,
+      "sort_order": 96,
       "title": "Release Remove",
       "mix_name": "",
       "artists": [
@@ -3121,7 +1949,7 @@
       "note_es": "Cara B del release Against The Grain ATG031 (2008) — Release Remove."
     },
     {
-      "sort_order": 156,
+      "sort_order": 97,
       "title": "Dancehall Thrilla",
       "mix_name": "",
       "artists": [
@@ -3140,7 +1968,7 @@
       "note_es": "Cara A del release Against The Grain ATG032 (2008) — Dancehall Thrilla."
     },
     {
-      "sort_order": 157,
+      "sort_order": 98,
       "title": "Up For The Possee",
       "mix_name": "",
       "artists": [
@@ -3159,7 +1987,7 @@
       "note_es": "Cara B del release Against The Grain ATG032 (2008) — Up For The Possee."
     },
     {
-      "sort_order": 158,
+      "sort_order": 99,
       "title": "Pleasure Machine",
       "mix_name": "",
       "artists": [
@@ -3178,7 +2006,7 @@
       "note_es": "Cara A del release Against The Grain ATG033 (2008) — Pleasure Machine."
     },
     {
-      "sort_order": 159,
+      "sort_order": 100,
       "title": "Party People",
       "mix_name": "",
       "artists": [
@@ -3197,7 +2025,7 @@
       "note_es": "Cara B del release Against The Grain ATG033 (2008) — Party People."
     },
     {
-      "sort_order": 160,
+      "sort_order": 101,
       "title": "Angels",
       "mix_name": "",
       "artists": [
@@ -3219,7 +2047,7 @@
       "note_es": "Cara A del release Against The Grain ATG034 (2008) — Angels."
     },
     {
-      "sort_order": 161,
+      "sort_order": 102,
       "title": "Baila Baila",
       "mix_name": "",
       "artists": [
@@ -3241,7 +2069,7 @@
       "note_es": "Cara B del release Against The Grain ATG034 (2008) — Baila Baila."
     },
     {
-      "sort_order": 162,
+      "sort_order": 103,
       "title": "Angels",
       "mix_name": "MJ Cole Remix Vocal",
       "artists": [
@@ -3263,7 +2091,7 @@
       "note_es": "Cara A1 del release Against The Grain ATG034R (2008) — Angels (MJ Cole Remix Vocal)."
     },
     {
-      "sort_order": 163,
+      "sort_order": 104,
       "title": "Angels",
       "mix_name": "MJ Cole Remix Instrumental",
       "artists": [
@@ -3285,7 +2113,7 @@
       "note_es": "Cara A2 del release Against The Grain ATG034R (2008) — Angels (MJ Cole Remix Instrumental)."
     },
     {
-      "sort_order": 164,
+      "sort_order": 105,
       "title": "Angels",
       "mix_name": "Napt Remix",
       "artists": [
@@ -3307,7 +2135,7 @@
       "note_es": "Cara B del release Against The Grain ATG034R (2008) — Angels (Napt Remix)."
     },
     {
-      "sort_order": 165,
+      "sort_order": 106,
       "title": "Back Up",
       "mix_name": "Love For The Music",
       "artists": [
@@ -3326,7 +2154,7 @@
       "note_es": "Cara A del release Against The Grain ATG035 (2009) — Back Up (Love For The Music)."
     },
     {
-      "sort_order": 166,
+      "sort_order": 107,
       "title": "Back Up (Love For The Music)",
       "mix_name": "Krafty Kuts Remix",
       "artists": [
@@ -3345,7 +2173,7 @@
       "note_es": "Cara AA del release Against The Grain ATG035 (2009) — Back Up (Love For The Music) (Krafty Kuts Remix)."
     },
     {
-      "sort_order": 167,
+      "sort_order": 108,
       "title": "Back Up (Love For The Music)",
       "mix_name": "TRG Remix",
       "artists": [
@@ -3364,7 +2192,7 @@
       "note_es": "Cara A del release Against The Grain ATG035R (2009) — Back Up (Love For The Music) (TRG Remix)."
     },
     {
-      "sort_order": 168,
+      "sort_order": 109,
       "title": "Back Up (Love For The Music)",
       "mix_name": "AC Slater Remix",
       "artists": [
@@ -3383,7 +2211,7 @@
       "note_es": "Cara AA del release Against The Grain ATG035R (2009) — Back Up (Love For The Music) (AC Slater Remix)."
     },
     {
-      "sort_order": 169,
+      "sort_order": 110,
       "title": "Warrior Charge",
       "mix_name": "",
       "artists": [
@@ -3402,7 +2230,7 @@
       "note_es": "Cara A1 del release [PIAS] 449.3002.015 (2004) — Warrior Charge."
     },
     {
-      "sort_order": 170,
+      "sort_order": 111,
       "title": "Dogs & Sledges",
       "mix_name": "",
       "artists": [
@@ -3421,7 +2249,7 @@
       "note_es": "Cara A2 del release [PIAS] 449.3002.015 (2004) — Dogs & Sledges."
     },
     {
-      "sort_order": 171,
+      "sort_order": 112,
       "title": "Too Far",
       "mix_name": "",
       "artists": [
@@ -3440,45 +2268,7 @@
       "note_es": "Cara B1 del release [PIAS] 449.3002.015 (2004) — Too Far."
     },
     {
-      "sort_order": 172,
-      "title": "Get A Life",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "[PIAS]",
-      "catalog_number": "449.3002.015",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Album",
-      "discogs_url": "https://www.discogs.com/release/9165531-Freestylers-Raw-As-Fk",
-      "youtube_url": "https://www.youtube.com/watch?v=Y7U5JJs3Egs",
-      "artwork_url": "https://i.discogs.com/_WYBxzrp20jbimuKTlFtrZ6OiSQTAk9ouI7LDgDgkK0/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxNjU1/MzEtMTQ3NTkyOTIx/NC0xMTcyLmpwZWc.jpeg",
-      "note_en": "Side B2 on [PIAS] 449.3002.015 (2004) — Get A Life.",
-      "note_es": "Cara B2 del release [PIAS] 449.3002.015 (2004) — Get A Life."
-    },
-    {
-      "sort_order": 173,
-      "title": "Raw As F**k",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "[PIAS]",
-      "catalog_number": "449.3002.015",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Album",
-      "discogs_url": "https://www.discogs.com/release/9165531-Freestylers-Raw-As-Fk",
-      "youtube_url": "https://www.youtube.com/watch?v=KgsP8wyOTj0",
-      "artwork_url": "https://i.discogs.com/_WYBxzrp20jbimuKTlFtrZ6OiSQTAk9ouI7LDgDgkK0/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxNjU1/MzEtMTQ3NTkyOTIx/NC0xMTcyLmpwZWc.jpeg",
-      "note_en": "Side C1 on [PIAS] 449.3002.015 (2004) — Raw As F**k.",
-      "note_es": "Cara C1 del release [PIAS] 449.3002.015 (2004) — Raw As F**k."
-    },
-    {
-      "sort_order": 174,
+      "sort_order": 113,
       "title": "The Slammer",
       "mix_name": "",
       "artists": [
@@ -3497,7 +2287,7 @@
       "note_es": "Cara C2 del release [PIAS] 449.3002.015 (2004) — The Slammer."
     },
     {
-      "sort_order": 175,
+      "sort_order": 114,
       "title": "Losing You",
       "mix_name": "",
       "artists": [
@@ -3516,7 +2306,7 @@
       "note_es": "Cara D1 del release [PIAS] 449.3002.015 (2004) — Losing You."
     },
     {
-      "sort_order": 176,
+      "sort_order": 115,
       "title": "Punks",
       "mix_name": "",
       "artists": [
@@ -3535,26 +2325,7 @@
       "note_es": "Cara D2 del release [PIAS] 449.3002.015 (2004) — Punks."
     },
     {
-      "sort_order": 177,
-      "title": "Push Up",
-      "mix_name": "",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "[PIAS]",
-      "catalog_number": "449.3002.015",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", Album",
-      "discogs_url": "https://www.discogs.com/release/9165531-Freestylers-Raw-As-Fk",
-      "youtube_url": "https://www.youtube.com/watch?v=VU01OK3EKvw",
-      "artwork_url": "https://i.discogs.com/_WYBxzrp20jbimuKTlFtrZ6OiSQTAk9ouI7LDgDgkK0/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxNjU1/MzEtMTQ3NTkyOTIx/NC0xMTcyLmpwZWc.jpeg",
-      "note_en": "Side E1 on [PIAS] 449.3002.015 (2004) — Push Up.",
-      "note_es": "Cara E1 del release [PIAS] 449.3002.015 (2004) — Push Up."
-    },
-    {
-      "sort_order": 178,
+      "sort_order": 116,
       "title": "No Replica",
       "mix_name": "",
       "artists": [
@@ -3573,7 +2344,7 @@
       "note_es": "Cara E2 del release [PIAS] 449.3002.015 (2004) — No Replica."
     },
     {
-      "sort_order": 179,
+      "sort_order": 117,
       "title": "Right On",
       "mix_name": "",
       "artists": [
@@ -3592,7 +2363,7 @@
       "note_es": "Cara F1 del release [PIAS] 449.3002.015 (2004) — Right On."
     },
     {
-      "sort_order": 180,
+      "sort_order": 118,
       "title": "Boom Blast",
       "mix_name": "",
       "artists": [
@@ -3609,63 +2380,6 @@
       "artwork_url": "https://i.discogs.com/_WYBxzrp20jbimuKTlFtrZ6OiSQTAk9ouI7LDgDgkK0/rs:fit/g:sm/q:90/h:300/w:300/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTkxNjU1/MzEtMTQ3NTkyOTIx/NC0xMTcyLmpwZWc.jpeg",
       "note_en": "Side F2 on [PIAS] 449.3002.015 (2004) — Boom Blast.",
       "note_es": "Cara F2 del release [PIAS] 449.3002.015 (2004) — Boom Blast."
-    },
-    {
-      "sort_order": 181,
-      "title": "Get A Life",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "PIA 6",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 33 ⅓ RPM, 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/346422-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=TUp3JtQu-cs",
-      "artwork_url": "https://i.discogs.com/gH14n34OjUi6W4_NWYGI5kAJjL3AJ68_kSbMqmfB0p4/rs:fit/g:sm/q:90/h:200/w:200/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM0NjQy/Mi0xMTAwMDE5OTI0/LmpwZw.jpeg",
-      "note_en": "Side A on Against The Grain PIA 6 (2004) — Get A Life (Original Mix).",
-      "note_es": "Cara A del release Against The Grain PIA 6 (2004) — Get A Life (Original Mix)."
-    },
-    {
-      "sort_order": 182,
-      "title": "Get A Life",
-      "mix_name": "Poxy Music Remix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "PIA 6",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 33 ⅓ RPM, 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/346422-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=eWBw9PElVcc",
-      "artwork_url": "https://i.discogs.com/gH14n34OjUi6W4_NWYGI5kAJjL3AJ68_kSbMqmfB0p4/rs:fit/g:sm/q:90/h:200/w:200/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM0NjQy/Mi0xMTAwMDE5OTI0/LmpwZw.jpeg",
-      "note_en": "Side B1 on Against The Grain PIA 6 (2004) — Get A Life (Poxy Music Remix).",
-      "note_es": "Cara B1 del release Against The Grain PIA 6 (2004) — Get A Life (Poxy Music Remix)."
-    },
-    {
-      "sort_order": 183,
-      "title": "Get A Life",
-      "mix_name": "Roni Size Mix",
-      "artists": [
-        {
-          "name": "Freestylers"
-        }
-      ],
-      "label": "Against The Grain",
-      "catalog_number": "PIA 6",
-      "year": 2004,
-      "format": "Vinyl, 12\\\", 33 ⅓ RPM, 45 RPM",
-      "discogs_url": "https://www.discogs.com/release/346422-Freestylers-Get-A-Life",
-      "youtube_url": "https://www.youtube.com/watch?v=MI4x7txxgMQ",
-      "artwork_url": "https://i.discogs.com/gH14n34OjUi6W4_NWYGI5kAJjL3AJ68_kSbMqmfB0p4/rs:fit/g:sm/q:90/h:200/w:200/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTM0NjQy/Mi0xMTAwMDE5OTI0/LmpwZw.jpeg",
-      "note_en": "Side B2 on Against The Grain PIA 6 (2004) — Get A Life (Roni Size Mix).",
-      "note_es": "Cara B2 del release Against The Grain PIA 6 (2004) — Get A Life (Roni Size Mix)."
     }
   ]
 }

@@ -5,14 +5,18 @@
       "sort_order": 1,
       "title": "Soul Surviving",
       "mix_name": "Autobots Remix",
-      "artists": [{ "name": "Napt" }],
+      "artists": [
+        {
+          "name": "Napt"
+        }
+      ],
       "label": "Plastic Raygun",
       "catalog_number": "TCCPR 036",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/339549-Napt-Soul-Surviving",
       "youtube_url": "https://www.youtube.com/watch?v=dI0VmU1l5qg",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/dI0VmU1l5qg/hqdefault.jpg",
       "note_en": "B-side of Napt's Soul Surviving 12\" on Plastic Raygun (UK 2004) — Autobots flip the vocal A-side into a rolling breaks workout.",
       "note_es": "Cara B del 12\" Soul Surviving de Napt en Plastic Raygun (UK 2004) — Autobots lleva el vocal de la cara A a un breaks rodante de club."
     },
@@ -20,14 +24,21 @@
       "sort_order": 2,
       "title": "It's Love (Trippin')",
       "mix_name": "JDS Remix",
-      "artists": [{ "name": "Goldtrix" }, { "name": "Andrea Brown" }],
+      "artists": [
+        {
+          "name": "Goldtrix"
+        },
+        {
+          "name": "Andrea Brown"
+        }
+      ],
       "label": "Groovilicious",
       "catalog_number": "GM 274",
       "year": 2002,
       "format": "2×12\"",
       "discogs_url": "https://www.discogs.com/release/138289-Andrea-Brown-Its-Love-Trippin",
       "youtube_url": "https://www.youtube.com/watch?v=AO-rypqWul0",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/AO-rypqWul0/hqdefault.jpg",
       "note_en": "Disc D of the US 2×12\" package (GM 274, 2002) — JDS's breaks-led rework of the Goldtrix & Andrea Brown vocal, alongside Goldtrix mixes, Flatline and Different Gear on the other discs.",
       "note_es": "Disco D del pack 2×12\" estadounidense (GM 274, 2002) — el rework de JDS del vocal de Goldtrix y Andrea Brown, con mezclas Goldtrix, Flatline y Different Gear en los otros discos."
     },
@@ -35,14 +46,18 @@
       "sort_order": 3,
       "title": "The Soul Breaker",
       "mix_name": "",
-      "artists": [{ "name": "Kosheen" }],
+      "artists": [
+        {
+          "name": "Kosheen"
+        }
+      ],
       "label": "DDB Records",
       "catalog_number": "DDB 15",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/236618-Kosheen-The-Soul-Breaker",
       "youtube_url": "https://www.youtube.com/watch?v=0s21-nFO5bY",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/0s21-nFO5bY/hqdefault.jpg",
       "note_en": "Single-sided unofficial / DJ-press style 12\" (DDB 15) circulating in the breaks scene — a heavyweight Kosheen club tool from the mid-2000s.",
       "note_es": "12\" cara única de circulación no oficial / estilo DJ (DDB 15) en la escena breaks — herramienta de pista contundente de Kosheen de mediados de los 2000."
     },
@@ -50,14 +65,21 @@
       "sort_order": 4,
       "title": "Informa",
       "mix_name": "",
-      "artists": [{ "name": "Ctrl-Z" }, { "name": "Deep Impact" }],
+      "artists": [
+        {
+          "name": "Ctrl-Z"
+        },
+        {
+          "name": "Deep Impact"
+        }
+      ],
       "label": "Funkatech",
       "catalog_number": "FTECH012",
       "year": 2005,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/521437-CTRL-Z-2-Deep-Impact-I-Cant-Wait-Informa",
       "youtube_url": "https://www.youtube.com/watch?v=XI1N49M1diw",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/XI1N49M1diw/hqdefault.jpg",
       "note_en": "AA-side of the Funkatech split 12\" (FTECH012, UK 2005) — Ctrl-Z & Deep Impact pairing Informa with I Can't Wait on the A.",
       "note_es": "Cara AA del 12\" compartido en Funkatech (FTECH012, UK 2005) — Ctrl-Z y Deep Impact emparejan Informa con I Can't Wait en la A."
     },
@@ -65,14 +87,21 @@
       "sort_order": 5,
       "title": "Soundbwoy",
       "mix_name": "",
-      "artists": [{ "name": "Aquasky" }, { "name": "Masterblaster" }],
+      "artists": [
+        {
+          "name": "Aquasky"
+        },
+        {
+          "name": "Masterblaster"
+        }
+      ],
       "label": "Passenger",
       "catalog_number": "PASA 008",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/64533-Aquasky-vs-Masterblaster-Soundbwoy-Perception",
       "youtube_url": "https://www.youtube.com/watch?v=QbEFBwgWAKk",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/QbEFBwgWAKk/hqdefault.jpg",
       "note_en": "A-side of the breakthrough Passenger 12\" (PASA 008, UK 2002) — Soundbwoy with Perception on the flip, a defining early Aquasky vs. Masterblaster club record.",
       "note_es": "Cara A del 12\" de Passenger (PASA 008, UK 2002) que los consolidó — Soundbwoy y Perception al otro lado, un disco de club temprano clave de Aquasky vs. Masterblaster."
     },
@@ -80,14 +109,21 @@
       "sort_order": 6,
       "title": "Whats Down Low",
       "mix_name": "Aquasky vs. Masterblaster Remix",
-      "artists": [{ "name": "Baitercell" }, { "name": "Schumacher" }],
+      "artists": [
+        {
+          "name": "Baitercell"
+        },
+        {
+          "name": "Schumacher"
+        }
+      ],
       "label": "Passenger",
       "catalog_number": "PASA 013",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/247071-Baitercell-Schumacher-Whats-Down-Low",
       "youtube_url": "https://www.youtube.com/watch?v=wfAZNYGS8kw",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/wfAZNYGS8kw/hqdefault.jpg",
       "note_en": "AA-side of Baitercell & Schumacher's PASA 013 12\" (UK 2004) — Aquasky vs. Masterblaster's breaks remix; original mix on the A.",
       "note_es": "Cara AA del 12\" PASA 013 de Baitercell & Schumacher (UK 2004) — remix breaks de Aquasky vs. Masterblaster; el original en la A."
     },
@@ -95,14 +131,21 @@
       "sort_order": 7,
       "title": "Busted Rhymes",
       "mix_name": "",
-      "artists": [{ "name": "X-Men" }, { "name": "Koma & Bones" }],
+      "artists": [
+        {
+          "name": "X-Men"
+        },
+        {
+          "name": "Koma & Bones"
+        }
+      ],
       "label": "Not On Label",
       "catalog_number": "RAP ONE",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/373293-X-Men-Busted-Rhymes",
       "youtube_url": "https://www.youtube.com/watch?v=Vej4ixS3kO8",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Vej4ixS3kO8/hqdefault.jpg",
       "note_en": "UK white-label 12\" (RAP ONE, 2004) — breaks rerub built around Busta Rhymes vocals with Koma & Bones in the blend; a staple unofficial DJ weapon from the era.",
       "note_es": "White label británico (RAP ONE, 2004) — reelaboración breaks sobre vocales de Busta Rhymes con Koma & Bones en la mezcla; arma no oficial muy pinchada en la época."
     },
@@ -110,14 +153,21 @@
       "sort_order": 8,
       "title": "Flesh Eater",
       "mix_name": "",
-      "artists": [{ "name": "The Autobots" }, { "name": "Screwface" }],
+      "artists": [
+        {
+          "name": "The Autobots"
+        },
+        {
+          "name": "Screwface"
+        }
+      ],
       "label": "Broke Breaks",
       "catalog_number": "BROKE 004",
       "year": 2005,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/484533-The-Autobots-Vs-Screwface-3-CTRL-Z-Flesh-Eater-Space-Dementia",
       "youtube_url": "https://www.youtube.com/watch?v=R8lEjMB_gUc",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/R8lEjMB_gUc/hqdefault.jpg",
       "note_en": "A-side of the Broke Breaks split 12\" (BROKE 004, UK 2005) — The Autobots vs. Screwface on Flesh Eater, with CTRL-Z's Space Dementia on the AA.",
       "note_es": "Cara A del 12\" compartido de Broke Breaks (BROKE 004, UK 2005) — The Autobots vs. Screwface en Flesh Eater, y Space Dementia de CTRL-Z en la AA."
     },
@@ -125,14 +175,18 @@
       "sort_order": 9,
       "title": "King of the Bongo",
       "mix_name": "Breaks Mix",
-      "artists": [{ "name": "Manu Chao" }],
+      "artists": [
+        {
+          "name": "Manu Chao"
+        }
+      ],
       "label": "Cut & Run",
       "catalog_number": "car 005",
       "year": 2005,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/470134-Manu-Chao-Portishead-King-Of-The-Bongo-Breaks-Mix-Over-DnB-Mix",
       "youtube_url": "https://www.youtube.com/watch?v=Vo81-r_UYv4",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Vo81-r_UYv4/hqdefault.jpg",
       "note_en": "A-side of Cut & Run's unofficial split 12\" (car 005, UK 2005) — breaks rebuild of Manu Chao's carnival anthem; Portishead \"Over\" as a DnB flip on the AA.",
       "note_es": "Cara A del 12\" no oficial de Cut & Run (car 005, UK 2005) — revisión breaks del himno de Manu Chao; «Over» de Portishead en versión DnB en la AA."
     },
@@ -140,14 +194,21 @@
       "sort_order": 10,
       "title": "Bass Phenomenon",
       "mix_name": "DJ Friction Remix",
-      "artists": [{ "name": "Krafty Kuts" }, { "name": "Tim Deluxe" }],
+      "artists": [
+        {
+          "name": "Krafty Kuts"
+        },
+        {
+          "name": "Tim Deluxe"
+        }
+      ],
       "label": "Against The Grain",
       "catalog_number": "ATG016R",
       "year": 2006,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/10148616-Krafty-Kuts-Bass-Phenomenom",
       "youtube_url": "https://www.youtube.com/watch?v=ClIn_wY1afg",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/ClIn_wY1afg/hqdefault.jpg",
       "note_en": "Against The Grain promo white-label 12\" (ATG016R): DJ Friction's Drum & Bass mix of Krafty Kuts & Tim Deluxe's Bass Phenomenon on the A; Tim Deluxe original \"The Funk Is\" on the flip — catalogue companion to the main ATG016 package.",
       "note_es": "White label promocional Against The Grain (ATG016R): remix drum & bass de DJ Friction a Krafty Kuts & Tim Deluxe en la cara A; el original «The Funk Is» de Tim Deluxe en la B — complemento catálogo del lanzamiento principal ATG016."
     },
@@ -155,14 +216,18 @@
       "sort_order": 11,
       "title": "Get A Life",
       "mix_name": "Original Mix",
-      "artists": [{ "name": "Freestylers" }],
+      "artists": [
+        {
+          "name": "Freestylers"
+        }
+      ],
       "label": "Against The Grain",
       "catalog_number": "ATG008",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/224550-Freestylers-Get-A-Life",
       "youtube_url": "https://www.youtube.com/watch?v=TUp3JtQu-cs",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/TUp3JtQu-cs/hqdefault.jpg",
       "note_en": "A-side of the 2004 Against The Grain 12\" (ATG008) — title track from the Freestylers' Against The Grain era; Roni Size's mix on the B.",
       "note_es": "Cara A del 12\" de Against The Grain (ATG008, 2004) — tema titular de la etapa Freestylers en el sello; remix de Roni Size en la B."
     }

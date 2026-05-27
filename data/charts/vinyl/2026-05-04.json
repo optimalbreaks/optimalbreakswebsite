@@ -5,14 +5,18 @@
       "sort_order": 1,
       "title": "Africa",
       "mix_name": "Original Breakbeat Mix",
-      "artists": [{ "name": "Monsoon" }],
+      "artists": [
+        {
+          "name": "Monsoon"
+        }
+      ],
       "label": "Funk Wax",
       "catalog_number": "FW012P",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/598846-Monsoon-Africa",
       "youtube_url": "https://www.youtube.com/watch?v=F3rG2peDWxg",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/F3rG2peDWxg/hqdefault.jpg",
       "note_en": "A-side of Monsoon (3)'s Funk Wax 12\" (FW012P, US 2001): the Original Breakbeat Mix heads the package alongside the trance mix and Infiniti's Black Jesus remix on the flip — a cornerstone US breaks 12\" from the early nu-skool era.",
       "note_es": "Cara A del 12\" de Monsoon (3) en Funk Wax (FW012P, EE. UU. 2001): el Original Breakbeat Mix abre el pack junto al trance mix y el remix Black Jesus de Infiniti en la cara B — referencia del breaks estadounidense de la primera ola nu-skool."
     },
@@ -20,14 +24,18 @@
       "sort_order": 2,
       "title": "Smoke Machine",
       "mix_name": "Koma and Bones Remix",
-      "artists": [{ "name": "X-Press 2" }],
+      "artists": [
+        {
+          "name": "X-Press 2"
+        }
+      ],
       "label": "Skint",
       "catalog_number": "XPRESS002",
       "year": 2002,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/68630-X-Press-2-Smoke-Machine-The-Remixes",
       "youtube_url": "https://www.youtube.com/watch?v=Hifk_d1waP4",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/Hifk_d1waP4/hqdefault.jpg",
       "note_en": "Lead cut on Skint's Smoke Machine (The Remixes) 12\" (UK 2002) — Koma & Bones' devastating rework, paired with Trendroid on the AA-side of this X-Press 2 club weapon.",
       "note_es": "Tema principal del 12\" Smoke Machine (The Remixes) en Skint (UK 2002) — el rework demoledor de Koma & Bones, emparejado con Trendroid en la cara AA de este arma de club de X-Press 2."
     },
@@ -35,14 +43,18 @@
       "sort_order": 3,
       "title": "Crétto de lâ Nabahâ",
       "mix_name": "kuplay Remix",
-      "artists": [{ "name": "Califato ¾" }],
+      "artists": [
+        {
+          "name": "Califato ¾"
+        }
+      ],
       "label": "Breaking Bass Records",
       "catalog_number": "BBRD035",
       "year": 2020,
       "format": "Digital",
       "discogs_url": "https://www.discogs.com/release/16354674-Califato-%C2%BE-Ruina-EP",
       "youtube_url": "https://www.youtube.com/watch?v=xp7RJdVPgg4",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/xp7RJdVPgg4/hqdefault.jpg",
       "note_en": "Track 8 on the Ruina EP digital suite (Breaking Bass Records, 2020) — kuplay reframes Califato ¾'s flamenco-electronic cadence in a heavyweight club frame alongside remixes by R Santos, Fiera, SKYGAZE and more.",
       "note_es": "Pista 8 del Ruina EP en digital (Breaking Bass Records, 2020) — kuplay reelabora la cadencia flamenquito-electrónica de Califato ¾ en clave de pista contundente, junto a remixes de R Santos, Fiera, SKYGAZE y más."
     },
@@ -50,14 +62,18 @@
       "sort_order": 4,
       "title": "Boingers",
       "mix_name": "Ed2000 Meets Circuit Breaker Remix",
-      "artists": [{ "name": "Sir Real" }],
+      "artists": [
+        {
+          "name": "Sir Real"
+        }
+      ],
       "label": "[k]rack-troni[k]",
       "catalog_number": "KRAK 4",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/265165-Sir-Real-Boingers",
       "youtube_url": "https://www.youtube.com/watch?v=XNvkPnLZfYY",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/XNvkPnLZfYY/hqdefault.jpg",
       "note_en": "B2 of Sir Real's Boingers 12\" on Birmingham's [k]rack-troni[k] (2004) — Ed2000 and Circuit Breaker's twist on the electro-breaks A-side, alongside 8-Bit Apocalypse's remix on B1.",
       "note_es": "Cara B2 del 12\" Boingers de Sir Real en [k]rack-troni[k] de Birmingham (2004) — la vuelta de tuerca de Ed2000 y Circuit Breaker al electro-breaks de la cara A, con el remix de 8-Bit Apocalypse en B1."
     },
@@ -65,14 +81,21 @@
       "sort_order": 5,
       "title": "Horizon",
       "mix_name": "Farlopa's Mix",
-      "artists": [{ "name": "D.J. Nomad" }, { "name": "Taranto" }],
+      "artists": [
+        {
+          "name": "D.J. Nomad"
+        },
+        {
+          "name": "Taranto"
+        }
+      ],
       "label": "Not On Label",
       "catalog_number": "SD-001-MX",
       "year": 2001,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/1086971-DJ-Nomad-Taranto-Horizon",
       "youtube_url": "https://www.youtube.com/watch?v=eUogxemi1Xo",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/eUogxemi1Xo/hqdefault.jpg",
       "note_en": "A1 of the white-label Horizon 12\" (Spain, 2001, SD-001-MX) — breakbeat-trance street cut with Farlopa's Mix leading a raw DIY Spanish club 12\" also pressed with an M.D.M.A. remix and vocal/instrumental For You versions.",
       "note_es": "Cara A1 del 12\" white label Horizon (España, 2001, SD-001-MX) — corte breakbeat-trance de circulación DIY; el Farlopa's Mix abre un vinilo que también incluye remix M.D.M.A. y versiones de For You."
     },
@@ -80,14 +103,18 @@
       "sort_order": 6,
       "title": "Infectious",
       "mix_name": "",
-      "artists": [{ "name": "Ed209" }],
+      "artists": [
+        {
+          "name": "Ed209"
+        }
+      ],
       "label": "Wireframe",
       "catalog_number": "WF 008",
       "year": 2004,
       "format": "12\"",
       "discogs_url": "https://www.discogs.com/release/255087-ED209-Infectious-Blow-A-Fuze",
       "youtube_url": "https://www.youtube.com/watch?v=b9rOriUHGPU",
-      "artwork_url": "",
+      "artwork_url": "https://i.ytimg.com/vi/b9rOriUHGPU/hqdefault.jpg",
       "note_en": "A-side of Ed209's 2004 Wireframe 12\" (WF 008, UK) — the original Infectious, a staple UK nu skool breaks cut, with Blow A Fuze on the flip.",
       "note_es": "Cara A del 12\" de Ed209 en Wireframe (WF 008, UK, 2004) — el Infectious original, clásico del nu-skool breaks británico, con Blow A Fuze en la cara B."
     }
