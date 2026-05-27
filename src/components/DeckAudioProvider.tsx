@@ -1046,6 +1046,22 @@ export function DeckAudioProvider({
   const [previewBlocked, setPreviewBlocked] = useState(false)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
   const previewRafRef = useRef(0)
+  // Refs espejo de la cola y el índice para que los listeners del
+  // <audio> (ended/error/timeupdate) tengan SIEMPRE el estado fresco
+  // sin depender del closure capturado al añadir el listener. La PWA en
+  // iOS, cuando llega `ended` mientras Next.js está en transición de
+  // ruta, perdía la cadena con el patrón anterior (`setState` anidados +
+  // setTimeout(0)) y se quedaba colgada.
+  const previewQueueRef = useRef<PreviewTrack[]>([])
+  const previewIndexRef = useRef(0)
+  // Garantiza que `ended` + `error` + watchdog de fin no encadenen DOS
+  // avances para la misma pista (idempotente por track). Se resetea en
+  // cada `loadAndPlayPreviewAt`.
+  const previewAdvancedRef = useRef(false)
+  // Ref a la función `loadAndPlayPreviewAt` para que el listener `ended`
+  // (registrado UNA sola vez al crear el <audio>) llame siempre a la
+  // versión más reciente sin depender del closure inicial.
+  const loadAndPlayRef = useRef<((q: PreviewTrack[], i: number) => void) | null>(null)
 
   useEffect(() => { trackIdxARef.current = trackIdxA }, [trackIdxA])
   useEffect(() => { trackIdxBRef.current = trackIdxB }, [trackIdxB])
@@ -1555,8 +1571,35 @@ export function DeckAudioProvider({
     }
   }, [])
 
+  // Avance idempotente al siguiente tema de la cola. Se llama desde
+  // `ended`, desde `error` (URL caída / stream cortado) y desde el
+  // watchdog de `timeupdate` (red de seguridad por si `ended` no llega
+  // en iOS PWA tras un cambio de visibility). El flag
+  // `previewAdvancedRef` garantiza que las tres rutas no encadenen
+  // dobles avances sobre la misma pista.
+  const advanceFromCurrentTrack = useCallback(() => {
+    if (previewAdvancedRef.current) return
+    previewAdvancedRef.current = true
+    const q = previewQueueRef.current
+    const cur = previewIndexRef.current
+    const next = cur + 1
+    if (next >= q.length) {
+      stopPreviewInternal()
+      return
+    }
+    setPreviewIndex(next)
+    previewIndexRef.current = next
+    const fn = loadAndPlayRef.current
+    if (fn) fn(q, next)
+  }, [stopPreviewInternal])
+
   const loadAndPlayPreviewAt = useCallback((queue: PreviewTrack[], idx: number) => {
     if (!queue[idx]) return
+    // Refs siempre frescas para los listeners del <audio>.
+    previewQueueRef.current = queue
+    previewIndexRef.current = idx
+    previewAdvancedRef.current = false
+
     if (!previewAudioRef.current) {
       const a = new Audio()
       a.preload = 'auto'
@@ -1576,27 +1619,53 @@ export function DeckAudioProvider({
           }
         }
       })
+      // El listener se registra UNA sola vez (al crear el <audio>) y
+      // delega en `advanceFromCurrentTrack` (idempotente) que lee la
+      // cola/índice por refs. Antes había `setState` anidados con
+      // `setTimeout(0)` que se perdían cuando el evento `ended` llegaba
+      // en mitad de una transición de Next.js (síntoma reportado: track
+      // termina y no salta al siguiente en la PWA).
+      // Helper: solo avanzamos si el <audio> tiene una src real. Tras
+      // `stopPreviewInternal` quitamos el src y eso dispara un `error`
+      // (MEDIA_SRC_NOT_SUPPORTED) que NO debe encadenar un avance.
+      // `getAttribute('src')` devuelve null tras `removeAttribute`,
+      // mientras que `a.src` (getter) puede resolver a la URL de la
+      // página. Por eso usamos el atributo directo.
+      const hasRealSrc = () => !!a.getAttribute('src')
       a.addEventListener('ended', () => {
-        // Avance a la siguiente pista de la cola; si se acaba, cerrar.
-        setPreviewIndex((prev) => {
-          const next = prev + 1
-          setPreviewQueue((q) => {
-            if (next >= q.length) {
-              // fin de cola
-              setTimeout(() => stopPreviewInternal(), 0)
-              return q
-            }
-            setTimeout(() => loadAndPlayPreviewAt(q, next), 0)
-            return q
-          })
-          return next
-        })
+        if (hasRealSrc()) advanceFromCurrentTrack()
+      })
+      // Si la URL falla (proxy caído, stream cortado, formato no
+      // soportado tras un sleep largo del SO), antes el reproductor se
+      // quedaba pillado a 0:00 sin avanzar nunca. Ahora salta al
+      // siguiente como si hubiera terminado.
+      a.addEventListener('error', () => {
+        if (hasRealSrc()) advanceFromCurrentTrack()
+      })
+      // Watchdog de fin de pista. En iOS PWA en background, a veces el
+      // evento `ended` no se dispara aunque el flag `audio.ended` se
+      // ponga a true (el SO suspende el JS justo en el último packet o
+      // el stream del proxy se corta). Si detectamos `audio.ended` en
+      // un `timeupdate` sin que `ended` haya disparado todavía,
+      // forzamos el avance. Solo confiamos en el flag `ended` (NO en
+      // `paused`, porque si el usuario pausa manualmente cerca del
+      // final NO queremos saltar). `previewAdvancedRef` impide dobles
+      // avances si el evento `ended` sí termina llegando después.
+      a.addEventListener('timeupdate', () => {
+        if (a.ended && hasRealSrc()) advanceFromCurrentTrack()
       })
       previewAudioRef.current = a
     }
     const audio = previewAudioRef.current
+    // Pause antes de cambiar src: en algunos navegadores móviles el
+    // siguiente play() ignora el cambio si el elemento sigue en estado
+    // "playing" interno. Y NO llamamos a `audio.load()` después: en iOS
+    // PWA `load()` rompe la cadena del user-gesture original cuando el
+    // tema cambia automáticamente al final del anterior, dejando el
+    // siguiente `play()` en NotAllowedError silencioso (el bug que el
+    // usuario describía como «termina y no pasa al siguiente»).
+    try { audio.pause() } catch { /* no-op */ }
     audio.src = queue[idx].src
-    audio.load()
     audio.play()
       .then(() => {
         setPreviewPlaying(true)
@@ -1625,7 +1694,19 @@ export function DeckAudioProvider({
       // lockscreen; también ayuda a iOS a NO inferir ±10 s por sí solo).
       try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
-  }, [stopPreviewInternal])
+  }, [stopPreviewInternal, advanceFromCurrentTrack])
+
+  // Mantén `loadAndPlayRef` apuntando a la versión más reciente; los
+  // listeners del <audio> la usan vía la ref para no quedarse colgados
+  // del closure inicial.
+  useEffect(() => {
+    loadAndPlayRef.current = loadAndPlayPreviewAt
+  }, [loadAndPlayPreviewAt])
+
+  // Sincroniza las refs espejo de cola e índice con el estado actual
+  // para que `advanceFromCurrentTrack` siempre lea valores frescos.
+  useEffect(() => { previewQueueRef.current = previewQueue }, [previewQueue])
+  useEffect(() => { previewIndexRef.current = previewIndex }, [previewIndex])
 
   const playPreviewQueue = useCallback((items: PreviewTrack[], startIndex = 0, groupKey?: string) => {
     if (!items.length) return
