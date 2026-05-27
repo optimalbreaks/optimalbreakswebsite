@@ -190,13 +190,18 @@ export function publicOgArtworkUrl(rawUrl: string | null | undefined): string | 
   return u
 }
 
-/** OG de vinilo: carátula Discogs (proxy) o miniatura YouTube si no hay artwork. */
-export function vinylOgArtworkUrl(
-  artworkUrl: string | null | undefined,
-  youtubeUrl: string | null | undefined,
-): string | null {
-  const fromArt = publicOgArtworkUrl(artworkUrl)
-  if (fromArt) return fromArt
+/** Clave normalizada para emparejar nombres de sello/artista en mapas de BD. */
+export function normalizeCatalogNameKey(raw: string): string {
+  return (raw || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+export function youtubeVideoIdFromUrl(youtubeUrl: string | null | undefined): string | null {
   const yt = (youtubeUrl || '').trim()
   if (!yt) return null
   const patterns = [
@@ -208,9 +213,106 @@ export function vinylOgArtworkUrl(
   ]
   for (const re of patterns) {
     const m = yt.match(re)
-    if (m) return publicOgArtworkUrl(`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`)
+    if (m) return m[1]
   }
   return null
+}
+
+export function youtubeThumbnailFromUrl(youtubeUrl: string | null | undefined): string | null {
+  const id = youtubeVideoIdFromUrl(youtubeUrl)
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null
+}
+
+/** Carátula Discogs servida bajo nuestro dominio (evita bloqueos en `<img>` del navegador). */
+export function proxyDiscogsArtworkForDisplay(rawUrl: string | null | undefined): string | null {
+  const u = (rawUrl || '').trim()
+  if (!u) return null
+  if (/i\.discogs\.com/i.test(u)) {
+    return `/api/og/image-proxy?${new URLSearchParams({ src: u })}`
+  }
+  return u
+}
+
+/** Orden: carátula → logo sello → miniatura YouTube. */
+export function vinylArtworkCandidates(
+  artworkUrl: string | null | undefined,
+  youtubeUrl: string | null | undefined,
+  label: string | null | undefined,
+  labelImageMap?: Record<string, string>,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (u: string | null | undefined) => {
+    const s = (u || '').trim()
+    if (!s || seen.has(s)) return
+    seen.add(s)
+    out.push(s)
+  }
+  push(proxyDiscogsArtworkForDisplay(artworkUrl))
+  const labelKey = normalizeCatalogNameKey(label || '')
+  if (labelKey && labelImageMap?.[labelKey]) push(labelImageMap[labelKey])
+  push(youtubeThumbnailFromUrl(youtubeUrl))
+  return out
+}
+
+export function vinylArtworkUseNativeImg(src: string): boolean {
+  return src.startsWith('/api/og/') || /i\.ytimg\.com/i.test(src) || /i\.discogs\.com/i.test(src)
+}
+
+/** Clave canónica para deduplicar vinilos (misma lógica que scripts/chart-vinyl-track-key.mjs). */
+export function vinylTrackDedupKey(
+  title: string | null | undefined,
+  mixName: string | null | undefined,
+  artists: { name?: string }[] | null | undefined,
+): string {
+  const norm = (s: string) =>
+    (s || '')
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim()
+  const normTitle = (t: string) => {
+    let n = norm(t)
+    if (n.startsWith('the')) n = n.slice(3)
+    return n
+  }
+  const normMix = (m: string) => {
+    const n = norm(m)
+    if (!n || n === 'originalmix' || n === 'original') return ''
+    return n
+  }
+  const a = (artists || [])
+    .map((x) => norm(x?.name || ''))
+    .filter(Boolean)
+    .sort()
+    .join(',')
+  return `${a}::${normTitle(title || '')}::${normMix(mixName || '')}`
+}
+
+export function vinylRowDisplayScore(track: {
+  artwork_url?: string | null
+  youtube_url?: string | null
+  format?: string | null
+  discogs_url?: string | null
+}): number {
+  let s = 0
+  if ((track.artwork_url || '').trim()) s += 8
+  if ((track.youtube_url || '').trim()) s += 4
+  const fmt = (track.format || '').replace(/\s+/g, '')
+  if (!/whitelabel|testpressing|promo|singlesided|unofficial|reissue/i.test(fmt)) s += 2
+  if ((track.discogs_url || '').trim()) s += 1
+  return s
+}
+
+/** OG de vinilo: carátula Discogs (proxy) o miniatura YouTube si no hay artwork. */
+export function vinylOgArtworkUrl(
+  artworkUrl: string | null | undefined,
+  youtubeUrl: string | null | undefined,
+): string | null {
+  const fromArt = publicOgArtworkUrl(artworkUrl)
+  if (fromArt) return fromArt
+  return publicOgArtworkUrl(youtubeThumbnailFromUrl(youtubeUrl))
 }
 
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */

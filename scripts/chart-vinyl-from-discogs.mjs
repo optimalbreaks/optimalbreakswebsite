@@ -25,6 +25,9 @@ import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { spawnSync } from 'child_process'
+import { dedupeVinylRows, vinylTrackKey } from './lib/chart-vinyl-track-key.mjs'
+
+const trackKey = (_discogsUrl, title, mixName, artists) => vinylTrackKey(title, mixName, artists)
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -154,17 +157,6 @@ function artistsFromRelease(release, track) {
   return main.length ? main : [{ name: 'Unknown' }]
 }
 
-function trackKey(discogsUrl, title, mixName, artists) {
-  const t = norm(title)
-  const m = norm(mixName)
-  const a = (artists || [])
-    .map((x) => norm(typeof x === 'string' ? x : x?.name || ''))
-    .filter(Boolean)
-    .sort()
-    .join(',')
-  return `${a}::${t}::${m}`
-}
-
 function norm(s) {
   return String(s || '')
     .toLowerCase()
@@ -259,9 +251,16 @@ function buildNote(release, track, lang) {
     : `${title}${mixBit} on ${labelName} ${cat} (${yr}).`
 }
 
+function youtubeArtworkFallback(youtubeUrl) {
+  const m = String(youtubeUrl || '').match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([a-zA-Z0-9_-]{11})/)
+  return m ? `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` : ''
+}
+
 function buildVinylRow(release, track, sortOrder, youtubeUrl) {
   const { title, mix_name } = splitTitleMix(track.title)
   const label = release.labels?.[0]
+  let artwork_url = pickDiscogsArtwork(release)
+  if (!(artwork_url || '').trim() && youtubeUrl) artwork_url = youtubeArtworkFallback(youtubeUrl)
   return {
     sort_order: sortOrder,
     title,
@@ -273,7 +272,7 @@ function buildVinylRow(release, track, sortOrder, youtubeUrl) {
     format: formatString(release),
     discogs_url: publicReleaseUrl(release),
     youtube_url: youtubeUrl || '',
-    artwork_url: pickDiscogsArtwork(release),
+    artwork_url,
     note_en: buildNote(release, track, 'en'),
     note_es: buildNote(release, track, 'es'),
   }
@@ -358,6 +357,12 @@ async function backfillArtworkInFile(outPath) {
     if (art) {
       row.artwork_url = art
       filled++
+    } else if (row.youtube_url) {
+      const ytArt = youtubeArtworkFallback(row.youtube_url)
+      if (ytArt) {
+        row.artwork_url = ytArt
+        filled++
+      }
     }
   }
   writeFileSync(outPath, JSON.stringify(data, null, 2) + '\n', 'utf8')
@@ -405,16 +410,16 @@ async function tracksFromLabel(labelId, opts, seenKeys) {
 }
 
 function mergeVinyl(existing, incoming) {
-  const keys = new Set((existing || []).map((r) => trackKey(null, r.title, r.mix_name, r.artists)))
   const merged = [...(existing || [])]
   let nextSort = merged.reduce((m, r) => Math.max(m, Number(r.sort_order) || 0), 0) + 1
+  const keys = new Set((existing || []).map((r) => trackKey(null, r.title, r.mix_name, r.artists)))
   for (const row of incoming) {
     const k = trackKey(null, row.title, row.mix_name, row.artists)
     if (keys.has(k)) continue
     merged.push({ ...row, sort_order: nextSort++ })
     keys.add(k)
   }
-  return merged
+  return dedupeVinylRows(merged)
 }
 
 async function main() {
@@ -469,7 +474,9 @@ async function main() {
   if (opts.merge && existsSync(outPath)) {
     const prev = JSON.parse(readFileSync(outPath, 'utf8'))
     payload.vinyl = mergeVinyl(prev.vinyl, vinyl)
-    console.log(`Merge → ${payload.vinyl.length} pistas totales`)
+    console.log(`Merge → ${payload.vinyl.length} pistas totales (sin duplicados)`)
+  } else {
+    payload.vinyl = dedupeVinylRows(payload.vinyl)
   }
 
   if (opts.write) {

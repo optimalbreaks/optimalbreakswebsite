@@ -24,37 +24,11 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
-import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
 type CanonRef = { source: ChartTrackSource; id: string }
-
-/** URLs de carátula vinilo en orden de preferencia (Discogs → YouTube → logo sello). */
-function vinylArtworkCandidates(
-  track: ChartVinylTrack,
-  labelImageMap?: Record<string, string>,
-): string[] {
-  const out: string[] = []
-  const seen = new Set<string>()
-  const push = (u: string | null | undefined) => {
-    const s = (u || '').trim()
-    if (!s || seen.has(s)) return
-    seen.add(s)
-    out.push(s)
-  }
-  push(track.artwork_url)
-  const ytId = extractYouTubeId(track.youtube_url)
-  if (ytId) push(`https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`)
-  const labelKey = normalizeArtistKey(track.label || '')
-  if (labelKey && labelImageMap?.[labelKey]) push(labelImageMap[labelKey])
-  return out
-}
-
-/** i.discogs.com usa URLs firmadas: el optimizador de Next suele fallar; el navegador no. */
-function vinylArtworkUnoptimized(url: string): boolean {
-  return /i\.discogs\.com/i.test(url) || /i\.ytimg\.com/i.test(url)
-}
 
 function VinylArtwork({
   track,
@@ -64,8 +38,8 @@ function VinylArtwork({
   labelImageMap?: Record<string, string>
 }) {
   const candidates = useMemo(
-    () => vinylArtworkCandidates(track, labelImageMap),
-    [track, labelImageMap],
+    () => vinylArtworkCandidates(track.artwork_url, track.youtube_url, track.label, labelImageMap),
+    [track.artwork_url, track.youtube_url, track.label, labelImageMap],
   )
   const [idx, setIdx] = useState(0)
 
@@ -80,29 +54,29 @@ function VinylArtwork({
     <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
       {allFailed ? (
         <span className="absolute inset-0 flex items-center justify-center text-[var(--ink)]/30 text-2xl font-black select-none" aria-hidden>♪</span>
-      ) : vinylArtworkUnoptimized(src) ? (
+      ) : vinylArtworkUseNativeImg(src) ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
+          key={`${track.id}-${idx}-${src}`}
           src={src}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           loading="lazy"
           referrerPolicy="no-referrer"
           onError={() => {
-            if (idx + 1 < candidates.length) setIdx((i) => i + 1)
-            else setIdx(candidates.length)
+            setIdx((i) => (i + 1 < candidates.length ? i + 1 : candidates.length))
           }}
         />
       ) : (
         <Image
+          key={`${track.id}-${idx}-${src}`}
           src={src}
           alt=""
           fill
           className="object-cover"
           sizes="(max-width: 640px) 56px, 64px"
           onError={() => {
-            if (idx + 1 < candidates.length) setIdx((i) => i + 1)
-            else setIdx(candidates.length)
+            setIdx((i) => (i + 1 < candidates.length ? i + 1 : candidates.length))
           }}
         />
       )}
@@ -126,12 +100,16 @@ function VinylAutoplayOverlay({
   const { track } = pending
   const artists = Array.isArray(track.artists) ? track.artists : []
   const artistText = artists.map((a) => a.name).filter(Boolean).join(', ')
-  const artSrc = (track.artwork_url || '').trim()
   const es = lang === 'es'
-  const [artFailed, setArtFailed] = useState(false)
-  const showArt = !!artSrc && !artFailed
+  const candidates = useMemo(
+    () => vinylArtworkCandidates(track.artwork_url, track.youtube_url, track.label),
+    [track.artwork_url, track.youtube_url, track.label],
+  )
+  const [idx, setIdx] = useState(0)
 
-  useEffect(() => { setArtFailed(false) }, [artSrc])
+  useEffect(() => { setIdx(0) }, [track.id, track.artwork_url, track.youtube_url, track.label])
+
+  const src = candidates[idx] ?? null
 
   return (
     <div
@@ -148,14 +126,17 @@ function VinylAutoplayOverlay({
         style={{ fontFamily: "'Courier Prime', monospace" }}
       >
         <div className="relative w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] shrink-0 overflow-hidden">
-          {showArt ? (
+          {src ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src={artSrc}
+              key={`${track.id}-${idx}-${src}`}
+              src={src}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
               referrerPolicy="no-referrer"
-              onError={() => setArtFailed(true)}
+              onError={() => {
+                setIdx((i) => (i + 1 < candidates.length ? i + 1 : candidates.length))
+              }}
             />
           ) : (
             <span className="absolute inset-0 flex items-center justify-center text-[var(--ink)]/50 text-xl font-black" aria-hidden>♪</span>
@@ -1326,10 +1307,18 @@ export default function ChartView({
   const vinylByYear = new Map<string, ChartVinylTrack[]>()
   for (const w of weeks) {
     for (const v of w.vinyl) {
-      const key = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
-      const arr = vinylByYear.get(key) ?? []
-      arr.push(v)
-      vinylByYear.set(key, arr)
+      const yearKey = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
+      const arr = vinylByYear.get(yearKey) ?? []
+      const dedupKey = vinylTrackDedupKey(v.title, v.mix_name, v.artists)
+      const existingIdx = arr.findIndex(
+        (t) => vinylTrackDedupKey(t.title, t.mix_name, t.artists) === dedupKey,
+      )
+      if (existingIdx === -1) {
+        arr.push(v)
+      } else if (vinylRowDisplayScore(v) > vinylRowDisplayScore(arr[existingIdx])) {
+        arr[existingIdx] = v
+      }
+      vinylByYear.set(yearKey, arr)
     }
   }
   // Orden descendente por año (más reciente primero); "sin año" al final.

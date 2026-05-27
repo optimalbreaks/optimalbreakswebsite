@@ -37,6 +37,7 @@ import { readFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import { dedupeVinylRows, vinylTrackKey } from './lib/chart-vinyl-track-key.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -121,7 +122,7 @@ async function main() {
     process.exit(1)
   }
 
-  const vinyl = Array.isArray(data.vinyl) ? data.vinyl : []
+  const vinyl = dedupeVinylRows(Array.isArray(data.vinyl) ? data.vinyl : [])
   const supabase = requireSupabase()
 
   const { data: editionRow, error: edErr } = await supabase
@@ -157,16 +158,8 @@ async function main() {
     console.log(`  ↳ Creada chart_editions para week_date=${weekDate} (edición vacía hasta publicar el 40).`)
   }
 
-  // Sync estable: NO borramos en bloque para no destruir los UUIDs y orfanar
-  // los `saved_chart_tracks` de los usuarios (track_source='vinyl'). Hacemos
-  // diff por clave compuesta: mismo release en Discogs puede contener varias
-  // pistas → discogs_url + title + mix_name (normalizados).
-  const norm = (s) => (s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '').trim()
-  const normMix = (m) => { const n = norm(m); return (!n || n === 'originalmix' || n === 'original') ? '' : n }
-  const trackKey = (title, mixName, artists) => {
-    const a = (artists || []).map((x) => norm(typeof x === 'string' ? x : x?.name || '')).sort().join(',')
-    return `${a}::${norm(title)}::${normMix(mixName)}`
-  }
+  // Sync estable: diff por clave canónica (artistas + título + mix).
+  const trackKey = vinylTrackKey
 
   const { data: existingRows, error: exErr } = await supabase
     .from('chart_vinyl_tracks')
@@ -233,10 +226,11 @@ async function main() {
     if (liveId) updates.push({ id: liveId, data: row })
     else inserts.push(row)
   }
+  const keepIds = new Set([...existingByTrackKey.values()])
   const toDelete = []
   for (const r of existingRows || []) {
     const k = trackKey(r.title, r.mix_name ?? '', r.artists)
-    if (!newKeys.has(k)) toDelete.push(r.id)
+    if (!newKeys.has(k) || !keepIds.has(r.id)) toDelete.push(r.id)
   }
 
   if (toDelete.length > 0) {
@@ -246,6 +240,20 @@ async function main() {
       .in('id', toDelete)
     if (delErr) throw new Error(`delete chart_vinyl_tracks (no presentes): ${delErr.message}`)
   }
+
+  if (updates.length > 0) {
+    let bump = 0
+    const TEMP_SORT_START = Math.min(32100, 32767 - Math.max(1, updates.length) - 1)
+    for (const u of updates) {
+      bump++
+      const { error } = await supabase
+        .from('chart_vinyl_tracks')
+        .update({ sort_order: TEMP_SORT_START + bump })
+        .eq('id', u.id)
+      if (error) throw new Error(`prep sort_order ${u.id}: ${error.message}`)
+    }
+  }
+
   for (const u of updates) {
     const { error: upErr } = await supabase
       .from('chart_vinyl_tracks')
