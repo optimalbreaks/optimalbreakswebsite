@@ -9,7 +9,7 @@ import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, Cha
 import type { Metadata } from 'next'
 import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
-import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -54,7 +54,7 @@ export async function generateMetadata({
       const supabase = createServerSupabase()
       const { data } = await supabase
         .from('chart_vinyl_tracks')
-        .select('title, mix_name, artists, label, artwork_url, year')
+        .select('title, mix_name, artists, label, artwork_url, youtube_url, year')
         .eq('id', parsed.id)
         .maybeSingle()
       const row = data as null | {
@@ -63,6 +63,7 @@ export async function generateMetadata({
         artists: ChartVinylArtist[] | null
         label: string | null
         artwork_url: string | null
+        youtube_url: string | null
         year: number | null
       }
       if (!row?.title) return fallback()
@@ -90,7 +91,7 @@ export async function generateMetadata({
         title,
         description,
         'website',
-        sectionOgImagePath('charts', lang),
+        vinylOgArtworkUrl(row.artwork_url, row.youtube_url),
         CHARTS_KEYWORDS[lang],
       )
     } catch {

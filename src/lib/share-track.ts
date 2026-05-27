@@ -190,6 +190,29 @@ export function publicOgArtworkUrl(rawUrl: string | null | undefined): string | 
   return u
 }
 
+/** OG de vinilo: carátula Discogs (proxy) o miniatura YouTube si no hay artwork. */
+export function vinylOgArtworkUrl(
+  artworkUrl: string | null | undefined,
+  youtubeUrl: string | null | undefined,
+): string | null {
+  const fromArt = publicOgArtworkUrl(artworkUrl)
+  if (fromArt) return fromArt
+  const yt = (youtubeUrl || '').trim()
+  if (!yt) return null
+  const patterns = [
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ]
+  for (const re of patterns) {
+    const m = yt.match(re)
+    if (m) return publicOgArtworkUrl(`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`)
+  }
+  return null
+}
+
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
 export function formatTrackReleaseDisplay(
   releaseDate: string | null | undefined,
