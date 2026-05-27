@@ -23,7 +23,6 @@ import type {
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 
@@ -1614,12 +1613,55 @@ export default function ChartView({
       )}
 
       {/* ================================================================ */}
-      {/* SECTION 4 — Top de la Comunidad (all-time)                       */}
-      {/* Las canciones más añadidas a "Mis Tracks" por toda la comunidad.  */}
-      {/* Hace fetch a /api/public/charts/community-monthly (slug histórico, */}
-      {/* ahora devuelve all-time). Ver `CommunityMonthlyTop.tsx`.          */}
+      {/* SECTION 4 — CTA al Top 100 de la Comunidad                       */}
+      {/* El ranking «all-time» se sacó de /charts a su propia ruta         */}
+      {/* `/[lang]/top100` para darle entidad/SEO. Aquí queda la tarjeta de */}
+      {/* descubrimiento que enlaza a la página completa.                   */}
       {/* ================================================================ */}
-      <CommunityMonthlyTop lang={lang} dict={dict} />
+      {(() => {
+        const es = lang === 'es'
+        const kicker = es ? 'TOP 100 DE LA COMUNIDAD' : 'COMMUNITY TOP 100'
+        const title = es ? 'Top 100 de la comunidad' : 'Community Top 100'
+        const subtitle = es
+          ? 'Las canciones más añadidas a "Mis Tracks" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.'
+          : 'The most-saved tracks across the whole Optimal Breaks community. All-time ranking — no polls, no votes, just real saves.'
+        const cta = es ? 'VER TOP 100 →' : 'OPEN TOP 100 →'
+        return (
+          <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24 px-2 sm:px-0">
+            <Link
+              href={`/${lang}/top100`}
+              className="block group border-[3px] border-[var(--ink)] bg-[var(--paper)] hover:bg-[var(--yellow)]/15 transition-colors no-underline"
+            >
+              <div className="px-4 sm:px-6 py-5 sm:py-7">
+                <span
+                  className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] mb-3"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {kicker}
+                </span>
+                <h2
+                  className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[0.95] mb-3 text-[var(--ink)] group-hover:text-[var(--red)] transition-colors"
+                  style={{ fontFamily: "'Unbounded', sans-serif" }}
+                >
+                  {title}
+                </h2>
+                <p
+                  className="text-sm sm:text-base text-[var(--ink)]/60 mb-5 max-w-2xl"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {subtitle}
+                </p>
+                <span
+                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 text-[11px] sm:text-[12px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white transition-all"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {cta}
+                </span>
+              </div>
+            </Link>
+          </section>
+        )
+      })()}
 
       <footer className="px-4 sm:px-0 mt-8 text-center">
         <p className="text-[10px] text-[var(--ink)]/30 tracking-[3px] font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>

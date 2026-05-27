@@ -63,6 +63,7 @@ export type SeoStaticKey =
   | 'blog'
   | 'mixes'
   | 'charts'
+  | 'top100'
   | 'about'
   | 'privacy'
   | 'terms'

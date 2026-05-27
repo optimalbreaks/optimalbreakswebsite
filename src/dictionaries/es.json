@@ -9,7 +9,8 @@
     "blog": "Blog",
     "mixes": "Mixes",
     "about": "Sobre",
-    "charts": "Tracks"
+    "charts": "Tracks",
+    "top100": "Top 100"
   },
   "search": {
     "button_short": "Buscar",
@@ -511,6 +512,10 @@
     "charts": {
       "title": "Tu Radio de Break Favorita — charts semanales y nuevos lanzamientos",
       "description": "Tu RADIO DE BREAK FAVORITA. Todos los TEMAZOS de BREAKBEAT a un solo clic. Chart semanal 40 Breaks Vitales, nuevos lanzamientos y vinilos curados cada semana."
+    },
+    "top100": {
+      "title": "Top 100 de la Comunidad — los breaks más guardados por la escena",
+      "description": "Ranking acumulado de los 100 temas de breakbeat más añadidos a Mis Tracks por la comunidad Optimal Breaks. Sin votos ni encuestas: solo saves reales."
     },
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",
