@@ -115,6 +115,11 @@ function normalizeUrl(u: string | null | undefined): string {
   }
 }
 
+function youtubeUrlFromCanonicalKey(key: string): string | null {
+  if (key.startsWith('yt:')) return `https://www.youtube.com/watch?v=${key.slice(3)}`
+  return null
+}
+
 interface Aggregate {
   canonical_key: string
   title: string
@@ -127,6 +132,7 @@ interface Aggregate {
   music_key: string | null
   artwork_url: string | null
   external_url: string | null
+  youtube_url: string | null
   playback_kind: PlaybackKind
   sample_url: string | null
   save_count: number
@@ -300,6 +306,7 @@ export async function GET(request: NextRequest) {
     music_key: string | null
     artwork_url: string | null
     external_url: string | null
+    youtube_url: string | null
     sample_url: string | null
     playback_kind: PlaybackKind
     canonical_key: string
@@ -322,6 +329,7 @@ export async function GET(request: NextRequest) {
       music_key: c.music_key,
       artwork_url: c.artwork_url,
       external_url: c.beatport_url,
+      youtube_url: null,
       sample_url: c.sample_url,
       playback_kind: 'beatport',
       canonical_key,
@@ -344,6 +352,7 @@ export async function GET(request: NextRequest) {
       music_key: f.music_key,
       artwork_url: f.artwork_url,
       external_url: f.link_url,
+      youtube_url: null,
       sample_url: f.sample_url,
       playback_kind: kind,
       canonical_key,
@@ -365,6 +374,7 @@ export async function GET(request: NextRequest) {
       music_key: null,
       artwork_url: v.artwork_url,
       external_url: v.discogs_url || v.youtube_url,
+      youtube_url: (v.youtube_url || '').trim() || null,
       sample_url: null,
       playback_kind: 'youtube',
       canonical_key,
@@ -383,8 +393,11 @@ export async function GET(request: NextRequest) {
     if (byRefKey.has(`${s.track_source}:${s.track_id}`)) continue
     const snap = (s.snapshot || {}) as Record<string, unknown>
     if (!snap || !snap.title) continue
+    const snapYoutube = typeof snap.youtube_url === 'string' ? snap.youtube_url.trim() : ''
     const externalUrl = (snap.beatport_url as string | null) || s.canonical_url
-    const canonical_key = normalizeUrl(externalUrl as string | null) || `t:${s.track_source}:${s.track_id}`
+    const canonical_key = s.track_source === 'vinyl'
+      ? normalizeUrl(snapYoutube || (s.canonical_url as string | null)) || `t:vinyl:${s.track_id}`
+      : normalizeUrl(externalUrl as string | null) || `t:${s.track_source}:${s.track_id}`
     const kind: PlaybackKind = s.track_source === 'vinyl' ? 'youtube' : 'beatport'
     byRefKey.set(`${s.track_source}:${s.track_id}`, {
       title: String(snap.title || ''),
@@ -400,6 +413,7 @@ export async function GET(request: NextRequest) {
       music_key: (snap.music_key as string | null) ?? null,
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: externalUrl as string | null,
+      youtube_url: snapYoutube || youtubeUrlFromCanonicalKey(canonical_key),
       sample_url: (snap.sample_url as string | null) ?? null,
       playback_kind: kind,
       canonical_key,
@@ -431,6 +445,7 @@ export async function GET(request: NextRequest) {
       music_key: (snap.music_key as string | null) ?? null,
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: beatport_url,
+      youtube_url: null,
       sample_url: (snap.sample_url as string | null) ?? null,
       playback_kind: 'beatport',
       canonical_key,
@@ -463,6 +478,7 @@ export async function GET(request: NextRequest) {
         music_key: meta.music_key,
         artwork_url: meta.artwork_url,
         external_url: meta.external_url,
+        youtube_url: meta.youtube_url || youtubeUrlFromCanonicalKey(key),
         sample_url: meta.sample_url,
         playback_kind: meta.playback_kind,
         save_count: 1,
@@ -490,6 +506,7 @@ export async function GET(request: NextRequest) {
       if (!existing.label && meta.label) existing.label = meta.label
       if (!existing.artwork_url && meta.artwork_url) existing.artwork_url = meta.artwork_url
       if (!existing.external_url && meta.external_url) existing.external_url = meta.external_url
+      if (!existing.youtube_url && meta.youtube_url) existing.youtube_url = meta.youtube_url
       if (!existing.bpm && meta.bpm) existing.bpm = meta.bpm
       if (!existing.music_key && meta.music_key) existing.music_key = meta.music_key
       if (!existing.year && meta.year) existing.year = meta.year
@@ -533,6 +550,7 @@ export async function GET(request: NextRequest) {
     music_key: a.music_key,
     artwork_url: a.artwork_url,
     external_url: a.external_url,
+    youtube_url: a.youtube_url || youtubeUrlFromCanonicalKey(a.canonical_key),
     sample_url: a.sample_url,
     playback_kind: a.playback_kind,
     save_count: a.save_count,

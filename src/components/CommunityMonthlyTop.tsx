@@ -13,12 +13,13 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
+import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import {
   formatTrackReleaseDisplay,
   buildTrackSharePath,
@@ -46,6 +47,7 @@ interface CommunityTopTrack {
   music_key: string | null
   artwork_url: string | null
   external_url: string | null
+  youtube_url: string | null
   sample_url: string | null
   playback_kind: PlaybackKind
   save_count: number
@@ -131,6 +133,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [shuffleMode, setShuffleMode] = useState(false)
+  const [activeYouTubeKey, setActiveYouTubeKey] = useState<string | null>(null)
+  const youtubeEmbedRef = useRef<HTMLDivElement>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -231,6 +235,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const playFromIndex = useCallback((bundleIdx: number) => {
     const rowKey = previewBundle[bundleIdx]?.rowKey
     if (!rowKey) return
+    setActiveYouTubeKey(null)
     const baseQueue = shuffleMode && isGroupActive ? previewQueue : previewBundle
     const idx = baseQueue.findIndex((m) => m.rowKey === rowKey)
     if (idx < 0) {
@@ -242,19 +247,34 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     playPreviewQueue(baseQueue, idx, groupKey)
   }, [previewBundle, previewQueue, shuffleMode, isGroupActive, playPreviewQueue, groupKey])
 
+  const toggleYouTube = useCallback((rowKey: string) => {
+    setActiveYouTubeKey((prev) => {
+      if (prev === rowKey) return null
+      if (isGroupActive) stopPreview()
+      setShuffleMode(false)
+      requestAnimationFrame(() => {
+        youtubeEmbedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      })
+      return rowKey
+    })
+  }, [isGroupActive, stopPreview])
+
   const onStop = useCallback(() => {
     stopPreview()
     setShuffleMode(false)
+    setActiveYouTubeKey(null)
   }, [stopPreview])
 
   const onPlayAll = useCallback(() => {
     if (previewBundle.length === 0) return
+    setActiveYouTubeKey(null)
     setShuffleMode(false)
     playPreviewQueue(previewBundle, 0, groupKey)
   }, [previewBundle, playPreviewQueue, groupKey])
 
   const onPlayShuffle = useCallback(() => {
     if (previewBundle.length === 0) return
+    setActiveYouTubeKey(null)
     const queue = [...previewBundle]
     for (let i = queue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -369,8 +389,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {data.top_tracks.map((t) => {
               const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
+              const isYouTubeOpen = activeYouTubeKey === rowKey
+              const ytId = extractYouTubeId(t.youtube_url || '')
               const idx = previewBundle.findIndex((m) => m.rowKey === rowKey)
               const hasSample = idx >= 0
+              const rowHighlighted = isActive || isYouTubeOpen
               // Link a la fuente: si tenemos week_date + chart/featured,
               // enlazamos a /charts?week=...&play=<source>:<id>; si no, al
               // external_url.
@@ -396,6 +419,10 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 return 'BEATPORT'
               })()
 
+              const externalLink = t.primary.source === 'vinyl' && t.youtube_url
+                ? t.youtube_url
+                : t.external_url
+
               const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
               return (
@@ -403,7 +430,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                   key={t.canonical_key}
                   id={rowKey}
                   className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors
-                    ${isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                    ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -446,6 +473,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     </div>
 
                     <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                      {ytId && !hasSample && (
+                        <button
+                          type="button"
+                          onClick={() => toggleYouTube(rowKey)}
+                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                            ${isYouTubeOpen ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={isYouTubeOpen ? c.preview_pause : c.preview_play}
+                          aria-label={isYouTubeOpen ? c.preview_pause : c.preview_play}
+                        >
+                          {isYouTubeOpen ? '❚❚' : '▶'}
+                        </button>
+                      )}
                       {hasSample && (
                         <button
                           type="button"
@@ -531,9 +571,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         }
                         return null
                       })()}
-                      {t.external_url && (
+                      {externalLink && (
                         <a
-                          href={t.external_url}
+                          href={externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -544,6 +584,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       )}
                     </div>
                   </div>
+
+                  {ytId && isYouTubeOpen && (
+                    <div ref={youtubeEmbedRef} className="w-full max-w-sm">
+                      <LazyYouTubeEmbed
+                        videoId={ytId}
+                        title={`${t.title} — ${t.artists}`}
+                        className="border-[3px] border-[var(--ink)]"
+                        autoplay
+                      />
+                    </div>
+                  )}
                 </div>
               )
             })}
