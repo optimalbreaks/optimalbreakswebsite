@@ -139,6 +139,8 @@ export type AdminUserRow = {
   role: 'user' | 'admin'
   created_at: string
   last_sign_in_at: string | null
+  /** Máximo entre último login, perfil y engagement (favoritos, saves, valoraciones…). */
+  last_activity_at: string | null
   favorites_count: number
   mixes_count: number
   tracks_count: number
@@ -162,6 +164,7 @@ export async function adminGetUserDetail(id: string): Promise<{
   id: string
   email: string
   last_sign_in_at: string | null
+  last_activity_at: string | null
   created_at: string
   profile: Record<string, unknown> | null
 }> {

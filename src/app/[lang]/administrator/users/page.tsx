@@ -113,9 +113,9 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      key: 'last_sign_in_at',
-      label: 'Último acceso',
-      render: (_: unknown, row: AdminUserRow) => fmtDate(row.last_sign_in_at),
+      key: 'last_activity_at',
+      label: 'Última actividad',
+      render: (_: unknown, row: AdminUserRow) => fmtDate(row.last_activity_at),
     },
   ]
 
@@ -126,7 +126,9 @@ export default function AdminUsersPage() {
         Cuentas registradas (Auth + perfil). Puedes asignar o quitar el rol de administrador. La búsqueda filtra por
         nombre visible o nombre de usuario en el perfil. <strong>Favoritos</strong> = artistas + sellos + eventos con
         corazón; <strong>Mixes</strong> = mixes guardados; <strong>Tracks</strong> = canciones en su lista My Tracks.
-        Pulsa sobre cualquiera de esos números para ver el detalle.
+        Pulsa sobre cualquiera de esos números para ver el detalle.{' '}
+        <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
+        perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>
       <AdminTable
         columns={columns}

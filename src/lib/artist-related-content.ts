@@ -142,12 +142,23 @@ function dedupeChartRows(
   featuredRows: ChartRow[],
   vinylRows: ChartRow[],
   lang: Locale,
-  cap = 8,
+  caps: { chart?: number; featured?: number; vinyl?: number; total?: number } = {},
 ): ArtistChartLink[] {
+  const chartCap = caps.chart ?? 12
+  const featuredCap = caps.featured ?? 24
+  const vinylCap = caps.vinyl ?? 8
+  const totalCap = caps.total ?? 40
+
   const seen = new Set<string>()
   const out: ArtistChartLink[] = []
+  const counts = { chart: 0, featured: 0, vinyl: 0 }
 
   const push = (row: ChartRow, kind: 'chart' | 'featured' | 'vinyl') => {
+    if (out.length >= totalCap) return
+    if (kind === 'chart' && counts.chart >= chartCap) return
+    if (kind === 'featured' && counts.featured >= featuredCap) return
+    if (kind === 'vinyl' && counts.vinyl >= vinylCap) return
+
     const title = (row.title || '').trim() || '—'
     const mix = (row.mix_name || '').trim()
     const key = `${normKey(title)}|${normKey(mix)}`
@@ -171,13 +182,14 @@ function dedupeChartRows(
       artistsText: artistNames.join(', '),
       artistNames,
     })
+    counts[kind] += 1
   }
 
   for (const row of chartRows) push(row, 'chart')
   for (const row of featuredRows) push(row, 'featured')
   for (const row of vinylRows) push(row, 'vinyl')
 
-  return out.slice(0, cap)
+  return out
 }
 
 function artistSearchTerms(
@@ -306,13 +318,13 @@ export async function fetchArtistRelatedContent(
       .or(artistNamesOr)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .order('position', { ascending: true })
-      .limit(20),
+      .limit(24),
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
       .or(artistNamesOr)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .limit(20),
+      .limit(48),
     supabase
       .from('chart_vinyl_tracks')
       .select('id, title, mix_name, label, year, artists')
@@ -416,7 +428,7 @@ export async function fetchLabelChartLinks(
     (featuredRes.data || []) as unknown as ChartRow[],
     (vinylRes.data || []) as unknown as ChartRow[],
     lang,
-    12,
+    { chart: 12, featured: 24, vinyl: 8, total: 40 },
   )
 }
 

@@ -32,6 +32,13 @@ import {
   buildVinylSharePath,
   extractBeatportTrackId,
 } from '@/lib/share-track'
+import { ArtistNames, type ArtistCredit } from '@/components/ArtistNames'
+import {
+  buildFullArtistSlugMap,
+  filterArtistSlugMapForNames,
+  normalizeArtistKey,
+  splitArtistDisplayLine,
+} from '@/lib/artist-slug-map'
 
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
@@ -67,6 +74,8 @@ type UnifiedTrack = {
   title: string
   mix_name?: string
   artists: string
+  /** Créditos parseados (JSONB de charts o línea "A, B") para enlazar fichas de artista. */
+  artist_credits?: ArtistCredit[]
   label?: string
   year?: number | null
   /** YYYY-MM-DD cuando existe (chart / featured / beatport_top). */
@@ -122,8 +131,30 @@ function previewAudioSrc(sampleUrl: string, platform?: string, linkUrl?: string 
 }
 
 function artistsToString(artists: any): string {
-  if (!Array.isArray(artists)) return ''
+  if (!Array.isArray(artists)) return typeof artists === 'string' ? artists : ''
   return artists.map((a: any) => (a && typeof a === 'object' ? a.name : a)).filter(Boolean).join(', ')
+}
+
+function parseArtistCredits(artists: unknown): ArtistCredit[] {
+  if (Array.isArray(artists)) {
+    return artists
+      .map((a: any) => ({
+        name: (a && typeof a === 'object' ? a.name : a) || '',
+        beatport_url: a?.beatport_url ?? null,
+        url: a?.url ?? null,
+      }))
+      .map((a) => ({ ...a, name: String(a.name).trim() }))
+      .filter((a) => a.name)
+  }
+  if (typeof artists === 'string' && artists.trim()) {
+    return splitArtistDisplayLine(artists).map((name) => ({ name }))
+  }
+  return []
+}
+
+function trackArtistCredits(t: UnifiedTrack): ArtistCredit[] {
+  if (t.artist_credits?.length) return t.artist_credits
+  return splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))
 }
 
 type SortBy = 'added' | 'artist' | 'title' | 'release'
@@ -267,6 +298,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // tracks; el usuario luego puede acotarlo arrastrando los pomos del slider.
   const [yearRange, setYearRange] = useState<[number, number] | null>(null)
   const [sortBy, setSortBy] = useState<SortBy>('added')
+  const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
   const es = lang === 'es'
 
   // Clave del grupo dentro del provider global. Propia del usuario logueado
@@ -360,9 +392,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
       const byKey = new Map<string, UnifiedTrack>()
       for (const c of chartData) {
+        const credits = parseArtistCredits(c.artists)
         byKey.set(`chart:${c.id}`, {
           key: `chart:${c.id}`, source: 'chart', id: c.id,
-          title: c.title, mix_name: c.mix_name, artists: typeof c.artists === 'string' ? c.artists : artistsToString(c.artists),
+          title: c.title, mix_name: c.mix_name,
+          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(c.artists),
+          artist_credits: credits.length ? credits : undefined,
           label: c.label, year: c.release_year, release_date: c.release_date ?? null, bpm: c.bpm, music_key: c.music_key,
           artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
           sample_url: c.sample_url,
@@ -370,9 +405,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         })
       }
       for (const f of featData) {
+        const credits = parseArtistCredits(f.artists)
         byKey.set(`featured:${f.id}`, {
           key: `featured:${f.id}`, source: 'featured', id: f.id,
-          title: f.title, mix_name: f.mix_name, artists: typeof f.artists === 'string' ? f.artists : artistsToString(f.artists),
+          title: f.title, mix_name: f.mix_name,
+          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(f.artists),
+          artist_credits: credits.length ? credits : undefined,
           label: f.label, year: f.release_year, release_date: f.release_date ?? null, bpm: f.bpm, music_key: f.music_key,
           artwork_url: f.artwork_url, external_url: f.link_url,
           external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
@@ -382,9 +420,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         })
       }
       for (const v of vinylData) {
+        const credits = parseArtistCredits(v.artists)
         byKey.set(`vinyl:${v.id}`, {
           key: `vinyl:${v.id}`, source: 'vinyl', id: v.id,
-          title: v.title, mix_name: v.mix_name, artists: typeof v.artists === 'string' ? v.artists : artistsToString(v.artists),
+          title: v.title, mix_name: v.mix_name,
+          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(v.artists),
+          artist_credits: credits.length ? credits : undefined,
           label: v.label, year: v.year,
           artwork_url: v.artwork_url, external_url: v.discogs_url, external_label: 'DISCOGS',
           youtube_url: v.youtube_url,
@@ -397,13 +438,15 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       for (const s of saved) {
         if (s.track_source !== 'beatport_top') continue
         const snap = (s.snapshot || {}) as Record<string, any>
+        const topCredits = parseArtistCredits(snap.artists)
         byKey.set(`beatport_top:${s.track_id}`, {
           key: `beatport_top:${s.track_id}`,
           source: 'beatport_top',
           id: s.track_id,
           title: snap.title || '',
           mix_name: snap.mix_name || undefined,
-          artists: snap.artists || '',
+          artists: topCredits.length ? topCredits.map((a) => a.name).join(', ') : (snap.artists || ''),
+          artist_credits: topCredits.length ? topCredits : undefined,
           label: snap.label || undefined,
           year: snap.year ?? null,
           release_date: snap.release_date ?? null,
@@ -503,6 +546,42 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved, loading, lang, isShared])
+
+  // Mapa nombre → slug para enlazar artistas del catálogo (como en /charts).
+  useEffect(() => {
+    if (!tracks.length) {
+      setArtistSlugMap({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const names = new Set<string>()
+      for (const t of tracks) {
+        for (const c of trackArtistCredits(t)) names.add(c.name)
+      }
+      if (names.size === 0) {
+        if (!cancelled) setArtistSlugMap({})
+        return
+      }
+      const supabase = createBrowserSupabase()
+      const { data } = await supabase.from('artists').select('slug, name, name_display').limit(5000)
+      if (cancelled) return
+      const full = buildFullArtistSlugMap(
+        (data as { slug: string; name: string | null; name_display: string | null }[]) || [],
+      )
+      for (const t of tracks) {
+        const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
+        if (t.source === 'beatport_top' && origin?.kind === 'artist' && origin.slug) {
+          for (const c of trackArtistCredits(t)) {
+            const key = normalizeArtistKey(c.name)
+            if (key) full[key] = origin.slug
+          }
+        }
+      }
+      setArtistSlugMap(filterArtistSlugMapForNames(full, names))
+    })()
+    return () => { cancelled = true }
+  }, [tracks])
 
   // Años mín / máx presentes en el conjunto de tracks (ignora los que no
   // tienen año). Sirve para fijar los topes del slider de rango.
@@ -1091,7 +1170,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         {t.mix_name ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span> : null}
                       </h3>
                       <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                        <span className="text-[var(--ink)]/70">{t.artists || '—'}</span>
+                        <ArtistNames
+                          artists={trackArtistCredits(t)}
+                          slugMap={artistSlugMap}
+                          lang={lang}
+                        />
                         {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
                         {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                       </p>

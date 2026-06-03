@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
+import { buildLastActivityAtByUserId } from '@/lib/admin-user-last-activity'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 
 function sanitizeSearch(raw: string): string {
@@ -89,12 +90,21 @@ export async function GET(request: NextRequest) {
         }),
       )
 
-      const counts = await buildEngagementCounts(sb, rows.map((r) => r.id))
+      const ids = rows.map((r) => r.id)
+      const [counts, lastActivity] = await Promise.all([
+        buildEngagementCounts(sb, ids),
+        buildLastActivityAtByUserId(
+          sb,
+          ids,
+          Object.fromEntries(rows.map((r) => [r.id, r.last_sign_in_at])),
+        ),
+      ])
       const rowsWithCounts = rows.map((r) => ({
         ...r,
         favorites_count: counts[r.id]?.favorites ?? 0,
         mixes_count: counts[r.id]?.mixes ?? 0,
         tracks_count: counts[r.id]?.tracks ?? 0,
+        last_activity_at: lastActivity[r.id] ?? null,
       }))
 
       return NextResponse.json({ data: rowsWithCounts, count: count ?? 0, page, limit })
@@ -135,12 +145,21 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const counts = await buildEngagementCounts(sb, rows.map((r) => r.id))
+    const ids = rows.map((r) => r.id)
+    const [counts, lastActivity] = await Promise.all([
+      buildEngagementCounts(sb, ids),
+      buildLastActivityAtByUserId(
+        sb,
+        ids,
+        Object.fromEntries(rows.map((r) => [r.id, r.last_sign_in_at])),
+      ),
+    ])
     const rowsWithCounts = rows.map((r) => ({
       ...r,
       favorites_count: counts[r.id]?.favorites ?? 0,
       mixes_count: counts[r.id]?.mixes ?? 0,
       tracks_count: counts[r.id]?.tracks ?? 0,
+      last_activity_at: lastActivity[r.id] ?? null,
     }))
 
     return NextResponse.json({ data: rowsWithCounts, count: total, page, limit })

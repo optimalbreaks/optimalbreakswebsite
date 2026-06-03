@@ -25,6 +25,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import type { ChartTrackSource } from '@/hooks/useUserData'
+import { ArtistNames } from '@/components/ArtistNames'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
 type CanonRef = { source: ChartTrackSource; id: string }
@@ -184,37 +185,6 @@ interface ChartViewProps {
 // Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
 const UNKNOWN_YEAR_KEY = '__unknown_year__'
 
-/**
- * Normalización compartida con `src/app/[lang]/charts/page.tsx` y `/api/search`:
- * minúsculas, quita acentos, colapsa separadores. El mapa `artistSlugMap` se
- * indexa con esta misma función, así que `findArtistSlug` puede mirar sin
- * preocuparse de mayúsculas/acentos/puntuación.
- */
-function normalizeArtistKey(raw: string): string {
-  return (raw || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
-/**
- * Busca slug de artista tolerando prefijo "The" (muy habitual: "The Freestylers"
- * en el track, "freestylers" en BD). Si no hay match exacto, prueba con/sin "the".
- */
-function findArtistSlug(
-  name: string,
-  slugMap: Record<string, string> | undefined,
-): string | null {
-  if (!slugMap || !name) return null
-  const n = normalizeArtistKey(name)
-  if (!n) return null
-  if (slugMap[n]) return slugMap[n]
-  const noThe = n.startsWith('the ') ? n.slice(4) : `the ${n}`
-  return slugMap[noThe] || null
-}
-
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
@@ -329,63 +299,6 @@ function MovementIndicator({
   return (
     <span className="text-[var(--ink)]/50 font-bold text-xs" title={c.position_same}>
       ═
-    </span>
-  )
-}
-
-/**
- * Renderiza la lista de artistas de una fila del chart. Preferencia de enlace:
- *   1. Link INTERNO `/{lang}/artists/{slug}` si el artista existe en `public.artists`
- *      (detectado vía `slugMap`). Así descubres al DJ dentro del sitio.
- *   2. Enlace EXTERNO a su Beatport (`beatport_url`) o a su perfil genérico (`url`)
- *      si no hay ficha interna.
- *   3. Texto plano si no hay ninguna URL.
- * Acepta los tres tipos de artista de charts (`ChartTrackArtist`, `ChartFeaturedArtist`,
- * `ChartVinylArtist`) porque todos comparten `name` + URL opcional.
- */
-function ArtistNames({
-  artists,
-  slugMap,
-  lang,
-}: {
-  artists: (ChartTrackArtist | ChartFeaturedArtist | ChartVinylArtist)[]
-  slugMap?: Record<string, string>
-  lang?: Locale
-}) {
-  return (
-    <span className="text-[var(--ink)]/70">
-      {artists.map((a, i) => {
-        const internalSlug = findArtistSlug(a.name, slugMap)
-        const externalHref =
-          ('beatport_url' in a && (a as ChartTrackArtist).beatport_url) ||
-          ('url' in a && (a as ChartFeaturedArtist | ChartVinylArtist).url) ||
-          ''
-        return (
-          <span key={i}>
-            {internalSlug && lang ? (
-              <Link
-                href={`/${lang}/artists/${internalSlug}`}
-                className="text-[var(--red)] font-bold hover:underline decoration-2 underline-offset-2 transition-colors"
-                title={a.name}
-              >
-                {a.name}
-              </Link>
-            ) : externalHref ? (
-              <a
-                href={externalHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[var(--red)] transition-colors underline decoration-dotted"
-              >
-                {a.name}
-              </a>
-            ) : (
-              a.name
-            )}
-            {i < artists.length - 1 && ', '}
-          </span>
-        )
-      })}
     </span>
   )
 }

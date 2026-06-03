@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
+import { buildLastActivityAtByUserId } from '@/lib/admin-user-last-activity'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 
 export async function GET(
@@ -28,10 +29,14 @@ export async function GET(
   }
 
   const u = udata.user
+  const lastActivity = await buildLastActivityAtByUserId(sb, [id], {
+    [id]: u.last_sign_in_at ?? null,
+  })
   return NextResponse.json({
     id: u.id,
     email: u.email ?? '',
     last_sign_in_at: u.last_sign_in_at ?? null,
+    last_activity_at: lastActivity[id] ?? null,
     created_at: u.created_at,
     profile: profile,
   })

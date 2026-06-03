@@ -23,6 +23,7 @@ export default function AdminUserDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [lastSignIn, setLastSignIn] = useState<string | null>(null)
+  const [lastActivity, setLastActivity] = useState<string | null>(null)
   const [createdAt, setCreatedAt] = useState('')
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
@@ -36,6 +37,7 @@ export default function AdminUserDetailPage() {
       .then((d) => {
         setEmail(d.email)
         setLastSignIn(d.last_sign_in_at)
+        setLastActivity(d.last_activity_at ?? null)
         setCreatedAt(d.created_at)
         const p = d.profile as Record<string, string | null> | null
         setDisplayName(p?.display_name ?? null)
@@ -110,8 +112,17 @@ export default function AdminUserDetailPage() {
             <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>{fmtDate(createdAt)}</div>
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)] mb-1">Último acceso</div>
-            <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>{fmtDate(lastSignIn)}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)] mb-1">Última actividad</div>
+            <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>{fmtDate(lastActivity)}</div>
+          </div>
+        </div>
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)] mb-1">Último inicio de sesión</div>
+          <div
+            className="text-[var(--dim)]"
+            style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}
+          >
+            {fmtDate(lastSignIn)}
           </div>
         </div>
 
