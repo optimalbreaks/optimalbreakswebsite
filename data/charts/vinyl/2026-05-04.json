@@ -117,6 +117,44 @@
       "artwork_url": "https://i.ytimg.com/vi/b9rOriUHGPU/hqdefault.jpg",
       "note_en": "A-side of Ed209's 2004 Wireframe 12\" (WF 008, UK) — the original Infectious, a staple UK nu skool breaks cut, with Blow A Fuze on the flip.",
       "note_es": "Cara A del 12\" de Ed209 en Wireframe (WF 008, UK, 2004) — el Infectious original, clásico del nu-skool breaks británico, con Blow A Fuze en la cara B."
+    },
+    {
+      "sort_order": 7,
+      "title": "Bring It On",
+      "mix_name": "Stanton Warriors Mix",
+      "artists": [
+        {
+          "name": "Goose"
+        }
+      ],
+      "label": "Skint",
+      "catalog_number": "SKINT 140",
+      "year": 2007,
+      "format": "Vinyl, 12\", Sampler",
+      "discogs_url": "https://www.discogs.com/es/release/1055045-Stanton-Warriors-Remixes",
+      "youtube_url": "https://www.youtube.com/watch?v=ocSGeiksBj8",
+      "artwork_url": "https://i.discogs.com/zpL4l1ynZ4q1q1oBanQAn1zUQy6URgD9-w8MJVpsTYI/rs:fit/g:sm/q:90/h:600/w:594/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNTUw/NDUtMTE4ODUxMzEz/NS5qcGVn.jpeg",
+      "note_en": "Side A on Skint's Stanton Warriors Remixes 12\" (SKINT 140, released 2007-08-27) — Goose reworked by Stanton Warriors, paired with Alter Ego's Rocker on the B-side.",
+      "note_es": "Cara A del 12\" Stanton Warriors Remixes en Skint (SKINT 140, lanzado 2007-08-27) — Goose remezclado por Stanton Warriors, emparejado con Rocker de Alter Ego en la cara B."
+    },
+    {
+      "sort_order": 8,
+      "title": "Rocker",
+      "mix_name": "Stanton Warriors Mix",
+      "artists": [
+        {
+          "name": "Alter Ego"
+        }
+      ],
+      "label": "Skint",
+      "catalog_number": "SKINT 140",
+      "year": 2007,
+      "format": "Vinyl, 12\", Sampler",
+      "discogs_url": "https://www.discogs.com/es/release/1055045-Stanton-Warriors-Remixes",
+      "youtube_url": "https://www.youtube.com/watch?v=hxFxhjPkic8",
+      "artwork_url": "https://i.discogs.com/zpL4l1ynZ4q1q1oBanQAn1zUQy6URgD9-w8MJVpsTYI/rs:fit/g:sm/q:90/h:600/w:594/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9SLTEwNTUw/NDUtMTE4ODUxMzEz/NS5qcGVn.jpeg",
+      "note_en": "Side B on Skint's Stanton Warriors Remixes 12\" (SKINT 140, released 2007-08-27) — Alter Ego's Rocker in the Stanton Warriors mix, flip to Bring It On on the A-side.",
+      "note_es": "Cara B del 12\" Stanton Warriors Remixes en Skint (SKINT 140, lanzado 2007-08-27) — Rocker de Alter Ego en el mix de Stanton Warriors, contracara de Bring It On en la A."
     }
   ]
 }

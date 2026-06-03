@@ -615,13 +615,15 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
               {c.vinyl_open_youtube}
             </a>
           )}
-          <a
-            href={track.discogs_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {c.vinyl_open_discogs}
-          </a>
+          {(track.discogs_url || '').trim().includes('discogs.com') && (
+            <a
+              href={track.discogs_url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {c.vinyl_open_discogs}
+            </a>
+          )}
         </div>
       </div>
 

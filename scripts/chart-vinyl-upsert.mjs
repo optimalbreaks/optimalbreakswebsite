@@ -22,7 +22,6 @@
  *       "format": "12\"",
  *       "discogs_url": "https://www.discogs.com/release/...",
  *       "youtube_url": "https://www.youtube.com/watch?v=...",
- *       "artwork_url": "",
  *       "note_en": "",
  *       "note_es": ""
  *     }
@@ -31,6 +30,7 @@
  *
  * Requiere .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  * La edición chart_editions.week_date debe existir ya.
+ * Cada fila necesita al menos discogs_url o youtube_url (curación manual por enlace YouTube OK).
  */
 
 import { readFileSync, existsSync } from 'fs'
@@ -193,7 +193,10 @@ async function main() {
     const title = (p.title || '').trim()
     if (!title) throw new Error(`vinyl sort_order=${sort}: falta title`)
     const discogs_url = (p.discogs_url || '').trim()
-    if (!discogs_url) throw new Error(`vinyl "${title}": falta discogs_url`)
+    const youtube_url = (p.youtube_url || '').trim()
+    if (!discogs_url && !youtube_url) {
+      throw new Error(`vinyl "${title}": falta discogs_url o youtube_url`)
+    }
 
     return {
       chart_edition_id: editionId,
@@ -208,8 +211,8 @@ async function main() {
           ? Number(p.year)
           : null,
       format: (p.format || '').trim(),
-      discogs_url,
-      youtube_url: (p.youtube_url || '').trim() || null,
+      discogs_url: discogs_url || '',
+      youtube_url: youtube_url || null,
       artwork_url: (p.artwork_url || '').trim() || null,
       note_en: (p.note_en || '').trim(),
       note_es: (p.note_es || '').trim(),
