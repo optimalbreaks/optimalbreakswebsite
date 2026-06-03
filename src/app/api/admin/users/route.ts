@@ -145,7 +145,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const ids = rows.map((r) => r.id)
     const [counts, lastActivity] = await Promise.all([
       buildEngagementCounts(sb, ids),
       buildLastActivityAtByUserId(

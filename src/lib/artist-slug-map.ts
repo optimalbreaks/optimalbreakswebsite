@@ -40,7 +40,7 @@ export function filterArtistSlugMapForNames(
   displayNames: Iterable<string>,
 ): Record<string, string> {
   const filtered: Record<string, string> = {}
-  for (const raw of displayNames) {
+  for (const raw of Array.from(displayNames)) {
     const key = normalizeArtistKey(raw)
     if (!key) continue
     if (fullMap[key]) filtered[key] = fullMap[key]
