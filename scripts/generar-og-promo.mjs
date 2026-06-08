@@ -43,6 +43,10 @@ const OPENAI_HEIGHT = 1024
 const OPENAI_SIZE = `${OPENAI_WIDTH}x${OPENAI_HEIGHT}`
 const FB_OG_WIDTH = 1200
 const FB_OG_HEIGHT = 1000
+/** Secciones que deben salir en ratio OG clásico de Meta (1200×630 ≈ 1.91:1). */
+const SECTION_OUTPUT_SIZE = {
+  top100: { width: 1200, height: 630, cropBias: 0.5, framePadding: 0.03 },
+}
 const MAX_PROMPT_LEN = 4000
 
 function parseEnvText(text) {
@@ -82,16 +86,29 @@ function env(key) {
   return v
 }
 
+function sectionOutputSize(sectionKey) {
+  return (
+    SECTION_OUTPUT_SIZE[sectionKey] ?? {
+      width: FB_OG_WIDTH,
+      height: FB_OG_HEIGHT,
+      cropBias: undefined,
+      framePadding: undefined,
+    }
+  )
+}
+
 // ============================================================
-// Recorte/marco a 1200×1000 (mismo pipeline que generar-og-secciones.mjs)
+// Recorte/marco al ratio de salida (1200×1000 por defecto; top100 → 1200×630)
 // ============================================================
-async function toFacebookOgPng(buf) {
+async function toFacebookOgPng(buf, output = sectionOutputSize('charts')) {
+  const targetW = output.width
+  const targetH = output.height
   const sharp = await getSharp()
-  const rawBias = process.env.OG_PROMO_CROP_BIAS?.trim()
+  const rawBias = output.cropBias ?? process.env.OG_PROMO_CROP_BIAS?.trim()
   const bias = rawBias !== undefined && rawBias !== '' ? Number(rawBias) : 0.41
   const t = Number.isFinite(bias) ? Math.min(1, Math.max(0, bias)) : 0.41
 
-  const rawPad = process.env.OG_PROMO_FRAME_PADDING?.trim()
+  const rawPad = output.framePadding ?? process.env.OG_PROMO_FRAME_PADDING?.trim()
   const padFrac =
     rawPad !== undefined && rawPad !== '' ? Number(rawPad) : 0.045
   const p = Number.isFinite(padFrac) ? Math.min(0.14, Math.max(0, padFrac)) : 0.045
@@ -99,26 +116,26 @@ async function toFacebookOgPng(buf) {
   const meta = await sharp(buf).metadata()
   const w = meta.width || OPENAI_WIDTH
   const h = meta.height || OPENAI_HEIGHT
-  const scale = Math.max(FB_OG_WIDTH / w, FB_OG_HEIGHT / h)
+  const scale = Math.max(targetW / w, targetH / h)
   const scaledW = Math.round(w * scale)
   const scaled = await sharp(buf).resize({ width: scaledW }).toBuffer()
   const m2 = await sharp(scaled).metadata()
   const rh = m2.height || Math.round(h * scale)
   const rw = m2.width || scaledW
-  const spanX = rw - FB_OG_WIDTH
-  const spanY = rh - FB_OG_HEIGHT
+  const spanX = rw - targetW
+  const spanY = rh - targetH
   const left = Math.max(0, Math.floor(spanX / 2))
   const top = Math.max(0, Math.min(Math.round(spanY * t), spanY))
 
   const cropped = await sharp(scaled)
-    .extract({ left, top, width: FB_OG_WIDTH, height: FB_OG_HEIGHT })
+    .extract({ left, top, width: targetW, height: targetH })
     .png()
     .toBuffer()
 
   if (p <= 0) return cropped
 
-  const maxW = Math.floor(FB_OG_WIDTH * (1 - 2 * p))
-  const maxH = Math.floor(FB_OG_HEIGHT * (1 - 2 * p))
+  const maxW = Math.floor(targetW * (1 - 2 * p))
+  const maxH = Math.floor(targetH * (1 - 2 * p))
   const inner = await sharp(cropped)
     .resize(maxW, maxH, { fit: 'inside' })
     .png()
@@ -126,8 +143,8 @@ async function toFacebookOgPng(buf) {
 
   return sharp({
     create: {
-      width: FB_OG_WIDTH,
-      height: FB_OG_HEIGHT,
+      width: targetW,
+      height: targetH,
       channels: 3,
       background: '#e8dcc8',
     },
@@ -144,6 +161,44 @@ async function toFacebookOgPng(buf) {
 // stencil/block con sombra roja desplazada. Colores estrictos.
 // ============================================================
 
+function buildFanzineWideOgPrompt({
+  language,
+  kicker,
+  mainHeadline,
+  sub,
+  plaqueTop,
+  plaqueBottom,
+  motifs,
+  width,
+  height,
+}) {
+  const ratio = (width / height).toFixed(2)
+  return `
+PROMOTIONAL OPEN-GRAPH BANNER — landscape ${width}×${height} (${ratio}:1) for the website "Optimal Breaks". Designed for Facebook / Meta / WhatsApp / X / LinkedIn link previews in WIDE format (same ratio as 1200×630). This is a CINEMA-WIDE banner, NOT a tall poster.
+
+GOAL: stop-the-scroll fanzine artwork in a horizontal strip. Punk brutalist energy; headline MUST stay legible at thumbnail size.
+
+LAYOUT (wide horizontal strip, content uses full width):
+  1. Top hazard-stripe band (~5% tall): yellow + ink diagonal stripes spanning full width.
+  2. Small uppercase tag in a stamped rectangle, top-left or top-center: "${kicker}".
+  3. LEFT ZONE (~45% width): MAIN HEADLINE "${mainHeadline}" in 1–2 stacked stencil lines, very large. Sub-headline "${sub}" directly beneath in smaller block type.
+  4. RIGHT ZONE (~45% width): collage cluster: ${motifs}. Spread horizontally, not stacked vertically.
+  5. Bottom plaque (full-width black bar ~14% tall, 4px ink border): white block type — line 1 "${plaqueTop}", line 2 smaller "${plaqueBottom}".
+  6. Bottom hazard-stripe band mirroring the top (~5% tall).
+  7. Optional small yellow scotch-tape corners.
+
+PALETTE (strict): cream #e8dcc8, ink #1a1a1a, red #d62828, industrial yellow #f7e733. Optional tiny cyan #0891b2 halftone only.
+
+STYLE — PUNK BRUTALIST FANZINE: photocopy grain, halftone, rubber stamps, torn paper, ink splatters. Typography crisp at small size.
+
+TYPOGRAPHY: bold block / stencil sans, ALL caps. Exact spelling (${language}). No other text.
+
+DO NOT: human faces, real logos, URLs, neon glow, 3D plastic, tall portrait layout.
+
+SAFE REGION: key text and icons within 5%–95% W and 10%–88% H — optimized for wide Facebook preview, not square crop.
+`.trim()
+}
+
 function buildFanzineLandscapePrompt({
   language,
   kicker,
@@ -152,9 +207,12 @@ function buildFanzineLandscapePrompt({
   plaqueTop,
   plaqueBottom,
   motifs,
+  width = FB_OG_WIDTH,
+  height = FB_OG_HEIGHT,
 }) {
+  const ratio = (width / height).toFixed(2)
   return `
-PROMOTIONAL OPEN-GRAPH BANNER — landscape 1200×1000 (1.2:1) for the website "Optimal Breaks" (online breakbeat encyclopedia & radio). Designed for link previews on Facebook / WhatsApp / X / LinkedIn — Facebook will square-crop the center, so the message MUST sit centered.
+PROMOTIONAL OPEN-GRAPH BANNER — landscape ${width}×${height} (${ratio}:1) for the website "Optimal Breaks" (online breakbeat encyclopedia & radio). Designed for link previews on Facebook / WhatsApp / X / LinkedIn — Facebook will square-crop the center, so the message MUST sit centered.
 
 GOAL: stop-the-scroll fanzine artwork. Punk brutalist energy, slightly overloaded collage, but the headline MUST stay legible at 200px wide thumbnail.
 
@@ -374,7 +432,8 @@ const LANG_NAME = { es: 'Spanish', en: 'English' }
 
 function buildPromptFor(sectionKey, lang) {
   const cfg = SECTIONS[sectionKey][lang]
-  return buildFanzineLandscapePrompt({
+  const output = sectionOutputSize(sectionKey)
+  const args = {
     language: LANG_NAME[lang],
     kicker: cfg.kicker,
     mainHeadline: cfg.mainHeadline,
@@ -382,7 +441,11 @@ function buildPromptFor(sectionKey, lang) {
     plaqueTop: cfg.plaqueTop,
     plaqueBottom: cfg.plaqueBottom,
     motifs: cfg.motifs,
-  })
+    width: output.width,
+    height: output.height,
+  }
+  if (output.height === 630) return buildFanzineWideOgPrompt(args)
+  return buildFanzineLandscapePrompt(args)
 }
 
 function fileFor(sectionKey, lang) {
@@ -526,11 +589,14 @@ async function main() {
       }
 
       try {
-        console.log(`  🎨 [${sectionKey}/${lang}] generando…`)
+        const output = sectionOutputSize(sectionKey)
+        console.log(`  🎨 [${sectionKey}/${lang}] generando… (${output.width}×${output.height})`)
         let buf = await generateOgImage(prompt)
-        buf = await toFacebookOgPng(buf)
+        buf = await toFacebookOgPng(buf, output)
         writeFileSync(outPath, buf)
-        console.log(`  ✅ [${sectionKey}/${lang}] ${fileName}  ${FB_OG_WIDTH}×${FB_OG_HEIGHT}  (${(buf.length / 1024).toFixed(0)} KB)`)
+        console.log(
+          `  ✅ [${sectionKey}/${lang}] ${fileName}  ${output.width}×${output.height}  (${(buf.length / 1024).toFixed(0)} KB)`,
+        )
       } catch (e) {
         console.error(`  ❌ [${sectionKey}/${lang}] ${e.message}`)
       }

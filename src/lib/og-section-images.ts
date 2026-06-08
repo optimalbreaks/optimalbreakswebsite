@@ -61,7 +61,7 @@ export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: nu
   blog: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
   mixes: { width: 1200, height: 630 },
   charts: { width: 1200, height: 630 },
-  top100: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
+  top100: { width: 1200, height: 630 },
   about: { width: 1764, height: 1264 },
 }
 
