@@ -37,8 +37,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = params
   return staticPageMetadata(lang, '/top100', 'top100', {
-    ogImagePath: sectionOgImagePath('charts', lang),
-    ogImageAlt: sectionOgImageAlt('charts', lang),
+    ogImagePath: sectionOgImagePath('top100', lang),
+    ogImageAlt: sectionOgImageAlt('top100', lang),
     extraKeywords: TOP100_KEYWORDS[lang],
   })
 }

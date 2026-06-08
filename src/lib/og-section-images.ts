@@ -20,6 +20,7 @@ export const SECTION_OG_KEYS = [
   'blog',
   'mixes',
   'charts',
+  'top100',
   'about',
 ] as const
 
@@ -34,6 +35,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   blog: 'blog.png',
   mixes: 'mixes-screenshot.png',
   charts: 'charts-screenshot.png',
+  top100: 'top100.png',
   about: 'about-og-alternate.png',
 }
 
@@ -46,7 +48,9 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
  * es responsabilidad del script de generación dejar siempre las dos variantes
  * cuando un asset se actualiza al nuevo flujo bilingüe.
  */
-const SECTION_OG_LANG_OVERRIDES: Partial<Record<SectionOgKey, true>> = {}
+const SECTION_OG_LANG_OVERRIDES: Partial<Record<SectionOgKey, true>> = {
+  top100: true,
+}
 
 /** Dimensiones reales del PNG servido (Meta og:image width/height). */
 export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: number }> = {
@@ -57,6 +61,7 @@ export const SECTION_OG_PIXELS: Record<SectionOgKey, { width: number; height: nu
   blog: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
   mixes: { width: 1200, height: 630 },
   charts: { width: 1200, height: 630 },
+  top100: { width: SECTION_OG_PIXEL_WIDTH, height: SECTION_OG_PIXEL_HEIGHT },
   about: { width: 1764, height: 1264 },
 }
 
@@ -88,6 +93,10 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
   charts: {
     es: 'Optimal Breaks — Tu radio de break favorita',
     en: 'Optimal Breaks — Your favorite break radio',
+  },
+  top100: {
+    es: 'Optimal Breaks — Top 100: las mejores canciones de breakbeat de la historia',
+    en: 'Optimal Breaks — Top 100: the best breakbeat tracks in history',
   },
   about: {
     es: 'Optimal Breaks — Sobre el proyecto',

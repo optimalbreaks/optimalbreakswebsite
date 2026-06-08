@@ -185,6 +185,26 @@ SAFE REGION: keep glyphs and key icons within 8%–92% W and 8%–92% H. The out
 // ============================================================
 
 const SECTIONS = {
+  top100: {
+    es: {
+      kicker: 'ALL-TIME · COMUNIDAD · SIN FILTROS',
+      mainHeadline: 'TOP 100',
+      sub: 'LAS MEJORES CANCIONES DE BREAKBEAT DE LA HISTORIA',
+      plaqueTop: 'RANKING DEFINITIVO · LA ESCENA DECIDE',
+      plaqueBottom: 'SIN VOTOS · SOLO SAVES REALES',
+      motifs:
+        'a bold vertical numbered list strip showing ranks 1 2 3 in stencil type, a rubber stamp shape labelled "BEST" in red ink, a rubber stamp shape labelled "EVER", a trophy silhouette as bold black graphic crowned with a jagged crown shape (not a photo), three vinyl record sleeves stacked and slightly fanned, a hand-drawn tally cluster suggesting "100" (///// × 20 style), a rubber stamp shape labelled "#1" stamped hard and slightly rotated, explosive halftone dot bursts, scattered ink splatters, a torn chart printout strip with rank numbers, a bold exclamation mark block',
+    },
+    en: {
+      kicker: 'ALL-TIME · COMMUNITY · NO FILTERS',
+      mainHeadline: 'TOP 100',
+      sub: 'THE BEST BREAKBEAT TRACKS IN HISTORY',
+      plaqueTop: 'DEFINITIVE RANKING · THE SCENE DECIDES',
+      plaqueBottom: 'NO POLLS · JUST REAL SAVES',
+      motifs:
+        'a bold vertical numbered list strip showing ranks 1 2 3 in stencil type, a rubber stamp shape labelled "BEST" in red ink, a rubber stamp shape labelled "EVER", a trophy silhouette as bold black graphic crowned with a jagged crown shape (not a photo), three vinyl record sleeves stacked and slightly fanned, a hand-drawn tally cluster suggesting "100" (///// × 20 style), a rubber stamp shape labelled "#1" stamped hard and slightly rotated, explosive halftone dot bursts, scattered ink splatters, a torn chart printout strip with rank numbers, a bold exclamation mark block',
+    },
+  },
   charts: {
     es: {
       kicker: 'RADIO DE BREAKS · ONLINE',
