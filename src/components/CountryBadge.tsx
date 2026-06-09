@@ -1,19 +1,10 @@
 import type { Locale } from '@/lib/i18n-config'
-import {
-  countryDisplayFromCode,
-  countryIsoCodesFromCode,
-  flagCdnUrl,
-} from '@/lib/seo'
+import { CountryFlagSvg } from '@/components/country-flag-svgs'
+import { countryDisplayFromCode, countryIsoCodesFromCode } from '@/lib/seo'
 
 type FlagSize = 'xs' | 'sm' | 'md'
 
-const FLAG_DIMS: Record<FlagSize, { w: number; h: number; cdnW: number }> = {
-  xs: { w: 16, h: 11, cdnW: 20 },
-  sm: { w: 24, h: 17, cdnW: 40 },
-  md: { w: 32, h: 22, cdnW: 80 },
-}
-
-/** Una bandera PNG desde flagcdn (sin texto). */
+/** Bandera SVG inline (sin texto). */
 export function CountryFlagImg({
   iso,
   size = 'sm',
@@ -23,20 +14,7 @@ export function CountryFlagImg({
   size?: FlagSize
   className?: string
 }) {
-  const dim = FLAG_DIMS[size]
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- flagcdn, igual que ArtistShowcase
-    <img
-      src={flagCdnUrl(iso, dim.cdnW)}
-      alt=""
-      width={dim.w}
-      height={dim.h}
-      loading="lazy"
-      decoding="async"
-      className={`rounded-[2px] object-cover shadow-sm shrink-0 ${className}`}
-      style={{ width: dim.w, height: dim.h }}
-    />
-  )
+  return <CountryFlagSvg iso={iso} size={size} className={className} />
 }
 
 /**
