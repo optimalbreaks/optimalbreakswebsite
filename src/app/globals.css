@@ -308,23 +308,7 @@ body::before {
   animation: obxDriftA 40s ease-in-out infinite alternate-reverse;
 }
 
-/* Reveal cinematográfico al entrar en viewport — solo en la pila vertical
-   móvil/tablet. En desktop las portadas viven en el carrusel horizontal y
-   se atenúan por opacidad (clase lg:opacity-40 desde React). */
-@media (max-width: 1023.98px) {
-  .obx-reveal {
-    opacity: 0;
-    transform: translateY(56px) scale(0.965);
-    transition: opacity 0.7s ease-out, transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform, opacity;
-  }
-  .obx-reveal.obx-in {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Raíl del carrusel desktop: sin scrollbar visible y sin swipe-back del historial */
+/* Raíl del carrusel desktop: sin scrollbar visible */
 .obx-rail {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -397,11 +381,6 @@ body::before {
   .obx-eq i,
   .obx-playing .obx-wave-bar {
     animation: none !important;
-  }
-  .obx-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
   }
   .obx-card-img {
     transition: none !important;

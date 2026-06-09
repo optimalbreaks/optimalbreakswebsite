@@ -4,8 +4,8 @@
 // OPTIMAL BREAKS — Artist Showcase (home)
 // Escenario oscuro con título sticky, portadas gigantes por artista
 // (bandera, waveform, géneros, fans y botón de play) y luz ambiental.
-// Todo el movimiento es CSS puro; un único IntersectionObserver
-// gestiona el reveal cinematográfico y el artista activo.
+// Todo el movimiento es CSS puro; un IntersectionObserver marca
+// el artista activo para el índice sticky.
 // ============================================
 
 import Link from 'next/link'
@@ -166,23 +166,12 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
     if (queue.length > 0) playPreviewQueue(queue, 0, key)
   }, [lang, previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
 
-  // Reveal cinematográfico (solo móvil vía CSS) + artista activo:
-  // desktop = posición del carrusel horizontal; móvil = observer vertical.
+  // Índice sticky: móvil = scroll vertical; desktop = carrusel horizontal.
   useEffect(() => {
     const root = sectionRef.current
     const rail = railRef.current
     if (!root || !rail) return
     const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-obx-card]'))
-
-    const reveal = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          e.target.classList.add('obx-in')
-          reveal.unobserve(e.target)
-        }
-      }
-    }, { threshold: 0.12 })
-    cards.forEach((c) => reveal.observe(c))
 
     const mq = window.matchMedia('(min-width: 1024px)')
     let vTracker: IntersectionObserver | null = null
@@ -221,7 +210,6 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
     setup()
     mq.addEventListener('change', setup)
     return () => {
-      reveal.disconnect()
       vTracker?.disconnect()
       if (onScroll) rail.removeEventListener('scroll', onScroll)
       mq.removeEventListener('change', setup)
@@ -334,7 +322,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
             </span>
           </div>
 
-          {/* ===== Portadas: pila vertical en móvil, carrusel snap en desktop ===== */}
+          {/* Móvil: pila vertical siempre visible. Desktop: carrusel horizontal. */}
           <div className="relative">
             <div
               ref={railRef}
@@ -360,7 +348,6 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
               })}
             </div>
 
-            {/* Flechas del carrusel — solo desktop */}
             <button
               type="button"
               onClick={() => step(-1)}
@@ -406,7 +393,7 @@ function ArtistCover({
   es: boolean
   sounding: boolean
   nowTitle: string | null
-  /** En desktop, slide del carrusel que no está centrado (se atenúa). */
+  /** Solo desktop: slide del carrusel no centrado (atenúa, nunca oculta). */
   inactive: boolean
   onPlay: () => void
 }) {
@@ -422,7 +409,7 @@ function ArtistCover({
       id={`home-artist-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card obx-reveal group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500 ${inactive ? 'lg:opacity-40' : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500 ${inactive ? 'lg:opacity-40' : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
