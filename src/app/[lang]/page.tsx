@@ -6,16 +6,23 @@
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import { HOME_OG_IMAGE, SITE_URL, homeOgImageAlt, staticPageMetadata } from '@/lib/seo'
+import {
+  HOME_OG_IMAGE,
+  SITE_URL,
+  countryNameFromCode,
+  homeOgImageAlt,
+  isoCountryCodeFromCode,
+  staticPageMetadata,
+} from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
-import type { Artist, BlogPost, BreakEvent } from '@/types/database'
+import type { Artist, BeatportTopTrack, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
-import ArtistCard from '@/components/ArtistCard'
+import ArtistShowcase, { type ShowcaseArtist } from '@/components/ArtistShowcase'
 import EventFlyer from '@/components/EventFlyer'
 
 const DjDeck = dynamic(() => import('@/components/DjDeck'), {
@@ -161,14 +168,16 @@ export default async function HomePage({
   const featuredSlugs = FEATURED_ARTISTS.map((a) => a.slug)
   const { data: artistRows } = await supabase
     .from('artists')
-    .select('id, slug, name_display, image_url, styles')
+    .select('id, slug, name_display, image_url, styles, country, beatport_top_tracks')
     .in('slug', featuredSlugs)
 
   const artistBySlug = new Map(
-    ((artistRows || []) as Pick<Artist, 'id' | 'slug' | 'name_display' | 'image_url' | 'styles'>[]).map((r) => [
-      r.slug,
-      r,
-    ]),
+    (
+      (artistRows || []) as Pick<
+        Artist,
+        'id' | 'slug' | 'name_display' | 'image_url' | 'styles' | 'country' | 'beatport_top_tracks'
+      >[]
+    ).map((r) => [r.slug, r]),
   )
 
   const resolvedArtists = FEATURED_ARTISTS.map((a) => {
@@ -181,6 +190,41 @@ export default async function HomePage({
       name: row?.name_display?.trim() || a.name,
       image_url: displayArtistImageUrl(a.slug, dbImg) ?? null,
       genres: styles.length > 0 ? styles.slice(0, 5) : a.genres,
+      country: row?.country ?? null,
+      topTracks: ((row?.beatport_top_tracks ?? []) as BeatportTopTrack[]).filter((t) => t?.sample_url),
+    }
+  })
+
+  // Fans por artista (favoritos públicos) — head counts en paralelo
+  const fanCounts = await Promise.all(
+    resolvedArtists.map(async (a) => {
+      if (!a.id) return 0
+      const { count } = await supabase
+        .from('favorite_artists')
+        .select('*', { count: 'exact', head: true })
+        .eq('artist_id', a.id)
+      return count ?? 0
+    }),
+  )
+
+  const showcaseArtists: ShowcaseArtist[] = resolvedArtists.map((a, i) => {
+    const iso = isoCountryCodeFromCode(a.country)
+    return {
+      slug: a.slug,
+      name: a.name,
+      desc: lang === 'es' ? a.desc_es : a.desc_en,
+      genres: a.genres,
+      imageUrl: a.image_url,
+      countryIso: iso ? iso.toLowerCase() : null,
+      countryName: countryNameFromCode(a.country, lang),
+      fans: fanCounts[i],
+      href: `/${lang}/artists/${a.slug}`,
+      tracks: a.topTracks.slice(0, 10).map((t) => ({
+        title: t.title,
+        artist: t.artists?.map((x) => x.name).join(', ') || a.name,
+        sampleUrl: t.sample_url!,
+        artworkUrl: t.artwork_url ?? null,
+      })),
     }
   })
 
@@ -518,51 +562,16 @@ export default async function HomePage({
         </section>
       ) : null}
 
-      {/* ===== ARTISTS ===== */}
-      <section className="lined px-3 sm:px-6 py-12 sm:py-20 relative z-[1]">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-2">
-          <div>
-            <div className="sec-tag">{h.section_artists.tag}</div>
-            <h2 className="sec-title mt-0">
-              {h.section_artists.title_1}
-              <br />
-              <span className="hl">{h.section_artists.title_2}</span>
-            </h2>
-          </div>
-          {'see_all' in h.section_artists ? (
-            <Link
-              href={`/${lang}/artists`}
-              className="shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontWeight: 700,
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                color: 'var(--ink)',
-              }}
-            >
-              {(h.section_artists as { see_all: string }).see_all}
-            </Link>
-          ) : null}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0 mt-8 sm:mt-10 border-4 border-[var(--ink)]">
-          {resolvedArtists.map((a, i) => (
-            <ArtistCard
-              key={a.slug}
-              num={i + 1}
-              name={a.name}
-              genres={a.genres}
-              desc={lang === 'es' ? a.desc_es : a.desc_en}
-              href={`/${lang}/artists/${a.slug}`}
-              imageUrl={a.image_url}
-              entityId={a.id ?? undefined}
-              lang={lang}
-            />
-          ))}
-        </div>
-      </section>
+      {/* ===== ARTISTS — showcase inmersivo ===== */}
+      <ArtistShowcase
+        lang={lang}
+        tag={h.section_artists.tag}
+        title1={h.section_artists.title_1}
+        title2={h.section_artists.title_2}
+        seeAll={'see_all' in h.section_artists ? (h.section_artists as { see_all: string }).see_all : undefined}
+        seeAllHref={`/${lang}/artists`}
+        artists={showcaseArtists}
+      />
 
       {/* ===== EVENTS ===== */}
       <section className="px-3 sm:px-6 py-12 sm:py-20 relative z-[1]">
