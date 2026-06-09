@@ -23,6 +23,7 @@ import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
+import { loadYouTubeIframeAPI } from '@/lib/mix-play-session-log'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
@@ -137,6 +138,12 @@ export interface PreviewTrack {
    *  (`<TrackShareButton>`) para que el usuario pueda compartir lo que está
    *  sonando sin tener que volver a la lista. */
   share?: PreviewShareData
+  /** Si está presente, la pista se reproduce con el player global de YouTube
+   *  (IFrame API, mini-vídeo flotante sobre la barra) en vez del `<audio>`.
+   *  Lo usan los vinilos (Retro Vinyl Picks, Top 100 comunidad, Mis Tracks)
+   *  cuyo único stream disponible es el vídeo de YouTube. `src` puede venir
+   *  vacío en ese caso. */
+  youtubeId?: string | null
 }
 
 export interface PreviewAudioApi {
@@ -316,6 +323,26 @@ export function claimAudio(source: AudioClaimSource) {
  *  retro-compatibilidad con consumidores antiguos. */
 export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
 
+// ─── YouTube global player (vinilos en la cola de previews) ─────────────
+// Tipado mínimo del player de la IFrame API (no hay @types/youtube en el
+// proyecto y solo usamos esta superficie).
+interface YTPlayerLike {
+  loadVideoById: (id: string) => void
+  playVideo: () => void
+  pauseVideo: () => void
+  stopVideo: () => void
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void
+  getCurrentTime: () => number
+  getDuration: () => number
+  getPlayerState: () => number
+  destroy?: () => void
+}
+
+// Estados de la IFrame API (YT.PlayerState).
+const YT_STATE = { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 } as const
+
+const YT_DOCK_CONTAINER_ID = 'ob-global-yt-player'
+
 // ─── MiniDeckBar ────────────────────────────────────────
 /**
  * Overlay que se pinta encima de la página cuando `audio.play()` falla con
@@ -392,6 +419,40 @@ function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
           ▶
         </span>
       </button>
+    </div>
+  )
+}
+
+/**
+ * Mini-vídeo flotante del player global de YouTube. Vive SIEMPRE montado en
+ * los overlays (el iframe de la IFrame API no puede destruirse/recrearse en
+ * cada pista sin cortar el audio), y solo se muestra cuando la pista actual
+ * de la cola es de YouTube. Se pinta encima de la barra del reproductor,
+ * pegado a la derecha, para que el vídeo siga siendo visible (requisito de
+ * YouTube: nada de players ocultos) sin tapar los controles.
+ */
+function GlobalYouTubeDock({ visible }: { visible: boolean }) {
+  const vvOffset = useViewportBottomOffset()
+  return (
+    <div
+      className="fixed z-[198] border-[3px] border-[var(--ink)] bg-black shadow-[0_4px_20px_rgba(0,0,0,.35)] overflow-hidden"
+      style={{
+        right: 12,
+        bottom: `calc(${vvOffset}px + env(safe-area-inset-bottom, 0px) + 148px)`,
+        width: 192,
+        aspectRatio: '16 / 9',
+        // OJO: no usamos display:none — algunos navegadores congelan el
+        // iframe al sacarlo del layout. Con visibility:hidden el player
+        // sigue vivo (aunque cuando no es visible ya lo hemos parado).
+        visibility: visible ? 'visible' : 'hidden',
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+      aria-hidden={!visible}
+    >
+      {/* La IFrame API sustituye este div por el <iframe> conservando el id;
+          el selector por id asegura que el iframe ocupe todo el dock. */}
+      <style>{`#${YT_DOCK_CONTAINER_ID} { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }`}</style>
+      <div id={YT_DOCK_CONTAINER_ID} />
     </div>
   )
 }
@@ -657,7 +718,7 @@ function MiniPlayerShell({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-2.5 max-w-4xl mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0">{controls}</div>
+        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0 max-w-[58%] sm:max-w-none overflow-x-auto overflow-y-hidden scrollbar-none">{controls}</div>
 
         {onTitleClick ? (
           <button
@@ -700,7 +761,15 @@ function MiniPlayerShell({
  * (verde/blanco) está sincronizado con el resto de la UI vía
  * `useSavedChartTracks()`.
  */
-function PreviewSaveSlot({ save, lang }: { save?: PreviewSaveData; lang: Locale }) {
+function PreviewSaveSlot({
+  save,
+  lang,
+  size = 'lg',
+}: {
+  save?: PreviewSaveData
+  lang: Locale
+  size?: 'sm' | 'lg'
+}) {
   if (!save) return null
   if (save.mode === 'url') {
     return (
@@ -710,7 +779,7 @@ function PreviewSaveSlot({ save, lang }: { save?: PreviewSaveData; lang: Locale 
         canonicalUrl={save.canonicalUrl ?? null}
         snapshot={save.snapshot ?? null}
         lang={lang}
-        size="sm"
+        size={size}
       />
     )
   }
@@ -723,7 +792,7 @@ function PreviewSaveSlot({ save, lang }: { save?: PreviewSaveData; lang: Locale 
       canonicalUrl={save.canonicalUrl ?? null}
       snapshot={save.snapshot ?? null}
       lang={lang}
-      size="sm"
+      size={size}
     />
   )
 }
@@ -744,11 +813,13 @@ function PreviewShareSlot({
   title,
   artist,
   lang,
+  size = 'lg',
 }: {
   share?: PreviewShareData
   title: string
   artist: string
   lang: Locale
+  size?: 'sm' | 'lg'
 }) {
   if (!share) return null
   const shareTitle = artist ? `${title} — ${artist}` : title
@@ -760,13 +831,14 @@ function PreviewShareSlot({
         weekDate={share.weekDate ?? ''}
         lang={lang}
         shareTitle={shareTitle}
+        size={size}
       />
     )
   }
   if (share.mode === 'path') {
-    return <TrackShareButton path={share.path} lang={lang} shareTitle={shareTitle} />
+    return <TrackShareButton path={share.path} lang={lang} shareTitle={shareTitle} size={size} />
   }
-  return <TrackShareButton externalUrl={share.externalUrl} lang={lang} shareTitle={shareTitle} />
+  return <TrackShareButton externalUrl={share.externalUrl} lang={lang} shareTitle={shareTitle} size={size} />
 }
 
 // ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────
@@ -808,17 +880,6 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       onTitleClick={cur.domId ? scrollToCurrentRow : undefined}
       titleClickHint={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
       counter={`${previewIndex + 1} / ${previewQueue.length}`}
-      extraRight={
-        <>
-          <PreviewShareSlot
-            share={cur.share}
-            title={cur.title || ''}
-            artist={cur.artist || ''}
-            lang={lang}
-          />
-          <PreviewSaveSlot save={cur.save} lang={lang} />
-        </>
-      }
       controls={
         <>
           <button
@@ -851,6 +912,22 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
             title={es ? 'Siguiente' : 'Next'}
             aria-label={es ? 'Siguiente' : 'Next'}
           >⏭</button>
+          {/* Compartir + Mis Tracks junto al transporte: más visible en
+              móvil que pegados al contador de tiempo. */}
+          {(cur.share || cur.save) ? (
+            <div
+              className="flex items-center gap-1.5 ml-0.5 sm:ml-1 pl-1.5 sm:pl-2 border-l-2 border-[var(--ink)]/20 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <PreviewShareSlot
+                share={cur.share}
+                title={cur.title || ''}
+                artist={cur.artist || ''}
+                lang={lang}
+              />
+              <PreviewSaveSlot save={cur.save} lang={lang} />
+            </div>
+          ) : null}
         </>
       }
     />
@@ -1062,6 +1139,36 @@ export function DeckAudioProvider({
   // (registrado UNA sola vez al crear el <audio>) llame siempre a la
   // versión más reciente sin depender del closure inicial.
   const loadAndPlayRef = useRef<((q: PreviewTrack[], i: number) => void) | null>(null)
+  // ── Robustez en segundo plano (pantalla bloqueada) ──
+  // true cuando la pausa fue una decisión del USUARIO (botón, lockscreen…).
+  // Si está a false y el audio aparece pausado, fue el SO/navegador quien
+  // lo paró (pérdida de foco, throttling) y podemos auto-reanudar.
+  const previewUserPausedRef = useRef(false)
+  // true cuando detectamos una pausa NO pedida por el usuario mientras la
+  // página estaba oculta (pantalla bloqueada / app en background).
+  const previewSystemPausedRef = useRef(false)
+  // Espejo de `previewBlocked` para los watchdogs (no pelear contra la
+  // política de autoplay: ahí hace falta un gesto, no un reintento).
+  const previewBlockedRef = useRef(false)
+  // <audio> oculto que precarga la SIGUIENTE pista de la cola mientras
+  // suena la actual. Así, al llegar el auto-avance con la pantalla
+  // bloqueada, los datos ya están en la caché HTTP y el play() arranca
+  // sin depender de una red throttleada por el SO.
+  const previewPreloadRef = useRef<HTMLAudioElement | null>(null)
+  // Watchdog de arranque de pista: si tras el auto-avance el audio no
+  // empieza a sonar (red parada en background), reintenta unas veces y,
+  // si no hay manera, salta a la siguiente.
+  const previewStartWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const previewStartAttemptsRef = useRef(0)
+  // ── Player global de YouTube (vinilos en la cola) ──
+  const ytPlayerRef = useRef<YTPlayerLike | null>(null)
+  const ytPlayerPromiseRef = useRef<Promise<YTPlayerLike> | null>(null)
+  // true cuando la pista ACTUAL de la cola se reproduce vía YouTube.
+  const [ytActive, setYtActive] = useState(false)
+  const ytActiveRef = useRef(false)
+  // Contador de "revivals" tras pausas del SO con pantalla bloqueada, para
+  // no entrar en un bucle infinito si el SO insiste en pausar el vídeo.
+  const ytKeepAliveAttemptsRef = useRef(0)
 
   useEffect(() => { trackIdxARef.current = trackIdxA }, [trackIdxA])
   useEffect(() => { trackIdxBRef.current = trackIdxB }, [trackIdxB])
@@ -1549,9 +1656,22 @@ export function DeckAudioProvider({
   // === Preview player: internos ===
   const stopPreviewInternal = useCallback(() => {
     setPreviewBlocked(false)
+    previewBlockedRef.current = false
+    previewUserPausedRef.current = false
+    previewSystemPausedRef.current = false
+    if (previewStartWatchdogRef.current) {
+      clearTimeout(previewStartWatchdogRef.current)
+      previewStartWatchdogRef.current = null
+    }
     cancelAnimationFrame(previewRafRef.current)
     const a = previewAudioRef.current
     if (a) { a.pause(); a.removeAttribute('src'); a.load() }
+    const pre = previewPreloadRef.current
+    if (pre) { pre.removeAttribute('src'); try { pre.load() } catch { /* no-op */ } }
+    // Para el player global de YouTube si era la fuente activa.
+    ytActiveRef.current = false
+    setYtActive(false)
+    try { ytPlayerRef.current?.stopVideo() } catch { /* player aún no creado */ }
     setPreviewPlaying(false)
     setPreviewQueue([])
     setPreviewIndex(0)
@@ -1593,12 +1713,264 @@ export function DeckAudioProvider({
     if (fn) fn(q, next)
   }, [stopPreviewInternal])
 
+  // Crea (una sola vez) el player global de YouTube dentro del dock de los
+  // overlays. El iframe persiste entre pistas y rutas; cada vinilo nuevo se
+  // carga con `loadVideoById`. Los listeners leen SIEMPRE por refs, igual
+  // que los del <audio>, para sobrevivir a las transiciones de Next.js.
+  const ensureYtPlayer = useCallback((): Promise<YTPlayerLike> => {
+    if (ytPlayerRef.current) return Promise.resolve(ytPlayerRef.current)
+    if (ytPlayerPromiseRef.current) return ytPlayerPromiseRef.current
+
+    const waitForContainer = () =>
+      new Promise<void>((resolve, reject) => {
+        let tries = 0
+        const check = () => {
+          if (document.getElementById(YT_DOCK_CONTAINER_ID)) { resolve(); return }
+          tries += 1
+          if (tries > 100) { reject(new Error('yt dock container missing')); return }
+          requestAnimationFrame(check)
+        }
+        check()
+      })
+
+    ytPlayerPromiseRef.current = loadYouTubeIframeAPI()
+      .then(waitForContainer)
+      .then(
+        () =>
+          new Promise<YTPlayerLike>((resolve, reject) => {
+            type YTGlobal = {
+              Player: new (
+                el: string,
+                opts: {
+                  width: string
+                  height: string
+                  playerVars: Record<string, string | number>
+                  events: {
+                    onReady: () => void
+                    onStateChange: (e: { data: number }) => void
+                    onError: () => void
+                  }
+                },
+              ) => YTPlayerLike
+            }
+            const YT = (window as unknown as { YT?: YTGlobal }).YT
+            if (!YT?.Player) { reject(new Error('YT api unavailable')); return }
+            const player: YTPlayerLike = new YT.Player(YT_DOCK_CONTAINER_ID, {
+              width: '100%',
+              height: '100%',
+              playerVars: {
+                playsinline: 1,
+                rel: 0,
+                controls: 1,
+                origin: window.location.origin,
+              },
+              events: {
+                onReady: () => {
+                  ytPlayerRef.current = player
+                  resolve(player)
+                },
+                onStateChange: (e: { data: number }) => {
+                  if (!ytActiveRef.current) return
+                  if (e.data === YT_STATE.ENDED) {
+                    advanceFromCurrentTrack()
+                    return
+                  }
+                  if (e.data === YT_STATE.PLAYING) {
+                    ytKeepAliveAttemptsRef.current = 0
+                    previewSystemPausedRef.current = false
+                    setPreviewPlaying(true)
+                    setPreviewBlocked(false)
+                    try {
+                      const d = player.getDuration()
+                      if (d && Number.isFinite(d)) setPreviewDuration(d)
+                    } catch { /* no-op */ }
+                    if ('mediaSession' in navigator) {
+                      try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+                    }
+                    return
+                  }
+                  if (e.data === YT_STATE.PAUSED) {
+                    // Pausa con la página oculta y SIN orden del usuario =
+                    // el SO paró el vídeo al bloquear la pantalla. Lo
+                    // relanzamos (keep-alive) para que la lista siga
+                    // sonando, con tope de intentos por pista para no
+                    // pelear indefinidamente contra el sistema.
+                    if (document.hidden && !previewUserPausedRef.current && ytKeepAliveAttemptsRef.current < 12) {
+                      ytKeepAliveAttemptsRef.current += 1
+                      previewSystemPausedRef.current = true
+                      setTimeout(() => {
+                        if (!ytActiveRef.current || previewUserPausedRef.current) return
+                        try { ytPlayerRef.current?.playVideo() } catch { /* no-op */ }
+                      }, 300)
+                      return
+                    }
+                    // Pausa con la página visible: el usuario tocó el vídeo
+                    // o sus controles nativos → pausa de usuario.
+                    if (!document.hidden) previewUserPausedRef.current = true
+                    setPreviewPlaying(false)
+                    if ('mediaSession' in navigator) {
+                      try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
+                    }
+                  }
+                },
+                onError: () => {
+                  // Vídeo borrado / restringido / sin embed: salta al siguiente.
+                  if (ytActiveRef.current) advanceFromCurrentTrack()
+                },
+              },
+            })
+          }),
+      )
+      .catch((err) => {
+        ytPlayerPromiseRef.current = null
+        throw err
+      })
+    return ytPlayerPromiseRef.current
+  }, [advanceFromCurrentTrack])
+
+  // Precarga la siguiente pista de audio de la cola en un <audio> oculto.
+  // El proxy de samples responde con Cache-Control público, así que esta
+  // descarga deja los datos en la caché HTTP y el auto-avance con la
+  // pantalla bloqueada no depende de la red (que el SO throttlea).
+  const preloadNextPreview = useCallback((queue: PreviewTrack[], idx: number) => {
+    const next = queue[idx + 1]
+    if (!next || next.youtubeId || !next.src) return
+    let pre = previewPreloadRef.current
+    if (!pre) {
+      pre = new Audio()
+      pre.preload = 'auto'
+      pre.muted = true
+      previewPreloadRef.current = pre
+    }
+    if (pre.getAttribute('src') !== next.src) {
+      pre.src = next.src
+      try { pre.load() } catch { /* no-op */ }
+    }
+  }, [])
+
+  // Watchdog de arranque: si tras (auto-)avanzar la pista el <audio> no
+  // llega a sonar (p. ej. la red está parada porque la pantalla lleva un
+  // rato bloqueada), reintenta `play()` unas veces y, si no hay manera,
+  // salta a la siguiente en vez de dejar la lista muerta.
+  const armPreviewStartWatchdog = useCallback((idx: number) => {
+    if (previewStartWatchdogRef.current) {
+      clearTimeout(previewStartWatchdogRef.current)
+      previewStartWatchdogRef.current = null
+    }
+    const schedule = () => {
+      previewStartWatchdogRef.current = setTimeout(() => {
+        previewStartWatchdogRef.current = null
+        if (previewIndexRef.current !== idx || ytActiveRef.current) return
+        if (previewUserPausedRef.current || previewBlockedRef.current) return
+        const a = previewAudioRef.current
+        if (!a || !a.getAttribute('src')) return
+        if (!a.paused && a.currentTime > 0) return // ya suena
+        if (a.ended) { advanceFromCurrentTrack(); return }
+        if (previewStartAttemptsRef.current >= 3) {
+          advanceFromCurrentTrack()
+          return
+        }
+        // Reintento sin `load()`: en iOS PWA `load()` rompe la cadena del
+        // user-gesture original y el play() siguiente caería en
+        // NotAllowedError (ver nota larga en loadAndPlayPreviewAt).
+        previewStartAttemptsRef.current += 1
+        void a.play().catch(() => { /* el siguiente intento lo cubre */ })
+        schedule()
+      }, 4000)
+    }
+    schedule()
+  }, [advanceFromCurrentTrack])
+
   const loadAndPlayPreviewAt = useCallback((queue: PreviewTrack[], idx: number) => {
     if (!queue[idx]) return
     // Refs siempre frescas para los listeners del <audio>.
     previewQueueRef.current = queue
     previewIndexRef.current = idx
     previewAdvancedRef.current = false
+    previewUserPausedRef.current = false
+    previewSystemPausedRef.current = false
+    previewStartAttemptsRef.current = 0
+    if (previewStartWatchdogRef.current) {
+      clearTimeout(previewStartWatchdogRef.current)
+      previewStartWatchdogRef.current = null
+    }
+
+    const ytId = (queue[idx].youtubeId || '').trim()
+    if (ytId) {
+      // ─── Rama YouTube (vinilos) ───
+      // Silencia y descarga el <audio> de previews; el stream pasa a ser
+      // el player global de YouTube del dock flotante.
+      const a0 = previewAudioRef.current
+      if (a0) {
+        try { a0.pause() } catch { /* no-op */ }
+        a0.removeAttribute('src')
+        try { a0.load() } catch { /* no-op */ }
+      }
+      setPreviewProgress(0)
+      setPreviewDuration(0)
+      setPreviewPlaying(true) // optimista; onStateChange lo corrige
+      setPreviewBlocked(false)
+      ytActiveRef.current = true
+      setYtActive(true)
+      ytKeepAliveAttemptsRef.current = 0
+      void ensureYtPlayer()
+        .then((p) => {
+          // Si mientras cargaba la API el usuario cambió de pista o paró,
+          // no pisamos el estado actual.
+          if (!ytActiveRef.current || previewIndexRef.current !== idx || previewQueueRef.current !== queue) return
+          try { p.loadVideoById(ytId) } catch { /* no-op */ }
+          // `loadVideoById` ya intenta reproducir. Si la política de
+          // autoplay lo bloquea (deep-link sin gesto) nunca llega PLAYING:
+          // reintenta una vez y, si sigue parado, pinta el overlay
+          // "Toca para escuchar" para recuperar con un tap.
+          setTimeout(() => {
+            if (!ytActiveRef.current || previewIndexRef.current !== idx) return
+            if (previewUserPausedRef.current) return
+            try {
+              const st = p.getPlayerState()
+              if (st !== YT_STATE.PLAYING && st !== YT_STATE.BUFFERING) p.playVideo()
+            } catch { /* no-op */ }
+          }, 1500)
+          setTimeout(() => {
+            if (!ytActiveRef.current || previewIndexRef.current !== idx) return
+            if (previewUserPausedRef.current) return
+            try {
+              const st = p.getPlayerState()
+              if (st !== YT_STATE.PLAYING && st !== YT_STATE.BUFFERING) {
+                setPreviewPlaying(false)
+                setPreviewBlocked(true)
+              }
+            } catch { /* no-op */ }
+          }, 4000)
+        })
+        .catch(() => {
+          // API de YouTube no disponible (bloqueador, red): salta al siguiente.
+          if (ytActiveRef.current && previewIndexRef.current === idx) advanceFromCurrentTrack()
+        })
+      // Precarga la siguiente pista de audio aunque la actual sea YouTube.
+      preloadNextPreview(queue, idx)
+      if ('mediaSession' in navigator) {
+        const m = queue[idx]
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: m.title || '',
+          artist: m.artist || 'Optimal Breaks',
+          artwork: m.artworkUrl
+            ? [{ src: m.artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
+            : [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+        })
+        try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+      }
+      return
+    }
+
+    // ─── Rama <audio> (Beatport / Bandcamp / MP3) ───
+    // Si veníamos de una pista YouTube, para el vídeo y devuelve el stream
+    // al <audio> de previews.
+    if (ytActiveRef.current) {
+      ytActiveRef.current = false
+      setYtActive(false)
+      try { ytPlayerRef.current?.stopVideo() } catch { /* no-op */ }
+    }
 
     if (!previewAudioRef.current) {
       const a = new Audio()
@@ -1651,9 +2023,36 @@ export function DeckAudioProvider({
       // `paused`, porque si el usuario pausa manualmente cerca del
       // final NO queremos saltar). `previewAdvancedRef` impide dobles
       // avances si el evento `ended` sí termina llegando después.
+      let lastPosStateFlush = 0
       a.addEventListener('timeupdate', () => {
         if (a.ended && hasRealSrc()) advanceFromCurrentTrack()
+        // Refresca la posición en la lockscreen (~1.5 s). El rAF de la UI
+        // no corre en background, así que sin esto la barra del SO se
+        // quedaba congelada en 0:00 con la pantalla bloqueada.
+        const now = Date.now()
+        if (now - lastPosStateFlush > 1500 && hasRealSrc() && Number.isFinite(a.duration) && a.duration > 0) {
+          lastPosStateFlush = now
+          if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: a.duration,
+                playbackRate: a.playbackRate || 1,
+                position: Math.min(a.currentTime, a.duration),
+              })
+            } catch { /* no-op */ }
+          }
+        }
       })
+      // Distinguir pausas del SO (pantalla bloqueada, pérdida de foco) de
+      // las del usuario: si llega un `pause` con la página oculta y sin que
+      // el usuario lo pidiera, lo marcamos para que el keeper/visibility
+      // puedan reanudar la lista.
+      a.addEventListener('pause', () => {
+        if (!previewUserPausedRef.current && document.hidden && hasRealSrc() && !a.ended) {
+          previewSystemPausedRef.current = true
+        }
+      })
+      a.addEventListener('play', () => { previewSystemPausedRef.current = false })
       previewAudioRef.current = a
     }
     const audio = previewAudioRef.current
@@ -1670,6 +2069,9 @@ export function DeckAudioProvider({
       .then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
+        // Con la pista ya sonando, calienta la caché con la siguiente para
+        // que el auto-avance funcione aunque el SO tenga la red dormida.
+        preloadNextPreview(queue, idx)
       })
       .catch((err: unknown) => {
         setPreviewPlaying(false)
@@ -1679,6 +2081,9 @@ export function DeckAudioProvider({
         const name = (err && typeof err === 'object' && 'name' in err) ? (err as { name?: string }).name : ''
         setPreviewBlocked(name === 'NotAllowedError')
       })
+    // Watchdog de arranque: reintenta/salta si la pista no llega a sonar
+    // (típico en background con la red throttleada al cambiar de tema).
+    armPreviewStartWatchdog(idx)
 
     // mediaSession — titular, artwork y controles.
     if ('mediaSession' in navigator) {
@@ -1694,7 +2099,7 @@ export function DeckAudioProvider({
       // lockscreen; también ayuda a iOS a NO inferir ±10 s por sí solo).
       try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
-  }, [stopPreviewInternal, advanceFromCurrentTrack])
+  }, [stopPreviewInternal, advanceFromCurrentTrack, ensureYtPlayer, preloadNextPreview, armPreviewStartWatchdog])
 
   // Mantén `loadAndPlayRef` apuntando a la versión más reciente; los
   // listeners del <audio> la usan vía la ref para no quedarse colgados
@@ -1731,9 +2136,38 @@ export function DeckAudioProvider({
   }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt])
 
   const togglePreview = useCallback(() => {
+    if (previewQueue.length === 0) return
+
+    // ─ Pista YouTube: pause/play sobre el player global del dock ─
+    if (ytActiveRef.current) {
+      const p = ytPlayerRef.current
+      if (!p) return
+      try {
+        const st = p.getPlayerState()
+        if (st === YT_STATE.PLAYING || st === YT_STATE.BUFFERING) {
+          previewUserPausedRef.current = true
+          p.pauseVideo()
+          setPreviewPlaying(false)
+          if ('mediaSession' in navigator) {
+            try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
+          }
+        } else {
+          previewUserPausedRef.current = false
+          setPreviewBlocked(false)
+          p.playVideo()
+          setPreviewPlaying(true)
+          if ('mediaSession' in navigator) {
+            try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+          }
+        }
+      } catch { /* player aún no listo */ }
+      return
+    }
+
     const a = previewAudioRef.current
-    if (!a || previewQueue.length === 0) return
+    if (!a) return
     if (a.paused) {
+      previewUserPausedRef.current = false
       a.play().then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
@@ -1742,6 +2176,7 @@ export function DeckAudioProvider({
         }
       }).catch(() => {})
     } else {
+      previewUserPausedRef.current = true
       a.pause()
       setPreviewPlaying(false)
       if ('mediaSession' in navigator) {
@@ -1774,9 +2209,21 @@ export function DeckAudioProvider({
   }, [previewQueue, loadAndPlayPreviewAt])
 
   const seekPreviewToRatio = useCallback((ratio: number) => {
+    const clamped = Math.max(0, Math.min(1, ratio))
+    if (ytActiveRef.current) {
+      const p = ytPlayerRef.current
+      if (!p) return
+      try {
+        const d = p.getDuration()
+        if (!d || !Number.isFinite(d)) return
+        p.seekTo(clamped * d, true)
+        setPreviewProgress(clamped * d)
+      } catch { /* no-op */ }
+      return
+    }
     const a = previewAudioRef.current
     if (!a || !a.duration) return
-    a.currentTime = Math.max(0, Math.min(1, ratio)) * a.duration
+    a.currentTime = clamped * a.duration
     setPreviewProgress(a.currentTime)
   }, [])
 
@@ -1808,6 +2255,86 @@ export function DeckAudioProvider({
     previewRafRef.current = requestAnimationFrame(tick)
     return () => { cancelled = true; cancelAnimationFrame(previewRafRef.current) }
   }, [previewQueue.length, previewIndex])
+
+  // Espejo de `previewBlocked` para los watchdogs/keepers (que viven en
+  // listeners y timers sin re-suscribirse a cada render).
+  useEffect(() => { previewBlockedRef.current = previewBlocked }, [previewBlocked])
+
+  // Progreso de pistas YouTube: la IFrame API no emite timeupdate, así que
+  // mientras el dock es la fuente activa muestreamos cada 500 ms. (En
+  // background el intervalo se throttlea, pero ahí la UI no se ve; los
+  // eventos onStateChange siguen llegando para el auto-avance.)
+  useEffect(() => {
+    if (!ytActive) return
+    const iv = window.setInterval(() => {
+      const p = ytPlayerRef.current
+      if (!p) return
+      try {
+        const st = p.getPlayerState()
+        setPreviewPlaying(st === YT_STATE.PLAYING || st === YT_STATE.BUFFERING)
+        const d = p.getDuration()
+        if (d && Number.isFinite(d)) setPreviewDuration(d)
+        const t = p.getCurrentTime()
+        if (Number.isFinite(t)) setPreviewProgress(t)
+      } catch { /* player aún no listo */ }
+    }, 500)
+    return () => window.clearInterval(iv)
+  }, [ytActive])
+
+  // Keeper de la cola en segundo plano. Con la pantalla bloqueada, a veces
+  // el SO pausa el <audio> (pérdida de foco transitoria, throttling de red
+  // entre pistas) o se pierde el `ended`. Este intervalo de baja frecuencia
+  // (el SO lo degrada a ~1/min en background, suficiente) re-arranca la
+  // reproducción SOLO cuando la pausa no fue del usuario, para que la lista
+  // no se quede muerta hasta que el usuario desbloquee el móvil.
+  useEffect(() => {
+    if (previewQueue.length === 0) return
+    const iv = window.setInterval(() => {
+      if (previewUserPausedRef.current || previewBlockedRef.current) return
+      if (ytActiveRef.current) {
+        const p = ytPlayerRef.current
+        if (!p) return
+        try {
+          const st = p.getPlayerState()
+          if (st === YT_STATE.ENDED) { advanceFromCurrentTrack(); return }
+          if (st === YT_STATE.PAUSED && previewSystemPausedRef.current) p.playVideo()
+        } catch { /* no-op */ }
+        return
+      }
+      const a = previewAudioRef.current
+      if (!a || !a.getAttribute('src')) return
+      if (a.ended) { advanceFromCurrentTrack(); return }
+      if (a.paused && previewSystemPausedRef.current) void a.play().catch(() => { /* siguiente tick */ })
+    }, 10000)
+    return () => window.clearInterval(iv)
+  }, [previewQueue.length, advanceFromCurrentTrack])
+
+  // Al volver a primer plano (desbloquear pantalla, volver a la pestaña):
+  // si la cola debería estar sonando y el SO la dejó pausada o se comió el
+  // `ended` final, recupera inmediatamente sin esperar al keeper.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.hidden) return
+      if (previewQueueRef.current.length === 0) return
+      if (previewUserPausedRef.current || previewBlockedRef.current) return
+      if (ytActiveRef.current) {
+        const p = ytPlayerRef.current
+        if (!p) return
+        try {
+          const st = p.getPlayerState()
+          if (st === YT_STATE.ENDED) advanceFromCurrentTrack()
+          else if (st === YT_STATE.PAUSED) p.playVideo()
+        } catch { /* no-op */ }
+        return
+      }
+      const a = previewAudioRef.current
+      if (!a || !a.getAttribute('src')) return
+      if (a.ended) { advanceFromCurrentTrack(); return }
+      if (a.paused) void a.play().catch(() => { /* no-op */ })
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [advanceFromCurrentTrack])
 
   // Media Session handlers específicos de preview.
   //
@@ -2075,6 +2602,10 @@ export function DeckAudioProvider({
       <>
         <MiniDeckBar lang={lang} />
         <PreviewAutoplayOverlay lang={lang} />
+        {/* Dock del player global de YouTube: SIEMPRE montado (el iframe no
+            puede recrearse sin cortar el audio); visible solo cuando la
+            pista actual de la cola es un vinilo de YouTube. */}
+        <GlobalYouTubeDock visible={ytActive && previewQueue.length > 0} />
         {scTrackUrl && (
           <SoundCloudWidget
             trackUrl={scTrackUrl}
@@ -2091,6 +2622,8 @@ export function DeckAudioProvider({
     [
       lang,
       scTrackUrl,
+      ytActive,
+      previewQueue.length,
       handleScReady,
       handleScPlay,
       handleScPause,

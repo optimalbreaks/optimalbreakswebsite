@@ -15,16 +15,16 @@ import { useAudioEngineGate } from '@/components/LazyDeckAudioProvider'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import { displayImageUrl } from '@/lib/image-url'
 import CountryBadge from '@/components/CountryBadge'
-
-export type ShowcaseTrack = {
-  title: string
-  artist: string
-  sampleUrl: string
-  artworkUrl: string | null
-}
+import {
+  buildBeatportSharePath,
+  extractBeatportTrackId,
+} from '@/lib/share-track'
+import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 export type ShowcaseArtist = {
   slug: string
+  /** UUID en `artists` — origen del snapshot al guardar en Mis Tracks. */
+  artistId: string | null
   name: string
   desc: string
   genres: string[]
@@ -33,7 +33,27 @@ export type ShowcaseArtist = {
   country: string | null
   fans: number
   href: string
-  tracks: ShowcaseTrack[]
+  tracks: BeatportTopTrack[]
+}
+
+function buildSnapshot(
+  t: BeatportTopTrack,
+  origin?: { kind: 'artist'; id: string; slug?: string; name?: string },
+): SavedChartTrackSnapshot {
+  return {
+    title: t.title,
+    mix_name: t.mix_name || null,
+    artists: t.artists.map((a) => a.name).join(', '),
+    label: t.label || null,
+    year: t.release_year ?? null,
+    release_date: t.release_date ?? null,
+    bpm: t.bpm ?? null,
+    music_key: t.key || null,
+    artwork_url: t.artwork_url || null,
+    sample_url: t.sample_url || null,
+    beatport_url: t.beatport_url || null,
+    origin,
+  }
 }
 
 interface Props {
@@ -113,16 +133,38 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
       togglePreview()
       return
     }
-    const queue: PreviewTrack[] = a.tracks.map((t, i) => ({
-      rowKey: `${a.slug}-${i}`,
-      src: proxyUrl(t.sampleUrl),
-      title: t.title,
-      artist: t.artist,
-      artworkUrl: t.artworkUrl,
-      domId: `home-artist-${a.slug}`,
-    }))
+    const sharePathBase = `/${lang}/artists/${a.slug}`
+    const origin = a.artistId
+      ? { kind: 'artist' as const, id: a.artistId, slug: a.slug, name: a.name }
+      : undefined
+    const queue: PreviewTrack[] = a.tracks.map((t, i) => {
+      const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
+      const sharePath = bpId ? buildBeatportSharePath(sharePathBase, bpId) : null
+      return {
+        rowKey: `${a.slug}-${i}`,
+        src: proxyUrl(t.sample_url!),
+        title: t.title,
+        artist: t.artists.map((x) => x.name).join(', '),
+        artworkUrl: t.artwork_url || null,
+        domId: `home-artist-${a.slug}`,
+        save: t.beatport_url
+          ? {
+              mode: 'url' as const,
+              externalUrl: t.beatport_url,
+              externalTrackId: bpId,
+              canonicalUrl: t.beatport_url,
+              snapshot: buildSnapshot(t, origin),
+            }
+          : undefined,
+        share: sharePath
+          ? { mode: 'path' as const, path: sharePath }
+          : t.beatport_url
+            ? { mode: 'url' as const, externalUrl: t.beatport_url }
+            : undefined,
+      }
+    })
     if (queue.length > 0) playPreviewQueue(queue, 0, key)
-  }, [previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
+  }, [lang, previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
 
   // Reveal cinematográfico (solo móvil vía CSS) + artista activo:
   // desktop = posición del carrusel horizontal; móvil = observer vertical.

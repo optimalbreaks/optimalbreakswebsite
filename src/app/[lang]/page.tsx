@@ -208,6 +208,7 @@ export default async function HomePage({
   const showcaseArtists: ShowcaseArtist[] = resolvedArtists.map((a, i) => {
     return {
       slug: a.slug,
+      artistId: a.id,
       name: a.name,
       desc: lang === 'es' ? a.desc_es : a.desc_en,
       genres: a.genres,
@@ -215,12 +216,7 @@ export default async function HomePage({
       country: a.country,
       fans: fanCounts[i],
       href: `/${lang}/artists/${a.slug}`,
-      tracks: a.topTracks.slice(0, 10).map((t) => ({
-        title: t.title,
-        artist: t.artists?.map((x) => x.name).join(', ') || a.name,
-        sampleUrl: t.sample_url!,
-        artworkUrl: t.artwork_url ?? null,
-      })),
+      tracks: a.topTracks.slice(0, 10),
     }
   })
 

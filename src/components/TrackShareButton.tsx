@@ -27,6 +27,8 @@ interface BaseProps {
   lang: Locale
   /** Texto que se muestra en el prompt nativo (móvil). Típicamente "Título — Artistas". */
   shareTitle: string
+  /** `lg` = botón cuadrado del mini reproductor (mismo tacto que play/pause). */
+  size?: 'sm' | 'lg'
 }
 
 interface ChartModeProps extends BaseProps {
@@ -92,8 +94,11 @@ export default function TrackShareButton(props: Props) {
     }
   }
 
+  const size = props.size ?? 'sm'
   const base =
-    'inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 transition-all no-underline touch-manipulation whitespace-nowrap cursor-pointer'
+    size === 'lg'
+      ? 'w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center text-base sm:text-sm font-black border-2 transition-all touch-manipulation cursor-pointer shrink-0'
+      : 'inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 transition-all no-underline touch-manipulation whitespace-nowrap cursor-pointer'
   const stateCls = copied
     ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
     : 'border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'

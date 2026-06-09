@@ -13,13 +13,21 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
+import { ArtistNames } from '@/components/ArtistNames'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
-import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import {
+  buildFullArtistSlugMap,
+  filterArtistSlugMapForNames,
+  normalizeArtistKey,
+  splitArtistDisplayLine,
+} from '@/lib/artist-slug-map'
+import { createBrowserSupabase } from '@/lib/supabase'
+import { extractYouTubeId } from '@/components/YouTubeEmbed'
 import {
   formatTrackReleaseDisplay,
   buildTrackSharePath,
@@ -132,9 +140,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
   const [shuffleMode, setShuffleMode] = useState(false)
-  const [activeYouTubeKey, setActiveYouTubeKey] = useState<string | null>(null)
-  const youtubeEmbedRef = useRef<HTMLDivElement>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -157,6 +164,43 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Enlaces a fichas de artista (misma lógica que ChartView / Mis Tracks).
+  useEffect(() => {
+    const tracks = data?.top_tracks
+    if (!tracks?.length) {
+      setArtistSlugMap({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const names = new Set<string>()
+      for (const t of tracks) {
+        for (const name of splitArtistDisplayLine(t.artists || '')) names.add(name)
+      }
+      if (names.size === 0) {
+        if (!cancelled) setArtistSlugMap({})
+        return
+      }
+      const supabase = createBrowserSupabase()
+      const { data: rows } = await supabase.from('artists').select('slug, name, name_display').limit(5000)
+      if (cancelled) return
+      const full = buildFullArtistSlugMap(
+        (rows as { slug: string; name: string | null; name_display: string | null }[]) || [],
+      )
+      for (const t of tracks) {
+        const o = t.beatport_share_origin
+        if (t.primary.source === 'beatport_top' && o?.kind === 'artist' && o.slug) {
+          for (const name of splitArtistDisplayLine(t.artists || '')) {
+            const key = normalizeArtistKey(name)
+            if (key) full[key] = o.slug
+          }
+        }
+      }
+      setArtistSlugMap(filterArtistSlugMapForNames(full, names))
+    })()
+    return () => { cancelled = true }
+  }, [data?.top_tracks])
 
   // Calcula el share del mini reproductor con la MISMA lógica que la fila
   // visible (ver render: chart/featured → /charts?play=..; vinyl → vinyl;
@@ -190,16 +234,20 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // Adjuntamos `save` con la misma lógica que la fila visible: modo URL
   // para los tracks cuya fuente primaria es `beatport_top` (no tienen fila
   // propia, viven solo como JSONB) y modo ref para el resto.
+  // Los vinilos (playback_kind 'youtube') también entran en la cola: el
+  // reproductor global los toca con el player de YouTube (mini-dock
+  // flotante) y la lista sigue de corrido mezclando samples y vinilos.
   const previewBundle = useMemo<PreviewTrack[]>(() => {
     const out: PreviewTrack[] = []
     if (!data) return out
     for (const t of data.top_tracks) {
-      if (!t.sample_url) continue
-      const src = previewAudioSrc(t.sample_url, t.playback_kind, t.external_url)
-      if (!src) continue
+      const src = t.sample_url ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url) : ''
+      const ytId = !src ? extractYouTubeId(t.youtube_url || '') : null
+      if (!src && !ytId) continue
       out.push({
         rowKey: `community-top-${t.canonical_key}`,
         src,
+        youtubeId: ytId,
         title: t.title,
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
@@ -235,7 +283,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const playFromIndex = useCallback((bundleIdx: number) => {
     const rowKey = previewBundle[bundleIdx]?.rowKey
     if (!rowKey) return
-    setActiveYouTubeKey(null)
     const baseQueue = shuffleMode && isGroupActive ? previewQueue : previewBundle
     const idx = baseQueue.findIndex((m) => m.rowKey === rowKey)
     if (idx < 0) {
@@ -247,34 +294,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     playPreviewQueue(baseQueue, idx, groupKey)
   }, [previewBundle, previewQueue, shuffleMode, isGroupActive, playPreviewQueue, groupKey])
 
-  const toggleYouTube = useCallback((rowKey: string) => {
-    setActiveYouTubeKey((prev) => {
-      if (prev === rowKey) return null
-      if (isGroupActive) stopPreview()
-      setShuffleMode(false)
-      requestAnimationFrame(() => {
-        youtubeEmbedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      })
-      return rowKey
-    })
-  }, [isGroupActive, stopPreview])
-
   const onStop = useCallback(() => {
     stopPreview()
     setShuffleMode(false)
-    setActiveYouTubeKey(null)
   }, [stopPreview])
 
   const onPlayAll = useCallback(() => {
     if (previewBundle.length === 0) return
-    setActiveYouTubeKey(null)
     setShuffleMode(false)
     playPreviewQueue(previewBundle, 0, groupKey)
   }, [previewBundle, playPreviewQueue, groupKey])
 
   const onPlayShuffle = useCallback(() => {
     if (previewBundle.length === 0) return
-    setActiveYouTubeKey(null)
     const queue = [...previewBundle]
     for (let i = queue.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -389,11 +421,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {data.top_tracks.map((t) => {
               const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
-              const isYouTubeOpen = activeYouTubeKey === rowKey
-              const ytId = extractYouTubeId(t.youtube_url || '')
               const idx = previewBundle.findIndex((m) => m.rowKey === rowKey)
+              // Incluye también vinilos YouTube: van a la cola global igual
+              // que los samples (ver previewBundle arriba).
               const hasSample = idx >= 0
-              const rowHighlighted = isActive || isYouTubeOpen
+              const rowHighlighted = isActive
               // Link a la fuente: si tenemos week_date + chart/featured,
               // enlazamos a /charts?week=...&play=<source>:<id>; si no, al
               // external_url.
@@ -465,7 +497,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           {t.mix_name ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span> : null}
                         </h3>
                         <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                          <span className="text-[var(--ink)]/70">{t.artists || '—'}</span>
+                          <ArtistNames
+                            artists={splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))}
+                            slugMap={artistSlugMap}
+                            lang={lang}
+                          />
                           {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                         </p>
@@ -473,19 +509,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     </div>
 
                     <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
-                      {ytId && !hasSample && (
-                        <button
-                          type="button"
-                          onClick={() => toggleYouTube(rowKey)}
-                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                            ${isYouTubeOpen ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isYouTubeOpen ? c.preview_pause : c.preview_play}
-                          aria-label={isYouTubeOpen ? c.preview_pause : c.preview_play}
-                        >
-                          {isYouTubeOpen ? '❚❚' : '▶'}
-                        </button>
-                      )}
                       {hasSample && (
                         <button
                           type="button"
@@ -585,16 +608,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     </div>
                   </div>
 
-                  {ytId && isYouTubeOpen && (
-                    <div ref={youtubeEmbedRef} className="w-full max-w-sm">
-                      <LazyYouTubeEmbed
-                        videoId={ytId}
-                        title={`${t.title} — ${t.artists}`}
-                        className="border-[3px] border-[var(--ink)]"
-                        autoplay
-                      />
-                    </div>
-                  )}
+                  {/* El vídeo de los vinilos ya no se incrusta aquí: suena
+                      en el reproductor global (mini-dock de YouTube), que
+                      sobrevive a la navegación y a la pantalla bloqueada. */}
                 </div>
               )
             })}

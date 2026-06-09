@@ -16,7 +16,7 @@ import { i18n } from '@/lib/i18n-config'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 interface SaveTrackButtonPropsBase {
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
   lang?: string
   className?: string
   /**
@@ -238,13 +238,15 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
     ? (es ? 'Quitar de Mis Tracks' : 'Remove from My Tracks')
     : (es ? 'Guardar en Mis Tracks' : 'Save to My Tracks')
 
-  if (size === 'sm') {
+  if (size === 'sm' || size === 'lg') {
+    const dim = size === 'lg' ? 'w-10 h-10 sm:w-9 sm:h-9' : 'w-8 h-8'
+    const icon = size === 'lg' ? 18 : 15
     return (
       <>
         <button
           type="button"
           onClick={handleClick}
-          className={`w-8 h-8 flex items-center justify-center rounded-full border-2 border-[var(--ink)] transition-all duration-200 ${
+          className={`${dim} flex items-center justify-center rounded-full border-2 border-[var(--ink)] transition-all duration-200 shrink-0 ${
             isSaved
               ? 'bg-[var(--acid)] text-[var(--ink)] shadow-[2px_2px_0_var(--ink)]'
               : 'bg-white text-[var(--ink)] hover:bg-[var(--acid)] hover:text-[var(--ink)] shadow-[1px_1px_0_var(--ink)]'
@@ -252,7 +254,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
           aria-label={ariaLabel}
           title={ariaLabel}
         >
-          {iconSvg(15)}
+          {iconSvg(icon)}
         </button>
         {guestModal}
       </>

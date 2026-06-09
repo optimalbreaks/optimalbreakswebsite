@@ -2,8 +2,8 @@
 // OPTIMAL BREAKS — My Tracks section
 // Tracks guardados desde charts (Beatport preview),
 // featured (new releases, Beatport/Bandcamp) y vinyl (YouTube).
-// Reproductor unificado: audio proxy para Beatport/Bandcamp y
-// LazyYouTubeEmbed para vinilos.
+// Reproductor unificado: audio proxy para Beatport/Bandcamp y el player
+// global de YouTube (mini-dock del DeckAudioProvider) para vinilos.
 // ============================================
 
 'use client'
@@ -18,7 +18,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
-import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { extractYouTubeId } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -677,12 +677,13 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return arr
   }, [filtered, sortBy, es])
 
-  // Queue of audio-only (Beatport / Bandcamp). YouTube se reproduce con embed
-  // aparte. Se basa en los campos efectivos del track (tras dedupe), no en
-  // la fuente original.
+  // Cola unificada: Beatport / Bandcamp por <audio> y vinilos YouTube vía el
+  // player global (mini-dock flotante del DeckAudioProvider). Se basa en los
+  // campos efectivos del track (tras dedupe), no en la fuente original.
   const isAudioPlayable = (t: UnifiedTrack) => {
     if (t.sample_url) return true
     if (t.platform === 'bandcamp' && t.external_url) return true
+    if (extractYouTubeId(t.youtube_url || '')) return true
     return false
   }
   const orderedAudioQueue = useMemo(() => sorted.filter(isAudioPlayable), [sorted])
@@ -750,11 +751,15 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     const src = t.source === 'featured' && t.platform === 'bandcamp'
       ? previewAudioSrc('', 'bandcamp', t.external_url)
       : t.sample_url ? previewAudioSrc(t.sample_url, t.platform || undefined) : ''
-    if (!src) return null
+    // Vinilos sin sample: entran en la cola como pista YouTube y los toca
+    // el player global de YouTube del provider.
+    const ytId = !src ? extractYouTubeId(t.youtube_url || '') : null
+    if (!src && !ytId) return null
     const useUrlMode = isShared && t.source === 'beatport_top' && !!(t.external_url || t.canonical_url)
     return {
       rowKey: t.key,
       src,
+      youtubeId: ytId,
       title: t.title,
       artist: t.artists,
       artworkUrl: t.artwork_url ?? null,
@@ -1151,7 +1156,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
             const ytId = (t.source === 'vinyl' || t.youtube_url) ? extractYouTubeId(t.youtube_url || '') : null
-            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
+            // Los vinilos YouTube ahora también se reproducen con el botón
+            // ▶ de la fila (cola global + mini-dock), igual que los samples.
+            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url) || ytId)
             const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
             return (
@@ -1314,16 +1321,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                   </div>
                 </div>
 
-                {/* YouTube embed for vinyls */}
-                {ytId ? (
-                  <div className="w-full max-w-sm">
-                    <LazyYouTubeEmbed
-                      videoId={ytId}
-                      title={`${t.title} — ${t.artists}`}
-                      className="border-[3px] border-[var(--ink)]"
-                    />
-                  </div>
-                ) : null}
+                {/* El vídeo de los vinilos ya no se incrusta en la fila: se
+                    reproduce en el player global (mini-dock de YouTube) y
+                    sobrevive a la navegación y a la pantalla bloqueada. */}
               </div>
             )
           })}

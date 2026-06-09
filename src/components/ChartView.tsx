@@ -7,7 +7,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
@@ -20,7 +20,7 @@ import type {
   ChartVinylArtist,
   ChartVinylTrack,
 } from '@/types/database'
-import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { extractYouTubeId } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
@@ -449,31 +449,15 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, labelImageMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; labelImageMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function VinylTrackRow({ track, dict, lang, isPlaying = false, onPlay, artistSlugMap, labelImageMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelImageMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
   const mixName = (track.mix_name || '').trim()
   const ytId = extractYouTubeId(track.youtube_url)
-  const embedRef = useRef<HTMLDivElement>(null)
-  const [showPlayer, setShowPlayer] = useState(autoplay)
-
-  useEffect(() => {
-    if (autoplay) setShowPlayer(true)
-  }, [autoplay])
-
-  const togglePlayer = useCallback(() => {
-    setShowPlayer((prev) => {
-      if (prev) return false
-      requestAnimationFrame(() => {
-        embedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      })
-      return true
-    })
-  }, [])
 
   return (
-    <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${showPlayer ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
+    <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <VinylArtwork track={track} labelImageMap={labelImageMap} />
@@ -500,17 +484,17 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
         </div>
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
-          {ytId && (
+          {ytId && onPlay && (
             <button
               type="button"
-              onClick={togglePlayer}
+              onClick={onPlay}
               className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                ${showPlayer ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
-              title={showPlayer ? c.preview_pause : c.preview_play}
-              aria-label={showPlayer ? c.preview_pause : c.preview_play}
+              title={isPlaying ? c.preview_pause : c.preview_play}
+              aria-label={isPlaying ? c.preview_pause : c.preview_play}
             >
-              {showPlayer ? '❚❚' : '▶'}
+              {isPlaying ? '❚❚' : '▶'}
             </button>
           )}
           <SaveTrackButton source="vinyl" trackId={track.id} relatedRefs={relatedRefs} canonicalUrl={track.youtube_url || track.discogs_url} snapshot={buildVinylSnapshot(track)} lang={lang} size="sm" />
@@ -540,16 +524,10 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
         </div>
       </div>
 
-      {ytId && showPlayer && (
-        <div ref={embedRef} className="w-full max-w-sm">
-          <LazyYouTubeEmbed
-            videoId={ytId}
-            title={`${track.title} — ${artists.map((a: ChartVinylArtist) => a.name).join(', ')}`}
-            className="border-[3px] border-[var(--ink)]"
-            autoplay
-          />
-        </div>
-      )}
+      {/* El vídeo ya no se incrusta en la fila: los vinilos entran en la
+          cola del reproductor global (DeckAudioProvider, modo preview con
+          `youtubeId`) y el vídeo se ve en el mini-dock flotante sobre la
+          barra — así sigue sonando al navegar y con la pantalla bloqueada. */}
     </div>
   )
 }
@@ -1126,6 +1104,45 @@ export default function ChartView({
     return out
   }, [])
 
+  /**
+   * Retro Vinyl Picks → cola del reproductor global. Cada vinilo con
+   * `youtube_url` entra como `PreviewTrack` con `youtubeId`: el provider lo
+   * reproduce con el player global de YouTube (mini-dock flotante) en vez
+   * del `<audio>`, y el auto-avance/lockscreen funcionan como en el resto
+   * de colas. Antes cada fila incrustaba su propio iframe y la reproducción
+   * moría al navegar o bloquear pantalla.
+   */
+  const buildVinylBundle = useCallback((
+    tracks: ChartVinylTrack[],
+    groups?: Map<string, CanonRef[]>,
+  ): PlayAllBundle => {
+    const out: PreviewTrack[] = []
+    for (const v of tracks) {
+      const ytId = extractYouTubeId(v.youtube_url)
+      if (!ytId) continue
+      const artists = Array.isArray(v.artists) ? v.artists.map((a: ChartVinylArtist) => a.name).join(', ') : ''
+      out.push({
+        rowKey: `chart-vinyl-row-${v.id}`,
+        src: '',
+        youtubeId: ytId,
+        title: v.title,
+        artist: artists,
+        artworkUrl: v.artwork_url || null,
+        domId: `chart-vinyl-row-${v.id}`,
+        save: {
+          mode: 'ref',
+          source: 'vinyl',
+          trackId: v.id,
+          relatedRefs: groups?.get(v.id),
+          canonicalUrl: v.youtube_url || v.discogs_url || null,
+          snapshot: buildVinylSnapshot(v),
+        },
+        share: { mode: 'path', path: buildVinylSharePath(lang, v.id) },
+      })
+    }
+    return out
+  }, [lang])
+
   const playFromIndex = useCallback((sectionKey: string, bundle: PlayAllBundle, index: number) => {
     if (bundle.length === 0) return
     playPreviewQueue(bundle, index, sectionKey)
@@ -1218,29 +1235,54 @@ export default function ChartView({
 
   // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
   // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
-  const vinylByYear = new Map<string, ChartVinylTrack[]>()
-  for (const w of weeks) {
-    for (const v of w.vinyl) {
-      const yearKey = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
-      const arr = vinylByYear.get(yearKey) ?? []
-      const dedupKey = vinylTrackDedupKey(v.title, v.mix_name, v.artists)
-      const existingIdx = arr.findIndex(
-        (t) => vinylTrackDedupKey(t.title, t.mix_name, t.artists) === dedupKey,
-      )
-      if (existingIdx === -1) {
-        arr.push(v)
-      } else if (vinylRowDisplayScore(v) > vinylRowDisplayScore(arr[existingIdx])) {
-        arr[existingIdx] = v
+  // (useMemo: lo necesitan también el helper de autoplay/deep-link de vinilos
+  // y el overlay "Toca para escuchar", no solo el render.)
+  const vinylByYear = useMemo(() => {
+    const map = new Map<string, ChartVinylTrack[]>()
+    for (const w of weeks) {
+      for (const v of w.vinyl) {
+        const yearKey = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
+        const arr = map.get(yearKey) ?? []
+        const dedupKey = vinylTrackDedupKey(v.title, v.mix_name, v.artists)
+        const existingIdx = arr.findIndex(
+          (t) => vinylTrackDedupKey(t.title, t.mix_name, t.artists) === dedupKey,
+        )
+        if (existingIdx === -1) {
+          arr.push(v)
+        } else if (vinylRowDisplayScore(v) > vinylRowDisplayScore(arr[existingIdx])) {
+          arr[existingIdx] = v
+        }
+        map.set(yearKey, arr)
       }
-      vinylByYear.set(yearKey, arr)
     }
-  }
+    return map
+  }, [weeks])
   // Orden descendente por año (más reciente primero); "sin año" al final.
   const sortedVinylYears = Array.from(vinylByYear.keys()).sort((a, b) => {
     if (a === UNKNOWN_YEAR_KEY) return 1
     if (b === UNKNOWN_YEAR_KEY) return -1
     return Number(b) - Number(a)
   })
+
+  // Reproduce un vinilo concreto en la cola global de su año. Lo usan el
+  // overlay de deep-link (gesto del usuario → autoplay permitido) y el
+  // efecto de `autoplayVinylId` (hash legacy del buscador global).
+  const playVinylTrackById = useCallback((trackId: string) => {
+    for (const [yearKey, arr] of Array.from(vinylByYear.entries())) {
+      if (!arr.some((v) => v.id === trackId)) continue
+      const tracks = sortVinylByArtist(arr, lang)
+      const bundle = buildVinylBundle(tracks, canonicalGroups.vinylByTrack)
+      const i = bundle.findIndex((m) => m.rowKey === `chart-vinyl-row-${trackId}`)
+      if (i >= 0) playFromIndex(`vinyl-${yearKey}`, bundle, i)
+      return
+    }
+  }, [vinylByYear, lang, buildVinylBundle, canonicalGroups.vinylByTrack, playFromIndex])
+
+  useEffect(() => {
+    if (!autoplayVinylId) return
+    playVinylTrackById(autoplayVinylId)
+    setAutoplayVinylId(null)
+  }, [autoplayVinylId, playVinylTrackById])
 
   if (weeks.length === 0) {
     return (
@@ -1470,54 +1512,68 @@ export default function ChartView({
               const yearLabel = yearKey === UNKNOWN_YEAR_KEY ? c.vinyl_year_unknown : yearKey
               const panelId = `vinyl-year-panel-${yearKey}`
               const triggerId = `vinyl-year-trigger-${yearKey}`
+              const vinylKey = `vinyl-${yearKey}`
+              const vinylBundle = buildVinylBundle(tracks, canonicalGroups.vinylByTrack)
 
               return (
                 <section
                   key={`vinyl-year-${yearKey}`}
                   className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden"
                 >
-                  <button
-                    type="button"
-                    id={triggerId}
-                    aria-expanded={expanded}
-                    aria-controls={panelId}
-                    onClick={() => toggleVinyl(yearKey)}
-                    className="w-full flex items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
-                    style={{ fontFamily: "'Courier Prime', monospace" }}
-                    title={expanded ? c.vinyl_toggle_hide : c.vinyl_toggle_show}
-                  >
-                    <span
-                      className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0"
-                      style={{ fontFamily: "'Unbounded', sans-serif" }}
-                      aria-hidden
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      id={triggerId}
+                      aria-expanded={expanded}
+                      aria-controls={panelId}
+                      onClick={() => toggleVinyl(yearKey)}
+                      className="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 text-left px-3 py-3 sm:px-4 sm:py-3.5 min-h-[52px] hover:bg-[var(--yellow)]/15 active:bg-[var(--yellow)]/25 transition-colors touch-manipulation"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                      title={expanded ? c.vinyl_toggle_hide : c.vinyl_toggle_show}
                     >
-                      {expanded ? '▼' : '▶'}
-                    </span>
-                    <span
-                      className="text-base sm:text-lg font-black tracking-wide text-[var(--ink)] flex-1 tabular-nums"
-                      style={{ fontFamily: "'Unbounded', sans-serif" }}
-                    >
-                      {yearLabel}
-                    </span>
-                    <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">
-                      {c.vinyl_count.replace('{n}', String(tracks.length))}
-                    </span>
-                  </button>
+                      <span
+                        className="text-[11px] sm:text-sm font-black text-[var(--ink)] shrink-0"
+                        style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        aria-hidden
+                      >
+                        {expanded ? '▼' : '▶'}
+                      </span>
+                      <span
+                        className="text-base sm:text-lg font-black tracking-wide text-[var(--ink)] flex-1 tabular-nums"
+                        style={{ fontFamily: "'Unbounded', sans-serif" }}
+                      >
+                        {yearLabel}
+                      </span>
+                      <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">
+                        {c.vinyl_count.replace('{n}', String(tracks.length))}
+                      </span>
+                    </button>
+                    {vinylBundle.length > 0 && (
+                      <div className="shrink-0 pr-3 sm:pr-4">
+                        {renderPlayAllBtn(vinylKey, vinylBundle)}
+                      </div>
+                    )}
+                  </div>
 
                   {expanded && (
                     <div id={panelId} role="region" aria-labelledby={triggerId}>
-                      {tracks.map((track) => (
-                        <VinylTrackRow
-                          key={track.id}
-                          track={track}
-                          dict={dict}
-                          lang={lang}
-                          autoplay={autoplayVinylId === track.id}
-                          artistSlugMap={artistSlugMap}
-                          labelImageMap={labelImageMap}
-                          relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
-                        />
-                      ))}
+                      {tracks.map((track) => {
+                        const rowKey = `chart-vinyl-row-${track.id}`
+                        const idx = vinylBundle.findIndex((m) => m.rowKey === rowKey)
+                        return (
+                          <VinylTrackRow
+                            key={track.id}
+                            track={track}
+                            dict={dict}
+                            lang={lang}
+                            isPlaying={activeRowKeyFor(vinylKey) === rowKey}
+                            onPlay={idx >= 0 ? () => playFromIndex(vinylKey, vinylBundle, idx) : undefined}
+                            artistSlugMap={artistSlugMap}
+                            labelImageMap={labelImageMap}
+                            relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
+                          />
+                        )
+                      })}
                     </div>
                   )}
                 </section>
@@ -1593,8 +1649,10 @@ export default function ChartView({
           onPlay={() => {
             const { trackId, yearKey } = pendingVinylPlay
             ensureOpenVinyl(yearKey)
-            setAutoplayVinylId(trackId)
             setPendingVinylPlay(null)
+            // Llamada directa (no vía estado) para conservar el gesto del
+            // usuario: el autoplay del player de YouTube lo necesita.
+            playVinylTrackById(trackId)
           }}
           onDismiss={() => setPendingVinylPlay(null)}
         />
