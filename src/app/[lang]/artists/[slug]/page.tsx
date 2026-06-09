@@ -11,6 +11,7 @@ import {
   resolveArtistSlug,
   splitRelatedArtistNames,
 } from '@/lib/artist-entity-match'
+import CountryBadge from '@/components/CountryBadge'
 import { breadcrumbJsonLd, countryNameFromCode, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
@@ -375,7 +376,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
               {artist.styles?.map((s: string, i: number) => (
                 <span key={i} className="cutout red">{s}</span>
               ))}
-              <span className="cutout fill">{artist.country}</span>
+              {artist.country ? (
+                <CountryBadge country={artist.country} lang={lang} size="sm" variant="cutout" />
+              ) : null}
               <span className="cutout outline">{artist.era}</span>
             </div>
             <div className="space-y-5">

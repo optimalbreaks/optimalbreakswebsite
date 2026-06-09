@@ -9,9 +9,7 @@ import type { Locale } from '@/lib/i18n-config'
 import {
   HOME_OG_IMAGE,
   SITE_URL,
-  countryNameFromCode,
   homeOgImageAlt,
-  isoCountryCodeFromCode,
   staticPageMetadata,
 } from '@/lib/seo'
 import { createServerSupabase } from '@/lib/supabase-server'
@@ -208,15 +206,13 @@ export default async function HomePage({
   )
 
   const showcaseArtists: ShowcaseArtist[] = resolvedArtists.map((a, i) => {
-    const iso = isoCountryCodeFromCode(a.country)
     return {
       slug: a.slug,
       name: a.name,
       desc: lang === 'es' ? a.desc_es : a.desc_en,
       genres: a.genres,
       imageUrl: a.image_url,
-      countryIso: iso ? iso.toLowerCase() : null,
-      countryName: countryNameFromCode(a.country, lang),
+      country: a.country,
       fans: fanCounts[i],
       href: `/${lang}/artists/${a.slug}`,
       tracks: a.topTracks.slice(0, 10).map((t) => ({

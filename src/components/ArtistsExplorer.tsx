@@ -5,6 +5,7 @@ import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import FavoriteButton from '@/components/FavoriteButton'
+import CountryBadge from '@/components/CountryBadge'
 
 interface ArtistRow {
   id: string
@@ -374,7 +375,7 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
                 ))}
               </div>
               <div className="flex gap-2 mt-2 items-center">
-                <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
+                {a.country ? <CountryBadge country={a.country} lang={lang} size="sm" variant="cutout" /> : null}
                 <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
                 {a.has_beatport_top && <span className="ml-auto"><BeatportBadge /></span>}
               </div>
@@ -411,7 +412,7 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
                 ))}
               </div>
               <div className="flex gap-1 mt-1 items-center">
-                <span className="cutout fill" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{a.country}</span>
+                {a.country ? <CountryBadge country={a.country} lang={lang} size="xs" variant="cutout" /> : null}
                 {a.has_beatport_top && <span className="ml-auto"><BeatportBadge size="xs" /></span>}
               </div>
             </div>
@@ -449,7 +450,7 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
               </div>
             </div>
             <div className="hidden sm:flex gap-2 shrink-0 items-center">
-              <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.country}</span>
+              {a.country ? <CountryBadge country={a.country} lang={lang} size="sm" variant="cutout" /> : null}
               <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
               {a.has_beatport_top && <BeatportBadge />}
             </div>

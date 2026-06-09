@@ -11,8 +11,10 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import { useAudioEngineGate } from '@/components/LazyDeckAudioProvider'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import { displayImageUrl } from '@/lib/image-url'
+import CountryBadge from '@/components/CountryBadge'
 
 export type ShowcaseTrack = {
   title: string
@@ -27,9 +29,8 @@ export type ShowcaseArtist = {
   desc: string
   genres: string[]
   imageUrl: string | null
-  /** ISO 3166-1 alpha-2 en minúsculas (gb, us, ru…) o null si desconocido */
-  countryIso: string | null
-  countryName: string | null
+  /** Código o nombre de país en BD (RU, UK, Russia, AU/UK…). */
+  country: string | null
   fans: number
   href: string
   tracks: ShowcaseTrack[]
@@ -75,12 +76,31 @@ const pad2 = (n: number) => String(n).padStart(2, '0')
 export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeAllHref, artists }: Props) {
   const es = lang === 'es'
   const sectionRef = useRef<HTMLElement>(null)
+  const railRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
 
+  const gate = useAudioEngineGate()
   const {
     previewQueue, previewIndex, previewPlaying, previewGroupKey,
     playPreviewQueue, togglePreview,
   } = usePreviewAudioGated()
+
+  // Precarga el motor de audio cuando la sección se acerca al viewport.
+  // Sin esto, el primer play llega con el motor sin cargar: el play() real
+  // se ejecuta fuera del gesto del usuario, el navegador lo bloquea y
+  // aparece el overlay "Toca para escuchar" tapando la portada.
+  useEffect(() => {
+    const root = sectionRef.current
+    if (!root) return
+    const warm = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        void gate.requestLoad()
+        warm.disconnect()
+      }
+    }, { rootMargin: '400px' })
+    warm.observe(root)
+    return () => warm.disconnect()
+  }, [gate])
 
   const groupKeyOf = (slug: string) => `home-artist:${slug}`
   const activeGroupSlug = previewGroupKey?.startsWith('home-artist:')
@@ -104,11 +124,14 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
     if (queue.length > 0) playPreviewQueue(queue, 0, key)
   }, [previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
 
-  // Reveal cinematográfico + artista activo para el índice sticky.
+  // Reveal cinematográfico (solo móvil vía CSS) + artista activo:
+  // desktop = posición del carrusel horizontal; móvil = observer vertical.
   useEffect(() => {
     const root = sectionRef.current
-    if (!root) return
+    const rail = railRef.current
+    if (!root || !rail) return
     const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-obx-card]'))
+
     const reveal = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
@@ -117,20 +140,64 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
         }
       }
     }, { threshold: 0.12 })
-    const tracker = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          const idx = Number((e.target as HTMLElement).dataset.idx)
-          if (!Number.isNaN(idx)) setActive(idx)
+    cards.forEach((c) => reveal.observe(c))
+
+    const mq = window.matchMedia('(min-width: 1024px)')
+    let vTracker: IntersectionObserver | null = null
+    let onScroll: (() => void) | null = null
+
+    const setup = () => {
+      vTracker?.disconnect()
+      vTracker = null
+      if (onScroll) { rail.removeEventListener('scroll', onScroll); onScroll = null }
+
+      if (mq.matches) {
+        onScroll = () => {
+          const center = rail.scrollLeft + rail.clientWidth / 2
+          let best = 0
+          let dist = Infinity
+          cards.forEach((c, i) => {
+            const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center)
+            if (d < dist) { dist = d; best = i }
+          })
+          setActive(best)
         }
+        rail.addEventListener('scroll', onScroll, { passive: true })
+        onScroll()
+      } else {
+        vTracker = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              const idx = Number((e.target as HTMLElement).dataset.idx)
+              if (!Number.isNaN(idx)) setActive(idx)
+            }
+          }
+        }, { rootMargin: '-40% 0px -45% 0px' })
+        cards.forEach((c) => vTracker!.observe(c))
       }
-    }, { rootMargin: '-40% 0px -45% 0px' })
-    cards.forEach((c) => { reveal.observe(c); tracker.observe(c) })
-    return () => { reveal.disconnect(); tracker.disconnect() }
+    }
+    setup()
+    mq.addEventListener('change', setup)
+    return () => {
+      reveal.disconnect()
+      vTracker?.disconnect()
+      if (onScroll) rail.removeEventListener('scroll', onScroll)
+      mq.removeEventListener('change', setup)
+    }
   }, [artists.length])
 
-  const scrollToArtist = (slug: string) => {
-    document.getElementById(`home-artist-${slug}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const scrollToArtist = useCallback((i: number) => {
+    const el = document.getElementById(`home-artist-${artists[i]?.slug}`)
+    if (!el) return
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [artists])
+
+  const step = (dir: 1 | -1) => {
+    scrollToArtist(Math.min(artists.length - 1, Math.max(0, active + dir)))
   }
 
   const seeAllBtn = seeAll ? (
@@ -172,7 +239,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
                 <li key={a.slug}>
                   <button
                     type="button"
-                    onClick={() => scrollToArtist(a.slug)}
+                    onClick={() => scrollToArtist(i)}
                     className={`flex w-full items-baseline gap-3 bg-transparent border-0 cursor-pointer text-left transition-all duration-300 ${isActive ? 'translate-x-2' : 'opacity-40 hover:opacity-75'}`}
                   >
                     <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', color: 'var(--red)' }}>
@@ -225,24 +292,53 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
             </span>
           </div>
 
-          {/* ===== Portadas ===== */}
-          <div className="space-y-10 sm:space-y-16">
-            {artists.map((a, i) => {
-              const isMine = activeGroupSlug === a.slug
-              const isSounding = isMine && previewPlaying
-              const nowTitle = isMine ? previewQueue[previewIndex]?.title ?? null : null
-              return (
-                <ArtistCover
-                  key={a.slug}
-                  artist={a}
-                  index={i}
-                  es={es}
-                  sounding={isSounding}
-                  nowTitle={nowTitle}
-                  onPlay={() => playArtist(a)}
-                />
-              )
-            })}
+          {/* ===== Portadas: pila vertical en móvil, carrusel snap en desktop ===== */}
+          <div className="relative">
+            <div
+              ref={railRef}
+              className="obx-rail space-y-10 sm:space-y-16 lg:space-y-0 lg:flex lg:gap-6 lg:overflow-x-auto lg:snap-x lg:snap-mandatory"
+            >
+              {artists.map((a, i) => {
+                const isMine = activeGroupSlug === a.slug
+                const isSounding = isMine && previewPlaying
+                const nowTitle = isMine ? previewQueue[previewIndex]?.title ?? null : null
+                return (
+                  <ArtistCover
+                    key={a.slug}
+                    artist={a}
+                    index={i}
+                    lang={lang}
+                    es={es}
+                    sounding={isSounding}
+                    nowTitle={nowTitle}
+                    inactive={i !== active}
+                    onPlay={() => playArtist(a)}
+                  />
+                )
+              })}
+            </div>
+
+            {/* Flechas del carrusel — solo desktop */}
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              disabled={active === 0}
+              aria-label={es ? 'Artista anterior' : 'Previous artist'}
+              className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 lg:grid"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              disabled={active >= artists.length - 1}
+              aria-label={es ? 'Artista siguiente' : 'Next artist'}
+              className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 lg:grid"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
+            >
+              →
+            </button>
           </div>
 
           {seeAll ? <div className="mt-10 text-center lg:hidden">{seeAllBtn}</div> : null}
@@ -255,16 +351,21 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
 function ArtistCover({
   artist: a,
   index,
+  lang,
   es,
   sounding,
   nowTitle,
+  inactive,
   onPlay,
 }: {
   artist: ShowcaseArtist
   index: number
+  lang: string
   es: boolean
   sounding: boolean
   nowTitle: string | null
+  /** En desktop, slide del carrusel que no está centrado (se atenúa). */
+  inactive: boolean
   onPlay: () => void
 }) {
   const img = displayImageUrl(a.imageUrl)
@@ -279,7 +380,7 @@ function ArtistCover({
       id={`home-artist-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card obx-reveal group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card obx-reveal group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500 ${inactive ? 'lg:opacity-40' : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
@@ -313,22 +414,8 @@ function ArtistCover({
 
       {/* Meta superior: bandera + fans */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-[6] flex flex-wrap items-center gap-2 p-4 sm:p-6">
-        {a.countryIso ? (
-          <span className="inline-flex items-center gap-2 border-2 border-white/30 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element -- bandera mínima desde flagcdn */}
-            <img
-              src={`https://flagcdn.com/w40/${a.countryIso}.png`}
-              alt={a.countryName ?? a.countryIso.toUpperCase()}
-              width={24}
-              height={17}
-              loading="lazy"
-              decoding="async"
-              className="h-[17px] w-6 rounded-[2px] object-cover shadow-sm"
-            />
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff' }}>
-              {a.countryName ?? a.countryIso.toUpperCase()}
-            </span>
-          </span>
+        {a.country ? (
+          <CountryBadge country={a.country} lang={lang} variant="overlay" size="sm" />
         ) : null}
         {a.fans > 0 ? (
           <span className="inline-flex items-center gap-1.5 border-2 border-white/30 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">

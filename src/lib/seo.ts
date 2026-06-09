@@ -293,10 +293,16 @@ export function countryNameFromCode(code: string | null | undefined, lang: Local
   const upper = trimmed.toUpperCase()
   const hit = COUNTRY_NAMES[upper]
   if (hit) return hit[lang]
+  const lower = trimmed.toLowerCase()
+  for (const names of Object.values(COUNTRY_NAMES)) {
+    if (names.es.toLowerCase() === lower || names.en.toLowerCase() === lower) {
+      return names[lang]
+    }
+  }
   return trimmed
 }
 
-/** ISO 3166-1 alpha-2 normalizado (UK→GB, USA→US). Para `addressCountry`. */
+/** ISO 3166-1 alpha-2 normalizado (UK→GB, USA→US, «Russia»→RU). Para banderas y schema. */
 export function isoCountryCodeFromCode(code: string | null | undefined): string | null {
   if (!code) return null
   const trimmed = code.trim()
@@ -304,7 +310,57 @@ export function isoCountryCodeFromCode(code: string | null | undefined): string 
   const upper = trimmed.toUpperCase()
   if (upper === 'UK') return 'GB'
   if (upper === 'USA') return 'US'
-  return upper.length === 2 ? upper : null
+  if (upper.length === 2) return upper
+  const lower = trimmed.toLowerCase()
+  for (const [iso, names] of Object.entries(COUNTRY_NAMES)) {
+    if (names.es.toLowerCase() === lower || names.en.toLowerCase() === lower) {
+      if (iso === 'UK') return 'GB'
+      if (iso === 'USA') return 'US'
+      return iso.length === 2 ? iso : null
+    }
+  }
+  return null
+}
+
+/** Todos los ISO de un campo país (soporta «AU/UK», «RU», «Russia»…). */
+export function countryIsoCodesFromCode(code: string | null | undefined): string[] {
+  if (!code) return []
+  const trimmed = code.trim()
+  if (!trimmed) return []
+  const parts = trimmed.split(/[/|,]/).map((p) => p.trim()).filter(Boolean)
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (iso: string | null) => {
+    if (!iso) return
+    const k = iso.toLowerCase()
+    if (seen.has(k)) return
+    seen.add(k)
+    out.push(k)
+  }
+  if (parts.length > 1) {
+    for (const part of parts) push(isoCountryCodeFromCode(part))
+    return out
+  }
+  push(isoCountryCodeFromCode(trimmed))
+  return out
+}
+
+/** Nombre legible para códigos compuestos («AU/UK» → «Australia / Reino Unido»). */
+export function countryDisplayFromCode(code: string | null | undefined, lang: Locale): string | null {
+  if (!code) return null
+  const trimmed = code.trim()
+  if (!trimmed) return null
+  const parts = trimmed.split(/[/|,]/).map((p) => p.trim()).filter(Boolean)
+  if (parts.length > 1) {
+    const names = parts.map((p) => countryNameFromCode(p, lang) || p).filter(Boolean)
+    return names.length ? names.join(' / ') : trimmed
+  }
+  return countryNameFromCode(trimmed, lang)
+}
+
+/** URL de bandera en flagcdn (PNG, ancho fijo). */
+export function flagCdnUrl(iso: string, width = 40): string {
+  return `https://flagcdn.com/w${width}/${iso.toLowerCase()}.png`
 }
 
 export type BreadcrumbItem = { name: string; url: string }

@@ -14,6 +14,7 @@ import { staticPageMetadata } from '@/lib/seo'
 import { ARTIST_ERAS, FEATURED_ARTISTS, artistSlug } from '@/lib/artists-timeline'
 import CardThumbnail from '@/components/CardThumbnail'
 import ArtistsExplorer from '@/components/ArtistsExplorer'
+import CountryBadge from '@/components/CountryBadge'
 
 const FEATURED_ARTIST_DESCRIPTIONS: Record<string, { es: string; en: string; country: string }> = {
   'DJ KOOL HERC': {
@@ -140,8 +141,12 @@ export default async function ArtistsPage({ params }: { params: { lang: Locale }
                         </span>
                       ))}
                     </div>
-                    <div className="flex gap-2 mt-2">
-                      <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{description?.country || 'INTL'}</span>
+                    <div className="flex gap-2 mt-2 items-center">
+                      {description?.country ? (
+                        <CountryBadge country={description.country} lang={lang} size="sm" variant="cutout" />
+                      ) : (
+                        <span className="cutout fill" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>INTL</span>
+                      )}
                       <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{artist.era}</span>
                     </div>
                     <p className="mt-3" style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-muted)' }}>
