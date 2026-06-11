@@ -677,16 +677,15 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return arr
   }, [filtered, sortBy, es])
 
-  // Cola unificada: Beatport / Bandcamp por <audio> y vinilos YouTube vía el
-  // player global (mini-dock flotante del DeckAudioProvider). Se basa en los
-  // campos efectivos del track (tras dedupe), no en la fuente original.
-  const isAudioPlayable = (t: UnifiedTrack) => {
+  // Cola del reproductor global: solo streams directos (Beatport / Bandcamp vía
+  // <audio>). Los vinilos YouTube siguen en la lista pero no entran en PLAY ALL
+  // ni en la cola — se escuchan con el enlace externo (ABRIR / YouTube).
+  const isStreamPlayable = (t: UnifiedTrack) => {
     if (t.sample_url) return true
     if (t.platform === 'bandcamp' && t.external_url) return true
-    if (extractYouTubeId(t.youtube_url || '')) return true
     return false
   }
-  const orderedAudioQueue = useMemo(() => sorted.filter(isAudioPlayable), [sorted])
+  const orderedAudioQueue = useMemo(() => sorted.filter(isStreamPlayable), [sorted])
 
   // Si el grupo activo es OTRO (otra lista, otro chart, otra página), el
   // reproductor global seguirá sonando pero aquí no resaltamos ninguna fila.
@@ -751,15 +750,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     const src = t.source === 'featured' && t.platform === 'bandcamp'
       ? previewAudioSrc('', 'bandcamp', t.external_url)
       : t.sample_url ? previewAudioSrc(t.sample_url, t.platform || undefined) : ''
-    // Vinilos sin sample: entran en la cola como pista YouTube y los toca
-    // el player global de YouTube del provider.
-    const ytId = !src ? extractYouTubeId(t.youtube_url || '') : null
-    if (!src && !ytId) return null
+    if (!src) return null
     const useUrlMode = isShared && t.source === 'beatport_top' && !!(t.external_url || t.canonical_url)
     return {
       rowKey: t.key,
       src,
-      youtubeId: ytId,
       title: t.title,
       artist: t.artists,
       artworkUrl: t.artwork_url ?? null,
@@ -1155,10 +1150,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           {sorted.map((t) => {
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
-            const ytId = (t.source === 'vinyl' || t.youtube_url) ? extractYouTubeId(t.youtube_url || '') : null
-            // Los vinilos YouTube ahora también se reproducen con el botón
-            // ▶ de la fila (cola global + mini-dock), igual que los samples.
-            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url) || ytId)
+            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
             const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
             return (
@@ -1321,9 +1313,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                   </div>
                 </div>
 
-                {/* El vídeo de los vinilos ya no se incrusta en la fila: se
-                    reproduce en el player global (mini-dock de YouTube) y
-                    sobrevive a la navegación y a la pantalla bloqueada. */}
+                {/* Vinilos YouTube: sin ▶ en fila; enlace ABRIR abre el vídeo fuera. */}
               </div>
             )
           })}

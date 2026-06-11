@@ -27,7 +27,6 @@ import {
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 import { createBrowserSupabase } from '@/lib/supabase'
-import { extractYouTubeId } from '@/components/YouTubeEmbed'
 import {
   formatTrackReleaseDisplay,
   buildTrackSharePath,
@@ -234,20 +233,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // Adjuntamos `save` con la misma lógica que la fila visible: modo URL
   // para los tracks cuya fuente primaria es `beatport_top` (no tienen fila
   // propia, viven solo como JSONB) y modo ref para el resto.
-  // Los vinilos (playback_kind 'youtube') también entran en la cola: el
-  // reproductor global los toca con el player de YouTube (mini-dock
-  // flotante) y la lista sigue de corrido mezclando samples y vinilos.
+  // Cola del reproductor global: solo samples Beatport/Bandcamp (<audio>).
+  // Vinilos YouTube no entran en PLAY ALL; el enlace externo abre YouTube.
   const previewBundle = useMemo<PreviewTrack[]>(() => {
     const out: PreviewTrack[] = []
     if (!data) return out
     for (const t of data.top_tracks) {
       const src = t.sample_url ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url) : ''
-      const ytId = !src ? extractYouTubeId(t.youtube_url || '') : null
-      if (!src && !ytId) continue
+      if (!src) continue
       out.push({
         rowKey: `community-top-${t.canonical_key}`,
         src,
-        youtubeId: ytId,
         title: t.title,
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
@@ -608,9 +604,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     </div>
                   </div>
 
-                  {/* El vídeo de los vinilos ya no se incrusta aquí: suena
-                      en el reproductor global (mini-dock de YouTube), que
-                      sobrevive a la navegación y a la pantalla bloqueada. */}
+                  {/* Vinilos YouTube: sin ▶ en fila; enlace externo abre YouTube. */}
                 </div>
               )
             })}
