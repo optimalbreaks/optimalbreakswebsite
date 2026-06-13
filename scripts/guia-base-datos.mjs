@@ -401,6 +401,38 @@ const ACTIONS = [
       'UPSERT breakdown-orlando-2026: BREAKDOWN, sáb 27 jun 2026 Broken Strings Brewery (1012 W Church St, Orlando FL), Fully Loaded + Rave Royalty present; headliner Huda Hudia (Kaleidoscope Music) + Soltek, Robotic, Matrix, Supagroover, Beezie, Axel V, Andres Morales; doors 20:00–23:30, all ages; cartel public/images/events/breakdown-orlando-2026.webp; tickets Eventbrite.',
   },
   {
+    id: 'events-patch-power-breakbeat-con-autobots-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-power-breakbeat-con-autobots-2026',
+    npm: 'npm run db:guia -- run events-patch-power-breakbeat-con-autobots-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT power-breakbeat-con-autobots-2026: 25 jul 2026 Sala Roka Málaga, Autobots confirmado, power-breakbeat-con-autobots.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-aqua-breaks-pool-party-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-aqua-breaks-pool-party-2026',
+    npm: 'npm run db:guia -- run events-patch-aqua-breaks-pool-party-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT aqua-breaks-pool-party-2026: 25 jul 2026 Campamento Rural La Torre La Rábida, cartel sin lineup, aqua-breaks-pool-party.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-surbreak-breakbiteros-del-sur-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-surbreak-breakbiteros-del-sur-2026',
+    npm: 'npm run db:guia -- run events-patch-surbreak-breakbiteros-del-sur-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT surbreak-breakbiteros-del-sur-2026: 15 ago 2026 Sala Las Palmeras La Línea, lineup cartel, surbreak-breakbiteros-del-sur.webp, MonsterTicket.',
+  },
+  {
+    id: 'events-patch-farewell-summer-festival-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-farewell-summer-festival-2026',
+    npm: 'npm run db:guia -- run events-patch-farewell-summer-festival-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT farewell-summer-festival-2026: 21–22 ago 2026 Recinto Ferial Pedro Abad, lineup TBA, entradas/info Instagram @farewell_summerfestival.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -627,6 +659,10 @@ Punto de entrada unificado:
   events-patch-floridance-festival-2026  Floridance Festival 2026, Rota 5 sept Estadio Monago (Animalia, MonsterTicket)
   events-patch-electrolunch-xxl-picnic-76-sevilla-2026  Electrolunch XXL · Picnic 76, Parque Magallanes Sevilla 9 may 2026 (Stanton Warriors + locales, ultimaentrada.com)
   events-patch-breakdown-orlando-2026  BREAKDOWN (Huda Hudia), Broken Strings Brewery Orlando 27 jun 2026 (Fully Loaded + Rave Royalty, Eventbrite)
+  events-patch-power-breakbeat-con-autobots-2026  Power Breakbeat + Autobots, Sala Roka Málaga 25 jul 2026 (MonsterTicket)
+  events-patch-aqua-breaks-pool-party-2026  Aqua Breaks Pool Party, La Rábida Huelva 25 jul 2026 (MonsterTicket)
+  events-patch-surbreak-breakbiteros-del-sur-2026  Surbreak, Sala Las Palmeras La Línea 15 ago 2026 (MonsterTicket)
+  events-patch-farewell-summer-festival-2026  Farewell Summer Festival, Recinto Ferial Pedro Abad 21–22 ago 2026 (Instagram)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -1053,6 +1089,21 @@ function main() {
       break
     case 'events-patch-breakdown-orlando-2026':
       runNode('enriquecer-evento.mjs', ['--patch-breakdown-orlando-2026', ...rest])
+      break
+    case 'events-patch-power-breakbeat-con-autobots-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-power-breakbeat-con-autobots-2026', ...rest])
+      break
+    case 'events-patch-aqua-breaks-pool-party-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-aqua-breaks-pool-party-2026', ...rest])
+      break
+    case 'events-patch-surbreak-breakbiteros-del-sur-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-surbreak-breakbiteros-del-sur-2026',
+        ...rest,
+      ])
+      break
+    case 'events-patch-farewell-summer-festival-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-farewell-summer-festival-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

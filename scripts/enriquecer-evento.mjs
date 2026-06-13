@@ -602,7 +602,7 @@ const RAVEART_SUMMER_2026_ROW = {
   country: 'Spain',
   venue: 'Hacienda El Chaparrejo',
   website: 'https://www.raveart.es/',
-  tickets_url: 'https://www.raveart.es/',
+  tickets_url: 'https://www.monsterticket.com/evento/summer-festival-2026',
   doors_open: '16:00',
   doors_close: '07:00',
   lineup: RAVEART_SUMMER_2026_LINEUP,
@@ -614,7 +614,9 @@ const RAVEART_SUMMER_2026_ROW = {
     'Sevilla',
     'Alcalá de Guadaíra',
     '2026',
+    'monsterticket',
   ],
+  age_restriction: '18+',
 }
 
 async function runPatchRaveartSummer2026(sb) {
@@ -3012,6 +3014,292 @@ async function runPatchBreakdownOrlando2026(sb) {
   console.log('[patch-breakdown-orlando-2026] OK:', after)
 }
 
+const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
+const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
+  'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
+const POWER_BREAKBEAT_CON_AUTOBOTS_IMAGE =
+  '/images/events/power-breakbeat-con-autobots.webp'
+
+const POWER_BREAKBEAT_CON_AUTOBOTS_2026_LINEUP = ['Autobots']
+
+const POWER_BREAKBEAT_CON_AUTOBOTS_2026_ROW = {
+  name: 'Power Breakbeat con Autobots',
+  description_en:
+    'Frequency Break and METSALA present Power Breakbeat at Sala Roka, Málaga, on Saturday 25 July 2026. Retro break, nu skool and current sounds; first confirmed headliner Autobots (UK). Promo tickets listed on MonsterTicket at 5 euros plus fees; non-nominal entry and 18+ only per the official sale page. Venue: Calle Leda 1, Cruz de Humilladero, Málaga. Co-branded on the flyer with Sala Roka and MonsterTicket.',
+  description_es:
+    'Frequency Break y METSALA presentan Power Breakbeat en Sala Roka, Málaga, el sábado 25 de julio de 2026. Sonido retro break, nu skool y actual; primer artista confirmado Autobots (UK). Entrada promo en MonsterTicket a 5 euros más gastos de gestión; entradas no nominativas y acceso prohibido a menores de 18 años según la ficha oficial. Sala: Calle Leda 1, Cruz de Humilladero, Málaga. Cartel con Sala Roka y MonsterTicket.',
+  event_type: 'club_night',
+  date_start: '2026-07-25',
+  date_end: null,
+  location: 'Sala Roka, Calle Leda 1, Málaga, Spain',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Sala Roka',
+  address: 'Calle Leda 1, Cruz de Humilladero, 29006 Málaga',
+  website: 'https://www.salaroka.es/',
+  tickets_url: POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS,
+  image_url: POWER_BREAKBEAT_CON_AUTOBOTS_IMAGE,
+  lineup: POWER_BREAKBEAT_CON_AUTOBOTS_2026_LINEUP,
+  tags: [
+    'power breakbeat',
+    'autobots',
+    'frequency break',
+    'metsala',
+    'breakbeat',
+    'sala roka',
+    'málaga',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {
+    'Sala Roka': 'https://www.salaroka.es/',
+  },
+  age_restriction: '18+',
+}
+
+async function runPatchPowerBreakbeatConAutobots2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-power-breakbeat-con-autobots-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...POWER_BREAKBEAT_CON_AUTOBOTS_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-power-breakbeat-con-autobots-2026] OK:', after)
+}
+
+const AQUA_BREAKS_POOL_PARTY_2026_SLUG = 'aqua-breaks-pool-party-2026'
+const AQUA_BREAKS_POOL_PARTY_TICKETS =
+  'https://www.monsterticket.com/evento/aqua-breaks-pool-party'
+const AQUA_BREAKS_POOL_PARTY_IMAGE = '/images/events/aqua-breaks-pool-party.webp'
+
+const AQUA_BREAKS_POOL_PARTY_2026_ROW = {
+  name: 'Aqua Breaks Pool Party',
+  description_en:
+    'BackStage and Campamento Rural La Torre host Aqua Breaks Pool Party on Saturday 25 July 2026 at La Torre Terraza, La Rábida (Huelva province). Sun, pool and breakbeat: large pool, jacuzzi, private parking and open-air natural setting; doors 16:00–07:00 per MonsterTicket. Official artwork does not yet list DJ names. Advance tickets on MonsterTicket; non-nominal entry and 18+ only. Address on sale page: C. el Pinar, 10, 21819 La Rábida, Huelva.',
+  description_es:
+    'BackStage y Campamento Rural La Torre organizan Aqua Breaks Pool Party el sábado 25 de julio de 2026 en La Torre Terraza, La Rábida (Huelva). Sol, piscina y breakbeat: gran piscina, jacuzzi, aparcamiento privado y entorno natural al aire libre; horario 16:00 h a 07:00 h según MonsterTicket. El cartel oficial aún no publica nombres de DJ. Entrada anticipada en MonsterTicket; entradas no nominativas y prohibido el acceso a menores de 18 años. Dirección en venta: C. el Pinar, 10, 21819 La Rábida, Huelva.',
+  event_type: 'festival',
+  date_start: '2026-07-25',
+  date_end: null,
+  location: 'Campamento Rural La Torre, La Rábida, Huelva, Spain',
+  city: 'La Rábida',
+  country: 'Spain',
+  venue: 'Campamento Rural La Torre',
+  address: 'C. el Pinar, 10, 21819 La Rábida, Huelva',
+  website: null,
+  tickets_url: AQUA_BREAKS_POOL_PARTY_TICKETS,
+  image_url: AQUA_BREAKS_POOL_PARTY_IMAGE,
+  lineup: [],
+  tags: [
+    'aqua breaks',
+    'pool party',
+    'breakbeat',
+    'la rábida',
+    'huelva',
+    'campamento rural la torre',
+    'backstage',
+    'festival',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '16:00',
+  doors_close: '07:00',
+}
+
+async function runPatchAquaBreaksPoolParty2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', AQUA_BREAKS_POOL_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-aqua-breaks-pool-party-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: AQUA_BREAKS_POOL_PARTY_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...AQUA_BREAKS_POOL_PARTY_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .eq('slug', AQUA_BREAKS_POOL_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-aqua-breaks-pool-party-2026] OK:', after)
+}
+
+const SURBREAK_BREAKBITEROS_DEL_SUR_2026_SLUG = 'surbreak-breakbiteros-del-sur-2026'
+const SURBREAK_BREAKBITEROS_DEL_SUR_TICKETS =
+  'https://www.monsterticket.com/evento/surbreak--breakbiteros-del-sur'
+const SURBREAK_BREAKBITEROS_DEL_SUR_IMAGE =
+  '/images/events/surbreak-breakbiteros-del-sur.webp'
+
+const SURBREAK_BREAKBITEROS_DEL_SUR_2026_LINEUP = [
+  'DJ Heavy',
+  'DJ Nachh',
+  'Mutant Breakz',
+  'Kill II Beat',
+  'DJ Xema',
+  'Diyeico',
+]
+
+const SURBREAK_BREAKBITEROS_DEL_SUR_2026_ROW = {
+  name: 'Surbreak — Breakbiteros del Sur',
+  description_en:
+    'SurBreak — Breakbiteros del Sur launch their first Surbreak club night on Saturday 15 August 2026 at Sala Las Palmeras, La Línea de la Concepción (Cádiz province), in collaboration with Love 90s. Official flyer line-up: DJ Heavy, DJ Nachh, Mutant Breakz, Kill II Beat, DJ Xema and Diyeico. Doors 23:00–07:00. General and VIP tickets (with drink; VIP beside the DJ booth) on MonsterTicket; non-nominal entry and 18+ only. Address: Calle Balandro, Polígono El Zabal, La Línea de la Concepción.',
+  description_es:
+    'SurBreak — Breakbiteros del Sur presentan su primer evento Surbreak el sábado 15 de agosto de 2026 en Sala Las Palmeras, La Línea de la Concepción (Cádiz), en colaboración con Love 90s. Cartel oficial: DJ Heavy, DJ Nachh, Mutant Breakz, Kill II Beat, DJ Xema y Diyeico. Horario 23:00 h a 07:00 h. Entrada general y VIP (con consumición; VIP junto a la cabina) en MonsterTicket; entradas no nominativas y prohibido el acceso a menores de 18 años. Dirección: Calle Balandro, Polígono El Zabal, La Línea de la Concepción.',
+  event_type: 'club_night',
+  date_start: '2026-08-15',
+  date_end: null,
+  location: 'Sala Las Palmeras, La Línea de la Concepción, Cádiz, Spain',
+  city: 'La Línea de la Concepción',
+  country: 'Spain',
+  venue: 'Sala Las Palmeras',
+  address: 'Calle Balandro, Polígono El Zabal, La Línea de la Concepción, Cádiz',
+  website: null,
+  tickets_url: SURBREAK_BREAKBITEROS_DEL_SUR_TICKETS,
+  image_url: SURBREAK_BREAKBITEROS_DEL_SUR_IMAGE,
+  lineup: SURBREAK_BREAKBITEROS_DEL_SUR_2026_LINEUP,
+  tags: [
+    'surbreak',
+    'breakbiteros del sur',
+    'breakbeat',
+    'sala las palmeras',
+    'la línea de la concepción',
+    'cádiz',
+    'love 90s',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '23:00',
+  doors_close: '07:00',
+}
+
+async function runPatchSurbreakBreakbiterosDelSur2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', SURBREAK_BREAKBITEROS_DEL_SUR_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-surbreak-breakbiteros-del-sur-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: SURBREAK_BREAKBITEROS_DEL_SUR_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...SURBREAK_BREAKBITEROS_DEL_SUR_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', SURBREAK_BREAKBITEROS_DEL_SUR_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-surbreak-breakbiteros-del-sur-2026] OK:', after)
+}
+
+const FAREWELL_SUMMER_FESTIVAL_2026_SLUG = 'farewell-summer-festival-2026'
+const FAREWELL_SUMMER_FESTIVAL_INSTAGRAM = 'https://www.instagram.com/farewell_summerfestival/'
+
+const FAREWELL_SUMMER_FESTIVAL_2026_ROW = {
+  name: 'Farewell Summer Festival 2026',
+  description_en:
+    'Farewell Summer Festival returns to the Recinto Ferial in Pedro Abad (Córdoba province) on Friday–Saturday 21–22 August 2026, closing the local summer season with a multi-style outdoor programme. The organisers promote breakbeat alongside tech house and hip-hop on their social channels; artist names and daily schedules are published via Instagram @farewell_summerfestival as the edition is confirmed. Check the official profile for tickets and lineup updates.',
+  description_es:
+    'Farewell Summer Festival vuelve al Recinto Ferial de Pedro Abad (Córdoba) el viernes y sábado 21 y 22 de agosto de 2026, como cierre de la temporada estival local con un programa al aire libre multitemático. En redes la organización mezcla breakbeat con tech house y hip-hop; nombres de artistas y horarios se publican en Instagram @farewell_summerfestival según se confirma la edición. Consultar el perfil oficial para entradas y avances de cartel.',
+  event_type: 'festival',
+  date_start: '2026-08-21',
+  date_end: '2026-08-22',
+  location: 'Recinto Ferial, Pedro Abad, Córdoba, Spain',
+  city: 'Pedro Abad',
+  country: 'Spain',
+  venue: 'Recinto Ferial',
+  address: 'Recinto Ferial, Pedro Abad, Córdoba',
+  website: FAREWELL_SUMMER_FESTIVAL_INSTAGRAM,
+  tickets_url: FAREWELL_SUMMER_FESTIVAL_INSTAGRAM,
+  image_url: null,
+  lineup: [],
+  tags: [
+    'farewell summer festival',
+    'breakbeat',
+    'tech house',
+    'hip hop',
+    'pedro abad',
+    'córdoba',
+    'festival',
+    '2026',
+  ],
+  socials: {
+    Instagram: FAREWELL_SUMMER_FESTIVAL_INSTAGRAM,
+  },
+}
+
+async function runPatchFarewellSummerFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, date_end, city, venue, image_url')
+    .eq('slug', FAREWELL_SUMMER_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-farewell-summer-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: FAREWELL_SUMMER_FESTIVAL_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FAREWELL_SUMMER_FESTIVAL_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, date_end, city, venue, image_url, tickets_url')
+    .eq('slug', FAREWELL_SUMMER_FESTIVAL_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-farewell-summer-festival-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -3184,6 +3472,26 @@ async function main() {
 
   if (argv.includes('--patch-breakdown-orlando-2026')) {
     await runPatchBreakdownOrlando2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-power-breakbeat-con-autobots-2026')) {
+    await runPatchPowerBreakbeatConAutobots2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-aqua-breaks-pool-party-2026')) {
+    await runPatchAquaBreaksPoolParty2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-surbreak-breakbiteros-del-sur-2026')) {
+    await runPatchSurbreakBreakbiterosDelSur2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-farewell-summer-festival-2026')) {
+    await runPatchFarewellSummerFestival2026(sb)
     return
   }
 
