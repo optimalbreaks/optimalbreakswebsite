@@ -100,7 +100,12 @@ export function LazyYouTubeEmbed({
           className="absolute inset-0 h-full w-full border-0"
         />
       ) : (
-        <div className="absolute inset-0 bg-black" aria-hidden />
+        <img
+          src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
+          alt={title}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       )}
     </div>
   )
