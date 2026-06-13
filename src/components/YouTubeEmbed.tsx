@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   registerYouTubeEmbed,
+  requestYouTubePlay,
   unregisterYouTubeEmbed,
 } from '@/lib/youtube-play-coordinator'
 
@@ -22,6 +23,13 @@ export function extractYouTubeId(url: string | null | undefined): string | null 
   return null
 }
 
+/** Miniatura de YouTube servida desde nuestro dominio (proxy). Evita que adblockers
+ * / proxies corporativos que bloquean `i.ytimg.com` dejen la portada en negro. */
+function proxiedThumbUrl(videoId: string): string {
+  const target = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+  return `/api/og/image-proxy?src=${encodeURIComponent(target)}`
+}
+
 export function LazyYouTubeEmbed({
   videoId,
   title,
@@ -35,46 +43,31 @@ export function LazyYouTubeEmbed({
   className?: string
   iframeId?: string
   /**
-   * Si `true`, monta el iframe inmediatamente (sin esperar IntersectionObserver)
-   * y añade `autoplay=1` al src. Lo usa el buscador global (⌘K) cuando el
-   * usuario llega a la página con `?play=1` en la URL: queremos que el vídeo
-   * arranque sin que tenga que volver a hacer clic en «play».
+   * Si `true`, monta el iframe inmediatamente (sin pasar por la portada) con
+   * `autoplay=1`. Lo usan las filas de /charts, Mis Tracks y Top 100 (que ya
+   * tienen su propio botón ▶ externo) y el buscador global (⌘K) al llegar con
+   * `?play=1`. En /mixes no se pasa: se ve la portada y arranca al pulsar play.
    */
   autoplay?: boolean
   /** Id único de esta instancia (fila de vinilo, mix, Mis Tracks…). Solo uno suena. */
   playSlotId?: string
 }) {
-  const rootRef = useRef<HTMLDivElement>(null)
+  // El iframe (pesado) se monta solo al pulsar play o con autoplay (deep-link /
+  // filas con botón externo). Así /mixes no monta decenas de iframes a la vez
+  // (eso pillaba la página) y muestra la portada vía proxy mientras tanto.
   const [mountIframe, setMountIframe] = useState(autoplay)
   const [embedSrc, setEmbedSrc] = useState<string | null>(null)
 
   useEffect(() => {
-    if (autoplay) {
-      setMountIframe(true)
-      return
-    }
-    const el = rootRef.current
-    if (!el || mountIframe) return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setMountIframe(true)
-          obs.disconnect()
-        }
-      },
-      { root: null, rootMargin: '380px 0px', threshold: 0.01 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [mountIframe, autoplay])
+    if (autoplay) setMountIframe(true)
+  }, [autoplay])
 
   useEffect(() => {
     if (!mountIframe) return
-    const auto = autoplay ? '&autoplay=1' : ''
     setEmbedSrc(
-      `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1${auto}&origin=${encodeURIComponent(window.location.origin)}`,
+      `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&autoplay=1&origin=${encodeURIComponent(window.location.origin)}`,
     )
-  }, [mountIframe, videoId, autoplay])
+  }, [mountIframe, videoId])
 
   useEffect(() => {
     if (!playSlotId || !mountIframe || !embedSrc) return
@@ -86,8 +79,13 @@ export function LazyYouTubeEmbed({
     return () => unregisterYouTubeEmbed(playSlotId)
   }, [playSlotId, mountIframe, embedSrc])
 
+  const handlePlay = () => {
+    if (playSlotId) requestYouTubePlay(playSlotId)
+    setMountIframe(true)
+  }
+
   return (
-    <div ref={rootRef} className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
+    <div className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
       {mountIframe && embedSrc ? (
         <iframe
           id={iframeId}
@@ -100,8 +98,68 @@ export function LazyYouTubeEmbed({
           className="absolute inset-0 h-full w-full border-0"
         />
       ) : (
-        <div className="absolute inset-0 bg-black" aria-hidden />
+        <YouTubePosterButton videoId={videoId} title={title} onPlay={handlePlay} />
       )}
     </div>
+  )
+}
+
+/** Portada con la miniatura de YouTube (vía proxy) y un play rojo encima. Si la
+ * imagen falla, recae en un placeholder a rayas con el título legible. */
+function YouTubePosterButton({
+  videoId,
+  title,
+  onPlay,
+}: {
+  videoId: string
+  title: string
+  onPlay: () => void
+}) {
+  const [broken, setBroken] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={onPlay}
+      aria-label={title}
+      className="group/yt absolute inset-0 h-full w-full cursor-pointer border-0 p-0 bg-black"
+    >
+      {!broken ? (
+        // eslint-disable-next-line @next/next/no-img-element -- miniatura YouTube vía proxy propio
+        <img
+          src={proxiedThumbUrl(videoId)}
+          alt={title}
+          decoding="async"
+          onError={() => setBroken(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <span
+          className="absolute inset-0 flex items-center justify-center text-center px-3"
+          style={{
+            background:
+              'repeating-linear-gradient(45deg, var(--ink) 0 12px, #2a2a2a 12px 24px)',
+            color: 'var(--yellow)',
+            fontFamily: "'Unbounded', sans-serif",
+            fontWeight: 900,
+            fontSize: 'clamp(11px, 2.2vw, 16px)',
+            textTransform: 'uppercase',
+            letterSpacing: '-0.3px',
+            lineHeight: 1.2,
+          }}
+        >
+          {title}
+        </span>
+      )}
+      <span className="absolute inset-0 bg-black/15 transition-colors group-hover/yt:bg-black/30" aria-hidden />
+      <span
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[58px] h-[40px] rounded-[10px] bg-[#f00] shadow-lg"
+        aria-hidden
+      >
+        <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white" aria-hidden>
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+    </button>
   )
 }

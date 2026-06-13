@@ -8,7 +8,12 @@ import { NextRequest, NextResponse } from 'next/server'
  *
  * Ruta bajo `/api/og/` para alinearse con `robots.ts` (Allow explícito OG crawlers).
  */
-const ALLOWED_HOSTS = new Set(['geo-media.beatport.com', 'i.discogs.com'])
+const ALLOWED_HOSTS = new Set([
+  'geo-media.beatport.com',
+  'i.discogs.com',
+  'i.ytimg.com',
+  'img.youtube.com',
+])
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024
 
 export async function GET(request: NextRequest) {
