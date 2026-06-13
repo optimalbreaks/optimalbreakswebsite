@@ -23,6 +23,12 @@ import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
+// Coordinador "una sola fuente audible": los YouTube embebidos (vinilos,
+// /mixes, Mis Tracks…) y este reproductor global se excluyen mutuamente.
+import {
+  registerGlobalPlaybackStopper,
+  stopAllYouTube,
+} from '@/lib/youtube-play-coordinator'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
@@ -1617,6 +1623,38 @@ export function DeckAudioProvider({
     }
   }, [])
 
+  // ── Exclusión con los embeds de YouTube en fila ──
+  // Modelo completo en `lib/youtube-play-coordinator.ts`. Aquí cerramos el
+  // lado "reproductor global" (preview/mix/deck) cuando un iframe de YouTube
+  // (vinilos, /mixes, Mis Tracks, Top 100) toma el relevo. La dirección
+  // contraria se cubre llamando `stopAllYouTube()` en cada arranque global.
+  const silenceGlobalPlaybackForYouTube = useCallback(() => {
+    if (previewQueueRef.current.length > 0 || previewAudioRef.current?.getAttribute('src')) {
+      stopPreviewInternal()
+      setMode((m) => (m === 'preview' ? 'idle' : m))
+    }
+    if (currentMix) {
+      stopMixInternal()
+      setMode((m) => (m === 'mix' ? 'idle' : m))
+    }
+    if (playingA && audioRefA.current) {
+      audioRefA.current.pause()
+      setPlayingA(false)
+    }
+    if (playingB && audioRefB.current) {
+      audioRefB.current.pause()
+      setPlayingB(false)
+    }
+    setSessionActive(false)
+  }, [currentMix, playingA, playingB, stopPreviewInternal, stopMixInternal])
+
+  // Registra el "stopper" en el coordinador: así un YouTube que arranca puede
+  // silenciar este reproductor sin acoplar el coordinador al provider.
+  useEffect(() => {
+    registerGlobalPlaybackStopper(silenceGlobalPlaybackForYouTube)
+    return () => registerGlobalPlaybackStopper(null)
+  }, [silenceGlobalPlaybackForYouTube])
+
   // Avance idempotente al siguiente tema de la cola. Se llama desde
   // `ended`, desde `error` (URL caída / stream cortado) y desde el
   // watchdog de `timeupdate` (red de seguridad por si `ended` no llega
@@ -1694,6 +1732,7 @@ export function DeckAudioProvider({
 
   const loadAndPlayPreviewAt = useCallback((queue: PreviewTrack[], idx: number) => {
     if (!queue[idx]) return
+    stopAllYouTube()
     // Refs siempre frescas para los listeners del <audio>.
     previewQueueRef.current = queue
     previewIndexRef.current = idx
@@ -1875,6 +1914,7 @@ export function DeckAudioProvider({
     const a = previewAudioRef.current
     if (!a) return
     if (a.paused) {
+      stopAllYouTube()
       previewUserPausedRef.current = false
       a.play().then(() => {
         setPreviewPlaying(true)
@@ -2115,6 +2155,7 @@ export function DeckAudioProvider({
   //                                              que equivalen a 'preview'.
   useEffect(() => {
     const handler = (e: Event) => {
+      stopAllYouTube()
       const src = (e as CustomEvent).detail?.source as AudioClaimSource | undefined
       // El deck y el mix se excluyen mutuamente con preview
       if (src === 'deck' || src === 'mix') {
