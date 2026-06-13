@@ -114,8 +114,16 @@ function YouTubePosterButton({
   title: string
   onPlay: () => void
 }) {
-  const variants = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', '0']
-  const [variantIdx, setVariantIdx] = useState(1)
+  // Algunos adblockers / proxies corporativos bloquean `i.ytimg.com` aunque
+  // permitan `youtube.com`. Empezamos por `img.youtube.com` (alias bajo el
+  // dominio youtube.com, que suele pasar) y caemos al CDN real solo si falla.
+  const sources = [
+    `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+    `https://i.ytimg.com/vi/${videoId}/0.jpg`,
+  ]
+  const [srcIdx, setSrcIdx] = useState(0)
   const [broken, setBroken] = useState(false)
 
   return (
@@ -128,13 +136,13 @@ function YouTubePosterButton({
       {!broken ? (
         // eslint-disable-next-line @next/next/no-img-element -- thumbnail directo de YouTube CDN
         <img
-          src={`https://i.ytimg.com/vi/${videoId}/${variants[variantIdx]}.jpg`}
+          src={sources[srcIdx]}
           alt={title}
           decoding="async"
           referrerPolicy="no-referrer"
           onError={() => {
-            if (variantIdx < variants.length - 1) {
-              setVariantIdx((i) => i + 1)
+            if (srcIdx < sources.length - 1) {
+              setSrcIdx((i) => i + 1)
             } else {
               setBroken(true)
             }
