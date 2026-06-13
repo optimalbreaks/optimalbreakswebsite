@@ -1,0 +1,34 @@
+---
+description: Mixes/YouTube — embeds en /mixes (portada vía proxy + play diferido, no auto-montar iframes)
+alwaysApply: true
+---
+
+# YouTube embebido en /mixes (y filas con `LazyYouTubeEmbed`)
+
+Componente: **`src/components/YouTubeEmbed.tsx`** (`LazyYouTubeEmbed`). Proxy de miniatura: **`src/app/api/og/image-proxy/route.ts`**.
+
+## Invariante (no negociable)
+
+Las tarjetas de YouTube en **`/[lang]/mixes`** **NO** montan el iframe del reproductor automáticamente. Muestran una **portada** (miniatura del vídeo) con un **play rojo**; el iframe `youtube.com/embed/…` se monta **solo al pulsar play** (con `autoplay=1`, exclusivo vía `youtube-play-coordinator`).
+
+**Prohibido** volver a auto-montar el iframe con `IntersectionObserver` / al hacer scroll en las tarjetas de /mixes. Montar ~10 iframes de YouTube a la vez **pilla la página** (cada iframe se cuelga esperando al CDN de Google, peor en redes/adblockers que bloquean `i.ytimg.com`). Click-to-play = como mucho un iframe montado a la vez.
+
+## La miniatura SIEMPRE por proxy propio
+
+La portada se pide a **nuestro dominio**: `/api/og/image-proxy?src=<URL i.ytimg.com codificada>`. El servidor baja `https://i.ytimg.com/vi/<id>/hqdefault.jpg` y la reenvía.
+
+- **No** usar `<img src="https://i.ytimg.com/...">` directo en el cliente: queda **en negro** en proxies corporativos / extensiones (uBlock EasyPrivacy, Brave Shields, SSL inspection de Acttax) que tratan `ytimg.com` como tracker.
+- Hosts permitidos del proxy en `image-proxy/route.ts`: `i.ytimg.com`, `img.youtube.com` (más Beatport/Discogs ya existentes). Si añades otra fuente de miniatura, amplía ese allow-list.
+- Si el proxy falla, la portada cae a un **placeholder a rayas con el título** del mix.
+
+## Excepción: prop `autoplay`
+
+Las filas que ya tienen su propio botón ▶ (**`/charts`** vinilo, **Mis Tracks**, **Community Top**) y el buscador global (⌘K, deep-link `?play=1`) pasan **`autoplay`**, que monta el iframe directamente sin portada. No cambiar ese comportamiento.
+
+## Local vs producción
+
+En `localhost` el proxy corre en tu red; si bloquea `i.ytimg.com`, la portada sale como placeholder a rayas **en local**. En producción (Vercel) se ve bien. **Probar portadas en la web desplegada, no en local.**
+
+## Referencia
+
+README (EN/ES): sección **Mixes** → «YouTube cards — poster facade + proxied thumbnail» / «Tarjetas de YouTube — portada (facade) + miniatura vía proxy».
