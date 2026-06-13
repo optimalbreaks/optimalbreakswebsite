@@ -34,6 +34,7 @@ import {
   buildBeatportSharePath,
   extractBeatportTrackId,
 } from '@/lib/share-track'
+import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 const COMMUNITY_TOP_LIMIT = 100
@@ -141,6 +142,12 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
   const [shuffleMode, setShuffleMode] = useState(false)
+  /** Vinilo YouTube abierto en fila (embed inline, no cola global). */
+  const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
+
+  const toggleYoutubeEmbed = useCallback((key: string) => {
+    setOpenYoutubeKey((prev) => (prev === key ? null : key))
+  }, [])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -234,7 +241,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // para los tracks cuya fuente primaria es `beatport_top` (no tienen fila
   // propia, viven solo como JSONB) y modo ref para el resto.
   // Cola del reproductor global: solo samples Beatport/Bandcamp (<audio>).
-  // Vinilos YouTube no entran en PLAY ALL; el enlace externo abre YouTube.
+  // Vinilos YouTube: ▶ en fila abre embed inline (como /mixes), no entran en PLAY ALL.
   const previewBundle = useMemo<PreviewTrack[]>(() => {
     const out: PreviewTrack[] = []
     if (!data) return out
@@ -418,10 +425,10 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
               const idx = previewBundle.findIndex((m) => m.rowKey === rowKey)
-              // Incluye también vinilos YouTube: van a la cola global igual
-              // que los samples (ver previewBundle arriba).
               const hasSample = idx >= 0
-              const rowHighlighted = isActive
+              const ytId = t.primary.source === 'vinyl' ? extractYouTubeId(t.youtube_url) : null
+              const showYtEmbed = ytId && openYoutubeKey === t.canonical_key
+              const rowHighlighted = isActive || showYtEmbed
               // Link a la fuente: si tenemos week_date + chart/featured,
               // enlazamos a /charts?week=...&play=<source>:<id>; si no, al
               // external_url.
@@ -518,6 +525,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           {isActive ? '❚❚' : '▶'}
                         </button>
                       )}
+                      {ytId && (
+                        <button
+                          type="button"
+                          onClick={() => toggleYoutubeEmbed(t.canonical_key)}
+                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                            ${showYtEmbed ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={showYtEmbed ? c.preview_pause : c.preview_play}
+                          aria-label={showYtEmbed ? c.preview_pause : c.preview_play}
+                        >
+                          {showYtEmbed ? '❚❚' : '▶'}
+                        </button>
+                      )}
                       {t.bpm != null && t.bpm > 0 ? (
                         <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
                           {t.bpm}
@@ -604,7 +624,16 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     </div>
                   </div>
 
-                  {/* Vinilos YouTube: sin ▶ en fila; enlace externo abre YouTube. */}
+                  {showYtEmbed && ytId ? (
+                    <div className="w-full max-w-sm">
+                      <LazyYouTubeEmbed
+                        videoId={ytId}
+                        title={`${t.title} — ${t.artists}`}
+                        className="border-[3px] border-[var(--ink)]"
+                        autoplay
+                      />
+                    </div>
+                  ) : null}
                 </div>
               )
             })}

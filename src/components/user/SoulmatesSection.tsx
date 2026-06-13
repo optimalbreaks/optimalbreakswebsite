@@ -237,7 +237,7 @@ export default function SoulmatesSection({ lang }: Props) {
           >
             {es ? `Top ${data.soulmates.length}` : `Top ${data.soulmates.length}`}
           </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.soulmates.map((sm, i) => (
               <article
                 key={sm.user.id}

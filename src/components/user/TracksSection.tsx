@@ -2,8 +2,8 @@
 // OPTIMAL BREAKS — My Tracks section
 // Tracks guardados desde charts (Beatport preview),
 // featured (new releases, Beatport/Bandcamp) y vinyl (YouTube).
-// Reproductor unificado: audio proxy para Beatport/Bandcamp y el player
-// global de YouTube (mini-dock del DeckAudioProvider) para vinilos.
+// Reproductor unificado: audio proxy para Beatport/Bandcamp en la barra global;
+// vinilos YouTube se incrustan en la fila (como /mixes), fuera de PLAY ALL.
 // ============================================
 
 'use client'
@@ -18,7 +18,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
-import { extractYouTubeId } from '@/components/YouTubeEmbed'
+import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -326,6 +326,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // orden visible. Sacamos el flag de si la cola activa coincide con
   // `orderedAudioQueue` para detectarlo.
   const [shuffleMode, setShuffleMode] = useState(false)
+  /** Vinilo/YouTube abierto en la fila (embed inline, no cola global). */
+  const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
+
+  const toggleYoutubeEmbed = useCallback((key: string) => {
+    setOpenYoutubeKey((prev) => (prev === key ? null : key))
+  }, [])
 
   // Load real track data for every saved ref (grouped by source).
   useEffect(() => {
@@ -457,6 +463,56 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           external_label: 'BEATPORT',
           sample_url: snap.sample_url || null,
         })
+      }
+
+      // Fallback snapshot: si un upsert pasado regeneró UUIDs en chart/featured/vinyl,
+      // la fila save sigue existiendo pero el join por track_id falla. Mostramos
+      // metadatos congelados del snapshot (igual que el endpoint público user-tracks).
+      for (const s of saved) {
+        if (s.track_source === 'beatport_top') continue
+        const mapKey = `${s.track_source}:${s.track_id}`
+        if (byKey.has(mapKey)) continue
+        const snap = (s.snapshot || {}) as Record<string, any>
+        const title = String(snap.title || '').trim()
+        if (!title) continue
+        const credits = parseArtistCredits(snap.artists)
+        const base = {
+          key: mapKey,
+          source: s.track_source as Exclude<ChartTrackSource, 'beatport_top'>,
+          id: s.track_id,
+          title,
+          mix_name: (snap.mix_name as string | undefined) || undefined,
+          artists: credits.length ? credits.map((a) => a.name).join(', ') : String(snap.artists || ''),
+          artist_credits: credits.length ? credits : undefined,
+          label: (snap.label as string | undefined) || undefined,
+          year: (snap.year as number | null | undefined) ?? null,
+          release_date: (snap.release_date as string | null | undefined) ?? null,
+          bpm: (snap.bpm as number | null | undefined) ?? null,
+          music_key: (snap.music_key as string | undefined) || undefined,
+          artwork_url: (snap.artwork_url as string | null | undefined) || null,
+          sample_url: (snap.sample_url as string | null | undefined) || null,
+        }
+        if (s.track_source === 'featured') {
+          byKey.set(mapKey, {
+            ...base,
+            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+            external_label: 'BEATPORT',
+            platform: (snap.platform as string | undefined) || undefined,
+          })
+        } else if (s.track_source === 'chart') {
+          byKey.set(mapKey, {
+            ...base,
+            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+            external_label: 'BEATPORT',
+          })
+        } else if (s.track_source === 'vinyl') {
+          byKey.set(mapKey, {
+            ...base,
+            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+            external_label: 'DISCOGS',
+            youtube_url: (snap.youtube_url as string | undefined) || undefined,
+          })
+        }
       }
 
       if (cancelled) return
@@ -1151,10 +1207,13 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
             const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
+            const ytId = extractYouTubeId(t.youtube_url)
+            const showYtEmbed = ytId && openYoutubeKey === t.key
+            const rowHighlighted = isCurrent || showYtEmbed
             const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
             return (
-              <div key={t.key} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isCurrent ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
+              <div key={t.key} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     {t.artwork_url ? (
@@ -1194,6 +1253,18 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         title={isCurrent && !isPausedHere ? (es ? 'Pausar' : 'Pause') : (es ? 'Reproducir' : 'Play')}
                       >
                         {isCurrent && !isPausedHere ? '❚❚' : '▶'}
+                      </button>
+                    ) : null}
+                    {ytId ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleYoutubeEmbed(t.key)}
+                        className={`h-[36px] px-2.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                          ${showYtEmbed ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                        style={{ fontFamily: "'Courier Prime', monospace" }}
+                        title={showYtEmbed ? (es ? 'Ocultar vídeo' : 'Hide video') : (es ? 'Ver vídeo' : 'Play video')}
+                      >
+                        {showYtEmbed ? '❚❚' : '▶'}
                       </button>
                     ) : null}
                     {t.bpm ? (
@@ -1313,7 +1384,16 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                   </div>
                 </div>
 
-                {/* Vinilos YouTube: sin ▶ en fila; enlace ABRIR abre el vídeo fuera. */}
+                {showYtEmbed && ytId ? (
+                  <div className="w-full max-w-sm">
+                    <LazyYouTubeEmbed
+                      videoId={ytId}
+                      title={`${t.title}${t.artists ? ` — ${t.artists}` : ''}`}
+                      className="border-[3px] border-[var(--ink)]"
+                      autoplay
+                    />
+                  </div>
+                ) : null}
               </div>
             )
           })}
