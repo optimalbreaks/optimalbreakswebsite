@@ -24,6 +24,11 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
+import {
+  requestYouTubePlay,
+  releaseYouTubePlay,
+  subscribeYouTubePlay,
+} from '@/lib/youtube-play-coordinator'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import { ArtistNames } from '@/components/ArtistNames'
 
@@ -455,22 +460,36 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
   const note = lang === 'es' ? track.note_es : track.note_en
   const mixName = (track.mix_name || '').trim()
   const ytId = extractYouTubeId(track.youtube_url)
+  const playSlotId = `chart-vinyl-row-${track.id}`
   const embedRef = useRef<HTMLDivElement>(null)
   const [showPlayer, setShowPlayer] = useState(autoplay)
 
   useEffect(() => {
-    if (autoplay) setShowPlayer(true)
-  }, [autoplay])
+    if (autoplay) {
+      requestYouTubePlay(playSlotId)
+      setShowPlayer(true)
+    }
+  }, [autoplay, playSlotId])
+
+  useEffect(() => {
+    return subscribeYouTubePlay((activeId) => {
+      if (activeId !== playSlotId) setShowPlayer(false)
+    })
+  }, [playSlotId])
 
   const togglePlayer = useCallback(() => {
     setShowPlayer((prev) => {
-      if (prev) return false
+      if (prev) {
+        releaseYouTubePlay(playSlotId)
+        return false
+      }
+      requestYouTubePlay(playSlotId)
       requestAnimationFrame(() => {
         embedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       })
       return true
     })
-  }, [])
+  }, [playSlotId])
 
   return (
     <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${showPlayer ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
@@ -547,6 +566,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
             title={`${track.title} — ${artists.map((a: ChartVinylArtist) => a.name).join(', ')}`}
             className="border-[3px] border-[var(--ink)]"
             autoplay
+            playSlotId={playSlotId}
           />
         </div>
       )}

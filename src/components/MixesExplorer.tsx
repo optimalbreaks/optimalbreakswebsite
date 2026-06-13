@@ -14,6 +14,7 @@ import {
   logMixPlayOncePerBrowserSession,
 } from '@/lib/mix-play-session-log'
 import { extractYouTubeId, LazyYouTubeEmbed as BaseLazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { requestYouTubePlay } from '@/lib/youtube-play-coordinator'
 
 /** Wrapper that adds mix-play logging via YouTube IFrame API on top of the shared embed. */
 function LazyYouTubeEmbed({
@@ -52,7 +53,10 @@ function LazyYouTubeEmbed({
             player = new YT.Player(iframeId, {
               events: {
                 onStateChange: (e: { data: number }) => {
-                  if (e.data === YT.PlayerState.PLAYING) logMixPlayOncePerBrowserSession(mixId)
+                  if (e.data === YT.PlayerState.PLAYING) {
+                    logMixPlayOncePerBrowserSession(mixId)
+                    requestYouTubePlay(`mix-${mixId}`)
+                  }
                 },
               },
             }) as { destroy?: () => void }
@@ -80,6 +84,7 @@ function LazyYouTubeEmbed({
       className={className}
       iframeId={iframeId}
       autoplay={autoplay}
+      playSlotId={mixId ? `mix-${mixId}` : undefined}
     />
   )
 }
@@ -360,6 +365,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
           playMix(track)
         } else if (extractYouTubeId(target.video_url)) {
           // YouTube embebido → autoplay=1 en el iframe de esa tarjeta.
+          requestYouTubePlay(`mix-${mixId}`)
           setAutoplayMixId(mixId)
         }
         // Limpia `?play=1` para que un refresh no vuelva a disparar.

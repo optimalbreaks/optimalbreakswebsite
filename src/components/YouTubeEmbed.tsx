@@ -1,6 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import {
+  registerYouTubeEmbed,
+  unregisterYouTubeEmbed,
+} from '@/lib/youtube-play-coordinator'
 
 export function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -24,6 +28,7 @@ export function LazyYouTubeEmbed({
   className = '',
   iframeId,
   autoplay = false,
+  playSlotId,
 }: {
   videoId: string
   title: string
@@ -36,6 +41,8 @@ export function LazyYouTubeEmbed({
    * arranque sin que tenga que volver a hacer clic en «play».
    */
   autoplay?: boolean
+  /** Id único de esta instancia (fila de vinilo, mix, Mis Tracks…). Solo uno suena. */
+  playSlotId?: string
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [mountIframe, setMountIframe] = useState(autoplay)
@@ -68,6 +75,16 @@ export function LazyYouTubeEmbed({
       `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1${auto}&origin=${encodeURIComponent(window.location.origin)}`,
     )
   }, [mountIframe, videoId, autoplay])
+
+  useEffect(() => {
+    if (!playSlotId || !mountIframe || !embedSrc) return
+    const stop = () => {
+      setMountIframe(false)
+      setEmbedSrc(null)
+    }
+    registerYouTubeEmbed(playSlotId, stop)
+    return () => unregisterYouTubeEmbed(playSlotId)
+  }, [playSlotId, mountIframe, embedSrc])
 
   return (
     <div ref={rootRef} className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>

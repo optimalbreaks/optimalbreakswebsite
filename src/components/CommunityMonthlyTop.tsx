@@ -35,6 +35,11 @@ import {
   extractBeatportTrackId,
 } from '@/lib/share-track'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import {
+  requestYouTubePlay,
+  releaseYouTubePlay,
+  subscribeYouTubePlay,
+} from '@/lib/youtube-play-coordinator'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 const COMMUNITY_TOP_LIMIT = 100
@@ -146,7 +151,20 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
 
   const toggleYoutubeEmbed = useCallback((key: string) => {
-    setOpenYoutubeKey((prev) => (prev === key ? null : key))
+    setOpenYoutubeKey((prev) => {
+      if (prev === key) {
+        releaseYouTubePlay(key)
+        return null
+      }
+      requestYouTubePlay(key)
+      return key
+    })
+  }, [])
+
+  useEffect(() => {
+    return subscribeYouTubePlay((activeId) => {
+      setOpenYoutubeKey((prev) => (prev && activeId !== prev ? null : prev))
+    })
   }, [])
 
   const fetchData = useCallback(async () => {
@@ -631,6 +649,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         title={`${t.title} — ${t.artists}`}
                         className="border-[3px] border-[var(--ink)]"
                         autoplay
+                        playSlotId={t.canonical_key}
                       />
                     </div>
                   ) : null}

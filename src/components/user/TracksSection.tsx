@@ -19,6 +19,11 @@ import TrackShareButton from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import {
+  requestYouTubePlay,
+  releaseYouTubePlay,
+  subscribeYouTubePlay,
+} from '@/lib/youtube-play-coordinator'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -330,7 +335,20 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
 
   const toggleYoutubeEmbed = useCallback((key: string) => {
-    setOpenYoutubeKey((prev) => (prev === key ? null : key))
+    setOpenYoutubeKey((prev) => {
+      if (prev === key) {
+        releaseYouTubePlay(key)
+        return null
+      }
+      requestYouTubePlay(key)
+      return key
+    })
+  }, [])
+
+  useEffect(() => {
+    return subscribeYouTubePlay((activeId) => {
+      setOpenYoutubeKey((prev) => (prev && activeId !== prev ? null : prev))
+    })
   }, [])
 
   // Load real track data for every saved ref (grouped by source).
@@ -1391,6 +1409,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                       title={`${t.title}${t.artists ? ` — ${t.artists}` : ''}`}
                       className="border-[3px] border-[var(--ink)]"
                       autoplay
+                      playSlotId={t.key}
                     />
                   </div>
                 ) : null}
