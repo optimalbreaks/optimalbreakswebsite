@@ -93,29 +93,81 @@ export function LazyYouTubeEmbed({
           className="absolute inset-0 h-full w-full border-0"
         />
       ) : (
-        <button
-          type="button"
-          onClick={handlePlay}
-          aria-label={title}
-          className="group/yt absolute inset-0 h-full w-full cursor-pointer border-0 p-0"
-        >
-          <img
-            src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
-            alt={title}
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <span className="absolute inset-0 bg-black/15 transition-colors group-hover/yt:bg-black/30" aria-hidden />
-          <span
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[58px] h-[40px] rounded-[10px] bg-[#f00] transition-colors group-hover/yt:bg-[#f00] shadow-lg"
-            aria-hidden
-          >
-            <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white" aria-hidden>
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </span>
-        </button>
+        <YouTubePosterButton videoId={videoId} title={title} onPlay={handlePlay} />
       )}
     </div>
+  )
+}
+
+/**
+ * Botón con la miniatura de YouTube como portada y un play rojo encima. Si la
+ * imagen no carga (adblocker bloqueando `i.ytimg.com`, proxy corporativo o el
+ * vídeo no tiene `maxres`/`hq`), recae en variantes más pequeñas y, en último
+ * caso, en un placeholder con el título visible.
+ */
+function YouTubePosterButton({
+  videoId,
+  title,
+  onPlay,
+}: {
+  videoId: string
+  title: string
+  onPlay: () => void
+}) {
+  const variants = ['maxresdefault', 'hqdefault', 'mqdefault', 'sddefault', '0']
+  const [variantIdx, setVariantIdx] = useState(1)
+  const [broken, setBroken] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={onPlay}
+      aria-label={title}
+      className="group/yt absolute inset-0 h-full w-full cursor-pointer border-0 p-0 bg-black"
+    >
+      {!broken ? (
+        // eslint-disable-next-line @next/next/no-img-element -- thumbnail directo de YouTube CDN
+        <img
+          src={`https://i.ytimg.com/vi/${videoId}/${variants[variantIdx]}.jpg`}
+          alt={title}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (variantIdx < variants.length - 1) {
+              setVariantIdx((i) => i + 1)
+            } else {
+              setBroken(true)
+            }
+          }}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <span
+          className="absolute inset-0 flex items-center justify-center text-center px-3"
+          style={{
+            background:
+              'repeating-linear-gradient(45deg, var(--ink) 0 12px, #2a2a2a 12px 24px)',
+            color: 'var(--yellow)',
+            fontFamily: "'Unbounded', sans-serif",
+            fontWeight: 900,
+            fontSize: 'clamp(11px, 2.2vw, 16px)',
+            textTransform: 'uppercase',
+            letterSpacing: '-0.3px',
+            lineHeight: 1.2,
+          }}
+        >
+          {title}
+        </span>
+      )}
+      <span className="absolute inset-0 bg-black/15 transition-colors group-hover/yt:bg-black/30" aria-hidden />
+      <span
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[58px] h-[40px] rounded-[10px] bg-[#f00] shadow-lg"
+        aria-hidden
+      >
+        <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white" aria-hidden>
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+    </button>
   )
 }
