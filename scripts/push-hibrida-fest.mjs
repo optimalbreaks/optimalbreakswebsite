@@ -155,6 +155,35 @@ function eventsPayload(orgId) {
       is_featured: true,
       promoter_organization_id: orgId,
     },
+    {
+      ...EVENT_JSON_DEFAULTS,
+      slug: 'hibrida-fest-29-agosto-2026',
+      name: 'Híbrida Fest feat. Funktasty — Conil (29 agosto 2026)',
+      description_en:
+        'Híbrida Festival feat. Funktasty on Saturday 29 August 2026 at Recinto La Mina, Conil de la Frontera (Cádiz): 11 hours of breakbeat (20:00–07:00), 18+. Full lineup announced on Monday 22 June 2026 (promotional ticket sales close the same day). Tickets via Fourvenues.',
+      description_es:
+        'Híbrida Festival feat. Funktasty el sábado 29 de agosto de 2026 en el Recinto La Mina, Conil de la Frontera (Cádiz): 11 horas de breakbeat (20:00–07:00), +18. Cartel completo el lunes 22 de junio de 2026 (fin de la venta promocional ese mismo día). Entradas vía Fourvenues.',
+      event_type: 'upcoming',
+      date_start: '2026-08-29',
+      date_end: null,
+      location: 'Recinto La Mina, Conil de la Frontera, Cádiz, Spain',
+      city: 'Conil de la Frontera',
+      country: 'Spain',
+      venue: 'Recinto La Mina',
+      address: '11149 Conil de la Frontera, Cádiz, España',
+      coords: { lat: 36.2776, lng: -6.0886 },
+      doors_open: '20:00',
+      doors_close: '07:00',
+      age_restriction: '+18',
+      tags: ['breakbeat', 'festival', 'conil', 'cadiz', 'andalusia'],
+      image_url: '/images/events/hibrida_verano_2026.webp',
+      website: 'https://www.hibridafest.com/',
+      tickets_url:
+        'https://site.fourvenues.com/es/hibrida-fest/events/hibrida-fest-29-08-2026-48YS',
+      lineup: [],
+      is_featured: false,
+      promoter_organization_id: orgId,
+    },
   ]
 }
 
