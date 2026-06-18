@@ -433,6 +433,14 @@ const ACTIONS = [
       'UPSERT farewell-summer-festival-2026: 21–22 ago 2026 Recinto Ferial Pedro Abad, lineup TBA, entradas/info Instagram @farewell_summerfestival.',
   },
   {
+    id: 'events-patch-ritmos-rotos-en-el-patio-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-ritmos-rotos-en-el-patio-2026',
+    npm: 'npm run db:guia -- run events-patch-ritmos-rotos-en-el-patio-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT ritmos-rotos-en-el-patio-2026: 11 jul 2026 El Patio Pandora Sevilla, Soul Of Man + locales, ritmos-rotos-en-el-patio-2026.webp, Fourvenues adrianchupi.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -663,6 +671,7 @@ Punto de entrada unificado:
   events-patch-aqua-breaks-pool-party-2026  Aqua Breaks Pool Party, La Rábida Huelva 25 jul 2026 (MonsterTicket)
   events-patch-surbreak-breakbiteros-del-sur-2026  Surbreak, Sala Las Palmeras La Línea 15 ago 2026 (MonsterTicket)
   events-patch-farewell-summer-festival-2026  Farewell Summer Festival, Recinto Ferial Pedro Abad 21–22 ago 2026 (Instagram)
+  events-patch-ritmos-rotos-en-el-patio-2026  Ritmos Rotos en el Patio, Pandora Sevilla 11 jul 2026 (Fourvenues adrianchupi)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -1104,6 +1113,9 @@ function main() {
       break
     case 'events-patch-farewell-summer-festival-2026':
       runNode('enriquecer-evento.mjs', ['--patch-farewell-summer-festival-2026', ...rest])
+      break
+    case 'events-patch-ritmos-rotos-en-el-patio-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-ritmos-rotos-en-el-patio-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()

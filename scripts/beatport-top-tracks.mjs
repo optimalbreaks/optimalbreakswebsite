@@ -309,14 +309,23 @@ function nameToBeatportSlugGuess(name) {
     .replace(/^-|-$/g, '')
 }
 
-async function searchBeatportArtistByExactName(displayName) {
+async function searchBeatportArtistByExactName(displayName, { headless = false } = {}) {
   const q = encodeURIComponent(displayName.trim())
   const searchUrl = `https://www.beatport.com/search?q=${q}`
-  const res = await fetch(searchUrl, {
-    headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
-  })
-  if (!res.ok) return null
-  const html = await res.text()
+  let html
+  if (headless) {
+    try {
+      html = await fetchBeatportPage(searchUrl, { headless: true })
+    } catch {
+      return null
+    }
+  } else {
+    const res = await fetch(searchUrl, {
+      headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
+    })
+    if (!res.ok) return null
+    html = await res.text()
+  }
   const marker = '__NEXT_DATA__'
   const idx = html.indexOf(marker)
   if (idx === -1) return null
@@ -514,13 +523,18 @@ async function batchUpdate(supabase, table, dryRun, { missingOnly = false, headl
   }
 }
 
-async function fillMissingArtists(supabase, dryRun, maxTotal = Infinity, { headless = false } = {}) {
+async function fillMissingArtists(supabase, dryRun, maxTotal = Infinity, { headless = false, slugFilter = null } = {}) {
   const { data: all, error } = await supabase
     .from('artists')
     .select('slug, name, beatport_id, beatport_url, beatport_top_tracks')
     .order('slug')
   if (error) throw new Error(`Supabase select artists: ${error.message}`)
-  const emptyTop = (all || []).filter((a) => isTopTracksEmpty(a.beatport_top_tracks))
+  let pool = all || []
+  if (slugFilter?.length) {
+    const want = new Set(slugFilter)
+    pool = pool.filter((a) => want.has(a.slug))
+  }
+  const emptyTop = pool.filter((a) => isTopTracksEmpty(a.beatport_top_tracks))
   const withId = emptyTop.filter((a) => a.beatport_id != null)
   const withoutId = emptyTop.filter((a) => a.beatport_id == null && (a.name || '').trim())
 
@@ -561,7 +575,7 @@ ${Number.isFinite(maxTotal) ? `  Límite de filas procesadas: ${maxTotal}` : ''}
     try {
       const nm = row.name.trim()
       process.stdout.write(`\n  [${processed + 1}] ${row.slug} — buscar «${nm}» en Beatport...`)
-      const bp = await searchBeatportArtistByExactName(nm)
+      const bp = await searchBeatportArtistByExactName(nm, { headless })
       if (!bp) {
         console.log(' ✗ sin coincidencia exacta')
         await sleep(delays.afterSearchMs)
@@ -605,8 +619,18 @@ function parseLimitArg(filtered) {
   return Number.isFinite(n) && n > 0 ? n : Infinity
 }
 
+function parseSlugsArg(filtered) {
+  const raw = filtered.find((a) => a.startsWith('--slugs='))
+  if (!raw) return null
+  return raw
+    .slice('--slugs='.length)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 function stripLimitArg(filtered) {
-  return filtered.filter((a) => !a.startsWith('--limit='))
+  return filtered.filter((a) => !a.startsWith('--limit=') && !a.startsWith('--slugs='))
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
@@ -624,6 +648,7 @@ async function main() {
   filtered = filtered.filter((a) => a !== '--headless')
 
   const maxTotal = parseLimitArg(filtered)
+  const slugFilter = parseSlugsArg(filtered)
   filtered = stripLimitArg(filtered)
 
   if (filtered.includes('--all-artists')) {
@@ -652,7 +677,7 @@ async function main() {
       process.exit(1)
     }
     const supabase = requireSupabase()
-    return fillMissingArtists(supabase, dryRun, maxTotal, { headless })
+    return fillMissingArtists(supabase, dryRun, maxTotal, { headless, slugFilter })
   }
 
   if (filtered.length < 3) {

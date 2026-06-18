@@ -3300,6 +3300,95 @@ async function runPatchFarewellSummerFestival2026(sb) {
   console.log('[patch-farewell-summer-festival-2026] OK:', after)
 }
 
+const RITMOS_ROTOS_EN_EL_PATIO_2026_SLUG = 'ritmos-rotos-en-el-patio-2026'
+const RITMOS_ROTOS_EN_EL_PATIO_TICKETS =
+  'https://site.fourvenues.com/es/adrianchupi/events/ritmos-rotos-en-el-patio-11-07-2026-I4K6'
+const RITMOS_ROTOS_EN_EL_PATIO_IMAGE = '/images/events/ritmos-rotos-en-el-patio-2026.webp'
+const RITMOS_ROTOS_EN_EL_PATIO_WEB =
+  'https://pandorasevilla.com/evento/ritmos-rotos-en-el-patio/'
+
+const RITMOS_ROTOS_EN_EL_PATIO_2026_LINEUP = [
+  'Soul Of Man',
+  'Adam Vyt',
+  'Bartdon',
+  'DJ Nachh',
+  'Elle Skull',
+  'Missy Karma',
+  'Pimpkea',
+]
+
+const RITMOS_ROTOS_EN_EL_PATIO_2026_ROW = {
+  name: 'Ritmos Rotos en el Patio',
+  description_en:
+    'Open-air breakbeat night in El Patio at Pandora Sevilla on Saturday 11 July 2026, doors 23:00 until close (listed until 05:00). Official Fourvenues listing (adrianchupi): Soul Of Man headlines breaks, retro and electro with Adam Vyt, Bartdon, DJ Nachh, Elle Skull, Missy Karma and Pimpkea; casual dress code; 18+ only. Ticket tiers on Fourvenues: free entry before 00:30; general admission €10 valid any time. VOID-powered patio; address C. Gramil 2, 41008 Sevilla. Pandora promotes it as a selective end-of-season session under the moonlight.',
+  description_es:
+    'Sesión al aire libre de breakbeat en El Patio de Pandora Sevilla el sábado 11 de julio de 2026, apertura 23:00 h hasta el cierre (ficha hasta 05:00 h). Venta oficial en Fourvenues (adrianchupi): Soul Of Man encabeza breaks, retro y electro con Adam Vyt, Bartdon, DJ Nachh, Elle Skull, Missy Karma y Pimpkea; dress code casual; solo mayores de 18 años. Tramos en Fourvenues: entrada gratis antes de las 00:30 h; entrada general 10 € válida en cualquier momento. Sonido VOID en el patio; dirección C. Gramil 2, 41008 Sevilla. Pandora lo presenta como fiesta selecta de cierre de temporada bajo la luz de la luna.',
+  event_type: 'club_night',
+  date_start: '2026-07-11',
+  date_end: null,
+  location: 'El Patio, Pandora Sevilla, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Pandora Sevilla (El Patio)',
+  address: 'Calle Gramil 2, Polígono Store, 41008 Sevilla',
+  website: RITMOS_ROTOS_EN_EL_PATIO_WEB,
+  tickets_url: RITMOS_ROTOS_EN_EL_PATIO_TICKETS,
+  image_url: RITMOS_ROTOS_EN_EL_PATIO_IMAGE,
+  lineup: RITMOS_ROTOS_EN_EL_PATIO_2026_LINEUP,
+  tags: [
+    'ritmos rotos en el patio',
+    'breakbeat',
+    'breaks',
+    'retro',
+    'electro',
+    'soul of man',
+    'finger lickin',
+    'pandora sevilla',
+    'el patio',
+    'sevilla',
+    'ritmika',
+    'fourvenues',
+    'adrianchupi',
+    '2026',
+  ],
+  socials: {
+    'Pandora Sevilla': 'https://pandorasevilla.com/',
+    Fourvenues: RITMOS_ROTOS_EN_EL_PATIO_TICKETS,
+  },
+  age_restriction: '18+',
+  doors_open: '23:00',
+  doors_close: '05:00',
+}
+
+async function runPatchRitmosRotosEnElPatio2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', RITMOS_ROTOS_EN_EL_PATIO_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-ritmos-rotos-en-el-patio-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: RITMOS_ROTOS_EN_EL_PATIO_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RITMOS_ROTOS_EN_EL_PATIO_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', RITMOS_ROTOS_EN_EL_PATIO_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-ritmos-rotos-en-el-patio-2026] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -3492,6 +3581,11 @@ async function main() {
 
   if (argv.includes('--patch-farewell-summer-festival-2026')) {
     await runPatchFarewellSummerFestival2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-ritmos-rotos-en-el-patio-2026')) {
+    await runPatchRitmosRotosEnElPatio2026(sb)
     return
   }
 
