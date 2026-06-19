@@ -4,8 +4,10 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createSimpleSupabase } from '@/lib/supabase'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
+import { extractBeatportTrackId } from '@/lib/share-track'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -83,6 +85,127 @@ function byType(
   return result
 }
 
+/** Normaliza texto para comparar/deduplicar: minúsculas, sin acentos, espacios colapsados. */
+function normForKey(s: string): string {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// ----------------------------------------------------------------
+// Índice en memoria del "TOP 10 BEATPORT" de cada ficha (artists/labels).
+// Estos temas viven dentro del JSONB `beatport_top_tracks`, que PostgREST no
+// sabe filtrar con `ilike` (no hay columna denormalizada como en chart_*).
+// La red de producción no permite migraciones por Postgres directo
+// (db.<ref>.supabase.co no resuelve), así que en lugar de una columna
+// GENERATED indexable, cargamos todos los Top 10 UNA vez por instancia
+// (~3 MB) y los cacheamos. Tras el primer fetch, cada búsqueda filtra en
+// memoria sin volver a tocar la BD. El catálogo es pequeño y estable.
+// ----------------------------------------------------------------
+interface BeatportTopEntry {
+  kind: 'artist' | 'label'
+  slug: string
+  /** title + mix + label + artistas, ya normalizado, para `.includes()`. */
+  haystack: string
+  title: string
+  mix: string
+  artistsText: string
+  label: string | null
+  artwork_url: string | null
+  release_year: number | null
+  release_date: string | null
+  /** ID numérico estable de Beatport, para el deep-link `?play=beatport:<id>`. */
+  beatportId: string | null
+  firstArtist: string
+}
+
+let bpTopIndexCache: BeatportTopEntry[] | null = null
+let bpTopIndexAt = 0
+const BP_TOP_TTL_MS = 10 * 60_000
+
+function collectBeatportEntries(
+  kind: 'artist' | 'label',
+  rows: Array<{ slug: string; beatport_top_tracks: unknown }>,
+  out: BeatportTopEntry[],
+): void {
+  for (const row of rows) {
+    const slug = row.slug
+    if (!slug) continue
+    const list = Array.isArray(row.beatport_top_tracks) ? row.beatport_top_tracks : []
+    for (const raw of list) {
+      if (!raw || typeof raw !== 'object') continue
+      const t = raw as Record<string, unknown>
+      const title = typeof t.title === 'string' ? t.title.trim() : ''
+      if (!title) continue
+      const mix = typeof t.mix_name === 'string' ? t.mix_name.trim() : ''
+      const label = typeof t.label === 'string' && t.label.trim() ? t.label.trim() : null
+      const artistsArr = Array.isArray(t.artists) ? t.artists : []
+      const names = artistsArr
+        .map((a) => {
+          if (typeof a === 'string') return a
+          if (a && typeof a === 'object') {
+            const n = (a as { name?: unknown }).name
+            return typeof n === 'string' ? n : ''
+          }
+          return ''
+        })
+        .map((s) => s.trim())
+        .filter(Boolean)
+      const artistsText = names.join(', ')
+      const beatportId = extractBeatportTrackId(
+        typeof t.beatport_url === 'string' ? t.beatport_url : null,
+      )
+      out.push({
+        kind,
+        slug,
+        haystack: normForKey([title, mix, label || '', artistsText].join(' ')),
+        title,
+        mix,
+        artistsText,
+        label,
+        artwork_url: typeof t.artwork_url === 'string' ? t.artwork_url : null,
+        release_year: typeof t.release_year === 'number' ? t.release_year : null,
+        release_date: typeof t.release_date === 'string' ? t.release_date : null,
+        beatportId,
+        firstArtist: names[0] || '',
+      })
+    }
+  }
+}
+
+async function getBeatportTopIndex(
+  supabase: SupabaseClient,
+): Promise<BeatportTopEntry[]> {
+  const now = Date.now()
+  if (bpTopIndexCache && now - bpTopIndexAt < BP_TOP_TTL_MS) return bpTopIndexCache
+  try {
+    const [artistsRows, labelsRows] = await Promise.all([
+      supabase.from('artists').select('slug, beatport_top_tracks').neq('beatport_top_tracks', '[]'),
+      supabase.from('labels').select('slug, beatport_top_tracks').neq('beatport_top_tracks', '[]'),
+    ])
+    const out: BeatportTopEntry[] = []
+    collectBeatportEntries(
+      'artist',
+      (artistsRows.data || []) as Array<{ slug: string; beatport_top_tracks: unknown }>,
+      out,
+    )
+    collectBeatportEntries(
+      'label',
+      (labelsRows.data || []) as Array<{ slug: string; beatport_top_tracks: unknown }>,
+      out,
+    )
+    bpTopIndexCache = out
+    bpTopIndexAt = now
+    return out
+  } catch {
+    // Ante fallo de red, seguimos sirviendo lo último cacheado (o nada).
+    return bpTopIndexCache || []
+  }
+}
+
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request)
   if (!allowRate(ip)) {
@@ -124,6 +247,7 @@ export async function GET(request: NextRequest) {
     chartTracksRes,
     chartFeaturedRes,
     chartVinylRes,
+    beatportTopIndex,
   ] = await Promise.all([
     supabase
       .from('artists')
@@ -213,6 +337,8 @@ export async function GET(request: NextRequest) {
       .select('id, title, mix_name, label, artwork_url, year, artists')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
       .limit(20),
+    // TOP 10 BEATPORT de fichas (artists/labels): índice en memoria cacheado.
+    getBeatportTopIndex(supabase),
   ])
 
   const results: SearchResult[] = []
@@ -545,8 +671,6 @@ export async function GET(request: NextRequest) {
   // Los `for` se ejecutan en ese orden, así que el primero que entra
   // marca la clave y los siguientes con la misma firma se descartan.
   const seenTrackKeys = new Set<string>()
-  const normForKey = (s: string) =>
-    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim()
 
   function pushTrack(
     row: TrackRow,
@@ -592,6 +716,45 @@ export async function GET(request: NextRequest) {
   for (const t of (chartTracksRes.data || []) as TrackRow[]) pushTrack(t, 'chart')
   for (const t of (chartFeaturedRes.data || []) as TrackRow[]) pushTrack(t, 'featured')
   for (const t of (chartVinylRes.data || []) as TrackRow[]) pushTrack(t, 'vinyl')
+
+  // ----------------------------------------------------------------
+  // TOP 10 BEATPORT de las fichas (artists/labels). Filtra el índice
+  // cacheado por la query normalizada y emite resultados `track` que
+  // enlazan a la ficha con `?play=beatport:<id>` (BeatportTopTracks lo
+  // recoge: expande el panel, hace scroll a la fila y arranca el preview).
+  // Comparte `seenTrackKeys` con los charts: si un tema YA salió por
+  // /charts (que se procesa antes), no se duplica aquí.
+  // ----------------------------------------------------------------
+  const bpNeedle = normForKey(qRaw)
+  if (bpNeedle) {
+    let bpAdded = 0
+    for (const e of beatportTopIndex as BeatportTopEntry[]) {
+      if (bpAdded >= 12) break
+      if (!e.haystack.includes(bpNeedle)) continue
+      const key = `${normForKey(e.title)}|${normForKey(e.mix)}|${normForKey(e.firstArtist)}`
+      if (seenTrackKeys.has(key)) continue
+      seenTrackKeys.add(key)
+      const fullTitle = e.mix ? `${e.title} (${e.mix})` : e.title
+      const rd =
+        e.release_date && /^\d{4}-\d{2}-\d{2}$/.test(e.release_date.slice(0, 10))
+          ? e.release_date.slice(0, 10)
+          : null
+      const dateLabel = rd || (e.release_year ? String(e.release_year) : null)
+      const parts = ['TOP BEATPORT', e.artistsText, e.label, dateLabel].filter(Boolean)
+      const folder = e.kind === 'artist' ? 'artists' : 'labels'
+      const playQuery = e.beatportId ? `?play=beatport:${e.beatportId}` : ''
+      results.push({
+        type: 'track',
+        id: e.beatportId ? `bp-${e.beatportId}` : `bp-${e.kind}-${e.slug}-${normForKey(e.title)}`,
+        slug: e.beatportId ? `bp:${e.beatportId}` : `bp:${e.kind}:${e.slug}:${normForKey(e.title)}`,
+        title: fullTitle,
+        subtitle: parts.join(' — '),
+        image_url: e.artwork_url,
+        href: `${base(`/${folder}/${e.slug}`)}${playQuery}`,
+      })
+      bpAdded++
+    }
+  }
 
   // Regla: los eventos pasados sólo aparecen cuando la búsqueda es
   // claramente "de eventos" (p.ej. "winter festival" → todos los
