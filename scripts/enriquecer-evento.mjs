@@ -42,6 +42,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
  *   node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026
  *   node scripts/enriquecer-evento.mjs --patch-breakdown-orlando-2026
+ *   node scripts/enriquecer-evento.mjs --patch-ritmika-1-aniversario-white-beach-lepe-2026
  *
  * Credenciales (.env.local):
  *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
@@ -3014,6 +3015,124 @@ async function runPatchBreakdownOrlando2026(sb) {
   console.log('[patch-breakdown-orlando-2026] OK:', after)
 }
 
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_SLUG =
+  'ritmika-1-aniversario-white-beach-lepe-2026'
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_TICKETS =
+  'https://www.monsterticket.com/evento/1-aniversario-ritmika--white-beach'
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_WEBSITE =
+  'https://www.rollerwhitebeach.com/'
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_IMAGE =
+  '/images/events/ritmika-1-aniversario-white-beach-lepe-2026.webp'
+
+// Cartel oficial — orden A-Z, mantenemos los enfrentamientos / b2b / feats tal cual.
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_LINEUP = [
+  // Headliners (A-Z)
+  'Ed Solo feat. Navigator',
+  'Keith Mackenzie feat. Sporty-O',
+  // Line up (A-Z) — show vand4los
+  'Bad Legs x Seekflow feat. JTT & L-Essence',
+  'Colombo vs Sekret Chadow',
+  'Guau vs Yo Speed',
+  'Jose Rodriguez + Gordo Master',
+  'Killerblitz vs Four Motion',
+  'Mbreaks',
+  'Perfect Kombo vs Seveng vs Basstyler',
+  'Rhades vs Pavane',
+  'Tortu',
+  'Urbano vs Bassmaster',
+  'Wiguez x Air Baxx',
+  // Warm up
+  'Mastherizers vs Drumback',
+  // Hosted by
+  'Speaker Reality (MC)',
+]
+
+const RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_ROW = {
+  name: 'Ritmika 1er Aniversario — Festival Open Air (White Beach La Antilla)',
+  description_en:
+    'RITMIKA throws its first anniversary edition on Saturday 18 July 2026 at White Beach Antilla (La Antilla, Lepe, Huelva), the open-air beach club on the Costa de la Luz operated by Roller Group (Pandora Sevilla, REBELS festival) with capacity for up to 3,000 people. Festival open air format with 12 hours non-stop of breakbeat and bass on the beach. Headliners (A-Z): Ed Solo feat. Navigator and Keith Mackenzie feat. Sporty-O. Show vand4los line up (A-Z): Bad Legs x Seekflow feat. JTT & L-Essence, Colombo vs Sekret Chadow, Guau vs Yo Speed, Jose Rodríguez + Gordo Master, Killerblitz vs Four Motion, Mbreaks, Perfect Kombo vs Seveng vs Basstyler, Rhades vs Pavane, Tortu, Urbano vs Bassmaster and Wiguez x Air Baxx. Warm up by Mastherizers vs Drumback, hosted by Speaker Reality on the mic. Doors 19:00; free entry with nominative ticket valid until 21:30 while capacity lasts, then GENERAL admission €10 + €1 booking fee via MonsterTicket and at rollerwhitebeach.com. 18+, non-nominative GENERAL tickets, wristband required for re-entry.',
+  description_es:
+    'RITMIKA celebra su primer aniversario el sábado 18 de julio de 2026 en White Beach Antilla (La Antilla, Lepe, Huelva), la gran terraza open air de la Costa de la Luz operada por Roller Group (Pandora Sevilla, festival REBELS) con capacidad para hasta 3.000 personas. Formato festival open air con 12 horas non-stop de breakbeat y bass a pie de playa. Headliners (A-Z): Ed Solo feat. Navigator y Keith Mackenzie feat. Sporty-O. Line up show vand4los (A-Z): Bad Legs x Seekflow feat. JTT & L-Essence, Colombo vs Sekret Chadow, Guau vs Yo Speed, Jose Rodríguez + Gordo Master, Killerblitz vs Four Motion, Mbreaks, Perfect Kombo vs Seveng vs Basstyler, Rhades vs Pavane, Tortu, Urbano vs Bassmaster y Wiguez x Air Baxx. Warm up a cargo de Mastherizers vs Drumback, presentación en directo de Speaker Reality al micro. Apertura de puertas 19:00 h; entrada GRATIS con entrada nominativa válida hasta las 21:30 h hasta agotar cupo, entrada GENERAL 10 € + 1 € gastos en MonsterTicket y en rollerwhitebeach.com. +18 años, entradas GENERAL no nominativas, pulsera obligatoria para reentrada según horario.',
+  event_type: 'festival',
+  date_start: '2026-07-18',
+  date_end: null,
+  location: 'White Beach Antilla, La Antilla, Lepe, Huelva, Spain',
+  city: 'Lepe',
+  country: 'Spain',
+  venue: 'White Beach Antilla (White Beach Club)',
+  address: 'Finca La Calzadilla, La Antilla, Lepe, Huelva',
+  website: RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_WEBSITE,
+  tickets_url: RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_TICKETS,
+  image_url: RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_IMAGE,
+  lineup: RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_LINEUP,
+  tags: [
+    'ritmika',
+    '1 aniversario',
+    '1er aniversario',
+    'festival open air',
+    'breakbeat',
+    'breaks',
+    'bass',
+    '12h non stop',
+    'open air',
+    'beach',
+    'white beach',
+    'white beach antilla',
+    'roller white beach',
+    'la antilla',
+    'lepe',
+    'huelva',
+    'costa de la luz',
+    'roller group',
+    'speaker reality',
+    'andalucia',
+    '2026',
+  ],
+  socials: {
+    'Web Roller White Beach': RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_WEBSITE,
+    'Tickets MonsterTicket': RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_TICKETS,
+    'Instagram @ritmika.club': 'https://www.instagram.com/ritmika.club/',
+    'Instagram @whitebeachantilla': 'https://www.instagram.com/whitebeachantilla/',
+  },
+  age_restriction: '+18',
+  doors_open: '19:00',
+  doors_close: '07:00',
+  capacity: 3000,
+  coords: { lat: 37.196, lng: -7.262 },
+}
+
+async function runPatchRitmika1AniversarioWhiteBeachLepe2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log(
+    '[patch-ritmika-1-aniversario-white-beach-lepe-2026] antes:',
+    before || '(sin fila)',
+  )
+
+  const row = {
+    slug: RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_ROW,
+    is_featured: true,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, age_restriction')
+    .eq('slug', RITMIKA_1_ANIVERSARIO_WHITE_BEACH_LEPE_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-ritmika-1-aniversario-white-beach-lepe-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -3389,6 +3508,90 @@ async function runPatchRitmosRotosEnElPatio2026(sb) {
   console.log('[patch-ritmos-rotos-en-el-patio-2026] OK:', after)
 }
 
+const RETRO_GOATS_2026_SLUG = 'retro-goats-2026-malaga'
+const RETRO_GOATS_TICKETS =
+  'https://www.monsterticket.com/evento/retro-goats-goat-breakbeat'
+const RETRO_GOATS_IMAGE = '/images/events/retro-goats-2026-malaga.webp'
+const RETRO_GOATS_INSTAGRAM = 'https://www.instagram.com/goatbreakbeat/'
+
+const RETRO_GOATS_2026_LINEUP = [
+  'Anuschka',
+  'José Rodríguez',
+  'Wally',
+  'Mr. Fli',
+  'DJ Heavy',
+  'Nokaut',
+  '936',
+  'Tony War',
+  'V. Aparicio',
+  'Kid:Katana',
+]
+
+const RETRO_GOATS_2026_ROW = {
+  name: 'RETRO Goats',
+  description_en:
+    'GOAT Breakbeat presents RETRO Goats on Saturday 20 June 2026 at Paris15, Málaga. Flyer lineup: Anuschka, José Rodríguez, Wally, Mr. Fli, DJ Heavy, Nokaut, 936, Tony War, plus the Goat crew with V. Aparicio and Kid:Katana. Non-nominal tickets and VIP zones on MonsterTicket (general tier 2 listed at €17 + fees at capture); ID required at door. 18+ only. Address C/ Orotava 27, Málaga. Updates and info @GOATBREAKBEAT.',
+  description_es:
+    'GOAT Breakbeat presenta RETRO Goats el sábado 20 de junio de 2026 en Paris15, Málaga. Cartel: Anuschka, José Rodríguez, Wally, Mr. Fli, DJ Heavy, Nokaut, 936, Tony War, más el crew Goat con V. Aparicio y Kid:Katana. Entradas no nominativas y zonas VIP en MonsterTicket (en la captura, general tramo 2 a 17 € + gastos); imprescindible D.N.I. Solo mayores de 18 años. Dirección C/ Orotava 27, Málaga. Más info en @GOATBREAKBEAT.',
+  event_type: 'club_night',
+  date_start: '2026-06-20',
+  date_end: null,
+  location: 'Paris15, Málaga',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Paris15',
+  address: 'C/ Orotava 27, Málaga',
+  website: RETRO_GOATS_INSTAGRAM,
+  tickets_url: RETRO_GOATS_TICKETS,
+  image_url: RETRO_GOATS_IMAGE,
+  lineup: RETRO_GOATS_2026_LINEUP,
+  tags: [
+    'retro goats',
+    'goat breakbeat',
+    'paris15',
+    'malaga',
+    'málaga',
+    'retro',
+    'breakbeat',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {
+    Instagram: RETRO_GOATS_INSTAGRAM,
+    MonsterTicket: RETRO_GOATS_TICKETS,
+  },
+  age_restriction: '18+',
+}
+
+async function runPatchRetroGoats2026Malaga(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url')
+    .eq('slug', RETRO_GOATS_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-retro-goats-2026-malaga] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: RETRO_GOATS_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RETRO_GOATS_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', RETRO_GOATS_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-retro-goats-2026-malaga] OK:', after)
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -3589,6 +3792,16 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-retro-goats-2026-malaga')) {
+    await runPatchRetroGoats2026Malaga(sb)
+    return
+  }
+
+  if (argv.includes('--patch-ritmika-1-aniversario-white-beach-lepe-2026')) {
+    await runPatchRitmika1AniversarioWhiteBeachLepe2026(sb)
+    return
+  }
+
   const deleteSlug = parseDeleteEventSlug(argv)
   if (deleteSlug) {
     await runDeleteEventBySlug(sb, deleteSlug)
@@ -3656,7 +3869,8 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-dreambeach-costa-del-sol-2026
   node scripts/enriquecer-evento.mjs --patch-iberican-breaks-festival-2026
   node scripts/enriquecer-evento.mjs --patch-electrolunch-xxl-picnic-76-sevilla-2026
-  node scripts/enriquecer-evento.mjs --patch-breakdown-orlando-2026`)
+  node scripts/enriquecer-evento.mjs --patch-breakdown-orlando-2026
+  node scripts/enriquecer-evento.mjs --patch-ritmika-1-aniversario-white-beach-lepe-2026`)
     process.exit(1)
   }
 
