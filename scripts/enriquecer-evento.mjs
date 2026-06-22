@@ -1291,41 +1291,84 @@ async function runPatchPureBassline7Aniversario2026(sb) {
   console.log('[patch-pure-bassline-7] OK:', after)
 }
 
-const PURE_BASSLINE_15_AGO_2026_SLUG = 'pure-bassline-15-agosto-2026-sevilla'
+const PURE_BASSLINE_15_AGO_2026_SLUG = 'made-in-spain-festival-2026-white-beach-lepe'
+const PURE_BASSLINE_15_AGO_2026_LEGACY_SLUG = 'pure-bassline-15-agosto-2026-sevilla'
 const PURE_BASSLINE_15_AGO_2026_TICKETS =
-  'https://web.fourvenues.com/es/sara-garcia-heredia/events/pure-bassline-15-08-2026-7FFR'
+  'https://site.fourvenues.com/es/rollercoaster/events/pure-bassline-15-08-2026-7FFR'
+const PURE_BASSLINE_15_AGO_2026_WEBSITE = 'https://www.rollerwhitebeach.com/'
+const PURE_BASSLINE_15_AGO_2026_IMAGE =
+  '/images/events/made-in-spain-festival-2026-white-beach-lepe.webp'
+
+const PURE_BASSLINE_15_AGO_2026_LINEUP = [
+  'Bowser',
+  'FM-3',
+  'KMK',
+  'Mbreaks',
+  'Rhades',
+  'Hankook',
+  'Orebeat',
+  'Nvthec',
+  'Xwile',
+  'Bubble Couple',
+  'Kuplay',
+  'Mutantbreakz',
+  'Karpin',
+  'Kultür',
+  'Lords of Motion',
+  'Maribel',
+  'Norbak',
+  'Rasco',
+  'Sans',
+  'The Brainkiller',
+]
 
 const PURE_BASSLINE_15_AGO_2026_ROW = {
-  name: 'Pure Bassline (15 agosto 2026)',
+  name: 'Made in Spain Festival (Pure Bassline) — White Beach La Antilla',
   description_en:
-    'Pure Bassline club night on Saturday 15 August 2026 in Seville. Official ticket and guest-list sales via Fourvenues (Sara García Heredia). Venue, timetable and lineup are taken from the live listing on that page; the series usually runs at Sala Pandora in the same city—confirm on the ticket link before travel. Breaks / bassline focus consistent with other Pure Bassline dates.',
+    'Pure Bassline presents Made in Spain Festival on Saturday 15 August 2026 at White Beach Antilla (La Antilla, Lepe, Huelva), the open-air beach club on the Costa de la Luz operated by Roller Group — billed as the collective’s largest breakbeat production to date with 12 hours non-stop. Fifth lineup announcement (5º avance): Banana Records showcase (Bowser, FM-3, KMK, Mbreaks, Rhades), Distorsion Records showcase (Hankook, Orebeat, Nvthec, Xwile), Guachinche Records showcase (Bubble Couple, Kuplay, Mutantbreakz) plus Karpin, Kultür, Lords of Motion, Maribel, Norbak, Rasco, Sans and The Brainkiller. Tickets via Fourvenues (Rollercoaster) and at rollerwhitebeach.com. 18+.',
   description_es:
-    'Sesión Pure Bassline el sábado 15 de agosto de 2026 en Sevilla. Venta de entradas e invitaciones en Fourvenues (enlace oficial de Sara García Heredia). Sala, horario y cartel tomados de la ficha activa en esa página; la marca suele programar en la sala Pandora de la misma ciudad—conviene confirmar en el enlace de compra antes de desplazarse. Línea breaks / bassline alineada con otras fechas Pure Bassline.',
-  event_type: 'club_night',
+    'Pure Bassline presenta Made in Spain Festival el sábado 15 de agosto de 2026 en White Beach Antilla (La Antilla, Lepe, Huelva), la terraza open air de la Costa de la Luz operada por Roller Group — el mayor evento del colectivo hasta la fecha, con 12 horas non-stop de breakbeat y ritmos rotos. Quinto avance de cartel: showcase Banana Records (Bowser, FM-3, KMK, Mbreaks, Rhades), showcase Distorsion Records (Hankook, Orebeat, Nvthec, Xwile), showcase Guachinche Records (Bubble Couple, Kuplay, Mutantbreakz) más Karpin, Kultür, Lords of Motion, Maribel, Norbak, Rasco, Sans y The Brainkiller. Entradas en Fourvenues (Rollercoaster) y en rollerwhitebeach.com. +18 años.',
+  event_type: 'festival',
   date_start: '2026-08-15',
   date_end: null,
-  location: 'Sala Pandora, Sevilla',
-  city: 'Sevilla',
+  location: 'White Beach Antilla, La Antilla, Lepe, Huelva, Spain',
+  city: 'Lepe',
   country: 'Spain',
-  venue: 'Sala Pandora',
-  website: null,
+  venue: 'White Beach Antilla (White Beach Club)',
+  address: 'Finca La Calzadilla, La Antilla, Lepe, Huelva',
+  website: PURE_BASSLINE_15_AGO_2026_WEBSITE,
   tickets_url: PURE_BASSLINE_15_AGO_2026_TICKETS,
-  image_url: '/images/events/pure-bassline-15-agosto-2026-sevilla.avif',
-  lineup: [],
+  image_url: PURE_BASSLINE_15_AGO_2026_IMAGE,
+  lineup: PURE_BASSLINE_15_AGO_2026_LINEUP,
   stages: [],
   schedule: [],
   tags: [
+    'made in spain festival',
     'pure bassline',
-    'bassline',
-    'breaks',
     'breakbeat',
-    'sevilla',
-    'sala pandora',
+    'breaks',
+    'bassline',
+    'festival',
+    'open air',
+    'white beach',
+    'white beach antilla',
+    'la antilla',
+    'lepe',
+    'huelva',
+    'roller group',
+    'banana records',
+    'distorsion records',
+    'guachinche records',
     '2026',
-    'fourvenues',
-    'sara garcia heredia',
   ],
-  socials: {},
+  socials: {
+    'Tickets Fourvenues (Rollercoaster)': PURE_BASSLINE_15_AGO_2026_TICKETS,
+    'Web Roller White Beach': PURE_BASSLINE_15_AGO_2026_WEBSITE,
+    'Instagram @purebassline': 'https://www.instagram.com/purebassline/',
+  },
+  age_restriction: '+18',
+  capacity: 3000,
+  coords: { lat: 37.196, lng: -7.262 },
   doors_open: null,
   doors_close: null,
 }
@@ -1337,26 +1380,38 @@ async function runPatchPureBassline15Agosto2026Sevilla(sb) {
     .eq('slug', PURE_BASSLINE_15_AGO_2026_SLUG)
     .maybeSingle()
   if (e0) throw e0
-  console.log('[patch-pure-bassline-15-agosto] antes:', before || '(sin fila)')
+  console.log('[patch-made-in-spain-festival-2026] antes:', before || '(sin fila)')
 
   const row = {
     slug: PURE_BASSLINE_15_AGO_2026_SLUG,
     ...EVENT_ROW_DEFAULTS,
     ...PURE_BASSLINE_15_AGO_2026_ROW,
-    is_featured: false,
+    is_featured: true,
     promoter_organization_id: null,
   }
 
   const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
   if (e1) throw e1
 
+  const { error: eLegacy } = await sb
+    .from('events')
+    .delete()
+    .eq('slug', PURE_BASSLINE_15_AGO_2026_LEGACY_SLUG)
+  if (eLegacy) throw eLegacy
+
   const { data: after, error: e2 } = await sb
     .from('events')
-    .select('slug, name, date_start, city, venue, image_url, tickets_url')
+    .select('slug, name, date_start, city, venue, lineup, image_url, tickets_url')
     .eq('slug', PURE_BASSLINE_15_AGO_2026_SLUG)
     .maybeSingle()
   if (e2) throw e2
-  console.log('[patch-pure-bassline-15-agosto] OK:', after)
+  console.log('[patch-made-in-spain-festival-2026] OK:', after)
+  if (PURE_BASSLINE_15_AGO_2026_LEGACY_SLUG !== PURE_BASSLINE_15_AGO_2026_SLUG) {
+    console.log(
+      '[patch-made-in-spain-festival-2026] borrada fila legacy:',
+      PURE_BASSLINE_15_AGO_2026_LEGACY_SLUG,
+    )
+  }
 }
 
 const NATURAL_UNIVERSAL_RETRO_2026_SLUG = 'natural-universal-retro-2026-malaga'

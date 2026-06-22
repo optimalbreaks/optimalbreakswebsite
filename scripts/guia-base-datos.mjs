@@ -238,7 +238,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-pure-bassline-15-agosto-2026-sevilla',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT pure-bassline-15-agosto-2026-sevilla: 15 ago 2026 Pure Bassline Sevilla, cartel public/images/events/pure-bassline-15-agosto-2026-sevilla.avif, entradas Fourvenues (Sara García Heredia); lineup desde ficha.',
+      'UPSERT made-in-spain-festival-2026-white-beach-lepe: Made in Spain Festival (Pure Bassline), sáb 15 ago 2026 White Beach Antilla (La Antilla, Lepe, Huelva, Roller Group). 5º avance cartel: showcases Banana Records, Distorsion Records, Guachinche Records + Karpin, Kultür, Lords of Motion, Maribel, Norbak, Rasco, Sans, The Brainkiller. Cartel public/images/events/made-in-spain-festival-2026-white-beach-lepe.webp; entradas Fourvenues rollercoaster + rollerwhitebeach.com. Borra slug legacy pure-bassline-15-agosto-2026-sevilla (ubicación errónea).',
   },
   {
     id: 'events-patch-natural-universal-retro-2026-malaga',
@@ -662,7 +662,7 @@ Punto de entrada unificado:
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
-  events-patch-pure-bassline-15-agosto-2026-sevilla  Pure Bassline 15 ago 2026 Sevilla, Fourvenues (Sara García Heredia)
+  events-patch-pure-bassline-15-agosto-2026-sevilla  Made in Spain Festival (Pure Bassline), White Beach Antilla Lepe 15 ago 2026 (5º avance cartel, Fourvenues rollercoaster)
   events-patch-natural-universal-retro-2026-malaga  Nätural Universal Retro, Paris15 Málaga 9 may 2026 (MonsterTicket)
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
