@@ -374,7 +374,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-solaris-fest-matalascanas-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT solaris-fest-matalascanas-2026: 20 jun 2026 Centro de Ocio Surfasaurus Matalascañas; MonsterTicket; cartel public/images/events/solaris-fest-matalascanas-2026.webp.',
+      'UPSERT solaris-fest-matalascanas-2026: 20 jun 2026 Centro de Ocio Surfasaurus Matalascañas (100 m playa Doñana); cartel con horario Olmedbreak 17:00, Nileb 17:45, Dany BS 18:30, DJ Tokyo 19:15, Perfect Kombo 20:00, Basstyler 21:00, Anuschka 22:00, The BJ Crew 23:00, Sekret Chadow 00:00, Hankook 01:00–02:00; MonsterTicket + RVT; public/images/events/solaris-fest-matalascanas-2026.webp.',
   },
   {
     id: 'events-patch-floridance-festival-2026',

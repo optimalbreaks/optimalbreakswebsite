@@ -1749,23 +1749,37 @@ const SOLARIS_FEST_MATALASCANAS_IMAGE =
   '/images/events/solaris-fest-matalascanas-2026.webp'
 
 const SOLARIS_FEST_MATALASCANAS_2026_LINEUP = [
-  'Anuschka',
-  'Sekret Shadow',
-  'Hankook',
+  'Olmedbreak',
+  'Nileb',
+  'Dany BS',
+  'DJ Tokyo',
   'Perfect Kombo',
   'Basstyler',
+  'Anuschka',
   'The BJ Crew',
-  'Dany BS',
-  'Nileb vs Olmedbreak',
-  'Benjamin VJ - LJ',
+  'Sekret Chadow',
+  'Hankook',
+]
+
+const SOLARIS_FEST_MATALASCANAS_2026_SCHEDULE = [
+  { time: '17:00', artist: 'Olmedbreak', stage: '', duration_min: 45 },
+  { time: '17:45', artist: 'Nileb', stage: '', duration_min: 45 },
+  { time: '18:30', artist: 'Dany BS', stage: '', duration_min: 45 },
+  { time: '19:15', artist: 'DJ Tokyo', stage: '', duration_min: 45 },
+  { time: '20:00', artist: 'Perfect Kombo', stage: '', duration_min: 60 },
+  { time: '21:00', artist: 'Basstyler', stage: '', duration_min: 60 },
+  { time: '22:00', artist: 'Anuschka', stage: '', duration_min: 60 },
+  { time: '23:00', artist: 'The BJ Crew', stage: '', duration_min: 60 },
+  { time: '00:00', artist: 'Sekret Chadow', stage: '', duration_min: 60 },
+  { time: '01:00', artist: 'Hankook', stage: '', duration_min: 60 },
 ]
 
 const SOLARIS_FEST_MATALASCANAS_2026_ROW = {
-  name: 'Solaris Fest',
+  name: 'Solaris Fest — Matalascañas',
   description_en:
-    'Solaris Fest at Centro de Ocio Surfasaurus in Matalascañas (Huelva province), about 100 m from Playa de Doñana: breakbeat festival with a summer vibe. Saturday 20 June 2026, doors 17:00-close 03:00. Line-up poster: Anuschka, Sekret Shadow, Hankook, Perfect Kombo, Basstyler, The BJ Crew, Dany BS; guest set Nileb vs Olmedbreak; visuals and lighting Benjamin VJ - LJ. Two parking areas; food and drink outlets on site. Official sale on MonsterTicket (advance 15 euros per listing when last checked); non-named tickets and 18+ as stated on ticketing. Venue address Sector Somormujo 31 (per MonsterTicket).',
+    'Solaris Fest at Centro de Ocio Surfasaurus in Matalascañas (Huelva), about 100 m from Playa de Doñana: current and retro breakbeat with a summer vibe. Saturday 20 June 2026, doors 17:00, closing after Hankook (01:00–02:00). Official poster timetable: Olmedbreak 17:00, Nileb 17:45, Dany BS 18:30, DJ Tokyo 19:15, Perfect Kombo 20:00, Basstyler 21:00, Anuschka 22:00, The BJ Crew 23:00, Sekret Chadow 00:00, Hankook 01:00–02:00. Two parking areas; food and drink on site. Tickets on MonsterTicket (non-named, 18+). Address Sector Somormujo 31. Co-branded with RVT (Raveart Booking & Clubbing) on the official flyer.',
   description_es:
-    'Solaris Fest en el Centro de Ocio Surfasaurus de Matalascañas (Huelva), a unos 100 metros de la playa de Doñana: festival de break beat con vibes de verano. Sábado 20 de junio de 2026, de 17:00 a 03:00 h (apertura y cierre según comunicado oficial). Cartel: Anuschka, Sekret Shadow, Hankook, Perfect Kombo, Basstyler, The BJ Crew y Dany BS; invitados Nileb vs Olmedbreak; vídeo e iluminación con Benjamin VJ - LJ. Dos zonas de parking y bares y zonas para comer en el recinto. Venta en MonsterTicket: entrada anticipada 15 euros según la ficha; entradas no nominativas; prohibido el acceso a menores de 18 años según MonsterTicket. Dirección: Sector Somormujo 31, Matalascañas.',
+    'Solaris Fest en el Centro de Ocio Surfasaurus de Matalascañas (Huelva), a unos 100 metros de la playa de Doñana: breakbeat actual y retro con vibes de verano. Sábado 20 de junio de 2026, apertura 17:00 h, cierre tras Hankook (01:00–02:00 h). Horario del cartel oficial: Olmedbreak 17:00, Nileb 17:45, Dany BS 18:30, DJ Tokyo 19:15, Perfect Kombo 20:00, Basstyler 21:00, Anuschka 22:00, The BJ Crew 23:00, Sekret Chadow 00:00, Hankook 01:00–02:00 h. Dos zonas de parking y bares/comida en el recinto. Entradas en MonsterTicket (no nominativas, +18). Dirección Sector Somormujo 31. Cartel con marca RVT (Raveart Booking & Clubbing).',
   event_type: 'festival',
   date_start: '2026-06-20',
   date_end: null,
@@ -1777,21 +1791,29 @@ const SOLARIS_FEST_MATALASCANAS_2026_ROW = {
   website: null,
   tickets_url: SOLARIS_FEST_MATALASCANAS_TICKETS,
   doors_open: '17:00',
-  doors_close: '03:00',
+  doors_close: '02:00',
   image_url: SOLARIS_FEST_MATALASCANAS_IMAGE,
   lineup: SOLARIS_FEST_MATALASCANAS_2026_LINEUP,
+  schedule: SOLARIS_FEST_MATALASCANAS_2026_SCHEDULE,
   tags: [
     'solaris fest',
     'matalascañas',
     'huelva',
     'breakbeat',
+    'breaks',
+    'retro breakbeat',
     'surfasaurus',
     'doñana',
     'monsterticket',
+    'rvt',
+    'raveart',
     '2026',
   ],
-  socials: {},
-  age_restriction: '18+',
+  socials: {
+    'Tickets MonsterTicket': SOLARIS_FEST_MATALASCANAS_TICKETS,
+    'RVT Booking & Clubbing': 'https://www.rvtpro.com/',
+  },
+  age_restriction: '+18',
 }
 
 async function runPatchSolarisFestMatalascanas2026(sb) {
