@@ -85,6 +85,26 @@ const LINEUP_2026 = [
   'Obscure Sound',
 ]
 
+const HIBRIDA_CONIL_29_AGOSTO_2026_LINEUP = [
+  'Cut & Run',
+  'The Brainkiller',
+  'Tryple-D',
+  'Perfectos Kabrones',
+  'DJ Karpin',
+  'Dub Elements',
+  'Miau',
+  'Aggresivnes',
+  'Bass & Crash',
+  'Baymont Bross',
+  'Mutantbreakz',
+  'Paket',
+  'Bassmaster',
+  'Missy Karma',
+  'Oto',
+  'Speaker Reality (host)',
+  'Pablo Guadalupe (live percussion)',
+]
+
 /** PostgREST upsert: omitir NOT NULL JSONB/array suele mandar NULL y rompe la fila. */
 const EVENT_JSON_DEFAULTS = {
   stages: [],
@@ -158,30 +178,49 @@ function eventsPayload(orgId) {
     {
       ...EVENT_JSON_DEFAULTS,
       slug: 'hibrida-fest-29-agosto-2026',
-      name: 'Híbrida Fest feat. Funktasty — Conil (29 agosto 2026)',
+      name: 'Híbrida Festival feat. Funktasty — Conil (29 agosto 2026)',
       description_en:
-        'Híbrida Festival feat. Funktasty on Saturday 29 August 2026 at Recinto La Mina, Conil de la Frontera (Cádiz): 11 hours of breakbeat (20:00–07:00), 18+. Full lineup announced on Monday 22 June 2026 (promotional ticket sales close the same day). Tickets via Fourvenues.',
+        'Híbrida Festival feat. Funktasty Crew on Saturday 29 August 2026 at Recinto La Mina, Conil de la Frontera (Cádiz): open-air breakbeat night from 20:00 to 07:00 (+18). Official poster lineup: Cut & Run (UK), The Brainkiller, Tryple-D (only show 2026), Perfectos Kabrones, DJ Karpin, Dub Elements (breakbeat set), Miau, Aggresivnes, Bass & Crash, Baymont Bross, Mutantbreakz, Paket, Bassmaster, Missy Karma, Oto (special breakbeat set), hosted by Speaker Reality with live percussion by Pablo Guadalupe. Tickets via Fourvenues.',
       description_es:
-        'Híbrida Festival feat. Funktasty el sábado 29 de agosto de 2026 en el Recinto La Mina, Conil de la Frontera (Cádiz): 11 horas de breakbeat (20:00–07:00), +18. Cartel completo el lunes 22 de junio de 2026 (fin de la venta promocional ese mismo día). Entradas vía Fourvenues.',
-      event_type: 'upcoming',
+        'Híbrida Festival feat. Funktasty Crew el sábado 29 de agosto de 2026 en el Recinto La Mina, Conil de la Frontera (Cádiz): noche open air de breakbeat de 20:00 a 07:00 h (+18). Cartel oficial: Cut & Run (UK), The Brainkiller, Tryple-D (único show 2026), Perfectos Kabrones, DJ Karpin, Dub Elements (breakbeat set), Miau, Aggresivnes, Bass & Crash, Baymont Bross, Mutantbreakz, Paket, Bassmaster, Missy Karma, Oto (special breakbeat set), presentación de Speaker Reality y percusión en directo de Pablo Guadalupe. Entradas vía Fourvenues.',
+      event_type: 'festival',
       date_start: '2026-08-29',
       date_end: null,
       location: 'Recinto La Mina, Conil de la Frontera, Cádiz, Spain',
       city: 'Conil de la Frontera',
       country: 'Spain',
-      venue: 'Recinto La Mina',
+      venue: 'Recinto La Mina (La Mina Club)',
       address: '11149 Conil de la Frontera, Cádiz, España',
       coords: { lat: 36.2776, lng: -6.0886 },
       doors_open: '20:00',
       doors_close: '07:00',
       age_restriction: '+18',
-      tags: ['breakbeat', 'festival', 'conil', 'cadiz', 'andalusia'],
-      image_url: '/images/events/hibrida_verano_2026.webp',
+      tags: [
+        'hibrida fest',
+        'funktasty',
+        'breakbeat',
+        'breaks',
+        'bass',
+        'festival',
+        'open air',
+        'conil',
+        'cadiz',
+        'la mina',
+        'andalusia',
+        'cut and run',
+        '2026',
+      ],
+      image_url: '/images/events/hibrida_verano_2026_2.webp',
       website: 'https://www.hibridafest.com/',
       tickets_url:
         'https://site.fourvenues.com/es/hibrida-fest/events/hibrida-fest-29-08-2026-48YS',
-      lineup: [],
-      is_featured: false,
+      lineup: HIBRIDA_CONIL_29_AGOSTO_2026_LINEUP,
+      socials: {
+        'Tickets Fourvenues':
+          'https://site.fourvenues.com/es/hibrida-fest/events/hibrida-fest-29-08-2026-48YS',
+        'Web Híbrida Fest': 'https://www.hibridafest.com/',
+      },
+      is_featured: true,
       promoter_organization_id: orgId,
     },
   ]
