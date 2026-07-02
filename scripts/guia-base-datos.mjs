@@ -174,7 +174,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-raveart-summer-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Actualiza slug raveart-summer-2026: 4 jul 2026, Hacienda El Chaparrejo (Alcala de Guadaira / Sevilla), textos XXIV aniversario.',
+      'Actualiza slug raveart-summer-2026: 4 jul 2026, Hacienda El Chaparrejo (Alcalá de Guadaira / Sevilla), XXIV aniversario. Horarios oficiales en 4 áreas (Summer Festival, 24th Anniversary, RVT Pro Main, Mass Bass) 16:00–07:00; cartel horarios public/images/events/summer-festival-2026-horarios.webp.',
   },
   {
     id: 'events-patch-raveart-rvt-we-love-retro-2026',

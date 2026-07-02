@@ -570,6 +570,135 @@ const RAVEART_SUMMER_2026_LINEUP = [
   'Benjamin VJ',
   'Carlos Mejias VJ',
   'Cellux MC',
+  'Nimeim',
+]
+
+const RAVEART_SUMMER_2026_STAGES = [
+  {
+    name: 'Summer Festival',
+    description_en: 'Main Raveart Summer Festival area — breaks and bass from 19:00 to 07:00.',
+    description_es: 'Área principal Summer Festival — breaks y bass de 19:00 a 07:00 h.',
+    lineup: [
+      'Bowser',
+      'Bubu vs Urbano',
+      'Pray for Bass',
+      'Freestylers',
+      'Destroyers ft Big Oli',
+      'Breakfastaz ft Ken Mac',
+      'Sekret Chadow',
+      'Backdraft',
+      'Hankook',
+      'Dub Elements B2B Aphex',
+      'Paket',
+      'Damián',
+    ],
+  },
+  {
+    name: '24th Anniversary',
+    description_en: 'XXIV anniversary stage — opens 16:00 with Bebe Breaks through to 07:00.',
+    description_es: 'Escenario XXIV aniversario — apertura 16:00 con Bebe Breaks hasta las 07:00 h.',
+    lineup: [
+      'Bebe Breaks',
+      'Four Motion',
+      'FM-3',
+      'Jan B',
+      'Prody',
+      'Aggresivnes',
+      'Nosk',
+      'Kid Panel',
+      'Müme',
+      'Plump DJs',
+      'Anuschka',
+      'Freq Nasty',
+      'Colombo',
+      'Datafunk',
+      'DJ Wavs',
+    ],
+  },
+  {
+    name: 'RVT Pro Main',
+    description_en: 'RVT Pro Main area — national breaks bill 20:00–07:00.',
+    description_es: 'Área RVT Pro Main — cartel nacional de breaks de 20:00 a 07:00 h.',
+    lineup: [
+      'Welder B',
+      'Staxia vs Linero',
+      'Tomy',
+      'Willy G',
+      'Seveng',
+      'Tortu',
+      'Baymont Bross',
+      'Norbak',
+      'Perfect Kombo',
+      'Karpin',
+      'Orebeat vs Maribel',
+    ],
+  },
+  {
+    name: 'Mass Bass',
+    description_en: 'Mass Bass area — DnB and bass-heavy sets including 4AM KRU live and Virus Trinity.',
+    description_es: 'Área Mass Bass — sesiones DnB y bass con 4AM KRU en directo y Virus Trinity.',
+    lineup: [
+      'Benny Page',
+      'The Mind Hackers',
+      'Vandermou',
+      '4AM KRU (live)',
+      'Nimeim',
+      'Virus Trinity (Audio B2B Ed Rush B2B Optical)',
+      'Midnight Cvlt',
+      'Frannabik',
+      'Juno',
+    ],
+  },
+]
+
+const RAVEART_SUMMER_2026_SCHEDULE = [
+  { time: '16:00', artist: 'Bebe Breaks', stage: '24th Anniversary' },
+  { time: '17:00', artist: 'Four Motion', stage: '24th Anniversary' },
+  { time: '18:00', artist: 'FM-3', stage: '24th Anniversary' },
+  { time: '19:00', artist: 'Bowser', stage: 'Summer Festival' },
+  { time: '19:00', artist: 'Jan B', stage: '24th Anniversary' },
+  { time: '19:00', artist: 'Benny Page', stage: 'Mass Bass' },
+  { time: '20:00', artist: 'Bubu vs Urbano', stage: 'Summer Festival', is_b2b: true },
+  { time: '20:00', artist: 'Prody', stage: '24th Anniversary' },
+  { time: '20:00', artist: 'Welder B', stage: 'RVT Pro Main' },
+  { time: '20:00', artist: 'The Mind Hackers', stage: 'Mass Bass' },
+  { time: '21:00', artist: 'Pray for Bass', stage: 'Summer Festival' },
+  { time: '21:00', artist: 'Aggresivnes', stage: '24th Anniversary' },
+  { time: '21:00', artist: 'Staxia vs Linero', stage: 'RVT Pro Main', is_b2b: true },
+  { time: '22:00', artist: 'Freestylers', stage: 'Summer Festival' },
+  { time: '22:00', artist: 'Nosk', stage: '24th Anniversary' },
+  { time: '22:00', artist: 'Tomy', stage: 'RVT Pro Main' },
+  { time: '22:00', artist: 'Vandermou', stage: 'Mass Bass' },
+  { time: '23:00', artist: 'Destroyers ft Big Oli', stage: 'Summer Festival' },
+  { time: '23:00', artist: 'Kid Panel', stage: '24th Anniversary' },
+  { time: '23:00', artist: 'Willy G', stage: 'RVT Pro Main' },
+  { time: '23:00', artist: '4AM KRU (live)', stage: 'Mass Bass' },
+  { time: '00:00', artist: 'Breakfastaz ft Ken Mac', stage: 'Summer Festival' },
+  { time: '00:00', artist: 'Müme', stage: '24th Anniversary' },
+  { time: '00:00', artist: 'Seveng', stage: 'RVT Pro Main' },
+  { time: '00:30', artist: 'Nimeim', stage: 'Mass Bass' },
+  { time: '01:00', artist: 'Sekret Chadow', stage: 'Summer Festival' },
+  { time: '01:00', artist: 'Plump DJs', stage: '24th Anniversary' },
+  { time: '01:00', artist: 'Tortu', stage: 'RVT Pro Main' },
+  { time: '02:00', artist: 'Backdraft', stage: 'Summer Festival' },
+  { time: '02:00', artist: 'Anuschka', stage: '24th Anniversary' },
+  { time: '02:00', artist: 'Baymont Bross', stage: 'RVT Pro Main' },
+  { time: '02:00', artist: 'Virus Trinity (Audio B2B Ed Rush B2B Optical)', stage: 'Mass Bass', is_b2b: true },
+  { time: '03:00', artist: 'Hankook', stage: 'Summer Festival' },
+  { time: '03:00', artist: 'Freq Nasty', stage: '24th Anniversary' },
+  { time: '03:00', artist: 'Norbak', stage: 'RVT Pro Main' },
+  { time: '03:30', artist: 'Midnight Cvlt', stage: 'Mass Bass' },
+  { time: '04:00', artist: 'Dub Elements B2B Aphex', stage: 'Summer Festival', is_b2b: true },
+  { time: '04:00', artist: 'Colombo', stage: '24th Anniversary' },
+  { time: '04:00', artist: 'Perfect Kombo', stage: 'RVT Pro Main' },
+  { time: '04:30', artist: 'Frannabik', stage: 'Mass Bass' },
+  { time: '05:00', artist: 'Paket', stage: 'Summer Festival' },
+  { time: '05:00', artist: 'Datafunk', stage: '24th Anniversary' },
+  { time: '05:00', artist: 'Karpin', stage: 'RVT Pro Main' },
+  { time: '05:30', artist: 'Juno', stage: 'Mass Bass' },
+  { time: '06:00', artist: 'Damián', stage: 'Summer Festival' },
+  { time: '06:00', artist: 'DJ Wavs', stage: '24th Anniversary' },
+  { time: '06:00', artist: 'Orebeat vs Maribel', stage: 'RVT Pro Main', is_b2b: true },
 ]
 
 const EVENT_ROW_DEFAULTS = {
@@ -592,10 +721,10 @@ const RAVEART_SUMMER_2026_ROW = {
   name: 'Raveart Summer Festival 2026',
   image_url: '/images/events/summer-festival-2026.webp',
   description_en:
-    'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Doors 16:00–07:00. Closed lineup with 50+ acts: international headliners Breakfastaz (world premiere), 4AM KRU live, Benny Page, Bebe Breaks, Freestylers, Freq Nasty, Plump DJs, Kid Panel, Dub Elements B2B Aphex, and Virus Trinity (Audio B2B Ed Rush B2B Optical). Plus a deep national selection: Aggresivnes, Anuschka, Backdraft, Baymont Bross, Bowser, Bubu, Colombo, Damián, Datafunk, Destroyers ft Big Oli, DJ Wavs, FM-3, Four Motion, Frannabik, Hankook, Jan B, Juno, Karpin, Ken Mac, Linero, Maribel, Midnight Cvlt, Müme, Norbak, Nosk, Orebeat, Paket, Perfect Kombo, Pray for Bass, Prody, Sekret Chadow, Seveng, Staxia, The Mind Hackers, Tomy, Tortu, Urbano, Vandermou, Welder B, Willy G, Yo Speed. Visuals by Benjamin VJ and Carlos Mejias VJ; on the mic Cellux MC. General admission includes entry plus minimum spend valid until 20:00; VIP adds VIP zone, drink, glass, re-entry pass within set hours and queue-free access. Tickets and updates on raveart.es.',
+    'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Doors 16:00–07:00 across four areas with official published timetables: Summer Festival (Bowser 19:00 through Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex and more), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) and Mass Bass (Benny Page 19:00 — 4AM KRU live, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuals Benjamin VJ and Carlos Mejias VJ. General admission includes entry plus minimum spend valid until 20:00; VIP adds VIP zone, drink, glass, re-entry pass and queue-free access. Tickets on MonsterTicket and raveart.es.',
   description_es:
-    'Edición del XXIV aniversario el sábado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcalá de Guadaíra (Sevilla). Horario de apertura 16:00 h a 07:00 h. Cartel cerrado con más de 50 artistas: cabezas internacionales Breakfastaz (primicia mundial), 4AM KRU en directo, Benny Page, Bebe Breaks, Freestylers, Freq Nasty, Plump DJs, Kid Panel, Dub Elements B2B Aphex y Virus Trinity (Audio B2B Ed Rush B2B Optical). Junto a ellos, una nómina nacional muy completa: Aggresivnes, Anuschka, Backdraft, Baymont Bross, Bowser, Bubu, Colombo, Damián, Datafunk, Destroyers ft Big Oli, DJ Wavs, FM-3, Four Motion, Frannabik, Hankook, Jan B, Juno, Karpin, Ken Mac, Linero, Maribel, Midnight Cvlt, Müme, Norbak, Nosk, Orebeat, Paket, Perfect Kombo, Pray for Bass, Prody, Sekret Chadow, Seveng, Staxia, The Mind Hackers, Tomy, Tortu, Urbano, Vandermou, Welder B, Willy G y Yo Speed. Visuales a cargo de Benjamin VJ y Carlos Mejias VJ; al micro, Cellux MC. Entrada general: entrada + consumición mínima válida hasta las 20:00 h. Entrada VIP: zona VIP, copa, vaso, bono ReAcceso en horarios establecidos y acceso sin colas. Venta de entradas e información en raveart.es.',
-  event_type: 'upcoming',
+    'Edición del XXIV aniversario el sábado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcalá de Guadaíra (Sevilla). Horario 16:00–07:00 h en cuatro áreas con horarios oficiales publicados: Summer Festival (Bowser 19:00 hasta Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex y más), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) y Mass Bass (Benny Page 19:00 — 4AM KRU en directo, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuales Benjamin VJ y Carlos Mejias VJ. Entrada general: entrada + consumición mínima válida hasta las 20:00 h. VIP: zona VIP, copa, vaso, bono ReAcceso y acceso sin colas. Entradas en MonsterTicket y raveart.es.',
+  event_type: 'festival',
   date_start: '2026-07-04',
   date_end: null,
   location: 'Hacienda El Chaparrejo, Alcalá de Guadaíra, Sevilla',
@@ -607,17 +736,23 @@ const RAVEART_SUMMER_2026_ROW = {
   doors_open: '16:00',
   doors_close: '07:00',
   lineup: RAVEART_SUMMER_2026_LINEUP,
+  stages: RAVEART_SUMMER_2026_STAGES,
+  schedule: RAVEART_SUMMER_2026_SCHEDULE,
   tags: [
     'Raveart',
     'Summer Festival',
+    'XXIV aniversario',
     'breakbeat',
     'drum and bass',
     'Sevilla',
     'Alcalá de Guadaíra',
+    'horarios',
     '2026',
     'monsterticket',
+    'rvt pro main',
+    'mass bass',
   ],
-  age_restriction: '18+',
+  age_restriction: '+18',
 }
 
 async function runPatchRaveartSummer2026(sb) {
@@ -653,11 +788,17 @@ async function runPatchRaveartSummer2026(sb) {
 
   const { data: after, error: e2 } = await sb
     .from('events')
-    .select('slug, name, date_start, date_end, city, venue, location, website')
+    .select('slug, name, date_start, date_end, city, venue, doors_open, doors_close')
     .eq('slug', RAVEART_SUMMER_2026_SLUG)
     .maybeSingle()
   if (e2) throw e2
   console.log('[patch-raveart-summer] despues:', after)
+  console.log(
+    '[patch-raveart-summer] stages:',
+    RAVEART_SUMMER_2026_STAGES.length,
+    '| schedule slots:',
+    RAVEART_SUMMER_2026_SCHEDULE.length,
+  )
 }
 
 const RAVEART_RVT_WE_LOVE_RETRO_SLUG = 'raveart-rvt-we-love-retro-granada-2026'
