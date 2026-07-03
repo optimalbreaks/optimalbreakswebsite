@@ -721,9 +721,9 @@ const RAVEART_SUMMER_2026_ROW = {
   name: 'Raveart Summer Festival 2026',
   image_url: '/images/events/summer-festival-2026.webp',
   description_en:
-    'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Doors 16:00–07:00 across four areas with official published timetables: Summer Festival (Bowser 19:00 through Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex and more), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) and Mass Bass (Benny Page 19:00 — 4AM KRU live, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuals Benjamin VJ and Carlos Mejias VJ. General admission includes entry plus minimum spend valid until 20:00; VIP adds VIP zone, drink, glass, re-entry pass and queue-free access. Tickets on MonsterTicket and raveart.es.',
+    'XXIV anniversary edition on Saturday 4 July 2026 at Hacienda El Chaparrejo, Alcalá de Guadaíra (Seville area). Four areas with published timetables: Summer Festival (Bowser 19:00 through Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex and more), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) and Mass Bass (Benny Page 19:00 — 4AM KRU live, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuals Benjamin VJ and Carlos Mejias VJ.\n\nDoors 16:00 through 07:00 Sunday 5 July. Named tickets only; physical ID required (18+).\n\nGeneral admission: entry plus minimum spend valid until 20:00. VIP adds VIP zone, drink, glass, re-entry pass at set hours and queue-free access.\n\nTickets and sales on MonsterTicket and raveart.es; named tickets are typically issued a few days before the show (check promoter terms).\n\nHow to get there: Hacienda El Chaparrejo is at Carretera Alcalá de Guadaíra–Morón de la Frontera, km 3.5, Alcalá de Guadaíra (41500, Seville), roughly 15–20 minutes by car from central Seville and Seville Airport (SVQ). By car: usual route via A-92 / A-376 towards Alcalá de Guadaíra, then follow signs for the Alcalá–Morón road; on-site parking is available (follow on-site signage on the day). Official Raveart buses: book at raveart.es/buses-summer-festival and MonsterTicket; stops and times may change and departure is only confirmed at 70% occupancy (refund if the line is cancelled). Taxi or ride-hail with the full address is an alternative. Plan your return before 07:00 and check Raveart’s site a few days ahead for last-minute bus or access changes.',
   description_es:
-    'Edición del XXIV aniversario el sábado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcalá de Guadaíra (Sevilla). Horario 16:00–07:00 h en cuatro áreas con horarios oficiales publicados: Summer Festival (Bowser 19:00 hasta Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex y más), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) y Mass Bass (Benny Page 19:00 — 4AM KRU en directo, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuales Benjamin VJ y Carlos Mejias VJ. Entrada general: entrada + consumición mínima válida hasta las 20:00 h. VIP: zona VIP, copa, vaso, bono ReAcceso y acceso sin colas. Entradas en MonsterTicket y raveart.es.',
+    'Edición del XXIV aniversario el sábado 4 de julio de 2026 en Hacienda El Chaparrejo, Alcalá de Guadaíra (Sevilla). Cuatro áreas con horarios oficiales: Summer Festival (Bowser 19:00 hasta Damián 06:00 — Freestylers, Breakfastaz ft Ken Mac, Destroyers ft Big Oli, Dub Elements B2B Aphex y más), 24th Anniversary (Bebe Breaks 16:00 — Plump DJs, Kid Panel, Freq Nasty, Anuschka), RVT Pro Main (Welder B 20:00 — Perfect Kombo, Norbak, Karpin, Orebeat vs Maribel) y Mass Bass (Benny Page 19:00 — 4AM KRU en directo, Virus Trinity, Midnight Cvlt, Nimeim). MC Cellux; visuales Benjamin VJ y Carlos Mejias VJ.\n\nHorario de apertura: puertas 16:00 h; cierre del festival 07:00 h del domingo 5 de julio. Entradas nominativas; documento de identidad físico obligatorio (+18).\n\nEntrada general: entrada + consumición mínima válida hasta las 20:00 h. Entrada VIP: zona VIP, copa, vaso, bono ReAcceso en los horarios establecidos y acceso sin colas.\n\nVenta de entradas en MonsterTicket y raveart.es; las nominativas suelen enviarse pocos días antes del evento (consultar condiciones del promotor).\n\nCómo llegar al Summer Festival 2026: la Hacienda El Chaparrejo está en Carretera Alcalá de Guadaíra–Morón de la Frontera, km 3,5, Alcalá de Guadaíra (41500, Sevilla), a unos 15–20 minutos en coche desde el centro de Sevilla y del aeropuerto de San Pablo (SVQ). En coche: salida habitual por la A-92 / A-376 hacia Alcalá de Guadaíra; sigue la señalización hacia la carretera Alcalá–Morón; hay aparcamiento en el recinto (consultar indicaciones el día del evento). Autobuses oficiales Raveart: venta en raveart.es/buses-summer-festival y MonsterTicket; paradas y horarios pueden ajustarse y la salida solo se confirma al cubrir el 70% de plazas (devolución si se cancela la línea). Alternativa: taxi o VTC con la dirección completa. Planifica la vuelta antes de las 07:00 h y revisa la web de Raveart unos días antes por posibles cambios de última hora.',
   event_type: 'festival',
   date_start: '2026-07-04',
   date_end: null,
@@ -731,8 +731,15 @@ const RAVEART_SUMMER_2026_ROW = {
   city: 'Alcala de Guadaira',
   country: 'Spain',
   venue: 'Hacienda El Chaparrejo',
+  address: 'Carretera Alcalá de Guadaíra–Morón de la Frontera, km 3,5, Alcalá de Guadaíra',
+  coords: { lat: 37.3033, lng: -5.7982 },
   website: 'https://www.raveart.es/',
   tickets_url: 'https://www.monsterticket.com/evento/summer-festival-2026',
+  socials: {
+    'Autobuses oficiales': 'https://www.raveart.es/buses-summer-festival/',
+    'Entradas MonsterTicket': 'https://www.monsterticket.com/evento/summer-festival-2026',
+    Raveart: 'https://www.raveart.es/',
+  },
   doors_open: '16:00',
   doors_close: '07:00',
   lineup: RAVEART_SUMMER_2026_LINEUP,
@@ -751,6 +758,9 @@ const RAVEART_SUMMER_2026_ROW = {
     'monsterticket',
     'rvt pro main',
     'mass bass',
+    'cómo llegar',
+    'autobús',
+    'transporte',
   ],
   age_restriction: '+18',
 }

@@ -73,6 +73,7 @@ export function splitFestivalDescriptionSections(
           { at: /Entrada general/i, test: /^Entrada general/i, title: 'Entrada general' },
           { at: /Entrada VIP/i, test: /^Entrada VIP/i, title: 'Entrada VIP' },
           { at: /Venta de entradas/i, test: /^Venta de entradas/i, title: 'Entradas e info' },
+          { at: /Cómo llegar/i, test: /^Cómo llegar/i, title: 'Cómo llegar' },
         ]
       : [
           { at: /\bDoors \d/i, test: /^Doors \d/i, title: 'Hours' },
@@ -81,6 +82,7 @@ export function splitFestivalDescriptionSections(
           { at: /General admission/i, test: /^General admission/i, title: 'General admission' },
           { at: /VIP adds/i, test: /^VIP adds/i, title: 'VIP' },
           { at: /Tickets and/i, test: /^Tickets and/i, title: 'Tickets & info' },
+          { at: /How to get there/i, test: /^How to get there/i, title: 'Getting there' },
         ]
 
   const inner = markers.map((m) => m.at.source).join('|')
