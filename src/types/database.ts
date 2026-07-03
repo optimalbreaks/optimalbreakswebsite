@@ -80,6 +80,9 @@ export type ChartTrack = {
   weeks_in_chart: number
 }
 
+/** Fuente de una pista en charts, NR, vinilo o Top 10 Beatport (guardados, plays, community top). */
+export type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
+
 /** Vinilos semanales curados desde Discogs (preview vía YouTube embed). */
 export interface ChartVinylArtist {
   name: string
