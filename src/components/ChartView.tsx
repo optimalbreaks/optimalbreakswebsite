@@ -24,6 +24,8 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
+import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
+import { logTrackPlay } from '@/lib/track-play-log'
 import {
   requestYouTubePlay,
   releaseYouTubePlay,
@@ -467,9 +469,11 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
   useEffect(() => {
     if (autoplay) {
       requestYouTubePlay(playSlotId)
+      const playKey = normalizeTrackCanonicalUrl(track.youtube_url) || `t:vinyl:${track.id}`
+      logTrackPlay(playKey)
       setShowPlayer(true)
     }
-  }, [autoplay, playSlotId])
+  }, [autoplay, playSlotId, track.youtube_url, track.id])
 
   useEffect(() => {
     return subscribeYouTubePlay((activeId) => {
@@ -484,12 +488,14 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
         return false
       }
       requestYouTubePlay(playSlotId)
+      const playKey = normalizeTrackCanonicalUrl(track.youtube_url) || `t:vinyl:${track.id}`
+      logTrackPlay(playKey)
       requestAnimationFrame(() => {
         embedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       })
       return true
     })
-  }, [playSlotId])
+  }, [playSlotId, track.youtube_url, track.id])
 
   return (
     <div id={`chart-vinyl-row-${track.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${showPlayer ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>

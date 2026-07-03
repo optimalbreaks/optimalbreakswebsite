@@ -23,6 +23,8 @@ import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
+import { canonicalKeyFromTrackPlaySave } from '@/lib/track-canonical-key'
+import { logTrackPlay } from '@/lib/track-play-log'
 // Coordinador "una sola fuente audible": los YouTube embebidos (vinilos,
 // /mixes, Mis Tracks…) y este reproductor global se excluyen mutuamente.
 import {
@@ -1842,6 +1844,8 @@ export function DeckAudioProvider({
       .then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
+        const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
+        if (playKey) logTrackPlay(playKey)
         // Con la pista ya sonando, calienta la caché con la siguiente para
         // que el auto-avance funcione aunque el SO tenga la red dormida.
         preloadNextPreview(queue, idx)
@@ -1919,6 +1923,9 @@ export function DeckAudioProvider({
       a.play().then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
+        const m = previewQueueRef.current[previewIndexRef.current]
+        const playKey = m?.save ? canonicalKeyFromTrackPlaySave(m.save) : null
+        if (playKey) logTrackPlay(playKey)
         if ('mediaSession' in navigator) {
           try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
         }

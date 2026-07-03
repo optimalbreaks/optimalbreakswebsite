@@ -1,0 +1,34 @@
+[
+  {
+    "slug": "guau-keep-it-ruff-2026",
+    "title": "Guau — Keep It Ruff",
+    "artist_name": "Guau",
+    "description_en": "Guau — Keep It Ruff, published on the OCHENTAYTRES YouTube channel.",
+    "description_es": "Guau — Keep It Ruff, publicado en el canal de YouTube OCHENTAYTRES.",
+    "mix_type": "youtube_session",
+    "year": 2026,
+    "published_at": "2026-04-16T22:00:25.000Z",
+    "duration_minutes": 4,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/Q8q6N9bPFZI",
+    "embed_url": "https://youtu.be/Q8q6N9bPFZI",
+    "image_url": "https://i.ytimg.com/vi/Q8q6N9bPFZI/hqdefault.jpg",
+    "is_featured": false
+  },
+  {
+    "slug": "ed-solo-skool-of-thought-love-your-life-2010",
+    "title": "Ed Solo, Skool of Thought — Love Your Life",
+    "artist_name": "Ed Solo, Skool of Thought",
+    "description_en": "Ed Solo and Skool of Thought — Love Your Life, published on the Backmeister YouTube channel.",
+    "description_es": "Ed Solo y Skool of Thought — Love Your Life, publicado en el canal de YouTube Backmeister.",
+    "mix_type": "youtube_session",
+    "year": 2010,
+    "published_at": "2010-04-24T13:07:48.000Z",
+    "duration_minutes": 5,
+    "platform": "youtube",
+    "video_url": "https://youtu.be/l9pouTwehJw",
+    "embed_url": "https://youtu.be/l9pouTwehJw",
+    "image_url": "https://i.ytimg.com/vi/l9pouTwehJw/hqdefault.jpg",
+    "is_featured": false
+  }
+]

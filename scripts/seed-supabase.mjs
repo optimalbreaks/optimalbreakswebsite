@@ -355,6 +355,88 @@ async function checkUserEventsSchema() {
   }
 }
 
+/** Postgres: tabla track_play_events + RPC track_play_counts_for_keys (migración 061). */
+async function checkTrackPlayEventsSchema() {
+  console.log(
+    'Comprobación track_play_events en Postgres (lee .env + .env.local, sin imprimir secretos)…\n',
+  )
+  const { connectionString, ssl } = connectionOptions()
+  const client = new pg.Client({ connectionString, ssl })
+  await client.connect()
+  let exitCode = 0
+  try {
+    const { rows: tables } = await client.query(
+      `select 1 from information_schema.tables
+       where table_schema = 'public' and table_name = 'track_play_events'`,
+    )
+    if (tables.length) {
+      console.log('Tabla public.track_play_events: OK')
+    } else {
+      console.log('Tabla public.track_play_events: FALTA — aplica 061_track_play_events.sql')
+      return 1
+    }
+
+    const { rows: cols } = await client.query(
+      `select column_name from information_schema.columns
+       where table_schema = 'public' and table_name = 'track_play_events'
+       order by ordinal_position`,
+    )
+    const names = cols.map((c) => c.column_name)
+    console.log(`Columnas: ${names.join(', ')}`)
+    for (const c of ['id', 'canonical_key', 'user_id', 'created_at']) {
+      if (!names.includes(c)) {
+        console.log(`  Columna ${c}: FALTA`)
+        exitCode = 1
+      }
+    }
+
+    const { rows: fn } = await client.query(
+      `select p.proname from pg_proc p
+       join pg_namespace n on p.pronamespace = n.oid
+       where n.nspname = 'public' and p.proname = 'track_play_counts_for_keys'`,
+    )
+    if (fn.length) {
+      console.log('Función public.track_play_counts_for_keys(text[]): OK')
+    } else {
+      console.log('Función public.track_play_counts_for_keys: FALTA — aplica 061_track_play_events.sql')
+      exitCode = 1
+    }
+
+    const { rows: countRows } = await client.query(
+      'select count(*)::int as n from public.track_play_events',
+    )
+    console.log(`Filas track_play_events: ${countRows[0]?.n ?? 0}`)
+
+    const ins = await client.query(
+      `insert into public.track_play_events (canonical_key) values ($1) returning id`,
+      ['__verify_ob_migration__'],
+    )
+    const testId = ins.rows[0]?.id
+    if (testId) {
+      const { rows: rpcRows } = await client.query(
+        'select * from public.track_play_counts_for_keys($1::text[])',
+        [['__verify_ob_migration__']],
+      )
+      const ok = rpcRows.length === 1 && Number(rpcRows[0].play_count) === 1
+      console.log(
+        ok
+          ? 'RPC de prueba: OK (play_count=1)'
+          : `RPC de prueba: FALTA o resultado inesperado ${JSON.stringify(rpcRows)}`,
+      )
+      if (!ok) exitCode = 1
+      await client.query('delete from public.track_play_events where id = $1', [testId])
+    } else {
+      console.log('INSERT de prueba: FALTA')
+      exitCode = 1
+    }
+
+    console.log('')
+    return exitCode
+  } finally {
+    await client.end()
+  }
+}
+
 async function main() {
   loadEnvLocal()
   const args = process.argv.slice(2)
@@ -364,6 +446,11 @@ async function main() {
   }
   if (args.includes('--check-user-events')) {
     const code = await checkUserEventsSchema()
+    process.exit(code)
+    return
+  }
+  if (args.includes('--check-track-play-events')) {
+    const code = await checkTrackPlayEventsSchema()
     process.exit(code)
     return
   }

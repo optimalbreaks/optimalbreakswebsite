@@ -2,20 +2,20 @@
  * Batch local: nuevos lanzamientos → `data/charts/picks/<lunes>.json` + luego UPSERT a Supabase (no lo hace solo).
  *
  * INVARIANTE (memorízalo igual que tatuaje): cada tema va al JSON cuyo **lunes (`week_date`)**
- * sea el de la **semana ISO del release day que devuelve Beatport** (`publish_date`).
+ * sea el de la **semana ISO del release day que devuelve la tienda** (Beatport `publish_date`, Bandcamp `release_date`).
  * Ni la fecha en que pegas URLs ni cuántos mensajes seguidos envíes eligen la carpeta/semana—solo ese release_date
  * (+ override explícito `YYYY-MM-DD URL` por línea, o `NR_BATCH_FALLBACK_WEEK` si falta fecha en scrape).
  *
  * **Semana de destino (no se adivina “la siguiente” en el calendario del repo):**
- *   Por defecto: **lunes de la semana del `release_date` que devuelve Beatport** (`publish_date`), misma idea que
+ *   Por defecto: **lunes de la semana del `release_date`** (Beatport o Bandcamp), misma idea que
  *   `chartEditionWeekMondayFromPublish` / import admin `featured-import`.
  *   Opcional por línea: `2026-05-25 https://www.beatport.com/es/track/foo/123` fuerza ese lunes de edición.
- *   Sin fecha en Beatport: `NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD` (cualquier día → se corrige al lunes de esa semana).
+ *   Sin fecha en tienda: `NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD` (cualquier día → se corrige al lunes de esa semana).
  *
  * Un mismo pegado puede abrir/rellenar **varios** JSON si los temas caen en lunes distintos.
  *
  * Modo actual: SOLO singles (releases multipista se listan pero no se insertan).
- * Acepta /release/ o /track/.
+ * Acepta Beatport `/release/` o `/track/`; Bandcamp `*.bandcamp.com/track/…` (un track por URL).
  *
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
@@ -321,10 +321,90 @@ function findAllTracksFromReleaseNextData(nd) {
 function dedupeKey(linkUrl) {
   const n = (linkUrl || '').trim().toLowerCase()
   const m = n.match(/\/track\/[^/]+\/(\d+)/)
-  return m ? `beatport:${m[1]}` : n
+  return m ? `beatport:${m[1]}` : n.replace(/\/+$/, '')
+}
+
+function isBandcampTrackUrl(url) {
+  try {
+    const h = new URL(url).hostname.toLowerCase()
+    return h.endsWith('.bandcamp.com') && /\/track\//i.test(url)
+  } catch {
+    return false
+  }
+}
+
+function isSupportedStoreUrl(url) {
+  const u = (url || '').toLowerCase()
+  return /beatport\.com/i.test(u) || isBandcampTrackUrl(url)
+}
+
+function bandcampReleaseDateIso(raw) {
+  if (raw == null || String(raw).trim() === '') return null
+  const d = new Date(String(raw).trim())
+  if (Number.isNaN(d.getTime())) return null
+  const y = d.getUTCFullYear()
+  const mo = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  if (y < 1970 || y > 2100) return null
+  return `${y}-${mo}-${day}`
+}
+
+function titleCaseBandcamp(raw) {
+  const s = (raw || '').trim()
+  if (!s) return s
+  if (s === s.toUpperCase() && s.length > 3) {
+    return s.charAt(0) + s.slice(1).toLowerCase()
+  }
+  return s
+}
+
+function pickFromBandcampTralbum(obj, linkUrl) {
+  const track = obj.trackinfo?.[0]
+  if (!track?.title) return null
+  const rawDate =
+    obj.album_release_date ||
+    obj.release_date ||
+    obj.current?.release_date ||
+    obj.current?.publish_date ||
+    null
+  const rd = bandcampReleaseDateIso(rawDate)
+  const y = rd ? Number.parseInt(rd.slice(0, 4), 10) : undefined
+  const artist = (obj.artist || obj.current?.artist || '').trim() || 'Unknown'
+  return {
+    title: titleCaseBandcamp(track.title),
+    mix_name: '',
+    artists: [{ name: artist }],
+    label: (obj.current?.album_title || '').trim(),
+    platform: 'bandcamp',
+    link_url: linkUrl.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://'),
+    link_label: '',
+    artwork_url: obj.art_id ? `https://f4.bcbits.com/img/a${obj.art_id}_10.jpg` : '',
+    sample_url: '',
+    bpm: null,
+    music_key: '',
+    release_year: Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : undefined,
+    release_date: rd || undefined,
+    note_en: '',
+    note_es: '',
+  }
+}
+
+async function fetchBandcampTracks(url) {
+  const res = await fetch(url.replace(/^http:\/\//i, 'https://'), {
+    headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const html = await res.text()
+  const tralbum = html.match(/data-tralbum="([^"]*)"/)
+  if (!tralbum) throw new Error('no data-tralbum')
+  const obj = JSON.parse(tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'))
+  const pick = pickFromBandcampTralbum(obj, url)
+  if (!pick?.title) throw new Error('sin título en tralbum')
+  return [pick]
 }
 
 async function fetchTracks(url) {
+  if (isBandcampTrackUrl(url)) return fetchBandcampTracks(url)
   const html = await fetchHttp(url)
   const nd = extractNextData(html)
   if (!nd) throw new Error('no __NEXT_DATA__')
@@ -336,7 +416,7 @@ const importEntries = parseImportLines(URLS_RAW)
 const uniqQueue = []
 const queueSeenUrl = new Set()
 for (const row of importEntries) {
-  if (!/beatport\.com/i.test(row.url || '')) continue
+  if (!isSupportedStoreUrl(row.url || '')) continue
   const u = String(row.url).replace(/^http:\/\//i, 'https://').replace(/\/+$/, '')
   if (queueSeenUrl.has(u)) continue
   queueSeenUrl.add(u)
@@ -407,7 +487,7 @@ for (let i = 0; i < uniqQueue.length; i++) {
       const monday = resolveEditionMondayForPick(pick, weekOverride)
       if (!monday) {
         const detail =
-          'sin release_date en Beatport; usa fecha en línea (YYYY-MM-DD URL) o env NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD'
+          'sin release_date en tienda; usa fecha en línea (YYYY-MM-DD URL) o env NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD'
         console.warn(`    [${idx}/${total}] · ${detail}`)
         failed.push({ url, reason: detail })
       } else {

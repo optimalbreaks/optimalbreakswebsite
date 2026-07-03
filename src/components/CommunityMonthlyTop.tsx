@@ -40,6 +40,7 @@ import {
   releaseYouTubePlay,
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
+import { logTrackPlay } from '@/lib/track-play-log'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 const COMMUNITY_TOP_LIMIT = 100
@@ -157,6 +158,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         return null
       }
       requestYouTubePlay(key)
+      logTrackPlay(key)
       return key
     })
   }, [])
@@ -264,7 +266,12 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     const out: PreviewTrack[] = []
     if (!data) return out
     for (const t of data.top_tracks) {
-      const src = t.sample_url ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url) : ''
+      const src =
+        t.playback_kind === 'bandcamp' && t.external_url
+          ? previewAudioSrc('', t.playback_kind, t.external_url)
+          : t.sample_url
+            ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url)
+            : ''
       if (!src) continue
       out.push({
         rowKey: `community-top-${t.canonical_key}`,

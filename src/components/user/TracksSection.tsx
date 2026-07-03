@@ -24,6 +24,7 @@ import {
   releaseYouTubePlay,
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
+import { logTrackPlay } from '@/lib/track-play-log'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -341,6 +342,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         return null
       }
       requestYouTubePlay(key)
+      logTrackPlay(key)
       return key
     })
   }, [])
@@ -821,9 +823,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   }, [lang])
 
   const toPreviewTrack = useCallback((t: UnifiedTrack): PreviewTrack | null => {
-    const src = t.source === 'featured' && t.platform === 'bandcamp'
-      ? previewAudioSrc('', 'bandcamp', t.external_url)
-      : t.sample_url ? previewAudioSrc(t.sample_url, t.platform || undefined) : ''
+    const src =
+      t.platform === 'bandcamp' && t.external_url
+        ? previewAudioSrc('', 'bandcamp', t.external_url)
+        : t.sample_url
+          ? previewAudioSrc(t.sample_url, t.platform || undefined, t.external_url)
+          : ''
     if (!src) return null
     const useUrlMode = isShared && t.source === 'beatport_top' && !!(t.external_url || t.canonical_url)
     return {

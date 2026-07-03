@@ -251,6 +251,12 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      track_play_events: {
+        Row: TrackPlayEventRow
+        Insert: Pick<TrackPlayEventRow, 'canonical_key'> & Partial<Pick<TrackPlayEventRow, 'user_id'>>
+        Update: never
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -263,6 +269,10 @@ export interface Database {
       admin_engagement_stats: {
         Args: { p_limit?: number }
         Returns: Record<string, unknown>
+      }
+      track_play_counts_for_keys: {
+        Args: { p_keys: string[] }
+        Returns: { canonical_key: string; play_count: number }[]
       }
     }
   }
@@ -324,6 +334,13 @@ export interface SavedChartTrackRow extends Record<string, unknown> {
 export interface MixPlayEventRow extends Record<string, unknown> {
   id: string
   mix_id: string
+  user_id: string | null
+  created_at: string
+}
+
+export interface TrackPlayEventRow extends Record<string, unknown> {
+  id: string
+  canonical_key: string
   user_id: string | null
   created_at: string
 }

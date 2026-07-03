@@ -525,14 +525,25 @@ export async function GET(request: NextRequest) {
 
   const aggregates = Array.from(aggByKey.values())
   aggregates.forEach((a) => { a.unique_users = a._users.size })
+
+  const playByKey = new Map<string, number>()
+  const allKeys = aggregates.map((a) => a.canonical_key)
+  if (allKeys.length) {
+    const { data: playRows } = await sb.rpc('track_play_counts_for_keys', { p_keys: allKeys })
+    for (const row of (playRows || []) as { canonical_key: string; play_count: number }[]) {
+      playByKey.set(row.canonical_key, Number(row.play_count) || 0)
+    }
+  }
+
   // Ordenamos por usuarios únicos primero (un mismo usuario no infla el ranking
   // re-guardando la canción en otra fuente), después por save_count, después
-  // por save más reciente (desempate que premia ligeramente lo que sigue
-  // moviéndose) y finalmente por título alfabético.
+  // por reproducciones (desempate cuando empatan en votos), después por save
+  // más reciente y finalmente por título alfabético.
   aggregates.sort(
     (a, b) =>
       b.unique_users - a.unique_users ||
       b.save_count - a.save_count ||
+      (playByKey.get(b.canonical_key) || 0) - (playByKey.get(a.canonical_key) || 0) ||
       (b.last_saved_at || '').localeCompare(a.last_saved_at || '') ||
       (a.title || '').localeCompare(b.title || ''),
   )
@@ -555,6 +566,7 @@ export async function GET(request: NextRequest) {
     playback_kind: a.playback_kind,
     save_count: a.save_count,
     unique_users: a.unique_users,
+    play_count: playByKey.get(a.canonical_key) || 0,
     first_saved_at: a.first_saved_at,
     last_saved_at: a.last_saved_at,
     sources: a.sources,

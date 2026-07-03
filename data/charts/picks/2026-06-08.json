@@ -3842,6 +3842,50 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 170
+    },
+    {
+      "title": "Brasil",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Coolbass"
+        }
+      ],
+      "label": "Super Pig Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brasil/28875882",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5ec7a218-d6cf-4e0e-99b7-7e9ebcbc8888.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4480a42e-536c-4e32-843a-669d6b4b46de.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 171
+    },
+    {
+      "title": "Substation",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "LucyLondon"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/substation/28939915",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d1c890be-e986-4535-aadc-e111313b8cc5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/32b53623-e215-434d-b801-d48c0a332e92.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 172
     }
   ]
 }
