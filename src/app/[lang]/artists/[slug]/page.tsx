@@ -33,8 +33,10 @@ import FavoriteButton from '@/components/FavoriteButton'
 import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
+import ArtistFeaturedTracks from '@/components/ArtistFeaturedTracks'
 import {
   fetchArtistRelatedContent,
+  fetchArtistFeaturedPicks,
   normalizeTrackTitleKey,
   resolveRecommendedMixHref,
 } from '@/lib/artist-related-content'
@@ -224,10 +226,11 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     )
   }
 
-  const [{ data: labelRows }, allArtistLinkRows, relatedContent] = await Promise.all([
+  const [{ data: labelRows }, allArtistLinkRows, relatedContent, featuredPicks] = await Promise.all([
     supabase.from('labels').select('name, slug'),
     fetchAllArtistLinkRows(supabase),
     fetchArtistRelatedContent(supabase, artist, lang),
+    fetchArtistFeaturedPicks(supabase, artist),
   ])
 
   const labelSlugByName = new Map<string, string>()
@@ -237,6 +240,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   }
 
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+  const artistSlugMap = Object.fromEntries(artistSlugByName)
   const relatedArtistsForDisplay = filterRelatedArtistsExcludingLabels(
     artist.related_artists,
     labelSlugByName,
@@ -267,8 +271,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const labelsArr = artist.labels_founded || []
   const recommendedMixes = artist.recommended_mixes || []
   const { chartLinks, mixLinks, artistEvents, trackHrefByTitle } = relatedContent
+  const sidebarChartLinks = chartLinks.filter((link) => link.kind !== 'featured')
   const hasOnSiteBlock =
-    chartLinks.length > 0 || mixLinks.length > 0 || artistEvents.length > 0
+    sidebarChartLinks.length > 0 || mixLinks.length > 0 || artistEvents.length > 0
   const hasLinksBlock =
     Boolean(artist.website?.trim()) ||
     Boolean(artist.beatport_url?.trim()) ||
@@ -365,6 +370,20 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   }}
                 />
               ) : null}
+              {featuredPicks.length > 0 ? (
+                <ArtistFeaturedTracks
+                  picks={featuredPicks}
+                  lang={lang}
+                  entityName={artist.name_display || artist.name}
+                  artistSlugMap={artistSlugMap}
+                  origin={{
+                    kind: 'artist',
+                    id: artist.id,
+                    slug: artist.slug,
+                    name: artist.name_display || artist.name,
+                  }}
+                />
+              ) : null}
             </div>
           </div>
         </header>
@@ -402,7 +421,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                 <h2 style={sidebarHeadingStyle}>
                   {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
                 </h2>
-                {chartLinks.map((link) => (
+                {sidebarChartLinks.map((link) => (
                   <div key={`chart-${link.id}-${link.kind}`} className="py-2 border-b border-dashed border-white/10">
                     <Link
                       href={link.href}
