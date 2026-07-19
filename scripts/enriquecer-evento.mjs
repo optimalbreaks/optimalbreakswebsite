@@ -3361,6 +3361,203 @@ async function runPatchRitmika1AniversarioWhiteBeachLepe2026(sb) {
   console.log('[patch-ritmika-1-aniversario-white-beach-lepe-2026] OK:', after)
 }
 
+const COAST_BREAKBEAT_2026_SLUG = 'coast-breakbeat-2026'
+const COAST_BREAKBEAT_TICKETS = 'https://www.monsterticket.com/evento/coast-breakbeat-2026'
+const COAST_BREAKBEAT_IMAGE = '/images/events/coast-breakbeat-2026.webp'
+
+const COAST_BREAKBEAT_2026_LINEUP = [
+  'Evil Crew vs Playbass',
+  'Isma Breakz',
+  'Super Break',
+  'Franetik',
+  'Raü',
+  'DJ Fdez',
+  'Defkon7',
+  'CSBreak',
+]
+
+const COAST_BREAKBEAT_2026_ROW = {
+  name: 'Coast Breakbeat',
+  description_en:
+    'Frequency Break presents Coast Breakbeat on Saturday 18 July 2026 at Sala Teranga, Torrox Costa (Málaga province): coastal breakbeat night on the Costa del Sol with Evil Crew vs Playbass, Isma Breakz, Super Break, Franetik, Raü, DJ Fdez, Defkon7 and CSBreak per the official MonsterTicket poster. Single ticket €7 including one drink; 18+ and non-nominal tickets. Address Paseo Marítimo de Ferrara 3, Torrox Costa (poster also cites Avenida del Faro). Same venue and promoter circuit as Break The Flow and Malaga is Break.',
+  description_es:
+    'Frequency Break presenta Coast Breakbeat el sábado 18 de julio de 2026 en Sala Teranga, Torrox Costa (Málaga): noche de breakbeat en la costa con Evil Crew vs Playbass, Isma Breakz, Super Break, Franetik, Raü, DJ Fdez, Defkon7 y CSBreak según cartel oficial en MonsterTicket. Entrada única 7 € con consumición; mayores de 18 años y entradas no nominativas. Dirección Paseo Marítimo de Ferrara 3, Torrox Costa (el cartel cita también Avenida del Faro). Mismo local y circuito promotor que Break The Flow y Malaga is Break.',
+  event_type: 'club_night',
+  date_start: '2026-07-18',
+  date_end: null,
+  location: 'Sala Teranga, Torrox Costa, Málaga, Spain',
+  city: 'Torrox',
+  country: 'Spain',
+  venue: 'Sala Teranga',
+  address: 'Paseo Marítimo de Ferrara 3, Torrox Costa, Málaga',
+  website: null,
+  tickets_url: COAST_BREAKBEAT_TICKETS,
+  image_url: COAST_BREAKBEAT_IMAGE,
+  lineup: COAST_BREAKBEAT_2026_LINEUP,
+  tags: [
+    'coast breakbeat',
+    'frequency break',
+    'breakbeat',
+    'torrox costa',
+    'málaga',
+    'costa del sol',
+    'sala teranga',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+}
+
+async function runPatchCoastBreakbeat2026(sb) {
+  const row = {
+    slug: COAST_BREAKBEAT_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...COAST_BREAKBEAT_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url')
+    .eq('slug', COAST_BREAKBEAT_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-coast-breakbeat-2026] OK:', after)
+}
+
+const BREAKCLUB_AT_COSMOS_CLUB_2026_SLUG = 'breakclub-at-cosmos-club-2026'
+const BREAKCLUB_AT_COSMOS_CLUB_TICKETS =
+  'https://www.monsterticket.com/evento/breakclub-at-cosmos-club'
+const BREAKCLUB_AT_COSMOS_CLUB_IMAGE = '/images/events/breakclub-at-cosmos-club-2026.webp'
+const BREAKCLUB_AT_COSMOS_WEB = 'https://www.salacosmos.com/'
+
+const BREAKCLUB_AT_COSMOS_CLUB_2026_LINEUP = [
+  'Black Voltaje',
+  'GoNe',
+  'Sirius',
+  'Dolt',
+  'Davo vs Coma',
+  'Alicia Krter',
+  'Mr John',
+]
+
+const BREAKCLUB_AT_COSMOS_CLUB_2026_ROW = {
+  name: 'BREAKCLUB at COSMOS CLUB',
+  description_en:
+    'Breakbeat night at Sala Cosmos (Seville) on Friday 17 July 2026, 00:00–07:00. Official MonsterTicket poster: Black Voltaje, GoNe, Sirius, Dolt, Davo vs Coma, Alicia Krter and Mr John. C/ Carlos de Cepeda 2; 18+ and non-nominal tickets. Part of the Cosmos Club breakbeat programme (Breakbeat Klub / Local Breakers series).',
+  description_es:
+    'Noche de breakbeat en Sala Cosmos (Sevilla) el viernes 17 de julio de 2026, de 00:00 a 07:00 h. Cartel oficial en MonsterTicket: Black Voltaje, GoNe, Sirius, Dolt, Davo vs Coma, Alicia Krter y Mr John. C/ Carlos de Cepeda 2; mayores de 18 años y entradas no nominativas. Encaja en la programación breakbeat del Cosmos Club (serie Breakbeat Klub / Local Breakers).',
+  event_type: 'club_night',
+  date_start: '2026-07-17',
+  date_end: null,
+  location: 'Sala Cosmos, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Cosmos',
+  address: 'C/ Carlos de Cepeda 2, Sevilla',
+  website: BREAKCLUB_AT_COSMOS_WEB,
+  tickets_url: BREAKCLUB_AT_COSMOS_CLUB_TICKETS,
+  image_url: BREAKCLUB_AT_COSMOS_CLUB_IMAGE,
+  lineup: BREAKCLUB_AT_COSMOS_CLUB_2026_LINEUP,
+  tags: [
+    'breakclub',
+    'breakbeat klub',
+    'cosmos club',
+    'breakbeat',
+    'sevilla',
+    '2026',
+    'monsterticket',
+    'local breakers',
+  ],
+  socials: {
+    'Sala Cosmos': BREAKCLUB_AT_COSMOS_WEB,
+  },
+  age_restriction: '18+',
+  doors_open: '00:00',
+  doors_close: '07:00',
+}
+
+async function runPatchBreakclubAtCosmosClub2026(sb) {
+  const row = {
+    slug: BREAKCLUB_AT_COSMOS_CLUB_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKCLUB_AT_COSMOS_CLUB_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', BREAKCLUB_AT_COSMOS_CLUB_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breakclub-at-cosmos-club-2026] OK:', after)
+}
+
+const BREAK_NATION_BY_420_SOUND_2026_SLUG = 'break-nation-by-420-sound-2026'
+const BREAK_NATION_BY_420_SOUND_TICKETS =
+  'https://www.monsterticket.com/evento/break-nation-by-420-sound'
+const BREAK_NATION_BY_420_SOUND_IMAGE = '/images/events/break-nation-by-420-sound-2026.webp'
+
+const BREAK_NATION_BY_420_SOUND_2026_ROW = {
+  name: 'Break Nation by 420 Sound',
+  description_en:
+    '420 Energy Sound presents Break Nation at Sala Roka, Málaga on Saturday 19 September 2026: underground breakbeat and bass culture night (official poster tagline: breakbeat, bass, culture). MonsterTicket lists 18+ and non-nominal tickets; promo tiers from €12. No individual DJ names were printed on the published artwork at cataloguing time — check MonsterTicket and @420energysound for lineup updates. Calle Leda 1, Málaga.',
+  description_es:
+    '420 Energy Sound presenta Break Nation en Sala Roka, Málaga, el sábado 19 de septiembre de 2026: noche de breakbeat y cultura bass underground (cartel oficial: breakbeat, bass, culture). MonsterTicket: mayores de 18 años y entradas no nominativas; tramos promocionales desde 12 €. El cartel publicado no incluía nombres de DJ individuales al catalogar — consultar MonsterTicket y @420energysound por avances de line-up. Calle Leda 1, Málaga.',
+  event_type: 'club_night',
+  date_start: '2026-09-19',
+  date_end: null,
+  location: 'Sala Roka, Málaga, Spain',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Sala Roka',
+  address: 'Calle Leda 1, Málaga',
+  website: null,
+  tickets_url: BREAK_NATION_BY_420_SOUND_TICKETS,
+  image_url: BREAK_NATION_BY_420_SOUND_IMAGE,
+  lineup: [],
+  tags: [
+    'break nation',
+    '420 sound',
+    '420 energy sound',
+    'breakbeat',
+    'bass',
+    'sala roka',
+    'málaga',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {
+    'Instagram @420energysound': 'https://www.instagram.com/420energysound/',
+  },
+  age_restriction: '18+',
+}
+
+async function runPatchBreakNationBy420Sound2026(sb) {
+  const row = {
+    slug: BREAK_NATION_BY_420_SOUND_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAK_NATION_BY_420_SOUND_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, tickets_url, image_url')
+    .eq('slug', BREAK_NATION_BY_420_SOUND_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-break-nation-by-420-sound-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -4027,6 +4224,21 @@ async function main() {
 
   if (argv.includes('--patch-ritmika-1-aniversario-white-beach-lepe-2026')) {
     await runPatchRitmika1AniversarioWhiteBeachLepe2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-coast-breakbeat-2026')) {
+    await runPatchCoastBreakbeat2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breakclub-at-cosmos-club-2026')) {
+    await runPatchBreakclubAtCosmosClub2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-break-nation-by-420-sound-2026')) {
+    await runPatchBreakNationBy420Sound2026(sb)
     return
   }
 
