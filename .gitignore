@@ -40,6 +40,11 @@ yarn-error.log*
 tmp-*.log
 tmp-*.txt
 tmp-*.json
+
+# Logs de lotes NR / imports de vinilos y colas pendientes (trabajo del agente)
+data/charts/.batch*.log
+data/charts/pending-nr-urls-*.txt
+data/charts/vinyl/.import-*.log
 listaseman*.txt
 listasemana*.txt
 
