@@ -3558,6 +3558,290 @@ async function runPatchBreakNationBy420Sound2026(sb) {
   console.log('[patch-break-nation-by-420-sound-2026] OK:', after)
 }
 
+const FINGER_LICKIN_SUMMER_TAKEOVER_2026_SLUG = 'finger-lickin-summer-takeover-2026'
+const FINGER_LICKIN_SUMMER_TAKEOVER_SKIDDLE =
+  'https://www.skiddle.com/whats-on/Brighton/The-Concorde-2/Finger-Lickin-Summer-Takeover/42427615/'
+const FINGER_LICKIN_SUMMER_TAKEOVER_IMAGE =
+  '/images/events/finger-lickin-summer-takeover-2026.webp'
+const CONCORDE2_WEB = 'https://www.concorde2.co.uk/'
+
+const FINGER_LICKIN_SUMMER_TAKEOVER_2026_LINEUP = [
+  'The Freestylers',
+  'Plump DJs',
+  'Krafty Kuts',
+  'A.Skillz',
+  'Soul of Man',
+]
+
+const FINGER_LICKIN_SUMMER_TAKEOVER_2026_ROW = {
+  name: "Finger Lickin' Summer Takeover (Concorde 2, Brighton)",
+  description_en:
+    "Finger Lickin Records summer showcase at Concorde 2, Brighton seafront, on Saturday 15 August 2026, 17:00–22:00 (18+). Official Skiddle listing: The Freestylers, Plump DJs, Krafty Kuts, A.Skillz and Soul of Man — core breaks roster from the Brighton-based label. Venue 286A Madeira Drive, BN2 1EN. Tickets via Skiddle; same Finger Lickin circuit as the London boat party and Between the Bridges dates already on Optimal Breaks.",
+  description_es:
+    'Showcase de verano de Finger Lickin Records en Concorde 2, frente al mar en Brighton, el sábado 15 de agosto de 2026, de 17:00 a 22:00 h (18+). Ficha Skiddle: The Freestylers, Plump DJs, Krafty Kuts, A.Skillz y Soul of Man — núcleo breaks del sello con sede en Brighton. Sala 286A Madeira Drive, BN2 1EN. Entradas en Skiddle; mismo circuito Finger Lickin que la boat party londinense y Between the Bridges ya catalogados en Optimal Breaks.',
+  event_type: 'club_night',
+  date_start: '2026-08-15',
+  date_end: null,
+  location: 'Concorde 2, Brighton, United Kingdom',
+  city: 'Brighton',
+  country: 'United Kingdom',
+  venue: 'Concorde 2',
+  address: '286A Madeira Drive, Brighton BN2 1EN',
+  website: CONCORDE2_WEB,
+  tickets_url: FINGER_LICKIN_SUMMER_TAKEOVER_SKIDDLE,
+  image_url: FINGER_LICKIN_SUMMER_TAKEOVER_IMAGE,
+  lineup: FINGER_LICKIN_SUMMER_TAKEOVER_2026_LINEUP,
+  tags: [
+    'finger lickin records',
+    'concorde 2',
+    'brighton',
+    'breaks',
+    'breakbeat',
+    'freestylers',
+    'plump djs',
+    'krafty kuts',
+    'a.skillz',
+    'soul of man',
+    '2026',
+    'skiddle',
+    'united kingdom',
+  ],
+  socials: {
+    'Concorde 2': CONCORDE2_WEB,
+    Skiddle: FINGER_LICKIN_SUMMER_TAKEOVER_SKIDDLE,
+  },
+  age_restriction: '18+',
+  doors_open: '17:00',
+  doors_close: '22:00',
+  coords: { lat: 50.8156, lng: -0.1294 },
+}
+
+async function runPatchFingerLickinSummerTakeover2026(sb) {
+  const row = {
+    slug: FINGER_LICKIN_SUMMER_TAKEOVER_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...FINGER_LICKIN_SUMMER_TAKEOVER_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url')
+    .eq('slug', FINGER_LICKIN_SUMMER_TAKEOVER_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-finger-lickin-summer-takeover-2026] OK:', after)
+}
+
+const STANTON_WARRIORS_VOLKS_BRIGHTON_2026_SLUG = 'stanton-warriors-volks-brighton-2026'
+const STANTON_WARRIORS_VOLKS_SKIDDLE =
+  'https://www.skiddle.com/whats-on/Brighton/Volks/On-the-Beach-Official-Afterparty-Stanton-Warriors-Calyx/42511743/'
+const STANTON_WARRIORS_VOLKS_IMAGE = '/images/events/stanton-warriors-volks-brighton-2026.webp'
+const VOLKS_WEB = 'https://volksclubbrighton.co.uk/'
+
+const STANTON_WARRIORS_VOLKS_BRIGHTON_2026_LINEUP = ['Stanton Warriors', 'Calyx']
+
+const STANTON_WARRIORS_VOLKS_BRIGHTON_2026_ROW = {
+  name: 'On the Beach Official Afterparty — Stanton Warriors & Calyx (Volks, Brighton)',
+  description_en:
+    'Official On the Beach festival afterparty at Volks Club, Brighton seafront, Saturday 18 July 2026: Stanton Warriors and Calyx (Skiddle listing). Doors 22:00 until 07:00; 18+. Address 1–3 Madeira Drive, BN2 1PS — same Madeira Drive strip as Concorde 2. Breakbeat and drum & bass crossover night tied to the Brighton beach weekender circuit.',
+  description_es:
+    'Afterparty oficial de On the Beach en Volks Club, frente al mar en Brighton, el sábado 18 de julio de 2026: Stanton Warriors y Calyx (Skiddle). Puertas 22:00 h hasta las 07:00 h; 18+. Dirección 1–3 Madeira Drive, BN2 1PS — misma franja de Madeira Drive que Concorde 2. Noche breakbeat / drum & bass ligada al circuito del festival playero de Brighton.',
+  event_type: 'club_night',
+  date_start: '2026-07-18',
+  date_end: null,
+  location: 'Volks Club, Brighton, United Kingdom',
+  city: 'Brighton',
+  country: 'United Kingdom',
+  venue: 'Volks Club',
+  address: '1–3 Madeira Drive, Brighton BN2 1PS',
+  website: VOLKS_WEB,
+  tickets_url: STANTON_WARRIORS_VOLKS_SKIDDLE,
+  image_url: STANTON_WARRIORS_VOLKS_IMAGE,
+  lineup: STANTON_WARRIORS_VOLKS_BRIGHTON_2026_LINEUP,
+  tags: [
+    'stanton warriors',
+    'calyx',
+    'on the beach',
+    'volks',
+    'brighton',
+    'afterparty',
+    'breakbeat',
+    'drum and bass',
+    '2026',
+    'skiddle',
+    'united kingdom',
+  ],
+  socials: {
+    Volks: VOLKS_WEB,
+    Skiddle: STANTON_WARRIORS_VOLKS_SKIDDLE,
+  },
+  age_restriction: '18+',
+  doors_open: '22:00',
+  doors_close: '07:00',
+  coords: { lat: 50.8165, lng: -0.1285 },
+}
+
+async function runPatchStantonWarriorsVolksBrighton2026(sb) {
+  const row = {
+    slug: STANTON_WARRIORS_VOLKS_BRIGHTON_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...STANTON_WARRIORS_VOLKS_BRIGHTON_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', STANTON_WARRIORS_VOLKS_BRIGHTON_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-stanton-warriors-volks-brighton-2026] OK:', after)
+}
+
+const STANTON_SESSIONS_STEELYARD_LONDON_2026_SLUG = 'stanton-sessions-steelyard-london-2026'
+const STANTON_SESSIONS_STEELYARD_SKIDDLE =
+  'https://www.skiddle.com/whats-on/London/The-Steelyard/Stanton-Warriors-Presents-Stanton-Sessions/43302831/'
+const STANTON_SESSIONS_STEELYARD_IMAGE =
+  '/images/events/stanton-sessions-steelyard-london-2026.webp'
+const STEELYARD_WEB = 'https://www.thesteelyard.co.uk/'
+
+const STANTON_SESSIONS_STEELYARD_LONDON_2026_LINEUP = ['Stanton Warriors']
+
+const STANTON_SESSIONS_STEELYARD_LONDON_2026_ROW = {
+  name: 'Stanton Warriors Presents: Stanton Sessions (The Steelyard, London)',
+  description_en:
+    'Stanton Warriors headline their Stanton Sessions brand at The Steelyard, London Bridge, on Saturday 10 October 2026. Doors 19:00 (Skiddle). Address 13–15 Allhallows Lane, EC4R 3UL. At cataloguing time public listings named Stanton Warriors only — check Skiddle and stantonwarriors.com for support announcements. Promotional artwork on file is a generic Stanton Warriors photo until a dedicated event poster is published.',
+  description_es:
+    'Stanton Warriors encabezan su marca Stanton Sessions en The Steelyard, London Bridge, el sábado 10 de octubre de 2026. Apertura 19:00 h (Skiddle). Dirección 13–15 Allhallows Lane, EC4R 3UL. Al catalogar, los listados públicos solo citaban a Stanton Warriors — consultar Skiddle y stantonwarriors.com por refuerzos. La imagen promocional en archivo es una foto genérica de Stanton Warriors hasta que publiquen cartel específico del evento.',
+  event_type: 'club_night',
+  date_start: '2026-10-10',
+  date_end: null,
+  location: 'The Steelyard, London, United Kingdom',
+  city: 'London',
+  country: 'United Kingdom',
+  venue: 'The Steelyard',
+  address: '13–15 Allhallows Lane, London EC4R 3UL',
+  website: STEELYARD_WEB,
+  tickets_url: STANTON_SESSIONS_STEELYARD_SKIDDLE,
+  image_url: STANTON_SESSIONS_STEELYARD_IMAGE,
+  lineup: STANTON_SESSIONS_STEELYARD_LONDON_2026_LINEUP,
+  tags: [
+    'stanton warriors',
+    'stanton sessions',
+    'the steelyard',
+    'london',
+    'breakbeat',
+    'breaks',
+    '2026',
+    'skiddle',
+    'united kingdom',
+  ],
+  socials: {
+    'The Steelyard': STEELYARD_WEB,
+    'Stanton Warriors': 'https://stantonwarriors.com/',
+    Skiddle: STANTON_SESSIONS_STEELYARD_SKIDDLE,
+  },
+  age_restriction: '18+',
+  doors_open: '19:00',
+  coords: { lat: 51.5107, lng: -0.0923 },
+}
+
+async function runPatchStantonSessionsSteelyardLondon2026(sb) {
+  const row = {
+    slug: STANTON_SESSIONS_STEELYARD_LONDON_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...STANTON_SESSIONS_STEELYARD_LONDON_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url')
+    .eq('slug', STANTON_SESSIONS_STEELYARD_LONDON_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-stanton-sessions-steelyard-london-2026] OK:', after)
+}
+
+const DEEKLINE_IRON_COW_ORLANDO_2026_SLUG = 'deekline-iron-cow-orlando-2026'
+const DEEKLINE_IRON_COW_TICKETS =
+  'https://www.happeningnext.com/event/best-of-breaks-presents-deekline-at-iron-cow-breaks-and-drum-n-bass'
+const DEEKLINE_IRON_COW_IMAGE = '/images/events/deekline-iron-cow-orlando-2026.webp'
+const IRON_COW_WEB = 'https://ironcowbar.com/'
+
+const DEEKLINE_IRON_COW_ORLANDO_2026_LINEUP = [
+  'Deekline',
+  'Tooltime',
+  'Audio',
+  'Amber Jane',
+]
+
+const DEEKLINE_IRON_COW_ORLANDO_2026_ROW = {
+  name: 'Best of Breaks presents Deekline @ Iron Cow (Orlando)',
+  description_en:
+    'Best of Breaks brings UK breakbeat icon Deekline to Iron Cow, Orlando, on Saturday 18 July 2026, 21:00–02:30. Listed support: Tooltime, Audio and Amber Jane (Happeningnext listing). Deekline spans classic breaks and drum & bass — a natural fit alongside Florida breakbeat nights such as BREAKDOWN on Optimal Breaks. Venue 2438A E Robinson St, Orlando, FL. 21+ bar; check Happeningnext and Iron Cow for ticket updates.',
+  description_es:
+    'Best of Breaks trae al icono británico del breakbeat Deekline al Iron Cow de Orlando el sábado 18 de julio de 2026, de 21:00 a 02:30 h. Refuerzos listados: Tooltime, Audio y Amber Jane (Happeningnext). Deekline cruza breaks clásico y drum & bass — encaja con la escena breakbeat de Florida ya representada por BREAKDOWN en Optimal Breaks. Local 2438A E Robinson St, Orlando, FL. Bar 21+; consultar Happeningnext e Iron Cow por entradas.',
+  event_type: 'club_night',
+  date_start: '2026-07-18',
+  date_end: null,
+  location: 'Iron Cow, Orlando, FL, United States',
+  city: 'Orlando',
+  country: 'United States',
+  venue: 'Iron Cow',
+  address: '2438A E Robinson St, Orlando, FL 32803',
+  website: IRON_COW_WEB,
+  tickets_url: DEEKLINE_IRON_COW_TICKETS,
+  image_url: DEEKLINE_IRON_COW_IMAGE,
+  lineup: DEEKLINE_IRON_COW_ORLANDO_2026_LINEUP,
+  tags: [
+    'deekline',
+    'best of breaks',
+    'iron cow',
+    'orlando',
+    'florida',
+    'breakbeat',
+    'breaks',
+    'drum and bass',
+    '2026',
+    'united states',
+  ],
+  socials: {
+    'Iron Cow': IRON_COW_WEB,
+    Happeningnext: DEEKLINE_IRON_COW_TICKETS,
+  },
+  age_restriction: '21+',
+  doors_open: '21:00',
+  doors_close: '02:30',
+  coords: { lat: 28.5458, lng: -81.3516 },
+}
+
+async function runPatchDeeklineIronCowOrlando2026(sb) {
+  const row = {
+    slug: DEEKLINE_IRON_COW_ORLANDO_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...DEEKLINE_IRON_COW_ORLANDO_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, age_restriction')
+    .eq('slug', DEEKLINE_IRON_COW_ORLANDO_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-deekline-iron-cow-orlando-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -4239,6 +4523,26 @@ async function main() {
 
   if (argv.includes('--patch-break-nation-by-420-sound-2026')) {
     await runPatchBreakNationBy420Sound2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-finger-lickin-summer-takeover-2026')) {
+    await runPatchFingerLickinSummerTakeover2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-stanton-warriors-volks-brighton-2026')) {
+    await runPatchStantonWarriorsVolksBrighton2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-stanton-sessions-steelyard-london-2026')) {
+    await runPatchStantonSessionsSteelyardLondon2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-deekline-iron-cow-orlando-2026')) {
+    await runPatchDeeklineIronCowOrlando2026(sb)
     return
   }
 

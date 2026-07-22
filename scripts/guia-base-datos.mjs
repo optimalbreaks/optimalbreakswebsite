@@ -481,6 +481,38 @@ const ACTIONS = [
       'UPSERT break-nation-by-420-sound-2026: Break Nation by 420 Energy Sound, Sala Roka Málaga 19 sept 2026 (cartel sin DJs individuales), MonsterTicket.',
   },
   {
+    id: 'events-patch-finger-lickin-summer-takeover-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-finger-lickin-summer-takeover-2026',
+    npm: 'npm run db:guia -- run events-patch-finger-lickin-summer-takeover-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      "UPSERT finger-lickin-summer-takeover-2026: Finger Lickin' Summer Takeover, Concorde 2 Brighton 15 ago 2026 (Freestylers, Plump DJs, Krafty Kuts, A.Skillz, Soul of Man), Skiddle.",
+  },
+  {
+    id: 'events-patch-stanton-warriors-volks-brighton-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-stanton-warriors-volks-brighton-2026',
+    npm: 'npm run db:guia -- run events-patch-stanton-warriors-volks-brighton-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT stanton-warriors-volks-brighton-2026: On the Beach afterparty, Volks Brighton 18 jul 2026 (Stanton Warriors, Calyx), Skiddle.',
+  },
+  {
+    id: 'events-patch-stanton-sessions-steelyard-london-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-stanton-sessions-steelyard-london-2026',
+    npm: 'npm run db:guia -- run events-patch-stanton-sessions-steelyard-london-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT stanton-sessions-steelyard-london-2026: Stanton Warriors Presents Stanton Sessions, The Steelyard London 10 oct 2026, Skiddle.',
+  },
+  {
+    id: 'events-patch-deekline-iron-cow-orlando-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-deekline-iron-cow-orlando-2026',
+    npm: 'npm run db:guia -- run events-patch-deekline-iron-cow-orlando-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT deekline-iron-cow-orlando-2026: Best of Breaks / Deekline, Iron Cow Orlando 18 jul 2026 (Tooltime, Audio, Amber Jane), Happeningnext.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -717,6 +749,10 @@ Punto de entrada unificado:
   events-patch-coast-breakbeat-2026          Coast Breakbeat, Sala Teranga Torrox Costa 18 jul 2026 (Frequency Break, MonsterTicket)
   events-patch-breakclub-at-cosmos-club-2026 BREAKCLUB at COSMOS CLUB Sevilla 17 jul 2026 (MonsterTicket)
   events-patch-break-nation-by-420-sound-2026 Break Nation by 420 Sound, Sala Roka Málaga 19 sept 2026 (MonsterTicket)
+  events-patch-finger-lickin-summer-takeover-2026  Finger Lickin' Summer Takeover, Concorde 2 Brighton 15 ago 2026 (Skiddle)
+  events-patch-stanton-warriors-volks-brighton-2026  On the Beach afterparty, Volks Brighton 18 jul 2026 (Stanton Warriors, Calyx)
+  events-patch-stanton-sessions-steelyard-london-2026  Stanton Sessions, The Steelyard London 10 oct 2026 (Skiddle)
+  events-patch-deekline-iron-cow-orlando-2026  Deekline @ Iron Cow Orlando 18 jul 2026 (Happeningnext)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -1179,6 +1215,18 @@ function main() {
       break
     case 'events-patch-break-nation-by-420-sound-2026':
       runNode('enriquecer-evento.mjs', ['--patch-break-nation-by-420-sound-2026', ...rest])
+      break
+    case 'events-patch-finger-lickin-summer-takeover-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-finger-lickin-summer-takeover-2026', ...rest])
+      break
+    case 'events-patch-stanton-warriors-volks-brighton-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-stanton-warriors-volks-brighton-2026', ...rest])
+      break
+    case 'events-patch-stanton-sessions-steelyard-london-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-stanton-sessions-steelyard-london-2026', ...rest])
+      break
+    case 'events-patch-deekline-iron-cow-orlando-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-deekline-iron-cow-orlando-2026', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()
