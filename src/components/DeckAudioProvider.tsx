@@ -525,10 +525,11 @@ function MiniPlayerShell({
   // Share / volver de Facebook…) o cambio de barra del sistema, el
   // `visualViewport` puede desincronizarse con `position: fixed; bottom: 0`
   // y dejar la barra "flotando" en mitad de la pantalla. El hook compensa
-  // con la diferencia entre `innerHeight` y `visualViewport.height + offsetTop`,
-  // escuchando además `visibilitychange` / `focus` (que es cuando ocurre el
-  // caso de Web Share desde la PWA) y re-midiendo a 80/250/600 ms tras cada
-  // "despertar" porque iOS tarda algunos frames en reportar el valor real.
+  // con la diferencia entre `innerHeight` y `visualViewport.height + offsetTop`.
+  // Además ignora mediciones transitorias con un overlay nativo encima
+  // (share sheet abierto) y, mientras el offset sea > 0, re-mide en un
+  // intervalo corto hasta volver a 0 — así la barra recupera el fondo
+  // aunque iOS no emita ningún evento al cerrar la hoja de compartir.
   const vvOffset = useViewportBottomOffset()
 
   const seek = useCallback((clientX: number) => {
