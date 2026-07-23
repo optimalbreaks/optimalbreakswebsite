@@ -29,6 +29,7 @@ const ChartsPromoModal = nextDynamic(() => import('@/components/ChartsPromoModal
 const CookieBanner = nextDynamic(() => import('@/components/CookieBanner'), { ssr: false })
 const DeferredFonts = nextDynamic(() => import('@/components/DeferredFonts'), { ssr: false })
 const BackToTop = nextDynamic(() => import('@/components/BackToTop'), { ssr: false })
+const AdminCaptureFab = nextDynamic(() => import('@/components/AdminCaptureFab'), { ssr: false })
 const GoogleAnalytics = nextDynamic(() => import('@/components/GoogleAnalytics'), { ssr: false })
 const ServiceWorkerRegistration = nextDynamic(() => import('@/components/ServiceWorkerRegistration'), { ssr: false })
 
@@ -162,6 +163,7 @@ export default async function LangLayout({
             <div className="danger-bar" />
             <Footer dict={dict} lang={lang} />
             <BackToTop ariaLabel={dict.a11y.backToTop} />
+            <AdminCaptureFab />
           </LazyDeckAudioProvider>
           <CookieBanner lang={lang} />
           <ChartsPromoModal lang={lang} dict={dict.charts_promo} />

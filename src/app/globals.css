@@ -694,6 +694,54 @@ main {
   padding: 1.25rem 1.5rem;
 }
 
+/* Captura editorial PWA: viewport completo, composer fijo, safe areas */
+.admin-shell--capture {
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.admin-shell--capture .admin-main {
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+}
+
+.admin-topbar--capture {
+  min-height: 48px;
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+}
+
+.admin-content--capture {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ob-capture {
+  flex: 1;
+  min-height: 0;
+}
+
+.ob-capture__bar {
+  min-height: 44px;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+@media (max-width: 767px) {
+  .admin-shell--capture .admin-topbar--capture span {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+}
+
 .admin-page-title {
   font-family: 'Unbounded', sans-serif;
   font-weight: 900;

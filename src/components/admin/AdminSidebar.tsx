@@ -11,6 +11,7 @@ interface AdminSidebarProps {
 }
 
 const NAV_ITEMS = [
+  { key: 'chat', label: 'Captura', icon: '⇪', path: '/chat' },
   { key: 'dashboard', label: 'Dashboard', icon: '◉', path: '' },
   { key: 'stats', label: 'Estadísticas', icon: '▤', path: '/stats' },
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },

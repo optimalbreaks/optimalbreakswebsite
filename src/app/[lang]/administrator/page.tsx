@@ -90,10 +90,16 @@ export default function AdminDashboard() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`${base}/stats`}
-            className="admin-btn admin-btn--yellow no-underline"
+            href={`${base}/chat`}
+            className="admin-btn admin-btn--yellow no-underline min-h-11"
           >
-            📊 Estadísticas
+            ⇪ Captura
+          </Link>
+          <Link
+            href={`${base}/stats`}
+            className="admin-btn no-underline"
+          >
+            Estadísticas
           </Link>
           <Link href={`${base}/artists/new`} className="admin-btn no-underline">
             + Artista
