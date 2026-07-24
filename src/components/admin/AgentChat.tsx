@@ -71,10 +71,30 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, loading])
 
+  // Miniaturas del composer como data URLs: los blob: se revocaban al recomprimir
+  // (doble setFiles) y quedaban rotos en iOS/Android.
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f))
-    setPreviews(urls)
-    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+    if (!files.length) {
+      setPreviews([])
+      return
+    }
+    let cancelled = false
+    Promise.all(
+      files.map(
+        (f) =>
+          new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result || ''))
+            reader.onerror = () => resolve('')
+            reader.readAsDataURL(f)
+          }),
+      ),
+    ).then((urls) => {
+      if (!cancelled) setPreviews(urls.filter(Boolean))
+    })
+    return () => {
+      cancelled = true
+    }
   }, [files])
 
   // Teclado móvil: evita que el composer quede tapado (visualViewport)

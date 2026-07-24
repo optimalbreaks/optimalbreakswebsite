@@ -19,9 +19,15 @@ function hostFromUrl(u: string): string {
 }
 
 const SYSTEM_POSTER = `Eres editor de Optimal Breaks (música dance / breakbeat). Recibes candidatos de Google Imágenes como METADATOS (no ves el píxel salvo modo visión aparte).
-Tu tarea: elegir a lo sumo UN candidato que sea muy probablemente el cartel, póster o flyer oficial o promocional del evento indicado (fecha, ciudad, nombre coherente).
-Rechaza: fotos de público genéricas sin diseño de evento, capturas de Instagram/Twitter sin cartel, logos sueltos, otra ciudad o año claramente distinto, merchandising, memes, resultados dudoso-homónimos.
-Prefiere proporción vertical u horizontal típica de flyer (no exijas datos EXIF; usa título y fuente).
+Tu tarea: elegir a lo sumo UN candidato que sea el MEJOR cartel/póster/flyer oficial o promocional del evento (fecha, ciudad, nombre coherente).
+
+Prioridad (de mayor a menor):
+1) Resolución alta (preferir width*height grandes; ideal ≥1000px en el lado corto; evita thumbnails).
+2) Cartel con MÁS información visible (line-up, fecha, venue, tickets) frente a teaser mínimo o cover genérico.
+3) Fuente fiable (web del evento, promotor, RA, ticketera, prensa) frente a Pinterest/redes recortadas.
+4) Proporción típica de flyer (vertical u horizontal de evento).
+
+Rechaza: fotos de público, selfies, logos sueltos, otra ciudad/año, merchandising, memes, capturas borrosas de Stories, resultados homónimos dudosos.
 Responde SOLO JSON:
 {"chosen": <índice 0-based del array "candidates" o null>, "reason": <string breve en español>}
 Si ningún candidato es fiable, chosen debe ser null.`
@@ -49,11 +55,15 @@ async function openAiChoosePoster(
 
   const lines = candidates.map((c, i) => {
     const dim = c.width && c.height ? `${c.width}x${c.height}` : 'unknown'
+    const px =
+      c.width && c.height && Number.isFinite(c.width * c.height)
+        ? c.width * c.height
+        : 0
     const host = hostFromUrl(c.original)
-    return `[${i}] title: ${c.title}\n    source: ${c.source}\n    page: ${c.link}\n    image_host: ${host}\n    size: ${dim}`
+    return `[${i}] title: ${c.title}\n    source: ${c.source}\n    page: ${c.link}\n    image_host: ${host}\n    size: ${dim} (pixels≈${px || 'unknown'})`
   })
 
-  const user = `Evento:\n- nombre: ${event.name}\n- slug: ${event.slug}\n- ciudad: ${event.city ?? 'null'}\n- pais: ${event.country ?? 'null'}\n- venue: ${event.venue ?? 'null'}\n- fecha_inicio: ${event.date_start ?? 'null'}\n- tipo: ${event.event_type ?? 'null'}\n\nCandidatos (índices 0..${candidates.length - 1}):\n${lines.join('\n\n')}\n\nDevuelve JSON: {"chosen": number|null, "reason": string}`
+  const user = `Evento:\n- nombre: ${event.name}\n- slug: ${event.slug}\n- ciudad: ${event.city ?? 'null'}\n- pais: ${event.country ?? 'null'}\n- venue: ${event.venue ?? 'null'}\n- fecha_inicio: ${event.date_start ?? 'null'}\n- tipo: ${event.event_type ?? 'null'}\n\nElige el cartel de MAYOR resolución e información (line-up/fecha/venue). Entre dos válidos, gana el de más píxeles.\n\nCandidatos (índices 0..${candidates.length - 1}):\n${lines.join('\n\n')}\n\nDevuelve JSON: {"chosen": number|null, "reason": string}`
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -187,6 +197,13 @@ export async function POST(request: NextRequest) {
   if (candidates.length === 0) {
     return NextResponse.json({ chosen: null, reason: 'Sin resultados de imágenes', candidates: 0 })
   }
+
+  // Priorizar candidatos con más píxeles (alta resolución) antes de pedirle a la IA
+  candidates = [...candidates].sort((a, b) => {
+    const pa = (a.width || 0) * (a.height || 0)
+    const pb = (b.width || 0) * (b.height || 0)
+    return pb - pa
+  })
 
   let chosen: { url: string | null; reason: string }
   try {

@@ -411,6 +411,62 @@ async function upsertArtistAction(
   }
 }
 
+/** Nombre normalizado para detectar eventos duplicados (sin acentos, ni símbolos, minúsculas). */
+function normalizeEventName(s: string): string {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function isChatScreenshotUrl(url: unknown): boolean {
+  return typeof url === 'string' && url.includes('/media/chat/')
+}
+
+type ExistingEventRow = {
+  id: string
+  slug: string
+  name: string
+  date_start: string | null
+  city: string | null
+  image_url: string | null
+}
+
+/**
+ * Busca un evento ya existente que sea el mismo que el nuevo:
+ * mismo slug, o nombre normalizado igual/contenido (y año compatible si ambos tienen fecha).
+ */
+function findDuplicateEvent(
+  all: ExistingEventRow[],
+  slug: string,
+  name: string,
+  dateStart: string | null | undefined,
+): ExistingEventRow | null {
+  const bySlug = all.find((e) => e.slug === slug)
+  if (bySlug) return bySlug
+
+  const normNew = normalizeEventName(name)
+  if (!normNew || normNew.length < 5) return null
+  const newYear = (dateStart || '').slice(0, 4)
+
+  for (const e of all) {
+    const normOld = normalizeEventName(e.name)
+    if (!normOld) continue
+    const sameName =
+      normOld === normNew ||
+      (normOld.length >= 8 && normNew.includes(normOld)) ||
+      (normNew.length >= 8 && normOld.includes(normNew))
+    if (!sameName) continue
+    // Ediciones anuales: si ambos tienen año y difiere, NO es duplicado
+    const oldYear = (e.date_start || '').slice(0, 4)
+    if (newYear && oldYear && newYear !== oldYear) continue
+    return e
+  }
+  return null
+}
+
 async function upsertEventAction(
   action: Extract<ChatAction, { type: 'event' }>,
   originRequest: Request,
@@ -463,11 +519,23 @@ async function upsertEventAction(
     row.image_url = attachedImageUrls[0]
   }
 
-  const { data: existing } = await sb.from('events').select('id, slug').eq('slug', slug).maybeSingle()
+  // Duplicados: buscar por slug Y por nombre normalizado (p. ej. mismo evento con otro slug)
+  const { data: allEvents } = await sb
+    .from('events')
+    .select('id, slug, name, date_start, city, image_url')
+    .limit(3000)
+  const existing = findDuplicateEvent(
+    (allEvents || []) as ExistingEventRow[],
+    slug,
+    name,
+    action.date_start,
+  )
+  const targetSlug = existing?.slug || slug
+  const isDuplicate = Boolean(existing && existing.slug !== slug)
 
   let writeErr: string | undefined
   if (existing?.id) {
-    const patch: Record<string, unknown> = { name: row.name, country: row.country }
+    const patch: Record<string, unknown> = { country: row.country }
     for (const key of [
       'city',
       'venue',
@@ -478,11 +546,16 @@ async function upsertEventAction(
       'event_type',
       'website',
       'tickets_url',
-      'image_url',
     ] as const) {
       const v = row[key]
       if (v != null && v !== '' && v !== 'TBA') patch[key] = v
     }
+    // La captura del chat NUNCA sustituye un cartel ya existente
+    const hasGoodImage =
+      typeof existing.image_url === 'string' &&
+      existing.image_url.startsWith('https://') &&
+      !isChatScreenshotUrl(existing.image_url)
+    if (!hasGoodImage && row.image_url) patch.image_url = row.image_url
     if (Array.isArray(row.lineup) && (row.lineup as string[]).length) patch.lineup = row.lineup
     if (Array.isArray(row.tags) && (row.tags as string[]).length) patch.tags = row.tags
     if (typeof row.description_es === 'string' && row.description_es.trim()) {
@@ -491,34 +564,41 @@ async function upsertEventAction(
     if (typeof row.description_en === 'string' && row.description_en.trim()) {
       patch.description_en = row.description_en
     }
-    const { error } = await sb.from('events').update(patch).eq('slug', slug)
+    const { error } = await sb.from('events').update(patch).eq('slug', targetSlug)
     writeErr = error?.message
   } else {
     const { error } = await sb.from('events').insert(row)
     writeErr = error?.message
   }
   if (writeErr) {
-    return { type: 'event', ok: false, summary: `Evento ${slug}: ${writeErr}` }
+    return { type: 'event', ok: false, summary: `Evento ${targetSlug}: ${writeErr}` }
   }
 
+  // Paso 2: enriquecer con búsqueda web (SerpAPI + OpenAI) los campos vacíos
   let enrichNote = ''
   if (action.enrich !== false) {
-    // Timeout corto: el self-fetch en Vercel a veces cuelga; el evento ya está guardado.
+    // Timeout: el self-fetch en Vercel a veces cuelga; el evento ya está guardado.
     try {
       const enrichPromise = adminInternalPost(originRequest, '/api/admin/agent/event', {
-        slug,
+        slug: targetSlug,
         force: false,
       })
       const timeoutPromise = new Promise<{ ok: false; status: number; json: Record<string, unknown> }>(
         (resolve) =>
           setTimeout(
             () => resolve({ ok: false, status: 504, json: { error: 'enrich timeout' } }),
-            28_000,
+            60_000,
           ),
       )
       const { ok, json } = await Promise.race([enrichPromise, timeoutPromise])
       if (ok && json.saved) {
-        enrichNote = ` · enriquecido (${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
+        const src =
+          json.web_source === 'openai'
+            ? 'OpenAI web_search'
+            : json.web_source === 'serpapi'
+              ? 'SerpAPI'
+              : 'web'
+        enrichNote = ` · ficha completada (${src}: ${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
       } else if (json.message) {
         enrichNote = ` · enrich: ${String(json.message)}`
       } else if (!ok) {
@@ -529,11 +609,48 @@ async function upsertEventAction(
     }
   }
 
+  // Paso 3: cartel oficial — la captura del móvil es solo provisional; buscar el
+  // póster real en Google Imágenes (agente event-poster) y sustituirla.
+  let posterNote = ''
+  const currentImage = existing?.image_url || (row.image_url as string | undefined) || null
+  const needsRealPoster =
+    !currentImage || !String(currentImage).startsWith('https://') || isChatScreenshotUrl(currentImage)
+  if (needsRealPoster) {
+    try {
+      const posterPromise = adminInternalPost(originRequest, '/api/admin/agent/event-poster', {
+        slug: targetSlug,
+      })
+      const timeoutPromise = new Promise<{ ok: false; status: number; json: Record<string, unknown> }>(
+        (resolve) =>
+          setTimeout(
+            () => resolve({ ok: false, status: 504, json: { error: 'poster timeout' } }),
+            75_000,
+          ),
+      )
+      const { ok, json } = await Promise.race([posterPromise, timeoutPromise])
+      if (ok && json.saved && json.storageUrl) {
+        posterNote = ' · cartel oficial encontrado y guardado'
+      } else if (json.reason) {
+        posterNote = ` · cartel: ${String(json.reason)} (se mantiene tu captura)`
+      } else if (!ok) {
+        posterNote = ' · cartel oficial no disponible aún (se mantiene tu captura)'
+      }
+    } catch {
+      posterNote = ' · cartel oficial no disponible aún (se mantiene tu captura)'
+    }
+  }
+
+  const header = isDuplicate
+    ? `Ya existía «${existing?.name}» (${targetSlug}); actualizado sin duplicar`
+    : existing
+      ? `Evento ya existente actualizado: ${name} (${targetSlug})`
+      : `Evento creado: ${name} (${targetSlug})`
+
   return {
     type: 'event',
     ok: true,
-    summary: `Evento upsert: ${name} (${slug})${enrichNote}`,
-    detail: { slug, image_url: row.image_url ?? null },
+    summary: `${header}${enrichNote}${posterNote}`,
+    detail: { slug: targetSlug, duplicate_of: isDuplicate ? existing?.slug : undefined },
   }
 }
 
@@ -870,6 +987,99 @@ async function fetchSerpContext(query: string, apiKey: string): Promise<string> 
   }
 }
 
+/** Búsqueda web nativa de OpenAI (Responses API, tool web_search). Devuelve resumen factual. */
+async function fetchOpenAIWebSearchContext(query: string, apiKey: string): Promise<string> {
+  // Preferir gpt-5.5 (web search nativo); override con OPENAI_SEARCH_MODEL
+  const model =
+    process.env.OPENAI_SEARCH_MODEL?.trim() ||
+    process.env.OPENAI_CHAT_MODEL?.trim() ||
+    'gpt-5.5'
+  const prompt = `Investiga en la web el evento de música electrónica / breakbeat: ${query}
+
+Prioriza fuentes oficiales (web del evento, promotor, ticketeras: MonsterTicket, Dice, RA, Resident Advisor, Facebook Events).
+
+Devuelve SOLO un resumen factual en texto plano (sin markdown) con:
+- Nombre oficial del evento
+- Fecha(s) exacta(s) (YYYY-MM-DD si posible) y horarios (doors / cierre)
+- Recinto/venue, dirección, ciudad y país
+- Line-up completo / artistas confirmados (y stages si hay)
+- URL oficial (website) y URL de venta de entradas (tickets)
+- Redes sociales del evento si aparecen
+- Precio, edad mínima, capacidad, promotor
+Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo inventes.`
+
+  // web_search (actual) → web_search_preview (legacy)
+  for (const toolType of ['web_search', 'web_search_preview']) {
+    try {
+      const res = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          tools: [{ type: toolType }],
+          tool_choice: 'auto',
+          input: prompt,
+        }),
+        signal: AbortSignal.timeout(90_000),
+      })
+      if (!res.ok) {
+        // 400 suele ser tool type no soportado → probar el otro
+        if (res.status === 400) continue
+        continue
+      }
+      const data = await res.json()
+      let text = ''
+      if (typeof data.output_text === 'string') {
+        text = data.output_text
+      } else if (Array.isArray(data.output)) {
+        for (const item of data.output) {
+          if (item?.type === 'message' && Array.isArray(item.content)) {
+            for (const c of item.content) {
+              if (
+                (c?.type === 'output_text' || c?.type === 'text') &&
+                typeof c.text === 'string'
+              ) {
+                text += c.text + '\n'
+              }
+            }
+          }
+        }
+      }
+      const trimmed = text.trim().slice(0, 12_000)
+      if (trimmed) return trimmed
+    } catch {
+      /* probar siguiente tool type / fallback SerpAPI */
+    }
+  }
+  return ''
+}
+
+/**
+ * Contexto web para fichas: OpenAI web search primero; SerpAPI solo como respaldo.
+ * (SerpAPI sigue siendo necesario aparte para Google IMÁGENES: carteles, fotos, logos.)
+ */
+export async function fetchWebResearchContext(
+  query: string,
+): Promise<{ context: string; source: 'openai' | 'serpapi' | 'none' }> {
+  const q = query.trim()
+  if (!q) return { context: '', source: 'none' }
+
+  const openaiKey = process.env.OPENAI_API_KEY?.trim()
+  if (openaiKey) {
+    const ctx = await fetchOpenAIWebSearchContext(q, openaiKey)
+    if (ctx) return { context: ctx, source: 'openai' }
+  }
+  const serpKey = process.env.SERPAPI_API_KEY?.trim()
+  if (serpKey) {
+    const ctx = await fetchSerpContext(q, serpKey)
+    if (ctx) return { context: ctx, source: 'serpapi' }
+  }
+  return { context: '', source: 'none' }
+}
+
 async function extractScreenshotFacts(opts: {
   openaiKey: string
   model: string
@@ -1008,28 +1218,28 @@ export async function planChatWithOpenAI(opts: {
     })
   }
 
-  const serpKey = process.env.SERPAPI_API_KEY?.trim()
-  if (serpKey) {
-    const q =
-      screenshotFacts?.search_query?.trim() ||
-      [
-        screenshotFacts?.event_name,
-        screenshotFacts?.city,
-        screenshotFacts?.date_start?.slice(0, 4) || screenshotFacts?.date_text,
-        'entradas evento',
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .trim() ||
-      (opts.message.match(/https?:\/\/\S+/i)
-        ? ''
-        : opts.message
-            .replace(/https?:\/\/\S+/gi, '')
-            .trim()
-            .slice(0, 120))
-    if (q && q.length > 3) {
-      webContext = await fetchSerpContext(q, serpKey)
-    }
+  const q =
+    screenshotFacts?.search_query?.trim() ||
+    [
+      screenshotFacts?.event_name,
+      screenshotFacts?.city,
+      screenshotFacts?.date_start?.slice(0, 4) || screenshotFacts?.date_text,
+      'entradas festival club event lineup',
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+    (opts.message.match(/https?:\/\/\S+/i)
+      ? opts.message.match(/https?:\/\/\S+/i)?.[0] || ''
+      : opts.message
+          .replace(/https?:\/\/\S+/gi, '')
+          .trim()
+          .slice(0, 120))
+  let webSource: 'openai' | 'serpapi' | 'none' = 'none'
+  if (q && q.length > 3) {
+    const research = await fetchWebResearchContext(q)
+    webContext = research.context
+    webSource = research.source
   }
 
   const historyMsgs = opts.history.slice(-6).map((h) => ({
@@ -1053,9 +1263,9 @@ export async function planChatWithOpenAI(opts: {
     text += `\nHECHOS YA LEÍDOS DE LA CAPTURA (OCR previo; priorízalos):\n${JSON.stringify(screenshotFacts, null, 2)}\n`
   }
   if (webContext) {
-    text += `\nCONTEXTO WEB (búsqueda; puede tener errores; no inventes URLs que no aparezcan):\n---\n${webContext}\n---\n`
+    text += `\nCONTEXTO WEB (${webSource === 'openai' ? 'OpenAI web_search' : 'SerpAPI fallback'}; puede tener errores; no inventes URLs que no aparezcan):\n---\n${webContext}\n---\n`
   } else if (hasImages) {
-    text += `\n(Sin contexto web / SerpAPI. Completa solo con lo legible en la imagen y el mensaje.)\n`
+    text += `\n(Sin contexto web. Completa solo con lo legible en la imagen y el mensaje.)\n`
   }
   text += `\nHoy (UTC): ${new Date().toISOString().slice(0, 10)}
 OBLIGATORIO: si hay cartel/evento identificable, actions DEBE incluir al menos un objeto { "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, ...campos }.

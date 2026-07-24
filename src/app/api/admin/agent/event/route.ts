@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { fetchWebResearchContext } from '@/lib/admin-chat'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 
@@ -16,33 +17,6 @@ function loadSystemPrompt(): string {
   const p = path.resolve(process.cwd(), 'scripts', 'prompts', 'evento-enriquecer-system.txt')
   if (!existsSync(p)) throw new Error(`Prompt del sistema no encontrado: ${p}`)
   return readFileSync(p, 'utf8').trim()
-}
-
-async function fetchSerpContext(query: string, apiKey: string): Promise<string> {
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  url.searchParams.set('gl', 'es')
-  url.searchParams.set('api_key', apiKey)
-
-  try {
-    const res = await fetch(url.toString())
-    if (!res.ok) return ''
-    const data = await res.json()
-    const bits: string[] = []
-    if (Array.isArray(data.organic_results)) {
-      for (const r of data.organic_results.slice(0, 10)) {
-        if (r.title) bits.push(`Title: ${r.title}`)
-        if (r.snippet) bits.push(`Snippet: ${r.snippet}`)
-        if (r.link) bits.push(`URL: ${r.link}`)
-        bits.push('---')
-      }
-    }
-    return bits.join('\n').slice(0, 9_000)
-  } catch {
-    return ''
-  }
 }
 
 function buildSearchQuery(event: Record<string, unknown>): string {
@@ -209,13 +183,17 @@ export async function POST(request: NextRequest) {
 
   const systemPrompt = loadSystemPrompt()
 
-  let webContext = '(Sin búsqueda web — falta SERPAPI_API_KEY)'
-  const serpKey = process.env.SERPAPI_API_KEY?.trim()
-  if (serpKey) {
-    const q = buildSearchQuery(event)
-    webContext = await fetchSerpContext(q, serpKey)
-    if (!webContext) webContext = '(Sin resultados de búsqueda.)'
-  }
+  const q = buildSearchQuery(event)
+  const research = await fetchWebResearchContext(q)
+  const webContext =
+    research.context ||
+    '(Sin resultados de búsqueda web — OpenAI web_search y SerpAPI no devolvieron contexto.)'
+  const webSourceLabel =
+    research.source === 'openai'
+      ? 'OpenAI web_search'
+      : research.source === 'serpapi'
+        ? 'SerpAPI (fallback)'
+        : 'ninguna'
 
   const today = new Date().toISOString().slice(0, 10)
   const userPrompt = `FICHA ACTUAL DEL EVENTO (JSON):
@@ -223,7 +201,7 @@ ${JSON.stringify(event, null, 2)}
 
 FECHA DE HOY: ${today}
 
-CONTEXTO WEB (resultados de búsqueda):
+CONTEXTO WEB (${webSourceLabel}):
 ---
 ${webContext}
 ---
@@ -231,8 +209,8 @@ ${webContext}
 Devuelve SOLO el JSON final con todos los campos del esquema (ver sistema).
 
 Prioridades para este enriquecimiento:
+- Completa la ficha al nivel de un evento editorial bien trabajado (p. ej. Summer Festival): fecha, venue, ciudad, país, location, address, lineup, stages, schedule, tags, website, tickets_url, socials, doors_open, doors_close, age_restriction, capacity y descripciones EN/ES útiles.
 - Respeta los valores existentes si ya son plausibles y el contexto no los contradice.
-- Prioriza los campos que más valor aportan a la BD y a la página de detalle: fecha, venue, ciudad, país, location, address, lineup, stages, schedule, tags, website, tickets_url, socials, doors_open, doors_close, age_restriction y capacity.
 - Si no hay día exacto confirmado, deja date_start/date_end en null.
 - Si no hay evidencia suficientemente clara para un campo, devuélvelo vacío en lugar de inferirlo.
 - Las descripciones EN/ES deben contar la misma historia y no introducir hechos nuevos.
@@ -308,5 +286,6 @@ Los campos que ya tienen valor correcto, repítelos tal cual.`
     event: enriched,
     saved: true,
     fieldsUpdated: Object.keys(patch),
+    web_source: research.source,
   })
 }
