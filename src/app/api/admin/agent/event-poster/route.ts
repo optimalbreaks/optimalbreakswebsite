@@ -4,6 +4,9 @@ import { createServiceSupabase } from '@/lib/supabase-admin'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 
+/** Visión OCR + SerpAPI + Storage; el chat usa light=true para no colgar. */
+export const maxDuration = 120
+
 type ImageCandidate = {
   title: string
   source: string
@@ -32,15 +35,21 @@ function sortCandidatesByPixels(candidates: ImageCandidate[]): ImageCandidate[] 
   return [...candidates].sort((a, b) => pixelScore(b) - pixelScore(a))
 }
 
-function visionImageUrl(c: ImageCandidate): string | null {
+function visionImageUrl(c: ImageCandidate, preferThumb: boolean): string | null {
   const original = typeof c.original === 'string' ? c.original : ''
   const thumb = typeof c.thumbnail === 'string' ? c.thumbnail : ''
   const host = hostFromUrl(original).toLowerCase()
   const blockedHosts = ['lookaside.instagram.com', 'lookaside.fbsbx.com', 'instagram.com']
-  if (original.startsWith('https://') && !blockedHosts.some((h) => host.includes(h))) {
-    return original
+  const originalOk =
+    original.startsWith('https://') && !blockedHosts.some((h) => host.includes(h))
+  // En modo light (chat): thumbs = OCR rápido. En modo normal: original para más nitidez.
+  if (preferThumb) {
+    if (thumb.startsWith('https://')) return thumb
+    if (originalOk) return original
+  } else {
+    if (originalOk) return original
+    if (thumb.startsWith('https://')) return thumb
   }
-  if (thumb.startsWith('https://')) return thumb
   return original.startsWith('https://') ? original : null
 }
 
@@ -82,6 +91,7 @@ async function openAiChoosePosterVision(
     event_type?: string | null
   },
   candidates: ImageCandidate[],
+  opts?: { light?: boolean },
 ): Promise<{ url: string | null; reason: string }> {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
@@ -89,9 +99,12 @@ async function openAiChoosePosterVision(
     process.env.OPENAI_VISION_MODEL?.trim() ||
     process.env.OPENAI_MODEL?.trim() ||
     'gpt-4o'
+  const light = opts?.light === true
+  const maxImg = Math.min(light ? 6 : 8, candidates.length)
+  const detail: 'high' | 'low' = light ? 'low' : 'high'
+  const preferThumb = light
 
   const ranked = sortCandidatesByPixels(candidates)
-  const maxImg = Math.min(10, ranked.length)
   const content: Array<
     | { type: 'text'; text: string }
     | { type: 'image_url'; image_url: { url: string; detail: 'high' | 'low' | 'auto' } }
@@ -113,7 +126,7 @@ JSON: {"chosen": number|null, "reason": "..."}`,
 
   for (let i = 0; i < maxImg; i++) {
     const c = ranked[i]
-    const imgUrl = visionImageUrl(c)
+    const imgUrl = visionImageUrl(c, preferThumb)
     if (!imgUrl) continue
     const dim = c.width && c.height ? `${c.width}x${c.height}` : '?'
     content.push({
@@ -122,7 +135,7 @@ JSON: {"chosen": number|null, "reason": "..."}`,
     })
     content.push({
       type: 'image_url',
-      image_url: { url: imgUrl, detail: 'high' },
+      image_url: { url: imgUrl, detail },
     })
   }
 
@@ -215,7 +228,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response
 
   const body = await request.json()
-  const { slug } = body as { slug?: string }
+  const { slug, light } = body as { slug?: string; light?: boolean }
   if (!slug) return NextResponse.json({ error: 'Se requiere slug' }, { status: 400 })
 
   const serpKey = process.env.SERPAPI_API_KEY?.trim()
@@ -266,7 +279,7 @@ export async function POST(request: NextRequest) {
 
   let chosen: { url: string | null; reason: string }
   try {
-    chosen = await openAiChoosePosterVision(event, candidates)
+    chosen = await openAiChoosePosterVision(event, candidates, { light: light === true })
   } catch (e) {
     return NextResponse.json({ error: `OpenAI: ${e instanceof Error ? e.message : e}` }, { status: 502 })
   }

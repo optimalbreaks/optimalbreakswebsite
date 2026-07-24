@@ -366,18 +366,31 @@ async function adminInternalPost(
   originRequest: Request,
   pathName: string,
   body: unknown,
+  opts?: { timeoutMs?: number },
 ): Promise<{ ok: boolean; status: number; json: Record<string, unknown> }> {
   const url = new URL(pathName, originRequest.url)
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      cookie: originRequest.headers.get('cookie') || '',
-    },
-    body: JSON.stringify(body),
-  })
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
-  return { ok: res.ok, status: res.status, json }
+  const timeoutMs = opts?.timeoutMs
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        cookie: originRequest.headers.get('cookie') || '',
+      },
+      body: JSON.stringify(body),
+      ...(timeoutMs && timeoutMs > 0 ? { signal: AbortSignal.timeout(timeoutMs) } : {}),
+    })
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
+    return { ok: res.ok, status: res.status, json }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    const timedOut = /timeout|aborted|AbortError/i.test(msg) || (e instanceof Error && e.name === 'TimeoutError')
+    return {
+      ok: false,
+      status: timedOut ? 504 : 502,
+      json: { error: timedOut ? 'timeout' : msg },
+    }
+  }
 }
 
 async function upsertArtistAction(
@@ -574,68 +587,60 @@ async function upsertEventAction(
     return { type: 'event', ok: false, summary: `Evento ${targetSlug}: ${writeErr}` }
   }
 
-  // Paso 2: enriquecer con búsqueda web (SerpAPI + OpenAI) los campos vacíos
+  // Paso 2+3 en paralelo: enrich web + cartel oficial (OCR).
+  // Antes iban en serie (60s+75s) y el cartel con visión hi-res dejaba el chat “colgado”.
+  // El evento YA está guardado; si estos fallan/timeout, se mantiene la captura.
   let enrichNote = ''
-  if (action.enrich !== false) {
-    // Timeout: el self-fetch en Vercel a veces cuelga; el evento ya está guardado.
-    try {
-      const enrichPromise = adminInternalPost(originRequest, '/api/admin/agent/event', {
-        slug: targetSlug,
-        force: false,
-      })
-      const timeoutPromise = new Promise<{ ok: false; status: number; json: Record<string, unknown> }>(
-        (resolve) =>
-          setTimeout(
-            () => resolve({ ok: false, status: 504, json: { error: 'enrich timeout' } }),
-            60_000,
-          ),
-      )
-      const { ok, json } = await Promise.race([enrichPromise, timeoutPromise])
-      if (ok && json.saved) {
-        const src =
-          json.web_source === 'openai'
-            ? 'OpenAI web_search'
-            : json.web_source === 'serpapi'
-              ? 'SerpAPI'
-              : 'web'
-        enrichNote = ` · ficha completada (${src}: ${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
-      } else if (json.message) {
-        enrichNote = ` · enrich: ${String(json.message)}`
-      } else if (!ok) {
-        enrichNote = ` · enrich omitido: ${String(json.error || json.dbError || 'timeout/error')}`
-      }
-    } catch (e) {
-      enrichNote = ` · enrich omitido: ${e instanceof Error ? e.message : 'error'}`
-    }
-  }
-
-  // Paso 3: cartel oficial — la captura del móvil es solo provisional; buscar el
-  // póster real en Google Imágenes (agente event-poster) y sustituirla.
   let posterNote = ''
   const currentImage = existing?.image_url || (row.image_url as string | undefined) || null
   const needsRealPoster =
     !currentImage || !String(currentImage).startsWith('https://') || isChatScreenshotUrl(currentImage)
-  if (needsRealPoster) {
-    try {
-      const posterPromise = adminInternalPost(originRequest, '/api/admin/agent/event-poster', {
-        slug: targetSlug,
-      })
-      const timeoutPromise = new Promise<{ ok: false; status: number; json: Record<string, unknown> }>(
-        (resolve) =>
-          setTimeout(
-            () => resolve({ ok: false, status: 504, json: { error: 'poster timeout' } }),
-            75_000,
-          ),
+
+  const enrichTask =
+    action.enrich !== false
+      ? adminInternalPost(
+          originRequest,
+          '/api/admin/agent/event',
+          { slug: targetSlug, force: false },
+          { timeoutMs: 45_000 },
+        )
+      : Promise.resolve({ ok: false as const, status: 0, json: {} as Record<string, unknown> })
+
+  const posterTask = needsRealPoster
+    ? adminInternalPost(
+        originRequest,
+        '/api/admin/agent/event-poster',
+        { slug: targetSlug, light: true },
+        { timeoutMs: 55_000 },
       )
-      const { ok, json } = await Promise.race([posterPromise, timeoutPromise])
-      if (ok && json.saved && json.storageUrl) {
-        posterNote = ' · cartel oficial encontrado y guardado'
-      } else if (json.reason) {
-        posterNote = ` · cartel: ${String(json.reason)} (se mantiene tu captura)`
-      } else if (!ok) {
-        posterNote = ' · cartel oficial no disponible aún (se mantiene tu captura)'
-      }
-    } catch {
+    : Promise.resolve({ ok: false as const, status: 0, json: {} as Record<string, unknown> })
+
+  const [enrichRes, posterRes] = await Promise.all([enrichTask, posterTask])
+
+  if (action.enrich !== false) {
+    const { ok, json } = enrichRes
+    if (ok && json.saved) {
+      const src =
+        json.web_source === 'openai'
+          ? 'OpenAI web_search'
+          : json.web_source === 'serpapi'
+            ? 'SerpAPI'
+            : 'web'
+      enrichNote = ` · ficha completada (${src}: ${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
+    } else if (json.message) {
+      enrichNote = ` · enrich: ${String(json.message)}`
+    } else if (!ok) {
+      enrichNote = ` · enrich omitido: ${String(json.error || json.dbError || 'timeout/error')}`
+    }
+  }
+
+  if (needsRealPoster) {
+    const { ok, json } = posterRes
+    if (ok && json.saved && json.storageUrl) {
+      posterNote = ' · cartel oficial encontrado y guardado'
+    } else if (json.reason) {
+      posterNote = ` · cartel: ${String(json.reason)} (se mantiene tu captura)`
+    } else {
       posterNote = ' · cartel oficial no disponible aún (se mantiene tu captura)'
     }
   }

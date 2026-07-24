@@ -464,7 +464,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
               className="text-xs uppercase tracking-wider text-[var(--ink)]/60 animate-pulse"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
-              Leyendo captura → buscando evento → guardando en BD…
+              Leyendo captura → guardando → completando ficha/cartel (hasta ~1 min)…
             </p>
           ) : null}
           <div ref={bottomRef} />
