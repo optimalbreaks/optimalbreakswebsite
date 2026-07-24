@@ -1,0 +1,34 @@
+# Chat editorial / Captura PWA (admin)
+
+Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
+
+## Alcance
+
+Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pestaña en `/administrator/agent`. API: `POST /api/admin/agent/chat`. Lógica: `src/lib/admin-chat.ts`. Prompt plan: `scripts/prompts/admin-chat-system.txt`.
+
+## Evento desde captura
+
+1. OCR de la imagen → `ScreenshotFacts`; si el plan no trae `actions`, **fallback** `eventActionFromScreenshotFacts`.
+2. UPSERT con **dedupe** (slug + nombre normalizado + año). Captura en `media/chat/` = **provisional**.
+3. Tras guardar: **enrich + cartel en paralelo** (no en serie). Timeouts reales (`AbortSignal`) ~45s / ~55s. El evento **ya está en BD** si fallan.
+4. Cartel: `POST /api/admin/agent/event-poster` con **`light: true`** desde el chat.
+
+## Carteles — visión/OCR (no negociable)
+
+Elegir flyer **leyendo el texto del cartel** (visión). **Prohibido** decidir solo por metadatos de Google Imágenes (atribuciones falsas).
+
+- Script: `elegir-poster-evento.mjs` — OCR por defecto; `--metadata-only` solo escape.
+- API: visión por defecto; `light` = menos candidatos + thumbs + `detail: low`.
+- Si el cartel es incorrecto: reejecutar poster / sustituir WebP en `public/images/events/` y UPSERT `image_url`.
+
+## UI
+
+Barra de progreso en `AgentChat` = etapas **orientativas** (sin stream de servidor). No marcar “Guardado” sin upsert real.
+
+## Otras acciones
+
+Mismos tipos del plan: `artist`, `mix`, `new_release` (semana = release Beatport), `vinyl`. New Releases: regla **`charts-new-releases-supabase`**.
+
+## PWA
+
+Share Target: `manifest.json` + `sw.js` + `/share-target`. No romper inbox / redirección al chat.

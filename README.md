@@ -104,7 +104,7 @@ CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-an
 
 ## AI prompts and agents (OpenAI)
 
-System prompts for **artist**, **label**, and **event enrichment** agents live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**) are set in **`.env.local`**; temperature, `max_tokens`, and JSON user instructions are defined in code per route or script.
+System prompts for **artist**, **label**, **event enrichment**, and the **admin capture chat** live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**, **`OPENAI_VISION_MODEL`**) are set in **`.env.local`**; temperature, `max_tokens`, and JSON user instructions are defined in code per route or script. Capture chat + poster OCR: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md).
 
 **Central index (all prompt files, defaults per flow, related APIs):** [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md).  
 **Artist agent (batch, admin API, commands):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).  
@@ -290,6 +290,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 ├── docs/
 │   ├── README.md               # Doc index + maintenance audit (what each .md covers)
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
+│   ├── ADMIN_CHAT_CAPTURA.md   # Admin PWA capture chat + event poster OCR
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
 │   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
@@ -313,7 +314,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   ├── guia-base-datos.mjs          # npm run db:guia — scripted DB task index (`run chart-featured-file`, …)
 │   ├── sync-timeline-artists.mjs    # db:timeline / db:timeline:sql
 │   ├── sync-user-list-artists.mjs   # db:user-list — starter rows for extended name list
-│   └── prompts/                # System prompts: artist, label, event enrich, revision modes
+│   └── prompts/                # System prompts: artist, label, event enrich, admin chat, revision modes
 │       ├── artista-agente-system.txt
 │       ├── artista-agente-revision-system.txt
 │       ├── sello-agente-system.txt
@@ -621,6 +622,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |
+| Admin capture chat (PWA) | `/[lang]/administrator/chat` | Screenshot / link → OCR → UPSERT (events, artists, mixes, NR, vinyl). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
 
 ---
 
@@ -783,7 +785,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
 - **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs, **each with `release_date YYYY-MM-DD`** when scrapeable), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
 - **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`). Same optional Beatport columns as artists (`046`).
-- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are **created manually** (admin UI or Cursor agent) and then **enriched** with `npm run db:events:enrich -- <slug>` (SerpAPI + OpenAI fill missing fields). Enricher system prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt) (see [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md))
+- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are created via admin UI, Cursor, or the **PWA capture chat** (`/[lang]/administrator/chat` — screenshot → OCR → UPSERT → enrich + official poster by **vision/OCR**). Enrich: `npm run db:events:enrich -- <slug> [--with-poster]`. Poster: `npm run db:events:poster -- <slug>` (OCR by default). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md); enricher prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt)
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
 - **blog_posts** — title, content, excerpt (EN/ES), category, tags, author, `image_url`, published flag
 - **scenes** — name (EN/ES), country, region, key artists/labels/venues, era, `image_url`

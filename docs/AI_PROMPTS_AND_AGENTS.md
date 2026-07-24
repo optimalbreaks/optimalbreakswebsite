@@ -19,6 +19,7 @@ Los **textos de sistema** de los agentes editoriales (fichas de artista, sello, 
 | `sello-agente-system.txt` | Agente de ficha de **sello** (`generar-sello-agente.mjs`, API `POST /api/admin/agent/label`). |
 | `sello-agente-revision-system.txt` | Modo revisión del CLI de sello. |
 | `evento-enriquecer-system.txt` | **Enriquecedor de eventos** (`scripts/enriquecer-evento.mjs`, API `POST /api/admin/agent/event`). |
+| `admin-chat-system.txt` | **Chat editorial / captura PWA** (`POST /api/admin/agent/chat`). Guía: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
 
 Las **instrucciones de usuario** (checklist, slug, contexto web, notas) se arman en **código** en cada script o `route.ts`; no están centralizadas en un solo `.txt`.
 
@@ -40,7 +41,9 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Artista (CLI + API admin) | `gpt-5.4` |
 | Sello (API admin + CLI sello) | `gpt-5.4` |
 | Enriquecer evento (CLI + API admin evento) | `gpt-4o-mini` |
-| Elegir foto artista / sello, poster, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
+| Chat editorial / captura (plan + OCR captura) | `OPENAI_MODEL` / visión según `admin-chat.ts` |
+| Cartel evento (visión/OCR, script + API `event-poster`) | `OPENAI_VISION_MODEL` o `OPENAI_MODEL` o `gpt-4o` |
+| Elegir foto artista / sello, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
 | Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.4` |
 
 Comprueba siempre el archivo concreto si cambias de modelo: los defaults pueden divergir entre flujos.
@@ -57,6 +60,7 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 
 ### Guías detalladas por agente
 
+- **Chat editorial / captura PWA (eventos desde cartel, upsert, OCR carteles, barra de progreso):** [`docs/ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md).
 - **Artista — biografías y también fotos (SerpAPI → Storage, `--repair`, retratos en `public`):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **Base de datos, enrich, posters, fotos:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) (`node scripts/guia-base-datos.mjs` sin args).
 - **Imágenes / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
@@ -67,7 +71,8 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 Algunas herramientas llevan **cadenas de sistema breves en el propio script** o en la ruta API, no en un `.txt` separado:
 
 - **Elegir foto de artista:** `scripts/elegir-foto-artista.mjs` (texto + JSON de candidatos; modo `--vision` con miniaturas). API admin: `src/app/api/admin/agent/artist-photo/route.ts`.
-- **Logos / carteles** (sellos, eventos): scripts y rutas API homólogas bajo `scripts/` y `src/app/api/admin/agent/`.
+- **Cartel de evento:** `scripts/elegir-poster-evento.mjs` + `src/app/api/admin/agent/event-poster/route.ts` — **visión/OCR por defecto** (leer texto del flyer); `--metadata-only` / no `light` solo en casos especiales. Detalle: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md).
+- **Logos de sello:** scripts y rutas API homólogas bajo `scripts/` y `src/app/api/admin/agent/`.
 
 Si unifica criterios editoriales, busca en el fichero del script o en `src/app/api/...` correspondiente. Comandos y flags: sección *Fotos de artista* en [`ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 
@@ -95,6 +100,7 @@ Si unifica criterios editoriales, busca en el fichero del script o en `src/app/a
 | `sello-agente-system.txt` | **Label** agent (`generar-sello-agente.mjs`, `POST /api/admin/agent/label`). |
 | `sello-agente-revision-system.txt` | Label CLI revision mode. |
 | `evento-enriquecer-system.txt` | **Event enricher** (`enriquecer-evento.mjs`, `POST /api/admin/agent/event`). |
+| `admin-chat-system.txt` | **Editorial / capture chat** (`POST /api/admin/agent/chat`). Guide: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
 
 **User-side instructions** (checklists, slug, web context, notes) are built in **code** in each script or `route.ts`.
 
@@ -116,7 +122,9 @@ See `.env.local` / `.env.local.example`.
 | Artist (CLI + admin API) | `gpt-5.4` |
 | Label (admin API + label CLI) | `gpt-5.4` |
 | Event enrich (CLI + admin event API) | `gpt-4o-mini` |
-| Artist/label photo pick, poster, logo scripts/APIs | often `gpt-5.4` except vision branches |
+| Editorial / capture chat (plan + OCR) | per `admin-chat.ts` |
+| Event poster (vision/OCR) | `OPENAI_VISION_MODEL` / `OPENAI_MODEL` / `gpt-4o` |
+| Artist/label photo pick, logo scripts/APIs | often `gpt-5.4` except vision branches |
 | Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.4` |
 
 Always check the specific file if you rely on a single global default.
@@ -127,6 +135,7 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 
 ### Deeper docs
 
+- **Editorial capture chat (PWA screenshots → upsert, poster OCR):** [docs/ADMIN_CHAT_CAPTURA.md](./ADMIN_CHAT_CAPTURA.md).
 - **Artist agent (bios + photos / repair / public portraits):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **DB CLI catalogue:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs).
 - **Images / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
@@ -137,7 +146,8 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 Some tools use **short inline system strings** in the script or API route:
 
 - **Artist photo pick:** `scripts/elegir-foto-artista.mjs` (text + candidate JSON; `--vision` with thumbnails). Admin: `src/app/api/admin/agent/artist-photo/route.ts`.
-- **Label logos / event posters:** sibling scripts and admin routes under `scripts/` and `src/app/api/admin/agent/`.
+- **Event posters:** `elegir-poster-evento.mjs` + `event-poster` API — **vision/OCR by default**. See [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md).
+- **Label logos:** sibling scripts and admin routes under `scripts/` and `src/app/api/admin/agent/`.
 
 Commands and flags: *Artist photos* section in [`ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 
