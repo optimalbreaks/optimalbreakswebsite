@@ -840,7 +840,8 @@ export async function executeChatActions(
   return results
 }
 
-const CHAT_IMAGE_MAX_BYTES = 12 * 1024 * 1024
+/** Alineado con el límite del bucket `media` en Supabase (5 MB). */
+const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 
 async function fetchSerpContext(query: string, apiKey: string): Promise<string> {
   const url = new URL('https://serpapi.com/search.json')
@@ -949,7 +950,7 @@ export async function uploadChatImages(
       continue
     }
     if (file.size > CHAT_IMAGE_MAX_BYTES) {
-      errors.push(`${file.name}: demasiado grande (máx 12MB)`)
+      errors.push(`${file.name}: demasiado grande (máx 5MB tras comprimir)`)
       continue
     }
     const mime = file.type || 'image/jpeg'

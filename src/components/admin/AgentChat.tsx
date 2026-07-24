@@ -127,9 +127,15 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       if (!list) return
       const arr = Array.from(list).filter((f) => f.type.startsWith('image/'))
       if (!arr.length) return
+      // Preview inmediata (antes de comprimir)
+      setFiles((prev) => [...prev, ...arr].slice(0, 4))
       setStatus('Preparando captura…')
       const compressed = await Promise.all(arr.map((f) => compressImage(f)))
-      setFiles((prev) => [...prev, ...compressed].slice(0, 4))
+      setFiles((prev) => {
+        // Sustituir solo las que acabamos de añadir (mismas posiciones finales)
+        const kept = prev.slice(0, Math.max(0, prev.length - arr.length))
+        return [...kept, ...compressed].slice(0, 4)
+      })
       setStatus(
         `${compressed.length} captura${compressed.length > 1 ? 's' : ''} lista${compressed.length > 1 ? 's' : ''} — Enviar para leer y guardar`,
       )
@@ -145,6 +151,15 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
     if (cameraRef.current) cameraRef.current.value = ''
   }, [])
 
+  const fileToDataUrl = useCallback((file: File) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(String(reader.result || ''))
+      reader.onerror = () => reject(reader.error || new Error('FileReader'))
+      reader.readAsDataURL(file)
+    })
+  }, [])
+
   const send = useCallback(
     async (opts?: { text?: string; files?: File[]; remoteUrls?: string[] }) => {
       const text = (opts?.text ?? inputRef.current).trim()
@@ -156,13 +171,19 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       setStatus(null)
       setLoading(true)
 
-      const previewUrls =
-        sendFiles.length > 0
-          ? sendFiles.map((f) => URL.createObjectURL(f))
-          : remotes.slice()
+      const userMsgId = `u-${Date.now()}`
+      // data: URLs (no blob) para que la miniatura no se rompa al limpiar el composer
+      let previewUrls: string[] = remotes.slice()
+      if (sendFiles.length > 0) {
+        try {
+          previewUrls = await Promise.all(sendFiles.map((f) => fileToDataUrl(f)))
+        } catch {
+          previewUrls = previews.slice()
+        }
+      }
 
       const userMsg: UiMessage = {
-        id: `u-${Date.now()}`,
+        id: userMsgId,
         role: 'user',
         content: text || '(captura / imagen)',
         previews: previewUrls,
@@ -201,8 +222,18 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
           reply?: string
           ok?: boolean
           results?: { ok: boolean; type: string; summary: string }[]
+          attached_urls?: string[]
         }
         if (!res.ok) throw new Error(data.error || res.statusText)
+
+        // Sustituir preview local por URL pública de Storage (permanente)
+        if (data.attached_urls?.length) {
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === userMsgId ? { ...msg, previews: data.attached_urls } : msg,
+            ),
+          )
+        }
 
         setMessages((m) => [
           ...m,
@@ -227,12 +258,9 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         ])
       } finally {
         setLoading(false)
-        previewUrls.forEach((u) => {
-          if (u.startsWith('blob:')) URL.revokeObjectURL(u)
-        })
       }
     },
-    [clearFiles, loading, messages],
+    [clearFiles, fileToDataUrl, loading, messages, previews],
   )
 
   // Share Target / query params / inbox SW
@@ -397,13 +425,13 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
             >
               {m.previews?.length ? (
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {m.previews.map((src) => (
+                  {m.previews.map((src, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      key={src}
+                      key={`${m.id}-p-${i}`}
                       src={src}
-                      alt=""
-                      className="h-24 w-24 sm:h-16 sm:w-16 object-cover border-[2px] border-[var(--ink)]"
+                      alt="Captura adjunta"
+                      className="h-28 w-28 sm:h-20 sm:w-20 object-cover border-[2px] border-[var(--ink)] bg-[var(--paper-dark)]"
                     />
                   ))}
                 </div>
