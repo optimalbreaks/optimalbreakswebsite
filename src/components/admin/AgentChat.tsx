@@ -25,6 +25,15 @@ const WELCOME_CAPTURE =
 const WELCOME_EMBEDDED =
   'Chat editorial: capturas de cartel, links o texto → la IA lee, busca y hace upsert (eventos, artistas, mixes, NR, vinyl).'
 
+/** Etapas orientativas mientras la API responde (un solo request, sin stream). */
+const PROGRESS_STEPS = [
+  { id: 'upload', label: 'Subiendo captura', atMs: 0, pct: 12 },
+  { id: 'read', label: 'Leyendo cartel (OCR)', atMs: 6_000, pct: 35 },
+  { id: 'save', label: 'Guardando en la BD', atMs: 18_000, pct: 58 },
+  { id: 'enrich', label: 'Completando ficha y cartel', atMs: 32_000, pct: 82 },
+  { id: 'wait', label: 'Casi listo…', atMs: 48_000, pct: 92 },
+] as const
+
 type CoreProps = Props & {
   shareQuery?: URLSearchParams | null
 }
@@ -47,6 +56,8 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
+  const [progressPct, setProgressPct] = useState(0)
+  const [progressLabel, setProgressLabel] = useState('')
   const [vvOffset, setVvOffset] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -56,6 +67,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const filesRef = useRef<File[]>([])
   const remoteRef = useRef<string[]>([])
   const inputRef = useRef('')
+  const progressTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   useEffect(() => {
     filesRef.current = files
@@ -69,7 +81,44 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, loading])
+  }, [messages, loading, progressLabel])
+
+  const clearProgressTimers = useCallback(() => {
+    for (const t of progressTimers.current) clearTimeout(t)
+    progressTimers.current = []
+  }, [])
+
+  const startProgress = useCallback(() => {
+    clearProgressTimers()
+    setProgressPct(PROGRESS_STEPS[0].pct)
+    setProgressLabel(PROGRESS_STEPS[0].label)
+    setStatus(PROGRESS_STEPS[0].label)
+    for (const step of PROGRESS_STEPS.slice(1)) {
+      progressTimers.current.push(
+        setTimeout(() => {
+          setProgressPct(step.pct)
+          setProgressLabel(step.label)
+          setStatus(step.label)
+        }, step.atMs),
+      )
+    }
+  }, [clearProgressTimers])
+
+  const finishProgress = useCallback(
+    (ok: boolean) => {
+      clearProgressTimers()
+      setProgressPct(100)
+      setProgressLabel(ok ? 'Listo' : 'Error')
+      const t = setTimeout(() => {
+        setProgressPct(0)
+        setProgressLabel('')
+      }, 900)
+      progressTimers.current.push(t)
+    },
+    [clearProgressTimers],
+  )
+
+  useEffect(() => () => clearProgressTimers(), [clearProgressTimers])
 
   // Miniaturas del composer como data URLs: los blob: se revocaban al recomprimir
   // (doble setFiles) y quedaban rotos en iOS/Android.
@@ -190,6 +239,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       setError(null)
       setStatus(null)
       setLoading(true)
+      startProgress()
 
       const userMsgId = `u-${Date.now()}`
       // data: URLs (no blob) para que la miniatura no se rompa al limpiar el composer
@@ -265,12 +315,14 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         ])
         clearFiles()
         const anySaved = data.ok === true || (data.results || []).some((r) => r.ok)
+        finishProgress(anySaved)
         setStatus(anySaved ? 'Guardado en BD' : 'No se guardó — mira el mensaje')
         if (!anySaved) {
           setError('La captura no llegó a la base de datos')
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error desconocido'
+        finishProgress(false)
         setError(msg)
         setMessages((m) => [
           ...m,
@@ -280,7 +332,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         setLoading(false)
       }
     },
-    [clearFiles, fileToDataUrl, loading, messages, previews],
+    [clearFiles, fileToDataUrl, finishProgress, loading, messages, previews, startProgress],
   )
 
   // Share Target / query params / inbox SW
@@ -459,13 +511,54 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
               {m.content}
             </div>
           ))}
-          {loading ? (
-            <p
-              className="text-xs uppercase tracking-wider text-[var(--ink)]/60 animate-pulse"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
+          {loading || progressPct > 0 ? (
+            <div
+              className="mr-auto w-full max-w-[94%] border-[2px] border-[var(--ink)] bg-white px-3 py-2.5 space-y-2"
+              role="status"
+              aria-live="polite"
+              aria-busy={loading}
             >
-              Leyendo captura → guardando → completando ficha/cartel (hasta ~1 min)…
-            </p>
+              <div className="flex items-center justify-between gap-2">
+                <p
+                  className="text-[11px] uppercase tracking-wider font-bold text-[var(--ink)]"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {progressLabel || 'Procesando…'}
+                </p>
+                <span
+                  className="text-[11px] tabular-nums text-[var(--ink)]/70"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {Math.min(100, Math.round(progressPct))}%
+                </span>
+              </div>
+              <div className="h-2.5 w-full border-[2px] border-[var(--ink)] bg-[var(--paper-dark)] overflow-hidden">
+                <div
+                  className="h-full bg-[var(--red)] transition-[width] duration-500 ease-out"
+                  style={{ width: `${Math.min(100, progressPct)}%` }}
+                />
+              </div>
+              <ol
+                className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] uppercase tracking-wide text-[var(--ink)]/55"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                {PROGRESS_STEPS.filter((s) => s.id !== 'wait').map((s) => {
+                  const active = progressLabel === s.label
+                  const done = progressPct > s.pct || (!loading && progressPct === 100)
+                  return (
+                    <li
+                      key={s.id}
+                      className={
+                        active ? 'text-[var(--red)] font-bold' : done ? 'text-[var(--ink)]' : ''
+                      }
+                    >
+                      {done && !active ? '✓ ' : active ? '→ ' : '· '}
+                      {s.label}
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
           ) : null}
           <div ref={bottomRef} />
         </div>
@@ -565,7 +658,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 }
                 onClick={() => void send()}
               >
-                {loading ? 'Guardando…' : 'Enviar y guardar'}
+                {loading ? progressLabel || 'Guardando…' : 'Enviar y guardar'}
               </button>
             ) : (
               <button
@@ -576,7 +669,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 }
                 onClick={() => void send()}
               >
-                {loading ? 'Guardando…' : 'Enviar'}
+                {loading ? progressLabel || 'Guardando…' : 'Enviar'}
               </button>
             )}
           </div>
