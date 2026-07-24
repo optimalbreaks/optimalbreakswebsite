@@ -196,7 +196,12 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
             }),
           })
         }
-        const data = (await res.json()) as { error?: string; reply?: string }
+        const data = (await res.json()) as {
+          error?: string
+          reply?: string
+          ok?: boolean
+          results?: { ok: boolean; type: string; summary: string }[]
+        }
         if (!res.ok) throw new Error(data.error || res.statusText)
 
         setMessages((m) => [
@@ -204,11 +209,15 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
           {
             id: `a-${Date.now()}`,
             role: 'assistant',
-            content: data.reply || 'Guardado.',
+            content: data.reply || (data.ok ? 'Guardado.' : 'No se guardó nada.'),
           },
         ])
         clearFiles()
-        setStatus('Guardado en BD')
+        const anySaved = data.ok === true || (data.results || []).some((r) => r.ok)
+        setStatus(anySaved ? 'Guardado en BD' : 'No se guardó — mira el mensaje')
+        if (!anySaved) {
+          setError('La captura no llegó a la base de datos')
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error desconocido'
         setError(msg)

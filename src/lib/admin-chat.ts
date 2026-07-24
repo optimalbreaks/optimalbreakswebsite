@@ -84,6 +84,19 @@ export type ChatPlan = {
   actions: ChatAction[]
 }
 
+export type ScreenshotFacts = {
+  event_name?: string
+  city?: string
+  country?: string
+  venue?: string
+  date_text?: string
+  date_start?: string | null
+  lineup?: string[]
+  tickets_or_urls?: string[]
+  raw_text?: string
+  search_query?: string
+}
+
 export type ActionResult = {
   type: string
   ok: boolean
@@ -118,8 +131,9 @@ function httpsOrNull(v: unknown): string | null {
 
 function loadSystemPrompt(): string {
   const p = path.resolve(process.cwd(), 'scripts', 'prompts', 'admin-chat-system.txt')
-  if (!existsSync(p)) throw new Error(`Prompt no encontrado: ${p}`)
-  return readFileSync(p, 'utf8').trim()
+  if (existsSync(p)) return readFileSync(p, 'utf8').trim()
+  // Fallback si el bundle no incluye scripts/prompts
+  return `Eres el asistente editorial de Optimal Breaks. Con capturas de cartel, lee el evento y devuelve JSON { "reply":"...", "actions":[{ "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, "lineup":[], "city":"", "country":"ES", "date_start":null }] }. Upsert directo, sin pedir confirmación.`
 }
 
 function stripJsonFence(raw: string): string {
@@ -130,14 +144,173 @@ function stripJsonFence(raw: string): string {
   return s
 }
 
+function httpsFromList(list: unknown): string | null {
+  if (!Array.isArray(list)) return null
+  for (const x of list) {
+    const s = String(x || '').trim()
+    if (s.startsWith('https://')) return s
+    if (/^[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return `https://${s.replace(/^\/\//, '')}`
+  }
+  return null
+}
+
+/** Normaliza actions del modelo (payload anidado, type en español, etc.). */
+export function normalizeChatActions(raw: unknown): ChatAction[] {
+  if (!Array.isArray(raw)) return []
+  const out: ChatAction[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    let o = item as Record<string, unknown>
+    if (o.payload && typeof o.payload === 'object' && !Array.isArray(o.payload)) {
+      o = { ...o, ...(o.payload as Record<string, unknown>) }
+    }
+    if (o.event && typeof o.event === 'object' && !o.type) {
+      o = { type: 'event', ...(o.event as Record<string, unknown>) }
+    }
+    let type = String(o.type || o.kind || o.action || '')
+      .toLowerCase()
+      .trim()
+    if (type === 'evento' || type === 'events') type = 'event'
+    if (type === 'artista' || type === 'artists') type = 'artist'
+    if (type === 'mixes') type = 'mix'
+    if (type === 'new-release' || type === 'new_releases' || type === 'nr' || type === 'featured') {
+      type = 'new_release'
+    }
+    if (type === 'vinilo' || type === 'vinyl_pick' || type === 'vinyls') type = 'vinyl'
+
+    if (type === 'event') {
+      const name = String(o.name || o.title || '').trim()
+      const slug = toSlug(String(o.slug || name))
+      if (!name && !slug) continue
+      out.push({
+        type: 'event',
+        slug: slug || toSlug(name),
+        name: name || slug,
+        country: o.country != null ? String(o.country) : undefined,
+        city: o.city != null ? String(o.city) : undefined,
+        venue: o.venue != null ? String(o.venue) : undefined,
+        location: o.location != null ? String(o.location) : undefined,
+        address: o.address != null ? String(o.address) : undefined,
+        date_start: (o.date_start as string | null) ?? null,
+        date_end: (o.date_end as string | null) ?? null,
+        event_type: o.event_type != null ? String(o.event_type) : undefined,
+        lineup: Array.isArray(o.lineup) ? o.lineup.map((x) => String(x)) : undefined,
+        website: httpsOrNull(o.website),
+        tickets_url: httpsOrNull(o.tickets_url),
+        description_es: o.description_es != null ? String(o.description_es) : undefined,
+        description_en: o.description_en != null ? String(o.description_en) : undefined,
+        tags: Array.isArray(o.tags) ? o.tags.map((x) => String(x)) : undefined,
+        enrich: o.enrich !== false,
+        use_attached_image: o.use_attached_image !== false,
+      })
+      continue
+    }
+    if (type === 'artist') {
+      const name = String(o.name || o.artistName || o.artist_name || '').trim()
+      const slug = toSlug(String(o.slug || name))
+      if (!name || !slug) continue
+      out.push({
+        type: 'artist',
+        slug,
+        name,
+        notes: o.notes != null ? String(o.notes) : undefined,
+        search: o.search !== false,
+      })
+      continue
+    }
+    if (type === 'mix') {
+      const title = String(o.title || '').trim()
+      const slug = toSlug(String(o.slug || title))
+      if (!title || !slug) continue
+      out.push({
+        type: 'mix',
+        slug,
+        title,
+        artist_name: String(o.artist_name || o.artistName || 'Unknown'),
+        platform: o.platform != null ? String(o.platform) : undefined,
+        mix_type: o.mix_type != null ? String(o.mix_type) : undefined,
+        video_url: httpsOrNull(o.video_url),
+        embed_url: httpsOrNull(o.embed_url),
+        year: o.year != null ? Number(o.year) : null,
+        duration_minutes: o.duration_minutes != null ? Number(o.duration_minutes) : null,
+        published_at: o.published_at != null ? String(o.published_at) : null,
+        description_es: o.description_es != null ? String(o.description_es) : undefined,
+        description_en: o.description_en != null ? String(o.description_en) : undefined,
+        image_url: httpsOrNull(o.image_url),
+        is_featured: Boolean(o.is_featured),
+      })
+      continue
+    }
+    if (type === 'new_release') {
+      const urls_text = String(o.urls_text || o.urls || '').trim()
+      if (!urls_text) continue
+      out.push({
+        type: 'new_release',
+        urls_text,
+        default_week_date: o.default_week_date != null ? String(o.default_week_date) : null,
+        create_edition_if_missing: o.create_edition_if_missing !== false,
+      })
+      continue
+    }
+    if (type === 'vinyl') {
+      const week_date = String(o.week_date || '').trim()
+      const items = Array.isArray(o.items) ? o.items : Array.isArray(o.vinyl) ? o.vinyl : []
+      if (!week_date || !items.length) continue
+      out.push({
+        type: 'vinyl',
+        week_date,
+        create_edition_if_missing: o.create_edition_if_missing !== false,
+        items: items as Extract<ChatAction, { type: 'vinyl' }>['items'],
+      })
+    }
+  }
+  return out
+}
+
 export function parseChatPlan(raw: unknown): ChatPlan {
   if (!raw || typeof raw !== 'object') {
     return { reply: 'No pude interpretar el plan.', actions: [] }
   }
   const o = raw as Record<string, unknown>
   const reply = typeof o.reply === 'string' && o.reply.trim() ? o.reply.trim() : 'Hecho.'
-  const actions = Array.isArray(o.actions) ? (o.actions as ChatAction[]) : []
+  const actions = normalizeChatActions(o.actions)
   return { reply, actions }
+}
+
+export function eventActionFromScreenshotFacts(
+  facts: ScreenshotFacts,
+  opts?: { forceEnrich?: boolean },
+): Extract<ChatAction, { type: 'event' }> | null {
+  const name = String(facts.event_name || '').trim()
+  if (!name) return null
+  const year = (facts.date_start || '').slice(0, 4)
+  const slug = toSlug([name, year, facts.city].filter(Boolean).join(' '))
+  if (!slug) return null
+  const ticket = httpsFromList(facts.tickets_or_urls)
+  const descBase = String(facts.raw_text || '').trim().slice(0, 600)
+  return {
+    type: 'event',
+    slug,
+    name,
+    city: facts.city?.trim() || 'TBA',
+    country: (facts.country || 'ES').trim() || 'ES',
+    venue: facts.venue?.trim() || undefined,
+    date_start: facts.date_start || null,
+    lineup: Array.isArray(facts.lineup)
+      ? facts.lineup.map((x) => String(x).trim()).filter(Boolean)
+      : [],
+    tickets_url: ticket,
+    website: ticket,
+    description_es:
+      descBase ||
+      `Evento ${name}${facts.city ? ` en ${facts.city}` : ''}${facts.date_text ? ` — ${facts.date_text}` : ''}.`,
+    description_en:
+      `Event: ${name}${facts.city ? ` in ${facts.city}` : ''}${facts.date_text ? ` — ${facts.date_text}` : ''}.`,
+    event_type: 'club_night',
+    enrich: opts?.forceEnrich !== false,
+    use_attached_image: true,
+    tags: ['from-capture'],
+  }
 }
 
 async function resolveFinalUrl(url: string): Promise<string> {
@@ -330,16 +503,29 @@ async function upsertEventAction(
 
   let enrichNote = ''
   if (action.enrich !== false) {
-    const { ok, json } = await adminInternalPost(originRequest, '/api/admin/agent/event', {
-      slug,
-      force: false,
-    })
-    if (ok && json.saved) {
-      enrichNote = ` · enriquecido (${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
-    } else if (json.message) {
-      enrichNote = ` · enrich: ${String(json.message)}`
-    } else if (!ok) {
-      enrichNote = ` · enrich falló: ${String(json.error || json.dbError || 'error')}`
+    // Timeout corto: el self-fetch en Vercel a veces cuelga; el evento ya está guardado.
+    try {
+      const enrichPromise = adminInternalPost(originRequest, '/api/admin/agent/event', {
+        slug,
+        force: false,
+      })
+      const timeoutPromise = new Promise<{ ok: false; status: number; json: Record<string, unknown> }>(
+        (resolve) =>
+          setTimeout(
+            () => resolve({ ok: false, status: 504, json: { error: 'enrich timeout' } }),
+            28_000,
+          ),
+      )
+      const { ok, json } = await Promise.race([enrichPromise, timeoutPromise])
+      if (ok && json.saved) {
+        enrichNote = ` · enriquecido (${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
+      } else if (json.message) {
+        enrichNote = ` · enrich: ${String(json.message)}`
+      } else if (!ok) {
+        enrichNote = ` · enrich omitido: ${String(json.error || json.dbError || 'timeout/error')}`
+      }
+    } catch (e) {
+      enrichNote = ` · enrich omitido: ${e instanceof Error ? e.message : 'error'}`
     }
   }
 
@@ -683,19 +869,6 @@ async function fetchSerpContext(query: string, apiKey: string): Promise<string> 
   }
 }
 
-type ScreenshotFacts = {
-  event_name?: string
-  city?: string
-  country?: string
-  venue?: string
-  date_text?: string
-  date_start?: string | null
-  lineup?: string[]
-  tickets_or_urls?: string[]
-  raw_text?: string
-  search_query?: string
-}
-
 async function extractScreenshotFacts(opts: {
   openaiKey: string
   model: string
@@ -758,10 +931,15 @@ Devuelve SOLO JSON:
 
 export async function uploadChatImages(
   files: File[],
-): Promise<{ urls: string[]; errors: string[] }> {
+): Promise<{
+  urls: string[]
+  errors: string[]
+  dataUrls: { mime: string; dataUrl: string; publicUrl?: string }[]
+}> {
   const sb = createServiceSupabase()
   const urls: string[] = []
   const errors: string[] = []
+  const dataUrls: { mime: string; dataUrl: string; publicUrl?: string }[] = []
   const allowed = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 
   for (const file of files) {
@@ -774,14 +952,12 @@ export async function uploadChatImages(
       errors.push(`${file.name}: demasiado grande (máx 12MB)`)
       continue
     }
-    const ext = file.name.split('.').pop() || 'jpg'
-    const storagePath = `chat/${Date.now()}_${file.name.replace(/\s+/g, '_').slice(0, 80)}.${ext}`.replace(
-      /\.+\./,
-      '.',
-    )
+    const mime = file.type || 'image/jpeg'
+    const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg'
+    const storagePath = `chat/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
     const buffer = Buffer.from(await file.arrayBuffer())
     const { error } = await sb.storage.from('media').upload(storagePath, buffer, {
-      contentType: file.type,
+      contentType: mime,
       upsert: true,
     })
     if (error) {
@@ -789,9 +965,17 @@ export async function uploadChatImages(
       continue
     }
     const { data } = sb.storage.from('media').getPublicUrl(storagePath)
-    if (data?.publicUrl) urls.push(data.publicUrl)
+    const publicUrl = data?.publicUrl
+    if (publicUrl) {
+      urls.push(publicUrl)
+      dataUrls.push({
+        mime,
+        dataUrl: `data:${mime};base64,${buffer.toString('base64')}`,
+        publicUrl,
+      })
+    }
   }
-  return { urls, errors }
+  return { urls, errors, dataUrls }
 }
 
 export async function planChatWithOpenAI(opts: {
@@ -799,23 +983,27 @@ export async function planChatWithOpenAI(opts: {
   history: ChatHistoryItem[]
   imageDataUrls: { mime: string; dataUrl: string; publicUrl?: string }[]
   attachedPublicUrls: string[]
-}): Promise<ChatPlan> {
+}): Promise<{ plan: ChatPlan; facts: ScreenshotFacts | null }> {
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
 
   const systemPrompt = loadSystemPrompt()
-  const model = process.env.OPENAI_CHAT_MODEL?.trim() || process.env.OPENAI_MODEL?.trim() || 'gpt-4o'
+  // Visión: forzar modelo con imagen; OPENAI_MODEL a veces es un modelo sin vision fiable
+  const visionModel =
+    process.env.OPENAI_CHAT_MODEL?.trim() ||
+    process.env.OPENAI_VISION_MODEL?.trim() ||
+    'gpt-4o'
   const hasImages = opts.imageDataUrls.length > 0 || opts.attachedPublicUrls.length > 0
 
   let screenshotFacts: ScreenshotFacts | null = null
   let webContext = ''
 
-  if (hasImages && opts.imageDataUrls.length > 0) {
+  if (opts.imageDataUrls.length > 0) {
     screenshotFacts = await extractScreenshotFacts({
       openaiKey,
-      model,
+      model: visionModel,
       message: opts.message,
-      imageDataUrls: opts.imageDataUrls,
+      imageDataUrls: opts.imageDataUrls.slice(0, 2),
     })
   }
 
@@ -843,7 +1031,7 @@ export async function planChatWithOpenAI(opts: {
     }
   }
 
-  const historyMsgs = opts.history.slice(-8).map((h) => ({
+  const historyMsgs = opts.history.slice(-6).map((h) => ({
     role: h.role as 'user' | 'assistant',
     content: h.content,
   }))
@@ -868,13 +1056,16 @@ export async function planChatWithOpenAI(opts: {
   } else if (hasImages) {
     text += `\n(Sin contexto web / SerpAPI. Completa solo con lo legible en la imagen y el mensaje.)\n`
   }
-  text += `\nHoy (UTC): ${new Date().toISOString().slice(0, 10)}\nDevuelve SOLO el JSON del plan (reply + actions). Si hay cartel, action event con enrich=true y use_attached_image=true.`
+  text += `\nHoy (UTC): ${new Date().toISOString().slice(0, 10)}
+OBLIGATORIO: si hay cartel/evento identificable, actions DEBE incluir al menos un objeto { "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, ...campos }.
+No respondas solo con reply. Devuelve SOLO el JSON del plan.`
   userParts.push({ type: 'text', text })
 
-  for (const img of opts.imageDataUrls.slice(0, 4)) {
+  // Si ya hay OCR, no reenviar 3 capturas (payload enorme / timeouts). Solo 1 de apoyo.
+  if (!screenshotFacts?.event_name && opts.imageDataUrls[0]) {
     userParts.push({
       type: 'image_url',
-      image_url: { url: img.dataUrl, detail: 'high' },
+      image_url: { url: opts.imageDataUrls[0].dataUrl, detail: 'high' },
     })
   }
 
@@ -885,8 +1076,8 @@ export async function planChatWithOpenAI(opts: {
       Authorization: `Bearer ${openaiKey}`,
     },
     body: JSON.stringify({
-      model,
-      temperature: 0.15,
+      model: visionModel,
+      temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
@@ -913,7 +1104,6 @@ export async function planChatWithOpenAI(opts: {
   }
   const plan = parseChatPlan(parsed)
 
-  // Garantías para capturas: cartel → image_url + enrich
   if (opts.attachedPublicUrls.length) {
     plan.actions = plan.actions.map((a) => {
       if (a && typeof a === 'object' && a.type === 'event') {
@@ -923,5 +1113,17 @@ export async function planChatWithOpenAI(opts: {
     })
   }
 
-  return plan
+  // Fallback duro: la IA a veces solo escribe reply sin actions
+  const hasEvent = plan.actions.some((a) => a.type === 'event')
+  if (!hasEvent && screenshotFacts?.event_name) {
+    const fallback = eventActionFromScreenshotFacts(screenshotFacts)
+    if (fallback) {
+      plan.actions = [fallback, ...plan.actions]
+      if (!plan.reply || /posible|intent|intentar/i.test(plan.reply)) {
+        plan.reply = `He leído el cartel «${fallback.name}» y lo guardo en la base de datos.`
+      }
+    }
+  }
+
+  return { plan, facts: screenshotFacts }
 }
