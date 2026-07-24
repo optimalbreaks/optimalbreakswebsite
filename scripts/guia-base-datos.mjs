@@ -526,7 +526,7 @@ const ACTIONS = [
     npm: 'npm run db:events:poster   # sin args = missing-only límite 20 (EVENTS_POSTER_DEFAULT_LIMIT)',
     creds: 'OPENAI + SERPAPI + URL + SERVICE_ROLE (bucket media, ruta events/<slug>/poster.*)',
     description:
-      'Google Imágenes (SerpAPI) + OpenAI eligen cartel; sube a Storage y actualiza events.image_url. --json-only = URL externa sin Storage.',
+      'Google Imágenes (SerpAPI) + OpenAI visión/OCR eligen cartel (leen el texto del flyer; --metadata-only = solo títulos). Sube a Storage y actualiza events.image_url. --json-only = URL externa sin Storage.',
   },
   {
     id: 'migrate-files',

@@ -15,22 +15,48 @@ type ImageCandidate = {
 }
 
 function hostFromUrl(u: string): string {
-  try { return new URL(u).hostname } catch { return '' }
+  try {
+    return new URL(u).hostname
+  } catch {
+    return ''
+  }
 }
 
-const SYSTEM_POSTER = `Eres editor de Optimal Breaks (música dance / breakbeat). Recibes candidatos de Google Imágenes como METADATOS (no ves el píxel salvo modo visión aparte).
-Tu tarea: elegir a lo sumo UN candidato que sea el MEJOR cartel/póster/flyer oficial o promocional del evento (fecha, ciudad, nombre coherente).
+function pixelScore(c: ImageCandidate): number {
+  const w = typeof c.width === 'number' ? c.width : 0
+  const h = typeof c.height === 'number' ? c.height : 0
+  return w * h
+}
 
-Prioridad (de mayor a menor):
-1) Resolución alta (preferir width*height grandes; ideal ≥1000px en el lado corto; evita thumbnails).
-2) Cartel con MÁS información visible (line-up, fecha, venue, tickets) frente a teaser mínimo o cover genérico.
-3) Fuente fiable (web del evento, promotor, RA, ticketera, prensa) frente a Pinterest/redes recortadas.
-4) Proporción típica de flyer (vertical u horizontal de evento).
+function sortCandidatesByPixels(candidates: ImageCandidate[]): ImageCandidate[] {
+  return [...candidates].sort((a, b) => pixelScore(b) - pixelScore(a))
+}
 
-Rechaza: fotos de público, selfies, logos sueltos, otra ciudad/año, merchandising, memes, capturas borrosas de Stories, resultados homónimos dudosos.
+function visionImageUrl(c: ImageCandidate): string | null {
+  const original = typeof c.original === 'string' ? c.original : ''
+  const thumb = typeof c.thumbnail === 'string' ? c.thumbnail : ''
+  const host = hostFromUrl(original).toLowerCase()
+  const blockedHosts = ['lookaside.instagram.com', 'lookaside.fbsbx.com', 'instagram.com']
+  if (original.startsWith('https://') && !blockedHosts.some((h) => host.includes(h))) {
+    return original
+  }
+  if (thumb.startsWith('https://')) return thumb
+  return original.startsWith('https://') ? original : null
+}
+
+const SYSTEM_POSTER_VISION = `Eres editor de Optimal Breaks (música dance / breakbeat). Ves miniaturas/imágenes de candidatos a cartel.
+
+OBLIGATORIO — OCR visual:
+1) LEE el texto visible en cada imagen (título del evento, artistas, fecha, venue, ciudad).
+2) SOLO elige un candidato si ese texto encaja con el evento pedido (nombre o marca reconocible, año/fecha coherente, venue/ciudad si aparecen).
+3) RECHAZA imágenes cuyo texto sea de OTRO evento aunque el metadato/título de Google diga lo contrario (Google Imágenes se equivoca a menudo).
+4) RECHAZA fotos de público, selfies, logos sueltos, merchandising, memes, Stories borrosas sin flyer.
+
+Entre varios carteles válidos del mismo evento, prefiere: más información (line-up/fecha/venue), mejor legibilidad y resolución aparente, fuente de ticketera/promotor.
+
 Responde SOLO JSON:
-{"chosen": <índice 0-based del array "candidates" o null>, "reason": <string breve en español>}
-Si ningún candidato es fiable, chosen debe ser null.`
+{"chosen": <índice 0-based o null>, "reason": <string breve en español citando texto leído en el cartel si eliges uno>}
+Si ninguno encaja por OCR, chosen = null.`
 
 type SerpImageOpts = { alternateQueries?: string[] }
 
@@ -45,58 +71,98 @@ async function serpGoogleImages(
   return fetchGoogleImageCandidates(query, apiKey, max, opts) as Promise<ImageCandidate[]>
 }
 
-async function openAiChoosePoster(
-  event: { name: string; slug: string; city?: string | null; country?: string | null; date_start?: string | null; venue?: string | null; event_type?: string | null; image_url?: string | null },
+async function openAiChoosePosterVision(
+  event: {
+    name: string
+    slug: string
+    city?: string | null
+    country?: string | null
+    date_start?: string | null
+    venue?: string | null
+    event_type?: string | null
+  },
   candidates: ImageCandidate[],
 ): Promise<{ url: string | null; reason: string }> {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model =
+    process.env.OPENAI_VISION_MODEL?.trim() ||
+    process.env.OPENAI_MODEL?.trim() ||
+    'gpt-4o'
 
-  const lines = candidates.map((c, i) => {
-    const dim = c.width && c.height ? `${c.width}x${c.height}` : 'unknown'
-    const px =
-      c.width && c.height && Number.isFinite(c.width * c.height)
-        ? c.width * c.height
-        : 0
-    const host = hostFromUrl(c.original)
-    return `[${i}] title: ${c.title}\n    source: ${c.source}\n    page: ${c.link}\n    image_host: ${host}\n    size: ${dim} (pixels≈${px || 'unknown'})`
-  })
+  const ranked = sortCandidatesByPixels(candidates)
+  const maxImg = Math.min(10, ranked.length)
+  const content: Array<
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string; detail: 'high' | 'low' | 'auto' } }
+  > = [
+    {
+      type: 'text',
+      text: `Evento a emparejar (lee el texto de cada imagen; no confíes solo en el título de Google):
+- nombre: ${event.name}
+- slug: ${event.slug}
+- ciudad: ${event.city || '?'}
+- venue: ${event.venue || '?'}
+- fecha_inicio: ${event.date_start || '?'}
+- país: ${event.country || '?'}
 
-  const user = `Evento:\n- nombre: ${event.name}\n- slug: ${event.slug}\n- ciudad: ${event.city ?? 'null'}\n- pais: ${event.country ?? 'null'}\n- venue: ${event.venue ?? 'null'}\n- fecha_inicio: ${event.date_start ?? 'null'}\n- tipo: ${event.event_type ?? 'null'}\n\nElige el cartel de MAYOR resolución e información (line-up/fecha/venue). Entre dos válidos, gana el de más píxeles.\n\nCandidatos (índices 0..${candidates.length - 1}):\n${lines.join('\n\n')}\n\nDevuelve JSON: {"chosen": number|null, "reason": string}`
+Candidatos ordenados por resolución estimada (índices 0..${maxImg - 1}). Elige UN índice cuyo cartel, por OCR, sea de ESTE evento, o null.
+JSON: {"chosen": number|null, "reason": "..."}`,
+    },
+  ]
+
+  for (let i = 0; i < maxImg; i++) {
+    const c = ranked[i]
+    const imgUrl = visionImageUrl(c)
+    if (!imgUrl) continue
+    const dim = c.width && c.height ? `${c.width}x${c.height}` : '?'
+    content.push({
+      type: 'text',
+      text: `\n--- [${i}] source=${c.source || '?'} size=${dim} title=${(c.title || '').slice(0, 120)} ---`,
+    })
+    content.push({
+      type: 'image_url',
+      image_url: { url: imgUrl, detail: 'high' },
+    })
+  }
+
+  if (content.length <= 1) {
+    return { url: null, reason: 'sin URLs de imagen usables para visión' }
+  }
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model, temperature: 0.15,
+      model,
+      temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_POSTER },
-        { role: 'user', content: user },
+        { role: 'system', content: SYSTEM_POSTER_VISION },
+        { role: 'user', content },
       ],
     }),
   })
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`OpenAI ${res.status}: ${err}`)
+    throw new Error(`OpenAI vision ${res.status}: ${err}`)
   }
   const data = await res.json()
-  const content = data.choices?.[0]?.message?.content
-  if (!content) throw new Error('Respuesta OpenAI vacía')
+  const text = data.choices?.[0]?.message?.content
+  if (!text) throw new Error('Respuesta OpenAI vacía')
 
-  let raw = content.trim()
+  let raw = String(text).trim()
   if (raw.startsWith('```')) raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
   const parsed = JSON.parse(raw)
   const chosen = parsed.chosen
   const reason = typeof parsed.reason === 'string' ? parsed.reason : ''
   if (chosen !== null && chosen !== undefined) {
     const n = Number(chosen)
-    if (Number.isInteger(n) && n >= 0 && n < candidates.length) {
-      return { url: candidates[n].original, reason }
+    if (Number.isInteger(n) && n >= 0 && n < maxImg) {
+      return { url: ranked[n].original, reason }
     }
   }
-  return { url: null, reason: reason || 'sin candidato adecuado' }
+  return { url: null, reason: reason || 'ningún cartel encaja por OCR' }
 }
 
 /**
@@ -142,7 +208,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/agent/event-poster
- * { slug } → SerpAPI images → OpenAI pick → download → Storage → UPDATE events.image_url
+ * { slug } → SerpAPI images → OpenAI visión/OCR → download → Storage → UPDATE events.image_url
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
@@ -198,16 +264,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ chosen: null, reason: 'Sin resultados de imágenes', candidates: 0 })
   }
 
-  // Priorizar candidatos con más píxeles (alta resolución) antes de pedirle a la IA
-  candidates = [...candidates].sort((a, b) => {
-    const pa = (a.width || 0) * (a.height || 0)
-    const pb = (b.width || 0) * (b.height || 0)
-    return pb - pa
-  })
-
   let chosen: { url: string | null; reason: string }
   try {
-    chosen = await openAiChoosePoster(event, candidates)
+    chosen = await openAiChoosePosterVision(event, candidates)
   } catch (e) {
     return NextResponse.json({ error: `OpenAI: ${e instanceof Error ? e.message : e}` }, { status: 502 })
   }

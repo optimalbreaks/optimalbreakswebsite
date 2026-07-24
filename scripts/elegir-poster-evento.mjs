@@ -2,8 +2,8 @@
  * OPTIMAL BREAKS — Cartel de evento: SerpAPI (Google Imágenes) + OpenAI + Storage
  *
  * Busca carteles / flyers con Google Imágenes vía SerpAPI, el modelo elige el mejor
- * candidato por metadatos (o con --vision miniaturas), descarga y sube a
- * `media/events/<slug>/poster.*`, actualiza `public.events.image_url`.
+ * candidato por visión/OCR del cartel (lee texto visible; --metadata-only = solo títulos),
+ * descarga y sube a `media/events/<slug>/poster.*`, actualiza `public.events.image_url`.
  *
  * Requiere: OPENAI_API_KEY, SERPAPI_API_KEY, NEXT_PUBLIC_SUPABASE_URL + SERVICE_ROLE
  * (salvo --dry-run o --json-only sin subida).
@@ -76,13 +76,27 @@ function buildEventPosterQuery(event, extraSuffix) {
   return q.replace(/\s+/g, ' ').trim()
 }
 
-const SYSTEM_POSTER = `Eres editor de Optimal Breaks (música dance / breakbeat). Recibes candidatos de Google Imágenes como METADATOS (no ves el píxel salvo modo visión aparte).
+const SYSTEM_POSTER_META = `Eres editor de Optimal Breaks (música dance / breakbeat). Recibes candidatos de Google Imágenes SOLO como METADATOS (no ves el píxel).
 Tu tarea: elegir a lo sumo UN candidato que sea muy probablemente el cartel, póster o flyer oficial o promocional del evento indicado (fecha, ciudad, nombre coherente).
 Rechaza: fotos de público genéricas sin diseño de evento, capturas de Instagram/Twitter sin cartel, logos sueltos, otra ciudad o año claramente distinto, merchandising, memes, resultados dudoso-homónimos.
 Prefiere proporción vertical u horizontal típica de flyer (no exijas datos EXIF; usa título y fuente).
 Responde SOLO JSON:
 {"chosen": <índice 0-based del array "candidates" o null>, "reason": <string breve en español>}
 Si ningún candidato es fiable, chosen debe ser null.`
+
+const SYSTEM_POSTER_VISION = `Eres editor de Optimal Breaks (música dance / breakbeat). Ves miniaturas/imágenes de candidatos a cartel.
+
+OBLIGATORIO — OCR visual:
+1) LEE el texto visible en cada imagen (título del evento, artistas, fecha, venue, ciudad).
+2) SOLO elige un candidato si ese texto encaja con el evento pedido (nombre o marca reconocible, año/fecha coherente, venue/ciudad si aparecen).
+3) RECHAZA imágenes cuyo texto sea de OTRO evento aunque el metadato/título de Google diga lo contrario (Google Imágenes se equivoca a menudo).
+4) RECHAZA fotos de público, selfies, logos sueltos, merchandising, memes, Stories borrosas sin flyer.
+
+Entre varios carteles válidos del mismo evento, prefiere: más información (line-up/fecha/venue), mejor legibilidad y resolución aparente, fuente de ticketera/promotor.
+
+Responde SOLO JSON:
+{"chosen": <índice 0-based o null>, "reason": <string breve en español citando texto leído en el cartel si eliges uno>}
+Si ninguno encaja por OCR, chosen = null.`
 
 async function openAiChoosePosterText({ event, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
@@ -120,7 +134,7 @@ Devuelve JSON: {"chosen": number|null, "reason": string}`
       temperature: 0.15,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: SYSTEM_POSTER },
+        { role: 'system', content: SYSTEM_POSTER_META },
         { role: 'user', content: user },
       ],
     }),
@@ -150,30 +164,73 @@ Devuelve JSON: {"chosen": number|null, "reason": string}`
   return { url: null, reason: reason || 'sin candidato' }
 }
 
+function pixelScore(c) {
+  const w = typeof c.width === 'number' ? c.width : 0
+  const h = typeof c.height === 'number' ? c.height : 0
+  return w * h
+}
+
+function sortCandidatesByPixels(candidates) {
+  return [...candidates].sort((a, b) => pixelScore(b) - pixelScore(a))
+}
+
+function visionImageUrl(c) {
+  // Preferir original para OCR (las thumbs de Serp a veces son demasiado pequeñas).
+  // Fallback a thumbnail si el original es de hosts que suelen bloquear fetch a OpenAI.
+  const original = typeof c.original === 'string' ? c.original : ''
+  const thumb = typeof c.thumbnail === 'string' ? c.thumbnail : ''
+  const host = hostFromUrl(original).toLowerCase()
+  const blockedHosts = ['lookaside.instagram.com', 'lookaside.fbsbx.com', 'instagram.com']
+  if (original.startsWith('https://') && !blockedHosts.some((h) => host.includes(h))) {
+    return original
+  }
+  if (thumb.startsWith('https://')) return thumb
+  return original.startsWith('https://') ? original : null
+}
+
 async function openAiChoosePosterVision({ event, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
   const model =
     process.env.OPENAI_VISION_MODEL?.trim() ||
     process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o-mini'
+    'gpt-4o'
 
-  const maxImg = Math.min(8, candidates.length)
+  const ranked = sortCandidatesByPixels(candidates)
+  const maxImg = Math.min(10, ranked.length)
   const content = [
     {
       type: 'text',
-      text: `Evento: "${event.name}" (${event.slug}). Ciudad: ${event.city || '?'}. Fecha: ${event.date_start || '?'}. Elige UN índice 0..${candidates.length - 1} cuyo cartel/flyer corresponda a este evento, o null. JSON: {"chosen": number|null, "reason": "..."}`,
+      text: `Evento a emparejar (lee el texto de cada imagen; no confíes solo en el título de Google):
+- nombre: ${event.name}
+- slug: ${event.slug}
+- ciudad: ${event.city || '?'}
+- venue: ${event.venue || '?'}
+- fecha_inicio: ${event.date_start || '?'}
+- país: ${event.country || '?'}
+
+Candidatos ordenados por resolución estimada (índices 0..${maxImg - 1}). Elige UN índice cuyo cartel, por OCR, sea de ESTE evento, o null.
+JSON: {"chosen": number|null, "reason": "..."}`,
     },
   ]
 
   for (let i = 0; i < maxImg; i++) {
-    const c = candidates[i]
-    const imgUrl = c.thumbnail && c.thumbnail.startsWith('https://') ? c.thumbnail : c.original
-    content.push({ type: 'text', text: `\n--- [${i}] ${c.source} ---` })
+    const c = ranked[i]
+    const imgUrl = visionImageUrl(c)
+    if (!imgUrl) continue
+    const dim = c.width && c.height ? `${c.width}x${c.height}` : '?'
+    content.push({
+      type: 'text',
+      text: `\n--- [${i}] source=${c.source || '?'} size=${dim} title=${(c.title || '').slice(0, 120)} ---`,
+    })
     content.push({
       type: 'image_url',
-      image_url: { url: imgUrl, detail: 'low' },
+      image_url: { url: imgUrl, detail: 'high' },
     })
+  }
+
+  if (content.length <= 1) {
+    return { url: null, reason: 'sin URLs de imagen usables para visión' }
   }
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -187,11 +244,7 @@ async function openAiChoosePosterVision({ event, candidates, quiet }) {
       temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
-        {
-          role: 'system',
-          content:
-            'Eres experto en identificar carteles y flyers de eventos musicales. Solo JSON válido.',
-        },
+        { role: 'system', content: SYSTEM_POSTER_VISION },
         { role: 'user', content },
       ],
     }),
@@ -212,11 +265,11 @@ async function openAiChoosePosterVision({ event, candidates, quiet }) {
   const reason = typeof parsed.reason === 'string' ? parsed.reason : ''
   if (chosen !== null && chosen !== undefined) {
     const n = Number(chosen)
-    if (!Number.isInteger(n) || n < 0 || n >= candidates.length) {
+    if (!Number.isInteger(n) || n < 0 || n >= maxImg) {
       if (!quiet) console.warn('[event-poster] Vision: índice inválido:', chosen)
       return { url: null, reason }
     }
-    return { url: candidates[n].original, reason }
+    return { url: ranked[n].original, reason }
   }
   return { url: null, reason }
 }
@@ -273,15 +326,25 @@ async function processOneEvent({ event, flags, serpKey, maxCandidates, querySuff
     return { ok: true, slug, url: null, reason: 'sin resultados' }
   }
 
-  if (!quiet) console.log(`[event-poster] ${slug}: ${candidates.length} candidatos → OpenAI…`)
+  // Por defecto: visión/OCR (leer el cartel). --metadata-only = solo títulos de Google (frágil).
+  const metadataOnly = flags.has('--metadata-only')
+  if (!quiet) {
+    console.log(
+      `[event-poster] ${slug}: ${candidates.length} candidatos → OpenAI ${metadataOnly ? 'metadatos' : 'visión/OCR'}…`,
+    )
+  }
 
   let url = null
   let reason = ''
   try {
-    if (flags.has('--vision')) {
-      ;({ url, reason } = await openAiChoosePosterVision({ event, candidates, quiet }))
+    if (metadataOnly) {
+      ;({ url, reason } = await openAiChoosePosterText({
+        event,
+        candidates: sortCandidatesByPixels(candidates),
+        quiet,
+      }))
     } else {
-      ;({ url, reason } = await openAiChoosePosterText({ event, candidates, quiet }))
+      ;({ url, reason } = await openAiChoosePosterVision({ event, candidates, quiet }))
     }
   } catch (e) {
     console.error(`[event-poster] ${slug}: OpenAI`, e.message)
@@ -410,7 +473,8 @@ Opciones:
   --force           volver a buscar aunque ya haya imagen
   --dry-run         no sube ni actualiza BD
   --json-only       guarda URL externa en image_url sin subir a Storage
-  --vision          modelo multimodal con miniaturas
+  --vision          (por defecto) visión/OCR del cartel; flag legado, no hace falta
+  --metadata-only   SOLO metadatos de Google (sin ver imagen; frágil, no recomendado)
   --max-candidates=N (default ${DEFAULT_MAX_CANDIDATES})
   --delay-ms=N      pausa entre eventos (default ${DEFAULT_DELAY_MS})
   --limit=N         tope de filas en lote (sin --limit con --all: 200)
