@@ -3,6 +3,7 @@ import { pathToFileURL } from 'url'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
+import { waitUntil } from '@vercel/functions'
 
 export type ChatHistoryItem = { role: 'user' | 'assistant'; content: string }
 
@@ -587,62 +588,42 @@ async function upsertEventAction(
     return { type: 'event', ok: false, summary: `Evento ${targetSlug}: ${writeErr}` }
   }
 
-  // Paso 2+3 en paralelo: enrich web + cartel oficial (OCR).
-  // Antes iban en serie (60s+75s) y el cartel con visión hi-res dejaba el chat “colgado”.
-  // El evento YA está guardado; si estos fallan/timeout, se mantiene la captura.
-  let enrichNote = ''
-  let posterNote = ''
+  // Enrich + cartel oficial en SEGUNDO PLANO (waitUntil).
+  // Antes se esperaban aquí y el self-fetch a Vercel / OCR podían matar la respuesta
+  // del chat aunque el UPSERT ya hubiera ido bien → el usuario veía error al final.
   const currentImage = existing?.image_url || (row.image_url as string | undefined) || null
   const needsRealPoster =
     !currentImage || !String(currentImage).startsWith('https://') || isChatScreenshotUrl(currentImage)
 
-  const enrichTask =
-    action.enrich !== false
-      ? adminInternalPost(
+  const backgroundWork = (async () => {
+    const tasks: Promise<unknown>[] = []
+    if (action.enrich !== false) {
+      tasks.push(
+        adminInternalPost(
           originRequest,
           '/api/admin/agent/event',
           { slug: targetSlug, force: false },
-          { timeoutMs: 45_000 },
-        )
-      : Promise.resolve({ ok: false as const, status: 0, json: {} as Record<string, unknown> })
-
-  const posterTask = needsRealPoster
-    ? adminInternalPost(
-        originRequest,
-        '/api/admin/agent/event-poster',
-        { slug: targetSlug, light: true },
-        { timeoutMs: 55_000 },
+          { timeoutMs: 90_000 },
+        ),
       )
-    : Promise.resolve({ ok: false as const, status: 0, json: {} as Record<string, unknown> })
-
-  const [enrichRes, posterRes] = await Promise.all([enrichTask, posterTask])
-
-  if (action.enrich !== false) {
-    const { ok, json } = enrichRes
-    if (ok && json.saved) {
-      const src =
-        json.web_source === 'openai'
-          ? 'OpenAI web_search'
-          : json.web_source === 'serpapi'
-            ? 'SerpAPI'
-            : 'web'
-      enrichNote = ` · ficha completada (${src}: ${(json.fieldsUpdated as string[] | undefined)?.join(', ') || 'campos'})`
-    } else if (json.message) {
-      enrichNote = ` · enrich: ${String(json.message)}`
-    } else if (!ok) {
-      enrichNote = ` · enrich omitido: ${String(json.error || json.dbError || 'timeout/error')}`
     }
-  }
-
-  if (needsRealPoster) {
-    const { ok, json } = posterRes
-    if (ok && json.saved && json.storageUrl) {
-      posterNote = ' · cartel oficial encontrado y guardado'
-    } else if (json.reason) {
-      posterNote = ` · cartel: ${String(json.reason)} (se mantiene tu captura)`
-    } else {
-      posterNote = ' · cartel oficial no disponible aún (se mantiene tu captura)'
+    if (needsRealPoster) {
+      tasks.push(
+        adminInternalPost(
+          originRequest,
+          '/api/admin/agent/event-poster',
+          { slug: targetSlug, light: true },
+          { timeoutMs: 90_000 },
+        ),
+      )
     }
+    if (tasks.length) await Promise.allSettled(tasks)
+  })()
+
+  try {
+    waitUntil(backgroundWork)
+  } catch {
+    void backgroundWork.catch(() => {})
   }
 
   const header = isDuplicate
@@ -651,10 +632,15 @@ async function upsertEventAction(
       ? `Evento ya existente actualizado: ${name} (${targetSlug})`
       : `Evento creado: ${name} (${targetSlug})`
 
+  const bgNote =
+    action.enrich !== false || needsRealPoster
+      ? ' · completando ficha/cartel en segundo plano'
+      : ''
+
   return {
     type: 'event',
     ok: true,
-    summary: `${header}${enrichNote}${posterNote}`,
+    summary: `${header}${bgNote}`,
     detail: { slug: targetSlug, duplicate_of: isDuplicate ? existing?.slug : undefined },
   }
 }

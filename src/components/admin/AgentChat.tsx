@@ -27,11 +27,10 @@ const WELCOME_EMBEDDED =
 
 /** Etapas orientativas mientras la API responde (un solo request, sin stream). */
 const PROGRESS_STEPS = [
-  { id: 'upload', label: 'Subiendo captura', atMs: 0, pct: 12 },
-  { id: 'read', label: 'Leyendo cartel (OCR)', atMs: 6_000, pct: 35 },
-  { id: 'save', label: 'Guardando en la BD', atMs: 18_000, pct: 58 },
-  { id: 'enrich', label: 'Completando ficha y cartel', atMs: 32_000, pct: 82 },
-  { id: 'wait', label: 'Casi listo…', atMs: 48_000, pct: 92 },
+  { id: 'upload', label: 'Subiendo captura', atMs: 0, pct: 15 },
+  { id: 'read', label: 'Leyendo cartel (OCR)', atMs: 5_000, pct: 45 },
+  { id: 'save', label: 'Guardando en la BD', atMs: 16_000, pct: 78 },
+  { id: 'done', label: 'Casi listo…', atMs: 28_000, pct: 92 },
 ] as const
 
 type CoreProps = Props & {
@@ -323,10 +322,16 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error desconocido'
         finishProgress(false)
+        const hint =
+          'Si el fallo fue al final, mira /administrator/events o /events: a veces el evento ya se guardó y solo falló el enriquecido/cartel.'
         setError(msg)
         setMessages((m) => [
           ...m,
-          { id: `e-${Date.now()}`, role: 'assistant', content: `Error: ${msg}` },
+          {
+            id: `e-${Date.now()}`,
+            role: 'assistant',
+            content: `Error: ${msg}\n\n${hint}`,
+          },
         ])
       } finally {
         setLoading(false)
@@ -542,7 +547,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] uppercase tracking-wide text-[var(--ink)]/55"
                 style={{ fontFamily: "'Courier Prime', monospace" }}
               >
-                {PROGRESS_STEPS.filter((s) => s.id !== 'wait').map((s) => {
+                {PROGRESS_STEPS.filter((s) => s.id !== 'done').map((s) => {
                   const active = progressLabel === s.label
                   const done = progressPct > s.pct || (!loading && progressPct === 100)
                   return (

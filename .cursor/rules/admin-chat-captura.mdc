@@ -10,7 +10,7 @@ Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pest
 
 1. OCR de la imagen → `ScreenshotFacts`; si el plan no trae `actions`, **fallback** `eventActionFromScreenshotFacts`.
 2. UPSERT con **dedupe** (slug + nombre normalizado + año). Captura en `media/chat/` = **provisional**.
-3. Tras guardar: **enrich + cartel en paralelo** (no en serie). Timeouts reales (`AbortSignal`) ~45s / ~55s. El evento **ya está en BD** si fallan.
+3. Tras UPSERT OK: **responder al cliente al momento**. Enrich + cartel van en **segundo plano** (`waitUntil` de `@vercel/functions`). No bloquear el chat esperándolos (evita falsos fallos al final).
 4. Cartel: `POST /api/admin/agent/event-poster` con **`light: true`** desde el chat.
 
 ## Carteles — visión/OCR (no negociable)

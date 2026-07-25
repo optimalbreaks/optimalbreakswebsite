@@ -27,10 +27,10 @@ Pensado sobre todo para **PWA móvil**: captura de Facebook/Instagram → enviar
 2. **API chat** (`src/app/api/admin/agent/chat/route.ts`, `maxDuration = 300`): sube a Storage `media/chat/…`, plan OpenAI.
 3. **OCR de la captura** (`src/lib/admin-chat.ts`): hechos (`ScreenshotFacts`). Si el plan no trae `actions`, **fallback** crea acción `event` desde OCR.
 4. **UPSERT evento**: detecta **duplicados** (slug + nombre normalizado + año). La captura en `media/chat/` es **provisional**.
-5. **En paralelo** (no en serie):
-   - Enrich: `POST /api/admin/agent/event` (web: OpenAI `web_search` preferente, SerpAPI fallback). Timeout chat **45 s**.
-   - Cartel oficial: `POST /api/admin/agent/event-poster` con **`light: true`**. Timeout chat **55 s**.
-6. Si enrich/cartel fallan o hacen timeout, **el evento ya está guardado** (con captura si no hay flyer mejor).
+5. **Respuesta al cliente en cuanto el UPSERT OK.** Enrich + cartel oficial corren en **segundo plano** (`waitUntil` de `@vercel/functions`):
+   - Enrich: `POST /api/admin/agent/event` (OpenAI `web_search` / SerpAPI).
+   - Cartel: `POST /api/admin/agent/event-poster` con **`light: true`**.
+6. Así el chat **no falla al final** si el OCR del cartel o el self-fetch tardan: la ficha ya está en BD (con captura si aún no hay flyer).
 
 ### Barra de progreso (UI)
 
