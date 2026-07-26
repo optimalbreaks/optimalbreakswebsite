@@ -366,7 +366,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_upsert_event',
-      description: 'Preparar alta/actualización de EVENTO/fiesta. Requiere confirmación.',
+      description:
+        'Preparar alta/actualización de EVENTO/fiesta. Requiere confirmación. date_start/date_end en YYYY-MM-DD; si el cartel no trae año, usa la próxima fecha futura (nunca un año pasado).',
       parameters: {
         type: 'object',
         properties: {
@@ -376,7 +377,10 @@ const TOOL_DEFINITIONS = [
           city: { type: 'string' },
           venue: { type: 'string' },
           address: { type: 'string' },
-          date_start: { type: 'string' },
+          date_start: {
+            type: 'string',
+            description: 'YYYY-MM-DD futuro. Sin año en el cartel → próximo día/mes desde hoy.',
+          },
           date_end: { type: 'string' },
           event_type: { type: 'string' },
           lineup: { type: 'array', items: { type: 'string' } },

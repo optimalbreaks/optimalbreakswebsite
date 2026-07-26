@@ -137,6 +137,39 @@ function httpsOrNull(v: unknown): string | null {
   return t.startsWith('https://') ? t : null
 }
 
+/**
+ * Carteles suelen poner «21 de agosto» sin año; el modelo inventa 2023/2024.
+ * Si la fecha ya pasó, la sube a la próxima ocurrencia del mismo día/mes (UTC).
+ * Devuelve solo `YYYY-MM-DD` (sin hora).
+ */
+export function normalizeUpcomingEventDate(
+  iso: string | null | undefined,
+  now = new Date(),
+): string | null {
+  if (iso == null || iso === '') return null
+  const m = String(iso).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return null
+  const mo = Number(m[2])
+  const d = Number(m[3])
+  if (!mo || !d || mo > 12 || d > 31) return null
+
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+  let y = Number(m[1])
+  let candidate = new Date(Date.UTC(y, mo - 1, d))
+  if (Number.isNaN(candidate.getTime()) || candidate < today) {
+    const thisYear = new Date(Date.UTC(today.getUTCFullYear(), mo - 1, d))
+    candidate =
+      !Number.isNaN(thisYear.getTime()) && thisYear >= today
+        ? thisYear
+        : new Date(Date.UTC(today.getUTCFullYear() + 1, mo - 1, d))
+  }
+  if (Number.isNaN(candidate.getTime())) return null
+  const yy = candidate.getUTCFullYear()
+  const mm = String(candidate.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(candidate.getUTCDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
 function loadSystemPrompt(): string {
   const p = path.resolve(process.cwd(), 'scripts', 'prompts', 'admin-chat-system.txt')
   if (existsSync(p)) return readFileSync(p, 'utf8').trim()
@@ -200,8 +233,10 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
         venue: o.venue != null ? String(o.venue) : undefined,
         location: o.location != null ? String(o.location) : undefined,
         address: o.address != null ? String(o.address) : undefined,
-        date_start: (o.date_start as string | null) ?? null,
-        date_end: (o.date_end as string | null) ?? null,
+        date_start: normalizeUpcomingEventDate(
+          o.date_start != null ? String(o.date_start) : null,
+        ),
+        date_end: normalizeUpcomingEventDate(o.date_end != null ? String(o.date_end) : null),
         event_type: o.event_type != null ? String(o.event_type) : undefined,
         lineup: Array.isArray(o.lineup) ? o.lineup.map((x) => String(x)) : undefined,
         website: httpsOrNull(o.website),
@@ -553,6 +588,8 @@ async function upsertEventAction(
   const location =
     action.location?.trim() ||
     [city, (action.country || 'ES').trim()].filter(Boolean).join(', ')
+  const dateStart = normalizeUpcomingEventDate(action.date_start)
+  const dateEnd = normalizeUpcomingEventDate(action.date_end) || dateStart
 
   const row: Record<string, unknown> = {
     slug,
@@ -562,8 +599,8 @@ async function upsertEventAction(
     venue: action.venue?.trim() || null,
     location,
     address: action.address?.trim() || null,
-    date_start: action.date_start || null,
-    date_end: action.date_end || null,
+    date_start: dateStart,
+    date_end: dateEnd,
     event_type: eventType,
     lineup: Array.isArray(action.lineup)
       ? Array.from(new Set(action.lineup.map((s) => String(s).trim()).filter(Boolean)))
@@ -1150,7 +1187,7 @@ Devuelve SOLO JSON:
   "country": "país corto o null",
   "venue": "sala/club o null",
   "date_text": "fecha como aparece en el flyer",
-  "date_start": "YYYY-MM-DD si puedes inferirlo con seguridad, si no null",
+  "date_start": "YYYY-MM-DD. Si el flyer NO muestra año (p. ej. «21 de agosto»), usa el próximo día/mes FUTURO desde hoy (nunca un año ya pasado). Si no puedes inferir el día, null",
   "lineup": ["DJ1","DJ2"],
   "tickets_or_urls": ["urls o dominios visibles"],
   "raw_text": "transcripción breve de lo legible",
@@ -1180,7 +1217,11 @@ Devuelve SOLO JSON:
   const content = data.choices?.[0]?.message?.content
   if (!content) return null
   try {
-    return JSON.parse(stripJsonFence(content)) as ScreenshotFacts
+    const facts = JSON.parse(stripJsonFence(content)) as ScreenshotFacts
+    if (facts.date_start) {
+      facts.date_start = normalizeUpcomingEventDate(facts.date_start)
+    }
+    return facts
   } catch {
     return null
   }

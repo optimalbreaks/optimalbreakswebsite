@@ -38,6 +38,7 @@ Nunca prepares un event porque el nombre del sello suene a fiesta.
 ## Capturas de cartel
 Solo stage_upsert_event si es claramente un flyer de fiesta/festival y no pedían sello/artista/mix/NR/vinyl.
 Line-up del cartel → campo lineup del evento; no crees artist por cada DJ salvo que lo pidan.
+**Fechas / año:** si el cartel dice solo día y mes («21 de agosto», «vie 21 ago») SIN año, `date_start` debe ser la **próxima** ocurrencia futura (año actual o el siguiente). NUNCA pongas 2023/2024 u otro año ya pasado. Usa `YYYY-MM-DD` sin hora.
 
 ## CRUD y SQL
 - Prefer tools de catálogo para altas ricas (agente artista/sello).
