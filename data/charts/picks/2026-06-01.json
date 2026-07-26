@@ -2196,6 +2196,59 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 96
+    },
+    {
+      "title": "Thistle",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Randomer"
+        },
+        {
+          "name": "Skrillex"
+        },
+        {
+          "name": "Blawan"
+        },
+        {
+          "name": "Mc Dricka"
+        }
+      ],
+      "label": "OWSLA/Atlantic",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/thistle/29191174",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69644be6-653b-47ab-8d8e-4a71fc638759.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/68f7e8d8-9c48-4ca1-98d0-dfa28eaea020.LOFI.mp3",
+      "bpm": 145,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Back The Funk",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Becking"
+        }
+      ],
+      "label": "No Instruction",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-the-funk/29030140",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/325862bc-27af-4e21-9328-0b2250c11d8b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0b843e56-37d4-4c6e-bd29-3fe6607d8a20.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
     }
   ]
 }

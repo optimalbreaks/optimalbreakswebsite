@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-10-13",
+  "picks": [
+    {
+      "title": "Fogo",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fogo/21621990",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/25a78f14-3271-442d-8390-1881e3999f46.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2b2efd3a-41d3-47d8-99bd-3832822ca03f.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

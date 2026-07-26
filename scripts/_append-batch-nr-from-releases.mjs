@@ -14,8 +14,8 @@
  *
  * Un mismo pegado puede abrir/rellenar **varios** JSON si los temas caen en lunes distintos.
  *
- * Modo actual: SOLO singles (releases multipista se listan pero no se insertan).
- * Acepta Beatport `/release/` o `/track/`; Bandcamp `*.bandcamp.com/track/…` (un track por URL).
+ * Modo actual: `/release/` y `/chart/` añaden **todas** las pistas; `/track/` una sola.
+ * Acepta Beatport `/release/`, `/track/` o `/chart/`; Bandcamp `*.bandcamp.com/track/…` (un track por URL).
  *
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
@@ -88,7 +88,10 @@ function parseImportLines(text) {
     } else if (/^https?:\/\//i.test(t)) {
       urlRaw = t
     } else continue
-    const url = urlRaw.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://')
+    const url = urlRaw
+      .split('?')[0]
+      .replace(/\/+$/, '')
+      .replace(/^http:\/\//i, 'https://')
     if (seen.has(url)) continue
     seen.add(url)
     out.push({ weekOverride, url })
@@ -286,6 +289,28 @@ function pickFromTrackBlob(t) {
   }
 }
 
+function findAllTracksFromChartNextData(nd) {
+  const qs = nd?.props?.pageProps?.dehydratedState?.queries || []
+  for (const q of qs) {
+    const key0 = Array.isArray(q?.queryKey) ? q.queryKey[0] : ''
+    const data = q?.state?.data
+    if (
+      typeof key0 === 'string' &&
+      /chart-\d+-tracks/i.test(key0) &&
+      Array.isArray(data?.results) &&
+      data.results.length
+    ) {
+      const out = []
+      for (const t of data.results) {
+        const p = pickFromTrackBlob(t)
+        if (p?.title) out.push(p)
+      }
+      if (out.length) return out
+    }
+  }
+  return []
+}
+
 function findAllTracksFromReleaseNextData(nd) {
   const qs = nd?.props?.pageProps?.dehydratedState?.queries || []
   for (const q of qs) {
@@ -322,6 +347,10 @@ function dedupeKey(linkUrl) {
   const n = (linkUrl || '').trim().toLowerCase()
   const m = n.match(/\/track\/[^/]+\/(\d+)/)
   return m ? `beatport:${m[1]}` : n.replace(/\/+$/, '')
+}
+
+function isBeatportChartUrl(url) {
+  return /beatport\.com\/(?:[a-z]{2}\/)?chart\//i.test(url || '')
 }
 
 function isBandcampTrackUrl(url) {
@@ -405,9 +434,15 @@ async function fetchBandcampTracks(url) {
 
 async function fetchTracks(url) {
   if (isBandcampTrackUrl(url)) return fetchBandcampTracks(url)
-  const html = await fetchHttp(url)
+  const cleanUrl = String(url).split('?')[0]
+  const html = await fetchHttp(cleanUrl)
   const nd = extractNextData(html)
   if (!nd) throw new Error('no __NEXT_DATA__')
+  if (isBeatportChartUrl(cleanUrl)) {
+    const chartTracks = findAllTracksFromChartNextData(nd)
+    if (!chartTracks.length) throw new Error('chart sin pistas en __NEXT_DATA__')
+    return chartTracks
+  }
   return findAllTracksFromReleaseNextData(nd)
 }
 
@@ -417,7 +452,7 @@ const uniqQueue = []
 const queueSeenUrl = new Set()
 for (const row of importEntries) {
   if (!isSupportedStoreUrl(row.url || '')) continue
-  const u = String(row.url).replace(/^http:\/\//i, 'https://').replace(/\/+$/, '')
+  const u = String(row.url).replace(/^http:\/\//i, 'https://').split('?')[0].replace(/\/+$/, '')
   if (queueSeenUrl.has(u)) continue
   queueSeenUrl.add(u)
   uniqQueue.push({ url: u, weekOverride: row.weekOverride })
@@ -451,8 +486,37 @@ function ensureWeek(monday) {
 }
 
 let addedSinglesTotal = 0
-const albums = []
 const failed = []
+
+function tryAddPick(pick, weekOverride, idx, total, releaseNote = '') {
+  const monday = resolveEditionMondayForPick(pick, weekOverride)
+  if (!monday) {
+    const detail =
+      'sin release_date en tienda; usa fecha en línea (YYYY-MM-DD URL) o env NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD'
+    console.warn(`    [${idx}/${total}] · ${detail}: ${pick.title}`)
+    failed.push({ url: pick.link_url, reason: detail })
+    return
+  }
+  const st = ensureWeek(monday)
+  const k = dedupeKey(pick.link_url)
+  if (st.existingKeys.has(k)) {
+    console.warn(`    [${idx}/${total}] · ya estaba en ${monday}: ${pick.title}`)
+    return
+  }
+  st.existingKeys.add(k)
+  pick.sort_order = st.nextSort++
+  st.data.picks.push(pick)
+  st.dirty = true
+  st.addedHere++
+  addedSinglesTotal++
+  console.log(
+    `    [${idx}/${total}] + [${monday}] ${pick.title}${
+      pick.mix_name ? ` (${pick.mix_name})` : ''
+    } — ${(pick.artists || [])
+      .map((a) => a.name)
+      .join(', ')}${releaseNote}`,
+  )
+}
 
 const BATCH_PAUSE_MS = Math.max(
   0,
@@ -476,42 +540,13 @@ for (let i = 0; i < uniqQueue.length; i++) {
     if (!tracks.length) {
       console.warn(`    [${idx}/${total}] Sin pistas: ${url}`)
       failed.push({ url, reason: 'sin pistas' })
-    } else if (tracks.length > 1) {
-      console.log(`    [${idx}/${total}] ⏭️  ÁLBUM (${tracks.length} pistas): ${url}`)
-      for (const t of tracks) {
-        console.log(`        · ${t.title}${t.mix_name ? ` (${t.mix_name})` : ''}`)
-      }
-      albums.push({ url, count: tracks.length, titles: tracks.map((t) => t.title) })
     } else {
-      const pick = tracks[0]
-      const monday = resolveEditionMondayForPick(pick, weekOverride)
-      if (!monday) {
-        const detail =
-          'sin release_date en tienda; usa fecha en línea (YYYY-MM-DD URL) o env NR_BATCH_FALLBACK_WEEK=YYYY-MM-DD'
-        console.warn(`    [${idx}/${total}] · ${detail}`)
-        failed.push({ url, reason: detail })
-      } else {
-        const st = ensureWeek(monday)
-        const k = dedupeKey(pick.link_url)
-        if (st.existingKeys.has(k)) {
-          console.warn(
-            `    [${idx}/${total}] · ya estaba en ${monday}: ${pick.title}`,
-          )
-        } else {
-          st.existingKeys.add(k)
-          pick.sort_order = st.nextSort++
-          st.data.picks.push(pick)
-          st.dirty = true
-          st.addedHere++
-          addedSinglesTotal++
-          console.log(
-            `    [${idx}/${total}] + [${monday}] ${pick.title}${
-              pick.mix_name ? ` (${pick.mix_name})` : ''
-            } — ${(pick.artists || [])
-              .map((a) => a.name)
-              .join(', ')}`,
-          )
-        }
+      if (tracks.length > 1) {
+        const kind = isBeatportChartUrl(url) ? '📊 Chart' : '📀 Release'
+        console.log(`    [${idx}/${total}] ${kind} (${tracks.length} pistas): ${url}`)
+      }
+      for (const pick of tracks) {
+        tryAddPick(pick, weekOverride, idx, total)
       }
     }
   } catch (e) {
@@ -531,7 +566,7 @@ for (const [monday, st] of weekStates) {
 }
 
 console.log(`\n=== RESUMEN ===`)
-console.log(`Singles añadidos (suma todas las semanas): ${addedSinglesTotal}`)
+console.log(`Picks añadidos (suma todas las semanas): ${addedSinglesTotal}`)
 if (weekStates.size) {
   console.log(`Semanas tocadas (${weekStates.size}):`)
   for (const monday of [...weekStates.keys()].sort()) {
@@ -540,10 +575,6 @@ if (weekStates.size) {
       `  · ${monday}: archivo ${st.path.split(/[/\\]/).slice(-3).join('/')} picks=${st.data.picks?.length ?? 0} (+${st.addedHere})`,
     )
   }
-}
-console.log(`Álbumes (varias pistas, NO añadidos): ${albums.length}`)
-for (const a of albums) {
-  console.log(`  · ${a.url} → ${a.count} pistas`)
 }
 if (failed.length) {
   console.log(`Fallos: ${failed.length}`)

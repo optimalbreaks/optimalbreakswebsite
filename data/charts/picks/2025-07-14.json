@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-07-14",
+  "picks": [
+    {
+      "title": "Muita",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/muita/20609095",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f1b49f76-486a-4615-9132-9641ba470199.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9a38f01c-3481-4f19-adf2-7657884879c5.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

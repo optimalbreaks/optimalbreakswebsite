@@ -1,0 +1,27 @@
+{
+  "week_date": "2026-01-05",
+  "picks": [
+    {
+      "title": "It Gets Worse & Worse",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/it-gets-worse-worse/22878479",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d84b30e2-ae7a-47c9-8d07-d9b7ade54709.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/68a833b5-496b-415a-ad5a-3449b5740274.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-01-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "week_date": "2026-02-16",
+  "picks": [
+    {
+      "title": "GET OUT MY HEAD",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Redlight"
+        },
+        {
+          "name": "NOTION"
+        }
+      ],
+      "label": "Polydor Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-out-my-head/24146297",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/78f6feae-17e8-458d-94a6-0b2fe52fa41a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e5ec7d3d-1f26-427a-aeef-5c5df1b01184.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "week_date": "2026-02-23",
+  "picks": [
+    {
+      "title": "Flex It",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "MPH"
+        },
+        {
+          "name": "y3kfae"
+        }
+      ],
+      "label": "Black Book Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flex-it/24001508",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8ecf3f0f-a6ae-454c-a643-3015d6fb1057.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5e8b9eef-a4eb-48b1-8d0c-612cff54c7e3.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-02-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

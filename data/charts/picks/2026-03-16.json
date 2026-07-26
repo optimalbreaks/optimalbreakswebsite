@@ -1,0 +1,30 @@
+{
+  "week_date": "2026-03-16",
+  "picks": [
+    {
+      "title": "Hold It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Guau"
+        },
+        {
+          "name": "Lototskiy"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hold-it/24214500",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c3cb82a8-d3db-48d9-ab7e-75c2276feb40.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50375e9a-84de-4b57-b5aa-cd894c916803.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

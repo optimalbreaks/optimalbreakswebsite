@@ -12,6 +12,34 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
+/** PostgREST / cliente Supabase corta en 1000 filas por defecto. Sin `.range` paginado,
+ * New Releases (y pronto 40 Breaks/vinyl) se ven “recortados” a ~67 por semana cuando
+ * el total de filas supera 1000 — no se borran en BD; la página no las carga. */
+const SUPABASE_PAGE = 1000
+
+async function fetchAllByEditionIds<T>(
+  supabase: ReturnType<typeof createServerSupabase>,
+  table: 'chart_tracks' | 'chart_featured_tracks' | 'chart_vinyl_tracks',
+  editionIds: string[],
+  orderCol: 'position' | 'sort_order',
+): Promise<T[]> {
+  if (editionIds.length === 0) return []
+  const out: T[] = []
+  for (let offset = 0; ; offset += SUPABASE_PAGE) {
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .in('chart_edition_id', editionIds)
+      .order(orderCol, { ascending: true })
+      .range(offset, offset + SUPABASE_PAGE - 1)
+    if (error) throw new Error(`${table}: ${error.message}`)
+    const rows = (data as T[] | null) ?? []
+    out.push(...rows)
+    if (rows.length < SUPABASE_PAGE) break
+  }
+  return out
+}
+
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
   es: [
     'radio de breakbeat online',
@@ -180,26 +208,21 @@ export default async function ChartsPage({
   let allFeatured: ChartFeaturedTrack[] = []
   let allVinyl: ChartVinylTrack[] = []
   if (editionIds.length > 0) {
-    const { data: trks } = await supabase
-      .from('chart_tracks')
-      .select('*')
-      .in('chart_edition_id', editionIds)
-      .order('position', { ascending: true })
-    allTracks = (trks as ChartTrack[]) ?? []
-
-    const { data: feat } = await supabase
-      .from('chart_featured_tracks')
-      .select('*')
-      .in('chart_edition_id', editionIds)
-      .order('sort_order', { ascending: true })
-    allFeatured = (feat as ChartFeaturedTrack[]) ?? []
-
-    const { data: viny } = await supabase
-      .from('chart_vinyl_tracks')
-      .select('*')
-      .in('chart_edition_id', editionIds)
-      .order('sort_order', { ascending: true })
-    allVinyl = (viny as ChartVinylTrack[]) ?? []
+    ;[allTracks, allFeatured, allVinyl] = await Promise.all([
+      fetchAllByEditionIds<ChartTrack>(supabase, 'chart_tracks', editionIds, 'position'),
+      fetchAllByEditionIds<ChartFeaturedTrack>(
+        supabase,
+        'chart_featured_tracks',
+        editionIds,
+        'sort_order',
+      ),
+      fetchAllByEditionIds<ChartVinylTrack>(
+        supabase,
+        'chart_vinyl_tracks',
+        editionIds,
+        'sort_order',
+      ),
+    ])
   }
 
   const byEdition = new Map<string, ChartTrack[]>()
