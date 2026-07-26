@@ -1180,16 +1180,34 @@ export async function uploadChatImages(
   return { urls, errors, dataUrls }
 }
 
+export type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist'
+
+const CHAT_INTENTS = new Set<string>(['event', 'new_release', 'vinyl', 'mix', 'artist'])
+
+export function normalizeChatIntent(raw: unknown): ChatIntent | null {
+  if (typeof raw !== 'string') return null
+  const v = raw.trim().toLowerCase().replace(/-/g, '_')
+  if (v === 'nr' || v === 'release' || v === 'releases') return 'new_release'
+  if (v === 'vinilo' || v === 'vinyl_pick') return 'vinyl'
+  if (v === 'artista') return 'artist'
+  if (CHAT_INTENTS.has(v)) return v as ChatIntent
+  return null
+}
+
 export async function planChatWithOpenAI(opts: {
   message: string
   history: ChatHistoryItem[]
   imageDataUrls: { mime: string; dataUrl: string; publicUrl?: string }[]
   attachedPublicUrls: string[]
+  /** Modo elegido en la UI; fuerza el type de action principal. */
+  intent?: ChatIntent | null
 }): Promise<{ plan: ChatPlan; facts: ScreenshotFacts | null }> {
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
 
   const systemPrompt = loadSystemPrompt()
+  const intent = opts.intent ?? null
+  const treatAsEvent = !intent || intent === 'event'
   // Visión: forzar modelo con imagen; OPENAI_MODEL a veces es un modelo sin vision fiable
   const visionModel =
     process.env.OPENAI_CHAT_MODEL?.trim() ||
@@ -1200,7 +1218,8 @@ export async function planChatWithOpenAI(opts: {
   let screenshotFacts: ScreenshotFacts | null = null
   let webContext = ''
 
-  if (opts.imageDataUrls.length > 0) {
+  // OCR de cartel solo cuando el modo es evento (o sin modo): evita clasificar un Beatport como fiesta
+  if (opts.imageDataUrls.length > 0 && treatAsEvent) {
     screenshotFacts = await extractScreenshotFacts({
       openaiKey,
       model: visionModel,
@@ -1215,11 +1234,11 @@ export async function planChatWithOpenAI(opts: {
       screenshotFacts?.event_name,
       screenshotFacts?.city,
       screenshotFacts?.date_start?.slice(0, 4) || screenshotFacts?.date_text,
-      'entradas festival club event lineup',
+      treatAsEvent ? 'entradas festival club event lineup' : '',
     ]
-      .filter(Boolean)
-      .join(' ')
-      .trim() ||
+    .filter(Boolean)
+    .join(' ')
+    .trim() ||
     (opts.message.match(/https?:\/\/\S+/i)
       ? opts.message.match(/https?:\/\/\S+/i)?.[0] || ''
       : opts.message
@@ -1227,7 +1246,8 @@ export async function planChatWithOpenAI(opts: {
           .trim()
           .slice(0, 120))
   let webSource: 'openai' | 'serpapi' | 'none' = 'none'
-  if (q && q.length > 3) {
+  // Investigación web de eventos solo en modo evento; en NR/vinyl suele bastar el link
+  if (q && q.length > 3 && (treatAsEvent || /https?:\/\//i.test(opts.message))) {
     const research = await fetchWebResearchContext(q)
     webContext = research.context
     webSource = research.source
@@ -1243,9 +1263,20 @@ export async function planChatWithOpenAI(opts: {
     | { type: 'image_url'; image_url: { url: string; detail?: 'high' | 'low' | 'auto' } }
   > = []
 
-  let text = `MENSAJE DEL EDITOR:\n${opts.message || '(sin texto; solo captura/imagen — trata como alta de evento desde cartel)'}\n`
+  const defaultNoText = treatAsEvent
+    ? '(sin texto; solo captura/imagen — trata como alta de evento desde cartel)'
+    : `(sin texto; solo captura/imagen — modo forzado: ${intent})`
+
+  let text = ''
+  if (intent) {
+    text += `INTENCIÓN DEL EDITOR (UI — OBLIGATORIA): type="${intent}".
+Genera actions de ese tipo. No uses "event" salvo que intent sea "event".
+Si faltan datos críticos, reply pidiendo el dato y deja actions vacío.
+`
+  }
+  text += `MENSAJE DEL EDITOR:\n${opts.message || defaultNoText}\n`
   if (opts.attachedPublicUrls.length) {
-    text += `\nIMÁGENES SUBIDAS (Storage). En action event usa use_attached_image=true:\n`
+    text += `\nIMÁGENES SUBIDAS (Storage)${treatAsEvent ? '. En action event usa use_attached_image=true' : ''}:\n`
     opts.attachedPublicUrls.forEach((u, i) => {
       text += `${i + 1}. ${u}\n`
     })
@@ -1258,13 +1289,20 @@ export async function planChatWithOpenAI(opts: {
   } else if (hasImages) {
     text += `\n(Sin contexto web. Completa solo con lo legible en la imagen y el mensaje.)\n`
   }
-  text += `\nHoy (UTC): ${new Date().toISOString().slice(0, 10)}
-OBLIGATORIO: si hay cartel/evento identificable, actions DEBE incluir al menos un objeto { "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, ...campos }.
-No respondas solo con reply. Devuelve SOLO el JSON del plan.`
+  text += `\nHoy (UTC): ${new Date().toISOString().slice(0, 10)}\n`
+  if (treatAsEvent) {
+    text += `OBLIGATORIO: si hay cartel/evento identificable, actions DEBE incluir al menos un objeto { "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, ...campos }.\n`
+  } else {
+    text += `OBLIGATORIO: actions deben ser type="${intent}" (no inventes evento).\n`
+  }
+  text += `No respondas solo con reply. Devuelve SOLO el JSON del plan.`
   userParts.push({ type: 'text', text })
 
   // Si ya hay OCR, no reenviar 3 capturas (payload enorme / timeouts). Solo 1 de apoyo.
-  if (!screenshotFacts?.event_name && opts.imageDataUrls[0]) {
+  const shouldAttachImage =
+    opts.imageDataUrls[0] &&
+    (treatAsEvent ? !screenshotFacts?.event_name : true)
+  if (shouldAttachImage && opts.imageDataUrls[0]) {
     userParts.push({
       type: 'image_url',
       image_url: { url: opts.imageDataUrls[0].dataUrl, detail: 'high' },
@@ -1315,9 +1353,9 @@ No respondas solo con reply. Devuelve SOLO el JSON del plan.`
     })
   }
 
-  // Fallback duro: la IA a veces solo escribe reply sin actions
+  // Fallback duro: solo en modo evento (o sin intención)
   const hasEvent = plan.actions.some((a) => a.type === 'event')
-  if (!hasEvent && screenshotFacts?.event_name) {
+  if (treatAsEvent && !hasEvent && screenshotFacts?.event_name) {
     const fallback = eventActionFromScreenshotFacts(screenshotFacts)
     if (fallback) {
       plan.actions = [fallback, ...plan.actions]

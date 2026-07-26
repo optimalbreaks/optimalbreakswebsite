@@ -10,6 +10,8 @@
 
 Canal **solo admin** (`profiles.role = admin`, p. ej. `contacto@eskaladigital.com`) para mandar **capturas de cartel**, texto o links y hacer **UPSERT directo** en Supabase: eventos, artistas, mixes, New Releases y vinyl picks.
 
+En la UI hay chips de **modo** (Evento / New Release / Vinyl pick / Mix / Artista): fijan `intent` en la API para que el plan no adivine el tipo. Sin chip, se clasifica por señales (cartel, Beatport, etc.).
+
 Pensado sobre todo para **PWA móvil**: captura de Facebook/Instagram → enviar → ficha en BD.
 
 ### Dónde abrir

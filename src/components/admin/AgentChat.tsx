@@ -19,11 +19,51 @@ type Props = {
   mode?: 'embedded' | 'capture'
 }
 
+type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist'
+
+const INTENT_OPTIONS: {
+  id: ChatIntent
+  label: string
+  hint: string
+  placeholder: string
+}[] = [
+  {
+    id: 'event',
+    label: 'Evento',
+    hint: 'Modo evento. Manda la captura del cartel o un link de entradas.',
+    placeholder: 'Nota u opcional link del evento…',
+  },
+  {
+    id: 'new_release',
+    label: 'New Release',
+    hint: 'Modo New Release. Pega el link de Beatport (/track o /release).',
+    placeholder: 'https://www.beatport.com/track/…',
+  },
+  {
+    id: 'vinyl',
+    label: 'Vinyl pick',
+    hint: 'Modo vinyl pick. Pega Discogs y/o YouTube (y nota si quieres).',
+    placeholder: 'Discogs / YouTube del vinilo…',
+  },
+  {
+    id: 'mix',
+    label: 'Mix',
+    hint: 'Modo mix. Pega YouTube o SoundCloud del set.',
+    placeholder: 'https://youtube.com/… o SoundCloud…',
+  },
+  {
+    id: 'artist',
+    label: 'Artista',
+    hint: 'Modo artista. Escribe el nombre (y notas o link Beatport si tienes).',
+    placeholder: 'Nombre del artista…',
+  },
+]
+
 const WELCOME_CAPTURE =
-  'Manda una captura del cartel (Facebook, Instagram, entradas…). La IA la lee, busca el evento en la web, rellena ficha/lineup y lo guarda en la BD. También vale pegar un link.'
+  '¿Qué quieres añadir?\nElige una opción abajo y luego manda el link, el texto o la captura. Así la IA sabe el tipo desde el principio.'
 
 const WELCOME_EMBEDDED =
-  'Chat editorial: capturas de cartel, links o texto → la IA lee, busca y hace upsert (eventos, artistas, mixes, NR, vinyl).'
+  'Chat editorial: elige qué quieres añadir (evento, NR, vinyl, mix, artista) y pega link/texto/captura.'
 
 /** Etapas orientativas mientras la API responde (un solo request, sin stream). */
 const PROGRESS_STEPS = [
@@ -57,6 +97,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const [status, setStatus] = useState<string | null>(null)
   const [progressPct, setProgressPct] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
+  const [intent, setIntent] = useState<ChatIntent | null>(null)
   const [vvOffset, setVvOffset] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -66,6 +107,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const filesRef = useRef<File[]>([])
   const remoteRef = useRef<string[]>([])
   const inputRef = useRef('')
+  const intentRef = useRef<ChatIntent | null>(null)
   const progressTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   useEffect(() => {
@@ -77,6 +119,27 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   useEffect(() => {
     inputRef.current = input
   }, [input])
+  useEffect(() => {
+    intentRef.current = intent
+  }, [intent])
+
+  const activeIntent = INTENT_OPTIONS.find((o) => o.id === intent) || null
+
+  const pickIntent = useCallback((next: ChatIntent) => {
+    setIntent(next)
+    intentRef.current = next
+    const opt = INTENT_OPTIONS.find((o) => o.id === next)
+    if (!opt) return
+    setMessages((m) => {
+      const last = m[m.length - 1]
+      if (last?.role === 'assistant' && last.id.startsWith('intent-')) {
+        return [...m.slice(0, -1), { id: `intent-${next}`, role: 'assistant', content: opt.hint }]
+      }
+      return [...m, { id: `intent-${next}`, role: 'assistant', content: opt.hint }]
+    })
+    setError(null)
+    window.setTimeout(() => textareaRef.current?.focus(), 50)
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
@@ -267,12 +330,15 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
 
+      const currentIntent = intentRef.current
+
       try {
         let res: Response
         if (sendFiles.length > 0) {
           const form = new FormData()
           form.set('message', text)
           form.set('history', JSON.stringify(history.slice(0, -1)))
+          if (currentIntent) form.set('intent', currentIntent)
           for (const f of sendFiles) form.append('files', f)
           res = await fetch('/api/admin/agent/chat', { method: 'POST', body: form })
         } else {
@@ -283,6 +349,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
               message: text,
               history: history.slice(0, -1),
               image_urls: remotes,
+              intent: currentIntent,
             }),
           })
         }
@@ -578,6 +645,35 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
               : undefined
           }
         >
+          <div className="space-y-1.5">
+            <p
+              className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]/60"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {intent ? `Modo: ${activeIntent?.label}` : '¿Qué quieres hacer?'}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {INTENT_OPTIONS.map((opt) => {
+                const selected = intent === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => pickIntent(opt.id)}
+                    className={`min-h-10 px-2.5 border-[2px] border-[var(--ink)] text-[11px] font-bold uppercase tracking-wide ${
+                      selected
+                        ? 'bg-[var(--yellow)] text-[var(--ink)]'
+                        : 'bg-white text-[var(--ink)] hover:bg-[var(--paper-dark)]'
+                    } disabled:opacity-50`}
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           {allPreviews.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
               {allPreviews.map((src) => (
@@ -606,9 +702,10 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
             rows={capture ? 2 : 3}
             enterKeyHint="send"
             placeholder={
-              capture
-                ? 'Opcional: nota o link… (con solo la captura basta)'
-                : 'Captura, link o texto…'
+              activeIntent?.placeholder ||
+              (capture
+                ? 'Elige un modo arriba, luego link o captura…'
+                : 'Elige modo: evento, NR, vinyl, mix, artista…')
             }
             className="admin-input !text-base !leading-snug resize-none"
             style={{ minHeight: capture ? '3.25rem' : '4.5rem', fontSize: '16px' }}

@@ -3,9 +3,11 @@ import { requireAdmin } from '@/lib/admin-auth'
 import {
   eventActionFromScreenshotFacts,
   executeChatActions,
+  normalizeChatIntent,
   planChatWithOpenAI,
   uploadChatImages,
   type ChatHistoryItem,
+  type ChatIntent,
 } from '@/lib/admin-chat'
 
 export const maxDuration = 300
@@ -24,10 +26,12 @@ export async function POST(request: NextRequest) {
     let history: ChatHistoryItem[] = []
     const files: File[] = []
     let preUploadedUrls: string[] = []
+    let intent: ChatIntent | null = null
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData()
       message = String(form.get('message') || '')
+      intent = normalizeChatIntent(form.get('intent'))
       const historyRaw = form.get('history')
       if (typeof historyRaw === 'string' && historyRaw.trim()) {
         try {
@@ -44,6 +48,7 @@ export async function POST(request: NextRequest) {
     } else {
       const body = await request.json()
       message = typeof body.message === 'string' ? body.message : ''
+      intent = normalizeChatIntent(body.intent)
       if (Array.isArray(body.history)) history = body.history
       if (Array.isArray(body.image_urls)) {
         preUploadedUrls = body.image_urls.filter(
@@ -98,10 +103,15 @@ export async function POST(request: NextRequest) {
       history,
       imageDataUrls,
       attachedPublicUrls,
+      intent,
     })
 
-    // Segundo fallback por si el plan vino vacío tras un OCR útil
-    if (!plan.actions.some((a) => a.type === 'event') && facts?.event_name) {
+    // Segundo fallback por si el plan vino vacío tras un OCR útil (solo modo evento)
+    if (
+      (!intent || intent === 'event') &&
+      !plan.actions.some((a) => a.type === 'event') &&
+      facts?.event_name
+    ) {
       const fb = eventActionFromScreenshotFacts(facts)
       if (fb) {
         plan.actions.unshift(fb)
