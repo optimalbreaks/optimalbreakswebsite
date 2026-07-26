@@ -123,14 +123,37 @@ export function pendingOpsSummary(ops: PendingOp[]): string {
 export function looksLikeConfirm(text: string): boolean {
   const t = text.trim().toLowerCase()
   if (!t) return false
-  return /^(sí|si|ok|vale|confirmo|confirma|confirmar|adelante|hazlo|guarda|guardar|yes|yep|go)\b/.test(
+  // Solo afirmaciones cortas (evita «sí pero cambia el slug…» → debe ir al agente)
+  if (t.length > 48) return false
+  return /^(sí|si|ok|vale|confirmo|confirma|confirmar|adelante|hazlo|guarda|guardar|yes|yep|go)([.!?\s]|$)/.test(
     t,
   )
 }
 
 export function looksLikeCancel(text: string): boolean {
   const t = text.trim().toLowerCase()
-  return /^(no|cancel|cancela|cancelar|descarta|olvida|stop)\b/.test(t)
+  if (!t || t.length > 48) return false
+  return /^(cancel|cancela|cancelar|descarta|descartar|olvida|stop)([.!?\s]|$)/.test(t)
+}
+
+/**
+ * pending_ops del último mensaje assistant del hilo.
+ * Solo cuenta el más reciente: si ya se confirmó (pending vacío), NO reutiliza ops antiguas.
+ */
+export async function loadLatestPendingOps(opts: {
+  userId: string
+  threadId: string
+}): Promise<PendingOp[]> {
+  const data = await loadChatThread({ userId: opts.userId, threadId: opts.threadId })
+  if (!data?.messages?.length) return []
+  for (let i = data.messages.length - 1; i >= 0; i--) {
+    const m = data.messages[i]
+    if (m.role !== 'assistant') continue
+    const ops = m.pending_ops
+    if (Array.isArray(ops) && ops.length > 0) return ops as PendingOp[]
+    return []
+  }
+  return []
 }
 
 async function adminPost(
@@ -904,12 +927,29 @@ export async function executePendingOps(
   for (const op of ops) {
     try {
       if (op.kind === 'chat_action') {
+        const action = op.action
+        if (!action || typeof action !== 'object' || !('type' in action)) {
+          results.push({
+            type: 'chat_action',
+            ok: false,
+            summary: `Op inválida (sin action): ${op.summary || '?'}`,
+          })
+          continue
+        }
         const r = await executeChatActions(
-          [op.action],
+          [action],
           originRequest,
           op.attached_urls || [],
         )
-        results.push(...r)
+        if (!r.length) {
+          results.push({
+            type: String((action as { type?: string }).type || 'chat_action'),
+            ok: false,
+            summary: `Sin resultado al ejecutar: ${op.summary}`,
+          })
+        } else {
+          results.push(...r)
+        }
         continue
       }
       if (op.kind === 'db_insert') {
@@ -1036,6 +1076,9 @@ export async function runAdminChatAgent(opts: {
   if (opts.attachedPublicUrls.length) {
     system += `\nImágenes de este turno (Storage):\n${opts.attachedPublicUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
   }
+  if (looksLikeConfirm(opts.message)) {
+    system += `\nEl editor acaba de afirmar («${opts.message.trim()}»). OBLIGATORIO en este turno: llama a stage_* con la entidad del historial (sello/artista/evento/…). No digas que no hay operaciones pendientes ni vuelvas a preguntar si lo añade.\n`
+  }
 
   const userParts: Array<
     | { type: 'text'; text: string }
@@ -1131,9 +1174,15 @@ export async function runAdminChatAgent(opts: {
   }
 
   if (pendingOps.length) {
+    // El modelo a menudo dice «he creado» aunque solo haya hecho stage (aún no hay fila).
+    finalReply = finalReply
+      .replace(/\bhe creado\b/gi, 'he preparado')
+      .replace(/\bya (está|esta) (creado|guardado|en la bd|en la base)\b/gi, 'queda pendiente de confirmar')
+      .replace(/\bguardado en (la )?bd\b/gi, 'preparado (aún no guardado)')
+      .replace(/\bcreado el evento\b/gi, 'preparado el evento')
     const block = pendingOpsSummary(pendingOps)
-    if (!/confirm/i.test(finalReply)) {
-      finalReply = `${finalReply}\n\n———\nPendiente de confirmar:\n${block}\n\nPulsa Confirmar o responde «sí» para aplicar; «cancelar» para descartar.`
+    if (!/pendiente de confirmar/i.test(finalReply)) {
+      finalReply = `${finalReply}\n\n———\nPendiente de confirmar (aún NO está en la BD):\n${block}\n\nPulsa «Confirmar y guardar» o responde «sí» para escribir en Supabase.`
     }
   }
 

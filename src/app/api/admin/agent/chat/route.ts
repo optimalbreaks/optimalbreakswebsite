@@ -13,6 +13,7 @@ import {
   executePendingOps,
   listChatThreads,
   loadChatThread,
+  loadLatestPendingOps,
   looksLikeCancel,
   looksLikeConfirm,
   pendingOpsSummary,
@@ -116,7 +117,31 @@ export async function POST(request: NextRequest) {
       cancelOps = Boolean(body.cancel_ops)
     }
 
-    // Cancelar ops pendientes
+    // Recuperar pending_ops del hilo si el cliente dijo «sí»/«cancelar» sin adjuntarlas.
+    // Si no hay ops en el hilo, el mensaje sigue al agente (memoria conversacional:
+    // «¿lo añado?» → «sí» → stage_* → tarjeta Confirmar).
+    if (
+      threadId &&
+      ((!(confirmOps && confirmOps.length) && looksLikeConfirm(message)) ||
+        (!cancelOps && looksLikeCancel(message)))
+    ) {
+      try {
+        const recovered = await loadLatestPendingOps({
+          userId: auth.userId,
+          threadId,
+        })
+        if (recovered.length) {
+          if (looksLikeConfirm(message) && (!confirmOps || !confirmOps.length)) {
+            confirmOps = recovered
+          }
+          if (looksLikeCancel(message)) cancelOps = true
+        }
+      } catch {
+        /* sin migración / hilo: el agente conversa igual */
+      }
+    }
+
+    // Descartar ops (botón Cancelar, o «cancelar» con ops en cliente/hilo)
     if (cancelOps) {
       const reply = 'Operaciones descartadas. No se ha escrito nada en la BD.'
       try {
@@ -138,7 +163,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Confirmación explícita: el cliente manda confirm_ops (botón o «sí» con ops adjuntas)
+    // Confirmar (botón, «sí» con ops en cliente, o «sí» recuperado del hilo)
     if (Array.isArray(confirmOps) && confirmOps.length > 0) {
       const results = await executePendingOps(confirmOps, request)
       const savedOk = results.some((r) => r.ok)
@@ -168,20 +193,6 @@ export async function POST(request: NextRequest) {
         pending_ops: [],
         thread_id: tid,
       })
-    }
-
-    if (looksLikeConfirm(message) && !confirmOps?.length) {
-      return NextResponse.json({
-        ok: false,
-        reply:
-          'No hay operaciones pendientes en este envío. Si viste una tarjeta de confirmación, pulsa Confirmar (o reenvía con las ops).',
-        pending_ops: [],
-      })
-    }
-
-    if (looksLikeCancel(message)) {
-      const reply = 'Cancelado. No se escribe nada.'
-      return NextResponse.json({ ok: true, reply, pending_ops: [] })
     }
 
     if (!message.trim() && files.length === 0 && preUploadedUrls.length === 0) {
@@ -231,14 +242,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Memoria: preferir historial del hilo en BD (más fiable que el del cliente)
+    let historyForAgent = history
+    if (threadId) {
+      try {
+        const thread = await loadChatThread({ userId: auth.userId, threadId })
+        if (thread?.messages?.length) {
+          const fromDb = thread.messages
+            .filter((m) => m.role === 'user' || m.role === 'assistant')
+            .map((m) => ({
+              role: m.role as 'user' | 'assistant',
+              content: m.content,
+            }))
+            .slice(-16)
+          if (fromDb.length) historyForAgent = fromDb
+        }
+      } catch {
+        /* usa history del cliente */
+      }
+    }
+
     const agent = await runAdminChatAgent({
       message,
-      history,
+      history: historyForAgent,
       intent,
       imageDataUrls,
       attachedPublicUrls,
       originRequest: request,
     })
+
+    // «sí»/«ok» sin ops previas: si el agente acaba de hacer stage_* en este turno,
+    // aplicar ya (evita el limbo «¿lo añado?» → «sí» → otra vez Confirmar).
+    let reply = agent.reply
+    let pendingOut = agent.pending_ops
+    let execResults: Awaited<ReturnType<typeof executePendingOps>> = []
+    let savedOk = false
+    if (looksLikeConfirm(message) && agent.pending_ops.length > 0) {
+      execResults = await executePendingOps(agent.pending_ops, request)
+      savedOk = execResults.some((r) => r.ok)
+      const lines = execResults.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
+      reply = savedOk
+        ? `Hecho. Guardado en la BD:\n${lines.join('\n')}`
+        : `No se completó el guardado:\n${lines.join('\n')}`
+      pendingOut = []
+    }
 
     let tid = threadId
     try {
@@ -258,8 +305,8 @@ export async function POST(request: NextRequest) {
           },
           {
             role: 'assistant',
-            content: agent.reply,
-            pending_ops: agent.pending_ops.length ? agent.pending_ops : null,
+            content: reply,
+            pending_ops: pendingOut.length ? pendingOut : null,
             tool_trace: agent.tool_trace.length ? agent.tool_trace : null,
           },
         ],
@@ -269,18 +316,17 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      ok: true,
-      reply: agent.reply,
-      pending_ops: agent.pending_ops,
-      pending_summary: pendingOpsSummary(agent.pending_ops),
+      ok: execResults.length ? savedOk : true,
+      reply,
+      pending_ops: pendingOut,
+      pending_summary: pendingOpsSummary(pendingOut),
       tool_trace: agent.tool_trace,
       attached_urls: attachedPublicUrls,
       upload_errors: upload.errors,
       thread_id: tid,
-      // compat UI antigua
-      results: [],
-      saved: false,
-      needs_confirm: agent.pending_ops.length > 0,
+      results: execResults,
+      saved: savedOk,
+      needs_confirm: pendingOut.length > 0,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)

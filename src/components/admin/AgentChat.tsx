@@ -91,17 +91,19 @@ const WELCOME_WIDGET =
 const PENDING_KEY = 'ob-admin-chat-pending'
 const THREAD_KEY = 'ob-admin-chat-thread'
 
-/** Etapas orientativas mientras el agente responde (un request, sin stream). */
-const PROGRESS_STEPS = [
-  { id: 'upload', label: 'Enviando mensaje', atMs: 0, pct: 12 },
-  { id: 'read', label: 'Agente pensando / tools', atMs: 4_000, pct: 48 },
-  { id: 'save', label: 'Preparando operaciones', atMs: 18_000, pct: 78 },
-  { id: 'done', label: 'Casi listo…', atMs: 35_000, pct: 92 },
+/** Pistas suaves mientras espera (un solo request, sin stream ni % real). */
+const WAITING_HINTS = [
+  { atMs: 0, label: 'Pensando…' },
+  { atMs: 6_000, label: 'Consultando tools…' },
+  { atMs: 20_000, label: 'Sigue trabajando…' },
+  { atMs: 45_000, label: 'Casi…' },
 ] as const
 
 function looksLikeConfirmText(text: string) {
-  return /^(sí|si|ok|vale|confirmo|confirma|confirmar|adelante|hazlo|guarda|guardar|yes)\b/i.test(
-    text.trim(),
+  const t = text.trim()
+  if (!t || t.length > 48) return false
+  return /^(sí|si|ok|vale|confirmo|confirma|confirmar|adelante|hazlo|guarda|guardar|yes)([.!?\s]|$)/i.test(
+    t,
   )
 }
 
@@ -126,8 +128,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
-  const [progressPct, setProgressPct] = useState(0)
-  const [progressLabel, setProgressLabel] = useState('')
+  const [waitingHint, setWaitingHint] = useState('')
   const [intent, setIntent] = useState<ChatIntent | null>(null)
   const [pendingOps, setPendingOps] = useState<PendingOp[]>([])
   const [threadId, setThreadId] = useState<string | null>(null)
@@ -144,7 +145,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
   const intentRef = useRef<ChatIntent | null>(null)
   const pendingRef = useRef<PendingOp[]>([])
   const threadRef = useRef<string | null>(null)
-  const progressTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const waitingTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const sendRef = useRef<
     (opts?: {
       text?: string
@@ -205,44 +206,33 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, loading, progressLabel])
+  }, [messages, loading, waitingHint])
 
-  const clearProgressTimers = useCallback(() => {
-    for (const t of progressTimers.current) clearTimeout(t)
-    progressTimers.current = []
+  const clearWaitingTimers = useCallback(() => {
+    for (const t of waitingTimers.current) clearTimeout(t)
+    waitingTimers.current = []
   }, [])
 
-  const startProgress = useCallback(() => {
-    clearProgressTimers()
-    setProgressPct(PROGRESS_STEPS[0].pct)
-    setProgressLabel(PROGRESS_STEPS[0].label)
-    setStatus(PROGRESS_STEPS[0].label)
-    for (const step of PROGRESS_STEPS.slice(1)) {
-      progressTimers.current.push(
+  const startWaitingHints = useCallback(() => {
+    clearWaitingTimers()
+    setWaitingHint(WAITING_HINTS[0].label)
+    setStatus(WAITING_HINTS[0].label)
+    for (const hint of WAITING_HINTS.slice(1)) {
+      waitingTimers.current.push(
         setTimeout(() => {
-          setProgressPct(step.pct)
-          setProgressLabel(step.label)
-          setStatus(step.label)
-        }, step.atMs),
+          setWaitingHint(hint.label)
+          setStatus(hint.label)
+        }, hint.atMs),
       )
     }
-  }, [clearProgressTimers])
+  }, [clearWaitingTimers])
 
-  const finishProgress = useCallback(
-    (ok: boolean) => {
-      clearProgressTimers()
-      setProgressPct(100)
-      setProgressLabel(ok ? 'Listo' : 'Error')
-      const t = setTimeout(() => {
-        setProgressPct(0)
-        setProgressLabel('')
-      }, 900)
-      progressTimers.current.push(t)
-    },
-    [clearProgressTimers],
-  )
+  const stopWaitingHints = useCallback(() => {
+    clearWaitingTimers()
+    setWaitingHint('')
+  }, [clearWaitingTimers])
 
-  useEffect(() => () => clearProgressTimers(), [clearProgressTimers])
+  useEffect(() => () => clearWaitingTimers(), [clearWaitingTimers])
 
   // Miniaturas del composer como data URLs: los blob: se revocaban al recomprimir
   // (doble setFiles) y quedaban rotos en iOS/Android.
@@ -385,21 +375,28 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
       }
       if (loading) return
 
-      // «sí» con ops pendientes → confirmar
+      // «sí» / Confirmar → adjuntar pending_ops (ref o sessionStorage)
       let opsToConfirm = confirmOps
-      if (
-        !opsToConfirm?.length &&
-        !cancelOps &&
-        looksLikeConfirmText(text) &&
-        pendingRef.current.length
-      ) {
-        opsToConfirm = pendingRef.current
+      if (!opsToConfirm?.length && !cancelOps && looksLikeConfirmText(text)) {
+        if (pendingRef.current.length) {
+          opsToConfirm = pendingRef.current
+        } else {
+          try {
+            const raw = sessionStorage.getItem(PENDING_KEY)
+            if (raw) {
+              const parsed = JSON.parse(raw) as PendingOp[]
+              if (Array.isArray(parsed) && parsed.length) opsToConfirm = parsed
+            }
+          } catch {
+            /* ignore */
+          }
+        }
       }
 
       setError(null)
       setStatus(null)
       setLoading(true)
-      startProgress()
+      startWaitingHints()
 
       const userMsgId = `u-${Date.now()}`
       let previewUrls: string[] = remotes.slice()
@@ -466,6 +463,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
           error?: string
           reply?: string
           ok?: boolean
+          saved?: boolean
           pending_ops?: PendingOp[]
           tool_trace?: { name: string; ok: boolean; detail: string }[]
           attached_urls?: string[]
@@ -488,7 +486,12 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
           )
         }
 
-        const nextPending = opsToConfirm?.length || cancelOps ? [] : data.pending_ops || []
+        const results = Array.isArray(data.results) ? data.results : []
+        const savedThisTurn =
+          Boolean(data.saved) ||
+          (results.length > 0 && (data.ok === true || results.some((r) => r.ok)))
+        const nextPending =
+          opsToConfirm?.length || cancelOps || savedThisTurn ? [] : data.pending_ops || []
         applyPendingFromResponse(nextPending)
 
         setMessages((m) => [
@@ -502,19 +505,20 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
           },
         ])
         clearFiles()
-        finishProgress(true)
-        if (opsToConfirm?.length) {
-          const anySaved = data.ok === true || (data.results || []).some((r) => r.ok)
+        stopWaitingHints()
+        if (opsToConfirm?.length || savedThisTurn) {
+          const anySaved =
+            data.ok === true || data.saved === true || results.some((r) => r.ok)
           setStatus(anySaved ? 'Guardado en BD' : 'Error al guardar — mira el mensaje')
           if (!anySaved) setError('No se completó el guardado')
         } else if (nextPending.length) {
           setStatus('Pendiente de confirmar')
         } else {
-          setStatus('Respuesta del agente')
+          setStatus(null)
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error desconocido'
-        finishProgress(false)
+        stopWaitingHints()
         setError(msg)
         setMessages((m) => [
           ...m,
@@ -532,11 +536,11 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
       applyPendingFromResponse,
       clearFiles,
       fileToDataUrl,
-      finishProgress,
       loading,
       messages,
       previews,
-      startProgress,
+      startWaitingHints,
+      stopWaitingHints,
     ],
   )
 
@@ -850,53 +854,24 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
               </div>
             </div>
           ) : null}
-          {loading || progressPct > 0 ? (
+          {loading ? (
             <div
-              className="mr-auto w-full max-w-[94%] border-[2px] border-[var(--ink)] bg-white px-3 py-2.5 space-y-2"
+              className="mr-auto max-w-[94%] border-[2px] border-[var(--ink)] bg-white px-3 py-2.5"
               role="status"
               aria-live="polite"
-              aria-busy={loading}
+              aria-busy="true"
             >
-              <div className="flex items-center justify-between gap-2">
-                <p
-                  className="text-[11px] uppercase tracking-wider font-bold text-[var(--ink)]"
-                  style={{ fontFamily: "'Courier Prime', monospace" }}
-                >
-                  {progressLabel || 'Procesando…'}
-                </p>
-                <span
-                  className="text-[11px] tabular-nums text-[var(--ink)]/70"
-                  style={{ fontFamily: "'Courier Prime', monospace" }}
-                >
-                  {Math.min(100, Math.round(progressPct))}%
-                </span>
-              </div>
-              <div className="h-2.5 w-full border-[2px] border-[var(--ink)] bg-[var(--paper-dark)] overflow-hidden">
-                <div
-                  className="h-full bg-[var(--red)] transition-[width] duration-500 ease-out"
-                  style={{ width: `${Math.min(100, progressPct)}%` }}
-                />
-              </div>
-              <ol
-                className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] uppercase tracking-wide text-[var(--ink)]/55"
-                style={{ fontFamily: "'Courier Prime', monospace" }}
+              <p
+                className="flex items-center gap-2 text-[13px] text-[var(--ink)]/80"
+                style={{ fontFamily: "'Special Elite', monospace" }}
               >
-                {PROGRESS_STEPS.filter((s) => s.id !== 'done').map((s) => {
-                  const active = progressLabel === s.label
-                  const done = progressPct > s.pct || (!loading && progressPct === 100)
-                  return (
-                    <li
-                      key={s.id}
-                      className={
-                        active ? 'text-[var(--red)] font-bold' : done ? 'text-[var(--ink)]' : ''
-                      }
-                    >
-                      {done && !active ? '✓ ' : active ? '→ ' : '· '}
-                      {s.label}
-                    </li>
-                  )
-                })}
-              </ol>
+                <span className="ob-admin-chat-typing" aria-hidden>
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span>{waitingHint || 'Pensando…'}</span>
+              </p>
             </div>
           ) : null}
           <div ref={bottomRef} />
@@ -1043,7 +1018,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
                 }
                 onClick={() => void send()}
               >
-                {loading ? progressLabel || 'Pensando…' : widget ? 'Enviar' : 'Enviar al agente'}
+                {loading ? waitingHint || 'Pensando…' : widget ? 'Enviar' : 'Enviar al agente'}
               </button>
             ) : (
               <button
@@ -1054,7 +1029,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
                 }
                 onClick={() => void send()}
               >
-                {loading ? progressLabel || 'Pensando…' : 'Enviar'}
+                {loading ? waitingHint || 'Pensando…' : 'Enviar'}
               </button>
             )}
           </div>
