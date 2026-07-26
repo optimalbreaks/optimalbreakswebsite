@@ -8,9 +8,9 @@
 
 ### Qué es
 
-Canal **solo admin** (`profiles.role = admin`) con un **agente conversacional** (OpenAI tool-calling): texto, capturas y links. El agente lee la BD/web, **prepara** altas (eventos, sellos, artistas, mixes, NR, vinyl, CRUD admin, SQL) y **solo escribe tras Confirmar**.
+Canal **solo admin** (`profiles.role = admin`) con un **agente conversacional** de OpenAI (**tool-calling**): texto, capturas, links.
 
-Chips de modo (Evento / Sello / Artista / NR / Vinyl / Mix) = **hint**. Persistencia de hilos: `admin_chat_threads` / `admin_chat_messages` (migración `062`).
+El agente puede **leer** la BD y la web, **preparar** altas/cambios (eventos, sellos, artistas, mixes, New Releases, vinyl, CRUD admin, SQL) y **solo escribe en Supabase tras Confirmar** (botón o «sí» / «adelante»).
 
 Pensado también para **PWA móvil** (Share Target → chat → confirmar).
 
@@ -21,122 +21,145 @@ Pensado también para **PWA móvil** (Share Target → chat → confirmar).
 | Captura fullscreen (PWA) | `/[lang]/administrator/chat` |
 | Pestaña en centro de agentes | `/[lang]/administrator/agent` → «Chat editorial» |
 | FAB «Captura» (abajo-izquierda, solo admin) | `AdminCaptureFab` |
-| Atajo PWA / Web Share Target | `public/manifest.json` → `/share-target` → chat |
+| Web Share Target | `public/manifest.json` → `/share-target` → chat |
 
 ### Flujo del agente
 
-1. **Cliente** (`AgentChat.tsx`): mensaje/captura → `POST /api/admin/agent/chat` (+ `thread_id`, `intent`).
-2. **Agente** (`src/lib/admin-chat-agent.ts`): loop OpenAI con **tools** (buscar BD, web, OCR, `stage_*`).
-3. Respuesta con `reply` + **`pending_ops`**. UI muestra tarjeta **Confirmar / Cancelar**.
-4. Confirmar → `confirm_ops` → `executePendingOps` (reutiliza upserts de `admin-chat.ts` + APIs agente + CRUD/SQL).
-5. Evento confirmado: UPSERT + dedupe; enrich/cartel en **segundo plano** (`waitUntil`, poster `light: true`).
-
-### Barra de progreso (UI)
-
-Etapas orientativas (sin stream): Enviando → Agente/tools → Preparando ops. Tras Confirmar, el guardado real está en la respuesta de `confirm_ops`.
-
-### Cartel oficial — visión / OCR (obligatorio)
-
-**No** elegir flyer solo por títulos de Google Imágenes (Google atribuye mal; caso real: Stanton Sessions vs C.A.Y.A. by fabric).
-
-| Pieza | Comportamiento |
-|-------|----------------|
-| Script CLI | `scripts/elegir-poster-evento.mjs` — **visión/OCR por defecto**; `--metadata-only` = escape frágil |
-| API admin | `POST /api/admin/agent/event-poster` — visión/OCR; body `{ slug, light?: boolean }` |
-| Chat | siempre `light: true` (hasta 6 thumbs, `detail: low`) para no colgar |
-| CLI / API “completa” | hasta 8 candidatos, preferir original, `detail: high` |
-| Prompt | leer texto del cartel; rechazar si es **otro** evento aunque el metadato diga lo contrario |
-
-Comandos:
-
-```bash
-npm run db:events:poster -- <slug>
-# o
-node scripts/guia-base-datos.mjs run events-poster <slug>
-# Solo metadatos (no recomendado):
-node scripts/elegir-poster-evento.mjs <slug> --metadata-only
+```text
+Mensaje / captura
+  → POST /api/admin/agent/chat
+  → loop OpenAI + tools (lectura + stage_*)
+  → reply + pending_ops
+  → UI: Confirmar / Cancelar
+  → confirm_ops → executePendingOps → BD
 ```
 
-Enriquecer ficha + cartel:
+1. **Cliente** [`AgentChat.tsx`](../src/components/admin/AgentChat.tsx): mensaje/captura, chips de modo (`intent` = hint), `thread_id`, tarjeta de confirmación.
+2. **API** [`chat/route.ts`](../src/app/api/admin/agent/chat/route.ts) (`maxDuration = 300`): sube imágenes a `media/chat/…`, llama al agente.
+3. **Agente** [`admin-chat-agent.ts`](../src/lib/admin-chat-agent.ts): hasta ~10 rondas de tools; las `stage_*` **no** escriben.
+4. **Confirmar** → `executePendingOps` (reutiliza [`admin-chat.ts`](../src/lib/admin-chat.ts) + APIs `/api/admin/agent/*` + CRUD/SQL).
+5. Evento confirmado: UPSERT + dedupe; enrich + cartel oficial en **segundo plano** (`waitUntil`, poster con `light: true`).
 
-```bash
-node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force]
-```
+`GET /api/admin/agent/chat?threads=1` lista hilos; `?thread_id=` carga mensajes.
 
-### Tools / destinos
+### Confirmación (invariante)
 
-| Tool / op | Destino |
-|-----------|---------|
-| `stage_upsert_event` | `events` (+ enrich/cartel al confirmar) |
-| `stage_upsert_label` | `/api/admin/agent/label` → `labels` |
-| `stage_upsert_artist` | `/api/admin/agent` → `artists` |
+| Acción | ¿Escribe en BD? |
+|--------|-----------------|
+| Tools de lectura (`search_catalog`, `get_record`, `db_list`, `db_get`, `db_sql_read`, `web_search`, `read_image_facts`) | No (solo leen) |
+| Tools `stage_*` / `stage_db_*` / `stage_db_sql_write` | No: acumulan `pending_ops` |
+| Botón **Confirmar** o mensaje «sí» + `confirm_ops` | **Sí** |
+| **Cancelar** | No (descarta pendientes) |
+
+El agente **no debe** decir «ya está guardado» hasta después de Confirmar.
+
+### Chips de modo
+
+Evento · Sello · Artista · New Release · Vinyl pick · Mix = **hint** (`intent` en el prompt). Sin chip, el modelo clasifica; palabras como «sello» / Beatport `/label/` ayudan. Distinguir siempre: **sello ≠ evento ≠ artista**.
+
+### Tools
+
+**Catálogo (preferidas para altas ricas)**
+
+| Tool | Destino |
+|------|---------|
+| `search_catalog` / `get_record` | Lectura `artists\|labels\|events\|mixes` |
+| `stage_upsert_event` | `events` (+ enrich/cartel tras confirmar) |
+| `stage_upsert_label` | `POST /api/admin/agent/label` → `labels` |
+| `stage_upsert_artist` | `POST /api/admin/agent` → `artists` |
 | `stage_upsert_mix` | `mixes` |
 | `stage_new_releases` | `featured-import` / `chart_featured_tracks` |
 | `stage_vinyl_picks` | `chart_vinyl_tracks` |
-| `stage_db_*` / `db_*` | CRUD tablas admin |
-| `db_sql_read` / `stage_db_sql_write` | Postgres (`DATABASE_URL`) |
+| `stage_enrich_event` / `stage_event_poster` | APIs event / event-poster |
+| `stage_artist_photo` / `stage_label_logo` | APIs foto / logo |
 
-Prompt: **`scripts/prompts/admin-chat-system.txt`**.
+**CRUD genérico** (tablas de [`api/admin/[table]`](../src/app/api/admin/[table]/route.ts)):  
+`db_list`, `db_get`, `stage_db_insert`, `stage_db_update`, `stage_db_delete`  
+→ `artists`, `labels`, `events`, `blog_posts`, `scenes`, `mixes`, `history_entries`.
+
+**SQL** (Postgres; necesita `DATABASE_URL` o `SUPABASE_DB_PASSWORD` + URL pública):  
+`db_sql_read` (SELECT/WITH, máx. 50 filas) · `stage_db_sql_write` (siempre confirmación; un solo statement).
+
+Prompt de sistema: [`scripts/prompts/admin-chat-system.txt`](../scripts/prompts/admin-chat-system.txt).
+
+### Persistencia de conversación
+
+Migración [`062_admin_chat_threads.sql`](../supabase/migrations/062_admin_chat_threads.sql):
+
+- `admin_chat_threads` — hilo por admin (`user_id`, `title`, `intent`, timestamps)
+- `admin_chat_messages` — `role`, `content`, `pending_ops`, `tool_trace`, `attached_urls`
+
+Si las tablas no existen, el chat sigue (pending en `sessionStorage`). Tipado en [`src/types/database.ts`](../src/types/database.ts): **no usar `unknown` en JSONB** (rompe la inferencia de Supabase y el build).
+
+### Cartel oficial — visión / OCR
+
+**No** elegir flyer solo por títulos de Google Imágenes.
+
+| Pieza | Comportamiento |
+|-------|----------------|
+| CLI | `scripts/elegir-poster-evento.mjs` — visión/OCR por defecto; `--metadata-only` = escape |
+| API | `POST /api/admin/agent/event-poster` — `{ slug, light?: boolean }` |
+| Chat (tras confirmar evento) | `light: true` |
+
+```bash
+npm run db:events:poster -- <slug>
+node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force]
+```
 
 ### Archivos clave
 
 | Archivo | Rol |
 |---------|-----|
-| `src/components/admin/AgentChat.tsx` | UI conversacional + Confirmar |
-| `src/app/api/admin/agent/chat/route.ts` | Endpoint agente + hilos |
-| `src/lib/admin-chat-agent.ts` | Tool loop, pending_ops, SQL, persistencia |
-| `src/lib/admin-chat.ts` | Upserts, OCR, enrich/poster en background |
-| `supabase/migrations/062_admin_chat_threads.sql` | Hilos/mensajes |
-| `src/app/api/admin/agent/event/route.ts` | Enrich evento |
-| `src/app/api/admin/agent/event-poster/route.ts` | Cartel (visión/OCR, `maxDuration = 120`) |
-| `scripts/elegir-poster-evento.mjs` | CLI carteles |
-| `scripts/enriquecer-evento.mjs` | CLI enrich |
-| `scripts/prompts/admin-chat-system.txt` | System prompt del plan |
-| `scripts/prompts/evento-enriquecer-system.txt` | Enrich |
-| `public/manifest.json` / `public/sw.js` | Share Target PWA |
-| `src/app/share-target/route.ts` | Recibe shares |
-| `src/lib/share-inbox.ts` | Inbox SW |
+| `src/components/admin/AgentChat.tsx` | UI + Confirmar + chips + hilo |
+| `src/app/api/admin/agent/chat/route.ts` | API agente |
+| `src/lib/admin-chat-agent.ts` | Tool loop, pending_ops, SQL, hilos |
+| `src/lib/admin-chat.ts` | Upserts, OCR, enrich/poster background |
+| `scripts/prompts/admin-chat-system.txt` | System prompt del agente |
+| `supabase/migrations/062_admin_chat_threads.sql` | Tablas de hilos |
+| `.cursor/rules/admin-chat-captura.mdc` | Regla Cursor (alwaysApply) |
 
 ### Credenciales
 
-- `OPENAI_API_KEY` (obligatoria)
-- `OPENAI_MODEL` / `OPENAI_VISION_MODEL` (opcionales)
-- `SERPAPI_API_KEY` (imágenes cartel + fallback web)
-- `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (o `SUPABASE_SECRET_KEY`)
+| Variable | Uso |
+|----------|-----|
+| `OPENAI_API_KEY` | Obligatoria |
+| `OPENAI_CHAT_MODEL` / `OPENAI_AGENT_MODEL` / `OPENAI_MODEL` | Modelo del loop (fallback típico `gpt-4o`) |
+| `OPENAI_VISION_MODEL` | OCR / carteles |
+| `SERPAPI_API_KEY` | Imágenes cartel + fallback web |
+| `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | REST / upserts |
+| `DATABASE_URL` (o password Postgres) | Tools SQL |
 
 ### PWA / Share Target
 
-1. Usuario comparte imagen/link a Optimal Breaks.
-2. SW o ruta `/share-target` guarda/sube y redirige al chat.
-3. Admin envía → mismo pipeline.
+1. Comparte imagen/link a Optimal Breaks.  
+2. SW o `/share-target` → chat.  
+3. El agente **prepara** ops; el admin **confirma** antes de BD.
 
 ### Invariantes
 
-1. **Upsert directo** — no pedir confirmación si hay nombre de evento.
-2. **No fingir “Guardado”** sin `results` OK / fila en BD.
-3. **Duplicados** — actualizar, no crear otra ficha.
-4. **Captura `media/chat/`** = provisional; buscar cartel oficial.
-5. **Cartel = OCR visual**, no solo metadatos SerpAPI.
-6. **Chat no debe colgarse** en OCR pesado: `light` + paralelo + timeouts; el evento ya está persistido.
-7. New Releases: semana = release Beatport (regla `charts-new-releases-supabase`).
+1. **Nada a BD sin Confirmar** (salvo lecturas).
+2. **No fingir “Guardado”** sin `results` OK tras `confirm_ops`.
+3. **Sello ≠ evento ≠ artista** (tools y chips).
+4. **Duplicados de evento** — actualizar, no clonar.
+5. Captura en `media/chat/` = **provisional**; cartel oficial por OCR.
+6. New Releases: semana = lunes ISO del **release Beatport** (regla `charts-new-releases-supabase`).
+7. Tipado `admin_chat_*`: JSONB como tipo JSON recursivo, no `unknown`.
 
 ### Relación con Cursor / CLI
 
-El chat **no sustituye** del todo a Cursor para fichas largas, pero cubre el alta rápida desde móvil. Para retoques:
-
-- `run events-enrich <slug> --force --with-poster`
-- `run events-poster <slug>`
-- Regla: **`base-de-datos-sin-dejar-trabajo-al-usuario`**.
+El chat **no sustituye** a Cursor para lotes o fichas muy largas. Para retoques: `run events-enrich`, `run label-agent`, `run artist-json`, etc. Regla: **`base-de-datos-sin-dejar-trabajo-al-usuario`**.
 
 ### Troubleshooting
 
 | Síntoma | Qué mirar |
 |---------|-----------|
-| “Guardando…” eterno (antes del fix) | Enrich+cartel en serie + OCR hi-res; ver `admin-chat.ts` paralelo + `light` |
-| Guardado OK, cartel mal | OCR; reejecutar `events-poster` / subir flyer a `public/images/events/` + WebP |
-| Evento duplicado | `findDuplicateEvent`; borrar slug malo (`events-delete-slug`) |
-| Preview negra en chat | Previews `data:` URL, no `blob:` revocado |
-| TLS / `fetch failed` en scripts locales | Red Acttax: `NODE_EXTRA_CA_CERTS` o Node con `--use-system-ca` (ver README) |
+| Build Vercel: `never` en `.name` / labels | Tipado `admin_chat` con `unknown` — ver `database.ts` |
+| Dice “guardado” pero no hay fila | ¿Pulsaste Confirmar? Revisa `pending_ops` |
+| SQL tools fallan | Falta `DATABASE_URL`; usa CRUD REST |
+| Hilos no se guardan | Migración `062` no aplicada |
+| Cartel incorrecto | OCR; `events-poster` / WebP en `public/images/events/` |
+| Preview negra | Previews `data:` URL, no `blob:` |
+| TLS local | `NODE_TLS_REJECT_UNAUTHORIZED=0` o CA corporativa (README) |
 
 ---
 
@@ -144,32 +167,50 @@ El chat **no sustituye** del todo a Cursor para fichas largas, pero cubre el alt
 
 ### What it is
 
-**Admin-only conversational agent** (OpenAI tool-calling): screenshots, text, links. Reads the DB/web, **stages** writes (events, labels, artists, mixes, NR, vinyl, admin CRUD, SQL), and **only persists after Confirm**. Mobile PWA Share Target supported.
+**Admin-only conversational agent** (OpenAI **tool-calling**): text, screenshots, links. It **reads** the DB/web, **stages** writes (events, labels, artists, mixes, New Releases, vinyl, admin CRUD, SQL), and **persists only after Confirm**. Also used as a mobile PWA capture channel (Share Target → confirm).
 
 ### Entry points
 
-- Fullscreen: `/[lang]/administrator/chat`
-- Agents hub tab: `/[lang]/administrator/agent`
-- FAB + Web Share Target (`manifest` / `sw.js` → `/share-target`)
+| Entry | Path |
+|-------|------|
+| Fullscreen PWA | `/[lang]/administrator/chat` |
+| Agents hub tab | `/[lang]/administrator/agent` |
+| FAB + Share Target | `AdminCaptureFab`, `/share-target` |
 
 ### Agent flow
 
-Message → tool loop (`admin-chat-agent.ts`) → `pending_ops` → Confirm → `executePendingOps`. Event upsert still dedupes; enrich/poster run in background (`light: true`).
+Message/image → `POST /api/admin/agent/chat` → OpenAI tool loop (`admin-chat-agent.ts`) → `pending_ops` → **Confirm** → `executePendingOps`. Confirmed events: UPSERT + dedupe; enrich + official poster in background (`waitUntil`, poster `light: true`).
 
-### Poster selection
+Threads: migration `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`). Without tables, chat still works (sessionStorage for pending).
 
-**Vision/OCR by default**. Chat poster uses **`light: true`**.
+### Confirmation invariant
 
-### Progress UI
+`stage_*` tools **never** write. Only `confirm_ops` (Confirm button / «yes») runs `executePendingOps`. Cancel discards pending ops.
 
-Client-side staged progress (not a server stream). Confirm card for pending ops.
+Mode chips (Event / Label / Artist / NR / Vinyl / Mix) are **hints**, not a hard classifier. Do not confuse **label** with **event** or **artist**.
 
-### Key files / env
+### Tools (summary)
 
-`admin-chat-agent.ts`, `admin-chat.ts`, migration `062_admin_chat_threads.sql`. Prompt: `scripts/prompts/admin-chat-system.txt`. Env: OpenAI + SerpAPI + Supabase service role (+ `DATABASE_URL` for SQL tools).
+- Catalog stages: event, label, artist, mix, new_releases, vinyl + enrich/poster/photo/logo  
+- Admin CRUD: list/get + staged insert/update/delete  
+- SQL: `db_sql_read` / `stage_db_sql_write` (needs `DATABASE_URL`)
+
+System prompt: `scripts/prompts/admin-chat-system.txt`.
+
+### Posters
+
+Vision/OCR by default (not Google Images titles alone). Chat uses `light: true` after a confirmed event upsert.
+
+### Env
+
+`OPENAI_API_KEY`, optional `OPENAI_CHAT_MODEL` / `OPENAI_MODEL` / `OPENAI_VISION_MODEL`, `SERPAPI_API_KEY`, Supabase service role, optional `DATABASE_URL` for SQL.
+
+### Typing note
+
+Do **not** type `admin_chat_*` JSONB columns as TypeScript `unknown` — it breaks Supabase client inference (`never` on other tables) and fails the Vercel build. Use a recursive JSON type in `src/types/database.ts`.
 
 ### See also
 
-- [`AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md)
-- [`guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) — `events-enrich`, `events-poster`
-- Cursor rules: `base-de-datos-sin-dejar-trabajo-al-usuario`, `charts-new-releases-supabase`, `admin-chat-captura`
+- [`AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md)  
+- [`guia-base-datos.mjs`](../scripts/guia-base-datos.mjs)  
+- Cursor: `admin-chat-captura`, `base-de-datos-sin-dejar-trabajo-al-usuario`, `charts-new-releases-supabase`

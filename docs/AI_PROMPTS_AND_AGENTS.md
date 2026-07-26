@@ -19,7 +19,7 @@ Los **textos de sistema** de los agentes editoriales (fichas de artista, sello, 
 | `sello-agente-system.txt` | Agente de ficha de **sello** (`generar-sello-agente.mjs`, API `POST /api/admin/agent/label`). |
 | `sello-agente-revision-system.txt` | Modo revisión del CLI de sello. |
 | `evento-enriquecer-system.txt` | **Enriquecedor de eventos** (`scripts/enriquecer-evento.mjs`, API `POST /api/admin/agent/event`). |
-| `admin-chat-system.txt` | **Chat editorial / captura PWA** (`POST /api/admin/agent/chat`). Guía: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
+| `admin-chat-system.txt` | **Agente conversacional admin / captura PWA** (`POST /api/admin/agent/chat`, tool-calling + confirmación). Guía: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
 
 Las **instrucciones de usuario** (checklist, slug, contexto web, notas) se arman en **código** en cada script o `route.ts`; no están centralizadas en un solo `.txt`.
 
@@ -32,7 +32,8 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | **`OPENAI_API_KEY`** | Obligatoria donde haya llamadas a OpenAI. |
 | **`OPENAI_MODEL`** | Opcional; el **valor por defecto depende del flujo** (ver tabla siguiente). |
 | **`SERPAPI_API_KEY`** | Opcional; contexto web (Google) en agentes que lo soportan. |
-| **`OPENAI_VISION_MODEL`** | Opcional en `elegir-foto-artista.mjs` (modo `--vision`). |
+| **`OPENAI_VISION_MODEL`** | Opcional en `elegir-foto-artista.mjs` (modo `--vision`) y OCR del chat/carteles. |
+| **`OPENAI_CHAT_MODEL`** / **`OPENAI_AGENT_MODEL`** | Opcional: modelo del **loop de tools** del chat admin (`admin-chat-agent.ts`); si no, `OPENAI_MODEL` o `gpt-4o`. |
 
 ### Modelo por defecto (si no defines `OPENAI_MODEL`)
 
@@ -41,7 +42,7 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Artista (CLI + API admin) | `gpt-5.4` |
 | Sello (API admin + CLI sello) | `gpt-5.4` |
 | Enriquecer evento (CLI + API admin evento) | `gpt-4o-mini` |
-| Chat editorial / captura (plan + OCR captura) | `OPENAI_MODEL` / visión según `admin-chat.ts` |
+| Chat admin (agente tools + confirmación) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-4o` (`admin-chat-agent.ts`); OCR vía `extractScreenshotFacts` / visión |
 | Cartel evento (visión/OCR, script + API `event-poster`) | `OPENAI_VISION_MODEL` o `OPENAI_MODEL` o `gpt-4o` |
 | Elegir foto artista / sello, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
 | Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.4` |
@@ -60,7 +61,7 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 
 ### Guías detalladas por agente
 
-- **Chat editorial / captura PWA (eventos desde cartel, upsert, OCR carteles, barra de progreso):** [`docs/ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md).
+- **Agente conversacional admin / captura PWA** (tool-calling, `pending_ops` + Confirmar, eventos/sellos/artistas/mixes/NR/vinyl/CRUD/SQL, hilos `062`, OCR carteles): [`docs/ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md).
 - **Artista — biografías y también fotos (SerpAPI → Storage, `--repair`, retratos en `public`):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **Base de datos, enrich, posters, fotos:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) (`node scripts/guia-base-datos.mjs` sin args).
 - **Imágenes / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
@@ -100,7 +101,7 @@ Si unifica criterios editoriales, busca en el fichero del script o en `src/app/a
 | `sello-agente-system.txt` | **Label** agent (`generar-sello-agente.mjs`, `POST /api/admin/agent/label`). |
 | `sello-agente-revision-system.txt` | Label CLI revision mode. |
 | `evento-enriquecer-system.txt` | **Event enricher** (`enriquecer-evento.mjs`, `POST /api/admin/agent/event`). |
-| `admin-chat-system.txt` | **Editorial / capture chat** (`POST /api/admin/agent/chat`). Guide: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
+| `admin-chat-system.txt` | **Admin conversational agent / PWA capture** (`POST /api/admin/agent/chat`, tool-calling + confirm). Guide: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
 
 **User-side instructions** (checklists, slug, web context, notes) are built in **code** in each script or `route.ts`.
 
@@ -122,7 +123,7 @@ See `.env.local` / `.env.local.example`.
 | Artist (CLI + admin API) | `gpt-5.4` |
 | Label (admin API + label CLI) | `gpt-5.4` |
 | Event enrich (CLI + admin event API) | `gpt-4o-mini` |
-| Editorial / capture chat (plan + OCR) | per `admin-chat.ts` |
+| Admin chat agent (tools + confirm) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-4o` (`admin-chat-agent.ts`) |
 | Event poster (vision/OCR) | `OPENAI_VISION_MODEL` / `OPENAI_MODEL` / `gpt-4o` |
 | Artist/label photo pick, logo scripts/APIs | often `gpt-5.4` except vision branches |
 | Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.4` |
@@ -135,7 +136,7 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 
 ### Deeper docs
 
-- **Editorial capture chat (PWA screenshots → upsert, poster OCR):** [docs/ADMIN_CHAT_CAPTURA.md](./ADMIN_CHAT_CAPTURA.md).
+- **Admin conversational agent / PWA capture** (tools, confirm before write, catalog + CRUD/SQL, threads `062`, poster OCR): [docs/ADMIN_CHAT_CAPTURA.md](./ADMIN_CHAT_CAPTURA.md).
 - **Artist agent (bios + photos / repair / public portraits):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **DB CLI catalogue:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs).
 - **Images / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).

@@ -14,15 +14,17 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Organizaciones y Raveart:** existe la tabla **`organizations`** (promotora, roles, enlaces). Los **sellos** pueden enlazar a una organización (`labels.organization_id`) y los **eventos** a la promotora (`events.promoter_organization_id`). Ficha pública: `/[lang]/organizations/[slug]` (p. ej. `raveart`). Datos sembrados y ampliados con las migraciones **`010_raveart_organizations.sql`** y **`011_raveart_gallery_events.sql`** (alineación con la [galería oficial](https://www.raveart.es/galeria/)). Detalle técnico y tabla de migraciones en [README.md](./README.md).
 
-**Eventos:** se crean **manualmente** desde el panel admin (`/administrator/events/new`), pidiendo al agente Cursor, o con el **chat de captura PWA** (solo admin): `/[lang]/administrator/chat` — foto del cartel / link → OCR → UPSERT → enrich + cartel oficial. Guía completa: **[`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md)**. Para completar una ficha ya existente: `npm run db:events:enrich -- <slug> [--with-poster]` (prompt: **`scripts/prompts/evento-enriquecer-system.txt`**). El cartel se elige por **visión/OCR** (`db:events:poster` / API `event-poster`), no solo por títulos de Google Imágenes.
+**Eventos:** se crean **manualmente** desde el panel admin (`/administrator/events/new`), pidiendo al agente Cursor, o con el **agente conversacional admin** (solo admin): `/[lang]/administrator/chat` — foto/texto/link → tools OpenAI → **Confirmar** → UPSERT → enrich + cartel oficial. Guía: **[`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md)**. También sirve para **sellos, artistas, mixes, New Releases, vinyl**, CRUD admin y SQL (con confirmación). Para completar una ficha ya existente: `npm run db:events:enrich -- <slug> [--with-poster]` (prompt: **`scripts/prompts/evento-enriquecer-system.txt`**). El cartel se elige por **visión/OCR** (`db:events:poster` / API `event-poster`), no solo por títulos de Google Imágenes.
 
-**Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. Chat captura: [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md). Agente de **artistas**: [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md). **Mapa de toda la documentación Markdown y auditoría:** [`docs/README.md`](./docs/README.md).
+**Índice general de prompts y agentes IA** (archivos `.txt`, variables `OPENAI_*`, modelos por defecto, APIs): **[`docs/AI_PROMPTS_AND_AGENTS.md`](./docs/AI_PROMPTS_AND_AGENTS.md)**. Agente chat admin: [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md). Agente de **artistas**: [`docs/ARTIST_AI_AGENT.md`](./docs/ARTIST_AI_AGENT.md). **Mapa de toda la documentación Markdown y auditoría:** [`docs/README.md`](./docs/README.md).
 
 **Imágenes (WebP, `public/images` vs Supabase Storage):** [`docs/IMAGES_AND_WEBP.md`](./docs/IMAGES_AND_WEBP.md). **Qué puede hacer el usuario:** [`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md). **Estrellas 1–5 solo** para **experiencias a las que puedes ir**: **artistas** (visto en vivo) y **eventos** (fui). Sellos, mixes, etc.: solo favoritos/guardados, sin puntuación.
 
 **Fechas de release con día (YYYY-MM-DD):** todas las listas de canciones (40 Breaks Vitales, New Releases, Retro Vinyl Picks, Top 10 de Beatport en artistas/sellos, **Mis Tracks** propio y público, Top de la Comunidad, Almas Gemelas, panel admin de Tracks y buscador ⌘K) muestran el **día completo** cuando se conoce, con fallback al año. Migración **`057_chart_featured_tracks_release_date.sql`** añade `chart_featured_tracks.release_date DATE`; la columna existe también en `chart_tracks.release_date` y dentro del JSONB `beatport_top_tracks` (artistas/sellos). Scrapers (Beatport `__NEXT_DATA__.publish_date`, Bandcamp `data-tralbum.album_release_date`) integrados en `chart-featured-upsert.mjs --enrich-release-dates`, `chart-40-breaks.mjs`, `beatport-top-tracks.mjs`. Para snapshots ya guardados: `scripts/saved-tracks-backfill.mjs` rellena `release_date` de forma **aditiva** (`mergeSnapshotAdditive`); flag `--scrape-beatport` para huérfanos. Helpers en `src/lib/share-track.ts` (`formatTrackReleaseDisplay`, `effectiveReleaseYear`, `releaseSortTimestampMs`). Detalle EN: [README.md — Track release dates](./README.md#track-release-dates-full-day-vs-year).
 
-**Veto editorial — DistroKid:** distribuidor masivo, **no** se crea como sello (`labels`). La cadena `"DistroKid"` aparece en muchos JSON de picks porque Beatport la reporta como label de auto-publicados, pero no se genera fila ni `/labels/distrokid`. Lista de vetos completa en [README.md — Editorial vetoes](./README.md#editorial-vetoes-entities-not-to-create); ampliar **solo** tras confirmación explícita.
+**Veto editorial — DistroKid / TuneCore / agregadores:** son **distribuidoras**, no sellos de escena. La cadena puede aparecer en picks de Beatport, pero **no** se crea fila en `labels` ni ficha `/labels/…`. Tampoco se dan de alta majors genéricos (Polydor, Columbia, OWSLA/Atlantic, etc.) solo por frecuencia en charts. Lista completa: [README.md — Editorial vetoes](./README.md#editorial-vetoes-entities-not-to-create); ampliar **solo** tras confirmación explícita.
+
+**Descubrimiento desde charts (umbrales editoriales):** cruzar **40 Breaks Vitales** + **New Releases** (ediciones publicadas; Retro Vinyl fuera). **Artistas:** alta con agente si tienen **≥ 3** créditos y aún no están en `data/artists/` (`npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only`). **Sellos reales:** alta solo con **≥ 10** apariciones del string `label` (excluyendo DistroKid/TuneCore/majors); por debajo se aparca. Detalle EN + comandos: [README.md — Discovering artists & labels from charts](./README.md#discovering-artists--labels-from-charts). Regla Cursor: `.cursor/rules/charts-catalog-discovery.mdc`.
 
 **Correos de autenticación (plantillas HTML para Supabase):** [`mailing/supabase/README.md`](./mailing/supabase/README.md) — confirmación de registro, invitación, magic link, cambio de correo, recuperación de contraseña, reautenticación. Flujo técnico actualizado en [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
 
@@ -197,6 +199,38 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 
 ---
 
+## Descubrir artistas y sellos desde los charts
+
+Crecimiento editorial del catálogo a partir de ediciones **publicadas** de **40 Breaks Vitales** (`chart_tracks`) + **New Releases** (`chart_featured_tracks`). **Retro Vinyl no cuenta** para estos umbrales.
+
+### Artistas — umbral **≥ 3** apariciones
+
+1. Contar créditos de artista en todas las ediciones publicadas (unión 40 Breaks + New Releases).
+2. Cruzar con `data/artists/` (nombre / nombre sin paréntesis / slug; alias en `CHART_NAME_TO_SLUG`).
+3. Con **≥ 3** apariciones y **sin** JSON local → crear con el agente:
+   ```bash
+   npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only --dry-run
+   npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only
+   ```
+4. Fotos opcionales: `npm run db:artist:photo -- <slug>`. Si Serp/Instagram fallan, dejar `image_url` null.
+5. Alternativa (todos los nombres del chart, sin filtro de frecuencia): `npm run db:chart:artists -- --all-published` y luego enriquecer starters. Para tandas de descubrimiento preferir el bootstrap **≥ 3**.
+
+### Sellos — umbral **≥ 10** apariciones (solo imprints reales)
+
+1. Contar el string `label` en las mismas tablas.
+2. Cruzar con `data/labels/`.
+3. **Excluir** DistroKid, TuneCore y el resto de [vetos editoriales](./README.md#editorial-vetoes-entities-not-to-create).
+4. Barra actual: **solo** crear fichas con **≥ 10** apariciones. Los de 5–9 / 3–4 / 1–2 quedan aparcados hasta que se baje el umbral a propósito.
+5. No hay script `chart-labels` aún; alta por sello:
+   ```bash
+   node scripts/guia-base-datos.mjs run label-agent -- <slug> "Nombre del sello" --save-json
+   node scripts/guia-base-datos.mjs run label-photo -- <slug>   # logo opcional
+   ```
+
+Regla para agentes Cursor: `.cursor/rules/charts-catalog-discovery.mdc`. Detalle en inglés: [README.md — Discovering artists & labels from charts](./README.md#discovering-artists--labels-from-charts).
+
+---
+
 ## Beatport: Top 10 en fichas de artista y sello
 
 Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**.
@@ -224,12 +258,12 @@ npm run db:beatport:top -- artist ed209 24421 --headless
 
 Si la IP del runner está fuertemente bloqueada por CF, el `--headless` también puede recibir el challenge sin resolverlo: en ese caso esperar varias horas y reintentar (la propia IP del usuario suele estar limpia y resuelve en segundos).
 
-**TLS `UNABLE_TO_VERIFY_LEAF_SIGNATURE` ("fetch failed" en Node)** — En redes con **SSL inspection** (típico en oficinas: Acttax, VPN/firewall corporativos), el certificado que ve Node está re-firmado por una CA interna. Node 20+ **no usa el truststore del SO por defecto**, así que `fetch` muere con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (visible como **"fetch failed"**) en **todos** los scripts que pegan a Beatport por HTTP: `chart-40-breaks`, `beatport-top-tracks`, `chart-featured-upsert --enrich-release-dates`, ad-hoc bajo `scripts/_*`, etc. **Solución limpia (sin desactivar TLS):** lanzar **`node --use-system-ca`** (lee la CA de Windows/macOS).
+**TLS `UNABLE_TO_VERIFY_LEAF_SIGNATURE` ("fetch failed" en Node)** — En redes con **SSL inspection** (típico en oficinas: Acttax, VPN/firewall corporativos), el certificado que ve Node está re-firmado por una CA interna. Node 20+ **no usa el truststore del SO por defecto**, así que `fetch` muere con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (visible como **"fetch failed"**) en scripts hacia Beatport / Supabase / OpenAI: `chart-40-breaks`, `beatport-top-tracks`, `chart-featured-upsert`, `enrich-chart-artists-agent`, `generar-sello-agente`, etc. **Solución limpia:** **`node --use-system-ca`** (disponible desde **Node ≥ 22.15**).
 
 - Invocar con `node` directo: `node --use-system-ca scripts/<archivo>.mjs …`
-- **Atención: `NODE_OPTIONS=--use-system-ca` rompe `npm`** (`--use-system-ca is not allowed in NODE_OPTIONS`). Por eso en lugar de `npm run db:beatport:top -- …` invoca directamente `node --use-system-ca scripts/beatport-top-tracks.mjs …`.
-- Alternativa persistente que **sí** acepta npm: variable de SO **`NODE_EXTRA_CA_CERTS=C:\ruta\ca-corporativa.pem`** apuntando al `.pem` exportado del proxy.
-- **No recomendado:** `NODE_TLS_REJECT_UNAUTHORIZED=0` (desactiva TLS para todo el proceso).
+- **`NODE_OPTIONS=--use-system-ca` rompe `npm`**. Preferir invocar el script con `node --use-system-ca …` o **`NODE_EXTRA_CA_CERTS`** al `.pem` del proxy.
+- **`guia-base-datos.mjs`** añade `--use-system-ca` a los hijos si Node major ≥ 20. Si tu build **rechaza** el flag (p. ej. **22.14**), usa **`OB_NO_SYSTEM_CA=1`** y, solo en esa sesión si hace falta, **`NODE_TLS_REJECT_UNAUTHORIZED=0`**.
+- **No recomendado como default permanente:** `NODE_TLS_REJECT_UNAUTHORIZED=0`.
 
 El script lee el HTML de Beatport, parsea **`__NEXT_DATA__`** y hace **`UPDATE`** por `slug` en la tabla correspondiente. **Guía:** `node scripts/guia-base-datos.mjs run beatport-top artist <slug> <id>`.
 

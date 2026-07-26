@@ -104,7 +104,7 @@ CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-an
 
 ## AI prompts and agents (OpenAI)
 
-System prompts for **artist**, **label**, **event enrichment**, and the **admin capture chat** live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**, **`OPENAI_VISION_MODEL`**) are set in **`.env.local`**; temperature, `max_tokens`, and JSON user instructions are defined in code per route or script. Capture chat + poster OCR: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md).
+System prompts for **artist**, **label**, **event enrichment**, and the **admin conversational agent** live under **`scripts/prompts/*.txt`** (versioned in Git; not stored in Supabase). **`OPENAI_MODEL`** and **`OPENAI_API_KEY`** (and optional **`SERPAPI_API_KEY`**, **`OPENAI_VISION_MODEL`**, **`OPENAI_CHAT_MODEL`**) are set in **`.env.local`**; temperature, `max_tokens`, tools, and JSON user instructions are defined in code per route or script. Admin chat (tool-calling + confirm before write) + poster OCR: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md).
 
 **Central index (all prompt files, defaults per flow, related APIs):** [`docs/AI_PROMPTS_AND_AGENTS.md`](docs/AI_PROMPTS_AND_AGENTS.md).  
 **Artist agent (batch, admin API, commands):** [`docs/ARTIST_AI_AGENT.md`](docs/ARTIST_AI_AGENT.md).  
@@ -290,7 +290,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 ├── docs/
 │   ├── README.md               # Doc index + maintenance audit (what each .md covers)
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
-│   ├── ADMIN_CHAT_CAPTURA.md   # Admin PWA capture chat + event poster OCR
+│   ├── ADMIN_CHAT_CAPTURA.md   # Admin conversational agent (tools + confirm) + PWA capture + poster OCR
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
 │   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
@@ -622,7 +622,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |
-| Admin capture chat (PWA) | `/[lang]/administrator/chat` | Screenshot / link → OCR → UPSERT (events, artists, mixes, NR, vinyl). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
+| Admin conversational agent (PWA) | `/[lang]/administrator/chat` | Chat + tools → stage writes → **Confirm** (events, labels, artists, mixes, NR, vinyl, CRUD/SQL). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
 
 ---
 
@@ -774,8 +774,43 @@ A short, hard-coded list of names that look like a label or artist on Beatport /
 | Name | Why | What to do |
 |------|-----|------------|
 | **DistroKid** (Beatport label id `66449`) | Mass-market **distributor / aggregator**, not a curated breakbeat label. Showing it as a label dilutes the catalog and its "top tracks" are random genres. | Leave the string `"DistroKid"` on individual chart picks (it appears in many JSON picks because Beatport reports it as the label of self-published tracks) but **do not** run `db:label`, `db:label:agent` or any UPSERT that would create a row in `labels` for it. The chart UI shows the text; the Beatport button still links to the track; no `/labels/distrokid` profile is generated. |
+| **TuneCore** (and similar aggregators: CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group when used as the Beatport “label”) | Same role as DistroKid: digital distribution / self-publishing pipes, not scene imprints. | Keep the string on chart rows if Beatport reports it; **never** create `labels` rows or `/labels/…` profiles. |
+| **Major / generic majors** when they only appear as Beatport metadata (e.g. Polydor, Columbia (Sony), OWSLA/Atlantic, Atlantic Records UK, Major Recordings/Warner) | Not breakbeat-scene imprint targets for Optimal Breaks catalog growth. | Do **not** bootstrap them from chart frequency. Add a major only after explicit editorial confirmation. |
 
 Add to this table only after explicit user confirmation. The aim is to keep a small, discoverable list rather than a separate document.
+
+---
+
+## Discovering artists & labels from charts
+
+Editorial growth of the catalogue from **published** editions of **40 Breaks Vitales** (`chart_tracks`) + **New Releases** (`chart_featured_tracks`). Retro Vinyl is **out of scope** for these thresholds.
+
+### Artists — threshold **≥ 3** appearances
+
+1. Count artist **credits** across all published editions (union of 40 Breaks + New Releases). One credit = one row where the name appears in `artists[]`.
+2. Match against `data/artists/` (name / stripped name / slug; aliases in `CHART_NAME_TO_SLUG` inside `sync-chart-artists.mjs` / `enrich-chart-artists-agent.mjs`).
+3. Candidates with **≥ 3** appearances and **no** local JSON → create with the agent:
+   ```bash
+   # SSL inspection (Acttax): see TLS notes below; Node < 22.15 needs OB_NO_SYSTEM_CA=1
+   npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only --dry-run
+   npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only
+   ```
+4. Optional after bios: portraits via `npm run db:artist:photo -- <slug>` (or a slug loop). Serp/Instagram failures are OK — leave `image_url` null.
+5. Starter sync of *all* missing names (no frequency filter): `npm run db:chart:artists -- --all-published` then enrich starters with `db:chart:artists:agent` (without `--bootstrap-only`). Prefer the **≥ 3 bootstrap** for discovery batches.
+
+### Labels — threshold **≥ 10** appearances (real imprints only)
+
+1. Count the `label` string on the same chart tables (published editions only).
+2. Match against `data/labels/` (name / slug; soft-match stripping trailing `Records` / `Recordings` / `Music`).
+3. **Exclude** DistroKid, TuneCore and the veto list above before ranking.
+4. Current editorial bar: only create profiles for missing labels with **≥ 10** appearances. Below that (5–9, 3–4, 1–2) stay parked until the threshold is lowered explicitly.
+5. There is **no** automated `chart-labels` bootstrap yet — create with the label agent per slug:
+   ```bash
+   node scripts/guia-base-datos.mjs run label-agent -- <slug> "Label Name" --save-json
+   # optional logo:
+   node scripts/guia-base-datos.mjs run label-photo -- <slug>
+   ```
+6. Cursor rule (agent invariant): `.cursor/rules/charts-catalog-discovery.mdc`.
 
 ---
 
@@ -785,7 +820,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
 - **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs, **each with `release_date YYYY-MM-DD`** when scrapeable), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
 - **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`). Same optional Beatport columns as artists (`046`).
-- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are created via admin UI, Cursor, or the **PWA capture chat** (`/[lang]/administrator/chat` — screenshot → OCR → UPSERT → enrich + official poster by **vision/OCR**). Enrich: `npm run db:events:enrich -- <slug> [--with-poster]`. Poster: `npm run db:events:poster -- <slug>` (OCR by default). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md); enricher prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt)
+- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are created via admin UI, Cursor, or the **admin conversational agent** (`/[lang]/administrator/chat` — screenshot/text → tools → **Confirm** → UPSERT → enrich + official poster by **vision/OCR**). Enrich: `npm run db:events:enrich -- <slug> [--with-poster]`. Poster: `npm run db:events:poster -- <slug>` (OCR by default). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md); enricher prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt)
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
 - **blog_posts** — title, content, excerpt (EN/ES), category, tags, author, `image_url`, published flag
 - **scenes** — name (EN/ES), country, region, key artists/labels/venues, era, `image_url`
@@ -816,6 +851,7 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `046_beatport_top_tracks.sql` | **`artists`** and **`labels`**: `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, default `[]`), `beatport_top_tracks_updated_at` — powers the **Beatport Top 10** accordion on profile pages |
 | `056_community_top_and_soulmates.sql` | **`profiles.is_tracks_public`** (default `TRUE`; when `FALSE`, user excluded from **Soulmates** + **Community Top** aggregates); **`idx_sct_created`** on **`saved_chart_tracks.created_at`** |
 | `057_chart_featured_tracks_release_date.sql` | **`chart_featured_tracks.release_date DATE`** + index. Stores **full publish day** (YYYY-MM-DD) from Beatport / Bandcamp alongside `release_year`; rendered everywhere via `formatTrackReleaseDisplay` (see below) |
+| `062_admin_chat_threads.sql` | **Admin conversational agent:** `admin_chat_threads` + `admin_chat_messages` (history, `pending_ops`, tool traces). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md) |
 
 ---
 
@@ -860,11 +896,12 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 - **Batch refresh** — `npm run db:beatport:top -- --all-artists` or `--all-labels` walks every row that already has **`beatport_id`** set (staggered requests). Add **`--missing-only`** to refresh only rows whose **`beatport_top_tracks`** is empty/null. **`--dry-run`** prints previews without writing.
 - **Fill missing accordion data (artists)** — `npm run db:beatport:top -- --fill-missing-artists` selects artists with an empty Top 10 list: first **`UPDATE`**s anyone who already had **`beatport_id`** (using the slug from **`beatport_url`** when present), then **searches Beatport** by **exact catalogue `name`** for remaining rows to discover **`beatport_id`**. Optional **`--limit=N`** (testing). Takes several minutes site-wide (~1.5 s pacing per scrape); some artists have **no** Beatport listing or Beatport exposes **zero** chart rows, so the hero accordion still stays hidden until tracks exist.
 - **Cloudflare 403 («Just a moment…»)** — Beatport sits behind Cloudflare. Plain HTTP fetch from a clean IP works (this is how the batch above got 177 artists in one go), but **once a single IP issues ~200 sequential scrapes Cloudflare flags it for several hours** and every following request returns `403`. Three options: (1) wait 4–24 h for the IP to be released and rerun the same `--missing-only` / single-artist command; (2) rerun **from a different IP / network**; (3) use `--headless` (e.g. `npm run db:beatport:top -- artist <slug> <id> --headless`), which spins up **Playwright + Chrome** to pass the JS challenge — useful from machines whose Chrome cookies / fingerprint Cloudflare already trusts. Requires `npm i -D playwright` + `npx playwright install chrome` (or `chromium`). The flag also works on `--all-artists`, `--all-labels` and `--fill-missing-artists`.
-- **TLS `UNABLE_TO_VERIFY_LEAF_SIGNATURE` ("fetch failed" en Node)** — En redes corporativas con **SSL inspection** (Acttax, muchas VPN/firewall), el certificado que ve Node es re-firmado por una CA interna. Node 20+ **no usa el truststore del SO por defecto**, así que `fetch` muere con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (visible como **`fetch failed`**). Afecta a **todos** los scripts que pegan a Beatport por HTTP: `chart-40-breaks`, `beatport-top-tracks`, `chart-featured-upsert --enrich-release-dates`, ad-hoc bajo `scripts/_*`, etc. **Solución limpia (sin desactivar TLS):** lanzar **`node --use-system-ca`** (lee la CA de Windows/macOS).
+- **TLS `UNABLE_TO_VERIFY_LEAF_SIGNATURE` ("fetch failed" en Node)** — En redes corporativas con **SSL inspection** (Acttax, muchas VPN/firewall), el certificado que ve Node es re-firmado por una CA interna. Node 20+ **no usa el truststore del SO por defecto**, así que `fetch` muere con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (visible como **`fetch failed`**). Afecta a **todos** los scripts que pegan a Beatport / Supabase por HTTP: `chart-40-breaks`, `beatport-top-tracks`, `chart-featured-upsert --enrich-release-dates`, `enrich-chart-artists-agent`, `generar-sello-agente`, ad-hoc bajo `scripts/_*`, etc. **Solución limpia (sin desactivar TLS):** lanzar **`node --use-system-ca`** (lee la CA de Windows/macOS) — available from **Node ≥ 22.15** (and recent Node 20).
   - Invocar con `node` directo: `node --use-system-ca scripts/<lo-que-sea>.mjs …`
   - Para los entry-points que se llaman vía `npm run …`: NO se puede usar `NODE_OPTIONS=--use-system-ca` porque **npm rechaza ese flag** (`--use-system-ca is not allowed in NODE_OPTIONS`). Workaround: invocar directamente con `node --use-system-ca scripts/<archivo>.mjs <args>` (saltándose npm), o configurar `NODE_EXTRA_CA_CERTS` a nivel de SO apuntando al `.pem` de la CA del proxy.
   - Alternativa: variable persistente del SO **`NODE_EXTRA_CA_CERTS=C:\ruta\ca-corporativa.pem`** (esa sí la acepta npm).
-  - **No recomendado:** `NODE_TLS_REJECT_UNAUTHORIZED=0` (desactiva la verificación TLS para todo el proceso).
+  - **`guia-base-datos.mjs`** auto-prepends `--use-system-ca` for child Node processes when major ≥ 20. On Node builds that **reject** the flag (e.g. **22.14**), set **`OB_NO_SYSTEM_CA=1`** so children start without it, and use **`NODE_TLS_REJECT_UNAUTHORIZED=0`** only for that shell session if Supabase/OpenAI still fail certificate checks.
+  - **No recomendado como default permanente:** `NODE_TLS_REJECT_UNAUTHORIZED=0` (desactiva la verificación TLS para todo el proceso).
 - **UI** — `src/components/BeatportTopTracks.tsx` (client): accordion in the **hero** of `/[lang]/artists/[slug]` and `/[lang]/labels/[slug]` when tracks exist. Previews use **`/api/audio-proxy`** (allowed Beatport sample hosts); artwork uses **`next/image`** (optimized/proxied) like the main chart. Track rows are **visually identical** to `ChartTrackRow` (same `PositionBadge`, artwork size, title/artist/label/year layout, BPM/key badges, BEATPORT button). Playback uses the **global `preview` mode** via **`usePreviewAudioGated`** → the persistent `MiniPreviewBar` (see [Global audio system](#global-audio-system-lazydeckaudioprovider--deckaudioprovider)). The **`+`** save button is also wired (same canonical dedupe as charts): saving a Top 10 track adds it to the user's **My Tracks**, and a track saved elsewhere already appears in green here.
 - **JSON upsert** — Optional `beatport_id` and `beatport_url` on `data/artists/*.json` / label JSON are passed through **`npm run db:artist` / `db:label`** (`scripts/lib/artist-upsert.mjs`, `label-upsert.mjs`). They do **not** include `beatport_top_tracks`; refresh rankings with **`db:beatport:top`** after setting the ID.
 
@@ -897,6 +934,9 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 | `npm run db:chart:featured -- data/charts/picks/<week>.json` | **New Releases** UPSERT (`chart-featured-upsert.mjs` → `chart_featured_tracks`). Required after batch/JSON edits for production. |
 | `npm run db:chart:vinyl -- …` | **Retro Vinyl Picks** from JSON (`chart-vinyl-upsert.mjs`). |
 | `npm run db:chart:backfill-new-releases` | Backfill **`chart_featured_tracks`** from historical 40 Breaks picks (`backfill-new-releases-from-40breaks.mjs`). |
+| `npm run db:chart:artists -- [--all-published\|--week=\|…]` | Sync chart artist names → catalogue (Breakbeat style + starter profiles). See **Discovering artists & labels from charts**. |
+| `npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only` | Agent-create artists with **≥ N** chart credits still missing from `data/artists/`. Editorial default **N=3**. |
+| `npm run db:label:agent -- <slug> "Name"` | Create/enrich a **label** (JSON + Supabase). Chart discovery bar for new labels: **≥ 10** real-imprint appearances (never DistroKid/TuneCore). |
 
 ---
 

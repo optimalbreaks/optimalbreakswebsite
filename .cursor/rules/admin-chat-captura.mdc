@@ -1,3 +1,8 @@
+---
+description: Agente conversacional admin (chat PWA): tools OpenAI, confirmación antes de escribir, carteles OCR.
+alwaysApply: true
+---
+
 # Chat editorial / Captura PWA (admin)
 
 Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
@@ -8,8 +13,9 @@ Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pest
 
 - API: `POST|GET /api/admin/agent/chat`
 - Agente: `src/lib/admin-chat-agent.ts` (OpenAI **tool-calling**, loop)
-- Upserts legacy reutilizados: `src/lib/admin-chat.ts` (`executeChatActions`, OCR, etc.)
+- Ejecución de writes: `executePendingOps` → `src/lib/admin-chat.ts` + APIs `/api/admin/agent/*`
 - Prompt: `scripts/prompts/admin-chat-system.txt`
+- Hilos: migración `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`)
 
 ## Modelo conversacional (obligatorio)
 
@@ -26,17 +32,13 @@ CRUD tablas admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
 SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).
 
-## Persistencia
-
-Tablas `admin_chat_threads` / `admin_chat_messages` (migración `062_admin_chat_threads.sql`). Si aún no están migradas, el chat sigue funcionando (sessionStorage para pending).
-
 ## Evento desde captura
 
-Tras **confirmar** un `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` como antes (`light: true` en poster).
+Tras **confirmar** un `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true` en poster). Cartel = **visión/OCR**, no solo metadatos Google Imágenes.
 
-## Carteles — visión/OCR
+## Tipado
 
-Elegir flyer **leyendo el texto** (visión). No solo metadatos Google Imágenes.
+En `src/types/database.ts`, JSONB de `admin_chat_*` **sin** `unknown` (rompe inferencia Supabase → build Vercel con `never`).
 
 ## PWA
 
