@@ -2,8 +2,10 @@
 // OPTIMAL BREAKS — Modal promocional CHARTS
 // Solo tras engagement real (2ª página o 40 s en el sitio),
 // no en la primera pantalla — evita LCP/CLS en PageSpeed y no
-// interrumpe la home. Reapertura cada 5 min mientras navega;
-// nunca en /[lang]/charts.
+// interrumpe la home.
+// - No logueados: reapertura como mucho cada 24 h.
+// - Logueados: una sola vez (localStorage) y no se vuelve a mostrar.
+// Nunca en /[lang]/charts.
 // ============================================
 
 'use client'
@@ -12,9 +14,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAuth } from '@/components/AuthProvider'
 
-/** ms desde la última vez que mostramos el modal hasta volver a mostrarlo. */
-const PROMO_REOPEN_MS = 5 * 60 * 1000
+/** Invitados: ms desde la última vez hasta volver a mostrar. */
+const PROMO_REOPEN_GUEST_MS = 24 * 60 * 60 * 1000
 /** Pequeño respiro tras cumplir engagement antes de abrir. */
 const SHOW_DELAY_MS = 800
 /** Segundos acumulados en el sitio antes de poder mostrar (1ª visita). */
@@ -23,6 +26,8 @@ const MIN_SESSION_MS = 40 * 1000
 const POLL_INTERVAL_MS = 5 * 1000
 
 const LS_LAST_SHOWN = 'ob_charts_promo_last_shown_at'
+/** Logueados: si existe, el promo ya se mostró alguna vez y no se repite. */
+const LS_SEEN_LOGGED = 'ob_charts_promo_seen_logged'
 const SS_SESSION_START = 'ob_charts_promo_session_start'
 const SS_PAGE_VIEWS = 'ob_charts_promo_page_views'
 
@@ -58,6 +63,24 @@ function writeLastShown(ts: number) {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(LS_LAST_SHOWN, String(ts))
+  } catch {
+    /* localStorage puede estar bloqueado */
+  }
+}
+
+function hasSeenLoggedIn(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return window.localStorage.getItem(LS_SEEN_LOGGED) === '1'
+  } catch {
+    return false
+  }
+}
+
+function markSeenLoggedIn() {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(LS_SEEN_LOGGED, '1')
   } catch {
     /* localStorage puede estar bloqueado */
   }
@@ -108,41 +131,51 @@ function hasEngaged(): boolean {
   return views >= 2 || elapsed >= MIN_SESSION_MS
 }
 
-function cooldownElapsed(): boolean {
+function guestCooldownElapsed(): boolean {
   const last = readLastShown()
   if (last == null) return true
-  return Date.now() - last >= PROMO_REOPEN_MS
+  return Date.now() - last >= PROMO_REOPEN_GUEST_MS
 }
 
-function canShowNow(): boolean {
-  return hasEngaged() && cooldownElapsed()
+function canShowNow(isLoggedIn: boolean): boolean {
+  if (!hasEngaged()) return false
+  if (isLoggedIn) return !hasSeenLoggedIn()
+  return guestCooldownElapsed()
 }
 
 export default function ChartsPromoModal({ lang, dict }: Props) {
   const pathname = usePathname() || ''
   const onChartsPage = pathname.includes(`/${lang}/charts`) || pathname.endsWith('/charts')
+  const { user, loading: authLoading } = useAuth()
+  const isLoggedIn = !!user
 
   const [open, setOpen] = useState(false)
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
   const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const showNow = useCallback(() => {
-    if (!canShowNow()) return
-    setOpen(true)
-    writeLastShown(Date.now())
+  const markShown = useCallback((loggedIn: boolean) => {
+    const now = Date.now()
+    writeLastShown(now)
+    if (loggedIn) markSeenLoggedIn()
   }, [])
+
+  const showNow = useCallback(() => {
+    if (authLoading || !canShowNow(isLoggedIn)) return
+    setOpen(true)
+    markShown(isLoggedIn)
+  }, [authLoading, isLoggedIn, markShown])
 
   const close = useCallback(() => {
     setOpen(false)
-    writeLastShown(Date.now())
-  }, [])
+    markShown(isLoggedIn)
+  }, [isLoggedIn, markShown])
 
   const scheduleShowIfReady = useCallback(() => {
-    if (onChartsPage || open) return
-    if (!canShowNow()) return
+    if (authLoading || onChartsPage || open) return
+    if (!canShowNow(isLoggedIn)) return
     if (showTimerRef.current) clearTimeout(showTimerRef.current)
     showTimerRef.current = setTimeout(showNow, SHOW_DELAY_MS)
-  }, [onChartsPage, open, showNow])
+  }, [authLoading, isLoggedIn, onChartsPage, open, showNow])
 
   // Contabilizar vistas de página en la sesión (cada ruta distinta cuenta).
   useEffect(() => {
@@ -153,7 +186,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
 
   // Polling: abrir cuando cumpla 40 s aunque no haya cambiado de página.
   useEffect(() => {
-    if (onChartsPage) return
+    if (onChartsPage || authLoading) return
 
     const interval = setInterval(() => {
       if (open) return
@@ -164,7 +197,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
       clearInterval(interval)
       if (showTimerRef.current) clearTimeout(showTimerRef.current)
     }
-  }, [onChartsPage, open, scheduleShowIfReady])
+  }, [authLoading, onChartsPage, open, scheduleShowIfReady])
 
   useEffect(() => {
     if (!open) return
