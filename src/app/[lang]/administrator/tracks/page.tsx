@@ -176,7 +176,7 @@ export default function AdminTracksPage() {
 
   return (
     <div>
-      <h1 className="admin-page-title">Tracks</h1>
+      <h1 className="admin-page-title">Saved Tracks</h1>
       <p
         className="text-sm text-[var(--ink)]/60 -mt-4 mb-6 max-w-2xl"
         style={{ fontFamily: "'Courier Prime', monospace" }}
