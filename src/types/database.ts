@@ -107,6 +107,26 @@ export type ChartVinylTrack = {
   note_es: string
 }
 
+export interface AdminChatThreadRow {
+  id: string
+  user_id: string
+  title: string | null
+  intent: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminChatMessageRow {
+  id: string
+  thread_id: string
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  pending_ops: unknown | null
+  tool_trace: unknown | null
+  attached_urls: string[] | null
+  created_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -258,6 +278,20 @@ export interface Database {
         Row: TrackPlayEventRow
         Insert: Pick<TrackPlayEventRow, 'canonical_key'> & Partial<Pick<TrackPlayEventRow, 'user_id'>>
         Update: never
+        Relationships: DbRelationship[]
+      }
+      admin_chat_threads: {
+        Row: AdminChatThreadRow
+        Insert: Omit<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'> &
+          Partial<Pick<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'>>
+        Update: Partial<Omit<AdminChatThreadRow, 'id' | 'user_id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      admin_chat_messages: {
+        Row: AdminChatMessageRow
+        Insert: Omit<AdminChatMessageRow, 'id' | 'created_at'> &
+          Partial<Pick<AdminChatMessageRow, 'id' | 'created_at'>>
+        Update: Partial<Omit<AdminChatMessageRow, 'id' | 'thread_id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
     }

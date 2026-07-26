@@ -4,31 +4,40 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 
 ## Alcance
 
-Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pestaña en `/administrator/agent`. API: `POST /api/admin/agent/chat`. Lógica: `src/lib/admin-chat.ts`. Prompt plan: `scripts/prompts/admin-chat-system.txt`.
+Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pestaña en `/administrator/agent`.
+
+- API: `POST|GET /api/admin/agent/chat`
+- Agente: `src/lib/admin-chat-agent.ts` (OpenAI **tool-calling**, loop)
+- Upserts legacy reutilizados: `src/lib/admin-chat.ts` (`executeChatActions`, OCR, etc.)
+- Prompt: `scripts/prompts/admin-chat-system.txt`
+
+## Modelo conversacional (obligatorio)
+
+1. El modelo **lee** BD/web con tools; las escrituras van a **`pending_ops`** (`stage_*`).
+2. **Nada se guarda** hasta **Confirmar** (botón o «sí») → `confirm_ops` → `executePendingOps`.
+3. Chips UI = hint de `intent`, no clasificador rígido único.
+4. Distinguir: sello (`label`) ≠ evento ≠ artista ≠ mix ≠ NR ≠ vinyl.
+
+## Tools
+
+Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases`, `stage_vinyl_picks`, enrich/poster/foto/logo.
+
+CRUD tablas admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
+
+SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).
+
+## Persistencia
+
+Tablas `admin_chat_threads` / `admin_chat_messages` (migración `062_admin_chat_threads.sql`). Si aún no están migradas, el chat sigue funcionando (sessionStorage para pending).
 
 ## Evento desde captura
 
-1. OCR de la imagen → `ScreenshotFacts`; si el plan no trae `actions`, **fallback** `eventActionFromScreenshotFacts`.
-2. UPSERT con **dedupe** (slug + nombre normalizado + año). Captura en `media/chat/` = **provisional**.
-3. Tras UPSERT OK: **responder al cliente al momento**. Enrich + cartel van en **segundo plano** (`waitUntil` de `@vercel/functions`). No bloquear el chat esperándolos (evita falsos fallos al final).
-4. Cartel: `POST /api/admin/agent/event-poster` con **`light: true`** desde el chat.
+Tras **confirmar** un `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` como antes (`light: true` en poster).
 
-## Carteles — visión/OCR (no negociable)
+## Carteles — visión/OCR
 
-Elegir flyer **leyendo el texto del cartel** (visión). **Prohibido** decidir solo por metadatos de Google Imágenes (atribuciones falsas).
-
-- Script: `elegir-poster-evento.mjs` — OCR por defecto; `--metadata-only` solo escape.
-- API: visión por defecto; `light` = menos candidatos + thumbs + `detail: low`.
-- Si el cartel es incorrecto: reejecutar poster / sustituir WebP en `public/images/events/` y UPSERT `image_url`.
-
-## UI
-
-Barra de progreso en `AgentChat` = etapas **orientativas** (sin stream de servidor). No marcar “Guardado” sin upsert real.
-
-## Otras acciones
-
-Mismos tipos del plan: `artist`, `mix`, `new_release` (semana = release Beatport), `vinyl`. New Releases: regla **`charts-new-releases-supabase`**.
+Elegir flyer **leyendo el texto** (visión). No solo metadatos Google Imágenes.
 
 ## PWA
 
-Share Target: `manifest.json` + `sw.js` + `/share-target`. No romper inbox / redirección al chat.
+Share Target: `manifest.json` + `sw.js` + `/share-target`. El share envía al agente (prepara ops); el admin confirma antes de BD.

@@ -16,6 +16,13 @@ export type ChatAction =
       search?: boolean
     }
   | {
+      type: 'label'
+      slug: string
+      name: string
+      notes?: string
+      search?: boolean
+    }
+  | {
       type: 'event'
       slug: string
       name: string
@@ -173,6 +180,7 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
       .trim()
     if (type === 'evento' || type === 'events') type = 'event'
     if (type === 'artista' || type === 'artists') type = 'artist'
+    if (type === 'sello' || type === 'labels' || type === 'record_label') type = 'label'
     if (type === 'mixes') type = 'mix'
     if (type === 'new-release' || type === 'new_releases' || type === 'nr' || type === 'featured') {
       type = 'new_release'
@@ -212,6 +220,19 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
       if (!name || !slug) continue
       out.push({
         type: 'artist',
+        slug,
+        name,
+        notes: o.notes != null ? String(o.notes) : undefined,
+        search: o.search !== false,
+      })
+      continue
+    }
+    if (type === 'label') {
+      const name = String(o.name || o.labelName || o.label_name || '').trim()
+      const slug = toSlug(String(o.slug || name))
+      if (!name || !slug) continue
+      out.push({
+        type: 'label',
         slug,
         name,
         notes: o.notes != null ? String(o.notes) : undefined,
@@ -421,6 +442,37 @@ async function upsertArtistAction(
     type: 'artist',
     ok: true,
     summary: `Artista upsert: ${name} (${slug})`,
+    detail: { slug, row: json.row },
+  }
+}
+
+async function upsertLabelAction(
+  action: Extract<ChatAction, { type: 'label' }>,
+  originRequest: Request,
+): Promise<ActionResult> {
+  const slug = toSlug(action.slug || action.name)
+  const name = String(action.name || '').trim()
+  if (!slug || !name) {
+    return { type: 'label', ok: false, summary: 'Faltan slug o name del sello' }
+  }
+  const { ok, json } = await adminInternalPost(originRequest, '/api/admin/agent/label', {
+    slug,
+    labelName: name,
+    notes: action.notes || undefined,
+    search: action.search !== false,
+  })
+  if (!ok || !json.saved) {
+    return {
+      type: 'label',
+      ok: false,
+      summary: `Sello ${slug}: ${String(json.error || json.dbError || 'falló el upsert')}`,
+      detail: json,
+    }
+  }
+  return {
+    type: 'label',
+    ok: true,
+    summary: `Sello upsert: ${name} (${slug})`,
     detail: { slug, row: json.row },
   }
 }
@@ -913,6 +965,9 @@ export async function executeChatActions(
         case 'artist':
           results.push(await upsertArtistAction(action, originRequest))
           break
+        case 'label':
+          results.push(await upsertLabelAction(action, originRequest))
+          break
         case 'event': {
           const eventAction =
             attachedImageUrls.length > 0
@@ -1071,7 +1126,7 @@ export async function fetchWebResearchContext(
   return { context: '', source: 'none' }
 }
 
-async function extractScreenshotFacts(opts: {
+export async function extractScreenshotFacts(opts: {
   openaiKey: string
   model: string
   message: string
@@ -1180,9 +1235,16 @@ export async function uploadChatImages(
   return { urls, errors, dataUrls }
 }
 
-export type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist'
+export type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist' | 'label'
 
-const CHAT_INTENTS = new Set<string>(['event', 'new_release', 'vinyl', 'mix', 'artist'])
+const CHAT_INTENTS = new Set<string>([
+  'event',
+  'new_release',
+  'vinyl',
+  'mix',
+  'artist',
+  'label',
+])
 
 export function normalizeChatIntent(raw: unknown): ChatIntent | null {
   if (typeof raw !== 'string') return null
@@ -1190,8 +1252,48 @@ export function normalizeChatIntent(raw: unknown): ChatIntent | null {
   if (v === 'nr' || v === 'release' || v === 'releases') return 'new_release'
   if (v === 'vinilo' || v === 'vinyl_pick') return 'vinyl'
   if (v === 'artista') return 'artist'
+  if (v === 'sello' || v === 'record_label' || v === 'labels') return 'label'
   if (CHAT_INTENTS.has(v)) return v as ChatIntent
   return null
+}
+
+/**
+ * Infiera intención desde el texto cuando el editor no pulsó un chip.
+ * Evita que «añade el sello X» acabe como evento (sesgo histórico del chat).
+ */
+export function inferChatIntent(message: string): ChatIntent | null {
+  const raw = String(message || '').trim()
+  if (!raw) return null
+  const m = raw.toLowerCase()
+
+  if (/beatport\.com\/[^\s]*\/?(track|release)(\/|\?|$)/i.test(raw)) return 'new_release'
+  if (/beatport\.com\/[^\s]*\/?label(\/|\?|$)/i.test(raw)) return 'label'
+  if (/\b(sello|sellos|discográfic|discografic|record label)\b/.test(m)) return 'label'
+  if (/\b(vinyl pick|vinilo|vinilos|discogs\.com)\b/.test(m) && !/\b(evento|festival|cartel)\b/.test(m)) {
+    return 'vinyl'
+  }
+  if (
+    /\b(essential mix|soundcloud\.com|on\.soundcloud|youtu\.be|youtube\.com)\b/.test(m) &&
+    !/\b(evento|festival|cartel|vinyl|vinilo|discogs)\b/.test(m)
+  ) {
+    return 'mix'
+  }
+  if (
+    /\b(artista|artistas|ficha de|bio de|\bdj\b)\b/.test(m) &&
+    !/\b(sello|evento|festival|cartel|vinyl|vinilo)\b/.test(m)
+  ) {
+    return 'artist'
+  }
+  if (/\b(evento|eventos|festival|cartel|flyer|entradas|monsterticket|dice\.fm)\b/.test(m)) {
+    return 'event'
+  }
+  return null
+}
+
+/** Si hay intención forzada, descarta actions de otro tipo (p. ej. event cuando pedían sello). */
+export function filterActionsByIntent(actions: ChatAction[], intent: ChatIntent | null): ChatAction[] {
+  if (!intent) return actions
+  return actions.filter((a) => a.type === intent)
 }
 
 export async function planChatWithOpenAI(opts: {
@@ -1206,7 +1308,7 @@ export async function planChatWithOpenAI(opts: {
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
 
   const systemPrompt = loadSystemPrompt()
-  const intent = opts.intent ?? null
+  const intent = opts.intent ?? inferChatIntent(opts.message)
   const treatAsEvent = !intent || intent === 'event'
   // Visión: forzar modelo con imagen; OPENAI_MODEL a veces es un modelo sin vision fiable
   const visionModel =
@@ -1362,6 +1464,22 @@ Si faltan datos críticos, reply pidiendo el dato y deja actions vacío.
       if (!plan.reply || /posible|intent|intentar/i.test(plan.reply)) {
         plan.reply = `He leído el cartel «${fallback.name}» y lo guardo en la base de datos.`
       }
+    }
+  }
+
+  // Guardrail: con intención (UI o inferida), nunca ejecutar otro tipo (p. ej. event por sello)
+  if (intent) {
+    const before = plan.actions.length
+    const wrong = plan.actions.filter((a) => a.type !== intent)
+    plan.actions = filterActionsByIntent(plan.actions, intent)
+    if (before > 0 && plan.actions.length === 0 && wrong.length) {
+      const wrongTypes = Array.from(new Set(wrong.map((a) => a.type))).join(', ')
+      plan.reply = [
+        plan.reply,
+        `He descartado acciones incorrectas (${wrongTypes}): pediste ${intent}, no eso.`,
+      ]
+        .filter(Boolean)
+        .join('\n')
     }
   }
 

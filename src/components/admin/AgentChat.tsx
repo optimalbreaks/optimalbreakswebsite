@@ -6,11 +6,19 @@ import { consumeShareInbox } from '@/lib/share-inbox'
 
 type ChatRole = 'user' | 'assistant'
 
+type PendingOp = {
+  kind: string
+  summary: string
+  [key: string]: unknown
+}
+
 type UiMessage = {
   id: string
   role: ChatRole
   content: string
   previews?: string[]
+  pendingOps?: PendingOp[]
+  toolTrace?: { name: string; ok: boolean; detail: string }[]
 }
 
 type Props = {
@@ -19,7 +27,7 @@ type Props = {
   mode?: 'embedded' | 'capture'
 }
 
-type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist'
+type ChatIntent = 'event' | 'new_release' | 'vinyl' | 'mix' | 'artist' | 'label'
 
 const INTENT_OPTIONS: {
   id: ChatIntent
@@ -32,6 +40,18 @@ const INTENT_OPTIONS: {
     label: 'Evento',
     hint: 'Modo evento. Manda la captura del cartel o un link de entradas.',
     placeholder: 'Nota u opcional link del evento…',
+  },
+  {
+    id: 'label',
+    label: 'Sello',
+    hint: 'Modo sello (record label). Escribe el nombre o pega Beatport /label/…',
+    placeholder: 'Nombre del sello o beatport.com/…/label/…',
+  },
+  {
+    id: 'artist',
+    label: 'Artista',
+    hint: 'Modo artista. Escribe el nombre (y notas o link Beatport si tienes).',
+    placeholder: 'Nombre del artista…',
   },
   {
     id: 'new_release',
@@ -51,27 +71,30 @@ const INTENT_OPTIONS: {
     hint: 'Modo mix. Pega YouTube o SoundCloud del set.',
     placeholder: 'https://youtube.com/… o SoundCloud…',
   },
-  {
-    id: 'artist',
-    label: 'Artista',
-    hint: 'Modo artista. Escribe el nombre (y notas o link Beatport si tienes).',
-    placeholder: 'Nombre del artista…',
-  },
 ]
 
 const WELCOME_CAPTURE =
-  '¿Qué quieres añadir?\nElige una opción abajo y luego manda el link, el texto o la captura. Así la IA sabe el tipo desde el principio.'
+  'Chat editorial (agente).\nElige un atajo si quieres, escribe o manda una captura. Preparo los cambios y tú confirmas antes de guardar en la BD.'
 
 const WELCOME_EMBEDDED =
-  'Chat editorial: elige qué quieres añadir (evento, NR, vinyl, mix, artista) y pega link/texto/captura.'
+  'Agente editorial: conversamos, leo la BD y preparo altas (evento, sello, artista, NR, vinyl, mix). Nada se guarda hasta que confirmes.'
 
-/** Etapas orientativas mientras la API responde (un solo request, sin stream). */
+const PENDING_KEY = 'ob-admin-chat-pending'
+const THREAD_KEY = 'ob-admin-chat-thread'
+
+/** Etapas orientativas mientras el agente responde (un request, sin stream). */
 const PROGRESS_STEPS = [
-  { id: 'upload', label: 'Subiendo captura', atMs: 0, pct: 15 },
-  { id: 'read', label: 'Leyendo cartel (OCR)', atMs: 5_000, pct: 45 },
-  { id: 'save', label: 'Guardando en la BD', atMs: 16_000, pct: 78 },
-  { id: 'done', label: 'Casi listo…', atMs: 28_000, pct: 92 },
+  { id: 'upload', label: 'Enviando mensaje', atMs: 0, pct: 12 },
+  { id: 'read', label: 'Agente pensando / tools', atMs: 4_000, pct: 48 },
+  { id: 'save', label: 'Preparando operaciones', atMs: 18_000, pct: 78 },
+  { id: 'done', label: 'Casi listo…', atMs: 35_000, pct: 92 },
 ] as const
+
+function looksLikeConfirmText(text: string) {
+  return /^(sí|si|ok|vale|confirmo|confirma|confirmar|adelante|hazlo|guarda|guardar|yes)\b/i.test(
+    text.trim(),
+  )
+}
 
 type CoreProps = Props & {
   shareQuery?: URLSearchParams | null
@@ -98,6 +121,8 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const [progressPct, setProgressPct] = useState(0)
   const [progressLabel, setProgressLabel] = useState('')
   const [intent, setIntent] = useState<ChatIntent | null>(null)
+  const [pendingOps, setPendingOps] = useState<PendingOp[]>([])
+  const [threadId, setThreadId] = useState<string | null>(null)
   const [vvOffset, setVvOffset] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
@@ -108,6 +133,8 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   const remoteRef = useRef<string[]>([])
   const inputRef = useRef('')
   const intentRef = useRef<ChatIntent | null>(null)
+  const pendingRef = useRef<PendingOp[]>([])
+  const threadRef = useRef<string | null>(null)
   const progressTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
   useEffect(() => {
@@ -122,6 +149,23 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
   useEffect(() => {
     intentRef.current = intent
   }, [intent])
+  useEffect(() => {
+    pendingRef.current = pendingOps
+    try {
+      if (pendingOps.length) sessionStorage.setItem(PENDING_KEY, JSON.stringify(pendingOps))
+      else sessionStorage.removeItem(PENDING_KEY)
+    } catch {
+      /* ignore */
+    }
+  }, [pendingOps])
+  useEffect(() => {
+    threadRef.current = threadId
+    try {
+      if (threadId) sessionStorage.setItem(THREAD_KEY, threadId)
+    } catch {
+      /* ignore */
+    }
+  }, [threadId])
 
   const activeIntent = INTENT_OPTIONS.find((o) => o.id === intent) || null
 
@@ -268,7 +312,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         return [...kept, ...compressed].slice(0, 4)
       })
       setStatus(
-        `${compressed.length} captura${compressed.length > 1 ? 's' : ''} lista${compressed.length > 1 ? 's' : ''} — Enviar para leer y guardar`,
+        `${compressed.length} captura${compressed.length > 1 ? 's' : ''} lista${compressed.length > 1 ? 's' : ''} — Enviar al agente`,
       )
     },
     [compressImage],
@@ -291,12 +335,48 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
     })
   }, [])
 
+  const applyPendingFromResponse = useCallback((ops: PendingOp[] | undefined) => {
+    const next = Array.isArray(ops) ? ops : []
+    setPendingOps(next)
+    pendingRef.current = next
+  }, [])
+
   const send = useCallback(
-    async (opts?: { text?: string; files?: File[]; remoteUrls?: string[] }) => {
+    async (opts?: {
+      text?: string
+      files?: File[]
+      remoteUrls?: string[]
+      confirmOps?: PendingOp[] | null
+      cancelOps?: boolean
+    }) => {
       const text = (opts?.text ?? inputRef.current).trim()
       const sendFiles = opts?.files ?? filesRef.current
       const remotes = opts?.remoteUrls ?? remoteRef.current
-      if ((!text && sendFiles.length === 0 && remotes.length === 0) || loading) return
+      const confirmOps = opts?.confirmOps
+      const cancelOps = Boolean(opts?.cancelOps)
+
+      const confirming = Array.isArray(confirmOps) && confirmOps.length > 0
+      if (
+        !confirming &&
+        !cancelOps &&
+        !text &&
+        sendFiles.length === 0 &&
+        remotes.length === 0
+      ) {
+        return
+      }
+      if (loading) return
+
+      // «sí» con ops pendientes → confirmar
+      let opsToConfirm = confirmOps
+      if (
+        !opsToConfirm?.length &&
+        !cancelOps &&
+        looksLikeConfirmText(text) &&
+        pendingRef.current.length
+      ) {
+        opsToConfirm = pendingRef.current
+      }
 
       setError(null)
       setStatus(null)
@@ -304,7 +384,6 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       startProgress()
 
       const userMsgId = `u-${Date.now()}`
-      // data: URLs (no blob) para que la miniatura no se rompa al limpiar el composer
       let previewUrls: string[] = remotes.slice()
       if (sendFiles.length > 0) {
         try {
@@ -314,11 +393,18 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         }
       }
 
+      const userContent =
+        cancelOps
+          ? text || 'Cancelar'
+          : opsToConfirm?.length
+            ? text || 'Confirmar'
+            : text || '(captura / imagen)'
+
       const userMsg: UiMessage = {
         id: userMsgId,
         role: 'user',
-        content: text || '(captura / imagen)',
-        previews: previewUrls,
+        content: userContent,
+        previews: previewUrls.length ? previewUrls : undefined,
       }
       setMessages((m) => [...m, userMsg])
       setInput('')
@@ -326,19 +412,21 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
 
       const history = [...messages, userMsg]
         .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .filter((m) => m.id !== 'welcome')
-        .slice(-10)
+        .filter((m) => m.id !== 'welcome' && !m.id.startsWith('intent-'))
+        .slice(-20)
         .map((m) => ({ role: m.role, content: m.content }))
 
       const currentIntent = intentRef.current
+      const tid = threadRef.current
 
       try {
         let res: Response
-        if (sendFiles.length > 0) {
+        if (sendFiles.length > 0 && !opsToConfirm?.length && !cancelOps) {
           const form = new FormData()
           form.set('message', text)
           form.set('history', JSON.stringify(history.slice(0, -1)))
           if (currentIntent) form.set('intent', currentIntent)
+          if (tid) form.set('thread_id', tid)
           for (const f of sendFiles) form.append('files', f)
           res = await fetch('/api/admin/agent/chat', { method: 'POST', body: form })
         } else {
@@ -346,10 +434,13 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              message: text,
+              message: userContent,
               history: history.slice(0, -1),
               image_urls: remotes,
               intent: currentIntent,
+              thread_id: tid,
+              confirm_ops: opsToConfirm?.length ? opsToConfirm : undefined,
+              cancel_ops: cancelOps || undefined,
             }),
           })
         }
@@ -357,12 +448,20 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
           error?: string
           reply?: string
           ok?: boolean
-          results?: { ok: boolean; type: string; summary: string }[]
+          pending_ops?: PendingOp[]
+          tool_trace?: { name: string; ok: boolean; detail: string }[]
           attached_urls?: string[]
+          thread_id?: string
+          results?: { ok: boolean; type: string; summary: string }[]
+          needs_confirm?: boolean
         }
         if (!res.ok) throw new Error(data.error || res.statusText)
 
-        // Sustituir preview local por URL pública de Storage (permanente)
+        if (data.thread_id) {
+          setThreadId(data.thread_id)
+          threadRef.current = data.thread_id
+        }
+
         if (data.attached_urls?.length) {
           setMessages((m) =>
             m.map((msg) =>
@@ -371,48 +470,129 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
           )
         }
 
+        const nextPending = opsToConfirm?.length || cancelOps ? [] : data.pending_ops || []
+        applyPendingFromResponse(nextPending)
+
         setMessages((m) => [
           ...m,
           {
             id: `a-${Date.now()}`,
             role: 'assistant',
-            content: data.reply || (data.ok ? 'Guardado.' : 'No se guardó nada.'),
+            content: data.reply || 'Listo.',
+            pendingOps: nextPending.length ? nextPending : undefined,
+            toolTrace: data.tool_trace,
           },
         ])
         clearFiles()
-        const anySaved = data.ok === true || (data.results || []).some((r) => r.ok)
-        finishProgress(anySaved)
-        setStatus(anySaved ? 'Guardado en BD' : 'No se guardó — mira el mensaje')
-        if (!anySaved) {
-          setError('La captura no llegó a la base de datos')
+        finishProgress(true)
+        if (opsToConfirm?.length) {
+          const anySaved = data.ok === true || (data.results || []).some((r) => r.ok)
+          setStatus(anySaved ? 'Guardado en BD' : 'Error al guardar — mira el mensaje')
+          if (!anySaved) setError('No se completó el guardado')
+        } else if (nextPending.length) {
+          setStatus('Pendiente de confirmar')
+        } else {
+          setStatus('Respuesta del agente')
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error desconocido'
         finishProgress(false)
-        const hint =
-          'Si el fallo fue al final, mira /administrator/events o /events: a veces el evento ya se guardó y solo falló el enriquecido/cartel.'
         setError(msg)
         setMessages((m) => [
           ...m,
           {
             id: `e-${Date.now()}`,
             role: 'assistant',
-            content: `Error: ${msg}\n\n${hint}`,
+            content: `Error: ${msg}`,
           },
         ])
       } finally {
         setLoading(false)
       }
     },
-    [clearFiles, fileToDataUrl, finishProgress, loading, messages, previews, startProgress],
+    [
+      applyPendingFromResponse,
+      clearFiles,
+      fileToDataUrl,
+      finishProgress,
+      loading,
+      messages,
+      previews,
+      startProgress,
+    ],
   )
 
-  // Share Target / query params / inbox SW
+  const confirmPending = useCallback(() => {
+    if (!pendingRef.current.length || loading) return
+    void send({ text: 'Confirmar', confirmOps: pendingRef.current })
+  }, [loading, send])
+
+  const cancelPending = useCallback(() => {
+    if (loading) return
+    void send({ text: 'Cancelar', cancelOps: true })
+  }, [loading, send])
+
+  // Share Target / query params / inbox SW + restaurar hilo
   useEffect(() => {
     if (bootstrapped.current) return
     bootstrapped.current = true
 
     const run = async () => {
+      try {
+        const savedPending = sessionStorage.getItem(PENDING_KEY)
+        if (savedPending) {
+          const ops = JSON.parse(savedPending) as PendingOp[]
+          if (Array.isArray(ops) && ops.length) {
+            setPendingOps(ops)
+            pendingRef.current = ops
+          }
+        }
+        const savedThread = sessionStorage.getItem(THREAD_KEY)
+        if (savedThread) {
+          setThreadId(savedThread)
+          threadRef.current = savedThread
+          const res = await fetch(`/api/admin/agent/chat?thread_id=${encodeURIComponent(savedThread)}`)
+          if (res.ok) {
+            const data = (await res.json()) as {
+              messages?: Array<{
+                id: string
+                role: string
+                content: string
+                pending_ops?: PendingOp[] | null
+                attached_urls?: string[] | null
+              }>
+            }
+            if (data.messages?.length) {
+              setMessages([
+                {
+                  id: 'welcome',
+                  role: 'assistant',
+                  content: capture ? WELCOME_CAPTURE : WELCOME_EMBEDDED,
+                },
+                ...data.messages
+                  .filter((m) => m.role === 'user' || m.role === 'assistant')
+                  .map((m) => ({
+                    id: m.id,
+                    role: m.role as ChatRole,
+                    content: m.content,
+                    previews: m.attached_urls || undefined,
+                    pendingOps: m.pending_ops || undefined,
+                  })),
+              ])
+              const lastPending = [...data.messages]
+                .reverse()
+                .find((m) => m.pending_ops && m.pending_ops.length)
+              if (lastPending?.pending_ops?.length) {
+                setPendingOps(lastPending.pending_ops)
+                pendingRef.current = lastPending.pending_ops
+              }
+            }
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+
       const fromShare = searchParams?.get('share') === '1'
       const needLogin = searchParams?.get('need_login') === '1'
       const qText = searchParams?.get('text') || ''
@@ -451,7 +631,6 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
         remoteRef.current = nextRemotes
       }
 
-      // Limpiar query (evita re-envíos al refrescar)
       if (fromShare || qText || qImages.length) {
         router.replace(`/${lang}/administrator/chat`, { scroll: false })
       }
@@ -459,7 +638,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
       const canAuto =
         fromShare && (nextFiles.length > 0 || nextRemotes.length > 0 || /https?:\/\//i.test(text))
       if (canAuto) {
-        setStatus('Recibido del compartir — guardando…')
+        setStatus('Recibido del compartir — el agente preparará el alta…')
         window.setTimeout(() => {
           void send({ text, files: nextFiles, remoteUrls: nextRemotes })
         }, 350)
@@ -581,8 +760,52 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 </div>
               ) : null}
               {m.content}
+              {m.toolTrace?.length ? (
+                <details className="mt-2 text-[10px] uppercase tracking-wide text-[var(--ink)]/55">
+                  <summary className="cursor-pointer font-bold">Tools usadas</summary>
+                  <ul className="mt-1 space-y-0.5 normal-case tracking-normal">
+                    {m.toolTrace.map((t, i) => (
+                      <li key={`${m.id}-t-${i}`}>
+                        {t.ok ? '✓' : '✗'} {t.name}
+                        {t.detail ? ` — ${t.detail}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
             </div>
           ))}
+          {pendingOps.length > 0 && !loading ? (
+            <div
+              className="mr-auto w-full max-w-[94%] border-[3px] border-[var(--ink)] bg-[var(--yellow)]/30 px-3 py-3 space-y-2"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-wider">
+                Pendiente de confirmar ({pendingOps.length})
+              </p>
+              <ol className="text-[13px] space-y-1 list-decimal pl-4">
+                {pendingOps.map((op, i) => (
+                  <li key={`pend-${i}`}>{op.summary || op.kind}</li>
+                ))}
+              </ol>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--yellow min-h-11"
+                  onClick={() => confirmPending()}
+                >
+                  Confirmar y guardar
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--ghost min-h-11"
+                  onClick={() => cancelPending()}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : null}
           {loading || progressPct > 0 ? (
             <div
               className="mr-auto w-full max-w-[94%] border-[2px] border-[var(--ink)] bg-white px-3 py-2.5 space-y-2"
@@ -760,7 +983,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 }
                 onClick={() => void send()}
               >
-                {loading ? progressLabel || 'Guardando…' : 'Enviar y guardar'}
+                {loading ? progressLabel || 'Pensando…' : 'Enviar al agente'}
               </button>
             ) : (
               <button
@@ -771,7 +994,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: CoreProps
                 }
                 onClick={() => void send()}
               >
-                {loading ? progressLabel || 'Guardando…' : 'Enviar'}
+                {loading ? progressLabel || 'Pensando…' : 'Enviar'}
               </button>
             )}
           </div>

@@ -8,11 +8,11 @@
 
 ### Qué es
 
-Canal **solo admin** (`profiles.role = admin`, p. ej. `contacto@eskaladigital.com`) para mandar **capturas de cartel**, texto o links y hacer **UPSERT directo** en Supabase: eventos, artistas, mixes, New Releases y vinyl picks.
+Canal **solo admin** (`profiles.role = admin`) con un **agente conversacional** (OpenAI tool-calling): texto, capturas y links. El agente lee la BD/web, **prepara** altas (eventos, sellos, artistas, mixes, NR, vinyl, CRUD admin, SQL) y **solo escribe tras Confirmar**.
 
-En la UI hay chips de **modo** (Evento / New Release / Vinyl pick / Mix / Artista): fijan `intent` en la API para que el plan no adivine el tipo. Sin chip, se clasifica por señales (cartel, Beatport, etc.).
+Chips de modo (Evento / Sello / Artista / NR / Vinyl / Mix) = **hint**. Persistencia de hilos: `admin_chat_threads` / `admin_chat_messages` (migración `062`).
 
-Pensado sobre todo para **PWA móvil**: captura de Facebook/Instagram → enviar → ficha en BD.
+Pensado también para **PWA móvil** (Share Target → chat → confirmar).
 
 ### Dónde abrir
 
@@ -23,20 +23,17 @@ Pensado sobre todo para **PWA móvil**: captura de Facebook/Instagram → enviar
 | FAB «Captura» (abajo-izquierda, solo admin) | `AdminCaptureFab` |
 | Atajo PWA / Web Share Target | `public/manifest.json` → `/share-target` → chat |
 
-### Flujo de un evento (captura)
+### Flujo del agente
 
-1. **Cliente** (`AgentChat.tsx`): comprime imagen, preview en `data:` URL, barra de progreso orientativa, `POST /api/admin/agent/chat`.
-2. **API chat** (`src/app/api/admin/agent/chat/route.ts`, `maxDuration = 300`): sube a Storage `media/chat/…`, plan OpenAI.
-3. **OCR de la captura** (`src/lib/admin-chat.ts`): hechos (`ScreenshotFacts`). Si el plan no trae `actions`, **fallback** crea acción `event` desde OCR.
-4. **UPSERT evento**: detecta **duplicados** (slug + nombre normalizado + año). La captura en `media/chat/` es **provisional**.
-5. **Respuesta al cliente en cuanto el UPSERT OK.** Enrich + cartel oficial corren en **segundo plano** (`waitUntil` de `@vercel/functions`):
-   - Enrich: `POST /api/admin/agent/event` (OpenAI `web_search` / SerpAPI).
-   - Cartel: `POST /api/admin/agent/event-poster` con **`light: true`**.
-6. Así el chat **no falla al final** si el OCR del cartel o el self-fetch tardan: la ficha ya está en BD (con captura si aún no hay flyer).
+1. **Cliente** (`AgentChat.tsx`): mensaje/captura → `POST /api/admin/agent/chat` (+ `thread_id`, `intent`).
+2. **Agente** (`src/lib/admin-chat-agent.ts`): loop OpenAI con **tools** (buscar BD, web, OCR, `stage_*`).
+3. Respuesta con `reply` + **`pending_ops`**. UI muestra tarjeta **Confirmar / Cancelar**.
+4. Confirmar → `confirm_ops` → `executePendingOps` (reutiliza upserts de `admin-chat.ts` + APIs agente + CRUD/SQL).
+5. Evento confirmado: UPSERT + dedupe; enrich/cartel en **segundo plano** (`waitUntil`, poster `light: true`).
 
 ### Barra de progreso (UI)
 
-Etapas **orientativas** (un solo request, sin stream): Subiendo → Leyendo cartel (OCR) → Guardando BD → Completando ficha/cartel → Casi listo. Al responder la API, 100 %.
+Etapas orientativas (sin stream): Enviando → Agente/tools → Preparando ops. Tras Confirmar, el guardado real está en la respuesta de `confirm_ops`.
 
 ### Cartel oficial — visión / OCR (obligatorio)
 
@@ -66,25 +63,30 @@ Enriquecer ficha + cartel:
 node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force]
 ```
 
-### Otras acciones del chat
+### Tools / destinos
 
-| Tipo | Destino |
-|------|---------|
-| `event` | `events` (+ enrich + cartel) |
-| `artist` | agente artista → UPSERT |
-| `mix` | `mixes` |
-| `new_release` | `featured-import` / `chart_featured_tracks` (semana = lunes ISO del **release Beatport**) |
-| `vinyl` | picks de vinilo de la edición |
+| Tool / op | Destino |
+|-----------|---------|
+| `stage_upsert_event` | `events` (+ enrich/cartel al confirmar) |
+| `stage_upsert_label` | `/api/admin/agent/label` → `labels` |
+| `stage_upsert_artist` | `/api/admin/agent` → `artists` |
+| `stage_upsert_mix` | `mixes` |
+| `stage_new_releases` | `featured-import` / `chart_featured_tracks` |
+| `stage_vinyl_picks` | `chart_vinyl_tracks` |
+| `stage_db_*` / `db_*` | CRUD tablas admin |
+| `db_sql_read` / `stage_db_sql_write` | Postgres (`DATABASE_URL`) |
 
-Prompt de plan: **`scripts/prompts/admin-chat-system.txt`**.
+Prompt: **`scripts/prompts/admin-chat-system.txt`**.
 
 ### Archivos clave
 
 | Archivo | Rol |
 |---------|-----|
-| `src/components/admin/AgentChat.tsx` | UI chat + progreso |
-| `src/app/api/admin/agent/chat/route.ts` | Endpoint chat |
-| `src/lib/admin-chat.ts` | Plan, OCR, upserts, timeouts, paralelo enrich/poster |
+| `src/components/admin/AgentChat.tsx` | UI conversacional + Confirmar |
+| `src/app/api/admin/agent/chat/route.ts` | Endpoint agente + hilos |
+| `src/lib/admin-chat-agent.ts` | Tool loop, pending_ops, SQL, persistencia |
+| `src/lib/admin-chat.ts` | Upserts, OCR, enrich/poster en background |
+| `supabase/migrations/062_admin_chat_threads.sql` | Hilos/mensajes |
 | `src/app/api/admin/agent/event/route.ts` | Enrich evento |
 | `src/app/api/admin/agent/event-poster/route.ts` | Cartel (visión/OCR, `maxDuration = 120`) |
 | `scripts/elegir-poster-evento.mjs` | CLI carteles |
@@ -142,7 +144,7 @@ El chat **no sustituye** del todo a Cursor para fichas largas, pero cubre el alt
 
 ### What it is
 
-**Admin-only** channel to send **poster screenshots**, text or links and **UPSERT** into Supabase (events, artists, mixes, New Releases, vinyl). Built for **mobile PWA** capture from social apps.
+**Admin-only conversational agent** (OpenAI tool-calling): screenshots, text, links. Reads the DB/web, **stages** writes (events, labels, artists, mixes, NR, vinyl, admin CRUD, SQL), and **only persists after Confirm**. Mobile PWA Share Target supported.
 
 ### Entry points
 
@@ -150,21 +152,21 @@ El chat **no sustituye** del todo a Cursor para fichas largas, pero cubre el alt
 - Agents hub tab: `/[lang]/administrator/agent`
 - FAB + Web Share Target (`manifest` / `sw.js` → `/share-target`)
 
-### Event pipeline (screenshot)
+### Agent flow
 
-Upload → OCR facts → OpenAI plan (+ OCR fallback action) → event UPSERT (dedupe) → **in parallel** enrich (`/api/admin/agent/event`, 45s) + official poster (`/api/admin/agent/event-poster? light: true`, 55s). Event is saved even if enrich/poster time out.
+Message → tool loop (`admin-chat-agent.ts`) → `pending_ops` → Confirm → `executePendingOps`. Event upsert still dedupes; enrich/poster run in background (`light: true`).
 
 ### Poster selection
 
-**Vision/OCR by default** (read text on the flyer). Do not trust Google Images titles alone. Chat uses **`light: true`**. CLI: `elegir-poster-evento.mjs` (opt-out: `--metadata-only`).
+**Vision/OCR by default**. Chat poster uses **`light: true`**.
 
 ### Progress UI
 
-Client-side staged progress bar in `AgentChat.tsx` (not a real server stream).
+Client-side staged progress (not a server stream). Confirm card for pending ops.
 
-### Key files / env / invariants
+### Key files / env
 
-Same tables as the Spanish section above. Prompt: `scripts/prompts/admin-chat-system.txt`. Env: OpenAI + SerpAPI + Supabase service role.
+`admin-chat-agent.ts`, `admin-chat.ts`, migration `062_admin_chat_threads.sql`. Prompt: `scripts/prompts/admin-chat-system.txt`. Env: OpenAI + SerpAPI + Supabase service role (+ `DATABASE_URL` for SQL tools).
 
 ### See also
 

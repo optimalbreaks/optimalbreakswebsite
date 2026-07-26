@@ -1,20 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import {
-  eventActionFromScreenshotFacts,
-  executeChatActions,
+  inferChatIntent,
   normalizeChatIntent,
-  planChatWithOpenAI,
   uploadChatImages,
   type ChatHistoryItem,
   type ChatIntent,
 } from '@/lib/admin-chat'
+import {
+  appendChatMessages,
+  ensureChatThread,
+  executePendingOps,
+  listChatThreads,
+  loadChatThread,
+  looksLikeCancel,
+  looksLikeConfirm,
+  pendingOpsSummary,
+  runAdminChatAgent,
+  type PendingOp,
+} from '@/lib/admin-chat-agent'
 
 export const maxDuration = 300
 
 /**
+ * GET /api/admin/agent/chat
+ * ?threads=1 → lista hilos
+ * ?thread_id=uuid → mensajes del hilo
+ */
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (!auth.ok) return auth.response
+
+  try {
+    const url = request.nextUrl
+    if (url.searchParams.get('threads') === '1') {
+      const threads = await listChatThreads(auth.userId)
+      return NextResponse.json({ threads })
+    }
+    const threadId = url.searchParams.get('thread_id')
+    if (threadId) {
+      const data = await loadChatThread({ userId: auth.userId, threadId })
+      if (!data) return NextResponse.json({ error: 'Hilo no encontrado' }, { status: 404 })
+      return NextResponse.json(data)
+    }
+    return NextResponse.json(
+      { error: 'Usa ?threads=1 o ?thread_id=' },
+      { status: 400 },
+    )
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : String(e) },
+      { status: 500 },
+    )
+  }
+}
+
+/**
  * POST /api/admin/agent/chat
- * Chat editorial: texto + imágenes → plan OpenAI → upsert directo.
+ * Agente conversacional con tools. Escrituras solo tras confirm_ops / «sí».
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
@@ -27,11 +70,24 @@ export async function POST(request: NextRequest) {
     const files: File[] = []
     let preUploadedUrls: string[] = []
     let intent: ChatIntent | null = null
+    let threadId: string | null = null
+    let confirmOps: PendingOp[] | null = null
+    let cancelOps = false
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData()
       message = String(form.get('message') || '')
       intent = normalizeChatIntent(form.get('intent'))
+      threadId = form.get('thread_id') ? String(form.get('thread_id')) : null
+      cancelOps = String(form.get('cancel_ops') || '') === '1'
+      const confirmRaw = form.get('confirm_ops')
+      if (typeof confirmRaw === 'string' && confirmRaw.trim()) {
+        try {
+          confirmOps = JSON.parse(confirmRaw) as PendingOp[]
+        } catch {
+          confirmOps = null
+        }
+      }
       const historyRaw = form.get('history')
       if (typeof historyRaw === 'string' && historyRaw.trim()) {
         try {
@@ -55,15 +111,92 @@ export async function POST(request: NextRequest) {
           (u: unknown) => typeof u === 'string' && String(u).startsWith('https://'),
         )
       }
+      if (typeof body.thread_id === 'string') threadId = body.thread_id
+      if (Array.isArray(body.confirm_ops)) confirmOps = body.confirm_ops as PendingOp[]
+      cancelOps = Boolean(body.cancel_ops)
+    }
+
+    // Cancelar ops pendientes
+    if (cancelOps) {
+      const reply = 'Operaciones descartadas. No se ha escrito nada en la BD.'
+      try {
+        const tid = await ensureChatThread({
+          userId: auth.userId,
+          threadId,
+          intent,
+        })
+        await appendChatMessages({
+          threadId: tid,
+          messages: [
+            { role: 'user', content: message || '(cancelar)' },
+            { role: 'assistant', content: reply, pending_ops: [] },
+          ],
+        })
+        return NextResponse.json({ ok: true, reply, pending_ops: [], thread_id: tid })
+      } catch {
+        return NextResponse.json({ ok: true, reply, pending_ops: [] })
+      }
+    }
+
+    // Confirmación explícita: el cliente manda confirm_ops (botón o «sí» con ops adjuntas)
+    if (Array.isArray(confirmOps) && confirmOps.length > 0) {
+      const results = await executePendingOps(confirmOps, request)
+      const savedOk = results.some((r) => r.ok)
+      const lines = results.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
+      const reply = savedOk
+        ? `Hecho. Guardado en la BD:\n${lines.join('\n')}`
+        : `No se completó el guardado:\n${lines.join('\n')}`
+
+      let tid = threadId
+      try {
+        tid = await ensureChatThread({ userId: auth.userId, threadId, intent })
+        await appendChatMessages({
+          threadId: tid,
+          messages: [
+            { role: 'user', content: message || 'Confirmar' },
+            { role: 'assistant', content: reply, pending_ops: [] },
+          ],
+        })
+      } catch {
+        /* persistencia opcional si la migración aún no corre */
+      }
+
+      return NextResponse.json({
+        ok: savedOk,
+        reply,
+        results,
+        pending_ops: [],
+        thread_id: tid,
+      })
+    }
+
+    if (looksLikeConfirm(message) && !confirmOps?.length) {
+      return NextResponse.json({
+        ok: false,
+        reply:
+          'No hay operaciones pendientes en este envío. Si viste una tarjeta de confirmación, pulsa Confirmar (o reenvía con las ops).',
+        pending_ops: [],
+      })
+    }
+
+    if (looksLikeCancel(message)) {
+      const reply = 'Cancelado. No se escribe nada.'
+      return NextResponse.json({ ok: true, reply, pending_ops: [] })
     }
 
     if (!message.trim() && files.length === 0 && preUploadedUrls.length === 0) {
       return NextResponse.json({ error: 'Escribe un mensaje o adjunta una imagen.' }, { status: 400 })
     }
 
+    if (!intent) intent = inferChatIntent(message)
+
     const upload = files.length
       ? await uploadChatImages(files.slice(0, 4))
-      : { urls: [] as string[], errors: [] as string[], dataUrls: [] as { mime: string; dataUrl: string; publicUrl?: string }[] }
+      : {
+          urls: [] as string[],
+          errors: [] as string[],
+          dataUrls: [] as { mime: string; dataUrl: string; publicUrl?: string }[],
+        }
 
     const attachedPublicUrls = [...preUploadedUrls, ...upload.urls]
     const imageDataUrls = [...upload.dataUrls]
@@ -98,63 +231,56 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { plan, facts } = await planChatWithOpenAI({
+    const agent = await runAdminChatAgent({
       message,
       history,
+      intent,
       imageDataUrls,
       attachedPublicUrls,
-      intent,
+      originRequest: request,
     })
 
-    // Segundo fallback por si el plan vino vacío tras un OCR útil (solo modo evento)
-    if (
-      (!intent || intent === 'event') &&
-      !plan.actions.some((a) => a.type === 'event') &&
-      facts?.event_name
-    ) {
-      const fb = eventActionFromScreenshotFacts(facts)
-      if (fb) {
-        plan.actions.unshift(fb)
-        plan.reply = `He leído «${fb.name}» en la captura y lo guardo ahora.`
-      }
-    }
-
-    if (
-      (files.length > 0 || preUploadedUrls.length > 0) &&
-      plan.actions.length === 0
-    ) {
-      return NextResponse.json({
-        ok: false,
-        reply:
-          (plan.reply ? `${plan.reply}\n\n` : '') +
-          'No pude crear ninguna ficha: la IA no devolvió acciones y el OCR no identificó un nombre de evento. Prueba con una captura más nítida del cartel o añade el nombre del evento en el texto.',
-        plan_reply: plan.reply,
-        actions: [],
-        results: [],
-        facts,
-        attached_urls: attachedPublicUrls,
-        upload_errors: upload.errors,
+    let tid = threadId
+    try {
+      tid = await ensureChatThread({
+        userId: auth.userId,
+        threadId,
+        title: message.slice(0, 80) || 'Chat editorial',
+        intent,
       })
+      await appendChatMessages({
+        threadId: tid,
+        messages: [
+          {
+            role: 'user',
+            content: message || '(captura / imagen)',
+            attached_urls: attachedPublicUrls.length ? attachedPublicUrls : null,
+          },
+          {
+            role: 'assistant',
+            content: agent.reply,
+            pending_ops: agent.pending_ops.length ? agent.pending_ops : null,
+            tool_trace: agent.tool_trace.length ? agent.tool_trace : null,
+          },
+        ],
+      })
+    } catch {
+      /* tablas 062 pueden no existir aún en el entorno */
     }
-
-    const results = await executeChatActions(plan.actions, request, attachedPublicUrls)
-    const savedOk = results.some((r) => r.ok)
-    const lines = results.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
-    const assistantMessage = [plan.reply, lines.length ? '\n' + lines.join('\n') : '']
-      .join('')
-      .trim()
 
     return NextResponse.json({
-      ok: savedOk,
-      reply: savedOk
-        ? assistantMessage
-        : `${assistantMessage}\n\nNo se guardó nada en la BD. Revisa los errores ✗ arriba.`,
-      plan_reply: plan.reply,
-      actions: plan.actions,
-      results,
-      facts,
+      ok: true,
+      reply: agent.reply,
+      pending_ops: agent.pending_ops,
+      pending_summary: pendingOpsSummary(agent.pending_ops),
+      tool_trace: agent.tool_trace,
       attached_urls: attachedPublicUrls,
       upload_errors: upload.errors,
+      thread_id: tid,
+      // compat UI antigua
+      results: [],
+      saved: false,
+      needs_confirm: agent.pending_ops.length > 0,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
