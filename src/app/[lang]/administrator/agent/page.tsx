@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
-import AgentChat from '@/components/admin/AgentChat'
+import { openAdminChat } from '@/components/AdminCaptureFab'
 import AgentArtist from '@/components/admin/AgentArtist'
 import AgentLabel from '@/components/admin/AgentLabel'
 import AgentEvent from '@/components/admin/AgentEvent'
@@ -11,7 +11,7 @@ import AgentEventPoster from '@/components/admin/AgentEventPoster'
 import AgentLabelLogo from '@/components/admin/AgentLabelLogo'
 
 const TABS = [
-  { key: 'chat', label: 'Chat editorial', icon: '💬', description: 'Upsert directo. En el móvil usa la pantalla Captura (/administrator/chat) o Comparte desde Facebook → Optimal Breaks.' },
+  { key: 'chat', label: 'Chat editorial', icon: '💬', description: 'Widget flotante (💬 abajo-izquierda): conversas, preparas altas y confirmas. También Share Target desde el móvil.' },
   { key: 'artists', label: 'Bio artistas', icon: '♫', description: 'Genera biografías de artistas con IA + búsqueda web y guarda en Supabase.' },
   { key: 'labels', label: 'Bio sellos', icon: '◈', description: 'Genera fichas de sellos discográficos con IA + búsqueda web y guarda en Supabase.' },
   { key: 'events', label: 'Enriquecer eventos', icon: '⚡', description: 'Enriquece fichas de eventos existentes con IA + búsqueda web (fecha, lineup, venue, etc.).' },
@@ -35,7 +35,8 @@ export default function AgentPage() {
         <span className="sec-tag">IA</span>
         <h1 className="sec-title !mb-2">Centro de agentes</h1>
         <p className="admin-muted max-w-xl">
-          Chat editorial con upsert directo, más agentes de bio, enriquecimiento e imágenes (fotos, logos, carteles).
+          Chat editorial en widget flotante, más agentes de bio, enriquecimiento e imágenes (fotos,
+          logos, carteles).
         </p>
       </div>
 
@@ -75,7 +76,21 @@ export default function AgentPage() {
       </p>
 
       {/* Tab content */}
-      {activeTab === 'chat' && <AgentChat lang={lang} />}
+      {activeTab === 'chat' && (
+        <div className="admin-panel space-y-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/20 shadow-[8px_8px_0_var(--ink)]">
+          <p style={{ fontFamily: "'Special Elite', monospace" }} className="text-sm">
+            El chat ya no es una página embebida: se abre como chatbot flotante en toda la web (solo
+            admin). Minimízalo con − y sigue trabajando.
+          </p>
+          <button
+            type="button"
+            className="admin-btn admin-btn--yellow min-h-12"
+            onClick={() => openAdminChat()}
+          >
+            Abrir chat editorial
+          </button>
+        </div>
+      )}
       {activeTab === 'artists' && <AgentArtist lang={lang} />}
       {activeTab === 'labels' && <AgentLabel lang={lang} />}
       {activeTab === 'events' && <AgentEvent lang={lang} />}

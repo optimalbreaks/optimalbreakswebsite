@@ -694,39 +694,47 @@ main {
   padding: 1.25rem 1.5rem;
 }
 
-/* Captura editorial PWA: viewport completo, composer fijo, safe areas */
-.admin-shell--capture {
-  min-height: 100dvh;
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
+/* Chat editorial: panel estilo chatbot (FAB → expand) */
+.ob-admin-chat-panel {
+  width: min(26.5rem, calc(100vw - 2rem));
+  height: min(36rem, calc(100dvh - 6.5rem));
+  max-height: calc(100dvh - 5.5rem - env(safe-area-inset-bottom, 0px));
+  overscroll-behavior: contain;
 }
 
-.admin-shell--capture .admin-main {
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
+.ob-admin-chat-panel--sheet {
+  width: 100%;
+  max-height: none;
+  /* top/height los pone JS vía visualViewport (teclado iOS/PWA) */
 }
 
-.admin-topbar--capture {
+.ob-admin-chat-panel__bar {
   min-height: 48px;
-  padding-top: env(safe-area-inset-top);
-  padding-left: max(0.75rem, env(safe-area-inset-left));
-  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+  padding-bottom: 0.35rem;
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
 }
 
-.admin-content--capture {
-  display: flex;
-  flex-direction: column;
+.ob-admin-chat-panel__body {
   min-height: 0;
-  flex: 1;
-  padding: 0;
-  overflow: hidden;
+}
+
+.ob-admin-chat-fab {
+  /* evita zoom/tap delay iOS */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ob-admin-chat-backdrop {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .ob-capture {
   flex: 1;
   min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .ob-capture__bar {
@@ -735,11 +743,16 @@ main {
   padding-bottom: 0.35rem;
 }
 
-@media (max-width: 767px) {
-  .admin-shell--capture .admin-topbar--capture span {
-    font-size: 10px;
-    letter-spacing: 1px;
-  }
+.ob-capture__composer {
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+.ob-capture__messages {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .admin-page-title {

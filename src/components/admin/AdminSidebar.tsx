@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { openAdminChat } from '@/components/AdminCaptureFab'
 
 interface AdminSidebarProps {
   lang: string
@@ -11,7 +12,7 @@ interface AdminSidebarProps {
 }
 
 const NAV_ITEMS = [
-  { key: 'chat', label: 'Captura', icon: '⇪', path: '/chat' },
+  { key: 'chat', label: 'Chat', icon: '💬', path: '/chat', openWidget: true },
   { key: 'dashboard', label: 'Dashboard', icon: '◉', path: '' },
   { key: 'stats', label: 'Estadísticas', icon: '▤', path: '/stats' },
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
@@ -78,24 +79,44 @@ export default function AdminSidebar({
           const isActive = isExact
             ? pathname === href || pathname === `${href}/`
             : pathname === href || pathname.startsWith(`${href}/`)
+          const className = `flex w-full items-center gap-2.5 px-3 py-2.5 no-underline border-l-[3px] transition-colors duration-100 text-left ${
+            isActive
+              ? 'border-[var(--red)] bg-[var(--red)] text-white'
+              : 'border-transparent text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--yellow)]'
+          }`
+          const style = {
+            fontFamily: "'Courier Prime', monospace",
+            fontWeight: 700,
+            fontSize: '11px',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase' as const,
+          }
+
+          if ('openWidget' in item && item.openWidget) {
+            return (
+              <button
+                key={item.key}
+                type="button"
+                className={className}
+                style={style}
+                onClick={() => {
+                  openAdminChat()
+                  onCloseMobile?.()
+                }}
+              >
+                <span className="w-5 text-center text-sm leading-none">{item.icon}</span>
+                {item.label}
+              </button>
+            )
+          }
 
           return (
             <Link
               key={item.key}
               href={href}
               onClick={onCloseMobile}
-              className={`flex items-center gap-2.5 px-3 py-2.5 no-underline border-l-[3px] transition-colors duration-100 ${
-                isActive
-                  ? 'border-[var(--red)] bg-[var(--red)] text-white'
-                  : 'border-transparent text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--yellow)]'
-              }`}
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontWeight: 700,
-                fontSize: '11px',
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-              }}
+              className={className}
+              style={style}
             >
               <span className="w-5 text-center text-sm leading-none">{item.icon}</span>
               {item.label}

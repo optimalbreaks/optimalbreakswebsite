@@ -622,7 +622,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |
-| Admin conversational agent (PWA) | `/[lang]/administrator/chat` | Chat + tools → stage writes → **Confirm** (events, labels, artists, mixes, NR, vinyl, CRUD/SQL). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
+| Admin conversational agent (PWA) | Floating 💬 widget (`AdminCaptureFab`) / `/[lang]/administrator/chat` | Chat + tools → stage writes → **Confirm** (events, labels, artists, mixes, NR, vinyl, CRUD/SQL). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
 
 ---
 

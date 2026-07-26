@@ -16,12 +16,17 @@ Pensado también para **PWA móvil** (Share Target → chat → confirmar).
 
 ### Dónde abrir
 
-| Entrada | Ruta |
-|---------|------|
-| Captura fullscreen (PWA) | `/[lang]/administrator/chat` |
-| Pestaña en centro de agentes | `/[lang]/administrator/agent` → «Chat editorial» |
-| FAB «Captura» (abajo-izquierda, solo admin) | `AdminCaptureFab` |
-| Web Share Target | `public/manifest.json` → `/share-target` → chat |
+El chat es un **widget flotante** (estilo chatbot), no una página a pantalla completa.
+
+| Entrada | Qué hace |
+|---------|----------|
+| Botón 💬 abajo-izquierda (solo admin) | Abre / minimiza el panel (`AdminCaptureFab`) |
+| Sidebar admin → «Chat» | Abre el mismo widget |
+| `/[lang]/administrator/chat` | Abre el widget (ruta Share Target / atajo) |
+| Centro de agentes → «Chat editorial» | Botón que abre el widget |
+| Web Share Target | `manifest` → `/share-target` → `/administrator/chat` → widget abierto |
+
+**Móvil / PWA:** el panel abierto es un **sheet** a pantalla completa anclado al `visualViewport` (teclado iOS, notch, home bar). Portal a `document.body`, `z-index` por encima del deck, scroll del body bloqueado al abrir. El FAB cerrado sigue compensando la barra del reproductor + desfase PWA (`useViewportBottomOffset`).
 
 ### Flujo del agente
 
@@ -110,7 +115,8 @@ node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force
 
 | Archivo | Rol |
 |---------|-----|
-| `src/components/admin/AgentChat.tsx` | UI + Confirmar + chips + hilo |
+| `src/components/AdminCaptureFab.tsx` | Widget flotante (FAB → panel chatbot) |
+| `src/components/admin/AgentChat.tsx` | UI del chat (`widget` / capture / embedded) + Confirmar + chips + hilo |
 | `src/app/api/admin/agent/chat/route.ts` | API agente |
 | `src/lib/admin-chat-agent.ts` | Tool loop, pending_ops, SQL, hilos |
 | `src/lib/admin-chat.ts` | Upserts, OCR, enrich/poster background |
@@ -171,11 +177,17 @@ El chat **no sustituye** a Cursor para lotes o fichas muy largas. Para retoques:
 
 ### Entry points
 
-| Entry | Path |
-|-------|------|
-| Fullscreen PWA | `/[lang]/administrator/chat` |
-| Agents hub tab | `/[lang]/administrator/agent` |
-| FAB + Share Target | `AdminCaptureFab`, `/share-target` |
+Floating **chatbot widget** (not a full-page chat):
+
+| Entry | What it does |
+|-------|----------------|
+| 💬 FAB (bottom-left, admin only) | Opens / minimizes the panel (`AdminCaptureFab`) |
+| Admin sidebar → Chat | Same widget |
+| `/[lang]/administrator/chat` | Opens the widget (Share Target / shortcut) |
+| Agents hub → Chat editorial | Button opens the widget |
+| Web Share Target | → `/share-target` → `/administrator/chat` → widget open |
+
+**Mobile / PWA:** open panel is a full-viewport **sheet** pinned to `visualViewport` (iOS keyboard, notch, home bar). Portaled to `document.body`, above the audio deck; body scroll locked while open. Closed FAB still clears the player bar + PWA viewport skew (`useViewportBottomOffset`).
 
 ### Agent flow
 

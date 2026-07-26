@@ -12,8 +12,6 @@ interface AdminShellProps {
 export default function AdminShell({ lang, children }: AdminShellProps) {
   const pathname = usePathname()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const isCaptureChat = /\/administrator\/chat\/?$/.test(pathname || '')
-
   useEffect(() => {
     setMobileNavOpen(false)
   }, [pathname])
@@ -37,7 +35,7 @@ export default function AdminShell({ lang, children }: AdminShellProps) {
   }, [mobileNavOpen])
 
   return (
-    <div className={`admin-shell lined ${isCaptureChat ? 'admin-shell--capture' : ''}`}>
+    <div className="admin-shell lined">
       <div
         role="presentation"
         className={`fixed inset-0 z-40 bg-[var(--ink)]/45 transition-opacity duration-200 md:hidden ${
@@ -51,7 +49,7 @@ export default function AdminShell({ lang, children }: AdminShellProps) {
         onCloseMobile={() => setMobileNavOpen(false)}
       />
       <div className="admin-main min-w-0">
-        <header className={`admin-topbar gap-3 ${isCaptureChat ? 'admin-topbar--capture' : ''}`}>
+        <header className="admin-topbar gap-3">
           <button
             type="button"
             className="flex h-11 w-11 shrink-0 items-center justify-center border-[3px] border-white bg-transparent text-white md:hidden"
@@ -68,13 +66,9 @@ export default function AdminShell({ lang, children }: AdminShellProps) {
           >
             {mobileNavOpen ? '✕' : '☰'}
           </button>
-          <span className="min-w-0 truncate">
-            {isCaptureChat ? 'Captura editorial' : 'Optimal Breaks // Panel de administración'}
-          </span>
+          <span className="min-w-0 truncate">Optimal Breaks // Panel de administración</span>
         </header>
-        <div className={`admin-content ${isCaptureChat ? 'admin-content--capture' : ''}`}>
-          {children}
-        </div>
+        <div className="admin-content">{children}</div>
       </div>
     </div>
   )

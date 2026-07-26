@@ -9,7 +9,7 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 
 ## Alcance
 
-Solo **admin**. UI: `AgentChat` en `/[lang]/administrator/chat` (capture) y pestaña en `/administrator/agent`.
+Solo **admin**. UI: **widget flotante** (`AdminCaptureFab` → panel con `AgentChat` mode `widget`). Atajos: FAB 💬, sidebar «Chat», `/administrator/chat` (Share Target), botón en `/administrator/agent`. Móvil/PWA: sheet a `visualViewport` (teclado/notch), portal a `body`, scroll lock.
 
 - API: `POST|GET /api/admin/agent/chat`
 - Agente: `src/lib/admin-chat-agent.ts` (OpenAI **tool-calling**, loop)
