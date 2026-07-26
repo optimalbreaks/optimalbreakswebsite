@@ -449,6 +449,8 @@
     "position_same": "Holds",
     "weeks_in_chart": "{n} wk.",
     "previous_editions": "Previous editions",
+    "weeks_show_more": "Show {n} earlier weeks",
+    "weeks_show_more_title": "Show all weeks",
     "no_chart_yet": "No chart published yet. Check back soon.",
     "source_label": "Sources",
     "preview_play": "Play preview",

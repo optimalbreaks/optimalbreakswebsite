@@ -192,6 +192,9 @@ interface ChartViewProps {
 // Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
 const UNKNOWN_YEAR_KEY = '__unknown_year__'
 
+/** Semanas visibles al cargar New Releases / 40 Breaks; el resto tras «Cargar más». */
+const INITIAL_WEEKS_VISIBLE = 10
+
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
@@ -796,6 +799,8 @@ export default function ChartView({
   const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(new Set<string>())
   const [openVinyl, toggleVinyl, ensureOpenVinyl] = useToggleSet(new Set<string>())
   const [openForty, toggleForty, ensureOpenForty] = useToggleSet(new Set<string>())
+  const [showAllPicksWeeks, setShowAllPicksWeeks] = useState(false)
+  const [showAllFortyWeeks, setShowAllFortyWeeks] = useState(false)
 
   const [autoplayVinylId, setAutoplayVinylId] = useState<string | null>(null)
 
@@ -922,8 +927,19 @@ export default function ChartView({
         }
 
         if (weekDate) {
-          if (inFeatured) ensureOpenPicks(weekDate)
-          else ensureOpenForty(weekDate)
+          if (inFeatured) {
+            const picksIdx = weeks
+              .filter((w) => w.featured.length > 0)
+              .findIndex((w) => w.edition.week_date === weekDate)
+            if (picksIdx >= INITIAL_WEEKS_VISIBLE) setShowAllPicksWeeks(true)
+            ensureOpenPicks(weekDate)
+          } else {
+            const fortyIdx = weeks
+              .filter((w) => w.tracks.length > 0)
+              .findIndex((w) => w.edition.week_date === weekDate)
+            if (fortyIdx >= INITIAL_WEEKS_VISIBLE) setShowAllFortyWeeks(true)
+            ensureOpenForty(weekDate)
+          }
           if (wantsPlay) {
             setPendingPlay({
               kind: inFeatured ? 'picks' : 'forty',
@@ -948,15 +964,19 @@ export default function ChartView({
         }
       }
 
-      // Espera a que el acordeón renderice antes de hacer scroll+highlight.
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const el = document.getElementById(domId)
-          if (!el) return
+      // Espera a que el acordeón (y, si aplica, «Cargar más») renderice.
+      const tryScroll = (attempt: number) => {
+        const el = document.getElementById(domId)
+        if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
           el.classList.add('!bg-[var(--yellow)]/25')
           setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1800)
-        }, 160)
+          return
+        }
+        if (attempt < 8) setTimeout(() => tryScroll(attempt + 1), 120)
+      }
+      requestAnimationFrame(() => {
+        setTimeout(() => tryScroll(0), 160)
       })
     }
 
@@ -1246,6 +1266,15 @@ export default function ChartView({
   // está vacía y por tanto oculta, la insignia caiga en la última con datos.
   const latestWeekDate = weeksWithTracks[0]?.edition.week_date ?? ''
 
+  const visiblePicksWeeks = showAllPicksWeeks
+    ? weeksWithFeatured
+    : weeksWithFeatured.slice(0, INITIAL_WEEKS_VISIBLE)
+  const hiddenPicksWeeks = Math.max(0, weeksWithFeatured.length - INITIAL_WEEKS_VISIBLE)
+  const visibleFortyWeeks = showAllFortyWeeks
+    ? weeksWithTracks
+    : weeksWithTracks.slice(0, INITIAL_WEEKS_VISIBLE)
+  const hiddenFortyWeeks = Math.max(0, weeksWithTracks.length - INITIAL_WEEKS_VISIBLE)
+
   // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
   // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
   // (useMemo: lo necesitan también el helper de autoplay/deep-link de vinilos
@@ -1337,12 +1366,14 @@ export default function ChartView({
           </header>
 
           <div className="flex flex-col gap-2 px-2 sm:px-0">
-            {weeksWithFeatured.map((bundle, index) => {
+            {visiblePicksWeeks.map((bundle, index) => {
               const { edition, featured } = bundle
               const isLatest = edition.week_date === weeksWithFeatured[0].edition.week_date
               const featuredSorted = sortFeaturedByArtist(featured, lang)
               const picksBundle = buildFeaturedBundle(featuredSorted, canonicalGroups.featuredByTrack, edition.week_date)
               const picksKey = `picks-${edition.week_date}`
+              const editionNumber =
+                weeksWithFeatured.findIndex((w) => w.edition.id === edition.id) + 1
 
               return (
                 <WeekAccordion
@@ -1350,7 +1381,7 @@ export default function ChartView({
                   weekDate={edition.week_date}
                   lang={lang}
                   isLatest={isLatest}
-                  editionNumber={index + 1}
+                  editionNumber={editionNumber > 0 ? editionNumber : index + 1}
                   count={featuredSorted.length}
                   expanded={openPicks.has(edition.week_date)}
                   onToggle={() => togglePicks(edition.week_date)}
@@ -1379,6 +1410,17 @@ export default function ChartView({
                 </WeekAccordion>
               )
             })}
+            {!showAllPicksWeeks && hiddenPicksWeeks > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllPicksWeeks(true)}
+                className="mt-1 min-h-[44px] w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-3 py-2 text-[11px] sm:text-xs font-black tracking-wider text-[var(--ink)] hover:bg-[var(--cyan)] hover:text-white transition-colors touch-manipulation"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+                title={c.weeks_show_more_title}
+              >
+                {c.weeks_show_more.replace('{n}', String(hiddenPicksWeeks))}
+              </button>
+            )}
           </div>
         </section>
       )}
@@ -1414,12 +1456,14 @@ export default function ChartView({
         </header>
 
         <div className="flex flex-col gap-2 px-2 sm:px-0">
-          {weeksWithTracks.map((bundle, index) => {
+          {visibleFortyWeeks.map((bundle, index) => {
             const { edition, tracks } = bundle
             const isLatest = edition.week_date === latestWeekDate
             const description = lang === 'es' ? edition.description_es : edition.description_en
             const fortyBundle = buildTrackBundle(tracks, canonicalGroups.chartByTrack, edition.week_date)
             const fortyKey = `forty-${edition.week_date}`
+            const editionNumber =
+              weeksWithTracks.findIndex((w) => w.edition.id === edition.id) + 1
 
             return (
               <WeekAccordion
@@ -1427,7 +1471,7 @@ export default function ChartView({
                 weekDate={edition.week_date}
                 lang={lang}
                 isLatest={isLatest}
-                editionNumber={index + 1}
+                editionNumber={editionNumber > 0 ? editionNumber : index + 1}
                 count={tracks.length}
                 expanded={openForty.has(edition.week_date)}
                 onToggle={() => toggleForty(edition.week_date)}
@@ -1468,6 +1512,17 @@ export default function ChartView({
               </WeekAccordion>
             )
           })}
+          {!showAllFortyWeeks && hiddenFortyWeeks > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAllFortyWeeks(true)}
+              className="mt-1 min-h-[44px] w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-3 py-2 text-[11px] sm:text-xs font-black tracking-wider text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-colors touch-manipulation"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title={c.weeks_show_more_title}
+            >
+              {c.weeks_show_more.replace('{n}', String(hiddenFortyWeeks))}
+            </button>
+          )}
         </div>
       </section>
 

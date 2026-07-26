@@ -351,6 +351,8 @@
     "position_same": "Se mantiene",
     "weeks_in_chart": "{n} sem.",
     "previous_editions": "Ediciones anteriores",
+    "weeks_show_more": "Ver {n} semanas anteriores",
+    "weeks_show_more_title": "Mostrar todas las semanas",
     "no_chart_yet": "Todavía no hay ningún chart publicado. Vuelve pronto.",
     "source_label": "Fuentes",
     "preview_play": "Escuchar preview",
