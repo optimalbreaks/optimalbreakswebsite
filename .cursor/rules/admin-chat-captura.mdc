@@ -1,5 +1,5 @@
 ---
-description: Agente conversacional admin (chat PWA): tools OpenAI, confirmación antes de escribir, carteles OCR.
+description: Agente conversacional admin (chat PWA): widget, tools, Confirmar, fechas sin año, OCR.
 alwaysApply: true
 ---
 
@@ -9,32 +9,37 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 
 ## Alcance
 
-Solo **admin**. UI: **widget flotante** (`AdminCaptureFab` → panel con `AgentChat` mode `widget`). Atajos: FAB 💬, sidebar «Chat», `/administrator/chat` (Share Target), botón en `/administrator/agent`. Móvil/PWA: sheet a `visualViewport` (teclado/notch), portal a `body`, scroll lock.
+Solo **admin**. UI: **widget flotante** (`AdminCaptureFab` → `AgentChat` mode `widget`). Atajos: FAB 💬, sidebar «Chat», `/administrator/chat` (Share Target), botón en `/administrator/agent`. Móvil/PWA: sheet a `visualViewport`, portal a `body`, scroll lock.
 
 - API: `POST|GET /api/admin/agent/chat`
 - Agente: `src/lib/admin-chat-agent.ts` (OpenAI **tool-calling**, loop)
-- Ejecución de writes: `executePendingOps` → `src/lib/admin-chat.ts` + APIs `/api/admin/agent/*`
+- Escrituras: `executePendingOps` → `src/lib/admin-chat.ts` + APIs `/api/admin/agent/*`
 - Prompt: `scripts/prompts/admin-chat-system.txt`
-- Hilos: migración `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`)
+- Hilos: `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`)
 
 ## Modelo conversacional (obligatorio)
 
-1. El modelo **lee** BD/web con tools; las escrituras van a **`pending_ops`** (`stage_*`).
-2. **Nada se guarda** hasta **Confirmar** (botón o «sí») → `confirm_ops` → `executePendingOps`.
-3. Chips UI = hint de `intent`, no clasificador rígido único.
-4. Distinguir: sello (`label`) ≠ evento ≠ artista ≠ mix ≠ NR ≠ vinyl.
+1. Lecturas con tools; escrituras solo vía **`pending_ops`** (`stage_*`).
+2. Guardar: **Confirmar**, «sí» con ops (cliente / **último** assistant del hilo), o «sí» que hace `stage_*` en el mismo turno (auto-aplica).
+3. No preguntar solo «¿lo añado?» sin `stage_*`. No decir «he creado/guardado» con solo pending.
+4. Chips UI = hint de `intent`. Distinguir: sello ≠ evento ≠ artista ≠ mix ≠ NR ≠ vinyl.
+5. UI de espera: indicador typing, **no** barra de progreso % falsa.
+
+## Fechas de eventos
+
+Cartel sin año («21 de agosto») → `normalizeUpcomingEventDate` (`admin-chat.ts`): próxima ocurrencia **futura** `YYYY-MM-DD`. Nunca dejar el evento en un año pasado (desaparece del listado `/events`).
 
 ## Tools
 
 Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases`, `stage_vinyl_picks`, enrich/poster/foto/logo.
 
-CRUD tablas admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
+CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
 SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).
 
 ## Evento desde captura
 
-Tras **confirmar** un `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true` en poster). Cartel = **visión/OCR**, no solo metadatos Google Imágenes.
+Tras confirmar `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true`). Cartel = **visión/OCR**.
 
 ## Tipado
 
@@ -42,4 +47,4 @@ En `src/types/database.ts`, JSONB de `admin_chat_*` **sin** `unknown` (rompe inf
 
 ## PWA
 
-Share Target: `manifest.json` + `sw.js` + `/share-target`. El share envía al agente (prepara ops); el admin confirma antes de BD.
+Share Target: `manifest.json` + `sw.js` + `/share-target` → abre el widget; el admin confirma antes de BD (salvo auto-aplica tras «sí» + stage en el mismo turno).

@@ -35,28 +35,35 @@ Mensaje / captura
   → POST /api/admin/agent/chat
   → loop OpenAI + tools (lectura + stage_*)
   → reply + pending_ops
-  → UI: Confirmar / Cancelar
-  → confirm_ops → executePendingOps → BD
+  → UI: Confirmar / Cancelar  (o «sí» / «cancelar»)
+  → executePendingOps → BD
 ```
 
-1. **Cliente** [`AgentChat.tsx`](../src/components/admin/AgentChat.tsx): mensaje/captura, chips de modo (`intent` = hint), `thread_id`, tarjeta de confirmación.
-2. **API** [`chat/route.ts`](../src/app/api/admin/agent/chat/route.ts) (`maxDuration = 300`): sube imágenes a `media/chat/…`, llama al agente.
+1. **Cliente** [`AgentChat.tsx`](../src/components/admin/AgentChat.tsx) (mode `widget`): mensaje/captura, chips (`intent` = hint), `thread_id`, tarjeta Confirmar; mientras espera: indicador «escribiendo» (sin barra de % falsa).
+2. **API** [`chat/route.ts`](../src/app/api/admin/agent/chat/route.ts) (`maxDuration = 300`): sube imágenes a `media/chat/…`, historial del hilo, llama al agente.
 3. **Agente** [`admin-chat-agent.ts`](../src/lib/admin-chat-agent.ts): hasta ~10 rondas de tools; las `stage_*` **no** escriben.
-4. **Confirmar** → `executePendingOps` (reutiliza [`admin-chat.ts`](../src/lib/admin-chat.ts) + APIs `/api/admin/agent/*` + CRUD/SQL).
-5. Evento confirmado: UPSERT + dedupe; enrich + cartel oficial en **segundo plano** (`waitUntil`, poster con `light: true`).
+4. **Confirmar** → `executePendingOps` ([`admin-chat.ts`](../src/lib/admin-chat.ts) + APIs `/api/admin/agent/*` + CRUD/SQL).
+5. Evento confirmado: UPSERT + dedupe; enrich + cartel oficial en **segundo plano** (`waitUntil`, poster `light: true`).
 
 `GET /api/admin/agent/chat?threads=1` lista hilos; `?thread_id=` carga mensajes.
 
-### Confirmación (invariante)
+### Confirmación y memoria conversacional
 
 | Acción | ¿Escribe en BD? |
 |--------|-----------------|
 | Tools de lectura (`search_catalog`, `get_record`, `db_list`, `db_get`, `db_sql_read`, `web_search`, `read_image_facts`) | No (solo leen) |
 | Tools `stage_*` / `stage_db_*` / `stage_db_sql_write` | No: acumulan `pending_ops` |
-| Botón **Confirmar** o mensaje «sí» + `confirm_ops` | **Sí** |
-| **Cancelar** | No (descarta pendientes) |
+| Botón **Confirmar y guardar**, o «sí»/«ok» con ops en cliente / último mensaje del hilo | **Sí** |
+| «sí» sin ops previas pero el agente hace `stage_*` en ese turno | **Sí** (auto-aplica tras el stage) |
+| **Cancelar** / «cancelar» (con ops) | No (descarta). Un «no» conversacional largo va al agente |
 
-El agente **no debe** decir «ya está guardado» hasta después de Confirmar.
+Reglas importantes:
+
+- El modelo debe **stage primero** y pedir Confirmar; no preguntar solo «¿lo añado?» sin `stage_*`.
+- Prohibido decir «he creado» / «guardado» mientras solo hay `pending_ops` (el servidor reescribe esas frases a «he preparado»).
+- Al recuperar ops del hilo se usa **solo el último mensaje assistant** (no ops antiguas ya confirmadas).
+- El cliente también guarda `pending_ops` en `sessionStorage` por si se pierde el ref al decir «sí».
+- Historial para el modelo: preferencia el hilo en BD (`admin_chat_messages`).
 
 ### Chips de modo
 
@@ -95,6 +102,12 @@ Migración [`062_admin_chat_threads.sql`](../supabase/migrations/062_admin_chat_
 - `admin_chat_messages` — `role`, `content`, `pending_ops`, `tool_trace`, `attached_urls`
 
 Si las tablas no existen, el chat sigue (pending en `sessionStorage`). Tipado en [`src/types/database.ts`](../src/types/database.ts): **no usar `unknown` en JSONB** (rompe la inferencia de Supabase y el build).
+
+### Fechas de eventos (cartel sin año)
+
+Si el flyer dice solo día/mes («21 de agosto») **sin año**, el modelo a menudo inventaba un año pasado (p. ej. 2023) y el evento **no aparecía** en `/events` (listado de próximos).
+
+Mitigación: `normalizeUpcomingEventDate` en [`admin-chat.ts`](../src/lib/admin-chat.ts) — OCR, `normalizeChatActions` y UPSERT fuerzan la **próxima ocurrencia futura** (`YYYY-MM-DD`). Prompt + tool `stage_upsert_event` lo dejan explícito.
 
 ### Cartel oficial — visión / OCR
 
@@ -143,13 +156,14 @@ node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force
 
 ### Invariantes
 
-1. **Nada a BD sin Confirmar** (salvo lecturas).
-2. **No fingir “Guardado”** sin `results` OK tras `confirm_ops`.
+1. **Nada a BD sin Confirmar / «sí» que aplica** (salvo lecturas). Las `stage_*` solo preparan.
+2. **No fingir “creado/guardado”** con solo `pending_ops`; tras escribir, mirar `results` OK.
 3. **Sello ≠ evento ≠ artista** (tools y chips).
 4. **Duplicados de evento** — actualizar, no clonar.
 5. Captura en `media/chat/` = **provisional**; cartel oficial por OCR.
-6. New Releases: semana = lunes ISO del **release Beatport** (regla `charts-new-releases-supabase`).
-7. Tipado `admin_chat_*`: JSONB como tipo JSON recursivo, no `unknown`.
+6. **Fecha sin año en cartel** → próxima ocurrencia futura (`normalizeUpcomingEventDate`).
+7. New Releases: semana = lunes ISO del **release Beatport** (regla `charts-new-releases-supabase`).
+8. Tipado `admin_chat_*`: JSONB como tipo JSON recursivo, no `unknown`.
 
 ### Relación con Cursor / CLI
 
@@ -160,11 +174,14 @@ El chat **no sustituye** a Cursor para lotes o fichas muy largas. Para retoques:
 | Síntoma | Qué mirar |
 |---------|-----------|
 | Build Vercel: `never` en `.name` / labels | Tipado `admin_chat` con `unknown` — ver `database.ts` |
-| Dice “guardado” pero no hay fila | ¿Pulsaste Confirmar? Revisa `pending_ops` |
+| Dice “he creado” / “guardado” pero no hay fila | Era solo stage; debe salir tarjeta Confirmar o «Hecho. Guardado…» con `results` |
+| «No hay operaciones pendientes» al decir «sí» | Deploy antiguo; o no hubo `stage_*`. Debe ir al agente / recuperar ops del **último** assistant |
+| Confirmó OK pero no sale en `/events` | Fecha en el pasado (año mal inferido). Revisar `date_start`; ver sección fechas |
 | SQL tools fallan | Falta `DATABASE_URL`; usa CRUD REST |
 | Hilos no se guardan | Migración `062` no aplicada |
 | Cartel incorrecto | OCR; `events-poster` / WebP en `public/images/events/` |
 | Preview negra | Previews `data:` URL, no `blob:` |
+| Teclado tapa el chat en iOS PWA | Sheet anclado a `visualViewport` (`AdminCaptureFab`) |
 | TLS local | `NODE_TLS_REJECT_UNAUTHORIZED=0` o CA corporativa (README) |
 
 ---
@@ -191,15 +208,21 @@ Floating **chatbot widget** (not a full-page chat):
 
 ### Agent flow
 
-Message/image → `POST /api/admin/agent/chat` → OpenAI tool loop (`admin-chat-agent.ts`) → `pending_ops` → **Confirm** → `executePendingOps`. Confirmed events: UPSERT + dedupe; enrich + official poster in background (`waitUntil`, poster `light: true`).
+Message/image → `POST /api/admin/agent/chat` → OpenAI tool loop (`admin-chat-agent.ts`) → `pending_ops` → **Confirm** / «yes» → `executePendingOps`. Confirmed events: UPSERT + dedupe; enrich + official poster in background (`waitUntil`, poster `light: true`).
 
-Threads: migration `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`). Without tables, chat still works (sessionStorage for pending).
+UI waiting state is a typing indicator (not a fake %-progress bar). Threads: migration `062` (`admin_chat_threads` / `admin_chat_messages`); pending also in `sessionStorage`.
 
-### Confirmation invariant
+### Confirmation & memory
 
-`stage_*` tools **never** write. Only `confirm_ops` (Confirm button / «yes») runs `executePendingOps`. Cancel discards pending ops.
+- `stage_*` never writes. Confirm button, short «yes» with pending ops (client or **latest** assistant message), or «yes» that triggers stage in the same turn → write.
+- Do not ask “shall I add it?” without staging. Do not claim “created/saved” while only staged (server rewrites wording).
+- Prefer DB thread history for the model context.
 
-Mode chips (Event / Label / Artist / NR / Vinyl / Mix) are **hints**, not a hard classifier. Do not confuse **label** with **event** or **artist**.
+Mode chips are **hints**. Do not confuse **label** with **event** or **artist**.
+
+### Event dates without a year on the flyer
+
+`normalizeUpcomingEventDate` (`admin-chat.ts`) forces the next future `YYYY-MM-DD` so the model cannot park events in a past year (they would vanish from the public upcoming list).
 
 ### Tools (summary)
 

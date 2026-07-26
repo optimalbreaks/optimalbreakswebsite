@@ -290,7 +290,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 ├── docs/
 │   ├── README.md               # Doc index + maintenance audit (what each .md covers)
 │   ├── AI_PROMPTS_AND_AGENTS.md # Index: all .txt prompts, env defaults, APIs (ES/EN)
-│   ├── ADMIN_CHAT_CAPTURA.md   # Admin conversational agent (tools + confirm) + PWA capture + poster OCR
+│   ├── ADMIN_CHAT_CAPTURA.md   # Admin chat widget (tools + Confirm, dates w/o year, PWA, OCR)
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
 │   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
@@ -622,7 +622,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Privacy / Terms / Cookies | `/[lang]/privacy`, etc. | Legal pages |
 | About | `/[lang]/about` | Project manifesto, contact, collaborate, submit |
 | Administrator | `/[lang]/administrator` | Admin-only CRUD + image upload (`profiles.role = admin`); not linked from public nav |
-| Admin conversational agent (PWA) | Floating 💬 widget (`AdminCaptureFab`) / `/[lang]/administrator/chat` | Chat + tools → stage writes → **Confirm** (events, labels, artists, mixes, NR, vinyl, CRUD/SQL). See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
+| Admin conversational agent (PWA) | Floating 💬 widget (`AdminCaptureFab`) / `/[lang]/administrator/chat` | Tools → stage → **Confirm**/«yes»; flyer dates without year → next future. See [`docs/ADMIN_CHAT_CAPTURA.md`](./docs/ADMIN_CHAT_CAPTURA.md) |
 
 ---
 
@@ -820,7 +820,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 
 - **artists** — `slug`, name / `name_display`, `real_name`, bio (EN/ES), category, styles, era, `image_url`, essential tracks, recommended mixes, related artists, `labels_founded`, `key_releases` (JSON), website, socials, featured flag, sort order — see `006_artist_extended_fields.sql` and `data/artists/deekline.json`. Optional **Beatport** fields (migration **`046_beatport_top_tracks.sql`**): `beatport_id`, `beatport_url`, `beatport_top_tracks` (JSONB, top-selling tracks + preview URLs, **each with `release_date YYYY-MM-DD`** when scrapeable), `beatport_top_tracks_updated_at`. The public artist page shows an accordion **only when** `beatport_top_tracks` is non-empty.
 - **labels** — name, country, founded year, description (EN/ES), `image_url`, key artists/releases; optional **`organization_id`** → `organizations.id` (migration `010`). Same optional Beatport columns as artists (`046`).
-- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are created via admin UI, Cursor, or the **admin conversational agent** (`/[lang]/administrator/chat` — screenshot/text → tools → **Confirm** → UPSERT → enrich + official poster by **vision/OCR**). Enrich: `npm run db:events:enrich -- <slug> [--with-poster]`. Poster: `npm run db:events:poster -- <slug>` (OCR by default). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md); enricher prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt)
+- **events** — name, type, dates, location, lineup, description (EN/ES), `image_url`, stages/schedule (JSON), tags, tickets, socials, coords; optional **`promoter_organization_id`** → `organizations.id` (migration `010`). Events are created via admin UI, Cursor, or the **admin conversational agent** (💬 widget / `/[lang]/administrator/chat` — screenshot/text → tools → **Confirm** → UPSERT; flyer day/month without year → next future date; enrich + official poster by **vision/OCR**). Enrich: `npm run db:events:enrich -- <slug> [--with-poster]`. Poster: `npm run db:events:poster -- <slug>` (OCR by default). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md); enricher prompt: [`scripts/prompts/evento-enriquecer-system.txt`](scripts/prompts/evento-enriquecer-system.txt)
 - **organizations** — `slug`, name, roles (`label`, `promoter`, …), descriptions (EN/ES), `website`, `socials` (JSON), optional `base_city` / `founded_year`; Raveart seed + FK wiring in `010_raveart_organizations.sql`; extra gallery-titled events in `011_raveart_gallery_events.sql`
 - **blog_posts** — title, content, excerpt (EN/ES), category, tags, author, `image_url`, published flag
 - **scenes** — name (EN/ES), country, region, key artists/labels/venues, era, `image_url`
