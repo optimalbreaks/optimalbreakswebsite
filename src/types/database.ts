@@ -107,7 +107,17 @@ export type ChartVinylTrack = {
   note_es: string
 }
 
-export interface AdminChatThreadRow {
+/** JSONB-safe (evitar `unknown`: rompe inferencia de `@supabase/supabase-js`). */
+export type AdminChatJson =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: AdminChatJson | undefined }
+  | AdminChatJson[]
+
+/** Sin `extends Record` (igual que chart tables) para no romper el cliente tipado. */
+export type AdminChatThreadRow = {
   id: string
   user_id: string
   title: string | null
@@ -116,13 +126,13 @@ export interface AdminChatThreadRow {
   updated_at: string
 }
 
-export interface AdminChatMessageRow {
+export type AdminChatMessageRow = {
   id: string
   thread_id: string
-  role: 'user' | 'assistant' | 'system'
+  role: string
   content: string
-  pending_ops: unknown | null
-  tool_trace: unknown | null
+  pending_ops: AdminChatJson
+  tool_trace: AdminChatJson
   attached_urls: string[] | null
   created_at: string
 }
@@ -282,16 +292,14 @@ export interface Database {
       }
       admin_chat_threads: {
         Row: AdminChatThreadRow
-        Insert: Omit<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'> &
-          Partial<Pick<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'>>
-        Update: Partial<Omit<AdminChatThreadRow, 'id' | 'user_id' | 'created_at'>>
+        Insert: Omit<AdminChatThreadRow, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<AdminChatThreadRow, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
       admin_chat_messages: {
         Row: AdminChatMessageRow
-        Insert: Omit<AdminChatMessageRow, 'id' | 'created_at'> &
-          Partial<Pick<AdminChatMessageRow, 'id' | 'created_at'>>
-        Update: Partial<Omit<AdminChatMessageRow, 'id' | 'thread_id' | 'created_at'>>
+        Insert: Omit<AdminChatMessageRow, 'id' | 'created_at'>
+        Update: Partial<Omit<AdminChatMessageRow, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
     }
