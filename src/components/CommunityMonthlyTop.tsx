@@ -356,8 +356,88 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
 
+  const artistsBlock =
+    !loading && !error && data && (data.top_artists?.length ?? 0) > 0 ? (
+      <section id="community-top-artists" className="mb-12 sm:mb-16 scroll-mt-24">
+        <header className="px-4 sm:px-0 mb-6 sm:mb-8">
+          <span
+            className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)] mb-3"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {cm.artists_kicker || 'TOP 10 SAVED ARTISTS'}
+          </span>
+          <h2
+            className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+            style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+          >
+            {cm.artists_title || 'Most-saved artists'}
+          </h2>
+          <p
+            className="text-sm sm:text-base text-[var(--ink)]/60"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {cm.artists_subtitle ||
+              'Who shows up most across the tracks the community adds to My Tracks.'}
+          </p>
+        </header>
+        <ol className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-2 divide-[var(--ink)] mx-2 sm:mx-0">
+          {(data.top_artists || []).map((a) => {
+            const nameEl = a.slug ? (
+              <Link
+                href={`/${lang}/artists/${a.slug}`}
+                className="font-black text-[var(--ink)] hover:text-[var(--red)] no-underline transition-colors"
+                style={{ fontFamily: "'Unbounded', sans-serif" }}
+              >
+                {a.name}
+              </Link>
+            ) : (
+              <span
+                className="font-black text-[var(--ink)]"
+                style={{ fontFamily: "'Unbounded', sans-serif" }}
+              >
+                {a.name}
+              </span>
+            )
+            const isHot = a.save_count >= 10
+            return (
+              <li
+                key={`${a.rank}-${a.name}`}
+                className="flex items-center gap-3 sm:gap-4 px-3 py-2.5 sm:px-4 sm:py-3"
+              >
+                <span
+                  className={`inline-flex flex-col items-center justify-center shrink-0 font-black border-[3px] border-[var(--ink)]
+                    ${isHot ? 'w-11 h-11 bg-[var(--red)] text-white' : 'w-10 h-10 bg-[var(--ink)] text-[var(--paper)]'}
+                  `}
+                  style={{ fontFamily: "'Unbounded', sans-serif" }}
+                  title={`#${a.rank}`}
+                >
+                  <span className="text-sm sm:text-base leading-none">{a.rank}</span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm sm:text-base truncate">{nameEl}</div>
+                  <div
+                    className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {a.save_count} {cm.artists_saves || 'saves'}
+                    {' · '}
+                    {a.unique_users} {cm.artists_fans || 'fans'}
+                    {' · '}
+                    {a.unique_tracks} {cm.artists_tracks || 'tracks'}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      </section>
+    ) : null
+
   return (
-    <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24">
+    <>
+      {artistsBlock}
+
+      <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24">
       <header className="px-4 sm:px-0 mb-6 sm:mb-8">
         <span
           className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] mb-3"
@@ -378,83 +458,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           {cm.subtitle || 'Las canciones más añadidas a "Mis Tracks" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.'}
         </p>
       </header>
-
-      {/* Top 10 artistas más guardados — encima del ranking de tracks */}
-      {!loading && !error && data && (data.top_artists?.length ?? 0) > 0 && (
-        <div className="mb-8 sm:mb-10 mx-2 sm:mx-0">
-          <div className="mb-4">
-            <span
-              className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)] mb-2"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-            >
-              {cm.artists_kicker || 'TOP 10 SAVED ARTISTS'}
-            </span>
-            <h3
-              className="text-xl sm:text-2xl font-black leading-tight mb-1"
-              style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-            >
-              {cm.artists_title || 'Most-saved artists'}
-            </h3>
-            <p
-              className="text-xs sm:text-sm text-[var(--ink)]/55"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-            >
-              {cm.artists_subtitle ||
-                'Who shows up most across the tracks the community adds to My Tracks.'}
-            </p>
-          </div>
-          <ol className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-2 divide-[var(--ink)]">
-            {(data.top_artists || []).map((a) => {
-              const nameEl = a.slug ? (
-                <Link
-                  href={`/${lang}/artists/${a.slug}`}
-                  className="font-black text-[var(--ink)] hover:text-[var(--red)] no-underline transition-colors"
-                  style={{ fontFamily: "'Unbounded', sans-serif" }}
-                >
-                  {a.name}
-                </Link>
-              ) : (
-                <span
-                  className="font-black text-[var(--ink)]"
-                  style={{ fontFamily: "'Unbounded', sans-serif" }}
-                >
-                  {a.name}
-                </span>
-              )
-              const isHot = a.save_count >= 10
-              return (
-                <li
-                  key={`${a.rank}-${a.name}`}
-                  className="flex items-center gap-3 sm:gap-4 px-3 py-2.5 sm:px-4 sm:py-3"
-                >
-                  <span
-                    className={`inline-flex flex-col items-center justify-center shrink-0 font-black border-[3px] border-[var(--ink)]
-                      ${isHot ? 'w-11 h-11 bg-[var(--red)] text-white' : 'w-10 h-10 bg-[var(--ink)] text-[var(--paper)]'}
-                    `}
-                    style={{ fontFamily: "'Unbounded', sans-serif" }}
-                    title={`#${a.rank}`}
-                  >
-                    <span className="text-sm sm:text-base leading-none">{a.rank}</span>
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm sm:text-base truncate">{nameEl}</div>
-                    <div
-                      className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
-                      style={{ fontFamily: "'Courier Prime', monospace" }}
-                    >
-                      {a.save_count} {cm.artists_saves || 'saves'}
-                      {' · '}
-                      {a.unique_users} {cm.artists_fans || 'fans'}
-                      {' · '}
-                      {a.unique_tracks} {cm.artists_tracks || 'tracks'}
-                    </div>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </div>
-      )}
 
       <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden mx-2 sm:mx-0">
         <div
@@ -754,5 +757,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         )}
       </div>
     </section>
+    </>
   )
 }
