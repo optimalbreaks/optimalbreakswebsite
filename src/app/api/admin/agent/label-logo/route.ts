@@ -18,6 +18,24 @@ function hostFromUrl(u: string): string {
   try { return new URL(u).hostname } catch { return '' }
 }
 
+function isDownloadableImageUrl(url: string): boolean {
+  if (!url.startsWith('https://')) return false
+  const host = hostFromUrl(url).toLowerCase()
+  const blocked = [
+    'lookaside.instagram.com',
+    'lookaside.fbsbx.com',
+    'instagram.com',
+    'facebook.com',
+    'fbcdn.net',
+  ]
+  return !blocked.some((h) => host.includes(h))
+}
+
+function preferDownloadableCandidates(candidates: ImageCandidate[]): ImageCandidate[] {
+  const good = candidates.filter((c) => isDownloadableImageUrl(c.original))
+  return good.length >= 3 ? good : candidates
+}
+
 const SYSTEM_LOGO = `Eres editor de Optimal Breaks (música dance / breakbeat). Te pasan candidatos de Google Imágenes como METADATOS (no ves el píxel).
 Tu tarea: elegir a lo sumo UN candidato que sea muy probablemente el logo o imagen oficial del sello discográfico indicado.
 Prefiere: logotipo oficial, imagotipo, imagen de perfil del sello en redes, arte de cabecera de la discográfica.
@@ -233,9 +251,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ chosen: null, reason: 'Sin resultados de imágenes', candidates: 0 })
   }
 
+  const pool = preferDownloadableCandidates(candidates)
+
   let chosen: { url: string | null; reason: string }
   try {
-    chosen = await openAiChooseLogo(labelName, slug, candidates)
+    chosen = await openAiChooseLogo(labelName, slug, pool)
+    if (chosen.url && !isDownloadableImageUrl(chosen.url)) {
+      const onlyGood = candidates.filter((c) => isDownloadableImageUrl(c.original))
+      if (onlyGood.length) {
+        const retry = await openAiChooseLogo(labelName, slug, onlyGood)
+        if (retry.url) {
+          chosen = { ...retry, reason: `${retry.reason} (evitó CDN Instagram/Facebook)` }
+        } else {
+          chosen = { url: null, reason: 'solo candidatas en hosts no descargables (IG/FB)' }
+        }
+      }
+    }
   } catch (e) {
     return NextResponse.json({ error: `OpenAI: ${e instanceof Error ? e.message : e}` }, { status: 502 })
   }

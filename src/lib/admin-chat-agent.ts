@@ -637,6 +637,12 @@ async function runTool(
     }
     const col = SEARCH_COL[table]
     const safe = query.replace(/[%_,]/g, ' ').trim()
+    // count exacto en BD (no confundir con el tamaño de la página de resultados)
+    let countQ = sb.from(table).select('*', { count: 'exact', head: true })
+    if (safe) countQ = countQ.ilike(col, `%${safe}%`)
+    const { count: totalCount, error: countErr } = await countQ
+    if (countErr) return { ok: false, detail: { error: countErr.message } }
+
     let q = sb.from(table).select('*').limit(limit)
     if (safe) {
       q = q.ilike(col, `%${safe}%`)
@@ -654,7 +660,17 @@ async function runTool(
         country: o.country ?? null,
       }
     })
-    return { ok: true, detail: { count: rows.length, rows } }
+    return {
+      ok: true,
+      detail: {
+        count: typeof totalCount === 'number' ? totalCount : rows.length,
+        returned: rows.length,
+        limit,
+        rows,
+        note:
+          'count = total en BD (filtro aplicado). returned = filas de esta página. Para «¿cuántos hay?» usa count, no returned.',
+      },
+    }
   }
 
   if (name === 'get_record') {
