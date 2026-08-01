@@ -142,6 +142,13 @@ function httpsOrNull(v: unknown): string | null {
  * Si la fecha ya pasó, la sube a la próxima ocurrencia del mismo día/mes (UTC).
  * Devuelve solo `YYYY-MM-DD` (sin hora).
  */
+/**
+ * Normaliza fechas de evento a YYYY-MM-DD.
+ * - Si el año del ISO es claramente erróneo del modelo (p. ej. 2023/2024 con hoy en 2026),
+ *   reinterpreta día/mes como la próxima ocurrencia futura.
+ * - Si el año es el actual o el anterior reciente (edición ya celebrada / año explícito en cartel),
+ *   se respeta aunque la fecha ya haya pasado (no empujar a +1 año).
+ */
 export function normalizeUpcomingEventDate(
   iso: string | null | undefined,
   now = new Date(),
@@ -154,20 +161,33 @@ export function normalizeUpcomingEventDate(
   if (!mo || !d || mo > 12 || d > 31) return null
 
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  let y = Number(m[1])
-  let candidate = new Date(Date.UTC(y, mo - 1, d))
-  if (Number.isNaN(candidate.getTime()) || candidate < today) {
-    const thisYear = new Date(Date.UTC(today.getUTCFullYear(), mo - 1, d))
-    candidate =
+  const y = Number(m[1])
+  const candidate = new Date(Date.UTC(y, mo - 1, d))
+  if (Number.isNaN(candidate.getTime())) return null
+
+  const fmt = (dt: Date) => {
+    const yy = dt.getUTCFullYear()
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, '0')
+    const dd = String(dt.getUTCDate()).padStart(2, '0')
+    return `${yy}-${mm}-${dd}`
+  }
+
+  if (candidate >= today) return fmt(candidate)
+
+  const currentY = today.getUTCFullYear()
+  // Años muy antiguos = alucinación típica del modelo en carteles sin año
+  if (y <= currentY - 2) {
+    const thisYear = new Date(Date.UTC(currentY, mo - 1, d))
+    const next =
       !Number.isNaN(thisYear.getTime()) && thisYear >= today
         ? thisYear
-        : new Date(Date.UTC(today.getUTCFullYear() + 1, mo - 1, d))
+        : new Date(Date.UTC(currentY + 1, mo - 1, d))
+    if (Number.isNaN(next.getTime())) return null
+    return fmt(next)
   }
-  if (Number.isNaN(candidate.getTime())) return null
-  const yy = candidate.getUTCFullYear()
-  const mm = String(candidate.getUTCMonth() + 1).padStart(2, '0')
-  const dd = String(candidate.getUTCDate()).padStart(2, '0')
-  return `${yy}-${mm}-${dd}`
+
+  // Año explícito reciente (esta edición ya pasó): conservar
+  return fmt(candidate)
 }
 
 function loadSystemPrompt(): string {
@@ -473,10 +493,34 @@ async function upsertArtistAction(
       detail: json,
     }
   }
+
+  // Foto en segundo plano (paridad con cartel tras evento). La ficha del agente
+  // casi nunca trae image_url https; no esperamos aquí para no colgar el chat.
+  const row = (json.row || {}) as { image_url?: string | null }
+  const currentImage = typeof row.image_url === 'string' ? row.image_url.trim() : ''
+  const needsPhoto = !currentImage.startsWith('https://')
+  if (needsPhoto) {
+    const backgroundPhoto = (async () => {
+      await adminInternalPost(
+        originRequest,
+        '/api/admin/agent/artist-photo',
+        { slug, artistName: name, light: true },
+        { timeoutMs: 90_000 },
+      )
+    })()
+    try {
+      waitUntil(backgroundPhoto)
+    } catch {
+      void backgroundPhoto.catch(() => {})
+    }
+  }
+
   return {
     type: 'artist',
     ok: true,
-    summary: `Artista upsert: ${name} (${slug})`,
+    summary: needsPhoto
+      ? `Artista upsert: ${name} (${slug}) · buscando foto en segundo plano`
+      : `Artista upsert: ${name} (${slug})`,
     detail: { slug, row: json.row },
   }
 }
@@ -504,10 +548,32 @@ async function upsertLabelAction(
       detail: json,
     }
   }
+
+  const row = (json.row || {}) as { image_url?: string | null }
+  const currentImage = typeof row.image_url === 'string' ? row.image_url.trim() : ''
+  const needsLogo = !currentImage.startsWith('https://')
+  if (needsLogo) {
+    const backgroundLogo = (async () => {
+      await adminInternalPost(
+        originRequest,
+        '/api/admin/agent/label-logo',
+        { slug, labelName: name },
+        { timeoutMs: 90_000 },
+      )
+    })()
+    try {
+      waitUntil(backgroundLogo)
+    } catch {
+      void backgroundLogo.catch(() => {})
+    }
+  }
+
   return {
     type: 'label',
     ok: true,
-    summary: `Sello upsert: ${name} (${slug})`,
+    summary: needsLogo
+      ? `Sello upsert: ${name} (${slug}) · buscando logo en segundo plano`
+      : `Sello upsert: ${name} (${slug})`,
     detail: { slug, row: json.row },
   }
 }
@@ -1187,7 +1253,7 @@ Devuelve SOLO JSON:
   "country": "país corto o null",
   "venue": "sala/club o null",
   "date_text": "fecha como aparece en el flyer",
-  "date_start": "YYYY-MM-DD. Si el flyer NO muestra año (p. ej. «21 de agosto»), usa el próximo día/mes FUTURO desde hoy (nunca un año ya pasado). Si no puedes inferir el día, null",
+  "date_start": "YYYY-MM-DD. Si el flyer muestra año (2026, '26), ÚSALO aunque la fecha ya haya pasado. Solo si NO hay año (p. ej. «21 de agosto»), usa el próximo día/mes FUTURO desde hoy (nunca inventes 2023/2024). Si no puedes inferir el día, null",
   "lineup": ["DJ1","DJ2"],
   "tickets_or_urls": ["urls o dominios visibles"],
   "raw_text": "transcripción breve de lo legible",

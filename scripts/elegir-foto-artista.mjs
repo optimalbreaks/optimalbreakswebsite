@@ -80,6 +80,25 @@ function hostFromUrl(u) {
   }
 }
 
+/** URLs que suelen devolver HTML/login al descargar (no sirven para Storage). */
+function isDownloadableImageUrl(url) {
+  if (!url || !String(url).startsWith('https://')) return false
+  const host = hostFromUrl(url).toLowerCase()
+  const blocked = [
+    'lookaside.instagram.com',
+    'lookaside.fbsbx.com',
+    'instagram.com',
+    'facebook.com',
+    'fbcdn.net',
+  ]
+  return !blocked.some((h) => host.includes(h))
+}
+
+function preferDownloadableCandidates(candidates) {
+  const good = (candidates || []).filter((c) => isDownloadableImageUrl(c.original))
+  return good.length >= 3 ? good : candidates
+}
+
 function buildImageSearchQuery(artist, extraSuffix) {
   const name = String(artist.name || '').trim()
   const rn = artist.real_name ? String(artist.real_name).trim() : ''
@@ -490,21 +509,36 @@ async function processOneArtist({
 
   if (!quiet) console.log(`[foto] ${slug}: ${candidates.length} candidatos → OpenAI…`)
 
+  const pool = preferDownloadableCandidates(candidates)
+
   let url = null
   let reason = ''
   try {
     if (flags.has('--vision')) {
       ;({ url, reason } = await openAiChooseCandidateVision({
         artist,
-        candidates,
+        candidates: pool,
         quiet,
       }))
     } else {
       ;({ url, reason } = await openAiChooseCandidateText({
         artist,
-        candidates,
+        candidates: pool,
         quiet,
       }))
+    }
+    if (url && !isDownloadableImageUrl(url)) {
+      const onlyGood = candidates.filter((c) => isDownloadableImageUrl(c.original))
+      if (onlyGood.length) {
+        const retry = await openAiChooseCandidateText({ artist, candidates: onlyGood, quiet: true })
+        if (retry.url) {
+          url = retry.url
+          reason = `${retry.reason} (evitó CDN Instagram/Facebook)`
+        } else {
+          url = null
+          reason = 'solo candidatas en hosts no descargables (IG/FB)'
+        }
+      }
     }
   } catch (e) {
     console.error(`[foto] ${slug}: OpenAI`, e.message)

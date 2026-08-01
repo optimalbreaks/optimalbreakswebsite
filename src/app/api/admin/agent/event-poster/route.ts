@@ -100,7 +100,7 @@ async function openAiChoosePosterVision(
     process.env.OPENAI_MODEL?.trim() ||
     'gpt-4o'
   const light = opts?.light === true
-  const maxImg = Math.min(light ? 6 : 8, candidates.length)
+  const maxImg = Math.min(light ? 8 : 10, candidates.length)
   const detail: 'high' | 'low' = light ? 'low' : 'high'
   const preferThumb = light
 
@@ -260,8 +260,11 @@ export async function POST(request: NextRequest) {
   const primary = q.replace(/\s+/g, ' ').trim()
   const alternateQueries = [
     `"${name}" poster flyer event`,
+    `"${name}" cartel flyer`,
     year ? `"${name}" ${year} festival poster` : '',
+    year && city ? `"${name}" ${city} ${year} poster` : '',
     city ? `"${name}" ${city} club night poster` : '',
+    venue ? `"${name}" ${venue} event poster` : '',
   ]
     .map((s) => s.replace(/\s+/g, ' ').trim())
     .filter((s) => s && s !== primary)

@@ -477,10 +477,14 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_artist_photo',
-      description: 'Encolar foto de artista (tras confirmación).',
+      description:
+        'Encolar búsqueda de FOTO/retrato de artista (no cartel de evento). Tras confirmación: SerpAPI + visión. Pasa name si lo sabes.',
       parameters: {
         type: 'object',
-        properties: { slug: { type: 'string' } },
+        properties: {
+          slug: { type: 'string' },
+          name: { type: 'string', description: 'Nombre del artista (recomendado; si falta se lee de BD)' },
+        },
         required: ['slug'],
       },
     },
@@ -489,10 +493,13 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_label_logo',
-      description: 'Encolar logo de sello (tras confirmación).',
+      description: 'Encolar búsqueda de LOGO de sello (tras confirmación). Pasa name si lo sabes.',
       parameters: {
         type: 'object',
-        properties: { slug: { type: 'string' } },
+        properties: {
+          slug: { type: 'string' },
+          name: { type: 'string', description: 'Nombre del sello (recomendado; si falta se lee de BD)' },
+        },
         required: ['slug'],
       },
     },
@@ -501,7 +508,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'db_list',
-      description: 'Listar filas de una tabla admin (lectura).',
+      description:
+        'Listar filas de una tabla admin (lectura). Incluye count exacto: úsalo para «¿cuántos artistas/sellos…?» en vez de SQL.',
       parameters: {
         type: 'object',
         properties: {
@@ -579,7 +587,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'db_sql_read',
-      description: 'Ejecutar SELECT/WITH de solo lectura (máx 50 filas). Requiere DATABASE_URL.',
+      description:
+        'SELECT/WITH (máx 50 filas). Preferir db_list para conteos. Si Postgres no responde, intenta count vía REST.',
       parameters: {
         type: 'object',
         properties: { sql: { type: 'string' } },
@@ -812,25 +821,37 @@ async function runTool(
   if (name === 'stage_artist_photo') {
     const slug = toSlug(String(args.slug || ''))
     if (!slug) return { ok: false, detail: { error: 'slug' } }
+    let artistName = String(args.name || args.artistName || '').trim()
+    if (!artistName) {
+      const { data } = await sb.from('artists').select('name').eq('slug', slug).maybeSingle()
+      artistName = String((data as { name?: string } | null)?.name || '').trim()
+    }
+    if (!artistName) artistName = slug.replace(/-/g, ' ')
     ctx.pendingOps.push({
       kind: 'agent_api',
-      summary: `Foto artista ${slug}`,
+      summary: `Foto artista «${artistName}» (${slug})`,
       path: '/api/admin/agent/artist-photo',
-      body: { slug },
+      body: { slug, artistName, light: true },
     })
-    return { ok: true, detail: { staged: true, slug } }
+    return { ok: true, detail: { staged: true, slug, artistName } }
   }
 
   if (name === 'stage_label_logo') {
     const slug = toSlug(String(args.slug || ''))
     if (!slug) return { ok: false, detail: { error: 'slug' } }
+    let labelName = String(args.name || args.labelName || '').trim()
+    if (!labelName) {
+      const { data } = await sb.from('labels').select('name').eq('slug', slug).maybeSingle()
+      labelName = String((data as { name?: string } | null)?.name || '').trim()
+    }
+    if (!labelName) labelName = slug.replace(/-/g, ' ')
     ctx.pendingOps.push({
       kind: 'agent_api',
-      summary: `Logo sello ${slug}`,
+      summary: `Logo sello «${labelName}» (${slug})`,
       path: '/api/admin/agent/label-logo',
-      body: { slug },
+      body: { slug, labelName },
     })
-    return { ok: true, detail: { staged: true, slug } }
+    return { ok: true, detail: { staged: true, slug, labelName } }
   }
 
   if (name === 'db_list') {
@@ -907,7 +928,42 @@ async function runTool(
   }
 
   if (name === 'db_sql_read') {
-    return runSql(String(args.sql || ''), true)
+    const sql = String(args.sql || '')
+    const result = await runSql(sql, true)
+    if (result.ok) return result
+    const err = String((result.detail as { error?: string })?.error || '')
+    // Redes Acttax / sin DATABASE_URL: Postgres host a menudo ENOTFOUND → contar vía REST
+    if (/ENOTFOUND|ECONNREFUSED|SQL no disponible|timeout|ETIMEDOUT/i.test(err)) {
+      const countMatch = sql.match(
+        /count\s*\(\s*\*\s*\)[\s\S]*?from\s+(public\.)?(artists|labels|events|mixes|blog_posts|scenes)\b/i,
+      )
+      if (countMatch) {
+        const table = countMatch[2].toLowerCase()
+        try {
+          const { count, error } = await sb.from(table).select('*', { count: 'exact', head: true })
+          if (!error) {
+            return {
+              ok: true,
+              detail: {
+                rowCount: 1,
+                rows: [{ count }],
+                command: 'SELECT',
+                note: `SQL Postgres no alcanzable (${err.slice(0, 80)}); conteo vía REST en «${table}».`,
+              },
+            }
+          }
+        } catch {
+          /* fall through */
+        }
+      }
+      return {
+        ok: false,
+        detail: {
+          error: `${err}. Para conteos usa db_list (lee count) o search_catalog; SQL directo requiere DATABASE_URL alcanzable.`,
+        },
+      }
+    }
+    return result
   }
 
   if (name === 'stage_db_sql_write') {
@@ -1002,12 +1058,24 @@ export async function executePendingOps(
       }
       if (op.kind === 'agent_api') {
         const { ok, json, status } = await adminPost(originRequest, op.path, op.body)
+        const isImageOp = /\/(artist-photo|label-logo|event-poster)/.test(op.path)
+        const skipped = Boolean(json.skipped)
+        const saved = json.saved === true
+        const chosenNull = isImageOp && ok && json.chosen === null && !skipped
+        const photoFail =
+          chosenNull || (isImageOp && ok && json.saved === false && !skipped)
         results.push({
           type: 'agent_api',
-          ok,
-          summary: ok
-            ? op.summary
-            : `${op.summary}: ${String(json.error || status)}`,
+          ok: ok && !photoFail,
+          summary: !ok
+            ? `${op.summary}: ${String(json.error || status)}`
+            : skipped
+              ? `${op.summary}: omitido (${String(json.reason || 'skip')})`
+              : photoFail
+                ? `${op.summary}: sin imagen válida (${String(json.reason || json.storageError || 'sin candidato')})`
+                : saved || json.storageUrl
+                  ? `${op.summary}: ok`
+                  : op.summary,
           detail: json,
         })
       }
@@ -1069,9 +1137,10 @@ export async function runAdminChatAgent(opts: {
 - Eres un chatbot conversacional. Puedes preguntar, aclarar y explicar.
 - Usa tools para LEER la BD y la web cuando haga falta.
 - Las tools stage_* / stage_db_* / stage_db_sql_write NO escriben: preparan operaciones.
-- Cuando hayas preparado cambios, resume en español qué harás y pide al editor que pulse Confirmar (o diga «sí»).
+- Con datos suficientes (captura de cartel, nombre de artista, etc.): stage_* EN ESTE TURNO y pide Confirmar. PROHIBIDO preguntar «¿lo añado?» sin stage.
 - NUNCA digas que ya guardaste en BD hasta que el sistema te confirme tras el botón Confirmar.
 - Distingue entidades: sello (label) ≠ evento ≠ artista ≠ mix ≠ new_release ≠ vinyl.
+- Conteos («¿cuántos artistas?»): usa db_list y lee el campo count; no dependas de SQL Postgres.
 `
 
   if (opts.intent) {

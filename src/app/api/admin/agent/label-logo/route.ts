@@ -176,16 +176,35 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/agent/label-logo
- * { slug, labelName } → SerpAPI images → OpenAI pick → download → Storage → UPDATE labels.image_url
+ * { slug, labelName? } → SerpAPI images → OpenAI pick → download → Storage → UPDATE labels.image_url
+ * Si falta labelName, se lee de BD por slug.
  */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
 
   const body = await request.json()
-  const { slug, labelName } = body as { slug?: string; labelName?: string }
-  if (!slug || !labelName) {
-    return NextResponse.json({ error: 'Se requieren slug y labelName' }, { status: 400 })
+  const { slug, labelName: labelNameIn } = body as { slug?: string; labelName?: string }
+  if (!slug) {
+    return NextResponse.json({ error: 'Se requiere slug' }, { status: 400 })
+  }
+
+  const sb = createServiceSupabase()
+  let labelName = typeof labelNameIn === 'string' ? labelNameIn.trim() : ''
+  if (!labelName) {
+    const { data: row, error } = await sb
+      .from('labels')
+      .select('name')
+      .eq('slug', slug)
+      .maybeSingle()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    labelName = String(row?.name || '').trim()
+  }
+  if (!labelName) {
+    return NextResponse.json(
+      { error: 'Se requieren slug y labelName (o sello existente en BD)' },
+      { status: 400 },
+    )
   }
 
   const serpKey = process.env.SERPAPI_API_KEY?.trim()
@@ -237,7 +256,6 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  const sb = createServiceSupabase()
   const { error: dbErr } = await sb
     .from('labels')
     .update({ image_url: storageUrl })

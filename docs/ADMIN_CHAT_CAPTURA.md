@@ -44,6 +44,7 @@ Mensaje / captura
 3. **Agente** [`admin-chat-agent.ts`](../src/lib/admin-chat-agent.ts): hasta ~10 rondas de tools; las `stage_*` **no** escriben.
 4. **Confirmar** → `executePendingOps` ([`admin-chat.ts`](../src/lib/admin-chat.ts) + APIs `/api/admin/agent/*` + CRUD/SQL).
 5. Evento confirmado: UPSERT + dedupe; enrich + cartel oficial en **segundo plano** (`waitUntil`, poster `light: true`).
+6. Artista/sello confirmados sin `image_url` https: foto/logo en **segundo plano** (artist-photo con visión; label-logo).
 
 `GET /api/admin/agent/chat?threads=1` lista hilos; `?thread_id=` carga mensajes.
 
@@ -83,7 +84,7 @@ Evento · Sello · Artista · New Release · Vinyl pick · Mix = **hint** (`inte
 | `stage_new_releases` | `featured-import` / `chart_featured_tracks` |
 | `stage_vinyl_picks` | `chart_vinyl_tracks` |
 | `stage_enrich_event` / `stage_event_poster` | APIs event / event-poster |
-| `stage_artist_photo` / `stage_label_logo` | APIs foto / logo |
+| `stage_artist_photo` / `stage_label_logo` | APIs foto / logo (`artistName`/`labelName` o resolución por slug en BD) |
 
 **CRUD genérico** (tablas de [`api/admin/[table]`](../src/app/api/admin/[table]/route.ts)):  
 `db_list`, `db_get`, `stage_db_insert`, `stage_db_update`, `stage_db_delete`  

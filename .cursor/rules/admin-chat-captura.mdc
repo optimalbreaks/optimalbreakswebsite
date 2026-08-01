@@ -37,9 +37,11 @@ CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
 SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).
 
-## Evento desde captura
+## Evento / artista / sello desde captura
 
 Tras confirmar `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true`). Cartel = **visión/OCR**.
+
+Tras confirmar artista/sello sin `image_url` https: foto/logo en segundo plano. `stage_artist_photo` / `stage_label_logo` envían nombre o la API lo resuelve por slug (antes fallaban con solo `{ slug }`). Foto de artista = **visión**, no solo metadatos de Google.
 
 ## Tipado
 
