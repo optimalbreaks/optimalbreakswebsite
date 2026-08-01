@@ -11,13 +11,15 @@
 //
 // Uso: GET /api/public/charts/community-monthly[?limit=N]
 //
-//   - limit: opcional, 5–100 (default 40).
+//   - limit: opcional, 5–100 (default 40) — solo afecta top_tracks.
+//   - top_artists: siempre top 10 por créditos de save.
 //
 // Respuesta:
 //   {
 //     scope: 'all_time',
 //     totals: { saves, unique_tracks, unique_users },
-//     top_tracks: TopTrack[]
+//     top_tracks: TopTrack[],
+//     top_artists: TopArtist[]
 //   }
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
@@ -33,6 +35,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import {
+  buildFullArtistSlugMap,
+  normalizeArtistKey,
+  splitArtistDisplayLine,
+} from '@/lib/artist-slug-map'
+
+const TOP_ARTISTS_LIMIT = 10
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -206,6 +215,7 @@ export async function GET(request: NextRequest) {
       scope: 'all_time',
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
+      top_artists: [],
     })
   }
 
@@ -459,6 +469,33 @@ export async function GET(request: NextRequest) {
   // cuenta una sola vez por usuario).
   const aggByKey = new Map<string, Aggregate>()
 
+  type ArtistAgg = {
+    name: string
+    save_count: number
+    _users: Set<string>
+    _tracks: Set<string>
+  }
+  const artistAgg = new Map<string, ArtistAgg>()
+
+  const bumpArtist = (artistName: string, userId: string, trackKey: string) => {
+    const key = normalizeArtistKey(artistName)
+    if (!key) return
+    let row = artistAgg.get(key)
+    if (!row) {
+      row = {
+        name: artistName.trim(),
+        save_count: 0,
+        _users: new Set(),
+        _tracks: new Set(),
+      }
+      artistAgg.set(key, row)
+    }
+    row.save_count += 1
+    row._users.add(userId)
+    row._tracks.add(trackKey)
+    if (artistName.trim().length > row.name.length) row.name = artistName.trim()
+  }
+
   for (const s of saved) {
     const meta = byRefKey.get(`${s.track_source}:${s.track_id}`)
     if (!meta) continue
@@ -521,6 +558,10 @@ export async function GET(request: NextRequest) {
         existing.primary = { source: meta.source, id: meta.id, week_date: meta.week_date }
       }
     }
+
+    for (const artistName of splitArtistDisplayLine(meta.artists || '')) {
+      bumpArtist(artistName, s.user_id, key)
+    }
   }
 
   const aggregates = Array.from(aggByKey.values())
@@ -574,6 +615,50 @@ export async function GET(request: NextRequest) {
     beatport_share_origin: a.beatport_share_origin,
   }))
 
+  // Top artistas: créditos de save (aparición en track guardado), luego users, luego tracks.
+  const artistRanked = Array.from(artistAgg.values())
+    .map((a) => ({
+      name: a.name,
+      save_count: a.save_count,
+      unique_users: a._users.size,
+      unique_tracks: a._tracks.size,
+    }))
+    .sort(
+      (a, b) =>
+        b.save_count - a.save_count ||
+        b.unique_users - a.unique_users ||
+        b.unique_tracks - a.unique_tracks ||
+        a.name.localeCompare(b.name),
+    )
+    .slice(0, TOP_ARTISTS_LIMIT)
+
+  let artistSlugMap: Record<string, string> = {}
+  if (artistRanked.length) {
+    const { data: artistRows } = await sb
+      .from('artists')
+      .select('slug, name, name_display')
+      .limit(5000)
+    artistSlugMap = buildFullArtistSlugMap(
+      (artistRows as { slug: string; name: string | null; name_display: string | null }[]) || [],
+    )
+  }
+
+  const top_artists = artistRanked.map((a, idx) => {
+    const key = normalizeArtistKey(a.name)
+    const slug =
+      artistSlugMap[key] ||
+      artistSlugMap[key.startsWith('the ') ? key.slice(4) : `the ${key}`] ||
+      null
+    return {
+      rank: idx + 1,
+      name: a.name,
+      save_count: a.save_count,
+      unique_users: a.unique_users,
+      unique_tracks: a.unique_tracks,
+      slug,
+    }
+  })
+
   // Solo contamos lo que de verdad se renderiza en el ranking. Los saves
   // huérfanos sin meta ni snapshot se descartan (no aparecen como tema en
   // el top, así que tampoco deben sumar al contador). Esto mantiene la
@@ -591,5 +676,6 @@ export async function GET(request: NextRequest) {
     scope: 'all_time',
     totals,
     top_tracks,
+    top_artists,
   })
 }
