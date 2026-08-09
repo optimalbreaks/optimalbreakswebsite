@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { loadYouTubeIframeAPI } from '@/lib/mix-play-session-log'
 import {
   registerYouTubeEmbed,
   requestYouTubePlay,
@@ -37,6 +38,7 @@ export function LazyYouTubeEmbed({
   iframeId,
   autoplay = false,
   playSlotId,
+  onPlayRecorded,
 }: {
   videoId: string
   title: string
@@ -51,12 +53,21 @@ export function LazyYouTubeEmbed({
   autoplay?: boolean
   /** Id único de esta instancia (fila de vinilo, mix, Mis Tracks…). Solo uno suena. */
   playSlotId?: string
+  /** Llamado una vez cuando el usuario inicia la reproducción (click o autoplay). */
+  onPlayRecorded?: () => void
 }) {
   // El iframe (pesado) se monta solo al pulsar play o con autoplay (deep-link /
   // filas con botón externo). Así /mixes no monta decenas de iframes a la vez
   // (eso pillaba la página) y muestra la portada vía proxy mientras tanto.
   const [mountIframe, setMountIframe] = useState(autoplay)
   const [embedSrc, setEmbedSrc] = useState<string | null>(null)
+  const playRecordedRef = useRef(false)
+
+  const recordPlayOnce = () => {
+    if (!onPlayRecorded || playRecordedRef.current) return
+    playRecordedRef.current = true
+    onPlayRecorded()
+  }
 
   useEffect(() => {
     if (autoplay) setMountIframe(true)
@@ -79,9 +90,53 @@ export function LazyYouTubeEmbed({
     return () => unregisterYouTubeEmbed(playSlotId)
   }, [playSlotId, mountIframe, embedSrc])
 
+  // Autoplay (deep-link / ?play=1): el iframe no pasa por handlePlay; escuchar PLAYING vía API.
+  useEffect(() => {
+    if (!mountIframe || !embedSrc || !iframeId || !onPlayRecorded || !autoplay) return
+    let cancelled = false
+    let player: { destroy?: () => void } | undefined
+    const t = window.setTimeout(() => {
+      void loadYouTubeIframeAPI()
+        .then(() => {
+          if (cancelled) return
+          const YT = (
+            window as unknown as {
+              YT?: {
+                Player: new (id: string, opts: Record<string, unknown>) => { destroy?: () => void }
+                PlayerState: { PLAYING: number }
+              }
+            }
+          ).YT
+          if (!YT?.Player || !document.getElementById(iframeId)) return
+          try {
+            player = new YT.Player(iframeId, {
+              events: {
+                onStateChange: (e: { data: number }) => {
+                  if (e.data === YT.PlayerState.PLAYING) recordPlayOnce()
+                },
+              },
+            }) as { destroy?: () => void }
+          } catch {
+            /* init API en iframe puede fallar según políticas */
+          }
+        })
+        .catch(() => {})
+    }, 200)
+    return () => {
+      cancelled = true
+      window.clearTimeout(t)
+      try {
+        player?.destroy?.()
+      } catch {
+        /* */
+      }
+    }
+  }, [mountIframe, embedSrc, iframeId, onPlayRecorded, autoplay])
+
   const handlePlay = () => {
     if (playSlotId) requestYouTubePlay(playSlotId)
     setMountIframe(true)
+    recordPlayOnce()
   }
 
   return (

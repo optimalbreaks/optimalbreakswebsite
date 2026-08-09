@@ -10,13 +10,12 @@ import type { MixTrack } from '@/components/DeckAudioProvider'
 import { buildSoundCloudVisualPlayerSrc, isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import {
   loadSoundCloudWidgetAPI,
-  loadYouTubeIframeAPI,
   logMixPlayOncePerBrowserSession,
 } from '@/lib/mix-play-session-log'
 import { extractYouTubeId, LazyYouTubeEmbed as BaseLazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import { requestYouTubePlay } from '@/lib/youtube-play-coordinator'
 
-/** Wrapper that adds mix-play logging via YouTube IFrame API on top of the shared embed. */
+/** Wrapper fino: registra reproducción de mix al dar play en el embed. */
 function LazyYouTubeEmbed({
   videoId,
   title,
@@ -32,51 +31,6 @@ function LazyYouTubeEmbed({
 }) {
   const iframeId = mixId ? `ob-yt-${mixId}` : undefined
 
-  useEffect(() => {
-    if (!mixId || !iframeId) return
-    let cancelled = false
-    let player: { destroy?: () => void } | undefined
-    const t = window.setTimeout(() => {
-      void loadYouTubeIframeAPI()
-        .then(() => {
-          if (cancelled) return
-          const YT = (
-            window as unknown as {
-              YT?: {
-                Player: new (id: string, opts: Record<string, unknown>) => { destroy?: () => void }
-                PlayerState: { PLAYING: number }
-              }
-            }
-          ).YT
-          if (!YT?.Player) return
-          try {
-            player = new YT.Player(iframeId, {
-              events: {
-                onStateChange: (e: { data: number }) => {
-                  if (e.data === YT.PlayerState.PLAYING) {
-                    logMixPlayOncePerBrowserSession(mixId)
-                    requestYouTubePlay(`mix-${mixId}`)
-                  }
-                },
-              },
-            }) as { destroy?: () => void }
-          } catch {
-            /* init API en iframe puede fallar según políticas */
-          }
-        })
-        .catch(() => {})
-    }, 200)
-    return () => {
-      cancelled = true
-      window.clearTimeout(t)
-      try {
-        player?.destroy?.()
-      } catch {
-        /* */
-      }
-    }
-  }, [mixId, iframeId])
-
   return (
     <BaseLazyYouTubeEmbed
       videoId={videoId}
@@ -85,6 +39,7 @@ function LazyYouTubeEmbed({
       iframeId={iframeId}
       autoplay={autoplay}
       playSlotId={mixId ? `mix-${mixId}` : undefined}
+      onPlayRecorded={mixId ? () => logMixPlayOncePerBrowserSession(mixId) : undefined}
     />
   )
 }
