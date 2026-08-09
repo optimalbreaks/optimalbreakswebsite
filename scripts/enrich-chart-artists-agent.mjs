@@ -15,10 +15,11 @@
  *   node scripts/enrich-chart-artists-agent.mjs --force          # todos los del chart, aunque ya no sean starter
  *   node scripts/enrich-chart-artists-agent.mjs --dry-run --limit=5
  *   node scripts/enrich-chart-artists-agent.mjs --delay-ms=6000
- *   node scripts/enrich-chart-artists-agent.mjs --photo-only   # tras bios: foto para cada slug del chart (JSON local)
+ *   node scripts/enrich-chart-artists-agent.mjs --poor-bios-all --all-published [--limit=N]  # reescribe bios con autopromo OB / chart metadata
  *   node scripts/enrich-chart-artists-agent.mjs --photo-only --dry-run
- *   node scripts/enrich-chart-artists-agent.mjs --all-published --bootstrap-min-freq=2 [--bootstrap-only]
- *     # créditos del chart sin JSON local (catálogo): agente nuevo + búsqueda; ≥N apariciones en 40/picks.
+ *   node scripts/enrich-chart-artists-agent.mjs --all-published --bootstrap-min-freq=3 [--bootstrap-only]
+ *     # créditos del chart sin JSON local: agente nuevo + búsqueda; ≥N apariciones en 40 Breaks + New Releases.
+ *     # Umbral editorial del catálogo: N=3 (artistas). Sellos: ver README / charts-catalog-discovery (≥10, sin DistroKid).
  *
  * Requiere: OPENAI_API_KEY, NEXT_PUBLIC_SUPABASE_URL + SERVICE_ROLE (salvo --file + --dry-run sin BD)
  * Opcional: SERPAPI_API_KEY
@@ -90,6 +91,7 @@ function parseArgs(argv) {
   let photoOnly = false
   let allPublished = false
   let bootstrapOnly = false
+  let poorBiosAll = false
   let weekDate = ''
   let filePath = ''
   let limit = Infinity
@@ -102,6 +104,7 @@ function parseArgs(argv) {
     else if (a === '--photo-only') photoOnly = true
     else if (a === '--all-published') allPublished = true
     else if (a === '--bootstrap-only') bootstrapOnly = true
+    else if (a === '--poor-bios-all') poorBiosAll = true
     else if (a.startsWith('--week=')) weekDate = a.slice('--week='.length).trim()
     else if (a.startsWith('--file=')) filePath = a.slice('--file='.length).trim()
     else if (a.startsWith('--bootstrap-min-freq=')) {
@@ -121,6 +124,7 @@ function parseArgs(argv) {
     photoOnly,
     allPublished,
     bootstrapOnly,
+    poorBiosAll,
     weekDate,
     filePath,
     limit,
@@ -179,6 +183,18 @@ function isStarterProfileBio(j) {
     es.includes('Ficha inicial; el texto puede ampliarse') ||
     en.includes('Starter profile; editorial depth can grow over time')
   )
+}
+
+const POOR_BIO_RE =
+  /Optimal Breaks|40 Breaks Vitales|listado extendido|extended artist roster|chart metadata|figura en el chart|appears in Optimal Breaks|tracked by Optimal Breaks|roster extendido de Optimal Breaks|extended Optimal Breaks roster/i
+
+/** Fichas cuya bio es plantilla del chart o autopromo del sitio en lugar de biografía editorial. */
+function isPoorProfileBio(j) {
+  if (isStarterProfileBio(j)) return true
+  const blob = `${j.bio_en || ''}\n${j.bio_es || ''}`
+  if (POOR_BIO_RE.test(blob)) return true
+  const kr = Array.isArray(j.key_releases) ? j.key_releases : []
+  return kr.some((r) => /chart metadata|Optimal Breaks/i.test(String(r?.note || '')))
 }
 
 /** slug → { labels: Set, lines: string[] } (líneas "«title» — label") */
@@ -274,7 +290,8 @@ function buildNotesFile({ slug, name, ctx, weekHint, profileMode = 'revise' }) {
 - Anchor the profile in **breakbeat / electronic club**; this name appears multiple times in the Optimal Breaks weekly 40 / New Releases exports — mention the chart **once** in bios only if it fits naturally, never as the whole article.
 - Use labels and track titles below as **disambiguation** cues; do not invent exact chart positions, sales, or dates.`
       : `- Revise and expand the existing JSON bios; keep the same artist identity and slug \`${slug}\`.
-- Anchor the profile in **breakbeat / electronic club** context consistent with Optimal Breaks.
+- Anchor the profile in **breakbeat / electronic club** context.
+- **Never** mention Optimal Breaks, «40 Breaks Vitales», extended roster, chart metadata, or that the artist is listed on this website — write for readers who are already here.
 - Use labels and track titles above only as **disambiguation** and scene hints; do not fabricate chart positions, sales, or exact dates.`
 
   const esEdit =
@@ -282,7 +299,7 @@ function buildNotesFile({ slug, name, ctx, weekHint, profileMode = 'revise' }) {
       ? `- Aún **no** hay ficha local para el slug \`${slug}\`: genera una entrada **completa** al estilo Optimal Breaks (no un placeholder).
 - Ancla el perfil en **breakbeat / electrónica de club**; este nombre aparece varias veces en los export del 40 / New Releases — menciona el chart **como mucho una vez** si encaja; nunca como texto único de la bio.
 - Usa sellos y temas solo como **pistas de desambiguación**; no inventes posiciones exactas en listas, ventas ni fechas.`
-      : `Instrucciones: revisa y amplía las bios del JSON; mantén slug \`${slug}\` y identidad; ancla en **breakbeat / electrónica de club**; usa sellos y títulos solo como pistas de desambiguación; no inventes datos.`
+      : `Instrucciones: revisa y amplía las bios del JSON; mantén slug \`${slug}\` y identidad; ancla en **breakbeat / electrónica de club**; **nunca** menciones Optimal Breaks, «40 Breaks Vitales», listado extendido ni metadatos del chart — el lector ya está en el sitio; usa sellos y títulos solo como pistas de desambiguación; no inventes datos.`
 
   let body = `# Chart context — Optimal Breaks «40 Breaks Vitales» (${weekHint})
 
@@ -497,6 +514,7 @@ async function main() {
     photoOnly,
     allPublished,
     bootstrapOnly,
+    poorBiosAll,
     weekDate,
     filePath,
     limit,
@@ -540,13 +558,16 @@ async function main() {
     }
     ;({ contextBySlug, sourceLabel, chartSlugs } = buildContextFromFile(abs))
   } else {
-    const r = await fetchChartContextFromSupabase({ allPublished, weekDate })
+    const r = await fetchChartContextFromSupabase({
+      allPublished: allPublished || poorBiosAll,
+      weekDate,
+    })
     contextBySlug = r.contextBySlug
     sourceLabel = r.sourceLabel
     chartSlugs = r.chartSlugs
   }
 
-  if (chartSlugs.size === 0) {
+  if (chartSlugs.size === 0 && !poorBiosAll) {
     console.log('No hay contexto de chart (0 slugs).')
     return
   }
@@ -574,21 +595,47 @@ async function main() {
   }
 
   const candidates = []
-  for (const slug of chartSlugs) {
-    const p = join(ARTISTS_DIR, `${slug}.json`)
-    if (!existsSync(p)) {
-      console.warn('Sin JSON local, omite:', slug)
-      continue
+  const bioFilter = force ? () => true : isPoorProfileBio
+
+  if (poorBiosAll) {
+    const files = readdirSync(ARTISTS_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+    for (const f of files) {
+      const p = join(ARTISTS_DIR, f)
+      const j = JSON.parse(readFileSync(p, 'utf8'))
+      if (!bioFilter(j)) continue
+      const slug = String(j.slug || f.replace(/\.json$/, '')).trim()
+      candidates.push({
+        slug,
+        name: String(j.name || slug).trim() || slug,
+        ctx: contextBySlug?.get(slug),
+      })
     }
-    const j = JSON.parse(readFileSync(p, 'utf8'))
-    if (!force && !isStarterProfileBio(j)) continue
-    candidates.push({ slug, name: String(j.name || slug).trim() || slug, ctx: contextBySlug.get(slug) })
+  } else {
+    for (const slug of chartSlugs) {
+      const p = join(ARTISTS_DIR, `${slug}.json`)
+      if (!existsSync(p)) {
+        console.warn('Sin JSON local, omite:', slug)
+        continue
+      }
+      const j = JSON.parse(readFileSync(p, 'utf8'))
+      if (!bioFilter(j)) continue
+      candidates.push({ slug, name: String(j.name || slug).trim() || slug, ctx: contextBySlug.get(slug) })
+    }
   }
 
   const todo = candidates.slice(0, limit)
   console.log(`Fuente: ${sourceLabel}`)
+  const modeLabel = poorBiosAll
+    ? 'bio pobre (sin autopromo OB)'
+    : force
+      ? 'force'
+      : 'bio pobre (sin autopromo OB)'
   console.log(
-    `Candidatos en chart: ${chartSlugs.size} | Con JSON + ${force ? 'force' : 'ficha starter'}: ${candidates.length} | A procesar: ${todo.length}`,
+    poorBiosAll
+      ? `Fichas con bio pobre en catálogo: ${candidates.length} | A procesar: ${todo.length}`
+      : `Candidatos en chart: ${chartSlugs.size} | Con JSON + ${modeLabel}: ${candidates.length} | A procesar: ${todo.length}`,
   )
 
   if (dryRun) {

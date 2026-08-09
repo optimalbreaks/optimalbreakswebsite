@@ -46,6 +46,22 @@ import {
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 
+/** Evita URLs demasiado largas / tope PostgREST al resolver muchos UUIDs con `.in()`. */
+const IN_CHUNK = 200
+
+async function selectByIds<T>(
+  ids: string[],
+  run: (chunk: string[]) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  if (!ids.length) return []
+  const out: T[] = []
+  for (let i = 0; i < ids.length; i += IN_CHUNK) {
+    const { data } = await run(ids.slice(i, i + IN_CHUNK))
+    if (data?.length) out.push(...data)
+  }
+  return out
+}
+
 /**
  * Payload público pre-cargado por la página compartida. Lo envía el endpoint
  * `/api/public/user-tracks` y evita que el componente tenga que usar el hook
@@ -378,20 +394,17 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         const featuredIds = saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)
         const vinylIds = saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)
 
-        const [chartRes, featRes, vinylRes] = await Promise.all([
-          chartIds.length
-            ? supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
-            : Promise.resolve({ data: [] as any[] }),
-          featuredIds.length
-            ? supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featuredIds)
-            : Promise.resolve({ data: [] as any[] }),
-          vinylIds.length
-            ? supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
-            : Promise.resolve({ data: [] as any[] }),
+        ;[chartData, featData, vinylData] = await Promise.all([
+          selectByIds(chartIds, (chunk) =>
+            supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chunk),
+          ),
+          selectByIds(featuredIds, (chunk) =>
+            supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', chunk),
+          ),
+          selectByIds(vinylIds, (chunk) =>
+            supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
+          ),
         ])
-        chartData = chartRes.data || []
-        featData = featRes.data || []
-        vinylData = vinylRes.data || []
 
         // Resolvemos week_date de las ediciones implicadas para poder generar
         // links compartibles "/charts?week=..&play=<source>:<id>" sin consulta
@@ -403,14 +416,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           ],
         ))
         if (editionIds.length) {
-          const { data: edData } = await supabase
-            .from('chart_editions')
-            .select('id, week_date')
-            .in('id', editionIds)
+          const edData = await selectByIds<{ id: string; week_date: string }>(editionIds, (chunk) =>
+            supabase.from('chart_editions').select('id, week_date').in('id', chunk),
+          )
           const weekBy = new Map<string, string>()
-          for (const e of ((edData as Array<{ id: string; week_date: string }> | null) || [])) {
-            weekBy.set(e.id, e.week_date)
-          }
+          for (const e of edData) weekBy.set(e.id, e.week_date)
           chartData = chartData.map((c: any) => ({ ...c, week_date: c.chart_edition_id ? weekBy.get(c.chart_edition_id) ?? null : null }))
           featData = featData.map((f: any) => ({ ...f, week_date: f.chart_edition_id ? weekBy.get(f.chart_edition_id) ?? null : null }))
         }

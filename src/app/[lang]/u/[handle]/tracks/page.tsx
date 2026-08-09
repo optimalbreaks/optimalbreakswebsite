@@ -14,13 +14,6 @@ import { getDictionary } from '@/lib/dictionaries'
 import { SITE_URL, ogAlternateLocales } from '@/lib/seo'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
 
-const TRACKS_OG_IMAGE = {
-  url: `${SITE_URL}/images/opengraph_home_OB.jpg`,
-  width: 1024,
-  height: 571,
-  type: 'image/jpeg',
-} as const
-
 export async function generateMetadata({ params }: { params: { lang: Locale; handle: string } }): Promise<Metadata> {
   const { lang, handle } = await params
   const dict = await getDictionary(lang)
@@ -53,10 +46,9 @@ export async function generateMetadata({ params }: { params: { lang: Locale; han
       ? 'Lista compartida de tracks en Optimal Breaks.'
       : 'Shared track list on Optimal Breaks.'
 
-  const imageAlt = es
-    ? 'Optimal Breaks — cabina DJ con dos platos y mezcladora'
-    : 'Optimal Breaks — two-deck DJ mixer artwork'
-
+  // Sin `images` aquí: Next usa `opengraph-image.tsx` / `twitter-image.tsx`
+  // de esta ruta (nombre + collage de carátulas). Si los sobreescribiéramos
+  // con una URL estática, Meta/WhatsApp ignorarían la OG dinámica.
   return {
     title,
     description,
@@ -77,13 +69,11 @@ export async function generateMetadata({ params }: { params: { lang: Locale; han
       siteName,
       locale: lang === 'es' ? 'es_ES' : 'en_US',
       alternateLocale: ogAlternateLocales(lang),
-      images: [{ ...TRACKS_OG_IMAGE, alt: imageAlt }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [TRACKS_OG_IMAGE.url],
     },
     robots: { index: false, follow: true },
   }

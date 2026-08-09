@@ -88,38 +88,53 @@ function requireSupabase() {
 // OpenAI (JSON mode)
 // ---------------------------------------------------------------------------
 
+function sleepMs(ms) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
 async function openAiJson({ system, user }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
   const model = process.env.OPENAI_MODEL_CHART?.trim() || process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+  const body = JSON.stringify({
+    model,
+    temperature: 0.3,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
   })
-  if (!res.ok) {
+  let lastErr
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`,
+      },
+      body,
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content
+      if (!content) throw new Error('Respuesta OpenAI vacía')
+      let raw = content.trim()
+      if (raw.startsWith('```')) {
+        raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
+      }
+      return JSON.parse(raw)
+    }
     const err = await res.text()
-    throw new Error(`OpenAI ${res.status}: ${err}`)
+    lastErr = new Error(`OpenAI ${res.status}: ${err}`)
+    if (attempt < 4 && (res.status >= 500 || res.status === 429)) {
+      console.log(`  ↳ OpenAI ${res.status}, reintento ${attempt + 1}/4…`)
+      await sleepMs(3000 * attempt)
+      continue
+    }
+    throw lastErr
   }
-  const data = await res.json()
-  const content = data.choices?.[0]?.message?.content
-  if (!content) throw new Error('Respuesta OpenAI vacía')
-  let raw = content.trim()
-  if (raw.startsWith('```')) {
-    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
-  }
-  return JSON.parse(raw)
+  throw lastErr
 }
 
 // ---------------------------------------------------------------------------
@@ -481,6 +496,50 @@ async function curateWithAI(beatportTracks, junoTracks = []) {
   return result.tracks
 }
 
+function beatportTrackToCuratedRow(t) {
+  return {
+    title: t.title,
+    mix_name: t.mix_name || '',
+    artists: t.artists || [],
+    label: t.label || '',
+    bpm: t.bpm,
+    key: t.key || '',
+    beatport_url: t.beatport_url,
+  }
+}
+
+/** Si OpenAI cae: Top Beatport con máx. 2 temas por artista principal. */
+function curateBeatportFallback(beatportTracks, n = 40) {
+  console.log(`  ⚠ Fallback editorial: Top Beatport (máx. 2 por artista principal)`)
+  const out = []
+  const seen = new Set()
+  const artistCount = new Map()
+  const push = (t, enforceArtistCap) => {
+    const id = beatportTrackIdFromUrl(t.beatport_url)
+    if (!id || seen.has(id)) return false
+    const artist = (t.artists?.[0]?.name || '').trim().toLowerCase()
+    if (enforceArtistCap && artist) {
+      const c = artistCount.get(artist) || 0
+      if (c >= 2) return false
+      artistCount.set(artist, c + 1)
+    }
+    seen.add(id)
+    out.push(beatportTrackToCuratedRow(t))
+    return true
+  }
+  for (const t of beatportTracks) {
+    push(t, true)
+    if (out.length >= n) break
+  }
+  if (out.length < n) {
+    for (const t of beatportTracks) {
+      push(t, false)
+      if (out.length >= n) break
+    }
+  }
+  return out
+}
+
 // ---------------------------------------------------------------------------
 // Previous edition comparison
 // ---------------------------------------------------------------------------
@@ -832,8 +891,14 @@ Fuentes disponibles: beatport, juno
     process.exit(1)
   }
 
-  // 2. AI curation
-  let curated = await curateWithAI(beatportTracks, junoTracks)
+  // 2. AI curation (fallback Top Beatport si la API falla)
+  let curated
+  try {
+    curated = await curateWithAI(beatportTracks, junoTracks)
+  } catch (err) {
+    console.log(`  ⚠ Curación IA: ${err.message}`)
+    curated = curateBeatportFallback(beatportTracks, 40)
+  }
   curated = dedupeCuratedTracks(curated, beatportTracks, 40)
   curated = curated.map((t, i) => ({ ...t, position: i + 1 }))
   curated = mergeBeatportMetadata(curated, beatportTracks)

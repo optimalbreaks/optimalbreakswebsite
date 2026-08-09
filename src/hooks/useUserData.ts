@@ -464,13 +464,23 @@ export function useSavedChartTracks() {
       setLoading(false)
       return
     }
-    const { data } = await supabase
-      .from('saved_chart_tracks')
-      .select('track_source, track_id, canonical_url, snapshot, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+    // PostgREST corta en 1000 filas por defecto: paginamos para listas largas.
+    const PAGE = 1000
+    const all: SavedChartTrackRef[] = []
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await supabase
+        .from('saved_chart_tracks')
+        .select('track_source, track_id, canonical_url, snapshot, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + PAGE - 1)
+      if (error) break
+      const rows = (data as SavedChartTrackRef[] | null) || []
+      all.push(...rows)
+      if (rows.length < PAGE) break
+    }
     savedChartTracksUserId = user.id
-    setSavedChartTracksCache((data as SavedChartTrackRef[]) || [])
+    setSavedChartTracksCache(all)
     setLoading(false)
   }, [user])
 

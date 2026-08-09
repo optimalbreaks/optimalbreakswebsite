@@ -1,0 +1,27 @@
+---
+description: Umbrales para descubrir artistas/sellos desde 40 Breaks + New Releases
+alwaysApply: true
+---
+
+# Charts → catálogo (artistas y sellos)
+
+Fuente: ediciones **publicadas** de **`chart_tracks`** (40 Breaks Vitales) + **`chart_featured_tracks`** (New Releases). **No** usar Retro Vinyl (`chart_vinyl_tracks`) para estos umbrales.
+
+## Artistas — umbral ≥ 3
+
+- Contar créditos (aparición en `artists[]` de cada fila) en la unión de ediciones publicadas.
+- Si el nombre **no** está en `data/artists/` (ni alias `CHART_NAME_TO_SLUG`) y tiene **≥ 3** apariciones → candidato a alta.
+- Alta preferida: `npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only` (luego fotos con `db:artist:photo` si hace falta).
+- Modelo del agente: `OPENAI_MODEL` o default **`gpt-5.4`**.
+
+## Sellos — umbral ≥ 10 (solo imprints reales)
+
+- Contar el string `label` en las mismas tablas; cruzar con `data/labels/`.
+- **Barra editorial actual: solo crear fichas con ≥ 10 apariciones.** Por debajo (5–9, 3–4, 1–2) **no** dar de alta salvo petición explícita de bajar el umbral.
+- **Nunca** crear como `labels`: **DistroKid**, **TuneCore** ni otros agregadores/distribuidoras; tampoco majors genéricos solo por frecuencia (Polydor, Columbia, OWSLA/Atlantic, etc.). Ver README «Editorial vetoes».
+- Alta: `run label-agent -- <slug> "Nombre" --save-json` (no hay bootstrap automático de sellos aún). Logo opcional: `run label-photo`.
+
+## TLS / red Acttax
+
+- Si `guia-base-datos` falla con `bad option: --use-system-ca` (Node anterior a 22.15, p. ej. 22.14): `OB_NO_SYSTEM_CA=1` y, si hace falta en esa sesión, `NODE_TLS_REJECT_UNAUTHORIZED=0`.
+- Documentación: README (EN/ES) secciones *Discovering artists & labels from charts* / *Descubrir artistas y sellos desde los charts*.

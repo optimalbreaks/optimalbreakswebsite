@@ -75,6 +75,13 @@ function loadSystemPrompt(withRevisionAppend) {
   return add ? `${base}\n\n---\n\n${add}` : base
 }
 
+const POOR_OB_BIO_RE =
+  /Optimal Breaks|40 Breaks Vitales|listado extendido|extended artist roster|chart metadata|figura en el chart|appears in Optimal Breaks|starter profile|ficha inicial/i
+
+function isPoorObBoilerplateBio(jsonText) {
+  return POOR_OB_BIO_RE.test(String(jsonText || ''))
+}
+
 async function fetchSerpContext(query, apiKey) {
   if (!apiKey) return ''
   const url = new URL('https://serpapi.com/search.json')
@@ -132,9 +139,16 @@ function buildUserPrompt({
   research,
   revise = false,
   currentArtistJson = '',
+  poorObBoilerplate = false,
 }) {
   let s = revise
-    ? `Tarea: REVISION de ficha existente (mejorar y corregir, no reemplazar desde cero). Sigue el prompt de sistema V2 + bloque MODO REVISION.
+    ? poorObBoilerplate
+      ? `Tarea: REESCRITURA de ficha con bio basura de chart/autopromo. La FICHA ACTUAL tiene texto inválido (menciona Optimal Breaks, el chart, etc.). IGNORA esas bios; escribe biografías nuevas desde notas + contexto web + sellos/temas verificables. Conserva slug, nombre y datos estructurados útiles (tracks, sellos en key_releases).
+
+slug (kebab-case): ${slug}
+Nombre artístico principal: ${artistName}
+`
+      : `Tarea: REVISION de ficha existente (mejorar y corregir, no reemplazar desde cero). Sigue el prompt de sistema V2 + bloque MODO REVISION.
 
 slug (kebab-case): ${slug}
 Nombre artístico principal: ${artistName}
@@ -174,7 +188,8 @@ ${extraNotes}
 CHECKLIST V2 (obligatorio antes de cerrar la respuesta):
 - Solo un objeto JSON parseable; sin markdown, sin texto fuera del JSON, sin campos extra.
 - Prioridad de fuentes: ${revise ? 'notas del artista / documentacion > ficha actual > ' : ''}notas del editor > contexto web > conocimiento general.
-${revise ? '- Modo revision: no sustituyas las biografias por un borrador nuevo; conserva y mejora el texto de la FICHA ACTUAL salvo correcciones documentadas.\n' : ''}
+${revise ? '- Modo revision: no sustituyas las biografias por un borrador nuevo; conserva y mejora el texto de la FICHA ACTUAL salvo correcciones documentadas.\n' : ''}${revise && poorObBoilerplate ? '- EXCEPCION (bio basura OB/chart): reescribe bio_en y bio_es desde cero; no repitas ni amplíes el texto de autopromo.\n' : ''}
+- PROHIBIDO en biografias y key_releases.note: Optimal Breaks, 40 Breaks Vitales, listado extendido, chart metadata.
 - No inventes charts, fechas exactas, premios, sellos, colaboraciones ni URLs sin base razonable.
 - slug EXACTO (kebab-case, solo a-z, 0-9, guiones): "${slug}"
 - bio_es y bio_en: apunta normalmente a 10-16 parrafos cada una; solo alarga mas si hay base suficiente, y si la evidencia es limitada prioriza precision antes que longitud. Separa parrafos con \\n\\n dentro del string JSON.
@@ -335,12 +350,24 @@ export async function runArtistAgent({
   }
 
   let research = ''
+  const poorObBoilerplate = revise && isPoorObBoilerplateBio(currentArtistJson)
+  if (poorObBoilerplate && !quiet) {
+    console.log('[agente] Bio OB/chart detectada → reescritura (no conservar plantilla)')
+  }
   if (!noSearch) {
     const serpKey = process.env.SERPAPI_API_KEY?.trim()
     if (serpKey) {
-      const q = `${artistName} DJ producer breakbeat biography discography`
+      const queries = [
+        `${artistName} breakbeat producer DJ discography Beatport`,
+        `${artistName} SoundCloud mix interview`,
+      ]
       if (!quiet) console.log('[agente] Buscando contexto (SerpAPI)...')
-      research = await fetchSerpContext(q, serpKey)
+      const chunks = []
+      for (const q of queries) {
+        const part = await fetchSerpContext(q, serpKey)
+        if (part) chunks.push(part)
+      }
+      research = [...new Set(chunks)].join('\n\n').slice(0, 14000)
       if (!quiet) {
         if (research) console.log('[agente] Contexto web:', research.length, 'caracteres')
         else console.log('[agente] Sin resultados útiles de SerpAPI')
@@ -357,6 +384,7 @@ export async function runArtistAgent({
     research,
     revise,
     currentArtistJson,
+    poorObBoilerplate,
   })
   if (!quiet) console.log('[agente] Llamando OpenAI…')
   const parsed = await openAiJson({

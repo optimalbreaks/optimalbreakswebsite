@@ -54,6 +54,44 @@ function normalizeUrlKey(u: string | null | undefined): string {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/** PostgREST corta en 1000 filas por defecto. */
+const PAGE = 1000
+/** Trozos seguros para `.in('id', …)` (URL / payload). */
+const IN_CHUNK = 200
+
+async function fetchAllSavedForUser(
+  sb: ReturnType<typeof createServiceSupabase>,
+  userId: string,
+): Promise<{ data: SavedRow[]; error: { message: string } | null }> {
+  const all: SavedRow[] = []
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await sb
+      .from('saved_chart_tracks')
+      .select('track_source, track_id, canonical_url, snapshot, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + PAGE - 1)
+    if (error) return { data: all, error }
+    const rows = ((data as unknown) as SavedRow[]) || []
+    all.push(...rows)
+    if (rows.length < PAGE) break
+  }
+  return { data: all, error: null }
+}
+
+async function selectByIds<T>(
+  ids: string[],
+  run: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<{ data: T[]; error: { message: string } | null }> {
+  const out: T[] = []
+  for (let i = 0; i < ids.length; i += IN_CHUNK) {
+    const { data, error } = await run(ids.slice(i, i + IN_CHUNK))
+    if (error) return { data: out, error }
+    if (data?.length) out.push(...data)
+  }
+  return { data: out, error: null }
+}
+
 export async function GET(request: NextRequest) {
   const handle = request.nextUrl.searchParams.get('handle')?.trim()
   if (!handle) return NextResponse.json({ error: 'handle requerido' }, { status: 400 })
@@ -75,42 +113,39 @@ export async function GET(request: NextRequest) {
   const owner = (profileData as unknown) as ProfileMini | null
   if (!owner) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
 
-  const { data: savedData, error: savedErr } = await sb
-    .from('saved_chart_tracks')
-    .select('track_source, track_id, canonical_url, snapshot, created_at')
-    .eq('user_id', owner.id)
-    .order('created_at', { ascending: false })
+  const { data: saved, error: savedErr } = await fetchAllSavedForUser(sb, owner.id)
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
-
-  const saved = ((savedData as unknown) as SavedRow[]) || []
 
   const chartIds = Array.from(new Set(saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)))
   const featIds = Array.from(new Set(saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)))
   const vinylIds = Array.from(new Set(saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)))
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
-    chartIds.length
-      ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chartIds)
-      : Promise.resolve({ data: [] as ChartRow[], error: null }),
-    featIds.length
-      ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', featIds)
-      : Promise.resolve({ data: [] as FeatRow[], error: null }),
-    vinylIds.length
-      ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', vinylIds)
-      : Promise.resolve({ data: [] as VinylRow[], error: null }),
+    selectByIds<ChartRow>(chartIds, (chunk) =>
+      sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chunk),
+    ),
+    selectByIds<FeatRow>(featIds, (chunk) =>
+      sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', chunk),
+    ),
+    selectByIds<VinylRow>(vinylIds, (chunk) =>
+      sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
+    ),
   ])
+  if (chartRes.error) return NextResponse.json({ error: chartRes.error.message }, { status: 500 })
+  if (featRes.error) return NextResponse.json({ error: featRes.error.message }, { status: 500 })
+  if (vinylRes.error) return NextResponse.json({ error: vinylRes.error.message }, { status: 500 })
 
-  const liveChartIds = new Set(((chartRes.data || []) as ChartRow[]).map((r) => r.id))
-  const liveFeatIds = new Set(((featRes.data || []) as FeatRow[]).map((r) => r.id))
-  const liveVinylIds = new Set(((vinylRes.data || []) as VinylRow[]).map((r) => r.id))
+  const liveChartIds = new Set((chartRes.data || []).map((r) => r.id))
+  const liveFeatIds = new Set((featRes.data || []).map((r) => r.id))
+  const liveVinylIds = new Set((vinylRes.data || []).map((r) => r.id))
 
   // Auto-backfill on read: para saves vivos a los que les falte snapshot o
   // canonical_url (p.ej. saves antiguos hechos antes de instaurar la capa de
   // protección), rellenamos los metadatos al vuelo desde la fila viva.
   // Esto refuerza la "capa 4" sin necesidad de scripts batch periódicos.
-  const liveChartMap = new Map(((chartRes.data || []) as ChartRow[]).map((r) => [r.id, r]))
-  const liveFeatMap = new Map(((featRes.data || []) as FeatRow[]).map((r) => [r.id, r]))
-  const liveVinylMap = new Map(((vinylRes.data || []) as VinylRow[]).map((r) => [r.id, r]))
+  const liveChartMap = new Map((chartRes.data || []).map((r) => [r.id, r]))
+  const liveFeatMap = new Map((featRes.data || []).map((r) => [r.id, r]))
+  const liveVinylMap = new Map((vinylRes.data || []).map((r) => [r.id, r]))
   const backfillJobs: Array<Promise<unknown>> = []
   for (const s of saved) {
     if (s.track_source === 'beatport_top') continue
@@ -323,10 +358,13 @@ export async function GET(request: NextRequest) {
   for (const f of (featRes.data || []) as FeatRow[]) if (f.chart_edition_id) editionIdSet.add(f.chart_edition_id)
   const editionIds = Array.from(editionIdSet)
   const editionRes = editionIds.length
-    ? await sb.from('chart_editions').select('id, week_date').in('id', editionIds)
+    ? await selectByIds<EditionRow>(editionIds, (chunk) =>
+        sb.from('chart_editions').select('id, week_date').in('id', chunk),
+      )
     : { data: [] as EditionRow[], error: null }
+  if (editionRes.error) return NextResponse.json({ error: editionRes.error.message }, { status: 500 })
   const weekByEdition = new Map<string, string>()
-  for (const e of ((editionRes.data || []) as EditionRow[])) weekByEdition.set(e.id, e.week_date)
+  for (const e of (editionRes.data || []) as EditionRow[]) weekByEdition.set(e.id, e.week_date)
 
   const tracks = {
     chart: ((chartRes.data || []) as (ChartRow & { from_snapshot?: boolean })[]).map((c) => ({

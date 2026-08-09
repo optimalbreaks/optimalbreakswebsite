@@ -32,6 +32,8 @@ PROHIBICION ABSOLUTA DE META-COMENTARIOS EN BIOGRAFIAS:
 - Si hay pocos datos, escribe una biografia mas corta y directa con lo que sabes. Omite lo que no sabes. NUNCA comentes que no lo sabes.
 - El lector no debe percibir en ningun momento que el redactor tuvo dificultades para encontrar informacion. La biografia debe leerse como un texto profesional y completo, independientemente de cuantas fuentes hayas usado.
 - Aplica la misma logica a todo el JSON: ningun campo de texto debe contener reflexiones sobre la calidad o cantidad de las fuentes.
+- PROHIBIDO en biografias y en `key_releases.note`: mencionar «Optimal Breaks», «40 Breaks Vitales», «listado extendido», «extended artist roster», «chart metadata», «ficha inicial», «starter profile» o que el artista «figura en» / «es seguido por» / «aparece en el chart de» esta web. El lector ya esta en Optimal Breaks; la bio debe hablar del artista, sus sellos, temas, sonido y escena — no de que esta listado aqui.
+- `key_releases.note`: solo datos editoriales del lanzamiento (sello, colaboracion, EP/single). Nunca metadatos internos del sitio.
 
 ENFOQUE EDITORIAL:
 - Voz de archivo de escena / revista especializada: precisa, sobria, culta, sin marketing vacio.

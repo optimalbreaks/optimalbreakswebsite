@@ -3,8 +3,7 @@
  *
  * Tras publicar la semana en BD (chart-confirm + chart-featured-file), ejecuta esto para:
  * - Añadir en `styles` la etiqueta «Breakbeat» si no estaba.
- * - Añadir al final de bio_en/bio_es una mención al chart (una sola vez por ficha).
- * - Crear fichas starter para nombres que aún no existan en data/artists.
+ * - Crear fichas starter mínimas para nombres que aún no existan en data/artists (sin mencionar Optimal Breaks en la bio).
  *
  * Uso:
  *   node scripts/sync-chart-artists.mjs
@@ -37,15 +36,11 @@ const CHART_NAME_TO_SLUG = {
   'Huda Hudia': 'huda-hudia',
 }
 
-const BREAKBEAT_HINT_EN =
-  'The artist appears in Optimal Breaks’ weekly breakbeat chart «40 Breaks Vitales», a Beatport-sourced, editorially curated snapshot of the current scene.'
-const BREAKBEAT_HINT_ES =
-  'El artista figura en el chart semanal de breakbeat «40 Breaks Vitales» de Optimal Breaks, una instantánea de la escena actual con base en Beatport y curación editorial.'
-
-const STARTER_TAIL_EN =
-  'Listed in the Optimal Breaks extended artist roster (2000s–present). Starter profile; editorial depth can grow over time.'
-const STARTER_TAIL_ES =
-  'Incluido en el listado extendido de artistas de Optimal Breaks (2000s–present). Ficha inicial; el texto puede ampliarse con el tiempo.'
+/** Bios mínimas al crear ficha; el agente editorial las sustituye. Sin mencionar Optimal Breaks ni charts. */
+const STARTER_BIO_EN =
+  'Contemporary breakbeat producer active through specialist labels and digital club circulation.'
+const STARTER_BIO_ES =
+  'Productor de breakbeat contemporáneo activo en sellos especializados y circulación digital de club.'
 
 function parseArgs(argv) {
   let dryRun = false
@@ -86,13 +81,6 @@ function mergeStyles(styles) {
     if (!base.some((x) => String(x).toLowerCase() === a.toLowerCase())) base.push(a)
   }
   return base
-}
-
-function appendChartMention(bio, hint) {
-  const t = String(bio || '').trim()
-  if (!t) return hint
-  if (t.includes('40 Breaks Vitales') || t.includes('«40 Breaks Vitales»')) return t
-  return `${t}\n\n${hint}`
 }
 
 function buildCatalogIndexes() {
@@ -280,8 +268,8 @@ async function main() {
       category: 'current',
       styles: ['Breakbeat', 'Electronic', 'Bass'],
       era: '2000s–present',
-      bio_en: `${BREAKBEAT_HINT_EN}\n\n${STARTER_TAIL_EN}`,
-      bio_es: `${BREAKBEAT_HINT_ES}\n\n${STARTER_TAIL_ES}`,
+      bio_en: STARTER_BIO_EN,
+      bio_es: STARTER_BIO_ES,
       essential_tracks: [],
       recommended_mixes: [],
       related_artists: [],
@@ -310,8 +298,6 @@ async function main() {
     const j = JSON.parse(before)
     const hadBb = hasBreakbeat(j.styles)
     j.styles = mergeStyles(j.styles)
-    j.bio_en = appendChartMention(j.bio_en, BREAKBEAT_HINT_EN)
-    j.bio_es = appendChartMention(j.bio_es, BREAKBEAT_HINT_ES)
     if (chartName !== j.name && chartName.toLowerCase() !== String(j.name).toLowerCase()) {
       console.log('Nota chart vs catálogo:', chartName, '→', j.name, `(${slug})`)
     }
