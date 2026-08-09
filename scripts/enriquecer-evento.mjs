@@ -3926,6 +3926,83 @@ async function runPatchBreaksBassGuauYoSpeedPerth2026(sb) {
   console.log('[patch-breaks-bass-guau-yo-speed-perth-2026] OK:', after)
 }
 
+const BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_SLUG = 'bionic-beatslappaz-si-paradiso-perth-2026'
+const BIONIC_BEATSLAPPAZ_FACEBOOK =
+  'https://www.facebook.com/events/s/bionic/4426760787598683/'
+const BIONIC_BEATSLAPPAZ_TICKETS = 'https://events.humanitix.com/bionic-sr7h5cdd'
+const BIONIC_BEATSLAPPAZ_IMAGE = '/images/events/bionic-beatslappaz-si-paradiso-perth-2026.webp'
+const SI_PARADISO_WEB = 'https://www.si-paradiso.com/'
+
+const BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_LINEUP = [
+  'Beatslappaz',
+  '1badbadams',
+  'Cobey',
+]
+
+const BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_ROW = {
+  name: 'Bionic — Beatslappaz (Journey of Breaks) @ Si Paradiso Basement',
+  description_en:
+    "Lee Majors presents Bionic's first birthday at Si Paradiso Basement, Highgate (Perth), Friday 28 August 2026, 20:00–01:00 AWST. Official poster and Humanitix listing: Perth breakbeat duo Beatslappaz headline with a journey through breaks from the 2000s to the present — their own productions mixed with classics — plus support from 1badbadams and Cobey. Basement club night on Beaufort Street. Address 1/446 Beaufort Street, Highgate WA 6003. Beatslappaz/Rump Shaker Records orbit is documented in the Optimal Breaks label catalogue.",
+  description_es:
+    'Lee Majors presenta el primer aniversario de Bionic en Si Paradiso Basement, Highgate (Perth), el viernes 28 de agosto de 2026, de 20:00 a 01:00 h (AWST). Cartel oficial y Humanitix: el dúo perthiano Beatslappaz encabeza con un recorrido por el breakbeat desde los 2000 hasta hoy — producciones propias mezcladas con clásicos — y refuerzo de 1badbadams y Cobey. Noche de club en el sótano de Beaufort Street. Dirección 1/446 Beaufort Street, Highgate WA 6003. El entorno Beatslappaz / Rump Shaker Records ya figura en el catálogo de sellos de Optimal Breaks.',
+  event_type: 'club_night',
+  date_start: '2026-08-28',
+  date_end: null,
+  location: 'Si Paradiso Basement, Highgate, Perth, WA, Australia',
+  city: 'Perth',
+  country: 'Australia',
+  venue: 'Si Paradiso Basement',
+  address: '1/446 Beaufort Street, Highgate, Perth WA 6003',
+  website: SI_PARADISO_WEB,
+  tickets_url: BIONIC_BEATSLAPPAZ_TICKETS,
+  image_url: BIONIC_BEATSLAPPAZ_IMAGE,
+  lineup: BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_LINEUP,
+  tags: [
+    'bionic',
+    'lee majors',
+    'beatslappaz',
+    '1badbadams',
+    'cobey',
+    'journey of breaks',
+    'si paradiso',
+    'highgate',
+    'perth',
+    'breakbeat',
+    'australia',
+    '2026',
+    'humanitix',
+    'rump shaker records',
+  ],
+  socials: {
+    Facebook: BIONIC_BEATSLAPPAZ_FACEBOOK,
+    Humanitix: BIONIC_BEATSLAPPAZ_TICKETS,
+    'Si Paradiso': SI_PARADISO_WEB,
+  },
+  age_restriction: '18+',
+  doors_open: '20:00',
+  doors_close: '01:00',
+  coords: { lat: -31.9454, lng: 115.8728 },
+}
+
+async function runPatchBionicBeatslappazSiParadisoPerth2026(sb) {
+  const row = {
+    slug: BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-bionic-beatslappaz-si-paradiso-perth-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -4632,6 +4709,11 @@ async function main() {
 
   if (argv.includes('--patch-breaks-bass-guau-yo-speed-perth-2026')) {
     await runPatchBreaksBassGuauYoSpeedPerth2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-bionic-beatslappaz-si-paradiso-perth-2026')) {
+    await runPatchBionicBeatslappazSiParadisoPerth2026(sb)
     return
   }
 
