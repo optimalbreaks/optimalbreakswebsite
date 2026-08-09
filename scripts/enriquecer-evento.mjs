@@ -3842,6 +3842,90 @@ async function runPatchDeeklineIronCowOrlando2026(sb) {
   console.log('[patch-deekline-iron-cow-orlando-2026] OK:', after)
 }
 
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_SLUG = 'breaks-bass-guau-yo-speed-perth-2026'
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_RA = 'https://ra.co/events/2503896'
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_TICKETS =
+  'https://megatix.com.au/events/breaks-n-bass-yo-speed-guau-tour'
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_IMAGE =
+  '/images/events/breaks-bass-guau-yo-speed-perth-2026.webp'
+const ABERDEEN_HOTEL_WEB = 'https://www.theaberdeenhotel.com.au/'
+
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_LINEUP = [
+  'Guau',
+  'Yo Speed',
+  'Guau B2B Yo Speed',
+  'Robwun',
+  'Micah B2B Philly Blunt',
+  'Krypsis',
+  'Rhythmiic',
+]
+
+const BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_ROW = {
+  name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Perth)',
+  description_en:
+    'Rhythmiic Productions presents Breaks & Bass on the Guau + Yo Speed Australian Tour: Friday 2 October 2026 at The Aberdeen Hotel, Northbridge (Perth), 19:00–02:00 AWST. Official poster and Megatix listing: Spanish breaks & bass headliners Guau and Yo Speed each play a solo set plus a closing Guau B2B Yo Speed; local support Robwun, Micah B2B Philly Blunt, Krypsis and Rhythmiic. 18+. Address 90 Aberdeen Street, Northbridge WA 6003. Part of the Perth leg of their 2026 Australia tour — both artists are already in the Optimal Breaks artist catalogue.',
+  description_es:
+    'Rhythmiic Productions presenta Breaks & Bass en la gira australiana Guau + Yo Speed: viernes 2 de octubre de 2026 en The Aberdeen Hotel, Northbridge (Perth), de 19:00 a 02:00 h (AWST). Cartel oficial y Megatix: los referentes españoles del breaks & bass Guau y Yo Speed con set en solitario cada uno y cierre Guau B2B Yo Speed; refuerzo local Robwun, Micah B2B Philly Blunt, Krypsis y Rhythmiic. 18+. Dirección 90 Aberdeen Street, Northbridge WA 6003. Parada de Perth de la gira Australia 2026 — ambos artistas ya figuran en el catálogo de Optimal Breaks.',
+  event_type: 'club_night',
+  date_start: '2026-10-02',
+  date_end: null,
+  location: 'The Aberdeen Hotel, Northbridge, Perth, WA, Australia',
+  city: 'Perth',
+  country: 'Australia',
+  venue: 'The Aberdeen Hotel',
+  address: '90 Aberdeen Street, Northbridge, Perth WA 6003',
+  website: ABERDEEN_HOTEL_WEB,
+  tickets_url: BREAKS_BASS_GUAU_YO_SPEED_PERTH_TICKETS,
+  image_url: BREAKS_BASS_GUAU_YO_SPEED_PERTH_IMAGE,
+  lineup: BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_LINEUP,
+  tags: [
+    'breaks and bass',
+    'breaks & bass',
+    'guau',
+    'yo speed',
+    'guau b2b yo speed',
+    'rhythmiic productions',
+    'australian tour',
+    'perth',
+    'northbridge',
+    'aberdeen hotel',
+    'breakbeat',
+    'bass',
+    'australia',
+    '2026',
+    'megatix',
+    'resident advisor',
+  ],
+  socials: {
+    'Resident Advisor': BREAKS_BASS_GUAU_YO_SPEED_PERTH_RA,
+    Megatix: BREAKS_BASS_GUAU_YO_SPEED_PERTH_TICKETS,
+    'The Aberdeen Hotel': ABERDEEN_HOTEL_WEB,
+  },
+  age_restriction: '18+',
+  doors_open: '19:00',
+  doors_close: '02:00',
+  coords: { lat: -31.9477, lng: 115.857 },
+}
+
+async function runPatchBreaksBassGuauYoSpeedPerth2026(sb) {
+  const row = {
+    slug: BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breaks-bass-guau-yo-speed-perth-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -4543,6 +4627,11 @@ async function main() {
 
   if (argv.includes('--patch-deekline-iron-cow-orlando-2026')) {
     await runPatchDeeklineIronCowOrlando2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breaks-bass-guau-yo-speed-perth-2026')) {
+    await runPatchBreaksBassGuauYoSpeedPerth2026(sb)
     return
   }
 
