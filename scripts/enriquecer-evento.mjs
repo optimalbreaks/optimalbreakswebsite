@@ -4003,6 +4003,126 @@ async function runPatchBionicBeatslappazSiParadisoPerth2026(sb) {
   console.log('[patch-bionic-beatslappaz-si-paradiso-perth-2026] OK:', after)
 }
 
+const DUB_ELEMENTS_FRIENDS_SLUG = 'dub-elements-friends'
+const DUB_ELEMENTS_FRIENDS_WEB =
+  'https://pandorasevilla.com/agenda/dub-elements-friends-x-aniversario-11-09-2026/'
+const DUB_ELEMENTS_FRIENDS_TICKETS =
+  'https://site.fourvenues.com/es/rollercoaster/events/dub-elements--friends-x-aniversario-11-09-2026-OMYN'
+const DUB_ELEMENTS_FRIENDS_IMAGE = '/images/events/dub-elements-friends-2026.webp'
+
+const DUB_ELEMENTS_FRIENDS_MAIN_ROOM = [
+  'Dub Elements',
+  'Murdock',
+  'Primate',
+  "Smokin' Pandas",
+  'Teddy Killerz',
+  'T-Lex',
+  'Zardonic',
+]
+
+const DUB_ELEMENTS_FRIENDS_TERRAZA = ['Dub Engineer', 'Ecsta', 'Sobass']
+
+const DUB_ELEMENTS_FRIENDS_STAGES = [
+  {
+    name: 'Main Room',
+    description_en:
+      'Indoor main room: drum & bass headliners on the official Dub Elements & Friends poster.',
+    description_es:
+      'Sala principal indoor: cabezas de cartel drum & bass según cartel oficial Dub Elements & Friends.',
+    lineup: DUB_ELEMENTS_FRIENDS_MAIN_ROOM,
+  },
+  {
+    name: 'Terraza Open Air',
+    description_en: 'Outdoor terrace support per the September 2026 poster.',
+    description_es: 'Terraza open air con refuerzos según cartel de septiembre 2026.',
+    lineup: DUB_ELEMENTS_FRIENDS_TERRAZA,
+  },
+]
+
+const DUB_ELEMENTS_FRIENDS_LINEUP = [
+  ...DUB_ELEMENTS_FRIENDS_MAIN_ROOM,
+  ...DUB_ELEMENTS_FRIENDS_TERRAZA,
+]
+
+const DUB_ELEMENTS_FRIENDS_ROW = {
+  name: 'Dub Elements & Friends',
+  description_en:
+    "Dub Elements & Friends X Aniversario — drum & bass festival at Pandora Sevilla on Friday 11 September 2026, doors 23:00 until 07:00. Official poster (Rollercoaster Group SL): Main Room with Dub Elements, Murdock, Primate, Smokin' Pandas, Teddy Killerz, T-Lex and Zardonic; Terraza Open Air with Dub Engineer, Ecsta and Sobass. Capacity ~1,550; 18+. Calle Gramil 2, Sevilla. Tickets via Fourvenues and pandorasevilla.com.",
+  description_es:
+    'Dub Elements & Friends X Aniversario — festival de drum & bass en Pandora Sevilla el viernes 11 de septiembre de 2026, puertas 23:00 h hasta las 07:00 h. Cartel oficial (Rollercoaster Group SL): Main Room con Dub Elements, Murdock, Primate, Smokin\' Pandas, Teddy Killerz, T-Lex y Zardonic; Terraza Open Air con Dub Engineer, Ecsta y Sobass. Aforo ~1.550; +18. Calle Gramil 2, Sevilla. Entradas en Fourvenues y pandorasevilla.com.',
+  event_type: 'festival',
+  date_start: '2026-09-11',
+  date_end: null,
+  location: 'Pandora Sevilla, Calle Gramil 2, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Pandora Sevilla',
+  address: 'C. Gramil / Calle Gramil, 2, 41008 Sevilla, España',
+  website: DUB_ELEMENTS_FRIENDS_WEB,
+  tickets_url: DUB_ELEMENTS_FRIENDS_TICKETS,
+  image_url: DUB_ELEMENTS_FRIENDS_IMAGE,
+  lineup: DUB_ELEMENTS_FRIENDS_LINEUP,
+  stages: DUB_ELEMENTS_FRIENDS_STAGES,
+  schedule: [],
+  tags: [
+    'dub elements',
+    'dub elements and friends',
+    'drum and bass',
+    'drum & bass',
+    'festival',
+    'pandora sevilla',
+    'sevilla',
+    'rollercoaster group',
+    'murdock',
+    'primate',
+    'smokin pandas',
+    'teddy killerz',
+    't-lex',
+    'zardonic',
+    '2026',
+    'fourvenues',
+  ],
+  socials: {
+    facebook: 'https://linktr.ee/pandora_sevilla',
+    instagram: 'https://linktr.ee/pandora_sevilla',
+    'Pandora Sevilla': 'https://www.pandorasevilla.com/',
+  },
+  capacity: 1550,
+  age_restriction: '18+',
+  doors_open: '23:00',
+  doors_close: '07:00',
+  coords: { lat: 37.4086, lng: -5.9734 },
+}
+
+async function runPatchDubElementsFriends(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, lineup, image_url, stages')
+    .eq('slug', DUB_ELEMENTS_FRIENDS_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-dub-elements-friends] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: DUB_ELEMENTS_FRIENDS_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...DUB_ELEMENTS_FRIENDS_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, stages, tickets_url, image_url')
+    .eq('slug', DUB_ELEMENTS_FRIENDS_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-dub-elements-friends] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -4714,6 +4834,11 @@ async function main() {
 
   if (argv.includes('--patch-bionic-beatslappaz-si-paradiso-perth-2026')) {
     await runPatchBionicBeatslappazSiParadisoPerth2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-dub-elements-friends')) {
+    await runPatchDubElementsFriends(sb)
     return
   }
 

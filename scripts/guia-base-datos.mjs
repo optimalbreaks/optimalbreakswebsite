@@ -529,6 +529,14 @@ const ACTIONS = [
       'UPSERT bionic-beatslappaz-si-paradiso-perth-2026: Bionic 1st birthday, Beatslappaz Si Paradiso Basement Perth 28 ago 2026 (1badbadams, Cobey), Humanitix / Facebook.',
   },
   {
+    id: 'events-patch-dub-elements-friends',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-dub-elements-friends',
+    npm: 'npm run db:guia -- run events-patch-dub-elements-friends',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT dub-elements-friends: Dub Elements & Friends X Aniversario, Pandora Sevilla 11 sept 2026 (Main Room + Terraza Open Air; cartel T-Lex, Dub Engineer, Ecsta, Sobass), Fourvenues.',
+  },
+  {
     id: 'events-delete-slug',
     run: 'node scripts/guia-base-datos.mjs run events-delete-slug <slug>',
     npm: 'npm run db:guia -- run events-delete-slug slug-duplicado',
@@ -771,6 +779,7 @@ Punto de entrada unificado:
   events-patch-deekline-iron-cow-orlando-2026  Deekline @ Iron Cow Orlando 18 jul 2026 (Happeningnext)
   events-patch-breaks-bass-guau-yo-speed-perth-2026  Breaks & Bass Guau + Yo Speed, The Aberdeen Perth 2 oct 2026 (Megatix / RA)
   events-patch-bionic-beatslappaz-si-paradiso-perth-2026  Bionic / Beatslappaz, Si Paradiso Basement Perth 28 ago 2026 (Humanitix)
+  events-patch-dub-elements-friends  Dub Elements & Friends, Pandora Sevilla 11 sept 2026 (Fourvenues)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
   events-poster …        elegir-poster-evento.mjs (Serp imágenes + cartel → Storage)
   migrate-files -- …     seed-supabase --files …
@@ -1251,6 +1260,9 @@ function main() {
       break
     case 'events-patch-bionic-beatslappaz-si-paradiso-perth-2026':
       runNode('enriquecer-evento.mjs', ['--patch-bionic-beatslappaz-si-paradiso-perth-2026', ...rest])
+      break
+    case 'events-patch-dub-elements-friends':
+      runNode('enriquecer-evento.mjs', ['--patch-dub-elements-friends', ...rest])
       break
     case 'events-delete-slug': {
       const slug = (rest[0] || '').trim()
