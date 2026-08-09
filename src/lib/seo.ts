@@ -379,6 +379,31 @@ export function breadcrumbJsonLd(items: BreadcrumbItem[]): Record<string, unknow
   }
 }
 
+/** FAQPage JSON-LD — solo con preguntas/respuestas reales (sin copy inventado). */
+export function faqPageJsonLd(
+  items: { question: string; answer: string }[],
+): Record<string, unknown> | null {
+  const clean = items
+    .map((i) => ({
+      question: i.question?.trim() || '',
+      answer: i.answer?.trim() || '',
+    }))
+    .filter((i) => i.question && i.answer)
+  if (clean.length < 2) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: clean.map((i) => ({
+      '@type': 'Question',
+      name: i.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: i.answer,
+      },
+    })),
+  }
+}
+
 export type EventJsonLdInput = {
   slug: string
   name: string

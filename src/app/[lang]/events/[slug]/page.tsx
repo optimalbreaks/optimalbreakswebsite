@@ -3,7 +3,14 @@
 // ============================================
 
 import { createServerSupabase } from '@/lib/supabase-server'
-import { breadcrumbJsonLd, detailPageMetadata, eventJsonLd, siteNameForLang, SITE_URL } from '@/lib/seo'
+import {
+  breadcrumbJsonLd,
+  detailPageMetadata,
+  eventJsonLd,
+  faqPageJsonLd,
+  siteNameForLang,
+  SITE_URL,
+} from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
 import type { Metadata } from 'next'
@@ -236,8 +243,8 @@ function metaPlaceLabel(venue: string | null, city: string | null, country: stri
     .join(', ')
 }
 
-/** Title corto y rico: "Nombre — fecha · ciudad". Trunca el nombre si hace
- *  falta para que el `<title>` total quepa en el ancho típico de SERP (≈60). */
+/** Title corto y rico: "Nombre — fecha · ciudad".
+ *  El layout root añade ` | Optimal Breaks` vía `title.template` — no repetir brand aquí. */
 function buildEventSeoTitle(
   name: string,
   dateLabel: string,
@@ -246,14 +253,14 @@ function buildEventSeoTitle(
 ): string {
   const cityBit = city?.trim() || ''
   const tail = [dateLabel, cityBit].filter(Boolean).join(' · ')
-  // Reservamos ~13 chars para " | Optimal Breaks". Total objetivo ≤ 65.
+  // Reservamos espacio para el template " | Optimal Breaks". Total objetivo ≤ 65.
   const room = 65 - (siteName.length + 3) // " | "
   const head = tail ? `${name} — ${tail}` : name
-  if (head.length <= room) return `${head} | ${siteName}`
+  if (head.length <= room) return head
   // Si no cabe, sacrificamos primero el city, luego la fecha; nunca el nombre.
   const onlyDate = dateLabel ? `${name} — ${dateLabel}` : name
-  if (onlyDate.length <= room) return `${onlyDate} | ${siteName}`
-  return `${name} | ${siteName}`
+  if (onlyDate.length <= room) return onlyDate
+  return name
 }
 
 /** ISO local (sin Z) para `event:start_time` / `event:end_time` (Open Graph). */
@@ -364,6 +371,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     poster_zoom_aria: string
     poster_close: string
     poster_lightbox_title: string
+    detail_about: string
+    detail_lineup: string
+    detail_stages: string
+    detail_schedule: string
+    detail_location: string
+    detail_links: string
+    detail_editions: string
+    detail_related: string
+    detail_faq: string
   }
 
   const stages = (event.stages ?? []) as EventStage[]
@@ -413,9 +429,46 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     for (const a of rows) artistSlugs.set(a.name, a.slug)
   }
 
+  const { data: relatedRaw } = await supabase
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, promoter_organization_id')
+    .neq('slug', slug)
+    .not('date_start', 'is', null)
+    .order('date_start', { ascending: false })
+    .limit(120)
+  const { editions: seriesEditions, related: relatedEvents } = pickRelatedEvents(
+    {
+      name: event.name,
+      city: event.city,
+      promoterId: event.promoter_organization_id,
+      dateStart: event.date_start,
+    },
+    (relatedRaw ?? []) as RelatedEventRow[],
+  )
+
   const rawDesc = lang === 'es' ? event.description_es : event.description_en
 
-  // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList ──
+  const faqItems = buildEventFaqItems({
+    lang,
+    name: event.name,
+    dateLabel: event.date_start
+      ? formatDate(event.date_start, lang) +
+        (event.date_end && event.date_end !== event.date_start
+          ? ` — ${formatDate(event.date_end, lang)}`
+          : '')
+      : '',
+    doorsOpen: formatDoorTime(event.doors_open),
+    doorsClose: formatDoorTime(event.doors_close),
+    venue: event.venue,
+    address: event.address ?? event.location,
+    city: event.city,
+    country: event.country,
+    ticketsUrl: event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null),
+    ageRestriction: event.age_restriction,
+    lineupNames: Array.from(allArtistNames),
+  })
+
+  // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList (+ FAQ si hay datos) ──
   const performersForLd = Array.from(allArtistNames).map((name) => ({
     name,
     slug: artistSlugs.get(name) ?? null,
@@ -450,9 +503,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     { name: lang === 'es' ? 'Eventos' : 'Events', url: `${SITE_URL}/${lang}/events` },
     { name: event.name, url: `${SITE_URL}/${lang}/events/${slug}` },
   ])
+  const faqLd = faqPageJsonLd(faqItems)
   const jsonLdGraph = {
     '@context': 'https://schema.org',
-    '@graph': [eventLd, breadcrumbLd],
+    '@graph': [eventLd, breadcrumbLd, ...(faqLd ? [faqLd] : [])],
   }
 
   let festivalSections = splitFestivalDescriptionSections(rawDesc, lang === 'es' ? 'es' : 'en')
@@ -504,6 +558,27 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             <h1 className="sec-title mt-2 md:mt-3">
               <span className="hl">{event.name}</span>
             </h1>
+            {(event.date_start || event.venue || event.city) && (
+              <p
+                className="mt-2 break-words"
+                style={{
+                  fontFamily: "'Courier Prime', monospace",
+                  fontWeight: 700,
+                  fontSize: 'clamp(13px, 2.4vw, 15px)',
+                  letterSpacing: '0.5px',
+                  color: 'var(--dim)',
+                  margin: 0,
+                }}
+              >
+                {[
+                  eventTypeLabel(event.event_type, lang),
+                  posterDateLabel || null,
+                  event.venue || event.city || null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )}
 
             {/* Date */}
             {event.date_start && (
@@ -606,8 +681,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* ── TEXTO: tarjetas troceadas si el copy encaja; si no, párrafos como antes ── */}
+      {(festivalSections || (rawDesc && rawDesc.trim())) && (
       <section className="mb-10">
-        <SectionHeading>{lang === 'es' ? 'NOTAS DE PISTA' : 'FLOOR NOTES'}</SectionHeading>
+        <SectionHeading>{ev.detail_about}</SectionHeading>
         {festivalSections ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {festivalSections.map((s, i) => (
@@ -647,11 +723,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           </div>
         )}
       </section>
+      )}
 
       {/* ── STAGES + LINEUP ── */}
       {stages.length > 0 ? (
         <section id="event-lineup" className="mb-10 scroll-mt-24">
-          <SectionHeading>{lang === 'es' ? 'ESCENARIOS' : 'STAGES'}</SectionHeading>
+          <SectionHeading>{ev.detail_stages}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {stages.map((stage, i) => (
               <div key={i} className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
@@ -683,7 +760,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         </section>
       ) : event.lineup?.length > 0 ? (
         <section id="event-lineup" className="mb-10 scroll-mt-24">
-          <SectionHeading>LINEUP</SectionHeading>
+          <SectionHeading>{ev.detail_lineup}</SectionHeading>
           <div className="p-5 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
             <div className="flex flex-wrap gap-2">
               {event.lineup.map((a: string, i: number) => {
@@ -700,7 +777,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* ── SCHEDULE / HORARIOS ── */}
       {schedule.length > 0 && (
         <section className="mb-10">
-          <SectionHeading>{lang === 'es' ? 'HORARIOS' : 'SCHEDULE'}</SectionHeading>
+          <SectionHeading>{ev.detail_schedule}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Array.from(scheduleByStage.entries()).map(([stageName, slots]) => (
               <div key={stageName} className="border-4 border-[var(--ink)] overflow-hidden">
@@ -751,7 +828,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* ── LOCATION / MAP ── */}
       {(event.address || event.location || mapLink) && (
         <section id="event-location" className="mb-10 scroll-mt-24">
-          <SectionHeading>{lang === 'es' ? 'UBICACIÓN' : 'LOCATION'}</SectionHeading>
+          <SectionHeading>
+            {event.venue ? `${ev.detail_location} · ${event.venue}` : ev.detail_location}
+          </SectionHeading>
           <div className="border-4 border-[var(--ink)] p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row sm:items-start gap-4">
               <div className="flex-1 min-w-0">
@@ -790,7 +869,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* ── LINKS / SOCIALS ── */}
       {(event.website || event.tickets_url || Object.keys(event.socials ?? {}).length > 0) && (
         <section className="mb-10">
-          <SectionHeading>LINKS</SectionHeading>
+          <SectionHeading>{ev.detail_links}</SectionHeading>
           <div className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {event.website && (
@@ -829,6 +908,53 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               ))}
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ── FAQ (solo con datos reales) ── */}
+      {faqItems.length >= 2 && (
+        <section className="mb-10">
+          <SectionHeading>{ev.detail_faq}</SectionHeading>
+          <div className="border-4 border-[var(--ink)] divide-y-[3px] divide-[var(--ink)]">
+            {faqItems.map((item, i) => (
+              <div key={i} className="p-5 sm:p-6 bg-[var(--paper)]">
+                <h3
+                  style={{
+                    fontFamily: "'Darker Grotesque', sans-serif",
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    margin: 0,
+                  }}
+                >
+                  {item.question}
+                </h3>
+                <p
+                  className="mt-2 text-[var(--ink)]"
+                  style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.75, margin: 0 }}
+                >
+                  {item.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Otras ediciones / relacionados ── */}
+      {(seriesEditions.length > 0 || relatedEvents.length > 0) && (
+        <section className="mb-10">
+          {seriesEditions.length > 0 && (
+            <div className={relatedEvents.length > 0 ? 'mb-10' : ''}>
+              <SectionHeading>{ev.detail_editions}</SectionHeading>
+              <RelatedEventList lang={lang} items={seriesEditions} />
+            </div>
+          )}
+          {relatedEvents.length > 0 && (
+            <div>
+              <SectionHeading>{ev.detail_related}</SectionHeading>
+              <RelatedEventList lang={lang} items={relatedEvents} />
+            </div>
+          )}
         </section>
       )}
     </div>
@@ -1066,6 +1192,218 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
         {children}
       </h2>
       <div className="mt-1 h-[3px] w-12 bg-[var(--red)]" />
+    </div>
+  )
+}
+
+type RelatedEventRow = {
+  slug: string
+  name: string
+  date_start: string | null
+  city: string
+  venue: string | null
+  image_url: string | null
+  promoter_organization_id: string | null
+}
+
+/** Stem de serie: quita años y puntuación para emparejar ediciones (Raveart Retro Halloween 2026 ↔ 2025). */
+function eventSeriesStem(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, ' ')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function stemTokenOverlap(a: string, b: string): number {
+  const ta = a.split(' ').filter((t) => t.length > 2)
+  const tb = new Set(b.split(' ').filter((t) => t.length > 2))
+  if (ta.length === 0 || tb.size === 0) return 0
+  let hit = 0
+  for (const t of ta) if (tb.has(t)) hit++
+  return hit / Math.max(ta.length, tb.size)
+}
+
+function isSameSeries(stemA: string, stemB: string): boolean {
+  if (!stemA || !stemB) return false
+  if (stemA === stemB) return true
+  if (stemA.includes(stemB) || stemB.includes(stemA)) {
+    const shorter = stemA.length <= stemB.length ? stemA : stemB
+    // Evitar matches demasiado cortos ("raveart" solo)
+    return shorter.split(' ').filter((t) => t.length > 2).length >= 2
+  }
+  return stemTokenOverlap(stemA, stemB) >= 0.75
+}
+
+function pickRelatedEvents(
+  current: {
+    name: string
+    city: string
+    promoterId: string | null
+    dateStart: string | null
+  },
+  candidates: RelatedEventRow[],
+): { editions: RelatedEventRow[]; related: RelatedEventRow[] } {
+  const stem = eventSeriesStem(current.name)
+  const cityKey = (current.city || '').trim().toLowerCase()
+  const currentTs = current.dateStart ? Date.parse(`${current.dateStart.slice(0, 10)}T12:00:00`) : NaN
+
+  const editions: RelatedEventRow[] = []
+  const relatedPool: { row: RelatedEventRow; score: number }[] = []
+  const editionSlugs = new Set<string>()
+
+  for (const row of candidates) {
+    const otherStem = eventSeriesStem(row.name)
+    if (isSameSeries(stem, otherStem)) {
+      editions.push(row)
+      editionSlugs.add(row.slug)
+      continue
+    }
+    const samePromoter =
+      Boolean(current.promoterId) && row.promoter_organization_id === current.promoterId
+    const sameCity = cityKey && (row.city || '').trim().toLowerCase() === cityKey
+    if (!samePromoter && !sameCity) continue
+    const otherTs = row.date_start ? Date.parse(`${row.date_start.slice(0, 10)}T12:00:00`) : NaN
+    const dateProximity =
+      Number.isFinite(currentTs) && Number.isFinite(otherTs)
+        ? 1 / (1 + Math.abs(currentTs - otherTs) / (1000 * 60 * 60 * 24 * 30))
+        : 0
+    const score = (samePromoter ? 2 : 0) + (sameCity ? 1.5 : 0) + dateProximity
+    relatedPool.push({ row, score })
+  }
+
+  editions.sort((a, b) => String(b.date_start ?? '').localeCompare(String(a.date_start ?? '')))
+  relatedPool.sort((a, b) => b.score - a.score)
+
+  const related: RelatedEventRow[] = []
+  for (const { row } of relatedPool) {
+    if (editionSlugs.has(row.slug)) continue
+    related.push(row)
+    if (related.length >= 4) break
+  }
+
+  return {
+    editions: editions.slice(0, 8),
+    related,
+  }
+}
+
+function buildEventFaqItems(input: {
+  lang: Locale
+  name: string
+  dateLabel: string
+  doorsOpen: string
+  doorsClose: string
+  venue: string | null
+  address: string | null
+  city: string
+  country: string
+  ticketsUrl: string | null
+  ageRestriction: string | null
+  lineupNames: string[]
+}): { question: string; answer: string }[] {
+  const es = input.lang === 'es'
+  const items: { question: string; answer: string }[] = []
+
+  if (input.dateLabel) {
+    let when = es
+      ? `${input.name} es el ${input.dateLabel}.`
+      : `${input.name} takes place on ${input.dateLabel}.`
+    if (input.doorsOpen || input.doorsClose) {
+      const doors = [input.doorsOpen, input.doorsClose].filter(Boolean).join(' → ')
+      when += es ? ` Horario de puertas: ${doors}.` : ` Doors: ${doors}.`
+    }
+    items.push({
+      question: es ? `¿Cuándo es ${input.name}?` : `When is ${input.name}?`,
+      answer: when,
+    })
+  }
+
+  const placeBits = [input.venue, input.address, [input.city, input.country].filter(Boolean).join(', ')]
+    .map((s) => s?.trim() || '')
+    .filter(Boolean)
+  if (placeBits.length > 0) {
+    items.push({
+      question: es ? `¿Dónde se celebra ${input.name}?` : `Where is ${input.name}?`,
+      answer: es
+        ? `${input.name} se celebra en ${placeBits.join(' · ')}.`
+        : `${input.name} is at ${placeBits.join(' · ')}.`,
+    })
+  }
+
+  if (input.ticketsUrl) {
+    items.push({
+      question: es ? `¿Dónde comprar entradas para ${input.name}?` : `Where can I buy tickets for ${input.name}?`,
+      answer: es
+        ? `Las entradas oficiales se enlazan desde esta ficha: ${input.ticketsUrl}`
+        : `Official tickets are linked from this page: ${input.ticketsUrl}`,
+    })
+  }
+
+  if (input.ageRestriction) {
+    items.push({
+      question: es ? `¿Hay restricción de edad en ${input.name}?` : `Is there an age limit for ${input.name}?`,
+      answer: es
+        ? `Restricción de edad: ${input.ageRestriction}.`
+        : `Age restriction: ${input.ageRestriction}.`,
+    })
+  }
+
+  if (input.lineupNames.length > 0) {
+    const preview = input.lineupNames.slice(0, 12).join(', ')
+    const more = input.lineupNames.length > 12
+    items.push({
+      question: es ? `¿Quién toca en ${input.name}?` : `Who is playing at ${input.name}?`,
+      answer: es
+        ? `Cartel confirmado en Optimal Breaks: ${preview}${more ? '…' : '.'}`
+        : `Confirmed line-up on Optimal Breaks: ${preview}${more ? '…' : '.'}`,
+    })
+  }
+
+  return items
+}
+
+function RelatedEventList({ lang, items }: { lang: Locale; items: RelatedEventRow[] }) {
+  return (
+    <div className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] divide-y divide-white/10">
+      {items.map((row) => {
+        const dateBit = row.date_start
+          ? new Date(`${row.date_start.slice(0, 10)}T12:00:00`).toLocaleDateString(
+              lang === 'es' ? 'es-ES' : 'en-GB',
+              { day: 'numeric', month: 'short', year: 'numeric' },
+            )
+          : null
+        const meta = [dateBit, row.city || null, row.venue || null].filter(Boolean).join(' · ')
+        return (
+          <Link
+            key={row.slug}
+            href={`/${lang}/events/${row.slug}`}
+            className="block px-5 py-3.5 no-underline text-[var(--paper)] hover:bg-white/5 transition-colors"
+          >
+            <div
+              style={{
+                fontFamily: "'Darker Grotesque', sans-serif",
+                fontWeight: 800,
+                fontSize: '16px',
+                lineHeight: 1.25,
+              }}
+            >
+              {row.name}
+            </div>
+            {meta && (
+              <div
+                className="mt-1 opacity-70"
+                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}
+              >
+                {meta}
+              </div>
+            )}
+          </Link>
+        )
+      })}
     </div>
   )
 }
