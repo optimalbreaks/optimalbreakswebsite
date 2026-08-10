@@ -444,7 +444,6 @@ export async function fetchArtistFeaturedPicks(
     )
     .or(artistNamesOr)
     .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-    .limit(48)
 
   if (error || !data?.length) return []
   return mapFeaturedPickRows(data as unknown as FeaturedPickRow[])

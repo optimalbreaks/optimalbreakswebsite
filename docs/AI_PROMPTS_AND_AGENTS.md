@@ -20,6 +20,7 @@ Los **textos de sistema** de los agentes editoriales (fichas de artista, sello, 
 | `sello-agente-revision-system.txt` | Modo revisión del CLI de sello. |
 | `evento-enriquecer-system.txt` | **Enriquecedor de eventos** (`scripts/enriquecer-evento.mjs`, API `POST /api/admin/agent/event`). |
 | `admin-chat-system.txt` | **Agente conversacional admin** (widget PWA, `POST /api/admin/agent/chat`, tools + Confirmar; fechas cartel sin año → futura). Guía: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
+| `blog-agente-system.txt` | **Redactor de artículos de blog** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Modelo por defecto **`gpt-5.5`**. |
 
 Las **instrucciones de usuario** (checklist, slug, contexto web, notas) se arman en **código** en cada script o `route.ts`; no están centralizadas en un solo `.txt`.
 
@@ -102,6 +103,7 @@ Si unifica criterios editoriales, busca en el fichero del script o en `src/app/a
 | `sello-agente-revision-system.txt` | Label CLI revision mode. |
 | `evento-enriquecer-system.txt` | **Event enricher** (`enriquecer-evento.mjs`, `POST /api/admin/agent/event`). |
 | `admin-chat-system.txt` | **Admin conversational agent** (PWA widget, `POST /api/admin/agent/chat`, tools + Confirm; flyer dates without year → next future). Guide: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
+| `blog-agente-system.txt` | **Blog article writer** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Default model **`gpt-5.5`**. |
 
 **User-side instructions** (checklists, slug, web context, notes) are built in **code** in each script or `route.ts`.
 

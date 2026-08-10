@@ -264,7 +264,10 @@ async function main() {
       name,
       name_display: stripParens(name).toUpperCase().replace(/\s+/g, ' '),
       real_name: null,
-      country: 'UK',
+      // País desconocido al crear desde el chart: NO asumir UK (causó fichas erróneas
+      // tipo Vital Drums / The Return Good, productores andaluces marcados como británicos).
+      // El agente editorial (enrich-chart-artists-agent) debe verificarlo con evidencia.
+      country: '',
       category: 'current',
       styles: ['Breakbeat', 'Electronic', 'Bass'],
       era: '2000s–present',

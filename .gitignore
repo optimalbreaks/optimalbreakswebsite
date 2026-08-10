@@ -41,12 +41,16 @@ tmp-*.log
 tmp-*.txt
 tmp-*.json
 
-# Logs de lotes NR / imports de vinilos y colas pendientes (trabajo del agente)
-data/charts/.batch*.log
+# Logs de lotes NR / imports de vinilos / bios y colas pendientes (trabajo del agente)
+data/charts/**/*.log
+data/charts/*.log
 data/charts/pending-nr-urls-*.txt
-data/charts/vinyl/.import-*.log
 listaseman*.txt
 listasemana*.txt
+
+# Briefs / notas de trabajo del agente de blog (no el JSON canónico de artículos)
+data/blog/_brief*
+data/blog/*.brief.txt
 
 # IDE
 .vscode/

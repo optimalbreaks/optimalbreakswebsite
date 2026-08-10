@@ -288,18 +288,22 @@ function buildNotesFile({ slug, name, ctx, weekHint, profileMode = 'revise' }) {
     profileMode === 'new'
       ? `- There is **no** local profile yet for slug \`${slug}\`: produce a **full** encyclopedia-style Optimal Breaks JSON (not a placeholder).
 - Anchor the profile in **breakbeat / electronic club**; this name appears multiple times in the Optimal Breaks weekly 40 / New Releases exports — mention the chart **once** in bios only if it fits naturally, never as the whole article.
-- Use labels and track titles below as **disambiguation** cues; do not invent exact chart positions, sales, or dates.`
+- Use labels and track titles below as **disambiguation** cues; do not invent exact chart positions, sales, or dates.
+- **Country (mandatory):** only set \`country\` with real evidence (public profiles, label geography, credits); many current breaks producers are Spanish/Andalusian. If unverifiable, use "" — never default to \`UK\`. Never infer biography from words in the stage name.`
       : `- Revise and expand the existing JSON bios; keep the same artist identity and slug \`${slug}\`.
 - Anchor the profile in **breakbeat / electronic club** context.
 - **Never** mention Optimal Breaks, «40 Breaks Vitales», extended roster, chart metadata, or that the artist is listed on this website — write for readers who are already here.
-- Use labels and track titles above only as **disambiguation** and scene hints; do not fabricate chart positions, sales, or exact dates.`
+- Use labels and track titles above only as **disambiguation** and scene hints; do not fabricate chart positions, sales, or exact dates.
+- **Country/identity check (mandatory):** the current \`country\` may be an unverified starter default (often \`UK\`). Verify nationality against public profiles, label geography and credits; many current breaks producers are Spanish/Andalusian (Samay, ElectroBreakz, Basstinazo, Banana Club, Delicious Groove, Sound Perfect Breakz…). If unverifiable, set \`country\` to "" — never keep or invent \`UK\`.
+- **Never infer biography from words in the stage name** (no "Good" → Good Looking/LTJ Bukem-style leaps); use labels, BPM, collaborators and real profiles instead.`
 
   const esEdit =
     profileMode === 'new'
       ? `- Aún **no** hay ficha local para el slug \`${slug}\`: genera una entrada **completa** al estilo Optimal Breaks (no un placeholder).
 - Ancla el perfil en **breakbeat / electrónica de club**; este nombre aparece varias veces en los export del 40 / New Releases — menciona el chart **como mucho una vez** si encaja; nunca como texto único de la bio.
-- Usa sellos y temas solo como **pistas de desambiguación**; no inventes posiciones exactas en listas, ventas ni fechas.`
-      : `Instrucciones: revisa y amplía las bios del JSON; mantén slug \`${slug}\` y identidad; ancla en **breakbeat / electrónica de club**; **nunca** menciones Optimal Breaks, «40 Breaks Vitales», listado extendido ni metadatos del chart — el lector ya está en el sitio; usa sellos y títulos solo como pistas de desambiguación; no inventes datos.`
+- Usa sellos y temas solo como **pistas de desambiguación**; no inventes posiciones exactas en listas, ventas ni fechas.
+- **País (obligatorio):** solo pon \`country\` con evidencia real (perfiles públicos, sede de sellos, créditos); muchos productores actuales de breaks son españoles/andaluces. Si no se puede verificar, usa "" — nunca \`UK\` por defecto. Prohibido inferir biografía por palabras del nombre artístico.`
+      : `Instrucciones: revisa y amplía las bios del JSON; mantén slug \`${slug}\` y identidad; ancla en **breakbeat / electrónica de club**; **nunca** menciones Optimal Breaks, «40 Breaks Vitales», listado extendido ni metadatos del chart — el lector ya está en el sitio; usa sellos y títulos solo como pistas de desambiguación; no inventes datos. **Verificación de país obligatoria:** el \`country\` actual puede ser plantilla sin verificar (a menudo \`UK\`); contrasta con perfiles públicos, sede de sellos y créditos — muchos productores actuales de breaks son españoles/andaluces (Samay, ElectroBreakz, Basstinazo, Banana Club…). Si no se puede verificar, \`country\` = "" — nunca mantengas ni inventes \`UK\`. **Prohibido inferir biografía por palabras del nombre artístico** (nada de saltos tipo «Good» → Good Looking/LTJ Bukem).`
 
   let body = `# Chart context — Optimal Breaks «40 Breaks Vitales» (${weekHint})
 

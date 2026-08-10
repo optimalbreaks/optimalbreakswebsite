@@ -601,13 +601,14 @@ async function refreshAllBlogCoversFromDb(sb, args) {
     .select('id, slug, title_es, title_en, excerpt_es, content_es')
     .eq('is_published', true)
     .order('published_at', { ascending: false })
+  if (args.slug) q = q.eq('slug', args.slug)
   if (args.limit) q = q.limit(args.limit)
   const { data: posts, error: listErr } = await q
   if (listErr) throw new Error(`Listar blog_posts: ${listErr.message}`)
   const list = posts || []
 
   console.log(
-    `\n🖼  Regenerar TODAS las portadas desde BD: ${list.length} posts${args.dryRun ? ' [DRY-RUN]' : ''}\n`,
+    `\n🖼  Regenerar portadas desde BD: ${list.length} posts${args.slug ? ` (slug=${args.slug})` : ''}${args.dryRun ? ' [DRY-RUN]' : ''}\n`,
   )
 
   let ok = 0
@@ -815,6 +816,7 @@ function parseArgs() {
     refreshImages: false,
     refreshImagesFromDb: false,
     onlyMissing: false,
+    slug: null,
   }
   for (let i = 0; i < a.length; i++) {
     if (a[i] === '--csv' && a[i + 1]) {
@@ -831,6 +833,16 @@ function parseArgs() {
     }
     if (a[i] === '--limit' && a[i + 1]) {
       out.limit = parseInt(a[++i], 10) || null
+      continue
+    }
+    if (a[i] === '--slug' && a[i + 1]) {
+      out.slug = String(a[++i] || '')
+        .trim()
+        .toLowerCase()
+      continue
+    }
+    if (a[i].startsWith('--slug=')) {
+      out.slug = a[i].slice('--slug='.length).trim().toLowerCase()
       continue
     }
     if (a[i] === '--dry-run') {

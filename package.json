@@ -22,6 +22,7 @@
     "db:label": "node scripts/actualizar-sello.mjs",
     "db:label:agent": "node scripts/generar-sello-agente.mjs",
     "db:label:agent:all": "node scripts/generar-sello-agente.mjs --from-db",
+    "db:blog:agent": "node scripts/generar-blog-agente.mjs",
     "db:labels:discogs": "node scripts/discogs-find-labels.mjs",
     "db:labels:discogs:images": "node scripts/discogs-labels-images.mjs",
     "db:timeline": "node scripts/sync-timeline-artists.mjs",

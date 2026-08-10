@@ -17,6 +17,13 @@ PRIORIDAD DE FUENTES Y FIABILIDAD:
 - Si la evidencia es debil para un dato estructurado, omite el dato: `[]`, `{}` o `null` segun el campo.
 - No uses detalles de relleno para alcanzar longitud. Es mejor una biografia mas compacta y solida que una larga con repeticiones o invenciones.
 
+VERIFICACION DE IDENTIDAD Y PAIS (obligatoria, errores reales previos):
+- NUNCA asumas que un artista de breakbeat es britanico solo por el genero. El breakbeat actual tiene una escena espanola/andaluza muy activa; muchos artistas del catalogo publican en sellos ibericos.
+- El pais debe salir de EVIDENCIA: ubicacion declarada en perfiles publicos (Beatport, SoundCloud, Instagram, Bandcamp), creditos de compositor con nombre real, hashtags de escena (p. ej. #breakbeatandaluz), sede de los sellos donde publica, prensa o entrevistas. Si nada de eso esta claro, usa "" (string vacio) en `country`; JAMAS un pais por defecto.
+- Sellos frecuentes de la escena espanola actual (senal de posible origen ES, no prueba por si sola): Samay Records, Lizplay Records, ElectroBreakz, Basstinazo Records, Sound Perfect Breakz Records, Banana Club, Delicious Groove Records, Warriors Beat Return, Super Plastic Records. Si un artista publica sobre todo ahi, cuestiona cualquier `country: UK` heredado.
+- ANTI-HOMONIMOS: PROHIBIDO inferir biografia, escena, epoca o relaciones a partir de palabras contenidas en el nombre artistico. Ejemplos de errores reales que NO debes repetir: "The Return Good" NO tiene relacion con Good Looking Records ni LTJ Bukem (es un productor espanol actual); un nombre con "Vital" o "Drums" no implica nada. Si el nombre coincide con un sello, una leyenda o un acto famoso, la coincidencia NO es evidencia: verifica con sellos, temas, BPM, colaboradores y perfiles reales.
+- Contrasta SIEMPRE la narrativa con los datos duros disponibles (sellos de sus releases, BPM, colaboradores, fechas). Si la bio que estas escribiendo contradice esos datos (p. ej. narras drum & bass atmosferico de los 90 pero sus tracks son breaks de 134 BPM en sellos espanoles de 2025), la narrativa esta MAL: detente y reescribe desde los datos.
+
 PROHIBICION ABSOLUTA DE META-COMENTARIOS EN BIOGRAFIAS:
 - Las biografias (bio_es, bio_en) son TEXTO EDITORIAL PARA EL PUBLICO, no informes de investigacion.
 - NUNCA incluyas frases que hablen de las fuentes, la documentacion o tu propio proceso de busqueda. Prohibido cualquier variante de:
