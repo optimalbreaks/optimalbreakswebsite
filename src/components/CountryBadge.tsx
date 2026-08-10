@@ -33,8 +33,8 @@ export default function CountryBadge({
   lang: Locale | string
   size?: FlagSize
   showLabel?: boolean
-  /** cutout = etiqueta del listado; overlay = tarjeta oscura home; plain = inline */
-  variant?: 'cutout' | 'overlay' | 'plain'
+  /** cutout = etiqueta con fondo; overlay = tarjeta oscura home; plain = inline; accent = bandera + texto rojo sin fondo */
+  variant?: 'cutout' | 'overlay' | 'plain' | 'accent'
   className?: string
 }) {
   const codes = countryIsoCodesFromCode(country)
@@ -52,7 +52,9 @@ export default function CountryBadge({
           ? ''
           : variant === 'cutout'
             ? ''
-            : 'text-[var(--ink)]/70'
+            : variant === 'accent'
+              ? 'text-[var(--red)]'
+              : 'text-[var(--ink)]/70'
       }
       style={
         variant === 'overlay'

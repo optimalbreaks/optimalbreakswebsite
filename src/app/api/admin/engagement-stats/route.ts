@@ -47,9 +47,11 @@ export async function GET(request: NextRequest) {
     for (const row of keysRes.data ?? []) {
       counts.set(row.canonical_key, (counts.get(row.canonical_key) ?? 0) + 1)
     }
-    const topRows = [...counts.entries()]
-      .map(([canonical_key, play_count]) => ({ canonical_key, play_count }))
-      .sort((a, b) => b.play_count - a.play_count)
+    const topRows: { canonical_key: string; play_count: number }[] = []
+    counts.forEach((play_count, canonical_key) => {
+      topRows.push({ canonical_key, play_count })
+    })
+    topRows.sort((a, b) => b.play_count - a.play_count)
 
     payload.track_plays_summary = {
       all_time: allRes.count ?? 0,

@@ -429,19 +429,22 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {artists.map((a) => (
-        <div key={a.slug} className="relative border-b-[2px] border-[var(--ink)]">
+        <div
+          key={a.slug}
+          className="group flex items-center border-b-[2px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)]"
+        >
           <Link
             href={`/${lang}/artists/${a.slug}`}
-            className="flex items-center gap-3 sm:gap-5 px-4 sm:px-6 py-3 pr-12 transition-all duration-150 hover:bg-[var(--yellow)] group no-underline text-[var(--ink)]"
+            className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 no-underline text-[var(--ink)] sm:gap-5 sm:px-6"
           >
-            <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 overflow-hidden border-[2px] border-[var(--ink)]">
+            <div className="h-10 w-10 shrink-0 overflow-hidden border-[2px] border-[var(--ink)] sm:h-12 sm:w-12">
               <CardThumbnail src={a.image_url} alt={a.name_display || a.name} aspectClass="aspect-square" frameClass="" />
             </div>
-            <div className="flex-grow min-w-0">
+            <div className="min-w-0 flex-grow">
               <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
                 {a.name_display || a.name}
               </div>
-              <div className="flex flex-wrap gap-[3px] mt-[2px]">
+              <div className="mt-[2px] flex flex-wrap gap-[3px]">
                 {a.styles?.slice(0, 3).map((s, si) => (
                   <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 5px' }}>
                     {s}
@@ -449,13 +452,18 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
                 ))}
               </div>
             </div>
-            <div className="hidden sm:flex gap-2 shrink-0 items-center">
-              {a.country ? <CountryBadge country={a.country} lang={lang} size="sm" variant="cutout" /> : null}
+            <div className="hidden shrink-0 items-center gap-2 sm:flex">
+              {a.country ? <CountryBadge country={a.country} lang={lang} size="sm" variant="accent" /> : null}
               <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{a.era}</span>
               {a.has_beatport_top && <BeatportBadge />}
             </div>
           </Link>
-          <FavoriteButton type="artist" entityId={a.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
+          <FavoriteButton
+            type="artist"
+            entityId={a.id}
+            lang={lang}
+            className="!relative !top-auto !right-auto !translate-y-0 shrink-0 mr-3 sm:mr-4"
+          />
         </div>
       ))}
     </div>
