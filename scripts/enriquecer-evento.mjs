@@ -3926,6 +3926,241 @@ async function runPatchBreaksBassGuauYoSpeedPerth2026(sb) {
   console.log('[patch-breaks-bass-guau-yo-speed-perth-2026] OK:', after)
 }
 
+const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_SLUG = 'breaks-bass-guau-yo-speed-melbourne-2026'
+const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_TICKETS =
+  'https://theindustrique.com.au/collections/whats-on/products/breaks-n-bass-guau-x-yo-speed-australian-tour'
+const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_IMAGE =
+  '/images/events/breaks-bass-guau-yo-speed-melbourne-2026.webp'
+const INDUSTRIQUE_WEB = 'https://theindustrique.com.au/'
+
+const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_LINEUP = [
+  'Guau',
+  'Yo Speed',
+  'Guau B2B Yo Speed',
+]
+
+const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_ROW = {
+  name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Melbourne)',
+  description_en:
+    'Rhythmiic Productions presents the Melbourne leg of the Guau + Yo Speed Australian Tour 2026 at The Industrique, Coburg North (Melbourne), Saturday 3 October 2026. Spanish breaks & bass headliners Guau and Yo Speed each play a solo set and close with Guau B2B Yo Speed — same format as the four-city October tour (Perth, Sydney, Brisbane, Melbourne). Local support still marked “coming soon” on the official Industrique listing at cataloguing time. R18. Address 5–7 Louvain Street, Coburg North VIC 3058. One of four distinct tour stops — not the Perth, Sydney or Brisbane dates.',
+  description_es:
+    'Rhythmiic Productions presenta la parada de Melbourne de la gira australiana Guau + Yo Speed 2026 en The Industrique, Coburg North (Melbourne), el sábado 3 de octubre de 2026. Los referentes españoles del breaks & bass Guau y Yo Speed con set en solitario cada uno y cierre Guau B2B Yo Speed — mismo formato que las cuatro ciudades de octubre (Perth, Sydney, Brisbane, Melbourne). Refuerzo local aún “coming soon” en la ficha oficial de Industrique al catalogar. R18. Dirección 5–7 Louvain Street, Coburg North VIC 3058. Una de las cuatro paradas del tour — no confundir con Perth, Sydney o Brisbane.',
+  event_type: 'club_night',
+  date_start: '2026-10-03',
+  date_end: null,
+  location: 'The Industrique, Coburg North, Melbourne, VIC, Australia',
+  city: 'Melbourne',
+  country: 'Australia',
+  venue: 'The Industrique',
+  address: '5–7 Louvain Street, Coburg North, Melbourne VIC 3058',
+  website: INDUSTRIQUE_WEB,
+  tickets_url: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_TICKETS,
+  image_url: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_IMAGE,
+  lineup: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_LINEUP,
+  tags: [
+    'breaks and bass',
+    'breaks & bass',
+    'guau',
+    'yo speed',
+    'guau b2b yo speed',
+    'rhythmiic productions',
+    'australian tour',
+    'melbourne',
+    'coburg north',
+    'the industrique',
+    'breakbeat',
+    'bass',
+    'australia',
+    '2026',
+  ],
+  socials: {
+    'The Industrique': INDUSTRIQUE_WEB,
+    Tickets: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_TICKETS,
+  },
+  age_restriction: '18+',
+  coords: { lat: -37.7271, lng: 144.9608 },
+}
+
+async function runPatchBreaksBassGuauYoSpeedMelbourne2026(sb) {
+  const row = {
+    slug: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url')
+    .eq('slug', BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breaks-bass-guau-yo-speed-melbourne-2026] OK:', after)
+}
+
+const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_SLUG = 'breaks-bass-guau-yo-speed-brisbane-2026'
+const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_TICKETS =
+  'https://tickets.oztix.com.au/outlet/event/114ff16c-5ab6-4fd4-8ffe-b65e3b57164a'
+const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_IMAGE =
+  '/images/events/breaks-bass-guau-yo-speed-brisbane-2026.webp'
+const BRIGHTSIDE_WEB = 'https://www.thebrightside.com.au/'
+
+const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_LINEUP = [
+  'Guau',
+  'Yo Speed',
+  'Guau B2B Yo Speed',
+  'Kenny Beeper',
+  'Bosketta',
+  'Rhythmiic',
+]
+
+const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_ROW = {
+  name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Brisbane)',
+  description_en:
+    'Rhythmiic Productions presents the Brisbane leg of the Guau + Yo Speed Australian Tour 2026: Monday 5 October 2026 (October long weekend) at The Brightside Outdoors, Fortitude Valley, 15:00–21:00 AEST. Guau and Yo Speed solo sets plus closing Guau B2B Yo Speed; local support Kenny Beeper, Bosketta and Rhythmiic per Oztix listing. Day-party format — distinct from the Perth (2 Oct), Sydney (4 Oct) and Melbourne (3 Oct) tour dates. 18+. The Brightside, Fortitude Valley QLD.',
+  description_es:
+    'Rhythmiic Productions presenta la parada de Brisbane de la gira australiana Guau + Yo Speed 2026: lunes 5 de octubre de 2026 (long weekend de octubre) en The Brightside Outdoors, Fortitude Valley, de 15:00 a 21:00 h (AEST). Sets en solitario de Guau y Yo Speed y cierre Guau B2B Yo Speed; refuerzo local Kenny Beeper, Bosketta y Rhythmiic según Oztix. Formato day party — distinto de Perth (2 oct), Sydney (4 oct) y Melbourne (3 oct). 18+. The Brightside, Fortitude Valley QLD.',
+  event_type: 'club_night',
+  date_start: '2026-10-05',
+  date_end: null,
+  location: 'The Brightside (Outdoors), Fortitude Valley, Brisbane, QLD, Australia',
+  city: 'Brisbane',
+  country: 'Australia',
+  venue: 'The Brightside (Outdoors)',
+  address: '566 Wickham Street, Fortitude Valley, Brisbane QLD 4006',
+  website: BRIGHTSIDE_WEB,
+  tickets_url: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_TICKETS,
+  image_url: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_IMAGE,
+  lineup: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_LINEUP,
+  tags: [
+    'breaks and bass',
+    'breaks & bass',
+    'guau',
+    'yo speed',
+    'guau b2b yo speed',
+    'rhythmiic productions',
+    'australian tour',
+    'brisbane',
+    'fortitude valley',
+    'the brightside',
+    'day party',
+    'long weekend',
+    'breakbeat',
+    'bass',
+    'australia',
+    '2026',
+    'oztix',
+  ],
+  socials: {
+    'The Brightside': BRIGHTSIDE_WEB,
+    Oztix: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_TICKETS,
+  },
+  age_restriction: '18+',
+  doors_open: '15:00',
+  doors_close: '21:00',
+  coords: { lat: -27.4572, lng: 153.0354 },
+}
+
+async function runPatchBreaksBassGuauYoSpeedBrisbane2026(sb) {
+  const row = {
+    slug: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breaks-bass-guau-yo-speed-brisbane-2026] OK:', after)
+}
+
+const BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_SLUG = 'breaks-bass-guau-yo-speed-sydney-2026'
+const BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_TICKETS =
+  'https://events.humanitix.com/guau-x-yo-speed-or-bre-ks-and-b-ss-or-sydney-or'
+const BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_IMAGE =
+  '/images/events/breaks-bass-guau-yo-speed-sydney-2026.webp'
+const ARQ_SYDNEY_WEB = 'https://arqsydney.com.au/'
+
+const BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_LINEUP = [
+  'Guau',
+  'Yo Speed',
+  'Guau B2B Yo Speed',
+  'Rhythmiic',
+]
+
+const BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_ROW = {
+  name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Sydney)',
+  description_en:
+    'Rhythmiic Productions presents the Sydney leg of the Guau + Yo Speed Australian Tour 2026 at ARQ Sydney Basement, Darlinghurst, Sunday 4 October 2026 (long weekend), 20:00–04:00 AEDT. Guau and Yo Speed solo sets plus a one-hour Guau B2B Yo Speed finale; Rhythmiic on support with further names TBA on Humanitix. All-night basement rave — separate event from Perth (2 Oct), Melbourne (3 Oct) and Brisbane day party (5 Oct). 18+. Address 16 Flinders Street, Darlinghurst NSW 2010.',
+  description_es:
+    'Rhythmiic Productions presenta la parada de Sydney de la gira australiana Guau + Yo Speed 2026 en ARQ Sydney Basement, Darlinghurst, domingo 4 de octubre de 2026 (long weekend), de 20:00 a 04:00 h (AEDT). Sets en solitario de Guau y Yo Speed y cierre Guau B2B Yo Speed de una hora; Rhythmiic en refuerzo con más nombres por confirmar en Humanitix. Rave nocturna en basement — evento distinto de Perth (2 oct), Melbourne (3 oct) y Brisbane day party (5 oct). 18+. Dirección 16 Flinders Street, Darlinghurst NSW 2010.',
+  event_type: 'club_night',
+  date_start: '2026-10-04',
+  date_end: null,
+  location: 'ARQ Sydney Basement, Darlinghurst, Sydney, NSW, Australia',
+  city: 'Sydney',
+  country: 'Australia',
+  venue: 'ARQ Sydney Basement',
+  address: '16 Flinders Street, Darlinghurst, Sydney NSW 2010',
+  website: ARQ_SYDNEY_WEB,
+  tickets_url: BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_TICKETS,
+  image_url: BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_IMAGE,
+  lineup: BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_LINEUP,
+  tags: [
+    'breaks and bass',
+    'breaks & bass',
+    'guau',
+    'yo speed',
+    'guau b2b yo speed',
+    'rhythmiic productions',
+    'australian tour',
+    'sydney',
+    'darlinghurst',
+    'arq sydney',
+    'long weekend',
+    'breakbeat',
+    'bass',
+    'australia',
+    '2026',
+    'humanitix',
+  ],
+  socials: {
+    Humanitix: BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_TICKETS,
+    'ARQ Sydney': ARQ_SYDNEY_WEB,
+  },
+  age_restriction: '18+',
+  doors_open: '20:00',
+  doors_close: '04:00',
+  coords: { lat: -33.8747, lng: 151.2185 },
+}
+
+async function runPatchBreaksBassGuauYoSpeedSydney2026(sb) {
+  const row = {
+    slug: BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url, image_url, doors_open')
+    .eq('slug', BREAKS_BASS_GUAU_YO_SPEED_SYDNEY_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breaks-bass-guau-yo-speed-sydney-2026] OK:', after)
+}
+
 const BIONIC_BEATSLAPPAZ_SI_PARADISO_PERTH_2026_SLUG = 'bionic-beatslappaz-si-paradiso-perth-2026'
 const BIONIC_BEATSLAPPAZ_FACEBOOK =
   'https://www.facebook.com/events/s/bionic/4426760787598683/'
@@ -4829,6 +5064,21 @@ async function main() {
 
   if (argv.includes('--patch-breaks-bass-guau-yo-speed-perth-2026')) {
     await runPatchBreaksBassGuauYoSpeedPerth2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breaks-bass-guau-yo-speed-melbourne-2026')) {
+    await runPatchBreaksBassGuauYoSpeedMelbourne2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breaks-bass-guau-yo-speed-brisbane-2026')) {
+    await runPatchBreaksBassGuauYoSpeedBrisbane2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breaks-bass-guau-yo-speed-sydney-2026')) {
+    await runPatchBreaksBassGuauYoSpeedSydney2026(sb)
     return
   }
 

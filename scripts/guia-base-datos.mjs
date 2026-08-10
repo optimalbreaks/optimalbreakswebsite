@@ -84,6 +84,14 @@ const ACTIONS = [
       'Redactor IA de sellos (mismo flujo que agent de artistas): prompts/sello-agente-*.txt; --revise, --notes, --json-only, --save-json; --from-db para lote.',
   },
   {
+    id: 'blog-agent',
+    run: 'node scripts/guia-base-datos.mjs run blog-agent -- <slug> "Título ES" [--featured] [--brief archivo] [--no-search] [--json-only] [--save-json]',
+    npm: 'npm run db:blog:agent -- …',
+    creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI / OPENAI web_search',
+    description:
+      'Redactor IA de artículos de blog (gpt-5.5 por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte.',
+  },
+  {
     id: 'photo',
     run: 'node scripts/guia-base-datos.mjs run photo -- <slug> | --all | --repair [--limit=N] …',
     npm: 'npm run db:artist:photo -- <slug> | npm run db:artist:photo:repair | npm run db:artist:sync-public-portraits',
@@ -521,6 +529,30 @@ const ACTIONS = [
       'UPSERT breaks-bass-guau-yo-speed-perth-2026: Breaks & Bass Guau + Yo Speed Australian Tour, The Aberdeen Hotel Perth 2 oct 2026 (Robwun, Micah B2B Philly Blunt, Krypsis, Rhythmiic), Megatix / RA.',
   },
   {
+    id: 'events-patch-breaks-bass-guau-yo-speed-melbourne-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breaks-bass-guau-yo-speed-melbourne-2026',
+    npm: 'npm run db:guia -- run events-patch-breaks-bass-guau-yo-speed-melbourne-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breaks-bass-guau-yo-speed-melbourne-2026: Guau + Yo Speed Australian Tour, The Industrique Melbourne 3 oct 2026, Industrique shop tickets.',
+  },
+  {
+    id: 'events-patch-breaks-bass-guau-yo-speed-brisbane-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breaks-bass-guau-yo-speed-brisbane-2026',
+    npm: 'npm run db:guia -- run events-patch-breaks-bass-guau-yo-speed-brisbane-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breaks-bass-guau-yo-speed-brisbane-2026: Guau + Yo Speed Australian Tour day party, The Brightside Outdoors Brisbane 5 oct 2026 (Kenny Beeper, Bosketta, Rhythmiic), Oztix.',
+  },
+  {
+    id: 'events-patch-breaks-bass-guau-yo-speed-sydney-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breaks-bass-guau-yo-speed-sydney-2026',
+    npm: 'npm run db:guia -- run events-patch-breaks-bass-guau-yo-speed-sydney-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breaks-bass-guau-yo-speed-sydney-2026: Guau + Yo Speed Australian Tour, ARQ Sydney Basement 4 oct 2026 (Rhythmiic + TBA), Humanitix.',
+  },
+  {
     id: 'events-patch-bionic-beatslappaz-si-paradiso-perth-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-bionic-beatslappaz-si-paradiso-perth-2026',
     npm: 'npm run db:guia -- run events-patch-bionic-beatslappaz-si-paradiso-perth-2026',
@@ -719,6 +751,7 @@ Punto de entrada unificado:
   agent -- …             generar-artista-agente.mjs (pasar args tras --)
   label-json <slug>      UPSERT desde data/labels/<slug>.json
   label-agent -- …       generar-sello-agente.mjs (pasar args tras --)
+  blog-agent -- …        generar-blog-agente.mjs (artículos blog_posts; gpt-5.5)
   photo -- …             elegir-foto-artista.mjs
   label-photo -- …       elegir-foto-sello.mjs (logos sellos)
   labels-discogs [--apply] [--slug X] [--limit N] [--all] [--strict]
@@ -778,6 +811,9 @@ Punto de entrada unificado:
   events-patch-stanton-sessions-steelyard-london-2026  Stanton Sessions, The Steelyard London 10 oct 2026 (Skiddle)
   events-patch-deekline-iron-cow-orlando-2026  Deekline @ Iron Cow Orlando 18 jul 2026 (Happeningnext)
   events-patch-breaks-bass-guau-yo-speed-perth-2026  Breaks & Bass Guau + Yo Speed, The Aberdeen Perth 2 oct 2026 (Megatix / RA)
+  events-patch-breaks-bass-guau-yo-speed-melbourne-2026  Guau + Yo Speed tour, The Industrique Melbourne 3 oct 2026
+  events-patch-breaks-bass-guau-yo-speed-brisbane-2026  Guau + Yo Speed tour day party, The Brightside Brisbane 5 oct 2026 (Oztix)
+  events-patch-breaks-bass-guau-yo-speed-sydney-2026  Guau + Yo Speed tour, ARQ Sydney Basement 4 oct 2026 (Humanitix)
   events-patch-bionic-beatslappaz-si-paradiso-perth-2026  Bionic / Beatslappaz, Si Paradiso Basement Perth 28 ago 2026 (Humanitix)
   events-patch-dub-elements-friends  Dub Elements & Friends, Pandora Sevilla 11 sept 2026 (Fourvenues)
   events-delete-slug <slug>            borrar un evento por slug (duplicados)
@@ -1068,6 +1104,9 @@ function main() {
     case 'label-agent':
       runNode('generar-sello-agente.mjs', stripLeadingDashDash(rest))
       break
+    case 'blog-agent':
+      runNode('generar-blog-agente.mjs', stripLeadingDashDash(rest))
+      break
     case 'photo':
       runNode('elegir-foto-artista.mjs', stripLeadingDashDash(rest))
       break
@@ -1257,6 +1296,15 @@ function main() {
       break
     case 'events-patch-breaks-bass-guau-yo-speed-perth-2026':
       runNode('enriquecer-evento.mjs', ['--patch-breaks-bass-guau-yo-speed-perth-2026', ...rest])
+      break
+    case 'events-patch-breaks-bass-guau-yo-speed-melbourne-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breaks-bass-guau-yo-speed-melbourne-2026', ...rest])
+      break
+    case 'events-patch-breaks-bass-guau-yo-speed-brisbane-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breaks-bass-guau-yo-speed-brisbane-2026', ...rest])
+      break
+    case 'events-patch-breaks-bass-guau-yo-speed-sydney-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breaks-bass-guau-yo-speed-sydney-2026', ...rest])
       break
     case 'events-patch-bionic-beatslappaz-si-paradiso-perth-2026':
       runNode('enriquecer-evento.mjs', ['--patch-bionic-beatslappaz-si-paradiso-perth-2026', ...rest])
