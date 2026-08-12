@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createBrowserSupabase } from '@/lib/supabase'
@@ -38,7 +38,7 @@ import {
   buildVinylSharePath,
   extractBeatportTrackId,
 } from '@/lib/share-track'
-import { ArtistNames, type ArtistCredit } from '@/components/ArtistNames'
+import { ArtistNames, LabelName, type ArtistCredit } from '@/components/ArtistNames'
 import {
   buildFullArtistSlugMap,
   filterArtistSlugMapForNames,
@@ -48,15 +48,19 @@ import {
 
 /** Evita URLs demasiado largas / tope PostgREST al resolver muchos UUIDs con `.in()`. */
 const IN_CHUNK = 200
+/** Filas montadas de golpe; el resto entra al hacer scroll. La cola de Play all es la lista completa. */
+const LIST_PAGE_SIZE = 40
 
 async function selectByIds<T>(
   ids: string[],
   run: (chunk: string[]) => PromiseLike<{ data: T[] | null }>,
 ): Promise<T[]> {
   if (!ids.length) return []
+  const chunks: string[][] = []
+  for (let i = 0; i < ids.length; i += IN_CHUNK) chunks.push(ids.slice(i, i + IN_CHUNK))
+  const results = await Promise.all(chunks.map((chunk) => run(chunk)))
   const out: T[] = []
-  for (let i = 0; i < ids.length; i += IN_CHUNK) {
-    const { data } = await run(ids.slice(i, i + IN_CHUNK))
+  for (const { data } of results) {
     if (data?.length) out.push(...data)
   }
   return out
@@ -177,6 +181,196 @@ function parseArtistCredits(artists: unknown): ArtistCredit[] {
 function trackArtistCredits(t: UnifiedTrack): ArtistCredit[] {
   if (t.artist_credits?.length) return t.artist_credits
   return splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))
+}
+
+type LiveTrackBags = { chart: any[]; featured: any[]; vinyl: any[] }
+
+type SavedRowLike = {
+  track_source: ChartTrackSource
+  track_id: string
+  canonical_url?: string | null
+  snapshot?: Record<string, any> | null
+  created_at?: string | null
+}
+
+/**
+ * Une saves + filas vivas (o solo snapshots) en la lista deduplicada.
+ * Sin `live` todavía se puede pintar: el snapshot de `saved_chart_tracks`
+ * trae título, artwork y sample_url en la mayoría de saves recientes.
+ */
+function assembleUnifiedTracks(
+  saved: SavedRowLike[],
+  live: LiveTrackBags,
+  lang: string,
+): UnifiedTrack[] {
+  const byKey = new Map<string, UnifiedTrack>()
+  for (const c of live.chart) {
+    const credits = parseArtistCredits(c.artists)
+    byKey.set(`chart:${c.id}`, {
+      key: `chart:${c.id}`, source: 'chart', id: c.id,
+      title: c.title, mix_name: c.mix_name,
+      artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(c.artists),
+      artist_credits: credits.length ? credits : undefined,
+      label: c.label, year: c.release_year, release_date: c.release_date ?? null, bpm: c.bpm, music_key: c.music_key,
+      artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
+      sample_url: c.sample_url,
+      week_date: c.week_date ?? null,
+    })
+  }
+  for (const f of live.featured) {
+    const credits = parseArtistCredits(f.artists)
+    byKey.set(`featured:${f.id}`, {
+      key: `featured:${f.id}`, source: 'featured', id: f.id,
+      title: f.title, mix_name: f.mix_name,
+      artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(f.artists),
+      artist_credits: credits.length ? credits : undefined,
+      label: f.label, year: f.release_year, release_date: f.release_date ?? null, bpm: f.bpm, music_key: f.music_key,
+      artwork_url: f.artwork_url, external_url: f.link_url,
+      external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
+      sample_url: f.sample_url, platform: f.platform,
+      note: lang === 'es' ? f.note_es : f.note_en,
+      week_date: f.week_date ?? null,
+    })
+  }
+  for (const v of live.vinyl) {
+    const credits = parseArtistCredits(v.artists)
+    byKey.set(`vinyl:${v.id}`, {
+      key: `vinyl:${v.id}`, source: 'vinyl', id: v.id,
+      title: v.title, mix_name: v.mix_name,
+      artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(v.artists),
+      artist_credits: credits.length ? credits : undefined,
+      label: v.label, year: v.year,
+      artwork_url: v.artwork_url, external_url: v.discogs_url, external_label: 'DISCOGS',
+      youtube_url: v.youtube_url,
+      note: lang === 'es' ? v.note_es : v.note_en,
+    })
+  }
+
+  for (const s of saved) {
+    if (s.track_source !== 'beatport_top') continue
+    const snap = (s.snapshot || {}) as Record<string, any>
+    const topCredits = parseArtistCredits(snap.artists)
+    byKey.set(`beatport_top:${s.track_id}`, {
+      key: `beatport_top:${s.track_id}`,
+      source: 'beatport_top',
+      id: s.track_id,
+      title: snap.title || '',
+      mix_name: snap.mix_name || undefined,
+      artists: topCredits.length ? topCredits.map((a) => a.name).join(', ') : (snap.artists || ''),
+      artist_credits: topCredits.length ? topCredits : undefined,
+      label: snap.label || undefined,
+      year: snap.year ?? null,
+      release_date: snap.release_date ?? null,
+      bpm: snap.bpm ?? null,
+      music_key: snap.music_key || undefined,
+      artwork_url: snap.artwork_url || null,
+      external_url: snap.beatport_url || s.canonical_url || null,
+      external_label: 'BEATPORT',
+      sample_url: snap.sample_url || null,
+    })
+  }
+
+  for (const s of saved) {
+    if (s.track_source === 'beatport_top') continue
+    const mapKey = `${s.track_source}:${s.track_id}`
+    if (byKey.has(mapKey)) continue
+    const snap = (s.snapshot || {}) as Record<string, any>
+    const title = String(snap.title || '').trim()
+    if (!title) continue
+    const credits = parseArtistCredits(snap.artists)
+    const base = {
+      key: mapKey,
+      source: s.track_source as Exclude<ChartTrackSource, 'beatport_top'>,
+      id: s.track_id,
+      title,
+      mix_name: (snap.mix_name as string | undefined) || undefined,
+      artists: credits.length ? credits.map((a) => a.name).join(', ') : String(snap.artists || ''),
+      artist_credits: credits.length ? credits : undefined,
+      label: (snap.label as string | undefined) || undefined,
+      year: (snap.year as number | null | undefined) ?? null,
+      release_date: (snap.release_date as string | null | undefined) ?? null,
+      bpm: (snap.bpm as number | null | undefined) ?? null,
+      music_key: (snap.music_key as string | undefined) || undefined,
+      artwork_url: (snap.artwork_url as string | null | undefined) || null,
+      sample_url: (snap.sample_url as string | null | undefined) || null,
+    }
+    if (s.track_source === 'featured') {
+      byKey.set(mapKey, {
+        ...base,
+        external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+        external_label: 'BEATPORT',
+        platform: (snap.platform as string | undefined) || undefined,
+      })
+    } else if (s.track_source === 'chart') {
+      byKey.set(mapKey, {
+        ...base,
+        external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+        external_label: 'BEATPORT',
+      })
+    } else if (s.track_source === 'vinyl') {
+      byKey.set(mapKey, {
+        ...base,
+        external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
+        external_label: 'DISCOGS',
+        youtube_url: (snap.youtube_url as string | undefined) || undefined,
+      })
+    }
+  }
+
+  const ordered = saved
+    .map((s) => {
+      const t = byKey.get(`${s.track_source}:${s.track_id}`)
+      if (!t) return null
+      return {
+        ...t,
+        saved_at: s.created_at ?? null,
+        snapshot: (s.snapshot as SavedChartTrackSnapshot | null) ?? null,
+        canonical_url: s.canonical_url ?? null,
+      }
+    })
+    .filter(Boolean) as UnifiedTrack[]
+
+  const normalizeUrl = (u: string) => {
+    const yt = extractYouTubeId(u)
+    if (yt) return `yt:${yt}`
+    try {
+      const url = new URL(u)
+      return `${url.host}${url.pathname.replace(/\/$/, '')}`
+    } catch {
+      return u.replace(/[?#].*$/, '').replace(/\/$/, '')
+    }
+  }
+  const canonicalKey = (t: UnifiedTrack) => {
+    if (t.source === 'vinyl') {
+      const yt = (t.youtube_url || '').trim().toLowerCase()
+      if (yt) return normalizeUrl(yt)
+      return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
+    }
+    const u = (t.external_url || '').trim().toLowerCase()
+    if (u) return normalizeUrl(u)
+    return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
+  }
+  const byCanon = new Map<string, UnifiedTrack>()
+  for (const t of ordered) {
+    const k = canonicalKey(t)
+    const existing = byCanon.get(k)
+    if (!existing) {
+      byCanon.set(k, { ...t, refs: [{ source: t.source, id: t.id }] })
+      continue
+    }
+    existing.refs!.push({ source: t.source, id: t.id })
+    if (!existing.sample_url && t.sample_url) existing.sample_url = t.sample_url
+    if (!existing.youtube_url && t.youtube_url) existing.youtube_url = t.youtube_url
+    if (!existing.artwork_url && t.artwork_url) existing.artwork_url = t.artwork_url
+    if (!existing.bpm && t.bpm) existing.bpm = t.bpm
+    if (!existing.music_key && t.music_key) existing.music_key = t.music_key
+    if (!existing.note && t.note) existing.note = t.note
+    if (!existing.snapshot && t.snapshot) existing.snapshot = t.snapshot
+    if (!existing.canonical_url && t.canonical_url) existing.canonical_url = t.canonical_url
+    if (!existing.week_date && t.week_date) existing.week_date = t.week_date
+    if (!(existing.release_date || '').trim() && (t.release_date || '').trim()) existing.release_date = t.release_date
+  }
+  return Array.from(byCanon.values())
 }
 
 type SortBy = 'added' | 'artist' | 'title' | 'release'
@@ -308,6 +502,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const loading = isShared ? false : ownHook.loading
   const [tracks, setTracks] = useState<UnifiedTrack[]>([])
   const [tracksLoading, setTracksLoading] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(LIST_PAGE_SIZE)
   const [copiedUrl, setCopiedUrl] = useState(false)
   // Filtro multiselección. Por defecto las tres fuentes están activas
   // (equivalente a TODO). Útil para, p.ej., elegir solo Beatport+Bandcamp
@@ -369,263 +564,74 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     })
   }, [])
 
-  // Load real track data for every saved ref (grouped by source).
+  // Lista propia: pintar YA con snapshots; hidratar filas vivas en segundo plano.
+  // Lista compartida: el payload ya trae chart/featured/vinyl — ensamblar en sync.
   useEffect(() => {
     if (loading) return
-    if (saved.length === 0) { setTracks([]); return }
+    if (saved.length === 0) {
+      setTracks([])
+      setTracksLoading(false)
+      return
+    }
 
     let cancelled = false
-    setTracksLoading(true)
+
+    const liveFromPayload = (): LiveTrackBags => {
+      if (!isShared || !publicPayload) return { chart: [], featured: [], vinyl: [] }
+      const p = publicPayload
+      return {
+        chart: p.tracks.chart.map((c) => ({ ...c, release_year: c.year, release_date: c.release_date ?? null, artists: c.artists })),
+        featured: p.tracks.featured.map((f) => ({ ...f, release_year: f.year, release_date: f.release_date ?? null, artists: f.artists })),
+        vinyl: p.tracks.vinyl.map((v) => ({ ...v, artists: v.artists })),
+      }
+    }
+
+    if (isShared) {
+      setTracks(assembleUnifiedTracks(saved, liveFromPayload(), lang))
+      setTracksLoading(false)
+      return
+    }
+
+    const fromSnap = assembleUnifiedTracks(saved, { chart: [], featured: [], vinyl: [] }, lang)
+    setTracks(fromSnap)
+    setTracksLoading(fromSnap.length === 0)
 
     ;(async () => {
-      // En modo compartido, los registros ya vienen en el payload; en modo
-      // propio se consultan las tablas de charts desde el cliente.
-      let chartData: any[] = []
-      let featData: any[] = []
-      let vinylData: any[] = []
-      if (isShared) {
-        const p = publicPayload!
-        chartData = p.tracks.chart.map((c) => ({ ...c, release_year: c.year, release_date: c.release_date ?? null, artists: c.artists }))
-        featData = p.tracks.featured.map((f) => ({ ...f, release_year: f.year, release_date: f.release_date ?? null, artists: f.artists }))
-        vinylData = p.tracks.vinyl.map((v) => ({ ...v, artists: v.artists }))
-      } else {
-        const supabase = createBrowserSupabase()
-        const chartIds = saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)
-        const featuredIds = saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)
-        const vinylIds = saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)
+      const supabase = createBrowserSupabase()
+      const chartIds = saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)
+      const featuredIds = saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)
+      const vinylIds = saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)
 
-        ;[chartData, featData, vinylData] = await Promise.all([
-          selectByIds(chartIds, (chunk) =>
-            supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chunk),
-          ),
-          selectByIds(featuredIds, (chunk) =>
-            supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', chunk),
-          ),
-          selectByIds(vinylIds, (chunk) =>
-            supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
-          ),
-        ])
+      let [chartData, featData, vinylData] = await Promise.all([
+        selectByIds(chartIds, (chunk) =>
+          supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chunk),
+        ),
+        selectByIds(featuredIds, (chunk) =>
+          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', chunk),
+        ),
+        selectByIds(vinylIds, (chunk) =>
+          supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
+        ),
+      ])
 
-        // Resolvemos week_date de las ediciones implicadas para poder generar
-        // links compartibles "/charts?week=..&play=<source>:<id>" sin consulta
-        // extra por fila.
-        const editionIds = Array.from(new Set(
-          [
-            ...chartData.map((c: any) => c.chart_edition_id as string | null).filter((x): x is string => !!x),
-            ...featData.map((f: any) => f.chart_edition_id as string | null).filter((x): x is string => !!x),
-          ],
-        ))
-        if (editionIds.length) {
-          const edData = await selectByIds<{ id: string; week_date: string }>(editionIds, (chunk) =>
-            supabase.from('chart_editions').select('id, week_date').in('id', chunk),
-          )
-          const weekBy = new Map<string, string>()
-          for (const e of edData) weekBy.set(e.id, e.week_date)
-          chartData = chartData.map((c: any) => ({ ...c, week_date: c.chart_edition_id ? weekBy.get(c.chart_edition_id) ?? null : null }))
-          featData = featData.map((f: any) => ({ ...f, week_date: f.chart_edition_id ? weekBy.get(f.chart_edition_id) ?? null : null }))
-        }
-      }
-
-      const byKey = new Map<string, UnifiedTrack>()
-      for (const c of chartData) {
-        const credits = parseArtistCredits(c.artists)
-        byKey.set(`chart:${c.id}`, {
-          key: `chart:${c.id}`, source: 'chart', id: c.id,
-          title: c.title, mix_name: c.mix_name,
-          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(c.artists),
-          artist_credits: credits.length ? credits : undefined,
-          label: c.label, year: c.release_year, release_date: c.release_date ?? null, bpm: c.bpm, music_key: c.music_key,
-          artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
-          sample_url: c.sample_url,
-          week_date: c.week_date ?? null,
-        })
-      }
-      for (const f of featData) {
-        const credits = parseArtistCredits(f.artists)
-        byKey.set(`featured:${f.id}`, {
-          key: `featured:${f.id}`, source: 'featured', id: f.id,
-          title: f.title, mix_name: f.mix_name,
-          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(f.artists),
-          artist_credits: credits.length ? credits : undefined,
-          label: f.label, year: f.release_year, release_date: f.release_date ?? null, bpm: f.bpm, music_key: f.music_key,
-          artwork_url: f.artwork_url, external_url: f.link_url,
-          external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
-          sample_url: f.sample_url, platform: f.platform,
-          note: lang === 'es' ? f.note_es : f.note_en,
-          week_date: f.week_date ?? null,
-        })
-      }
-      for (const v of vinylData) {
-        const credits = parseArtistCredits(v.artists)
-        byKey.set(`vinyl:${v.id}`, {
-          key: `vinyl:${v.id}`, source: 'vinyl', id: v.id,
-          title: v.title, mix_name: v.mix_name,
-          artists: credits.length ? credits.map((a) => a.name).join(', ') : artistsToString(v.artists),
-          artist_credits: credits.length ? credits : undefined,
-          label: v.label, year: v.year,
-          artwork_url: v.artwork_url, external_url: v.discogs_url, external_label: 'DISCOGS',
-          youtube_url: v.youtube_url,
-          note: lang === 'es' ? v.note_es : v.note_en,
-        })
-      }
-
-      // Beatport Top 10: no hay fila en ninguna tabla de charts — la info
-      // viene embebida en `snapshot` del propio saved_chart_tracks.
-      for (const s of saved) {
-        if (s.track_source !== 'beatport_top') continue
-        const snap = (s.snapshot || {}) as Record<string, any>
-        const topCredits = parseArtistCredits(snap.artists)
-        byKey.set(`beatport_top:${s.track_id}`, {
-          key: `beatport_top:${s.track_id}`,
-          source: 'beatport_top',
-          id: s.track_id,
-          title: snap.title || '',
-          mix_name: snap.mix_name || undefined,
-          artists: topCredits.length ? topCredits.map((a) => a.name).join(', ') : (snap.artists || ''),
-          artist_credits: topCredits.length ? topCredits : undefined,
-          label: snap.label || undefined,
-          year: snap.year ?? null,
-          release_date: snap.release_date ?? null,
-          bpm: snap.bpm ?? null,
-          music_key: snap.music_key || undefined,
-          artwork_url: snap.artwork_url || null,
-          external_url: snap.beatport_url || s.canonical_url || null,
-          external_label: 'BEATPORT',
-          sample_url: snap.sample_url || null,
-        })
-      }
-
-      // Fallback snapshot: si un upsert pasado regeneró UUIDs en chart/featured/vinyl,
-      // la fila save sigue existiendo pero el join por track_id falla. Mostramos
-      // metadatos congelados del snapshot (igual que el endpoint público user-tracks).
-      for (const s of saved) {
-        if (s.track_source === 'beatport_top') continue
-        const mapKey = `${s.track_source}:${s.track_id}`
-        if (byKey.has(mapKey)) continue
-        const snap = (s.snapshot || {}) as Record<string, any>
-        const title = String(snap.title || '').trim()
-        if (!title) continue
-        const credits = parseArtistCredits(snap.artists)
-        const base = {
-          key: mapKey,
-          source: s.track_source as Exclude<ChartTrackSource, 'beatport_top'>,
-          id: s.track_id,
-          title,
-          mix_name: (snap.mix_name as string | undefined) || undefined,
-          artists: credits.length ? credits.map((a) => a.name).join(', ') : String(snap.artists || ''),
-          artist_credits: credits.length ? credits : undefined,
-          label: (snap.label as string | undefined) || undefined,
-          year: (snap.year as number | null | undefined) ?? null,
-          release_date: (snap.release_date as string | null | undefined) ?? null,
-          bpm: (snap.bpm as number | null | undefined) ?? null,
-          music_key: (snap.music_key as string | undefined) || undefined,
-          artwork_url: (snap.artwork_url as string | null | undefined) || null,
-          sample_url: (snap.sample_url as string | null | undefined) || null,
-        }
-        if (s.track_source === 'featured') {
-          byKey.set(mapKey, {
-            ...base,
-            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
-            external_label: 'BEATPORT',
-            platform: (snap.platform as string | undefined) || undefined,
-          })
-        } else if (s.track_source === 'chart') {
-          byKey.set(mapKey, {
-            ...base,
-            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
-            external_label: 'BEATPORT',
-          })
-        } else if (s.track_source === 'vinyl') {
-          byKey.set(mapKey, {
-            ...base,
-            external_url: (snap.beatport_url as string | undefined) || s.canonical_url || null,
-            external_label: 'DISCOGS',
-            youtube_url: (snap.youtube_url as string | undefined) || undefined,
-          })
-        }
+      const editionIds = Array.from(new Set(
+        [
+          ...chartData.map((c: any) => c.chart_edition_id as string | null).filter((x): x is string => !!x),
+          ...featData.map((f: any) => f.chart_edition_id as string | null).filter((x): x is string => !!x),
+        ],
+      ))
+      if (editionIds.length) {
+        const edData = await selectByIds<{ id: string; week_date: string }>(editionIds, (chunk) =>
+          supabase.from('chart_editions').select('id, week_date').in('id', chunk),
+        )
+        const weekBy = new Map<string, string>()
+        for (const e of edData) weekBy.set(e.id, e.week_date)
+        chartData = chartData.map((c: any) => ({ ...c, week_date: c.chart_edition_id ? weekBy.get(c.chart_edition_id) ?? null : null }))
+        featData = featData.map((f: any) => ({ ...f, week_date: f.chart_edition_id ? weekBy.get(f.chart_edition_id) ?? null : null }))
       }
 
       if (cancelled) return
-      const ordered = saved
-        .map((s) => {
-          const t = byKey.get(`${s.track_source}:${s.track_id}`)
-          if (!t) return null
-          // Propagamos snapshot y canonical_url del registro original a la
-          // UnifiedTrack. Esto es lo que permite que, desde una lista
-          // compartida, el visitante pueda clonar la track a su propia
-          // lista con toda la info necesaria (crítico para beatport_top,
-          // que no tiene fila en ninguna tabla de charts).
-          return {
-            ...t,
-            saved_at: s.created_at ?? null,
-            snapshot: (s.snapshot as SavedChartTrackSnapshot | null) ?? null,
-            canonical_url: s.canonical_url ?? null,
-          }
-        })
-        .filter(Boolean) as UnifiedTrack[]
-
-      // Dedupe: una canción sólo puede aparecer una vez aunque esté guardada
-      // desde varias fuentes (p.ej. 40 Breaks + Novedades). Clave canónica:
-      // URL externa normalizada; fallback a título+mix+artistas.
-      //
-      // IMPORTANTE para vinyl: `external_url` es la URL de Discogs, que
-      // identifica el RELEASE completo (muchas canciones del mismo LP
-      // comparten discogs_url). Si lo usásemos como clave, todas las pistas
-      // del mismo vinilo colapsarían en una sola fila. Para vinyl usamos el
-      // `youtube_url`, que sí es único por canción.
-      const normalizeUrl = (u: string) => {
-        // YouTube: el ID del vídeo está en la querystring (?v=…); host+pathname
-        // colapsaría todos los watch?v=… en la misma clave. Usamos el ID.
-        const yt = extractYouTubeId(u)
-        if (yt) return `yt:${yt}`
-        try {
-          const url = new URL(u)
-          return `${url.host}${url.pathname.replace(/\/$/, '')}`
-        } catch {
-          return u.replace(/[?#].*$/, '').replace(/\/$/, '')
-        }
-      }
-      const canonicalKey = (t: UnifiedTrack) => {
-        if (t.source === 'vinyl') {
-          const yt = (t.youtube_url || '').trim().toLowerCase()
-          if (yt) return normalizeUrl(yt)
-          return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
-        }
-        const u = (t.external_url || '').trim().toLowerCase()
-        if (u) return normalizeUrl(u)
-        return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
-      }
-      const byCanon = new Map<string, UnifiedTrack>()
-      for (const t of ordered) {
-        const k = canonicalKey(t)
-        const existing = byCanon.get(k)
-        if (!existing) {
-          byCanon.set(k, { ...t, refs: [{ source: t.source, id: t.id }] })
-          continue
-        }
-        existing.refs!.push({ source: t.source, id: t.id })
-        // Enriquecemos el representativo con campos que puedan faltarle
-        // (p.ej. el vinilo aporta youtube_url; chart/featured aportan sample).
-        if (!existing.sample_url && t.sample_url) existing.sample_url = t.sample_url
-        if (!existing.youtube_url && t.youtube_url) existing.youtube_url = t.youtube_url
-        if (!existing.artwork_url && t.artwork_url) existing.artwork_url = t.artwork_url
-        if (!existing.bpm && t.bpm) existing.bpm = t.bpm
-        if (!existing.music_key && t.music_key) existing.music_key = t.music_key
-        if (!existing.note && t.note) existing.note = t.note
-        // Preservamos snapshot / canonical_url si el representativo no los
-        // tiene pero un duplicado sí (típicamente: representativo es chart y
-        // se fusiona con su gemela beatport_top que sí trae snapshot).
-        if (!existing.snapshot && t.snapshot) existing.snapshot = t.snapshot
-        if (!existing.canonical_url && t.canonical_url) existing.canonical_url = t.canonical_url
-        // week_date del representativo puede venir null si es un beatport_top
-        // que se fusiona con un chart/featured de una semana concreta: en ese
-        // caso nos quedamos con la semana del duplicado (para que el botón
-        // "compartir" pueda apuntar al chart).
-        if (!existing.week_date && t.week_date) existing.week_date = t.week_date
-        if (!(existing.release_date || '').trim() && (t.release_date || '').trim()) existing.release_date = t.release_date
-      }
-      const deduped = Array.from(byCanon.values())
-      setTracks(deduped)
+      setTracks(assembleUnifiedTracks(saved, { chart: chartData, featured: featData, vinyl: vinylData }, lang))
       setTracksLoading(false)
     })()
 
@@ -633,41 +639,104 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saved, loading, lang, isShared])
 
-  // Mapa nombre → slug para enlazar artistas del catálogo (como en /charts).
+  const artistNamesKey = useMemo(() => {
+    const names: string[] = []
+    const seen = new Set<string>()
+    for (const t of tracks) {
+      for (const c of trackArtistCredits(t)) {
+        if (c.name && !seen.has(c.name)) {
+          seen.add(c.name)
+          names.push(c.name)
+        }
+      }
+    }
+    names.sort()
+    return names.join('\n')
+  }, [tracks])
+
+  // Mapa nombre → slug. Debounce para no pedir 5000 artistas dos veces
+  // (pintado snapshot → hidratación viva con los mismos nombres).
   useEffect(() => {
-    if (!tracks.length) {
+    if (!artistNamesKey) {
       setArtistSlugMap({})
       return
     }
     let cancelled = false
-    ;(async () => {
-      const names = new Set<string>()
-      for (const t of tracks) {
-        for (const c of trackArtistCredits(t)) names.add(c.name)
+    const timer = window.setTimeout(() => {
+      ;(async () => {
+        const names = new Set(artistNamesKey.split('\n').filter(Boolean))
+        const supabase = createBrowserSupabase()
+        const { data } = await supabase.from('artists').select('slug, name, name_display').limit(5000)
+        if (cancelled) return
+        const full = buildFullArtistSlugMap(
+          (data as { slug: string; name: string | null; name_display: string | null }[]) || [],
+        )
+        for (const t of tracks) {
+          const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
+          if (t.source === 'beatport_top' && origin?.kind === 'artist' && origin.slug) {
+            for (const c of trackArtistCredits(t)) {
+              const key = normalizeArtistKey(c.name)
+              if (key) full[key] = origin.slug
+            }
+          }
+        }
+        setArtistSlugMap(filterArtistSlugMapForNames(full, names))
+      })()
+    }, 160)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [artistNamesKey, tracks])
+
+  const labelNamesKey = useMemo(() => {
+    const names: string[] = []
+    const seen = new Set<string>()
+    for (const t of tracks) {
+      const name = (t.label || '').trim()
+      if (name && !seen.has(name)) {
+        seen.add(name)
+        names.push(name)
       }
-      if (names.size === 0) {
-        if (!cancelled) setArtistSlugMap({})
-        return
-      }
-      const supabase = createBrowserSupabase()
-      const { data } = await supabase.from('artists').select('slug, name, name_display').limit(5000)
-      if (cancelled) return
-      const full = buildFullArtistSlugMap(
-        (data as { slug: string; name: string | null; name_display: string | null }[]) || [],
-      )
-      for (const t of tracks) {
-        const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
-        if (t.source === 'beatport_top' && origin?.kind === 'artist' && origin.slug) {
-          for (const c of trackArtistCredits(t)) {
-            const key = normalizeArtistKey(c.name)
+    }
+    names.sort()
+    return names.join('\n')
+  }, [tracks])
+
+  useEffect(() => {
+    if (!labelNamesKey) {
+      setLabelSlugMap({})
+      return
+    }
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      ;(async () => {
+        const names = new Set(labelNamesKey.split('\n').filter(Boolean))
+        const supabase = createBrowserSupabase()
+        const { data } = await supabase.from('labels').select('slug, name').limit(5000)
+        if (cancelled) return
+        const full = buildFullArtistSlugMap(
+          ((data as { slug: string; name: string | null }[]) || []).map((r) => ({
+            slug: r.slug,
+            name: r.name,
+            name_display: null,
+          })),
+        )
+        for (const t of tracks) {
+          const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
+          if (t.source === 'beatport_top' && origin?.kind === 'label' && origin.slug) {
+            const key = normalizeArtistKey(t.label || '')
             if (key) full[key] = origin.slug
           }
         }
-      }
-      setArtistSlugMap(filterArtistSlugMapForNames(full, names))
-    })()
-    return () => { cancelled = true }
-  }, [tracks])
+        setLabelSlugMap(filterArtistSlugMapForNames(full, names))
+      })()
+    }, 160)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [labelNamesKey, tracks])
 
   // Años mín / máx presentes en el conjunto de tracks (ignora los que no
   // tienen año). Sirve para fijar los topes del slider de rango.
@@ -762,6 +831,33 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     }
     return arr
   }, [filtered, sortBy, es])
+
+  useEffect(() => {
+    setVisibleCount(LIST_PAGE_SIZE)
+  }, [sortBy, activeKinds])
+
+  const visibleRows = useMemo(
+    () => sorted.slice(0, visibleCount),
+    [sorted, visibleCount],
+  )
+
+  const sortedLenRef = useRef(sorted.length)
+  sortedLenRef.current = sorted.length
+  const loadMoreObserverRef = useRef<IntersectionObserver | null>(null)
+  const sentinelCallback = useCallback((node: HTMLDivElement | null) => {
+    loadMoreObserverRef.current?.disconnect()
+    loadMoreObserverRef.current = null
+    if (!node) return
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return
+        setVisibleCount((n) => Math.min(n + LIST_PAGE_SIZE, sortedLenRef.current))
+      },
+      { rootMargin: '800px 0px' },
+    )
+    obs.observe(node)
+    loadMoreObserverRef.current = obs
+  }, [])
 
   // Cola del reproductor global: solo streams directos (Beatport / Bandcamp vía
   // <audio>). Los vinilos YouTube siguen en la lista pero no entran en PLAY ALL
@@ -963,7 +1059,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     }
   }, [shareUrl, es])
 
-  if (loading || tracksLoading) {
+  if ((loading || tracksLoading) && tracks.length === 0) {
     return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
       {isShared
         ? (es ? 'Cargando tracks…' : 'Loading tracks…')
@@ -1236,7 +1332,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             )
           })()}
           <div className="border-4 border-[var(--ink)] bg-[var(--paper)]">
-          {sorted.map((t) => {
+          {visibleRows.map((t, i) => {
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
             const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
@@ -1246,12 +1342,16 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.year)
 
             return (
-              <div key={t.key} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
+              <div
+                key={t.key}
+                className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                style={showYtEmbed ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 108px' }}
+              >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     {t.artwork_url ? (
                       <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" loading={i < 6 ? 'eager' : 'lazy'} priority={i < 4} />
                       </div>
                     ) : null}
 
@@ -1266,7 +1366,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                           slugMap={artistSlugMap}
                           lang={lang}
                         />
-                        {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
+                        {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                         {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                       </p>
                       {t.note ? (
@@ -1432,6 +1532,27 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             )
           })}
           </div>
+          {visibleCount < sorted.length ? (
+            <div
+              ref={sentinelCallback}
+              className="mt-2 px-3 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] flex items-center justify-between gap-3 flex-wrap"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '1px' }}
+            >
+              <span className="text-[var(--ink)]/70">
+                {es
+                  ? `Mostrando ${visibleRows.length} de ${sorted.length}`
+                  : `Showing ${visibleRows.length} of ${sorted.length}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setVisibleCount(sorted.length)}
+                className="h-[32px] px-3 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] transition-colors cursor-pointer"
+                style={{ fontSize: '10px', letterSpacing: '1px' }}
+              >
+                {es ? 'MOSTRAR TODAS' : 'SHOW ALL'}
+              </button>
+            </div>
+          ) : null}
         </>
       )}
 
