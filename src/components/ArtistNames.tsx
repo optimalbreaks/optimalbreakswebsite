@@ -57,3 +57,30 @@ export function ArtistNames({ artists, slugMap, lang, className = 'text-[var(--i
     </span>
   )
 }
+
+/** Nombre de sello: enlace interno a `/[lang]/labels/<slug>` si consta en BD. */
+export function LabelName({
+  name,
+  slugMap,
+  lang,
+}: {
+  name: string | null | undefined
+  slugMap?: Record<string, string>
+  lang?: Locale | string
+}) {
+  const label = (name || '').trim()
+  if (!label) return null
+  const slug = findArtistSlug(label, slugMap)
+  if (slug && lang) {
+    return (
+      <Link
+        href={`/${lang}/labels/${slug}`}
+        className="text-[var(--red)] font-bold hover:underline decoration-2 underline-offset-2 transition-colors"
+        title={label}
+      >
+        {label}
+      </Link>
+    )
+  }
+  return <span className="text-[var(--ink)]/50">{label}</span>
+}

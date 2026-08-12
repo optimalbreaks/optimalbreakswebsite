@@ -706,7 +706,7 @@ async function runTool(
     const model =
       process.env.OPENAI_CHAT_MODEL?.trim() ||
       process.env.OPENAI_VISION_MODEL?.trim() ||
-      'gpt-4o'
+      'gpt-5.6-terra'
     const focus = String(args.focus || ctx.userMessage || '')
     const facts = await extractScreenshotFacts({
       openaiKey,
@@ -1134,7 +1134,7 @@ export async function runAdminChatAgent(opts: {
     process.env.OPENAI_CHAT_MODEL?.trim() ||
     process.env.OPENAI_AGENT_MODEL?.trim() ||
     process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o'
+    'gpt-5.6-terra'
 
   const pendingOps: PendingOp[] = []
   const toolTrace: ToolTraceItem[] = []

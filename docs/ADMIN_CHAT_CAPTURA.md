@@ -143,7 +143,7 @@ node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force
 | Variable | Uso |
 |----------|-----|
 | `OPENAI_API_KEY` | Obligatoria |
-| `OPENAI_CHAT_MODEL` / `OPENAI_AGENT_MODEL` / `OPENAI_MODEL` | Modelo del loop (fallback típico `gpt-4o`) |
+| `OPENAI_CHAT_MODEL` / `OPENAI_AGENT_MODEL` / `OPENAI_MODEL` | Modelo del loop (fallback típico `gpt-5.6-terra`) |
 | `OPENAI_VISION_MODEL` | OCR / carteles |
 | `SERPAPI_API_KEY` | Imágenes cartel + fallback web |
 | `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | REST / upserts |

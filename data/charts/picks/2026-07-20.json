@@ -1603,6 +1603,37 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 70
+    },
+    {
+      "title": "Baile DF",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Boys Noize"
+        },
+        {
+          "name": "Adame DJ"
+        },
+        {
+          "name": "MC da França"
+        },
+        {
+          "name": "Thalia Abdon"
+        }
+      ],
+      "label": "ONES AND ZEROS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/baile-df/29544242",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8621173c-57ea-4d22-92ae-27cc84974d3e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5c2285f6-3a03-4f0b-9fe1-1502d8b38bc9.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-07-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
     }
   ]
 }

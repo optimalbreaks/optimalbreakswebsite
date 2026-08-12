@@ -1138,11 +1138,11 @@ async function fetchSerpContext(query: string, apiKey: string): Promise<string> 
 
 /** Búsqueda web nativa de OpenAI (Responses API, tool web_search). Devuelve resumen factual. */
 async function fetchOpenAIWebSearchContext(query: string, apiKey: string): Promise<string> {
-  // Preferir gpt-5.5 (web search nativo); override con OPENAI_SEARCH_MODEL
+  // Preferir gpt-5.6-terra (web search nativo); override con OPENAI_SEARCH_MODEL
   const model =
     process.env.OPENAI_SEARCH_MODEL?.trim() ||
     process.env.OPENAI_CHAT_MODEL?.trim() ||
-    'gpt-5.5'
+    'gpt-5.6-terra'
   const prompt = `Investiga en la web el evento de música electrónica / breakbeat: ${query}
 
 Prioriza fuentes oficiales (web del evento, promotor, ticketeras: MonsterTicket, Dice, RA, Resident Advisor, Facebook Events).
@@ -1421,7 +1421,7 @@ export async function planChatWithOpenAI(opts: {
   const visionModel =
     process.env.OPENAI_CHAT_MODEL?.trim() ||
     process.env.OPENAI_VISION_MODEL?.trim() ||
-    'gpt-4o'
+    'gpt-5.6-terra'
   const hasImages = opts.imageDataUrls.length > 0 || opts.attachedPublicUrls.length > 0
 
   let screenshotFacts: ScreenshotFacts | null = null

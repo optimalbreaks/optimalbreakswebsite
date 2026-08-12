@@ -32,7 +32,7 @@ import {
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
 import type { ChartTrackSource } from '@/hooks/useUserData'
-import { ArtistNames } from '@/components/ArtistNames'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
 type CanonRef = { source: ChartTrackSource; id: string }
@@ -185,6 +185,12 @@ interface ChartViewProps {
    * cuando el artista existe en la base de datos (en vez de ir siempre a Beatport).
    */
   artistSlugMap?: Record<string, string>
+  /**
+   * Mapa `nombreNormalizado → slug` de sellos en `public.labels`.
+   * Igual que `artistSlugMap`: si el sello de la fila consta en BD, el nombre
+   * enlaza a `/[lang]/labels/<slug>`.
+   */
+  labelSlugMap?: Record<string, string>
   /** `nombreNormalizado → image_url` de sellos con logo en BD (fallback vinilo). */
   labelImageMap?: Record<string, string>
 }
@@ -381,7 +387,7 @@ function buildVinylSnapshot(v: ChartVinylTrack) {
   }
 }
 
-function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artistSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artistSlugMap, labelSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -407,7 +413,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
-              {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{pick.label}</span></> : null}
+              {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={pick.label} slugMap={labelSlugMap} lang={lang} /></> : null}
               {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>
             {note ? <p className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>{note}</p> : null}
@@ -459,7 +465,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
   )
 }
 
-function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, labelImageMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; labelImageMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, labelSlugMap, labelImageMap, relatedRefs }: { track: ChartVinylTrack; dict: any; lang: Locale; autoplay?: boolean; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; labelImageMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const note = lang === 'es' ? track.note_es : track.note_en
@@ -513,7 +519,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
-              {track.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></> : null}
+              {track.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={track.label} slugMap={labelSlugMap} lang={lang} /></> : null}
               {track.year != null && track.year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{track.year}</span></> : null}
             </p>
             {(track.catalog_number || track.format) && (
@@ -583,7 +589,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
+function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const releaseDisp = formatTrackReleaseDisplay(track.release_date, track.release_year)
@@ -615,7 +621,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, lang, we
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
-              {track.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{track.label}</span></>}
+              {track.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={track.label} slugMap={labelSlugMap} lang={lang} /></>}
               {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>
           </div>
@@ -792,6 +798,7 @@ export default function ChartView({
   dict,
   weeks,
   artistSlugMap,
+  labelSlugMap,
   labelImageMap,
 }: ChartViewProps) {
   const c = dict.charts
@@ -1403,6 +1410,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
+                        labelSlugMap={labelSlugMap}
                         relatedRefs={canonicalGroups.featuredByTrack.get(pick.id)}
                       />
                     )
@@ -1504,6 +1512,7 @@ export default function ChartView({
                         isPlaying={isActive}
                         onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle, idx) : undefined}
                         artistSlugMap={artistSlugMap}
+                        labelSlugMap={labelSlugMap}
                         relatedRefs={canonicalGroups.chartByTrack.get(track.id)}
                       />
                     )
@@ -1606,6 +1615,7 @@ export default function ChartView({
                           lang={lang}
                           autoplay={autoplayVinylId === track.id}
                           artistSlugMap={artistSlugMap}
+                          labelSlugMap={labelSlugMap}
                           labelImageMap={labelImageMap}
                           relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
                         />

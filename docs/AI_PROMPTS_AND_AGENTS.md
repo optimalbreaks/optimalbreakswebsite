@@ -20,7 +20,7 @@ Los **textos de sistema** de los agentes editoriales (fichas de artista, sello, 
 | `sello-agente-revision-system.txt` | Modo revisión del CLI de sello. |
 | `evento-enriquecer-system.txt` | **Enriquecedor de eventos** (`scripts/enriquecer-evento.mjs`, API `POST /api/admin/agent/event`). |
 | `admin-chat-system.txt` | **Agente conversacional admin** (widget PWA, `POST /api/admin/agent/chat`, tools + Confirmar; fechas cartel sin año → futura). Guía: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
-| `blog-agente-system.txt` | **Redactor de artículos de blog** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Modelo por defecto **`gpt-5.5`**. |
+| `blog-agente-system.txt` | **Redactor de artículos de blog** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Modelo por defecto **`gpt-5.6-terra`**. |
 
 Las **instrucciones de usuario** (checklist, slug, contexto web, notas) se arman en **código** en cada script o `route.ts`; no están centralizadas en un solo `.txt`.
 
@@ -34,7 +34,7 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | **`OPENAI_MODEL`** | Opcional; el **valor por defecto depende del flujo** (ver tabla siguiente). |
 | **`SERPAPI_API_KEY`** | Opcional; contexto web (Google) en agentes que lo soportan. |
 | **`OPENAI_VISION_MODEL`** | Opcional en `elegir-foto-artista.mjs` (modo `--vision`) y OCR del chat/carteles. |
-| **`OPENAI_CHAT_MODEL`** / **`OPENAI_AGENT_MODEL`** | Opcional: modelo del **loop de tools** del chat admin (`admin-chat-agent.ts`); si no, `OPENAI_MODEL` o `gpt-4o`. |
+| **`OPENAI_CHAT_MODEL`** / **`OPENAI_AGENT_MODEL`** | Opcional: modelo del **loop de tools** del chat admin (`admin-chat-agent.ts`); si no, `OPENAI_MODEL` o `gpt-5.6-terra`. |
 
 ### Modelo por defecto (si no defines `OPENAI_MODEL`)
 
@@ -43,7 +43,7 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Artista (CLI + API admin) | `gpt-5.4` |
 | Sello (API admin + CLI sello) | `gpt-5.4` |
 | Enriquecer evento (CLI + API admin evento) | `gpt-4o-mini` |
-| Chat admin (agente tools + confirmación) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-4o` (`admin-chat-agent.ts`); OCR vía `extractScreenshotFacts` / visión |
+| Chat admin (agente tools + confirmación) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-5.6-terra` (`admin-chat-agent.ts`); OCR vía `extractScreenshotFacts` / visión |
 | Cartel evento (visión/OCR, script + API `event-poster`) | `OPENAI_VISION_MODEL` o `OPENAI_MODEL` o `gpt-4o` |
 | Elegir foto artista / sello, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
 | Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.4` |
@@ -103,7 +103,7 @@ Si unifica criterios editoriales, busca en el fichero del script o en `src/app/a
 | `sello-agente-revision-system.txt` | Label CLI revision mode. |
 | `evento-enriquecer-system.txt` | **Event enricher** (`enriquecer-evento.mjs`, `POST /api/admin/agent/event`). |
 | `admin-chat-system.txt` | **Admin conversational agent** (PWA widget, `POST /api/admin/agent/chat`, tools + Confirm; flyer dates without year → next future). Guide: [`ADMIN_CHAT_CAPTURA.md`](./ADMIN_CHAT_CAPTURA.md). |
-| `blog-agente-system.txt` | **Blog article writer** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Default model **`gpt-5.5`**. |
+| `blog-agente-system.txt` | **Blog article writer** (`scripts/generar-blog-agente.mjs`, `run blog-agent` / `npm run db:blog:agent`). Default model **`gpt-5.6-terra`**. |
 
 **User-side instructions** (checklists, slug, web context, notes) are built in **code** in each script or `route.ts`.
 
@@ -125,7 +125,7 @@ See `.env.local` / `.env.local.example`.
 | Artist (CLI + admin API) | `gpt-5.4` |
 | Label (admin API + label CLI) | `gpt-5.4` |
 | Event enrich (CLI + admin event API) | `gpt-4o-mini` |
-| Admin chat agent (tools + confirm) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-4o` (`admin-chat-agent.ts`) |
+| Admin chat agent (tools + confirm) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-5.6-terra` (`admin-chat-agent.ts`) |
 | Event poster (vision/OCR) | `OPENAI_VISION_MODEL` / `OPENAI_MODEL` / `gpt-4o` |
 | Artist/label photo pick, logo scripts/APIs | often `gpt-5.4` except vision branches |
 | Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.4` |

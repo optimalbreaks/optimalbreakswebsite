@@ -89,7 +89,7 @@ const ACTIONS = [
     npm: 'npm run db:blog:agent -- …',
     creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI / OPENAI web_search',
     description:
-      'Redactor IA de artículos de blog (gpt-5.5 por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte.',
+      'Redactor IA de artículos de blog (gpt-5.6-terra por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte.',
   },
   {
     id: 'photo',
@@ -751,7 +751,7 @@ Punto de entrada unificado:
   agent -- …             generar-artista-agente.mjs (pasar args tras --)
   label-json <slug>      UPSERT desde data/labels/<slug>.json
   label-agent -- …       generar-sello-agente.mjs (pasar args tras --)
-  blog-agent -- …        generar-blog-agente.mjs (artículos blog_posts; gpt-5.5)
+  blog-agent -- …        generar-blog-agente.mjs (artículos blog_posts; gpt-5.6-terra)
   photo -- …             elegir-foto-artista.mjs
   label-photo -- …       elegir-foto-sello.mjs (logos sellos)
   labels-discogs [--apply] [--slug X] [--limit N] [--all] [--strict]

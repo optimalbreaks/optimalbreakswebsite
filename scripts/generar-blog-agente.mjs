@@ -9,7 +9,7 @@
  *   npm run db:blog:agent -- slug "Título" --json-only
  *   npm run db:blog:agent -- slug "Título" --save-json
  *
- * Modelo por defecto: gpt-5.5 (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
+ * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Requiere OPENAI_API_KEY. Para BD: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
  * Opcional: SERPAPI_API_KEY.
  */
@@ -73,7 +73,7 @@ async function fetchOpenAIWebSearchContext(query, apiKey) {
   const model =
     process.env.OPENAI_SEARCH_MODEL?.trim() ||
     process.env.OPENAI_BLOG_MODEL?.trim() ||
-    'gpt-5.5'
+    'gpt-5.6-terra'
   const prompt = `Investiga en la web: ${query}
 
 Devuelve SOLO un resumen factual en texto plano (sin markdown) útil para un artículo enciclopédico sobre breakbeat:
@@ -283,7 +283,7 @@ async function openAiJson({ system, user }) {
   const model =
     process.env.OPENAI_BLOG_MODEL?.trim() ||
     process.env.OPENAI_MODEL?.trim() ||
-    'gpt-5.5'
+    'gpt-5.6-terra'
   console.log(`[blog-agent] Modelo redacción: ${model}`)
 
   const body = {
