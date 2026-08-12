@@ -516,6 +516,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const [yearRange, setYearRange] = useState<[number, number] | null>(null)
   const [sortBy, setSortBy] = useState<SortBy>('added')
   const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
+  const [labelSlugMap, setLabelSlugMap] = useState<Record<string, string>>({})
   const es = lang === 'es'
 
   // Clave del grupo dentro del provider global. Propia del usuario logueado
@@ -654,6 +655,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     return names.join('\n')
   }, [tracks])
 
+  const tracksRef = useRef(tracks)
+  tracksRef.current = tracks
+
   // Mapa nombre → slug. Debounce para no pedir 5000 artistas dos veces
   // (pintado snapshot → hidratación viva con los mismos nombres).
   useEffect(() => {
@@ -671,7 +675,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         const full = buildFullArtistSlugMap(
           (data as { slug: string; name: string | null; name_display: string | null }[]) || [],
         )
-        for (const t of tracks) {
+        for (const t of tracksRef.current) {
           const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
           if (t.source === 'beatport_top' && origin?.kind === 'artist' && origin.slug) {
             for (const c of trackArtistCredits(t)) {
@@ -687,7 +691,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [artistNamesKey, tracks])
+  }, [artistNamesKey])
 
   const labelNamesKey = useMemo(() => {
     const names: string[] = []
@@ -722,7 +726,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             name_display: null,
           })),
         )
-        for (const t of tracks) {
+        for (const t of tracksRef.current) {
           const origin = (t.snapshot as { origin?: { kind?: string; slug?: string } } | null)?.origin
           if (t.source === 'beatport_top' && origin?.kind === 'label' && origin.slug) {
             const key = normalizeArtistKey(t.label || '')
@@ -736,7 +740,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [labelNamesKey, tracks])
+  }, [labelNamesKey])
 
   // Años mín / máx presentes en el conjunto de tracks (ignora los que no
   // tienen año). Sirve para fijar los topes del slider de rango.
@@ -857,6 +861,13 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     )
     obs.observe(node)
     loadMoreObserverRef.current = obs
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      loadMoreObserverRef.current?.disconnect()
+      loadMoreObserverRef.current = null
+    }
   }, [])
 
   // Cola del reproductor global: solo streams directos (Beatport / Bandcamp vía
@@ -1534,6 +1545,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           </div>
           {visibleCount < sorted.length ? (
             <div
+              key={visibleCount}
               ref={sentinelCallback}
               className="mt-2 px-3 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] flex items-center justify-between gap-3 flex-wrap"
               style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '1px' }}
