@@ -1119,6 +1119,36 @@ type OaiMsg =
     }
   | { role: 'tool'; tool_call_id: string; content: string }
 
+/**
+ * gpt-5.6-terra aplica `reasoning_effort` por defecto. En /v1/chat/completions
+ * eso es incompatible con function tools (400: usar /v1/responses o
+ * reasoning_effort=none). También rechaza temperature custom.
+ */
+function openAiChatCompletionsPayload(opts: {
+  model: string
+  messages: OaiMsg[]
+  tools?: unknown
+  tool_choice?: string
+  temperature?: number
+}): Record<string, unknown> {
+  const isGpt5 = /^gpt-5/i.test(opts.model)
+  const body: Record<string, unknown> = {
+    model: opts.model,
+    messages: opts.messages,
+  }
+  if (opts.tools) {
+    body.tools = opts.tools
+    body.tool_choice = opts.tool_choice ?? 'auto'
+    if (isGpt5) body.reasoning_effort = 'none'
+  }
+  if (isGpt5) {
+    body.max_completion_tokens = 16_000
+  } else if (opts.temperature != null) {
+    body.temperature = opts.temperature
+  }
+  return body
+}
+
 export async function runAdminChatAgent(opts: {
   message: string
   history: ChatHistoryItem[]
@@ -1201,13 +1231,15 @@ export async function runAdminChatAgent(opts: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${openaiKey}`,
       },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        tools: TOOL_DEFINITIONS,
-        tool_choice: 'auto',
-        messages,
-      }),
+      body: JSON.stringify(
+        openAiChatCompletionsPayload({
+          model,
+          messages,
+          tools: TOOL_DEFINITIONS,
+          tool_choice: 'auto',
+          temperature: 0.2,
+        }),
+      ),
       signal: AbortSignal.timeout(120_000),
     })
 
