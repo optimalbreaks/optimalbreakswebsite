@@ -603,14 +603,14 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       const featuredIds = saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)
       const vinylIds = saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)
 
-      let [chartData, featData, vinylData] = await Promise.all([
-        selectByIds(chartIds, (chunk) =>
+      let [chartData, featData, vinylData]: [any[], any[], any[]] = await Promise.all([
+        selectByIds<any>(chartIds, (chunk) =>
           supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('id', chunk),
         ),
-        selectByIds(featuredIds, (chunk) =>
+        selectByIds<any>(featuredIds, (chunk) =>
           supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url, note_en, note_es').in('id', chunk),
         ),
-        selectByIds(vinylIds, (chunk) =>
+        selectByIds<any>(vinylIds, (chunk) =>
           supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
         ),
       ])
