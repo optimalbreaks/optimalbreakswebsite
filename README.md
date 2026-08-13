@@ -59,7 +59,7 @@ This split helps the site feel both like an archive and like a living magazine w
 
 Logged-in users get **My Breaks** (`/[lang]/dashboard` as overview + dedicated pages under `/[lang]/mi-cuenta/<slug>`): favorites, attendance, saved mixes, **saved chart tracks** (`/mi-cuenta/tracks`), **Soulmates** (`/mi-cuenta/almas-gemelas`), and **star ratings only for real-world experiences** — **artists** (seen live) and **events** (went there). Labels, mixes, etc. use **favorites/saves only** (no 1–5 stars).
 
-**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migrations **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl | beatport_top`, plus `canonical_url` + `snapshot` columns so the artist/label **Beatport Top 10** can be saved cross-source with a single URL-based canonical key). Migration **`056_community_top_and_soulmates.sql`** adds **`profiles.is_tracks_public`** (default `TRUE`; users who set it to `FALSE` are excluded from **Soulmates** affinity matching and from **Community Top** aggregates) plus **`idx_sct_created`** on `saved_chart_tracks.created_at`.
+**Reference:** [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). **DB:** migration **`032_event_ratings_attendance_fields.sql`** for extra `event_ratings` fields; migrations **`053_saved_chart_tracks.sql`** + **`054_saved_chart_tracks_beatport_top.sql`** for the polymorphic saved-tracks table (`chart | featured | vinyl | beatport_top`, plus `canonical_url` + `snapshot` columns so the artist/label **Beatport Top 10** can be saved cross-source with a single URL-based canonical key). Migration **`056_community_top_and_soulmates.sql`** adds **`profiles.is_tracks_public`** (default `TRUE`; users who set it to `FALSE` are excluded from **Soulmates** affinity matching and from **Community Top** aggregates) plus **`idx_sct_created`** on `saved_chart_tracks.created_at`. Migration **`064_breakbeat_profiles_rls.sql`** enables **owner-only RLS** on **`breakbeat_profiles`** (Breakbeat DNA on the dashboard overview): `authenticated` may SELECT/INSERT/UPDATE/DELETE only `auth.uid() = user_id`; **`anon` has no grants**; DNA is **not** public (unlike the shareable My Tracks list).
 
 **Community Top** (`/[lang]/charts`, section below *Retro Vinyl Picks*): `CommunityMonthlyTop.tsx` calls **`GET /api/public/charts/community-monthly`** (optional `limit`, default 40, max 100). All-time ranking — no monthly window. Same canonical dedupe as the admin Tracks dashboard; sorted by **unique users → total saves → most-recent save → alphabetical**. The slug `community-monthly` is preserved on both the endpoint and the component file for compatibility (was monthly until April 2026; switched to all-time because calendar months kept "drying up" the ranking once active users emptied the month's catalogue into their lists).
 
@@ -198,6 +198,17 @@ Until then, consumers use **gated hooks** that enqueue the first action without 
 - **`/[lang]/history`:** `export const revalidate = 300` (ISR) where applicable.
 - **Removed** `export const dynamic = 'force-dynamic'` from `[lang]/layout.tsx` so static/ISR pages can cache HTML when data allows.
 
+### Supabase Data Cache for public reads (Disk IO protection)
+
+**Incident (Aug 2026):** the Supabase instance exhausted its **Disk IO Budget** — every public page view (bots included) ran the full catalog queries with no cache, and the middleware called Supabase Auth on every request with no timeout. When the DB throttled to its 5 MB/s baseline, the middleware exceeded Vercel's 25 s limit and the whole site returned **504 `MIDDLEWARE_INVOCATION_TIMEOUT`**. Compute was upgraded **Nano → Micro**, and the app now caches all public reads:
+
+- **`createCachedSupabase()`** (`src/lib/supabase-server.ts`): cookie-less read client whose PostgREST GETs are stored in the **Next/Vercel Data Cache** with **`revalidate: 300`** (5 min). Used by every public catalog page — home, `/charts`, `/artists` (+ detail), `/labels` (+ detail), `/events` (+ detail + OG image), `/mixes`, `/scenes` (+ detail), `/blog` (+ detail), `/history`, `/organizations/[slug]` — plus `sitemap.ts`, `/api/search` and `/api/og/story`. DB publishes show on the public site within **≤ ~5 min**; the admin panel reads live data and is unaffected.
+- **Do not** switch these pages back to `createServerSupabase()` (calling `cookies()` disables all caching → every visit hits the DB again) and do not use the cached client for per-user data or writes.
+- **Middleware** (`src/middleware.ts`): `supabase.auth.getUser()` runs **only** when the request carries Supabase auth cookies (anonymous traffic skips Auth entirely), the Auth fetch is aborted after **2.5 s** (`AbortSignal.timeout`) and wrapped in try/catch — a Supabase outage can no longer take the whole site down with 504s.
+- `/charts` and `/blog` declare `export const dynamic = 'force-dynamic'` because they depend on `searchParams` (`?week=`, `?play=`, `?page=`); their fetches still go through the Data Cache.
+
+Guard rule for agents: `.cursor/rules/supabase-cache-lecturas-publicas.mdc`.
+
 ### Home SEO (breakbeat)
 
 - Home metadata and JSON-LD lead with **breakbeat**; visible H1 includes **`sr-only`** “Breakbeat —” plus **OPTIMAL BREAKS** styling; section H2s in dictionaries include **breakbeat** in the highlighted span. See commits on `main` (May 2026).
@@ -333,7 +344,7 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   │       ├── page.tsx        # HOME — hero, deck (dynamic), marquee, timeline, artists, events, CTA
 │   │       ├── history/        # Full breakbeat history by era
 │   │       ├── artists/        # Artist directory (+ Supabase / fallback)
-│   │       │   ├── layout.tsx  # No fetch/Data Cache; no-store headers for this segment
+│   │       │   ├── layout.tsx  # Data reads cached 300 s (createCachedSupabase); no-store headers only for HTML/CDN
 │   │       │   └── [slug]/     # Individual artist pages (related-artist name → slug links)
 │   │       ├── labels/         # Record label directory
 │   │       │   └── [slug]/     # Individual label pages (+ link to org when organization_id set)
@@ -588,7 +599,7 @@ for f in data/artists/*.json; do npm run db:artist -- "$f"; done
 
 - **Source of truth for the live site** is the **`artists` table** in the Supabase project configured as `NEXT_PUBLIC_SUPABASE_URL` in Vercel (or locally). Committing JSON to Git does **not** update bios until an upsert runs against that project (**`npm run db:artist`**, the agent CLI by default, or admin save).
 - **`npm run db:user-list`** inserts **starter** rows for many names (short placeholder copy in ES/EN). Replace those profiles with the agent (default UPSERT) or **`db:artist`** when you have a full JSON.
-- **Caching:** Under `[lang]/artists`, the app sets **`revalidate = 0`**, **`fetchCache = 'force-no-store'`**, and **`next.config.js`** adds **`Cache-Control` / `CDN-Cache-Control: no-store`** for `/[lang]/artists` routes so HTML and Supabase-backed data are not served stale from the Data Cache or the CDN after you publish DB changes. The PWA **`public/sw.js`** does **not** cache HTML for paths containing **`/artists`** (offline fallback for those URLs is not a stale artist page).
+- **Caching:** artist pages read Supabase through **`createCachedSupabase()`** (Next/Vercel **Data Cache**, `revalidate: 300`), so DB publishes show on the public site within **≤ ~5 min**. `next.config.js` still adds **`Cache-Control` / `CDN-Cache-Control: no-store`** for `/[lang]/artists` HTML and the PWA **`public/sw.js`** does **not** cache HTML for paths containing **`/artists`**. The old `revalidate = 0` / `fetchCache = 'force-no-store'` segment config was **removed in Aug 2026**: it made every visit hit Supabase and helped exhaust the instance's Disk IO Budget (site-wide 504) — see *Performance → Supabase Data Cache for public reads*.
 
 ### 6. Run development server
 
@@ -614,7 +625,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views**; year / platform / search filters; **lazy embeds** (see *Directory listing views* → Mixes) |
 | Charts | `/[lang]/charts` | *40 Breaks Vitales*, *New Releases*, *Retro Vinyl Picks*; **Community Top** (all-time ranking of saves across the whole community) appears **after** Retro Vinyl Picks |
-| Dashboard (overview) | `/[lang]/dashboard` | User area landing: summary cards + Breakbeat DNA — requires login |
+| Dashboard (overview) | `/[lang]/dashboard` | User area landing: summary cards + **Breakbeat DNA** (`breakbeat_profiles`, private RLS — **064**) — requires login |
 | My account — sections | `/[lang]/mi-cuenta/favoritos`, `.../vistos-en-vivo`, `.../eventos`, `.../resenas`, `.../mixes`, `.../tracks`, `.../almas-gemelas`, `.../perfil` | Each user area lives in its own page (no in-page tabs). Legacy `/dashboard?tab=xxx` URLs redirect automatically. Soulmates + privacy toggle: [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md). |
 | My Tracks (public) | `/[lang]/u/<userId>/tracks` | Shareable read-only version of a user's saved-tracks list; third-party visitors can play/sort/filter and save tracks to **their** list. |
 | Login | `/[lang]/login` | Supabase auth (sign up, sign in, forgot password → email link) |
@@ -827,6 +838,7 @@ Supabase tables are reflected in `src/types/database.ts`. Highlights:
 - **mixes** — title, artist, type, year, duration, embed URL, platform, `image_url`
 - **history_entries** — title, content (EN/ES), section, year range, sort order
 - **profiles**, **favorite_artists**, **favorite_labels**, and related user tables — see `003_user_system.sql` and follow-up migrations; **`056_community_top_and_soulmates.sql`** adds **`is_tracks_public`** on **`profiles`** for Soulmates / Community Top opt-out
+- **breakbeat_profiles** — one DNA-analysis row per user (`user_id` UNIQUE → `profiles`). Stats JSONB + bilingual analysis/archetype. **Private:** RLS owner-only (`064_breakbeat_profiles_rls.sql`). Written by `POST /api/breakbeat-profile` and `useBreakbeatProfile()` with the **user JWT** (not `service_role`). Detail: [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md#breakbeat-dna-breakbeat_profiles)
 
 ---
 
@@ -852,6 +864,7 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `056_community_top_and_soulmates.sql` | **`profiles.is_tracks_public`** (default `TRUE`; when `FALSE`, user excluded from **Soulmates** + **Community Top** aggregates); **`idx_sct_created`** on **`saved_chart_tracks.created_at`** |
 | `057_chart_featured_tracks_release_date.sql` | **`chart_featured_tracks.release_date DATE`** + index. Stores **full publish day** (YYYY-MM-DD) from Beatport / Bandcamp alongside `release_year`; rendered everywhere via `formatTrackReleaseDisplay` (see below) |
 | `062_admin_chat_threads.sql` | **Admin conversational agent:** `admin_chat_threads` + `admin_chat_messages` (history, `pending_ops`, tool traces). Docs: [`docs/ADMIN_CHAT_CAPTURA.md`](docs/ADMIN_CHAT_CAPTURA.md) |
+| `064_breakbeat_profiles_rls.sql` | **`breakbeat_profiles`:** `CREATE TABLE IF NOT EXISTS` (one row per user) + **ENABLE RLS** + owner-only SELECT/INSERT/UPDATE/DELETE (`TO authenticated`, `(SELECT auth.uid()) = user_id`) + `REVOKE ALL` from **`anon`**. Fixes the PostgREST lint “RLS disabled on exposed table”. DNA is **private** (dashboard only). See [`docs/USER_ENGAGEMENT.md`](docs/USER_ENGAGEMENT.md#breakbeat-dna-breakbeat_profiles). |
 
 ---
 

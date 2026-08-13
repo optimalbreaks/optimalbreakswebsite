@@ -57,6 +57,7 @@ Optimizaciones para **Lighthouse móvil** (LCP, CLS, JS no usado) sin cambiar el
 - **Audio global diferido:** **`LazyDeckAudioProvider`** en el layout; **`DeckAudioProvider`** solo se importa al **primer Play** (deck, mix, preview) o si **`sessionStorage`** (`ob_audio_active`) indica sesión activa. Hooks **`usePreviewAudioGated`** / **`useMixAudioGated`** en charts, Top 10, mixes y Mis Tracks; cabina home con controles offline hasta el primer gesto. El provider mantiene un **shell estable** alrededor de `{children}` (no remonta el árbol de la página al cargar el motor — el acordeón de `/charts` no se colapsa al primer play) y **portala** el reproductor a `<div id="ob-audio-overlays">` bajo `document.body` para que `position: fixed` siempre ancle al viewport real. Tanto **`MiniPlayerShell`** como **`BackToTop`** compensan el **`visualViewport`** en **PWA iOS** (`resize` / `scroll` / `pageshow`) para que tras bloquear/desbloquear el móvil sigan pegados al borde inferior visible.
 - **Fuentes:** subsets **latin** de Unbounded en layout + **preload** del woff2 del 900; Special Elite fuera del CSS bloqueante (`DeferredFonts`).
 - **Otros:** `DjDeck` con `dynamic()`; modal de charts solo tras engagement (2ª página o 40 s); GA/SW/BackToTop dinámicos; **`/history`** con revalidate 300; quitado `force-dynamic` del layout global.
+- **Caché de lecturas públicas de Supabase (Disk IO, agosto 2026):** la instancia agotó su **Disk IO Budget** (cada visita, bots incluidos, lanzaba todas las consultas del catálogo sin caché y el middleware llamaba a Auth sin timeout) y el sitio entero cayó con **504 `MIDDLEWARE_INVOCATION_TIMEOUT`**. Solución: compute **Nano → Micro** y, en la app, **`createCachedSupabase()`** (`src/lib/supabase-server.ts`) — cliente sin cookies cuyas lecturas van a la **Data Cache** de Next/Vercel con `revalidate` **300 s** — en todo el catálogo público (home, charts, artists, labels, events, mixes, scenes, blog, history, organizations, sitemap, buscador y OG de Stories). El **middleware** solo llama a Auth si hay cookies de sesión y aborta a los **2,5 s**. Los cambios en BD tardan **≤ ~5 min** en verse en la web pública (el admin ve datos vivos). **No** volver a `createServerSupabase()` en páginas públicas ni usar el cliente cacheado para datos por-usuario o escrituras. Regla: `.cursor/rules/supabase-cache-lecturas-publicas.mdc`.
 - **SEO home:** metadatos y H2 orientados a **breakbeat** (mayo 2026).
 
 Detalle técnico en inglés: **[README.md — Performance & Core Web Vitals](./README.md#performance--core-web-vitals)**.
@@ -154,7 +155,7 @@ Más detalle y tabla de migraciones SQL en [README.md](./README.md).
 
 - La web lee **`artists` en Supabase** (misma URL que `NEXT_PUBLIC_SUPABASE_URL` en Vercel). **Git/commit no actualiza la bio** hasta que haya un UPSERT en ese proyecto (`db:artist`, agente CLI por defecto, o panel admin).
 - Si ves el texto corto tipo *«Incluido en el listado extendido…»*, la fila viene de **`db:user-list`** (o equivalente); sustitúyela con JSON + **`db:artist`**.
-- Rutas **`/artists`**: el layout del segmento fuerza datos frescos (`revalidate` 0, `fetchCache` sin store), cabeceras **`no-store`** en `next.config.js` y el **service worker** no guarda HTML de URLs con `/artists`, para que tras publicar en BD no se quede una página vieja en CDN o PWA.
+- Rutas **`/artists`**: leen Supabase vía **`createCachedSupabase()`** (Data Cache, `revalidate` 300 s) — lo publicado en BD tarda **≤ ~5 min** en verse en la web pública. Se mantienen las cabeceras **`no-store`** en `next.config.js` (el HTML no se queda viejo en CDN) y el **service worker** sigue sin guardar HTML de `/artists`. El antiguo `revalidate 0` + `fetchCache force-no-store` se retiró en agosto 2026: hacía que cada visita golpease Supabase y contribuyó a agotar el Disk IO Budget (504 en todo el sitio).
 
 ### Agente de biografías (OpenAI)
 
@@ -303,6 +304,8 @@ Política: **valoración con estrellas solo en artistas y eventos** (experiencia
 
 **Arquitectura de páginas (abril 2026):** antes era un único `/[lang]/dashboard` con pestañas; ahora hay **página de resumen** (`/[lang]/dashboard`: tarjetas + análisis *Breakbeat DNA*) y **una página por sección** bajo `/[lang]/mi-cuenta/<slug>` (`favoritos`, `vistos-en-vivo`, `eventos`, `resenas`, `mixes`, `tracks`, `almas-gemelas`, `perfil`). Las URLs antiguas `?tab=xxx` redirigen automáticamente. La shell compartida vive en `src/components/user/UserSectionShell.tsx`.
 
+**ADN breakbeatero (`breakbeat_profiles`).** El bloque de análisis del dashboard genera (y relee) **una fila por usuario**. Es **privado**: no se comparte en Almas Gemelas, Top de la Comunidad ni en `/u/<id>/tracks`. Migración **`064_breakbeat_profiles_rls.sql`**: RLS activado; `authenticated` solo SELECT/INSERT/UPDATE/DELETE de su propia fila (`auth.uid() = user_id`); **`anon` sin grants**. Escritura vía JWT del usuario (`POST /api/breakbeat-profile` + hook `useBreakbeatProfile`), no `service_role`. Detalle: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)** (*Breakbeat DNA*).
+
 **Mis Tracks (`/[lang]/mi-cuenta/tracks`)**. Nueva sección que permite guardar canciones de cualquiera de los tres bloques de `/charts`:
 
 - **40 Breaks Vitales** (`chart_tracks`, preview Beatport)
@@ -436,7 +439,7 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-Aplica las migraciones SQL de `supabase/migrations/` **en orden alfabético** en el panel de Supabase, o `npm run db:migrate` si tienes URI de Postgres configurada (en proyectos **ya inicializados**, re-ejecutar `001` puede fallar). Para aplicar **solo** Raveart sin tocar el resto:
+Aplica las migraciones SQL de `supabase/migrations/` **en orden alfabético** en el panel de Supabase, o `npm run db:migrate` si tienes URI de Postgres configurada (en proyectos **ya inicializados**, re-ejecutar `001` puede fallar). La tabla de referencia (parcial) está en [README.md — SQL migrations](./README.md#sql-migrations-reference); incluye **`064_breakbeat_profiles_rls.sql`** (RLS del ADN breakbeatero). Para aplicar **solo** Raveart sin tocar el resto:
 
 ```bash
 npm run db:migrate:raveart

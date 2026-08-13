@@ -1,0 +1,26 @@
+---
+description: Caché de lecturas públicas de Supabase y middleware con timeout (no repetir el 504 por Disk IO)
+alwaysApply: true
+---
+
+# Supabase: caché de lecturas públicas + middleware blindado
+
+## Contexto (agosto 2026)
+
+La instancia de Supabase agotó su **Disk IO Budget**: cada visita pública (bots incluidos) lanzaba todas las consultas del catálogo sin caché y el middleware llamaba a Auth en cada petición sin timeout. Con la BD estrangulada a 5 MB/s, el middleware superó los 25 s de Vercel y **todo el sitio devolvió 504 `MIDDLEWARE_INVOCATION_TIMEOUT`**. Se subió el compute (Nano → **Micro**) y se cachearon las lecturas públicas.
+
+## Invariantes (no negociables)
+
+1. **Páginas públicas de catálogo** — home, `/charts`, `/artists` (+ ficha), `/labels` (+ ficha), `/events` (+ ficha y OG image), `/mixes`, `/scenes` (+ ficha), `/blog` (+ ficha), `/history`, `/organizations/[slug]`, `sitemap.ts`, `/api/search`, `/api/og/story` — leen Supabase con **`createCachedSupabase()`** (`src/lib/supabase-server.ts`): cliente sin cookies con los GET de PostgREST en la **Data Cache** de Next/Vercel (`revalidate: 300`). **Prohibido** volver a `createServerSupabase()` o a un cliente sin caché en esas rutas: `cookies()` desactiva toda la caché y cada visita vuelve a golpear la BD.
+2. El cliente cacheado **no** se usa para datos por-usuario ni escrituras (favoritos, mi-cuenta, admin y APIs de escritura mantienen sus clientes actuales).
+3. **Middleware** (`src/middleware.ts`): `auth.getUser()` **solo** si la petición trae cookies de sesión de Supabase; el fetch a Auth lleva **`AbortSignal.timeout(2500)`** y try/catch. No quitar el guard de cookies ni el timeout: son lo que impide que una caída de Supabase tumbe el sitio entero.
+4. **No** restaurar `revalidate = 0` / `fetchCache = 'force-no-store'` en `[lang]/artists/layout.tsx` (ni equivalentes en otros segmentos públicos) salvo petición explícita del usuario consciente del coste en Disk IO.
+5. `/charts` y `/blog` declaran `export const dynamic = 'force-dynamic'` porque dependen de `searchParams` (`?week=`, `?play=`, `?page=`); sus fetch siguen pasando por la Data Cache. No quitarlo.
+
+## Consecuencia editorial
+
+Los cambios publicados en BD tardan **≤ ~5 min** en verse en la web pública (el panel admin ve datos vivos al instante). Si el usuario pregunta por qué no ve un cambio recién publicado, la respuesta suele ser esta ventana de revalidación, no un bug.
+
+## Referencias
+
+README (EN): **Performance & Core Web Vitals → Supabase Data Cache for public reads (Disk IO protection)**. README (ES): bloque «Caché de lecturas públicas de Supabase» en **Rendimiento y Core Web Vitals**.
