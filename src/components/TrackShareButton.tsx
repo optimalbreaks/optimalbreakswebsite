@@ -21,6 +21,7 @@ import {
   buildAbsoluteShareUrl,
   buildTrackSharePath,
   copyShareLink,
+  parsePlayParam,
 } from '@/lib/share-track'
 
 interface BaseProps {
@@ -72,10 +73,73 @@ function resolveFullUrl(props: Props): string {
   )
 }
 
+/**
+ * Valor `play=` (chart:<id> / featured:<id> / vinyl:<id>) para pedir la
+ * imagen de Story a `/api/og/story`. Solo para tracks de nuestros charts;
+ * Beatport Top / URLs externas no tienen imagen resoluble → null (sin botón IG).
+ */
+function resolveStoryPlayParam(props: Props): string | null {
+  if ('source' in props && props.source && props.trackId) {
+    return `${props.source}:${props.trackId}`
+  }
+  if ('path' in props && props.path) {
+    const query = props.path.split('?')[1]
+    if (!query) return null
+    const parsed = parsePlayParam(new URLSearchParams(query).get('play'))
+    if (parsed?.kind === 'track') return `${parsed.source}:${parsed.id}`
+    if (parsed?.kind === 'vinyl') return `vinyl:${parsed.id}`
+  }
+  return null
+}
+
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
+  const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
+  const storyPlay = resolveStoryPlayParam(props)
+
+  /**
+   * Botón "IG": baja el PNG 1080×1920 de `/api/og/story` y lo comparte como
+   * archivo (`navigator.share({ files })`) → en móvil aparece Instagram y el
+   * usuario lo publica en Stories. Antes copiamos el enlace del track al
+   * portapapeles para pegarlo en el sticker de enlace. En escritorio (sin
+   * share de archivos) se descarga la imagen y se copia el enlace.
+   */
+  async function onStoryClick() {
+    if (!storyPlay || storyState === 'busy') return
+    setStoryState('busy')
+    try {
+      await copyShareLink(fullUrl)
+      const params = new URLSearchParams({ play: storyPlay, lang: props.lang })
+      const res = await fetch(`/api/og/story?${params.toString()}`)
+      if (!res.ok) throw new Error(`story ${res.status}`)
+      const blob = await res.blob()
+      const file = new File([blob], 'optimal-breaks-story.png', { type: 'image/png' })
+
+      const nav = typeof navigator !== 'undefined' ? navigator : null
+      if (nav?.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({ files: [file], title: props.shareTitle })
+        } catch {
+          // Cancelación del usuario: no es un error.
+        }
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'optimal-breaks-story.png'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+      }
+      setStoryState('done')
+      setTimeout(() => setStoryState('idle'), 1800)
+    } catch {
+      setStoryState('idle')
+    }
+  }
 
   async function onClick() {
     const nav = typeof navigator !== 'undefined' ? navigator : null
@@ -108,16 +172,41 @@ export default function TrackShareButton(props: Props) {
     ? (es ? 'Enlace copiado' : 'Link copied')
     : (es ? 'Copiar / compartir enlace' : 'Copy / share link')
 
+  const storyStateCls = storyState === 'done'
+    ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
+    : 'border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'
+  const storyLabel = storyState === 'done' ? '✓' : storyState === 'busy' ? '…' : 'IG'
+  const storyTitle = storyState === 'done'
+    ? (es ? 'Imagen lista · enlace copiado' : 'Image ready · link copied')
+    : (es
+        ? 'Story de Instagram: genera la imagen y copia el enlace'
+        : 'Instagram Story: generate image and copy link')
+
   return (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); onClick() }}
-      className={`${base} ${stateCls}`}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
-      title={title}
-      aria-label={title}
-    >
-      {label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onClick() }}
+        className={`${base} ${stateCls}`}
+        style={{ fontFamily: "'Courier Prime', monospace" }}
+        title={title}
+        aria-label={title}
+      >
+        {label}
+      </button>
+      {storyPlay ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onStoryClick() }}
+          className={`${base} ${storyStateCls}`}
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+          title={storyTitle}
+          aria-label={storyTitle}
+          disabled={storyState === 'busy'}
+        >
+          {storyLabel}
+        </button>
+      ) : null}
+    </>
   )
 }
