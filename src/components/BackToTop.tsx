@@ -58,12 +58,15 @@ export default function BackToTop({ ariaLabel = 'Back to top' }: Props) {
 
   if (!isVisible) return null
 
+  // Con barra visible: la altura real la publica MiniPlayerShell en
+  // `--ob-bottom-bar-h` (incluye safe-area). El max() cubre el caso de la
+  // barra "play all" de charts, que no monta el shell y no fija la variable.
   const baseBottom = isSm
     ? bottomBarVisible
-      ? 'calc(7rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      ? 'max(calc(var(--ob-bottom-bar-h, 0px) + 14px), calc(7rem + env(safe-area-inset-bottom, 0px) + 10px))'
       : 'calc(2rem + env(safe-area-inset-bottom, 0px))'
     : bottomBarVisible
-      ? 'calc(6.75rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      ? 'max(calc(var(--ob-bottom-bar-h, 0px) + 14px), calc(6.75rem + env(safe-area-inset-bottom, 0px) + 10px))'
       : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))'
 
   return (

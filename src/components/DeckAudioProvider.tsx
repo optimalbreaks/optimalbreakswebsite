@@ -516,7 +516,26 @@ function MiniPlayerShell({
 }) {
   const pct = duration ? (progress / duration) * 100 : 0
 
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const barRef = useRef<HTMLDivElement | null>(null)
+
+  // Publica la altura real de la barra en `--ob-bottom-bar-h` (en <html>).
+  // La consumen los botones flotantes (BackToTop, FAB de chat admin) para
+  // colocarse justo encima sin constantes mágicas: la altura cambia entre
+  // breakpoints (layout de dos filas en móvil) y con la safe-area.
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el || typeof document === 'undefined') return
+    const sync = () =>
+      document.documentElement.style.setProperty('--ob-bottom-bar-h', `${el.offsetHeight}px`)
+    sync()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(sync) : null
+    ro?.observe(el)
+    return () => {
+      ro?.disconnect()
+      document.documentElement.style.removeProperty('--ob-bottom-bar-h')
+    }
+  }, [])
   const draggingPointerId = useRef<number | null>(null)
   const moveListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
   const upListenerRef = useRef<((e: PointerEvent) => void) | null>(null)
@@ -615,6 +634,7 @@ function MiniPlayerShell({
 
   return (
     <div
+      ref={rootRef}
       className="fixed inset-x-0 z-[199] border-t-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[0_-4px_20px_rgba(0,0,0,.15)]"
       role="region"
       aria-label={ariaLabel}
@@ -665,23 +685,28 @@ function MiniPlayerShell({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-2.5 max-w-4xl mx-auto">
-        <div className="flex items-center gap-1.5 sm:gap-1 shrink-0 max-w-[58%] sm:max-w-none overflow-x-auto overflow-y-hidden scrollbar-none">{controls}</div>
-
+      {/* Móvil: dos filas (título a lo ancho / controles + tiempo). Antes los
+          controles acotaban el título a ~42% y en pantallas estrechas (p. ej.
+          el navegador in-app de Instagram al abrir un link compartido) el
+          título quedaba truncado a 2-3 letras. En ≥sm vuelve a una sola fila:
+          [controles] [título] [tiempo]. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-3 px-3 sm:px-4 pt-1.5 pb-2.5 sm:py-2.5 max-w-4xl mx-auto">
         {onTitleClick ? (
           <button
             type="button"
             onClick={onTitleClick}
-            className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
+            className="order-1 basis-full sm:order-2 sm:basis-0 sm:flex-1 min-w-0 overflow-hidden text-left cursor-pointer hover:opacity-70 active:opacity-50 transition-opacity"
             title={titleClickHint}
           >
             {titleInner}
           </button>
         ) : (
-          <div className="flex-1 min-w-0 overflow-hidden">{titleInner}</div>
+          <div className="order-1 basis-full sm:order-2 sm:basis-0 sm:flex-1 min-w-0 overflow-hidden">{titleInner}</div>
         )}
 
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="order-2 sm:order-1 flex items-center gap-1.5 sm:gap-1 shrink-0 max-w-full overflow-x-auto overflow-y-hidden scrollbar-none">{controls}</div>
+
+        <div className="order-3 shrink-0 flex items-center gap-2 ml-auto sm:ml-0">
           <div className="text-right">
             <span className="block text-xs text-[var(--ink)]/50 font-bold tabular-nums whitespace-nowrap">
               {fmt(progress)} / {duration ? fmt(duration) : '—'}

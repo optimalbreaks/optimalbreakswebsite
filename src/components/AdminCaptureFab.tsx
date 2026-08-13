@@ -196,12 +196,13 @@ function AdminChatWidgetInner() {
 
   if (!domReady || authLoading || !user || !isAdmin) return null
 
+  // Ver BackToTop: `--ob-bottom-bar-h` = altura real del mini reproductor.
   const baseBottom = isSm
     ? bottomBarVisible
-      ? 'calc(7rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      ? 'max(calc(var(--ob-bottom-bar-h, 0px) + 14px), calc(7rem + env(safe-area-inset-bottom, 0px) + 10px))'
       : 'calc(2rem + env(safe-area-inset-bottom, 0px))'
     : bottomBarVisible
-      ? 'calc(6.75rem + env(safe-area-inset-bottom, 0px) + 10px)'
+      ? 'max(calc(var(--ob-bottom-bar-h, 0px) + 14px), calc(6.75rem + env(safe-area-inset-bottom, 0px) + 10px))'
       : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))'
 
   const fabBottom = vvOffset ? `calc(${baseBottom} + ${vvOffset}px)` : baseBottom
