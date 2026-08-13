@@ -9,6 +9,7 @@
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { displayImageUrl } from '@/lib/image-url'
 import type { Locale } from '@/lib/i18n-config'
@@ -306,14 +307,20 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
 
   const kbd = mac ? '⌘K' : 'Ctrl K'
 
-  return (
-    <>
-      {open ? (
+  // Portal a <body>: el palette se monta dentro del <header> (sticky,
+  // z-[100]) que crea un stacking context y capa cualquier z-index interno
+  // a 100. Overlays a nivel de layout (promo de charts z-[210], chat admin
+  // z-[220]…) quedaban ENCIMA e interceptaban los clics de los resultados
+  // aunque el palette fuera visible. Fuera del header, su z-index manda.
+  if (!open) return null
+  return createPortal(
+    (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={dict.button_full}
-          className="fixed inset-0 z-[300] flex items-start justify-center px-3 sm:px-6 pt-[10vh]"
+          data-ob-overlay
+          className="fixed inset-0 z-[1300] flex items-start justify-center px-3 sm:px-6 pt-[10vh]"
         >
           <div
             className="absolute inset-0 bg-[var(--ink)]/75"
@@ -566,8 +573,8 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
             }
           `}</style>
         </div>
-      ) : null}
-    </>
+    ),
+    document.body,
   )
 }
 

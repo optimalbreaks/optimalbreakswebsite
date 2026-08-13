@@ -137,7 +137,20 @@ function guestCooldownElapsed(): boolean {
   return Date.now() - last >= PROMO_REOPEN_GUEST_MS
 }
 
+/**
+ * ¿Hay otro overlay con prioridad abierto (buscador ⌘K, chat admin)? Si es
+ * así el promo espera: abrirse encima interceptaba los clics del usuario
+ * (p. ej. sobre los resultados del buscador). El poll de 5 s reintenta.
+ * Se usa `[data-ob-overlay]` y no `[role=dialog]` genérico porque el banner
+ * de cookies también es role=dialog permanente y bloquearía el promo.
+ */
+function otherModalOpen(): boolean {
+  if (typeof document === 'undefined') return false
+  return !!document.querySelector('[data-ob-overlay]:not([hidden])')
+}
+
 function canShowNow(isLoggedIn: boolean): boolean {
+  if (otherModalOpen()) return false
   if (!hasEngaged()) return false
   if (isLoggedIn) return !hasSeenLoggedIn()
   return guestCooldownElapsed()
@@ -178,9 +191,17 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
   }, [authLoading, isLoggedIn, onChartsPage, open, showNow])
 
   // Contabilizar vistas de página en la sesión (cada ruta distinta cuenta).
+  // Guardamos la última ruta contada en un ref: este efecto también se
+  // re-ejecuta cuando cambia la identidad de scheduleShowIfReady (auth
+  // resuelto, open…), y sin el guard una sola página sumaba 2+ "vistas"
+  // y el promo saltaba a los pocos segundos de la primera carga.
+  const bumpedPathRef = useRef<string | null>(null)
   useEffect(() => {
     if (onChartsPage) return
-    bumpPageViews()
+    if (bumpedPathRef.current !== pathname) {
+      bumpedPathRef.current = pathname
+      bumpPageViews()
+    }
     scheduleShowIfReady()
   }, [pathname, onChartsPage, scheduleShowIfReady])
 

@@ -282,6 +282,7 @@ function AdminChatWidgetInner() {
         role="dialog"
         aria-modal="true"
         aria-label={label}
+        data-ob-overlay
         hidden={!open}
       >
         <header className="ob-admin-chat-panel__bar shrink-0 flex items-center gap-2 px-3 border-b-4 border-[var(--ink)] bg-[var(--red)] text-white">
