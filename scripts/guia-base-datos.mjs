@@ -158,7 +158,7 @@ const ACTIONS = [
     npm: 'npm run db:network:enrich -- --dry-run',
     creds: 'OPENAI_API_KEY + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Agente IA (OPENAI_MODEL, por defecto gpt-5.4) que para cada entidad (artista/sello/escena/evento) sugiere qué SLUGS del archivo están conectados y fusiona en related_artists/labels_founded/key_artists/key_labels/lineup con dedupe. Marca ai_enriched_at. --dry-run imprime sugerencias sin escribir.',
+      'Agente IA (OPENAI_MODEL, por defecto gpt-5.6-terra + web_search) que para cada entidad (artista/sello/escena/evento) sugiere qué SLUGS del archivo están conectados y fusiona en related_artists/labels_founded/key_artists/key_labels/lineup con dedupe. Marca ai_enriched_at. --dry-run imprime sugerencias sin escribir.',
   },
   {
     id: 'events-prune-non-spain',
@@ -223,6 +223,14 @@ const ACTIONS = [
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
       'image_url = /images/events/retro-halloween-2025.webp en slug raveart-retro-halloween-2025.',
+  },
+  {
+    id: 'events-patch-raveart-retro-halloween-2026-lineup',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-retro-halloween-2026-lineup',
+    npm: 'npm run db:guia -- run events-patch-raveart-retro-halloween-2026-lineup',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Line-up por áreas en raveart-retro-halloween-2026-malaga-forum: 1ª tanda Only Vinyls y 2ª tanda Universal (UK + nacionales); VIP, info-line y @raveartprod. Anniversary y Old School TBA.',
   },
   {
     id: 'events-patch-kultura-breakz-ii-aniversario-2026',
@@ -773,6 +781,7 @@ Punto de entrada unificado:
   events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026  We Love Retro, Elysium Sevilla 9 may 2026
   events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026  RVT Summer Festival presentación, El Tren Granada 9 may 2026
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
+  events-patch-raveart-retro-halloween-2026-lineup  line-up Only Vinyls + Universal en raveart-retro-halloween-2026-malaga-forum
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-patch-pure-bassline-15-agosto-2026-sevilla  Made in Spain Festival (Pure Bassline), White Beach Antilla Lepe 15 ago 2026 (5º avance cartel, Fourvenues rollercoaster)
@@ -1170,6 +1179,9 @@ function main() {
       break
     case 'events-patch-raveart-retro-halloween-2025-poster':
       runNode('enriquecer-evento.mjs', ['--patch-raveart-retro-halloween-2025-poster', ...rest])
+      break
+    case 'events-patch-raveart-retro-halloween-2026-lineup':
+      runNode('enriquecer-evento.mjs', ['--patch-raveart-retro-halloween-2026-lineup', ...rest])
       break
     case 'events-patch-kultura-breakz-ii-aniversario-2026':
       runNode('enriquecer-evento.mjs', ['--patch-kultura-breakz-ii-aniversario-2026', ...rest])

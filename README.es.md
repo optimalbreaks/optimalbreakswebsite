@@ -168,7 +168,7 @@ npm run db:artist:agent:all                                    # regenera cada f
 npm run db:artist:ensure -- data/artists/deekline.json         # comprobar JSON vs BD y sincronizar si difiere
 ```
 
-Necesitas **`OPENAI_API_KEY`**. Por defecto **`gpt-5.4`**; **`OPENAI_MODEL`** lo sobrescribe. Opcional **`SERPAPI_API_KEY`**. Revisa siempre hechos antes de publicar.
+Necesitas **`OPENAI_API_KEY`**. Por defecto **`gpt-5.6-terra`** con **web_search**; **`OPENAI_MODEL`** lo sobrescribe. Opcional **`SERPAPI_API_KEY`** (respaldo web e imágenes). Revisa siempre hechos antes de publicar.
 
 ### Fotos de artista (otro flujo: imágenes, no biografías)
 

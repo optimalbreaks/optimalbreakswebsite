@@ -12,7 +12,7 @@ Fuente: ediciones **publicadas** de **`chart_tracks`** (40 Breaks Vitales) + **`
 - Contar créditos (aparición en `artists[]` de cada fila) en la unión de ediciones publicadas.
 - Si el nombre **no** está en `data/artists/` (ni alias `CHART_NAME_TO_SLUG`) y tiene **≥ 3** apariciones → candidato a alta.
 - Alta preferida: `npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only` (luego fotos con `db:artist:photo` si hace falta).
-- Modelo del agente: `OPENAI_MODEL` o default **`gpt-5.4`**.
+- Modelo del agente: `OPENAI_MODEL` o default **`gpt-5.6-terra`** (web_search).
 
 ## Sellos — umbral ≥ 10 (solo imprints reales)
 

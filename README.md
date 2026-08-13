@@ -556,7 +556,7 @@ By default the agent **UPSERTs into Supabase** via the **REST API + service role
 
 Editable system prompt: [`scripts/prompts/artista-agente-system.txt`](scripts/prompts/artista-agente-system.txt).
 
-Requires **`OPENAI_API_KEY`** in `.env.local`. Defaults to **`gpt-5.4`**; override with **`OPENAI_MODEL`**. Optional **`SERPAPI_API_KEY`** ([SerpApi](https://serpapi.com)) for web snippets; if missing, the agent uses model knowledge only.
+Requires **`OPENAI_API_KEY`** in `.env.local`. Defaults to **`gpt-5.6-terra`** with native **web_search**; override with **`OPENAI_MODEL`**. Optional **`SERPAPI_API_KEY`** ([SerpApi](https://serpapi.com)) as web fallback and for Google Images; if missing, the bio agent still searches via OpenAI.
 
 ```bash
 npm run db:artist:agent -- plump-djs "Plump DJs"

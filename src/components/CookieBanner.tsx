@@ -15,6 +15,7 @@ export type CookieConsent = {
   analytics: boolean
 }
 
+/** Nombre fijo: el script de Consent Mode en `[lang]/layout.tsx` lee la misma cookie. */
 const COOKIE_NAME = 'ob_consent'
 const COOKIE_MAX_AGE = 34_164_000 // ~13 months (EU max)
 /** Espera antes de mostrar el banner en 1ª visita (LCP = hero, no este texto). */

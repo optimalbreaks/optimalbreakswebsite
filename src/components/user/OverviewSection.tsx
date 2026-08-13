@@ -206,7 +206,7 @@ function YearHistogramBars({ stats, es }: { stats: BreakbeatProfileStats; es: bo
 
 // =============================================
 // "Pinchando tu ADN" — modal overlay que se enseña mientras la IA trabaja.
-// La generación real tarda ~30-55s (gpt-5.4 + 2 llamadas paralelas), así que
+// La generación real tarda ~30-55s (gpt-5.6-terra + 2 llamadas paralelas), así que
 // mostramos una fiesta: bola de discoteca, crew bailando, barra con rayas
 // animadas y mensajes rotatorios con humor breakbeatero.
 // =============================================

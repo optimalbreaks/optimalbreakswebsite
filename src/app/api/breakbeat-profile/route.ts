@@ -23,7 +23,7 @@ export const maxDuration = 60
 const OPENAI_MODEL_PRIMARY =
   process.env.OPENAI_MODEL_PROFILE?.trim() ||
   process.env.OPENAI_MODEL?.trim() ||
-  'gpt-5.4'
+  'gpt-5.6-terra'
 const OPENAI_MODEL_FALLBACK =
   process.env.OPENAI_MODEL_PROFILE_FALLBACK?.trim() || 'gpt-4o'
 

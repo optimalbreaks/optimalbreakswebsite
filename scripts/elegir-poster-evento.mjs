@@ -26,6 +26,10 @@ import {
   uploadEventPosterFromUrl,
   hasStorageCredentials,
 } from './lib/upload-event-poster-to-storage.mjs'
+import {
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const DEFAULT_MAX_CANDIDATES = 18
 const DEFAULT_DELAY_MS = 1400
@@ -101,7 +105,7 @@ Si ninguno encaja por OCR, chosen = null.`
 async function openAiChoosePosterText({ event, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
 
   const lines = candidates.map((c, i) => {
     const dim = c.width && c.height ? `${c.width}x${c.height}` : 'unknown'
@@ -129,15 +133,18 @@ Devuelve JSON: {"chosen": number|null, "reason": string}`
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.15,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_POSTER_META },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.15,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_POSTER_META },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -191,10 +198,7 @@ function visionImageUrl(c) {
 async function openAiChoosePosterVision({ event, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model =
-    process.env.OPENAI_VISION_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o'
+  const model = resolveOpenAiModel('OPENAI_VISION_MODEL')
 
   const ranked = sortCandidatesByPixels(candidates)
   const maxImg = Math.min(10, ranked.length)
@@ -239,15 +243,18 @@ JSON: {"chosen": number|null, "reason": "..."}`,
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_POSTER_VISION },
-        { role: 'user', content },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.1,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_POSTER_VISION },
+          { role: 'user', content },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()

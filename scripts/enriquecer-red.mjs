@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Enriquecimiento de La Red del Break con GPT-5.4.
+ * Enriquecimiento de La Red del Break con GPT-5.6 Terra.
  *
  * Lee el catálogo completo de Supabase (artistas, sellos, escenas, eventos) y,
  * para cada entidad, pide al modelo que identifique qué OTROS slugs del archivo
@@ -20,10 +20,10 @@
  *   node scripts/enriquecer-red.mjs --min-confidence 0.7
  *
  * Requisitos en .env.local:
- *   OPENAI_API_KEY, OPENAI_MODEL (opcional, por defecto gpt-5.4)
+ *   OPENAI_API_KEY, OPENAI_MODEL (opcional, por defecto gpt-5.6-terra)
  *   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)
  *
- * Coste aproximado con gpt-5.4: ~3-5k tokens input por entidad (si usamos
+ * Coste aproximado con gpt-5.6-terra: ~3-5k tokens input por entidad (si usamos
  * candidatos filtrados). Con prompt caching del catálogo el coste baja.
  */
 
@@ -32,6 +32,10 @@ import {
   loadEnvLocal,
   supabaseApiCredentials,
 } from './lib/artist-upsert.mjs'
+import {
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 // ============================================
 // CLI args
@@ -46,7 +50,7 @@ function parseArgs(argv) {
     limit: null,
     minConfidence: 0.65,
     force: false,
-    model: process.env.OPENAI_MODEL?.trim() || 'gpt-5.4',
+    model: process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra',
     concurrency: 2,
   }
   for (let i = 0; i < argv.length; i++) {
@@ -226,15 +230,18 @@ async function callOpenAi({ system, user, model }) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.2,
+        maxCompletionTokens: 4000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const txt = await res.text().catch(() => '')

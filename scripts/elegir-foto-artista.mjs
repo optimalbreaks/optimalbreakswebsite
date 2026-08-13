@@ -9,7 +9,7 @@
  * La IA no analiza píxeles salvo que uses --vision (GPT con imágenes en miniatura).
  *
  * Requiere: OPENAI_API_KEY, SERPAPI_API_KEY en .env.local
- * Opcional: OPENAI_MODEL (por defecto igual que generar-artista-agente: gpt-5.4)
+ * Opcional: OPENAI_MODEL / OPENAI_VISION_MODEL (por defecto gpt-5.6-terra)
  *
  * Aviso legal: las URLs son de terceros; revisa derechos y licencias antes de uso público.
  *
@@ -50,6 +50,10 @@ import {
   shouldSkipInternetArtistPhotoSearch,
   hasEditorialPortraitFile,
 } from './lib/editorial-public-artist-portrait.mjs'
+import {
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -286,7 +290,7 @@ Si ningún candidato es fiable, chosen debe ser null.`
 async function openAiChooseCandidateText({ artist, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY en .env.local')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
 
   const lines = candidates.map((c, i) => {
     const dim =
@@ -312,15 +316,18 @@ Devuelve JSON: {"chosen": number|null, "reason": string}`
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.15,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_TEXT },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.15,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_TEXT },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -354,10 +361,7 @@ Devuelve JSON: {"chosen": number|null, "reason": string}`
 async function openAiChooseCandidateVision({ artist, candidates, quiet }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY en .env.local')
-  const model =
-    process.env.OPENAI_VISION_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o-mini'
+  const model = resolveOpenAiModel('OPENAI_VISION_MODEL')
 
   const maxImg = Math.min(8, candidates.length)
   const content = [
@@ -383,19 +387,22 @@ async function openAiChooseCandidateVision({ artist, candidates, quiet }) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Eres un experto en identificar músicos y DJs en fotos. Responde solo JSON válido.',
-        },
-        { role: 'user', content },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.1,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Eres un experto en identificar músicos y DJs en fotos. Responde solo JSON válido.',
+          },
+          { role: 'user', content },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -755,7 +762,7 @@ Opciones:
   --dry-run          no escribe JSON ni BD
   --skip-existing    omitir si image_url ya es https
   --json-only        URL externa en JSON solamente; no Storage ni UPSERT
-  --vision           usar miniaturas + modelo multimodal (OPENAI_VISION_MODEL o gpt-4o-mini)
+  --vision           usar miniaturas + modelo multimodal (OPENAI_VISION_MODEL o gpt-5.6-terra)
   --limit=N          con --all o --repair, procesar solo N artistas
   --max-candidates=N SerpAPI: máximo a considerar (default ${DEFAULT_MAX_CANDIDATES})
   --delay-ms=N       pausa entre artistas (default ${DEFAULT_DELAY_MS})

@@ -33,6 +33,15 @@ const AdminCaptureFab = nextDynamic(() => import('@/components/AdminCaptureFab')
 const GoogleAnalytics = nextDynamic(() => import('@/components/GoogleAnalytics'), { ssr: false })
 const ServiceWorkerRegistration = nextDynamic(() => import('@/components/ServiceWorkerRegistration'), { ssr: false })
 
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+
+/**
+ * Consent Mode v2 default in first HTML (must match CookieBanner `ob_consent`).
+ * Reads the cookie so returning users are granted before any hit — otherwise
+ * GA4 sends a cookieless ping and then a cookied session (two “visits”).
+ */
+const GA_CONSENT_DEFAULT_SCRIPT = `(function(){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;var g='denied';try{var m=document.cookie.match(/(?:^|; )ob_consent=([^;]*)/);if(m){var c=JSON.parse(decodeURIComponent(m[1]));if(c&&c.analytics===true)g='granted'}}catch(e){}gtag('consent','default',{'analytics_storage':g,'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied','wait_for_update':500});})();`
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -148,6 +157,12 @@ export default async function LangLayout({
         <link rel="apple-touch-icon" href="/images/favicon_punk_brutalism.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {GA_MEASUREMENT_ID ? (
+          <script
+            id="ga-consent-default"
+            dangerouslySetInnerHTML={{ __html: GA_CONSENT_DEFAULT_SCRIPT }}
+          />
+        ) : null}
       </head>
       <body>
         <script

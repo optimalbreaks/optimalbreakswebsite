@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 
 let systemPromptCache: string | null = null
 
@@ -16,7 +17,7 @@ function loadSystemPrompt(): string {
 }
 
 function openAiModel(): string {
-  return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
+  return resolveOpenAiModel()
 }
 
 const OPENAI_RETRY_STATUS = new Set([429, 502, 503])
@@ -92,15 +93,19 @@ Rules for this row:
 Source JSON:
 ${JSON.stringify({ name_es: nameEs, description_es: descriptionEs })}`
 
-  const res = await openAiChatResponse(key, {
-    model: openAiModel(),
-    temperature: 0.25,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  })
+  const res = await openAiChatResponse(
+    key,
+    openAiChatCompletionsBody({
+      model: openAiModel(),
+      temperature: 0.25,
+      maxCompletionTokens: 4000,
+      responseFormat: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  )
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[]
@@ -143,15 +148,19 @@ Return ONLY a JSON object: {"text_en":"..."}
 Spanish source:
 ${textSpanish}`
 
-  const res = await openAiChatResponse(key, {
-    model: openAiModel(),
-    temperature: 0.25,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  })
+  const res = await openAiChatResponse(
+    key,
+    openAiChatCompletionsBody({
+      model: openAiModel(),
+      temperature: 0.25,
+      maxCompletionTokens: 4000,
+      responseFormat: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  )
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[]

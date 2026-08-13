@@ -18,7 +18,7 @@
  *   npm run db:artist:agent:all -- --from-db --starter-bio-only   # solo bio_es plantilla «Incluido en el listado extendido…»
  *
  * Requiere OPENAI_API_KEY. Para escribir en BD: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET).
- * Opcional: SERPAPI_API_KEY para contexto web.
+ * Búsqueda web: OpenAI web_search (gpt-5.6-terra) por defecto; SerpAPI solo como respaldo.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
@@ -26,6 +26,11 @@ import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
 import { upsertArtist, supabaseApiCredentials } from './lib/artist-upsert.mjs'
+import {
+  fetchWebResearchContext,
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -80,38 +85,6 @@ const POOR_OB_BIO_RE =
 
 function isPoorObBoilerplateBio(jsonText) {
   return POOR_OB_BIO_RE.test(String(jsonText || ''))
-}
-
-async function fetchSerpContext(query, apiKey) {
-  if (!apiKey) return ''
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  url.searchParams.set('api_key', apiKey)
-  try {
-    const res = await fetch(url.toString())
-    if (!res.ok) {
-      console.warn('[agente] SerpAPI HTTP', res.status, '(sigue sin contexto web)')
-      return ''
-    }
-    const data = await res.json()
-    const bits = []
-    if (data.organic_results && Array.isArray(data.organic_results)) {
-      for (const r of data.organic_results.slice(0, 8)) {
-        if (r.title) bits.push(`Título: ${r.title}`)
-        if (r.snippet) bits.push(`Resumen: ${r.snippet}`)
-        if (r.link) bits.push(`URL: ${r.link}`)
-        bits.push('---')
-      }
-    }
-    if (data.answer_box?.answer) bits.push(`Answer: ${data.answer_box.answer}`)
-    const text = bits.join('\n').slice(0, 12000)
-    return text || ''
-  } catch (e) {
-    console.warn('[agente] SerpAPI error:', e.message)
-    return ''
-  }
 }
 
 /** Texto JSON de la ficha actual: repo primero, si no Supabase. */
@@ -234,22 +207,24 @@ async function openAiJson({ system, user }) {
   if (!key) {
     throw new Error('Falta OPENAI_API_KEY en .env.local')
   }
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.28,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.28,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -355,25 +330,13 @@ export async function runArtistAgent({
     console.log('[agente] Bio OB/chart detectada → reescritura (no conservar plantilla)')
   }
   if (!noSearch) {
-    const serpKey = process.env.SERPAPI_API_KEY?.trim()
-    if (serpKey) {
-      const queries = [
-        `${artistName} breakbeat producer DJ discography Beatport`,
-        `${artistName} SoundCloud mix interview`,
-      ]
-      if (!quiet) console.log('[agente] Buscando contexto (SerpAPI)...')
-      const chunks = []
-      for (const q of queries) {
-        const part = await fetchSerpContext(q, serpKey)
-        if (part) chunks.push(part)
-      }
-      research = [...new Set(chunks)].join('\n\n').slice(0, 14000)
-      if (!quiet) {
-        if (research) console.log('[agente] Contexto web:', research.length, 'caracteres')
-        else console.log('[agente] Sin resultados útiles de SerpAPI')
-      }
-    } else if (!quiet) {
-      console.log('[agente] SERPAPI_API_KEY no definida; modo solo modelo.')
+    const q = `${artistName} DJ producer breakbeat biography discography Beatport SoundCloud`
+    if (!quiet) console.log('[agente] Buscando contexto (OpenAI web_search)…')
+    const web = await fetchWebResearchContext(q, { logPrefix: '[agente]' })
+    research = web.context
+    if (!quiet) {
+      if (research) console.log('[agente] Contexto web:', web.source, research.length, 'caracteres')
+      else console.log('[agente] Sin contexto web (OpenAI web_search / SerpAPI)')
     }
   }
 

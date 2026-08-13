@@ -3,6 +3,7 @@ import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 
 type ImageCandidate = {
   title: string
@@ -64,7 +65,7 @@ async function openAiChooseLogo(
 ): Promise<{ url: string | null; reason: string }> {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
 
   const lines = candidates.map((c, i) => {
     const dim = c.width && c.height ? `${c.width}x${c.height}` : 'unknown'
@@ -77,14 +78,18 @@ async function openAiChooseLogo(
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model, temperature: 0.15,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_LOGO },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.15,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_LOGO },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()

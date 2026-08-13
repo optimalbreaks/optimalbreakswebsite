@@ -20,6 +20,10 @@ import {
   hasStorageCredentials,
 } from './lib/upload-artist-portrait-to-storage.mjs'
 import { fetchGoogleImageCandidates } from './lib/serp-google-images.mjs'
+import {
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const DEFAULT_MAX_CANDIDATES = 18
 const DEFAULT_DELAY_MS = 1200
@@ -81,7 +85,7 @@ function buildLogoSearchQueries(labelName) {
 async function openAiChooseLogo(labelName, slug, candidates, quiet) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY en .env.local')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
 
   const lines = candidates.map((c, i) => {
     const dim = c.width && c.height ? `${c.width}x${c.height}` : 'unknown'
@@ -97,15 +101,18 @@ async function openAiChooseLogo(labelName, slug, candidates, quiet) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.15,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_LOGO },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.15,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_LOGO },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()

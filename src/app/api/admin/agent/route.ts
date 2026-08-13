@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { fetchWebResearchContext } from '@/lib/admin-chat'
+import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 import { readFileSync, existsSync } from 'fs'
 import path, { join } from 'path'
 import { pathToFileURL } from 'url'
@@ -67,33 +69,6 @@ function loadSystemPrompt(): string {
   const p = path.resolve(process.cwd(), 'scripts', 'prompts', 'artista-agente-system.txt')
   if (!existsSync(p)) throw new Error(`Prompt del sistema no encontrado: ${p}`)
   return readFileSync(p, 'utf8').trim()
-}
-
-async function fetchSerpContext(query: string, apiKey: string): Promise<string> {
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  url.searchParams.set('api_key', apiKey)
-
-  try {
-    const res = await fetch(url.toString())
-    if (!res.ok) return ''
-    const data = await res.json()
-    const bits: string[] = []
-    if (Array.isArray(data.organic_results)) {
-      for (const r of data.organic_results.slice(0, 8)) {
-        if (r.title) bits.push(`Título: ${r.title}`)
-        if (r.snippet) bits.push(`Resumen: ${r.snippet}`)
-        if (r.link) bits.push(`URL: ${r.link}`)
-        bits.push('---')
-      }
-    }
-    if (data.answer_box?.answer) bits.push(`Answer: ${data.answer_box.answer}`)
-    return bits.join('\n').slice(0, 12_000)
-  } catch {
-    return ''
-  }
 }
 
 function buildUserPrompt(opts: {
@@ -211,7 +186,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response
 
   const body = await request.json()
-  const { slug, artistName, notes, search } = body as {
+  const { slug, artistName, notes, search = true } = body as {
     slug?: string
     artistName?: string
     notes?: string
@@ -228,19 +203,15 @@ export async function POST(request: NextRequest) {
   }
 
   let research = ''
-  if (search) {
-    const serpKey = process.env.SERPAPI_API_KEY?.trim()
-    if (serpKey) {
-      research = await fetchSerpContext(
-        `${artistName} DJ producer breakbeat biography discography`,
-        serpKey,
-      )
-    }
+  if (search !== false) {
+    const q = `${artistName} DJ producer breakbeat biography discography`
+    const web = await fetchWebResearchContext(q)
+    research = web.context
   }
 
   const systemPrompt = loadSystemPrompt()
   const userPrompt = buildUserPrompt({ slug, artistName, notes, research })
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
 
   const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -248,15 +219,17 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${openaiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.28,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.28,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    ),
   })
 
   if (!oaiRes.ok) {

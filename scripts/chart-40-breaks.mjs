@@ -21,6 +21,10 @@ import { readFileSync, existsSync, writeFileSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import {
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -95,16 +99,19 @@ function sleepMs(ms) {
 async function openAiJson({ system, user }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model = process.env.OPENAI_MODEL_CHART?.trim() || process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
-  const body = JSON.stringify({
-    model,
-    temperature: 0.3,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  })
+  const model = resolveOpenAiModel('OPENAI_MODEL_CHART')
+  const body = JSON.stringify(
+    openAiChatCompletionsBody({
+      model,
+      temperature: 0.3,
+      maxCompletionTokens: 8000,
+      responseFormat: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  )
   let lastErr
   for (let attempt = 1; attempt <= 4; attempt++) {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {

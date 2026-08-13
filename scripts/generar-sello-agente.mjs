@@ -10,7 +10,7 @@
  *   node scripts/generar-sello-agente.mjs --from-db [--limit N] [--skip=a,b] [--no-search]
  *
  * Requiere OPENAI_API_KEY. Para escribir en BD: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET).
- * Opcional: SERPAPI_API_KEY para contexto web.
+ * Búsqueda web: OpenAI web_search (gpt-5.6-terra) por defecto; SerpAPI solo como respaldo.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
@@ -19,6 +19,11 @@ import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
 import { supabaseApiCredentials } from './lib/artist-upsert.mjs'
 import { upsertLabel } from './lib/label-upsert.mjs'
+import {
+  fetchWebResearchContext,
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -64,38 +69,6 @@ function loadSystemPrompt(withRevisionAppend) {
   if (!existsSync(REVISION_APPEND_PATH)) return base
   const add = readFileSync(REVISION_APPEND_PATH, 'utf8').trim()
   return add ? `${base}\n\n---\n\n${add}` : base
-}
-
-async function fetchSerpContext(query, apiKey) {
-  if (!apiKey) return ''
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  url.searchParams.set('api_key', apiKey)
-  try {
-    const res = await fetch(url.toString())
-    if (!res.ok) {
-      console.warn('[sello-agente] SerpAPI HTTP', res.status, '(sigue sin contexto web)')
-      return ''
-    }
-    const data = await res.json()
-    const bits = []
-    if (data.organic_results && Array.isArray(data.organic_results)) {
-      for (const r of data.organic_results.slice(0, 8)) {
-        if (r.title) bits.push(`Título: ${r.title}`)
-        if (r.snippet) bits.push(`Resumen: ${r.snippet}`)
-        if (r.link) bits.push(`URL: ${r.link}`)
-        bits.push('---')
-      }
-    }
-    if (data.answer_box?.answer) bits.push(`Answer: ${data.answer_box.answer}`)
-    const text = bits.join('\n').slice(0, 12000)
-    return text || ''
-  } catch (e) {
-    console.warn('[sello-agente] SerpAPI error:', e.message)
-    return ''
-  }
 }
 
 const LABEL_SELECT_REVISE =
@@ -192,22 +165,24 @@ async function openAiJson({ system, user }) {
   if (!key) {
     throw new Error('Falta OPENAI_API_KEY en .env.local')
   }
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-5.4'
+  const model = resolveOpenAiModel()
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.28,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.28,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -296,17 +271,13 @@ export async function runLabelAgent({
 
   let research = ''
   if (!noSearch) {
-    const serpKey = process.env.SERPAPI_API_KEY?.trim()
-    if (serpKey) {
-      const q = `${labelName} record label breakbeat discography`
-      if (!quiet) console.log('[sello-agente] Buscando contexto (SerpAPI)...')
-      research = await fetchSerpContext(q, serpKey)
-      if (!quiet) {
-        if (research) console.log('[sello-agente] Contexto web:', research.length, 'caracteres')
-        else console.log('[sello-agente] Sin resultados utiles de SerpAPI')
-      }
-    } else if (!quiet) {
-      console.log('[sello-agente] SERPAPI_API_KEY no definida; modo solo modelo.')
+    const q = `${labelName} record label breakbeat discography`
+    if (!quiet) console.log('[sello-agente] Buscando contexto (OpenAI web_search)…')
+    const web = await fetchWebResearchContext(q, { logPrefix: '[sello-agente]' })
+    research = web.context
+    if (!quiet) {
+      if (research) console.log('[sello-agente] Contexto web:', web.source, research.length, 'caracteres')
+      else console.log('[sello-agente] Sin contexto web (OpenAI web_search / SerpAPI)')
     }
   }
 

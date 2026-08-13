@@ -37,8 +37,8 @@ Los archivos **`data/artists/*.json`** están en **`.gitignore`** (canónico en 
 Definidas en `.env.local` (ver `.env.local.example`):
 
 - **`OPENAI_API_KEY`** — obligatoria para el agente.
-- **`OPENAI_MODEL`** — opcional; por defecto el código usa **`gpt-5.4`**.
-- **`SERPAPI_API_KEY`** — opcional; snippets de Google para contexto (si falta, el agente usa solo el modelo).
+- **`OPENAI_MODEL`** — opcional; por defecto el código usa **`gpt-5.6-terra`** con **web_search** nativo (SerpAPI solo como respaldo).
+- **`SERPAPI_API_KEY`** — opcional; respaldo de snippets de Google y **Google Imágenes** (fotos/carteles). Si falta, el agente de bios usa OpenAI `web_search`.
 - Para **escribir en `artists`** (agente por defecto, `db:artist`, batch): `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. La clave **anon/publishable** no vale para upsert. `DATABASE_URL` solo aplica a migraciones (`db:migrate`), no a estos scripts.
 
 ### Comandos (npm)
@@ -52,7 +52,7 @@ npm run db:artist:agent -- <slug-kebab> "Nombre para búsqueda"
 Opciones útiles:
 
 - `--notes ruta.txt` — notas del editor (máxima prioridad frente a web/modelo).
-- `--no-search` — sin SerpAPI.
+- `--no-search` — sin OpenAI web_search / SerpAPI.
 - `--stdout` — imprime JSON por consola; sin archivo ni BD.
 - `--json-only` — solo `data/artists/<slug>.json`, sin BD.
 - `--save-json` — UPSERT + copia JSON en disco.
@@ -190,8 +190,8 @@ The **artist profile agent** uses OpenAI (and optional web search) to produce an
 Set in `.env.local` (see `.env.local.example`):
 
 - **`OPENAI_API_KEY`** — required for the agent.
-- **`OPENAI_MODEL`** — optional; default in code is **`gpt-5.4`**.
-- **`SERPAPI_API_KEY`** — optional; Google snippets for context (if missing, model-only).
+- **`OPENAI_MODEL`** — optional; default in code is **`gpt-5.6-terra`** with native **web_search** (SerpAPI as fallback).
+- **`SERPAPI_API_KEY`** — optional; Google snippet fallback and **Google Images** (photos/posters). If missing, the bio agent uses OpenAI `web_search`.
 - To **write `artists`** (default agent, `db:artist`, batch): `NEXT_PUBLIC_SUPABASE_URL` + **`SUPABASE_SERVICE_ROLE_KEY`** / **`SUPABASE_SECRET_KEY`**. The **anon/publishable** key cannot upsert. `DATABASE_URL` is for migrations (`db:migrate`), not these scripts.
 
 ### Commands (npm)
@@ -205,7 +205,7 @@ npm run db:artist:agent -- <kebab-slug> "Name for search context"
 Useful flags:
 
 - `--notes path.txt` — editor notes (highest priority vs web/model).
-- `--no-search` — skip SerpAPI.
+- `--no-search` — omitir OpenAI web_search / SerpAPI.
 - `--stdout` — print JSON to stdout; no file or DB.
 - `--json-only` — JSON file only, no DB.
 - `--save-json` — UPSERT + JSON copy on disk.

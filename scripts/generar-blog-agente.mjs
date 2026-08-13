@@ -10,8 +10,8 @@
  *   npm run db:blog:agent -- slug "Título" --save-json
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
+ * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
  * Requiere OPENAI_API_KEY. Para BD: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
- * Opcional: SERPAPI_API_KEY.
  */
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
@@ -19,6 +19,11 @@ import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
 import { loadEnvLocal, supabaseApiCredentials } from './lib/artist-upsert.mjs'
+import {
+  fetchWebResearchContext,
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -34,104 +39,6 @@ function loadSystemPrompt() {
     process.exit(1)
   }
   return readFileSync(SYSTEM_PROMPT_PATH, 'utf8').trim()
-}
-
-async function fetchSerpContext(query, apiKey) {
-  if (!apiKey) return ''
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  url.searchParams.set('hl', 'es')
-  url.searchParams.set('api_key', apiKey)
-  try {
-    const res = await fetch(url.toString())
-    if (!res.ok) {
-      console.warn('[blog-agent] SerpAPI HTTP', res.status)
-      return ''
-    }
-    const data = await res.json()
-    const bits = []
-    if (Array.isArray(data.organic_results)) {
-      for (const r of data.organic_results.slice(0, 8)) {
-        if (r.title) bits.push(`Título: ${r.title}`)
-        if (r.snippet) bits.push(`Resumen: ${r.snippet}`)
-        if (r.link) bits.push(`URL: ${r.link}`)
-        bits.push('---')
-      }
-    }
-    if (data.answer_box?.answer) bits.push(`Answer: ${data.answer_box.answer}`)
-    return bits.join('\n').slice(0, 12000)
-  } catch (e) {
-    console.warn('[blog-agent] SerpAPI error:', e.message)
-    return ''
-  }
-}
-
-/** Búsqueda web nativa OpenAI (Responses + web_search), mismo patrón que admin-chat. */
-async function fetchOpenAIWebSearchContext(query, apiKey) {
-  const model =
-    process.env.OPENAI_SEARCH_MODEL?.trim() ||
-    process.env.OPENAI_BLOG_MODEL?.trim() ||
-    'gpt-5.6-terra'
-  const prompt = `Investiga en la web: ${query}
-
-Devuelve SOLO un resumen factual en texto plano (sin markdown) útil para un artículo enciclopédico sobre breakbeat:
-- Definición musical (ritmo, BPM aproximados, contraste con four-on-the-floor)
-- Orígenes (breaks, funk/soul, Kool Herc, Amen break si aplica)
-- Líneas principales: UK hardcore/rave, big beat, nu skool, Florida breaks, jungle/DnB adyacente, UK bass
-- Escenas territoriales relevantes (UK, EE. UU., España/Andalucía) si aparecen en fuentes serias
-Incluye URL de fuente junto a datos clave. No inventes.`
-
-  for (const toolType of ['web_search', 'web_search_preview']) {
-    try {
-      const res = await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          tools: [{ type: toolType }],
-          tool_choice: 'auto',
-          input: prompt,
-        }),
-        signal: AbortSignal.timeout(120_000),
-      })
-      if (!res.ok) {
-        if (res.status === 400) continue
-        const err = await res.text()
-        console.warn(`[blog-agent] OpenAI web_search ${res.status}:`, err.slice(0, 200))
-        continue
-      }
-      const data = await res.json()
-      let text = ''
-      if (typeof data.output_text === 'string') text = data.output_text
-      else if (Array.isArray(data.output)) {
-        for (const item of data.output) {
-          if (item?.type === 'message' && Array.isArray(item.content)) {
-            for (const c of item.content) {
-              if (
-                (c?.type === 'output_text' || c?.type === 'text') &&
-                typeof c.text === 'string'
-              ) {
-                text += c.text + '\n'
-              }
-            }
-          }
-        }
-      }
-      text = text.trim().slice(0, 14000)
-      if (text) {
-        console.log(`[blog-agent] Contexto web OpenAI (${toolType}, ${model}): ${text.length} chars`)
-        return text
-      }
-    } catch (e) {
-      console.warn('[blog-agent] OpenAI web_search error:', e.message)
-    }
-  }
-  return ''
 }
 
 function escHtml(s) {
@@ -280,28 +187,8 @@ CHECKLIST:
 async function openAiJson({ system, user }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY en .env.local')
-  const model =
-    process.env.OPENAI_BLOG_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
-    'gpt-5.6-terra'
+  const model = resolveOpenAiModel('OPENAI_BLOG_MODEL')
   console.log(`[blog-agent] Modelo redacción: ${model}`)
-
-  const body = {
-    model,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  }
-
-  // gpt-5.x: max_completion_tokens; temperature custom a menudo no está soportada
-  if (/^gpt-5/i.test(model)) {
-    body.max_completion_tokens = 16000
-  } else {
-    body.temperature = 0.35
-    body.max_tokens = 12000
-  }
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -309,7 +196,18 @@ async function openAiJson({ system, user }) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.35,
+        maxCompletionTokens: 16_000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -498,16 +396,21 @@ async function main() {
 
   let research = ''
   if (!args.noSearch) {
-    const apiKey = process.env.OPENAI_API_KEY?.trim()
-    const serp = process.env.SERPAPI_API_KEY?.trim()
     const q = `${args.titleHint} breakbeat definición qué es`
-    if (apiKey) {
-      research = await fetchOpenAIWebSearchContext(q, apiKey)
-    }
-    if (!research && serp) {
-      console.log('[blog-agent] Fallback SerpAPI…')
-      research = await fetchSerpContext(q, serp)
-    }
+    const blogPrompt = `Investiga en la web: ${q}
+
+Devuelve SOLO un resumen factual en texto plano (sin markdown) útil para un artículo enciclopédico sobre breakbeat:
+- Definición musical (ritmo, BPM aproximados, contraste con four-on-the-floor)
+- Orígenes (breaks, funk/soul, Kool Herc, Amen break si aplica)
+- Líneas principales: UK hardcore/rave, big beat, nu skool, Florida breaks, jungle/DnB adyacente, UK bass
+- Escenas territoriales relevantes (UK, EE. UU., España/Andalucía) si aparecen en fuentes serias
+Incluye URL de fuente junto a datos clave. No inventes.`
+    const web = await fetchWebResearchContext(q, {
+      prompt: blogPrompt,
+      logPrefix: '[blog-agent]',
+    })
+    research = web.context
+    if (web.source === 'serpapi') console.log('[blog-agent] Fallback SerpAPI…')
   }
 
   const user = buildUserPrompt({

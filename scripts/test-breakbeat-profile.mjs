@@ -28,7 +28,7 @@
  *   SUPABASE_SERVICE_ROLE_KEY
  *   OPENAI_API_KEY
  * Opcional:
- *   OPENAI_MODEL_PROFILE  (primario, por defecto lee OPENAI_MODEL o 'gpt-5.4')
+ *   OPENAI_MODEL_PROFILE  (primario, por defecto lee OPENAI_MODEL o 'gpt-5.6-terra')
  *   OPENAI_MODEL_PROFILE_FALLBACK  (por defecto 'gpt-4o')
  */
 
@@ -790,7 +790,7 @@ async function main() {
 
   // 1) Env
   const openaiKey = process.env.OPENAI_API_KEY?.trim() || ''
-  const modelPrimary = (ARGS.model || process.env.OPENAI_MODEL_PROFILE || process.env.OPENAI_MODEL || 'gpt-5.4').trim()
+  const modelPrimary = (ARGS.model || process.env.OPENAI_MODEL_PROFILE || process.env.OPENAI_MODEL || 'gpt-5.6-terra').trim()
   const modelFallback = (process.env.OPENAI_MODEL_PROFILE_FALLBACK || 'gpt-4o').trim()
 
   console.log(`Email:                ${ARGS.email}`)

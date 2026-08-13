@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
-import { fetchWebResearchContext } from '@/lib/admin-chat'
+import { EVENT_WEB_SEARCH_PROMPT, fetchWebResearchContext } from '@/lib/admin-chat'
+import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
   const systemPrompt = loadSystemPrompt()
 
   const q = buildSearchQuery(event)
-  const research = await fetchWebResearchContext(q)
+  const research = await fetchWebResearchContext(q, { prompt: EVENT_WEB_SEARCH_PROMPT(q) })
   const webContext =
     research.context ||
     '(Sin resultados de búsqueda web — OpenAI web_search y SerpAPI no devolvieron contexto.)'
@@ -217,7 +218,7 @@ Prioridades para este enriquecimiento:
 
 Los campos que ya tienen valor correcto, repítelos tal cual.`
 
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
+  const model = resolveOpenAiModel()
 
   const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -225,15 +226,17 @@ Los campos que ya tienen valor correcto, repítelos tal cual.`
       'Content-Type': 'application/json',
       Authorization: `Bearer ${openaiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.2,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    ),
   })
 
   if (!oaiRes.ok) {

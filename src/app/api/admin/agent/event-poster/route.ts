@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 
@@ -95,10 +96,7 @@ async function openAiChoosePosterVision(
 ): Promise<{ url: string | null; reason: string }> {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model =
-    process.env.OPENAI_VISION_MODEL?.trim() ||
-    process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o'
+  const model = resolveOpenAiModel('OPENAI_VISION_MODEL')
   const light = opts?.light === true
   const maxImg = Math.min(light ? 8 : 10, candidates.length)
   const detail: 'high' | 'low' = light ? 'low' : 'high'
@@ -146,15 +144,18 @@ JSON: {"chosen": number|null, "reason": "..."}`,
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: SYSTEM_POSTER_VISION },
-        { role: 'user', content },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.1,
+        maxCompletionTokens: 2000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: SYSTEM_POSTER_VISION },
+          { role: 'user', content },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()

@@ -22,7 +22,7 @@
  * published_at: desde la fecha más antigua ya guardada hacia atrás, saltos aleatorios 11/13/15 días
  * (misma regla que el import completo). Orden de inserción: aleatorio respecto al CSV.
  *
- * Opcional: BLOG_IMAGE_PROMPT_MODEL (default: OPENAI_MODEL o gpt-4o-mini)
+ * Opcional: BLOG_IMAGE_PROMPT_MODEL (default: OPENAI_MODEL o gpt-5.6-terra)
  *
  * Requiere: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY (salvo --skip-images)
  */
@@ -31,6 +31,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { openAiChatCompletionsBody } from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -383,7 +384,7 @@ async function buildImagePromptFromArticleAgent({
   const model =
     process.env.BLOG_IMAGE_PROMPT_MODEL?.trim() ||
     process.env.OPENAI_MODEL?.trim() ||
-    'gpt-4o-mini'
+    'gpt-5.6-terra'
   const bias = COMPOSITION_BIAS[hashString(slug) % COMPOSITION_BIAS.length]
   const lightPalette =
     LIGHTING_PALETTE[hashString(`${slug}|lux`) % LIGHTING_PALETTE.length]
@@ -429,15 +430,17 @@ ${snippet}`
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      max_tokens: 1200,
-      temperature: 0.88,
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.88,
+        maxCompletionTokens: 1200,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
 
   if (!res.ok) {

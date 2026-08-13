@@ -469,7 +469,7 @@ async function runBootstrapMissingFrequent({
       {
         cwd: ROOT,
         stdio: 'inherit',
-        env: { ...process.env, OPENAI_MODEL: process.env.OPENAI_MODEL?.trim() || 'gpt-5.4' },
+        env: { ...process.env, OPENAI_MODEL: process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra' },
         shell: false,
       },
     )
@@ -678,7 +678,7 @@ async function main() {
       {
         cwd: ROOT,
         stdio: 'inherit',
-        env: { ...process.env, OPENAI_MODEL: process.env.OPENAI_MODEL?.trim() || 'gpt-5.4' },
+        env: { ...process.env, OPENAI_MODEL: process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra' },
         shell: false,
       },
     )

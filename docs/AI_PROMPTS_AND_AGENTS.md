@@ -31,8 +31,8 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Variable | Rol |
 |----------|-----|
 | **`OPENAI_API_KEY`** | Obligatoria donde haya llamadas a OpenAI. |
-| **`OPENAI_MODEL`** | Opcional; el **valor por defecto depende del flujo** (ver tabla siguiente). |
-| **`SERPAPI_API_KEY`** | Opcional; contexto web (Google) en agentes que lo soportan. |
+| **`OPENAI_MODEL`** | Opcional; default **`gpt-5.6-terra`** en casi todos los flujos (ver tabla). |
+| **`SERPAPI_API_KEY`** | Opcional; **respaldo** de contexto web y **Google Imágenes** (fotos/carteles). El texto usa OpenAI `web_search` primero. |
 | **`OPENAI_VISION_MODEL`** | Opcional en `elegir-foto-artista.mjs` (modo `--vision`) y OCR del chat/carteles. |
 | **`OPENAI_CHAT_MODEL`** / **`OPENAI_AGENT_MODEL`** | Opcional: modelo del **loop de tools** del chat admin (`admin-chat-agent.ts`); si no, `OPENAI_MODEL` o `gpt-5.6-terra`. |
 
@@ -40,15 +40,15 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 
 | Flujo | Default típico en código |
 |--------|---------------------------|
-| Artista (CLI + API admin) | `gpt-5.4` |
-| Sello (API admin + CLI sello) | `gpt-5.4` |
-| Enriquecer evento (CLI + API admin evento) | `gpt-4o-mini` |
+| Artista (CLI + API admin) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI respaldo) |
+| Sello (API admin + CLI sello) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI respaldo) |
+| Enriquecer evento (CLI + API admin evento) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI respaldo) |
 | Chat admin (agente tools + confirmación) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-5.6-terra` (`admin-chat-agent.ts`); OCR vía `extractScreenshotFacts` / visión |
-| Cartel evento (visión/OCR, script + API `event-poster`) | `OPENAI_VISION_MODEL` o `OPENAI_MODEL` o `gpt-4o` |
-| Elegir foto artista / sello, logo (scripts y APIs relacionadas) | suele ser `gpt-5.4` salvo ramas vision (`gpt-4o-mini` u `OPENAI_VISION_MODEL`) |
-| Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.4` |
+| Cartel evento (visión/OCR, script + API `event-poster`) | `OPENAI_VISION_MODEL` o `OPENAI_MODEL` o `gpt-5.6-terra` |
+| Elegir foto artista / sello, logo (scripts y APIs relacionadas) | `gpt-5.6-terra` (visión: `OPENAI_VISION_MODEL`) |
+| Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.6-terra` |
 
-Comprueba siempre el archivo concreto si cambias de modelo: los defaults pueden divergir entre flujos.
+Los flujos de texto editorial comparten **`gpt-5.6-terra`** + **`web_search`**. Comprueba el archivo concreto si defines un override (`OPENAI_BLOG_MODEL`, `OPENAI_CHAT_MODEL`, `OPENAI_VISION_MODEL`).
 
 ### Otros parámetros (temperatura, `max_tokens`, formato)
 
@@ -114,21 +114,21 @@ See `.env.local` / `.env.local.example`.
 | Variable | Role |
 |----------|------|
 | **`OPENAI_API_KEY`** | Required for OpenAI calls. |
-| **`OPENAI_MODEL`** | Optional; **defaults differ by flow** (table below). |
-| **`SERPAPI_API_KEY`** | Optional web context (Google) where supported. |
+| **`OPENAI_MODEL`** | Optional; default **`gpt-5.6-terra`** in almost every flow (table below). |
+| **`SERPAPI_API_KEY`** | Optional; web **fallback** and **Google Images** (photos/posters). Text agents use OpenAI `web_search` first. |
 | **`OPENAI_VISION_MODEL`** | Optional for `elegir-foto-artista.mjs` (`--vision`). |
 
 ### Default model when `OPENAI_MODEL` is unset
 
 | Flow | Typical code default |
 |------|----------------------|
-| Artist (CLI + admin API) | `gpt-5.4` |
-| Label (admin API + label CLI) | `gpt-5.4` |
-| Event enrich (CLI + admin event API) | `gpt-4o-mini` |
+| Artist (CLI + admin API) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI fallback) |
+| Label (admin API + label CLI) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI fallback) |
+| Event enrich (CLI + admin event API) | `gpt-5.6-terra` + OpenAI `web_search` (SerpAPI fallback) |
 | Admin chat agent (tools + confirm) | `OPENAI_CHAT_MODEL` → `OPENAI_AGENT_MODEL` → `OPENAI_MODEL` → `gpt-5.6-terra` (`admin-chat-agent.ts`) |
-| Event poster (vision/OCR) | `OPENAI_VISION_MODEL` / `OPENAI_MODEL` / `gpt-4o` |
-| Artist/label photo pick, logo scripts/APIs | often `gpt-5.4` except vision branches |
-| Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.4` |
+| Event poster (vision/OCR) | `OPENAI_VISION_MODEL` / `OPENAI_MODEL` / `gpt-5.6-terra` |
+| Artist/label photo pick, logo scripts/APIs | `gpt-5.6-terra` (vision: `OPENAI_VISION_MODEL`) |
+| Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.6-terra` |
 
 Always check the specific file if you rely on a single global default.
 

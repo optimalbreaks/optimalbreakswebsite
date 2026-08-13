@@ -19,6 +19,7 @@
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-elysium-sevilla-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026
  *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
+ *   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2026-lineup
  *   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
  *   node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla
@@ -45,7 +46,8 @@
  *   node scripts/enriquecer-evento.mjs --patch-ritmika-1-aniversario-white-beach-lepe-2026
  *
  * Credenciales (.env.local):
- *   OPENAI_API_KEY, SERPAPI_API_KEY (enriquecimiento)
+ *   OPENAI_API_KEY (web_search + redacción; gpt-5.6-terra)
+ *   SERPAPI_API_KEY opcional (respaldo web; Google Imágenes para carteles)
  *   NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (siempre)
  *
  * Indice: node scripts/guia-base-datos.mjs run events-enrich <slug> [--flags]
@@ -56,6 +58,11 @@ import { spawnSync } from 'child_process'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import {
+  fetchWebResearchContext,
+  openAiChatCompletionsBody,
+  resolveOpenAiModel,
+} from './lib/openai-editorial.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -115,54 +122,30 @@ function requireSupabase() {
 }
 
 // ---------------------------------------------------------------------------
-// SerpAPI (busqueda web, no imagenes)
-// ---------------------------------------------------------------------------
-
-async function fetchSerpWebContext(query, apiKey, gl = 'es') {
-  const url = new URL('https://serpapi.com/search.json')
-  url.searchParams.set('engine', 'google')
-  url.searchParams.set('q', query)
-  url.searchParams.set('num', '10')
-  if (gl) url.searchParams.set('gl', gl)
-  url.searchParams.set('api_key', apiKey)
-  const res = await fetch(url.toString())
-  if (!res.ok) return ''
-  const data = await res.json()
-  const bits = []
-  if (data.organic_results && Array.isArray(data.organic_results)) {
-    for (const r of data.organic_results.slice(0, 10)) {
-      if (r.title) bits.push(`Title: ${r.title}`)
-      if (r.snippet) bits.push(`Snippet: ${r.snippet}`)
-      if (r.link) bits.push(`URL: ${r.link}`)
-      bits.push('---')
-    }
-  }
-  return bits.join('\n').slice(0, 9000)
-}
-
-// ---------------------------------------------------------------------------
 // OpenAI (JSON mode)
 // ---------------------------------------------------------------------------
 
 async function openAiJson({ system, user }) {
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) throw new Error('Falta OPENAI_API_KEY')
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini'
+  const model = resolveOpenAiModel()
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
     },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model,
+        temperature: 0.2,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    ),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -264,7 +247,6 @@ function normalizePatch(patch) {
 
 async function runEnrich(slug, opts) {
   const sb = requireSupabase()
-  const serpKey = process.env.SERPAPI_API_KEY?.trim()
 
   const { data: event, error: e0 } = await sb
     .from('events')
@@ -285,14 +267,32 @@ async function runEnrich(slug, opts) {
   }
   const systemPrompt = readFileSync(SYSTEM_PROMPT_PATH, 'utf8').trim()
 
-  let webContext = '(Sin busqueda web — falta SERPAPI_API_KEY)'
-  if (serpKey) {
-    const q = buildSearchQuery(event)
-    console.log('[enrich] SerpAPI query:', q)
-    webContext = await fetchSerpWebContext(q, serpKey)
-    if (!webContext) webContext = '(Sin resultados de busqueda.)'
+  let webContext = '(Sin resultados de búsqueda web — OpenAI web_search y SerpAPI no devolvieron contexto.)'
+  const q = buildSearchQuery(event)
+  console.log('[enrich] Web search query:', q)
+  const eventPrompt = `Investiga en la web el evento de música electrónica / breakbeat: ${q}
+
+Prioriza fuentes oficiales (web del evento, promotor, ticketeras: MonsterTicket, Dice, RA, Resident Advisor, Facebook Events).
+
+Devuelve SOLO un resumen factual en texto plano (sin markdown) con:
+- Nombre oficial del evento
+- Fecha(s) exacta(s) (YYYY-MM-DD si posible) y horarios (doors / cierre)
+- Recinto/venue, dirección, ciudad y país
+- Line-up completo / artistas confirmados (y stages si hay)
+- URL oficial (website) y URL de venta de entradas (tickets)
+- Redes sociales del evento si aparecen
+- Precio, edad mínima, capacidad, promotor
+Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo inventes.`
+  const research = await fetchWebResearchContext(q, {
+    prompt: eventPrompt,
+    logPrefix: '[enrich]',
+    gl: 'es',
+  })
+  if (research.context) {
+    webContext = research.context
+    console.log('[enrich] Contexto web:', research.source, webContext.length, 'chars')
   } else {
-    console.warn('[enrich] SERPAPI_API_KEY no disponible; solo OpenAI con conocimiento general.')
+    console.warn('[enrich] Sin contexto web; solo OpenAI con conocimiento general.')
   }
 
   const today = new Date().toISOString().slice(0, 10)
@@ -301,7 +301,7 @@ ${JSON.stringify(event, null, 2)}
 
 FECHA DE HOY: ${today}
 
-CONTEXTO WEB (resultados de busqueda):
+CONTEXTO WEB (OpenAI web_search o SerpAPI; puede tener errores; no inventes URLs que no aparezcan):
 ---
 ${webContext}
 ---
@@ -510,6 +510,148 @@ async function runPatchRaveartRetroHalloween2025Poster(sb) {
     .maybeSingle()
   if (e2) throw e2
   console.log('[patch-retro-halloween-2025] despues:', after)
+}
+
+const RAVEART_RETRO_HALLOWEEN_2026_SLUG = 'raveart-retro-halloween-2026-malaga-forum'
+
+/** Cartel oficial ÁREA ONLY VINYLS / 1ª tanda (A-Z en flyer y comunicado Raveart, ago 2026). */
+const RAVEART_RH_2026_ONLY_VINYLS = [
+  'Adam VYT',
+  'Aldo Ferrari',
+  'Amaya Dejota',
+  'Anuschka',
+  'Baymont Bross',
+  'Heavy',
+  'Maribel',
+  'Norbak',
+  'Kos DJ',
+  'Prody',
+  'Rasco',
+  'Rupe',
+  'Carlos Mejías VJ',
+]
+
+/** Cartel oficial ÁREA UNIVERSAL / 2ª tanda (A-Z en flyer y comunicado Raveart, ago 2026). */
+const RAVEART_RH_2026_UNIVERSAL = [
+  'Bartdon',
+  'Chris Carter',
+  'Deep Impact',
+  'Madam Breaks',
+  'Ricardo del Toro',
+  'Rueda',
+  'Saturn DJ',
+  'Slag Brothers',
+  'V. Aparicio',
+  'Xema',
+]
+
+const RAVEART_RH_2026_LINEUP = [
+  ...new Set([...RAVEART_RH_2026_ONLY_VINYLS, ...RAVEART_RH_2026_UNIVERSAL]),
+].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+
+const RAVEART_RH_2026_STAGES = [
+  {
+    name: 'ÁREA ONLY VINYLS',
+    description_en:
+      'Vinyl-only cabin: turntables and physical format, with visuals by Carlos Mejías VJ. First published wave — a Spanish-scene bill.',
+    description_es:
+      'Cabina de vinilo: platos y formato físico, con visuales de Carlos Mejías VJ. Primera oleada publicada: cartel de la escena nacional.',
+    lineup: RAVEART_RH_2026_ONLY_VINYLS,
+  },
+  {
+    name: 'ÁREA ANNIVERSARY',
+    description_en:
+      'From 2002 to 2026: retro meeting the current catalogue. Line-up not yet published.',
+    description_es:
+      'De 2002 a 2026: lo retro con el catálogo actual. Line-up por confirmar.',
+    lineup: [],
+  },
+  {
+    name: 'ÁREA UNIVERSAL',
+    description_en:
+      'Electronic classics through 2010. Second published wave, with UK guests Chris Carter, Deep Impact, Madam Breaks and Slag Brothers.',
+    description_es:
+      'Clásicos electrónicos hasta 2010. Segunda oleada publicada, con invitados del Reino Unido: Chris Carter, Deep Impact, Madam Breaks y Slag Brothers.',
+    lineup: RAVEART_RH_2026_UNIVERSAL,
+  },
+  {
+    name: 'ÁREA OLD SCHOOL',
+    description_en:
+      'The earliest layer: classics through 2000. Line-up not yet published.',
+    description_es:
+      'La capa más temprana: clásicos hasta el año 2000. Line-up por confirmar.',
+    lineup: [],
+  },
+]
+
+async function runPatchRaveartRetroHalloween2026Lineup(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, lineup, stages, tags, socials, description_es, address')
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  if (!before) {
+    console.error('[patch-retro-halloween-2026] No existe fila:', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    process.exit(1)
+  }
+  console.log(
+    '[patch-retro-halloween-2026] antes: lineup',
+    before.lineup?.length || 0,
+    '| stages',
+    Array.isArray(before.stages) ? before.stages.length : 0,
+  )
+
+  const tags = [
+    ...new Set([
+      ...(before.tags || []),
+      'only vinyls',
+      'área universal',
+      'anniversary',
+      'old school',
+      'vinilo',
+      'málaga forum',
+    ]),
+  ]
+  const prevSocials =
+    before.socials && typeof before.socials === 'object' ? before.socials : {}
+  const socials = {
+    ...prevSocials,
+    instagram: 'https://www.instagram.com/raveartprod/',
+    email: 'mailto:info@raveart.es',
+    phone: 'tel:+34657733208',
+    MonsterTicket: 'https://www.monsterticket.com/evento/retro-halloween-2026',
+  }
+
+  const { error: e1 } = await sb
+    .from('events')
+    .update({
+      lineup: RAVEART_RH_2026_LINEUP,
+      stages: RAVEART_RH_2026_STAGES,
+      tags,
+      socials,
+      address: 'Ctra. de la Azucarera Intelhorce, 7, Churriana, Málaga',
+      location: 'Málaga Forum, Churriana, Málaga',
+      description_es:
+        'Raveart celebra Retro Halloween el sábado 31 de octubre de 2026 en el Málaga Forum de Churriana: la primera vez que la cita aterriza en la Costa del Sol, después de la edición de 2025 en Complejo Embrujo (Las Gabias, Granada). Doce horas de breaks y electrónica clásica, de tarde a madrugada, con estética Halloween y cuatro áreas pensadas por época y formato. Only Vinyls —primera oleada publicada— reivindica los platos y el disco físico, con cartel de la escena nacional y visuales de Carlos Mejías. Universal —segunda oleada— cubre clásicos hasta 2010 e introduce los primeros internacionales del cartel, todos del Reino Unido: Chris Carter, Deep Impact, Madam Breaks y Slag Brothers. Anniversary (2002–2026) y Old School (hasta 2000) se anunciarán más adelante.\n\nHorario de apertura: el recinto abre a las 14:00 h y la programación se extiende hasta las 02:00 h. Prohibida la entrada a menores de 18 años.\n\nEntrada general: incluye consumición mínima, válida hasta las 17:00 h, según las condiciones publicadas por Raveart.\n\nEntrada VIP: zona VIP, copa, vaso, bono ReAcceso en los horarios que fije la organización y acceso sin colas.\n\nVenta de entradas en raveart.es. Consultas al promotor: info@raveart.es y 657 733 208.\n\nCómo llegar: Málaga Forum está en la Ctra. de la Azucarera Intelhorce, 7, Churriana (Málaga).',
+      description_en:
+        'Raveart stages Retro Halloween on Saturday 31 October 2026 at Málaga Forum in Churriana — the first time the date lands on the Costa del Sol, after the 2025 edition at Complejo Embrujo (Las Gabias, Granada). Twelve hours of breaks and classic electronics, afternoon into the small hours, with Halloween production and four areas split by era and format. Only Vinyls — the first published wave — is a turntable cabin for physical format, with a Spanish-scene bill and visuals by Carlos Mejías. Universal — the second wave — runs classics through 2010 and brings in the bill’s first international names, all from the UK: Chris Carter, Deep Impact, Madam Breaks and Slag Brothers. Anniversary (2002–2026) and Old School (through 2000) are still to come.\n\nDoors 14:00; the programme runs through 02:00. 18+ only.\n\nGeneral admission includes a minimum spend valid until 17:00, per Raveart’s published terms.\n\nVIP adds VIP zone, drink, glass, re-entry pass at the hours set by the promoter, and queue-free access.\n\nTickets and sales on raveart.es. Promoter info-line: info@raveart.es and 657 733 208.\n\nHow to get there: Málaga Forum, Ctra. de la Azucarera Intelhorce, 7, Churriana (Málaga).',
+    })
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, lineup, stages')
+    .eq('slug', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log(
+    '[patch-retro-halloween-2026] despues: lineup',
+    after?.lineup?.length || 0,
+    '| stages',
+    Array.isArray(after?.stages) ? after.stages.map((s) => `${s.name}:${s.lineup?.length || 0}`).join(', ') : 0,
+  )
 }
 
 const RAVEART_SUMMER_2026_SLUG = 'raveart-summer-2026'
@@ -4877,6 +5019,11 @@ async function main() {
     return
   }
 
+  if (argv.includes('--patch-raveart-retro-halloween-2026-lineup')) {
+    await runPatchRaveartRetroHalloween2026Lineup(sb)
+    return
+  }
+
   if (argv.includes('--patch-kultura-breakz-ii-aniversario-2026')) {
     await runPatchKulturaBreakzIiAniversario2026(sb)
     return
@@ -5137,6 +5284,7 @@ async function main() {
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-we-love-retro-elysium-sevilla-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026
   node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2025-poster
+  node scripts/enriquecer-evento.mjs --patch-raveart-retro-halloween-2026-lineup
   node scripts/enriquecer-evento.mjs --patch-kultura-breakz-ii-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-7-aniversario-2026
   node scripts/enriquecer-evento.mjs --patch-pure-bassline-15-agosto-2026-sevilla

@@ -1,4 +1,5 @@
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { pathToFileURL } from 'url'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
@@ -1136,14 +1137,15 @@ async function fetchSerpContext(query: string, apiKey: string): Promise<string> 
   }
 }
 
-/** Búsqueda web nativa de OpenAI (Responses API, tool web_search). Devuelve resumen factual. */
-async function fetchOpenAIWebSearchContext(query: string, apiKey: string): Promise<string> {
-  // Preferir gpt-5.6-terra (web search nativo); override con OPENAI_SEARCH_MODEL
-  const model =
-    process.env.OPENAI_SEARCH_MODEL?.trim() ||
-    process.env.OPENAI_CHAT_MODEL?.trim() ||
-    'gpt-5.6-terra'
-  const prompt = `Investiga en la web el evento de música electrónica / breakbeat: ${query}
+function defaultWebSearchPrompt(query: string): string {
+  return `Investiga en la web (música electrónica / breakbeat): ${query}
+
+Devuelve SOLO un resumen factual en texto plano (sin markdown) con datos verificables: nombres, fechas, lugares, sellos, discografía, line-up, URLs oficiales.
+Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo inventes.`
+}
+
+export const EVENT_WEB_SEARCH_PROMPT = (query: string) =>
+  `Investiga en la web el evento de música electrónica / breakbeat: ${query}
 
 Prioriza fuentes oficiales (web del evento, promotor, ticketeras: MonsterTicket, Dice, RA, Resident Advisor, Facebook Events).
 
@@ -1156,6 +1158,19 @@ Devuelve SOLO un resumen factual en texto plano (sin markdown) con:
 - Redes sociales del evento si aparecen
 - Precio, edad mínima, capacidad, promotor
 Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo inventes.`
+
+/** Búsqueda web nativa de OpenAI (Responses API, tool web_search). Devuelve resumen factual. */
+async function fetchOpenAIWebSearchContext(
+  query: string,
+  apiKey: string,
+  prompt?: string,
+): Promise<string> {
+  // Preferir gpt-5.6-terra (web search nativo); override con OPENAI_SEARCH_MODEL
+  const model =
+    process.env.OPENAI_SEARCH_MODEL?.trim() ||
+    process.env.OPENAI_CHAT_MODEL?.trim() ||
+    'gpt-5.6-terra'
+  const input = prompt || defaultWebSearchPrompt(query)
 
   // web_search (actual) → web_search_preview (legacy)
   for (const toolType of ['web_search', 'web_search_preview']) {
@@ -1170,7 +1185,7 @@ Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo i
           model,
           tools: [{ type: toolType }],
           tool_choice: 'auto',
-          input: prompt,
+          input,
         }),
         signal: AbortSignal.timeout(90_000),
       })
@@ -1212,13 +1227,14 @@ Incluye la URL de la fuente junto a cada dato clave. Si algo no aparece, no lo i
  */
 export async function fetchWebResearchContext(
   query: string,
+  opts?: { prompt?: string },
 ): Promise<{ context: string; source: 'openai' | 'serpapi' | 'none' }> {
   const q = query.trim()
   if (!q) return { context: '', source: 'none' }
 
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (openaiKey) {
-    const ctx = await fetchOpenAIWebSearchContext(q, openaiKey)
+    const ctx = await fetchOpenAIWebSearchContext(q, openaiKey, opts?.prompt)
     if (ctx) return { context: ctx, source: 'openai' }
   }
   const serpKey = process.env.SERPAPI_API_KEY?.trim()
@@ -1271,12 +1287,15 @@ Devuelve SOLO JSON:
       'Content-Type': 'application/json',
       Authorization: `Bearer ${opts.openaiKey}`,
     },
-    body: JSON.stringify({
-      model: opts.model,
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-      messages: [{ role: 'user', content: parts }],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model: opts.model,
+        temperature: 0.1,
+        maxCompletionTokens: 4000,
+        responseFormat: { type: 'json_object' },
+        messages: [{ role: 'user', content: parts }],
+      }),
+    ),
   })
   if (!res.ok) return null
   const data = await res.json()
@@ -1457,7 +1476,10 @@ export async function planChatWithOpenAI(opts: {
   let webSource: 'openai' | 'serpapi' | 'none' = 'none'
   // Investigación web de eventos solo en modo evento; en NR/vinyl suele bastar el link
   if (q && q.length > 3 && (treatAsEvent || /https?:\/\//i.test(opts.message))) {
-    const research = await fetchWebResearchContext(q)
+    const research = await fetchWebResearchContext(
+      q,
+      treatAsEvent ? { prompt: EVENT_WEB_SEARCH_PROMPT(q) } : undefined,
+    )
     webContext = research.context
     webSource = research.source
   }
@@ -1524,16 +1546,19 @@ Si faltan datos críticos, reply pidiendo el dato y deja actions vacío.
       'Content-Type': 'application/json',
       Authorization: `Bearer ${openaiKey}`,
     },
-    body: JSON.stringify({
-      model: visionModel,
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...historyMsgs,
-        { role: 'user', content: userParts },
-      ],
-    }),
+    body: JSON.stringify(
+      openAiChatCompletionsBody({
+        model: visionModel,
+        temperature: 0.1,
+        maxCompletionTokens: 8000,
+        responseFormat: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...historyMsgs,
+          { role: 'user', content: userParts },
+        ],
+      }),
+    ),
   })
 
   if (!oaiRes.ok) {
