@@ -16,6 +16,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/components/AuthProvider'
 import type { Locale } from '@/lib/i18n-config'
 import {
   buildAbsoluteShareUrl,
@@ -95,9 +96,11 @@ function resolveStoryPlayParam(props: Props): string | null {
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
   const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
+  const { isAdmin } = useAuth()
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
-  const storyPlay = resolveStoryPlayParam(props)
+  // Botón IG (Story) solo para admins: herramienta de promo del equipo.
+  const storyPlay = isAdmin ? resolveStoryPlayParam(props) : null
 
   /**
    * Botón "IG": baja el PNG 1080×1920 de `/api/og/story` y lo comparte como

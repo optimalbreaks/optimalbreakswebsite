@@ -15,6 +15,8 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
+  /** `profiles.role === 'admin'` del usuario logueado (una consulta por sesión). */
+  isAdmin: boolean
   signInWithGoogle: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>
@@ -28,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: true,
+  isAdmin: false,
   signInWithGoogle: async () => {},
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
@@ -45,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createBrowserSupabase()
   const pathname = usePathname()
   const lang = getLangFromPath(pathname)
@@ -66,6 +70,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [supabase.auth])
+
+  // Rol admin (mismo criterio que Header / AdminCaptureFab): profiles.role.
+  useEffect(() => {
+    if (!user?.id) {
+      setIsAdmin(false)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (!cancelled) setIsAdmin((data as { role?: string } | null)?.role === 'admin')
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, supabase])
 
   const prevPathnameRef = useRef<string | null>(null)
 
@@ -146,6 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         session,
         loading,
+        isAdmin,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
