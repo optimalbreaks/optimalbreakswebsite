@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Organization Detail Page
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent, Label, Organization } from '@/types/database'
@@ -19,7 +19,7 @@ type EventPreview = Pick<BreakEvent, 'slug' | 'name' | 'date_start' | 'city' | '
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('organizations')
     .select('name, description_en, description_es, image_url')
@@ -49,7 +49,7 @@ function socialLabel(key: string, lang: Locale) {
 
 export default async function OrganizationDetailPage({ params }: Props) {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: rawOrganization } = await supabase.from('organizations').select('*').eq('slug', slug).single()
   const organization = rawOrganization as Organization | null
 

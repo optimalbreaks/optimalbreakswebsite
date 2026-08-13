@@ -3,7 +3,7 @@
 // ============================================
 
 import { MetadataRoute } from 'next'
-import { createSimpleSupabase } from '@/lib/supabase'
+import { createCachedSupabase } from '@/lib/supabase-server'
 
 const BASE_URL = 'https://www.optimalbreaks.com'
 
@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  const client = createSimpleSupabase()
+  const client = createCachedSupabase()
   const [artistsR, labelsR, organizationsR, eventsR, scenesR, blogR] = await Promise.all([
     client.from('artists').select('slug'),
     client.from('labels').select('slug'),

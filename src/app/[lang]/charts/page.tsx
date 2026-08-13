@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — 40 Breaks Vitales (Charts Page)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, ChartFeaturedArtist, ChartTrackArtist, ChartVinylArtist } from '@/types/database'
@@ -12,13 +12,18 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import ChartView from '@/components/ChartView'
 
+// La página depende de searchParams (?week=, ?play=): debe renderizarse por
+// petición. Los datos siguen viniendo de la Data Cache (createCachedSupabase,
+// revalidate 300 s), así que esto NO golpea Supabase en cada visita.
+export const dynamic = 'force-dynamic'
+
 /** PostgREST / cliente Supabase corta en 1000 filas por defecto. Sin `.range` paginado,
  * New Releases (y pronto 40 Breaks/vinyl) se ven “recortados” a ~67 por semana cuando
  * el total de filas supera 1000 — no se borran en BD; la página no las carga. */
 const SUPABASE_PAGE = 1000
 
 async function fetchAllByEditionIds<T>(
-  supabase: ReturnType<typeof createServerSupabase>,
+  supabase: ReturnType<typeof createCachedSupabase>,
   table: 'chart_tracks' | 'chart_featured_tracks' | 'chart_vinyl_tracks',
   editionIds: string[],
   orderCol: 'position' | 'sort_order',
@@ -79,7 +84,7 @@ export async function generateMetadata({
 
   if (parsed.kind === 'vinyl') {
     try {
-      const supabase = createServerSupabase()
+      const supabase = createCachedSupabase()
       const { data } = await supabase
         .from('chart_vinyl_tracks')
         .select('title, mix_name, artists, label, artwork_url, youtube_url, year')
@@ -133,7 +138,7 @@ export async function generateMetadata({
   // la portada y los metadatos reales del tema para que el preview en
   // WhatsApp/X/Facebook tenga el nombre y el artwork correctos.
   try {
-    const supabase = createServerSupabase()
+    const supabase = createCachedSupabase()
     const table = parsed.source === 'chart' ? 'chart_tracks' : 'chart_featured_tracks'
     const { data } = await supabase
       .from(table)
@@ -192,7 +197,7 @@ export default async function ChartsPage({
 }) {
   const lang = params.lang
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
 
   const { data: editionsRaw } = await supabase
     .from('chart_editions')

@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Events Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent } from '@/types/database'
@@ -104,7 +104,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
 export default async function EventsPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: events } = await supabase.from('events').select('*').order('date_start', { ascending: false })
   const list = ((events || []) as BreakEvent[]).sort((a, b) => {
     if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1

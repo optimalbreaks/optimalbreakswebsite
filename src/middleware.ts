@@ -45,14 +45,27 @@ export async function middleware(request: NextRequest) {
   // Create response for cookie handling
   let response = NextResponse.next({ request })
 
-  // Refresh Supabase auth session (keeps cookies alive)
+  // Refresh Supabase auth session (keeps cookies alive).
+  // Only when auth cookies exist — anonymous traffic must not call Auth.
+  // Hard timeout: if Auth hangs, Vercel returns MIDDLEWARE_INVOCATION_TIMEOUT (504)
+  // for the whole site; better skip refresh than take the page down.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.includes('-auth-token') || c.name.startsWith('sb-'))
 
-  if (supabaseUrl && supabaseKey) {
+  if (supabaseUrl && supabaseKey && hasAuthCookie) {
+    // Aborta de verdad la petición a Auth si tarda: sin esto, un cuelgue de
+    // Supabase agota los 25 s del middleware y Vercel devuelve 504 en todo el sitio.
+    const AUTH_TIMEOUT_MS = 2_500
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+          fetch(input, { ...init, signal: AbortSignal.timeout(AUTH_TIMEOUT_MS) }),
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -69,8 +82,12 @@ export async function middleware(request: NextRequest) {
       },
     })
 
-    // Refresh the session — this keeps the user logged in
-    await supabase.auth.getUser()
+    try {
+      // Refresca la sesión (mantiene al usuario logueado)
+      await supabase.auth.getUser()
+    } catch {
+      // Auth caído o lento: seguir sirviendo la página sin refrescar cookies
+    }
   }
 
   // Validate locale in URL

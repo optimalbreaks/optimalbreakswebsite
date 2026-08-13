@@ -3,7 +3,7 @@
 // + ShareButtons
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { detailPageMetadata, siteNameForLang } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Scene } from '@/types/database'
@@ -74,7 +74,7 @@ function linkSceneDescriptionHtml(
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('scenes')
     .select('name_en, name_es, description_en, description_es, image_url, og_image_url')
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SceneDetailPage({ params }: Props) {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: rawScene } = await supabase.from('scenes').select('*').eq('slug', slug).single()
   const scene = rawScene as Scene | null
 

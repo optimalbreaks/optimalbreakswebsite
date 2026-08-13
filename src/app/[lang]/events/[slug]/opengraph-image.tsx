@@ -10,7 +10,7 @@
 import { ImageResponse } from 'next/og'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { EventOgImage } from '@/lib/EventOgImage'
 
 export const alt = 'Optimal Breaks — Event'
@@ -116,7 +116,7 @@ async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<str
 export default async function Image({ params }: Props) {
   const { slug } = await params
 
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data } = await supabase
     .from('events')
     .select('image_url, og_image_url')

@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Mixes Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { Mix } from '@/types/database'
@@ -112,7 +112,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
 export default async function MixesPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   // No ordenar por published_at en SQL: si la migración 021 no está aplicada en Supabase,
   // PostgREST falla y data queda vacío → se muestra el fallback estático.
   const { data: mixes } = await supabase

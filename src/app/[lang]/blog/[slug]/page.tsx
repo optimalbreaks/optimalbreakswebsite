@@ -3,7 +3,7 @@
 // + ShareButtons
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import {
   blogPostingJsonLd,
   breadcrumbJsonLd,
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const safeLang = validateLocale(lang)
   const safeSlug = sanitizeSlug(slug)
   if (!safeSlug) return { title: safeLang === 'es' ? 'Entrada no encontrada' : 'Post not found', robots: { index: false, follow: true } }
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('blog_posts')
     .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url')
@@ -47,7 +47,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { lang, slug } = await params
   const safeLang = validateLocale(lang)
   const safeSlug = sanitizeSlug(slug)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   let rawPost: unknown = null
   if (safeSlug) {
     const res = await supabase.from('blog_posts').select('*').eq('slug', safeSlug).eq('is_published', true).single()

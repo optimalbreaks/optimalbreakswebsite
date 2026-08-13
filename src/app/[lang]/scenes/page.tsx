@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Scenes Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { Scene } from '@/types/database'
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
 export default async function ScenesPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: scenes } = await supabase.from('scenes').select('*').order('era', { ascending: true })
   const list = (scenes || []) as Scene[]
 

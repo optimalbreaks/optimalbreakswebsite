@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createSimpleSupabase } from '@/lib/supabase'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { extractBeatportTrackId } from '@/lib/share-track'
 
@@ -225,7 +225,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [] as SearchResult[] })
   }
   const ilike = `%${q}%`
-  const supabase = createSimpleSupabase()
+  const supabase = createCachedSupabase()
 
   const base = (path: string) => `/${lang}${path}`
 

@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — History Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { HistoryEntry } from '@/types/database'
@@ -71,7 +71,7 @@ const SECTION_COLORS: Record<string, string> = {
 export default async function HistoryPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: entries } = await supabase.from('history_entries').select('*').order('sort_order', { ascending: true })
   const list = (entries || []) as HistoryEntry[]
   const sectionMap = dict.history.sections as HistorySectionMap

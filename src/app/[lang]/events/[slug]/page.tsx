@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Event Detail Page (redesigned)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import {
   breadcrumbJsonLd,
   detailPageMetadata,
@@ -277,7 +277,7 @@ function ogEventDateTime(date: string | null | undefined, time: string | null | 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('events')
     .select(
@@ -336,7 +336,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const { lang, slug } = await params
   const sp: Record<string, string | string[] | undefined> = await (searchParams ?? Promise.resolve({}))
   const autoOpenEventReview = firstSearchParam(sp.editReview) === '1'
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: rawEvent } = await supabase
     .from('events')
     .select('*, promoter:organizations!events_promoter_organization_id_fkey(slug, name)')

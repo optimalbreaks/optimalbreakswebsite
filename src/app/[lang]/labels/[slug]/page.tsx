@@ -3,8 +3,7 @@
 // + ShareButtons + FanCounter
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
-import { createSimpleSupabase } from '@/lib/supabase'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import {
   buildArtistSlugLookup,
   fetchAllArtistLinkRows,
@@ -71,7 +70,7 @@ function firstSearchParam(v: string | string[] | undefined): string | undefined 
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('labels')
     .select('name, description_en, description_es, image_url, og_image_url, country, founded_year')
@@ -122,8 +121,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function LabelDetailPage({ params }: Props) {
   const { lang, slug } = await params
-  const supabase = createServerSupabase()
-  const readSupabase = createSimpleSupabase()
+  const supabase = createCachedSupabase()
+  const readSupabase = createCachedSupabase()
   const { data: rawLabel } = await supabase
     .from('labels')
     .select('*, organization:organizations!labels_organization_id_fkey(slug, name)')

@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Labels Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { Label } from '@/types/database'
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
 export default async function LabelsPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const { data: labels } = await supabase.from('labels').select('*').order('name', { ascending: true })
   const list = (labels || []) as Label[]
 

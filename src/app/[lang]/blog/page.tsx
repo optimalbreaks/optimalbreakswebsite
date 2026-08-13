@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Blog Page (Supabase)
 // ============================================
 
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BlogPost } from '@/types/database'
@@ -11,6 +11,10 @@ import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
+
+// Paginación por ?page=: render por petición; los datos van por Data Cache
+// (createCachedSupabase, revalidate 300 s), sin golpear Supabase por visita.
+export const dynamic = 'force-dynamic'
 
 type FallbackPost = {
   category: string
@@ -291,7 +295,7 @@ export default async function BlogPage({
   const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page
   const parsed = parseInt(rawPage || '1', 10)
   const dict = await getDictionary(lang)
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
 
   const { count: publishedCount } = await supabase
     .from('blog_posts')

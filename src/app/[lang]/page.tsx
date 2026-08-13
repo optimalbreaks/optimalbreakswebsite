@@ -12,7 +12,7 @@ import {
   homeOgImageAlt,
   staticPageMetadata,
 } from '@/lib/seo'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import type { Artist, BeatportTopTrack, BlogPost, BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
@@ -162,7 +162,7 @@ export default async function HomePage({
   const explore =
     'section_explore' in h ? (h as { section_explore: HomeExplore }).section_explore : null
 
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const featuredSlugs = FEATURED_ARTISTS.map((a) => a.slug)
   const { data: artistRows } = await supabase
     .from('artists')

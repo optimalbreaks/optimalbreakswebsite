@@ -10,7 +10,7 @@
 
 import { ImageResponse } from 'next/og'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createCachedSupabase } from '@/lib/supabase-server'
 import {
   parsePlayParam,
   upscaleTrackArtworkForOg,
@@ -83,7 +83,7 @@ async function fetchStoryRow(
   kind: 'chart' | 'featured' | 'vinyl',
   id: string,
 ): Promise<StoryRow | null> {
-  const supabase = createServerSupabase()
+  const supabase = createCachedSupabase()
   const table =
     kind === 'chart' ? 'chart_tracks' : kind === 'featured' ? 'chart_featured_tracks' : 'chart_vinyl_tracks'
   const cols =
