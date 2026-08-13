@@ -140,9 +140,14 @@ export async function GET(request: NextRequest) {
       : kind === 'featured'
         ? 'NEW RELEASES'
         : '40 BREAKS VITALES'
-  const footer = es
-    ? 'Escúchalo en www.optimalbreaks.com'
-    : 'Listen at www.optimalbreaks.com'
+  // El admin suele añadir un sticker de música de Instagram a la story
+  // (catálogo de Meta): avisamos de que ese audio NO es el tema compartido.
+  const footerWarning = es
+    ? 'La música que suena aquí no es este tema'
+    : 'The music playing here is not this track'
+  const footerDomain = es
+    ? 'Escúchalo real en el enlace · www.optimalbreaks.com'
+    : 'Hear the real one via the link · www.optimalbreaks.com'
 
   return new ImageResponse(
     (
@@ -298,25 +303,46 @@ export async function GET(request: NextRequest) {
           ) : null}
         </div>
 
-        {/* Pie */}
+        {/* Pie: advertencia sobre el audio del sticker + dominio */}
         <div
           style={{
             position: 'absolute',
-            bottom: 84,
+            bottom: 72,
             left: 0,
             right: 0,
             display: 'flex',
-            justifyContent: 'center',
-            fontSize: 30,
-            fontWeight: 700,
-            letterSpacing: 3,
-            color: PAPER,
-            opacity: 0.85,
-            textTransform: 'uppercase',
-            fontFamily: MONO,
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 14,
           }}
         >
-          {footer}
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 30,
+              fontWeight: 800,
+              letterSpacing: 2,
+              color: YELLOW,
+              textTransform: 'uppercase',
+              fontFamily: MONO,
+            }}
+          >
+            {footerWarning}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 22,
+              fontWeight: 600,
+              letterSpacing: 2,
+              color: PAPER,
+              opacity: 0.65,
+              textTransform: 'uppercase',
+              fontFamily: MONO,
+            }}
+          >
+            {footerDomain}
+          </div>
         </div>
       </div>
     ),
