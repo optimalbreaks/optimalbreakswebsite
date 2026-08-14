@@ -1,13 +1,16 @@
 /**
- * Rellena mixes.published_at desde la fecha de publicación de YouTube.
+ * Rellena mixes.published_at (y duration_minutes en SoundCloud) desde la plataforma.
  *
- * 1) Si existe YOUTUBE_DATA_API_KEY (YouTube Data API v3), usa videos.list (oficial).
- * 2) Si no, intenta leer uploadDate del HTML de la página del vídeo (frágil; puede fallar).
+ * YouTube:
+ *   1) YOUTUBE_DATA_API_KEY (API v3) → videos.list
+ *   2) yt-dlp --print upload_date si está en PATH
+ *   3) scraping HTML uploadDate
+ *
+ * SoundCloud:
+ *   scraping HTML de la página del track → created_at + duration (ms)
  *
  * Uso: node scripts/backfill-mix-youtube-published-at.mjs [--force]
  *   --force  Vuelve a escribir published_at aunque ya exista.
- * Requiere: NEXT_PUBLIC_SUPABASE_URL + SERVICE_ROLE (igual que artist-upsert).
- * Opcional: YOUTUBE_DATA_API_KEY (YouTube Data API v3) o yt-dlp en PATH.
  */
 import { createClient } from '@supabase/supabase-js'
 import { loadEnvLocal, supabaseApiCredentials } from './lib/artist-upsert.mjs'
@@ -100,10 +103,40 @@ async function resolvePublishedAt(videoId, videoUrl, apiKey) {
   return publishedAtFromWatchPage(videoId)
 }
 
-function chunk(arr, n) {
-  const out = []
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n))
-  return out
+function isSoundCloudTrackUrl(url) {
+  if (!url || typeof url !== 'string') return false
+  try {
+    const u = new URL(url)
+    return u.hostname.includes('soundcloud.com') && u.pathname.split('/').filter(Boolean).length >= 2
+  } catch {
+    return false
+  }
+}
+
+/** @returns {Promise<{ published_at: string|null, duration_minutes: number|null }>} */
+async function soundCloudMetaFromPage(trackUrl) {
+  const r = await fetch(trackUrl, {
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+    },
+  })
+  if (!r.ok) return { published_at: null, duration_minutes: null }
+  const html = await r.text()
+  const created = html.match(/"created_at":"([^"]+)"/)?.[1] ?? null
+  const durMs = html.match(/"duration":(\d+)/)?.[1]
+  let published_at = null
+  if (created) {
+    try {
+      published_at = new Date(created).toISOString()
+    } catch {
+      published_at = null
+    }
+  }
+  const duration_minutes =
+    durMs && Number.isFinite(Number(durMs)) ? Math.max(1, Math.round(Number(durMs) / 60000)) : null
+  return { published_at, duration_minutes }
 }
 
 const force = process.argv.includes('--force')
@@ -157,9 +190,50 @@ for (const m of rows) {
   await new Promise((r) => setTimeout(r, apiKey ? 120 : 400))
 }
 
-console.log(`Hecho. Actualizados: ${updated}, ya tenían fecha: ${skipped}, total youtube con URL: ${rows.length}`)
+console.log(`YouTube. Actualizados: ${updated}, ya tenían fecha: ${skipped}, total: ${rows.length}`)
 if (!apiKey) {
   console.log(
     'Opcional: YOUTUBE_DATA_API_KEY en .env.local para API oficial (cuota diaria). Sin clave se usa yt-dlp si existe, o scraping HTML.',
   )
 }
+
+const { data: scMixes, error: scErr } = await supabase
+  .from('mixes')
+  .select('id, slug, embed_url, platform, published_at, duration_minutes')
+  .eq('platform', 'soundcloud')
+
+if (scErr) {
+  console.error(scErr.message)
+  process.exit(1)
+}
+
+const scRows = (scMixes || []).filter((m) => isSoundCloudTrackUrl(m.embed_url))
+let scUpdated = 0
+let scSkipped = 0
+
+for (const m of scRows) {
+  const url = m.embed_url.trim()
+  if (!force && m.published_at) {
+    scSkipped++
+    continue
+  }
+  const meta = await soundCloudMetaFromPage(url)
+  if (!meta.published_at) {
+    console.warn('SoundCloud sin fecha:', m.slug, url)
+    continue
+  }
+  const patch = { published_at: meta.published_at }
+  if (meta.duration_minutes != null && (force || m.duration_minutes == null)) {
+    patch.duration_minutes = meta.duration_minutes
+  }
+  const { error: upErr } = await supabase.from('mixes').update(patch).eq('id', m.id)
+  if (upErr) {
+    console.error('Update SC', m.slug, upErr.message)
+    continue
+  }
+  console.log('OK SC', m.slug, meta.published_at, meta.duration_minutes ? `${meta.duration_minutes} min` : '')
+  scUpdated++
+  await new Promise((r) => setTimeout(r, 400))
+}
+
+console.log(`SoundCloud. Actualizados: ${scUpdated}, ya tenían fecha: ${scSkipped}, total: ${scRows.length}`)

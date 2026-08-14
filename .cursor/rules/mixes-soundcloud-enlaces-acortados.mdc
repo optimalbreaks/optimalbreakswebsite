@@ -21,7 +21,7 @@ Cuando el usuario pase un enlace de SoundCloud, **en especial acortados** (`http
 - `embed_url`: URL canónica del track (o, en último caso, el `on.soundcloud.com` si no se pudo resolver)
 - `video_url`: `null` (reservado a YouTube)
 - `image_url`: **artwork** del tema (URL pública). Obtener vía [oEmbed SoundCloud](https://developers.soundcloud.com/docs/oembed) (`thumbnail_url`) o desde la ficha del track si hace falta.
-- Resto: `title`, `artist_name`, `slug`, `mix_type`, `year` / `published_at` / `duration_minutes` según catálogo.
+- **`published_at` y `duration_minutes`:** el oEmbed **no** trae fecha. Obligatorio leer la página del track (`GET` HTML canónico) y extraer `"created_at":"…"` (fecha de publicación, p. ej. «Posteado el 23 Jun 2026») y `"duration":…` (milisegundos → minutos redondeados). Alternativa batch: `node scripts/guia-base-datos.mjs run mixes-published [--force]` (también rellena SoundCloud sin fecha).
 
 ## 3. Persistencia
 
