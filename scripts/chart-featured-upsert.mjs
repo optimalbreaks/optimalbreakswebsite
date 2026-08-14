@@ -317,6 +317,30 @@ function requireSupabase() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 
+/** Tras UPSERT local, purga la Data Cache de /charts en producción (si hay secret + URL). */
+async function pingPublicChartsRevalidate() {
+  const secret = process.env.REVALIDATE_SECRET?.trim()
+  const base = (
+    process.env.SITE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.VERCEL_URL
+  )?.trim()
+  if (!secret || !base) return
+  const origin = /^https?:\/\//i.test(base) ? base : `https://${base}`
+  const url = `${origin.replace(/\/$/, '')}/api/revalidate?secret=${encodeURIComponent(secret)}`
+  try {
+    const res = await fetch(url, { method: 'POST' })
+    if (res.ok) {
+      console.log('  ↳ Caché web pública invalidada (/charts).')
+    } else {
+      console.warn(`  ⚠ Revalidate HTTP ${res.status} — los picks pueden tardar ~5 min en verse online.`)
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.warn(`  ⚠ No se pudo invalidar caché web: ${msg}`)
+  }
+}
+
 async function main() {
   const argv = process.argv.slice(2)
   const createEditionIfMissing = argv.includes('--create-edition')
@@ -429,6 +453,7 @@ async function main() {
       if (delAllErr) throw new Error(`delete chart_featured_tracks (semana vacía): ${delAllErr.message}`)
     }
     console.log(`  ↳ Semana ${weekDate}: lista vacía (picks borrados).`)
+    await pingPublicChartsRevalidate()
     return
   }
 
@@ -568,6 +593,7 @@ async function main() {
     `  ↳ Semana ${weekDate}: ${rows.length} picks vigentes ` +
     `(${updates.length} actualizados, ${inserts.length} nuevos, ${toDelete.length} eliminados).`,
   )
+  await pingPublicChartsRevalidate()
 }
 
 main().catch((e) => {

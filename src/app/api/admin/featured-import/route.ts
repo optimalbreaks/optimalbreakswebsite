@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
@@ -284,6 +285,10 @@ export async function POST(request: NextRequest) {
     if (i + 1 < beatportUrls.length && pauseMs > 0) {
       await sleep(pauseMs)
     }
+  }
+
+  if (added.length > 0) {
+    revalidatePublicCharts()
   }
 
   return NextResponse.json({

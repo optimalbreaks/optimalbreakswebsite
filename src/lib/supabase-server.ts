@@ -13,7 +13,7 @@ import { getSupabaseEnv } from './supabase'
  * bots) no golpea Supabase en cada página vista — protege el Disk IO Budget
  * de la instancia. NO usar para datos por-usuario ni para escrituras.
  */
-export function createCachedSupabase(revalidateSeconds = 300) {
+export function createCachedSupabase(revalidateSeconds = 300, tags?: string[]) {
   const { url, key } = getSupabaseEnv()
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -25,7 +25,10 @@ export function createCachedSupabase(revalidateSeconds = 300) {
             ? ({ ...init, cache: 'no-store' } as RequestInit)
             : ({
                 ...init,
-                next: { revalidate: revalidateSeconds },
+                next: {
+                  revalidate: revalidateSeconds,
+                  ...(tags?.length ? { tags } : {}),
+                },
               } as RequestInit),
         ),
     },

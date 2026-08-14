@@ -3,6 +3,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { PUBLIC_CHARTS_CACHE_TAG } from '@/lib/revalidate-public'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, ChartFeaturedArtist, ChartTrackArtist, ChartVinylArtist } from '@/types/database'
@@ -22,8 +23,12 @@ export const dynamic = 'force-dynamic'
  * el total de filas supera 1000 — no se borran en BD; la página no las carga. */
 const SUPABASE_PAGE = 1000
 
+function chartsSupabase() {
+  return createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])
+}
+
 async function fetchAllByEditionIds<T>(
-  supabase: ReturnType<typeof createCachedSupabase>,
+  supabase: ReturnType<typeof chartsSupabase>,
   table: 'chart_tracks' | 'chart_featured_tracks' | 'chart_vinyl_tracks',
   editionIds: string[],
   orderCol: 'position' | 'sort_order',
@@ -84,7 +89,7 @@ export async function generateMetadata({
 
   if (parsed.kind === 'vinyl') {
     try {
-      const supabase = createCachedSupabase()
+      const supabase = chartsSupabase()
       const { data } = await supabase
         .from('chart_vinyl_tracks')
         .select('title, mix_name, artists, label, artwork_url, youtube_url, year')
@@ -138,7 +143,7 @@ export async function generateMetadata({
   // la portada y los metadatos reales del tema para que el preview en
   // WhatsApp/X/Facebook tenga el nombre y el artwork correctos.
   try {
-    const supabase = createCachedSupabase()
+    const supabase = chartsSupabase()
     const table = parsed.source === 'chart' ? 'chart_tracks' : 'chart_featured_tracks'
     const { data } = await supabase
       .from(table)
@@ -197,7 +202,7 @@ export default async function ChartsPage({
 }) {
   const lang = params.lang
   const dict = await getDictionary(lang)
-  const supabase = createCachedSupabase()
+  const supabase = chartsSupabase()
 
   const { data: editionsRaw } = await supabase
     .from('chart_editions')
