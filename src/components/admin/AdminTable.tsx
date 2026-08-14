@@ -7,6 +7,9 @@ interface Column {
   key: string
   label: string
   render?: (value: any, row: any) => React.ReactNode
+  sortable?: boolean
+  /** Dirección al pulsar la columna por primera vez. */
+  sortDefault?: 'asc' | 'desc'
 }
 
 interface AdminTableProps {
@@ -22,6 +25,9 @@ interface AdminTableProps {
   /** Si se omite, no se muestra el botón «+ Nuevo». */
   newHref?: string
   searchPlaceholder?: string
+  sortKey?: string | null
+  sortDir?: 'asc' | 'desc'
+  onSort?: (key: string, dir: 'asc' | 'desc') => void
 }
 
 export default function AdminTable({
@@ -36,10 +42,22 @@ export default function AdminTable({
   editHref,
   newHref,
   searchPlaceholder = 'Buscar…',
+  sortKey = null,
+  sortDir = 'asc',
+  onSort,
 }: AdminTableProps) {
   const [search, setSearch] = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const totalPages = Math.max(1, Math.ceil(count / limit))
+
+  const handleSort = (col: Column) => {
+    if (!onSort || col.sortable === false) return
+    if (sortKey === col.key) {
+      onSort(col.key, sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      onSort(col.key, col.sortDefault ?? 'asc')
+    }
+  }
 
   const handleSearch = (val: string) => {
     setSearch(val)
@@ -76,15 +94,41 @@ export default function AdminTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--yellow)] border-b-[3px] border-[var(--ink)]">
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]"
-                  style={{ fontFamily: "'Courier Prime', monospace" }}
-                >
-                  {col.label}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const canSort = Boolean(onSort) && col.sortable !== false
+                const active = sortKey === col.key
+                const ariaSort = !canSort
+                  ? undefined
+                  : active
+                    ? sortDir === 'asc'
+                      ? 'ascending'
+                      : 'descending'
+                    : 'none'
+                return (
+                  <th
+                    key={col.key}
+                    aria-sort={ariaSort}
+                    className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {canSort ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSort(col)}
+                        title={`Ordenar por ${col.label}`}
+                        className="inline-flex items-center gap-1 bg-transparent border-0 p-0 cursor-pointer font-inherit text-inherit uppercase tracking-wider hover:text-[var(--red)]"
+                      >
+                        {col.label}
+                        <span aria-hidden className={active ? 'opacity-100' : 'opacity-40'}>
+                          {active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}
+                        </span>
+                      </button>
+                    ) : (
+                      col.label
+                    )}
+                  </th>
+                )
+              })}
               <th
                 className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]"
                 style={{ fontFamily: "'Courier Prime', monospace" }}

@@ -150,11 +150,15 @@ export async function adminListUsers(opts: {
   page?: number
   limit?: number
   search?: string
+  order?: string
+  dir?: 'asc' | 'desc'
 } = {}): Promise<ListResponse<AdminUserRow>> {
   const params = new URLSearchParams()
   if (opts.page) params.set('page', String(opts.page))
   if (opts.limit) params.set('limit', String(opts.limit))
   if (opts.search) params.set('search', opts.search)
+  if (opts.order) params.set('order', opts.order)
+  if (opts.dir) params.set('dir', opts.dir)
   const res = await fetch(`${BASE}/users?${params}`)
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
   return res.json()
