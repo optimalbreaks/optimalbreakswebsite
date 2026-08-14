@@ -1345,6 +1345,116 @@ async function runPatchRaveartRvtSummerFestivalPresentacionOficialElTrenGranada2
   console.log('[patch-rvt-summer-fest-present-el-tren] OK:', after)
 }
 
+const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_SLUG =
+  'raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026'
+const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_POSTER = join(
+  ROOT,
+  'public',
+  'images',
+  'events',
+  'raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026.webp',
+)
+const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_TICKETS =
+  'https://www.monsterticket.com/evento/rvt-by-raveart-retro-halloween-2026-presentacion-oficial--el-tren-granada'
+
+const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_LINEUP = [
+  'Backdraft',
+  'Aggresivnes vs Paket',
+  'Prody vs Bubu',
+  'Datafunk vs Destroyers',
+  'Saturn DJ vs Mr Fli',
+  'BLNK vs Tilla Pink',
+]
+
+const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_ROW = {
+  name: 'RVT by Raveart: Retro Halloween 2026 (Presentación oficial)',
+  description_en:
+    'Raveart presents the official Retro Halloween 2026 launch at Sala El Tren (Granada): RVT Booking & Clubbing breakbeat night separate from the main Retro Halloween festival at Málaga Forum on 31 October 2026. Saturday 12 September 2026, 01:00–07:00. Official poster: headliner Backdraft plus versus sets Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli and BLNK vs Tilla Pink. Flyer offer: entry with free lanyard, beer and re-entry (per promoter artwork). Address Ctra. de Málaga 136, Chana, Granada. Tickets via MonsterTicket; info@rvtpro.com / rvtpro.com.',
+  description_es:
+    'Raveart presenta la presentación oficial de Retro Halloween 2026 en Sala El Tren (Granada): noche breakbeat de RVT Booking & Clubbing, distinta del festival Retro Halloween en Málaga Forum el 31 de octubre de 2026. Sábado 12 de septiembre de 2026, 1:00h–7:00h. Cartel oficial: cabeza de cartel Backdraft y enfrentamientos Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli y BLNK vs Tilla Pink. Oferta del cartel: entrada con lanyard gratis, cerveza y reacceso (según artwork del promotor). Ctra. de Málaga 136, Chana, Granada. Entradas en MonsterTicket; info@rvtpro.com / rvtpro.com.',
+  event_type: 'club_night',
+  date_start: '2026-09-12',
+  date_end: null,
+  location: 'Sala El Tren, Chana, Granada, Spain',
+  city: 'Granada',
+  country: 'Spain',
+  venue: 'Sala El Tren',
+  address: 'Ctra. de Málaga, 136, Chana, Granada',
+  website: 'https://www.rvtpro.com/',
+  tickets_url: RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_TICKETS,
+  lineup: RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_LINEUP,
+  tags: [
+    'retro halloween',
+    'halloween',
+    'breakbeat',
+    'raveart',
+    'rvt',
+    'rvt booking',
+    'granada',
+    'sala el tren',
+    'chana',
+    'backdraft',
+    'presentación oficial',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {
+    email: 'mailto:info@rvtpro.com',
+    phone: 'tel:+34657733208',
+    'RVT Pro': 'https://www.rvtpro.com/',
+    MonsterTicket: RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_TICKETS,
+  },
+  age_restriction: '18+',
+  doors_open: '01:00',
+  doors_close: '07:00',
+  coords: { lat: 37.192, lng: -3.6165 },
+}
+
+async function runPatchRaveartRvtRetroHalloweenPresentacionOficialElTrenGranada2026(sb) {
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+  if (!org?.id) {
+    console.error('[patch-rvt-retro-halloween-present-el-tren] Falta organizations.slug = raveart')
+    process.exit(1)
+  }
+
+  let imageUrl = null
+  try {
+    imageUrl = await uploadLocalPosterToMedia(
+      sb,
+      RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_SLUG,
+      RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_POSTER,
+    )
+  } catch (e) {
+    console.error('[patch-rvt-retro-halloween-present-el-tren] Error subiendo cartel:', e.message || e)
+    throw e
+  }
+
+  const row = {
+    slug: RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_ROW,
+    image_url: imageUrl,
+    is_featured: true,
+    promoter_organization_id: org.id,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup, doors_open')
+    .eq('slug', RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-rvt-retro-halloween-present-el-tren] OK:', after)
+}
+
 const KULTURA_BREAKZ_II_SLUG = 'kultura-breakz-ii-aniversario-2026'
 const KULTURA_BREAKZ_TICKETS =
   'https://site.fourvenues.com/es/dj-rokeh/events/ii-aniversario-kultura-breakz-02-05-2026-K0AA'
@@ -5011,6 +5121,11 @@ async function main() {
 
   if (argv.includes('--patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026')) {
     await runPatchRaveartRvtSummerFestivalPresentacionOficialElTrenGranada2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026')) {
+    await runPatchRaveartRvtRetroHalloweenPresentacionOficialElTrenGranada2026(sb)
     return
   }
 

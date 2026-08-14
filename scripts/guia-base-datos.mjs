@@ -217,6 +217,14 @@ const ACTIONS = [
       'UPSERT raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026: Summer Festival presentación + Deekline, Sala El Tren 9 may 2026, MonsterTicket.',
   },
   {
+    id: 'events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026',
+    npm: 'npm run db:guia -- run events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026: Retro Halloween presentación oficial + Backdraft, Sala El Tren Granada 12 sept 2026, MonsterTicket.',
+  },
+  {
     id: 'events-patch-raveart-retro-halloween-2025-poster',
     run: 'node scripts/guia-base-datos.mjs run events-patch-raveart-retro-halloween-2025-poster',
     npm: 'npm run db:guia -- run events-patch-raveart-retro-halloween-2025-poster',
@@ -780,6 +788,7 @@ Punto de entrada unificado:
   events-patch-raveart-rvt-booking-clubbing-2026  RVT Booking & Clubbing, Elysium Sevilla 11 abr 2026
   events-patch-raveart-rvt-we-love-retro-elysium-sevilla-2026  We Love Retro, Elysium Sevilla 9 may 2026
   events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026  RVT Summer Festival presentación, El Tren Granada 9 may 2026
+  events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026  Retro Halloween presentación oficial, El Tren Granada 12 sept 2026
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
   events-patch-raveart-retro-halloween-2026-lineup  line-up Only Vinyls + Universal en raveart-retro-halloween-2026-malaga-forum
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
@@ -1174,6 +1183,12 @@ function main() {
     case 'events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026':
       runNode('enriquecer-evento.mjs', [
         '--patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026',
+        ...rest,
+      ])
+      break
+    case 'events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026',
         ...rest,
       ])
       break
