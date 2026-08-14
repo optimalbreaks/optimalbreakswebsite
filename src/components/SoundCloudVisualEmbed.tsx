@@ -21,9 +21,9 @@ export function buildSoundCloudVisualPlayerSrc(trackUrl: string): string {
   q.set('auto_play', 'false')
   q.set('hide_related', 'false')
   q.set('show_comments', 'false')
-  q.set('show_user', 'true')
+  q.set('show_user', 'false')
   q.set('show_reposts', 'false')
-  q.set('show_teaser', 'true')
+  q.set('show_teaser', 'false')
   q.set('color', '#d62828')
   return `https://w.soundcloud.com/player/?${q.toString()}`
 }

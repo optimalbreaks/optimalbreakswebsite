@@ -14,6 +14,7 @@ import {
 } from '@/lib/mix-play-session-log'
 import { extractYouTubeId, LazyYouTubeEmbed as BaseLazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import { requestYouTubePlay } from '@/lib/youtube-play-coordinator'
+import { formatMixDateLine, mixSortTimestamp } from '@/lib/mix-datetime-local'
 
 /** Wrapper fino: registra reproducción de mix al dar play en el embed. */
 function LazyYouTubeEmbed({
@@ -127,23 +128,6 @@ function LazySoundCloudEmbed({
   )
 }
 
-/** Fecha de publicación (YouTube) o año catalogado + duración opcional. */
-function formatMixDateLine(m: Mix, lang: string): string {
-  const locale = lang === 'es' ? 'es-ES' : 'en-GB'
-  const published = m.published_at
-  const datePart = published
-    ? new Date(published).toLocaleDateString(locale, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
-    : m.year != null
-      ? String(m.year)
-      : '—'
-  const dur = m.duration_minutes != null ? ` · ${m.duration_minutes} min` : ''
-  return `${datePart}${dur}`
-}
-
 function getMixTrack(m: Mix): MixTrack | null {
   const audioUrl = (m as any).audio_url as string | null | undefined
   if (audioUrl) {
@@ -199,7 +183,7 @@ export { getMixTrack }
 
 type YearGroupKey = number | 'undated'
 
-/** Año calendario UTC de publicación en YouTube; si no hay `published_at`, el año catalogado (`mix.year`). */
+/** Año calendario UTC de publicación; si no hay `published_at`, el año catalogado (`mix.year`). */
 function mixGroupYear(m: Mix): number | null {
   if (m.published_at) {
     const d = new Date(m.published_at)
@@ -207,15 +191,6 @@ function mixGroupYear(m: Mix): number | null {
   }
   if (m.year != null && Number.isFinite(Number(m.year))) return Number(m.year)
   return null
-}
-
-function mixSortTimestamp(m: Mix): number {
-  if (m.published_at) {
-    const t = new Date(m.published_at).getTime()
-    if (!Number.isNaN(t)) return t
-  }
-  const c = new Date(m.created_at).getTime()
-  return Number.isNaN(c) ? 0 : c
 }
 
 /** Años numéricos primero (más reciente arriba); «undated» al final. Dentro de cada año: más reciente primero. */
@@ -719,7 +694,7 @@ function CompactGrid({
               </div>
               <div className="flex flex-wrap gap-1 mt-1 items-center">
                 <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
-                <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', color: 'var(--dim)' }}>
+                <span className="cutout outline" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>
                   {formatMixDateLine(m, lang)}
                 </span>
               </div>
@@ -780,13 +755,7 @@ function ListView({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
                     <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
-                      {m.published_at
-                        ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })
-                        : m.year ?? '—'}
+                      {formatMixDateLine(m, lang)}
                     </span>
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
@@ -829,13 +798,7 @@ function ListView({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
                     <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
-                      {m.published_at
-                        ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })
-                        : m.year ?? '—'}
+                      {formatMixDateLine(m, lang)}
                     </span>
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
@@ -886,13 +849,7 @@ function ListView({
             <div className="hidden sm:flex gap-2 shrink-0 items-center">
               <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
               <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>
-                {m.published_at
-                  ? new Date(m.published_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  : m.year ?? '—'}
+                {formatMixDateLine(m, lang)}
               </span>
               {getMixTrack(m) ? (
                 <MixPlayButton mix={m} size="xs" />

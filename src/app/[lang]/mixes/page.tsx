@@ -11,6 +11,7 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import MixesExplorer from '@/components/MixesExplorer'
+import { mixSortTimestamp } from '@/lib/mix-datetime-local'
 
 type FallbackMix = {
   type: string
@@ -124,18 +125,8 @@ export default async function MixesPage({ params }: { params: { lang: Locale } }
     .order('year', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
   const raw = (mixes || []) as Mix[]
-  /** Orden: 1) fecha de publicación en YouTube (mixes.published_at, backfill o admin), más reciente primero; 2) año; 3) created_at. Sin published_at van detrás de los que sí la tienen. */
-  const list = [...raw].sort((a, b) => {
-    const ta = a.published_at ? new Date(a.published_at).getTime() : null
-    const tb = b.published_at ? new Date(b.published_at).getTime() : null
-    if (ta != null && tb != null && ta !== tb) return tb - ta
-    if (ta != null && tb == null) return -1
-    if (ta == null && tb != null) return 1
-    const ya = a.year ?? -1
-    const yb = b.year ?? -1
-    if (ya !== yb) return yb - ya
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
+  /** Orden coherente con MixesExplorer: published_at → año catalogado (no fecha de importación). */
+  const list = [...raw].sort((a, b) => mixSortTimestamp(b) - mixSortTimestamp(a))
 
   return (
     <div className="lined min-h-screen">
