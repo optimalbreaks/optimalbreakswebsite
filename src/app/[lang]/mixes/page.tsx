@@ -109,10 +109,13 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   })
 }
 
+/** Catálogo editorial: revalidar a menudo para que nuevos UPSERT aparezcan sin redeploy completo. */
+export const revalidate = 60
+
 export default async function MixesPage({ params }: { params: { lang: Locale } }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(60)
   // No ordenar por published_at en SQL: si la migración 021 no está aplicada en Supabase,
   // PostgREST falla y data queda vacío → se muestra el fallback estático.
   const { data: mixes } = await supabase
