@@ -42,6 +42,21 @@ import {
 } from '@/lib/artist-slug-map'
 
 const TOP_ARTISTS_LIMIT = 10
+/** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
+const IN_CHUNK = 200
+
+async function selectByIds<T>(
+  ids: string[],
+  run: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<{ data: T[]; error: { message: string } | null }> {
+  const out: T[] = []
+  for (let i = 0; i < ids.length; i += IN_CHUNK) {
+    const { data, error } = await run(ids.slice(i, i + IN_CHUNK))
+    if (error) return { data: out, error }
+    if (data?.length) out.push(...data)
+  }
+  return { data: out, error: null }
+}
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -225,24 +240,32 @@ export async function GET(request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb
-          .from('chart_tracks')
-          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url')
-          .in('id', chartIds)
+      ? selectByIds<ChartRow>(chartIds, (chunk) =>
+          sb
+            .from('chart_tracks')
+            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url')
+            .in('id', chunk),
+        )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb
-          .from('chart_featured_tracks')
-          .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url')
-          .in('id', featIds)
+      ? selectByIds<FeatRow>(featIds, (chunk) =>
+          sb
+            .from('chart_featured_tracks')
+            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url')
+            .in('id', chunk),
+        )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
-      ? sb
-          .from('chart_vinyl_tracks')
-          .select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url')
-          .in('id', vinylIds)
+      ? selectByIds<VinylRow>(vinylIds, (chunk) =>
+          sb
+            .from('chart_vinyl_tracks')
+            .select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url')
+            .in('id', chunk),
+        )
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
+  const lookupErr = chartRes.error || featRes.error || vinylRes.error
+  if (lookupErr) return NextResponse.json({ error: lookupErr.message }, { status: 500 })
 
   // Auto-resolución de huérfanos por canonical_url: para saves cuyo track_id
   // ya no existe pero que tienen URL canónica, buscamos la fila viva por URL
@@ -256,13 +279,19 @@ export async function GET(request: NextRequest) {
   if (orphChart.length || orphFeat.length || orphVinyl.length) {
     const [extraChart, extraFeat, extraVinyl] = await Promise.all([
       orphChart.length
-        ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', orphChart.map((o) => o.canonical_url as string))
+        ? selectByIds<ChartRow>(orphChart.map((o) => o.canonical_url as string), (chunk) =>
+            sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', chunk),
+          )
         : Promise.resolve({ data: [] as ChartRow[], error: null }),
       orphFeat.length
-        ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', orphFeat.map((o) => o.canonical_url as string))
+        ? selectByIds<FeatRow>(orphFeat.map((o) => o.canonical_url as string), (chunk) =>
+            sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', chunk),
+          )
         : Promise.resolve({ data: [] as FeatRow[], error: null }),
       orphVinyl.length
-        ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('discogs_url', orphVinyl.map((o) => o.canonical_url as string))
+        ? selectByIds<VinylRow>(orphVinyl.map((o) => o.canonical_url as string), (chunk) =>
+            sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('discogs_url', chunk),
+          )
         : Promise.resolve({ data: [] as VinylRow[], error: null }),
     ])
     type R = { id: string }
@@ -300,7 +329,9 @@ export async function GET(request: NextRequest) {
   for (const f of (featRes.data || []) as FeatRow[]) if (f.chart_edition_id) editionIdSet.add(f.chart_edition_id)
   const editionIds = Array.from(editionIdSet)
   const editionRes = editionIds.length
-    ? await sb.from('chart_editions').select('id, week_date').in('id', editionIds)
+    ? await selectByIds<EditionRow>(editionIds, (chunk) =>
+        sb.from('chart_editions').select('id, week_date').in('id', chunk),
+      )
     : { data: [] as EditionRow[], error: null }
   const weekByEdition = new Map<string, string>()
   for (const e of ((editionRes.data || []) as EditionRow[])) weekByEdition.set(e.id, e.week_date)
