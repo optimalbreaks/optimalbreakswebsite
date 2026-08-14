@@ -19,10 +19,15 @@ export function createCachedSupabase(revalidateSeconds = 300) {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
       fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-        fetch(input, {
-          ...init,
-          next: { revalidate: revalidateSeconds },
-        } as RequestInit),
+        fetch(
+          input,
+          revalidateSeconds <= 0
+            ? ({ ...init, cache: 'no-store' } as RequestInit)
+            : ({
+                ...init,
+                next: { revalidate: revalidateSeconds },
+              } as RequestInit),
+        ),
     },
   })
 }

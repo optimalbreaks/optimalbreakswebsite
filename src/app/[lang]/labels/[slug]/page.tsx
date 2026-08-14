@@ -43,6 +43,8 @@ type Props = {
 
 /** `?play=beatport:<id>` debe influir en OG en tiempo de petición. */
 export const dynamic = 'force-dynamic'
+/** Logos / metadatos del sello: sin caché PostgREST (evita placeholder tras UPSERT). */
+export const revalidate = 0
 type LabelSeoRow = Pick<
   Label,
   'name' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url' | 'country' | 'founded_year'
@@ -70,7 +72,7 @@ function firstSearchParam(v: string | string[] | undefined): string | undefined 
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(0)
   const { data: raw } = await supabase
     .from('labels')
     .select('name, description_en, description_es, image_url, og_image_url, country, founded_year')
@@ -121,8 +123,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function LabelDetailPage({ params }: Props) {
   const { lang, slug } = await params
-  const supabase = createCachedSupabase()
-  const readSupabase = createCachedSupabase()
+  const supabase = createCachedSupabase(0)
+  const readSupabase = createCachedSupabase(0)
   const { data: rawLabel } = await supabase
     .from('labels')
     .select('*, organization:organizations!labels_organization_id_fkey(slug, name)')
