@@ -18,6 +18,7 @@ import CountryBadge from '@/components/CountryBadge'
 import {
   buildBeatportSharePath,
   extractBeatportTrackId,
+  trackStoryMeta,
 } from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
@@ -140,6 +141,14 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
     const queue: PreviewTrack[] = a.tracks.map((t, i) => {
       const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
       const sharePath = bpId ? buildBeatportSharePath(sharePathBase, bpId) : null
+      const storyMeta = trackStoryMeta({
+        title: t.title,
+        mix_name: t.mix_name,
+        artists: t.artists.map((x) => x.name).filter(Boolean).join(', '),
+        label: t.label,
+        year: t.release_year,
+        artwork_url: t.artwork_url,
+      })
       return {
         rowKey: `${a.slug}-${i}`,
         src: proxyUrl(t.sample_url!),
@@ -157,9 +166,9 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
             }
           : undefined,
         share: sharePath
-          ? { mode: 'path' as const, path: sharePath }
+          ? { mode: 'path' as const, path: sharePath, storyMeta }
           : t.beatport_url
-            ? { mode: 'url' as const, externalUrl: t.beatport_url }
+            ? { mode: 'url' as const, externalUrl: t.beatport_url, storyMeta }
             : undefined,
       }
     })

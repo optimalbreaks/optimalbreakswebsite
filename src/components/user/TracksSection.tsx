@@ -37,6 +37,7 @@ import {
   buildTrackSharePath,
   buildVinylSharePath,
   extractBeatportTrackId,
+  trackStoryMeta,
 } from '@/lib/share-track'
 import { ArtistNames, LabelName, type ArtistCredit } from '@/components/ArtistNames'
 import {
@@ -181,6 +182,21 @@ function parseArtistCredits(artists: unknown): ArtistCredit[] {
 function trackArtistCredits(t: UnifiedTrack): ArtistCredit[] {
   if (t.artist_credits?.length) return t.artist_credits
   return splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))
+}
+
+function storyMetaFromUnified(t: UnifiedTrack) {
+  const fromDate = (t.release_date || '').trim()
+  const year =
+    (t.year && t.year > 0 ? t.year : null) ??
+    (/^\d{4}/.test(fromDate) ? Number(fromDate.slice(0, 4)) : null)
+  return trackStoryMeta({
+    title: t.title,
+    mix_name: t.mix_name,
+    artists: t.artists,
+    label: t.label,
+    year,
+    artwork_url: t.artwork_url,
+  })
 }
 
 type LiveTrackBags = { chart: any[]; featured: any[]; vinyl: any[] }
@@ -921,6 +937,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         t.external_url ||
         t.canonical_url
       const bpId = extractBeatportTrackId(bpUrl)
+      const storyMeta = storyMetaFromUnified(t)
       if (
         origin?.kind &&
         origin.slug &&
@@ -931,10 +948,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         return {
           mode: 'path',
           path: buildBeatportSharePath(`/${lang}/${folder}/${origin.slug}`, bpId),
+          storyMeta,
         }
       }
       const externalUrl = (t.external_url || t.canonical_url || '').trim()
-      if (externalUrl) return { mode: 'url', externalUrl }
+      if (externalUrl) return { mode: 'url', externalUrl, storyMeta }
     }
     return undefined
   }, [lang])
@@ -1493,6 +1511,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                               path={path}
                               lang={lang as Locale}
                               shareTitle={shareTitle}
+                              storyMeta={storyMetaFromUnified(t)}
                             />
                           )
                         }
@@ -1513,6 +1532,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                           externalUrl={externalUrl}
                           lang={lang as Locale}
                           shareTitle={shareTitle}
+                          storyMeta={storyMetaFromUnified(t)}
                         />
                       )
                     })()}

@@ -12,6 +12,7 @@ import {
   parsePlayParam,
   formatTrackReleaseDisplay,
   extractBeatportTrackId,
+  trackStoryMeta,
 } from '@/lib/share-track'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
@@ -48,6 +49,17 @@ function buildSnapshot(
     beatport_url: t.beatport_url || null,
     origin,
   }
+}
+
+function storyMetaFromTop(t: BeatportTopTrack) {
+  return trackStoryMeta({
+    title: t.title,
+    mix_name: t.mix_name,
+    artists: t.artists.map((a) => a.name).filter(Boolean).join(', '),
+    label: t.label,
+    year: t.release_year,
+    artwork_url: t.artwork_url,
+  })
 }
 
 function proxyUrl(sampleUrl: string): string {
@@ -109,6 +121,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       const sharePath = bpId && pathname
         ? buildBeatportSharePath(pathname, bpId)
         : null
+      const storyMeta = storyMetaFromTop(t)
       return {
         rowKey: `bp-${t.position}`,
         src: proxyUrl(t.sample_url!),
@@ -126,9 +139,9 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
             }
           : undefined,
         share: sharePath
-          ? { mode: 'path' as const, path: sharePath }
+          ? { mode: 'path' as const, path: sharePath, storyMeta }
           : t.beatport_url
-            ? { mode: 'url' as const, externalUrl: t.beatport_url }
+            ? { mode: 'url' as const, externalUrl: t.beatport_url, storyMeta }
             : undefined,
       }
     })
@@ -177,6 +190,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
       const sharePath = bpId && pathname
         ? buildBeatportSharePath(pathname, bpId)
         : null
+      const storyMeta = storyMetaFromTop(t)
       return {
         rowKey: `bp-${t.position}`,
         src: proxyUrl(t.sample_url!),
@@ -194,9 +208,9 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
             }
           : undefined,
         share: sharePath
-          ? { mode: 'path', path: sharePath }
+          ? { mode: 'path', path: sharePath, storyMeta }
           : t.beatport_url
-            ? { mode: 'url', externalUrl: t.beatport_url }
+            ? { mode: 'url', externalUrl: t.beatport_url, storyMeta }
             : undefined,
       }
     })
@@ -370,6 +384,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                             path={buildBeatportSharePath(pathname, bpId)}
                             lang={lang}
                             shareTitle={`${t.title}${t.mix_name ? ` (${t.mix_name})` : ''} — ${t.artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                            storyMeta={storyMetaFromTop(t)}
                           />
                         )
                       })()}

@@ -35,6 +35,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import type { SavedChartTrackSnapshot } from '@/types/database'
+import type { TrackStoryMeta } from '@/lib/share-track'
 
 export interface DeckDict {
   play: string
@@ -114,8 +115,8 @@ export type PreviewShareData =
       trackId: string
       weekDate?: string | null
     }
-  | { mode: 'path'; path: string }
-  | { mode: 'url'; externalUrl: string }
+  | { mode: 'path'; path: string; storyMeta?: TrackStoryMeta }
+  | { mode: 'url'; externalUrl: string; storyMeta?: TrackStoryMeta }
 
 /**
  * Track del reproductor global de previews (Beatport/Bandcamp de charts,
@@ -809,9 +810,25 @@ function PreviewShareSlot({
     )
   }
   if (share.mode === 'path') {
-    return <TrackShareButton path={share.path} lang={lang} shareTitle={shareTitle} size={size} />
+    return (
+      <TrackShareButton
+        path={share.path}
+        lang={lang}
+        shareTitle={shareTitle}
+        size={size}
+        storyMeta={share.storyMeta}
+      />
+    )
   }
-  return <TrackShareButton externalUrl={share.externalUrl} lang={lang} shareTitle={shareTitle} size={size} />
+  return (
+    <TrackShareButton
+      externalUrl={share.externalUrl}
+      lang={lang}
+      shareTitle={shareTitle}
+      size={size}
+      storyMeta={share.storyMeta}
+    />
+  )
 }
 
 // ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────

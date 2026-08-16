@@ -1,6 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Imagen de Story de Instagram por canción
-// GET /api/og/story?play=<chart|featured|vinyl>:<id>&lang=es|en → PNG 1080×1920
+// GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&lang=es|en → PNG 1080×1920
 //
 // La consume el botón "IG" de `TrackShareButton`: el cliente baja este PNG
 // y lo pasa a `navigator.share({ files })` para que el usuario lo suba a
@@ -12,10 +12,12 @@ import { ImageResponse } from 'next/og'
 import { NextRequest, NextResponse } from 'next/server'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import {
+  findBeatportTopTrackById,
   parsePlayParam,
   upscaleTrackArtworkForOg,
   youtubeThumbnailFromUrl,
 } from '@/lib/share-track'
+import type { BeatportTopTrack } from '@/types/database'
 
 export const runtime = 'nodejs'
 
@@ -79,6 +81,67 @@ async function loadArtworkDataUrl(rawUrl: string | null | undefined): Promise<st
   }
 }
 
+const QUERY_ARTWORK_HOSTS = new Set([
+  'geo-media.beatport.com',
+  'i.discogs.com',
+  'i.ytimg.com',
+  'img.youtube.com',
+])
+
+function isAllowedQueryArtworkUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    if (u.protocol !== 'https:') return false
+    const host = u.hostname.toLowerCase()
+    if (QUERY_ARTWORK_HOSTS.has(host)) return true
+    if (host.endsWith('.supabase.co') && u.pathname.includes('/storage/')) return true
+    return false
+  } catch {
+    return false
+  }
+}
+
+async function fetchBeatportStoryRow(
+  id: string,
+  from: string | null,
+): Promise<StoryRow | null> {
+  const parsedFrom = from ? /^(artists|labels)\/([a-z0-9-]+)$/i.exec(from.trim()) : null
+  if (!parsedFrom) return null
+  const table = parsedFrom[1].toLowerCase() as 'artists' | 'labels'
+  const slug = parsedFrom[2]
+  const supabase = createCachedSupabase()
+  const { data } = await supabase.from(table).select('beatport_top_tracks').eq('slug', slug).maybeSingle()
+  const tracks = (data as { beatport_top_tracks?: BeatportTopTrack[] | null } | null)?.beatport_top_tracks
+  const track = findBeatportTopTrackById(tracks, id)
+  if (!track?.title) return null
+  return {
+    title: track.title,
+    mix_name: track.mix_name || null,
+    artists: track.artists,
+    label: track.label || null,
+    artwork_url: track.artwork_url,
+    release_year: track.release_year,
+  }
+}
+
+function storyRowFromQuery(sp: URLSearchParams): StoryRow | null {
+  const title = (sp.get('title') || '').trim()
+  if (!title) return null
+  const artists = (sp.get('artists') || '').trim()
+  const yearRaw = Number(sp.get('year') || '')
+  const artwork = (sp.get('artwork') || '').trim()
+  return {
+    title,
+    mix_name: (sp.get('mix') || '').trim() || null,
+    artists: artists
+      ? artists.split(',').map((n) => ({ name: n.trim() })).filter((a) => a.name)
+      : [],
+    label: (sp.get('label') || '').trim() || null,
+    artwork_url: artwork || null,
+    release_year: Number.isFinite(yearRaw) && yearRaw > 1900 ? yearRaw : null,
+  }
+}
+
 async function fetchStoryRow(
   kind: 'chart' | 'featured' | 'vinyl',
   id: string,
@@ -99,7 +162,7 @@ export async function GET(request: NextRequest) {
   const lang = sp.get('lang') === 'en' ? 'en' : 'es'
   const parsed = parsePlayParam(sp.get('play'))
 
-  let kind: 'chart' | 'featured' | 'vinyl' | null = null
+  let kind: 'chart' | 'featured' | 'vinyl' | 'beatport' | null = null
   let id = ''
   if (parsed?.kind === 'track') {
     kind = parsed.source
@@ -107,19 +170,35 @@ export async function GET(request: NextRequest) {
   } else if (parsed?.kind === 'vinyl') {
     kind = 'vinyl'
     id = parsed.id
+  } else if (parsed?.kind === 'beatport') {
+    kind = 'beatport'
+    id = parsed.id
   }
   if (!kind || !id) {
     return NextResponse.json({ error: 'Invalid play param' }, { status: 400 })
   }
 
-  const row = await fetchStoryRow(kind, id)
+  let artworkUntrusted = false
+  const row =
+    kind === 'beatport'
+      ? await (async () => {
+          const fromCatalog = await fetchBeatportStoryRow(id, sp.get('from'))
+          if (fromCatalog) return fromCatalog
+          artworkUntrusted = true
+          return storyRowFromQuery(sp)
+        })()
+      : await fetchStoryRow(kind, id)
   if (!row?.title) {
     return NextResponse.json({ error: 'Track not found' }, { status: 404 })
   }
 
-  const artworkSource =
+  const rawArtwork =
     upscaleTrackArtworkForOg(row.artwork_url) ??
     (kind === 'vinyl' ? youtubeThumbnailFromUrl(row.youtube_url) : null)
+  const artworkSource =
+    rawArtwork && artworkUntrusted && !isAllowedQueryArtworkUrl(rawArtwork)
+      ? null
+      : rawArtwork
   const artworkDataUrl = await loadArtworkDataUrl(artworkSource)
 
   const es = lang === 'es'
@@ -139,7 +218,9 @@ export async function GET(request: NextRequest) {
       ? 'RETRO VINYL PICKS'
       : kind === 'featured'
         ? 'NEW RELEASES'
-        : '40 BREAKS VITALES'
+        : kind === 'beatport'
+          ? 'BEATPORT TOP 10'
+          : '40 BREAKS VITALES'
   // El admin suele añadir un sticker de música de Instagram a la story
   // (catálogo de Meta): avisamos de que ese audio NO es el tema compartido.
   const footerWarning = es

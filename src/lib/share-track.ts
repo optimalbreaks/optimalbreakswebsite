@@ -18,6 +18,65 @@ import type { BeatportTopTrack } from '@/types/database'
 
 export type ShareTrackSource = 'chart' | 'featured' | 'beatport'
 
+/** Metadatos para la story de Instagram cuando el tema no vive en chart_*_tracks
+ *  (Top 10 Beatport). El cliente los manda a `/api/og/story` como fallback
+ *  si el track ya no está en el Top 10 actual de la ficha. */
+export type TrackStoryMeta = {
+  title: string
+  mix_name?: string | null
+  artists?: string | null
+  label?: string | null
+  year?: number | null
+  artwork_url?: string | null
+}
+
+export function trackStoryMeta(
+  input: {
+    title?: string | null
+    mix_name?: string | null
+    artists?: string | null
+    label?: string | null
+    year?: number | null
+    artwork_url?: string | null
+  },
+): TrackStoryMeta | undefined {
+  const title = (input.title || '').trim()
+  if (!title) return undefined
+  return {
+    title,
+    mix_name: input.mix_name ?? null,
+    artists: input.artists ?? null,
+    label: input.label ?? null,
+    year: input.year ?? null,
+    artwork_url: input.artwork_url ?? null,
+  }
+}
+
+/** `artists/slug` o `labels/slug` extraído de un path de ficha con `?play=beatport:`. */
+export function storyFromSharePath(path: string | null | undefined): string | null {
+  if (!path) return null
+  const pathOnly = path.split('?')[0]
+  const m = /\/(artists|labels)\/([a-z0-9-]+)/i.exec(pathOnly)
+  return m ? `${m[1].toLowerCase()}/${m[2]}` : null
+}
+
+export function appendTrackStoryMeta(
+  params: URLSearchParams,
+  meta: TrackStoryMeta | null | undefined,
+): void {
+  if (!meta?.title?.trim()) return
+  params.set('title', meta.title.trim().slice(0, 90))
+  const mix = (meta.mix_name || '').trim()
+  if (mix) params.set('mix', mix.slice(0, 80))
+  const artists = (meta.artists || '').trim()
+  if (artists) params.set('artists', artists.slice(0, 160))
+  const label = (meta.label || '').trim()
+  if (label) params.set('label', label.slice(0, 80))
+  if (meta.year && meta.year > 1900) params.set('year', String(meta.year))
+  const art = (meta.artwork_url || '').trim()
+  if (art && /^https?:\/\//i.test(art)) params.set('artwork', art.slice(0, 500))
+}
+
 /** Path relativo (no absoluto). Útil para `navigator.clipboard` y botones de compartir nativos. */
 export function buildTrackSharePath(
   lang: Locale,

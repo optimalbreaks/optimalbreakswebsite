@@ -11,6 +11,7 @@
 //     construido: `path` directo (p.ej. `/es/artists/prodigy?play=beatport:123456`).
 //  3) URL absoluta externa (beatport_top sin contexto OB interno): `externalUrl`.
 //     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
+//     Beatport Top también genera story IG (`play=beatport:<id>` + snapshot).
 // ============================================
 
 'use client'
@@ -19,10 +20,14 @@ import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import type { Locale } from '@/lib/i18n-config'
 import {
+  appendTrackStoryMeta,
   buildAbsoluteShareUrl,
   buildTrackSharePath,
   copyShareLink,
+  extractBeatportTrackId,
   parsePlayParam,
+  storyFromSharePath,
+  type TrackStoryMeta,
 } from '@/lib/share-track'
 
 interface BaseProps {
@@ -31,6 +36,8 @@ interface BaseProps {
   shareTitle: string
   /** `lg` = botón cuadrado del mini reproductor (mismo tacto que play/pause). */
   size?: 'sm' | 'lg'
+  /** Fallback de la story IG para Beatport Top (snapshot) si el Top 10 ya rotó. */
+  storyMeta?: TrackStoryMeta
 }
 
 interface ChartModeProps extends BaseProps {
@@ -75,9 +82,9 @@ function resolveFullUrl(props: Props): string {
 }
 
 /**
- * Valor `play=` (chart:<id> / featured:<id> / vinyl:<id>) para pedir la
- * imagen de Story a `/api/og/story`. Solo para tracks de nuestros charts;
- * Beatport Top / URLs externas no tienen imagen resoluble → null (sin botón IG).
+ * Valor `play=` (chart:<id> / featured:<id> / vinyl:<id> / beatport:<id>)
+ * para pedir la imagen de Story a `/api/og/story`. Beatport Top resuelve
+ * por ficha (`from=artists|labels/slug`) o por `storyMeta` (snapshot).
  */
 function resolveStoryPlayParam(props: Props): string | null {
   if ('source' in props && props.source && props.trackId) {
@@ -89,6 +96,11 @@ function resolveStoryPlayParam(props: Props): string | null {
     const parsed = parsePlayParam(new URLSearchParams(query).get('play'))
     if (parsed?.kind === 'track') return `${parsed.source}:${parsed.id}`
     if (parsed?.kind === 'vinyl') return `vinyl:${parsed.id}`
+    if (parsed?.kind === 'beatport') return `beatport:${parsed.id}`
+  }
+  if ('externalUrl' in props && props.externalUrl) {
+    const bpId = extractBeatportTrackId(props.externalUrl)
+    if (bpId) return `beatport:${bpId}`
   }
   return null
 }
@@ -115,6 +127,9 @@ export default function TrackShareButton(props: Props) {
     try {
       await copyShareLink(fullUrl)
       const params = new URLSearchParams({ play: storyPlay, lang: props.lang })
+      const from = 'path' in props ? storyFromSharePath(props.path) : null
+      if (from) params.set('from', from)
+      appendTrackStoryMeta(params, props.storyMeta)
       const res = await fetch(`/api/og/story?${params.toString()}`)
       if (!res.ok) throw new Error(`story ${res.status}`)
       const blob = await res.blob()

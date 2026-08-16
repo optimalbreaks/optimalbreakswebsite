@@ -33,6 +33,7 @@ import {
   buildVinylSharePath,
   buildBeatportSharePath,
   extractBeatportTrackId,
+  trackStoryMeta,
 } from '@/lib/share-track'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import {
@@ -257,11 +258,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     if (t.primary.source === 'beatport_top') {
       const bpId = extractBeatportTrackId(t.external_url)
       const o = t.beatport_share_origin
+      const storyMeta = trackStoryMeta({
+        title: t.title,
+        mix_name: t.mix_name,
+        artists: t.artists,
+        label: t.label,
+        year: t.year,
+        artwork_url: t.artwork_url,
+      })
       if (o?.slug && bpId && (o.kind === 'artist' || o.kind === 'label')) {
         const folder = o.kind === 'artist' ? 'artists' : 'labels'
-        return { mode: 'path', path: buildBeatportSharePath(`/${lang}/${folder}/${o.slug}`, bpId) }
+        return { mode: 'path', path: buildBeatportSharePath(`/${lang}/${folder}/${o.slug}`, bpId), storyMeta }
       }
-      if (t.external_url) return { mode: 'url', externalUrl: t.external_url }
+      if (t.external_url) return { mode: 'url', externalUrl: t.external_url, storyMeta }
     }
     return undefined
   }, [lang])
@@ -700,6 +709,14 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         const shareTitle = `${t.title} — ${t.artists}`
                         const bpId = extractBeatportTrackId(t.external_url)
                         const o = t.beatport_share_origin
+                        const storyMeta = trackStoryMeta({
+                          title: t.title,
+                          mix_name: t.mix_name,
+                          artists: t.artists,
+                          label: t.label,
+                          year: t.year,
+                          artwork_url: t.artwork_url,
+                        })
                         if (
                           o?.slug &&
                           bpId &&
@@ -711,6 +728,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                               path={buildBeatportSharePath(`/${lang}/${folder}/${o.slug}`, bpId)}
                               lang={lang}
                               shareTitle={shareTitle}
+                              storyMeta={storyMeta}
                             />
                           )
                         }
@@ -720,6 +738,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                               externalUrl={t.external_url}
                               lang={lang}
                               shareTitle={shareTitle}
+                              storyMeta={storyMeta}
                             />
                           )
                         }
