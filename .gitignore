@@ -40,6 +40,18 @@ yarn-error.log*
 tmp-*.log
 tmp-*.txt
 tmp-*.json
+tmp-*.png
+_tmp-*
+scripts/_tmp-*
+
+# Carruseles / exports de Instagram (no los sirve la web)
+instagram_images/
+
+# Capturas de cámara soltadas en promo (la promo canónica es charts-promo*.webp)
+public/images/promo/Foto *
+
+# Correos de artistas (PII). El resto de artists_docs sí se versiona (notas, EPK).
+artists_docs/**/email*
 
 # Logs de lotes NR / imports de vinilos / bios y colas pendientes (trabajo del agente)
 data/charts/**/*.log
@@ -57,6 +69,8 @@ data/blog/*.brief.txt
 .idea/
 *.swp
 *.swo
+# Preferencias locales de Cursor; las reglas (.cursor/rules/) sí van en Git
+.cursor/settings.json
 
 # OS
 .DS_Store
