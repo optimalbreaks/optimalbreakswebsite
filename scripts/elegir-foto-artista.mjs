@@ -8,7 +8,7 @@
  * recibe el índice del mejor retrato / foto promocional coherente con el nombre.
  * La IA no analiza píxeles salvo que uses --vision (GPT con imágenes en miniatura).
  *
- * Requiere: OPENAI_API_KEY, SERPAPI_API_KEY en .env.local
+ * Requiere: OPENAI_API_KEY en .env.local; SERPAPI_API_KEY si Beatport no da hero
  * Opcional: OPENAI_MODEL / OPENAI_VISION_MODEL (por defecto gpt-5.6-terra)
  *
  * Aviso legal: las URLs son de terceros; revisa derechos y licencias antes de uso público.
@@ -19,6 +19,8 @@
  *
  * Uso:
  *   npm run db:artist:photo -- fatboy-slim
+ *   npm run db:artist:photo -- slug-a slug-b slug-c
+ *   npm run db:artist:photo -- --slugs-file=scripts/_tmp-nr-photo-slugs.txt
  *   npm run db:artist:photo -- --all
  *   npm run db:artist:photo -- --all --skip-existing --limit 10
  *   npm run db:artist:photo -- --repair              # BD: sin imagen https o URL rota (HEAD) → nueva búsqueda; si falla → image_url null (fallback web)
@@ -54,6 +56,10 @@ import {
   openAiChatCompletionsBody,
   resolveOpenAiModel,
 } from './lib/openai-editorial.mjs'
+import {
+  resolveBeatportArtistHero,
+  closeHeadlessBrowser,
+} from './beatport-top-tracks.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -94,6 +100,9 @@ function isDownloadableImageUrl(url) {
     'instagram.com',
     'facebook.com',
     'fbcdn.net',
+    'tiktok.com',
+    'tiktokcdn.com',
+    'muscdn.com',
   ]
   return !blocked.some((h) => host.includes(h))
 }
@@ -133,6 +142,8 @@ function buildArtistImageSearchQueries(artist, extraSuffix) {
     alts.push(`"${rn}" ${name} DJ`.replace(/\s+/g, ' ').trim())
   }
   if (name && country) alts.push(`"${name}" ${country} electronic DJ`.replace(/\s+/g, ' ').trim())
+  if (name) alts.push(`"${name}" beatport artist`.replace(/\s+/g, ' ').trim())
+  if (name) alts.push(`site:beatport.com "${name}"`.replace(/\s+/g, ' ').trim())
 
   const seenQ = new Set()
   const unique = []
@@ -484,6 +495,78 @@ async function processOneArtist({
     }
   }
 
+  if (!flags.has('--skip-beatport')) {
+    if (!artist.beatport_id && dbRow?.beatport_id) {
+      artist = {
+        ...artist,
+        beatport_id: dbRow.beatport_id,
+        beatport_url: dbRow.beatport_url || artist.beatport_url || null,
+      }
+    }
+    try {
+      if (!quiet) {
+        console.log(
+          `[foto] ${slug}: Beatport hero${artist.beatport_id ? ` (id ${artist.beatport_id})` : ' (búsqueda por nombre)'}…`,
+        )
+      }
+      const bp = await resolveBeatportArtistHero({
+        name: artist.name,
+        beatportId: artist.beatport_id,
+        beatportUrl: artist.beatport_url,
+        headless: flags.has('--headless'),
+      })
+      if (bp?.beatportId && !artist.beatport_id) {
+        artist = {
+          ...artist,
+          beatport_id: bp.beatportId,
+          beatport_url: bp.beatportUrl || artist.beatport_url || null,
+        }
+      }
+      if (bp?.heroUrl) {
+        if (!quiet) console.log(`[foto] ${slug}: Beatport hero →`, String(bp.heroUrl).slice(0, 90))
+        if (flags.has('--dry-run')) {
+          return {
+            ok: true,
+            slug,
+            url: bp.heroUrl,
+            reason: 'beatport-hero',
+            dryRun: true,
+            outcome: 'dry_run_chosen',
+          }
+        }
+        let imageUrlFinal = bp.heroUrl
+        if (!flags.has('--json-only')) {
+          try {
+            imageUrlFinal = await uploadArtistPortraitFromUrl({ slug, sourceUrl: bp.heroUrl, quiet })
+          } catch (e) {
+            console.error(`[foto] ${slug}: Beatport hero no se pudo subir:`, e.message)
+            imageUrlFinal = null
+          }
+        }
+        if (imageUrlFinal) {
+          return finalizeArtistPhoto({
+            artist,
+            slug,
+            imageUrlFinal,
+            flags,
+            quiet,
+            reason: 'beatport-hero',
+            outcome: 'portrait',
+          })
+        }
+      } else if (!quiet) {
+        console.log(`[foto] ${slug}: Beatport sin hero, sigue SerpAPI`)
+      }
+    } catch (e) {
+      if (!quiet) console.warn(`[foto] ${slug}: Beatport`, e.message)
+    }
+  }
+
+  if (!serpKey) {
+    console.error(`[foto] ${slug}: sin foto Beatport y falta SERPAPI_API_KEY`)
+    return { ok: false, slug, error: 'no beatport hero / no SERPAPI', outcome: 'hard_error' }
+  }
+
   const queries = buildArtistImageSearchQueries(artist, querySuffix)
   const [primaryQ, ...altQueries] = queries
   if (!quiet) console.log(`[foto] ${slug}: SerpAPI →`, primaryQ, altQueries.length ? `+${altQueries.length} alt.` : '')
@@ -625,14 +708,13 @@ async function main() {
   loadEnvLocal()
   const { flags, positional } = parseArgs(process.argv.slice(2))
 
-  const serpKey = process.env.SERPAPI_API_KEY?.trim()
-  if (!serpKey) {
-    console.error('Falta SERPAPI_API_KEY en .env.local')
-    process.exit(1)
-  }
+  const serpKey = process.env.SERPAPI_API_KEY?.trim() || ''
   if (!process.env.OPENAI_API_KEY?.trim()) {
     console.error('Falta OPENAI_API_KEY en .env.local')
     process.exit(1)
+  }
+  if (!serpKey && !flags.has('--skip-beatport')) {
+    console.warn('[foto] Sin SERPAPI_API_KEY: solo se usará el hero de Beatport.')
   }
 
   if (!flags.has('--json-only') && !flags.has('--dry-run') && !hasStorageCredentials()) {
@@ -734,12 +816,25 @@ async function main() {
       console.log(`\nListo [repair] (detalle por outcome arriba).`)
     }
 
+    await closeHeadlessBrowser()
     if (hardErrors > 0) process.exit(1)
     return
   }
 
   let slugs = []
-  if (flags.has('--all')) {
+  const slugsFileArg = process.argv.find((x) => x.startsWith('--slugs-file='))
+  if (slugsFileArg) {
+    const rel = slugsFileArg.slice('--slugs-file='.length).trim()
+    const abs = resolve(ROOT, rel)
+    if (!existsSync(abs)) {
+      console.error('No existe --slugs-file=', abs)
+      process.exit(1)
+    }
+    slugs = readFileSync(abs, 'utf8')
+      .split(/\r?\n/)
+      .map((s) => s.trim().replace(/\.json$/, ''))
+      .filter((s) => s && !s.startsWith('#'))
+  } else if (flags.has('--all')) {
     if (!existsSync(ARTISTS_DIR)) {
       console.error('No existe', ARTISTS_DIR)
       process.exit(1)
@@ -749,21 +844,24 @@ async function main() {
       .map((f) => f.replace(/\.json$/, ''))
       .sort()
   } else if (positional.length >= 1) {
-    slugs = [positional[0].replace(/\.json$/, '')]
+    slugs = positional.map((s) => s.replace(/\.json$/, ''))
   } else {
     console.error(`Uso:
-  npm run db:artist:photo -- <slug>
+  npm run db:artist:photo -- <slug> [slug2 …]
+  npm run db:artist:photo -- --slugs-file=ruta.txt
   npm run db:artist:photo -- --all [opciones]
   npm run db:artist:photo -- --repair [--limit=N]   # BD: sin https o URL rota → buscar; si no hay foto → image_url null
 
 Opciones:
   --repair           cola desde Supabase (falta imagen o HEAD falla); requiere SERVICE_ROLE
   --force-rephoto    ignorar retratos editoriales en public/images/artists y buscar igualmente
+  --skip-beatport    no intentar hero de Beatport (solo SerpAPI)
+  --headless         Beatport con Playwright (Cloudflare)
   --dry-run          no escribe JSON ni BD
   --skip-existing    omitir si image_url ya es https
   --json-only        URL externa en JSON solamente; no Storage ni UPSERT
   --vision           usar miniaturas + modelo multimodal (OPENAI_VISION_MODEL o gpt-5.6-terra)
-  --limit=N          con --all o --repair, procesar solo N artistas
+  --limit=N          con --all, --repair o --slugs-file, procesar solo N artistas
   --max-candidates=N SerpAPI: máximo a considerar (default ${DEFAULT_MAX_CANDIDATES})
   --delay-ms=N       pausa entre artistas (default ${DEFAULT_DELAY_MS})
   --query-suffix=... añade texto a la consulta de imágenes
@@ -773,7 +871,7 @@ Opciones:
   }
 
   const limitArg = process.argv.find((x) => x.startsWith('--limit='))
-  if (limitArg && flags.has('--all')) {
+  if (limitArg && (flags.has('--all') || slugsFileArg)) {
     const n = parseInt(limitArg.split('=')[1], 10)
     if (Number.isFinite(n) && n > 0) slugs = slugs.slice(0, n)
   }
@@ -798,10 +896,12 @@ Opciones:
   if (!quiet) {
     console.log(`\nListo: ${ok} ok, ${fail} errores (${slugs.length} procesados)`)
   }
+  await closeHeadlessBrowser()
   if (fail > 0) process.exit(1)
 }
 
-main().catch((e) => {
+main().catch(async (e) => {
   console.error(e)
+  await closeHeadlessBrowser()
   process.exit(1)
 })

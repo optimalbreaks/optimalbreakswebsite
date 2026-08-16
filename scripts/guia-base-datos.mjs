@@ -85,7 +85,7 @@ const ACTIONS = [
   },
   {
     id: 'blog-agent',
-    run: 'node scripts/guia-base-datos.mjs run blog-agent -- <slug> "Título ES" [--featured] [--brief archivo] [--no-search] [--json-only] [--save-json]',
+    run: 'node scripts/guia-base-datos.mjs run blog-agent -- <slug> "Título ES" [--featured] [--brief archivo] [--no-search] [--json-only] [--save-json] [--from-json [ruta]]',
     npm: 'npm run db:blog:agent -- …',
     creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI / OPENAI web_search',
     description:

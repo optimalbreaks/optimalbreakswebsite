@@ -7,6 +7,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent } from '@/types/database'
 import type { Metadata } from 'next'
+import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -106,7 +107,14 @@ export default async function EventsPage({ params }: { params: { lang: Locale } 
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase()
   const { data: events } = await supabase.from('events').select('*').order('date_start', { ascending: false })
-  const list = ((events || []) as BreakEvent[]).sort((a, b) => {
+  const list = ((events || []) as BreakEvent[])
+    .map((e) => ({
+      ...e,
+      // Cartel versionado: la ruta en Storage es fija, `?v=<updated_at>` evita
+      // que CDN/navegador sigan enseñando el cartel viejo tras reemplazarlo.
+      image_url: versionedImageUrl(e.image_url, imageCacheVersion(e.updated_at)),
+    }))
+    .sort((a, b) => {
     if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
     if (a.event_type !== 'upcoming' && b.event_type === 'upcoming') return 1
     const aTime = a.date_start ? Date.parse(a.date_start) : Number.NEGATIVE_INFINITY

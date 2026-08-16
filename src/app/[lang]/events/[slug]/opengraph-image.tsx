@@ -20,9 +20,31 @@ export const runtime = 'nodejs'
 
 type Props = { params: Promise<{ lang: string; slug: string }> }
 
+/**
+ * Versiona la URL del og:image con `events.updated_at` (trigger 065): la meta
+ * emitida pasa a ser `…/opengraph-image/<epoch>?<hash>`, así Facebook/WhatsApp
+ * (que cachean la tarjeta POR URL) bajan el cartel nuevo en cuanto se edita el
+ * evento. Nota: el og:image explícito en `generateMetadata` NO sirve aquí — la
+ * convención de archivo del mismo segmento pisa `openGraph.images`.
+ */
+export async function generateImageMetadata({ params }: Props) {
+  const { slug } = await params
+  const supabase = createCachedSupabase()
+  const { data } = await supabase
+    .from('events')
+    .select('updated_at')
+    .eq('slug', slug)
+    .single()
+  const row = (data as { updated_at: string | null } | null) ?? null
+  const t = row?.updated_at ? Date.parse(row.updated_at) : NaN
+  const id = Number.isFinite(t) ? String(t) : '0'
+  return [{ id, alt, size, contentType }]
+}
+
 type EventOgRow = {
   image_url: string | null
   og_image_url: string | null
+  updated_at: string | null
 }
 
 const EXT_MIME: Record<string, string> = {
@@ -84,7 +106,10 @@ async function ensureSatoriCompatible(
   }
 }
 
-async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<string | null> {
+async function loadPosterDataUrl(
+  rawUrl: string | null | undefined,
+  version: string | null,
+): Promise<string | null> {
   const url = rawUrl?.trim()
   if (!url) return null
   try {
@@ -95,7 +120,15 @@ async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<str
       const filePath = path.join(process.cwd(), 'public', url.replace(/^\/+/, ''))
       buf = await fs.readFile(filePath)
     } else if (url.startsWith('http://') || url.startsWith('https://')) {
-      const res = await fetch(url, { cache: 'force-cache' })
+      // El cartel vive en una ruta fija de Storage (media/events/<slug>/poster.*),
+      // así que `?v=<updated_at>` es lo único que invalida Data Cache y CDN de
+      // Supabase al reemplazarlo. Con versión la respuesta es inmutable
+      // (force-cache); sin ella, revalidamos cada 5 min — nunca caché indefinida.
+      const fetchUrl = version ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url
+      const res = await fetch(
+        fetchUrl,
+        version ? { cache: 'force-cache' } : { next: { revalidate: 300 } },
+      )
       if (!res.ok) return null
       const ct = res.headers.get('content-type')?.split(';')[0]?.trim()
       if (ct) mime = ct
@@ -113,19 +146,24 @@ async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<str
   }
 }
 
-export default async function Image({ params }: Props) {
+export default async function Image({ params, id }: Props & { id: string }) {
   const { slug } = await params
 
   const supabase = createCachedSupabase()
   const { data } = await supabase
     .from('events')
-    .select('image_url, og_image_url')
+    .select('image_url, og_image_url, updated_at')
     .eq('slug', slug)
     .single()
   const row = (data as EventOgRow | null) ?? null
 
+  // Versión de caché del cartel: el id de `generateImageMetadata` (epoch de
+  // updated_at) o, si no llegara, el updated_at de la propia fila.
+  const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
+  const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
+  const version = id && id !== '0' ? id : fallbackVersion
   const posterSource = row?.og_image_url || row?.image_url || null
-  const posterDataUrl = await loadPosterDataUrl(posterSource)
+  const posterDataUrl = await loadPosterDataUrl(posterSource, version)
 
   return new ImageResponse(
     (

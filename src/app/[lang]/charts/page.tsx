@@ -11,6 +11,7 @@ import type { Metadata } from 'next'
 import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
+import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
 import ChartView from '@/components/ChartView'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
@@ -266,9 +267,11 @@ export default async function ChartsPage({
     vinyl: vinylByEdition.get(edition.id) ?? [],
   }))
 
+  const weekParamMonday =
+    chartEditionWeekMondayFromPublish(searchParams.week) ?? searchParams.week
   const validWeekParam =
-    searchParams.week && editions.some((e) => e.week_date === searchParams.week)
-      ? searchParams.week
+    weekParamMonday && editions.some((e) => e.week_date === weekParamMonday)
+      ? weekParamMonday
       : undefined
 
   const defaultExpandedWeekDate =

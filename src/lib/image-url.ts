@@ -34,6 +34,29 @@ function isOurOptimizableUrl(u: string): boolean {
   return u.startsWith('/images/')
 }
 
+/** Sello de versión de imagen: epoch ms de un timestamp (p. ej. `events.updated_at`). */
+export function imageCacheVersion(updatedAt: string | null | undefined): string | null {
+  const t = updatedAt ? Date.parse(updatedAt) : NaN
+  return Number.isFinite(t) ? String(t) : null
+}
+
+/**
+ * Los carteles de eventos viven en una ruta fija de Storage
+ * (media/events/<slug>/poster.*): la URL no cambia al reemplazar la imagen.
+ * `?v=<versión>` fuerza a CDN de Supabase, navegador y scrapers
+ * (Facebook/WhatsApp) a bajar siempre la más actualizada.
+ * Solo aplica a URLs http(s); las rutas locales bajo /images/ van con el deploy.
+ */
+export function versionedImageUrl(
+  url: string | null | undefined,
+  version: string | null,
+): string | null {
+  const u = url?.trim()
+  if (!u) return null
+  if (!version || !/^https?:\/\//i.test(u)) return u
+  return `${u}${u.includes('?') ? '&' : '?'}v=${version}`
+}
+
 /**
  * Devuelve la URL a usar en <img>: WebP si migramos el asset; sin cambios si no aplica.
  */

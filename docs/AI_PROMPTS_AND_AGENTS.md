@@ -48,6 +48,8 @@ Definidas en `.env.local` (plantilla: `.env.local.example`).
 | Elegir foto artista / sello, logo (scripts y APIs relacionadas) | `gpt-5.6-terra` (visión: `OPENAI_VISION_MODEL`) |
 | Perfil breakbeat (`/api/breakbeat-profile`) | `OPENAI_MODEL` si existe; si no, por defecto `gpt-5.6-terra` |
 
+El texto generado se **persiste** en **`breakbeat_profiles`** (una fila por usuario). Es **privado**: RLS owner-only (migración **`064_breakbeat_profiles_rls.sql`**). La ruta API usa el JWT del usuario, no `service_role`. Detalle: [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md) (*Breakbeat DNA*).
+
 Los flujos de texto editorial comparten **`gpt-5.6-terra`** + **`web_search`**. Comprueba el archivo concreto si defines un override (`OPENAI_BLOG_MODEL`, `OPENAI_CHAT_MODEL`, `OPENAI_VISION_MODEL`).
 
 ### Otros parámetros (temperatura, `max_tokens`, formato)
@@ -56,7 +58,7 @@ Van **en código** (fetch a `v1/chat/completions`), no en `.txt`. Ejemplos:
 
 - Agente admin artista: `temperature`, `response_format: json_object` en `src/app/api/admin/agent/route.ts`.
 - Enriquecedor de eventos: ver `scripts/enriquecer-evento.mjs` y `src/app/api/admin/agent/event/route.ts`.
-- Perfil breakbeat: `max_tokens` y la longitud objetivo del análisis se controlan en `src/app/api/breakbeat-profile/route.ts`.
+- Perfil breakbeat: `max_tokens` y la longitud objetivo del análisis se controlan en `src/app/api/breakbeat-profile/route.ts`. Persistencia: tabla **`breakbeat_profiles`** + RLS **064** (ver [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md)).
 
 Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman parte del **texto del prompt** o del bloque de usuario, no de una constante global única.
 
@@ -66,7 +68,7 @@ Los **límites de longitud de biografías** (p. ej. párrafos sugeridos) forman 
 - **Artista — biografías y también fotos (SerpAPI → Storage, `--repair`, retratos en `public`):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **Base de datos, enrich, posters, fotos:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs) (`node scripts/guia-base-datos.mjs` sin args).
 - **Imágenes / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
-- **Favoritos, valoraciones, asistencia:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
+- **Favoritos, valoraciones, asistencia, ADN breakbeatero (RLS 064):** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts fuera de `scripts/prompts/`
 
@@ -130,11 +132,13 @@ See `.env.local` / `.env.local.example`.
 | Artist/label photo pick, logo scripts/APIs | `gpt-5.6-terra` (vision: `OPENAI_VISION_MODEL`) |
 | Breakbeat profile API | `OPENAI_MODEL` if set; otherwise defaults to `gpt-5.6-terra` |
 
+Generated copy is stored in **`breakbeat_profiles`** (one row per user). **Private:** owner-only RLS (migration **`064_breakbeat_profiles_rls.sql`**). The route uses the user JWT, not `service_role`. See [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md) (*Breakbeat DNA*).
+
 Always check the specific file if you rely on a single global default.
 
 ### Other parameters (`temperature`, `max_tokens`, `response_format`)
 
-Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, `enriquecer-evento.mjs`, `breakbeat-profile/route.ts`. **Bio length hints** live inside prompt text, not one shared numeric cap.
+Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, `enriquecer-evento.mjs`, `breakbeat-profile/route.ts` (persist + RLS: [`USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md)). **Bio length hints** live inside prompt text, not one shared numeric cap.
 
 ### Deeper docs
 
@@ -142,7 +146,7 @@ Set **in code** (OpenAI HTTP API), not in `.txt`. Examples: admin artist route, 
 - **Artist agent (bios + photos / repair / public portraits):** [`docs/ARTIST_AI_AGENT.md`](./ARTIST_AI_AGENT.md).
 - **DB CLI catalogue:** [`scripts/guia-base-datos.mjs`](../scripts/guia-base-datos.mjs).
 - **Images / WebP / Storage:** [`docs/IMAGES_AND_WEBP.md`](./IMAGES_AND_WEBP.md).
-- **User favorites, ratings, attendance:** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
+- **User favorites, ratings, attendance, Breakbeat DNA (RLS 064):** [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md).
 
 ### Prompts not under `scripts/prompts/`
 

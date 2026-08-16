@@ -160,8 +160,8 @@ export interface Database {
       }
       events: {
         Row: BreakEvent
-        Insert: Omit<BreakEvent, 'id' | 'created_at'>
-        Update: Partial<Omit<BreakEvent, 'id' | 'created_at'>>
+        Insert: Omit<BreakEvent, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<BreakEvent, 'id' | 'created_at' | 'updated_at'>>
         Relationships: DbRelationship[]
       }
       blog_posts: {
@@ -623,6 +623,8 @@ export interface EventScheduleSlot {
 export interface BreakEvent extends Record<string, unknown> {
   id: string
   created_at: string
+  /** Trigger `events_updated_at`: versión de caché del cartel (OG `?v=`). */
+  updated_at: string
   slug: string
   name: string
   description_en: string

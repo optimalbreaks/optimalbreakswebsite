@@ -33,9 +33,7 @@ function sleep(ms: number) {
 }
 
 function isoWeekDate(s: string): string | null {
-  const t = s.trim()
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null
-  return t
+  return chartEditionWeekMondayFromPublish(s.trim())
 }
 
 async function ensureEditionId(

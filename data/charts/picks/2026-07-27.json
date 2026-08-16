@@ -1322,6 +1322,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 59
+    },
+    {
+      "title": "Passion",
+      "mix_name": "Gruv42 Remix",
+      "artists": [
+        {
+          "name": "K5"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/passion/29738114",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0a9c1ff1-afe0-43dd-9423-ee2c09e4364f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4a9f253a-ba6c-42f4-bac7-b0f6a1e58c40.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
     }
   ]
 }

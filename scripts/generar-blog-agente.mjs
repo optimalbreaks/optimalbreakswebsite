@@ -8,6 +8,8 @@
  *   npm run db:blog:agent -- slug "Título ES" [--brief notas.txt] [--featured] [--no-search]
  *   npm run db:blog:agent -- slug "Título" --json-only
  *   npm run db:blog:agent -- slug "Título" --save-json
+ *   npm run db:blog:agent -- slug --from-json
+ *   npm run db:blog:agent -- slug --from-json data/blog/slug.json
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
@@ -346,6 +348,7 @@ function parseArgs(argv) {
     jsonOnly: false,
     saveJson: false,
     stdout: false,
+    fromJson: null,
   }
   const pos = []
   for (let i = 0; i < argv.length; i++) {
@@ -355,7 +358,13 @@ function parseArgs(argv) {
     else if (a === '--json-only') out.jsonOnly = true
     else if (a === '--save-json') out.saveJson = true
     else if (a === '--stdout') out.stdout = true
-    else if (a === '--brief' || a === '--notes') {
+    else if (a === '--from-json') {
+      const next = argv[i + 1]
+      if (next && !next.startsWith('-')) out.fromJson = argv[++i]
+      else out.fromJson = true
+    } else if (a.startsWith('--from-json=')) {
+      out.fromJson = a.slice('--from-json='.length)
+    } else if (a === '--brief' || a === '--notes') {
       const next = argv[++i]
       if (next) out.briefPaths.push(next)
     } else if (a.startsWith('--brief=')) {
@@ -384,11 +393,36 @@ function loadBrief(paths) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
-  if (!args.slug || !args.titleHint) {
+  if (!args.slug || (!args.titleHint && !args.fromJson)) {
     console.error(
-      'Uso: node scripts/generar-blog-agente.mjs <slug> "Título ES" [--featured] [--brief archivo.txt] [--no-search] [--json-only] [--save-json]',
+      'Uso: node scripts/generar-blog-agente.mjs <slug> "Título ES" [--featured] [--brief archivo.txt] [--no-search] [--json-only] [--save-json] [--from-json [ruta]]',
     )
     process.exit(1)
+  }
+
+  if (args.fromJson) {
+    const jsonPath =
+      args.fromJson === true
+        ? join(ROOT, 'data', 'blog', `${args.slug}.json`)
+        : resolve(ROOT, args.fromJson)
+    if (!existsSync(jsonPath)) {
+      throw new Error(`No existe ${jsonPath}`)
+    }
+    console.log('[blog-agent] --from-json:', jsonPath)
+    const raw = JSON.parse(readFileSync(jsonPath, 'utf8'))
+    const row = normalizePost(raw, args.slug, { featured: args.featured })
+    if (args.jsonOnly) {
+      console.log('[blog-agent] --json-only: sin BD')
+      return
+    }
+    const result = await upsertBlogPost(row)
+    console.log(
+      `[blog-agent] OK ${result.action} id=${result.id} → /es/blog/${row.slug} — ${row.title_es}`,
+    )
+    console.log(
+      '[blog-agent] Portada: null (genera con npm run blog:refresh-images si quieres imagen)',
+    )
+    return
   }
 
   const system = loadSystemPrompt()

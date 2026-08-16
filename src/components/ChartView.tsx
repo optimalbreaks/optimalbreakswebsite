@@ -214,6 +214,22 @@ function formatWeekDate(dateStr: string, lang: Locale): string {
   })
 }
 
+/** Lunes ISO de `YYYY-MM-DD` (calendario local). Enlaces viejos ?week=martes → lunes. */
+function isoMondayFromYmd(dateStr: string): string | null {
+  const s = (dateStr || '').trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
+  const [ys, ms, ds] = s.split('-')
+  const d = new Date(Number(ys), Number(ms) - 1, Number(ds))
+  if (Number.isNaN(d.getTime())) return null
+  const day = d.getDay()
+  const diff = day === 0 ? 6 : day - 1
+  d.setDate(d.getDate() - diff)
+  const yy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
 /** Primer artista (como en Beatport) para orden alfabético en «New releases» — no implica ranking. */
 function featuredPrimaryArtistName(pick: ChartFeaturedTrack): string {
   const a = pick.artists
@@ -899,7 +915,9 @@ export default function ChartView({
       } else {
         // Prefer la semana indicada en ?week= si coincide con el id; si no,
         // busca por id en todas las semanas cargadas.
-        const preferredWeek = search.get('week') || ''
+        const preferredWeekRaw = search.get('week') || ''
+        const preferredWeekMonday = isoMondayFromYmd(preferredWeekRaw)
+        const preferredWeek = preferredWeekMonday || preferredWeekRaw
         let weekDate: string | null = null
         let inFeatured = forceForty === 'featured'
 

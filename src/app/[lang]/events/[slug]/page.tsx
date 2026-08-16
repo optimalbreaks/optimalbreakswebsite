@@ -26,6 +26,7 @@ import {
   splitFestivalDescriptionSections,
   splitProseForDisplay,
 } from '@/lib/bio-format'
+import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { getDictionary } from '@/lib/dictionaries'
 
 type Props = {
@@ -313,6 +314,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (ogStart) extraOgTags['event:start_time'] = ogStart
   if (ogEnd && ogEnd !== ogStart) extraOgTags['event:end_time'] = ogEnd
 
+  // El og:image lo emite la convención `opengraph-image.tsx` del segmento, que
+  // versiona la URL con `events.updated_at` vía `generateImageMetadata`
+  // (`…/opengraph-image/<epoch>`): cartel siempre fresco en Facebook/WhatsApp.
   return detailPageMetadata(
     lang,
     `/events/${slug}`,
@@ -487,7 +491,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       venue: event.venue,
       address: event.address ?? event.location ?? null,
       coords: (event.coords as { lat: number; lng: number } | null) ?? null,
-      imageUrl: event.og_image_url || event.image_url || null,
+      imageUrl: versionedImageUrl(event.og_image_url || event.image_url, imageCacheVersion(event.updated_at)),
       ticketsUrl: event.tickets_url,
       website: event.website,
       capacity: event.capacity,
@@ -544,7 +548,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           {/* Poster */}
           <div className="w-full max-w-[min(100%,360px)] sm:max-w-[400px] md:max-w-[min(420px,40vw)] shrink-0 mx-auto md:mx-0">
             <EventPosterLightbox
-              src={event.image_url}
+              src={versionedImageUrl(event.image_url, imageCacheVersion(event.updated_at))}
               alt={posterAlt}
               zoomAria={ev.poster_zoom_aria}
               closeLabel={ev.poster_close}

@@ -179,8 +179,10 @@ export function detailPageMetadata(
   /**
    * Si true, no se incluyen `images` en `openGraph` ni `twitter`. Útil cuando
    * la ruta tiene su propio `opengraph-image.tsx` / `twitter-image.tsx`
-   * dinámico, ya que Next.js solo lo aplica si los metadatos no sobreescriben
-   * `openGraph.images`.
+   * dinámico. OJO: la convención de archivo del MISMO segmento SIEMPRE pisa
+   * `openGraph.images` (comprobado en Next 14.2) — para versionar esa URL usa
+   * `generateImageMetadata` en el propio `opengraph-image.tsx` (véase
+   * events/[slug]), no un `og:image` explícito aquí.
    */
   omitImages?: boolean,
   /**

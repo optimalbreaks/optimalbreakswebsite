@@ -602,12 +602,30 @@ function enrichWithHistory(curated, previousTracks) {
 // Week date calculation
 // ---------------------------------------------------------------------------
 
+/** Lunes ISO de la semana (calendario local, sin UTC). `--week` martes → lunes. */
 function currentWeekMonday(dateStr) {
-  const d = dateStr ? new Date(dateStr) : new Date()
+  let y
+  let m
+  let dayNum
+  if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr).trim())) {
+    const [ys, ms, ds] = String(dateStr).trim().split('-')
+    y = Number(ys)
+    m = Number(ms)
+    dayNum = Number(ds)
+  } else {
+    const now = new Date()
+    y = now.getFullYear()
+    m = now.getMonth() + 1
+    dayNum = now.getDate()
+  }
+  const d = new Date(y, m - 1, dayNum)
   const day = d.getDay()
   const diff = day === 0 ? 6 : day - 1
   d.setDate(d.getDate() - diff)
-  return d.toISOString().slice(0, 10)
+  const yy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
 }
 
 // ---------------------------------------------------------------------------
@@ -854,9 +872,9 @@ async function main() {
   const dryRun = args.includes('--dry-run')
   const confirm = args.includes('--confirm')
   const weekIdx = args.indexOf('--week')
-  const weekDate = weekIdx !== -1 && args[weekIdx + 1]
-    ? args[weekIdx + 1]
-    : currentWeekMonday()
+  const weekDate = currentWeekMonday(
+    weekIdx !== -1 && args[weekIdx + 1] ? args[weekIdx + 1] : undefined,
+  )
 
   const srcIdx = args.indexOf('--sources')
   const sourcesArg = srcIdx !== -1 && args[srcIdx + 1]

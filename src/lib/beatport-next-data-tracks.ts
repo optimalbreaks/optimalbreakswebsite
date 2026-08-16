@@ -158,17 +158,25 @@ export async function fetchBeatportPageHtml(url: string): Promise<string> {
   return res.text()
 }
 
-/** Lunes de la semana del calendario local para una fecha YYYY-MM-DD (misma regla que chart-40-breaks.mjs → currentWeekMonday). */
+/** Lunes ISO de la semana de una fecha YYYY-MM-DD (calendario local, sin UTC). */
 export function chartEditionWeekMondayFromPublish(isoYYYYMMDD: string | null | undefined): string | null {
   if (isoYYYYMMDD == null || isoYYYYMMDD === '') return null
   const s = String(isoYYYYMMDD).trim().slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
-  const d = new Date(s)
+  const [ys, ms, ds] = s.split('-')
+  const y = Number(ys)
+  const m = Number(ms)
+  const dayNum = Number(ds)
+  if (!y || !m || !dayNum) return null
+  const d = new Date(y, m - 1, dayNum)
   if (Number.isNaN(d.getTime())) return null
   const day = d.getDay()
   const diff = day === 0 ? 6 : day - 1
   d.setDate(d.getDate() - diff)
-  return d.toISOString().slice(0, 10)
+  const yy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
 }
 
 /**

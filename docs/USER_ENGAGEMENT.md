@@ -54,7 +54,59 @@ The shared shell lives in `src/components/user/UserSectionShell.tsx`; each secti
 | **Seen live (artist)** | **Yes — 1–5** + optional text | **SEEN LIVE** on artist page (`SeenLiveButton`) | `artist_sightings` | Date, venue, city, country, event name, rating, notes |
 | **Event status** | No (state machine) | Event page: wishlist / going / attended | `event_attendance` | Toggles only; "interested" style counts for events |
 | **Rate + review event** | **Yes — 1–5** + optional review | Event page: `EventReviewButton` (RATE / VALORAR) | `event_ratings` (migration **`032_event_ratings_attendance_fields.sql`**) | Dashboard Reviews + Events |
-| **Breakbeat profile** | N/A | Dashboard Overview (generate) | `breakbeat_profiles` | Needs enough favorites **and** saved tracks to unlock |
+| **Breakbeat profile** | N/A | Dashboard Overview (generate) | `breakbeat_profiles` (**064** RLS) | Private per user. Unlock needs enough favorites **and** saved tracks. See *Breakbeat DNA* below. |
+
+---
+
+## Breakbeat DNA (`breakbeat_profiles`)
+
+Generated taste analysis shown on **`/[lang]/dashboard`** (`BreakbeatDNA` inside `OverviewSection`). One row per user (`UNIQUE (user_id)`). **Not** part of Soulmates, Community Top, or the public `/u/<id>/tracks` page — those use `saved_chart_tracks` / `profiles.is_tracks_public`. The DNA text stays **private**.
+
+### Unlock
+
+The UI requires a minimum of **3** combined inputs (favorite artists + labels + events + saved mixes + saved chart tracks + attendance keys) before “generate” is enabled. The API (`POST /api/breakbeat-profile`) also hashes the current catalog IDs so a regenerate is a no-op when inputs have not changed (`input_hash`).
+
+### Table
+
+The table existed in production before it had a repo migration. **`064_breakbeat_profiles_rls.sql`** is idempotent (`CREATE TABLE IF NOT EXISTS`) so new environments get the same shape, then enables RLS.
+
+```
+breakbeat_profiles (
+  id UUID PK,
+  user_id UUID → profiles(id) ON DELETE CASCADE, UNIQUE,
+  created_at / updated_at TIMESTAMPTZ,
+  analysis_text_en / analysis_text_es TEXT,
+  archetype_en / archetype_es TEXT,
+  stats JSONB,                 -- styles, countries, eras, samples, saved-track tallies, …
+  input_hash TEXT,
+  generated_by TEXT CHECK IN ('rules', 'openai', 'manual')
+)
+```
+
+Trigger `breakbeat_profiles_updated_at` uses `public.update_updated_at()` (same helper as `profiles`).
+
+### RLS and grants (migration **064**)
+
+Supabase advisors flagged the table as **exposed in `public` with RLS off**. With default PostgREST grants, `anon` and `authenticated` could read/modify **every** row.
+
+| Role | Access |
+|------|--------|
+| **`anon`** | **None** (`REVOKE ALL`). No public-read policy — DNA is not a public profile. |
+| **`authenticated`** | SELECT / INSERT / UPDATE / DELETE **own row only**: `(SELECT auth.uid()) = user_id`. No `TRUNCATE` / `REFERENCES` / `TRIGGER` (TRUNCATE is not filtered by RLS). |
+| **`service_role`** | Bypasses RLS (admin/scripts). Not used by the DNA generate path. |
+
+Policies are `TO authenticated` so a logged-out client cannot match them even if a grant slipped back.
+
+**Do not** turn RLS off again, and **do not** add `USING (true)` for SELECT unless product explicitly makes DNA public.
+
+### App paths (JWT, not service role)
+
+Both writes use the **user session** (anon/publishable key + cookies). RLS must allow INSERT + UPDATE for upsert (`onConflict: 'user_id'`).
+
+1. **`POST /api/breakbeat-profile`** — `createServerClient` with the user JWT; computes stats from favorites / attendance / mixes / saved tracks; optional OpenAI (`OPENAI_MODEL_PROFILE` / `OPENAI_MODEL`, fallback `OPENAI_MODEL_PROFILE_FALLBACK` or `gpt-4o`); upserts the row.
+2. **`useBreakbeatProfile()`** (`src/hooks/useUserData.ts`) — SELECT own row; after generate, client **upserts again** from the JSON response (`save`).
+
+Types: `BreakbeatProfileRow` / `BreakbeatProfileStats` in `src/types/database.ts`.
 
 ---
 
@@ -170,12 +222,13 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 
 ## Community Top (public, all-time)
 
-Public, on-demand ranking of the most-saved tracks **across all time**, rendered inside `ChartView` **after** *Retro Vinyl Picks*. Originally launched as a monthly window; switched to an all-time accumulator after we noticed that calendar months kept "drying up" the ranking once active users had emptied that month's catalogue into their lists. The slug `community-monthly` is preserved for compatibility — both the endpoint and the component file keep the historical name even though they no longer expose any monthly window.
+Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_tracks`) **across all time**. One save = one click on `SaveTrackButton`. Page: **`/[lang]/top100`** (`src/app/[lang]/top100/page.tsx`). `/[lang]/charts` only keeps a teaser card that links there (the ranking used to sit under *Retro Vinyl Picks* inside `ChartView`). Originally a monthly window; switched to an all-time accumulator after calendar months kept "drying up" the ranking once active users had emptied that month's catalogue into their lists. The slug `community-monthly` is preserved for compatibility — both the endpoint and the component file keep the historical name even though they no longer expose any monthly window.
 
-- **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100). No `month` parameter — the response is always the all-time aggregate.
-- **Component:** `src/components/CommunityMonthlyTop.tsx`. Single-section layout (no month selector): header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row so a logged-in user can add the track to their own list with one click. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
-- **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Sorting: **unique users first**, then total saves, then **most-recent save** (light tie-break that nudges fresher tracks above stagnant ones with the same vote count), then alphabetical.
-- **Privacy:** users with `profiles.is_tracks_public = false` are excluded from the ranking. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
+- **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100 — the public page requests **100**). No `month` parameter — the response is always the all-time aggregate. **`top_tracks`** and **`top_artists`** (always top 10 by save credits) come from the **same** pass over the same rows.
+- **Component:** `src/components/CommunityMonthlyTop.tsx`. Two blocks: **top 10 most-saved artists** (save credits · unique fans · unique tracks) then the track list. Header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
+- **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name.
+- **Hydration `.in()` must be chunked (`IN_CHUNK = 200`, same helper pattern as `/api/public/user-tracks`).** A single PostgREST `.in('id', featIds)` with hundreds of New Releases UUIDs (GET URL / payload limit) **drops metadata**. Saves **without `snapshot`** then look like orphans and are discarded — the public totals fall below the real `saved_chart_tracks` count (seen August 2026: ~968 rows in DB vs ~803 on `/top100`; artist numbers such as Paket 17→15). **Do not** collapse those lookups back into one unchunked `.in()`. Check lookup errors (empty `data` + ignored `error` silently under-counts).
+- **What counts / what does not:** `totals.saves` is the sum of hydratable rows (identity: Σ `save_count` == `totals.saves`). True orphans (source row gone **and** no snapshot / no remappable `canonical_url`) stay out of both the track list and the artist board — they cannot be rendered. Users with `profiles.is_tracks_public = false` are excluded. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
 
 ---
 
@@ -226,8 +279,9 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 
 ## Code pointers
 
-- `src/hooks/useUserData.ts` — every user hook: favorites, sightings, attendance, event ratings, **saved_chart_tracks** (`useSavedChartTracks`).
-- `src/components/user/` — `UserSectionShell`, `OverviewSection`, `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, **`SoulmatesSection`**, `ProfileSection`.
+- `src/hooks/useUserData.ts` — every user hook: favorites, sightings, attendance, event ratings, **saved_chart_tracks** (`useSavedChartTracks`), **Breakbeat DNA** (`useBreakbeatProfile`).
+- `src/components/user/` — `UserSectionShell`, `OverviewSection` (**`BreakbeatDNA`**), `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, **`SoulmatesSection`**, `ProfileSection`.
+- `src/app/api/breakbeat-profile/route.ts` — generate + upsert DNA (user JWT; RLS applies).
 - `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**, **`TrackShareButton.tsx`**.
 - `src/lib/share-track.ts` — builders + parser for `?play=<source>:<id>` URLs (chart / featured / beatport); **`formatTrackReleaseDisplay`** for saved-track release lines.
 - `src/components/LazyDeckAudioProvider.tsx` — gate + dynamic import of the audio engine; **`PendingActionRunner`** for first-play deep links. Keeps a **stable shell** around `{children}` (`engineOnly` + `onBind`) so the first Play doesn't remount the page tree (the weekly accordion in `/charts` preserves `openPicks` / `openForty`). **Portals** the player overlays to `<div id="ob-audio-overlays">` under `document.body` so `position: fixed` always resolves against the viewport.
@@ -240,10 +294,12 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
 - `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
-- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved for compatibility).
+- `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`** so hydratable saves are not dropped).
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.
+- `supabase/migrations/064_breakbeat_profiles_rls.sql` — `breakbeat_profiles` shape (IF NOT EXISTS) + **owner-only RLS** + revoke `anon`.
 - `supabase/migrations/057_chart_featured_tracks_release_date.sql` — `chart_featured_tracks.release_date DATE` (full publish day for *New Releases*; complements the existing `release_year`). The same field also lives in `chart_tracks.release_date` and inside `artists.beatport_top_tracks` / `labels.beatport_top_tracks` JSONB so every list (including *My Tracks*, the public shared list, Community Top, Soulmates recommendations and admin stats) can render `YYYY-MM-DD`.
 
 ### Release-date display in saved snapshots

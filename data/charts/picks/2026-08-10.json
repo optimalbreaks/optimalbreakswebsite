@@ -1557,6 +1557,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 69
+    },
+    {
+      "title": "The System",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Justin Johnson"
+        },
+        {
+          "name": "Gruv42"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-system/29268059",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/42261636-54d9-42c8-abf2-aacb6590705b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af73d1ea-a10b-4e71-ba32-178bd1b7cfab.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
     }
   ]
 }
