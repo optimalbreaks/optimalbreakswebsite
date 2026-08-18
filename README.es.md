@@ -521,6 +521,17 @@ El modo **`preview` es global**: la cola (`PreviewTrack[]`), el índice, el `<au
 
 Al reclamar audio el provider llama internamente a **`claimAudio(source)`** (y acepta aliases retrocompatibles `chart-preview` / `chart-playall` / `beatport-top` / `my-tracks`, todos mapean a `preview`). Esto dispara el evento **`ob-audio-claim`** en `window`, que pausa los otros modos. Solo suena **uno** a la vez sin importar desde dónde se pulsó play.
 
+### Coordinador de embeds y consistencia en móvil (`src/lib/youtube-play-coordinator.ts`)
+
+Los iframes de terceros (vinilos YouTube, tarjetas de `/mixes`, mixes guardados del dashboard, **widgets visuales de SoundCloud**) viven fuera del provider; un singleton a nivel de módulo coordina los dos mundos — **una sola fuente audible en todo el sitio**. Invariantes añadidos en agosto 2026 con los arreglos de consistencia en móvil/PWA (sonaba otro tema, dos fuentes a la vez al volver del background, la lockscreen abría otra app):
+
+- **Todo embed pasa por el coordinador.** YouTube vía `requestYouTubePlay` / `registerYouTubeEmbed` (todos los montajes con `autoplay` llaman antes a `requestYouTubePlay`); los widgets visuales de SoundCloud vía **`useSoundCloudExclusivePlayback`** (`SoundCloudVisualEmbed.tsx`): el evento `PLAY` de la Widget API reclama el slot y registra un stopper que hace `pause()`. El `YouTubeIframe` del dashboard (`user/shared.tsx`) delega en `LazyYouTubeEmbed` — **no** reintroducir `<iframe>` en crudo sin coordinar.
+- **Carrera request→mount cerrada.** `stopAllYouTube()` recuerda qué slot desalojó el reproductor global; si ese iframe se registra *tarde*, se para a sí mismo en vez de volver a silenciar el preview que el usuario acababa de arrancar (siempre gana la última acción del usuario).
+- **Los keepers del preview respetan los embeds.** El resume de `visibilitychange`, el intervalo de 10 s y el watchdog de arranque en `DeckAudioProvider` consultan **`getActiveYouTubePlayId()`** y nunca auto-reanudan el `<audio>` del preview por encima de un embed activo.
+- **Exclusión entre ventanas (`BroadcastChannel('ob-playback-claim')`).** Cuando cualquier pestaña / ventana PWA del origen arranca reproducción (`claimAudio`, claims de YouTube/SC, resume de preview/mix), emite un claim y el resto de clientes se silencia — estilo Spotify; arregla el bug de "dos listas a la vez" cuando convivían el icono PWA y una pestaña de Safari.
+- **Media Session:** el effect del deck **no** debe limpiar metadata/handlers de `mediaSession` con `mode === 'preview'` (antes lo hacía y dejaba la lockscreen de iOS huérfana). El preview gestiona su propia sesión en `loadAndPlayPreviewAt` + su effect de handlers.
+- **Manifest PWA** (`public/manifest.json`) declara `id: "/"`, `scope: "/"` y `launch_handler.client_mode: "focus-existing"` para que los controles del sistema / lanzamientos reutilicen la ventana existente en vez de abrir otra instancia. El manifest está precacheado por `public/sw.js` — **bumpear `CACHE_NAME`** cada vez que cambie (actualmente `ob-v5`).
+
 ### `MiniPreviewBar`
 
 Renderizada por el provider cuando `previewQueue.length > 0` (antes se montaba en cada página). Diseño idéntico al antiguo:

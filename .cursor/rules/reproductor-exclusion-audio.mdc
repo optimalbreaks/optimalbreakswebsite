@@ -1,0 +1,21 @@
+---
+description: Reproductor — una sola fuente audible (coordinador, keepers, BroadcastChannel, Media Session, manifest PWA)
+alwaysApply: true
+---
+
+# Reproductor: una sola fuente audible (móvil/PWA)
+
+Coordinador: **`src/lib/youtube-play-coordinator.ts`**. Motor global: **`src/components/DeckAudioProvider.tsx`**. Contexto (agosto 2026): se arreglaron tres bugs de consistencia en móvil — sonaba otro tema distinto al pulsado, dos fuentes a la vez al volver del background, y la lockscreen de iOS abría otra instancia/PWA.
+
+## Invariantes (no negociables)
+
+1. **Todo embed de terceros pasa por el coordinador.** YouTube: `requestYouTubePlay` **antes** de montar con `autoplay` + `registerYouTubeEmbed` al montar. SoundCloud visual: **`useSoundCloudExclusivePlayback`** (`SoundCloudVisualEmbed.tsx`) — el `PLAY` de la Widget API reclama el slot y registra `pause()`. **Prohibido** añadir `<iframe>` de YouTube/SoundCloud en crudo sin coordinar (el `YouTubeIframe` del dashboard delega en `LazyYouTubeEmbed`; no revertirlo).
+2. **Carrera request→mount:** `stopAllYouTube()` recuerda el slot desalojado (`stoppedByGlobalClaim`); un `registerYouTubeEmbed` tardío de ese slot se para a sí mismo y **no** re-silencia el global. Siempre gana la última acción del usuario. No quitar esa lógica.
+3. **Keepers del preview** (resume de `visibilitychange`, intervalo 10 s, watchdog de arranque en `DeckAudioProvider`): consultan **`getActiveYouTubePlayId()`** y **nunca** auto-reanudan el `<audio>` del preview con un embed activo. No quitar esos guards.
+4. **Exclusión entre ventanas:** `BroadcastChannel('ob-playback-claim')` en el coordinador; cada arranque/resume (vía `claimAudio`, claims de embeds, toggles de preview/mix) emite `broadcastPlaybackClaim()` y el resto de pestañas/ventanas PWA se silencia. Cualquier punto de arranque de audio nuevo debe emitir el claim.
+5. **Media Session:** el effect del deck en `DeckAudioProvider` **no** limpia metadata/handlers cuando `mode === 'preview'` (condición `mode !== 'mix' && mode !== 'preview'`). Si se restaura la limpieza en preview, la lockscreen de iOS queda huérfana.
+6. **Manifest PWA** (`public/manifest.json`): mantener `id: "/"`, `scope: "/"` y `launch_handler.client_mode: "focus-existing"`. El manifest está precacheado por `public/sw.js`: **bumpear `CACHE_NAME`** (hoy `ob-v5`) al cambiarlo.
+
+## Referencias
+
+README (EN): **Global audio system → Embed coordinator & mobile consistency**. README (ES): **Sistema de audio global → Coordinador de embeds y consistencia en móvil**.

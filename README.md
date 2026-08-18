@@ -726,6 +726,17 @@ The **`preview` mode is global**: the queue (`PreviewTrack[]`), the current inde
 2. The provider pauses the non-matching modes when a claim is received. Only one of `deck` / `mix` / `preview` plays at a time.
 3. The type **`AudioClaimSource`** still accepts legacy aliases (`chart-preview`, `chart-playall`, `beatport-top`, `my-tracks`) for backward compatibility — they all map to the new `preview` mode.
 
+### Embed coordinator & mobile consistency (`src/lib/youtube-play-coordinator.ts`)
+
+Third-party iframes (YouTube vinyl rows, `/mixes` cards, dashboard saved-mix cards, **SoundCloud visual widgets**) live outside the provider, so a module-level singleton coordinates both worlds — **only one audible source site-wide**. Invariants added in Aug 2026 after the mobile/PWA consistency fixes (wrong track playing, two sources at once after backgrounding, lock screen opening the wrong app):
+
+- **Every embed goes through the coordinator.** YouTube via `requestYouTubePlay` / `registerYouTubeEmbed` (all `autoplay` mounts call `requestYouTubePlay` first); SoundCloud visual widgets via **`useSoundCloudExclusivePlayback`** (in `SoundCloudVisualEmbed.tsx`): the Widget API `PLAY` event claims the slot and registers a `pause()` stopper. The dashboard `YouTubeIframe` (`user/shared.tsx`) delegates to `LazyYouTubeEmbed` — do **not** reintroduce raw uncoordinated `<iframe>`s.
+- **Request→mount race is closed.** `stopAllYouTube()` remembers which slot the global player evicted; if that slot's iframe registers *late*, it stops itself instead of re-silencing the preview the user just started (the last user action always wins).
+- **Preview keepers respect embeds.** The `visibilitychange` resume, the 10 s keeper interval and the start watchdog in `DeckAudioProvider` all check **`getActiveYouTubePlayId()`** and never auto-`play()` the preview `<audio>` over an active embed.
+- **Cross-window exclusion (`BroadcastChannel('ob-playback-claim')`).** When any tab / PWA window of the origin starts playback (`claimAudio`, YouTube/SC claims, preview/mix resume), it broadcasts a claim and every other client silences itself — Spotify-style, fixes the "two playlists at once" bug when both the PWA icon and a Safari tab were alive.
+- **Media Session:** the deck effect must **not** clear `mediaSession` metadata/handlers while `mode === 'preview'` (it used to, leaving the iOS lock screen orphaned). Preview owns its session via `loadAndPlayPreviewAt` + its own handler effect.
+- **PWA manifest** (`public/manifest.json`) declares `id: "/"`, `scope: "/"` and `launch_handler.client_mode: "focus-existing"` so OS media controls / launches reuse the existing window instead of spawning another instance. The manifest is precached by `public/sw.js` — **bump `CACHE_NAME`** whenever it changes (currently `ob-v5`).
+
 ### `MiniPreviewBar`
 
 Rendered by the provider whenever `previewQueue.length > 0`. Same visual layout as the old per-page floating bar:
@@ -777,6 +788,8 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 | `src/components/user/TracksSection.tsx` | My Tracks page (own/shared). Play-all + shuffle for the audio subset; YouTube embeds for vinyls rendered inline. `toPreviewTrack` mirrors the per-row save logic (URL mode for shared `beatport_top`, ref mode with `relatedRefs` on the owner's list). |
 | `src/components/BackToTop.tsx` | Listens for `OB_CHART_PLAYALL_BAR_EVENT` to offset the scroll button (matches the new player height: `safe-area + 10 px`). Uses **`useViewportBottomOffset`** so on iOS PWA standalone the button stays anchored to the visible bottom edge after lock/unlock, orientation change, or returning from Web Share. |
 | `src/hooks/useViewportBottomOffset.ts` | Shared hook for the iOS PWA viewport drift fix. Listens to `visualViewport.resize/scroll`, `pageshow`, `focus`, `orientationchange`, `visibilitychange` and re-measures at 80/250/600/1200 ms after each wake event. Ignores transient overlay measurements (hidden page or drift > 40% of viewport height) and self-heals by polling while offset > 0, so the bar recovers even when iOS fires no event after closing the share sheet. |
+| `src/lib/youtube-play-coordinator.ts` | Singleton "one audible source" coordinator between the global player and third-party embeds (YouTube + SoundCloud visual). Handles the request→mount race, exposes `getActiveYouTubePlayId()` for the preview keepers, and broadcasts playback claims across tabs / PWA windows via `BroadcastChannel('ob-playback-claim')`. |
+| `src/components/SoundCloudVisualEmbed.tsx` | SoundCloud visual iframe + **`useSoundCloudExclusivePlayback`** (Widget API `PLAY` → claim slot / register `pause()` stopper). Used by `/mixes` cards (`LazySoundCloudEmbed`) and dashboard saved-mix cards. |
 | `src/app/api/audio-proxy/route.ts` | Server-side proxy for `geo-samples.beatport.com` / `geo-media.beatport.com` (prevents hotlink blocks) |
 
 ---
