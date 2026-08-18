@@ -28,6 +28,8 @@ import { logTrackPlay } from '@/lib/track-play-log'
 // Coordinador "una sola fuente audible": los YouTube embebidos (vinilos,
 // /mixes, Mis Tracks…) y este reproductor global se excluyen mutuamente.
 import {
+  broadcastPlaybackClaim,
+  getActiveYouTubePlayId,
   registerGlobalPlaybackStopper,
   stopAllYouTube,
 } from '@/lib/youtube-play-coordinator'
@@ -316,6 +318,9 @@ export type AudioClaimSource =
   | 'my-tracks'
 
 export function claimAudio(source: AudioClaimSource) {
+  // Avisa a otras pestañas/ventanas PWA (lockscreen, Safari + icono…) de que
+  // este cliente pasa a ser la fuente de audio: los demás se silencian.
+  broadcastPlaybackClaim()
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
 }
 
@@ -1601,6 +1606,7 @@ export function DeckAudioProvider({
         mixAudioRef.current.pause()
         setMixPlaying(false)
       } else {
+        broadcastPlaybackClaim()
         void mixAudioRef.current.play().then(() => setMixPlaying(true)).catch(() => {})
       }
     } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
@@ -1608,6 +1614,7 @@ export function DeckAudioProvider({
         scHandleRef.current.pause()
         setMixPlaying(false)
       } else {
+        broadcastPlaybackClaim()
         scHandleRef.current.play()
         setMixPlaying(true)
       }
@@ -1756,6 +1763,7 @@ export function DeckAudioProvider({
         previewStartWatchdogRef.current = null
         if (previewIndexRef.current !== idx) return
         if (previewUserPausedRef.current || previewBlockedRef.current) return
+        if (getActiveYouTubePlayId()) return // un embed tomó el relevo
         const a = previewAudioRef.current
         if (!a || !a.getAttribute('src')) return
         if (!a.paused && a.currentTime > 0) return // ya suena
@@ -1962,6 +1970,7 @@ export function DeckAudioProvider({
     if (!a) return
     if (a.paused) {
       stopAllYouTube()
+      broadcastPlaybackClaim()
       previewUserPausedRef.current = false
       a.play().then(() => {
         setPreviewPlaying(true)
@@ -2057,6 +2066,9 @@ export function DeckAudioProvider({
     if (previewQueue.length === 0) return
     const iv = window.setInterval(() => {
       if (previewUserPausedRef.current || previewBlockedRef.current) return
+      // Si hay un embed (YouTube/SoundCloud) sonando, NO re-arrancar el
+      // preview por encima: era una de las fuentes del "suenan dos cosas".
+      if (getActiveYouTubePlayId()) return
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
       if (a.ended) { advanceFromCurrentTrack(); return }
@@ -2073,6 +2085,9 @@ export function DeckAudioProvider({
       if (document.hidden) return
       if (previewQueueRef.current.length === 0) return
       if (previewUserPausedRef.current || previewBlockedRef.current) return
+      // Un embed activo (YouTube/SoundCloud) tiene prioridad: no auto-reanudar
+      // el preview encima al volver del background.
+      if (getActiveYouTubePlayId()) return
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
       if (a.ended) { advanceFromCurrentTrack(); return }
@@ -2188,7 +2203,12 @@ export function DeckAudioProvider({
       navigator.mediaSession.setActionHandler('pause', () => togglePlay())
       navigator.mediaSession.setActionHandler('previoustrack', () => switchTrack(-1))
       navigator.mediaSession.setActionHandler('nexttrack', () => switchTrack(1))
-    } else if (mode !== 'mix') {
+    } else if (mode !== 'mix' && mode !== 'preview') {
+      // OJO: en modo 'preview' la Media Session la gestiona el bloque de
+      // preview (metadata en loadAndPlayPreviewAt + handlers en su effect).
+      // Antes este else limpiaba metadata/handlers también con mode==='preview'
+      // (este effect corre después), dejando la lockscreen de iOS huérfana:
+      // sin título, botones muertos o apuntando a otra sesión.
       navigator.mediaSession.metadata = null
       navigator.mediaSession.setActionHandler('play', null)
       navigator.mediaSession.setActionHandler('pause', null)

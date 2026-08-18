@@ -7,11 +7,12 @@ import type { Mix } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { useMixAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { MixTrack } from '@/components/DeckAudioProvider'
-import { buildSoundCloudVisualPlayerSrc, isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import {
-  loadSoundCloudWidgetAPI,
-  logMixPlayOncePerBrowserSession,
-} from '@/lib/mix-play-session-log'
+  buildSoundCloudVisualPlayerSrc,
+  isSoundCloudTrackEmbedUrl,
+  useSoundCloudExclusivePlayback,
+} from '@/components/SoundCloudVisualEmbed'
+import { logMixPlayOncePerBrowserSession } from '@/lib/mix-play-session-log'
 import { extractYouTubeId, LazyYouTubeEmbed as BaseLazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import { requestYouTubePlay } from '@/lib/youtube-play-coordinator'
 import { formatMixDateLine, mixSortTimestamp } from '@/lib/mix-datetime-local'
@@ -77,34 +78,15 @@ function LazySoundCloudEmbed({
     return () => obs.disconnect()
   }, [mountIframe])
 
-  useEffect(() => {
-    if (!mountIframe || !mixId) return
-    let cancelled = false
-    const iframeId = `ob-sc-${mixId}`
-    const t = window.setTimeout(() => {
-      void loadSoundCloudWidgetAPI()
-        .then(() => {
-          if (cancelled) return
-          const el = document.getElementById(iframeId) as HTMLIFrameElement | null
-          const SCg = (window as unknown as { SC?: { Widget?: unknown } }).SC
-          const Widget = SCg?.Widget as
-            | ((iframe: HTMLIFrameElement) => { bind: (ev: string, fn: () => void) => void })
-            | undefined
-          const Events = (SCg?.Widget as unknown as { Events?: { PLAY?: string } } | undefined)?.Events
-          if (!el || !Widget || !Events?.PLAY) return
-          try {
-            Widget(el).bind(Events.PLAY, () => logMixPlayOncePerBrowserSession(mixId))
-          } catch {
-            /* */
-          }
-        })
-        .catch(() => {})
-    }, 200)
-    return () => {
-      cancelled = true
-      window.clearTimeout(t)
-    }
-  }, [mountIframe, mixId, src])
+  // Coordinación «una sola fuente audible» + métrica de play. El hook reclama
+  // el slot al detectar PLAY dentro del widget (para preview/mix/deck y cierra
+  // YouTube) y sabe pausar este iframe cuando otra fuente toma el relevo.
+  useSoundCloudExclusivePlayback(
+    mixId ? `ob-sc-${mixId}` : undefined,
+    mixId ? `sc-mix-${mixId}` : undefined,
+    mixId ? () => logMixPlayOncePerBrowserSession(mixId) : undefined,
+    mountIframe,
+  )
 
   return (
     <div

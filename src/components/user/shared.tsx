@@ -7,6 +7,7 @@
 
 import { useMixAudioGated } from '@/hooks/useGatedDeckAudio'
 import { getMixTrack } from '@/components/MixesExplorer'
+import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { ViewMode } from '@/components/ViewToggle'
 import ViewToggle from '@/components/ViewToggle'
 
@@ -38,19 +39,21 @@ export function formatMixDateLine(m: any, lang: string): string {
   return `${datePart}${dur}`
 }
 
+/**
+ * Tarjeta YouTube del dashboard. Antes montaba el iframe en crudo, fuera del
+ * coordinador «una sola fuente audible»: dar play ahí no paraba el reproductor
+ * global (ni al revés) y podían sonar dos cosas a la vez. Ahora delega en
+ * `LazyYouTubeEmbed` (portada + click-to-play + slot exclusivo), igual que
+ * las tarjetas de /mixes.
+ */
 export function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
   return (
-    <div className={`relative w-full aspect-video bg-black overflow-hidden ${className}`}>
-      <iframe
-        src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-        title={title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowFullScreen
-        loading="lazy"
-        referrerPolicy="strict-origin-when-cross-origin"
-        className="absolute inset-0 h-full w-full border-0"
-      />
-    </div>
+    <LazyYouTubeEmbed
+      videoId={videoId}
+      title={title}
+      className={className}
+      playSlotId={`dash-yt-${videoId}`}
+    />
   )
 }
 

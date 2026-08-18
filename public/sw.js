@@ -4,7 +4,9 @@
 // + Web Share Target → inbox → chat captura
 // ============================================
 
-const CACHE_NAME = 'ob-v4'
+// v5: manifest con id/scope/launch_handler (consistencia del reproductor en
+// PWA móvil) — el bump invalida el manifest.json precacheado en clientes.
+const CACHE_NAME = 'ob-v5'
 const SHARE_INBOX = 'ob-share-inbox'
 const STATIC_ASSETS = [
   '/',

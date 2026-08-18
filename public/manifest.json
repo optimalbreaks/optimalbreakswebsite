@@ -2,8 +2,13 @@
   "name": "Optimal Breaks — The Breakbeat Bible",
   "short_name": "OptimalBreaks",
   "description": "Your personal breakbeat archive, guide and scene memory",
+  "id": "/",
+  "scope": "/",
   "start_url": "/es",
   "display": "standalone",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "background_color": "#e8dcc8",
   "theme_color": "#d62828",
   "orientation": "portrait-primary",

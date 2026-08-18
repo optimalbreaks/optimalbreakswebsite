@@ -44,10 +44,61 @@ let activeStop: StopFn | null = null
 let stopGlobalPlayback: StopFn | null = null
 /** Filas suscritas: reciben el slot activo (o null) para sincronizar su botón ▶. */
 const listeners = new Set<(activeId: string | null) => void>
+/**
+ * Último slot que el mundo global desalojó vía `stopAllYouTube()`. Cierra la
+ * carrera request→mount en móvil: si el usuario pide un YouTube y, antes de
+ * que el iframe llegue a montarse/registrarse, arranca el reproductor global
+ * (preview/mix), el `registerYouTubeEmbed` tardío NO debe volver a silenciar
+ * el global (eso dejaba al usuario oyendo "otro tema" distinto al que pidió).
+ */
+let stoppedByGlobalClaim: string | null = null
 
 function notify(activeId: string | null) {
   listeners.forEach((l) => l(activeId))
 }
+
+// ─── Exclusión entre clientes (pestañas / ventanas PWA del mismo origen) ───
+// En móvil es fácil acabar con DOS contextos vivos del sitio (icono PWA +
+// pestaña de Safari, o la ventana que abre la lockscreen). Sin esto, cada
+// contexto tenía su propio reproductor y sonaban "dos listas" a la vez al
+// volver del background. Con BroadcastChannel, cuando un cliente reclama la
+// reproducción, el resto se silencia (mismo modelo que Spotify entre
+// dispositivos, aquí entre ventanas).
+const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36)
+let claimChannel: BroadcastChannel | null = null
+
+function ensureClaimChannel(): BroadcastChannel | null {
+  if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return null
+  if (claimChannel) return claimChannel
+  try {
+    claimChannel = new BroadcastChannel('ob-playback-claim')
+    claimChannel.onmessage = (ev: MessageEvent) => {
+      const data = ev.data as { type?: string; clientId?: string } | null
+      if (!data || data.type !== 'claim' || data.clientId === CLIENT_ID) return
+      // Otro cliente (otra pestaña / otra ventana PWA) empezó a reproducir:
+      // este se calla del todo (global + embed activo).
+      stopGlobalPlaybackIfAny()
+      stopYouTubeEmbedIfAny()
+    }
+  } catch {
+    claimChannel = null
+  }
+  return claimChannel
+}
+
+/**
+ * Anuncia al resto de pestañas/ventanas PWA que ESTE cliente pasa a ser la
+ * fuente de audio. Llamar en cada arranque/resume de reproducción (lo hacen
+ * `claimAudio`, los toggles del provider y los claims de YouTube de aquí).
+ */
+export function broadcastPlaybackClaim(): void {
+  const ch = ensureClaimChannel()
+  if (!ch) return
+  try { ch.postMessage({ type: 'claim', clientId: CLIENT_ID }) } catch { /* no-op */ }
+}
+
+// Escucha claims ajenos desde el primer momento (no solo tras reproducir aquí).
+if (typeof window !== 'undefined') ensureClaimChannel()
 
 /** Desmonta el iframe de YouTube activo (si lo hay) y avisa a las filas. */
 function stopYouTubeEmbedIfAny(): void {
@@ -82,7 +133,16 @@ export function registerGlobalPlaybackStopper(stop: StopFn | null): void {
  * sonando. No toca el reproductor de abajo (ese es quien llama).
  */
 export function stopAllYouTube(): void {
+  // Recuerda qué slot desalojó el global: si su iframe llega a registrarse
+  // DESPUÉS (carrera típica en móvil), no debe re-silenciar al global.
+  if (activePlayId !== null) stoppedByGlobalClaim = activePlayId
   stopYouTubeEmbedIfAny()
+}
+
+/** Slot del embed actualmente activo (o null). Lo consultan los keepers del
+ *  provider para NO auto-reanudar el preview por encima de un embed sonando. */
+export function getActiveYouTubePlayId(): string | null {
+  return activePlayId
 }
 
 /**
@@ -93,6 +153,9 @@ export function stopAllYouTube(): void {
  */
 export function requestYouTubePlay(playId: string): void {
   if (!playId) return
+  // Petición explícita del usuario: este slot vuelve a tener derecho a sonar.
+  if (stoppedByGlobalClaim === playId) stoppedByGlobalClaim = null
+  broadcastPlaybackClaim()
   if (activePlayId === playId) return
   stopGlobalPlaybackIfAny()
   stopYouTubeEmbedIfAny()
@@ -107,6 +170,15 @@ export function requestYouTubePlay(playId: string): void {
  */
 export function registerYouTubeEmbed(playId: string, stop: StopFn): void {
   if (!playId) return
+  // Carrera request→mount: el global reclamó la reproducción DESPUÉS de que
+  // este slot la pidiera pero ANTES de que su iframe se registrara. El global
+  // gana (fue la última acción del usuario): este embed se para a sí mismo y
+  // no toca nada más.
+  if (activePlayId === null && stoppedByGlobalClaim === playId) {
+    try { stop() } catch { /* no-op */ }
+    return
+  }
+  broadcastPlaybackClaim()
   stopGlobalPlaybackIfAny()
   if (activePlayId !== playId && activeStop) {
     try { activeStop() } catch { /* no-op */ }
