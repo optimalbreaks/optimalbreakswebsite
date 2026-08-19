@@ -156,6 +156,9 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
         artist: t.artists.map((x) => x.name).join(', '),
         artworkUrl: t.artwork_url || null,
         domId: `home-artist-${a.slug}`,
+        // Vuelta al origen desde el mini reproductor: la tarjeta del artista
+        // en la home (las pistas del showcase no tienen fila propia).
+        originPath: `/${lang}`,
         save: t.beatport_url
           ? {
               mode: 'url' as const,

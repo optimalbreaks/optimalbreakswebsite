@@ -131,6 +131,9 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
         artist: t.artists.map(a => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
         domId: `bp-row-${t.position}`,
+        // Vuelta al origen desde el mini reproductor: la ficha (artista o
+        // sello) donde vive este Top 10. El hash #bp-row-N expande el panel.
+        originPath: pathname || undefined,
         save: t.beatport_url
           ? {
               mode: 'url' as const,
@@ -179,6 +182,19 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
     return previewQueue[previewIndex]?.rowKey === `bp-${t.position}`
   }, [myQueueActive, previewQueue, previewIndex])
 
+  // Hash #bp-row-N (click en el título del mini reproductor → volver al
+  // origen): expande el panel para que la fila exista en el DOM; el scroll
+  // y el destello los hace el propio reproductor cuando la encuentra.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const applyHash = () => {
+      if (window.location.hash.startsWith('#bp-row-')) setExpanded(true)
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [])
+
   // Deep-link: ?play=beatport:<id>
   // Cuando alguien abre un link compartido de una canción de este Top 10,
   // expandimos el panel, hacemos scroll a la fila y arrancamos la cola global
@@ -206,6 +222,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
         artist: t.artists.map((a) => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
         domId: `bp-row-${t.position}`,
+        originPath: pathname || undefined,
         save: t.beatport_url
           ? {
               mode: 'url',

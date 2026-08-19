@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
@@ -93,10 +94,24 @@ export default function ArtistFeaturedTracks({
   origin,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
     playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
+
+  // Hash #nr-row-<id> (click en el título del mini reproductor → volver al
+  // origen): expande el panel para que la fila exista en el DOM; el scroll
+  // y el destello los hace el propio reproductor cuando la encuentra.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const applyHash = () => {
+      if (window.location.hash.startsWith('#nr-row-')) setExpanded(true)
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [])
 
   const groupKey = useMemo(
     () => `ob-nr:${origin?.id ?? entityName}`,
@@ -119,6 +134,9 @@ export default function ArtistFeaturedTracks({
         artist: artists,
         artworkUrl: pick.artwork_url || null,
         domId: `nr-row-${pick.id}`,
+        // Vuelta al origen desde el mini reproductor: la ficha de artista
+        // donde vive este bloque de New Releases.
+        originPath: pathname || undefined,
         save: {
           mode: 'ref' as const,
           source: 'featured' as const,
@@ -134,7 +152,7 @@ export default function ArtistFeaturedTracks({
         },
       }
     })
-  }, [playablePicks, origin])
+  }, [playablePicks, origin, pathname])
 
   const playFromPick = useCallback((pick: ArtistFeaturedPick) => {
     // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚

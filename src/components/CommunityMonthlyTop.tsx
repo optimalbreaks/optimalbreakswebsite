@@ -301,6 +301,10 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
         domId: `community-top-${t.canonical_key}`,
+        // Vuelta al origen desde el mini reproductor: el Top 100 público.
+        // Las filas se montan al terminar el fetch; el reproductor reintenta
+        // el scroll hasta encontrarlas.
+        originPath: `/${lang}/top100`,
         save: t.primary.source === 'beatport_top' && t.external_url
           ? {
               mode: 'url',
@@ -319,7 +323,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
       })
     }
     return out
-  }, [data, shareForCommunityTop])
+  }, [data, shareForCommunityTop, lang])
 
   const groupKey = 'community-top-all-time'
 

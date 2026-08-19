@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
@@ -521,6 +522,7 @@ function YearRangeSlider({
 
 export default function TracksSection({ lang, publicPayload }: TracksSectionProps) {
   const isShared = !!publicPayload
+  const pathname = usePathname()
   const { user } = useAuth()
   const ownHook = useSavedChartTracks()
   // En modo compartido, saved/loading vienen del payload; si no, del hook.
@@ -871,6 +873,26 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
     [sorted, visibleCount],
   )
 
+  // Deep-link #mytracks-row-<key> (click en el título del mini reproductor →
+  // volver a la fila que suena): la lista se pagina con scroll infinito, así
+  // que ampliamos visibleCount hasta incluir la fila; el scroll y el destello
+  // los hace el propio reproductor cuando la encuentra en el DOM.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const applyHash = () => {
+      const raw = window.location.hash.replace(/^#/, '')
+      if (!raw.startsWith('mytracks-row-')) return
+      let key = raw.slice('mytracks-row-'.length)
+      try { key = decodeURIComponent(key) } catch { /* usar tal cual */ }
+      const idx = sorted.findIndex((t) => t.key === key)
+      if (idx < 0) return
+      setVisibleCount((v) => (idx >= v ? idx + LIST_PAGE_SIZE : v))
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [sorted])
+
   const sortedLenRef = useRef(sorted.length)
   sortedLenRef.current = sorted.length
   const loadMoreObserverRef = useRef<IntersectionObserver | null>(null)
@@ -982,8 +1004,12 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       title: t.title,
       artist: t.artists,
       artworkUrl: t.artwork_url ?? null,
-      // domId no aplica aquí; las filas no tienen id único en el DOM y el
-      // scroll-to-row sólo tiene sentido dentro de la misma ruta.
+      // Vuelta al origen desde el mini reproductor: esta misma lista (Mis
+      // Tracks o la lista pública /u/<handle>/tracks). El hash
+      // #mytracks-row-<key> amplía la paginación hasta la fila (ver efecto
+      // de deep-link más abajo) y el reproductor hace el scroll.
+      domId: `mytracks-row-${t.key}`,
+      originPath: pathname || undefined,
       save: useUrlMode
         ? {
             mode: 'url',
@@ -1005,7 +1031,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           },
       share: toPreviewShare(t),
     }
-  }, [isShared, toPreviewShare])
+  }, [isShared, toPreviewShare, pathname])
 
   const buildQueue = useCallback((src: UnifiedTrack[]): PreviewTrack[] => {
     const out: PreviewTrack[] = []
@@ -1383,6 +1409,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             return (
               <div
                 key={t.key}
+                id={`mytracks-row-${t.key}`}
                 className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 style={showYtEmbed ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 108px' }}
               >

@@ -1145,6 +1145,9 @@ export default function ChartView({
         artist: artists,
         artworkUrl: p.artwork_url || null,
         domId: `chart-row-${p.id}`,
+        // Vuelta al origen desde el mini reproductor: /charts con la semana
+        // de esta edición (el hash #chart-row-<id> expande el acordeón).
+        originPath: weekDate ? `/${lang}/charts?week=${weekDate}` : `/${lang}/charts`,
         save: {
           mode: 'ref',
           source: 'featured',
@@ -1162,7 +1165,7 @@ export default function ChartView({
       })
     }
     return out
-  }, [])
+  }, [lang])
 
   const buildTrackBundle = useCallback((
     tracks: ChartTrack[],
@@ -1180,6 +1183,7 @@ export default function ChartView({
         artist: artists,
         artworkUrl: t.artwork_url || null,
         domId: `chart-row-${t.id}`,
+        originPath: weekDate ? `/${lang}/charts?week=${weekDate}` : `/${lang}/charts`,
         save: {
           mode: 'ref',
           source: 'chart',
@@ -1197,7 +1201,7 @@ export default function ChartView({
       })
     }
     return out
-  }, [])
+  }, [lang])
 
   /**
    * Retro Vinyl Picks: cada fila incrusta su propio iframe YouTube al pulsar ▶.

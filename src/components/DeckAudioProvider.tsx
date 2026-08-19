@@ -22,6 +22,7 @@ import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 import { canonicalKeyFromTrackPlaySave } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -132,6 +133,12 @@ export type PreviewShareData =
  *   - `domId`:  id del DOM dentro de la página origen para hacer
  *               `scrollIntoView` desde la barra global (si la página
  *               actual no lo contiene, no-op silencioso).
+ *   - `originPath`: ruta interna (con lang y query, sin hash) de la LISTA
+ *               donde el usuario arrancó la cola (p. ej.
+ *               `/es/charts?week=2026-08-17`, `/es/top100`,
+ *               `/es/mi-cuenta/tracks`, ficha de artista…). El click en el
+ *               título del MiniPreviewBar navega a `originPath#domId` cuando
+ *               la fila no está en la ruta actual, sin tocar la reproducción.
  *   - `save`:   datos opcionales para pintar el botón "Añadir a Mis
  *               Tracks" en la barra del reproductor; ver `PreviewSaveData`.
  */
@@ -142,6 +149,7 @@ export interface PreviewTrack {
   artist: string
   artworkUrl?: string | null
   domId?: string
+  originPath?: string
   save?: PreviewSaveData
   /** Datos opcionales para pintar "🔗 compartir" en el mini reproductor.
    *  El productor pasa la misma URL canónica que renderiza en la fila origen
@@ -837,6 +845,14 @@ function PreviewShareSlot({
 }
 
 // ─── Adapter: Preview (charts / Top 10 / Mis Tracks) ─────────────────────
+
+/** Scroll suave + destello amarillo sobre la fila origen del tema sonando. */
+function highlightPreviewRow(el: HTMLElement) {
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.classList.add('!bg-[var(--yellow)]/25')
+  setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
+}
+
 function MiniPreviewBar({ lang }: { lang: Locale }) {
   const {
     previewQueue, previewIndex, previewPlaying,
@@ -844,23 +860,80 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
     togglePreview, stopPreview, previewNext, previewPrev,
     seekPreviewToRatio, fmt,
   } = useDeckAudio()
+  const router = useRouter()
   const es = lang === 'es'
   const cur = previewQueue[previewIndex]
 
+  // Reintentos de scroll tras navegar al origen: la lista destino puede
+  // tardar en montarse (fetch en cliente del Top 100, acordeón de /charts
+  // expandiéndose, paginación de Mis Tracks…). Un click nuevo cancela el
+  // bucle anterior.
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+  }, [])
+
+  const retryScrollToRow = useCallback((id: string) => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = null
+    }
+    const tryScroll = (attempt: number) => {
+      const el = document.getElementById(id)
+      if (el) { highlightPreviewRow(el); return }
+      if (attempt >= 40) return
+      retryTimerRef.current = setTimeout(() => tryScroll(attempt + 1), 250)
+    }
+    tryScroll(0)
+  }, [])
+
+  // Click en el título de la barra = "llévame al origen de esta canción".
+  // 1) Si la fila está montada en la página actual → scroll directo.
+  // 2) Si no, navegamos a `originPath#domId` (la lista donde se arrancó la
+  //    cola: semana de /charts, Top 100, Mis Tracks, ficha…). La navegación
+  //    NO toca el <audio> global: la barra persiste y el tema sigue sonando.
+  //    Las páginas con acordeón/paginación escuchan el hash y expanden lo
+  //    necesario; este bucle de reintentos hace el scroll cuando la fila
+  //    por fin existe.
   // Nota: este callback va ANTES del early-return para no romper el orden
   // de hooks entre renders (en la versión previa estaba después y era un
   // bug latente).
-  const scrollToCurrentRow = useCallback(() => {
-    const id = cur?.domId
-    if (!id) return
-    const el = typeof document !== 'undefined' ? document.getElementById(id) : null
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    el.classList.add('!bg-[var(--yellow)]/25')
-    setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1500)
-  }, [cur])
+  const goToCurrentRow = useCallback(() => {
+    if (!cur || typeof document === 'undefined') return
+    const id = cur.domId
+    const origin = cur.originPath
+    const originPathname = origin ? origin.split(/[?#]/)[0] : null
+    // El atajo "la fila ya está en el DOM" solo vale si estamos en la página
+    // de origen (o si el track no declara origen, comportamiento histórico).
+    // Algunos domId se repiten entre páginas (p. ej. `bp-row-3` existe en
+    // TODAS las fichas con Top 10 de Beatport): sin este guard, mirando la
+    // ficha C mientras suena el Top 10 de la ficha B, el click haría scroll
+    // a la fila equivocada en vez de navegar al origen real.
+    const onOriginPage = !originPathname || window.location.pathname === originPathname
+    if (id && onOriginPage) {
+      const el = document.getElementById(id)
+      if (el) { highlightPreviewRow(el); return }
+    }
+    if (!origin) return
+    if (window.location.pathname === originPathname) {
+      // Misma ruta pero la fila no está montada (acordeón plegado, página
+      // sin cargar…): publicar el hash dispara `hashchange` y la propia
+      // página expande lo que haga falta.
+      if (id) {
+        if (window.location.hash === `#${id}`) {
+          window.dispatchEvent(new HashChangeEvent('hashchange'))
+        } else {
+          window.location.hash = id
+        }
+      }
+    } else {
+      router.push(id ? `${origin}#${id}` : origin)
+    }
+    if (id) retryScrollToRow(id)
+  }, [cur, router, retryScrollToRow])
 
   if (!cur) return null
+  const canGoToRow = !!(cur.domId || cur.originPath)
 
   return (
     <MiniPlayerShell
@@ -872,8 +945,8 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
       fmt={fmt}
       title={cur.title || '—'}
       subtitleBelow={cur.artist || ''}
-      onTitleClick={cur.domId ? scrollToCurrentRow : undefined}
-      titleClickHint={cur.domId ? (es ? 'Ir a la canción' : 'Go to song') : undefined}
+      onTitleClick={canGoToRow ? goToCurrentRow : undefined}
+      titleClickHint={canGoToRow ? (es ? 'Ir a la canción en su lista' : 'Go to song in its list') : undefined}
       counter={`${previewIndex + 1} / ${previewQueue.length}`}
       controls={
         <>
