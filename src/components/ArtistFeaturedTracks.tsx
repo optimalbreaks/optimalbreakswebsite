@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
@@ -311,15 +311,19 @@ export default function ArtistFeaturedTracks({
                       />
                       <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
                       {pick.link_url ? (
-                        <a
-                          href={pick.link_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          {pickCtaLabel(lang, pick)}
-                        </a>
+                        pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
+                          <BeatportLinkButton url={pick.link_url} lang={lang} />
+                        ) : (
+                          <a
+                            href={pick.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+                            style={{ fontFamily: "'Courier Prime', monospace" }}
+                          >
+                            {pickCtaLabel(lang, pick)}
+                          </a>
+                        )
                       ) : null}
                     </div>
                   </div>

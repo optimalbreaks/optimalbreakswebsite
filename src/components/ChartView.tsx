@@ -22,7 +22,7 @@ import type {
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -468,14 +468,18 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
             lang={lang}
             shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
           />
-          <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} />
-          <a
-            href={pick.link_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {cta}
-          </a>
+          <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} lang={lang} />
+          {pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
+            <BeatportLinkButton url={pick.link_url} dict={dict} lang={lang} />
+          ) : (
+            <a
+              href={pick.link_url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {cta}
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -678,15 +682,9 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
               shareTitle={`${track.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
             />
           )}
-          <SpotifyLinkButton url={track.spotify_url} title={track.title} artists={artists} dict={dict} />
+          <SpotifyLinkButton url={track.spotify_url} title={track.title} artists={artists} dict={dict} lang={lang} />
           {track.beatport_url && (
-            <a
-              href={track.beatport_url} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-              style={{ fontFamily: "'Courier Prime', monospace" }} title={c.open_beatport}
-            >
-              BEATPORT
-            </a>
+            <BeatportLinkButton url={track.beatport_url} dict={dict} lang={lang} />
           )}
         </div>
       </div>

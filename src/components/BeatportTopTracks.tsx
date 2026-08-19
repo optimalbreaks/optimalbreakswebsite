@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
 import {
   buildBeatportSharePath,
   parsePlayParam,
@@ -390,15 +390,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                       })()}
                       <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={t.artists} lang={lang} />
                       {t.beatport_url && (
-                        <a
-                          href={t.beatport_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          BEATPORT
-                        </a>
+                        <BeatportLinkButton url={t.beatport_url} lang={lang} />
                       )}
                     </div>
                   </div>

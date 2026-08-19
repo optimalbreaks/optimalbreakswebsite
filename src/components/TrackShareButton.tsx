@@ -230,11 +230,22 @@ export default function TrackShareButton(props: Props) {
 }
 
 // ============================================
-// Botón «SPOTIFY» compartido (ChartView, BeatportTopTracks, ArtistFeaturedTracks).
-// Enlace directo al track si hay match verificado (`spotify_url`, rellenado por
-// scripts/spotify-match-charts.mjs); si no, búsqueda en Spotify con artista +
-// título para que quien tenga cuenta pueda escuchar el tema entero.
+// Botones de plataforma compartidos (ChartView, BeatportTopTracks,
+// ArtistFeaturedTracks). En móvil (<sm) son circulares con el logo de la marca;
+// en escritorio, pastilla con texto. Spotify: enlace directo al track si hay
+// match verificado (`spotify_url`, rellenado por scripts/spotify-match-charts.mjs);
+// si no, búsqueda en Spotify con artista + título.
 // ============================================
+
+/** Logo oficial Spotify (simple-icons, viewBox 24). Sobre verde va en negro (branding oficial). */
+const SPOTIFY_ICON_PATH = 'M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z'
+
+/** Logo oficial Beatport «b» (simple-icons, viewBox 24). */
+const BEATPORT_ICON_PATH = 'M21.429 17.055a7.114 7.114 0 0 1-.794 3.246 6.917 6.917 0 0 1-2.181 2.492 6.698 6.698 0 0 1-3.063 1.163 6.653 6.653 0 0 1-3.239-.434 6.796 6.796 0 0 1-2.668-1.932 7.03 7.03 0 0 1-1.481-2.983 7.124 7.124 0 0 1 .049-3.345 7.015 7.015 0 0 1 1.566-2.937l-4.626 4.73-2.421-2.479 5.201-5.265a3.791 3.791 0 0 0 1.066-2.675V0h3.41v6.613a7.172 7.172 0 0 1-.519 2.794 7.02 7.02 0 0 1-1.559 2.353l-.153.156a6.768 6.768 0 0 1 3.49-1.725 6.687 6.687 0 0 1 3.845.5 6.873 6.873 0 0 1 2.959 2.564 7.118 7.118 0 0 1 1.118 3.8Zm-3.089 0a3.89 3.89 0 0 0-.611-2.133 3.752 3.752 0 0 0-1.666-1.424 3.65 3.65 0 0 0-2.158-.233 3.704 3.704 0 0 0-1.92 1.037 3.852 3.852 0 0 0-1.031 1.955 3.908 3.908 0 0 0 .205 2.213c.282.7.76 1.299 1.374 1.721a3.672 3.672 0 0 0 2.076.647 3.637 3.637 0 0 0 2.635-1.096c.347-.351.622-.77.81-1.231.188-.461.285-.956.286-1.456Z'
+
+/** Circular con logo en móvil, pastilla con texto en ≥sm. */
+const PLATFORM_BTN_BASE =
+  'inline-flex items-center justify-center h-[36px] w-[36px] rounded-full p-0 sm:h-auto sm:w-auto sm:rounded-none sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all no-underline touch-manipulation whitespace-nowrap'
 
 export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
   url?: string | null
@@ -258,11 +269,33 @@ export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
   return (
     <a
       href={href} target="_blank" rel="noopener noreferrer"
-      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[#1DB954] text-white hover:bg-[#169c46] active:bg-[#169c46] transition-all no-underline touch-manipulation whitespace-nowrap"
+      className={`${PLATFORM_BTN_BASE} bg-[#1ED760] text-[var(--ink)] hover:bg-[#1DB954] active:bg-[#1DB954]`}
       style={{ fontFamily: "'Courier Prime', monospace" }}
       title={tooltip}
+      aria-label={tooltip}
     >
-      SPOTIFY
+      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={SPOTIFY_ICON_PATH} /></svg>
+      <span className="hidden sm:inline">SPOTIFY</span>
+    </a>
+  )
+}
+
+export function BeatportLinkButton({ url, lang, dict }: {
+  url: string
+  lang?: Locale
+  dict?: { charts?: Record<string, string> }
+}) {
+  const tooltip = dict?.charts?.open_beatport || (lang === 'es' ? 'Ver en Beatport' : 'View on Beatport')
+  return (
+    <a
+      href={url} target="_blank" rel="noopener noreferrer"
+      className={`${PLATFORM_BTN_BASE} bg-[var(--ink)] text-[#01FF95] sm:text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]`}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+      title={tooltip}
+      aria-label={tooltip}
+    >
+      <svg viewBox="0 0 24 24" className="w-[20px] h-[20px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={BEATPORT_ICON_PATH} /></svg>
+      <span className="hidden sm:inline">BEATPORT</span>
     </a>
   )
 }
