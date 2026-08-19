@@ -309,8 +309,8 @@ export default function ArtistFeaturedTracks({
                         lang={lang}
                         shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
                       />
-                      <TidalLinkButton url={pick.tidal_url} lang={lang} />
                       <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
+                      <TidalLinkButton url={pick.tidal_url} lang={lang} />
                       {pick.link_url ? (
                         pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
                           <BeatportLinkButton url={pick.link_url} lang={lang} />

@@ -1544,7 +1544,6 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         />
                       )
                     })()}
-                    <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
                     {t.source !== 'vinyl' ? (
                       <SpotifyLinkButton
                         url={t.spotify_url}
@@ -1553,6 +1552,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         lang={lang as Locale}
                       />
                     ) : null}
+                    <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
                     {t.external_url ? (
                       (t.external_label || '') === 'BEATPORT' ? (
                         <BeatportLinkButton url={t.external_url} lang={lang as Locale} />
