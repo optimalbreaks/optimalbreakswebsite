@@ -41,6 +41,33 @@
   box-sizing: border-box;
 }
 
+/* Barra de acciones de una fila de track: 100% ancho, una sola línea.
+   En móvil (admin + IG + 3 plataformas) encoge el grupo; en escritorio
+   vuelve al wrap natural alineado a la derecha. */
+.track-action-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: 100%;
+  gap: 0.25rem;
+  touch-action: manipulation;
+}
+@media (max-width: 639px) {
+  .track-action-bar {
+    zoom: 0.86;
+  }
+}
+@media (min-width: 640px) {
+  .track-action-bar {
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-self: center;
+    flex-shrink: 0;
+    gap: 0.5rem;
+  }
+}
+
 /* 100vw en móvil suele ser > ancho útil (barra/gutter) y provoca scroll horizontal fantasma */
 html {
   width: 100%;

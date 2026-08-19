@@ -271,7 +271,7 @@ export default function ArtistFeaturedTracks({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                    <div className="track-action-bar">
                       {canPlay && (
                         <button
                           type="button"

@@ -1414,7 +1414,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2">
+                  <div className="track-action-bar">
                     {hasAudio ? (
                       <button
                         type="button"

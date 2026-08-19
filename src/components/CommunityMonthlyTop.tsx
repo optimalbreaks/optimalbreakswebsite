@@ -635,7 +635,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                    <div className="track-action-bar">
                       {hasSample && (
                         <button
                           type="button"

@@ -436,7 +436,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+        <div className="track-action-bar">
           {hasSample && onPlay && (
             <button
               type="button"
@@ -555,7 +555,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+        <div className="track-action-bar">
           {ytId && (
             <button
               type="button"
@@ -649,7 +649,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+        <div className="track-action-bar">
           {track.sample_url && onPlay && (
             <button
               type="button"

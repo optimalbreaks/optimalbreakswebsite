@@ -339,17 +339,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
-                      {t.beatport_url && (
-                        <SaveTrackButton
-                          externalUrl={t.beatport_url}
-                          externalTrackId={extractBeatportTrackId(t.beatport_url) ?? undefined}
-                          canonicalUrl={t.beatport_url}
-                          snapshot={buildSnapshot(t, origin)}
-                          lang={lang}
-                          size="sm"
-                        />
-                      )}
+                    <div className="track-action-bar">
                       {canPlay && (
                         <button
                           type="button"
@@ -377,6 +367,16 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                         >
                           {t.key}
                         </span>
+                      )}
+                      {t.beatport_url && (
+                        <SaveTrackButton
+                          externalUrl={t.beatport_url}
+                          externalTrackId={extractBeatportTrackId(t.beatport_url) ?? undefined}
+                          canonicalUrl={t.beatport_url}
+                          snapshot={buildSnapshot(t, origin)}
+                          lang={lang}
+                          size="sm"
+                        />
                       )}
                       {(() => {
                         const bpId = extractBeatportTrackId(t.beatport_url)
