@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton from '@/components/TrackShareButton'
+import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
@@ -271,7 +271,7 @@ export default function ArtistFeaturedTracks({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                    <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
                       {canPlay && (
                         <button
                           type="button"
@@ -309,6 +309,7 @@ export default function ArtistFeaturedTracks({
                         lang={lang}
                         shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
                       />
+                      <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
                       {pick.link_url ? (
                         <a
                           href={pick.link_url}

@@ -531,6 +531,8 @@ export interface BeatportTopTrack {
   release_year: number | null
   /** Fecha de release Beatport cuando está disponible (YYYY-MM-DD). */
   release_date: string | null
+  /** Enlace verificado al track en Spotify (opcional; el botón cae a búsqueda). */
+  spotify_url?: string | null
 }
 
 export interface Artist extends Record<string, unknown> {

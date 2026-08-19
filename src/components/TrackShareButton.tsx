@@ -228,3 +228,41 @@ export default function TrackShareButton(props: Props) {
     </>
   )
 }
+
+// ============================================
+// Botón «SPOTIFY» compartido (ChartView, BeatportTopTracks, ArtistFeaturedTracks).
+// Enlace directo al track si hay match verificado (`spotify_url`, rellenado por
+// scripts/spotify-match-charts.mjs); si no, búsqueda en Spotify con artista +
+// título para que quien tenga cuenta pueda escuchar el tema entero.
+// ============================================
+
+export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
+  url?: string | null
+  title: string
+  artists: Array<{ name?: string } | string>
+  /** Diccionario i18n con bloque `charts` (ChartView); opcional fuera de /charts. */
+  dict?: { charts?: Record<string, string> }
+  lang?: Locale
+}) {
+  const c = dict?.charts
+  const es = lang === 'es'
+  const direct = (url || '').trim()
+  const names = (Array.isArray(artists) ? artists : [])
+    .map((a) => (a && typeof a === 'object' ? a.name : a))
+    .filter(Boolean)
+    .join(' ')
+  const href = direct || `https://open.spotify.com/search/${encodeURIComponent(`${names} ${title}`.trim())}`
+  const tooltip = direct
+    ? c?.open_spotify || (es ? 'Abrir en Spotify' : 'Open on Spotify')
+    : c?.search_spotify || (es ? 'Buscar en Spotify' : 'Search on Spotify')
+  return (
+    <a
+      href={href} target="_blank" rel="noopener noreferrer"
+      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[#1DB954] text-white hover:bg-[#169c46] active:bg-[#169c46] transition-all no-underline touch-manipulation whitespace-nowrap"
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+      title={tooltip}
+    >
+      SPOTIFY
+    </a>
+  )
+}

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton from '@/components/TrackShareButton'
+import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
 import {
   buildBeatportSharePath,
   parsePlayParam,
@@ -337,7 +337,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+                    <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
                       {t.beatport_url && (
                         <SaveTrackButton
                           externalUrl={t.beatport_url}
@@ -388,6 +388,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                           />
                         )
                       })()}
+                      <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={t.artists} lang={lang} />
                       {t.beatport_url && (
                         <a
                           href={t.beatport_url}

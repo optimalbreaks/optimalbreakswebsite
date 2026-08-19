@@ -176,6 +176,14 @@ async function spotifyToken() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/** Cuota diaria por cuenta agotada (Development Mode): reanudar otro día. */
+class SpotifyQuotaExceeded extends Error {
+  constructor(retryAfterSec) {
+    super(`cuota diaria de la API agotada (retry-after ${retryAfterSec}s)`)
+    this.quotaExceeded = true
+  }
+}
+
 async function spotifySearch(query) {
   const token = await spotifyToken()
   const url = `https://api.spotify.com/v1/search?type=track&limit=10&market=${encodeURIComponent(MARKET)}&q=${encodeURIComponent(query)}`
@@ -183,6 +191,10 @@ async function spotifySearch(query) {
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     if (res.status === 429) {
       const retry = Number(res.headers.get('retry-after') || '2')
+      const body = await res.text().catch(() => '')
+      // Desde jul-2026 la cuota (por cuenta/día) responde 429 con reason QUOTA_EXCEEDED
+      // y retry-after de horas: no tiene sentido dormir, se reanuda otro día.
+      if (retry > 600 || body.includes('QUOTA_EXCEEDED')) throw new SpotifyQuotaExceeded(retry)
       console.warn(`  … rate limit Spotify, esperando ${retry}s`)
       await sleep((retry + 1) * 1000)
       continue
@@ -309,12 +321,22 @@ async function processTable(table) {
     // Búsqueda con campos (precisa); si nada aceptable, texto plano (laxa).
     const cleanTitle = String(row.title).replace(/"/g, '')
     const firstArtist = String(artistNames[0] || '').replace(/"/g, '')
-    let candidates = await spotifySearch(`track:"${cleanTitle}" artist:"${firstArtist}"`)
-    let hit = bestMatch(row, candidates)
-    if (!hit) {
-      await sleep(PAUSE_MS)
-      candidates = await spotifySearch(`${artistNames.join(' ')} ${row.title}`)
+    let candidates
+    let hit
+    try {
+      candidates = await spotifySearch(`track:"${cleanTitle}" artist:"${firstArtist}"`)
       hit = bestMatch(row, candidates)
+      if (!hit) {
+        await sleep(PAUSE_MS)
+        candidates = await spotifySearch(`${artistNames.join(' ')} ${row.title}`)
+        hit = bestMatch(row, candidates)
+      }
+    } catch (e) {
+      if (e?.quotaExceeded) {
+        console.warn(`\n  ■ ${e.message}. Progreso guardado: reejecuta el script mañana y continuará con las filas pendientes (spotify_url NULL).`)
+        return { matched, notFound, misses, quotaExceeded: true }
+      }
+      throw e
     }
 
     if (hit) {
@@ -342,6 +364,7 @@ async function main() {
     const r = await processTable(t)
     totals.matched += r.matched
     totals.notFound += r.notFound
+    if (r.quotaExceeded) break
   }
   console.log(`\nTotal: ${totals.matched} enlaces guardados, ${totals.notFound} sin match.`)
   if (!DRY_RUN && totals.matched > 0) await pingPublicChartsRevalidate()

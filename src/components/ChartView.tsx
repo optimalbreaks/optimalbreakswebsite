@@ -22,7 +22,7 @@ import type {
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton from '@/components/TrackShareButton'
+import TrackShareButton, { SpotifyLinkButton } from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -360,26 +360,6 @@ function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
 // ---------------------------------------------------------------------------
 // Track rows — IDENTICAL layout for both sections
 // ---------------------------------------------------------------------------
-
-// Botón «Spotify»: enlace directo al track si hay match verificado (spotify_url,
-// rellenado por scripts/spotify-match-charts.mjs); si no, búsqueda en Spotify con
-// artista + título para que el usuario con cuenta pueda escuchar el tema entero.
-function SpotifyLinkButton({ url, title, artists, dict }: { url?: string | null; title: string; artists: Array<{ name?: string }>; dict: any }) {
-  const c = dict.charts
-  const direct = (url || '').trim()
-  const names = (Array.isArray(artists) ? artists : []).map((a) => a?.name).filter(Boolean).join(' ')
-  const href = direct || `https://open.spotify.com/search/${encodeURIComponent(`${names} ${title}`.trim())}`
-  return (
-    <a
-      href={href} target="_blank" rel="noopener noreferrer"
-      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[#1DB954] text-white hover:bg-[#169c46] active:bg-[#169c46] transition-all no-underline touch-manipulation whitespace-nowrap"
-      style={{ fontFamily: "'Courier Prime', monospace" }}
-      title={direct ? c.open_spotify : c.search_spotify}
-    >
-      SPOTIFY
-    </a>
-  )
-}
 
 function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): string {
   const custom = (track.link_label || '').trim()

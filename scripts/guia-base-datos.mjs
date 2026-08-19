@@ -654,7 +654,7 @@ const ACTIONS = [
     npm: 'npm run db:chart:spotify -- [--week=2026-08-10] [--dry-run]',
     creds: 'SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Rellena spotify_url en chart_tracks + chart_featured_tracks vía búsqueda en la Web API de Spotify (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). La UI de /charts cae a un enlace de búsqueda en Spotify cuando no hay match. Migración previa: 066_charts_spotify_url.sql. TLS Acttax: node --use-system-ca.',
+      'Rellena spotify_url en chart_tracks + chart_featured_tracks vía búsqueda en la Web API de Spotify (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). La UI de /charts cae a un enlace de búsqueda en Spotify cuando no hay match. Migración previa: 066_charts_spotify_url.sql. TLS Acttax: node --use-system-ca. OJO: Development Mode tiene cuota diaria por cuenta (~1.300 búsquedas); al agotarse (429 QUOTA_EXCEEDED) el script corta con resumen y se reanuda otro día donde quedó (solo procesa filas con spotify_url NULL).',
   },
   {
     id: 'purge-featured-week-dates',
