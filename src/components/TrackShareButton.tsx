@@ -243,9 +243,11 @@ const SPOTIFY_ICON_PATH = 'M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6
 /** Logo oficial Beatport «b» (simple-icons, viewBox 24). */
 const BEATPORT_ICON_PATH = 'M21.429 17.055a7.114 7.114 0 0 1-.794 3.246 6.917 6.917 0 0 1-2.181 2.492 6.698 6.698 0 0 1-3.063 1.163 6.653 6.653 0 0 1-3.239-.434 6.796 6.796 0 0 1-2.668-1.932 7.03 7.03 0 0 1-1.481-2.983 7.124 7.124 0 0 1 .049-3.345 7.015 7.015 0 0 1 1.566-2.937l-4.626 4.73-2.421-2.479 5.201-5.265a3.791 3.791 0 0 0 1.066-2.675V0h3.41v6.613a7.172 7.172 0 0 1-.519 2.794 7.02 7.02 0 0 1-1.559 2.353l-.153.156a6.768 6.768 0 0 1 3.49-1.725 6.687 6.687 0 0 1 3.845.5 6.873 6.873 0 0 1 2.959 2.564 7.118 7.118 0 0 1 1.118 3.8Zm-3.089 0a3.89 3.89 0 0 0-.611-2.133 3.752 3.752 0 0 0-1.666-1.424 3.65 3.65 0 0 0-2.158-.233 3.704 3.704 0 0 0-1.92 1.037 3.852 3.852 0 0 0-1.031 1.955 3.908 3.908 0 0 0 .205 2.213c.282.7.76 1.299 1.374 1.721a3.672 3.672 0 0 0 2.076.647 3.637 3.637 0 0 0 2.635-1.096c.347-.351.622-.77.81-1.231.188-.461.285-.956.286-1.456Z'
 
-/** Circular con logo en móvil, pastilla con texto en ≥sm. */
+/** Botón circular con logo de marca (móvil y escritorio; tooltip = nombre del servicio). */
 const PLATFORM_BTN_BASE =
-  'inline-flex items-center justify-center h-[36px] w-[36px] rounded-full p-0 sm:h-auto sm:w-auto sm:rounded-none sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all no-underline touch-manipulation whitespace-nowrap'
+  'inline-flex items-center justify-center shrink-0 h-[34px] w-[34px] sm:h-[30px] sm:w-[30px] rounded-full p-0 border-2 border-[var(--ink)] transition-all no-underline touch-manipulation'
+
+const PLATFORM_ICON_CLS = 'w-[18px] h-[18px] sm:w-[16px] sm:h-[16px]'
 
 export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
   url?: string | null
@@ -270,12 +272,10 @@ export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
     <a
       href={href} target="_blank" rel="noopener noreferrer"
       className={`${PLATFORM_BTN_BASE} bg-[#1ED760] text-[var(--ink)] hover:bg-[#1DB954] active:bg-[#1DB954]`}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
       title={tooltip}
       aria-label={tooltip}
     >
-      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={SPOTIFY_ICON_PATH} /></svg>
-      <span className="hidden sm:inline">SPOTIFY</span>
+      <svg viewBox="0 0 24 24" className={PLATFORM_ICON_CLS} fill="currentColor" aria-hidden="true"><path d={SPOTIFY_ICON_PATH} /></svg>
     </a>
   )
 }
@@ -295,12 +295,10 @@ export function TidalLinkButton({ url, lang }: { url?: string | null; lang?: Loc
     <a
       href={direct} target="_blank" rel="noopener noreferrer"
       className={`${PLATFORM_BTN_BASE} bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white active:bg-[var(--ink)] active:text-white`}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
       title={tooltip}
       aria-label={tooltip}
     >
-      <svg viewBox="0 0 24 24" className="w-[20px] h-[20px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={TIDAL_ICON_PATH} /></svg>
-      <span className="hidden sm:inline">TIDAL</span>
+      <svg viewBox="0 0 24 24" className={PLATFORM_ICON_CLS} fill="currentColor" aria-hidden="true"><path d={TIDAL_ICON_PATH} /></svg>
     </a>
   )
 }
@@ -314,13 +312,11 @@ export function BeatportLinkButton({ url, lang, dict }: {
   return (
     <a
       href={url} target="_blank" rel="noopener noreferrer"
-      className={`${PLATFORM_BTN_BASE} bg-[var(--ink)] text-[#01FF95] sm:text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]`}
-      style={{ fontFamily: "'Courier Prime', monospace" }}
+      className={`${PLATFORM_BTN_BASE} bg-[var(--ink)] text-[#01FF95] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] active:text-white`}
       title={tooltip}
       aria-label={tooltip}
     >
-      <svg viewBox="0 0 24 24" className="w-[20px] h-[20px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={BEATPORT_ICON_PATH} /></svg>
-      <span className="hidden sm:inline">BEATPORT</span>
+      <svg viewBox="0 0 24 24" className={PLATFORM_ICON_CLS} fill="currentColor" aria-hidden="true"><path d={BEATPORT_ICON_PATH} /></svg>
     </a>
   )
 }
