@@ -198,6 +198,15 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 - **Viernes (día de lanzamientos):** Beatport lleva **mucho más tráfico**; Cloudflare y límites suelen **fallar más** (`403`, timeouts). Suele ir mejor **al día siguiente** o con **`BEATPORT_BATCH_PAUSE_MS`** más alto; no es necesariamente un fallo del código.
 - **Otros comandos relacionados:** **`npm run db:chart:vinyl`** (vinilos retrospectivos desde JSON); **`npm run db:chart:backfill-new-releases`** (relleno histórico desde 40 Breaks). Más contexto en inglés: [README.md — Beatport (incluye New Releases)](./README.md#beatport-weekly-chart-vs-top-10-on-profiles).
 
+### Enlaces «Abrir en Spotify» en `/charts`
+
+Cada fila de **40 Breaks Vitales** y **New Releases** muestra un botón **SPOTIFY** (`SpotifyLinkButton` en `ChartView.tsx`): quien tenga cuenta de Spotify puede escuchar el tema completo allí (no podemos alojar audio íntegro por derechos). Dos modos:
+
+- **Enlace verificado** — columna **`spotify_url`** en `chart_tracks` + `chart_featured_tracks` (migración **`066_charts_spotify_url.sql`**), rellenada por **`npm run db:chart:spotify`** (`scripts/spotify-match-charts.mjs`): búsqueda en la Web API de Spotify con **client credentials** (`SPOTIFY_CLIENT_ID` + `SPOTIFY_CLIENT_SECRET`; desde feb-2026 el dueño de la app necesita Premium, pero no hay OAuth por usuario). Matching conservador (título normalizado + al menos un artista; «Original Mix» cuenta como sin sufijo); ante ambigüedad queda `NULL`.
+- **Fallback de búsqueda** — sin `spotify_url`, el botón enlaza a `open.spotify.com/search/<artistas título>`, así funciona aunque el matching no se haya ejecutado.
+
+Los syncs semanales **no** pisan los matches: la RPC del 40 (`apply_chart_tracks_row_updates`) no incluye la columna y `chart-featured-upsert.mjs` solo envía `spotify_url` si viene en el JSON. Tras publicar edición nueva: `npm run db:chart:spotify -- --week=<lunes>`. El OAuth por usuario (añadir a playlist, reproducción completa embebida) queda **descartado**: desde feb/mar-2026 las apps en Development Mode admiten máx. 5 usuarios en allowlist y el Extended Quota Mode exige organizaciones con ≥250k usuarios activos mensuales.
+
 ---
 
 ## Descubrir artistas y sellos desde los charts

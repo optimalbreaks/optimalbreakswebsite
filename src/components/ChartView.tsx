@@ -361,6 +361,26 @@ function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
 // Track rows — IDENTICAL layout for both sections
 // ---------------------------------------------------------------------------
 
+// Botón «Spotify»: enlace directo al track si hay match verificado (spotify_url,
+// rellenado por scripts/spotify-match-charts.mjs); si no, búsqueda en Spotify con
+// artista + título para que el usuario con cuenta pueda escuchar el tema entero.
+function SpotifyLinkButton({ url, title, artists, dict }: { url?: string | null; title: string; artists: Array<{ name?: string }>; dict: any }) {
+  const c = dict.charts
+  const direct = (url || '').trim()
+  const names = (Array.isArray(artists) ? artists : []).map((a) => a?.name).filter(Boolean).join(' ')
+  const href = direct || `https://open.spotify.com/search/${encodeURIComponent(`${names} ${title}`.trim())}`
+  return (
+    <a
+      href={href} target="_blank" rel="noopener noreferrer"
+      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[#1DB954] hover:text-white active:bg-[#1DB954] transition-all no-underline touch-manipulation whitespace-nowrap"
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+      title={direct ? c.open_spotify : c.search_spotify}
+    >
+      SPOTIFY
+    </a>
+  )
+}
+
 function pickCtaLabel(c: Record<string, string>, track: ChartFeaturedTrack): string {
   const custom = (track.link_label || '').trim()
   if (custom) return custom
@@ -436,7 +456,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
           {hasSample && onPlay && (
             <button
               type="button"
@@ -468,6 +488,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
             lang={lang}
             shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
           />
+          <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} />
           <a
             href={pick.link_url} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
@@ -643,7 +664,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto sm:shrink-0 sm:justify-end sm:self-center sm:gap-2 touch-manipulation">
           {track.sample_url && onPlay && (
             <button
               type="button"
@@ -677,6 +698,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
               shareTitle={`${track.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
             />
           )}
+          <SpotifyLinkButton url={track.spotify_url} title={track.title} artists={artists} dict={dict} />
           {track.beatport_url && (
             <a
               href={track.beatport_url} target="_blank" rel="noopener noreferrer"

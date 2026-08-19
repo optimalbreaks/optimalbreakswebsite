@@ -53,6 +53,8 @@ export type ChartFeaturedTrack = {
   release_year: number | null
   /** Fecha de lanzamiento Beatport (YYYY-MM-DD). Null si no hay dato. */
   release_date: string | null
+  /** Enlace verificado al track en Spotify (matching batch); null = sin match. */
+  spotify_url: string | null
   note_en: string
   note_es: string
 }
@@ -73,6 +75,8 @@ export type ChartTrack = {
   /** Fecha completa de release según Beatport (YYYY-MM-DD). */
   release_date: string | null
   beatport_url: string | null
+  /** Enlace verificado al track en Spotify (matching batch); null = sin match. */
+  spotify_url: string | null
   artwork_url: string | null
   sample_url: string | null
   waveform_url: string | null

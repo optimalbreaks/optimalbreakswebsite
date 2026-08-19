@@ -39,6 +39,7 @@
  *       "music_key": "G Minor",
  *       "release_year": 2026,
  *       "release_date": "2026-04-18",
+ *       "spotify_url": "https://open.spotify.com/track/…",   // opcional; normal: lo rellena spotify-match-charts.mjs
  *       "note_en": "",
  *       "note_es": ""
  *     }
@@ -500,7 +501,7 @@ async function main() {
         ? Number(bpmRaw)
         : null
 
-    return {
+    const row = {
       chart_edition_id: editionId,
       sort_order: idx + 1,
       title,
@@ -522,6 +523,12 @@ async function main() {
       note_en: (p.note_en || '').trim(),
       note_es: (p.note_es || '').trim(),
     }
+    // spotify_url solo si viene en el JSON: si falta la clave, el UPDATE no pisa
+    // el match ya guardado en BD por scripts/spotify-match-charts.mjs.
+    if (typeof p.spotify_url === 'string' && p.spotify_url.trim()) {
+      row.spotify_url = p.spotify_url.trim()
+    }
+    return row
   }
 
   const rows = dedupedPicks.map(buildRow)

@@ -466,6 +466,8 @@
     "preview_pause": "Pause preview",
     "preview_stop": "Stop preview",
     "open_beatport": "View on Beatport",
+    "open_spotify": "Open on Spotify",
+    "search_spotify": "Search on Spotify",
     "bpm_label": "BPM",
     "key_label": "KEY",
     "release_year_title": "Release year on Beatport (store release date, not necessarily studio production year)",

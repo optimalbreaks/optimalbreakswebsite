@@ -917,6 +917,15 @@ All track-listing surfaces (40 Breaks Vitales, New Releases, Retro Vinyl Picks, 
 - **Friday release-day congestion:** Labels worldwide often ship on **Fridays**, so Beatport sees **heavy traffic + scraping load**. Expect **more `403`/timeouts/flaky headless** than mid-week; retry **Saturday morning** or raise **`BEATPORT_BATCH_PAUSE_MS`** — same batches often succeed the next day without code changes.
 - **Vinyl editorial block:** **`npm run db:chart:vinyl -- …`** (`chart-vinyl-upsert.mjs`). **Backfill New Releases from 40 Breaks history:** **`npm run db:chart:backfill-new-releases`**.
 
+### «Open on Spotify» links on `/charts`
+
+Every row in **40 Breaks Vitales** and **New Releases** shows a **SPOTIFY** button (`SpotifyLinkButton` in `ChartView.tsx`) so users with a Spotify account can hear the full track there (we cannot host full audio — no licensing). Two modes:
+
+- **Verified link** — column **`spotify_url`** on `chart_tracks` + `chart_featured_tracks` (migration **`066_charts_spotify_url.sql`**), filled by **`npm run db:chart:spotify`** (`scripts/spotify-match-charts.mjs`): Spotify Web API search via **client-credentials** (env `SPOTIFY_CLIENT_ID` + `SPOTIFY_CLIENT_SECRET`; app owner needs Premium since Feb 2026, but no per-user OAuth is involved). Matching is conservative (normalized title + at least one artist must match; «Original Mix» is treated as no suffix); ambiguity leaves `NULL`.
+- **Search fallback** — rows without `spotify_url` link to `open.spotify.com/search/<artists title>`, so the button works even before matching runs.
+
+Weekly syncs never wipe matches: the 40 Breaks RPC (`apply_chart_tracks_row_updates`) does not list the column, and `chart-featured-upsert.mjs` only sends `spotify_url` when present in the JSON. Run `npm run db:chart:spotify -- --week=<monday>` after publishing a new edition. Per-user Spotify OAuth (add-to-playlist, in-page full playback) is **off the table**: since Feb/Mar 2026 Development Mode apps allow max 5 allowlisted users and Extended Quota Mode requires ≥250k MAU organizations.
+
 ---
 
 - **Weekly chart (“40 Breaks Vitales”)** — `npm run db:chart` runs `scripts/chart-40-breaks.mjs` (Beatport genre top 100 + editorial pipeline). Separate from per-artist sales widgets.

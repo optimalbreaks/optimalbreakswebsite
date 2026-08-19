@@ -649,6 +649,14 @@ const ACTIONS = [
       'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
   },
   {
+    id: 'chart-spotify',
+    run: 'node scripts/guia-base-datos.mjs run chart-spotify [--week=YYYY-MM-DD] [--table=chart|featured|all] [--dry-run] [--force] [--limit=N]',
+    npm: 'npm run db:chart:spotify -- [--week=2026-08-10] [--dry-run]',
+    creds: 'SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Rellena spotify_url en chart_tracks + chart_featured_tracks vía búsqueda en la Web API de Spotify (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). La UI de /charts cae a un enlace de búsqueda en Spotify cuando no hay match. Migración previa: 066_charts_spotify_url.sql. TLS Acttax: node --use-system-ca.',
+  },
+  {
     id: 'purge-featured-week-dates',
     run: 'node scripts/guia-base-datos.mjs run purge-featured-week-dates YYYY-MM-DD […] [--dry-run] [--keep-empty-editions]',
     npm: '—',
