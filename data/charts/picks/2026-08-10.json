@@ -1582,6 +1582,182 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 70
+    },
+    {
+      "title": "Casarider",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Zouave"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/casarider/30242979",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d81bc5aa-9099-48b9-b2a9-ca1c61604d6d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d9638372-4059-4d44-a67a-07470a457031.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "See U",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Zouave"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/see-u/30242980",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d81bc5aa-9099-48b9-b2a9-ca1c61604d6d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/de71e9fc-97df-4fd6-92fe-b8d6d7401842.LOFI.mp3",
+      "bpm": 83,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "Drugstore Cowboy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Zouave"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drugstore-cowboy/30242981",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d81bc5aa-9099-48b9-b2a9-ca1c61604d6d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9cc1d537-5283-4548-b359-2375c2b242fe.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "LUCKY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lucky/30220938",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32d0c908-f01e-48e7-9580-8b574544e48a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7e029f73-a05d-4cd3-ad58-935e82e2eb6a.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "LUCKY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lucky/30220937",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32d0c908-f01e-48e7-9580-8b574544e48a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b3b84a5a-9839-44ec-af93-bf6238120fb3.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "LUCKY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lucky/30220939",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32d0c908-f01e-48e7-9580-8b574544e48a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39cb54bd-8d86-4e9b-a563-e7b0c3a59612.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
+    },
+    {
+      "title": "Utopia (VIP)",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "name": "Pok3r"
+        }
+      ],
+      "label": "Breaksworld records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/utopia-vip/23580955",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/98304fbf-8b46-4bd4-9162-ad2c2d6544a4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/398d3d49-55b6-4e5f-b274-14b27ff4b026.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Hello Goodbye",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Mailky"
+        }
+      ],
+      "label": "Eldryss Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hello-goodbye/30115385",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8e99382e-de23-4f92-9c73-84f17c7a55b6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/31f1e21b-23bd-4cfd-a663-df380872bed6.LOFI.mp3",
+      "bpm": 93,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-08-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
     }
   ]
 }

@@ -1,0 +1,366 @@
+{
+  "week_date": "2026-08-17",
+  "picks": [
+    {
+      "title": "Feel Your Body",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "TT Beats"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-your-body/30172182",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/826f4eff-2d52-47e4-b95e-0394cfac6439.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eeb87cf3-c7af-4b2d-bf03-c3d32e0a4bb4.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "One Baby",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/one-baby/29784413",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/211cc71a-16a6-443e-a875-e353aaf9d301.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7df0c7af-5fcf-42cd-b7f3-ed8f8ba6d0f7.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "I'm Still Alive",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SulivanZ"
+        }
+      ],
+      "label": "Shadow Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/im-still-alive/30186342",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b3437b01-c916-4a58-bf21-fc034f9d22a6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3dc008dc-f4b8-41ad-a19e-ea943feeac41.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "You Win",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "KillBeat (SP)"
+        }
+      ],
+      "label": "X-TRAVAGANT RECORDS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/you-win/29846487",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/560191c2-6bbf-4147-a6dd-4adf5cd082e5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c13b9dd8-1215-463c-a041-510103bfe078.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Low Sun",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Red Nuts"
+        },
+        {
+          "name": "Amalomu"
+        }
+      ],
+      "label": "Stroganov Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/low-sun/29693275",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c9434911-e655-4835-91c5-9ae7493f6650.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/126df581-8997-45e2-9174-9e0c1f468f39.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Radar",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "WelderB"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/radar/29550368",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/30b701f8-2dd9-4b1c-ac91-b772765f86b7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6032bf5c-b571-479c-8c8f-3c2d3d748f91.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Got To Have It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Citybox"
+        },
+        {
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/got-to-have-it/29177181",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eeda26a2-1cea-47ba-b6a6-024801892738.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1f111643-f1d4-497f-b531-50dac9b37d35.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "XTC RAVE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/xtc-rave/30095398",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4dd22240-b9e0-431e-abf4-858fe660f969.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "The Game",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-game/30095397",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f18a7154-1d63-4c0f-9f24-6df4e9c93701.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Sweat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sweat/30095396",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bcb72af8-4179-467e-ab2e-9de4a9a20f81.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Spinal Shock",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        },
+        {
+          "name": "DJ Immortal"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/spinal-shock/30095395",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ad574524-c161-403d-a406-6a9d51fe79cb.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "My Third Eye",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-third-eye/30095394",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/73164fcf-c885-412e-86b0-fc554c1913af.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "Free My Heart",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/free-my-heart/30095393",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/86f56880-711f-4339-9a09-caf7e53eef2a.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "Feeling Immaculate",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feeling-immaculate/30095392",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f430be62-8aac-4e4b-94bc-fbf73dc88197.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Break The Doors Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/break-the-doors-down/30095391",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a06b7a87-1879-42d3-b8fe-cf44ee9aa883.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Again",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/again/30095390",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1347009e-5c74-4ff8-bd4b-d6dfb126f7e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/496cc45c-8ebb-4829-a1d3-9b31657dceff.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-08-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    }
+  ]
+}
