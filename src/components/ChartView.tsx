@@ -372,7 +372,7 @@ function SpotifyLinkButton({ url, title, artists, dict }: { url?: string | null;
   return (
     <a
       href={href} target="_blank" rel="noopener noreferrer"
-      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[#1DB954] hover:text-white active:bg-[#1DB954] transition-all no-underline touch-manipulation whitespace-nowrap"
+      className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[#1DB954] text-white hover:bg-[#169c46] active:bg-[#169c46] transition-all no-underline touch-manipulation whitespace-nowrap"
       style={{ fontFamily: "'Courier Prime', monospace" }}
       title={direct ? c.open_spotify : c.search_spotify}
     >
