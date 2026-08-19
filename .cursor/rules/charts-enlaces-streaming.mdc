@@ -16,6 +16,10 @@ Columnas **`spotify_url`** y **`tidal_url`** en `chart_tracks` + `chart_featured
 5. **Selects explícitos:** `/charts` usa `select('*')` y recibe las columnas solas, pero `TracksSection`, `/api/public/user-tracks` y `artist-related-content.ts` enumeran columnas: al añadir un servicio nuevo hay que ampliarlos (y sus tipos `ChartRow`/`FeatRow`/payload).
 6. **Solo URLs `https://`, nunca esquemas `spotify:`/deep links:** el SO ya abre la app nativa si está instalada y el navegador si no; no hay API web para detectar apps y forzar el esquema saca diálogos de error a quien no la tiene. Si un usuario reporta que «la búsqueda de Spotify no muestra resultados en el móvil»: es la web móvil de Spotify **sin sesión** (enseña recientes/explorar) — no es un bug nuestro; se resuelve completando el matching (los enlaces directos a track sí funcionan sin sesión).
 
+## Top 10 de Beatport en fichas (`artists.beatport_top_tracks` / `labels.beatport_top_tracks`)
+
+Además de los charts, el bloque **Top 10 Beatport** de cada artista/sello lleva sus propios enlaces dentro del JSONB (`BeatportTopTrack.spotify_url` / `.tidal_url`; botones en `BeatportTopTracks.tsx`, Spotify siempre + TIDAL solo con match). Se rellenan con el mismo script: `node scripts/spotify-match-charts.mjs --service=<spotify|tidal> --table=beatport` (o `--table=artists` / `--table=labels`). El matcher itera cada elemento del array, solo toca los que no tienen ese enlace (salvo `--force`), cachea por firma para no repetir búsquedas de un track que sale en varias fichas, y hace PATCH del array completo por entidad. **Tras dar de alta un nuevo Top 10 de Beatport** (`run beatport-top`), lanzar también este matching para paridad con el resto.
+
 ## Operativa editorial
 
 - **Tras publicar edición semanal:** `npm run db:chart:spotify -- --week=<lunes>` y `npm run db:chart:tidal -- --week=<lunes>` (~50-100 búsquedas; trivial para las cuotas).

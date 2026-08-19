@@ -7,13 +7,15 @@
  * UI: el botón SPOTIFY se muestra siempre (fallback a búsqueda); el botón TIDAL
  * solo aparece con match verificado (su catálogo de breaks es más limitado).
  *
- *   node scripts/spotify-match-charts.mjs                       # Spotify, todo lo pendiente (spotify_url NULL)
+ *   node scripts/spotify-match-charts.mjs                       # Spotify, charts pendientes (spotify_url NULL)
  *   node scripts/spotify-match-charts.mjs --service=tidal       # TIDAL (tidal_url NULL)
  *   node scripts/spotify-match-charts.mjs --week=2026-08-10     # solo esa edición (lunes ISO)
- *   node scripts/spotify-match-charts.mjs --table=featured      # solo New Releases (chart|featured|all)
+ *   node scripts/spotify-match-charts.mjs --table=featured      # chart | featured | all (charts)
+ *   node scripts/spotify-match-charts.mjs --table=beatport      # Top 10 Beatport de artists + labels (JSONB)
+ *   node scripts/spotify-match-charts.mjs --table=artists       # solo Top 10 de artistas | labels = solo sellos
  *   node scripts/spotify-match-charts.mjs --dry-run             # no escribe en BD
  *   node scripts/spotify-match-charts.mjs --force               # re-matchea también filas con enlace
- *   node scripts/spotify-match-charts.mjs --limit=50            # tope de filas por tabla
+ *   node scripts/spotify-match-charts.mjs --limit=50            # tope de filas/tracks por tabla
  *
  * Requiere .env.local:
  *   SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET  (app en developer.spotify.com; client credentials)
@@ -91,8 +93,8 @@ const PAUSE_MS = Number(argValue('pause-ms', '350')) || 350
 const MARKET = argValue('market', 'ES')
 const SERVICE = (argValue('service', 'spotify') || 'spotify').toLowerCase()
 
-if (!['all', 'chart', 'featured'].includes(TABLE)) {
-  console.error(`--table debe ser chart | featured | all (recibido: ${TABLE})`)
+if (!['all', 'chart', 'featured', 'beatport', 'artists', 'labels'].includes(TABLE)) {
+  console.error(`--table debe ser chart | featured | all | beatport | artists | labels (recibido: ${TABLE})`)
   process.exit(1)
 }
 if (!['spotify', 'tidal'].includes(SERVICE)) {
@@ -368,6 +370,42 @@ async function pingPublicChartsRevalidate() {
 // Main
 // ---------------------------------------------------------------------------
 
+/**
+ * Busca el mejor match de streaming para una fila { title, mix_name, artists, label }.
+ * Cachea por firma normalizada (título+primer artista) para no repetir búsquedas de
+ * un mismo track que aparece en varias fichas (Top 10 de artista y de sello, colabos…).
+ * Devuelve el candidato ({name, artists, url}) o null. Lanza QuotaExceeded al agotar cuota.
+ */
+const matchCache = new Map()
+async function findMatch(row) {
+  const artistNames = (Array.isArray(row.artists) ? row.artists : [])
+    .map((a) => (a && typeof a === 'object' ? a.name : a))
+    .filter(Boolean)
+  const cleanTitle = String(row.title || '').replace(/"/g, '')
+  const firstArtist = String(artistNames[0] || '').replace(/"/g, '')
+  const cacheKey = `${norm(cleanTitle)}|${normMix(row.mix_name)}|${norm(firstArtist)}`
+  if (matchCache.has(cacheKey)) return matchCache.get(cacheKey)
+
+  const queries = SERVICE === 'tidal'
+    ? [`${firstArtist} ${cleanTitle}`, cleanTitle]
+    : [`track:"${cleanTitle}" artist:"${firstArtist}"`, `${artistNames.join(' ')} ${row.title}`]
+  let hit = bestMatch(row, await searchTracks(queries[0]))
+  if (!hit) {
+    await sleep(PAUSE_MS)
+    hit = bestMatch(row, await searchTracks(queries[1]))
+  }
+  matchCache.set(cacheKey, hit || null)
+  await sleep(PAUSE_MS)
+  return hit || null
+}
+
+function rowLabel(row) {
+  const artistNames = (Array.isArray(row.artists) ? row.artists : [])
+    .map((a) => (a && typeof a === 'object' ? a.name : a))
+    .filter(Boolean)
+  return `«${row.title}»${row.mix_name ? ` (${row.mix_name})` : ''} — ${artistNames.join(', ')}`
+}
+
 async function processTable(table) {
   const rows = await fetchRows(table)
   console.log(`\n■ ${table}: ${rows.length} filas ${FORCE ? '(--force: re-matcheo)' : 'pendientes'}${WEEK ? ` — semana ${WEEK}` : ''}`)
@@ -376,24 +414,10 @@ async function processTable(table) {
   const misses = []
 
   for (const row of rows) {
-    const artistNames = (Array.isArray(row.artists) ? row.artists : [])
-      .map((a) => (a && typeof a === 'object' ? a.name : a))
-      .filter(Boolean)
-    const label = `«${row.title}»${row.mix_name ? ` (${row.mix_name})` : ''} — ${artistNames.join(', ')}`
-
-    // Primera búsqueda (precisa); si nada aceptable, segunda más laxa.
-    const cleanTitle = String(row.title).replace(/"/g, '')
-    const firstArtist = String(artistNames[0] || '').replace(/"/g, '')
-    const queries = SERVICE === 'tidal'
-      ? [`${firstArtist} ${cleanTitle}`, cleanTitle]
-      : [`track:"${cleanTitle}" artist:"${firstArtist}"`, `${artistNames.join(' ')} ${row.title}`]
+    const label = rowLabel(row)
     let hit
     try {
-      hit = bestMatch(row, await searchTracks(queries[0]))
-      if (!hit) {
-        await sleep(PAUSE_MS)
-        hit = bestMatch(row, await searchTracks(queries[1]))
-      }
+      hit = await findMatch(row)
     } catch (e) {
       if (e?.quotaExceeded) {
         console.warn(`\n  ■ ${e.message}. Progreso guardado: reejecuta el script mañana y continuará con las filas pendientes (${COLUMN} NULL).`)
@@ -411,23 +435,113 @@ async function processTable(table) {
       misses.push(label)
       console.log(`  ✗ ${label} — sin match fiable`)
     }
-    await sleep(PAUSE_MS)
   }
 
   console.log(`  ── ${table}: ${matched} matches, ${notFound} sin match.`)
   return { matched, notFound, misses }
 }
 
+/** Filas de artists/labels con Top 10 de Beatport (JSONB beatport_top_tracks). */
+async function fetchEntities(entityTable) {
+  const rows = []
+  const PAGE = 500
+  // El filtrado por elemento (algunos ya tienen url) se hace en JS al iterar el array.
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await sbGet(
+      `${entityTable}?select=id,slug,beatport_top_tracks&beatport_top_tracks=not.is.null&order=id&limit=${PAGE}&offset=${offset}`,
+    )
+    rows.push(...page.filter((r) => Array.isArray(r.beatport_top_tracks) && r.beatport_top_tracks.length))
+    if (page.length < PAGE) break
+  }
+  return rows
+}
+
+/**
+ * Procesa el Top 10 de Beatport embebido en artists/labels: matchea cada track del
+ * array JSONB y reescribe la columna con los nuevos {COLUMN}. Solo toca elementos sin
+ * enlace (salvo --force). PATCH del array completo una vez por entidad.
+ */
+async function processBeatportEntity(entityTable) {
+  const entities = await fetchEntities(entityTable)
+  const totalTracks = entities.reduce((n, e) => n + e.beatport_top_tracks.length, 0)
+  console.log(`\n■ ${entityTable}.beatport_top_tracks: ${entities.length} fichas, ${totalTracks} tracks ${FORCE ? '(--force: re-matcheo)' : ''}`)
+  let matched = 0
+  let notFound = 0
+  const misses = []
+  let processedTracks = 0
+
+  for (const ent of entities) {
+    const list = ent.beatport_top_tracks
+    let changed = false
+    for (const el of list) {
+      if (!FORCE && el[COLUMN]) continue // ya tiene enlace de este servicio
+      if (LIMIT && processedTracks >= LIMIT) break
+      processedTracks++
+      const row = { title: el.title, mix_name: el.mix_name, artists: el.artists, label: el.label }
+      const label = `[${ent.slug}] ${rowLabel(row)}`
+      let hit
+      try {
+        hit = await findMatch(row)
+      } catch (e) {
+        if (e?.quotaExceeded) {
+          if (changed && !DRY_RUN) await sbPatch(entityTable, ent.id, { beatport_top_tracks: list })
+          console.warn(`\n  ■ ${e.message}. Progreso guardado: reejecuta mañana y seguirá por los tracks sin ${COLUMN}.`)
+          return { matched, notFound, misses, quotaExceeded: true }
+        }
+        throw e
+      }
+      if (hit) {
+        matched++
+        el[COLUMN] = hit.url
+        changed = true
+        console.log(`  ✓ ${label}\n      → ${hit.url}`)
+      } else {
+        notFound++
+        misses.push(label)
+        console.log(`  ✗ ${label} — sin match fiable`)
+      }
+    }
+    if (changed && !DRY_RUN) await sbPatch(entityTable, ent.id, { beatport_top_tracks: list })
+    if (LIMIT && processedTracks >= LIMIT) break
+  }
+
+  console.log(`  ── ${entityTable}.beatport_top_tracks: ${matched} matches, ${notFound} sin match.`)
+  return { matched, notFound, misses }
+}
+
 async function main() {
   console.log(`${SVC.label} matching (columna ${COLUMN}) — tablas: ${TABLE}${DRY_RUN ? ' (dry-run, no escribe)' : ''}`)
   const totals = { matched: 0, notFound: 0 }
-  const tables = TABLE === 'all' ? ['chart_tracks', 'chart_featured_tracks'] : TABLE === 'chart' ? ['chart_tracks'] : ['chart_featured_tracks']
-  for (const t of tables) {
+
+  // Charts (chart_tracks / chart_featured_tracks)
+  const chartTables =
+    TABLE === 'all' ? ['chart_tracks', 'chart_featured_tracks']
+    : TABLE === 'chart' ? ['chart_tracks']
+    : TABLE === 'featured' ? ['chart_featured_tracks']
+    : []
+  // Top 10 Beatport embebido (artists / labels)
+  const beatportEntities =
+    TABLE === 'beatport' ? ['artists', 'labels']
+    : TABLE === 'artists' ? ['artists']
+    : TABLE === 'labels' ? ['labels']
+    : []
+
+  let stop = false
+  for (const t of chartTables) {
     const r = await processTable(t)
     totals.matched += r.matched
     totals.notFound += r.notFound
-    if (r.quotaExceeded) break
+    if (r.quotaExceeded) { stop = true; break }
   }
+  if (!stop) {
+    for (const e of beatportEntities) {
+      const r = await processBeatportEntity(e)
+      totals.matched += r.matched
+      totals.notFound += r.notFound
+      if (r.quotaExceeded) break
+    }
+  }
+
   console.log(`\nTotal: ${totals.matched} enlaces guardados, ${totals.notFound} sin match.`)
   if (!DRY_RUN && totals.matched > 0) await pingPublicChartsRevalidate()
 }

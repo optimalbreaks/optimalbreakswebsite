@@ -537,6 +537,8 @@ export interface BeatportTopTrack {
   release_date: string | null
   /** Enlace verificado al track en Spotify (opcional; el botón cae a búsqueda). */
   spotify_url?: string | null
+  /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
+  tidal_url?: string | null
 }
 
 export interface Artist extends Record<string, unknown> {
