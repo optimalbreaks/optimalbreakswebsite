@@ -280,6 +280,31 @@ export function SpotifyLinkButton({ url, title, artists, dict, lang }: {
   )
 }
 
+/** Logo oficial TIDAL (simple-icons, viewBox 24). */
+const TIDAL_ICON_PATH = 'M12.012 3.992L8.008 7.996 4.004 3.992 0 7.996 4.004 12l4.004-4.004L12.012 12l-4.004 4.004 4.004 4.004 4.004-4.004L12.012 12l4.004-4.004-4.004-4.004zM16.042 7.996l3.979-3.979L24 7.996l-3.979 3.979z'
+
+/**
+ * TIDAL solo se muestra con enlace verificado (`tidal_url`): su catálogo de
+ * breaks es más limitado y no queremos un botón de búsqueda casi siempre vacío.
+ */
+export function TidalLinkButton({ url, lang }: { url?: string | null; lang?: Locale }) {
+  const direct = (url || '').trim()
+  if (!direct) return null
+  const tooltip = lang === 'es' ? 'Abrir en TIDAL' : 'Open on TIDAL'
+  return (
+    <a
+      href={direct} target="_blank" rel="noopener noreferrer"
+      className={`${PLATFORM_BTN_BASE} bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white active:bg-[var(--ink)] active:text-white`}
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+      title={tooltip}
+      aria-label={tooltip}
+    >
+      <svg viewBox="0 0 24 24" className="w-[20px] h-[20px] sm:hidden" fill="currentColor" aria-hidden="true"><path d={TIDAL_ICON_PATH} /></svg>
+      <span className="hidden sm:inline">TIDAL</span>
+    </a>
+  )
+}
+
 export function BeatportLinkButton({ url, lang, dict }: {
   url: string
   lang?: Locale

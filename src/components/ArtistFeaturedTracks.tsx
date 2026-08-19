@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
@@ -309,6 +309,7 @@ export default function ArtistFeaturedTracks({
                         lang={lang}
                         shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
                       />
+                      <TidalLinkButton url={pick.tidal_url} lang={lang} />
                       <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
                       {pick.link_url ? (
                         pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (

@@ -55,6 +55,8 @@ export type ChartFeaturedTrack = {
   release_date: string | null
   /** Enlace verificado al track en Spotify (matching batch); null = sin match. */
   spotify_url: string | null
+  /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
+  tidal_url?: string | null
   note_en: string
   note_es: string
 }
@@ -77,6 +79,8 @@ export type ChartTrack = {
   beatport_url: string | null
   /** Enlace verificado al track en Spotify (matching batch); null = sin match. */
   spotify_url: string | null
+  /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
+  tidal_url?: string | null
   artwork_url: string | null
   sample_url: string | null
   waveform_url: string | null

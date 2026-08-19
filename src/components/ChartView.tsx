@@ -22,7 +22,7 @@ import type {
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -468,6 +468,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
             lang={lang}
             shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
           />
+          <TidalLinkButton url={pick.tidal_url} lang={lang} />
           <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} lang={lang} />
           {pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
             <BeatportLinkButton url={pick.link_url} dict={dict} lang={lang} />
@@ -682,6 +683,7 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
               shareTitle={`${track.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
             />
           )}
+          <TidalLinkButton url={track.tidal_url} lang={lang} />
           <SpotifyLinkButton url={track.spotify_url} title={track.title} artists={artists} dict={dict} lang={lang} />
           {track.beatport_url && (
             <BeatportLinkButton url={track.beatport_url} dict={dict} lang={lang} />

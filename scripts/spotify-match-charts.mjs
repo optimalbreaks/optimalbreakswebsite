@@ -1,20 +1,23 @@
 /**
- * OPTIMAL BREAKS — Matching de tracks del chart contra Spotify (spotify_url)
+ * OPTIMAL BREAKS — Matching de tracks del chart contra Spotify / TIDAL
+ * (columnas spotify_url / tidal_url en chart_tracks + chart_featured_tracks)
  *
  * Recorre chart_tracks (40 Breaks Vitales) y chart_featured_tracks (New Releases)
- * y rellena la columna `spotify_url` con el enlace verificado al track en Spotify.
- * La UI de /charts muestra «SPOTIFY» siempre: enlace directo si hay match,
- * búsqueda en open.spotify.com si no (así el matching solo mejora, nunca bloquea).
+ * y rellena la columna del servicio con el enlace verificado al track.
+ * UI: el botón SPOTIFY se muestra siempre (fallback a búsqueda); el botón TIDAL
+ * solo aparece con match verificado (su catálogo de breaks es más limitado).
  *
- *   node scripts/spotify-match-charts.mjs                       # todo lo pendiente (spotify_url NULL)
+ *   node scripts/spotify-match-charts.mjs                       # Spotify, todo lo pendiente (spotify_url NULL)
+ *   node scripts/spotify-match-charts.mjs --service=tidal       # TIDAL (tidal_url NULL)
  *   node scripts/spotify-match-charts.mjs --week=2026-08-10     # solo esa edición (lunes ISO)
  *   node scripts/spotify-match-charts.mjs --table=featured      # solo New Releases (chart|featured|all)
  *   node scripts/spotify-match-charts.mjs --dry-run             # no escribe en BD
- *   node scripts/spotify-match-charts.mjs --force               # re-matchea también filas con spotify_url
+ *   node scripts/spotify-match-charts.mjs --force               # re-matchea también filas con enlace
  *   node scripts/spotify-match-charts.mjs --limit=50            # tope de filas por tabla
  *
  * Requiere .env.local:
  *   SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET  (app en developer.spotify.com; client credentials)
+ *   TIDAL_CLIENT_ID + TIDAL_CLIENT_SECRET      (app en developer.tidal.com; solo --service=tidal)
  *   NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)
  *
  * Redes con SSL inspection (Acttax): si falla el TLS contra accounts.spotify.com,
@@ -24,8 +27,11 @@
  *   - el título normalizado debe coincidir (exacto o contenido en el nombre del track);
  *   - al menos un artista nuestro debe estar entre los artistas del candidato;
  *   - el mix_name («Extended Mix»…) puntúa pero no bloquea («Original Mix» se ignora:
- *     en Spotify el mix original suele ir sin sufijo).
+ *     el mix original suele ir sin sufijo en streaming).
  * Ambigüedad o cero candidatos → se deja NULL y se lista en el resumen.
+ *
+ * Cuotas: Spotify Development Mode tiene cuota diaria (~1.300 búsquedas por cuenta);
+ * al agotarse el script corta con resumen y se reanuda otro día donde quedó.
  */
 
 import { readFileSync, existsSync } from 'fs'
@@ -83,11 +89,18 @@ const FORCE = argv.includes('--force')
 const LIMIT = Number(argValue('limit', '0')) || 0
 const PAUSE_MS = Number(argValue('pause-ms', '350')) || 350
 const MARKET = argValue('market', 'ES')
+const SERVICE = (argValue('service', 'spotify') || 'spotify').toLowerCase()
 
 if (!['all', 'chart', 'featured'].includes(TABLE)) {
   console.error(`--table debe ser chart | featured | all (recibido: ${TABLE})`)
   process.exit(1)
 }
+if (!['spotify', 'tidal'].includes(SERVICE)) {
+  console.error(`--service debe ser spotify | tidal (recibido: ${SERVICE})`)
+  process.exit(1)
+}
+/** Columna destino en BD según servicio. */
+const COLUMN = SERVICE === 'tidal' ? 'tidal_url' : 'spotify_url'
 
 // ---------------------------------------------------------------------------
 // Supabase REST (service role)
@@ -122,9 +135,9 @@ async function sbPatch(table, id, body) {
 
 /** Filas pendientes con paginación (PostgREST corta en ~1000). */
 async function fetchRows(table) {
-  const cols = 'id,title,mix_name,artists,label,spotify_url'
+  const cols = `id,title,mix_name,artists,label,${COLUMN}`
   const filters = []
-  if (!FORCE) filters.push('spotify_url=is.null')
+  if (!FORCE) filters.push(`${COLUMN}=is.null`)
   if (WEEK) {
     const eds = await sbGet(`chart_editions?select=id&week_date=eq.${WEEK}`)
     if (!eds.length) throw new Error(`No hay chart_editions con week_date=${WEEK}`)
@@ -143,32 +156,48 @@ async function fetchRows(table) {
 }
 
 // ---------------------------------------------------------------------------
-// Spotify Web API (client credentials)
+// APIs de streaming (client credentials). Ambos backends devuelven candidatos
+// normalizados: { name, artists: string[], url }.
 // ---------------------------------------------------------------------------
 
-const SPOTIFY_ID = process.env.SPOTIFY_CLIENT_ID || ''
-const SPOTIFY_SECRET = process.env.SPOTIFY_CLIENT_SECRET || ''
-if (!SPOTIFY_ID || !SPOTIFY_SECRET) {
-  console.error(
-    'Faltan SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET en .env.local.\n' +
-    'Crea una app en https://developer.spotify.com/dashboard (Web API; requiere cuenta Premium\n' +
-    'desde feb-2026) y copia Client ID + Client Secret. La UI funciona sin esto (enlace de búsqueda).',
-  )
+const SVC = SERVICE === 'tidal'
+  ? {
+      label: 'TIDAL',
+      id: process.env.TIDAL_CLIENT_ID || '',
+      secret: process.env.TIDAL_CLIENT_SECRET || '',
+      tokenUrl: 'https://auth.tidal.com/v1/oauth2/token',
+      credsHelp:
+        'Faltan TIDAL_CLIENT_ID / TIDAL_CLIENT_SECRET en .env.local.\n' +
+        'Crea una app en https://developer.tidal.com/dashboard y copia Client ID + Client Secret.',
+    }
+  : {
+      label: 'Spotify',
+      id: process.env.SPOTIFY_CLIENT_ID || '',
+      secret: process.env.SPOTIFY_CLIENT_SECRET || '',
+      tokenUrl: 'https://accounts.spotify.com/api/token',
+      credsHelp:
+        'Faltan SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET en .env.local.\n' +
+        'Crea una app en https://developer.spotify.com/dashboard (Web API; requiere cuenta Premium\n' +
+        'desde feb-2026) y copia Client ID + Client Secret. La UI funciona sin esto (enlace de búsqueda).',
+    }
+
+if (!SVC.id || !SVC.secret) {
+  console.error(SVC.credsHelp)
   process.exit(1)
 }
 
 let tokenCache = { value: '', expiresAt: 0 }
-async function spotifyToken() {
+async function serviceToken() {
   if (tokenCache.value && Date.now() < tokenCache.expiresAt - 30_000) return tokenCache.value
-  const res = await fetch('https://accounts.spotify.com/api/token', {
+  const res = await fetch(SVC.tokenUrl, {
     method: 'POST',
     headers: {
-      Authorization: `Basic ${Buffer.from(`${SPOTIFY_ID}:${SPOTIFY_SECRET}`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${SVC.id}:${SVC.secret}`).toString('base64')}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
   })
-  if (!res.ok) throw new Error(`Spotify token: HTTP ${res.status} ${await res.text()}`)
+  if (!res.ok) throw new Error(`${SVC.label} token: HTTP ${res.status} ${await res.text()}`)
   const json = await res.json()
   tokenCache = { value: json.access_token, expiresAt: Date.now() + (json.expires_in || 3600) * 1000 }
   return tokenCache.value
@@ -176,35 +205,69 @@ async function spotifyToken() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-/** Cuota diaria por cuenta agotada (Development Mode): reanudar otro día. */
-class SpotifyQuotaExceeded extends Error {
+/** Cuota diaria por cuenta agotada (Spotify Development Mode): reanudar otro día. */
+class QuotaExceeded extends Error {
   constructor(retryAfterSec) {
     super(`cuota diaria de la API agotada (retry-after ${retryAfterSec}s)`)
     this.quotaExceeded = true
   }
 }
 
-async function spotifySearch(query) {
-  const token = await spotifyToken()
-  const url = `https://api.spotify.com/v1/search?type=track&limit=10&market=${encodeURIComponent(MARKET)}&q=${encodeURIComponent(query)}`
+/** fetch con manejo de 429 (rate limit corto → espera; cuota diaria → aborta). */
+async function fetchWith429(url, headers) {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    const res = await fetch(url, { headers })
     if (res.status === 429) {
       const retry = Number(res.headers.get('retry-after') || '2')
       const body = await res.text().catch(() => '')
-      // Desde jul-2026 la cuota (por cuenta/día) responde 429 con reason QUOTA_EXCEEDED
-      // y retry-after de horas: no tiene sentido dormir, se reanuda otro día.
-      if (retry > 600 || body.includes('QUOTA_EXCEEDED')) throw new SpotifyQuotaExceeded(retry)
-      console.warn(`  … rate limit Spotify, esperando ${retry}s`)
+      if (retry > 600 || body.includes('QUOTA_EXCEEDED')) throw new QuotaExceeded(retry)
+      console.warn(`  … rate limit ${SVC.label}, esperando ${retry}s`)
       await sleep((retry + 1) * 1000)
       continue
     }
-    if (!res.ok) throw new Error(`Spotify search: HTTP ${res.status} ${await res.text()}`)
-    const json = await res.json()
-    return json?.tracks?.items || []
+    if (!res.ok) throw new Error(`${SVC.label} search: HTTP ${res.status} ${await res.text()}`)
+    return res.json()
   }
-  throw new Error('Spotify search: rate limit persistente (429 x3)')
+  throw new Error(`${SVC.label} search: rate limit persistente (429 x3)`)
 }
+
+async function spotifySearch(query) {
+  const token = await serviceToken()
+  const url = `https://api.spotify.com/v1/search?type=track&limit=10&market=${encodeURIComponent(MARKET)}&q=${encodeURIComponent(query)}`
+  const json = await fetchWith429(url, { Authorization: `Bearer ${token}` })
+  return (json?.tracks?.items || []).map((t) => ({
+    name: t.name || '',
+    artists: (t.artists || []).map((a) => a?.name || '').filter(Boolean),
+    url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
+  }))
+}
+
+async function tidalSearch(query) {
+  const token = await serviceToken()
+  const url = `https://openapi.tidal.com/v2/searchResults?filter[query]=${encodeURIComponent(query)}&countryCode=${encodeURIComponent(MARKET)}&include=tracks.artists`
+  const json = await fetchWith429(url, {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.api+json',
+  })
+  const included = json?.included || []
+  const artistById = new Map(
+    included.filter((r) => r.type === 'artists').map((a) => [a.id, a.attributes?.name || '']),
+  )
+  return included
+    .filter((r) => r.type === 'tracks')
+    .map((t) => {
+      const title = t.attributes?.title || ''
+      const version = (t.attributes?.version || '').trim()
+      return {
+        // `version` es el mix («Extended Mix»…); se añade al nombre para el scoring.
+        name: version && !title.toLowerCase().includes(version.toLowerCase()) ? `${title} (${version})` : title,
+        artists: (t.relationships?.artists?.data || []).map((r) => artistById.get(r.id) || '').filter(Boolean),
+        url: t.attributes?.externalLinks?.[0]?.href || `https://tidal.com/browse/track/${t.id}`,
+      }
+    })
+}
+
+const searchTracks = SERVICE === 'tidal' ? tidalSearch : spotifySearch
 
 // ---------------------------------------------------------------------------
 // Normalización y scoring
@@ -236,8 +299,8 @@ function artistMatches(ourName, candArtists) {
 }
 
 /**
- * Puntúa un candidato de Spotify contra nuestra fila.
- * Devuelve 0 si no es aceptable (título o artistas no cuadran).
+ * Puntúa un candidato normalizado ({ name, artists: string[], url }) contra
+ * nuestra fila. Devuelve 0 si no es aceptable (título o artistas no cuadran).
  */
 function scoreCandidate(row, cand) {
   const ourTitle = norm(row.title)
@@ -245,7 +308,7 @@ function scoreCandidate(row, cand) {
   const candName = norm(cand.name)
   // «Title - Extended Mix» → base «title»
   const candBase = norm(String(cand.name).split(/\s+[-–—]\s+/)[0])
-  const candArtists = (cand.artists || []).map((a) => a?.name || '')
+  const candArtists = cand.artists || []
 
   const titleExact = candName === ourTitle || candBase === ourTitle
   const titleContained = !titleExact && (candName.includes(ourTitle) || ourTitle.includes(candBase))
@@ -318,36 +381,35 @@ async function processTable(table) {
       .filter(Boolean)
     const label = `«${row.title}»${row.mix_name ? ` (${row.mix_name})` : ''} — ${artistNames.join(', ')}`
 
-    // Búsqueda con campos (precisa); si nada aceptable, texto plano (laxa).
+    // Primera búsqueda (precisa); si nada aceptable, segunda más laxa.
     const cleanTitle = String(row.title).replace(/"/g, '')
     const firstArtist = String(artistNames[0] || '').replace(/"/g, '')
-    let candidates
+    const queries = SERVICE === 'tidal'
+      ? [`${firstArtist} ${cleanTitle}`, cleanTitle]
+      : [`track:"${cleanTitle}" artist:"${firstArtist}"`, `${artistNames.join(' ')} ${row.title}`]
     let hit
     try {
-      candidates = await spotifySearch(`track:"${cleanTitle}" artist:"${firstArtist}"`)
-      hit = bestMatch(row, candidates)
+      hit = bestMatch(row, await searchTracks(queries[0]))
       if (!hit) {
         await sleep(PAUSE_MS)
-        candidates = await spotifySearch(`${artistNames.join(' ')} ${row.title}`)
-        hit = bestMatch(row, candidates)
+        hit = bestMatch(row, await searchTracks(queries[1]))
       }
     } catch (e) {
       if (e?.quotaExceeded) {
-        console.warn(`\n  ■ ${e.message}. Progreso guardado: reejecuta el script mañana y continuará con las filas pendientes (spotify_url NULL).`)
+        console.warn(`\n  ■ ${e.message}. Progreso guardado: reejecuta el script mañana y continuará con las filas pendientes (${COLUMN} NULL).`)
         return { matched, notFound, misses, quotaExceeded: true }
       }
       throw e
     }
 
     if (hit) {
-      const spotifyUrl = hit.external_urls?.spotify || `https://open.spotify.com/track/${hit.id}`
       matched++
-      console.log(`  ✓ ${label}\n      → ${spotifyUrl}  [${hit.name} — ${(hit.artists || []).map((a) => a.name).join(', ')}]`)
-      if (!DRY_RUN) await sbPatch(table, row.id, { spotify_url: spotifyUrl })
+      console.log(`  ✓ ${label}\n      → ${hit.url}  [${hit.name} — ${(hit.artists || []).join(', ')}]`)
+      if (!DRY_RUN) await sbPatch(table, row.id, { [COLUMN]: hit.url })
     } else {
       notFound++
       misses.push(label)
-      console.log(`  ✗ ${label} — sin match fiable (queda enlace de búsqueda en la UI)`)
+      console.log(`  ✗ ${label} — sin match fiable`)
     }
     await sleep(PAUSE_MS)
   }
@@ -357,7 +419,7 @@ async function processTable(table) {
 }
 
 async function main() {
-  console.log(`Spotify matching — tablas: ${TABLE}${DRY_RUN ? ' (dry-run, no escribe)' : ''}`)
+  console.log(`${SVC.label} matching (columna ${COLUMN}) — tablas: ${TABLE}${DRY_RUN ? ' (dry-run, no escribe)' : ''}`)
   const totals = { matched: 0, notFound: 0 }
   const tables = TABLE === 'all' ? ['chart_tracks', 'chart_featured_tracks'] : TABLE === 'chart' ? ['chart_tracks'] : ['chart_featured_tracks']
   for (const t of tables) {

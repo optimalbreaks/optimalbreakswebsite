@@ -650,11 +650,11 @@ const ACTIONS = [
   },
   {
     id: 'chart-spotify',
-    run: 'node scripts/guia-base-datos.mjs run chart-spotify [--week=YYYY-MM-DD] [--table=chart|featured|all] [--dry-run] [--force] [--limit=N]',
-    npm: 'npm run db:chart:spotify -- [--week=2026-08-10] [--dry-run]',
-    creds: 'SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    run: 'node scripts/guia-base-datos.mjs run chart-spotify [--service=spotify|tidal] [--week=YYYY-MM-DD] [--table=chart|featured|all] [--dry-run] [--force] [--limit=N]',
+    npm: 'npm run db:chart:spotify -- [--week=2026-08-10] [--dry-run]   ·   npm run db:chart:tidal',
+    creds: 'SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET (o TIDAL_CLIENT_ID + TIDAL_CLIENT_SECRET con --service=tidal) + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Rellena spotify_url en chart_tracks + chart_featured_tracks vía búsqueda en la Web API de Spotify (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). La UI de /charts cae a un enlace de búsqueda en Spotify cuando no hay match. Migración previa: 066_charts_spotify_url.sql. TLS Acttax: node --use-system-ca. OJO: Development Mode tiene cuota diaria por cuenta (~1.300 búsquedas); al agotarse (429 QUOTA_EXCEEDED) el script corta con resumen y se reanuda otro día donde quedó (solo procesa filas con spotify_url NULL).',
+      'Rellena spotify_url (o tidal_url con --service=tidal) en chart_tracks + chart_featured_tracks vía búsqueda en la API del servicio (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). UI: botón SPOTIFY siempre (fallback búsqueda); botón TIDAL solo con match verificado. Migraciones previas: 066_charts_spotify_url.sql + 067_charts_tidal_url.sql. TLS Acttax: node --use-system-ca. OJO Spotify: Development Mode tiene cuota diaria por cuenta (~1.300 búsquedas); al agotarse (429 QUOTA_EXCEEDED) el script corta con resumen y se reanuda otro día donde quedó (solo procesa filas NULL).',
   },
   {
     id: 'purge-featured-week-dates',

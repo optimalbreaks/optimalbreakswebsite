@@ -15,7 +15,7 @@ import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton } from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
@@ -88,8 +88,8 @@ export type PublicTracksPayload = {
     created_at: string | null
   }>
   tracks: {
-    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; spotify_url?: string | null; sample_url: string | null; week_date?: string | null }>
-    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
+    chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; week_date?: string | null }>
+    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
     vinyl: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }>
   }
 }
@@ -114,6 +114,8 @@ type UnifiedTrack = {
   external_label?: string
   /** Enlace verificado al track en Spotify (chart / featured); el botón cae a búsqueda. */
   spotify_url?: string | null
+  /** Enlace verificado al track en TIDAL; el botón solo sale con match. */
+  tidal_url?: string | null
   sample_url?: string | null
   youtube_url?: string | null
   platform?: string
@@ -232,6 +234,7 @@ function assembleUnifiedTracks(
       label: c.label, year: c.release_year, release_date: c.release_date ?? null, bpm: c.bpm, music_key: c.music_key,
       artwork_url: c.artwork_url, external_url: c.beatport_url, external_label: 'BEATPORT',
       spotify_url: c.spotify_url ?? null,
+      tidal_url: c.tidal_url ?? null,
       sample_url: c.sample_url,
       week_date: c.week_date ?? null,
     })
@@ -247,6 +250,7 @@ function assembleUnifiedTracks(
       artwork_url: f.artwork_url, external_url: f.link_url,
       external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
       spotify_url: f.spotify_url ?? null,
+      tidal_url: f.tidal_url ?? null,
       sample_url: f.sample_url, platform: f.platform,
       note: lang === 'es' ? f.note_es : f.note_en,
       week_date: f.week_date ?? null,
@@ -625,10 +629,10 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
       let [chartData, featData, vinylData]: [any[], any[], any[]] = await Promise.all([
         selectByIds<any>(chartIds, (chunk) =>
-          supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, sample_url').in('id', chunk),
+          supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('id', chunk),
         ),
         selectByIds<any>(featuredIds, (chunk) =>
-          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, sample_url, note_en, note_es').in('id', chunk),
+          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, note_en, note_es').in('id', chunk),
         ),
         selectByIds<any>(vinylIds, (chunk) =>
           supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
@@ -1540,6 +1544,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                         />
                       )
                     })()}
+                    <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
                     {t.source !== 'vinyl' ? (
                       <SpotifyLinkButton
                         url={t.spotify_url}

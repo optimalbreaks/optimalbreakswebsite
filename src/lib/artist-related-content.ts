@@ -440,7 +440,7 @@ export async function fetchArtistFeaturedPicks(
   const { data, error } = await supabase
     .from('chart_featured_tracks')
     .select(
-      'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, note_en, note_es, chart_editions!inner(week_date)',
+      'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)',
     )
     .or(artistNamesOr)
     .order('week_date', { referencedTable: 'chart_editions', ascending: false })

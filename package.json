@@ -42,6 +42,7 @@
     "db:chart:artists:agent": "node scripts/enrich-chart-artists-agent.mjs",
     "db:chart:featured": "node scripts/chart-featured-upsert.mjs",
     "db:chart:spotify": "node scripts/spotify-match-charts.mjs",
+    "db:chart:tidal": "node scripts/spotify-match-charts.mjs --service=tidal",
     "db:chart:backfill-new-releases": "node scripts/backfill-new-releases-from-40breaks.mjs",
     "db:chart:vinyl": "node scripts/chart-vinyl-upsert.mjs",
     "db:chart:vinyl:discogs": "node scripts/chart-vinyl-from-discogs.mjs",
