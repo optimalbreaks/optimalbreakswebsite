@@ -16,6 +16,7 @@ export default function LoginForm({ lang }: { lang: string }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [isArtist, setIsArtist] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -54,7 +55,16 @@ export default function LoginForm({ lang }: { lang: string }) {
       }
       const { error: err } = await signUpWithEmail(email, password, name)
       if (err) setError(err)
-      else setSuccess(es ? 'Revisa tu email para confirmar tu cuenta' : 'Check your email to confirm your account')
+      else {
+        // Recordamos la intención de artista para llevarle al onboarding
+        // (Mi cuenta → Artista) cuando confirme el email y entre.
+        try {
+          if (isArtist) localStorage.setItem('ob_artist_intent', '1')
+        } catch {
+          /* localStorage no disponible */
+        }
+        setSuccess(es ? 'Revisa tu email para confirmar tu cuenta' : 'Check your email to confirm your account')
+      }
     }
     setSubmitting(false)
   }
@@ -109,6 +119,27 @@ export default function LoginForm({ lang }: { lang: string }) {
               className="w-full px-4 py-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)] transition-colors"
               style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px' }}
             />
+          )}
+
+          {mode === 'signup' && (
+            <label className="flex items-start gap-3 cursor-pointer select-none py-1">
+              <input
+                type="checkbox"
+                checked={isArtist}
+                onChange={(e) => setIsArtist(e.target.checked)}
+                className="mt-1 w-5 h-5 accent-[var(--red)] cursor-pointer shrink-0"
+              />
+              <span>
+                <span className="block font-black" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>
+                  {es ? 'Soy artista de break' : "I'm a break artist"}
+                </span>
+                <span className="block text-[12px] text-[var(--ink)]/60 mt-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  {es
+                    ? 'Podrás reclamar tu ficha y recibir solicitudes de booking.'
+                    : 'You’ll be able to claim your profile and receive booking requests.'}
+                </span>
+              </span>
+            </label>
           )}
 
           {error && (

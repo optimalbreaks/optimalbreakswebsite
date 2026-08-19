@@ -46,3 +46,41 @@ export async function requireAdmin(request: Request): Promise<AdminCheckResult> 
 
   return { ok: true, userId: user.id }
 }
+
+export type RouteUserResult =
+  | { ok: true; userId: string; email: string | null; supabase: ReturnType<typeof createServerClient<Database>> }
+  | { ok: false; response: NextResponse }
+
+/**
+ * Sesión del usuario en una API route. Devuelve además un cliente Supabase con
+ * el JWT del usuario (anon key + cookies) para escrituras que respetan RLS.
+ */
+export async function getRouteUser(): Promise<RouteUserResult> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const key = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    ''
+  ).trim()
+
+  if (!url || !key) {
+    return { ok: false, response: NextResponse.json({ error: 'Server config' }, { status: 500 }) }
+  }
+
+  const cookieStore = await cookies()
+  const supabase = createServerClient<Database>(url, key, {
+    cookies: {
+      getAll() { return cookieStore.getAll() },
+      setAll(c: { name: string; value: string; options: CookieOptions }[]) {
+        try { c.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {}
+      },
+    },
+  })
+
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) {
+    return { ok: false, response: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+  }
+
+  return { ok: true, userId: user.id, email: user.email ?? null, supabase }
+}

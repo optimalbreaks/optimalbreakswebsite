@@ -19,6 +19,7 @@ export type UserSectionKey =
   | 'mixes'
   | 'tracks'
   | 'soulmates'
+  | 'artist'
   | 'profile'
 
 type NavIcon = (props: { className?: string }) => ReactNode
@@ -107,6 +108,17 @@ function IconProfile({ className }: { className?: string }) {
   )
 }
 
+function IconArtist({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 2v14" />
+      <circle cx="8" cy="18" r="3" />
+      <path d="M12 6l8-2v10" />
+      <circle cx="17" cy="16" r="3" />
+    </svg>
+  )
+}
+
 const NAV: Array<{
   key: UserSectionKey
   href: (lang: string) => string
@@ -124,6 +136,7 @@ const NAV: Array<{
   { key: 'mixes',     href: (l) => `/${l}/mi-cuenta/mixes`,          Icon: IconMixes,     label_en: 'SAVED MIXES',   label_es: 'MIXES GUARDADOS', short_en: 'MIXES',  short_es: 'MIXES' },
   { key: 'tracks',    href: (l) => `/${l}/mi-cuenta/tracks`,         Icon: IconTracks,    label_en: 'MY TRACKS',     label_es: 'MIS TRACKS',      short_en: 'TRACKS', short_es: 'TRACKS' },
   { key: 'soulmates', href: (l) => `/${l}/mi-cuenta/almas-gemelas`,  Icon: IconSoulmates, label_en: 'SOULMATES',     label_es: 'ALMAS GEMELAS',   short_en: 'SOUL',   short_es: 'ALMAS' },
+  { key: 'artist',    href: (l) => `/${l}/mi-cuenta/artista`,        Icon: IconArtist,    label_en: 'ARTIST',        label_es: 'ARTISTA',         short_en: 'ARTIST', short_es: 'ARTISTA' },
   { key: 'profile',   href: (l) => `/${l}/mi-cuenta/perfil`,         Icon: IconProfile,   label_en: 'PROFILE',       label_es: 'PERFIL',          short_en: 'PROFILE',short_es: 'PERFIL' },
 ]
 
@@ -144,6 +157,20 @@ export default function UserSectionShell({ lang, section, children }: Props) {
       router.push(`/${lang}/login`)
     }
   }, [authLoading, user, lang, router])
+
+  // Onboarding de artista: si el usuario marcó "Soy artista" al registrarse,
+  // al llegar por primera vez a su panel lo llevamos a la sección Artista.
+  useEffect(() => {
+    if (authLoading || !user || section !== 'overview') return
+    try {
+      if (localStorage.getItem('ob_artist_intent') === '1') {
+        localStorage.removeItem('ob_artist_intent')
+        router.replace(`/${lang}/mi-cuenta/artista`)
+      }
+    } catch {
+      /* localStorage no disponible */
+    }
+  }, [authLoading, user, section, lang, router])
 
   if (authLoading) {
     return (

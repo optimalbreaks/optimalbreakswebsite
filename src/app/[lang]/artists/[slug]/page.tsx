@@ -34,6 +34,7 @@ import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import ArtistFeaturedTracks from '@/components/ArtistFeaturedTracks'
+import BookingRequestButton from '@/components/BookingRequestButton'
 import {
   fetchArtistRelatedContent,
   fetchArtistFeaturedPicks,
@@ -353,6 +354,13 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                 <ShareButtons
                   url={`/${lang}/artists/${slug}`}
                   title={`${artist.name} | Optimal Breaks`}
+                  lang={lang}
+                />
+                {/* claimed_by NUNCA se pasa al cliente: solo el booleano accepts_bookings */}
+                <BookingRequestButton
+                  artistId={artist.id}
+                  artistName={artist.name_display || artist.name}
+                  accepts={artist.accepts_bookings === true}
                   lang={lang}
                 />
               </div>

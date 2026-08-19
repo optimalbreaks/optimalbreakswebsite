@@ -310,6 +310,47 @@ export interface Database {
         Update: Partial<Omit<AdminChatMessageRow, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
+      artist_claims: {
+        Row: ArtistClaimRow
+        Insert: Pick<ArtistClaimRow, 'user_id' | 'kind'> &
+          Partial<Pick<
+            ArtistClaimRow,
+            | 'artist_id'
+            | 'proposed_name'
+            | 'beatport_url'
+            | 'youtube_url'
+            | 'soundcloud_url'
+            | 'instagram_url'
+            | 'message'
+            | 'relationship'
+            | 'status'
+          >>
+        Update: Partial<Pick<
+          ArtistClaimRow,
+          'status' | 'admin_notes' | 'artist_id' | 'resolved_at' | 'resolved_by'
+        >>
+        Relationships: DbRelationship[]
+      }
+      booking_requests: {
+        Row: BookingRequestRow
+        Insert: Pick<
+          BookingRequestRow,
+          'artist_id' | 'sender_id' | 'city' | 'message' | 'contact_email'
+        > &
+          Partial<Pick<
+            BookingRequestRow,
+            'event_date' | 'venue' | 'event_type' | 'budget_range' | 'contact_phone' | 'status'
+          >>
+        Update: Partial<Pick<BookingRequestRow, 'status' | 'hidden_by_admin' | 'admin_notes'>>
+        Relationships: DbRelationship[]
+      }
+      booking_sender_bans: {
+        Row: BookingSenderBanRow
+        Insert: Pick<BookingSenderBanRow, 'user_id'> &
+          Partial<Pick<BookingSenderBanRow, 'reason' | 'created_by'>>
+        Update: Partial<Pick<BookingSenderBanRow, 'reason'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -443,6 +484,64 @@ export interface EventRatingRow extends Record<string, unknown> {
   country: string
 }
 
+export type ArtistClaimKind = 'claim_existing' | 'request_new'
+export type ArtistClaimRelationship = 'artist' | 'manager' | 'agency'
+export type ArtistClaimStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'revoked'
+
+export interface ArtistClaimRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  updated_at: string
+  user_id: string
+  kind: ArtistClaimKind
+  artist_id: string | null
+  proposed_name: string
+  beatport_url: string
+  youtube_url: string
+  soundcloud_url: string
+  instagram_url: string
+  message: string
+  relationship: ArtistClaimRelationship
+  status: ArtistClaimStatus
+  admin_notes: string
+  resolved_at: string | null
+  resolved_by: string | null
+}
+
+export type BookingRequestStatus =
+  | 'new'
+  | 'read'
+  | 'replied'
+  | 'accepted'
+  | 'declined'
+  | 'closed'
+
+export interface BookingRequestRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  updated_at: string
+  artist_id: string
+  sender_id: string
+  event_date: string | null
+  city: string
+  venue: string
+  event_type: string
+  budget_range: string
+  message: string
+  contact_email: string
+  contact_phone: string
+  status: BookingRequestStatus
+  hidden_by_admin: boolean
+  admin_notes: string
+}
+
+export interface BookingSenderBanRow extends Record<string, unknown> {
+  user_id: string
+  reason: string
+  created_at: string
+  created_by: string | null
+}
+
 export interface ProfileRow extends Record<string, unknown> {
   id: string
   created_at: string
@@ -572,6 +671,14 @@ export interface Artist extends Record<string, unknown> {
   beatport_url: string | null
   beatport_top_tracks: BeatportTopTrack[]
   beatport_top_tracks_updated_at: string | null
+  /**
+   * Usuario verificado que recibe las solicitudes de booking de esta ficha
+   * (bookings, migración 068). Fuente de verdad del vínculo. NO exponer en
+   * superficies públicas (se filtra en los selects de la ficha).
+   */
+  claimed_by: string | null
+  /** Si TRUE (implica claim aprobado), la ficha muestra SOLICITAR BOOKING. */
+  accepts_bookings: boolean
 }
 
 export interface Label extends Record<string, unknown> {
