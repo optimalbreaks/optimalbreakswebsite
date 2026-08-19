@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRouteUser } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
-import { isClaimableCategory } from '@/lib/bookings'
+import { isClaimableCategory, isValidEmail } from '@/lib/bookings'
 import type { ArtistClaimRow } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -58,6 +58,19 @@ export async function POST(request: NextRequest) {
     ? (String(body.relationship) as 'artist' | 'manager' | 'agency')
     : 'artist'
   const message = String(body.message || '').slice(0, 2000)
+  const contactPhone = String(body.contact_phone || '').trim().slice(0, 60)
+  const contactEmail = String(body.contact_email || '').trim().slice(0, 200)
+
+  // Teléfono obligatorio: admin verifica la identidad por llamada.
+  if (!contactPhone) {
+    return NextResponse.json(
+      { error: 'Indica un teléfono de contacto para poder verificarte.' },
+      { status: 400 },
+    )
+  }
+  if (contactEmail && !isValidEmail(contactEmail)) {
+    return NextResponse.json({ error: 'Email de contacto no válido.' }, { status: 400 })
+  }
 
   const svc = createServiceSupabase()
 
@@ -79,6 +92,8 @@ export async function POST(request: NextRequest) {
     kind,
     relationship,
     message,
+    contact_phone: contactPhone,
+    contact_email: contactEmail,
     status: 'pending',
   }
 

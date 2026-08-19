@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/components/AuthProvider'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { isClaimableCategory, budgetLabel, BOOKING_STATUS_LABELS, CLAIM_STATUS_LABELS, ARTIST_SETTABLE_BOOKING_STATUSES } from '@/lib/bookings'
 import type { ArtistClaimRow, BookingRequestRow, BookingRequestStatus } from '@/types/database'
@@ -273,13 +274,19 @@ function ResolvedClaims({ lang, claims }: { lang: string; claims: ClaimWithArtis
 // ---------------------------------------------------------------------------
 function ClaimOnboarding({ lang, onChange }: { lang: string; onChange: () => void }) {
   const es = lang === 'es'
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [hits, setHits] = useState<SearchHit[]>([])
   const [searching, setSearching] = useState(false)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
+  const [contact, setContact] = useState({ contact_phone: '', contact_email: '' })
   const [newForm, setNewForm] = useState({ proposed_name: '', beatport_url: '', youtube_url: '', soundcloud_url: '', instagram_url: '', message: '' })
+
+  useEffect(() => {
+    if (user?.email) setContact((c) => ({ ...c, contact_email: c.contact_email || user.email || '' }))
+  }, [user])
 
   useEffect(() => {
     const q = query.trim()
@@ -300,13 +307,16 @@ function ClaimOnboarding({ lang, onChange }: { lang: string; onChange: () => voi
     return () => { cancelled = true; clearTimeout(t) }
   }, [query])
 
+  const phoneMissing = !contact.contact_phone.trim()
+
   const claimExisting = async (artistId: string) => {
+    if (phoneMissing) { setErr(es ? 'Añade un teléfono de contacto antes de reclamar.' : 'Add a contact phone before claiming.'); return }
     setBusy(true); setErr(null)
     try {
       const res = await fetch('/api/artist-claims', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'claim_existing', artist_id: artistId }),
+        body: JSON.stringify({ kind: 'claim_existing', artist_id: artistId, ...contact }),
       })
       const json = await res.json()
       if (!res.ok) { setErr(json.error); return }
@@ -317,12 +327,13 @@ function ClaimOnboarding({ lang, onChange }: { lang: string; onChange: () => voi
   }
 
   const requestNew = async () => {
+    if (phoneMissing) { setErr(es ? 'Añade un teléfono de contacto.' : 'Add a contact phone.'); return }
     setBusy(true); setErr(null)
     try {
       const res = await fetch('/api/artist-claims', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'request_new', ...newForm }),
+        body: JSON.stringify({ kind: 'request_new', ...newForm, ...contact }),
       })
       const json = await res.json()
       if (!res.ok) { setErr(json.error); return }
@@ -345,6 +356,34 @@ function ClaimOnboarding({ lang, onChange }: { lang: string; onChange: () => voi
       </p>
 
       {err && <div className="mb-3 p-3 bg-[var(--red)] text-white" style={{ ...MONO, fontSize: '12px' }}>{err}</div>}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div>
+          <label style={{ ...MONO, fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+            {es ? 'Teléfono de contacto *' : 'Contact phone *'}
+          </label>
+          <input
+            type="tel"
+            value={contact.contact_phone}
+            onChange={(e) => setContact({ ...contact, contact_phone: e.target.value })}
+            placeholder={es ? 'Para verificarte por llamada' : 'So we can verify you by phone'}
+            className={inputClass}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label style={{ ...MONO, fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+            {es ? 'Email de contacto' : 'Contact email'}
+          </label>
+          <input
+            type="email"
+            value={contact.contact_email}
+            onChange={(e) => setContact({ ...contact, contact_email: e.target.value })}
+            className={inputClass}
+            style={inputStyle}
+          />
+        </div>
+      </div>
 
       {!showNew ? (
         <>

@@ -7,16 +7,21 @@
 > - **Migración** `supabase/migrations/068_artist_claims_bookings.sql` — tablas `artist_claims`,
 >   `booking_requests`, `booking_sender_bans` + columnas `artists.claimed_by` / `artists.accepts_bookings`,
 >   índices anti-abuso y RLS.
+> - **Migración** `supabase/migrations/069_artist_claims_contact.sql` — columnas
+>   `artist_claims.contact_phone` (obligatorio en la API) y `artist_claims.contact_email` (opcional),
+>   para verificar la identidad por llamada.
 > - **Tipos** en `src/types/database.ts` (`ArtistClaimRow`, `BookingRequestRow`, `BookingSenderBanRow`,
 >   columnas nuevas de `Artist`) y constantes compartidas en `src/lib/bookings.ts`.
 > - **APIs**: `api/artist-claims` (+`[id]`), `api/booking-requests` (+`[id]`),
 >   `api/artist-bookings/settings`, `api/admin/claims`, `api/admin/bookings` (listado + ban).
 > - **UI usuario**: check "Soy artista" en el registro (`LoginForm`), pestaña **Artista** en Mi cuenta
->   (`components/user/ArtistSection.tsx` + `mi-cuenta/artista`), con reclamación de ficha, estado de
+>   (`components/user/ArtistSection.tsx` + `mi-cuenta/artista`), con reclamación de ficha (pidiendo
+>   **teléfono de contacto obligatorio** + email prefijado con el de la cuenta), estado de
 >   verificación, toggle de recepción, bandeja de bookings y solicitudes enviadas.
 > - **UI pública**: `components/BookingRequestButton.tsx` en la ficha de artista (solo si
 >   `accepts_bookings = TRUE`; `claimed_by` nunca llega al cliente).
-> - **Admin**: `/administrator/claims` y `/administrator/bookings` + enlaces en el sidebar.
+> - **Admin**: `/administrator/claims` (muestra teléfono `tel:` pulsable y email de contacto de cada
+>   reclamación) y `/administrator/bookings` + enlaces en el sidebar.
 >
 > **Desviaciones respecto al diseño original:**
 > - El ban de remitentes (§2.21) vive en su **propia tabla** `booking_sender_bans`, no en una columna
@@ -169,6 +174,9 @@ CREATE TABLE public.artist_claims (
   soundcloud_url TEXT,
   instagram_url TEXT,
   message TEXT DEFAULT '',
+  -- datos de contacto para la verificación por llamada (migración 069):
+  contact_phone TEXT DEFAULT '',   -- obligatorio en la API
+  contact_email TEXT DEFAULT '',   -- opcional (si difiere del email de la cuenta)
   -- relación con la ficha: 'artist' (soy yo) | 'manager' | 'agency'
   relationship TEXT NOT NULL DEFAULT 'artist',
   status TEXT NOT NULL DEFAULT 'pending'

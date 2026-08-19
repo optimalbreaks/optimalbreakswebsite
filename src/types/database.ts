@@ -322,6 +322,8 @@ export interface Database {
             | 'soundcloud_url'
             | 'instagram_url'
             | 'message'
+            | 'contact_phone'
+            | 'contact_email'
             | 'relationship'
             | 'status'
           >>
@@ -501,6 +503,10 @@ export interface ArtistClaimRow extends Record<string, unknown> {
   soundcloud_url: string
   instagram_url: string
   message: string
+  /** Teléfono de contacto para la verificación por llamada (solo admin). */
+  contact_phone: string
+  /** Email de contacto opcional (si difiere del email de la cuenta). */
+  contact_email: string
   relationship: ArtistClaimRelationship
   status: ArtistClaimStatus
   admin_notes: string

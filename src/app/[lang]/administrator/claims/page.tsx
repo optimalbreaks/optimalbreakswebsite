@@ -90,6 +90,12 @@ export default function AdminClaimsPage() {
               </div>
               <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', lineHeight: 1.7 }}>
                 <div><strong>Usuario:</strong> {c.user_display_name || c.user_username || '—'} · {c.user_email || '—'}</div>
+                {c.contact_phone && (
+                  <div><strong>Teléfono:</strong> <a href={`tel:${c.contact_phone}`} className="text-[var(--red)] underline">{c.contact_phone}</a></div>
+                )}
+                {c.contact_email && (
+                  <div><strong>Email contacto:</strong> <a href={`mailto:${c.contact_email}`} className="text-[var(--red)] underline break-all">{c.contact_email}</a></div>
+                )}
                 <div><strong>Relación:</strong> {c.relationship}</div>
                 {c.artist_slug && <div><strong>Ficha:</strong> /{lang}/artists/{c.artist_slug}</div>}
                 {c.kind === 'request_new' && (
