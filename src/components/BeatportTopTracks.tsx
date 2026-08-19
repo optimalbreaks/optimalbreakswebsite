@@ -47,6 +47,8 @@ function buildSnapshot(
     artwork_url: t.artwork_url || null,
     sample_url: t.sample_url || null,
     beatport_url: t.beatport_url || null,
+    spotify_url: t.spotify_url ?? null,
+    tidal_url: t.tidal_url ?? null,
     origin,
   }
 }

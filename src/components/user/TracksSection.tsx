@@ -291,6 +291,8 @@ function assembleUnifiedTracks(
       external_url: snap.beatport_url || s.canonical_url || null,
       external_label: 'BEATPORT',
       sample_url: snap.sample_url || null,
+      spotify_url: snap.spotify_url ?? null,
+      tidal_url: snap.tidal_url ?? null,
     })
   }
 

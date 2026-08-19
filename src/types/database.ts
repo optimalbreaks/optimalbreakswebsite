@@ -365,6 +365,9 @@ export interface SavedChartTrackSnapshot {
   artwork_url?: string | null
   sample_url?: string | null
   beatport_url?: string | null
+  /** Enlaces de streaming verificados capturados al guardar (beatport_top). */
+  spotify_url?: string | null
+  tidal_url?: string | null
   // Contexto opcional (desde dónde se guardó)
   origin?: {
     kind: 'artist' | 'label'
