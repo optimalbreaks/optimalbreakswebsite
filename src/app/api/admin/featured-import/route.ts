@@ -256,8 +256,9 @@ export async function POST(request: NextRequest) {
             music_key: pick.music_key || '',
             release_year: pick.release_year,
             release_date: pick.release_date,
-            // Se rellena después con scripts/spotify-match-charts.mjs (npm run db:chart:spotify).
+            // Se rellenan después con scripts/spotify-match-charts.mjs (npm run db:chart:spotify / db:chart:tidal).
             spotify_url: null,
+            tidal_url: null,
             note_en: pick.note_en,
             note_es: pick.note_es,
           })

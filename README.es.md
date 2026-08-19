@@ -536,6 +536,14 @@ El modo **`preview` es global**: la cola (`PreviewTrack[]`), el índice, el `<au
 
 Al reclamar audio el provider llama internamente a **`claimAudio(source)`** (y acepta aliases retrocompatibles `chart-preview` / `chart-playall` / `beatport-top` / `my-tracks`, todos mapean a `preview`). Esto dispara el evento **`ob-audio-claim`** en `window`, que pausa los otros modos. Solo suena **uno** a la vez sin importar desde dónde se pulsó play.
 
+### El Play/Pausa de cada fila es un toggle real (no reinicia)
+
+**Invariante (agosto 2026):** el botón ▶ de una fila que pasa a **`❚❚`** debe **pausar** de verdad — al pulsarlo otra vez, reanuda desde la misma posición. **Nunca** debe re-lanzar la cola (eso reinicia el tema desde 0:00 y parece que "el botón de pausa no detiene la reproducción"). El fallo se reportó en Firefox pero era de todos los navegadores: el handler de la fila siempre llamaba a `playPreviewQueue` en vez de hacer toggle.
+
+- **Patrón correcto:** si la fila pulsada es la que suena en este grupo (`previewGroupKey === sectionKey && previewQueue[previewIndex]?.rowKey === rowKey`), llamar a **`togglePreview()`**; si no, `playPreviewQueue(bundle, idx, groupKey)`. El icono `❚❚` solo se muestra con `isActive && previewPlaying` (en pausa → `▶`).
+- **Superficies que deben mantenerlo:** `ChartView` (40 Breaks + Novedades), `CommunityMonthlyTop` (`/top100`), `BeatportTopTracks` (Top 10 de artista/sello), `ArtistFeaturedTracks` (Novedades en ficha). `TracksSection` (Mis Tracks) y `ArtistShowcase` ya hacían toggle y son la implementación de referencia.
+- **Tarjetas de mix** (`MixesExplorer.MixPlayButton`, dashboard `DashboardMixPlayButton`): la etiqueta **`■ STOP`** debe llamar a **`stopMix()`** (no a `playMix` otra vez). `useMixAudioGated` expone `stopMix` / `toggleMixPlayback` para ello.
+
 ### Coordinador de embeds y consistencia en móvil (`src/lib/youtube-play-coordinator.ts`)
 
 Los iframes de terceros (vinilos YouTube, tarjetas de `/mixes`, mixes guardados del dashboard, **widgets visuales de SoundCloud**) viven fuera del provider; un singleton a nivel de módulo coordina los dos mundos — **una sola fuente audible en todo el sitio**. Invariantes añadidos en agosto 2026 con los arreglos de consistencia en móvil/PWA (sonaba otro tema, dos fuentes a la vez al volver del background, la lockscreen abría otra app):

@@ -62,12 +62,13 @@ export function YouTubeIframe({ videoId, title, className = '' }: { videoId: str
  * Uses the global DeckAudioProvider to avoid multiple audio sources at once.
  */
 export function DashboardMixPlayButton({ m }: { m: any }) {
-  const { playMix, currentMix, mixPlaying } = useMixAudioGated()
+  const { playMix, stopMix, currentMix, mixPlaying } = useMixAudioGated()
   const track = getMixTrack(m)
   if (!track) return null
 
   const isThisMix = currentMix?.id === m.id
-  const label = isThisMix && mixPlaying ? '■ STOP' : '▶ PLAY'
+  const isStoppable = isThisMix && mixPlaying
+  const label = isStoppable ? '■ STOP' : '▶ PLAY'
 
   return (
     <button
@@ -75,7 +76,10 @@ export function DashboardMixPlayButton({ m }: { m: any }) {
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        playMix(track)
+        // Antes SIEMPRE re-lanzaba el mix: el botón decía "STOP" pero reiniciaba
+        // el tema. Ahora si es el mix que suena, lo detiene de verdad.
+        if (isStoppable) stopMix()
+        else playMix(track)
       }}
       className={`mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] hover:bg-[var(--red)] hover:text-white transition-colors cursor-pointer border-0 ${isThisMix && mixPlaying ? 'animate-pulse' : ''}`}
       style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}

@@ -727,6 +727,14 @@ The **`preview` mode is global**: the queue (`PreviewTrack[]`), the current inde
 2. The provider pauses the non-matching modes when a claim is received. Only one of `deck` / `mix` / `preview` plays at a time.
 3. The type **`AudioClaimSource`** still accepts legacy aliases (`chart-preview`, `chart-playall`, `beatport-top`, `my-tracks`) for backward compatibility — they all map to the new `preview` mode.
 
+### Per-row Play/Pause is a real toggle (not a restart)
+
+**Invariant (Aug 2026):** a row's ▶ button that turns into a **`❚❚`** must actually **pause** the track — clicking it again resumes from the same position. It must **never** re-launch the queue (which restarts the song from 0:00 and looks like "the pause button doesn't stop playback"). The reported symptom was on Firefox but the bug was cross-browser: the row handler always called `playPreviewQueue` instead of toggling.
+
+- **Correct pattern:** if the clicked row is the one currently playing in this group (`previewGroupKey === sectionKey && previewQueue[previewIndex]?.rowKey === rowKey`), call **`togglePreview()`**; otherwise `playPreviewQueue(bundle, idx, groupKey)`. The `❚❚` icon is shown only when `isActive && previewPlaying` (paused → `▶`).
+- **Surfaces that must keep this:** `ChartView` (40 Breaks + New Releases), `CommunityMonthlyTop` (`/top100`), `BeatportTopTracks` (artist/label Top 10), `ArtistFeaturedTracks` (profile New Releases). `TracksSection` (My Tracks) and `ArtistShowcase` already toggled correctly and are the reference implementation.
+- **Mix cards** (`MixesExplorer.MixPlayButton`, dashboard `DashboardMixPlayButton`): the **`■ STOP`** label must call **`stopMix()`** (not `playMix` again). `useMixAudioGated` exposes `stopMix` / `toggleMixPlayback` for this.
+
 ### Embed coordinator & mobile consistency (`src/lib/youtube-play-coordinator.ts`)
 
 Third-party iframes (YouTube vinyl rows, `/mixes` cards, dashboard saved-mix cards, **SoundCloud visual widgets**) live outside the provider, so a module-level singleton coordinates both worlds — **only one audible source site-wide**. Invariants added in Aug 2026 after the mobile/PWA consistency fixes (wrong track playing, two sources at once after backgrounding, lock screen opening the wrong app):

@@ -19,7 +19,7 @@ import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { ArtistNames } from '@/components/ArtistNames'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import TrackShareButton from '@/components/TrackShareButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildFullArtistSlugMap,
   filterArtistSlugMapForNames,
@@ -63,6 +63,8 @@ interface CommunityTopTrack {
   artwork_url: string | null
   external_url: string | null
   youtube_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
   sample_url: string | null
   playback_kind: PlaybackKind
   save_count: number
@@ -322,14 +324,20 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const groupKey = 'community-top-all-time'
 
   const {
-    previewQueue, previewIndex, previewGroupKey,
-    playPreviewQueue, stopPreview,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
   const isGroupActive = previewGroupKey === groupKey
   const playFromIndex = useCallback((bundleIdx: number) => {
     const rowKey = previewBundle[bundleIdx]?.rowKey
     if (!rowKey) return
+    // Si esta fila ya es la que suena, toggle pausa/reanudar en vez de
+    // re-lanzar la cola (el icono ❚❚ debe DETENER, no reiniciar el tema).
+    if (isGroupActive && previewQueue[previewIndex]?.rowKey === rowKey) {
+      togglePreview()
+      return
+    }
     const baseQueue = shuffleMode && isGroupActive ? previewQueue : previewBundle
     const idx = baseQueue.findIndex((m) => m.rowKey === rowKey)
     if (idx < 0) {
@@ -339,7 +347,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     }
     if (!shuffleMode || !isGroupActive) setShuffleMode(false)
     playPreviewQueue(baseQueue, idx, groupKey)
-  }, [previewBundle, previewQueue, shuffleMode, isGroupActive, playPreviewQueue, groupKey])
+  }, [previewBundle, previewQueue, previewIndex, shuffleMode, isGroupActive, playPreviewQueue, togglePreview, groupKey])
 
   const onStop = useCallback(() => {
     stopPreview()
@@ -548,6 +556,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {data.top_tracks.map((t) => {
               const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
+              const isPausedHere = isActive && !previewPlaying
               const idx = previewBundle.findIndex((m) => m.rowKey === rowKey)
               const hasSample = idx >= 0
               const ytId = t.primary.source === 'vinyl' ? extractYouTubeId(t.youtube_url) : null
@@ -643,10 +652,10 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                             ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive ? c.preview_pause : c.preview_play}
-                          aria-label={isActive ? c.preview_pause : c.preview_play}
+                          title={isActive && !isPausedHere ? c.preview_pause : c.preview_play}
+                          aria-label={isActive && !isPausedHere ? c.preview_pause : c.preview_play}
                         >
-                          {isActive ? '❚❚' : '▶'}
+                          {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       {ytId && (
@@ -744,16 +753,24 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         }
                         return null
                       })()}
+                      {t.primary.source !== 'vinyl' ? (
+                        <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists || '')} lang={lang} />
+                      ) : null}
+                      <TidalLinkButton url={t.tidal_url} lang={lang} />
                       {externalLink && (
-                        <a
-                          href={externalLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                        >
-                          {ctaLabel}
-                        </a>
+                        ctaLabel === 'BEATPORT' ? (
+                          <BeatportLinkButton url={externalLink} lang={lang} />
+                        ) : (
+                          <a
+                            href={externalLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+                            style={{ fontFamily: "'Courier Prime', monospace" }}
+                          >
+                            {ctaLabel}
+                          </a>
+                        )
                       )}
                     </div>
                   </div>

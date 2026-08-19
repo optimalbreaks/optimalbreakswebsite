@@ -41,6 +41,8 @@ export function usePreviewAudioGated(): PreviewAudioApi {
 /** Mixes: carga el motor solo al primer play. */
 export function useMixAudioGated(): {
   playMix: (track: MixTrack) => void
+  toggleMixPlayback: () => void
+  stopMix: () => void
   currentMix: MixTrack | null
   mixPlaying: boolean
 } {
@@ -50,6 +52,8 @@ export function useMixAudioGated(): {
   if (live) {
     return {
       playMix: live.playMix,
+      toggleMixPlayback: live.toggleMixPlayback,
+      stopMix: live.stopMix,
       currentMix: live.currentMix,
       mixPlaying: live.mixPlaying,
     }
@@ -59,6 +63,9 @@ export function useMixAudioGated(): {
     playMix: (track) => {
       void gate.requestLoad({ kind: 'mix', track })
     },
+    // Motor aún no cargado ⇒ nada suena ⇒ parar/toggle son no-ops.
+    toggleMixPlayback: noop,
+    stopMix: noop,
     currentMix: null,
     mixPlaying: false,
   }

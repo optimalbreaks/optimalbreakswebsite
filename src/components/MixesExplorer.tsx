@@ -125,12 +125,13 @@ function getMixTrack(m: Mix): MixTrack | null {
 }
 
 function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'xs' }) {
-  const { playMix, currentMix, mixPlaying } = useMixAudioGated()
+  const { playMix, stopMix, currentMix, mixPlaying } = useMixAudioGated()
   const track = getMixTrack(mix)
   if (!track) return null
 
   const isThisMix = currentMix?.id === mix.id
-  const label = isThisMix && mixPlaying ? '■ STOP' : '▶ PLAY'
+  const isStoppable = isThisMix && mixPlaying
+  const label = isStoppable ? '■ STOP' : '▶ PLAY'
 
   const sizeClass = size === 'lg'
     ? 'absolute bottom-3 right-3'
@@ -144,7 +145,10 @@ function MixPlayButton({ mix, size = 'lg' }: { mix: Mix; size?: 'lg' | 'sm' | 'x
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        playMix(track)
+        // Antes SIEMPRE re-lanzaba el mix: el botón decía "STOP" pero reiniciaba
+        // el tema. Ahora si es el mix que suena, lo detiene de verdad.
+        if (isStoppable) stopMix()
+        else playMix(track)
       }}
       className={`${sizeClass} bg-[var(--ink)] text-[var(--yellow)] hover:bg-[var(--red)] hover:text-white transition-colors cursor-pointer border-0 ${isThisMix && mixPlaying ? 'animate-pulse' : ''}`}
       style={{

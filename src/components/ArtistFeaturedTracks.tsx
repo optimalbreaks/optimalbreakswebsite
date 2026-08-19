@@ -94,8 +94,8 @@ export default function ArtistFeaturedTracks({
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const {
-    previewQueue, previewIndex, previewGroupKey,
-    playPreviewQueue, stopPreview,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
   const groupKey = useMemo(
@@ -137,12 +137,18 @@ export default function ArtistFeaturedTracks({
   }, [playablePicks, origin])
 
   const playFromPick = useCallback((pick: ArtistFeaturedPick) => {
+    // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚
+    // debe DETENER la reproducción, no reiniciar el tema desde el principio).
+    if (myQueueActive && previewQueue[previewIndex]?.rowKey === `nr-${pick.id}`) {
+      togglePreview()
+      return
+    }
     const queue = buildQueue()
     const idx = queue.findIndex((q) => q.rowKey === `nr-${pick.id}`)
     if (idx < 0) return
     setExpanded(true)
     playPreviewQueue(queue, idx, groupKey)
-  }, [buildQueue, groupKey, playPreviewQueue])
+  }, [buildQueue, groupKey, playPreviewQueue, myQueueActive, previewQueue, previewIndex, togglePreview])
 
   const handlePlayAllClick = useCallback(() => {
     if (myQueueActive) {
@@ -217,6 +223,7 @@ export default function ArtistFeaturedTracks({
           <div className="border-t-4 border-[var(--ink)]">
             {picks.map((pick) => {
               const isActive = isPlayingPick(pick)
+              const isPausedHere = isActive && !previewPlaying
               const rowId = `nr-row-${pick.id}`
               const canPlay = pickHasPreview(pick)
               const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
@@ -279,9 +286,9 @@ export default function ArtistFeaturedTracks({
                           className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                             ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive ? (lang === 'es' ? 'Reproduciendo' : 'Playing') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
+                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
                         >
-                          {isActive ? '❚❚' : '▶'}
+                          {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       {pick.bpm != null && pick.bpm > 0 ? (

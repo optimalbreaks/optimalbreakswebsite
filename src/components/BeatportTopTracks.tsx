@@ -95,8 +95,8 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
   const [expanded, setExpanded] = useState(false)
   const pathname = usePathname()
   const {
-    previewQueue, previewIndex, previewGroupKey,
-    playPreviewQueue, stopPreview,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
   // groupKey estable para identificar "mi" cola dentro del provider global.
@@ -150,12 +150,18 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
   }, [playableTracks, origin, pathname])
 
   const playFromTrack = useCallback((t: BeatportTopTrack) => {
+    // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚
+    // debe DETENER la reproducción, no reiniciar el tema desde el principio).
+    if (myQueueActive && previewQueue[previewIndex]?.rowKey === `bp-${t.position}`) {
+      togglePreview()
+      return
+    }
     const queue = buildQueue()
     const idx = queue.findIndex(q => q.rowKey === `bp-${t.position}`)
     if (idx < 0) return
     setExpanded(true)
     playPreviewQueue(queue, idx, groupKey)
-  }, [buildQueue, groupKey, playPreviewQueue])
+  }, [buildQueue, groupKey, playPreviewQueue, myQueueActive, previewQueue, previewIndex, togglePreview])
 
   const handlePlayAllClick = useCallback(() => {
     if (myQueueActive) {
@@ -295,6 +301,7 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
           <div className="border-t-4 border-[var(--ink)]">
             {tracks.map((t, i) => {
               const isActive = isPlayingTrack(t)
+              const isPausedHere = isActive && !previewPlaying
               const rowId = `bp-row-${t.position}`
               const canPlay = !!t.sample_url
               const releaseDisp = formatTrackReleaseDisplay(t.release_date, t.release_year)
@@ -347,9 +354,9 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                           className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                             ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive ? 'Playing' : 'Preview'}
+                          title={isActive && !isPausedHere ? 'Pause' : 'Preview'}
                         >
-                          {isActive ? '❚❚' : '▶'}
+                          {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
                       {t.bpm != null && t.bpm > 0 && (

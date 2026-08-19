@@ -403,7 +403,7 @@ function buildVinylSnapshot(v: ChartVinylTrack) {
   }
 }
 
-function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artistSlugMap, labelSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
+function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPlay, artistSlugMap, labelSlugMap, relatedRefs }: { pick: ChartFeaturedTrack; dict: any; lang: Locale; weekDate: string; isPlaying?: boolean; isPaused?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(pick.artists) ? pick.artists : []
   const note = lang === 'es' ? pick.note_es : pick.note_en
@@ -444,10 +444,10 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, onPlay, artist
               className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                 ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
-              title={isPlaying ? c.preview_pause : c.preview_play}
-              aria-label={isPlaying ? c.preview_pause : c.preview_play}
+              title={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
+              aria-label={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
             >
-              {isPlaying ? '❚❚' : '▶'}
+              {isPlaying && !isPaused ? '❚❚' : '▶'}
             </button>
           )}
           {pick.bpm != null && pick.bpm > 0 ? (
@@ -611,7 +611,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
   )
 }
 
-function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
+function ChartTrackRow({ track, dict, isPlaying, isPaused, onPlay, artistSlugMap, labelSlugMap, lang, weekDate, relatedRefs }: { track: ChartTrack; dict: any; isPlaying?: boolean; isPaused?: boolean; onPlay?: () => void; artistSlugMap?: Record<string, string>; labelSlugMap?: Record<string, string>; lang?: Locale; weekDate: string; relatedRefs?: CanonRef[] }) {
   const c = dict.charts
   const artists = Array.isArray(track.artists) ? track.artists : []
   const releaseDisp = formatTrackReleaseDisplay(track.release_date, track.release_year)
@@ -657,10 +657,10 @@ function ChartTrackRow({ track, dict, isPlaying, onPlay, artistSlugMap, labelSlu
               className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                 ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
-              title={isPlaying ? c.preview_pause : c.preview_play}
-              aria-label={isPlaying ? c.preview_pause : c.preview_play}
+              title={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
+              aria-label={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
             >
-              {isPlaying ? '❚❚' : '▶'}
+              {isPlaying && !isPaused ? '❚❚' : '▶'}
             </button>
           )}
           {track.bpm && (
@@ -1014,8 +1014,8 @@ export default function ChartView({
 
   // ---- Play-all state (delegado al provider global) ----
   const {
-    previewQueue, previewIndex, previewGroupKey,
-    playPreviewQueue, stopPreview,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
   type PlayAllBundle = PreviewTrack[]
@@ -1207,6 +1207,18 @@ export default function ChartView({
     if (bundle.length === 0) return
     playPreviewQueue(bundle, index, sectionKey)
   }, [playPreviewQueue])
+
+  // Click en el ▶/❚❚ de una fila: si ya es la que está sonando en este
+  // grupo, hacemos toggle pausa/reanudar (antes SIEMPRE re-lanzaba la cola,
+  // así que el icono de pausa reiniciaba el tema en vez de detenerlo — el
+  // botón "no paraba" la reproducción). Si es otra fila, arranca desde ahí.
+  const handleRowPlay = useCallback((sectionKey: string, bundle: PlayAllBundle, index: number, isActiveRow: boolean) => {
+    if (isActiveRow) {
+      togglePreview()
+      return
+    }
+    playFromIndex(sectionKey, bundle, index)
+  }, [togglePreview, playFromIndex])
 
   const handlePlayAllClick = useCallback((sectionKey: string, bundle: PlayAllBundle) => {
     if (previewGroupKey === sectionKey) {
@@ -1428,7 +1440,8 @@ export default function ChartView({
                         lang={lang}
                         weekDate={edition.week_date}
                         isPlaying={isActive}
-                        onPlay={idx >= 0 ? () => playFromIndex(picksKey, picksBundle, idx) : undefined}
+                        isPaused={isActive && !previewPlaying}
+                        onPlay={idx >= 0 ? () => handleRowPlay(picksKey, picksBundle, idx, isActive) : undefined}
                         artistSlugMap={artistSlugMap}
                         labelSlugMap={labelSlugMap}
                         relatedRefs={canonicalGroups.featuredByTrack.get(pick.id)}
@@ -1530,7 +1543,8 @@ export default function ChartView({
                         lang={lang}
                         weekDate={edition.week_date}
                         isPlaying={isActive}
-                        onPlay={idx >= 0 ? () => playFromIndex(fortyKey, fortyBundle, idx) : undefined}
+                        isPaused={isActive && !previewPlaying}
+                        onPlay={idx >= 0 ? () => handleRowPlay(fortyKey, fortyBundle, idx, isActive) : undefined}
                         artistSlugMap={artistSlugMap}
                         labelSlugMap={labelSlugMap}
                         relatedRefs={canonicalGroups.chartByTrack.get(track.id)}
