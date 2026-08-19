@@ -86,6 +86,8 @@ type ChartRow = {
   music_key: string | null
   artwork_url: string | null
   beatport_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
   sample_url: string | null
 }
 type FeatRow = {
@@ -103,6 +105,8 @@ type FeatRow = {
   link_url: string | null
   link_label: string | null
   platform: string | null
+  spotify_url: string | null
+  tidal_url: string | null
   sample_url: string | null
 }
 type VinylRow = {
@@ -157,6 +161,8 @@ interface Aggregate {
   artwork_url: string | null
   external_url: string | null
   youtube_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
   playback_kind: PlaybackKind
   sample_url: string | null
   save_count: number
@@ -243,7 +249,7 @@ export async function GET(request: NextRequest) {
       ? selectByIds<ChartRow>(chartIds, (chunk) =>
           sb
             .from('chart_tracks')
-            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url')
+            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url')
             .in('id', chunk),
         )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
@@ -251,7 +257,7 @@ export async function GET(request: NextRequest) {
       ? selectByIds<FeatRow>(featIds, (chunk) =>
           sb
             .from('chart_featured_tracks')
-            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url')
+            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url')
             .in('id', chunk),
         )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
@@ -280,12 +286,12 @@ export async function GET(request: NextRequest) {
     const [extraChart, extraFeat, extraVinyl] = await Promise.all([
       orphChart.length
         ? selectByIds<ChartRow>(orphChart.map((o) => o.canonical_url as string), (chunk) =>
-            sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, sample_url').in('beatport_url', chunk),
+            sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('beatport_url', chunk),
           )
         : Promise.resolve({ data: [] as ChartRow[], error: null }),
       orphFeat.length
         ? selectByIds<FeatRow>(orphFeat.map((o) => o.canonical_url as string), (chunk) =>
-            sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, sample_url').in('link_url', chunk),
+            sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url').in('link_url', chunk),
           )
         : Promise.resolve({ data: [] as FeatRow[], error: null }),
       orphVinyl.length
@@ -348,6 +354,8 @@ export async function GET(request: NextRequest) {
     artwork_url: string | null
     external_url: string | null
     youtube_url: string | null
+    spotify_url: string | null
+    tidal_url: string | null
     sample_url: string | null
     playback_kind: PlaybackKind
     canonical_key: string
@@ -371,6 +379,8 @@ export async function GET(request: NextRequest) {
       artwork_url: c.artwork_url,
       external_url: c.beatport_url,
       youtube_url: null,
+      spotify_url: c.spotify_url ?? null,
+      tidal_url: c.tidal_url ?? null,
       sample_url: c.sample_url,
       playback_kind: 'beatport',
       canonical_key,
@@ -394,6 +404,8 @@ export async function GET(request: NextRequest) {
       artwork_url: f.artwork_url,
       external_url: f.link_url,
       youtube_url: null,
+      spotify_url: f.spotify_url ?? null,
+      tidal_url: f.tidal_url ?? null,
       sample_url: f.sample_url,
       playback_kind: kind,
       canonical_key,
@@ -416,6 +428,8 @@ export async function GET(request: NextRequest) {
       artwork_url: v.artwork_url,
       external_url: v.discogs_url || v.youtube_url,
       youtube_url: (v.youtube_url || '').trim() || null,
+      spotify_url: null,
+      tidal_url: null,
       sample_url: null,
       playback_kind: 'youtube',
       canonical_key,
@@ -455,6 +469,8 @@ export async function GET(request: NextRequest) {
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: externalUrl as string | null,
       youtube_url: snapYoutube || youtubeUrlFromCanonicalKey(canonical_key),
+      spotify_url: (snap.spotify_url as string | null) ?? null,
+      tidal_url: (snap.tidal_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
       playback_kind: kind,
       canonical_key,
@@ -487,6 +503,8 @@ export async function GET(request: NextRequest) {
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: beatport_url,
       youtube_url: null,
+      spotify_url: (snap.spotify_url as string | null) ?? null,
+      tidal_url: (snap.tidal_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
       playback_kind: 'beatport',
       canonical_key,
@@ -547,6 +565,8 @@ export async function GET(request: NextRequest) {
         artwork_url: meta.artwork_url,
         external_url: meta.external_url,
         youtube_url: meta.youtube_url || youtubeUrlFromCanonicalKey(key),
+        spotify_url: meta.spotify_url,
+        tidal_url: meta.tidal_url,
         sample_url: meta.sample_url,
         playback_kind: meta.playback_kind,
         save_count: 1,
@@ -575,6 +595,8 @@ export async function GET(request: NextRequest) {
       if (!existing.artwork_url && meta.artwork_url) existing.artwork_url = meta.artwork_url
       if (!existing.external_url && meta.external_url) existing.external_url = meta.external_url
       if (!existing.youtube_url && meta.youtube_url) existing.youtube_url = meta.youtube_url
+      if (!existing.spotify_url && meta.spotify_url) existing.spotify_url = meta.spotify_url
+      if (!existing.tidal_url && meta.tidal_url) existing.tidal_url = meta.tidal_url
       if (!existing.bpm && meta.bpm) existing.bpm = meta.bpm
       if (!existing.music_key && meta.music_key) existing.music_key = meta.music_key
       if (!existing.year && meta.year) existing.year = meta.year
@@ -634,6 +656,8 @@ export async function GET(request: NextRequest) {
     artwork_url: a.artwork_url,
     external_url: a.external_url,
     youtube_url: a.youtube_url || youtubeUrlFromCanonicalKey(a.canonical_key),
+    spotify_url: a.spotify_url,
+    tidal_url: a.tidal_url,
     sample_url: a.sample_url,
     playback_kind: a.playback_kind,
     save_count: a.save_count,

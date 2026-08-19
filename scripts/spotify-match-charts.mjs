@@ -13,6 +13,7 @@
  *   node scripts/spotify-match-charts.mjs --table=featured      # chart | featured | all (charts)
  *   node scripts/spotify-match-charts.mjs --table=beatport      # Top 10 Beatport de artists + labels (JSONB)
  *   node scripts/spotify-match-charts.mjs --table=artists       # solo Top 10 de artistas | labels = solo sellos
+ *   node scripts/spotify-match-charts.mjs --table=artists --slug=diyeico  # una ficha
  *   node scripts/spotify-match-charts.mjs --dry-run             # no escribe en BD
  *   node scripts/spotify-match-charts.mjs --force               # re-matchea también filas con enlace
  *   node scripts/spotify-match-charts.mjs --limit=50            # tope de filas/tracks por tabla
@@ -85,6 +86,7 @@ function argValue(name, def = null) {
   return hit ? hit.slice(p.length) : def
 }
 const WEEK = argValue('week')
+const SLUG = (argValue('slug') || '').trim()
 const TABLE = (argValue('table', 'all') || 'all').toLowerCase()
 const DRY_RUN = argv.includes('--dry-run')
 const FORCE = argv.includes('--force')
@@ -447,8 +449,9 @@ async function fetchEntities(entityTable) {
   const PAGE = 500
   // El filtrado por elemento (algunos ya tienen url) se hace en JS al iterar el array.
   for (let offset = 0; ; offset += PAGE) {
+    const slugFilter = SLUG ? `&slug=eq.${encodeURIComponent(SLUG)}` : ''
     const page = await sbGet(
-      `${entityTable}?select=id,slug,beatport_top_tracks&beatport_top_tracks=not.is.null&order=id&limit=${PAGE}&offset=${offset}`,
+      `${entityTable}?select=id,slug,beatport_top_tracks&beatport_top_tracks=not.is.null${slugFilter}&order=id&limit=${PAGE}&offset=${offset}`,
     )
     rows.push(...page.filter((r) => Array.isArray(r.beatport_top_tracks) && r.beatport_top_tracks.length))
     if (page.length < PAGE) break

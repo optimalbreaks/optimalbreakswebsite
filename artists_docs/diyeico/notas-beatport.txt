@@ -1,0 +1,38 @@
+Fuente editorial obligatoria — ficha Beatport del artista:
+https://www.beatport.com/es/artist/diyeico/2321276
+
+En el JSON de salida incluir exactamente:
+- beatport_id: 2321276
+- beatport_url: https://www.beatport.com/artist/diyeico/2321276
+
+Nombre artístico en Beatport: Diyeico (slug diyeico).
+
+Hechos verificados (prioridad alta; no inventar más allá de esto):
+
+Identidad:
+- Nombre artístico: Diyeico
+- Nombre real acreditado en metadatos de tienda (Qobuz / créditos de composición): Jacob Vázquez Martínez (composer / producer).
+- País: ES. Asociado al circuito de breakbeat del sur de España / Andalucía (Campo de Gibraltar / Cádiz). No afirmar una ciudad de residencia si no está en un perfil propio del artista.
+
+Sello:
+- Publica en Br8kn Records (imprint digital de breakbeat contemporáneo, catálogo Beatport). No es fundador del sello salvo evidencia.
+
+Catálogo Beatport 2026 (Br8kn Records):
+- Breakman (Original Mix) — 2026-04-03 — colaboración con Breakbeat ESP (crédito compositor: Sergio Padila Mula).
+- Sonic Shift (Original Mix) — 2026-05-08
+- Fatking Alien (Original Mix) — 2026-06-05
+- Terrorist Break (Original Mix) — 2026-07-03
+- Terrorist Break (Skull Breakerz Remix) — 2026-08-14
+
+Top Ten Beatport (página del artista, agosto 2026): Fatking Alien; Terrorist Break; Breakman (con Breakbeat ESP).
+
+Circuito en vivo:
+- 15 agosto 2026: SurBreak (primer club night de Breakbiteros del Sur) en Sala Las Palmeras, La Línea de la Concepción (Cádiz), cartel con DJ Heavy, DJ Nachh, Mutant Breakz, Kill II Beat, DJ Xema y Diyeico. Colaboración Love 90s.
+
+Categoría sugerida: andalusian (circuito sur / Cádiz), no uk_legend ni pioneer.
+Era: 2020s-present
+Estilos: Breakbeat / Breaks / Bass (no inventar jungle/D&B sin evidencia).
+
+NO hay SoundCloud canónico verificado (soundcloud.com/diyeico = 404). No inventar Instagram ni web.
+NO mencionar Optimal Breaks ni charts en la bio.
+related_artists solo si son artistas (p. ej. Breakbeat ESP, Skull Breakerz, DJ Heavy, Mutantbreakz, DJ Xema) — nunca el sello Br8kn Records.
