@@ -217,10 +217,26 @@ class QuotaExceeded extends Error {
   }
 }
 
-/** fetch con manejo de 429 (rate limit corto → espera; cuota diaria → aborta). */
+/**
+ * fetch con manejo de 429 (rate limit corto → espera; cuota diaria → aborta)
+ * y reintentos con backoff para errores 5xx transitorios (502/503/504 son
+ * habituales en la API de Spotify y no deben tumbar todo el batch).
+ */
 async function fetchWith429(url, headers) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(url, { headers })
+  let serverErrs = 0
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let res
+    try {
+      res = await fetch(url, { headers })
+    } catch (e) {
+      // Fallo de red transitorio: backoff y reintento.
+      serverErrs++
+      if (serverErrs > 5) throw e
+      const wait = Math.min(30, 2 ** serverErrs)
+      console.warn(`  … red inestable ${SVC.label} (${e.message}), reintento en ${wait}s`)
+      await sleep(wait * 1000)
+      continue
+    }
     if (res.status === 429) {
       const retry = Number(res.headers.get('retry-after') || '2')
       const body = await res.text().catch(() => '')
@@ -229,10 +245,18 @@ async function fetchWith429(url, headers) {
       await sleep((retry + 1) * 1000)
       continue
     }
+    if (res.status >= 500 && res.status <= 599) {
+      serverErrs++
+      if (serverErrs > 5) throw new Error(`${SVC.label} search: HTTP ${res.status} persistente ${await res.text().catch(() => '')}`)
+      const wait = Math.min(30, 2 ** serverErrs)
+      console.warn(`  … ${SVC.label} HTTP ${res.status} transitorio, reintento en ${wait}s`)
+      await sleep(wait * 1000)
+      continue
+    }
     if (!res.ok) throw new Error(`${SVC.label} search: HTTP ${res.status} ${await res.text()}`)
     return res.json()
   }
-  throw new Error(`${SVC.label} search: rate limit persistente (429 x3)`)
+  throw new Error(`${SVC.label} search: reintentos agotados`)
 }
 
 async function spotifySearch(query) {

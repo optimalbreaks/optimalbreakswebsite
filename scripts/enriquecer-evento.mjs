@@ -4610,6 +4610,69 @@ async function runPatchDubElementsFriends(sb) {
   console.log('[patch-dub-elements-friends] OK:', after)
 }
 
+const HEAT_OPENING_360_2026_SLUG = 'opening-special-360-show'
+const HEAT_OPENING_360_2026_TICKETS =
+  'https://www.monsterticket.com/evento/heat-opening-special-360-show'
+
+/** Confirmaciones oficiales Heat Pro (Instagram, ago 2026), en orden de anuncio 1ª→8ª. */
+const HEAT_OPENING_360_2026_LINEUP = [
+  'Yo Speed',
+  'Jottafrank',
+  'Bowser',
+  'Bad Legs',
+  'Tortu',
+  'Bass & Crash',
+  'V. Aparicio',
+  'Jose Rodriguez',
+]
+
+async function runPatchHeatOpeningSpecial360Show2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, lineup, doors_open, doors_close, tags')
+    .eq('slug', HEAT_OPENING_360_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  if (!before) {
+    console.error('[patch-heat-opening-360-2026] No existe fila:', HEAT_OPENING_360_2026_SLUG)
+    process.exit(1)
+  }
+  console.log(
+    '[patch-heat-opening-360-2026] antes: lineup',
+    before.lineup?.length || 0,
+    '| horario',
+    before.doors_open,
+    '→',
+    before.doors_close,
+  )
+
+  const tags = [...new Set([...(before.tags || []), 'paris 15', 'breakbeat'])]
+
+  const { error: e1 } = await sb
+    .from('events')
+    .update({
+      lineup: HEAT_OPENING_360_2026_LINEUP,
+      doors_open: '01:00',
+      doors_close: '07:00',
+      tickets_url: HEAT_OPENING_360_2026_TICKETS,
+      tags,
+      description_es:
+        'Heat Pro inaugura temporada el sábado 26 de septiembre de 2026 en Sala París 15 (Málaga) con Opening Special 360° Show: noche de sonidos rotos de 01:00 a 07:00. Cartel completo, por orden de confirmación: Yo Speed (Cádiz), Jottafrank (Córdoba), Bowser (Sevilla), Bad Legs (Sevilla), Tortu (Málaga), Bass & Crash, V. Aparicio y Jose Rodriguez. Solo mayores de 18 años; entradas en MonsterTicket.\n\nPromoción cumpleaños: si cumples años el 25, 26 o 27 de septiembre, escribe a Heat Pro y entras gratis (fecha límite para apuntarse: 10 de septiembre).',
+      description_en:
+        'Heat Pro opens the season on Saturday 26 September 2026 at Sala París 15 (Málaga) with Opening Special 360° Show: a broken-beats night from 01:00 to 07:00. Full bill, in confirmation order: Yo Speed (Cádiz), Jottafrank (Córdoba), Bowser (Seville), Bad Legs (Seville), Tortu (Málaga), Bass & Crash, V. Aparicio and Jose Rodriguez. 18+ only; tickets via MonsterTicket.\n\nBirthday promo: if your birthday falls on 25, 26 or 27 September, message Heat Pro and get in free (sign-up deadline: 10 September).',
+    })
+    .eq('slug', HEAT_OPENING_360_2026_SLUG)
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, lineup, doors_open, doors_close, tickets_url, tags')
+    .eq('slug', HEAT_OPENING_360_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-heat-opening-360-2026] OK:', after)
+}
+
 const POWER_BREAKBEAT_CON_AUTOBOTS_2026_SLUG = 'power-breakbeat-con-autobots-2026'
 const POWER_BREAKBEAT_CON_AUTOBOTS_TICKETS =
   'https://www.monsterticket.com/evento/power-breakbeat-con-autobots'
@@ -5351,6 +5414,11 @@ async function main() {
 
   if (argv.includes('--patch-dub-elements-friends')) {
     await runPatchDubElementsFriends(sb)
+    return
+  }
+
+  if (argv.includes('--patch-heat-opening-special-360-show-2026')) {
+    await runPatchHeatOpeningSpecial360Show2026(sb)
     return
   }
 
