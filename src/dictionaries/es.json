@@ -437,7 +437,14 @@
       "artists_subtitle": "Quiénes más aparecen en las canciones que la comunidad añade a Mis Tracks. Ranking aparte del Top 100 de temas.",
       "artists_saves": "saves",
       "artists_fans": "fans",
-      "artists_tracks": "temas"
+      "artists_tracks": "temas",
+      "artists_weeks_at_1": "{n} sem. nº 1",
+      "leader_new": "Nuevo nº 1: {name}",
+      "leader_climbs": "{name} escala al nº 1 (+{n})",
+      "leader_holds": "{name} se mantiene en el nº 1",
+      "leader_streak": "{name} lleva {n} semanas en el nº 1",
+      "artists_load_more": "Cargar más",
+      "artists_load_more_title": "Mostrar hasta 50 artistas"
     }
   },
   "charts_promo": {

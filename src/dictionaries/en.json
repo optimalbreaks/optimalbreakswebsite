@@ -535,7 +535,14 @@
       "artists_subtitle": "Who shows up most across the tracks the community adds to My Tracks. A separate ranking from the Top 100 tracks.",
       "artists_saves": "saves",
       "artists_fans": "fans",
-      "artists_tracks": "tracks"
+      "artists_tracks": "tracks",
+      "artists_weeks_at_1": "{n} wk. at #1",
+      "leader_new": "New #1: {name}",
+      "leader_climbs": "{name} climbs to #1 (+{n})",
+      "leader_holds": "{name} holds #1",
+      "leader_streak": "{name} has been #1 for {n} weeks",
+      "artists_load_more": "Load more",
+      "artists_load_more_title": "Show up to 50 artists"
     }
   },
   "charts_promo": {

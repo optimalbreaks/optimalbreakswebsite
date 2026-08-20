@@ -6,7 +6,9 @@
 // `/api/public/charts/community-monthly` (que ahora devuelve all-time;
 // el slug se conserva por compatibilidad — ver cabecera del endpoint).
 //
-// Se monta dentro de `ChartView`, justo debajo de Retro Vinyl Picks.
+// Se monta en `/[lang]/top100`. El top 10 de artistas replica el idioma
+// visual de los 40 Breaks (▲/▼/═/NUEVO + semanas) con movimiento
+// reconstruido en el endpoint a partir de `created_at`.
 // ============================================
 
 'use client'
@@ -45,6 +47,8 @@ import { logTrackPlay } from '@/lib/track-play-log'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 const COMMUNITY_TOP_LIMIT = 100
+/** Primer vistazo del tablero de artistas; el resto hasta 50 va tras «Cargar más». */
+const ARTISTS_VISIBLE_INITIAL = 10
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -84,6 +88,9 @@ interface CommunityTopArtist {
   unique_users: number
   unique_tracks: number
   slug: string | null
+  previous_rank?: number | null
+  weeks_in_top10?: number
+  weeks_at_1?: number
 }
 
 interface ApiResponse {
@@ -135,6 +142,66 @@ function snapshotForBeatportTop(t: CommunityTopTrack): SavedChartTrackSnapshot {
   return snap
 }
 
+function ArtistMovementIndicator({
+  rank,
+  previousRank,
+  dict,
+}: {
+  rank: number
+  previousRank: number | null | undefined
+  dict: any
+}) {
+  const c = dict.charts
+  if (previousRank == null) {
+    return (
+      <span className="inline-block px-1.5 py-0.5 text-[10px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
+        {c.new_entry}
+      </span>
+    )
+  }
+  const diff = previousRank - rank
+  if (diff > 0) {
+    return (
+      <span className="text-green-600 font-bold text-xs" title={c.position_up}>
+        ▲ {diff}
+      </span>
+    )
+  }
+  if (diff < 0) {
+    return (
+      <span className="text-red-600 font-bold text-xs" title={c.position_down}>
+        ▼ {Math.abs(diff)}
+      </span>
+    )
+  }
+  return (
+    <span className="text-[var(--ink)]/50 font-bold text-xs" title={c.position_same}>
+      ═
+    </span>
+  )
+}
+
+function leaderHeadline(leader: CommunityTopArtist, cm: Record<string, string>): string | null {
+  if (leader.rank !== 1) return null
+  const name = leader.name
+  const prev = leader.previous_rank
+  const weeks = leader.weeks_at_1 ?? 1
+  if (prev == null) {
+    return (cm.leader_new || 'Nuevo nº 1: {name}').replace('{name}', name)
+  }
+  if (prev > 1) {
+    return (cm.leader_climbs || '{name} escala al nº 1 (+{n})')
+      .replace('{name}', name)
+      .replace('{n}', String(prev - 1))
+  }
+  if (weeks >= 4) {
+    return (cm.leader_streak || '{name} lleva {n} semanas en el nº 1')
+      .replace('{name}', name)
+      .replace('{n}', String(weeks))
+  }
+  return (cm.leader_holds || '{name} se mantiene en el nº 1').replace('{name}', name)
+}
+
 function SaveCountBadge({ count, label }: { count: number; label: string }) {
   // Badge similar a `PositionBadge` del chart pero con el número de saves.
   const isHot = count >= 5
@@ -161,6 +228,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
   const [shuffleMode, setShuffleMode] = useState(false)
+  const [showAllArtists, setShowAllArtists] = useState(false)
   /** Vinilo YouTube abierto en fila (embed inline, no cola global). */
   const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
 
@@ -376,9 +444,13 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   }, [previewBundle, playPreviewQueue, groupKey])
 
   const activeRowKey = isGroupActive ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const artistLeaderLine = data?.top_artists?.[0] ? leaderHeadline(data.top_artists[0], cm) : null
+  const artistRows = data?.top_artists || []
+  const visibleArtists = showAllArtists ? artistRows : artistRows.slice(0, ARTISTS_VISIBLE_INITIAL)
+  const hiddenArtists = Math.max(0, artistRows.length - ARTISTS_VISIBLE_INITIAL)
 
   const artistsBlock =
-    !loading && !error && data && (data.top_artists?.length ?? 0) > 0 ? (
+    !loading && !error && data && artistRows.length > 0 ? (
       <section id="community-top-artists" className="mb-12 sm:mb-16 scroll-mt-24">
         <header className="px-4 sm:px-0 mb-6 sm:mb-8">
           <span
@@ -400,9 +472,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {cm.artists_subtitle ||
               'Who shows up most across the tracks the community adds to My Tracks.'}
           </p>
+          {artistLeaderLine ? (
+            <p
+              className="text-sm sm:text-base text-[var(--ink)] font-bold mt-3"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {artistLeaderLine}
+            </p>
+          ) : null}
         </header>
         <ol className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-2 divide-[var(--ink)] mx-2 sm:mx-0">
-          {(data.top_artists || []).map((a) => {
+          {visibleArtists.map((a) => {
             const nameEl = a.slug ? (
               <Link
                 href={`/${lang}/artists/${a.slug}`}
@@ -419,7 +499,15 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 {a.name}
               </span>
             )
-            const isHot = a.save_count >= 10
+            const isLeader = a.rank === 1
+            const isHot = isLeader || a.save_count >= 10
+            const weeksAt1 = a.weeks_at_1 ?? 0
+            const weeksIn = a.weeks_in_top10 ?? 1
+            const weekLabel = isLeader && weeksAt1 > 1
+              ? (cm.artists_weeks_at_1 || '{n} sem. nº 1').replace('{n}', String(weeksAt1))
+              : !isLeader && weeksIn > 1
+                ? (c.weeks_in_chart || '{n} sem.').replace('{n}', String(weeksIn))
+                : null
             return (
               <li
                 key={`${a.rank}-${a.name}`}
@@ -435,6 +523,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                   <span className="text-sm sm:text-base leading-none">{a.rank}</span>
                 </span>
                 <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <ArtistMovementIndicator rank={a.rank} previousRank={a.previous_rank} dict={dict} />
+                    {weekLabel ? (
+                      <span
+                        className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider"
+                        style={{ fontFamily: "'Courier Prime', monospace" }}
+                      >
+                        {weekLabel}
+                      </span>
+                    ) : null}
+                  </div>
                   <div className="text-sm sm:text-base truncate">{nameEl}</div>
                   <div
                     className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
@@ -451,6 +550,17 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             )
           })}
         </ol>
+        {!showAllArtists && hiddenArtists > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAllArtists(true)}
+            className="mt-1 min-h-[44px] w-[calc(100%-1rem)] sm:w-full mx-2 sm:mx-0 border-2 border-[var(--ink)] bg-[var(--paper)] px-3 py-2 text-[11px] sm:text-xs font-black tracking-wider text-[var(--ink)] hover:bg-[var(--cyan)] hover:text-white transition-colors touch-manipulation"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+            title={cm.artists_load_more_title || cm.artists_load_more || 'Cargar más'}
+          >
+            {cm.artists_load_more || 'Cargar más'}
+          </button>
+        )}
       </section>
     ) : null
 

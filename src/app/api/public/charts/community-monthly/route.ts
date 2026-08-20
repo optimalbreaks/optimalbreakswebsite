@@ -12,15 +12,11 @@
 // Uso: GET /api/public/charts/community-monthly[?limit=N]
 //
 //   - limit: opcional, 5–100 (default 40) — solo afecta top_tracks.
-//   - top_artists: siempre top 10 por créditos de save.
-//
-// Respuesta:
-//   {
-//     scope: 'all_time',
-//     totals: { saves, unique_tracks, unique_users },
-//     top_tracks: TopTrack[],
-//     top_artists: TopArtist[]
-//   }
+//   - top_artists: top 50 por créditos de save (la UI enseña 10 y «Cargar más»).
+//     Cada fila lleva movimiento semanal reconstruido desde `created_at`
+//     (lunes ISO UTC): previous_rank (null = no estaba en el top 50 al
+//     empezar la semana), weeks_in_top10 (semanas seguidas en este tablero),
+//     weeks_at_1. No hay tabla de snapshots.
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
 // `community-monthly` por compatibilidad — antes este top era mensual y
@@ -41,9 +37,125 @@ import {
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 
-const TOP_ARTISTS_LIMIT = 10
+const TOP_ARTISTS_LIMIT = 50
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
 const IN_CHUNK = 200
+
+type ArtistAgg = {
+  name: string
+  save_count: number
+  _users: Set<string>
+  _tracks: Set<string>
+}
+
+type ArtistCredit = {
+  key: string
+  name: string
+  userId: string
+  trackKey: string
+  createdMs: number
+}
+
+function ymdUtc(d: Date): string {
+  const yy = d.getUTCFullYear()
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(d.getUTCDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
+/** Lunes ISO (UTC) de la semana que contiene `from`. */
+function isoMondayUtc(from: Date): string {
+  const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()))
+  const day = d.getUTCDay()
+  d.setUTCDate(d.getUTCDate() - (day === 0 ? 6 : day - 1))
+  return ymdUtc(d)
+}
+
+function addDaysYmdUtc(ymd: string, days: number): string {
+  const [y, m, d] = ymd.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  dt.setUTCDate(dt.getUTCDate() + days)
+  return ymdUtc(dt)
+}
+
+function mondayCutoffMs(mondayYmd: string): number {
+  return Date.parse(`${mondayYmd}T00:00:00.000Z`)
+}
+
+function bumpArtistInto(map: Map<string, ArtistAgg>, artistName: string, userId: string, trackKey: string) {
+  const key = normalizeArtistKey(artistName)
+  if (!key) return
+  let row = map.get(key)
+  if (!row) {
+    row = {
+      name: artistName.trim(),
+      save_count: 0,
+      _users: new Set(),
+      _tracks: new Set(),
+    }
+    map.set(key, row)
+  }
+  row.save_count += 1
+  row._users.add(userId)
+  row._tracks.add(trackKey)
+  if (artistName.trim().length > row.name.length) row.name = artistName.trim()
+}
+
+function artistRankMap(agg: Map<string, ArtistAgg>, limit = TOP_ARTISTS_LIMIT): Map<string, number> {
+  const ranked = Array.from(agg.entries()).sort(([, a], [, b]) =>
+    b.save_count - a.save_count ||
+    b._users.size - a._users.size ||
+    b._tracks.size - a._tracks.size ||
+    a.name.localeCompare(b.name),
+  )
+  const out = new Map<string, number>()
+  for (let i = 0; i < ranked.length && i < limit; i++) {
+    out.set(ranked[i][0], i + 1)
+  }
+  return out
+}
+
+/**
+ * Snapshots del top 10 al inicio de cada lunes ISO (créditos con createdAt < lunes 00:00 UTC).
+ * El ranking «ahora» no entra aquí: se calcula con todos los saves.
+ */
+function artistMondaySnapshots(credits: ArtistCredit[], thisMonday: string): Map<string, Map<string, number>> {
+  const snapshots = new Map<string, Map<string, number>>()
+  const dated = credits.filter((c) => Number.isFinite(c.createdMs) && c.createdMs > 0)
+  if (!dated.length) return snapshots
+  let minMs = dated[0].createdMs
+  for (const c of dated) if (c.createdMs < minMs) minMs = c.createdMs
+  const firstMonday = isoMondayUtc(new Date(minMs))
+  const sorted = credits
+    .map((c) => ({ ...c, createdMs: c.createdMs > 0 ? c.createdMs : minMs }))
+    .sort((a, b) => a.createdMs - b.createdMs)
+  const agg = new Map<string, ArtistAgg>()
+  let i = 0
+  for (let monday = firstMonday; monday <= thisMonday; monday = addDaysYmdUtc(monday, 7)) {
+    const cutoff = mondayCutoffMs(monday)
+    while (i < sorted.length && sorted[i].createdMs < cutoff) {
+      const c = sorted[i]
+      bumpArtistInto(agg, c.name, c.userId, c.trackKey)
+      i++
+    }
+    snapshots.set(monday, artistRankMap(agg))
+  }
+  return snapshots
+}
+
+function consecutiveWeeks(
+  key: string,
+  thisMonday: string,
+  snapshots: Map<string, Map<string, number>>,
+  predicate: (rank: number | undefined) => boolean,
+): number {
+  let weeks = 0
+  for (let monday = thisMonday; snapshots.has(monday); monday = addDaysYmdUtc(monday, -7)) {
+    if (!predicate(snapshots.get(monday)?.get(key))) break
+    weeks += 1
+  }
+  return weeks
+}
 
 async function selectByIds<T>(
   ids: string[],
@@ -518,32 +630,8 @@ export async function GET(request: NextRequest) {
   // cuenta una sola vez por usuario).
   const aggByKey = new Map<string, Aggregate>()
 
-  type ArtistAgg = {
-    name: string
-    save_count: number
-    _users: Set<string>
-    _tracks: Set<string>
-  }
   const artistAgg = new Map<string, ArtistAgg>()
-
-  const bumpArtist = (artistName: string, userId: string, trackKey: string) => {
-    const key = normalizeArtistKey(artistName)
-    if (!key) return
-    let row = artistAgg.get(key)
-    if (!row) {
-      row = {
-        name: artistName.trim(),
-        save_count: 0,
-        _users: new Set(),
-        _tracks: new Set(),
-      }
-      artistAgg.set(key, row)
-    }
-    row.save_count += 1
-    row._users.add(userId)
-    row._tracks.add(trackKey)
-    if (artistName.trim().length > row.name.length) row.name = artistName.trim()
-  }
+  const artistCredits: ArtistCredit[] = []
 
   for (const s of saved) {
     const meta = byRefKey.get(`${s.track_source}:${s.track_id}`)
@@ -613,7 +701,16 @@ export async function GET(request: NextRequest) {
     }
 
     for (const artistName of splitArtistDisplayLine(meta.artists || '')) {
-      bumpArtist(artistName, s.user_id, key)
+      const artistKey = normalizeArtistKey(artistName)
+      if (!artistKey) continue
+      bumpArtistInto(artistAgg, artistName, s.user_id, key)
+      artistCredits.push({
+        key: artistKey,
+        name: artistName.trim(),
+        userId: s.user_id,
+        trackKey: key,
+        createdMs: created ? Date.parse(created) || 0 : 0,
+      })
     }
   }
 
@@ -671,8 +768,9 @@ export async function GET(request: NextRequest) {
   }))
 
   // Top artistas: créditos de save (aparición en track guardado), luego users, luego tracks.
-  const artistRanked = Array.from(artistAgg.values())
-    .map((a) => ({
+  const artistRanked = Array.from(artistAgg.entries())
+    .map(([key, a]) => ({
+      key,
       name: a.name,
       save_count: a.save_count,
       unique_users: a._users.size,
@@ -687,6 +785,10 @@ export async function GET(request: NextRequest) {
     )
     .slice(0, TOP_ARTISTS_LIMIT)
 
+  const thisMonday = isoMondayUtc(new Date())
+  const mondaySnapshots = artistMondaySnapshots(artistCredits, thisMonday)
+  const previousRanks = mondaySnapshots.get(thisMonday) || new Map<string, number>()
+
   let artistSlugMap: Record<string, string> = {}
   if (artistRanked.length) {
     const { data: artistRows } = await sb
@@ -699,18 +801,27 @@ export async function GET(request: NextRequest) {
   }
 
   const top_artists = artistRanked.map((a, idx) => {
-    const key = normalizeArtistKey(a.name)
+    const key = a.key
     const slug =
       artistSlugMap[key] ||
       artistSlugMap[key.startsWith('the ') ? key.slice(4) : `the ${key}`] ||
       null
+    const rank = idx + 1
+    const previous_rank = previousRanks.get(key) ?? null
+    const extraTop10 = consecutiveWeeks(key, thisMonday, mondaySnapshots, (r) => r != null && r <= TOP_ARTISTS_LIMIT)
+    const extraAt1 = rank === 1
+      ? consecutiveWeeks(key, thisMonday, mondaySnapshots, (r) => r === 1)
+      : 0
     return {
-      rank: idx + 1,
+      rank,
       name: a.name,
       save_count: a.save_count,
       unique_users: a.unique_users,
       unique_tracks: a.unique_tracks,
       slug,
+      previous_rank,
+      weeks_in_top10: extraTop10 + 1,
+      weeks_at_1: rank === 1 ? extraAt1 + 1 : 0,
     }
   })
 
