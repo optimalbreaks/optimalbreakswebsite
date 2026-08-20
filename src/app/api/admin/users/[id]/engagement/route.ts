@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { uniqueSavedTrackKey } from '@/lib/track-canonical-key'
 
 type EngagementType = 'favorites' | 'mixes' | 'tracks'
 
@@ -301,13 +302,31 @@ export async function GET(
       }
     }
 
-    const tracks = saved.map((s) => {
+    const tracks = saved.flatMap((s) => {
       const snap = (s.snapshot || {}) as Record<string, unknown>
       let live: Record<string, unknown> | undefined
       if (s.track_source === 'chart') live = liveChart.get(s.track_id) as Record<string, unknown> | undefined
       else if (s.track_source === 'featured') live = liveFeat.get(s.track_id) as Record<string, unknown> | undefined
       else if (s.track_source === 'vinyl') live = liveVinyl.get(s.track_id) as Record<string, unknown> | undefined
       const base = live || snap || {}
+
+      const uniqKey = uniqueSavedTrackKey({
+        track_source: s.track_source,
+        track_id: s.track_id,
+        canonical_url: s.canonical_url,
+        snapshot: snap,
+        live: live
+          ? {
+              title: (live.title as string | null | undefined) ?? null,
+              mix_name: (live.mix_name as string | null | undefined) ?? null,
+              artists: live.artists,
+              beatport_url: (live.beatport_url as string | null | undefined) ?? null,
+              link_url: (live.link_url as string | null | undefined) ?? null,
+              youtube_url: (live.youtube_url as string | null | undefined) ?? null,
+            }
+          : null,
+      })
+      if (!uniqKey) return []
 
       const title = String((base as Record<string, unknown>).title || snap.title || '—')
       const mix_name =
@@ -343,7 +362,8 @@ export async function GET(
         if (eid) week_date = weekByEdition.get(eid) || null
       }
 
-      return {
+      return [{
+        _uniq: uniqKey,
         track_source: s.track_source,
         track_id: s.track_id,
         saved_at: s.created_at,
@@ -356,18 +376,27 @@ export async function GET(
         artwork_url,
         canonical_url,
         week_date,
-      }
+      }]
+    })
+
+    const seenUniq = new Set<string>()
+    const uniqueTracks = tracks.flatMap((t) => {
+      if (seenUniq.has(t._uniq)) return []
+      seenUniq.add(t._uniq)
+      const { _uniq, ...rest } = t
+      void _uniq
+      return [rest]
     })
 
     const counts = {
-      total: tracks.length,
-      chart: tracks.filter((t) => t.track_source === 'chart').length,
-      featured: tracks.filter((t) => t.track_source === 'featured').length,
-      vinyl: tracks.filter((t) => t.track_source === 'vinyl').length,
-      beatport_top: tracks.filter((t) => t.track_source === 'beatport_top').length,
+      total: uniqueTracks.length,
+      chart: uniqueTracks.filter((t) => t.track_source === 'chart').length,
+      featured: uniqueTracks.filter((t) => t.track_source === 'featured').length,
+      vinyl: uniqueTracks.filter((t) => t.track_source === 'vinyl').length,
+      beatport_top: uniqueTracks.filter((t) => t.track_source === 'beatport_top').length,
     }
 
-    return NextResponse.json({ type, counts, tracks })
+    return NextResponse.json({ type, counts, tracks: uniqueTracks })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error obteniendo engagement'
     return NextResponse.json({ error: msg }, { status: 500 })

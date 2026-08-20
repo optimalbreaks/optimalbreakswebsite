@@ -138,7 +138,9 @@ export default function AdminUsersPage() {
       <p className="admin-muted mb-6 max-w-2xl">
         Cuentas registradas (Auth + perfil). Puedes asignar o quitar el rol de administrador. La búsqueda filtra por
         nombre visible o nombre de usuario en el perfil. <strong>Favoritos</strong> = artistas + sellos + eventos con
-        corazón; <strong>Mixes</strong> = mixes guardados; <strong>Tracks</strong> = canciones en su lista My Tracks.
+        corazón; <strong>Mixes</strong> = mixes guardados; <strong>Tracks</strong> = canciones
+        únicas en su lista My Tracks (la misma pista no se cuenta dos veces si la guardó desde
+        varias listas).
         Pulsa sobre cualquiera de esos números para ver el detalle. Pulsa el
         encabezado de una columna para ordenar (el segundo clic invierte el
         sentido).{' '}

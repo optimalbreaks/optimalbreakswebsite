@@ -143,6 +143,7 @@ export type AdminUserRow = {
   last_activity_at: string | null
   favorites_count: number
   mixes_count: number
+  /** Canciones únicas en My Tracks (misma pista desde varias listas = 1). */
   tracks_count: number
 }
 

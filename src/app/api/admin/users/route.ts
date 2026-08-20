@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { buildLastActivityAtByUserId } from '@/lib/admin-user-last-activity'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { uniqueSavedTrackKey } from '@/lib/track-canonical-key'
+import type { ChartTrackSource } from '@/types/database'
 
 function sanitizeSearch(raw: string): string {
   return raw.replace(/[%_\\]/g, '').trim().slice(0, 80)
@@ -75,7 +77,7 @@ function cmpDate(a: string | null | undefined, b: string | null | undefined, asc
 
 async function tallyByUserId(
   sb: ServiceClient,
-  table: 'favorite_artists' | 'favorite_labels' | 'favorite_events' | 'saved_chart_tracks' | 'saved_mixes',
+  table: 'favorite_artists' | 'favorite_labels' | 'favorite_events' | 'saved_mixes',
   userIds: string[],
 ): Promise<CountMap> {
   if (userIds.length === 0) return {}
@@ -88,9 +90,51 @@ async function tallyByUserId(
   return out
 }
 
+type SavedTrackTallyRow = {
+  user_id: string
+  track_source: ChartTrackSource
+  track_id: string
+  canonical_url: string | null
+  snapshot: Record<string, unknown> | null
+}
+
+/** Canciones únicas por usuario (Mis Tracks), no filas crudas de `saved_chart_tracks`. */
+async function tallyUniqueTracksByUserId(
+  sb: ServiceClient,
+  userIds?: string[],
+): Promise<CountMap> {
+  if (userIds && userIds.length === 0) return {}
+  const keysByUser = new Map<string, Set<string>>()
+  const pageSize = 1000
+  let from = 0
+  for (;;) {
+    let q = sb
+      .from('saved_chart_tracks')
+      .select('user_id, track_source, track_id, canonical_url, snapshot')
+    if (userIds) q = q.in('user_id', userIds)
+    const { data, error } = await q.range(from, from + pageSize - 1)
+    if (error || !data?.length) break
+    for (const row of data as SavedTrackTallyRow[]) {
+      const key = uniqueSavedTrackKey(row)
+      if (!key) continue
+      let set = keysByUser.get(row.user_id)
+      if (!set) {
+        set = new Set()
+        keysByUser.set(row.user_id, set)
+      }
+      set.add(key)
+    }
+    if (data.length < pageSize) break
+    from += pageSize
+  }
+  const out: CountMap = {}
+  for (const [id, keys] of keysByUser) out[id] = keys.size
+  return out
+}
+
 async function tallyAllByUserId(
   sb: ServiceClient,
-  table: 'favorite_artists' | 'favorite_labels' | 'favorite_events' | 'saved_chart_tracks' | 'saved_mixes',
+  table: 'favorite_artists' | 'favorite_labels' | 'favorite_events' | 'saved_mixes',
 ): Promise<CountMap> {
   const out: CountMap = {}
   const pageSize = 1000
@@ -121,7 +165,7 @@ async function buildEngagementCounts(
     tally('favorite_labels'),
     tally('favorite_events'),
     tally('saved_mixes'),
-    tally('saved_chart_tracks'),
+    tallyUniqueTracksByUserId(sb, opts.allRows ? undefined : userIds),
   ])
   const out: Record<string, { favorites: number; mixes: number; tracks: number }> = {}
   for (const id of userIds) {
