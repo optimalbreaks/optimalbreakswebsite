@@ -224,11 +224,38 @@ Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/a
 
 Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_tracks`) **across all time**. One save = one click on `SaveTrackButton`. Page: **`/[lang]/top100`** (`src/app/[lang]/top100/page.tsx`). `/[lang]/charts` only keeps a teaser card that links there (the ranking used to sit under *Retro Vinyl Picks* inside `ChartView`). Originally a monthly window; switched to an all-time accumulator after calendar months kept "drying up" the ranking once active users had emptied that month's catalogue into their lists. The slug `community-monthly` is preserved for compatibility — both the endpoint and the component file keep the historical name even though they no longer expose any monthly window.
 
-- **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100 — the public page requests **100**). No `month` parameter — the response is always the all-time aggregate. **`top_tracks`** and **`top_artists`** (top 50 by save credits; UI shows 10 then «Cargar más») come from the **same** pass over the same rows. Each artist row also has **`previous_rank`** (`null` = not in last week's top 50), **`weeks_in_top10`** (consecutive weeks on this board) and **`weeks_at_1`**, rebuilt from `created_at` vs the current ISO Monday (UTC).
-- **Component:** `src/components/CommunityMonthlyTop.tsx`. Two blocks: **most-saved artists** (heading stays «Top 10»; first 10 rows, then load-more up to 50 — save credits · unique fans · unique tracks; week-over-week ▲/▼/═/NUEVO plus weeks on the board / weeks at #1, same visual language as 40 Breaks Vitales — reconstructed from `saved_chart_tracks.created_at` vs ISO Monday UTC, no snapshot table) then the track list. Header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
+- **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100 — the public page requests **100**). No `month` parameter — the response is always the all-time aggregate. **`top_tracks`** and **`top_artists`** (top **50** by save credits) come from the **same** pass over the same rows.
+- **Component:** `src/components/CommunityMonthlyTop.tsx`. Two blocks: **most-saved artists** then the track list. Heading / kicker stay **«Top 10 artistas»** (not renamed when the list expands). First view shows **10** rows; **Cargar más** reveals the rest (up to 50); **Ver menos** at the bottom collapses back to 10 and smooth-scrolls to `#community-top-artists`. Each row: save credits · unique fans · unique tracks. Track block: header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
 - **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name.
 - **Hydration `.in()` must be chunked (`IN_CHUNK = 200`, same helper pattern as `/api/public/user-tracks`).** A single PostgREST `.in('id', featIds)` with hundreds of New Releases UUIDs (GET URL / payload limit) **drops metadata**. Saves **without `snapshot`** then look like orphans and are discarded — the public totals fall below the real `saved_chart_tracks` count (seen August 2026: ~968 rows in DB vs ~803 on `/top100`; artist numbers such as Paket 17→15). **Do not** collapse those lookups back into one unchunked `.in()`. Check lookup errors (empty `data` + ignored `error` silently under-counts).
 - **What counts / what does not:** `totals.saves` is the sum of hydratable rows (identity: Σ `save_count` == `totals.saves`). True orphans (source row gone **and** no snapshot / no remappable `canonical_url`) stay out of both the track list and the artist board — they cannot be rendered. Users with `profiles.is_tracks_public = false` are excluded. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
+
+### Artist board — weekly movement (not daily)
+
+Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`): **NUEVO** / **▲ N** / **▼ N** / **═**, plus a weeks label. The ranking itself stays **all-time**.
+
+- **Two clocks (do not mix them):**
+  - **The list is live.** Rank #1 / #4 / #12 updates as soon as someone saves (or unsaves). The page does **not** wait until next Monday to move a name.
+  - **The variation is Monday-to-Monday.** Arrows compare **live rank now** vs **rank at this ISO Monday 00:00 UTC** (saves with `created_at` before that cutoff). ═ means “same as Monday”, not “same as yesterday”.
+- **Cadence:** **weekly**, not daily. Same week boundary as the editorial charts. Next Monday a new baseline is taken.
+- **Live inside the week:** because “now” keeps moving, arrows can change mid-week (e.g. Monday #4 → Thursday #3 → **▲ 1**). The Monday snapshot stays fixed until the following Monday.
+- **No snapshot table / no cron.** Rebuilt on each request from `saved_chart_tracks.created_at` (`artistMondaySnapshots` in `community-monthly/route.ts`). `idx_sct_created` (migration **056**) helps the recency tie-break and this reconstruction.
+- **Caveat:** an unsave **deletes** the row, so last week’s reconstructed board is “current remaining saves before Monday”, not a photographic archive of what was on screen then.
+
+**API fields on each `top_artists` row**
+
+| Field | Meaning |
+| --- | --- |
+| `previous_rank` | Rank on this board (top 50) at Monday 00:00 UTC. `null` = was **not** in last week’s top 50 → UI **NUEVO**. |
+| `weeks_in_top10` | Consecutive ISO weeks **on the board** (the 50), **not** weeks at the current rank. Field name is historical (the board used to be 10). UI label `X sem.` on ranks 2–50 when `> 1`. |
+| `weeks_at_1` | Consecutive ISO weeks at **#1** only. UI label `X sem. nº 1` when the leader has `> 1`. |
+
+**UI**
+
+- On-page copy: `charts.community_monthly.artists_subtitle` (ES/EN) states live list + Monday-to-Monday arrows.
+- Arrows = this week’s **position change** vs Monday. Weeks = **tenure** (board vs throne).
+- Rank **#1** box is always red. One editorial line under the subtitle, #1 only: new leader / climbs to #1 / holds / streak (≥ 4 weeks at #1). Copy in `charts.community_monthly` (`leader_new`, `leader_climbs`, `leader_holds`, `leader_streak`).
+- Movement is **not** shown on the Top 100 **tracks** list.
 
 ---
 
@@ -295,7 +322,8 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
 - `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
-- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`** so hydratable saves are not dropped).
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC).
+- `src/components/CommunityMonthlyTop.tsx` — `/top100` UI (artist board 10→50 + track list).
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.
