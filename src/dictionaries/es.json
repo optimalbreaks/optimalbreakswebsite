@@ -444,7 +444,9 @@
       "leader_holds": "{name} se mantiene en el nº 1",
       "leader_streak": "{name} lleva {n} semanas en el nº 1",
       "artists_load_more": "Cargar más",
-      "artists_load_more_title": "Mostrar hasta 50 artistas"
+      "artists_load_more_title": "Mostrar hasta 50 artistas",
+      "artists_show_less": "Ver menos",
+      "artists_show_less_title": "Volver a los 10 primeros"
     }
   },
   "charts_promo": {

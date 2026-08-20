@@ -561,6 +561,20 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {cm.artists_load_more || 'Cargar más'}
           </button>
         )}
+        {showAllArtists && hiddenArtists > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowAllArtists(false)
+              document.getElementById('community-top-artists')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+            className="mt-1 min-h-[44px] w-[calc(100%-1rem)] sm:w-full mx-2 sm:mx-0 border-2 border-[var(--ink)] bg-[var(--paper)] px-3 py-2 text-[11px] sm:text-xs font-black tracking-wider text-[var(--ink)] hover:bg-[var(--cyan)] hover:text-white transition-colors touch-manipulation"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+            title={cm.artists_show_less_title || cm.artists_show_less || 'Ver menos'}
+          >
+            {cm.artists_show_less || 'Ver menos'}
+          </button>
+        )}
       </section>
     ) : null
 

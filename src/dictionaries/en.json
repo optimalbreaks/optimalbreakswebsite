@@ -542,7 +542,9 @@
       "leader_holds": "{name} holds #1",
       "leader_streak": "{name} has been #1 for {n} weeks",
       "artists_load_more": "Load more",
-      "artists_load_more_title": "Show up to 50 artists"
+      "artists_load_more_title": "Show up to 50 artists",
+      "artists_show_less": "Show less",
+      "artists_show_less_title": "Back to the top 10"
     }
   },
   "charts_promo": {
