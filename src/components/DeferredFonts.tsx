@@ -5,20 +5,17 @@ import { useEffect } from 'react'
 /** Fuentes fuera del CSS bloqueante inicial (Special Elite, Courier, Darker Grotesque, Unbounded 400). */
 export default function DeferredFonts() {
   useEffect(() => {
-    const loadCss = (specifier: string) => {
-      void import(specifier)
-    }
-
-    // Cuerpo / prose: fuera del layout crítico pero lo pedimos enseguida tras hidratar.
-    loadCss('@fontsource/special-elite/400.css')
+    // Literales: `import(variable)` no lo resuelve Webpack y en local
+    // explota el overlay (Cannot find module '@fontsource/…').
+    void import('@fontsource/special-elite/400.css')
 
     const load = () => {
-      loadCss('@fontsource/unbounded/400.css')
-      loadCss('@fontsource/courier-prime/400.css')
-      loadCss('@fontsource/courier-prime/700.css')
-      loadCss('@fontsource/darker-grotesque/400.css')
-      loadCss('@fontsource/darker-grotesque/700.css')
-      loadCss('@fontsource/darker-grotesque/900.css')
+      void import('@fontsource/unbounded/400.css')
+      void import('@fontsource/courier-prime/400.css')
+      void import('@fontsource/courier-prime/700.css')
+      void import('@fontsource/darker-grotesque/400.css')
+      void import('@fontsource/darker-grotesque/700.css')
+      void import('@fontsource/darker-grotesque/900.css')
     }
 
     const win = window as Window & {

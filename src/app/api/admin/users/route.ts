@@ -81,11 +81,24 @@ async function tallyByUserId(
   userIds: string[],
 ): Promise<CountMap> {
   if (userIds.length === 0) return {}
-  const { data, error } = await sb.from(table).select('user_id').in('user_id', userIds)
-  if (error || !data) return {}
+  // Paginado: PostgREST corta en 1000 filas por defecto y sin bucle los
+  // usuarios cuyas filas caen más allá del corte salían con 0.
   const out: CountMap = {}
-  for (const row of data as Array<{ user_id: string }>) {
-    out[row.user_id] = (out[row.user_id] ?? 0) + 1
+  const pageSize = 1000
+  let from = 0
+  for (;;) {
+    const { data, error } = await sb
+      .from(table)
+      .select('user_id')
+      .in('user_id', userIds)
+      .order('user_id')
+      .range(from, from + pageSize - 1)
+    if (error || !data?.length) break
+    for (const row of data as Array<{ user_id: string }>) {
+      out[row.user_id] = (out[row.user_id] ?? 0) + 1
+    }
+    if (data.length < pageSize) break
+    from += pageSize
   }
   return out
 }
@@ -98,13 +111,37 @@ type SavedTrackTallyRow = {
   snapshot: Record<string, unknown> | null
 }
 
+type LiveUniq = {
+  title?: string | null
+  mix_name?: string | null
+  artists?: unknown
+  beatport_url?: string | null
+  link_url?: string | null
+  youtube_url?: string | null
+}
+
+const IN_CHUNK = 200
+
+async function fetchLiveByIds<T extends { id: string }>(
+  ids: string[],
+  run: (chunk: string[]) => PromiseLike<{ data: T[] | null }>,
+): Promise<Map<string, T>> {
+  const out = new Map<string, T>()
+  if (!ids.length) return out
+  for (let i = 0; i < ids.length; i += IN_CHUNK) {
+    const { data } = await run(ids.slice(i, i + IN_CHUNK))
+    for (const row of data || []) out.set(row.id, row)
+  }
+  return out
+}
+
 /** Canciones únicas por usuario (Mis Tracks), no filas crudas de `saved_chart_tracks`. */
 async function tallyUniqueTracksByUserId(
   sb: ServiceClient,
   userIds?: string[],
 ): Promise<CountMap> {
   if (userIds && userIds.length === 0) return {}
-  const keysByUser = new Map<string, Set<string>>()
+  const rows: SavedTrackTallyRow[] = []
   const pageSize = 1000
   let from = 0
   for (;;) {
@@ -112,23 +149,50 @@ async function tallyUniqueTracksByUserId(
       .from('saved_chart_tracks')
       .select('user_id, track_source, track_id, canonical_url, snapshot')
     if (userIds) q = q.in('user_id', userIds)
-    const { data, error } = await q.range(from, from + pageSize - 1)
+    // Orden estable: sin él, el range pagina en orden físico y puede
+    // duplicar o saltarse filas entre páginas.
+    const { data, error } = await q.order('id').range(from, from + pageSize - 1)
     if (error || !data?.length) break
-    for (const row of data as SavedTrackTallyRow[]) {
-      const key = uniqueSavedTrackKey(row)
-      if (!key) continue
-      let set = keysByUser.get(row.user_id)
-      if (!set) {
-        set = new Set()
-        keysByUser.set(row.user_id, set)
-      }
-      set.add(key)
-    }
+    rows.push(...(data as SavedTrackTallyRow[]))
     if (data.length < pageSize) break
     from += pageSize
   }
+
+  const chartIds = Array.from(new Set(rows.filter((r) => r.track_source === 'chart').map((r) => r.track_id)))
+  const featIds = Array.from(new Set(rows.filter((r) => r.track_source === 'featured').map((r) => r.track_id)))
+  const vinylIds = Array.from(new Set(rows.filter((r) => r.track_source === 'vinyl').map((r) => r.track_id)))
+
+  const [chartLive, featLive, vinylLive] = await Promise.all([
+    fetchLiveByIds(chartIds, (chunk) =>
+      sb.from('chart_tracks').select('id, title, mix_name, artists, beatport_url').in('id', chunk),
+    ),
+    fetchLiveByIds(featIds, (chunk) =>
+      sb.from('chart_featured_tracks').select('id, title, mix_name, artists, link_url').in('id', chunk),
+    ),
+    fetchLiveByIds(vinylIds, (chunk) =>
+      sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, youtube_url').in('id', chunk),
+    ),
+  ])
+
+  const keysByUser = new Map<string, Set<string>>()
+  for (const row of rows) {
+    let live: LiveUniq | null = null
+    if (row.track_source === 'chart') live = chartLive.get(row.track_id) ?? null
+    else if (row.track_source === 'featured') live = featLive.get(row.track_id) ?? null
+    else if (row.track_source === 'vinyl') live = vinylLive.get(row.track_id) ?? null
+    const key = uniqueSavedTrackKey({ ...row, live })
+    if (!key) continue
+    let set = keysByUser.get(row.user_id)
+    if (!set) {
+      set = new Set()
+      keysByUser.set(row.user_id, set)
+    }
+    set.add(key)
+  }
   const out: CountMap = {}
-  for (const [id, keys] of keysByUser) out[id] = keys.size
+  keysByUser.forEach((keys, id) => {
+    out[id] = keys.size
+  })
   return out
 }
 
@@ -140,7 +204,11 @@ async function tallyAllByUserId(
   const pageSize = 1000
   let from = 0
   for (;;) {
-    const { data, error } = await sb.from(table).select('user_id').range(from, from + pageSize - 1)
+    const { data, error } = await sb
+      .from(table)
+      .select('user_id')
+      .order('user_id')
+      .range(from, from + pageSize - 1)
     if (error || !data?.length) break
     for (const row of data as Array<{ user_id: string }>) {
       out[row.user_id] = (out[row.user_id] ?? 0) + 1

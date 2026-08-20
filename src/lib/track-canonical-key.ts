@@ -82,10 +82,11 @@ export function uniqueSavedTrackKey(row: SavedTrackUniqInput): string | null {
     )
   }
 
+  // Misma prioridad que Mis Tracks: URL de la fila viva, luego save/snapshot.
   const url = normalizeTrackCanonicalUrl(
-    row.canonical_url ||
-      live?.beatport_url ||
+    live?.beatport_url ||
       live?.link_url ||
+      row.canonical_url ||
       (snap.beatport_url as string | undefined) ||
       (snap.link_url as string | undefined) ||
       '',
