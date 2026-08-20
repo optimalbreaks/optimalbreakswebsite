@@ -1215,6 +1215,15 @@ export function DeckAudioProvider({
   // true cuando detectamos una pausa NO pedida por el usuario mientras la
   // página estaba oculta (pantalla bloqueada / app en background).
   const previewSystemPausedRef = useRef(false)
+  // true cuando otra app tomó el FOCO DE AUDIO del SO y nos pausó (WhatsApp,
+  // una llamada, otro reproductor…). Como un reproductor de música de verdad,
+  // NO peleamos por recuperar el sonido: nos quedamos en pausa y esperamos a
+  // que el usuario pulse play. Se pone a true sólo si, tras una pausa del
+  // sistema, un ÚNICO reintento de `play()` es rechazado (señal de que el foco
+  // es de otra app). Un blip transitorio —una notificación con sonido— recupera
+  // sin marcar nada porque ese reintento sí arranca. Evita el bug "las
+  // canciones intentaban volverse a poner solas al abrir WhatsApp".
+  const previewInterruptedRef = useRef(false)
   // Espejo de `previewBlocked` para los watchdogs (no pelear contra la
   // política de autoplay: ahí hace falta un gesto, no un reintento).
   const previewBlockedRef = useRef(false)
@@ -1720,6 +1729,7 @@ export function DeckAudioProvider({
     previewBlockedRef.current = false
     previewUserPausedRef.current = false
     previewSystemPausedRef.current = false
+    previewInterruptedRef.current = false
     if (previewStartWatchdogRef.current) {
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
@@ -1842,7 +1852,15 @@ export function DeckAudioProvider({
         if (!a.paused && a.currentTime > 0) return // ya suena
         if (a.ended) { advanceFromCurrentTrack(); return }
         if (previewStartAttemptsRef.current >= 3) {
-          advanceFromCurrentTrack()
+          // Tras varios intentos sin arrancar hay que distinguir la causa:
+          //  - `a.error` presente → la URL/medios están caídos (proxy muerto,
+          //    formato no soportado): saltamos a la siguiente pista.
+          //  - sin error → el `play()` está bloqueado por el SO (autoplay en
+          //    segundo plano / pantalla bloqueada). NO quemamos la cola
+          //    saltando pistas una a una (era el bug "suenan 4-5 temas y de
+          //    repente para"): nos quedamos en la pista actual; se reanuda al
+          //    volver a primer plano (visibilitychange) o al pulsar play.
+          if (a.error) advanceFromCurrentTrack()
           return
         }
         // Reintento sin `load()`: en iOS PWA `load()` rompe la cadena del
@@ -1865,6 +1883,7 @@ export function DeckAudioProvider({
     previewAdvancedRef.current = false
     previewUserPausedRef.current = false
     previewSystemPausedRef.current = false
+    previewInterruptedRef.current = false
     previewStartAttemptsRef.current = 0
     if (previewStartWatchdogRef.current) {
       clearTimeout(previewStartWatchdogRef.current)
@@ -1947,11 +1966,41 @@ export function DeckAudioProvider({
       // el usuario lo pidiera, lo marcamos para que el keeper/visibility
       // puedan reanudar la lista.
       a.addEventListener('pause', () => {
-        if (!previewUserPausedRef.current && document.hidden && hasRealSrc() && !a.ended) {
-          previewSystemPausedRef.current = true
-        }
+        if (previewUserPausedRef.current || a.ended || !hasRealSrc()) return
+        if (!document.hidden) return
+        // Pausa no pedida por el usuario con la app en segundo plano: es una
+        // interrupción del SO (otra app suena, llamada, notificación con
+        // sonido). Marcamos el estado para el keeper/visibility.
+        previewSystemPausedRef.current = true
+        if (previewInterruptedRef.current) return
+        // Muchas interrupciones son un "blip" corto. Probamos UNA sola
+        // reanudación tras un instante: si el foco vuelve a ser nuestro, la
+        // música sigue (caso "voy en moto y suena una notificación"). Si otra
+        // app está sonando de verdad (WhatsApp, llamada), el `play()` se
+        // rechaza y nos quedamos en pausa como un reproductor de música
+        // normal, SIN pelear por el foco (bug "intentaba volverse a poner").
+        window.setTimeout(() => {
+          if (previewUserPausedRef.current || previewBlockedRef.current) return
+          if (previewInterruptedRef.current) return
+          if (getActiveYouTubePlayId()) return
+          const el = previewAudioRef.current
+          if (!el || el !== a || !el.getAttribute('src') || el.ended) return
+          if (!el.paused) return // ya volvió solo (blip terminado)
+          void el.play().catch(() => {
+            // Otra app mantiene el foco de audio: dejamos de insistir.
+            previewInterruptedRef.current = true
+            try {
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
+            } catch { /* no-op */ }
+          })
+        }, 1500)
       })
-      a.addEventListener('play', () => { previewSystemPausedRef.current = false })
+      a.addEventListener('play', () => {
+        // Cualquier arranque real limpia el estado de interrupción: el foco de
+        // audio ha vuelto a ser nuestro.
+        previewSystemPausedRef.current = false
+        previewInterruptedRef.current = false
+      })
       previewAudioRef.current = a
     }
     const audio = previewAudioRef.current
@@ -2045,6 +2094,10 @@ export function DeckAudioProvider({
       stopAllYouTube()
       broadcastPlaybackClaim()
       previewUserPausedRef.current = false
+      // Acción explícita del usuario: recupera el foco de audio, olvida la
+      // interrupción previa (otra app) para que el keeper vuelva a operar.
+      previewInterruptedRef.current = false
+      previewSystemPausedRef.current = false
       a.play().then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
@@ -2142,10 +2195,18 @@ export function DeckAudioProvider({
       // Si hay un embed (YouTube/SoundCloud) sonando, NO re-arrancar el
       // preview por encima: era una de las fuentes del "suenan dos cosas".
       if (getActiveYouTubePlayId()) return
+      // Otra app tomó el foco de audio (WhatsApp, llamada…): NO insistir en
+      // reanudar; nos quedamos en pausa como haría un reproductor de música.
+      if (previewInterruptedRef.current) return
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
       if (a.ended) { advanceFromCurrentTrack(); return }
-      if (a.paused && previewSystemPausedRef.current) void a.play().catch(() => { /* siguiente tick */ })
+      if (a.paused && previewSystemPausedRef.current) {
+        void a.play().catch(() => {
+          // El foco es de otra app: back-off (deja de pelear en cada tick).
+          previewInterruptedRef.current = true
+        })
+      }
     }, 10000)
     return () => window.clearInterval(iv)
   }, [previewQueue.length, advanceFromCurrentTrack])
@@ -2164,6 +2225,11 @@ export function DeckAudioProvider({
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
       if (a.ended) { advanceFromCurrentTrack(); return }
+      // Si otra app nos interrumpió (abrir WhatsApp, una llamada…), NO revivas
+      // la música al volver al primer plano: el usuario decide con play. Sí
+      // reanudamos las pausas benignas del SO (throttling en background sin que
+      // otra fuente sonara), que nunca marcan `previewInterruptedRef`.
+      if (previewInterruptedRef.current) return
       if (a.paused) void a.play().catch(() => { /* no-op */ })
     }
     document.addEventListener('visibilitychange', onVisible)
