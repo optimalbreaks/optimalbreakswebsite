@@ -20,6 +20,8 @@ import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
 import { ArtistNames } from '@/components/ArtistNames'
+import CardThumbnail from '@/components/CardThumbnail'
+import CountryBadge from '@/components/CountryBadge'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
@@ -88,6 +90,8 @@ interface CommunityTopArtist {
   unique_users: number
   unique_tracks: number
   slug: string | null
+  image_url?: string | null
+  country?: string | null
   previous_rank?: number | null
   weeks_in_top10?: number
   weeks_at_1?: number
@@ -508,6 +512,16 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               : !isLeader && weeksIn > 1
                 ? (c.weeks_in_chart || '{n} sem.').replace('{n}', String(weeksIn))
                 : null
+            const portrait = (
+              <div className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden border-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
+                <CardThumbnail
+                  src={a.image_url}
+                  alt={a.name}
+                  aspectClass="aspect-square"
+                  frameClass=""
+                />
+              </div>
+            )
             return (
               <li
                 key={`${a.rank}-${a.name}`}
@@ -522,6 +536,18 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 >
                   <span className="text-sm sm:text-base leading-none">{a.rank}</span>
                 </span>
+                {a.slug ? (
+                  <Link
+                    href={`/${lang}/artists/${a.slug}`}
+                    className="shrink-0 no-underline"
+                    aria-hidden
+                    tabIndex={-1}
+                  >
+                    {portrait}
+                  </Link>
+                ) : (
+                  portrait
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <ArtistMovementIndicator rank={a.rank} previousRank={a.previous_rank} dict={dict} />
@@ -534,7 +560,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       </span>
                     ) : null}
                   </div>
-                  <div className="text-sm sm:text-base truncate">{nameEl}</div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-sm sm:text-base truncate min-w-0">{nameEl}</div>
+                    {a.country ? (
+                      <CountryBadge
+                        country={a.country}
+                        lang={lang}
+                        size="xs"
+                        variant="accent"
+                        showLabel={false}
+                        className="shrink-0"
+                      />
+                    ) : null}
+                  </div>
                   <div
                     className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
                     style={{ fontFamily: "'Courier Prime', monospace" }}

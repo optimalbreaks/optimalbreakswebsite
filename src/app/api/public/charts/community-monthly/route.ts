@@ -16,7 +16,7 @@
 //     Cada fila lleva movimiento semanal reconstruido desde `created_at`
 //     (lunes ISO UTC): previous_rank (null = no estaba en el top 50 al
 //     empezar la semana), weeks_in_top10 (semanas seguidas en este tablero),
-//     weeks_at_1. No hay tabla de snapshots.
+//     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
 // `community-monthly` por compatibilidad — antes este top era mensual y
@@ -36,6 +36,7 @@ import {
   normalizeArtistKey,
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
+import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 
 const TOP_ARTISTS_LIMIT = 50
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
@@ -790,14 +791,24 @@ export async function GET(request: NextRequest) {
   const previousRanks = mondaySnapshots.get(thisMonday) || new Map<string, number>()
 
   let artistSlugMap: Record<string, string> = {}
+  const catalogBySlug = new Map<string, { image_url: string | null; country: string | null }>()
   if (artistRanked.length) {
     const { data: artistRows } = await sb
       .from('artists')
-      .select('slug, name, name_display')
+      .select('slug, name, name_display, image_url, country')
       .limit(5000)
-    artistSlugMap = buildFullArtistSlugMap(
-      (artistRows as { slug: string; name: string | null; name_display: string | null }[]) || [],
-    )
+    const rows =
+      (artistRows as {
+        slug: string
+        name: string | null
+        name_display: string | null
+        image_url: string | null
+        country: string | null
+      }[]) || []
+    artistSlugMap = buildFullArtistSlugMap(rows)
+    for (const row of rows) {
+      catalogBySlug.set(row.slug, { image_url: row.image_url, country: row.country })
+    }
   }
 
   const top_artists = artistRanked.map((a, idx) => {
@@ -806,6 +817,7 @@ export async function GET(request: NextRequest) {
       artistSlugMap[key] ||
       artistSlugMap[key.startsWith('the ') ? key.slice(4) : `the ${key}`] ||
       null
+    const catalog = slug ? catalogBySlug.get(slug) : undefined
     const rank = idx + 1
     const previous_rank = previousRanks.get(key) ?? null
     const extraTop10 = consecutiveWeeks(key, thisMonday, mondaySnapshots, (r) => r != null && r <= TOP_ARTISTS_LIMIT)
@@ -819,6 +831,8 @@ export async function GET(request: NextRequest) {
       unique_users: a.unique_users,
       unique_tracks: a.unique_tracks,
       slug,
+      image_url: displayArtistImageUrl(slug, catalog?.image_url) ?? null,
+      country: catalog?.country || null,
       previous_rank,
       weeks_in_top10: extraTop10 + 1,
       weeks_at_1: rank === 1 ? extraAt1 + 1 : 0,
