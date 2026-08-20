@@ -924,11 +924,12 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
   const keyMod = await import(
     pathToFileURL(join(process.cwd(), 'scripts', 'lib', 'chart-vinyl-track-key.mjs')).href
   )
-  const vinylTrackKey = keyMod.vinylTrackKey as (
-    title: string,
-    mixName: string,
-    artists: unknown,
-  ) => string
+  const vinylIdentityKey = keyMod.vinylIdentityKey as (row: {
+    youtube_url?: string | null
+    title?: string
+    mix_name?: string
+    artists?: unknown
+  }) => string
 
   const sb = createServiceSupabase()
   const { data: editionRow, error: edErr } = await sb
@@ -964,15 +965,15 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
 
   const { data: existingRows, error: exErr } = await sb
     .from('chart_vinyl_tracks')
-    .select('id, title, mix_name, artists, sort_order')
+    .select('id, title, mix_name, artists, sort_order, youtube_url')
     .eq('chart_edition_id', editionId)
   if (exErr) return { type: 'vinyl', ok: false, summary: exErr.message }
 
   const existingByKey = new Map<string, string>()
   let maxSort = 0
   for (const r of existingRows || []) {
-    const k = vinylTrackKey(r.title, r.mix_name ?? '', r.artists)
-    if (!existingByKey.has(k)) existingByKey.set(k, r.id as string)
+    const k = vinylIdentityKey(r)
+    if (k && !existingByKey.has(k)) existingByKey.set(k, r.id as string)
     const so = Number(r.sort_order || 0)
     if (so > maxSort) maxSort = so
   }
@@ -1001,8 +1002,8 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
           .filter((a) => a.name)
       : []
     const mix_name = String(raw.mix_name || '').trim()
-    const k = vinylTrackKey(title, mix_name, artists)
-    const liveId = existingByKey.get(k)
+    const k = vinylIdentityKey({ title, mix_name, artists, youtube_url })
+    const liveId = k ? existingByKey.get(k) : undefined
 
     let sort_order: number
     if (raw.sort_order != null && Number.isFinite(Number(raw.sort_order))) {

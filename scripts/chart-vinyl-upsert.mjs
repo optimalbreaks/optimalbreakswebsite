@@ -37,7 +37,7 @@ import { readFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
-import { dedupeVinylRows, vinylTrackKey } from './lib/chart-vinyl-track-key.mjs'
+import { dedupeVinylRows, vinylIdentityKey } from './lib/chart-vinyl-track-key.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -158,19 +158,18 @@ async function main() {
     console.log(`  ↳ Creada chart_editions para week_date=${weekDate} (edición vacía hasta publicar el 40).`)
   }
 
-  // Sync estable: diff por clave canónica (artistas + título + mix).
-  const trackKey = vinylTrackKey
-
+  // Sync estable por YouTube (o título si no hay vídeo). NO borrar+insertar
+  // la misma canción: eso regenera UUID y orfana saved_chart_tracks.
   const { data: existingRows, error: exErr } = await supabase
     .from('chart_vinyl_tracks')
-    .select('id, discogs_url, title, mix_name, artists')
+    .select('id, discogs_url, youtube_url, title, mix_name, artists')
     .eq('chart_edition_id', editionId)
   if (exErr) throw new Error(`load chart_vinyl_tracks: ${exErr.message}`)
 
   const existingByTrackKey = new Map()
   for (const r of existingRows || []) {
-    const k = trackKey(r.title, r.mix_name ?? '', r.artists)
-    if (!existingByTrackKey.has(k)) existingByTrackKey.set(k, r.id)
+    const k = vinylIdentityKey(r)
+    if (k && !existingByTrackKey.has(k)) existingByTrackKey.set(k, r.id)
   }
 
   if (vinyl.length === 0) {
@@ -222,18 +221,22 @@ async function main() {
   const newKeys = new Set()
   const updates = []
   const inserts = []
+  const usedLiveIds = new Set()
   for (const row of rows) {
-    const k = trackKey(row.title, row.mix_name, row.artists)
-    newKeys.add(k)
-    const liveId = existingByTrackKey.get(k)
-    if (liveId) updates.push({ id: liveId, data: row })
-    else inserts.push(row)
+    const k = vinylIdentityKey(row)
+    if (k) newKeys.add(k)
+    const liveId = k ? existingByTrackKey.get(k) : null
+    if (liveId && !usedLiveIds.has(liveId)) {
+      usedLiveIds.add(liveId)
+      updates.push({ id: liveId, data: row })
+    } else {
+      inserts.push(row)
+    }
   }
-  const keepIds = new Set([...existingByTrackKey.values()])
   const toDelete = []
   for (const r of existingRows || []) {
-    const k = trackKey(r.title, r.mix_name ?? '', r.artists)
-    if (!newKeys.has(k) || !keepIds.has(r.id)) toDelete.push(r.id)
+    const k = vinylIdentityKey(r)
+    if (!k || !newKeys.has(k) || !usedLiveIds.has(r.id)) toDelete.push(r.id)
   }
 
   if (toDelete.length > 0) {

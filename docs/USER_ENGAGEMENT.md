@@ -131,6 +131,8 @@ saved_chart_tracks (
 )
 ```
 
+**Immutable catalogue IDs:** `track_id` is the live row UUID (`chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks`). Weekly upserts **must UPDATE that row**, never delete+insert the same song (that minted new UUIDs and orphaned “+” saves — vinyl, 2026, when matching was title+artists). Match keys: Beatport URL (40 Breaks), `link_url` (New Releases), **YouTube video id** (vinyl; not Discogs). New UUID only for a track that is not already in the edition. The “+” always writes `canonical_url` + `snapshot` so My Tracks still renders if a pick is later removed from the week. Rebind URL-bearing orphans: `node scripts/saved-tracks-rebind.mjs`. Rule: `.cursor/rules/charts-ids-inmutables-saves.mdc`.
+
 Migration **054** also **back-fills `canonical_url`** for every pre-existing save by joining each row against its source table (`chart_tracks.beatport_url`, `chart_featured_tracks.link_url`, `chart_vinyl_tracks.youtube_url`). This is what allows the cross-source "already saved" detection to work for rows saved **before** the migration.
 
 RLS keeps each user's rows private (SELECT / INSERT / DELETE). The shared read endpoint (`/api/public/user-tracks`) bypasses RLS via the **service-role** Supabase client; the payload is read-only.

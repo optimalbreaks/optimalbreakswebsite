@@ -33,6 +33,27 @@ export function vinylTrackKey(title, mixName, artists) {
   return `${a}::${normVinylTitle(title)}::${normVinylMix(mixName)}`
 }
 
+/** YouTube video id — identidad estable. Discogs NO: un release tiene varios cortes. */
+export function vinylYouTubeKey(youtubeUrl) {
+  const s = String(youtubeUrl || '').trim()
+  if (!s) return ''
+  const m = s.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([A-Za-z0-9_-]{11})/i,
+  )
+  return m ? `yt:${m[1].toLowerCase()}` : ''
+}
+
+/**
+ * Identidad de fila para no regenerar UUID al re-upsert.
+ * 1) YouTube (el mismo vídeo = la misma canción, aunque cambien artistas).
+ * 2) Fallback título+mix+artistas (vinilos sin YouTube).
+ */
+export function vinylIdentityKey(row) {
+  const yt = vinylYouTubeKey(row?.youtube_url)
+  if (yt) return yt
+  return vinylTrackKey(row?.title, row?.mix_name, row?.artists)
+}
+
 /** Preferir fila con carátula, YouTube y edición comercial (no white label). */
 export function vinylRowScore(row) {
   let s = 0

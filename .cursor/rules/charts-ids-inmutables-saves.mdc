@@ -1,0 +1,23 @@
+---
+description: IDs de chart_tracks / featured / vinyl son inmutables; un upsert no puede orfanar saved_chart_tracks.
+alwaysApply: true
+---
+
+# Charts — IDs inmutables (no romper Mis Tracks)
+
+Los usuarios guardan temas en **`saved_chart_tracks.track_id`**. Ese UUID es el pasaporte. Si un upsert **borra e inserta** la misma canción, el ID cambia y se pierden los “+” (o quedan cáscaras vacías). Agosto 2026: vinilos reescritos por clave título+artistas → saves huérfanos.
+
+## Invariante (no negociable)
+
+1. **Misma canción = mismo `id`.** Actualizar la fila (`UPDATE`). **Prohibido** delete+insert de un tema que ya existe.
+2. **Cómo reconocer “la misma”:**
+   - **40 Breaks** (`chart_tracks`): URL Beatport (id numérico).
+   - **New Releases** (`chart_featured_tracks`): `link_url` (`dedupeKeyForFeaturedLink`).
+   - **Vinyl** (`chart_vinyl_tracks`): **ID de YouTube** (`vinylIdentityKey` / `yt:<id>`). **No** Discogs (un release = varios cortes). Fallback título+mix+artistas solo si no hay YouTube.
+3. **ID nuevo solo** si el tema **no** está ya en esa edición (URL/vídeo desconocido).
+4. Quitar un pick de la semana **sí** puede borrar esa fila. Quien lo guardó **con `snapshot`** lo sigue viendo. El “+” **debe** grabar `canonical_url` + `snapshot`.
+5. Si hay huérfanos con URL: reenganchar (`scripts/saved-tracks-rebind.mjs`), no regenerar catálogo. Sin URL ni título no se adivina.
+
+Scripts: `chart-40-breaks.mjs`, `chart-featured-upsert.mjs`, `chart-vinyl-upsert.mjs`. Chat admin vinyl: `src/lib/admin-chat.ts`. Import admin NR: solo **INSERT** de picks nuevos.
+
+README (EN/ES) + `docs/USER_ENGAGEMENT.md`: *Immutable chart row IDs*.

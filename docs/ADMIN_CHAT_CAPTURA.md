@@ -82,7 +82,7 @@ Evento · Sello · Artista · New Release · Vinyl pick · Mix = **hint** (`inte
 | `stage_upsert_artist` | `POST /api/admin/agent` → `artists` |
 | `stage_upsert_mix` | `mixes` |
 | `stage_new_releases` | `featured-import` / `chart_featured_tracks` |
-| `stage_vinyl_picks` | `chart_vinyl_tracks` |
+| `stage_vinyl_picks` | `chart_vinyl_tracks` (UPDATE por ID de YouTube; no regenerar UUID — ver `.cursor/rules/charts-ids-inmutables-saves.mdc`) |
 | `stage_enrich_event` / `stage_event_poster` | APIs event / event-poster |
 | `stage_artist_photo` / `stage_label_logo` | APIs foto / logo (`artistName`/`labelName` o resolución por slug en BD) |
 
