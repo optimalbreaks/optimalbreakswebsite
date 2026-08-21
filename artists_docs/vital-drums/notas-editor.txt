@@ -1,0 +1,55 @@
+Revisión editorial — Vital Drums (agosto 2026)
+==============================================
+
+Fuentes: brief del editor (Qobuz, Beatport, Bandcamp Samay, SoundCloud).
+Ficha pública previa etiquetaba United Kingdom / «UK breakbeat producer» y era 2020s–present.
+JSON local posterior lo presentaba como andaluz de Puebla de Guzmán (ES). Ninguna de las dos geografías queda acreditada con fuente primaria.
+
+Identidad
+---------
+- Nombre artístico: Vital Drums
+- real_name: Alejandro Gómez Campos (Qobuz: compositor/productor en Do my things, Different Star, Dream off, Monster). Sin reservas.
+- country: "" (vacío). No hay biografía fiable de nacionalidad ni ciudad. Circuito de sellos españoles (Sound Perfect Breakz, Samay en Loja, Frequency Fusion, Br8kn) describe la red discográfica, no prueba residencia ni nacionalidad.
+- category: current. NO uk_legend. NO andalusian.
+- era: 2025-present (catálogo comercial documentado). NO 2020s-present.
+- Rol: productor.
+
+Estilos
+-------
+- Breakbeat · Breaks · UK Garage · Bassline
+- No: Bass / Club / Electro como géneros principales.
+- Soundboy y Feel it figuran en Beatport como UK Garage / Bassline.
+
+Sellos
+------
+Sound Perfect Breakz Records (casa principal: Yeah, Soundboy, Feel it, Do my things, Dream off)
+Frequency Fusion Records (2026: Respect, Uk Boy, Tomahawk, Different Star, Teke)
+Br8kn Records · Samay Records · Delicious Groove Records · Banana Club · Creative Sound Records · ÄwÄ Records
+
+Actividad
+---------
+- Huella SoundCloud 2021–2022 (comentarios en sesiones/tracks): presencia en el ecosistema breaks, no prueba de discografía propia anterior.
+- Primeros comerciales 2025: Yeah (SPB, oct), Siik Boy (Br8kn, oct), Soundboy (SPB, nov), Burn (Br8kn, dic).
+- 2026 muy prolífico: Kumbara (Eskila), Respect, Tranzit, Uk Boy, Feel it, Do my things (8 abr), Roll Out (10 abr), Tomahawk (29 abr, 137 BPM Breaks/UK Bass), Monster (FunkyBitz), Different Star, Teke, Back On The Keep, Dream off, Controlling.
+
+Colaboraciones
+--------------
+- Eskila — Kumbara, Samay Records, 2 ene 2026 (Bandcamp: break beat / breaks).
+- FunkyBitz — Monster, Samay Records, mayo 2026. Qobuz: Alejandro Gómez Campos + Antonio Carrasco Peña.
+
+Correcciones de fechas (Beatport)
+---------------------------------
+- Do my things → 2026 (8 abr), no 2025.
+- Roll Out → 2026 (10 abr), no 2025.
+
+Essential / key
+---------------
+Yeah · Siik Boy · Kumbara · Tomahawk · Monster · Do my things · Dream off
+NO usar el Top Ten dinámico de Beatport (p. ej. Get This) como prueba histórica.
+related_artists: Eskila, FunkyBitz. Quitar Kid Master / Mkbreaks (solo órbita Samay).
+
+Bio
+---
+Hechos: nombre civil, 2025 comercial, breakbeat + UKG/bassline, SPB + Frequency Fusion + Br8kn + Samay, colaboraciones, catálogo 2026.
+NO: «UK producer», Puebla de Guzmán, Andalucía como nacionalidad, relleno tipo «direct drum programming / soundsystem language / pressure and immediacy».
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.

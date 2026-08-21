@@ -1,0 +1,46 @@
+Alta editorial — The Pattern Sound (agosto 2026)
+================================================
+
+Fuentes: brief del editor + Beatport 1166464 + Spotify + SoundCloud mb-breakz.
+
+Identidad
+---------
+- slug: the-pattern-sound
+- name: The Pattern Sound. name_display: THE PATTERN SOUND
+- real_name: Manuel Romero Orellana (Drastic Pattern: musician/songwriter/producer; Back To The Pattern, Experiens Pattern, Time To Pattern: Manuel Romero compositor/productor). Sin reservas.
+- country: "" — sin ciudad, provincia ni nacionalidad pública sólida. Samay (Loja) no prueba origen.
+- category: current. era: 2024-present (huella pública clara; no afirmar que la carrera empieza exactamente entonces).
+- Rol: DJ · productor.
+- beatport_id: 1166464
+- beatport_url: https://www.beatport.com/artist/the-pattern-sound/1166464
+- socials: https://soundcloud.com/mb-breakz · https://open.spotify.com/artist/2gyJcWII7z5yLEzZDdUeyE
+
+Estilos
+-------
+Breakbeat · Breaks · UK Bass
+NO Electronic como etiqueta principal.
+Oscuro / potencia: en bio (guest mix 45'5, nov 2024), no como género extra.
+BPM típicos 134–136; tonalidades menores; club.
+
+Sellos
+------
+Principal: Samay Records (Pattern's Contact, Buster Pattern, Unsociable Pattern, Time To Pattern, Back To The Pattern, Experiens Pattern, y más). NO miembro ni fundador.
+También: Triple Seven Recordings (Drastic Pattern), Sound Perfect Breakz (Night Pattern, The Pattern Dramatize), Creative Sound Records (Inner Pattern).
+
+Actividad
+---------
+2024: huella pública (Audiomack sept; guest mix 45'5 nov como «joven DJ y productor»; Dead Silence feb 2024 en Triple Seven según Beatport tracker).
+2025: Drastic Pattern (3 oct, Triple Seven). Pattern's Contact y etapa Samay.
+2026: Time To Pattern (4 feb, 4 tracks); Back To The Pattern (10 abr, 7 tracks — key release); Inner Pattern (mar, Creative Sound); Experiens Pattern (mayo, Samay); Pattern Boladão, Pattern Format, Silence Pattern (Samay, mayo); Control The Flow con Olivobreaks.
+
+Essential / key
+---------------
+Panic Pattern (señal BeatStats; NO fijar posición).
+Drastic Pattern · Pattern's Contact · Unsociable Pattern · Back To Pattern
+related: Olivobreaks
+NO llenar esenciales solo por ser recientes (Night Pattern, The Pattern Dramatize, Experiens Pattern: bio/key si cabe, no essential extra).
+
+Bio
+---
+Hechos: nombre civil, DJ+productor, 2024 visible, breakbeat oscuro de pista, Samay como casa principal, red de sellos, EPs 2026, colaboración Olivobreaks.
+NO localización inventada. NO citar Shazam/Audiomack/BeatStats/Optimal Breaks en el texto público.
