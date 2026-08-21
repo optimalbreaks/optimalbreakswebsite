@@ -297,6 +297,14 @@ const ACTIONS = [
       'UPSERT safari-break-night-2026: 25 abr 2026 Safari Club Palomares del Río, Basshock Events, cartel public/images/events/safari-break-night.webp, MonsterTicket.',
   },
   {
+    id: 'events-patch-break-night-free-party-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-break-night-free-party-2026',
+    npm: 'npm run db:guia -- run events-patch-break-night-free-party-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT break-night: 21 ago 2026 Sala Even Sevilla, free party, cartel break-night-free-party-2026.webp, MonsterTicket.',
+  },
+  {
     id: 'events-patch-break-the-flow-w-terrie-kynd-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-break-the-flow-w-terrie-kynd-2026',
     npm: 'npm run db:guia -- run events-patch-break-the-flow-w-terrie-kynd-2026',
@@ -814,6 +822,7 @@ Punto de entrada unificado:
   events-patch-malaga-is-break-3-aniversario-frequency-break-2026  Malaga is Break 3º Aniversario Frequency Break, Sala Roka Málaga 3 abr 2026
   events-patch-cyber-bass-2026  Cyber Bass 2026 GOAT Breakbeat, Maruja Limón Alhaurín 18 abr 2026
   events-patch-safari-break-night-2026  Safari Break Night, Safari Club Palomares del Río 25 abr 2026
+  events-patch-break-night-free-party-2026  Break Night Free Party, Sala Even Sevilla 21 ago 2026
   events-patch-break-the-flow-w-terrie-kynd-2026  Break The Flow / Terrie Kynd, Sala Teranga Torrox 2 may 2026
   events-patch-el-pinar-breaks-fest-2026  El Pinar Breaks Fest, Baños de la Encina 9 may 2026
   events-patch-breaks-bloom-festival-2026  Breaks Bloom Festival, Hacienda El Mantillo Pilas 19 sept 2026
@@ -1238,6 +1247,9 @@ function main() {
       break
     case 'events-patch-safari-break-night-2026':
       runNode('enriquecer-evento.mjs', ['--patch-safari-break-night-2026', ...rest])
+      break
+    case 'events-patch-break-night-free-party-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-break-night-free-party-2026', ...rest])
       break
     case 'events-patch-break-the-flow-w-terrie-kynd-2026':
       runNode('enriquecer-evento.mjs', ['--patch-break-the-flow-w-terrie-kynd-2026', ...rest])

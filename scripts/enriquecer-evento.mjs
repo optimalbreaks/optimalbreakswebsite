@@ -2145,6 +2145,93 @@ async function runPatchSafariBreakNight2026(sb) {
   console.log('[patch-safari-break-night-2026] OK:', after)
 }
 
+const BREAK_NIGHT_FREE_PARTY_2026_SLUG = 'break-night'
+const BREAK_NIGHT_FREE_PARTY_TICKETS =
+  'https://www.monsterticket.com/evento/break-night--free-party'
+const BREAK_NIGHT_FREE_PARTY_IMAGE = '/images/events/break-night-free-party-2026.webp'
+
+const BREAK_NIGHT_FREE_PARTY_2026_LINEUP = [
+  'Broken Ragdoll',
+  'Lookdown',
+  'Doublefacez',
+  'Cool Beat',
+  'Skull Breakerz',
+  'The Mastreline',
+]
+
+const BREAK_NIGHT_FREE_PARTY_2026_SCHEDULE = [
+  { time: '01:00', artist: 'Broken Ragdoll' },
+  { time: '02:00', artist: 'Lookdown' },
+  { time: '03:00', artist: 'Doublefacez' },
+  { time: '04:00', artist: 'Cool Beat' },
+  { time: '05:00', artist: 'Skull Breakerz' },
+  { time: '06:00', artist: 'The Mastreline' },
+]
+
+const BREAK_NIGHT_FREE_PARTY_2026_ROW = {
+  name: 'Break Night | Free Party',
+  description_en:
+    'Break Night Free Party on Friday 21 August 2026 at Sala Even, Seville. Doors 1:00–7:00. Poster line-up and set times: Broken Ragdoll (01:00), Lookdown (02:00), Doublefacez (03:00), Cool Beat (04:00), Skull Breakerz (05:00), The Mastreline (06:00). MonsterTicket lists 18+ only and non-nominal tickets; online sales for this event had ended on the platform at the time of cataloguing — check Sala Even / élitemusic for door policy. Address: C/ José Díaz 5, Sevilla.',
+  description_es:
+    'Break Night Free Party el viernes 21 de agosto de 2026 en Sala Even (Sevilla). Horario 1:00h–7:00h. Cartel y horarios: Broken Ragdoll (01:00), Lookdown (02:00), Doublefacez (03:00), Cool Beat (04:00), Skull Breakerz (05:00), The Mastreline (06:00). MonsterTicket indica prohibido el acceso a menores de 18 años y entradas no nominativas; la venta online había finalizado en la plataforma al catalogar — consulta Sala Even / élitemusic por acceso en puerta. Dirección: C/ José Díaz 5, Sevilla.',
+  event_type: 'club_night',
+  date_start: '2026-08-21',
+  date_end: null,
+  location: 'Sala Even, Sevilla, Spain',
+  city: 'Sevilla',
+  country: 'Spain',
+  venue: 'Sala Even',
+  address: 'C/ José Díaz 5, Sevilla',
+  website: null,
+  tickets_url: BREAK_NIGHT_FREE_PARTY_TICKETS,
+  image_url: BREAK_NIGHT_FREE_PARTY_IMAGE,
+  lineup: BREAK_NIGHT_FREE_PARTY_2026_LINEUP,
+  schedule: BREAK_NIGHT_FREE_PARTY_2026_SCHEDULE,
+  tags: [
+    'break night',
+    'free party',
+    'breakbeat',
+    'sala even',
+    'sevilla',
+    'élitemusic',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction: '18+',
+  doors_open: '01:00',
+  doors_close: '07:00',
+}
+
+async function runPatchBreakNightFreeParty2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, lineup')
+    .eq('slug', BREAK_NIGHT_FREE_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-break-night-free-party-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BREAK_NIGHT_FREE_PARTY_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREAK_NIGHT_FREE_PARTY_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', BREAK_NIGHT_FREE_PARTY_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-break-night-free-party-2026] OK:', after)
+}
+
 const SOLARIS_FEST_MATALASCANAS_2026_SLUG = 'solaris-fest-matalascanas-2026'
 const SOLARIS_FEST_MATALASCANAS_TICKETS =
   'https://www.monsterticket.com/evento/solaris-fest-matalascanas'
@@ -5234,6 +5321,11 @@ async function main() {
 
   if (argv.includes('--patch-safari-break-night-2026')) {
     await runPatchSafariBreakNight2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-break-night-free-party-2026')) {
+    await runPatchBreakNightFreeParty2026(sb)
     return
   }
 
