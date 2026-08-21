@@ -33,7 +33,7 @@ export default function CountryBadge({
   lang: Locale | string
   size?: FlagSize
   showLabel?: boolean
-  /** cutout = etiqueta con fondo; overlay = tarjeta oscura home; plain = inline; accent = bandera + texto rojo sin fondo */
+  /** cutout = etiqueta con borde (fondo de papel, para que la bandera no quede sobre negro); overlay = tarjeta oscura home; plain = inline; accent = bandera + texto rojo sin fondo */
   variant?: 'cutout' | 'overlay' | 'plain' | 'accent'
   className?: string
 }) {
@@ -106,7 +106,7 @@ export default function CountryBadge({
   if (variant === 'cutout') {
     return (
       <span
-        className={`cutout fill inline-flex items-center gap-1.5 ${className ?? ''}`}
+        className={`cutout outline inline-flex items-center gap-1.5 ${className ?? ''}`}
         style={{
           fontSize: size === 'xs' ? '7px' : '8px',
           padding: size === 'xs' ? '0px 4px' : '1px 6px',
