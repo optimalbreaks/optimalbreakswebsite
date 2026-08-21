@@ -33,7 +33,7 @@ export default function CountryBadge({
   lang: Locale | string
   size?: FlagSize
   showLabel?: boolean
-  /** cutout = etiqueta con borde (fondo de papel, para que la bandera no quede sobre negro); overlay = tarjeta oscura home; plain = inline; accent = bandera + texto rojo sin fondo */
+  /** cutout = bandera + texto inline al estilo cutout (sin fondo/borde: la bandera se ve limpia); overlay = tarjeta oscura home; plain = inline; accent = bandera + texto rojo sin fondo */
   variant?: 'cutout' | 'overlay' | 'plain' | 'accent'
   className?: string
 }) {
@@ -70,7 +70,8 @@ export default function CountryBadge({
             ? {
                 fontFamily: "'Courier Prime', monospace",
                 fontWeight: 700,
-                letterSpacing: '1px',
+                fontSize: size === 'xs' ? '8px' : '10px',
+                letterSpacing: '2px',
                 textTransform: 'uppercase',
               }
             : {
@@ -106,12 +107,7 @@ export default function CountryBadge({
   if (variant === 'cutout') {
     return (
       <span
-        className={`cutout outline inline-flex items-center gap-1.5 ${className ?? ''}`}
-        style={{
-          fontSize: size === 'xs' ? '7px' : '8px',
-          padding: size === 'xs' ? '0px 4px' : '1px 6px',
-          margin: 0,
-        }}
+        className={`inline-flex items-center gap-1.5 align-middle ${className ?? ''}`}
       >
         {inner}
       </span>

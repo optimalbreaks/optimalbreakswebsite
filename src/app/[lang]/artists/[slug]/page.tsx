@@ -404,7 +404,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                 <span key={i} className="cutout red">{s}</span>
               ))}
               {artist.country ? (
-                <CountryBadge country={artist.country} lang={lang} size="sm" variant="cutout" />
+                <CountryBadge country={artist.country} lang={lang} size="md" variant="cutout" />
               ) : null}
               <span className="cutout outline">{artist.era}</span>
             </div>
