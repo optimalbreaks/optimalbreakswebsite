@@ -73,6 +73,40 @@ const FallbackIcon = (
   </svg>
 )
 
+function HeartIcon({ label }: { label: string }) {
+  return (
+    <svg
+      width="1.1em"
+      height="1.1em"
+      viewBox="0 0 24 24"
+      aria-label={label}
+      role="img"
+      className="inline-block align-[-0.15em] text-[var(--red)]"
+    >
+      <path
+        fill="currentColor"
+        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+      />
+    </svg>
+  )
+}
+
+function SpainFlag({ label }: { label: string }) {
+  return (
+    <svg
+      width="1.25em"
+      height="0.85em"
+      viewBox="0 0 21 14"
+      aria-label={label}
+      role="img"
+      className="inline-block align-[-0.08em] overflow-hidden rounded-[1px] ring-1 ring-[var(--paper)]/40"
+    >
+      <rect width="21" height="14" fill="#C60B1E" />
+      <rect y="3.5" width="21" height="7" fill="#FFC400" />
+    </svg>
+  )
+}
+
 export default function Footer({ dict, lang = 'en' }: FooterProps) {
   const f = dict.footer ?? {}
   const social = Array.isArray(f.social) ? f.social : []
@@ -184,7 +218,10 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
               className="rounded-sm border-2 border-[var(--ink)] bg-[var(--ink)] px-4 py-3 text-center text-[15px] font-bold leading-snug text-[var(--paper)] shadow-[2px_2px_0_0_var(--red)] sm:text-left"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
-              {f.funding}
+              {lang === 'es' ? 'Página web hecha con mucho' : 'Website made with lots of'}{' '}
+              <HeartIcon label={lang === 'es' ? 'amor' : 'love'} />{' '}
+              {lang === 'es' ? 'desde Murcia' : 'from Murcia'}{' '}
+              <SpainFlag label={lang === 'es' ? 'España' : 'Spain'} />
             </p>
           ) : null}
           <p
