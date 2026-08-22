@@ -135,17 +135,26 @@ export async function fetchAllArtistLinkRows(
 ): Promise<ArtistLinkRow[]> {
   const all: ArtistLinkRow[] = []
   let from = 0
-  for (;;) {
-    const { data, error } = await supabase
-      .from('artists')
-      .select('name, name_display, slug')
-      .order('slug', { ascending: true })
-      .range(from, from + PAGE - 1)
-    if (error) throw new Error(error.message)
-    if (!data?.length) break
-    all.push(...(data as ArtistLinkRow[]))
-    if (data.length < PAGE) break
-    from += PAGE
+  try {
+    for (;;) {
+      const { data, error } = await supabase
+        .from('artists')
+        .select('name, name_display, slug')
+        .order('slug', { ascending: true })
+        .range(from, from + PAGE - 1)
+      if (error) throw new Error(error.message)
+      if (!data?.length) break
+      all.push(...(data as ArtistLinkRow[]))
+      if (data.length < PAGE) break
+      from += PAGE
+    }
+  } catch (err) {
+    // El auto-enlazado de nombres es un extra: si la BD no responde (TLS local,
+    // hipo de Supabase), la ficha se renderiza sin links en vez de dar 500.
+    console.warn(
+      '[artist-entity-match] fetchAllArtistLinkRows:',
+      err instanceof Error ? err.message : err,
+    )
   }
   return all
 }

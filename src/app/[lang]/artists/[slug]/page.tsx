@@ -353,6 +353,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                 <FanCounter type="artist" entityId={artist.id} lang={lang} />
                 <ShareButtons
                   url={`/${lang}/artists/${slug}`}
+                  shortUrl={`/a/${slug}`}
                   title={`${artist.name} | Optimal Breaks`}
                   lang={lang}
                 />

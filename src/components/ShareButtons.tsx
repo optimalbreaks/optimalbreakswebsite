@@ -17,12 +17,16 @@ interface ShareButtonsProps {
   url: string
   title: string
   lang: string
+  /** Path corto (p. ej. `/a/ctrl-z`) para redes que limitan la longitud del enlace (Instagram). */
+  shortUrl?: string
 }
 
-export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
+export default function ShareButtons({ url, title, lang, shortUrl }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
+  const [copiedShort, setCopiedShort] = useState(false)
   const es = lang === 'es'
   const fullUrl = buildAbsoluteShareUrl(url)
+  const fullShortUrl = shortUrl ? buildAbsoluteShareUrl(shortUrl) : null
   const encodedUrl = encodeURIComponent(fullUrl)
   const encodedTitle = encodeURIComponent(title)
 
@@ -49,6 +53,15 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
     if (ok) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const copyShort = async () => {
+    if (!fullShortUrl) return
+    const ok = await copyShareLink(fullShortUrl)
+    if (ok) {
+      setCopiedShort(true)
+      setTimeout(() => setCopiedShort(false), 2000)
     }
   }
 
@@ -115,6 +128,38 @@ export default function ShareButtons({ url, title, lang }: ShareButtonsProps) {
       >
         {copied ? (es ? '✓ COPIADO' : '✓ COPIED') : (es ? '🔗 LINK' : '🔗 LINK')}
       </button>
+
+      {fullShortUrl && (
+        <button
+          type="button"
+          onClick={copyShort}
+          className={`inline-flex items-center justify-center h-9 px-3 border-2 transition-all duration-150 cursor-pointer ${
+            copiedShort
+              ? 'bg-[var(--acid)] border-[var(--acid)] text-white'
+              : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-white hover:text-white'
+          }`}
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontWeight: 700,
+            fontSize: '11px',
+            letterSpacing: '1px',
+          }}
+          title={
+            copiedShort
+              ? (es ? 'Enlace corto copiado' : 'Short link copied')
+              : (es
+                  ? 'Copiar enlace corto (para Instagram y bios)'
+                  : 'Copy short link (for Instagram & bios)')
+          }
+          aria-label={
+            copiedShort
+              ? (es ? 'Enlace corto copiado' : 'Short link copied')
+              : (es ? 'Copiar enlace corto' : 'Copy short link')
+          }
+        >
+          {copiedShort ? (es ? '✓ COPIADO' : '✓ COPIED') : (es ? '✂ CORTO' : '✂ SHORT')}
+        </button>
+      )}
 
       {'share' in (typeof navigator !== 'undefined' ? navigator : {}) && (
         <button

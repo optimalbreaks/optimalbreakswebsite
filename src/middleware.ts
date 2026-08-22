@@ -42,6 +42,15 @@ export async function middleware(request: NextRequest) {
     return new NextResponse('Bad Request', { status: 400 })
   }
 
+  // Shortlink para compartir (Instagram rechaza URLs largas en stickers):
+  // /a/<slug> → /<locale>/artists/<slug>. 307 (no permanente) porque el
+  // destino depende de la cookie/Accept-Language del visitante.
+  const shortMatch = pathname.match(/^\/a\/([^/]+)\/?$/)
+  if (shortMatch) {
+    request.nextUrl.pathname = `/${getLocale(request)}/artists/${shortMatch[1]}`
+    return NextResponse.redirect(request.nextUrl, 307)
+  }
+
   // Create response for cookie handling
   let response = NextResponse.next({ request })
 
