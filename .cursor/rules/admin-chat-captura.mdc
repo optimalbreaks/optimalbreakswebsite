@@ -41,6 +41,8 @@ SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Po
 
 Tras confirmar `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true`). Cartel = **visión/OCR**.
 
+**Opt-out de ficha:** no `stage_upsert_artist` para **Vazteria X**. Regla **`artistas-opt-out-perfil`**.
+
 Tras confirmar artista/sello sin `image_url` https: foto/logo en segundo plano. `stage_artist_photo` / `stage_label_logo` envían nombre o la API lo resuelve por slug (antes fallaban con solo `{ slug }`). Foto de artista = **visión**, no solo metadatos de Google.
 
 ## Tipado

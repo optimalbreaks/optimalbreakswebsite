@@ -1,0 +1,138 @@
+Alta editorial — CURLY (CH) (agosto 2026)
+=========================================
+
+Fuentes: brief del editor + Beatport 1086500.
+
+Identidad
+---------
+- slug: curly-ch
+- name: CURLY (CH)
+- name_display: CURLY (CH)
+- real_name: null. No hay nombre civil público confirmado. NO inventar.
+- country: "" (string vacío). NO publicar Suiza / Switzerland / CH como nacionalidad.
+  El sufijo "(CH)" es el alias en Beatport; NO es prueba de país. No usar el perfil de
+  Joos (CH) (Zúrich) como evidencia: es otro artista, aunque ambos aparezcan en un
+  remix de 10 AM.
+- category: current
+- era: 2022-present (catálogo comercial documentado al menos desde noviembre 2022)
+- Rol: productor
+- beatport_id: 1086500
+- beatport_url: https://www.beatport.com/artist/curly-ch/1086500
+- socials: solo URLs https halladas de ESTE artista (CURLY / CURLY CH / curly-ch, id Beatport 1086500). Si duda de homónimo, {}.
+- website: null salvo URL propia clara.
+
+Estilos
+-------
+Principales (campo styles, en este orden):
+Breakbeat · Breaks · UK Garage · Bassline · Dubstep · Grime
+
+Secundarios (solo en bio, no como estilos principales):
+Electronica · Indie Dance
+
+El breakbeat es el centro del catálogo. Beatport clasifica como Breaks / Breakbeat / UK Bass, entre otros:
+Hood Politics, Make Me Feel, All About The Music, Talk To Me, Designer Groove, 1993,
+OYM, 7AM, All The Night, Love You, Missing You, Andromeda, 8AM, 10 AM, Last Night,
+Transcendence, Arena Of Dub.
+
+Excepciones de género (bio, no redefinir el eje):
+- Can't Get Over → UK Garage / Bassline
+- Limewire Gang → Deep Dubstep / Grime
+- Downfall → Electronica
+- Dance → Indie Dance
+
+Sellos
+------
+Main labels: 83 · Close Your Eyes
+NO es fundador de ninguno (labels_founded: []).
+
+83 (casa principal, catálogo más denso):
+Hood Politics, All About The Music, Nora Dub, Designer Groove, 1993, OYM, 7AM,
+All The Night, Love You, Missing You, Limewire Gang, Andromeda, Klein con Yo Speed,
+See Through You, Arena Of Dub, 8AM, más Resampled Memories EP1, Resampled Memories EP2
+y el recopilatorio/álbum Resampled Memories.
+
+Close Your Eyes (segundo eje, varios años):
+Make Me Feel, Talk To Me, Rundfunk, Last Night, Transcendence, Break 2 The Future,
+Glow con Content of Void, Sunlight con Jackfruit (US), Dance, Sleepwalker,
+y presencia en la compilación de cinco años del sello.
+
+Otros sellos (bio, no como "main"):
+Elektroshok Records · Banana Club · 3-4-1 Cuts · DIRTY KITCHEN RAVE · Etiqueta Negra
+
+Actividad
+---------
+Nov 2022: Hood Politics — 83. Primera huella comercial documentada en Beatport.
+Dic 2022: Make Me Feel — Close Your Eyes.
+Producción continuada 2023–2026.
+
+2023: Resampled Memories EP1 en 83. Proyecto de catálogo estructurado (más relevante
+biográficamente que enumerar una docena de singles). Luego Resampled Memories EP2 y
+Resampled Memories (también 83).
+
+Oct 2023: OYM — 83. Apoyo editorial Beatport (Best New Breaks / UK Bass: October)
+y Best of 2023 de Guau.
+
+18 oct 2024: 8AM — 83. Apoyo editorial fuerte de Beatport:
+Best New Breaks / UK Bass: October 2024; Weekend Picks 2024: Week 42;
+Exclusives Only: Week 43; Closing Essentials 2024: Breaks / UK Bass.
+También Best of 2024 de Guau. Candidato claro a essential.
+
+Abr 2025: Break 2 The Future — Close Your Eyes. Key release. Nueve cortes:
+Last Night, Algorithm, Reality Shift con DJ Žaibas, Benny, Breathe,
+All The Night (VIP Mix), Transcendence, Andromeda (DJ Žaibas Remix), Call Me (Kyhu Remix).
+Reúne su sonido y abre a colaboraciones/remixes externos.
+
+Jul 2025: Arena Of Dub — 83. Best New Breaks / UK Bass: July 2025;
+Weekend Picks 2025: Week 30. Señal de tracción (NO fijar puesto numérico de BeatStats).
+
+Oct 2025: Sunlight — Jackfruit (US) & CURLY (CH).
+
+Mar 2026: The Broken Mind — DIRTY KITCHEN RAVE — 132 BPM — Breaks / Breakbeat / UK Bass.
+Activo en 2026: Sleepwalker, Dance, Simplicity; compilaciones BASSLINE! 6,
+WE ARE DKR Vol 9, Close Your Eyes - 5 Years Compilation.
+
+Colaboraciones (related_artists)
+--------------------------------
+- DJ Žaibas — Reality Shift (Break 2 The Future); remix oficial de Andromeda
+- Yo Speed — Klein (Yo Speed & CURLY (CH), 83)
+- Content of Void — Glow (Content of Void & CURLY (CH), Close Your Eyes)
+- Jackfruit (US) — Sunlight (oct 2025)
+NO meter a Joos (CH) como related solo por el remix de 10 AM.
+
+Essential tracks (histórico editorial; NO copiar el Top 10 dinámico de Beatport)
+-------------------------------------------------------------------------------
+OYM
+8AM
+Arena Of Dub
+Andromeda
+Last Night
+Transcendence
+
+Klein, See Through You y Sleepwalker pueden estar ahora en el Top Beatport; son lista
+dinámica, no sustituyen la selección histórica. No usarlos como esenciales extra.
+
+Key releases
+------------
+Hood Politics — 2022 — 83; primera publicación documentada en Beatport (nov)
+Make Me Feel — 2022 — Close Your Eyes; diciembre
+Resampled Memories EP1 — 2023 — 83; inicio del proyecto Resampled Memories
+OYM — 2023 — 83; Best New Breaks / UK Bass + Guau Best of 2023
+8AM — 2024 — 83, 18 octubre; apoyo editorial Beatport 2024 + Guau Best of 2024
+Break 2 The Future — 2025 — Close Your Eyes, abril; EP de nueve cortes (key release)
+Arena Of Dub — 2025 — 83, julio; Best New Breaks / UK Bass 2025
+The Broken Mind — 2026 — DIRTY KITCHEN RAVE, marzo
+
+Bio
+---
+Hechos: productor de breakbeat contemporáneo asociado al ecosistema de 83 y Close Your Eyes;
+catálogo desde al menos nov 2022; eje breaks con incursiones UKG/bassline, dubstep/grime
+y, de forma secundaria, electronica / indie dance; proyecto Resampled Memories 2023;
+Break 2 The Future 2025; activo 2026; colaboraciones Žaibas, Yo Speed, Content of Void,
+Jackfruit (US). Se puede mencionar apoyo editorial de Beatport / Guau en OYM y 8AM
+como recepción, sin puestos numéricos fijos ni BeatStats.
+
+NO país ni ciudad. NO "Swiss producer". NO nombre real. NO Joos (CH) como prueba de origen.
+NO citar Optimal Breaks, 40 Breaks Vitales, BeatStats rankings, Shazam, Audiomack.
+NO meta-comentarios sobre falta de fuentes o sobre el sufijo CH.
+is_featured: false. sort_order: ~125–140 (actual, catálogo denso, no figura histórica).
+image_url: null (la foto se elige después).

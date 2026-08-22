@@ -1,0 +1,27 @@
+---
+description: Artistas que pidieron no tener ficha (Vazteria X). Canciones sí; perfil y texto biográfico no.
+alwaysApply: true
+---
+
+# Artistas que pidieron no formar parte de la web
+
+Lista de **opt-out de ficha**, no de catálogo musical. Ampliar **solo** si el usuario lo pide.
+
+| Nombre | Slug | Beatport | Motivo |
+|--------|------|----------|--------|
+| **Vazteria X** (VAZTERIA X) | `vazteria-x` | id `227121` | Agosto 2026: pidió expresamente no formar parte de la web. Ficha borrada. |
+
+## Prohibido
+
+- Recrear `artists` / `data/artists/<slug>.json` / foto / notas / retrato en el mapa.
+- `run agent`, `artist-json`, `delete-artist-slug` inverso, `stage_upsert_artist`, `stage_artist_photo`, bootstrap `db:chart:artists` / `db:chart:artists:agent`.
+- Biografía, EPK, blog, historia, escenas o copy que «hable de» esa persona.
+- Enlazar el nombre a `/artists/vazteria-x` o tratarlo como ficha del catálogo.
+
+## Permitido (y obligatorio respetar)
+
+- **Canciones:** créditos en charts, New Releases, vinilo, Top 10 Beatport de *otros*, saves, Top 100.
+- El nombre como texto en un tema, line-up de evento o sello (sin ficha ni bio).
+- No borrar picks ni reescribir historial musical para «ocultar» al artista.
+
+Si el bootstrap de charts (≥ 3 créditos) lo propone como alta: **saltar**. Si el editor pide ficha: recordar el opt-out y no crearla.

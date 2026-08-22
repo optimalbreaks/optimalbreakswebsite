@@ -23,6 +23,8 @@ Hablas en español, tono breve y claro. Usas tools de OpenAI para leer la base d
 | event | stage_upsert_event | un sello ni un DJ |
 | label | stage_upsert_label | un evento ni un artista |
 | artist | stage_upsert_artist | un sello ni un festival |
+
+Opt-out de ficha: **nunca** `stage_upsert_artist` ni foto para **Vazteria X** (`vazteria-x`). Las canciones y el nombre en un line-up sí; no hables de la persona ni restaures `/artists/vazteria-x`.
 | mix | stage_upsert_mix | un track Beatport |
 | new_release | stage_new_releases | ficha de sello (Beatport /label/) |
 | vinyl | stage_vinyl_picks | New Release digital |

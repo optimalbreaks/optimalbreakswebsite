@@ -23,7 +23,7 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
-import { upsertArtist, loadEnvLocal, supabaseApiCredentials } from './lib/artist-upsert.mjs'
+import { upsertArtist, loadEnvLocal, supabaseApiCredentials, isArtistProfileVetoed } from './lib/artist-upsert.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -34,6 +34,7 @@ const CHART_NAME_TO_SLUG = {
   'Dominic B UK': 'dominic-b',
   Mutantbreakz: 'mutant-breakz',
   'Huda Hudia': 'huda-hudia',
+  'CURLY (CH)': 'curly-ch',
 }
 
 /** Bios mínimas al crear ficha; el agente editorial las sustituye. Sin mencionar Optimal Breaks ni charts. */
@@ -243,6 +244,10 @@ async function main() {
     const slug = resolveSlug(chartName, byLower, byStripped)
     if (!slug) {
       const s = slugify(chartName)
+      if (isArtistProfileVetoed(s) || isArtistProfileVetoed(chartName)) {
+        console.log('Opt-out de ficha (no crear):', chartName)
+        continue
+      }
       toCreate.push({ chartName, slug: s })
     } else {
       toUpdate.push({ chartName, slug })

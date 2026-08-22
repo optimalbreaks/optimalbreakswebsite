@@ -39,6 +39,20 @@ export function loadEnvLocal() {
   }
 }
 
+/** Fichas que el artista pidió no tener. Canciones sí; UPSERT de perfil no. Ver `.cursor/rules/artistas-opt-out-perfil.mdc`. */
+export const ARTIST_PROFILE_VETO_SLUGS = new Set(['vazteria-x'])
+
+export function isArtistProfileVetoed(slugOrName) {
+  const s = String(slugOrName || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+  return ARTIST_PROFILE_VETO_SLUGS.has(s)
+}
+
 export function supabaseApiCredentials() {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
   const key = (
@@ -125,6 +139,12 @@ export const UPSERT_CREDENTIALS_HINT =
  */
 export async function upsertArtist(data) {
   loadEnvLocal()
+
+  if (isArtistProfileVetoed(data?.slug) || isArtistProfileVetoed(data?.name)) {
+    throw new Error(
+      `Opt-out de ficha: no se crea ni restaura «${data?.name || data?.slug}». Las canciones sí pueden quedar en charts. Regla artistas-opt-out-perfil.`,
+    )
+  }
 
   const errors = validateArtistRow(data)
   if (errors.length) {

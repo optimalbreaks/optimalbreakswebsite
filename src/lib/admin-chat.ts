@@ -480,6 +480,14 @@ async function upsertArtistAction(
   if (!slug || !name) {
     return { type: 'artist', ok: false, summary: 'Faltan slug o name' }
   }
+  const vetoKey = `${slug} ${name}`.toLowerCase()
+  if (/\bvazteria[\s-]*x\b/.test(vetoKey) || slug === 'vazteria-x') {
+    return {
+      type: 'artist',
+      ok: false,
+      summary: 'Opt-out: Vazteria X pidió no tener ficha. Las canciones sí; no se restaura el perfil.',
+    }
+  }
   const { ok, json } = await adminInternalPost(originRequest, '/api/admin/agent', {
     slug,
     artistName: name,

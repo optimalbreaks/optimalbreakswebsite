@@ -1,0 +1,27 @@
+Revisión editorial — Stacy McClure (agosto 2026)
+================================================
+
+Fuentes principales
+-------------------
+- Brief editorial del usuario (SoundCloud propio, Bandcamp, Beatport ShenaniGoons, Gigabeat 2025–2026).
+- Bandcamp: https://djstacymcclure.bandcamp.com/ — «Jacksonville, Florida».
+- Beatport artist 1369918 — https://www.beatport.com/artist/stacy-mcclure/1369918
+- Beatport ShenaniGoons 1394148 — dúo de hermanos Jacksonville; DJs/productores desde 2000.
+
+Correcciones aplicadas
+----------------------
+- era: 2020s-present → 2000s-present (activo c. 2000; interrupción intermedia; no es un artista nacido en los 2020).
+- styles: Breakbeat / Bass / Electronic / UK Bass → Florida Breaks · Breakbeat · Breaks · Electro.
+- real_name: Stacy McClure (usa el nombre civil como nombre artístico; no hay alias oculto).
+- Bio reescrita: Jacksonville confirmado; SoundCloud (20+ años, parón y regreso); ShenaniGoons con SiR1 / John Kraft; Gigabeat; retorno comercial 2025; Troublemakers EP + Best New Breaks / UK Bass April 2026; 808 Pulse como impacto comercial 2026 (sin posiciones BeatStats); estética Florida breaks / 808 explícita; remixes EDM en Bandcamp como faceta secundaria. Español en masculino (DJ y productor).
+- essential_tracks: This Is Florida Breaks, 808 Pulse, Lets Hit Em With The 808s, All I Want, Rock The 904.
+- key_releases: Troublemakers EP como lanzamiento conceptual principal; This Is Florida Breaks; 808 Pulse; Lets Hit Em With The 808s; All I Want; Rock The 904.
+- related: ShenaniGoons, SiR1, DJ Genesis.
+
+No usar
+-------
+- Etiqueta 2020s–present.
+- Géneros genéricos Bass / Electronic / UK Bass como centro de ficha.
+- Inferencias tipo «los títulos sugieren presión de subgraves».
+- Posiciones concretas de BeatStats (cambian).
+- Cuatro cortes del mismo EP como tracks esenciales.

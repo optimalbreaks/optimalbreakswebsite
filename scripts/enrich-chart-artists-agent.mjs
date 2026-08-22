@@ -33,7 +33,7 @@ import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { spawnSync, spawn } from 'child_process'
 import { createClient } from '@supabase/supabase-js'
-import { loadEnvLocal, supabaseApiCredentials } from './lib/artist-upsert.mjs'
+import { loadEnvLocal, supabaseApiCredentials, isArtistProfileVetoed } from './lib/artist-upsert.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -45,6 +45,7 @@ const CHART_NAME_TO_SLUG = {
   'Dominic B UK': 'dominic-b',
   Mutantbreakz: 'mutant-breakz',
   'Huda Hudia': 'huda-hudia',
+  'CURLY (CH)': 'curly-ch',
 }
 
 /** Slugs muy ambiguos → nota de desambiguación reforzada */
@@ -434,6 +435,10 @@ async function runBootstrapMissingFrequent({
     const slug = slugify(name)
     const p = join(ARTISTS_DIR, `${slug}.json`)
     if (existsSync(p)) continue
+    if (isArtistProfileVetoed(slug) || isArtistProfileVetoed(name)) {
+      console.log(`[bootstrap] Opt-out de ficha (saltar): ${name}`)
+      continue
+    }
     todo.push({ name, slug, count })
   }
   const sliced = todo.slice(0, limit)

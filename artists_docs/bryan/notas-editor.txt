@@ -1,0 +1,21 @@
+Revisión editorial — BRYAN (agosto 2026)
+=====================================
+
+Fuentes principales
+-------------------
+- Brief editorial del usuario (SoundCloud oficial: «BRYAN (Cádiz)», DJ desde 1995, productor desde 2022).
+- Beatport artist 191653 — bio en español (breakbeat de los 90, bajos potentes, sintes atmosféricos).
+- Beatport Top 10 (headless, agosto 2026): Fog #1, Radio/Nosk #2, Passion/Ryan Blake #3, etc.
+- Apoyo editorial Beatport citado por el usuario: Like This (CYE, nov 2023); New World (83, 14 nov 2024).
+
+Correcciones aplicadas
+----------------------
+- era: 2020s-present → 1995-present (DJ); matiz «producing since 2022» en bio.
+- country: ES; category: andalusian (Cádiz).
+- styles: Breakbeat, Breaks, Old School Breaks, UK Bass (influencias jungle/rave/acid/trance en bio, no como género principal).
+- Bio reescrita: Fuerza 4, tienda de vinilos, raves 1996–2005, sellos 83 / Close Your Eyes / HEM / Raveart.
+- essential_tracks: Like This, New World, Fog, Radio, Concrete Jungle.
+- related: NOSK, Guau, Yo Speed, MBreaks, Bowser.
+- real_name: null (sin fuente fiable).
+
+SoundCloud: https://soundcloud.com/bryan-cadiz (perfil «Bryan Cadiz», Cádiz; bio pública citada por el artista en revisión).
