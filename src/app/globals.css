@@ -319,6 +319,12 @@ body::before {
   height: 0;
   display: none;
 }
+/* El padding inferior del raíl solo existe para la sombra dura (desktop) */
+@media (max-width: 1023px) {
+  .obx-rail {
+    padding-bottom: 0;
+  }
+}
 
 /* Número gigante hueco sobre la portada */
 .obx-ghost {

@@ -338,20 +338,34 @@ export default function ArtistShowcase({
             </h2>
           </header>
 
-          {/* Barra sticky móvil: título + contador mientras se desplazan las portadas */}
-          <div className="lg:hidden sticky top-[48px] z-30 -mx-3 sm:-mx-6 mb-5 flex items-center justify-between gap-3 border-y-[3px] border-[var(--paper)] bg-[var(--ink)] px-3 py-2">
+          {/* Barra sticky móvil: título + contador mientras se desplazan las portadas.
+              top = altura exacta del Header (52px móvil / 60px sm) para que el borde no quede tapado. */}
+          <div className="lg:hidden sticky top-[52px] sm:top-[60px] z-30 -mx-3 sm:-mx-6 mb-5 flex items-center justify-between gap-3 border-y-[3px] border-[var(--paper)] bg-[var(--ink)] px-3 py-2">
             <span
               className="truncate text-[var(--paper)]"
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}
             >
               {title1} <span className="text-[var(--yellow)]">{title2}</span>
             </span>
-            <span
-              className="shrink-0 max-w-[48%] truncate border-[2px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1 text-[var(--ink)]"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
-            >
-              {pad2(active + 1)}/{pad2(artists.length)} {artists[active]?.name}
-            </span>
+            {/* En el raíl el contador es botón: tap = siguiente artista (con vuelta al primero) */}
+            {alwaysRail && artists.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => scrollToArtist((active + 1) % artists.length)}
+                aria-label={es ? 'Siguiente artista' : 'Next artist'}
+                className="shrink-0 max-w-[52%] cursor-pointer truncate border-[2px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1 text-[var(--ink)] active:translate-y-px"
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+              >
+                {pad2(active + 1)}/{pad2(artists.length)} {artists[active]?.name} →
+              </button>
+            ) : (
+              <span
+                className="shrink-0 max-w-[48%] truncate border-[2px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1 text-[var(--ink)]"
+                style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+              >
+                {pad2(active + 1)}/{pad2(artists.length)} {artists[active]?.name}
+              </span>
+            )}
           </div>
 
           {/* Móvil: pila vertical (home) o raíl. Desktop: carrusel horizontal. */}
@@ -451,7 +465,7 @@ function ArtistCover({
       id={`${idPrefix}-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card group relative flex flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] ${alwaysRail ? 'box-border h-[400px] w-full min-w-full max-w-full shrink-0 snap-start transition-opacity duration-300 sm:h-[480px] lg:h-auto lg:min-h-[560px] lg:w-[92%] lg:min-w-[92%] lg:max-w-none lg:snap-center xl:w-[90%] xl:min-w-[90%]' : 'min-h-[440px] sm:min-h-[520px] lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] ${alwaysRail ? 'box-border h-[400px] w-[calc(100%-32px)] min-w-[calc(100%-32px)] max-w-full shrink-0 snap-start snap-always transition-opacity duration-300 sm:h-[480px] lg:h-auto lg:min-h-[560px] lg:w-[92%] lg:min-w-[92%] lg:max-w-none lg:snap-center xl:w-[90%] xl:min-w-[90%]' : 'min-h-[440px] sm:min-h-[520px] lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:snap-always lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
