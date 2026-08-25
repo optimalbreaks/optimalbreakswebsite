@@ -218,11 +218,13 @@ export default function ArtistShowcase({
 
       if (alwaysRail || mq.matches) {
         onScroll = () => {
-          const center = rail.scrollLeft + rail.clientWidth / 2
+          const startSnap = alwaysRail && !mq.matches
+          const mark = startSnap ? rail.scrollLeft : rail.scrollLeft + rail.clientWidth / 2
           let best = 0
           let dist = Infinity
           cards.forEach((c, i) => {
-            const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center)
+            const pos = startSnap ? c.offsetLeft : c.offsetLeft + c.offsetWidth / 2
+            const d = Math.abs(pos - mark)
             if (d < dist) { dist = d; best = i }
           })
           setActive(best)
@@ -253,7 +255,9 @@ export default function ArtistShowcase({
   const scrollToArtist = useCallback((i: number) => {
     const el = document.getElementById(`${idPrefix}-${artists[i]?.slug}`)
     if (!el) return
-    if (alwaysRail || window.matchMedia('(min-width: 1024px)').matches) {
+    if (alwaysRail && !window.matchMedia('(min-width: 1024px)').matches) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+    } else if (alwaysRail || window.matchMedia('(min-width: 1024px)').matches) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     } else {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -351,12 +355,12 @@ export default function ArtistShowcase({
           </div>
 
           {/* Móvil: pila vertical (home) o raíl. Desktop: carrusel horizontal. */}
-          <div className="relative">
+          <div className="relative min-w-0 w-full max-w-full">
             <div
               ref={railRef}
               className={
                 alwaysRail
-                  ? 'obx-rail flex gap-3 overflow-x-auto snap-x snap-mandatory px-0.5 sm:gap-6'
+                  ? 'obx-rail flex w-full min-w-0 max-w-full gap-3 overflow-x-auto snap-x snap-mandatory sm:gap-6'
                   : 'obx-rail space-y-10 sm:space-y-16 lg:space-y-0 lg:flex lg:gap-6 lg:overflow-x-auto lg:snap-x lg:snap-mandatory'
               }
             >
@@ -447,7 +451,7 @@ function ArtistCover({
       id={`${idPrefix}-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card group relative flex flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] ${alwaysRail ? 'h-[400px] min-w-[92%] shrink-0 snap-center transition-opacity duration-300 sm:h-[480px] lg:h-auto lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%]' : 'min-h-[440px] sm:min-h-[520px] lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] ${alwaysRail ? 'box-border h-[400px] w-full min-w-full max-w-full shrink-0 snap-start transition-opacity duration-300 sm:h-[480px] lg:h-auto lg:min-h-[560px] lg:w-[92%] lg:min-w-[92%] lg:max-w-none lg:snap-center xl:w-[90%] xl:min-w-[90%]' : 'min-h-[440px] sm:min-h-[520px] lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">

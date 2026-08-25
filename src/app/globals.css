@@ -366,6 +366,11 @@ body::before {
   box-shadow: 6px 6px 0 #000;
   transition: box-shadow 0.2s ease;
 }
+@media (max-width: 1023px) {
+  .obx-card {
+    box-shadow: none;
+  }
+}
 .obx-card:hover,
 .obx-card.obx-playing {
   box-shadow: 6px 6px 0 var(--yellow);
