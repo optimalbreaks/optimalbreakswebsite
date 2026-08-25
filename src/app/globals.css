@@ -267,31 +267,32 @@ body::before {
 }
 
 /* ============================================
-   Artist Showcase (home) — escenario oscuro
-   Luz ambiental, reveal cinematográfico y waveform.
-   Solo transform/opacity: animaciones compositables (GPU).
+   Artist Showcase — bloque oscuro fanzine
+   Tinta plana, sombra dura, waveform.
    ============================================ */
 .obx-stage {
-  background:
-    radial-gradient(1100px 540px at 85% -10%, rgba(123, 47, 247, 0.16), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(214, 40, 40, 0.14), transparent 60%),
-    #111114;
+  background: var(--ink);
 }
 
-@keyframes obxDriftA {
-  0%   { transform: translate3d(-8%, -4%, 0) scale(1); }
-  50%  { transform: translate3d(10%, 6%, 0) scale(1.22); }
-  100% { transform: translate3d(-4%, 10%, 0) scale(0.92); }
+/* Título del bloque: sin partir palabras (ARTISTS ≠ ARTIS / TS) */
+.obx-title {
+  font-family: 'Unbounded', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(28px, 3.4vw, 52px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  margin: 0 0 1.25rem;
+  color: var(--paper);
+  hyphens: none;
+  -webkit-hyphens: none;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
-@keyframes obxDriftB {
-  0%   { transform: translate3d(6%, 8%, 0) scale(1.1); }
-  50%  { transform: translate3d(-10%, -5%, 0) scale(0.9); }
-  100% { transform: translate3d(8%, -8%, 0) scale(1.18); }
+.obx-title > span {
+  display: block;
 }
-@keyframes obxFloatY {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
+
 @keyframes obxWaveBar {
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
@@ -305,55 +306,25 @@ body::before {
   50% { transform: scaleY(1); }
 }
 
-/* Luz ambiental: gradientes radiales (sin blur → barato de componer) */
-.obx-blob {
-  position: absolute;
-  width: 55vw;
-  height: 55vw;
-  max-width: 760px;
-  max-height: 760px;
-  border-radius: 50%;
-  pointer-events: none;
-  will-change: transform;
-}
-.obx-blob-red {
-  top: -12%;
-  left: -12%;
-  background: radial-gradient(circle, rgba(214, 40, 40, 0.34) 0%, transparent 65%);
-  animation: obxDriftA 26s ease-in-out infinite alternate;
-}
-.obx-blob-uv {
-  top: 28%;
-  right: -16%;
-  background: radial-gradient(circle, rgba(123, 47, 247, 0.3) 0%, transparent 65%);
-  animation: obxDriftB 34s ease-in-out infinite alternate;
-}
-.obx-blob-pink {
-  bottom: -18%;
-  left: 22%;
-  background: radial-gradient(circle, rgba(233, 30, 140, 0.22) 0%, transparent 65%);
-  animation: obxDriftA 40s ease-in-out infinite alternate-reverse;
-}
-
 /* Raíl del carrusel desktop: sin scrollbar visible */
 .obx-rail {
   scrollbar-width: none;
   -ms-overflow-style: none;
   overscroll-behavior-x: contain;
+  overflow-y: hidden;
+  padding-bottom: 8px;
 }
 .obx-rail::-webkit-scrollbar {
+  width: 0;
+  height: 0;
   display: none;
-}
-
-.obx-float {
-  animation: obxFloatY 7s ease-in-out infinite;
 }
 
 /* Número gigante hueco sobre la portada */
 .obx-ghost {
-  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.22);
+  -webkit-text-stroke: 2px rgba(232, 220, 200, 0.28);
   color: transparent;
-  text-shadow: 0 0 36px rgba(214, 40, 40, 0.25);
+  text-shadow: none;
 }
 
 /* Waveform: barras estáticas que cobran vida al reproducir */
@@ -367,9 +338,8 @@ body::before {
 /* Anillo expansivo del botón play mientras suena */
 .obx-pulse-ring {
   position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 3px solid rgba(214, 40, 40, 0.7);
+  inset: -7px;
+  border: 3px solid var(--yellow);
   animation: obxPulseRing 1.5s ease-out infinite;
   pointer-events: none;
 }
@@ -391,26 +361,21 @@ body::before {
 .obx-eq i:nth-child(2) { animation-delay: 0.2s; }
 .obx-eq i:nth-child(3) { animation-delay: 0.4s; }
 
-/* Profundidad: sombra dura fanzine + halo al pasar / sonar */
+/* Profundidad: sombra dura fanzine */
 .obx-card {
-  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.45);
-  transition: box-shadow 0.4s ease;
+  box-shadow: 6px 6px 0 #000;
+  transition: box-shadow 0.2s ease;
 }
 .obx-card:hover,
 .obx-card.obx-playing {
-  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.45), 0 0 70px rgba(214, 40, 40, 0.25);
+  box-shadow: 6px 6px 0 var(--yellow);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .obx-blob,
-  .obx-float,
   .obx-pulse-ring,
   .obx-eq i,
   .obx-playing .obx-wave-bar {
     animation: none !important;
-  }
-  .obx-card-img {
-    transition: none !important;
   }
 }
 

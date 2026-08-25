@@ -267,7 +267,7 @@ export default function ArtistShowcase({
   const seeAllBtn = seeAll && seeAllHref ? (
     <Link
       href={seeAllHref}
-      className="inline-block no-underline border-[3px] border-white/80 px-4 py-2 text-white hover:bg-[var(--red)] hover:border-[var(--red)] transition-colors"
+      className="inline-block no-underline border-[3px] border-[var(--paper)] px-4 py-2 text-[var(--paper)] hover:bg-[var(--red)] hover:border-[var(--red)] hover:text-white transition-colors"
       style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
     >
       {seeAll} →
@@ -275,27 +275,21 @@ export default function ArtistShowcase({
   ) : null
 
   return (
-    <section ref={sectionRef} className="obx-stage relative overflow-hidden border-b-[5px] border-[var(--ink)] px-3 sm:px-6 py-12 sm:py-20">
-      {/* Luz ambiental animada */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="obx-blob obx-blob-red" />
-        <div className="obx-blob obx-blob-uv" />
-        <div className="obx-blob obx-blob-pink" />
-      </div>
+    <section ref={sectionRef} className="obx-stage relative overflow-hidden border-y-[4px] border-[var(--ink)] px-3 sm:px-6 py-10 sm:py-14">
+      <div aria-hidden className="danger-bar -mx-3 sm:-mx-6 mb-8 sm:mb-10" />
 
-      <div className="relative z-[1] mx-auto max-w-[1400px] lg:grid lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+      <div className="relative z-[1] mx-auto w-full max-w-[1800px] lg:grid lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] xl:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] lg:gap-8 xl:gap-10">
 
         {/* ===== Columna sticky (desktop) ===== */}
-        <aside className="hidden lg:block lg:sticky lg:top-28 lg:self-start">
-          <div className="sec-tag" style={{ borderColor: 'rgba(255,255,255,.85)', color: '#fff' }}>{tag}</div>
-          <h2 className="sec-title text-white">
-            {title1}
-            <br />
+        <aside className="hidden lg:block lg:sticky lg:top-28 lg:self-start min-w-0">
+          <div className="sec-tag" style={{ borderColor: 'var(--paper)', color: 'var(--paper)' }}>{tag}</div>
+          <h2 className="obx-title">
+            <span>{title1}</span>
             <span className="hl">{title2}</span>
           </h2>
 
           {/* Índice de artistas: resalta el que está en pantalla */}
-          <ol className={`m-0 mt-2 mb-8 list-none space-y-2 ${alwaysRail ? 'max-h-[58vh] overflow-y-auto pr-1' : ''}`}>
+          <ol className={`m-0 mt-2 mb-8 list-none space-y-1 ${alwaysRail ? 'max-h-[58vh] overflow-y-auto pr-1' : ''}`}>
             {artists.map((a, i) => {
               const isActive = i === active
               const isSounding = activeGroupSlug === a.slug && previewPlaying
@@ -304,9 +298,9 @@ export default function ArtistShowcase({
                   <button
                     type="button"
                     onClick={() => scrollToArtist(i)}
-                    className={`flex w-full items-baseline gap-3 bg-transparent border-0 cursor-pointer text-left transition-all duration-300 ${isActive ? 'translate-x-2' : 'opacity-40 hover:opacity-75'}`}
+                    className={`flex w-full items-baseline gap-3 border-0 border-l-[3px] bg-transparent py-1 pl-3 cursor-pointer text-left transition-colors ${isActive ? 'border-[var(--yellow)]' : 'border-transparent opacity-55 hover:opacity-90'}`}
                   >
-                    <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', color: 'var(--red)' }}>
+                    <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', color: isActive ? 'var(--yellow)' : 'var(--red)' }}>
                       {pad2(i + 1)}
                     </span>
                     <span
@@ -317,7 +311,7 @@ export default function ArtistShowcase({
                         fontSize: '14px',
                         textTransform: 'uppercase',
                         letterSpacing: '-0.3px',
-                        color: isActive ? 'var(--yellow)' : '#fff',
+                        color: isActive ? 'var(--yellow)' : 'var(--paper)',
                       }}
                     >
                       {a.name}
@@ -334,25 +328,25 @@ export default function ArtistShowcase({
         <div className="min-w-0">
           {/* ===== Cabecera móvil ===== */}
           <header className="lg:hidden mb-4">
-            <div className="sec-tag" style={{ borderColor: 'rgba(255,255,255,.85)', color: '#fff' }}>{tag}</div>
-            <h2 className="sec-title text-white">
-              {title1} <span className="hl">{title2}</span>
+            <div className="sec-tag" style={{ borderColor: 'var(--paper)', color: 'var(--paper)' }}>{tag}</div>
+            <h2 className="obx-title" style={{ fontSize: 'clamp(26px, 8vw, 40px)' }}>
+              <span>{title1} <span className="hl" style={{ display: 'inline' }}>{title2}</span></span>
             </h2>
           </header>
 
           {/* Barra sticky móvil: título + contador mientras se desplazan las portadas */}
-          <div className="lg:hidden sticky top-[48px] z-30 -mx-3 sm:-mx-6 mb-8 flex items-center justify-between gap-3 border-y-[3px] border-[var(--ink)] bg-[#101013]/90 px-4 py-2 backdrop-blur-sm">
+          <div className="lg:hidden sticky top-[48px] z-30 -mx-3 sm:-mx-6 mb-5 flex items-center justify-between gap-3 border-y-[3px] border-[var(--paper)] bg-[var(--ink)] px-3 py-2">
             <span
-              className="truncate text-white"
+              className="truncate text-[var(--paper)]"
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}
             >
               {title1} <span className="text-[var(--yellow)]">{title2}</span>
             </span>
             <span
-              className="shrink-0 truncate max-w-[45%] text-right"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '2px', color: 'var(--yellow)' }}
+              className="shrink-0 max-w-[48%] truncate border-[2px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1 text-[var(--ink)]"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
             >
-              {pad2(active + 1)}/{pad2(artists.length)} — {artists[active]?.name}
+              {pad2(active + 1)}/{pad2(artists.length)} {artists[active]?.name}
             </span>
           </div>
 
@@ -393,7 +387,7 @@ export default function ArtistShowcase({
               onClick={() => step(-1)}
               disabled={active === 0}
               aria-label={es ? 'Artista anterior' : 'Previous artist'}
-              className={`absolute left-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
+              className={`absolute left-3 top-1/2 z-20 h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               ←
@@ -403,7 +397,7 @@ export default function ArtistShowcase({
               onClick={() => step(1)}
               disabled={active >= artists.length - 1}
               aria-label={es ? 'Artista siguiente' : 'Next artist'}
-              className={`absolute right-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
+              className={`absolute right-3 top-1/2 z-20 h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               →
@@ -453,7 +447,7 @@ function ArtistCover({
       id={`${idPrefix}-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] ${alwaysRail ? 'min-w-[88%] shrink-0 sm:min-w-[80%] lg:min-w-[86%] xl:min-w-[82%] snap-center transition-opacity duration-500' : 'lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500'} ${inactive ? (alwaysRail ? 'opacity-40' : 'lg:opacity-40') : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] sm:min-h-[520px] lg:min-h-[560px] ${alwaysRail ? 'min-w-[88%] shrink-0 sm:min-w-[80%] lg:min-w-[92%] xl:min-w-[90%] snap-center transition-opacity duration-300' : 'lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
@@ -464,7 +458,7 @@ function ArtistCover({
             alt={a.name}
             loading={index === 0 ? 'eager' : 'lazy'}
             decoding="async"
-            className="obx-card-img absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[1400ms] ease-out group-hover:scale-[1.07]"
+            className="obx-card-img absolute inset-0 h-full w-full object-cover object-center"
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
@@ -474,7 +468,7 @@ function ArtistCover({
       {/* Número gigante flotante */}
       <div
         aria-hidden
-        className="obx-ghost obx-float absolute -top-3 right-2 z-[4] select-none sm:right-6"
+        className="obx-ghost absolute -top-3 right-2 z-[4] select-none sm:right-6"
         style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(88px, 16vw, 190px)', lineHeight: 1 }}
       >
         {pad2(index + 1)}
@@ -493,16 +487,16 @@ function ArtistCover({
           <CountryBadge country={a.country} lang={lang} variant="overlay" size="sm" />
         ) : null}
         {a.fans > 0 ? (
-          <span className="inline-flex items-center gap-1.5 border-2 border-white/30 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1.5 border-[2px] border-[var(--ink)] bg-[var(--ink)] px-2 py-1">
             <span className="text-[var(--yellow)]" style={{ fontSize: '12px', lineHeight: 1 }}>★</span>
-            <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', color: '#fff' }}>{a.fans}</span>
-            <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', color: 'rgba(255,255,255,.65)' }}>
+            <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--paper)' }}>{a.fans}</span>
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px', color: 'var(--paper)' }}>
               {es ? 'FANS' : 'FANS'}
             </span>
           </span>
         ) : null}
         {sounding ? (
-          <span className="animate-flicker ml-auto inline-flex items-center gap-1.5 bg-[var(--red)] px-2.5 py-1.5 text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px' }}>
+          <span className="ml-auto inline-flex items-center gap-1.5 border-[2px] border-[var(--ink)] bg-[var(--red)] px-2 py-1 text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '2px' }}>
             ● {es ? 'SONANDO' : 'ON AIR'}
           </span>
         ) : null}
@@ -514,7 +508,7 @@ function ArtistCover({
           {a.genres.slice(0, 4).map((g, j) => (
             <span
               key={j}
-              className="bg-[var(--ink)]/85 text-[var(--paper)] backdrop-blur-sm"
+              className="border-[2px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)]"
               style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1.5px', textTransform: 'uppercase', padding: '3px 8px' }}
             >
               {g}
@@ -531,7 +525,7 @@ function ArtistCover({
             lineHeight: 0.95,
             textTransform: 'uppercase',
             letterSpacing: '-1px',
-            textShadow: '3px 3px 0 rgba(0,0,0,.6), 0 0 60px rgba(214,40,40,.35)',
+            textShadow: '3px 3px 0 #000',
           }}
         >
           {a.name}
@@ -552,7 +546,7 @@ function ArtistCover({
               onClick={onPlay}
               aria-label={playLabel}
               title={playLabel}
-              className="pointer-events-auto relative grid h-16 w-16 shrink-0 cursor-pointer place-items-center rounded-full border-4 border-white/90 bg-[var(--red)] text-white shadow-[0_0_45px_rgba(214,40,40,.6)] transition-transform duration-200 hover:scale-110 active:scale-95 sm:h-20 sm:w-20"
+              className="pointer-events-auto relative grid h-14 w-14 shrink-0 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--red)] text-white shadow-[4px_4px_0_#000] transition-colors hover:bg-[var(--ink)] active:translate-x-px active:translate-y-px sm:h-16 sm:w-16"
             >
               {sounding ? <span className="obx-pulse-ring" aria-hidden /> : null}
               {sounding ? (
@@ -568,7 +562,7 @@ function ArtistCover({
             </button>
           ) : (
             <span
-              className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-4 border-white/40 text-white/70 sm:h-20 sm:w-20"
+              className="grid h-14 w-14 shrink-0 place-items-center border-[3px] border-[var(--paper)] text-[var(--paper)] sm:h-16 sm:w-16"
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
               aria-hidden
             >
