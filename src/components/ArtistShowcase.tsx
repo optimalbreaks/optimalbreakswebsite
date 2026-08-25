@@ -356,7 +356,7 @@ export default function ArtistShowcase({
               ref={railRef}
               className={
                 alwaysRail
-                  ? 'obx-rail flex gap-4 overflow-x-auto snap-x snap-mandatory sm:gap-6'
+                  ? 'obx-rail flex gap-3 overflow-x-auto snap-x snap-mandatory px-0.5 sm:gap-6'
                   : 'obx-rail space-y-10 sm:space-y-16 lg:space-y-0 lg:flex lg:gap-6 lg:overflow-x-auto lg:snap-x lg:snap-mandatory'
               }
             >
@@ -387,7 +387,7 @@ export default function ArtistShowcase({
               onClick={() => step(-1)}
               disabled={active === 0}
               aria-label={es ? 'Artista anterior' : 'Previous artist'}
-              className={`absolute left-3 top-1/2 z-20 h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
+              className="absolute left-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 lg:grid"
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               ←
@@ -397,7 +397,7 @@ export default function ArtistShowcase({
               onClick={() => step(1)}
               disabled={active >= artists.length - 1}
               aria-label={es ? 'Artista siguiente' : 'Next artist'}
-              className={`absolute right-3 top-1/2 z-20 h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
+              className="absolute right-3 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)] transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] hover:text-white disabled:cursor-default disabled:opacity-25 lg:grid"
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               →
@@ -447,7 +447,7 @@ function ArtistCover({
       id={`${idPrefix}-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] sm:min-h-[520px] lg:min-h-[560px] ${alwaysRail ? 'min-w-[88%] shrink-0 sm:min-w-[80%] lg:min-w-[92%] xl:min-w-[90%] snap-center transition-opacity duration-300' : 'lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[var(--ink)] ${alwaysRail ? 'h-[400px] min-w-[92%] shrink-0 snap-center transition-opacity duration-300 sm:h-[480px] lg:h-auto lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%]' : 'min-h-[440px] sm:min-h-[520px] lg:min-h-[560px] lg:min-w-[92%] xl:min-w-[90%] lg:snap-center lg:transition-opacity lg:duration-300'} ${inactive ? (alwaysRail ? 'opacity-70' : 'lg:opacity-70') : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
@@ -458,11 +458,11 @@ function ArtistCover({
             alt={a.name}
             loading={index === 0 ? 'eager' : 'lazy'}
             decoding="async"
-            className="obx-card-img absolute inset-0 h-full w-full object-cover object-center"
+            className={`obx-card-img absolute inset-0 h-full w-full object-cover ${alwaysRail ? 'object-top lg:object-center' : 'object-center'}`}
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent lg:from-black/95 lg:via-black/40 lg:to-black/10" />
+        <div className="absolute inset-0 hidden bg-gradient-to-r from-black/50 via-transparent to-transparent lg:block" />
       </div>
 
       {/* Número gigante flotante */}
@@ -503,9 +503,9 @@ function ArtistCover({
       </div>
 
       {/* Contenido inferior */}
-      <div className="pointer-events-none relative z-[6] p-4 pb-5 sm:p-8">
+      <div className="pointer-events-none relative z-[6] p-3 pb-4 sm:p-8">
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {a.genres.slice(0, 4).map((g, j) => (
+          {a.genres.slice(0, alwaysRail ? 3 : 4).map((g, j) => (
             <span
               key={j}
               className="border-[2px] border-[var(--paper)] bg-[var(--ink)] text-[var(--paper)]"
@@ -517,7 +517,7 @@ function ArtistCover({
         </div>
 
         <h3
-          className="m-0 break-words text-white"
+          className={`m-0 break-words text-white ${alwaysRail ? 'line-clamp-2 lg:line-clamp-none' : ''}`}
           style={{
             fontFamily: "'Unbounded', sans-serif",
             fontWeight: 900,
@@ -532,14 +532,14 @@ function ArtistCover({
         </h3>
 
         <p
-          className="mt-2 max-w-[560px] text-white/75"
+          className={`mt-2 max-w-[560px] text-white/75 ${alwaysRail ? 'line-clamp-2 lg:line-clamp-none' : ''}`}
           style={{ fontFamily: "'Special Elite', monospace", fontSize: 'clamp(12px, 1.6vw, 14px)', lineHeight: 1.6 }}
         >
           {a.desc}
         </p>
 
         {/* Waveform + play */}
-        <div className="mt-4 flex items-center gap-4 sm:mt-5 sm:gap-6">
+        <div className="mt-3 flex items-center gap-3 sm:mt-5 sm:gap-6">
           {playable ? (
             <button
               type="button"
