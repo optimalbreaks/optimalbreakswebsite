@@ -26,6 +26,19 @@ function artistsToString(a: unknown): string {
     .join(', ')
 }
 
+type OriginKind = 'artist' | 'label'
+type ParsedOrigin = { kind: OriginKind; slug: string | null; id: string | null }
+
+function parseBeatportOrigin(snap: Record<string, unknown>): ParsedOrigin | null {
+  const o = snap.origin as Record<string, unknown> | undefined
+  if (!o || typeof o !== 'object') return null
+  if (o.kind !== 'artist' && o.kind !== 'label') return null
+  const slug = typeof o.slug === 'string' && o.slug.trim() ? o.slug.trim() : null
+  const id = typeof o.id === 'string' && o.id.trim() ? o.id.trim() : null
+  if (!slug && !id) return null
+  return { kind: o.kind, slug, id }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -302,6 +315,48 @@ export async function GET(
       }
     }
 
+    // Saves beatport_top: origin.slug para deep-link interno a la ficha.
+    // Si el snapshot trae id pero no slug (saves viejos), lo resolvemos aquí.
+    const artistIdsNeedingSlug: string[] = []
+    const labelIdsNeedingSlug: string[] = []
+    for (const s of saved) {
+      if (s.track_source !== 'beatport_top') continue
+      const parsed = parseBeatportOrigin((s.snapshot || {}) as Record<string, unknown>)
+      if (!parsed || parsed.slug || !parsed.id) continue
+      if (parsed.kind === 'artist') artistIdsNeedingSlug.push(parsed.id)
+      else labelIdsNeedingSlug.push(parsed.id)
+    }
+    const slugByArtistId = new Map<string, string>()
+    const slugByLabelId = new Map<string, string>()
+    if (artistIdsNeedingSlug.length) {
+      const { data } = await sb
+        .from('artists')
+        .select('id, slug')
+        .in('id', [...new Set(artistIdsNeedingSlug)])
+      for (const r of (data || []) as Array<{ id: string; slug: string }>) {
+        if (r.slug) slugByArtistId.set(r.id, r.slug)
+      }
+    }
+    if (labelIdsNeedingSlug.length) {
+      const { data } = await sb
+        .from('labels')
+        .select('id, slug')
+        .in('id', [...new Set(labelIdsNeedingSlug)])
+      for (const r of (data || []) as Array<{ id: string; slug: string }>) {
+        if (r.slug) slugByLabelId.set(r.id, r.slug)
+      }
+    }
+
+    function resolvedOrigin(snap: Record<string, unknown>): { kind: OriginKind; slug: string } | null {
+      const parsed = parseBeatportOrigin(snap)
+      if (!parsed) return null
+      if (parsed.slug) return { kind: parsed.kind, slug: parsed.slug }
+      if (!parsed.id) return null
+      const slug =
+        parsed.kind === 'artist' ? slugByArtistId.get(parsed.id) : slugByLabelId.get(parsed.id)
+      return slug ? { kind: parsed.kind, slug } : null
+    }
+
     const tracks = saved.flatMap((s) => {
       const snap = (s.snapshot || {}) as Record<string, unknown>
       let live: Record<string, unknown> | undefined
@@ -354,7 +409,15 @@ export async function GET(
             ((base as Record<string, unknown>).discogs_url as string | null | undefined) ??
             ((base as Record<string, unknown>).youtube_url as string | null | undefined) ??
             null
+        else if (s.track_source === 'beatport_top')
+          canonical_url = (typeof snap.beatport_url === 'string' && snap.beatport_url) || null
       }
+
+      const origin = s.track_source === 'beatport_top' ? resolvedOrigin(snap) : null
+      const beatport_url =
+        s.track_source === 'beatport_top'
+          ? ((typeof snap.beatport_url === 'string' && snap.beatport_url) || canonical_url)
+          : null
 
       let week_date: string | null = null
       if (live && (s.track_source === 'chart' || s.track_source === 'featured')) {
@@ -376,6 +439,8 @@ export async function GET(
         artwork_url,
         canonical_url,
         week_date,
+        origin,
+        beatport_url,
       }]
     })
 

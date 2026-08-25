@@ -4,6 +4,8 @@
  * Scrapea la página pública de Beatport de un artista o sello, extrae el
  * bloque "Top Ten Tracks" desde __NEXT_DATA__ y guarda el resultado como
  * JSONB en Supabase (columnas beatport_top_tracks en artists / labels).
+ * Remixers: fusiona Beatport `remixers[]` + `mix_name` en el array de artistas
+ * de cada corte (`scripts/lib/remixer-credits.mjs`).
  *
  * El slug y el ID numérico deben coincidir con la URL en Beatport — con o sin locale:
  *   https://www.beatport.com/artist/<slug>/<id>

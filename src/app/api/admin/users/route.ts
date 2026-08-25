@@ -396,7 +396,51 @@ async function fetchAllMatchingProfiles(
     if (!data || data.length < pageSize) break
     from += pageSize
   }
-  return { profiles, count: total, error: null }
+
+  if (!search) {
+    return { profiles, count: total, error: null }
+  }
+
+  // El email vive en Auth, no en `profiles`. Sin esto, buscar "gmail" o un
+  // correo deja fuera a casi todo el mundo (el buscador "solo nombre/usuario").
+  const { users } = await listAllAuthUsers(sb)
+  const q = search.toLowerCase()
+  const emailIds = users
+    .filter((u) => (u.email || '').toLowerCase().includes(q))
+    .map((u) => u.id)
+  const have = new Set(profiles.map((p) => p.id))
+  const missing = emailIds.filter((id) => !have.has(id))
+  if (missing.length === 0) {
+    return { profiles, count: profiles.length, error: null }
+  }
+
+  const extra: ProfileLite[] = []
+  const foundExtra = new Set<string>()
+  for (let i = 0; i < missing.length; i += IN_CHUNK) {
+    const chunk = missing.slice(i, i + IN_CHUNK)
+    const { data } = await sb
+      .from('profiles')
+      .select('id, display_name, username, role, created_at')
+      .in('id', chunk)
+    for (const row of (data || []) as ProfileLite[]) {
+      extra.push(row)
+      foundExtra.add(row.id)
+    }
+  }
+  const authById = new Map(users.map((u) => [u.id, u]))
+  for (const id of missing) {
+    if (foundExtra.has(id)) continue
+    const u = authById.get(id)
+    extra.push({
+      id,
+      display_name: null,
+      username: null,
+      role: 'user',
+      created_at: u?.created_at ?? new Date(0).toISOString(),
+    })
+  }
+  profiles.push(...extra)
+  return { profiles, count: profiles.length, error: null }
 }
 
 function rowsFromProfiles(profs: ProfileLite[], authMap: Map<string, AuthLite>): BaseRow[] {
@@ -437,6 +481,19 @@ export async function GET(request: NextRequest) {
 
   try {
     if (order && isProfileSort(order)) {
+      if (search) {
+        const { profiles, count, error } = await fetchAllMatchingProfiles(sb, search)
+        if (error) return NextResponse.json({ error }, { status: 500 })
+        const sorted = [...profiles].sort((a, b) => {
+          if (order === 'role') return cmpStr(a.role, b.role, ascending)
+          if (order === 'username') return cmpStr(a.username, b.username, ascending)
+          return cmpStr(a.display_name, b.display_name, ascending)
+        })
+        const pageProfs = paginate(sorted, page, limit)
+        const authMap = await authByIds(sb, pageProfs.map((p) => p.id))
+        const data = await attachEngagement(sb, rowsFromProfiles(pageProfs, authMap))
+        return NextResponse.json({ data, count, page, limit })
+      }
       const { profiles, count, error } = await fetchProfilesPage(sb, {
         search,
         from,
@@ -566,16 +623,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      const { profiles, count, error } = await fetchProfilesPage(sb, {
-        search,
-        from,
-        to,
-        order: 'created_at',
-        ascending: false,
-      })
+      const { profiles, count, error } = await fetchAllMatchingProfiles(sb, search)
       if (error) return NextResponse.json({ error }, { status: 500 })
-      const authMap = await authByIds(sb, profiles.map((p) => p.id))
-      const data = await attachEngagement(sb, rowsFromProfiles(profiles, authMap))
+      const pageProfs = paginate(profiles, page, limit)
+      const authMap = await authByIds(sb, pageProfs.map((p) => p.id))
+      const data = await attachEngagement(sb, rowsFromProfiles(pageProfs, authMap))
       return NextResponse.json({ data, count, page, limit })
     }
 

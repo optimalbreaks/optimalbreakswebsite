@@ -298,6 +298,10 @@ export type AdminSavedTrack = {
   canonical_url: string | null
   /** Solo para `chart` y `featured`: lunes ISO de la edición; permite construir `/charts?week=…&play=…`. */
   week_date: string | null
+  /** Ficha de origen (Top 10 Beatport de artista/sello). */
+  origin: { kind: 'artist' | 'label'; slug: string } | null
+  /** URL Beatport del snapshot (`beatport_top`); para extraer el id del `?play=`. */
+  beatport_url: string | null
 }
 
 export type AdminUserEngagement =

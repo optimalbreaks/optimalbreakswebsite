@@ -9,7 +9,7 @@ Fuente: ediciones **publicadas** de **`chart_tracks`** (40 Breaks Vitales) + **`
 
 ## Artistas — umbral ≥ 3
 
-- Contar créditos (aparición en `artists[]` de cada fila) en la unión de ediciones publicadas.
+- Contar créditos (aparición en `artists[]` de cada fila) en la unión de ediciones publicadas. **Los remixers van en `artists[]`** (import + `mix_name`); un remix cuenta para el umbral igual que un original.
 - Si el nombre **no** está en `data/artists/` (ni alias `CHART_NAME_TO_SLUG`) y tiene **≥ 3** apariciones → candidato a alta.
 - **Opt-out de ficha:** nunca dar de alta **Vazteria X** (`vazteria-x`). Las canciones sí; la persona no. Regla **`artistas-opt-out-perfil`**.
 - Alta preferida: `npm run db:chart:artists:agent -- --bootstrap-min-freq=3 --bootstrap-only` (luego fotos con `db:artist:photo` si hace falta).

@@ -11,11 +11,13 @@
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-03-30.json
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-20.json --create-edition
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-27.json --enrich-release-dates --write-json
+ *   node scripts/chart-featured-upsert.mjs --backfill-remixer-credits
  *
  * Flags:
  *   --enrich-release-dates    (alias: --enrich-beatport-dates) Rellena `release_date` vía URL del pick.
  *   --write-json              Tras enriquecer, guarda de nuevo el JSON (pretty-print).
  *   --force-release-dates     (alias: --force-beatport-dates) Fuerza refetch aunque ya haya fecha válida.
+ *   --backfill-remixer-credits  Sin JSON: UPDATE `artists[]` en filas vivas (featured + 40 Breaks + vinyl) y reescribe `data/charts/picks/*.json`. Mismos UUID.
  *
  * NOTA — «eliminados» en el log: solo se borran filas de chart_featured_tracks de ESTA semana
  * que ya no están en el JSON (no se borran artistas, chart_tracks 40 Breaks ni otras tablas).

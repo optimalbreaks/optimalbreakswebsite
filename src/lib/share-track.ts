@@ -137,6 +137,42 @@ export function buildBeatportShareUrl(
   return `${SITE_URL}${buildBeatportSharePath(pageHref, beatportId)}`
 }
 
+export type BeatportShareOrigin = { kind: 'artist' | 'label'; slug: string }
+
+/** Origen de ficha embebido en el snapshot de un save `beatport_top`. */
+export function beatportShareOriginFromSnapshot(
+  snap: { origin?: { kind?: unknown; slug?: unknown } } | Record<string, unknown> | null | undefined,
+): BeatportShareOrigin | null {
+  if (!snap || typeof snap !== 'object') return null
+  const o = (snap as { origin?: unknown }).origin
+  if (!o || typeof o !== 'object') return null
+  const rec = o as { kind?: unknown; slug?: unknown }
+  if (rec.kind !== 'artist' && rec.kind !== 'label') return null
+  if (typeof rec.slug !== 'string' || !rec.slug.trim()) return null
+  return { kind: rec.kind, slug: rec.slug.trim() }
+}
+
+/** ID numérico Beatport: URL canónica, o el `track_id` del save si es dígitos. */
+export function resolveBeatportPlayId(
+  beatportUrl: string | null | undefined,
+  fallbackNumericId?: string | null,
+): string | null {
+  const fromUrl = extractBeatportTrackId(beatportUrl)
+  if (fromUrl) return fromUrl
+  const id = (fallbackNumericId || '').trim()
+  return /^\d+$/.test(id) ? id : null
+}
+
+/** Deep-link interno al Top 10 de la ficha (`?play=beatport:<id>`). */
+export function buildBeatportTopInternalPath(
+  lang: Locale,
+  origin: BeatportShareOrigin,
+  beatportId: string,
+): string {
+  const folder = origin.kind === 'artist' ? 'artists' : 'labels'
+  return buildBeatportSharePath(`/${lang}/${folder}/${origin.slug}`, beatportId)
+}
+
 /** Busca una fila del Top 10 Beatport por ID numérico estable. */
 export function findBeatportTopTrackById(
   tracks: BeatportTopTrack[] | null | undefined,

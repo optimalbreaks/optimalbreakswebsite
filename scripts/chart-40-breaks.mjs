@@ -1,6 +1,9 @@
 /**
  * OPTIMAL BREAKS — 40 Breaks Vitales: scraping + curación IA + UPSERT Supabase
  *
+ * Remixers: al escribir filas, fusiona Beatport `remixers[]` + `mix_name` en `artists[]`
+ * (`scripts/lib/remixer-credits.mjs`) — mismo criterio que New Releases / Top 10.
+ *
  * Editorial: cada --week YYYY-MM-DD etiqueta la *edición* del chart (lunes de esa semana).
  * Beatport: se pide el Top 100 *en vivo* en el momento de la ejecución; no hay API de “top histórico”.
  * Para que los 40 temas reflejen “esta semana”, ejecuta --confirm cuando publiques esa edición.

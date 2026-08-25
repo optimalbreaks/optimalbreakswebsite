@@ -31,7 +31,7 @@ Cartel sin año («21 de agosto») → `normalizeUpcomingEventDate` (`admin-chat
 
 ## Tools
 
-Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases`, `stage_vinyl_picks`, enrich/poster/foto/logo.
+Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases` (remixer → `artists[]`, misma regla que `charts-new-releases-supabase`), `stage_vinyl_picks`, enrich/poster/foto/logo.
 
 CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 

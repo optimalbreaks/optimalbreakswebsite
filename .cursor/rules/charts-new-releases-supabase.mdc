@@ -35,6 +35,10 @@ alwaysApply: true
 - **No tratar como bug del repo** si el mismo batch funcionó al día siguiente (experiencia editorial repetida).
 - **Salidas:** esperar y reintentar con **`BEATPORT_BATCH_PAUSE_MS`** más alto (p. ej. `4000–6000`); otro día u horario; otra red/IP; import por **admin** (`featured-import`) desde red que no esté marcada.
 
+## Remixer = crédito de artista (no negociable)
+
+El remixer es el productor de la **versión breakbeat**. Beatport lo deja en `remixers[]` / `mix_name`; aquí debe vivir también en **`artists[]`** (alimenta `artist_names_text`, ficha, tablero de artistas). El import (batch, admin, 40 Breaks, Top 10) fusiona `artists` + `remixers` + nombres parseados de `mix_name` (`src/lib/remixer-credits.ts`). No inventar artista en *Original Mix*, *VIP Remix*, *Breakbeat Remix*. Backfill: `node scripts/chart-featured-upsert.mjs --backfill-remixer-credits`.
+
 ## IDs de fila (no negociable con los saves)
 
 El UPSERT de NR **actualiza** por `link_url`; **no** borra e inserta el mismo pick (eso cambiaría `chart_featured_tracks.id` y rompería `saved_chart_tracks`). Detalle: regla **`charts-ids-inmutables-saves`**.

@@ -14,6 +14,9 @@
  *
  * Un mismo pegado puede abrir/rellenar **varios** JSON si los temas caen en lunes distintos.
  *
+ * Remixer = crédito: Beatport deja el original en `artists[]` y el remixer en `remixers[]` /
+ * `mix_name`. Este script fusiona ambos en `artists[]` (`scripts/lib/remixer-credits.mjs`).
+ *
  * Modo actual: `/release/` y `/chart/` añaden **todas** las pistas; `/track/` una sola.
  * Acepta Beatport `/release/`, `/track/` o `/chart/`; Bandcamp `*.bandcamp.com/track/…` (un track por URL).
  *

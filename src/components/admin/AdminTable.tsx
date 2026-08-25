@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Column {
   key: string
@@ -48,7 +48,14 @@ export default function AdminTable({
 }: AdminTableProps) {
   const [search, setSearch] = useState('')
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const totalPages = Math.max(1, Math.ceil(count / limit))
+
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current)
+    }
+  }, [])
 
   const handleSort = (col: Column) => {
     if (!onSort || col.sortable === false) return
@@ -61,7 +68,18 @@ export default function AdminTable({
 
   const handleSearch = (val: string) => {
     setSearch(val)
-    onSearch(val)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    // Vaciar el campo aplica al instante: si no, una respuesta lenta del
+    // filtro anterior deja la tabla a 4 filas con el buscador ya limpio.
+    if (!val.trim()) {
+      searchTimer.current = null
+      onSearch('')
+      return
+    }
+    searchTimer.current = setTimeout(() => {
+      searchTimer.current = null
+      onSearch(val)
+    }, 280)
   }
 
   const handleDelete = (id: string) => {
@@ -76,13 +94,29 @@ export default function AdminTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder={searchPlaceholder}
-          className="admin-input flex-1 max-w-md"
-        />
+        <div className="relative flex-1 max-w-md">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={searchPlaceholder}
+            className="admin-input w-full"
+            style={{ paddingRight: 36 }}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => handleSearch('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 p-1 cursor-pointer text-[var(--dim)] hover:text-[var(--red)] text-lg leading-none"
+              title="Limpiar búsqueda"
+              aria-label="Limpiar búsqueda"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
         {newHref ? (
           <Link href={newHref} className="admin-btn admin-btn--yellow no-underline text-center sm:text-left">
             + Nuevo

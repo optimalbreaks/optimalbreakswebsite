@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { adminListUsers, type AdminUserRow } from '@/lib/admin-api'
 import AdminTable from '@/components/admin/AdminTable'
@@ -59,19 +59,29 @@ export default function AdminUsersPage() {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [drawer, setDrawer] = useState<{ user: AdminUserRow; tab: DrawerTab } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const loadSeq = useRef(0)
   const limit = 20
 
   const load = useCallback(() => {
+    const seq = ++loadSeq.current
+    setError(null)
     adminListUsers({
       page,
       limit,
       search,
       order: sortKey ?? undefined,
       dir: sortKey ? sortDir : undefined,
-    }).then((res) => {
-      setData(res.data)
-      setCount(res.count)
     })
+      .then((res) => {
+        if (seq !== loadSeq.current) return
+        setData(res.data)
+        setCount(res.count)
+      })
+      .catch((e) => {
+        if (seq !== loadSeq.current) return
+        setError(e instanceof Error ? e.message : 'Error al cargar usuarios')
+      })
   }, [page, search, sortKey, sortDir])
 
   useEffect(() => {
@@ -151,7 +161,7 @@ export default function AdminUsersPage() {
       <h1 className="admin-page-title">Usuarios</h1>
       <p className="admin-muted mb-6 max-w-2xl">
         Cuentas registradas (Auth + perfil). Puedes asignar o quitar el rol de administrador. La búsqueda filtra por
-        nombre visible o nombre de usuario en el perfil. <strong>Favoritos</strong> = artistas + sellos + eventos con
+        email, nombre visible o nombre de usuario. <strong>Favoritos</strong> = artistas + sellos + eventos con
         corazón; <strong>Mixes</strong> = mixes guardados; <strong>Tracks</strong> = canciones
         únicas en su lista My Tracks (la misma pista no se cuenta dos veces si la guardó desde
         varias listas).
@@ -166,6 +176,11 @@ export default function AdminUsersPage() {
         <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
         perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>
+      {error ? (
+        <p className="text-[var(--red)] mb-4" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px' }}>
+          {error}
+        </p>
+      ) : null}
       <AdminTable
         columns={columns}
         data={data}
@@ -185,7 +200,7 @@ export default function AdminUsersPage() {
           setPage(1)
         }}
         editHref={(row) => `/${lang}/administrator/users/${row.id}`}
-        searchPlaceholder="Buscar por nombre o usuario…"
+        searchPlaceholder="Buscar por email, nombre o usuario…"
       />
       {drawer ? (
         <AdminUserEngagementDrawer

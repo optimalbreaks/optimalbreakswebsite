@@ -8,7 +8,7 @@ alwaysApply: true
 ## Tres niveles (no negociable)
 
 1. **Usuario normal** — sus «+» cuentan en Mis Tracks, Top 100 de **canciones** y Top de **artistas**.
-2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros**. **No** escribe `claimed_by` ni abre bookings.
+2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros** (incluido el **remixer** de `mix_name` / Beatport `remixers[]`). **No** escribe `claimed_by` ni abre bookings.
 3. **Claim aprobado** (`artists.claimed_by`) — misma exclusión que el 2 **y** puede recibir bookings si enciende `accepts_bookings` (nace en `false`).
 
 Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.
@@ -23,10 +23,22 @@ El tablero de artistas se ordena por **canciones guardadas** (créditos), no por
 - Auto-activar `accepts_bookings` al aprobar un claim.
 - Aplicar el skip al agregado de **temas** (solo al bump de artistas en `community-monthly`).
 - Cambiar el sort del tablero a unique fans o poner un tope de 1 crédito por `(usuario, artista)`.
-- Anular los votos de un fichado hacia **otros** nombres (colabs / roster del sello).
+- Anular los votos de un fichado hacia **otros** nombres (colabs / roster del sello / remixers).
+
+## Cómo fichar
+
+Panel: `/administrator/users/[id]` → «Marcar artista (fase 2)» con el **nombre de crédito** (p. ej. `Devis Hard`). **No** escribir `claimed_by`. No inferir el email: buscar la fila en Usuarios.
+
+Trampas de email (agosto 2026): `afghanheadspin@gmail.com` (no `afgan…`); `gruv42@me.com` (no `gruv42ruv42@…`); `aranniadj@gmail.com` (no `ranniadj@…`). Devis Hard = `davisoto@hotmail.com`. Tabla viva + IDs: `docs/USER_ENGAGEMENT.md` (*Editorial marks in production*).
+
+## Cómo leer el tablero después del fichaje
+
+`N saves · M fans · K tracks` **no** es la biblioteca del marcado. El skip ya quitó su auto-voto. Lo que queda son **otros** usuarios públicos. Con pocos saves, la cuenta editorial (`contacto@eskaladigital.com` / Optimal Breaks) suele ser el grueso. Si un fichado sigue alto, auditar fans — no asumir que el skip falló, no ocultar la lista, no poner tope 1.
+
+Caso cerrado (25 ago 2026): Afghan Headspin — 24 «+» propios saltados; 20 saves / 3 fans = Optimal Breaks 16 + MestasDeejay 3 + jennie 1. Detalle en la spec.
 
 ## Dónde vive
 
-- Skip: `src/lib/artist-self-credit.ts` → `community-monthly/route.ts` (tablero en vivo y snapshots del lunes).
+- Skip: `src/lib/artist-self-credit.ts` → `community-monthly/route.ts` (tablero en vivo y snapshots del lunes). Remixers: `src/lib/remixer-credits.ts` (crédito extra en el tablero; el Top de canciones no cambia).
 - Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)».
-- Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).
+- Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels* + *Editorial marks in production*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).

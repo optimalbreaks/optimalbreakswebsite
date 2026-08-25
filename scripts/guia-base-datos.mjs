@@ -662,7 +662,7 @@ const ACTIONS = [
     npm: 'npm run db:chart:featured -- data/charts/picks/2026-03-30.json',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). No scrapea tiendas; la edición week_date debe existir.',
+      'Picks «New releases» en /charts: UPSERT manual desde JSON (chart_featured_tracks). Fusiona remixers (Beatport remixers[] + mix_name) en artists[]. No scrapea tiendas; la edición week_date debe existir. Reaplicar créditos a filas vivas: node scripts/chart-featured-upsert.mjs --backfill-remixer-credits (sin JSON).',
   },
   {
     id: 'chart-spotify',
@@ -686,7 +686,7 @@ const ACTIONS = [
     npm: '—',
     creds: 'Cookie admin + vars servidor (Supabase service)',
     description:
-      'Importa singles desde URLs Beatport a chart_featured_tracks. Multi-semana: prefijo YYYY-MM-DD en cada línea. Sin Playwright en servidor (403 → script local).',
+      'Importa singles desde URLs Beatport a chart_featured_tracks. Fusiona remixers[] + mix_name en artists[] (mismo criterio que chart-featured-upsert). Multi-semana: prefijo YYYY-MM-DD en cada línea. Sin Playwright en servidor (403 → script local).',
   },
   {
     id: 'chart-vinyl-file',
@@ -867,7 +867,8 @@ Punto de entrada unificado:
   mixes-published [--force]  backfill-mix-youtube-published-at.mjs (fecha publicación YouTube → orden /mixes)
   chart-propose [--sources …]  chart-40-breaks.mjs --dry-run (proponer chart semanal, solo terminal)
   chart-confirm [--week …] [--sources …]  chart-40-breaks.mjs --confirm (proponer + subir a Supabase)
-  chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual)
+  chart-featured-file <ruta.json>  chart-featured-upsert.mjs (New releases por semana, solo JSON manual; remixers → artists[])
+  # remixers en filas ya publicadas: node scripts/chart-featured-upsert.mjs --backfill-remixer-credits
   purge-featured-week-dates <YYYY-MM-DD …> [--dry-run] [--keep-empty-editions]  purge-chart-featured-by-week-date.mjs (quita NR; no toca el 40)
   featured-import-admin           panel /administrator/tracks + POST /api/admin/featured-import (URLs Beatport → Supabase)
   chart-vinyl-file <ruta.json>    chart-vinyl-upsert.mjs (Retro Vinyl Picks semanales, Discogs+YouTube, solo JSON manual)
@@ -977,7 +978,8 @@ CATÁLOGO EN CASTELLANO (scripts/ — qué es cada cosa)
 
 • chart-featured-upsert.mjs — «New releases» en /charts. Lee solo un JSON con
   week_date + picks (título, artistas, link_url, artwork opcional, etc.) y
-  sustituye chart_featured_tracks para esa edición. No scrapea tiendas.
+  sustituye chart_featured_tracks para esa edición. Fusiona remixers[] +
+  mix_name en artists[]. No scrapea tiendas. Reaplicar créditos: --backfill-remixer-credits.
 
 • sync-chart-artists.mjs — Tras publicar la semana: cruza nombres del chart
   (chart_tracks + chart_featured_tracks, última edición por defecto) con

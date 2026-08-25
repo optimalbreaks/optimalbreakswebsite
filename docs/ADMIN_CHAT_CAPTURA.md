@@ -163,7 +163,7 @@ node scripts/guia-base-datos.mjs run events-enrich <slug> --with-poster [--force
 4. **Duplicados de evento** — actualizar, no clonar.
 5. Captura en `media/chat/` = **provisional**; cartel oficial por OCR.
 6. **Fecha sin año en cartel** → próxima ocurrencia futura (`normalizeUpcomingEventDate`).
-7. New Releases: semana = lunes ISO del **release Beatport** (regla `charts-new-releases-supabase`).
+7. New Releases: semana = lunes ISO del **release Beatport**; el **remixer** entra en `artists[]` (regla `charts-new-releases-supabase`).
 8. Tipado `admin_chat_*`: JSONB como tipo JSON recursivo, no `unknown`.
 
 ### Relación con Cursor / CLI
@@ -249,4 +249,4 @@ Do **not** type `admin_chat_*` JSONB columns as TypeScript `unknown` — it brea
 
 - [`AI_PROMPTS_AND_AGENTS.md`](./AI_PROMPTS_AND_AGENTS.md)  
 - [`guia-base-datos.mjs`](../scripts/guia-base-datos.mjs)  
-- Cursor: `admin-chat-captura`, `base-de-datos-sin-dejar-trabajo-al-usuario`, `charts-new-releases-supabase`
+- Cursor: `admin-chat-captura`, `base-de-datos-sin-dejar-trabajo-al-usuario`, `charts-new-releases-supabase` (remixer → `artists[]`)

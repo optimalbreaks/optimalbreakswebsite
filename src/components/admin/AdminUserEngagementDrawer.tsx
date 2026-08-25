@@ -16,7 +16,12 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { displayImageUrl } from '@/lib/image-url'
-import { buildTrackSharePath, buildVinylSharePath } from '@/lib/share-track'
+import {
+  buildBeatportTopInternalPath,
+  buildTrackSharePath,
+  buildVinylSharePath,
+  resolveBeatportPlayId,
+} from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import {
   adminGetUserEngagement,
@@ -539,8 +544,8 @@ function trackSourceClass(src: AdminSavedTrack['track_source']): string {
  *  - chart    → `/[lang]/charts?week=YYYY-MM-DD&play=chart:<id>`
  *  - featured → `/[lang]/charts?week=YYYY-MM-DD&play=featured:<id>`
  *  - vinyl    → `/[lang]/charts?play=vinyl:<id>`
- *  - beatport_top → no tiene página dedicada en el sitio (vive dentro del Top
- *    10 de la ficha de artista/sello), así que caemos a `canonical_url`.
+ *  - beatport_top → ficha artista/sello `?play=beatport:<id>` (Top 10).
+ *    Nunca Beatport: el tema vive en nuestra ficha, igual que el reproductor.
  */
 function trackInternalHref(
   t: AdminSavedTrack,
@@ -554,6 +559,16 @@ function trackInternalHref(
   }
   if (t.is_live && t.track_source === 'vinyl') {
     return { href: buildVinylSharePath(lang, t.track_id), external: false }
+  }
+  if (t.track_source === 'beatport_top') {
+    const bpId = resolveBeatportPlayId(t.beatport_url || t.canonical_url, t.track_id)
+    if (t.origin && bpId) {
+      return {
+        href: buildBeatportTopInternalPath(lang, t.origin, bpId),
+        external: false,
+      }
+    }
+    return null
   }
   if (t.canonical_url) {
     return { href: t.canonical_url, external: true }

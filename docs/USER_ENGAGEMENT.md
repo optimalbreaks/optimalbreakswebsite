@@ -198,7 +198,9 @@ Single URL scheme per source:
 | `beatport_top` (artist / label Top 10) | `/[lang]/<artists|labels>/<slug>?play=beatport:<beatportId>` | `BeatportTopTracks` expands the Top 10 accordion on that profile, scrolls to the row and calls `playPreviewQueue` |
 | `vinyl` (Retro Vinyl Picks) | — no internal share — | stays on the external Discogs / YouTube link (iframe-only playback makes an autoplay link unreliable) |
 
-`parsePlayParam` is defensive: accepts `1` (legacy autoplay flag from ⌘K), `chart:<uuid>`, `featured:<uuid>`, `beatport:<digits>`; anything else returns `null` and the page renders normally.
+`parsePlayParam` is defensive: accepts `1` (legacy autoplay flag from ⌘K), `chart:<uuid>`, `featured:<uuid>`, `beatport:<digits>`, `vinyl:<uuid>`; anything else returns `null` and the page renders normally.
+
+The **admin users drawer** (`/[lang]/administrator/users` → click a Tracks count) uses this **same** URL scheme. A `beatport_top` save must open the artist/label ficha with `?play=beatport:<id>` (expand Top 10, scroll, highlight, autoplay) — **never** `canonical_url` / Beatport. Helpers: `buildBeatportTopInternalPath`, `resolveBeatportPlayId`, `beatportShareOriginFromSnapshot` in `src/lib/share-track.ts`. Origin comes from `snapshot.origin` (`kind` + `slug`); if an old save has `origin.id` but no slug, `GET /api/admin/users/[id]/engagement` resolves it. If the track has dropped out of that ficha’s current Top 10, the page still opens; highlight/autoplay no-ops.
 
 **Server-side OG overrides.** The same `?play=<source>:<id>` is consumed by `generateMetadata`:
 
@@ -220,6 +222,29 @@ Net effect: when you paste the URL into WhatsApp / X / Signal, the preview shows
 
 Source of truth: `src/app/api/admin/tracks/route.ts` + page at `src/app/[lang]/administrator/tracks/page.tsx`. Also summarised on the main admin dashboard (`/administrator`) as a stat card.
 
+### Admin users (list + engagement drawer)
+
+`/[lang]/administrator/users` is Auth + `profiles` (not a public page). Columns include role, editorial artist level, **Favorites / Mixes / Tracks** counts and last activity. Clicking a non-zero count opens **`AdminUserEngagementDrawer`** (`src/components/admin/AdminUserEngagementDrawer.tsx`) with lazy tabs. API: `GET /api/admin/users/[id]/engagement?type=favorites|mixes|tracks` (`src/app/api/admin/users/[id]/engagement/route.ts`).
+
+**Row links stay on Optimal Breaks** (same `?play=` as share / player):
+
+| Saved source | Click destination |
+|--------------|-------------------|
+| `chart` / `featured` (live) | `/[lang]/charts?week=<YYYY-MM-DD>&play=<chart\|featured>:<uuid>` |
+| `vinyl` (live) | `/[lang]/charts?play=vinyl:<uuid>` |
+| `beatport_top` | `/[lang]/<artists\|labels>/<slug>?play=beatport:<id>` from `snapshot.origin` + Beatport numeric id. **Never** open Beatport for this source. |
+| Orphan chart/featured/vinyl without enough context | last resort: `canonical_url` (external) |
+
+Engagement payload for tracks includes `origin: { kind, slug } | null` and `beatport_url` so the drawer can build the internal path without re-reading JSONB on the client.
+
+**Search** (`GET /api/admin/users?search=`):
+
+- Matches **email** (Auth `listUsers`), **display_name** and **username** (`profiles` `ilike`). Email is not a column on `profiles`; a name-only filter made the first table column unsearchable.
+- `AdminTable` **debounces** 280 ms while typing; **clearing the box (or ×) applies immediately** so a slow in-flight filter cannot leave “4 rows” on screen with an empty field.
+- The users page **ignores stale responses** (monotonic request seq) and surfaces load errors. Placeholder: “Buscar por email, nombre o usuario…”.
+
+List API: `src/app/api/admin/users/route.ts`. Client: `src/app/[lang]/administrator/users/page.tsx`. Editorial mark UI on `/administrator/users/[id]` is unchanged (see *Three account levels* below).
+
 ---
 
 ## Community Top (public, all-time)
@@ -228,7 +253,7 @@ Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_t
 
 - **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100 — the public page requests **100**). No `month` parameter — the response is always the all-time aggregate. **`top_tracks`** and **`top_artists`** (top **50** by save credits) come from the **same** pass over the same rows.
 - **Component:** `src/components/CommunityMonthlyTop.tsx`. Two blocks: **most-saved artists** then the track list. Heading / kicker stay **«Top 10 artistas»** (not renamed when the list expands). First view shows **10** rows; **Cargar más** reveals the rest (up to 50); **Ver menos** at the bottom collapses back to 10 and smooth-scrolls to `#community-top-artists`. Each row: save credits · unique fans · unique tracks. Track block: header, summary chip with `tracks · fans · saves`, "play all" of available previews and a `SaveTrackButton` per row. Each track in the play-all queue also carries its own `save` payload (URL mode for `beatport_top` primaries, ref mode for the rest) so the global `MiniPreviewBar` exposes the same "+/✓" button for whichever song is currently sounding.
-- **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name.
+- **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name. **Remixer credits:** names in `artists[]` **plus** remixers parsed from `mix_name` / Beatport `remixers[]` (`src/lib/remixer-credits.ts`) each get one credit per save (deduped). *Original Mix* / *VIP Remix* / *Breakbeat Remix* do not invent a name. The **track** Top 100 is unchanged (still one row per song). UI (`ArtistNames` `mixName`) shows the remixer on `/top100`, `/charts`, My Tracks and artist/label lists.
 - **Hydration `.in()` must be chunked (`IN_CHUNK = 200`, same helper pattern as `/api/public/user-tracks`).** A single PostgREST `.in('id', featIds)` with hundreds of New Releases UUIDs (GET URL / payload limit) **drops metadata**. Saves **without `snapshot`** then look like orphans and are discarded — the public totals fall below the real `saved_chart_tracks` count (seen August 2026: ~968 rows in DB vs ~803 on `/top100`; artist numbers such as Paket 17→15). **Do not** collapse those lookups back into one unchunked `.in()`. Check lookup errors (empty `data` + ignored `error` silently under-counts).
 - **What counts / what does not:** `totals.saves` is the sum of hydratable rows (identity: Σ `save_count` == `totals.saves`). True orphans (source row gone **and** no snapshot / no remappable `canonical_url`) stay out of both the track list and the artist board — they cannot be rendered. Users with `profiles.is_tracks_public = false` are excluded. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
 - **Self-credits (artist board only — not the track Top 100):** see **Three account levels** below. If the account is **editorially marked** or has an **approved claim**, a save of a track where **they** are credited does **not** add a credit to *their* name on the artist board. That same save **does** count toward the **track** Top 100 (unique users / song ranking) and stays in **My Tracks**. Collaborator names on the same track still get the artist-board credit.
@@ -249,7 +274,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 
 **Do not** write `claimed_by` to “fix the ranking”. That would treat them as verified for bookings RLS. The editorial table is a separate identity map: `user_id` + normalized credit key (`normalizeArtistKey`, e.g. `afghan headspin`, `gruv42`). A catalogue ficha (`artist_id`) is optional — the skip works without `/artists/<slug>`.
 
-**Collabs and other artists (closed decision, agosto 2026):** the artist board stays ranked by **songs saved** (save credits), not by unique fans and not by a “1 credit per user per artist” cap. A marked/claimed account **does not** credit *their own* name. The same save **does** credit everyone else on the track and any other artist they saved. Example: Afghan Headspin saves “Mamacita” (J-Break, Jan-B, Afghan Headspin) → **0** to Afghan Headspin, **+1** to J-Break and **+1** to Jan-B. If he saves the rest of the Dirty Kitchen Rave roster, those names go up. That is accepted: the board measures how many of an artist’s tracks landed in lists. With a small user base a label owner can inflate a collaborator (seen with **J-Break**); **do not** “fix” it by fichando the whole roster, zeroing all of that account’s artist-board credits, or changing the sort to unique fans. It dilutes when more **non-artist** saves exist.
+**Collabs and other artists (closed decision, agosto 2026):** the artist board stays ranked by **songs saved** (save credits), not by unique fans and not by a “1 credit per user per artist” cap. A marked/claimed account **does not** credit *their own* name. The same save **does** credit everyone else on the track and any other artist they saved — **including the remixer** when `mix_name` is e.g. `Jem Haynes Remix` (the remixer is the breakbeat producer of that cut). Example: Afghan Headspin saves “Mamacita” (J-Break, Jan-B, Afghan Headspin) → **0** to Afghan Headspin, **+1** to J-Break and **+1** to Jan-B. If he saves the rest of the Dirty Kitchen Rave roster, those names go up. That is accepted: the board measures how many of an artist’s tracks landed in lists. With a small user base a label owner can inflate a collaborator (seen with **J-Break**); **do not** “fix” it by fichando the whole roster, zeroing all of that account’s artist-board credits, or changing the sort to unique fans. It dilutes when more **non-artist** saves exist.
 
 **What does not count as a fix**
 
@@ -273,7 +298,38 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Schema: `supabase/migrations/070_editorial_artist_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
-First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**, **Lady Arannia**, **Devis Hard**.
+### Editorial marks in production (ops)
+
+How to mark: `/[lang]/administrator/users` → open the row → **Marcar artista (fase 2)** with the **credit name** as it appears on tracks (`Devis Hard`, not the email). That upserts `editorial_artist_marks` (`user_id` + `normalizeArtistKey`). Optional `artist_id` if `/artists/<slug>` exists. **Do not** write `claimed_by` or flip `accepts_bookings`.
+
+Identity is **never** guessed from display name or email. Look the row up in Usuarios. Known email traps (do not invent the local-part):
+
+| Wrong guess | Real email |
+| --- | --- |
+| `afganheadspin@…` | `afghanheadspin@gmail.com` |
+| `gruv42ruv42@…` | `gruv42@me.com` |
+| `ranniadj@…` | `aranniadj@gmail.com` |
+
+Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
+
+| Email | Credit name | `artist_key` | Slug | `user_id` |
+| --- | --- | --- | --- | --- |
+| `afghanheadspin@gmail.com` | Afghan Headspin | `afghan headspin` | `afghan-headspin` | `4df84b27-8162-493e-8bbd-67284b277513` |
+| `gruv42@me.com` | Gruv42 | `gruv42` | `gruv42` | `535d437f-5641-42aa-8c0a-a939ded2f6c3` |
+| `aranniadj@gmail.com` | Lady Arannia | `lady arannia` | `lady-arannia` | `18673d03-b462-4ddd-a56f-06a5f388c555` |
+| `davisoto@hotmail.com` | Devis Hard | `devis hard` | `devis-hard` | `9b83800a-5a40-4cdd-9e3d-f4b1a61160af` |
+
+**How to read a row that is still high after a mark.** `20 saves · 3 fans · 18 tracks` is **not** that account’s library. The skip already dropped their self-credits. Remaining credits are **other** public users (`is_tracks_public`). With a small base, the editorial login (`contacto@eskaladigital.com`, display **Optimal Breaks**) often dominates. Do **not** treat a leftover #7 as a broken skip, and do **not** hide the list or cap credits to “fix” it.
+
+**Audit — Afghan Headspin (25 Aug 2026).** First case: he saved his catalogue and sat #1. After the mark, **24** of his own «+» were skipped (Darkness, Mamacita, Ghost Mode, …). The board then showed **20 saves · 3 fans · 18 tracks**:
+
+| Fan | Email | Role | Saves that still credit him |
+| --- | --- | --- | --- |
+| Optimal Breaks | `contacto@eskaladigital.com` | admin | **16** (Negative Spit, ACIDICA, Mamacita, JUMP, Need To Believe, Let It Be, ROMERO, Mind Control remix, Work It, Know How, Darkness VIP + original, Say Wannabe, Ghost Mode, ILL Behavior, Fly So High) |
+| MestasDeejay | `mestasdeejay@gmail.com` | admin | **3** (Let It Be, My apocolypse, Wildcat) |
+| jennie | `jenniev52@outlook.com` | user | **1** (Let It Be) |
+
+16 + 3 + 1 = 20. Eighteen tracks because *Let It Be* is shared. His Mis Tracks and the **song** Top 100 still include his 24 saves. Collaborators he saved (J-Break, Jan-B, DKR roster) still get full artist-board credits — accepted; see the collab decision above.
 
 ### Artist board — weekly movement (not daily)
 
@@ -355,20 +411,27 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/components/user/` — `UserSectionShell`, `OverviewSection` (**`BreakbeatDNA`**), `FavoritesSection`, `SightingsSection`, `EventsSection`, `ReviewsSection`, `MixesSection`, `TracksSection`, **`SoulmatesSection`**, `ProfileSection`.
 - `src/app/api/breakbeat-profile/route.ts` — generate + upsert DNA (user JWT; RLS applies).
 - `src/components/FavoriteButton.tsx`, `SeenLiveButton.tsx`, `EventStatusButton.tsx`, `EventReviewButton.tsx`, **`SaveTrackButton.tsx`**, **`TrackShareButton.tsx`**.
-- `src/lib/share-track.ts` — builders + parser for `?play=<source>:<id>` URLs (chart / featured / beatport); **`formatTrackReleaseDisplay`** for saved-track release lines.
+- `src/lib/share-track.ts` — builders + parser for `?play=<source>:<id>` URLs (chart / featured / beatport / vinyl); **`buildBeatportTopInternalPath`**, **`resolveBeatportPlayId`**, **`beatportShareOriginFromSnapshot`** for Top 10 fichas; **`formatTrackReleaseDisplay`** for saved-track release lines.
+- `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl), hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`, and resolves `?week=…&play=<source>:<id>` deep-links into scroll + highlight + `playPreviewQueue`.
+- `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
+- `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
+- `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
+- `src/app/api/admin/users/route.ts` — admin user list (search by email + name + username; sortable counts).
+- `src/app/api/admin/users/[id]/engagement/route.ts` — favorites / mixes / saved tracks for the users drawer (`origin` + `beatport_url` on `beatport_top` rows).
+- `src/components/admin/AdminUserEngagementDrawer.tsx` — drawer from `/administrator/users`; internal `?play=` links (Beatport Top 10 → ficha, not Beatport.com).
+- `src/components/admin/AdminTable.tsx` — shared admin table; search debounce + immediate clear.
+- `src/app/[lang]/administrator/users/page.tsx` — users list (stale-response guard).
 - `src/components/LazyDeckAudioProvider.tsx` — gate + dynamic import of the audio engine; **`PendingActionRunner`** for first-play deep links. Keeps a **stable shell** around `{children}` (`engineOnly` + `onBind`) so the first Play doesn't remount the page tree (the weekly accordion in `/charts` preserves `openPicks` / `openForty`). **Portals** the player overlays to `<div id="ob-audio-overlays">` under `document.body` so `position: fixed` always resolves against the viewport.
 - `src/components/deck-audio-context.ts` — shared `DeckAudioContext` so the lazy provider and the engine module publish/consume the same value without import cycles.
 - `src/hooks/useGatedDeckAudio.ts` — **`usePreviewAudioGated`**, **`useMixAudioGated`** for list UIs before the engine is mounted.
 - `src/components/DeckAudioProvider.tsx` — global preview `<audio>` + **`MiniPreviewBar`**; **`previewBlocked`** flag and **`PreviewAutoplayOverlay`** when `audio.play()` hits `NotAllowedError` (shared links in a new tab); overlay artwork via **`next/image`** (`/_next/image`) + ♪ placeholder on `onError`; **`usePreviewAudio()`** / **`usePreviewAudioMaybe()`** re-export preview API (gated hook delegates here after load). Supports an **`engineOnly`** mode that returns `null` and reports its context value / overlays via `onBind`. `MiniPlayerShell` reads **`useViewportBottomOffset`** so the bar stays glued to the visible bottom edge in iOS PWA standalone after lock/unlock, orientation change or returning from Web Share (Facebook / WhatsApp / etc.).
 - `src/components/BackToTop.tsx` — same `useViewportBottomOffset` compensation as the player so the up-arrow doesn't float mid-screen in PWA after sleep/wake or share-and-return.
 - `src/hooks/useViewportBottomOffset.ts` — shared hook for the iOS PWA viewport drift fix. Listens to `visualViewport.resize/scroll`, `pageshow`, `focus`, `orientationchange`, `visibilitychange` and re-measures at 80/250/600 ms after each wake event.
-- `src/components/ChartView.tsx` — renders the three chart sections (chart / featured / vinyl), hosts the `canonicalGroups` memo that feeds `relatedRefs` to every `SaveTrackButton`, and resolves `?week=…&play=<source>:<id>` deep-links into scroll + highlight + `playPreviewQueue`.
-- `src/components/BeatportTopTracks.tsx` — resolves `?play=beatport:<id>` inside the artist/label profile (expand accordion + scroll + autoplay) and embeds a `TrackShareButton` per row.
-- `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
-- `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
 - `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
-- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`).
-- `src/lib/artist-self-credit.ts` — skip map (editorial marks + `claimed_by`) and collab split for the artist board only.
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`; **remixer names** from `mix_name` via `remixer-credits.ts`).
+- `src/lib/remixer-credits.ts` — parse remixer names from `mix_name`; merge Beatport `remixers[]` into `artists[]` (scripts copy: `scripts/lib/remixer-credits.mjs`).
+- `src/lib/artist-related-content.ts` — artist/label chart links + New Releases accordion (`fetchArtistFeaturedPicks` matches `artist_names_text` **or** remixer in `mix_name`).
+- `src/lib/artist-self-credit.ts` — skip map (editorial marks + `claimed_by`) and collab split for the artist board only. Live marks + Afghan audit: *Editorial marks in production* above.
 - `src/app/api/admin/users/[id]/route.ts` — user detail + editorial mark / unmark.
 - `src/components/CommunityMonthlyTop.tsx` — `/top100` UI (artist board 10→50 + track list).
 - `supabase/migrations/070_editorial_artist_marks.sql` — `editorial_artist_marks` (phase 2, no bookings).
