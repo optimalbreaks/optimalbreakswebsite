@@ -1,0 +1,20 @@
+Revisión editorial — Bosketta (agosto 2026)
+==========================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Bandcamp https://bosketta1.bandcamp.com/ — «Bosketta Brisbane, Australia»; «Breaks & UKG DJ/ Producer from East Coast Australia»; sellos One7Audio, Dirty Kitchen Rave, Kaleidoscope Music, Very Mid Records; «runs Breaks Australia's Instagram page».
+- Beatport artist 996078.
+- Frenemy Hitta — ONE7AUDIO, 22 oct 2021 (ONE7221); corte Hitta como Breaks / Breakbeat / UK Bass.
+- Nuh Tek EP — DKR, 2 jul 2025 (DKR0157).
+- Feature — DKR, 4 sep 2025 (DKR0187).
+- Morrigan — DKR; Apple Music 26 jun 2026 / Volumo 10 jul 2026.
+
+Decisiones
+----------
+- real_name: null
+- country: AU; category: current
+- era: 2021-present
+- related_artists: vacío (Gruv42 sin ficha)
+- No usar el texto de Slaps (Western Sydney / Mid North Coast) como biografía principal: Bandcamp es la fuente oficial de localización.

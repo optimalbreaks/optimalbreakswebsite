@@ -1,0 +1,20 @@
+Revisión editorial — Obsidian Wave (agosto 2026)
+==============================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Bio Beatport 910445: born and raised in London; Jungle/Hardcore; pirate radio; illegal raves; heavy raw techno and breaks.
+- Bandcamp propio: https://obsidianwave.bandcamp.com/album/team — 9 jul 2021, «Written & Produced by J. Given».
+- Torre Bandcamp: Raver's Prayer E.P. 10 dic 2021.
+- We Kill Culture: https://wekillculture.bandcamp.com/ — Vol.1–5 con Rawtrachs, Skin Teeth, Microcosm.
+- DKR Bandcamp FOOLISH / DONNIE! (2 mar 2026) lista «James Given» en créditos. No expandir la J. por conjetura; el campo real_name queda en J. Given. El crédito James Given se menciona en la bio como listado del sello, no como nombre legal verificado por documento civil.
+- Dopedust — Tribal Pulse, jul 2026 (electrobeats 24 jul; Volumo 7 ago).
+
+Decisiones
+----------
+- real_name: J. Given
+- country: UK; category: current
+- era: 2021-present
+- related_artists: vacío (Distillat / Rawtrachs / Skin Teeth / Microcosm sin ficha)
+- No UK Garage / UK Bass como identidad principal

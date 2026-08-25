@@ -1,0 +1,22 @@
+Revisión editorial — AndrewFx (agosto 2026)
+=========================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Bio oficial Beatport artist 1176911 (La Palma, 1987, guitarra, 2001 Acid Pro + ModPlug Tracker, 2005 FL Studio, 2022 profesional, sellos andaluces → extranjeros).
+- Qobuz Fever Dream: composer Andres Ramos Perez.
+- Dark Soul — Architektur, 25 oct 2024 (ARCH042).
+- Voltage Connection EP — TheDJBass & AndrewFx, Architektur, 27 jun 2025 (ARCH061); Voltage Rush → Best New Breaks / UK Bass: June 2025.
+- Fever Dream — Old Skool Records, 2025; Best New Sept 2025 + Warm Up Essentials 2025.
+- India — AndrewFx & DJ Guanxe, Architektur, 9 ene 2026; Best New Breaks January 2026.
+
+Decisiones
+----------
+- real_name: Andrés Ramos Pérez
+- country: ES; category: current (Canarias, no andalusian)
+- era: 2001-present (producción); carrera publicada 2022–present en bio
+- styles: Breakbeat, Breaks, UK Bass, Drum & Bass, Jungle
+- related_artists: vacío (colaboradores sin ficha en catálogo)
+- Essentials: Dark Soul, Voltage Rush, Fever Dream, India, Electric Night, Don't Stop Me, You Got Me
+- No mencionar Optimal Breaks en la bio.

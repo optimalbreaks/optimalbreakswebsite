@@ -1,0 +1,25 @@
+Revisión editorial — Xana (agosto 2026)
+======================================
+
+CUIDADO: homónimos
+------------------
+El Beatport artist 85445 (y Apple/Amazon/Deezer) mezcla el bloque breakbeat 2025–2026 con catálogo latino/pop y álbumes de 1994–2015. NO usar esa discografía agregada. Solo el bloque Frequency Fusion / Ravesta / DIRTY KITCHEN RAVE.
+
+Bloque coherente
+----------------
+- Energy — Frequency Fusion — 12 sep 2025
+- Himno / Destroy — Ravesta — 14 nov 2025
+- Old Paradise — Frequency Fusion — 25 feb 2026 (Gaana lista compositor Jose Solana Naveros; NO publicar como real_name)
+- Psy Punch — Frequency Fusion — 18 mar 2026 (Beatport; Volumo 1 abr)
+- POWER (feat. XANA) — DJ Ask — DistroKid — 9 mar 2026 (colaboración externa, no eje)
+- Like This — WE ARE DKR Vol 11 — may–jun 2026
+- Dance Line — DIRTY KITCHEN RAVE — jul 2026 (Beatport: Electro; Volumo: Breaks)
+- UNIVERSAL BREAKS Vol 16 — ago 2026
+
+Decisiones
+----------
+- real_name: null; country: vacío; category: current
+- era: 2025-present
+- rol: productora; no afirmar DJ
+- related_artists: vacío
+- No foto automática si el hero de Beatport es de otro Xana

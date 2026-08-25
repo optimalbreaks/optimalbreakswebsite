@@ -1,0 +1,22 @@
+Revisión editorial — Lucas (agosto 2026)
+=======================================
+
+CUIDADO: Beatport artist 4092 mezcla homónimos (Solo Ora, Senza Freno, Lifestyle, BASS & DROP). No importar el Top 10 si viene contaminado.
+
+Fuentes
+-------
+- Brief del usuario.
+- Entrevista Vinyl Junkie 2023: https://shop.vinyljunkie.uk/blogs/interviews/vinyl-junkie-interviews-top-drawer-digital
+  Cheltenham / Birmingham; 50 años en 2023 (~1973); Ibiza 1989; Dance 91, Pandemonium, Quest, Shelley's, Kinetic; XP50 ~1997; J-Tek ~2008; TDD 2009; «I'm not a DJ»; Digitally Mashed = DJ del sello; Abstractions 3 = cierre.
+- Bandcamp TDD: https://topdrawerdigital.bandcamp.com/album/tddr100-abstractions-3-jungle-techno-breaks
+- Chartmetric / bio Spotify: Top Drawer Digital + Bass Elements; aliases Lucas, Blag:iD, 200Mcg con Strange Rollers; DJ Mag, BBC R1 Huw Stephens, Kutski, Annie Nightingale.
+- Hazy Days EP — DKR Bandcamp 21 feb 2026; Beatport listing ago 2026.
+
+Decisiones
+----------
+- real_name: null; no publicar ~1973 como fecha exacta de nacimiento (solo «around 50 in 2023» en bio)
+- country: UK; category: current
+- era: late-1990s-present
+- labels_founded: Top Drawer Digital Records, Bass Elements
+- Rol: productor / fundador de sello; NO DJ
+- related_artists: vacío

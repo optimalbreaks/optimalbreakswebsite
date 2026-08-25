@@ -1,0 +1,22 @@
+Revisión editorial — SL 83 (agosto 2026)
+=======================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Bio oficial Beatport artist 1303115: «SL 83 aka Sean»; 90s jungle/hardcore/hard dance; DJ desde el colegio; promoción de clubes; colectivo Schema (luego SKMA) desde mid-2000s; alias SL 83 en 2024; debut mayo 2025 en We Are DKR; luego Breakbeat Transmissions.
+- Beatport: WE ARE DKR, Vol. 6 — 8 may 2025 (DKRLP023) — First Contact.
+- Beatport / NR pick: Liquid Night — WE ARE DKR Vol 11 — 20 may 2026 — 132 BPM — Breaks / Breakbeat / UK Bass.
+- Beatport / NR pick: Falling + Falling (Contagion (UK) Remix) — DKR — 19 ago 2026.
+- Podcast: https://breakbeattransmissions.podbean.com/ — «Minimal chat and maximum music, covering all corners of the diverse and wonderful world of Breakbeat.»
+  Ep. 04: 11 oct 2025; 05: 28 oct 2025; 08: 16 abr 2026; 09: 15 may; 10: 26 jun (Falling Contagion Remix + End Of Days); 11: 29 jul 2026.
+- SKMA (independiente): Technique Recordings / Mixcloud / Juno — trío D&B de Jersey, Channel Islands, antes Schema (cuartet). El texto de Technique («Coming from a background of 90s jungle and hardcore…») es cercano al de Beatport. NO publicar Jersey/UK como procedencia de SL 83: Beatport no lo dice y el brief pide no inferir país. NO confundir con DJ SCHEMA (Spotify, hard techno).
+
+Decisiones
+----------
+- real_name: null. «Sean» solo en bio como formulación de Beatport; sin apellido.
+- country: vacío; category: current
+- era: 2025-present (catálogo SL 83). Historia Schema/SKMA y DJ escolar en bio, no como era del alias.
+- related_artists: vacío (selecciones de podcast ≠ colaboración; Vazteria X solo como nombre en tracklist, sin ficha)
+- website: Podbean del podcast
+- Foto: hero Beatport aunque el Top 10 se seque

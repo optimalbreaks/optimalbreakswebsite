@@ -231,7 +231,7 @@ Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_t
 - **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name.
 - **Hydration `.in()` must be chunked (`IN_CHUNK = 200`, same helper pattern as `/api/public/user-tracks`).** A single PostgREST `.in('id', featIds)` with hundreds of New Releases UUIDs (GET URL / payload limit) **drops metadata**. Saves **without `snapshot`** then look like orphans and are discarded — the public totals fall below the real `saved_chart_tracks` count (seen August 2026: ~968 rows in DB vs ~803 on `/top100`; artist numbers such as Paket 17→15). **Do not** collapse those lookups back into one unchunked `.in()`. Check lookup errors (empty `data` + ignored `error` silently under-counts).
 - **What counts / what does not:** `totals.saves` is the sum of hydratable rows (identity: Σ `save_count` == `totals.saves`). True orphans (source row gone **and** no snapshot / no remappable `canonical_url`) stay out of both the track list and the artist board — they cannot be rendered. Users with `profiles.is_tracks_public = false` are excluded. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
-- **Self-credits (artist board only):** see **Three account levels** below. A save still appears in **My Tracks** and still counts on the **track** Top 100. It does **not** add a credit to that user's own artist name on the artist board if the account is **editorially marked** or has an **approved claim**. Collaborator names on the same track still get the credit.
+- **Self-credits (artist board only — not the track Top 100):** see **Three account levels** below. If the account is **editorially marked** or has an **approved claim**, a save of a track where **they** are credited does **not** add a credit to *their* name on the artist board. That same save **does** count toward the **track** Top 100 (unique users / song ranking) and stays in **My Tracks**. Collaborator names on the same track still get the artist-board credit.
 
 ### Three account levels (normal / marked / claimed)
 
@@ -273,7 +273,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Schema: `supabase/migrations/070_editorial_artist_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
-First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**.
+First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**, **Lady Arannia**.
 
 ### Artist board — weekly movement (not daily)
 

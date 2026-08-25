@@ -1,0 +1,30 @@
+Revisión editorial — AceNoise (agosto 2026)
+==========================================
+
+Fuentes
+-------
+- Brief editorial del usuario.
+- Beatport artist 1205597.
+- Beatport: Another Enemy (Banana Club, 6 jun 2024) — anterior a Indian Vibes.
+- Indian Vibes (Banana Club, 29 ago 2024) — Best New Breaks / UK Bass: August 2024.
+- The King / Bounce It (Distorsion, 15 abr 2025).
+- Ace Of Noise (Distorsion, 13 may 2025).
+- Bring it back (Sound Perfect Breakz, 17 oct 2025) — crédito civil Antonio Jesús Castro Espinosa.
+- Qobuz: I Can't Stop (Distorsion, 2026) también acredita a Antonio Jesús Castro Espinosa.
+- All You Got — DIRTY KITCHEN RAVE, julio 2026 (Apple Music 17 jul; otros stores 31 jul).
+- Goodbye — AceNoise & DataFunk, Rough Division, julio 2026.
+- Smart Guy — AceNoise & Drill Rocks, Rough Division, 2026.
+- Let It Loose (ACENOISE Remix) — Afghan Headspin, Distorsion, mar–abr 2026.
+- SSB Guest Mix #093 — AceNoise (Southside Breaks). URL: https://soundcloud.com/southside-breaks/ssb-guest-mix-093-acenoise
+
+Decisiones
+----------
+- era: 2024-present (primer rastro comercial: Another Enemy, no Indian Vibes).
+- country: vacío; category: current. Distorsion en Cádiz no implica que él sea gaditano.
+- styles: Breakbeat · Breaks · UK Bass · UK Garage
+- related_artists: vacío. DataFunk, Drill Rocks y Bzrnt no tienen ficha; una colaboración no basta para inventar related.
+- No mencionar Vazteria X (opt-out de ficha).
+- No afirmar DJ como profesión principal; el guest mix de Southside Breaks sí justifica Producer / DJ con cautela.
+
+Beatport ID: 1205597
+Slug: acenoise

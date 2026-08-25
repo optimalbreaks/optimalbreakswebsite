@@ -8,7 +8,7 @@ alwaysApply: true
 ## Tres niveles (no negociable)
 
 1. **Usuario normal** — sus «+» cuentan en Mis Tracks, Top 100 de **canciones** y Top de **artistas**.
-2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks y en el Top 100 de canciones. **No** suman crédito a *su* nombre en el tablero de artistas. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros**. **No** escribe `claimed_by` ni abre bookings.
+2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros**. **No** escribe `claimed_by` ni abre bookings.
 3. **Claim aprobado** (`artists.claimed_by`) — misma exclusión que el 2 **y** puede recibir bookings si enciende `accepts_bookings` (nace en `false`).
 
 Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.

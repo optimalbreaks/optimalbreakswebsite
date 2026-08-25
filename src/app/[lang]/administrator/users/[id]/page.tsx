@@ -205,10 +205,10 @@ export default function AdminUserDetailPage() {
           </div>
           <p className="admin-muted text-xs !mb-0">
             {artistLevel === 'claimed'
-              ? 'Fase 3 — reclamó su ficha: no auto-voto en el Top de artistas y puede abrir bookings.'
+              ? 'Fase 3 — reclamó su ficha. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas; sí cuentan en el Top 100 de canciones y en Mis Tracks. Puede abrir bookings.'
               : artistLevel === 'marked'
-                ? 'Fase 2 — fichaje editorial: no auto-voto en el Top de artistas. Bookings solo si él reclama.'
-                : 'Fase 1 — usuario normal. Sus saves cuentan en el Top de artistas.'}
+                ? 'Fase 2 — fichaje editorial. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas; sí cuentan en el Top 100 de canciones y en Mis Tracks. Bookings solo si él reclama.'
+                : 'Fase 1 — usuario normal. Sus saves cuentan en el Top de artistas y en el Top 100 de canciones.'}
           </p>
           {claimedArtists.length > 0 ? (
             <ul className="m-0 pl-4 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>

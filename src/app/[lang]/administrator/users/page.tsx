@@ -158,6 +158,11 @@ export default function AdminUsersPage() {
         Pulsa sobre cualquiera de esos números para ver el detalle. Pulsa el
         encabezado de una columna para ordenar (el segundo clic invierte el
         sentido).{' '}
+        <strong>Artista</strong> = <em>Marcado</em> (fichaje editorial) o <em>Reclamado</em> (claim
+        aprobado). En ambos casos sus «+» en temas donde sale <em>él</em> no suman al Top de
+        artistas; esos mismos saves <strong>sí cuentan</strong> en el Top 100 de canciones y en Mis
+        Tracks, y los créditos de colaboradores u otros artistas también. Editar la fila para
+        marcar o quitar.{' '}
         <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
         perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>

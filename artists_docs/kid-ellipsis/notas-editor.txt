@@ -1,0 +1,19 @@
+Revisión editorial — Kid Ellipsis (agosto 2026)
+==============================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Bio Beatport artist 1206672: Richmond, VA-based DJ and producer; UKG, dubstep and breaks for over 2 decades; soulful but cold breakbeat.
+- Lost In The Music — Close Your Eyes, 4 oct 2024, CYE119. El artista lo presentó como first ever release.
+- POP ONE EP — DIRTY KITCHEN RAVE, 10 jun 2026, DKR0291.
+- Audiomack: Will Gilfillan como productor de Use The Voice, Chance We Fly, Felt Like This; No Loose Ends con Louis Hampton (Prey4m3!).
+- Gonna Change — AndrewFx & Kid Ellipsis (DKR); AndrewFx ya tiene ficha.
+
+Decisiones
+----------
+- real_name: Will Gilfillan
+- country: US; category: us_artist
+- era: 2000s-present (DJ); catálogo Kid Ellipsis 2024–present en bio
+- related_artists: AndrewFx (colaboración + ficha existente)
+- Prey4m3!, Gruv42, Afghan Headspin: en bio, no en related
