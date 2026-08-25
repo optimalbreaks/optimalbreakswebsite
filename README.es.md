@@ -387,6 +387,26 @@ Componentes: `ViewToggle.tsx` más `ArtistsExplorer`, `LabelsExplorer`, `EventsE
 
 **Ficha de evento (`/[lang]/events/[slug]`):** CTA ancha de compra en el **hero** si hay URL de entradas o web, el evento **no está pasado** por fecha (último día del evento antes que hoy) y además **`event_type === 'upcoming'`** o el enlace es **MonsterTicket** (`monsterticket.com` / `.es` y subdominios). Se prioriza URL MonsterTicket. Textos acordados para MonsterTicket: **«Compra de entradas»** / **«Buy tickets»**; enlaces genéricos: **«Comprar entradas»** / **«Get tickets»**. Detalle en inglés: [README.md — Directory listing views](./README.md#directory-listing-views-artists-labels-events-scenes-mixes).
 
+### Showcase de artistas (home y roster de sello) — `ArtistShowcase`
+
+**`src/components/ArtistShowcase.tsx`** pinta las portadas gigantes estilo fanzine (bandera, fans, géneros, waveform y play cuadrado rojo) y se reutiliza en dos superficies con la prop **`layout`**:
+
+- **`stage`** (home): pila vertical en móvil, carrusel horizontal desde `lg` con **índice sticky** de artistas (resalta el que está en pantalla y muestra un mini ecualizador mientras suena).
+- **`rail`** (ficha de sello `/[lang]/labels/[slug]`): carrusel horizontal en **todos** los anchos. El roster sale de **`labels.key_artists`**, resuelto contra `artists` **por slug y por nombre**; los artistas sin ficha se pintan sin enlace.
+
+**Orden de la ficha de sello** (rediseño agosto 2026): cabecera (logo, título, favorito, acordeón **Top 10 Beatport**, acordeón **«En Optimal Breaks»** — los picks del sello en 40 Breaks + New Releases vía `ArtistFeaturedTracks` con `origin.kind: 'label'`, datos de `fetchLabelOnSitePicks` en `src/lib/artist-related-content.ts` — y CTA de Discogs) → **carrusel del roster** → bio + sidebar (solo lanzamientos clave + links).
+
+**Reproducción:** el play encola el **Top 10 de Beatport** del artista por el modo `preview` global (`usePreviewAudioGated` → `MiniPreviewBar` persistente), con **guardar** (`mode: 'url'` + snapshot con origen del artista) y **compartir** por pista, y `originPath` de vuelta a la tarjeta. Un `IntersectionObserver` precalienta el motor de audio al acercarse la sección para que el primer toque reproduzca dentro del gesto del usuario.
+
+**UX del raíl en móvil (no regresionar):**
+
+- La tarjeta mide **`calc(100% − 32px)` con `max-w-full`** y toda la cadena de ancestros lleva **`min-w-0`**: una card **nunca** puede ser más ancha que el viewport (el bug original: el `min-w` porcentual resolvía contra un flex sin límite, el cartel se paneaba de lado y el play quedaba fuera de alcance).
+- **`snap-start snap-always`**: cada swipe avanza exactamente **un artista**; el **peek** de ~20 px del siguiente cartel (atenuado) es la pista de que se puede deslizar. En desktop se mantiene el peek centrado del 92/90 % (`lg:snap-center`).
+- **Las flechas son solo de desktop** (`hidden lg:grid`). En móvil la **barra sticky con contador** (`01/06 NOMBRE`) hace de navegación: en el raíl es un **botón** que salta al siguiente artista (con vuelta al primero). Su `top` coincide con la **altura real del header** (`top-[52px] sm:top-[60px]`).
+- La sombra dura de `.obx-card` y el padding inferior del raíl solo existen **≥ 1024 px** (en móvil sumaban ancho/alto fantasma).
+- La portada usa **`object-top`** en móvil (las caras se quedan dentro del recorte de 400 px); nombre y bio con `line-clamp-2`.
+- Tracking del activo: en el raíl móvil compara **`offsetLeft` con `scrollLeft`** (acorde a `snap-start`); en desktop compara centros.
+
 ---
 
 ## Open Graph (previews en redes)

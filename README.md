@@ -154,6 +154,26 @@ DOM order follows **newest publication years first**.
 
 **Event detail (`/[lang]/events/[slug]`):** Full-width **hero ticket CTA** when there is a ticket/website URL, the event is **not past** by date (`isEventPastByDate`: last calendar day of the event before today), and either **`event_type === 'upcoming'`** or **`tickets_url` / `website`** is a **MonsterTicket** host (`monsterticket.com`, `monsterticket.es`, including subdomains). **`preferredHeroTicketUrl`** prefers MonsterTicket over other URLs. Copy for MonsterTicket: **“Compra de entradas”** / **“Buy tickets”**; generic links keep **“Comprar entradas”** / **“Get tickets”**.
 
+### Artist showcase (home & label roster) — `ArtistShowcase`
+
+**`src/components/ArtistShowcase.tsx`** renders the big dark "fanzine" artist covers (flag, fans, genres, waveform, square red play) and is shared by two surfaces via the **`layout`** prop:
+
+- **`stage`** (home): vertical stack on mobile, horizontal carousel from `lg` up with a **sticky index column** (numbered artist list that highlights the one on screen and shows a mini equalizer while it plays).
+- **`rail`** (label detail `/[lang]/labels/[slug]`): horizontal carousel at **every** width. The roster comes from **`labels.key_artists`**, resolved against `artists` **by slug and by name** (parallel lookups); artists without a profile page render as non-linking cards.
+
+**Label page order** (Aug 2026 redesign): header (logo, title, favorite, **Beatport Top 10** accordion, **“On Optimal Breaks”** accordion — the label’s 40 Breaks + New Releases picks via `ArtistFeaturedTracks` with `origin.kind: 'label'`, fed by `fetchLabelOnSitePicks` in `src/lib/artist-related-content.ts` — and the Discogs CTA) → **roster carousel** → bio + sidebar (key releases + links only).
+
+**Playback:** the play button queues the artist’s **Beatport Top 10 previews** through the global `preview` mode (`usePreviewAudioGated` → persistent `MiniPreviewBar`), with per-track **save** (`mode: 'url'` + snapshot with artist origin) and **share** payloads, and `originPath` pointing back to the card for the mini-player’s back-to-origin tap. An `IntersectionObserver` pre-warms the audio engine when the section approaches the viewport so the first tap plays inside the user gesture (no “tap to listen” overlay).
+
+**Mobile rail UX (do not regress):**
+
+- The card is **`calc(100% − 32px)` wide with `max-w-full`**, and the whole ancestor chain carries **`min-w-0`** — a card must **never** be wider than the viewport (the original bug: percentage `min-w` resolved against an unconstrained flex container, the poster panned sideways and the play button scrolled out of reach).
+- **`snap-start snap-always`**: each swipe advances exactly **one artist**; the ~20 px **peek** of the next cover (dimmed) is the swipe affordance. Desktop keeps the centered 92/90 % peek (`lg:snap-center`).
+- **Arrows are desktop-only** (`hidden lg:grid`). On mobile the **sticky counter bar** (`01/06 NAME`) doubles as navigation: on rails it is a **button** that jumps to the next artist (wrapping to the first). Its `top` matches the **real header height** (`top-[52px] sm:top-[60px]`) so its border is never clipped.
+- The hard `box-shadow` on `.obx-card` and the rail’s bottom padding exist **only ≥ 1024 px** (they added phantom width/height on mobile).
+- Cover uses **`object-top`** on mobile (faces stay in the 400 px-tall crop); name and bio are `line-clamp-2`.
+- Active-index tracking: on the mobile rail it compares **`offsetLeft` vs `scrollLeft`** (matches `snap-start`); desktop compares card centers.
+
 ---
 
 ## Performance & Core Web Vitals
