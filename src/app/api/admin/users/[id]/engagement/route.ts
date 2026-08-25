@@ -332,7 +332,7 @@ export async function GET(
       const { data } = await sb
         .from('artists')
         .select('id, slug')
-        .in('id', [...new Set(artistIdsNeedingSlug)])
+        .in('id', Array.from(new Set(artistIdsNeedingSlug)))
       for (const r of (data || []) as Array<{ id: string; slug: string }>) {
         if (r.slug) slugByArtistId.set(r.id, r.slug)
       }
@@ -341,13 +341,13 @@ export async function GET(
       const { data } = await sb
         .from('labels')
         .select('id, slug')
-        .in('id', [...new Set(labelIdsNeedingSlug)])
+        .in('id', Array.from(new Set(labelIdsNeedingSlug)))
       for (const r of (data || []) as Array<{ id: string; slug: string }>) {
         if (r.slug) slugByLabelId.set(r.id, r.slug)
       }
     }
 
-    function resolvedOrigin(snap: Record<string, unknown>): { kind: OriginKind; slug: string } | null {
+    const resolvedOrigin = (snap: Record<string, unknown>): { kind: OriginKind; slug: string } | null => {
       const parsed = parseBeatportOrigin(snap)
       if (!parsed) return null
       if (parsed.slug) return { kind: parsed.kind, slug: parsed.slug }
