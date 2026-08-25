@@ -1,0 +1,32 @@
+---
+description: Top 100 — tres niveles de cuenta y exclusión de auto-voto en el tablero de artistas
+alwaysApply: true
+---
+
+# Top 100 — auto-voto de artistas (fichaje ≠ claim)
+
+## Tres niveles (no negociable)
+
+1. **Usuario normal** — sus «+» cuentan en Mis Tracks, Top 100 de **canciones** y Top de **artistas**.
+2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks y en el Top 100 de canciones. **No** suman crédito a *su* nombre en el tablero de artistas. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros**. **No** escribe `claimed_by` ni abre bookings.
+3. **Claim aprobado** (`artists.claimed_by`) — misma exclusión que el 2 **y** puede recibir bookings si enciende `accepts_bookings` (nace en `false`).
+
+Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.
+
+El tablero de artistas se ordena por **canciones guardadas** (créditos), no por fans únicos. Un label manager puede hinchar a un colaborador (p. ej. J-Break en DKR); **se acepta**. Se diluye cuando haya más saves de no-artistas. No “arreglarlo” con tope 1, ni ordenar por fans, ni anular todos los créditos de esa cuenta, ni fichar el roster entero.
+
+## Prohibido
+
+- Inferir identidad por `display_name`, `username` o email para el ranking.
+- Usar `claimed_by` solo para «arreglar el Top» (eso es verificación + RLS de bookings).
+- Poner `is_tracks_public = false` o borrar saves como parche de auto-voto.
+- Auto-activar `accepts_bookings` al aprobar un claim.
+- Aplicar el skip al agregado de **temas** (solo al bump de artistas en `community-monthly`).
+- Cambiar el sort del tablero a unique fans o poner un tope de 1 crédito por `(usuario, artista)`.
+- Anular los votos de un fichado hacia **otros** nombres (colabs / roster del sello).
+
+## Dónde vive
+
+- Skip: `src/lib/artist-self-credit.ts` → `community-monthly/route.ts` (tablero en vivo y snapshots del lunes).
+- Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)».
+- Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).

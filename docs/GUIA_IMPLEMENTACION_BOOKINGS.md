@@ -10,6 +10,9 @@
 > - **Migración** `supabase/migrations/069_artist_claims_contact.sql` — columnas
 >   `artist_claims.contact_phone` (obligatorio en la API) y `artist_claims.contact_email` (opcional),
 >   para verificar la identidad por llamada.
+> - **Migración** `supabase/migrations/070_editorial_artist_marks.sql` — fichaje editorial
+>   (fase 2 del Top de artistas: no auto-voto). **No** es un claim y **no** abre bookings.
+>   Ver `docs/USER_ENGAGEMENT.md` (*Three account levels*).
 > - **Tipos** en `src/types/database.ts` (`ArtistClaimRow`, `BookingRequestRow`, `BookingSenderBanRow`,
 >   columnas nuevas de `Artist`) y constantes compartidas en `src/lib/bookings.ts`.
 > - **APIs**: `api/artist-claims` (+`[id]`), `api/booking-requests` (+`[id]`),
@@ -40,6 +43,11 @@
 **Es:** un puente de trabajo entre la gente que ya está en la base — DJs/productores con ficha
 en el catálogo y usuarios/promotores que montan fiestas. El artista **reclama su identidad**
 (no su ficha editorial) y a partir de ahí puede **recibir solicitudes de booking** estructuradas.
+
+Tres niveles de cuenta (detalle del ranking en `docs/USER_ENGAGEMENT.md` → *Three account levels*):
+usuario normal → **marcado editorial** (no auto-voto en Top artistas, sin bookings) →
+**claim aprobado** (mismo skip + puede abrir `accepts_bookings`). El fichaje editorial
+**nunca** sustituye a un claim.
 
 **No es:**
 
@@ -80,6 +88,7 @@ en el catálogo y usuarios/promotores que montan fiestas. El artista **reclama s
 | 22 | `artists` **no** recibe ninguna política de UPDATE para usuarios. El toggle `accepts_bookings` se escribe vía API (verifica sesión + `claimed_by = auth.uid()`) con **service role**, solo esa columna | Abrir UPDATE de `artists` por RLS para una columna es la puerta a algo peor en la tabla editorial |
 | 23 | Existe **revocación** de claims (`status = 'revoked'`): claim a `revoked` + `artists.claimed_by = NULL` + `accepts_bookings = FALSE` en la misma transacción | Cuentas comprometidas, managers que dejan de llevar al artista, conflictos: aparece a los 6 meses y hay que tenerlo pensado antes. Al revocar, la ficha vuelve a ser reclamable |
 | 24 | **`claimed_by` nunca viaja a superficies públicas** (ni props ni HTML): las páginas públicas gatean el botón con booleanos (`accepts_bookings`) | El UUID ligaría la ficha con la cuenta personal del artista (y con `/u/<id>/tracks`, su colección privada de saves) sin su consentimiento |
+| 25 | El **fichaje editorial** (`editorial_artist_marks`) y el **claim** son capas distintas. Marcar a alguien para el Top de artistas **no** escribe `claimed_by` ni `accepts_bookings`. Un claim aprobado **sí** aplica la misma exclusión de auto-voto y **además** desbloquea bookings (interruptor del artista, default off) | Con pocos saves un artista se votaba el catálogo y salía #1. Detectar por nombre/mail es frágil. El editor ficha a quien conoce; bookings solo cuando *él* reclama |
 
 ---
 

@@ -231,7 +231,49 @@ Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_t
 - **Aggregation:** reads **every** row of `saved_chart_tracks` (paginated server-side, 1000 per page), hydrates source metadata from `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` (and from the embedded `snapshot` for `beatport_top` rows **and** for chart/featured/vinyl orphans), and groups by **canonical key** (same normalization as `/api/admin/tracks` and `useSavedChartTracks`). Track sort: **unique users first**, then total saves, then play count, then **most-recent save**, then alphabetical. Artist sort: save credits → unique users → unique tracks → name.
 - **Hydration `.in()` must be chunked (`IN_CHUNK = 200`, same helper pattern as `/api/public/user-tracks`).** A single PostgREST `.in('id', featIds)` with hundreds of New Releases UUIDs (GET URL / payload limit) **drops metadata**. Saves **without `snapshot`** then look like orphans and are discarded — the public totals fall below the real `saved_chart_tracks` count (seen August 2026: ~968 rows in DB vs ~803 on `/top100`; artist numbers such as Paket 17→15). **Do not** collapse those lookups back into one unchunked `.in()`. Check lookup errors (empty `data` + ignored `error` silently under-counts).
 - **What counts / what does not:** `totals.saves` is the sum of hydratable rows (identity: Σ `save_count` == `totals.saves`). True orphans (source row gone **and** no snapshot / no remappable `canonical_url`) stay out of both the track list and the artist board — they cannot be rendered. Users with `profiles.is_tracks_public = false` are excluded. Migration `056_community_top_and_soulmates.sql` adds the `is_tracks_public` column (default `TRUE`) plus an `idx_sct_created` index (originally added for monthly windowing; still useful for the recency tie-break and any future filtering).
-- **Self-credits (artist board only):** a save still appears in **My Tracks** and still counts on the **track** Top 100. It does **not** add a credit to that user's own artist name on the artist board if the account is **editorially marked** (`editorial_artist_marks`, admin → user detail) or has an **approved claim** (`artists.claimed_by`). Collaborator names on the same track still get the credit. Bookings stay gated on claim + `accepts_bookings` (never on the editorial mark). Migration **`070_editorial_artist_marks.sql`**.
+- **Self-credits (artist board only):** see **Three account levels** below. A save still appears in **My Tracks** and still counts on the **track** Top 100. It does **not** add a credit to that user's own artist name on the artist board if the account is **editorially marked** or has an **approved claim**. Collaborator names on the same track still get the credit.
+
+### Three account levels (normal / marked / claimed)
+
+Product decision (agosto 2026): with a small save base, an artist can put themselves #1 on the artist board by saving their whole catalogue. Identity is **never** inferred from display name or email (an alias would dodge it; a fan named like an artist would be punished). The editor marks known accounts; a later **approved claim** is the same skip plus bookings.
+
+| Level | How it happens | My Tracks | Track Top 100 | Artist board (own name) | Bookings |
+| --- | --- | --- | --- | --- | --- |
+| **1. Normal user** | Sign-up | Yes | Yes | Counts | No |
+| **2. Editorially marked** | Admin fichaje (`editorial_artist_marks`) | Yes | Yes | **Skip** that credit name | **No** (`claimed_by` untouched) |
+| **3. Claimed** | Approved `artist_claims` → `artists.claimed_by` | Yes | Yes | **Skip** (same as 2) | **Can** open (`accepts_bookings`, default **false** until they toggle) |
+
+**If you mark first and they later claim:** they already had 2; claim adds 3.  
+**If they claim with no prior mark:** approve → 2 + 3 in one step.  
+**Revoke claim:** `claimed_by` / bookings go away; an editorial mark **stays** (phase 2 remains).
+
+**Do not** write `claimed_by` to “fix the ranking”. That would treat them as verified for bookings RLS. The editorial table is a separate identity map: `user_id` + normalized credit key (`normalizeArtistKey`, e.g. `afghan headspin`, `gruv42`). A catalogue ficha (`artist_id`) is optional — the skip works without `/artists/<slug>`.
+
+**Collabs and other artists (closed decision, agosto 2026):** the artist board stays ranked by **songs saved** (save credits), not by unique fans and not by a “1 credit per user per artist” cap. A marked/claimed account **does not** credit *their own* name. The same save **does** credit everyone else on the track and any other artist they saved. Example: Afghan Headspin saves “Mamacita” (J-Break, Jan-B, Afghan Headspin) → **0** to Afghan Headspin, **+1** to J-Break and **+1** to Jan-B. If he saves the rest of the Dirty Kitchen Rave roster, those names go up. That is accepted: the board measures how many of an artist’s tracks landed in lists. With a small user base a label owner can inflate a collaborator (seen with **J-Break**); **do not** “fix” it by fichando the whole roster, zeroing all of that account’s artist-board credits, or changing the sort to unique fans. It dilutes when more **non-artist** saves exist.
+
+**What does not count as a fix**
+
+- Matching name / username / email local-part automatically.
+- Setting `is_tracks_public = false` (that also hides them from Soulmates and the rest of the community top).
+- Deleting their “+” (they should still see the tracks in My Tracks).
+- Auto-enabling `accepts_bookings` on claim approve (they opt in from Mi cuenta).
+- Capping credits at 1 per `(user, artist)` or sorting the artist board by unique fans (the ranking is **songs saved**).
+- Silencing a marked account’s votes for **other** names (collaborators / label roster).
+
+**Admin**
+
+- List: `/[lang]/administrator/users` column **Artista** — `—` / **Marcado** / **Reclamado**.
+- Detail: `/[lang]/administrator/users/[id]` — add credit name (**Marcar artista (fase 2)**) or remove a mark. Claimed fichas listed read-only (bookings open/closed).
+- API: `GET`/`PATCH /api/admin/users/[id]` with `editorial_artist_name` (string = upsert, `null` = clear all) or `remove_editorial_artist_key`.
+
+**Implementation**
+
+- Skip map: `src/lib/artist-self-credit.ts` (`loadSelfCreditSkipMap` = editorial rows + every `artists.claimed_by` name / `name_display` / slug).
+- Applied only when bumping **artist** credits in `src/app/api/public/charts/community-monthly/route.ts` (live board **and** Monday snapshots). Track aggregates are unchanged.
+- Schema: `supabase/migrations/070_editorial_artist_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
+- Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
+
+First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**.
 
 ### Artist board — weekly movement (not daily)
 
@@ -325,8 +367,11 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/app/api/public/user-tracks/route.ts` — read-only public payload for shared lists; joins `chart_editions` to expose `week_date` so the client can build share links.
 - `src/app/api/admin/tracks/route.ts` — aggregated admin stats.
 - `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
-- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC).
+- `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`).
+- `src/lib/artist-self-credit.ts` — skip map (editorial marks + `claimed_by`) and collab split for the artist board only.
+- `src/app/api/admin/users/[id]/route.ts` — user detail + editorial mark / unmark.
 - `src/components/CommunityMonthlyTop.tsx` — `/top100` UI (artist board 10→50 + track list).
+- `supabase/migrations/070_editorial_artist_marks.sql` — `editorial_artist_marks` (phase 2, no bookings).
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.
