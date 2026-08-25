@@ -1,4 +1,4 @@
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { pathToFileURL } from 'url'
 import { join } from 'path'
@@ -698,10 +698,13 @@ async function upsertEventAction(
   }
 
   // Duplicados: buscar por slug Y por nombre normalizado (p. ej. mismo evento con otro slug)
-  const { data: allEvents } = await sb
-    .from('events')
-    .select('id, slug, name, date_start, city, image_url')
-    .limit(3000)
+  const { data: allEvents } = await fetchAllRows<ExistingEventRow>((from, to) =>
+    sb
+      .from('events')
+      .select('id, slug, name, date_start, city, image_url')
+      .order('id', { ascending: true })
+      .range(from, to),
+  )
   const existing = findDuplicateEvent(
     (allEvents || []) as ExistingEventRow[],
     slug,

@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import {
   chartEditionWeekMondayFromPublish,
@@ -78,10 +78,14 @@ async function loadEditionState(
   createEdition: boolean,
 ): Promise<EditionState> {
   const editionId = await ensureEditionId(sb, weekDate, createEdition)
-  const { data: rows, error } = await sb
-    .from('chart_featured_tracks')
-    .select('link_url, sort_order')
-    .eq('chart_edition_id', editionId)
+  const { data: rows, error } = await fetchAllRows<{ link_url?: string; sort_order?: number }>((from, to) =>
+    sb
+      .from('chart_featured_tracks')
+      .select('link_url, sort_order')
+      .eq('chart_edition_id', editionId)
+      .order('id', { ascending: true })
+      .range(from, to),
+  )
   if (error) throw new Error(error.message)
   const keys = new Set<string>()
   for (const r of rows || []) {

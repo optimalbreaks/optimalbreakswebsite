@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 
 const DEFAULT_LIMIT = 30
 
@@ -40,11 +40,13 @@ export async function GET(request: NextRequest) {
         .from('track_play_events')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', weekAgo),
-      sb.from('track_play_events').select('canonical_key'),
+      fetchAllRows<{ canonical_key: string }>((from, to) =>
+        sb.from('track_play_events').select('canonical_key').order('id', { ascending: true }).range(from, to),
+      ),
     ])
 
     const counts = new Map<string, number>()
-    for (const row of keysRes.data ?? []) {
+    for (const row of keysRes.data) {
       counts.set(row.canonical_key, (counts.get(row.canonical_key) ?? 0) + 1)
     }
     const topRows: { canonical_key: string; play_count: number }[] = []

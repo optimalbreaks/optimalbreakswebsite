@@ -109,7 +109,7 @@ export default function AdminTracksPage() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/admin/tracks?limit=100')
+    fetch('/api/admin/tracks')
       .then(async (r) => {
         if (!r.ok) {
           const j = await r.json().catch(() => ({}))

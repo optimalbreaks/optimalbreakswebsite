@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
 import type { BookingRequestRow, BookingRequestStatus } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -13,19 +13,23 @@ export async function GET(request: NextRequest) {
   const status = new URL(request.url).searchParams.get('status')
   const svc = createServiceSupabase()
 
-  let query = svc.from('booking_requests').select('*').order('created_at', { ascending: false }).limit(500)
-  if (status) query = query.eq('status', status as BookingRequestStatus)
-  const { data, error } = await query
+  const { data, error } = await fetchAllRows<BookingRequestRow>((from, to) => {
+    let query = svc.from('booking_requests').select('*').order('created_at', { ascending: false }).order('id', { ascending: true })
+    if (status) query = query.eq('status', status as BookingRequestStatus)
+    return query.range(from, to)
+  })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const rows = (data as BookingRequestRow[]) || []
+  const rows = data
   const artistIds = Array.from(new Set(rows.map((r) => r.artist_id)))
   const senderIds = Array.from(new Set(rows.map((r) => r.sender_id)))
 
   const artistById: Record<string, { name: string; slug: string }> = {}
   if (artistIds.length) {
-    const { data: arts } = await svc.from('artists').select('id, name, slug').in('id', artistIds)
-    ;(arts as { id: string; name: string; slug: string }[] | null)?.forEach((a) => {
+    const { data: arts } = await selectByIds<{ id: string; name: string; slug: string }>(artistIds, (chunk) =>
+      svc.from('artists').select('id, name, slug').in('id', chunk),
+    )
+    arts.forEach((a) => {
       artistById[a.id] = { name: a.name, slug: a.slug }
     })
   }
@@ -41,8 +45,10 @@ export async function GET(request: NextRequest) {
   // Marca de baneados
   const bannedSet = new Set<string>()
   if (senderIds.length) {
-    const { data: bans } = await svc.from('booking_sender_bans').select('user_id').in('user_id', senderIds)
-    ;(bans as { user_id: string }[] | null)?.forEach((b) => bannedSet.add(b.user_id))
+    const { data: bans } = await selectByIds<{ user_id: string }>(senderIds, (chunk) =>
+      svc.from('booking_sender_bans').select('user_id').in('user_id', chunk),
+    )
+    bans.forEach((b) => bannedSet.add(b.user_id))
   }
 
   return NextResponse.json({

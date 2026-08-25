@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
 import { uniqueSavedTrackKey } from '@/lib/track-canonical-key'
 
 type EngagementType = 'favorites' | 'mixes' | 'tracks'
@@ -69,45 +69,93 @@ export async function GET(
   try {
     if (type === 'favorites') {
       const [favArtistsRes, favLabelsRes, favEventsRes] = await Promise.all([
-        sb
-          .from('favorite_artists')
-          .select('artist_id, created_at')
-          .eq('user_id', id)
-          .order('created_at', { ascending: false }),
-        sb
-          .from('favorite_labels')
-          .select('label_id, created_at')
-          .eq('user_id', id)
-          .order('created_at', { ascending: false }),
-        sb
-          .from('favorite_events')
-          .select('event_id, created_at')
-          .eq('user_id', id)
-          .order('created_at', { ascending: false }),
+        fetchAllRows<{ artist_id: string; created_at: string | null }>((from, to) =>
+          sb
+            .from('favorite_artists')
+            .select('artist_id, created_at')
+            .eq('user_id', id)
+            .order('created_at', { ascending: false })
+            .order('artist_id', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<{ label_id: string; created_at: string | null }>((from, to) =>
+          sb
+            .from('favorite_labels')
+            .select('label_id, created_at')
+            .eq('user_id', id)
+            .order('created_at', { ascending: false })
+            .order('label_id', { ascending: true })
+            .range(from, to),
+        ),
+        fetchAllRows<{ event_id: string; created_at: string | null }>((from, to) =>
+          sb
+            .from('favorite_events')
+            .select('event_id, created_at')
+            .eq('user_id', id)
+            .order('created_at', { ascending: false })
+            .order('event_id', { ascending: true })
+            .range(from, to),
+        ),
       ])
+      if (favArtistsRes.error) return NextResponse.json({ error: favArtistsRes.error.message }, { status: 500 })
+      if (favLabelsRes.error) return NextResponse.json({ error: favLabelsRes.error.message }, { status: 500 })
+      if (favEventsRes.error) return NextResponse.json({ error: favEventsRes.error.message }, { status: 500 })
 
-      const artistIds = (favArtistsRes.data || []).map((r) => (r as { artist_id: string }).artist_id)
-      const labelIds = (favLabelsRes.data || []).map((r) => (r as { label_id: string }).label_id)
-      const eventIds = (favEventsRes.data || []).map((r) => (r as { event_id: string }).event_id)
+      const artistIds = favArtistsRes.data.map((r) => r.artist_id)
+      const labelIds = favLabelsRes.data.map((r) => r.label_id)
+      const eventIds = favEventsRes.data.map((r) => r.event_id)
 
       const [artistsRes, labelsRes, eventsRes] = await Promise.all([
         artistIds.length
-          ? sb
-              .from('artists')
-              .select('id, slug, name, name_display, country, image_url, styles, era')
-              .in('id', artistIds)
+          ? selectByIds<{
+              id: string
+              slug: string
+              name: string
+              name_display: string | null
+              country: string | null
+              image_url: string | null
+              styles: string[] | null
+              era: string | null
+            }>(artistIds, (chunk) =>
+              sb
+                .from('artists')
+                .select('id, slug, name, name_display, country, image_url, styles, era')
+                .in('id', chunk),
+            )
           : Promise.resolve({ data: [], error: null }),
         labelIds.length
-          ? sb
-              .from('labels')
-              .select('id, slug, name, country, founded_year, image_url, is_active')
-              .in('id', labelIds)
+          ? selectByIds<{
+              id: string
+              slug: string
+              name: string
+              country: string | null
+              founded_year: number | null
+              image_url: string | null
+              is_active: boolean | null
+            }>(labelIds, (chunk) =>
+              sb
+                .from('labels')
+                .select('id, slug, name, country, founded_year, image_url, is_active')
+                .in('id', chunk),
+            )
           : Promise.resolve({ data: [], error: null }),
         eventIds.length
-          ? sb
-              .from('events')
-              .select('id, slug, name, date_start, city, country, venue, event_type, image_url')
-              .in('id', eventIds)
+          ? selectByIds<{
+              id: string
+              slug: string
+              name: string
+              date_start: string | null
+              city: string | null
+              country: string | null
+              venue: string | null
+              event_type: string | null
+              image_url: string | null
+            }>(eventIds, (chunk) =>
+              sb
+                .from('events')
+                .select('id, slug, name, date_start, city, country, venue, event_type, image_url')
+                .in('id', chunk),
+            )
           : Promise.resolve({ data: [], error: null }),
       ])
 
@@ -121,9 +169,8 @@ export async function GET(
         ((eventsRes.data || []) as Array<{ id: string }>).map((r) => [r.id, r]),
       )
 
-      const artists = (favArtistsRes.data || [])
-        .map((r) => {
-          const row = r as { artist_id: string; created_at: string | null }
+      const artists = favArtistsRes.data
+        .map((row) => {
           const a = artistsMap.get(row.artist_id) as
             | {
                 id: string
@@ -141,9 +188,8 @@ export async function GET(
         })
         .filter(Boolean)
 
-      const labels = (favLabelsRes.data || [])
-        .map((r) => {
-          const row = r as { label_id: string; created_at: string | null }
+      const labels = favLabelsRes.data
+        .map((row) => {
           const l = labelsMap.get(row.label_id) as
             | {
                 id: string
@@ -160,9 +206,8 @@ export async function GET(
         })
         .filter(Boolean)
 
-      const events = (favEventsRes.data || [])
-        .map((r) => {
-          const row = r as { event_id: string; created_at: string | null }
+      const events = favEventsRes.data
+        .map((row) => {
           const e = eventsMap.get(row.event_id) as
             | {
                 id: string
@@ -196,23 +241,30 @@ export async function GET(
     }
 
     if (type === 'mixes') {
-      const { data: savedRows, error: savedErr } = await sb
-        .from('saved_mixes')
-        .select('mix_id, created_at')
-        .eq('user_id', id)
-        .order('created_at', { ascending: false })
+      const { data: savedRows, error: savedErr } = await fetchAllRows<{ mix_id: string; created_at: string | null }>(
+        (from, to) =>
+          sb
+            .from('saved_mixes')
+            .select('mix_id, created_at')
+            .eq('user_id', id)
+            .order('created_at', { ascending: false })
+            .order('mix_id', { ascending: true })
+            .range(from, to),
+      )
       if (savedErr) {
         return NextResponse.json({ error: savedErr.message }, { status: 500 })
       }
-      const mixIds = (savedRows || []).map((r) => (r as { mix_id: string }).mix_id)
+      const mixIds = savedRows.map((r) => r.mix_id)
       const { data: mixRows, error: mixErr } = mixIds.length
-        ? await sb
-            .from('mixes')
-            .select(
-              'id, slug, title, artist_name, mix_type, image_url, video_url, embed_url, platform, published_at, year, duration_minutes',
-            )
-            .in('id', mixIds)
-        : { data: [], error: null }
+        ? await selectByIds<Record<string, unknown> & { id: string }>(mixIds, (chunk) =>
+            sb
+              .from('mixes')
+              .select(
+                'id, slug, title, artist_name, mix_type, image_url, video_url, embed_url, platform, published_at, year, duration_minutes',
+              )
+              .in('id', chunk),
+          )
+        : { data: [] as Array<Record<string, unknown> & { id: string }>, error: null }
       if (mixErr) {
         return NextResponse.json({ error: mixErr.message }, { status: 500 })
       }
@@ -234,15 +286,6 @@ export async function GET(
     }
 
     // type === 'tracks' → polimórfico (chart, featured, vinyl, beatport_top)
-    const { data: savedRows, error: savedErr } = await sb
-      .from('saved_chart_tracks')
-      .select('track_source, track_id, canonical_url, snapshot, created_at')
-      .eq('user_id', id)
-      .order('created_at', { ascending: false })
-    if (savedErr) {
-      return NextResponse.json({ error: savedErr.message }, { status: 500 })
-    }
-
     type SavedRow = {
       track_source: 'chart' | 'featured' | 'vinyl' | 'beatport_top'
       track_id: string
@@ -250,7 +293,19 @@ export async function GET(
       snapshot: Record<string, unknown> | null
       created_at: string | null
     }
-    const saved = ((savedRows || []) as unknown) as SavedRow[]
+    const { data: savedRows, error: savedErr } = await fetchAllRows<SavedRow>((from, to) =>
+      sb
+        .from('saved_chart_tracks')
+        .select('track_source, track_id, canonical_url, snapshot, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false })
+        .order('track_id', { ascending: true })
+        .range(from, to),
+    )
+    if (savedErr) {
+      return NextResponse.json({ error: savedErr.message }, { status: 500 })
+    }
+    const saved = savedRows
 
     const chartIds = saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)
     const featIds = saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)
@@ -258,29 +313,35 @@ export async function GET(
 
     const [chartRes, featRes, vinylRes] = await Promise.all([
       chartIds.length
-        ? sb
-            .from('chart_tracks')
-            .select(
-              'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url',
-            )
-            .in('id', chartIds)
-        : Promise.resolve({ data: [], error: null }),
+        ? selectByIds<Record<string, unknown> & { id: string }>(chartIds, (chunk) =>
+            sb
+              .from('chart_tracks')
+              .select(
+                'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url',
+              )
+              .in('id', chunk),
+          )
+        : Promise.resolve({ data: [] as Array<Record<string, unknown> & { id: string }>, error: null }),
       featIds.length
-        ? sb
-            .from('chart_featured_tracks')
-            .select(
-              'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform',
-            )
-            .in('id', featIds)
-        : Promise.resolve({ data: [], error: null }),
+        ? selectByIds<Record<string, unknown> & { id: string }>(featIds, (chunk) =>
+            sb
+              .from('chart_featured_tracks')
+              .select(
+                'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform',
+              )
+              .in('id', chunk),
+          )
+        : Promise.resolve({ data: [] as Array<Record<string, unknown> & { id: string }>, error: null }),
       vinylIds.length
-        ? sb
-            .from('chart_vinyl_tracks')
-            .select(
-              'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url',
-            )
-            .in('id', vinylIds)
-        : Promise.resolve({ data: [], error: null }),
+        ? selectByIds<Record<string, unknown> & { id: string }>(vinylIds, (chunk) =>
+            sb
+              .from('chart_vinyl_tracks')
+              .select(
+                'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url',
+              )
+              .in('id', chunk),
+          )
+        : Promise.resolve({ data: [] as Array<Record<string, unknown> & { id: string }>, error: null }),
     ])
 
     const liveChart = new Map(
@@ -297,20 +358,21 @@ export async function GET(
     // construya enlaces internos `/charts?week=...&play=<source>:<id>` en
     // lugar de mandar al admin fuera del sitio (Beatport, Discogs, etc.).
     const editionIdSet = new Set<string>()
-    for (const c of (chartRes.data || []) as Array<{ chart_edition_id: string | null }>) {
-      if (c.chart_edition_id) editionIdSet.add(c.chart_edition_id)
+    for (const c of chartRes.data) {
+      const editionId = c.chart_edition_id
+      if (typeof editionId === 'string' && editionId) editionIdSet.add(editionId)
     }
-    for (const f of (featRes.data || []) as Array<{ chart_edition_id: string | null }>) {
-      if (f.chart_edition_id) editionIdSet.add(f.chart_edition_id)
+    for (const f of featRes.data) {
+      const editionId = f.chart_edition_id
+      if (typeof editionId === 'string' && editionId) editionIdSet.add(editionId)
     }
     const editionIds = Array.from(editionIdSet)
     const weekByEdition = new Map<string, string>()
     if (editionIds.length) {
-      const { data: editions } = await sb
-        .from('chart_editions')
-        .select('id, week_date')
-        .in('id', editionIds)
-      for (const e of ((editions || []) as Array<{ id: string; week_date: string }>)) {
+      const { data: editions } = await selectByIds<{ id: string; week_date: string }>(editionIds, (chunk) =>
+        sb.from('chart_editions').select('id, week_date').in('id', chunk),
+      )
+      for (const e of editions) {
         weekByEdition.set(e.id, e.week_date)
       }
     }
@@ -329,20 +391,20 @@ export async function GET(
     const slugByArtistId = new Map<string, string>()
     const slugByLabelId = new Map<string, string>()
     if (artistIdsNeedingSlug.length) {
-      const { data } = await sb
-        .from('artists')
-        .select('id, slug')
-        .in('id', Array.from(new Set(artistIdsNeedingSlug)))
-      for (const r of (data || []) as Array<{ id: string; slug: string }>) {
+      const { data } = await selectByIds<{ id: string; slug: string }>(
+        Array.from(new Set(artistIdsNeedingSlug)),
+        (chunk) => sb.from('artists').select('id, slug').in('id', chunk),
+      )
+      for (const r of data) {
         if (r.slug) slugByArtistId.set(r.id, r.slug)
       }
     }
     if (labelIdsNeedingSlug.length) {
-      const { data } = await sb
-        .from('labels')
-        .select('id, slug')
-        .in('id', Array.from(new Set(labelIdsNeedingSlug)))
-      for (const r of (data || []) as Array<{ id: string; slug: string }>) {
+      const { data } = await selectByIds<{ id: string; slug: string }>(
+        Array.from(new Set(labelIdsNeedingSlug)),
+        (chunk) => sb.from('labels').select('id, slug').in('id', chunk),
+      )
+      for (const r of data) {
         if (r.slug) slugByLabelId.set(r.id, r.slug)
       }
     }

@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 type PlaybackKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -67,9 +67,6 @@ export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
 
-  const url = new URL(request.url)
-  const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 25))
-
   let sb: ReturnType<typeof createServiceSupabase>
   try {
     sb = createServiceSupabase()
@@ -77,12 +74,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Servidor no configurado' }, { status: 503 })
   }
 
-  const { data: savedData, error: savedErr } = await sb
-    .from('saved_chart_tracks')
-    .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+  const { data: savedData, error: savedErr } = await fetchAllRows<SavedRow>((from, to) =>
+    sb
+      .from('saved_chart_tracks')
+      .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+      .order('id', { ascending: true })
+      .range(from, to),
+  )
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
-
-  const saved = ((savedData as unknown) as SavedRow[]) || []
+  const saved = savedData
 
   if (saved.length === 0) {
     return NextResponse.json({
@@ -99,15 +99,23 @@ export async function GET(request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url, sample_url').in('id', chartIds)
+      ? selectByIds<ChartRow>(chartIds, (chunk) =>
+          sb.from('chart_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url, sample_url').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform, sample_url').in('id', featIds)
+      ? selectByIds<FeatRow>(featIds, (chunk) =>
+          sb.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform, sample_url').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
-      ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', vinylIds)
+      ? selectByIds<VinylRow>(vinylIds, (chunk) =>
+          sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
+  const lookupErr = chartRes.error || featRes.error || vinylRes.error
+  if (lookupErr) return NextResponse.json({ error: lookupErr.message }, { status: 500 })
 
   const byRefKey = new Map<string, { title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date: string | null; artwork_url: string | null; external_url: string | null; playback_kind: PlaybackKind; canonical_key: string; source: ChartTrackSource; id: string }>()
 
@@ -217,7 +225,7 @@ export async function GET(request: NextRequest) {
   aggregates.forEach((a) => { a.unique_users = a._users.size })
   aggregates.sort((a, b) => b.save_count - a.save_count || (a.title || '').localeCompare(b.title || ''))
 
-  const top_tracks = aggregates.slice(0, limit).map((a) => ({
+  const top_tracks = aggregates.map((a) => ({
     canonical_key: a.canonical_key,
     title: a.title,
     mix_name: a.mix_name,
@@ -251,11 +259,9 @@ export async function GET(request: NextRequest) {
 
   const top_labels = Array.from(labelSaves.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 15)
     .map(([name, save_count]) => ({ name, save_count }))
   const top_artists = Array.from(artistSaves.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 15)
     .map(([name, save_count]) => ({ name, save_count }))
 
   const totals = {
