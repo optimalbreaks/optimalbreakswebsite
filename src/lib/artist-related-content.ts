@@ -250,7 +250,7 @@ function chartRowMatchesArtist(
     if (lineupEntryMatchesArtist(name, matchKeys)) return true
   }
   const mix = normalizeForEntityMatch(row.mix_name || '')
-  for (const key of matchKeys) {
+  for (const key of Array.from(matchKeys)) {
     if (key.length >= 3 && mix.includes(key)) return true
   }
   return false
