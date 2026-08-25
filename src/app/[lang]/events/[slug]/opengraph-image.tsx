@@ -12,7 +12,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { EventOgImage } from '@/lib/EventOgImage'
-import { isEventCancelled } from '@/types/database'
+import { eventNoticeKind } from '@/types/database'
 
 export const alt = 'Optimal Breaks — Event'
 export const size = { width: 1200, height: 630 }
@@ -40,7 +40,8 @@ export async function generateImageMetadata({ params }: Props) {
   const t = row?.updated_at ? Date.parse(row.updated_at) : NaN
   const epoch = Number.isFinite(t) ? String(t) : '0'
   // `-cxl` cambia la URL de og:image aunque updated_at no se toque (caché de WhatsApp/FB).
-  const id = isEventCancelled(row) ? `${epoch}-cxl` : epoch
+  const notice = eventNoticeKind(row)
+  const id = notice === 'cancelled' ? `${epoch}-cxl` : notice === 'postponed' ? `${epoch}-pstd` : epoch
   return [{ id, alt, size, contentType }]
 }
 
@@ -165,17 +166,26 @@ export default async function Image({ params, id }: Props & { id: string }) {
   // updated_at) o, si no llegara, el updated_at de la propia fila.
   const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
   const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
-  const version = id && id !== '0' ? id.replace(/-cxl$/, '') : fallbackVersion
+  const version = id && id !== '0' ? id.replace(/-cxl$/, '').replace(/-pstd$/, '') : fallbackVersion
   const posterSource = row?.og_image_url || row?.image_url || null
   const posterDataUrl = await loadPosterDataUrl(posterSource, version)
-  const cancelled = isEventCancelled(row)
+  const notice = eventNoticeKind(row)
 
   return new ImageResponse(
     (
       <EventOgImage
         posterDataUrl={posterDataUrl}
-        cancelled={cancelled}
-        cancelledLabel={lang === 'en' ? 'CANCELLED' : 'CANCELADO'}
+        cancelled={Boolean(notice)}
+        cancelledLabel={
+          notice === 'postponed'
+            ? lang === 'en'
+              ? 'POSTPONED'
+              : 'APLAZADO'
+            : lang === 'en'
+              ? 'CANCELLED'
+              : 'CANCELADO'
+        }
+        stampTone={notice === 'postponed' ? 'postpone' : 'cancel'}
       />
     ),
     { ...size },

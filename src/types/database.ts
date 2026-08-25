@@ -800,18 +800,41 @@ export interface BreakEvent extends Record<string, unknown> {
   coords: { lat: number; lng: number } | null
 }
 
+function normalizeEventTag(tag: string): string {
+  return String(tag)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+}
+
 /** Tag editorial `cancelado` / `cancelled` / `canceled`. Sin columna de estado. */
 export function isEventCancelled(event: { tags?: string[] | null } | null | undefined): boolean {
   const tags = event?.tags
   if (!tags?.length) return false
   return tags.some((tag) => {
-    const n = String(tag)
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
+    const n = normalizeEventTag(tag)
     return n === 'cancelado' || n === 'cancelled' || n === 'canceled'
   })
+}
+
+/** Tag editorial `aplazado` / `postponed` / `rescheduled`. El evento sigue en pie. */
+export function isEventPostponed(event: { tags?: string[] | null } | null | undefined): boolean {
+  const tags = event?.tags
+  if (!tags?.length) return false
+  return tags.some((tag) => {
+    const n = normalizeEventTag(tag)
+    return n === 'aplazado' || n === 'postponed' || n === 'rescheduled' || n === 'reprogramado'
+  })
+}
+
+export type EventNoticeKind = 'cancelled' | 'postponed' | null
+
+/** Cancelación gana si hay las dos marcas. */
+export function eventNoticeKind(event: { tags?: string[] | null } | null | undefined): EventNoticeKind {
+  if (isEventCancelled(event)) return 'cancelled'
+  if (isEventPostponed(event)) return 'postponed'
+  return null
 }
 
 export interface BlogPost extends Record<string, unknown> {

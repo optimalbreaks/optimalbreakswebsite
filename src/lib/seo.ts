@@ -433,6 +433,7 @@ export type EventJsonLdInput = {
   /** Lista plana de artistas (lineup principal); ya filtrada y deduplicada. */
   performers: { name: string; slug?: string | null }[]
   cancelled?: boolean
+  postponed?: boolean
 }
 
 /** JSON-LD `Event` / `MusicEvent` / `Festival` para fichas de eventos.
@@ -524,7 +525,9 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
     ...(endDate ? { endDate } : {}),
     eventStatus: input.cancelled
       ? 'https://schema.org/EventCancelled'
-      : 'https://schema.org/EventScheduled',
+      : input.postponed
+        ? 'https://schema.org/EventRescheduled'
+        : 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location,
     ...(image ? { image: [image] } : {}),

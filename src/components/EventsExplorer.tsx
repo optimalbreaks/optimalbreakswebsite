@@ -6,7 +6,7 @@ import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { BreakEvent } from '@/types/database'
-import { isEventCancelled } from '@/types/database'
+import { eventNoticeKind } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { EventCancelledStamp } from '@/components/EventPosterLightbox'
 
@@ -50,6 +50,8 @@ interface Props {
     date_filter?: DateFilterDict
     cancelled_stamp?: string
     calendar_modal_badge_cancelled?: string
+    calendar_modal_badge_postponed?: string
+    postponed_stamp?: string
   }
   lang: string
 }
@@ -213,9 +215,11 @@ type CalendarModalLabels = {
   badgePast: string
   badgeUpcoming: string
   badgeCancelled: string
+  badgePostponed: string
 }
 
-function cancelledStampLabel(lang: string) {
+function noticeStampLabel(lang: string, kind: 'cancelled' | 'postponed') {
+  if (kind === 'postponed') return lang === 'es' ? 'APLAZADO' : 'POSTPONED'
   return lang === 'es' ? 'CANCELADO' : 'CANCELLED'
 }
 
@@ -279,7 +283,7 @@ function CalendarDayEventsModal({
           <div className="overflow-y-auto flex-1 min-h-0 px-4 py-5 space-y-10">
             {payload.events.map((e) => {
               const past = isEventPast(e)
-              const cancelled = isEventCancelled(e)
+              const notice = eventNoticeKind(e)
               const lineup = lineupPreviewText(e, 18)
               const excerpt = descriptionExcerpt(e, lang, 220)
               return (
@@ -287,16 +291,32 @@ function CalendarDayEventsModal({
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative sm:w-[min(42%,160px)] shrink-0 overflow-hidden bg-[var(--paper)]">
                       <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
-                      {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
+                      {notice ? (
+                        <EventCancelledStamp
+                          label={noticeStampLabel(lang, notice)}
+                          size="card"
+                          tone={notice === 'postponed' ? 'postpone' : 'cancel'}
+                        />
+                      ) : null}
                     </div>
                     <div className="min-w-0 flex-1 flex flex-col gap-2 text-[var(--ink)]">
                       <span
                         className={`self-start text-[9px] uppercase tracking-wider px-2 py-0.5 border border-[var(--ink)] ${
-                          cancelled || past ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)]'
+                          notice === 'cancelled' || past
+                            ? 'bg-[var(--red)] text-white'
+                            : notice === 'postponed'
+                              ? 'bg-[var(--yellow)] text-[var(--ink)]'
+                              : 'bg-[var(--yellow)] text-[var(--ink)]'
                         }`}
                         style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
                       >
-                        {cancelled ? labels.badgeCancelled : past ? labels.badgePast : labels.badgeUpcoming}
+                        {notice === 'cancelled'
+                          ? labels.badgeCancelled
+                          : notice === 'postponed'
+                            ? labels.badgePostponed
+                            : past
+                              ? labels.badgePast
+                              : labels.badgeUpcoming}
                       </span>
                       <h3
                         className="m-0 uppercase"
@@ -416,6 +436,7 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
       badgePast: dict.calendar_modal_badge_past ?? 'Past',
       badgeUpcoming: dict.calendar_modal_badge_upcoming ?? 'Upcoming',
       badgeCancelled: dict.calendar_modal_badge_cancelled ?? (lang === 'es' ? 'Cancelado' : 'Cancelled'),
+      badgePostponed: dict.calendar_modal_badge_postponed ?? (lang === 'es' ? 'Aplazado' : 'Postponed'),
     }),
     [dict, lang],
   )
@@ -789,7 +810,7 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-stretch">
       {events.map((e) => {
         const past = isEventPast(e)
-        const cancelled = isEventCancelled(e)
+        const notice = eventNoticeKind(e)
         return (
         <Link
           key={e.slug}
@@ -803,7 +824,13 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
             }`}
           >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
-            {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
+            {notice ? (
+              <EventCancelledStamp
+                label={noticeStampLabel(lang, notice)}
+                size="card"
+                tone={notice === 'postponed' ? 'postpone' : 'cancel'}
+              />
+            ) : null}
           </div>
           <div
             className={`flex flex-1 flex-col justify-start p-3 text-left transition-colors duration-200 ease-out min-h-[5.25rem] ${
@@ -846,7 +873,7 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-stretch">
       {events.map((e) => {
         const past = isEventPast(e)
-        const cancelled = isEventCancelled(e)
+        const notice = eventNoticeKind(e)
         return (
         <Link
           key={e.slug}
@@ -859,7 +886,13 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
             }`}
           >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
-            {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
+            {notice ? (
+              <EventCancelledStamp
+                label={noticeStampLabel(lang, notice)}
+                size="card"
+                tone={notice === 'postponed' ? 'postpone' : 'cancel'}
+              />
+            ) : null}
           </div>
           <div
             className={`flex flex-1 flex-col justify-start p-1.5 text-left transition-colors duration-200 ease-out min-h-[3.75rem] ${
@@ -887,7 +920,7 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="border-4 border-[var(--ink)]">
       {events.map((e) => {
         const past = isEventPast(e)
-        const cancelled = isEventCancelled(e)
+        const notice = eventNoticeKind(e)
         return (
         <div key={e.slug} className="relative border-b-[2px] border-[var(--ink)]">
           <FavoriteButton type="event" entityId={e.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
@@ -906,7 +939,13 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
                 }`}
               >
                 <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" groupHoverGroup="link" />
-                {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="thumb" /> : null}
+                {notice ? (
+                  <EventCancelledStamp
+                    label={noticeStampLabel(lang, notice)}
+                    size="thumb"
+                    tone={notice === 'postponed' ? 'postpone' : 'cancel'}
+                  />
+                ) : null}
               </div>
               <div className="flex-grow min-w-0">
                 <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>

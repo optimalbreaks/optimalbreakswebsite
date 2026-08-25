@@ -13,15 +13,18 @@ type Props = {
   lightboxTitle: string
   cancelled?: boolean
   cancelledLabel?: string
+  stampTone?: 'cancel' | 'postpone'
 }
 
 /** Sello diagonal sobre el cartel original (ficha, listado y redes). */
 export function EventCancelledStamp({
   label,
   size = 'card',
+  tone = 'cancel',
 }: {
   label: string
   size?: 'hero' | 'card' | 'thumb'
+  tone?: 'cancel' | 'postpone'
 }) {
   const textClass =
     size === 'hero'
@@ -29,12 +32,17 @@ export function EventCancelledStamp({
       : size === 'thumb'
         ? 'text-[8px] tracking-[0.08em] py-0.5'
         : 'text-[clamp(11px,2.1vw,17px)] tracking-[0.1em] py-1'
+  const postpone = tone === 'postpone'
   return (
     <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden" aria-hidden>
-      <div className="absolute inset-0 bg-[var(--ink)]/32" />
-      <div className="absolute left-[-28%] right-[-28%] top-1/2 -translate-y-1/2 rotate-[-13deg] border-y-[4px] border-[var(--ink)] bg-[var(--red)] text-center shadow-[0_4px_0_rgba(0,0,0,0.35)]">
+      <div className={`absolute inset-0 ${postpone ? 'bg-[var(--ink)]/20' : 'bg-[var(--ink)]/32'}`} />
+      <div
+        className={`absolute left-[-28%] right-[-28%] top-1/2 -translate-y-1/2 rotate-[-13deg] border-y-[4px] border-[var(--ink)] text-center shadow-[0_4px_0_rgba(0,0,0,0.35)] ${
+          postpone ? 'bg-[var(--yellow)]' : 'bg-[var(--red)]'
+        }`}
+      >
         <span
-          className={`block font-black uppercase text-white ${textClass}`}
+          className={`block font-black uppercase ${postpone ? 'text-[var(--ink)]' : 'text-white'} ${textClass}`}
           style={{ fontFamily: "'Unbounded', sans-serif" }}
         >
           {label}
@@ -52,6 +60,7 @@ export default function EventPosterLightbox({
   lightboxTitle,
   cancelled = false,
   cancelledLabel = 'CANCELADO',
+  stampTone = 'cancel',
 }: Props) {
   const url = displayImageUrl(src)?.trim()
   const [open, setOpen] = useState(false)
@@ -124,7 +133,7 @@ export default function EventPosterLightbox({
                 alt={alt}
                 className="block max-h-[min(82dvh,calc(100dvh-5.5rem))] w-auto max-w-full object-contain"
               />
-              {cancelled ? <EventCancelledStamp label={cancelledLabel} size="hero" /> : null}
+              {cancelled ? <EventCancelledStamp label={cancelledLabel} size="hero" tone={stampTone} /> : null}
             </div>
           </div>
         </div>
@@ -142,7 +151,7 @@ export default function EventPosterLightbox({
           frameClass="border-0"
           fit="contain"
         />
-        {cancelled ? <EventCancelledStamp label={cancelledLabel} size="hero" /> : null}
+        {cancelled ? <EventCancelledStamp label={cancelledLabel} size="hero" tone={stampTone} /> : null}
         {url ? (
           <button
             type="button"

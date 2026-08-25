@@ -14,7 +14,7 @@ import {
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { Artist, BeatportTopTrack, BlogPost, BreakEvent } from '@/types/database'
-import { isEventCancelled } from '@/types/database'
+import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -250,6 +250,7 @@ export default async function HomePage({
           imageUrl: e.image_url,
           href: `/${lang}/events/${e.slug}` as string | undefined,
           cancelled: isEventCancelled(e),
+          postponed: eventNoticeKind(e) === 'postponed',
         }))
       : FALLBACK_HOME_EVENTS.map((e, i) => ({
           key: `fallback-${i}`,
@@ -261,6 +262,7 @@ export default async function HomePage({
           imageUrl: e.image_url ?? null,
           href: undefined as string | undefined,
           cancelled: false,
+          postponed: false,
         }))
 
   const { data: featuredBlogRaw } = await supabase
@@ -610,6 +612,7 @@ export default async function HomePage({
               entityId={e.id}
               lang={lang}
               cancelled={e.cancelled}
+              postponed={e.postponed}
             />
           ))}
         </div>

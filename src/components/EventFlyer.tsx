@@ -18,10 +18,11 @@ interface EventFlyerProps {
   entityId?: string
   lang?: string
   cancelled?: boolean
+  postponed?: boolean
 }
 
 /** Misma envoltura y miniatura que `LargeGrid` en `EventsExplorer` (vista grande /events). */
-export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang, cancelled }: EventFlyerProps) {
+export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang, cancelled, postponed }: EventFlyerProps) {
   const shell =
     'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group'
 
@@ -35,8 +36,20 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href,
           frameClass="border-b-[3px] border-[var(--ink)]"
           fit="cover"
         />
-        {cancelled ? (
-          <EventCancelledStamp label={lang === 'en' ? 'CANCELLED' : 'CANCELADO'} size="card" />
+        {cancelled || postponed ? (
+          <EventCancelledStamp
+            label={
+              postponed
+                ? lang === 'en'
+                  ? 'POSTPONED'
+                  : 'APLAZADO'
+                : lang === 'en'
+                  ? 'CANCELLED'
+                  : 'CANCELADO'
+            }
+            size="card"
+            tone={postponed ? 'postpone' : 'cancel'}
+          />
         ) : null}
       </div>
 
@@ -79,7 +92,15 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href,
             transform: 'rotate(3deg)',
           }}
         >
-          {cancelled ? (lang === 'en' ? 'CANCELLED' : 'CANCELADO') : type}
+          {cancelled
+            ? lang === 'en'
+              ? 'CANCELLED'
+              : 'CANCELADO'
+            : postponed
+              ? lang === 'en'
+                ? 'POSTPONED'
+                : 'APLAZADO'
+              : type}
         </div>
       </div>
     </>

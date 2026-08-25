@@ -7,6 +7,7 @@
 
 const INK = '#1a1a1a'
 const RED = '#d62828'
+const YELLOW = '#f7e733'
 const PAPER = '#f4efe6'
 
 export type EventOgImageProps = {
@@ -14,12 +15,14 @@ export type EventOgImageProps = {
   /** Sello diagonal sobre el cartel original (compartir en redes). */
   cancelled?: boolean
   cancelledLabel?: string
+  stampTone?: 'cancel' | 'postpone'
 }
 
 export function EventOgImage({
   posterDataUrl,
   cancelled = false,
   cancelledLabel = 'CANCELADO',
+  stampTone = 'cancel',
 }: EventOgImageProps) {
   return (
     <div
@@ -82,7 +85,7 @@ export function EventOgImage({
               justifyContent: 'center',
               width: 1500,
               transform: 'rotate(-13deg)',
-              backgroundColor: RED,
+              backgroundColor: stampTone === 'postpone' ? YELLOW : RED,
               borderTopWidth: 8,
               borderBottomWidth: 8,
               borderTopStyle: 'solid',
@@ -98,7 +101,7 @@ export function EventOgImage({
             <div
               style={{
                 display: 'flex',
-                color: PAPER,
+                color: stampTone === 'postpone' ? INK : PAPER,
                 fontSize: 92,
                 fontWeight: 900,
                 letterSpacing: 10,
