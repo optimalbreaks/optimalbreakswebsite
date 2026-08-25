@@ -4,6 +4,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import {
   buildArtistSlugLookup,
   fetchAllArtistLinkRows,
@@ -11,7 +12,7 @@ import {
   resolveArtistSlug,
 } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
-import { fetchLabelChartLinks } from '@/lib/artist-related-content'
+import { fetchLabelOnSitePicks } from '@/lib/artist-related-content'
 import CountryBadge from '@/components/CountryBadge'
 import {
   breadcrumbJsonLd,
@@ -20,6 +21,7 @@ import {
   musicLabelJsonLd,
   siteNameForLang,
   SITE_URL,
+  smartTruncate,
 } from '@/lib/seo'
 import {
   parsePlayParam,
@@ -37,6 +39,8 @@ import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
+import ArtistFeaturedTracks from '@/components/ArtistFeaturedTracks'
+import ArtistShowcase, { type ShowcaseArtist } from '@/components/ArtistShowcase'
 
 type Props = {
   params: { lang: Locale; slug: string }
@@ -70,6 +74,30 @@ function buildLabelKeywords(label: LabelSeoRow, lang: Locale): string[] {
 function firstSearchParam(v: string | string[] | undefined): string | undefined {
   if (v === undefined) return undefined
   return Array.isArray(v) ? v[0] : v
+}
+
+type RosterArtistRow = Pick<
+  Artist,
+  | 'id'
+  | 'slug'
+  | 'name'
+  | 'name_display'
+  | 'image_url'
+  | 'styles'
+  | 'country'
+  | 'bio_en'
+  | 'bio_es'
+  | 'beatport_top_tracks'
+>
+
+function rosterCardSlug(name: string, index: number): string {
+  const n = normalizeForEntityMatch(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return n || `artist-${index + 1}`
+}
+
+function rosterBlurb(bio: string | null | undefined): string {
+  const first = splitBioParagraphs(bio)[0] || ''
+  return first ? smartTruncate(first, 180) : ''
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -134,18 +162,62 @@ export default async function LabelDetailPage({ params }: Props) {
     .single()
   const label = rawLabel as LabelPageRow | null
 
-  const artistSlugs = new Map<string, string>()
-  const [{ data: matchedArtists }, allArtistLinkRows, labelChartLinks, { data: labelRows }] = await Promise.all([
-    label?.key_artists?.length
-      ? supabase.from('artists').select('name, slug').in('name', label.key_artists)
-      : Promise.resolve({ data: [] as Pick<Artist, 'name' | 'slug'>[] }),
+  const [allArtistLinkRows, onSitePicks, { data: labelRows }] = await Promise.all([
     fetchAllArtistLinkRows(readSupabase),
-    label ? fetchLabelChartLinks(readSupabase, { name: label.name }, lang) : Promise.resolve([]),
+    label ? fetchLabelOnSitePicks(readSupabase, { name: label.name }) : Promise.resolve([]),
     supabase.from('labels').select('name, slug'),
   ])
-  const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
-  for (const a of rows) artistSlugs.set(a.name, a.slug)
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+  const keyArtistNames = (label?.key_artists ?? []).map((n) => n.trim()).filter(Boolean)
+  const rosterSlugs = [...new Set(
+    keyArtistNames
+      .map((n) => resolveArtistSlug(n, artistSlugByName))
+      .filter((s): s is string => Boolean(s)),
+  )]
+  const rosterSelect =
+    'id, slug, name, name_display, image_url, styles, country, bio_en, bio_es, beatport_top_tracks'
+  const [{ data: rosterBySlugRaw }, { data: rosterByNameRaw }] = await Promise.all([
+    rosterSlugs.length
+      ? supabase.from('artists').select(rosterSelect).in('slug', rosterSlugs)
+      : Promise.resolve({ data: [] as RosterArtistRow[] }),
+    keyArtistNames.length
+      ? supabase.from('artists').select(rosterSelect).in('name', keyArtistNames)
+      : Promise.resolve({ data: [] as RosterArtistRow[] }),
+  ])
+  const rosterBySlug = new Map<string, RosterArtistRow>()
+  const rosterByNormName = new Map<string, RosterArtistRow>()
+  for (const row of [...((rosterBySlugRaw ?? []) as RosterArtistRow[]), ...((rosterByNameRaw ?? []) as RosterArtistRow[])]) {
+    rosterBySlug.set(row.slug, row)
+    const n = normalizeForEntityMatch(row.name)
+    const nd = normalizeForEntityMatch(row.name_display)
+    if (n) rosterByNormName.set(n, row)
+    if (nd) rosterByNormName.set(nd, row)
+  }
+  const showcaseArtists: ShowcaseArtist[] = []
+  const seenCardSlugs = new Set<string>()
+  for (let i = 0; i < keyArtistNames.length; i++) {
+    const name = keyArtistNames[i]!
+    const resolved = resolveArtistSlug(name, artistSlugByName)
+    const row = (resolved ? rosterBySlug.get(resolved) : undefined)
+      ?? rosterByNormName.get(normalizeForEntityMatch(name))
+    const cardSlug = row?.slug || rosterCardSlug(name, i)
+    if (seenCardSlugs.has(cardSlug)) continue
+    seenCardSlugs.add(cardSlug)
+    showcaseArtists.push({
+      slug: cardSlug,
+      artistId: row?.id ?? null,
+      name: row?.name_display?.trim() || row?.name || name,
+      desc: rosterBlurb(lang === 'es' ? row?.bio_es : row?.bio_en),
+      genres: (row?.styles ?? []).filter(Boolean).slice(0, 5),
+      imageUrl: row ? displayArtistImageUrl(row.slug, row.image_url) ?? null : null,
+      country: row?.country ?? null,
+      fans: 0,
+      href: row ? `/${lang}/artists/${row.slug}` : null,
+      tracks: ((row?.beatport_top_tracks ?? []) as BeatportTopTrack[])
+        .filter((t) => t?.sample_url)
+        .slice(0, 10),
+    })
+  }
   const trackArtistNames = new Set<string>()
   const trackLabelNames = new Set<string>()
   for (const t of (label?.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []) {
@@ -155,6 +227,15 @@ export default async function LabelDetailPage({ params }: Props) {
     }
     const labelName = (t.label || '').trim()
     if (labelName) trackLabelNames.add(labelName)
+  }
+  for (const pick of onSitePicks) {
+    const artists = Array.isArray(pick.artists) ? pick.artists : []
+    for (const a of artists) {
+      const artistName = (a.name || '').trim()
+      if (artistName) trackArtistNames.add(artistName)
+    }
+    const pickLabel = (pick.label || '').trim()
+    if (pickLabel) trackLabelNames.add(pickLabel)
   }
   const artistSlugMap = filterArtistSlugMapForNames(
     buildFullArtistSlugMap(allArtistLinkRows),
@@ -171,10 +252,6 @@ export default async function LabelDetailPage({ params }: Props) {
     trackLabelNames,
     { labelSuffixes: true },
   )
-  const keyArtistsInCharts = new Set(
-    labelChartLinks.flatMap((link) => link.artistNames.map((n) => normalizeForEntityMatch(n))),
-  )
-
   if (!label) {
     return (
       <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
@@ -226,11 +303,12 @@ export default async function LabelDetailPage({ params }: Props) {
       .join(', '),
   ].filter(Boolean) as string[]
   const logoAlt = logoAltBits.filter((s) => s.trim()).join(' · ')
-  const hasOnSiteBlock = labelChartLinks.length > 0
   const hasLinksBlock =
     Boolean(label.website?.trim()) ||
     Boolean(label.beatport_url?.trim()) ||
     Boolean(label.discogs_url?.trim())
+  const hasKeyReleases = (label.key_releases?.length ?? 0) > 0
+  const hasSidebar = hasKeyReleases || hasLinksBlock
   const sidebarHeadingStyle = {
     fontFamily: "'Darker Grotesque', sans-serif",
     fontWeight: 900,
@@ -244,10 +322,6 @@ export default async function LabelDetailPage({ params }: Props) {
     fontSize: '12px',
     color: 'rgba(232,220,200,0.6)',
   } as const
-  const sidebarLinkStyle = {
-    fontFamily: "'Courier Prime', monospace",
-    fontSize: '12px',
-  } as const
 
   return (
     <>
@@ -255,11 +329,12 @@ export default async function LabelDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
       />
-    <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
+    <div className="lined min-h-screen">
+      <div className="px-4 sm:px-6 pt-8 sm:pt-12">
       <Link href={`/${lang}/labels`} className="btn-back"><span className="arrow">←</span> {lang === 'es' ? 'Volver a Sellos' : 'Back to Labels'}</Link>
 
       {/* Misma estructura hero que artistas: logo acotado + título/compartir en fila (md+) */}
-      <header className="mb-8 md:mb-10 border-b-[3px] border-[var(--ink)] pb-8 md:pb-10">
+      <header className={`${showcaseArtists.length > 0 ? 'mb-0' : 'mb-8 md:mb-10'} border-b-[3px] border-[var(--ink)] pb-8 md:pb-10`}>
         <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 lg:gap-10 items-stretch md:items-start">
           <div className="w-full max-w-[min(100%,300px)] sm:max-w-[340px] md:max-w-[min(400px,40vw)] shrink-0 mx-auto md:mx-0">
             <CardThumbnail
@@ -291,6 +366,18 @@ export default async function LabelDetailPage({ params }: Props) {
                 origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
               />
             ) : null}
+            {onSitePicks.length > 0 ? (
+              <ArtistFeaturedTracks
+                picks={onSitePicks}
+                lang={lang}
+                entityName={label.name}
+                artistSlugMap={artistSlugMap}
+                labelSlugMap={labelSlugMap}
+                heading={lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
+                badge="OB"
+                origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
+              />
+            ) : null}
             {/* CTA destacado a Discogs: fuente rica de info (catálogo completo, artistas, fechas, reviews).
                 Va debajo del Top 10 Beatport para darle protagonismo como referencia externa. */}
             {label.discogs_url && (
@@ -311,10 +398,25 @@ export default async function LabelDetailPage({ params }: Props) {
           </div>
         </div>
       </header>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-0 border-4 border-[var(--ink)]">
+      {showcaseArtists.length > 0 ? (
+        <ArtistShowcase
+          lang={lang}
+          tag={lang === 'es' ? 'ROSTER' : 'ROSTER'}
+          title1={lang === 'es' ? 'ARTISTAS' : 'LABEL'}
+          title2={lang === 'es' ? 'DEL SELLO' : 'ARTISTS'}
+          artists={showcaseArtists}
+          idPrefix={`label-${slug}`}
+          layout="rail"
+          originPath={`/${lang}/labels/${slug}`}
+        />
+      ) : null}
+
+      <div className="px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
+      <div className={`grid grid-cols-1 gap-0 border-4 border-[var(--ink)] ${hasSidebar ? 'md:grid-cols-[2fr_1fr]' : ''}`}>
         {/* Bio */}
-        <div className="p-6 sm:p-8 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+        <div className={`p-6 sm:p-8 ${hasSidebar ? 'border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]' : ''}`}>
           <div className="flex flex-wrap gap-2 mb-4">
             {label.country ? (
               <CountryBadge country={label.country} lang={lang} size="md" variant="cutout" />
@@ -340,91 +442,10 @@ export default async function LabelDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Sidebar */}
+        {hasSidebar ? (
         <div className="p-6 sm:p-8 bg-[var(--ink)] text-[var(--paper)]">
-          {hasOnSiteBlock && (
-            <div className="mb-6">
-              <h2 style={sidebarHeadingStyle}>
-                {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
-              </h2>
-              {labelChartLinks.map((link) => (
-                <div key={`${link.kind}-${link.id}`} className="py-2 border-b border-dashed border-white/10">
-                  <Link
-                    href={link.href}
-                    className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
-                    style={{ ...sidebarLinkStyle, fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
-                  >
-                    {link.title}
-                  </Link>
-                  <div
-                    className="flex flex-wrap items-baseline gap-x-1 gap-y-0"
-                    style={{ ...sidebarRowStyle, fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px', marginTop: '2px' }}
-                  >
-                    {link.artistNames.length > 0 ? (
-                      <>
-                        {link.artistNames.map((artistName, ai) => {
-                          const artistSlug = resolveArtistSlug(artistName, artistSlugByName)
-                          const showComma = ai < link.artistNames.length - 1
-                          return (
-                            <span key={`${link.id}-artist-${ai}`} className="inline-flex items-baseline gap-x-0">
-                              {artistSlug ? (
-                                <Link
-                                  href={`/${lang}/artists/${artistSlug}`}
-                                  className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
-                                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px' }}
-                                >
-                                  {artistName}
-                                </Link>
-                              ) : (
-                                <span>{artistName}</span>
-                              )}
-                              {showComma && <span aria-hidden>,&nbsp;</span>}
-                            </span>
-                          )
-                        })}
-                        <span aria-hidden>&nbsp;·&nbsp;</span>
-                      </>
-                    ) : null}
-                    <span>{link.subtitle}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {label.key_artists?.length > 0 && (
-            <div className="mb-6">
-              <h2 style={sidebarHeadingStyle}>
-                {lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}
-              </h2>
-              {label.key_artists.map((a: string, i: number) => {
-                const artistSlug = artistSlugs.get(a) || resolveArtistSlug(a, artistSlugByName)
-                const inCharts = keyArtistsInCharts.has(normalizeForEntityMatch(a))
-                const chartHint = inCharts
-                  ? (lang === 'es' ? 'Aparece en charts de Optimal Breaks' : 'Featured in Optimal Breaks charts')
-                  : undefined
-                return (
-                  <div key={i} className="py-1 border-b border-dashed border-white/10" style={sidebarRowStyle}>
-                    {artistSlug ? (
-                      <Link
-                        href={`/${lang}/artists/${artistSlug}`}
-                        className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
-                        style={sidebarLinkStyle}
-                        title={chartHint}
-                      >
-                        {a}{inCharts ? ' ★' : ''}
-                      </Link>
-                    ) : (
-                      <span title={chartHint}>{a}{inCharts ? ' ★' : ''}</span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {label.key_releases?.length > 0 && (
-            <div className="mb-6">
+          {hasKeyReleases && (
+            <div className={hasLinksBlock ? 'mb-6' : undefined}>
               <h2 style={sidebarHeadingStyle}>
                 {lang === 'es' ? 'LANZAMIENTOS CLAVE' : 'KEY RELEASES'}
               </h2>
@@ -475,6 +496,8 @@ export default async function LabelDetailPage({ params }: Props) {
             </div>
           )}
         </div>
+        ) : null}
+      </div>
       </div>
 
     </div>

@@ -72,7 +72,12 @@ export type ArtistRelatedContent = {
 }
 
 /** Pick editorial de New Releases enlazado a la semana (`chart_editions.week_date`). */
-export type ArtistFeaturedPick = ChartFeaturedTrack & { weekDate: string }
+export type ArtistFeaturedPick = ChartFeaturedTrack & {
+  weekDate: string
+  /** `featured` = New Releases; `chart` = 40 Breaks Vitales. */
+  chartKind?: 'chart' | 'featured'
+  position?: number | null
+}
 
 type ChartRow = {
   id: string
@@ -415,7 +420,7 @@ function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
     seen.add(key)
 
     const { chart_editions: _ce, ...pick } = row
-    out.push({ ...pick, weekDate })
+    out.push({ ...pick, weekDate, chartKind: 'featured' })
   }
 
   out.sort((a, b) => {
@@ -447,6 +452,126 @@ export async function fetchArtistFeaturedPicks(
 
   if (error || !data?.length) return []
   return mapFeaturedPickRows(data as unknown as FeaturedPickRow[])
+}
+
+type LabelChartPickRow = {
+  id: string
+  chart_edition_id: string
+  position: number | null
+  title: string | null
+  mix_name: string | null
+  label: string | null
+  artists?: unknown
+  bpm: number | null
+  music_key: string | null
+  release_year: number | null
+  release_date: string | null
+  beatport_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
+  artwork_url: string | null
+  sample_url: string | null
+  chart_editions?: { week_date: string } | { week_date: string }[] | null
+}
+
+function labelFieldMatches(rowLabel: string | null | undefined, labelKey: string): boolean {
+  const n = normalizeForEntityMatch(rowLabel || '')
+  if (!n || !labelKey) return false
+  return n === labelKey || n.includes(labelKey)
+}
+
+function mapChartTrackToPick(row: LabelChartPickRow): ArtistFeaturedPick | null {
+  const weekDate = weekDateFromRow(row as ChartRow)
+  if (!weekDate) return null
+  const artists = extractArtistNames(row.artists).map((name) => ({ name }))
+  return {
+    id: row.id,
+    chart_edition_id: row.chart_edition_id,
+    sort_order: row.position ?? 0,
+    title: (row.title || '').trim() || '—',
+    mix_name: (row.mix_name || '').trim(),
+    artists,
+    label: row.label || '',
+    platform: 'beatport',
+    link_url: row.beatport_url || '',
+    link_label: '',
+    artwork_url: row.artwork_url,
+    sample_url: row.sample_url,
+    bpm: row.bpm,
+    music_key: row.music_key || '',
+    release_year: row.release_year,
+    release_date: row.release_date,
+    spotify_url: row.spotify_url,
+    tidal_url: row.tidal_url,
+    note_en: '',
+    note_es: '',
+    weekDate,
+    chartKind: 'chart',
+    position: row.position ?? null,
+  }
+}
+
+/**
+ * Temas del sello en /charts (40 Breaks + New Releases) con audio y metadatos
+ * para el desplegable reproducible de la ficha.
+ */
+export async function fetchLabelOnSitePicks(
+  supabase: SupabaseClient<Database>,
+  label: { name: string },
+): Promise<ArtistFeaturedPick[]> {
+  const primaryTerm = escIlike(label.name)
+  if (primaryTerm.length < 2) return []
+  const ilike = `%${primaryTerm}%`
+  const labelKey = normalizeForEntityMatch(label.name)
+
+  const [chartRes, featuredRes] = await Promise.all([
+    supabase
+      .from('chart_tracks')
+      .select(
+        'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)',
+      )
+      .ilike('label', ilike)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+      .order('position', { ascending: true })
+      .limit(24),
+    supabase
+      .from('chart_featured_tracks')
+      .select(
+        'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)',
+      )
+      .ilike('label', ilike)
+      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+      .limit(40),
+  ])
+
+  const seen = new Set<string>()
+  const out: ArtistFeaturedPick[] = []
+
+  const push = (pick: ArtistFeaturedPick) => {
+    if (!labelFieldMatches(pick.label, labelKey)) return
+    const key = `${normKey(pick.title)}|${normKey(pick.mix_name || '')}`
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(pick)
+  }
+
+  for (const row of (chartRes.data || []) as unknown as LabelChartPickRow[]) {
+    const pick = mapChartTrackToPick(row)
+    if (pick) push(pick)
+  }
+  for (const pick of mapFeaturedPickRows((featuredRes.data || []) as unknown as FeaturedPickRow[])) {
+    push(pick)
+  }
+
+  out.sort((a, b) => {
+    if (a.weekDate !== b.weekDate) return b.weekDate.localeCompare(a.weekDate)
+    const ad = a.release_date || ''
+    const bd = b.release_date || ''
+    if (ad !== bd) return bd.localeCompare(ad)
+    return (a.position ?? 99) - (b.position ?? 99)
+  })
+
+  return out.slice(0, 40)
 }
 
 export async function fetchLabelChartLinks(

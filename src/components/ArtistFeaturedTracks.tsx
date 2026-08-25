@@ -19,8 +19,10 @@ interface Props {
   entityName: string
   artistSlugMap?: Record<string, string>
   labelSlugMap?: Record<string, string>
+  heading?: string
+  badge?: string
   origin?: {
-    kind: 'artist'
+    kind: 'artist' | 'label'
     id: string
     slug?: string
     name?: string
@@ -87,12 +89,18 @@ function formatWeekLabel(weekDate: string, lang: 'en' | 'es'): string {
   })
 }
 
+function pickSource(pick: ArtistFeaturedPick): 'chart' | 'featured' {
+  return pick.chartKind === 'chart' ? 'chart' : 'featured'
+}
+
 export default function ArtistFeaturedTracks({
   picks,
   lang,
   entityName,
   artistSlugMap,
   labelSlugMap,
+  heading,
+  badge,
   origin,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
@@ -141,14 +149,14 @@ export default function ArtistFeaturedTracks({
         originPath: pathname || undefined,
         save: {
           mode: 'ref' as const,
-          source: 'featured' as const,
+          source: pickSource(pick),
           trackId: pick.id,
           canonicalUrl: pick.link_url || undefined,
           snapshot: buildSnapshot(pick, origin),
         },
         share: {
           mode: 'chart' as const,
-          source: 'featured' as const,
+          source: pickSource(pick),
           trackId: pick.id,
           weekDate: pick.weekDate,
         },
@@ -188,7 +196,9 @@ export default function ArtistFeaturedTracks({
 
   if (!picks.length) return null
 
-  const title = lang === 'es' ? 'NEW RELEASES EN OPTIMAL BREAKS' : 'NEW RELEASES ON OPTIMAL BREAKS'
+  const title = heading
+    ?? (lang === 'es' ? 'NEW RELEASES EN OPTIMAL BREAKS' : 'NEW RELEASES ON OPTIMAL BREAKS')
+  const badgeLabel = badge ?? 'PICKS'
   const countLabel = `${picks.length} ${lang === 'es' ? (picks.length === 1 ? 'tema' : 'temas') : (picks.length === 1 ? 'track' : 'tracks')}`
   const playAllBtnLabel = myQueueActive
     ? `■ STOP ${previewIndex + 1}/${previewQueue.length}`
@@ -216,7 +226,7 @@ export default function ArtistFeaturedTracks({
           </span>
           <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
             <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--red)] text-white border-2 border-[var(--ink)]">
-              PICKS
+              {badgeLabel}
             </span>
             <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold">{countLabel}</span>
           </span>
@@ -250,11 +260,12 @@ export default function ArtistFeaturedTracks({
               const note = lang === 'es' ? pick.note_es : pick.note_en
               const mixName = (pick.mix_name || '').trim()
               const artists = Array.isArray(pick.artists) ? pick.artists : []
+              const kind = pickSource(pick)
               const chartHref = `/${lang}/charts?week=${pick.weekDate}#chart-row-${pick.id}`
 
               return (
                 <div
-                  key={pick.id}
+                  key={`${kind}-${pick.id}`}
                   id={rowId}
                   className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
@@ -265,9 +276,13 @@ export default function ArtistFeaturedTracks({
                         className="inline-flex flex-col items-center justify-center shrink-0 w-12 h-12 sm:w-14 sm:h-14 border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] hover:bg-[var(--yellow)]/30 transition-colors no-underline"
                         title={lang === 'es' ? 'Ver en Charts' : 'View in Charts'}
                       >
-                        <span className="text-[8px] font-black tracking-wider text-[var(--ink)]/50 uppercase">NR</span>
+                        <span className="text-[8px] font-black tracking-wider text-[var(--ink)]/50 uppercase">
+                          {kind === 'chart' ? '40' : 'NR'}
+                        </span>
                         <span className="text-[9px] sm:text-[10px] font-bold text-[var(--ink)] text-center leading-tight px-0.5">
-                          {formatWeekLabel(pick.weekDate, lang)}
+                          {kind === 'chart' && pick.position != null
+                            ? `#${pick.position}`
+                            : formatWeekLabel(pick.weekDate, lang)}
                         </span>
                       </Link>
 
@@ -322,7 +337,7 @@ export default function ArtistFeaturedTracks({
                         </span>
                       ) : null}
                       <SaveTrackButton
-                        source="featured"
+                        source={pickSource(pick)}
                         trackId={pick.id}
                         canonicalUrl={pick.link_url}
                         snapshot={buildSnapshot(pick, origin)}
@@ -330,7 +345,7 @@ export default function ArtistFeaturedTracks({
                         size="sm"
                       />
                       <TrackShareButton
-                        source="featured"
+                        source={pickSource(pick)}
                         trackId={pick.id}
                         weekDate={pick.weekDate}
                         lang={lang}

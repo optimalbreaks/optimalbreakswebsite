@@ -33,7 +33,8 @@ export type ShowcaseArtist = {
   /** Código o nombre de país en BD (RU, UK, Russia, AU/UK…). */
   country: string | null
   fans: number
-  href: string
+  /** Si falta, la tarjeta no enlaza a ficha (artista del roster sin página). */
+  href: string | null
   tracks: BeatportTopTrack[]
 }
 
@@ -63,8 +64,17 @@ interface Props {
   title1: string
   title2: string
   seeAll?: string
-  seeAllHref: string
+  seeAllHref?: string
   artists: ShowcaseArtist[]
+  /** Prefijo de ids/grupos de audio. Default: home. */
+  idPrefix?: string
+  /**
+   * `stage` (home): pila vertical en móvil, carrusel en desktop.
+   * `rail`: carrusel horizontal en todos los anchos (fichas de sello).
+   */
+  layout?: 'stage' | 'rail'
+  /** Ruta de vuelta del mini reproductor. Default: home del idioma. */
+  originPath?: string
 }
 
 function proxyUrl(sampleUrl: string): string {
@@ -94,8 +104,20 @@ function seededBars(slug: string, n = 28): number[] {
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
-export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeAllHref, artists }: Props) {
+export default function ArtistShowcase({
+  lang,
+  tag,
+  title1,
+  title2,
+  seeAll,
+  seeAllHref = '/artists',
+  artists,
+  idPrefix = 'home-artist',
+  layout = 'stage',
+  originPath,
+}: Props) {
   const es = lang === 'es'
+  const alwaysRail = layout === 'rail'
   const sectionRef = useRef<HTMLElement>(null)
   const railRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
@@ -123,9 +145,9 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
     return () => warm.disconnect()
   }, [gate])
 
-  const groupKeyOf = (slug: string) => `home-artist:${slug}`
-  const activeGroupSlug = previewGroupKey?.startsWith('home-artist:')
-    ? previewGroupKey.slice('home-artist:'.length)
+  const groupKeyOf = (slug: string) => `${idPrefix}:${slug}`
+  const activeGroupSlug = previewGroupKey?.startsWith(`${idPrefix}:`)
+    ? previewGroupKey.slice(idPrefix.length + 1)
     : null
 
   const playArtist = useCallback((a: ShowcaseArtist) => {
@@ -134,7 +156,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
       togglePreview()
       return
     }
-    const sharePathBase = `/${lang}/artists/${a.slug}`
+    const sharePathBase = a.href || `/${lang}/artists/${a.slug}`
     const origin = a.artistId
       ? { kind: 'artist' as const, id: a.artistId, slug: a.slug, name: a.name }
       : undefined
@@ -155,10 +177,10 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
         title: t.title,
         artist: t.artists.map((x) => x.name).join(', '),
         artworkUrl: t.artwork_url || null,
-        domId: `home-artist-${a.slug}`,
+        domId: `${idPrefix}-${a.slug}`,
         // Vuelta al origen desde el mini reproductor: la tarjeta del artista
         // en la home (las pistas del showcase no tienen fila propia).
-        originPath: `/${lang}`,
+        originPath: originPath || `/${lang}`,
         save: t.beatport_url
           ? {
               mode: 'url' as const,
@@ -176,7 +198,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
       }
     })
     if (queue.length > 0) playPreviewQueue(queue, 0, key)
-  }, [lang, previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
+  }, [idPrefix, lang, originPath, previewGroupKey, previewQueue.length, togglePreview, playPreviewQueue])
 
   // Índice sticky: móvil = scroll vertical; desktop = carrusel horizontal.
   useEffect(() => {
@@ -194,7 +216,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
       vTracker = null
       if (onScroll) { rail.removeEventListener('scroll', onScroll); onScroll = null }
 
-      if (mq.matches) {
+      if (alwaysRail || mq.matches) {
         onScroll = () => {
           const center = rail.scrollLeft + rail.clientWidth / 2
           let best = 0
@@ -226,23 +248,23 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
       if (onScroll) rail.removeEventListener('scroll', onScroll)
       mq.removeEventListener('change', setup)
     }
-  }, [artists.length])
+  }, [artists.length, alwaysRail])
 
   const scrollToArtist = useCallback((i: number) => {
-    const el = document.getElementById(`home-artist-${artists[i]?.slug}`)
+    const el = document.getElementById(`${idPrefix}-${artists[i]?.slug}`)
     if (!el) return
-    if (window.matchMedia('(min-width: 1024px)').matches) {
+    if (alwaysRail || window.matchMedia('(min-width: 1024px)').matches) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     } else {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [artists])
+  }, [alwaysRail, artists, idPrefix])
 
   const step = (dir: 1 | -1) => {
     scrollToArtist(Math.min(artists.length - 1, Math.max(0, active + dir)))
   }
 
-  const seeAllBtn = seeAll ? (
+  const seeAllBtn = seeAll && seeAllHref ? (
     <Link
       href={seeAllHref}
       className="inline-block no-underline border-[3px] border-white/80 px-4 py-2 text-white hover:bg-[var(--red)] hover:border-[var(--red)] transition-colors"
@@ -273,7 +295,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
           </h2>
 
           {/* Índice de artistas: resalta el que está en pantalla */}
-          <ol className="m-0 mt-2 mb-8 list-none space-y-2">
+          <ol className={`m-0 mt-2 mb-8 list-none space-y-2 ${alwaysRail ? 'max-h-[58vh] overflow-y-auto pr-1' : ''}`}>
             {artists.map((a, i) => {
               const isActive = i === active
               const isSounding = activeGroupSlug === a.slug && previewPlaying
@@ -334,11 +356,15 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
             </span>
           </div>
 
-          {/* Móvil: pila vertical siempre visible. Desktop: carrusel horizontal. */}
+          {/* Móvil: pila vertical (home) o raíl. Desktop: carrusel horizontal. */}
           <div className="relative">
             <div
               ref={railRef}
-              className="obx-rail space-y-10 sm:space-y-16 lg:space-y-0 lg:flex lg:gap-6 lg:overflow-x-auto lg:snap-x lg:snap-mandatory"
+              className={
+                alwaysRail
+                  ? 'obx-rail flex gap-4 overflow-x-auto snap-x snap-mandatory sm:gap-6'
+                  : 'obx-rail space-y-10 sm:space-y-16 lg:space-y-0 lg:flex lg:gap-6 lg:overflow-x-auto lg:snap-x lg:snap-mandatory'
+              }
             >
               {artists.map((a, i) => {
                 const isMine = activeGroupSlug === a.slug
@@ -349,11 +375,13 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
                     key={a.slug}
                     artist={a}
                     index={i}
+                    idPrefix={idPrefix}
                     lang={lang}
                     es={es}
                     sounding={isSounding}
                     nowTitle={nowTitle}
                     inactive={i !== active}
+                    alwaysRail={alwaysRail}
                     onPlay={() => playArtist(a)}
                   />
                 )
@@ -365,7 +393,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
               onClick={() => step(-1)}
               disabled={active === 0}
               aria-label={es ? 'Artista anterior' : 'Previous artist'}
-              className="absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 lg:grid"
+              className={`absolute left-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               ←
@@ -375,7 +403,7 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
               onClick={() => step(1)}
               disabled={active >= artists.length - 1}
               aria-label={es ? 'Artista siguiente' : 'Next artist'}
-              className="absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 lg:grid"
+              className={`absolute right-3 top-1/2 z-20 h-12 w-12 -translate-y-1/2 cursor-pointer place-items-center border-[3px] border-white/80 bg-black/60 text-white backdrop-blur-sm transition-colors hover:border-[var(--red)] hover:bg-[var(--red)] disabled:cursor-default disabled:opacity-25 ${alwaysRail ? 'grid' : 'hidden lg:grid'}`}
               style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '18px' }}
             >
               →
@@ -392,21 +420,25 @@ export default function ArtistShowcase({ lang, tag, title1, title2, seeAll, seeA
 function ArtistCover({
   artist: a,
   index,
+  idPrefix,
   lang,
   es,
   sounding,
   nowTitle,
   inactive,
+  alwaysRail,
   onPlay,
 }: {
   artist: ShowcaseArtist
   index: number
+  idPrefix: string
   lang: string
   es: boolean
   sounding: boolean
   nowTitle: string | null
-  /** Solo desktop: slide del carrusel no centrado (atenúa, nunca oculta). */
+  /** Slide del carrusel no centrado (atenúa, nunca oculta). */
   inactive: boolean
+  alwaysRail: boolean
   onPlay: () => void
 }) {
   const img = displayImageUrl(a.imageUrl)
@@ -418,10 +450,10 @@ function ArtistCover({
 
   return (
     <article
-      id={`home-artist-${a.slug}`}
+      id={`${idPrefix}-${a.slug}`}
       data-obx-card
       data-idx={index}
-      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500 ${inactive ? 'lg:opacity-40' : ''} ${sounding ? 'obx-playing' : ''}`}
+      className={`obx-card group relative flex min-h-[440px] flex-col justify-end overflow-hidden border-4 border-[var(--ink)] bg-[#17171a] sm:min-h-[560px] ${alwaysRail ? 'min-w-[88%] shrink-0 sm:min-w-[80%] lg:min-w-[86%] xl:min-w-[82%] snap-center transition-opacity duration-500' : 'lg:min-w-[86%] xl:min-w-[82%] lg:snap-center lg:transition-opacity lg:duration-500'} ${inactive ? (alwaysRail ? 'opacity-40' : 'lg:opacity-40') : ''} ${sounding ? 'obx-playing' : ''}`}
     >
       {/* Portada */}
       <div className="absolute inset-0 overflow-hidden">
@@ -449,9 +481,11 @@ function ArtistCover({
       </div>
 
       {/* Toda la tarjeta enlaza a la ficha; los controles flotan encima */}
-      <Link href={a.href} className="absolute inset-0 z-[5]" aria-label={a.name}>
-        <span className="sr-only">{a.name}</span>
-      </Link>
+      {a.href ? (
+        <Link href={a.href} className="absolute inset-0 z-[5]" aria-label={a.name}>
+          <span className="sr-only">{a.name}</span>
+        </Link>
+      ) : null}
 
       {/* Meta superior: bandera + fans */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-[6] flex flex-wrap items-center gap-2 p-4 sm:p-6">
