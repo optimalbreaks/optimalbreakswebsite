@@ -7,12 +7,20 @@
 
 const INK = '#1a1a1a'
 const RED = '#d62828'
+const PAPER = '#f4efe6'
 
 export type EventOgImageProps = {
   posterDataUrl?: string | null
+  /** Sello diagonal sobre el cartel original (compartir en redes). */
+  cancelled?: boolean
+  cancelledLabel?: string
 }
 
-export function EventOgImage({ posterDataUrl }: EventOgImageProps) {
+export function EventOgImage({
+  posterDataUrl,
+  cancelled = false,
+  cancelledLabel = 'CANCELADO',
+}: EventOgImageProps) {
   return (
     <div
       style={{
@@ -22,6 +30,7 @@ export function EventOgImage({ posterDataUrl }: EventOgImageProps) {
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: INK,
+        position: 'relative',
       }}
     >
       {posterDataUrl ? (
@@ -52,6 +61,58 @@ export function EventOgImage({ posterDataUrl }: EventOgImageProps) {
           OB
         </div>
       )}
+      {cancelled ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(26,26,26,0.32)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 1500,
+              transform: 'rotate(-13deg)',
+              backgroundColor: RED,
+              borderTopWidth: 8,
+              borderBottomWidth: 8,
+              borderTopStyle: 'solid',
+              borderBottomStyle: 'solid',
+              borderTopColor: INK,
+              borderBottomColor: INK,
+              paddingTop: 22,
+              paddingBottom: 22,
+              paddingLeft: 48,
+              paddingRight: 48,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                color: PAPER,
+                fontSize: 92,
+                fontWeight: 900,
+                letterSpacing: 10,
+                lineHeight: 1,
+                textTransform: 'uppercase',
+                fontFamily:
+                  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              }}
+            >
+              {cancelledLabel}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

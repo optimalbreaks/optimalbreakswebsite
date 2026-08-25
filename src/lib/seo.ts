@@ -432,6 +432,7 @@ export type EventJsonLdInput = {
   promoterSlug?: string | null
   /** Lista plana de artistas (lineup principal); ya filtrada y deduplicada. */
   performers: { name: string; slug?: string | null }[]
+  cancelled?: boolean
 }
 
 /** JSON-LD `Event` / `MusicEvent` / `Festival` para fichas de eventos.
@@ -488,7 +489,9 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
     offers.push({
       '@type': 'Offer',
       url: input.ticketsUrl,
-      availability: 'https://schema.org/InStock',
+      availability: input.cancelled
+        ? 'https://schema.org/SoldOut'
+        : 'https://schema.org/InStock',
       ...(startDate ? { validFrom: new Date().toISOString() } : {}),
     })
   } else if (input.website) {
@@ -519,7 +522,9 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
     ...(input.description ? { description: smartTruncate(input.description, 500) } : {}),
     ...(startDate ? { startDate } : {}),
     ...(endDate ? { endDate } : {}),
-    eventStatus: 'https://schema.org/EventScheduled',
+    eventStatus: input.cancelled
+      ? 'https://schema.org/EventCancelled'
+      : 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location,
     ...(image ? { image: [image] } : {}),

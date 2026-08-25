@@ -13,6 +13,7 @@ import {
 } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
+import { isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -45,6 +46,7 @@ type EventSeoRow = Pick<
   | 'venue'
   | 'city'
   | 'country'
+  | 'tags'
 >
 type EventPageRow = BreakEvent & {
   promoter: Pick<Organization, 'slug' | 'name'> | null
@@ -251,17 +253,21 @@ function buildEventSeoTitle(
   dateLabel: string,
   city: string | null,
   siteName: string,
+  cancelled = false,
+  lang: Locale = 'es',
 ): string {
+  const prefix = cancelled && !/cancel/i.test(name) ? (lang === 'es' ? 'Cancelado: ' : 'Cancelled: ') : ''
+  const titled = `${prefix}${name}`
   const cityBit = city?.trim() || ''
   const tail = [dateLabel, cityBit].filter(Boolean).join(' · ')
   // Reservamos espacio para el template " | Optimal Breaks". Total objetivo ≤ 65.
   const room = 65 - (siteName.length + 3) // " | "
-  const head = tail ? `${name} — ${tail}` : name
+  const head = tail ? `${titled} — ${tail}` : titled
   if (head.length <= room) return head
   // Si no cabe, sacrificamos primero el city, luego la fecha; nunca el nombre.
-  const onlyDate = dateLabel ? `${name} — ${dateLabel}` : name
+  const onlyDate = dateLabel ? `${titled} — ${dateLabel}` : titled
   if (onlyDate.length <= room) return onlyDate
-  return name
+  return titled
 }
 
 /** ISO local (sin Z) para `event:start_time` / `event:end_time` (Open Graph). */
@@ -282,7 +288,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: raw } = await supabase
     .from('events')
     .select(
-      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country, doors_open, doors_close',
+      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country, doors_open, doors_close, tags',
     )
     .eq('slug', slug)
     .single()
@@ -295,17 +301,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       robots: { index: false, follow: true },
     }
   const siteName = await siteNameForLang(lang)
+  const cancelled = isEventCancelled(data)
 
   const dateLabel = metaDateLabel(data.date_start ?? null, data.date_end ?? null, lang)
   const placeLabel = metaPlaceLabel(data.venue ?? null, data.city ?? null, data.country ?? null)
   const head = [dateLabel, placeLabel].filter(Boolean).join(' · ')
   const longDesc = (lang === 'es' ? data.description_es : data.description_en)?.trim() || ''
+  const cancelLead =
+    cancelled
+      ? lang === 'es'
+        ? 'Evento cancelado. Reembolso automático en 24–48 h.'
+        : 'Event cancelled. Automatic refund within 24–48 hours.'
+      : ''
   // Componemos "FECHA · LUGAR — descripción larga". detailPageMetadata aplica
   // smartTruncate(160) sin cortar palabras: la cabecera siempre se conserva
   // y se recorta primero la descripción larga, que es lo "que quepa".
-  const description = [head, longDesc].filter(Boolean).join(' — ') || undefined
+  const description =
+    [cancelLead, head, longDesc].filter(Boolean).join(' — ') || undefined
 
-  const seoTitle = buildEventSeoTitle(data.name, dateLabel, data.city ?? null, siteName)
+  const seoTitle = buildEventSeoTitle(data.name, dateLabel, data.city ?? null, siteName, cancelled, lang)
 
   // OG events: emitir `event:start_time` / `event:end_time` cuando hay datos.
   const ogStart = ogEventDateTime(data.date_start, data.doors_open)
@@ -384,12 +398,21 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     detail_editions: string
     detail_related: string
     detail_faq: string
+    cancelled_stamp?: string
+    cancelled_badge?: string
+    cancelled_banner_title?: string
+    cancelled_banner_body?: string
+    cancelled_cta?: string
+    detail_links_cancelled?: string
+    tickets_refunds?: string
   }
 
   const stages = (event.stages ?? []) as EventStage[]
   const schedule = (event.schedule ?? []) as EventScheduleSlot[]
   const tags = (event.tags ?? []) as string[]
   const mapLink = mapsUrl(event.coords as { lat: number; lng: number } | null, event.address ?? event.location)
+  const cancelled = isEventCancelled(event)
+  const cancelStamp = ev.cancelled_stamp ?? (lang === 'es' ? 'CANCELADO' : 'CANCELLED')
   const ticketHeroHref = preferredHeroTicketUrl(event)
   // Texto descriptivo del cartel para alt + Google Images: "Cartel de X · Ciudad · 4 julio 2026".
   const posterDateLabel = metaDateLabel(event.date_start, event.date_end, lang)
@@ -407,6 +430,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     isKnownTicketingSiteUrl(event.website)
   /** Hero: CTA rojo si hay URL de compra y (upcoming, MonsterTicket u otro ticketer conocido p. ej. Skiddle). */
   const showHeroTicketCta =
+    !cancelled &&
     ticketHeroHref.length > 0 &&
     !isEventPastByDate(event) &&
     (event.event_type === 'upcoming' || hasPartnerTicketingLink)
@@ -467,9 +491,15 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     address: event.address ?? event.location,
     city: event.city,
     country: event.country,
-    ticketsUrl: event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null),
+    ticketsUrl: cancelled
+      ? null
+      : event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null),
     ageRestriction: event.age_restriction,
     lineupNames: Array.from(allArtistNames),
+    cancelled,
+    refundsUrl: cancelled
+      ? event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null)
+      : null,
   })
 
   // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList (+ FAQ si hay datos) ──
@@ -494,6 +524,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       imageUrl: versionedImageUrl(event.og_image_url || event.image_url, imageCacheVersion(event.updated_at)),
       ticketsUrl: event.tickets_url,
       website: event.website,
+      cancelled,
       capacity: event.capacity,
       eventType: event.event_type,
       promoterName: event.promoter?.name ?? null,
@@ -542,6 +573,34 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         <span className="arrow">←</span> {lang === 'es' ? 'Volver a Eventos' : 'Back to Events'}
       </Link>
 
+      {cancelled && (
+        <div
+          role="status"
+          className="mb-6 border-4 border-[var(--ink)] bg-[var(--red)] px-5 py-4 text-white shadow-[6px_6px_0_var(--ink)]"
+        >
+          <div
+            style={{
+              fontFamily: "'Unbounded', sans-serif",
+              fontWeight: 900,
+              fontSize: 'clamp(18px, 4vw, 28px)',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+            }}
+          >
+            {ev.cancelled_banner_title ?? (lang === 'es' ? 'Evento cancelado' : 'Event cancelled')}
+          </div>
+          <p
+            className="mt-2 mb-0"
+            style={{ fontFamily: "'Courier Prime', monospace", fontSize: '14px', lineHeight: 1.55 }}
+          >
+            {ev.cancelled_banner_body ??
+              (lang === 'es'
+                ? 'El promotor ha cancelado este evento. Las entradas se reembolsan automáticamente en 24–48 horas por el mismo método de pago.'
+                : 'The promoter has cancelled this event. Tickets are refunded automatically within 24–48 hours via the original payment method.')}
+          </p>
+        </div>
+      )}
+
       {/* ── HERO ── */}
       <header className="mb-8 md:mb-10 border-b-[3px] border-[var(--ink)] pb-8 md:pb-10">
         <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 lg:gap-10 items-stretch md:items-start">
@@ -553,12 +612,18 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               zoomAria={ev.poster_zoom_aria}
               closeLabel={ev.poster_close}
               lightboxTitle={ev.poster_lightbox_title}
+              cancelled={cancelled}
+              cancelledLabel={cancelStamp}
             />
           </div>
 
           {/* Info */}
           <div className="min-w-0 flex-1 flex flex-col justify-center md:justify-start md:pt-0">
-            <div className="sec-tag w-fit">{eventTypeLabel(event.event_type, lang).toUpperCase()}</div>
+            <div className={`sec-tag w-fit ${cancelled ? 'bg-[var(--red)] text-white border-[var(--red)]' : ''}`}>
+              {cancelled
+                ? (ev.cancelled_badge ?? (lang === 'es' ? 'Cancelado' : 'Cancelled')).toUpperCase()
+                : eventTypeLabel(event.event_type, lang).toUpperCase()}
+            </div>
             <h1 className="sec-title mt-2 md:mt-3">
               <span className="hl">{event.name}</span>
             </h1>
@@ -638,7 +703,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             {/* Favorite + attendance + fan counter + share */}
             <div className="flex flex-wrap items-center gap-3 mt-5">
               <FavoriteButton type="event" entityId={event.id} size="md" lang={lang} />
-              <EventStatusButton eventId={event.id} lang={lang} />
+              {!cancelled && <EventStatusButton eventId={event.id} lang={lang} />}
               <EventReviewButton
                 eventId={event.id}
                 eventName={event.name}
@@ -664,6 +729,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               >
                 {primaryTicketCtaLabel(event.tickets_url, event.website, lang)} →
               </a>
+            )}
+            {cancelled && (
+              <div
+                className="mt-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3.5 text-center text-[var(--yellow)]"
+                style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', letterSpacing: '1px', textTransform: 'uppercase' }}
+              >
+                {ev.cancelled_cta ?? (lang === 'es' ? 'No hay venta de entradas — evento cancelado' : 'Tickets are not on sale — event cancelled')}
+              </div>
             )}
           </div>
         </div>
@@ -873,7 +946,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       {/* ── LINKS / SOCIALS ── */}
       {(event.website || event.tickets_url || Object.keys(event.socials ?? {}).length > 0) && (
         <section className="mb-10">
-          <SectionHeading>{ev.detail_links}</SectionHeading>
+          <SectionHeading>{cancelled ? ev.detail_links_cancelled ?? ev.detail_links : ev.detail_links}</SectionHeading>
           <div className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {event.website && (
@@ -884,7 +957,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="text-[var(--cyan)] hover:text-white transition-colors"
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}
                 >
-                  {websiteLinkLabel(event.website, lang)} →
+                  {cancelled && isKnownTicketingSiteUrl(event.website)
+                    ? `${ev.tickets_refunds ?? (lang === 'es' ? 'Venta / reembolsos' : 'Sale / refunds')} →`
+                    : `${websiteLinkLabel(event.website, lang)} →`}
                 </a>
               )}
               {event.tickets_url && event.tickets_url !== event.website && (
@@ -895,7 +970,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="text-[var(--yellow)] hover:text-white transition-colors"
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}
                 >
-                  {secondaryTicketsLinkLabel(event.tickets_url, lang)} →
+                  {cancelled
+                    ? `${ev.tickets_refunds ?? (lang === 'es' ? 'Venta / reembolsos' : 'Sale / refunds')} →`
+                    : `${secondaryTicketsLinkLabel(event.tickets_url, lang)} →`}
                 </a>
               )}
               {Object.entries(event.socials ?? {}).map(([key, url]) => (
@@ -1308,9 +1385,26 @@ function buildEventFaqItems(input: {
   ticketsUrl: string | null
   ageRestriction: string | null
   lineupNames: string[]
+  cancelled?: boolean
+  refundsUrl?: string | null
 }): { question: string; answer: string }[] {
   const es = input.lang === 'es'
   const items: { question: string; answer: string }[] = []
+
+  if (input.cancelled) {
+    items.push({
+      question: es ? `¿Se ha cancelado ${input.name}?` : `Has ${input.name} been cancelled?`,
+      answer: es
+        ? `Sí. ${input.name} está cancelado según el comunicado oficial del promotor. Las entradas se reembolsan automáticamente en 24–48 horas por el mismo método de pago.`
+        : `Yes. ${input.name} has been cancelled according to the promoter’s official notice. Tickets are refunded automatically within 24–48 hours via the original payment method.`,
+    })
+    items.push({
+      question: es ? `¿Me devuelven el dinero de ${input.name}?` : `Will I get a refund for ${input.name}?`,
+      answer: es
+        ? `Sí: el reembolso es automático en 24–48 horas por el mismo método de pago.${input.refundsUrl ? ` Más info en la página de venta: ${input.refundsUrl}` : ''}`
+        : `Yes: refunds are automatic within 24–48 hours via the original payment method.${input.refundsUrl ? ` More info on the ticketing page: ${input.refundsUrl}` : ''}`,
+    })
+  }
 
   if (input.dateLabel) {
     let when = es
@@ -1322,7 +1416,11 @@ function buildEventFaqItems(input: {
     }
     items.push({
       question: es ? `¿Cuándo es ${input.name}?` : `When is ${input.name}?`,
-      answer: when,
+      answer: input.cancelled
+        ? es
+          ? `${input.name} iba a celebrarse el ${input.dateLabel}, pero ha sido cancelado.`
+          : `${input.name} was scheduled for ${input.dateLabel}, but it has been cancelled.`
+        : when,
     })
   }
 

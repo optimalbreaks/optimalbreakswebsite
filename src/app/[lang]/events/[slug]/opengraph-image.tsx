@@ -12,6 +12,7 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { EventOgImage } from '@/lib/EventOgImage'
+import { isEventCancelled } from '@/types/database'
 
 export const alt = 'Optimal Breaks — Event'
 export const size = { width: 1200, height: 630 }
@@ -32,12 +33,14 @@ export async function generateImageMetadata({ params }: Props) {
   const supabase = createCachedSupabase()
   const { data } = await supabase
     .from('events')
-    .select('updated_at')
+    .select('updated_at, tags')
     .eq('slug', slug)
     .single()
-  const row = (data as { updated_at: string | null } | null) ?? null
+  const row = (data as { updated_at: string | null; tags?: string[] | null } | null) ?? null
   const t = row?.updated_at ? Date.parse(row.updated_at) : NaN
-  const id = Number.isFinite(t) ? String(t) : '0'
+  const epoch = Number.isFinite(t) ? String(t) : '0'
+  // `-cxl` cambia la URL de og:image aunque updated_at no se toque (caché de WhatsApp/FB).
+  const id = isEventCancelled(row) ? `${epoch}-cxl` : epoch
   return [{ id, alt, size, contentType }]
 }
 
@@ -45,6 +48,7 @@ type EventOgRow = {
   image_url: string | null
   og_image_url: string | null
   updated_at: string | null
+  tags?: string[] | null
 }
 
 const EXT_MIME: Record<string, string> = {
@@ -147,12 +151,12 @@ async function loadPosterDataUrl(
 }
 
 export default async function Image({ params, id }: Props & { id: string }) {
-  const { slug } = await params
+  const { lang, slug } = await params
 
   const supabase = createCachedSupabase()
   const { data } = await supabase
     .from('events')
-    .select('image_url, og_image_url, updated_at')
+    .select('image_url, og_image_url, updated_at, tags')
     .eq('slug', slug)
     .single()
   const row = (data as EventOgRow | null) ?? null
@@ -161,13 +165,18 @@ export default async function Image({ params, id }: Props & { id: string }) {
   // updated_at) o, si no llegara, el updated_at de la propia fila.
   const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
   const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
-  const version = id && id !== '0' ? id : fallbackVersion
+  const version = id && id !== '0' ? id.replace(/-cxl$/, '') : fallbackVersion
   const posterSource = row?.og_image_url || row?.image_url || null
   const posterDataUrl = await loadPosterDataUrl(posterSource, version)
+  const cancelled = isEventCancelled(row)
 
   return new ImageResponse(
     (
-      <EventOgImage posterDataUrl={posterDataUrl} />
+      <EventOgImage
+        posterDataUrl={posterDataUrl}
+        cancelled={cancelled}
+        cancelledLabel={lang === 'en' ? 'CANCELLED' : 'CANCELADO'}
+      />
     ),
     { ...size },
   )

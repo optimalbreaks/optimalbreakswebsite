@@ -5,6 +5,7 @@
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
+import { EventCancelledStamp } from '@/components/EventPosterLightbox'
 
 interface EventFlyerProps {
   date: string
@@ -16,22 +17,28 @@ interface EventFlyerProps {
   href?: string
   entityId?: string
   lang?: string
+  cancelled?: boolean
 }
 
 /** Misma envoltura y miniatura que `LargeGrid` en `EventsExplorer` (vista grande /events). */
-export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang }: EventFlyerProps) {
+export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang, cancelled }: EventFlyerProps) {
   const shell =
     'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group'
 
   const body = (
     <>
-      <CardThumbnail
-        src={imageUrl}
-        alt={name}
-        aspectClass="aspect-poster w-full"
-        frameClass="border-b-[3px] border-[var(--ink)]"
-        fit="cover"
-      />
+      <div className="relative">
+        <CardThumbnail
+          src={imageUrl}
+          alt={name}
+          aspectClass="aspect-poster w-full"
+          frameClass="border-b-[3px] border-[var(--ink)]"
+          fit="cover"
+        />
+        {cancelled ? (
+          <EventCancelledStamp label={lang === 'en' ? 'CANCELLED' : 'CANCELADO'} size="card" />
+        ) : null}
+      </div>
 
       <div className="p-5 sm:p-7 relative">
         {/* Tape */}
@@ -72,7 +79,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href,
             transform: 'rotate(3deg)',
           }}
         >
-          {type}
+          {cancelled ? (lang === 'en' ? 'CANCELLED' : 'CANCELADO') : type}
         </div>
       </div>
     </>

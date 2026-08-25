@@ -800,6 +800,20 @@ export interface BreakEvent extends Record<string, unknown> {
   coords: { lat: number; lng: number } | null
 }
 
+/** Tag editorial `cancelado` / `cancelled` / `canceled`. Sin columna de estado. */
+export function isEventCancelled(event: { tags?: string[] | null } | null | undefined): boolean {
+  const tags = event?.tags
+  if (!tags?.length) return false
+  return tags.some((tag) => {
+    const n = String(tag)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+    return n === 'cancelado' || n === 'cancelled' || n === 'canceled'
+  })
+}
+
 export interface BlogPost extends Record<string, unknown> {
   id: string
   created_at: string

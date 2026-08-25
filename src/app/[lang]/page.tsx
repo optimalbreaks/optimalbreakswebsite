@@ -14,6 +14,7 @@ import {
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import type { Artist, BeatportTopTrack, BlogPost, BreakEvent } from '@/types/database'
+import { isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -86,7 +87,7 @@ const FALLBACK_HOME_EVENTS: {
 
 type HomeEventRow = Pick<
   BreakEvent,
-  'id' | 'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url'
+  'id' | 'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url' | 'tags'
 >
 
 /** «Hoy» calendario (sitio centrado en España; coherente en SSR). */
@@ -222,19 +223,19 @@ export default async function HomePage({
 
   const { data: upcomingEventsRaw } = await supabase
     .from('events')
-    .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+    .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
     .gte('date_start', todayYmdHome())
     .order('date_start', { ascending: true })
-    .limit(4)
+    .limit(16)
 
-  let homeEvents = (upcomingEventsRaw || []) as HomeEventRow[]
+  let homeEvents = ((upcomingEventsRaw || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, 4)
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
-      .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url')
+      .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
       .order('date_start', { ascending: false })
-      .limit(4)
-    homeEvents = (anyEvents || []) as HomeEventRow[]
+      .limit(16)
+    homeEvents = ((anyEvents || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, 4)
   }
 
   const displayEvents =
@@ -248,6 +249,7 @@ export default async function HomePage({
           type: eventTypeLabelHome(e.event_type, lang),
           imageUrl: e.image_url,
           href: `/${lang}/events/${e.slug}`,
+          cancelled: isEventCancelled(e),
         }))
       : FALLBACK_HOME_EVENTS.map((e, i) => ({
           key: `fallback-${i}`,
@@ -606,6 +608,7 @@ export default async function HomePage({
               href={e.href}
               entityId={e.id}
               lang={lang}
+              cancelled={'cancelled' in e ? e.cancelled : false}
             />
           ))}
         </div>

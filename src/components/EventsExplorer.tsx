@@ -6,7 +6,9 @@ import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { BreakEvent } from '@/types/database'
+import { isEventCancelled } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
+import { EventCancelledStamp } from '@/components/EventPosterLightbox'
 
 type DateWhen = 'all' | 'upcoming' | 'past' | 'undated'
 type YearGroupKey = number | 'undated'
@@ -46,6 +48,8 @@ interface Props {
     calendar_modal_badge_past?: string
     calendar_modal_badge_upcoming?: string
     date_filter?: DateFilterDict
+    cancelled_stamp?: string
+    calendar_modal_badge_cancelled?: string
   }
   lang: string
 }
@@ -208,6 +212,11 @@ type CalendarModalLabels = {
   dates: string
   badgePast: string
   badgeUpcoming: string
+  badgeCancelled: string
+}
+
+function cancelledStampLabel(lang: string) {
+  return lang === 'es' ? 'CANCELADO' : 'CANCELLED'
 }
 
 function CalendarDayEventsModal({
@@ -270,22 +279,24 @@ function CalendarDayEventsModal({
           <div className="overflow-y-auto flex-1 min-h-0 px-4 py-5 space-y-10">
             {payload.events.map((e) => {
               const past = isEventPast(e)
+              const cancelled = isEventCancelled(e)
               const lineup = lineupPreviewText(e, 18)
               const excerpt = descriptionExcerpt(e, lang, 220)
               return (
                 <article key={e.slug} className="pb-10 border-b-[2px] border-[var(--ink)] last:border-b-0 last:pb-0">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="sm:w-[min(42%,160px)] shrink-0 overflow-hidden bg-[var(--paper)]">
+                    <div className="relative sm:w-[min(42%,160px)] shrink-0 overflow-hidden bg-[var(--paper)]">
                       <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+                      {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
                     </div>
                     <div className="min-w-0 flex-1 flex flex-col gap-2 text-[var(--ink)]">
                       <span
                         className={`self-start text-[9px] uppercase tracking-wider px-2 py-0.5 border border-[var(--ink)] ${
-                          past ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)]'
+                          cancelled || past ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)]'
                         }`}
                         style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
                       >
-                        {past ? labels.badgePast : labels.badgeUpcoming}
+                        {cancelled ? labels.badgeCancelled : past ? labels.badgePast : labels.badgeUpcoming}
                       </span>
                       <h3
                         className="m-0 uppercase"
@@ -404,8 +415,9 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
       dates: dict.calendar_modal_dates ?? 'Dates',
       badgePast: dict.calendar_modal_badge_past ?? 'Past',
       badgeUpcoming: dict.calendar_modal_badge_upcoming ?? 'Upcoming',
+      badgeCancelled: dict.calendar_modal_badge_cancelled ?? (lang === 'es' ? 'Cancelado' : 'Cancelled'),
     }),
-    [dict],
+    [dict, lang],
   )
 
   useEffect(() => {
@@ -777,6 +789,7 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-stretch">
       {events.map((e) => {
         const past = isEventPast(e)
+        const cancelled = isEventCancelled(e)
         return (
         <Link
           key={e.slug}
@@ -785,11 +798,12 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
         >
           <FavoriteButton type="event" entityId={e.id} lang={lang} />
           <div
-            className={`relative shrink-0 transition-colors duration-150 ${
+            className={`relative shrink-0 overflow-hidden transition-colors duration-150 ${
               past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
             }`}
           >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
+            {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
           </div>
           <div
             className={`flex flex-1 flex-col justify-start p-3 text-left transition-colors duration-200 ease-out min-h-[5.25rem] ${
@@ -832,6 +846,7 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-stretch">
       {events.map((e) => {
         const past = isEventPast(e)
+        const cancelled = isEventCancelled(e)
         return (
         <Link
           key={e.slug}
@@ -839,11 +854,12 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
           className="relative h-full min-h-0 border-b-[2px] border-r-[2px] border-[var(--ink)] transition-all duration-150 group/link no-underline text-[var(--ink)] flex flex-col overflow-hidden"
         >
           <div
-            className={`relative shrink-0 transition-colors duration-150 ${
+            className={`relative shrink-0 overflow-hidden transition-colors duration-150 ${
               past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
             }`}
           >
             <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
+            {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="card" /> : null}
           </div>
           <div
             className={`flex flex-1 flex-col justify-start p-1.5 text-left transition-colors duration-200 ease-out min-h-[3.75rem] ${
@@ -871,6 +887,7 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
     <div className="border-4 border-[var(--ink)]">
       {events.map((e) => {
         const past = isEventPast(e)
+        const cancelled = isEventCancelled(e)
         return (
         <div key={e.slug} className="relative border-b-[2px] border-[var(--ink)]">
           <FavoriteButton type="event" entityId={e.id} lang={lang} className="!top-1/2 !-translate-y-1/2 !right-3" />
@@ -884,11 +901,12 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
               }`}
             >
               <div
-                className={`shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)] transition-colors duration-150 ${
+                className={`relative shrink-0 w-[2.75rem] sm:w-14 overflow-hidden border-[2px] border-[var(--ink)] transition-colors duration-150 ${
                   past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
                 }`}
               >
                 <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" groupHoverGroup="link" />
+                {cancelled ? <EventCancelledStamp label={cancelledStampLabel(lang)} size="thumb" /> : null}
               </div>
               <div className="flex-grow min-w-0">
                 <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
