@@ -428,7 +428,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
               {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
+              <ArtistNames artists={artists} mixName={mixName} slugMap={artistSlugMap} lang={lang} />
               {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={pick.label} slugMap={labelSlugMap} lang={lang} /></> : null}
               {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>
@@ -540,7 +540,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
               {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
+              <ArtistNames artists={artists} mixName={mixName} slugMap={artistSlugMap} lang={lang} />
               {track.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={track.label} slugMap={labelSlugMap} lang={lang} /></> : null}
               {track.year != null && track.year > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{track.year}</span></> : null}
             </p>
@@ -642,7 +642,7 @@ function ChartTrackRow({ track, dict, isPlaying, isPaused, onPlay, artistSlugMap
               {track.mix_name && <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{track.mix_name}</span>}
             </h3>
             <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-              <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
+              <ArtistNames artists={artists} mixName={track.mix_name} slugMap={artistSlugMap} lang={lang} />
               {track.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={track.label} slugMap={labelSlugMap} lang={lang} /></>}
               {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap" title={c.release_year_title}>{releaseDisp}</span></> : null}
             </p>

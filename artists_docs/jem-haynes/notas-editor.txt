@@ -1,0 +1,30 @@
+Revisión editorial — Jem Haynes (agosto 2026)
+===========================================
+
+Fuentes
+-------
+- Brief del usuario.
+- Ibiza Spotlight, 17 feb 2011: «I'm from Wandsworth in South London.»
+  https://www.ibiza-spotlight.com/night/reviews/2011/ibiza_resident_dj_jem_haynes_i.htm
+- LinkedIn: We Love @ Space Ibiza, jun 2005–sep 2014 (9 años 3 meses), main room.
+- Beatport artist 88378.
+- Gonna Be — Punks, 13 sep 2024, PUNKS181, Breaks / Breakbeat / UK Bass, 128 BPM.
+- Heaven — Punks, 24 ene 2025, PUNKS183.
+- Find Me — Rebel Bass, 1 ago 2025 en Beatport (Bandcamp lista 22 ago); Breaks / Breakbeat / UK Bass, 128 BPM.
+- I WANNA (Jem Haynes Remix) — WeZ WhaTevR, DKR, 2 jul 2026, 132 BPM.
+- Surreal / Beatport: mix engineer Champion Sound (Faithless) 2025; Life Is A Melody feat. Jinadu; Funkaholics / Kepler edit de Hype It Up 2025.
+
+Correcciones respecto a la ficha anterior
+----------------------------------------
+- Quitar mención a Optimal Breaks / 40 Breaks Vitales de la bio.
+- No presentarlo como artista de breaks británico desde los 2000.
+- Fechas: Gonna Be 2024 (no 2006); Heaven 2025 (no 2010); Find Me 2025 (no 2010). Quitar Rebel Bass como «tema» esencial de 2020.
+- Styles: quitar Bass y Electro; añadir House y Tech House.
+- real_name: Jem Haynes
+- related_artists: Dominic B UK, Stanton Warriors (fichas existentes). Faithless / Jinadu solo en bio.
+
+Decisiones
+----------
+- country: UK; category: current; era: 2000s-present
+- Colour Series en bio como sello propio histórico, no en labels_founded
+- Foto: no tocar (ya hay retrato en Storage)

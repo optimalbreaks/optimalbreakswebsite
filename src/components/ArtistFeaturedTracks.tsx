@@ -301,7 +301,7 @@ export default function ArtistFeaturedTracks({
                           {mixName ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
                         </h3>
                         <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                          <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
+                          <ArtistNames artists={artists} mixName={mixName} slugMap={artistSlugMap} lang={lang} />
                           {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={pick.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                         </p>

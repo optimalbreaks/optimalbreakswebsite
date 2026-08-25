@@ -433,6 +433,7 @@ export default function SoulmatesSection({ lang }: Props) {
                     <p className="text-[11px] text-[var(--ink)]/60 sm:break-words break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
                       <ArtistNames
                         artists={splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))}
+                        mixName={t.mix_name}
                         slugMap={artistSlugMap}
                         lang={lang}
                       />

@@ -57,10 +57,11 @@
  * se inserta una edición publicada mínima (igual que chart-vinyl-upsert) si aún no hay fila.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import { extractRemixerNames, mergeArtistCreditObjects } from './lib/remixer-credits.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -342,8 +343,83 @@ async function pingPublicChartsRevalidate() {
   }
 }
 
+function artistsCreditKey(artists) {
+  return (artists || [])
+    .map((x) => String(x?.name || '').trim().toLowerCase())
+    .filter(Boolean)
+    .join('|')
+}
+
+function rewritePicksJsonRemixers() {
+  const dir = join(ROOT, 'data/charts/picks')
+  if (!existsSync(dir)) return { filesTouched: 0, picksTouched: 0 }
+  const files = readdirSync(dir).filter((f) => f.endsWith('.json') && !f.includes('example'))
+  let filesTouched = 0
+  let picksTouched = 0
+  for (const f of files) {
+    const pth = join(dir, f)
+    let json
+    try {
+      json = JSON.parse(readFileSync(pth, 'utf8'))
+    } catch {
+      continue
+    }
+    if (!Array.isArray(json.picks)) continue
+    let changed = false
+    for (const pick of json.picks) {
+      const next = mergeArtistCreditObjects(pick.artists, extractRemixerNames(pick.mix_name))
+      if (artistsCreditKey(pick.artists) === artistsCreditKey(next)) continue
+      pick.artists = next
+      changed = true
+      picksTouched++
+    }
+    if (changed) {
+      writeFileSync(pth, `${JSON.stringify(json, null, 2)}\n`, 'utf8')
+      filesTouched++
+    }
+  }
+  return { filesTouched, picksTouched }
+}
+
+async function backfillRemixerCreditsInDb(supabase) {
+  const tables = ['chart_featured_tracks', 'chart_tracks', 'chart_vinyl_tracks']
+  for (const table of tables) {
+    let from = 0
+    const PAGE = 500
+    let patched = 0
+    for (;;) {
+      const { data, error } = await supabase
+        .from(table)
+        .select('id, artists, mix_name')
+        .range(from, from + PAGE - 1)
+      if (error) throw new Error(`${table}: ${error.message}`)
+      if (!data?.length) break
+      for (const row of data) {
+        const next = mergeArtistCreditObjects(row.artists, extractRemixerNames(row.mix_name))
+        if (artistsCreditKey(row.artists) === artistsCreditKey(next)) continue
+        const { error: upErr } = await supabase.from(table).update({ artists: next }).eq('id', row.id)
+        if (upErr) throw new Error(`update ${table} ${row.id}: ${upErr.message}`)
+        patched++
+        console.log(`    ${table}: ${(row.mix_name || '').trim()} → ${next.map((a) => a.name).join(', ')}`)
+      }
+      if (data.length < PAGE) break
+      from += PAGE
+    }
+    console.log(`  ↳ ${table}: ${patched} filas con remixer añadido`)
+  }
+}
+
 async function main() {
   const argv = process.argv.slice(2)
+  if (argv.includes('--backfill-remixer-credits')) {
+    const jsonStats = rewritePicksJsonRemixers()
+    console.log(`  ↳ JSON picks: ${jsonStats.picksTouched} temas en ${jsonStats.filesTouched} archivos`)
+    const supabase = requireSupabase()
+    await backfillRemixerCreditsInDb(supabase)
+    await pingPublicChartsRevalidate()
+    return
+  }
+
   const createEditionIfMissing = argv.includes('--create-edition')
   const enrichReleaseDates =
     argv.includes('--enrich-release-dates') || argv.includes('--enrich-beatport-dates')
@@ -506,7 +582,10 @@ async function main() {
       sort_order: idx + 1,
       title,
       mix_name: (p.mix_name || '').trim(),
-      artists: Array.isArray(p.artists) ? p.artists : [],
+      artists: mergeArtistCreditObjects(
+        Array.isArray(p.artists) ? p.artists : [],
+        extractRemixerNames(p.mix_name),
+      ),
       label: (p.label || '').trim(),
       platform: (p.platform || 'other').trim().toLowerCase() || 'other',
       link_url,

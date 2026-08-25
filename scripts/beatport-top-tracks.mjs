@@ -35,6 +35,7 @@ import { readFileSync, existsSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import { extractRemixerNames } from './lib/remixer-credits.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -470,10 +471,24 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false, autoF
 
       const results = topQuery.state?.data?.results || []
       const tracks = results.map((t, i) => {
-        const artists = (t.artists || []).map((a) => ({
-          name: a.name,
-          beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
-        }))
+        const seen = new Set()
+        const artists = []
+        for (const a of [...(t.artists || []), ...(t.remixers || [])]) {
+          const name = (a?.name || '').trim()
+          if (!name || seen.has(name.toLowerCase())) continue
+          seen.add(name.toLowerCase())
+          artists.push({
+            name,
+            beatport_url: a.slug && a.id
+              ? `https://www.beatport.com/artist/${a.slug}/${a.id}`
+              : undefined,
+          })
+        }
+        for (const name of extractRemixerNames(t.mix_name)) {
+          if (seen.has(name.toLowerCase())) continue
+          seen.add(name.toLowerCase())
+          artists.push({ name })
+        }
         const label = t.release?.label || t.label
         return {
           position: i + 1,

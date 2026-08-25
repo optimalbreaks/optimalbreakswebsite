@@ -46,6 +46,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { collectBeatportArtistCredits } from './lib/remixer-credits.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -268,9 +269,7 @@ function releaseDateIso(t) {
 
 function pickFromTrackBlob(t) {
   if (!t?.id || !t?.slug) return null
-  const artists = (t.artists || [])
-    .map((a) => ({ name: (a?.name || '').trim() }))
-    .filter((x) => x.name)
+  const artists = collectBeatportArtistCredits(t)
   const link_url = `https://www.beatport.com/track/${t.slug}/${t.id}`
   const rd = releaseDateIso(t)
   const y = rd ? Number.parseInt(rd.slice(0, 4), 10) : undefined

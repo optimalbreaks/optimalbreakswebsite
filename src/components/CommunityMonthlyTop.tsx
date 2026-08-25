@@ -842,6 +842,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
                           <ArtistNames
                             artists={splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))}
+                            mixName={t.mix_name}
                             slugMap={artistSlugMap}
                             lang={lang}
                           />

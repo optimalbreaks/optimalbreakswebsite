@@ -273,7 +273,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Schema: `supabase/migrations/070_editorial_artist_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
-First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**, **Lady Arannia**.
+First editorial marks (agosto 2026): **Afghan Headspin**, **Gruv42**, **Lady Arannia**, **Devis Hard**.
 
 ### Artist board — weekly movement (not daily)
 

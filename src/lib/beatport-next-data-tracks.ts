@@ -3,6 +3,10 @@
  * Usado por importación admin de New Releases y alineado con scripts/_append-batch-nr-from-releases.mjs
  */
 
+import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
+
+export { collectBeatportArtistCredits }
+
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
@@ -47,10 +51,7 @@ export function pickFromTrackBlob(t: Record<string, unknown>): BeatportPickInput
   const id = t.id as number | undefined
   const slug = t.slug as string | undefined
   if (!id || !slug) return null
-  const artistsRaw = t.artists as { name?: string }[] | undefined
-  const artists = (artistsRaw || [])
-    .map((a) => ({ name: (a?.name || '').trim() }))
-    .filter((x) => x.name)
+  const artists = collectBeatportArtistCredits(t)
   const link_url = `https://www.beatport.com/track/${slug}/${id}`
   const rd = releaseDateIso(t)
   const y = rd ? Number.parseInt(rd.slice(0, 4), 10) : NaN

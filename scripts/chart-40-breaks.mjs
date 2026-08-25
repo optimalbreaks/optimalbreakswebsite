@@ -21,6 +21,7 @@ import { readFileSync, existsSync, writeFileSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
+import { extractRemixerNames } from './lib/remixer-credits.mjs'
 import {
   openAiChatCompletionsBody,
   resolveOpenAiModel,
@@ -215,10 +216,24 @@ function parseBeatportNextData(html) {
 
   const results = topQuery.state?.data?.results || []
   const tracks = results.map((t, i) => {
-    const artists = (t.artists || []).map((a) => ({
-      name: a.name,
-      beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
-    }))
+    // Artistas + remixers: el remixer es el autor real de la versión breakbeat
+    // (mismo criterio que src/lib/beatport-next-data-tracks.ts).
+    const seenNames = new Set()
+    const artists = []
+    for (const a of [...(t.artists || []), ...(t.remixers || [])]) {
+      const name = (a?.name || '').trim()
+      if (!name || seenNames.has(name.toLowerCase())) continue
+      seenNames.add(name.toLowerCase())
+      artists.push({
+        name,
+        beatport_url: `https://www.beatport.com/artist/${a.slug}/${a.id}`,
+      })
+    }
+    for (const name of extractRemixerNames(t.mix_name)) {
+      if (seenNames.has(name.toLowerCase())) continue
+      seenNames.add(name.toLowerCase())
+      artists.push({ name })
+    }
 
     const artworkUrl = artworkUrlFromBeatportEntity(t)
 

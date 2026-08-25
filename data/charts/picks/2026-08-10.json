@@ -249,6 +249,9 @@
       "artists": [
         {
           "name": "Future Funk Squad"
+        },
+        {
+          "name": "Aggresivnes"
         }
       ],
       "label": "Elektroshok Records",
@@ -729,6 +732,9 @@
       "artists": [
         {
           "name": "Diyeico"
+        },
+        {
+          "name": "Skull Breakerz"
         }
       ],
       "label": "Br8kn Records",
@@ -817,6 +823,12 @@
       "artists": [
         {
           "name": "K5"
+        },
+        {
+          "name": "ANUSCHKA"
+        },
+        {
+          "name": "DJ WAVS"
         }
       ],
       "label": "Kaleidoscope Music",
@@ -961,6 +973,9 @@
       "artists": [
         {
           "name": "PhoenixRising"
+        },
+        {
+          "name": "Sharaz Nite Sky"
         }
       ],
       "label": "Br8kn Records",
@@ -1209,6 +1224,9 @@
       "artists": [
         {
           "name": "Dj žaibas"
+        },
+        {
+          "name": "Emisora 404"
         }
       ],
       "label": "Close Your Eyes",
@@ -1344,6 +1362,9 @@
         },
         {
           "name": "DJ WAVS"
+        },
+        {
+          "name": "Huda Hudia"
         }
       ],
       "label": "Kaleidoscope Music",
@@ -1520,6 +1541,9 @@
       "artists": [
         {
           "name": "Luis Pitti"
+        },
+        {
+          "name": "Sunset Garage Luis Pitti"
         }
       ],
       "label": "Canary Step Records",
@@ -1542,6 +1566,9 @@
       "artists": [
         {
           "name": "Luis Pitti"
+        },
+        {
+          "name": "Broken Groove Luis Pitti"
         }
       ],
       "label": "Canary Step Records",

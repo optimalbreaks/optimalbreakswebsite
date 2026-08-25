@@ -7,6 +7,9 @@
       "artists": [
         {
           "name": "Quentin SounDrive"
+        },
+        {
+          "name": "Hey! This Is Brad"
         }
       ],
       "label": "Quintessential Records",
@@ -1103,6 +1106,9 @@
       "artists": [
         {
           "name": "J-Break"
+        },
+        {
+          "name": "FM-3"
         }
       ],
       "label": "DIRTY KITCHEN RAVE",
@@ -2147,6 +2153,162 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 95
+    },
+    {
+      "title": "Deeper",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/deeper/29899851",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f640794d-305e-4320-86a3-329313908fca.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "Jamm Rox",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jamm-rox/29899850",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/71966311-b5ac-4545-b977-b68babfe1d11.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Watch Dem",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Logan_olm"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/watch-dem/29899849",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3333ee34-abe7-46ad-b1a2-5e0e19922503.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "Rack City",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rack-city/29899848",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/643062ea-086d-4fc9-8c28-38f3601388ba.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "Big Bad Wolf",
+      "mix_name": "Yo Speed Remix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        },
+        {
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-bad-wolf/29899847",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d3cd8c76-2153-4cdd-b8cd-bb0be5d48ee4.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "Big Bad Wolf",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Son of Sam (UK)"
+        }
+      ],
+      "label": "Hot Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-bad-wolf/29899846",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6d4596-0fe6-4091-9c5c-c38901eda00a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9c3112b0-916d-4f12-b64a-73a917b36be1.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
     }
   ]
 }

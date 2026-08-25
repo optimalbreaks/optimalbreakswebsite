@@ -6,6 +6,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ChartFeaturedTrack, Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
+import { extractRemixerNames } from '@/lib/remixer-credits'
 
 function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
@@ -232,6 +233,29 @@ function orIlikeFilter(column: string, terms: string[]): string {
   return terms.map((t) => `${column}.ilike.%${t}%`).join(',')
 }
 
+function artistTrackOrFilter(terms: string[]): string {
+  return terms
+    .flatMap((t) => [`artist_names_text.ilike.%${t}%`, `mix_name.ilike.%${t}%`])
+    .join(',')
+}
+
+function chartRowMatchesArtist(
+  row: { artists?: unknown; mix_name?: string | null },
+  matchKeys: Set<string>,
+): boolean {
+  for (const name of extractArtistNames(row.artists)) {
+    if (lineupEntryMatchesArtist(name, matchKeys)) return true
+  }
+  for (const name of extractRemixerNames(row.mix_name)) {
+    if (lineupEntryMatchesArtist(name, matchKeys)) return true
+  }
+  const mix = normalizeForEntityMatch(row.mix_name || '')
+  for (const key of matchKeys) {
+    if (key.length >= 3 && mix.includes(key)) return true
+  }
+  return false
+}
+
 type EventRow = {
   slug: string
   name: string
@@ -309,7 +333,7 @@ export async function fetchArtistRelatedContent(
   const pastCutoffIso = pastCutoff.toISOString().slice(0, 10)
   const terms = artistSearchTerms(artist)
   const matchKeys = buildArtistMatchKeys(artist)
-  const artistNamesOr = orIlikeFilter('artist_names_text', terms)
+  const artistNamesOr = artistTrackOrFilter(terms)
   const lineupOr = orIlikeFilter('lineup_text', terms)
   const mixOr = [`artist_id.eq.${artist.id}`, ...terms.map((t) => `artist_name.ilike.%${t}%`)].join(',')
 
@@ -356,9 +380,9 @@ export async function fetchArtistRelatedContent(
   ])
 
   const chartLinks = dedupeChartRows(
-    (chartRes.data || []) as unknown as ChartRow[],
-    (featuredRes.data || []) as unknown as ChartRow[],
-    (vinylRes.data || []) as unknown as ChartRow[],
+    ((chartRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
+    ((featuredRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
+    ((vinylRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
     lang,
   )
 
@@ -433,14 +457,15 @@ function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
   return out
 }
 
-/** Picks de New Releases donde aparece el artista (match por `artist_names_text`). */
+/** Picks de New Releases: crédito en `artists[]` o remixer en `mix_name`. */
 export async function fetchArtistFeaturedPicks(
   supabase: SupabaseClient<Database>,
   artist: { name: string; name_display?: string | null; slug?: string },
 ): Promise<ArtistFeaturedPick[]> {
   const terms = artistSearchTerms(artist)
   if (terms.length === 0) return []
-  const artistNamesOr = orIlikeFilter('artist_names_text', terms)
+  const matchKeys = buildArtistMatchKeys(artist)
+  const artistNamesOr = artistTrackOrFilter(terms)
 
   const { data, error } = await supabase
     .from('chart_featured_tracks')
@@ -451,7 +476,9 @@ export async function fetchArtistFeaturedPicks(
     .order('week_date', { referencedTable: 'chart_editions', ascending: false })
 
   if (error || !data?.length) return []
-  return mapFeaturedPickRows(data as unknown as FeaturedPickRow[])
+  return mapFeaturedPickRows(data as unknown as FeaturedPickRow[]).filter((p) =>
+    chartRowMatchesArtist(p, matchKeys),
+  )
 }
 
 type LabelChartPickRow = {

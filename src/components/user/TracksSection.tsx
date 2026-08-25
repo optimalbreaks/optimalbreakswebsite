@@ -1430,6 +1430,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
                       <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
                         <ArtistNames
                           artists={trackArtistCredits(t)}
+                          mixName={t.mix_name}
                           slugMap={artistSlugMap}
                           lang={lang}
                         />

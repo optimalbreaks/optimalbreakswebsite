@@ -44,6 +44,7 @@ import {
   shouldSkipArtistSelfCredit,
   splitArtistCreditsForRanking,
 } from '@/lib/artist-self-credit'
+import { extractRemixerNames } from '@/lib/remixer-credits'
 
 const TOP_ARTISTS_LIMIT = 50
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
@@ -710,14 +711,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const credited = new Map<string, string>()
     for (const artistName of splitArtistCreditsForRanking(meta.artists || '')) {
       const artistKey = normalizeArtistKey(artistName)
-      if (!artistKey) continue
+      if (artistKey && !credited.has(artistKey)) credited.set(artistKey, artistName.trim())
+    }
+    for (const remixer of extractRemixerNames(meta.mix_name)) {
+      const artistKey = normalizeArtistKey(remixer)
+      if (artistKey && !credited.has(artistKey)) credited.set(artistKey, remixer.trim())
+    }
+    for (const [artistKey, artistName] of credited) {
       if (shouldSkipArtistSelfCredit(selfCreditSkip, s.user_id, artistName)) continue
       bumpArtistInto(artistAgg, artistName, s.user_id, key)
       artistCredits.push({
         key: artistKey,
-        name: artistName.trim(),
+        name: artistName,
         userId: s.user_id,
         trackKey: key,
         createdMs: created ? Date.parse(created) || 0 : 0,

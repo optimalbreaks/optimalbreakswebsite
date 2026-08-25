@@ -8,6 +8,7 @@
 import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
 import { findArtistSlug, findLabelSlug } from '@/lib/artist-slug-map'
+import { extractRemixerNames, mergeArtistCreditObjects } from '@/lib/remixer-credits'
 
 export type ArtistCredit = {
   name: string
@@ -18,16 +19,19 @@ export type ArtistCredit = {
 
 type ArtistNamesProps = {
   artists: ArtistCredit[]
+  /** Si el mix es un remix, el remixer se añade al crédito (y enlaza a ficha). */
+  mixName?: string | null
   slugMap?: Record<string, string>
   lang?: Locale | string
   className?: string
 }
 
-export function ArtistNames({ artists, slugMap, lang, className = 'text-[var(--ink)]/70' }: ArtistNamesProps) {
-  if (!artists.length) return <span className={className}>—</span>
+export function ArtistNames({ artists, mixName, slugMap, lang, className = 'text-[var(--ink)]/70' }: ArtistNamesProps) {
+  const credits = mergeArtistCreditObjects(artists, extractRemixerNames(mixName))
+  if (!credits.length) return <span className={className}>—</span>
   return (
     <span className={className}>
-      {artists.map((a, i) => {
+      {credits.map((a, i) => {
         const name = (a.name || '').trim()
         if (!name) return null
         const internalSlug = findArtistSlug(name, slugMap)
@@ -44,7 +48,7 @@ export function ArtistNames({ artists, slugMap, lang, className = 'text-[var(--i
             ) : (
               name
             )}
-            {i < artists.length - 1 ? ', ' : null}
+            {i < credits.length - 1 ? ', ' : null}
           </span>
         )
       })}

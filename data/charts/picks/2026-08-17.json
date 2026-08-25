@@ -861,6 +861,9 @@
       "artists": [
         {
           "name": "SL 83"
+        },
+        {
+          "name": "Contagion (UK)"
         }
       ],
       "label": "DIRTY KITCHEN RAVE",
@@ -1294,6 +1297,9 @@
       "artists": [
         {
           "name": "GODINO"
+        },
+        {
+          "name": "Blackdryft"
         }
       ],
       "label": "DIRTY KITCHEN RAVE",
@@ -1501,6 +1507,9 @@
         },
         {
           "name": "Evil Crew"
+        },
+        {
+          "name": "PERCYBASS"
         }
       ],
       "label": "DIRTY KITCHEN RAVE",
@@ -1545,6 +1554,9 @@
       "artists": [
         {
           "name": "DJ Brownie"
+        },
+        {
+          "name": "SluG (FL)"
         }
       ],
       "label": "DIRTY KITCHEN RAVE",
@@ -1589,6 +1601,9 @@
       "artists": [
         {
           "name": "Pray For Bass"
+        },
+        {
+          "name": "Shade K"
         }
       ],
       "label": "SPACE PIZZA Records",
@@ -1890,6 +1905,9 @@
       "artists": [
         {
           "name": "K5"
+        },
+        {
+          "name": "DEVIS HARD"
         }
       ],
       "label": "Kaleidoscope Music",
@@ -2226,6 +2244,9 @@
         },
         {
           "name": "TT Beats"
+        },
+        {
+          "name": "ANON808"
         }
       ],
       "label": "Br8kn Records",
@@ -2307,6 +2328,59 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 102
+    },
+    {
+      "title": "Skin Out",
+      "mix_name": "Woter Remix",
+      "artists": [
+        {
+          "name": "Darkus"
+        },
+        {
+          "name": "Paul Bassrock"
+        },
+        {
+          "name": "Woter"
+        }
+      ],
+      "label": "SOUNDSYSTEM BASSROCK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/skin-out/29743707",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fd72f39f-ac5e-4593-8ec2-d182adf07924.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0cc298fa-565d-4214-bf67-99589d9810fa.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103
+    },
+    {
+      "title": "Six Days",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Deekline"
+        },
+        {
+          "name": "Zen Lewis"
+        }
+      ],
+      "label": "Jungle Cakes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/six-days/29897424",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/81c5a7fe-89f8-421c-ba95-6492ff74f9e0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/13021515-99b4-4349-94b2-bc06250b63e8.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104
     }
   ]
 }
