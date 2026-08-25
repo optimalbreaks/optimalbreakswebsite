@@ -19,13 +19,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '@/lib/i18n-config'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
-import { ArtistNames } from '@/components/ArtistNames'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import CardThumbnail from '@/components/CardThumbnail'
 import CountryBadge from '@/components/CountryBadge'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildFullArtistSlugMap,
+  buildFullLabelSlugMap,
   filterArtistSlugMapForNames,
   normalizeArtistKey,
   splitArtistDisplayLine,
@@ -231,6 +232,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
+  const [labelSlugMap, setLabelSlugMap] = useState<Record<string, string>>({})
   const [shuffleMode, setShuffleMode] = useState(false)
   const [showAllArtists, setShowAllArtists] = useState(false)
   /** Vinilo YouTube abierto en fila (embed inline, no cola global). */
@@ -309,6 +311,45 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         }
       }
       setArtistSlugMap(filterArtistSlugMapForNames(full, names))
+    })()
+    return () => { cancelled = true }
+  }, [data?.top_tracks])
+
+  useEffect(() => {
+    const tracks = data?.top_tracks
+    if (!tracks?.length) {
+      setLabelSlugMap({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const names = new Set<string>()
+      for (const t of tracks) {
+        const name = (t.label || '').trim()
+        if (name) names.add(name)
+      }
+      if (names.size === 0) {
+        if (!cancelled) setLabelSlugMap({})
+        return
+      }
+      const supabase = createBrowserSupabase()
+      const { data: rows } = await supabase.from('labels').select('slug, name').limit(5000)
+      if (cancelled) return
+      const full = buildFullLabelSlugMap(
+        ((rows as { slug: string; name: string | null }[]) || []).map((r) => ({
+          slug: r.slug,
+          name: r.name,
+          name_display: null,
+        })),
+      )
+      for (const t of tracks) {
+        const o = t.beatport_share_origin
+        if (t.primary.source === 'beatport_top' && o?.kind === 'label' && o.slug) {
+          const key = normalizeArtistKey(t.label || '')
+          if (key) full[key] = o.slug
+        }
+      }
+      setLabelSlugMap(filterArtistSlugMapForNames(full, names, { labelSuffixes: true }))
     })()
     return () => { cancelled = true }
   }, [data?.top_tracks])
@@ -804,7 +845,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                             slugMap={artistSlugMap}
                             lang={lang}
                           />
-                          {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></> : null}
+                          {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                         </p>
                       </div>

@@ -16,6 +16,14 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useProfile } from '@/hooks/useUserData'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
+import {
+  buildFullArtistSlugMap,
+  buildFullLabelSlugMap,
+  filterArtistSlugMapForNames,
+  splitArtistDisplayLine,
+} from '@/lib/artist-slug-map'
+import { createBrowserSupabase } from '@/lib/supabase'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -101,6 +109,8 @@ export default function SoulmatesSection({ lang }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [savingFlag, setSavingFlag] = useState(false)
+  const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
+  const [labelSlugMap, setLabelSlugMap] = useState<Record<string, string>>({})
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -123,6 +133,57 @@ export default function SoulmatesSection({ lang }: Props) {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  useEffect(() => {
+    const tracks = data?.recommended_tracks
+    if (!tracks?.length) {
+      setArtistSlugMap({})
+      setLabelSlugMap({})
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const artistNames = new Set<string>()
+      const labelNames = new Set<string>()
+      for (const t of tracks) {
+        for (const name of splitArtistDisplayLine(t.artists || '')) artistNames.add(name)
+        const label = (t.label || '').trim()
+        if (label) labelNames.add(label)
+      }
+      const supabase = createBrowserSupabase()
+      const [{ data: artistRows }, { data: labelRows }] = await Promise.all([
+        artistNames.size
+          ? supabase.from('artists').select('slug, name, name_display').limit(5000)
+          : Promise.resolve({ data: [] as { slug: string; name: string | null; name_display: string | null }[] }),
+        labelNames.size
+          ? supabase.from('labels').select('slug, name').limit(5000)
+          : Promise.resolve({ data: [] as { slug: string; name: string | null }[] }),
+      ])
+      if (cancelled) return
+      setArtistSlugMap(
+        filterArtistSlugMapForNames(
+          buildFullArtistSlugMap(
+            (artistRows as { slug: string; name: string | null; name_display: string | null }[]) || [],
+          ),
+          artistNames,
+        ),
+      )
+      setLabelSlugMap(
+        filterArtistSlugMapForNames(
+          buildFullLabelSlugMap(
+            ((labelRows as { slug: string; name: string | null }[]) || []).map((r) => ({
+              slug: r.slug,
+              name: r.name,
+              name_display: null,
+            })),
+          ),
+          labelNames,
+          { labelSuffixes: true },
+        ),
+      )
+    })()
+    return () => { cancelled = true }
+  }, [data?.recommended_tracks])
 
   const enableSharing = async () => {
     setSavingFlag(true)
@@ -370,8 +431,12 @@ export default function SoulmatesSection({ lang }: Props) {
                       {t.mix_name && <span className="font-normal text-[10px] text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span>}
                     </h4>
                     <p className="text-[11px] text-[var(--ink)]/60 sm:break-words break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                      {t.artists || '—'}
-                      {t.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span>{t.label}</>}
+                      <ArtistNames
+                        artists={splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))}
+                        slugMap={artistSlugMap}
+                        lang={lang}
+                      />
+                      {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                       {(() => {
                         const rd = formatTrackReleaseDisplay(t.release_date, t.year)
                         return rd ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="whitespace-nowrap tabular-nums">{rd}</span></> : null

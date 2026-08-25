@@ -13,6 +13,13 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
 import ChartView from '@/components/ChartView'
+import {
+  buildFullArtistSlugMap,
+  buildFullLabelSlugMap,
+  filterArtistSlugMapForNames,
+  findLabelSlug,
+  normalizeArtistKey,
+} from '@/lib/artist-slug-map'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
 // petición. Los datos siguen viniendo de la Data Cache (createCachedSupabase,
@@ -280,25 +287,16 @@ export default async function ChartsPage({
   // ---- Mapa `nombreNormalizado → slug` de artistas existentes en BD ----
   // Se usa en `ChartView` para convertir el nombre del artista de cada fila en
   // un enlace INTERNO a `/[lang]/artists/<slug>` cuando el artista existe en
-  // `public.artists`. Así el usuario puede descubrir al DJ dentro del sitio sin
-  // salir a Beatport. Si no hay match, seguimos mostrando el link externo
-  // (Beatport / Discogs) o texto plano.
-  const normalizeArtistKey = (raw: string): string =>
-    (raw || '')
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/&/g, ' and ')
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim()
-
+  // `public.artists`. Si no hay ficha, el nombre queda como texto: Beatport /
+  // Spotify / TIDAL solo salen en sus botones de fila.
   const chartArtistNames = new Set<string>()
   const collectArtistNames = (
     arr: (ChartTrackArtist | ChartFeaturedArtist | ChartVinylArtist)[] | null | undefined,
   ) => {
     if (!Array.isArray(arr)) return
     for (const a of arr) {
-      const key = normalizeArtistKey(a?.name || '')
-      if (key) chartArtistNames.add(key)
+      const name = (a?.name || '').trim()
+      if (name) chartArtistNames.add(name)
     }
   }
   for (const t of allTracks) collectArtistNames(t.artists)
@@ -307,46 +305,26 @@ export default async function ChartsPage({
 
   let artistSlugMap: Record<string, string> = {}
   if (chartArtistNames.size > 0) {
-    // Traemos todos los artistas de la tabla (hoy ~pocos cientos) y cruzamos
-    // en memoria: evita construir un `.or()` enorme con un `ilike` por cada
-    // nombre único del chart. Si en el futuro hay miles, convendría añadir
-    // una columna `name_normalized` y un índice para `.in()`.
     const { data: dbArtists } = await supabase
       .from('artists')
       .select('slug, name, name_display')
       .limit(5000)
     const rows = (dbArtists as { slug: string; name: string | null; name_display: string | null }[] | null) ?? []
-    for (const r of rows) {
-      for (const raw of [r.name, r.name_display]) {
-        const key = normalizeArtistKey(raw || '')
-        if (key && !artistSlugMap[key]) artistSlugMap[key] = r.slug
-      }
-    }
-    // Nos quedamos sólo con las claves que aparecen en el chart: el componente
-    // cliente no necesita el catálogo completo y así el HTML enviado es menor.
-    // `Array.from` en vez de `for..of` sobre el `Set` por el target TS del repo.
-    const filtered: Record<string, string> = {}
-    Array.from(chartArtistNames).forEach((key) => {
-      if (artistSlugMap[key]) filtered[key] = artistSlugMap[key]
-      // Fallback: artista en BD sin "the" pero en chart con "the" (o viceversa).
-      const withoutThe = key.startsWith('the ') ? key.slice(4) : `the ${key}`
-      if (!filtered[key] && artistSlugMap[withoutThe]) filtered[key] = artistSlugMap[withoutThe]
-    })
-    artistSlugMap = filtered
+    artistSlugMap = filterArtistSlugMapForNames(buildFullArtistSlugMap(rows), chartArtistNames)
   }
 
   const chartLabelNames = new Set<string>()
   for (const t of allTracks) {
-    const key = normalizeArtistKey(t.label || '')
-    if (key) chartLabelNames.add(key)
+    const name = (t.label || '').trim()
+    if (name) chartLabelNames.add(name)
   }
   for (const t of allFeatured) {
-    const key = normalizeArtistKey(t.label || '')
-    if (key) chartLabelNames.add(key)
+    const name = (t.label || '').trim()
+    if (name) chartLabelNames.add(name)
   }
   for (const t of allVinyl) {
-    const key = normalizeArtistKey(t.label || '')
-    if (key) chartLabelNames.add(key)
+    const name = (t.label || '').trim()
+    if (name) chartLabelNames.add(name)
   }
 
   let labelImageMap: Record<string, string> = {}
@@ -358,22 +336,22 @@ export default async function ChartsPage({
       .limit(5000)
     const labelRows =
       (dbLabels as { slug: string; name: string | null; image_url: string | null }[] | null) ?? []
-    const allSlugs: Record<string, string> = {}
-    const allByName: Record<string, string> = {}
+    const fullLabelMap = buildFullLabelSlugMap(
+      labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null })),
+    )
+    labelSlugMap = filterArtistSlugMapForNames(fullLabelMap, chartLabelNames, { labelSuffixes: true })
+    const imagesBySlug = new Map<string, string>()
     for (const r of labelRows) {
-      const key = normalizeArtistKey(r.name || '')
-      if (key && !allSlugs[key]) allSlugs[key] = r.slug
       const img = (r.image_url || '').trim()
-      if (key && img && !allByName[key]) allByName[key] = img
+      if (img && !imagesBySlug.has(r.slug)) imagesBySlug.set(r.slug, img)
     }
-    const filteredSlugs: Record<string, string> = {}
-    const filteredLabels: Record<string, string> = {}
-    Array.from(chartLabelNames).forEach((key) => {
-      if (allSlugs[key]) filteredSlugs[key] = allSlugs[key]
-      if (allByName[key]) filteredLabels[key] = allByName[key]
+    Array.from(chartLabelNames).forEach((raw) => {
+      const slug = findLabelSlug(raw, fullLabelMap)
+      const img = slug ? imagesBySlug.get(slug) : undefined
+      if (!img) return
+      const key = normalizeArtistKey(raw)
+      if (key) labelImageMap[key] = img
     })
-    labelSlugMap = filteredSlugs
-    labelImageMap = filteredLabels
   }
 
   return (

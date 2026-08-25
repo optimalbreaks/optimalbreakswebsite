@@ -11,6 +11,7 @@ import {
   resolveArtistSlug,
   splitRelatedArtistNames,
 } from '@/lib/artist-entity-match'
+import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import CountryBadge from '@/components/CountryBadge'
 import { breadcrumbJsonLd, countryNameFromCode, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import { splitBioParagraphs } from '@/lib/bio-format'
@@ -241,7 +242,40 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   }
 
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
-  const artistSlugMap = Object.fromEntries(artistSlugByName)
+  const trackArtistNames = new Set<string>()
+  const trackLabelNames = new Set<string>()
+  for (const t of (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []) {
+    for (const a of t.artists ?? []) {
+      const artistName = (a.name || '').trim()
+      if (artistName) trackArtistNames.add(artistName)
+    }
+    const labelName = (t.label || '').trim()
+    if (labelName) trackLabelNames.add(labelName)
+  }
+  for (const pick of featuredPicks) {
+    const artists = Array.isArray(pick.artists) ? pick.artists : []
+    for (const a of artists) {
+      const artistName = (a.name || '').trim()
+      if (artistName) trackArtistNames.add(artistName)
+    }
+    const labelName = (pick.label || '').trim()
+    if (labelName) trackLabelNames.add(labelName)
+  }
+  const artistSlugMap = filterArtistSlugMapForNames(
+    buildFullArtistSlugMap(allArtistLinkRows),
+    trackArtistNames,
+  )
+  const labelSlugMap = filterArtistSlugMapForNames(
+    buildFullLabelSlugMap(
+      ((labelRows ?? []) as { slug: string; name: string | null }[]).map((r) => ({
+        slug: r.slug,
+        name: r.name,
+        name_display: null,
+      })),
+    ),
+    trackLabelNames,
+    { labelSuffixes: true },
+  )
   const relatedArtistsForDisplay = filterRelatedArtistsExcludingLabels(
     artist.related_artists,
     labelSlugByName,
@@ -371,6 +405,8 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   beatportUrl={artist.beatport_url}
                   lang={lang}
                   entityName={artist.name_display || artist.name}
+                  artistSlugMap={artistSlugMap}
+                  labelSlugMap={labelSlugMap}
                   origin={{
                     kind: 'artist',
                     id: artist.id,
@@ -385,6 +421,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   lang={lang}
                   entityName={artist.name_display || artist.name}
                   artistSlugMap={artistSlugMap}
+                  labelSlugMap={labelSlugMap}
                   origin={{
                     kind: 'artist',
                     id: artist.id,

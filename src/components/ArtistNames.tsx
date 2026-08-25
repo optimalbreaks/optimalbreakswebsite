@@ -1,13 +1,17 @@
 // ============================================
-// OPTIMAL BREAKS — Nombres de artista con enlace a ficha interna o URL externa
+// OPTIMAL BREAKS — Nombres de artista / sello
+// Enlace SOLO a ficha interna. Sin Beatport ni URLs externas:
+// el tráfico se queda en el archivo. Spotify / TIDAL / Beatport
+// van en sus botones de fila, no en el crédito.
 // ============================================
 
 import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
-import { findArtistSlug } from '@/lib/artist-slug-map'
+import { findArtistSlug, findLabelSlug } from '@/lib/artist-slug-map'
 
 export type ArtistCredit = {
   name: string
+  /** Conservado en el tipo (JSON Beatport); no se usa para enlazar el nombre. */
   beatport_url?: string | null
   url?: string | null
 }
@@ -27,7 +31,6 @@ export function ArtistNames({ artists, slugMap, lang, className = 'text-[var(--i
         const name = (a.name || '').trim()
         if (!name) return null
         const internalSlug = findArtistSlug(name, slugMap)
-        const externalHref = (a.beatport_url || a.url || '').trim()
         return (
           <span key={`${name}-${i}`}>
             {internalSlug && lang ? (
@@ -38,15 +41,6 @@ export function ArtistNames({ artists, slugMap, lang, className = 'text-[var(--i
               >
                 {name}
               </Link>
-            ) : externalHref ? (
-              <a
-                href={externalHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[var(--red)] transition-colors underline decoration-dotted"
-              >
-                {name}
-              </a>
             ) : (
               name
             )}
@@ -70,7 +64,7 @@ export function LabelName({
 }) {
   const label = (name || '').trim()
   if (!label) return null
-  const slug = findArtistSlug(label, slugMap)
+  const slug = findLabelSlug(label, slugMap)
   if (slug && lang) {
     return (
       <Link

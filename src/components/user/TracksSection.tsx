@@ -43,6 +43,7 @@ import {
 import { ArtistNames, LabelName, type ArtistCredit } from '@/components/ArtistNames'
 import {
   buildFullArtistSlugMap,
+  buildFullLabelSlugMap,
   filterArtistSlugMapForNames,
   normalizeArtistKey,
   splitArtistDisplayLine,
@@ -747,7 +748,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         const supabase = createBrowserSupabase()
         const { data } = await supabase.from('labels').select('slug, name').limit(5000)
         if (cancelled) return
-        const full = buildFullArtistSlugMap(
+        const full = buildFullLabelSlugMap(
           ((data as { slug: string; name: string | null }[]) || []).map((r) => ({
             slug: r.slug,
             name: r.name,
@@ -761,7 +762,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             if (key) full[key] = origin.slug
           }
         }
-        setLabelSlugMap(filterArtistSlugMapForNames(full, names))
+        setLabelSlugMap(filterArtistSlugMapForNames(full, names, { labelSuffixes: true }))
       })()
     }, 160)
     return () => {

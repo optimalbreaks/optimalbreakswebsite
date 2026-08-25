@@ -14,6 +14,7 @@ import {
   extractBeatportTrackId,
   trackStoryMeta,
 } from '@/lib/share-track'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   beatportUrl?: string | null
   lang: 'en' | 'es'
   entityName: string
+  artistSlugMap?: Record<string, string>
+  labelSlugMap?: Record<string, string>
   /** Contexto "de dónde viene" la canción (artista/sello). Se embebe en el
    *  snapshot del save para reconstruir la tarjeta en /mi-cuenta/tracks. */
   origin?: {
@@ -91,7 +94,15 @@ function PositionBadge({ position }: { position: number }) {
   )
 }
 
-export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityName, origin }: Props) {
+export default function BeatportTopTracks({
+  tracks,
+  beatportUrl,
+  lang,
+  entityName,
+  artistSlugMap,
+  labelSlugMap,
+  origin,
+}: Props) {
   const [expanded, setExpanded] = useState(false)
   const pathname = usePathname()
   const {
@@ -347,17 +358,8 @@ export default function BeatportTopTracks({ tracks, beatportUrl, lang, entityNam
                           {t.mix_name && <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span>}
                         </h3>
                         <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                          <span className="text-[var(--ink)]/70">
-                            {t.artists.map((a, ai) => (
-                              <span key={ai}>
-                                {a.beatport_url ? (
-                                  <a href={a.beatport_url} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--red)] transition-colors underline decoration-dotted">{a.name}</a>
-                                ) : a.name}
-                                {ai < t.artists.length - 1 && ', '}
-                              </span>
-                            ))}
-                          </span>
-                          {t.label && <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{t.label}</span></>}
+                          <ArtistNames artists={t.artists} slugMap={artistSlugMap} lang={lang} />
+                          {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                         </p>
                       </div>

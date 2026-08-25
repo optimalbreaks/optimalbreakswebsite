@@ -10,7 +10,9 @@ import {
   normalizeForEntityMatch,
   resolveArtistSlug,
 } from '@/lib/artist-entity-match'
+import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import { fetchLabelChartLinks } from '@/lib/artist-related-content'
+import CountryBadge from '@/components/CountryBadge'
 import {
   breadcrumbJsonLd,
   countryNameFromCode,
@@ -133,16 +135,42 @@ export default async function LabelDetailPage({ params }: Props) {
   const label = rawLabel as LabelPageRow | null
 
   const artistSlugs = new Map<string, string>()
-  const [{ data: matchedArtists }, allArtistLinkRows, labelChartLinks] = await Promise.all([
+  const [{ data: matchedArtists }, allArtistLinkRows, labelChartLinks, { data: labelRows }] = await Promise.all([
     label?.key_artists?.length
       ? supabase.from('artists').select('name, slug').in('name', label.key_artists)
       : Promise.resolve({ data: [] as Pick<Artist, 'name' | 'slug'>[] }),
     fetchAllArtistLinkRows(readSupabase),
     label ? fetchLabelChartLinks(readSupabase, { name: label.name }, lang) : Promise.resolve([]),
+    supabase.from('labels').select('name, slug'),
   ])
   const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
   for (const a of rows) artistSlugs.set(a.name, a.slug)
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+  const trackArtistNames = new Set<string>()
+  const trackLabelNames = new Set<string>()
+  for (const t of (label?.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []) {
+    for (const a of t.artists ?? []) {
+      const artistName = (a.name || '').trim()
+      if (artistName) trackArtistNames.add(artistName)
+    }
+    const labelName = (t.label || '').trim()
+    if (labelName) trackLabelNames.add(labelName)
+  }
+  const artistSlugMap = filterArtistSlugMapForNames(
+    buildFullArtistSlugMap(allArtistLinkRows),
+    trackArtistNames,
+  )
+  const labelSlugMap = filterArtistSlugMapForNames(
+    buildFullLabelSlugMap(
+      ((labelRows ?? []) as { slug: string; name: string | null }[]).map((r) => ({
+        slug: r.slug,
+        name: r.name,
+        name_display: null,
+      })),
+    ),
+    trackLabelNames,
+    { labelSuffixes: true },
+  )
   const keyArtistsInCharts = new Set(
     labelChartLinks.flatMap((link) => link.artistNames.map((n) => normalizeForEntityMatch(n))),
   )
@@ -198,6 +226,28 @@ export default async function LabelDetailPage({ params }: Props) {
       .join(', '),
   ].filter(Boolean) as string[]
   const logoAlt = logoAltBits.filter((s) => s.trim()).join(' · ')
+  const hasOnSiteBlock = labelChartLinks.length > 0
+  const hasLinksBlock =
+    Boolean(label.website?.trim()) ||
+    Boolean(label.beatport_url?.trim()) ||
+    Boolean(label.discogs_url?.trim())
+  const sidebarHeadingStyle = {
+    fontFamily: "'Darker Grotesque', sans-serif",
+    fontWeight: 900,
+    fontSize: '16px',
+    color: 'var(--yellow)',
+    marginBottom: '8px',
+    marginTop: 0,
+  } as const
+  const sidebarRowStyle = {
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '12px',
+    color: 'rgba(232,220,200,0.6)',
+  } as const
+  const sidebarLinkStyle = {
+    fontFamily: "'Courier Prime', monospace",
+    fontSize: '12px',
+  } as const
 
   return (
     <>
@@ -236,6 +286,8 @@ export default async function LabelDetailPage({ params }: Props) {
                 beatportUrl={label.beatport_url}
                 lang={lang}
                 entityName={label.name}
+                artistSlugMap={artistSlugMap}
+                labelSlugMap={labelSlugMap}
                 origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
               />
             ) : null}
@@ -260,114 +312,170 @@ export default async function LabelDetailPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        <span className="cutout fill">{label.country}</span>
-        {label.founded_year && <span className="cutout outline">Est. {label.founded_year}</span>}
-        <span className={`cutout ${label.is_active ? 'acid' : 'red'}`}>{label.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
-        {label.organization && (
-          <Link href={`/${lang}/organizations/${label.organization.slug}`} className="cutout outline no-underline text-[var(--ink)]">
-            {lang === 'es' ? 'Organizacion: ' : 'Organization: '}{label.organization.name}
-          </Link>
-        )}
-      </div>
-
-      {label.website && (
-        <div className="flex flex-wrap gap-2 mb-8">
-          <a
-            href={label.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="cutout outline no-underline text-[var(--ink)]"
-            title={lang === 'es' ? 'Web oficial del sello' : 'Official label website'}
-          >
-            {lang === 'es' ? '↗ WEB' : '↗ WEBSITE'}
-          </a>
-        </div>
-      )}
-      <div className="max-w-[700px] space-y-5">
-        {splitBioParagraphs(lang === 'es' ? label.description_es : label.description_en).map((para, i) => (
-          <p
-            key={i}
-            style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
-            className="text-[var(--ink)]"
-          >
-            {para}
-          </p>
-        ))}
-      </div>
-
-      {labelChartLinks.length > 0 && (
-        <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
-          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px', marginTop: 0 }}>
-            {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
-          </h2>
-          {labelChartLinks.map((link) => (
-            <div key={`${link.kind}-${link.id}`} className="py-2 border-b border-dashed border-white/10 last:border-b-0">
-              <Link
-                href={link.href}
-                className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
-                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
-              >
-                {link.title}
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-0 border-4 border-[var(--ink)]">
+        {/* Bio */}
+        <div className="p-6 sm:p-8 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {label.country ? (
+              <CountryBadge country={label.country} lang={lang} size="md" variant="cutout" />
+            ) : null}
+            {label.founded_year && <span className="cutout outline">Est. {label.founded_year}</span>}
+            <span className={`cutout ${label.is_active ? 'acid' : 'red'}`}>{label.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
+            {label.organization && (
+              <Link href={`/${lang}/organizations/${label.organization.slug}`} className="cutout outline no-underline text-[var(--ink)]">
+                {lang === 'es' ? 'Organizacion: ' : 'Organization: '}{label.organization.name}
               </Link>
-              <div
-                className="flex flex-wrap items-baseline gap-x-1 gap-y-0 mt-1"
-                style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px' }}
+            )}
+          </div>
+          <div className="space-y-5">
+            {splitBioParagraphs(lang === 'es' ? label.description_es : label.description_en).map((para, i) => (
+              <p
+                key={i}
+                style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.85 }}
+                className="text-[var(--ink)]"
               >
-                {link.artistNames.length > 0 ? (
-                  <>
-                    {link.artistNames.map((artistName, ai) => {
-                      const artistSlug = resolveArtistSlug(artistName, artistSlugByName)
-                      const showComma = ai < link.artistNames.length - 1
-                      return (
-                        <span key={`${link.id}-artist-${ai}`} className="inline-flex items-baseline gap-x-0">
-                          {artistSlug ? (
-                            <Link
-                              href={`/${lang}/artists/${artistSlug}`}
-                              className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
-                              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px' }}
-                            >
-                              {artistName}
-                            </Link>
-                          ) : (
-                            <span>{artistName}</span>
-                          )}
-                          {showComma && <span aria-hidden>,&nbsp;</span>}
-                        </span>
-                      )
-                    })}
-                    <span aria-hidden>&nbsp;·&nbsp;</span>
-                  </>
-                ) : null}
-                <span>{link.subtitle}</span>
-              </div>
-            </div>
-          ))}
+                {para}
+              </p>
+            ))}
+          </div>
         </div>
-      )}
 
-      {label.key_artists?.length > 0 && (
-        <div className="mt-8 p-4 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
-          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--yellow)', marginBottom: '12px', marginTop: 0 }}>{lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}</h2>
-          <div className="flex flex-wrap gap-2">{label.key_artists.map((a: string, i: number) => {
-            const artistSlug = artistSlugs.get(a) || resolveArtistSlug(a, artistSlugByName)
-            const inCharts = keyArtistsInCharts.has(normalizeForEntityMatch(a))
-            return artistSlug
-              ? (
-                <Link key={i} href={`/${lang}/artists/${artistSlug}`} className="cutout red no-underline" title={inCharts ? (lang === 'es' ? 'Aparece en charts de Optimal Breaks' : 'Featured in Optimal Breaks charts') : undefined}>
-                  {a}{inCharts ? ' ★' : ''}
-                </Link>
-              )
-              : <span key={i} className="cutout red">{a}{inCharts ? ' ★' : ''}</span>
-          })}</div>
+        {/* Sidebar */}
+        <div className="p-6 sm:p-8 bg-[var(--ink)] text-[var(--paper)]">
+          {hasOnSiteBlock && (
+            <div className="mb-6">
+              <h2 style={sidebarHeadingStyle}>
+                {lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
+              </h2>
+              {labelChartLinks.map((link) => (
+                <div key={`${link.kind}-${link.id}`} className="py-2 border-b border-dashed border-white/10">
+                  <Link
+                    href={link.href}
+                    className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                    style={{ ...sidebarLinkStyle, fontWeight: 700, color: 'rgba(232,220,200,0.85)' }}
+                  >
+                    {link.title}
+                  </Link>
+                  <div
+                    className="flex flex-wrap items-baseline gap-x-1 gap-y-0"
+                    style={{ ...sidebarRowStyle, fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.5px', marginTop: '2px' }}
+                  >
+                    {link.artistNames.length > 0 ? (
+                      <>
+                        {link.artistNames.map((artistName, ai) => {
+                          const artistSlug = resolveArtistSlug(artistName, artistSlugByName)
+                          const showComma = ai < link.artistNames.length - 1
+                          return (
+                            <span key={`${link.id}-artist-${ai}`} className="inline-flex items-baseline gap-x-0">
+                              {artistSlug ? (
+                                <Link
+                                  href={`/${lang}/artists/${artistSlug}`}
+                                  className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px' }}
+                                >
+                                  {artistName}
+                                </Link>
+                              ) : (
+                                <span>{artistName}</span>
+                              )}
+                              {showComma && <span aria-hidden>,&nbsp;</span>}
+                            </span>
+                          )
+                        })}
+                        <span aria-hidden>&nbsp;·&nbsp;</span>
+                      </>
+                    ) : null}
+                    <span>{link.subtitle}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {label.key_artists?.length > 0 && (
+            <div className="mb-6">
+              <h2 style={sidebarHeadingStyle}>
+                {lang === 'es' ? 'ARTISTAS CLAVE' : 'KEY ARTISTS'}
+              </h2>
+              {label.key_artists.map((a: string, i: number) => {
+                const artistSlug = artistSlugs.get(a) || resolveArtistSlug(a, artistSlugByName)
+                const inCharts = keyArtistsInCharts.has(normalizeForEntityMatch(a))
+                const chartHint = inCharts
+                  ? (lang === 'es' ? 'Aparece en charts de Optimal Breaks' : 'Featured in Optimal Breaks charts')
+                  : undefined
+                return (
+                  <div key={i} className="py-1 border-b border-dashed border-white/10" style={sidebarRowStyle}>
+                    {artistSlug ? (
+                      <Link
+                        href={`/${lang}/artists/${artistSlug}`}
+                        className="text-[var(--cyan)] hover:text-white hover:underline transition-colors"
+                        style={sidebarLinkStyle}
+                        title={chartHint}
+                      >
+                        {a}{inCharts ? ' ★' : ''}
+                      </Link>
+                    ) : (
+                      <span title={chartHint}>{a}{inCharts ? ' ★' : ''}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {label.key_releases?.length > 0 && (
+            <div className="mb-6">
+              <h2 style={sidebarHeadingStyle}>
+                {lang === 'es' ? 'LANZAMIENTOS CLAVE' : 'KEY RELEASES'}
+              </h2>
+              {label.key_releases.map((r: string, i: number) => (
+                <div key={i} className="py-1 border-b border-dashed border-white/10" style={sidebarRowStyle}>
+                  {r}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {hasLinksBlock && (
+            <div>
+              <h2 style={sidebarHeadingStyle}>LINKS</h2>
+              {label.website && (
+                <a
+                  href={label.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block py-1 text-[var(--cyan)] hover:text-white transition-colors"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}
+                >
+                  WEB →
+                </a>
+              )}
+              {label.beatport_url && (
+                <a
+                  href={label.beatport_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block py-1 text-[var(--cyan)] hover:text-white transition-colors"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}
+                >
+                  BEATPORT →
+                </a>
+              )}
+              {label.discogs_url && (
+                <a
+                  href={label.discogs_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block py-1 text-[var(--cyan)] hover:text-white transition-colors"
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}
+                >
+                  DISCOGS →
+                </a>
+              )}
+            </div>
+          )}
         </div>
-      )}
-      {label.key_releases?.length > 0 && (
-        <div className="mt-4 p-4 sm:p-6 border-4 border-[var(--ink)]">
-          <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', color: 'var(--red)', marginBottom: '12px', marginTop: 0 }}>{lang === 'es' ? 'RELEASES CLAVE' : 'KEY RELEASES'}</h2>
-          <div className="flex flex-wrap gap-2">{label.key_releases.map((r: string, i: number) => <span key={i} className="cutout fill">{r}</span>)}</div>
-        </div>
-      )}
+      </div>
 
     </div>
     </>

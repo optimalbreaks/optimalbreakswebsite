@@ -8,7 +8,7 @@ import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { ArtistNames } from '@/components/ArtistNames'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
 import type { ChartFeaturedTrack, SavedChartTrackSnapshot } from '@/types/database'
@@ -18,6 +18,7 @@ interface Props {
   lang: 'en' | 'es'
   entityName: string
   artistSlugMap?: Record<string, string>
+  labelSlugMap?: Record<string, string>
   origin?: {
     kind: 'artist'
     id: string
@@ -91,6 +92,7 @@ export default function ArtistFeaturedTracks({
   lang,
   entityName,
   artistSlugMap,
+  labelSlugMap,
   origin,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
@@ -285,7 +287,7 @@ export default function ArtistFeaturedTracks({
                         </h3>
                         <p className="text-xs sm:text-sm mt-0.5 break-words" style={{ fontFamily: "'Courier Prime', monospace" }}>
                           <ArtistNames artists={artists} slugMap={artistSlugMap} lang={lang} />
-                          {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/50">{pick.label}</span></> : null}
+                          {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={pick.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
                         </p>
                         {note ? (
