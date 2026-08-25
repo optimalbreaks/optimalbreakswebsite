@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { adminGetUserDetail, adminUpdateUserRole } from '@/lib/admin-api'
+import {
+  adminGetUserDetail,
+  adminMarkEditorialArtist,
+  adminUpdateUserRole,
+  type AdminArtistLevel,
+  type AdminClaimedArtist,
+  type AdminEditorialMark,
+} from '@/lib/admin-api'
 
 function fmtDate(iso: string | null) {
   if (!iso) return '—'
@@ -28,6 +35,11 @@ export default function AdminUserDetailPage() {
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
   const [role, setRole] = useState<'user' | 'admin'>('user')
+  const [artistLevel, setArtistLevel] = useState<AdminArtistLevel>('user')
+  const [editorialMarks, setEditorialMarks] = useState<AdminEditorialMark[]>([])
+  const [claimedArtists, setClaimedArtists] = useState<AdminClaimedArtist[]>([])
+  const [markName, setMarkName] = useState('')
+  const [marking, setMarking] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -44,10 +56,52 @@ export default function AdminUserDetailPage() {
         setUsername(p?.username ?? null)
         const r = p?.role
         setRole(r === 'admin' ? 'admin' : 'user')
+        setArtistLevel(d.artist_level ?? 'user')
+        setEditorialMarks(d.editorial_marks ?? [])
+        setClaimedArtists(d.claimed_artists ?? [])
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'))
       .finally(() => setLoading(false))
   }, [id])
+
+  const applyLevel = (d: {
+    artist_level: AdminArtistLevel
+    editorial_marks: AdminEditorialMark[]
+    claimed_artists: AdminClaimedArtist[]
+  }) => {
+    setArtistLevel(d.artist_level)
+    setEditorialMarks(d.editorial_marks)
+    setClaimedArtists(d.claimed_artists)
+  }
+
+  const handleMark = async () => {
+    if (!id || !markName.trim()) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialArtist(id, { editorial_artist_name: markName.trim() })
+      applyLevel(d)
+      setMarkName('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo marcar')
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  const handleUnmark = async (key: string) => {
+    if (!id) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialArtist(id, { remove_editorial_artist_key: key })
+      applyLevel(d)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo quitar el marcaje')
+    } finally {
+      setMarking(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!id) return
@@ -143,6 +197,63 @@ export default function AdminUserDetailPage() {
             Los administradores acceden a este panel. El email y la contraseña solo los cambia el propio usuario en su
             cuenta o desde el panel de Supabase Auth.
           </p>
+        </div>
+
+        <div className="border-t-[3px] border-[var(--ink)] pt-5 space-y-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)]">
+            Nivel de artista
+          </div>
+          <p className="admin-muted text-xs !mb-0">
+            {artistLevel === 'claimed'
+              ? 'Fase 3 — reclamó su ficha: no auto-voto en el Top de artistas y puede abrir bookings.'
+              : artistLevel === 'marked'
+                ? 'Fase 2 — fichaje editorial: no auto-voto en el Top de artistas. Bookings solo si él reclama.'
+                : 'Fase 1 — usuario normal. Sus saves cuentan en el Top de artistas.'}
+          </p>
+          {claimedArtists.length > 0 ? (
+            <ul className="m-0 pl-4 text-sm" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {claimedArtists.map((a) => (
+                <li key={a.id}>
+                  {a.name} ({a.slug})
+                  {a.accepts_bookings ? ' · bookings abiertos' : ' · bookings cerrados'}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {editorialMarks.length > 0 ? (
+            <ul className="m-0 p-0 list-none space-y-2">
+              {editorialMarks.map((m) => (
+                <li key={m.id} className="flex items-center gap-2 text-sm">
+                  <span style={{ fontFamily: "'Courier Prime', monospace" }}>{m.artist_name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUnmark(m.artist_key)}
+                    disabled={marking}
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                  >
+                    Quitar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="text"
+              value={markName}
+              onChange={(e) => setMarkName(e.target.value)}
+              placeholder="Nombre del crédito (p. ej. Gruv42)"
+              className="admin-input max-w-xs"
+            />
+            <button
+              type="button"
+              onClick={handleMark}
+              disabled={marking || !markName.trim()}
+              className="admin-btn admin-btn--ghost"
+            >
+              {marking ? 'Guardando…' : 'Marcar artista (fase 2)'}
+            </button>
+          </div>
         </div>
 
         {error ? <p className="text-[var(--red)] text-sm m-0">{error}</p> : null}

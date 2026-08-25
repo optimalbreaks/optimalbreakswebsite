@@ -353,6 +353,13 @@ export interface Database {
         Update: Partial<Pick<BookingSenderBanRow, 'reason'>>
         Relationships: DbRelationship[]
       }
+      editorial_artist_marks: {
+        Row: EditorialArtistMarkRow
+        Insert: Pick<EditorialArtistMarkRow, 'user_id' | 'artist_key'> &
+          Partial<Pick<EditorialArtistMarkRow, 'artist_name' | 'artist_id' | 'created_by'>>
+        Update: Partial<Pick<EditorialArtistMarkRow, 'artist_key' | 'artist_name' | 'artist_id'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -545,6 +552,16 @@ export interface BookingSenderBanRow extends Record<string, unknown> {
   user_id: string
   reason: string
   created_at: string
+  created_by: string | null
+}
+
+export interface EditorialArtistMarkRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  user_id: string
+  artist_key: string
+  artist_name: string
+  artist_id: string | null
   created_by: string | null
 }
 

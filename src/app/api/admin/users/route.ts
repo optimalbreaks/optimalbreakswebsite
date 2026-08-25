@@ -246,15 +246,36 @@ async function buildEngagementCounts(
   return out
 }
 
+async function attachArtistLevels(
+  sb: ServiceClient,
+  ids: string[],
+): Promise<Record<string, 'user' | 'marked' | 'claimed'>> {
+  const out: Record<string, 'user' | 'marked' | 'claimed'> = {}
+  for (const id of ids) out[id] = 'user'
+  if (ids.length === 0) return out
+  const [{ data: marks }, { data: claimed }] = await Promise.all([
+    sb.from('editorial_artist_marks').select('user_id').in('user_id', ids),
+    sb.from('artists').select('claimed_by').in('claimed_by', ids),
+  ])
+  for (const row of (marks || []) as { user_id: string }[]) {
+    if (out[row.user_id] === 'user') out[row.user_id] = 'marked'
+  }
+  for (const row of (claimed || []) as { claimed_by: string | null }[]) {
+    if (row.claimed_by) out[row.claimed_by] = 'claimed'
+  }
+  return out
+}
+
 async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
   const ids = rows.map((r) => r.id)
-  const [counts, lastActivity] = await Promise.all([
+  const [counts, lastActivity, artistLevels] = await Promise.all([
     buildEngagementCounts(sb, ids),
     buildLastActivityAtByUserId(
       sb,
       ids,
       Object.fromEntries(rows.map((r) => [r.id, r.last_sign_in_at])),
     ),
+    attachArtistLevels(sb, ids),
   ])
   return rows.map((r) => ({
     ...r,
@@ -262,6 +283,7 @@ async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
     mixes_count: counts[r.id]?.mixes ?? 0,
     tracks_count: counts[r.id]?.tracks ?? 0,
     last_activity_at: lastActivity[r.id] ?? null,
+    artist_level: artistLevels[r.id] ?? 'user',
   }))
 }
 
@@ -488,12 +510,14 @@ export async function GET(request: NextRequest) {
         rows.map((r) => r.id),
         Object.fromEntries(rows.map((r) => [r.id, r.last_sign_in_at])),
       )
+      const artistLevels = await attachArtistLevels(sb, rows.map((r) => r.id))
       const data = rows.map((r) => ({
         ...r,
         favorites_count: counts[r.id]?.favorites ?? 0,
         mixes_count: counts[r.id]?.mixes ?? 0,
         tracks_count: counts[r.id]?.tracks ?? 0,
         last_activity_at: lastActivity[r.id] ?? null,
+        artist_level: artistLevels[r.id] ?? 'user',
       }))
       return NextResponse.json({ data, count, page, limit })
     }
@@ -529,12 +553,14 @@ export async function GET(request: NextRequest) {
         sb,
         pageRows.map((r) => r.id),
       )
+      const artistLevels = await attachArtistLevels(sb, pageRows.map((r) => r.id))
       const data = pageRows.map((r) => ({
         ...r,
         favorites_count: pageCounts[r.id]?.favorites ?? 0,
         mixes_count: pageCounts[r.id]?.mixes ?? 0,
         tracks_count: pageCounts[r.id]?.tracks ?? 0,
         last_activity_at: lastActivity[r.id] ?? null,
+        artist_level: artistLevels[r.id] ?? 'user',
       }))
       return NextResponse.json({ data, count, page, limit })
     }

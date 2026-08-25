@@ -97,6 +97,20 @@ export default function AdminUsersPage() {
       ),
     },
     {
+      key: 'artist_level',
+      label: 'Artista',
+      render: (_: unknown, row: AdminUserRow) => {
+        const level = row.artist_level || 'user'
+        if (level === 'claimed') {
+          return <span className="font-bold text-[var(--red)]">Reclamado</span>
+        }
+        if (level === 'marked') {
+          return <span className="font-bold">Marcado</span>
+        }
+        return <span className="text-[var(--text-muted)]">—</span>
+      },
+    },
+    {
       key: 'favorites_count',
       label: 'Favoritos',
       sortDefault: 'desc' as const,

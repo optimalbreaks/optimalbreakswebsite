@@ -145,6 +145,8 @@ export type AdminUserRow = {
   mixes_count: number
   /** Canciones únicas en My Tracks (misma pista desde varias listas = 1). */
   tracks_count: number
+  /** user = normal · marked = fichaje editorial · claimed = reclamó ficha */
+  artist_level?: AdminArtistLevel
 }
 
 export async function adminListUsers(opts: {
@@ -165,6 +167,22 @@ export async function adminListUsers(opts: {
   return res.json()
 }
 
+export type AdminArtistLevel = 'user' | 'marked' | 'claimed'
+
+export type AdminEditorialMark = {
+  id: string
+  artist_key: string
+  artist_name: string
+  artist_id: string | null
+}
+
+export type AdminClaimedArtist = {
+  id: string
+  name: string
+  slug: string
+  accepts_bookings: boolean
+}
+
 export async function adminGetUserDetail(id: string): Promise<{
   id: string
   email: string
@@ -172,6 +190,9 @@ export async function adminGetUserDetail(id: string): Promise<{
   last_activity_at: string | null
   created_at: string
   profile: Record<string, unknown> | null
+  artist_level?: AdminArtistLevel
+  editorial_marks?: AdminEditorialMark[]
+  claimed_artists?: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`)
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
@@ -183,6 +204,27 @@ export async function adminUpdateUserRole(id: string, role: 'user' | 'admin'): P
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role }),
+  })
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
+
+export async function adminMarkEditorialArtist(
+  id: string,
+  body:
+    | { editorial_artist_name: string }
+    | { editorial_artist_name: null }
+    | { remove_editorial_artist_key: string },
+): Promise<{
+  ok: boolean
+  artist_level: AdminArtistLevel
+  editorial_marks: AdminEditorialMark[]
+  claimed_artists: AdminClaimedArtist[]
+}> {
+  const res = await fetch(`${BASE}/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error((await res.json()).error || res.statusText)
   return res.json()

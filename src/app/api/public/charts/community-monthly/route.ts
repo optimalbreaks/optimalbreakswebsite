@@ -17,6 +17,9 @@
 //     (lunes ISO UTC): previous_rank (null = no estaba en el top 50 al
 //     empezar la semana), weeks_in_top10 (semanas seguidas en este tablero),
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
+//     Un save de un usuario fichado editorialmente o con claim aprobado no
+//     acredita SU propio nombre (sí el de colaboradores; el Top 100 de temas
+//     no se toca). Ver `artist-self-credit.ts` + `editorial_artist_marks`.
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
 // `community-monthly` por compatibilidad — antes este top era mensual y
@@ -34,9 +37,13 @@ import { createServiceSupabase } from '@/lib/supabase-admin'
 import {
   buildFullArtistSlugMap,
   normalizeArtistKey,
-  splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
+import {
+  loadSelfCreditSkipMap,
+  shouldSkipArtistSelfCredit,
+  splitArtistCreditsForRanking,
+} from '@/lib/artist-self-credit'
 
 const TOP_ARTISTS_LIMIT = 50
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
@@ -352,6 +359,8 @@ export async function GET(request: NextRequest) {
       top_artists: [],
     })
   }
+
+  const selfCreditSkip = await loadSelfCreditSkipMap(sb)
 
   const chartIds = Array.from(new Set(saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)))
   const featIds = Array.from(new Set(saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)))
@@ -701,9 +710,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    for (const artistName of splitArtistDisplayLine(meta.artists || '')) {
+    for (const artistName of splitArtistCreditsForRanking(meta.artists || '')) {
       const artistKey = normalizeArtistKey(artistName)
       if (!artistKey) continue
+      if (shouldSkipArtistSelfCredit(selfCreditSkip, s.user_id, artistName)) continue
       bumpArtistInto(artistAgg, artistName, s.user_id, key)
       artistCredits.push({
         key: artistKey,
