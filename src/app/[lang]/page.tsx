@@ -242,13 +242,13 @@ export default async function HomePage({
     homeEvents.length > 0
       ? homeEvents.map((e) => ({
           key: e.slug,
-          id: e.id,
+          id: e.id as string | undefined,
           date: formatHomeEventDate(e.date_start, e.date_end, lang),
           name: e.name,
           location: eventLocationLine(e),
           type: eventTypeLabelHome(e.event_type, lang),
           imageUrl: e.image_url,
-          href: `/${lang}/events/${e.slug}`,
+          href: `/${lang}/events/${e.slug}` as string | undefined,
           cancelled: isEventCancelled(e),
         }))
       : FALLBACK_HOME_EVENTS.map((e, i) => ({
@@ -260,6 +260,7 @@ export default async function HomePage({
           type: e.type,
           imageUrl: e.image_url ?? null,
           href: undefined as string | undefined,
+          cancelled: false,
         }))
 
   const { data: featuredBlogRaw } = await supabase
@@ -608,7 +609,7 @@ export default async function HomePage({
               href={e.href}
               entityId={e.id}
               lang={lang}
-              cancelled={'cancelled' in e ? e.cancelled : false}
+              cancelled={e.cancelled}
             />
           ))}
         </div>
