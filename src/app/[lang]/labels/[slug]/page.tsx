@@ -169,11 +169,11 @@ export default async function LabelDetailPage({ params }: Props) {
   ])
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
   const keyArtistNames = (label?.key_artists ?? []).map((n) => n.trim()).filter(Boolean)
-  const rosterSlugs = [...new Set(
+  const rosterSlugs = Array.from(new Set(
     keyArtistNames
       .map((n) => resolveArtistSlug(n, artistSlugByName))
       .filter((s): s is string => Boolean(s)),
-  )]
+  ))
   const rosterSelect =
     'id, slug, name, name_display, image_url, styles, country, bio_en, bio_es, beatport_top_tracks'
   const [{ data: rosterBySlugRaw }, { data: rosterByNameRaw }] = await Promise.all([
