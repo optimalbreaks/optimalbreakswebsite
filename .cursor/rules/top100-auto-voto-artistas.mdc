@@ -8,7 +8,7 @@ alwaysApply: true
 ## Tres niveles (no negociable)
 
 1. **Usuario normal** — sus «+» cuentan en Mis Tracks, Top 100 de **canciones** y Top de **artistas**.
-2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En un colab o en temas de otros, **el resto de créditos sí cuentan enteros** (incluido el **remixer** de `mix_name` / Beatport `remixers[]`). **No** escribe `claimed_by` ni abre bookings.
+2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En **Almas Gemelas**, un tema donde él está acreditado **no** entra en *su* set Jaccard (el resto de su lista sí). En un colab o en temas de otros, **el resto de créditos sí cuentan enteros** en el tablero (incluido el **remixer**). **No** escribe `claimed_by` ni abre bookings.
 3. **Claim aprobado** (`artists.claimed_by`) — misma exclusión que el 2 **y** puede recibir bookings si enciende `accepts_bookings` (nace en `false`).
 
 Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.
@@ -21,7 +21,7 @@ El tablero de artistas se ordena por **canciones guardadas** (créditos), no por
 - Usar `claimed_by` solo para «arreglar el Top» (eso es verificación + RLS de bookings).
 - Poner `is_tracks_public = false` o borrar saves como parche de auto-voto.
 - Auto-activar `accepts_bookings` al aprobar un claim.
-- Aplicar el skip al agregado de **temas** (solo al bump de artistas en `community-monthly`).
+- Aplicar el skip al agregado de **temas** del Top 100 (solo al bump de artistas en `community-monthly`, y al set Jaccard del fichado en `soulmates` — no al recuento de canciones).
 - Cambiar el sort del tablero a unique fans o poner un tope de 1 crédito por `(usuario, artista)`.
 - Anular los votos de un fichado hacia **otros** nombres (colabs / roster del sello / remixers).
 
@@ -39,6 +39,6 @@ Caso cerrado (25 ago 2026): Afghan Headspin — 24 «+» propios saltados; 20 sa
 
 ## Dónde vive
 
-- Skip: `src/lib/artist-self-credit.ts` → `community-monthly/route.ts` (tablero en vivo y snapshots del lunes). Remixers: `src/lib/remixer-credits.ts` (crédito extra en el tablero; el Top de canciones no cambia).
+- Skip: `src/lib/artist-self-credit.ts` → tablero en `community-monthly/route.ts` **y** set del fichado en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El Top de canciones no cambia.
 - Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)».
 - Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels* + *Editorial marks in production*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).

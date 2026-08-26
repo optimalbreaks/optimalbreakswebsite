@@ -1,11 +1,12 @@
-// Exclusión de auto-voto en el Top de artistas.
+// Exclusión de auto-voto: Top de artistas + Almas Gemelas.
 // Fase 2: fichaje editorial (`editorial_artist_marks`) o claim aprobado
 // (`artists.claimed_by`). El save sigue en Mis Tracks y en el Top 100 de
-// canciones; no suma crédito al nombre de ESE artista. En un colab, el
-// resto de nombres sí cuentan.
+// canciones. En el tablero de artistas no suma a *su* nombre (colabs sí).
+// En Almas Gemelas ese mismo tema no entra en el set Jaccard del fichado.
 // Fase 3 (bookings) no vive aquí: solo `claimed_by` + `accepts_bookings`.
 
 import { normalizeArtistKey, splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { extractRemixerNames } from '@/lib/remixer-credits'
 import type { createServiceSupabase } from '@/lib/supabase-admin'
 
 export type SelfCreditSkipMap = Map<string, Set<string>>
@@ -78,4 +79,23 @@ export function shouldSkipArtistSelfCredit(
   const keys = map.get(userId)
   if (!keys || keys.size === 0) return false
   return keys.has(normalizeArtistKey(artistName))
+}
+
+/** True si este save es un auto-voto: el usuario fichado/reclamado está en el crédito (artists o remixer). */
+export function isArtistSelfCreditSave(
+  map: SelfCreditSkipMap,
+  userId: string,
+  artistsLine: string | null | undefined,
+  mixName?: string | null,
+): boolean {
+  if (!map.get(userId)?.size) return false
+  const names = splitArtistCreditsForRanking(artistsLine || '')
+  for (let i = 0; i < names.length; i++) {
+    if (shouldSkipArtistSelfCredit(map, userId, names[i])) return true
+  }
+  const remixers = extractRemixerNames(mixName)
+  for (let i = 0; i < remixers.length; i++) {
+    if (shouldSkipArtistSelfCredit(map, userId, remixers[i])) return true
+  }
+  return false
 }

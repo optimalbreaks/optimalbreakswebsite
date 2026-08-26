@@ -16,6 +16,10 @@
 //   - Sólo se consideran candidatos con `is_tracks_public = TRUE`.
 //   - Se exigen mínimos: self_count >= MIN_SELF, other_count >= MIN_OTHER,
 //     common >= MIN_COMMON.
+//   - Auto-voto (fichaje / claim): un tema donde el usuario está acreditado
+//     no entra en SU set Jaccard (misma identidad que el Top de artistas).
+//     Mis Tracks y el Top 100 de canciones no se tocan. El resto de sus
+//     «+» (otros artistas) sí cuentan.
 //
 // Además devuelve `recommended_tracks`: temas que las almas gemelas tienen
 // guardados y el usuario aún no, ordenados por número de almas gemelas que
@@ -26,7 +30,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/database'
-import { createServiceSupabase } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
+import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self-credit'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -193,13 +198,19 @@ export async function GET(_request: NextRequest) {
   const profileById = new Map<string, ProfileMini>()
   for (const p of ((pubProfiles as ProfileMini[] | null) ?? [])) profileById.set(p.id, p)
 
-  const { data: savedData, error: savedErr } = await sb
-    .from('saved_chart_tracks')
-    .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+  const [{ data: savedData, error: savedErr }, selfCreditSkip] = await Promise.all([
+    fetchAllRows<SavedRow>((from, to) =>
+      sb
+        .from('saved_chart_tracks')
+        .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    loadSelfCreditSkipMap(sb),
+  ])
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
 
-  const allSaved = ((savedData as unknown) as SavedRow[]) || []
-  const saved = allSaved.filter((s) => allowedIds.has(s.user_id))
+  const saved = savedData.filter((s) => allowedIds.has(s.user_id))
 
   // 2) Catálogo canónico necesario para mapear (source, id) → canonical_key.
   const chartIds = Array.from(new Set(saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)))
@@ -208,13 +219,19 @@ export async function GET(_request: NextRequest) {
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url').in('id', chartIds)
+      ? selectByIds<ChartRow>(chartIds, (chunk) =>
+          sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform').in('id', featIds)
+      ? selectByIds<FeatRow>(featIds, (chunk) =>
+          sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
-      ? sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', vinylIds)
+      ? selectByIds<VinylRow>(vinylIds, (chunk) =>
+          sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', chunk),
+        )
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
 
@@ -274,6 +291,31 @@ export async function GET(_request: NextRequest) {
       primary: { source: 'vinyl', id: v.id, week_date: null },
     })
   }
+  for (const s of saved) {
+    if (s.track_source === 'beatport_top') continue
+    if (metaByRefKey.has(`${s.track_source}:${s.track_id}`)) continue
+    const snap = (s.snapshot || {}) as Record<string, unknown>
+    if (!snap || !snap.title) continue
+    const snapYoutube = typeof snap.youtube_url === 'string' ? snap.youtube_url.trim() : ''
+    const externalUrl = (snap.beatport_url as string | null) || s.canonical_url
+    const canonical_key = s.track_source === 'vinyl'
+      ? normalizeUrl(snapYoutube || s.canonical_url) || `t:vinyl:${s.track_id}`
+      : normalizeUrl(externalUrl as string | null) || `t:${s.track_source}:${s.track_id}`
+    const release_date_raw = typeof snap.release_date === 'string' ? snap.release_date.trim().slice(0, 10) : ''
+    metaByRefKey.set(`${s.track_source}:${s.track_id}`, {
+      canonical_key,
+      title: String(snap.title || ''),
+      mix_name: (snap.mix_name as string | null) ?? null,
+      artists: String(snap.artists || ''),
+      label: (snap.label as string | null) ?? null,
+      year: typeof snap.year === 'number' ? (snap.year as number) : null,
+      release_date: /^\d{4}-\d{2}-\d{2}$/.test(release_date_raw) ? release_date_raw : null,
+      artwork_url: (snap.artwork_url as string | null) ?? null,
+      external_url: (externalUrl as string | null) ?? null,
+      primary: { source: s.track_source, id: s.track_id, week_date: null },
+    })
+  }
+
   // Saves "beatport_top" usan snapshot como meta.
   for (const s of saved) {
     if (s.track_source !== 'beatport_top') continue
@@ -318,10 +360,11 @@ export async function GET(_request: NextRequest) {
     const meta = metaByRefKey.get(`${s.track_source}:${s.track_id}`)
     if (!meta) continue
     const key = meta.canonical_key
+    metaByKey.set(key, preferMeta(metaByKey.get(key), meta))
+    if (isArtistSelfCreditSave(selfCreditSkip, s.user_id, meta.artists, meta.mix_name)) continue
     const set = keysByUser.get(s.user_id) || new Set<string>()
     set.add(key)
     keysByUser.set(s.user_id, set)
-    metaByKey.set(key, preferMeta(metaByKey.get(key), meta))
   }
 
   const selfKeys = keysByUser.get(user.id) || new Set<string>()
