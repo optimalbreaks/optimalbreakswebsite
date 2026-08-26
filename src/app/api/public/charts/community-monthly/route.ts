@@ -19,7 +19,8 @@
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
 //     Un save de un usuario fichado editorialmente o con claim aprobado no
 //     acredita SU propio nombre (sí el de colaboradores; el Top 100 de temas
-//     no se toca). Ver `artist-self-credit.ts` + `editorial_artist_marks`.
+//     no se toca). Si además hay `editorial_label_marks`, un save de ese sello
+//     no acredita a nadie en el tablero. Ver `artist-self-credit.ts`.
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
 // `community-monthly` por compatibilidad — antes este top era mensual y
@@ -40,8 +41,10 @@ import {
 } from '@/lib/artist-slug-map'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import {
+  loadLabelCreditSkipMap,
   loadSelfCreditSkipMap,
   shouldSkipArtistSelfCredit,
+  shouldSkipLabelSave,
   splitArtistCreditsForRanking,
 } from '@/lib/artist-self-credit'
 import { extractRemixerNames } from '@/lib/remixer-credits'
@@ -361,7 +364,10 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const selfCreditSkip = await loadSelfCreditSkipMap(sb)
+  const [selfCreditSkip, labelCreditSkip] = await Promise.all([
+    loadSelfCreditSkipMap(sb),
+    loadLabelCreditSkipMap(sb),
+  ])
 
   const chartIds = Array.from(new Set(saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)))
   const featIds = Array.from(new Set(saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)))
@@ -710,6 +716,8 @@ export async function GET(request: NextRequest) {
         existing.primary = { source: meta.source, id: meta.id, week_date: meta.week_date }
       }
     }
+
+    if (shouldSkipLabelSave(labelCreditSkip, s.user_id, meta.label)) continue
 
     const credited = new Map<string, string>()
     for (const artistName of splitArtistCreditsForRanking(meta.artists || '')) {

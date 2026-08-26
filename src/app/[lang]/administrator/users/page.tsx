@@ -121,6 +121,16 @@ export default function AdminUsersPage() {
       },
     },
     {
+      key: 'label_marked',
+      label: 'Sello',
+      render: (_: unknown, row: AdminUserRow) =>
+        row.label_marked ? (
+          <span className="font-bold">Marcado</span>
+        ) : (
+          <span className="text-[var(--text-muted)]">—</span>
+        ),
+    },
+    {
       key: 'favorites_count',
       label: 'Favoritos',
       sortDefault: 'desc' as const,
@@ -173,6 +183,9 @@ export default function AdminUsersPage() {
         artistas; esos mismos saves <strong>sí cuentan</strong> en el Top 100 de canciones y en Mis
         Tracks, y los créditos de colaboradores u otros artistas también. Editar la fila para
         marcar o quitar.{' '}
+        <strong>Sello</strong> = fichaje de conducta sobre un catálogo (dueño, roster o dumping
+        errático): esos «+» en temas de ese sello no suman a <em>nadie</em> en el Top de artistas.
+        El Top 100 de canciones y Mis Tracks no cambian.{' '}
         <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
         perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>

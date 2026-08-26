@@ -4,12 +4,20 @@
 // canciones. En el tablero de artistas no suma a *su* nombre (colabs sí).
 // En Almas Gemelas ese mismo tema no entra en el set Jaccard del fichado.
 // Fase 3 (bookings) no vive aquí: solo `claimed_by` + `accepts_bookings`.
+//
+// Sello editorial (`editorial_label_marks`): independiente del nombre propio.
+// Si el editor marca cuenta + sello, un save cuyo `label` coincide no acredita
+// a NADIE en el tablero de artistas (roster / colabs de ese catálogo). Mis
+// Tracks y el Top 100 de canciones no cambian. No implica dueño legal.
 
-import { normalizeArtistKey, splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { normalizeArtistKey, slugLookupKeys, splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import type { createServiceSupabase } from '@/lib/supabase-admin'
 
 export type SelfCreditSkipMap = Map<string, Set<string>>
+export type LabelCreditSkipMap = Map<string, Set<string>>
+
+const LABEL_SKIP_OPTS = { labelSuffixes: true } as const
 
 type ServiceClient = ReturnType<typeof createServiceSupabase>
 
@@ -96,6 +104,53 @@ export function isArtistSelfCreditSave(
   const remixers = extractRemixerNames(mixName)
   for (let i = 0; i < remixers.length; i++) {
     if (shouldSkipArtistSelfCredit(map, userId, remixers[i])) return true
+  }
+  return false
+}
+
+function addLabelSkipKeys(map: LabelCreditSkipMap, userId: string | null | undefined, raw: string | null | undefined) {
+  const id = (userId || '').trim()
+  if (!id || !(raw || '').trim()) return
+  let set = map.get(id)
+  if (!set) {
+    set = new Set()
+    map.set(id, set)
+  }
+  for (const key of slugLookupKeys(raw || '', LABEL_SKIP_OPTS)) {
+    if (key) set.add(key)
+    const spaced = normalizeArtistKey(key)
+    if (spaced) set.add(spaced)
+  }
+}
+
+export async function loadLabelCreditSkipMap(sb: ServiceClient): Promise<LabelCreditSkipMap> {
+  const map: LabelCreditSkipMap = new Map()
+  const { data: marks } = await sb
+    .from('editorial_label_marks')
+    .select('user_id, label_key, label_name')
+  for (const row of (marks || []) as {
+    user_id: string
+    label_key: string | null
+    label_name: string | null
+  }[]) {
+    addLabelSkipKeys(map, row.user_id, row.label_key)
+    addLabelSkipKeys(map, row.user_id, row.label_name)
+  }
+  return map
+}
+
+/** True si este save es de un sello fichado para esa cuenta (todo el crédito del tema se salta en el tablero). */
+export function shouldSkipLabelSave(
+  map: LabelCreditSkipMap,
+  userId: string,
+  labelName: string | null | undefined,
+): boolean {
+  const keys = map.get(userId)
+  if (!keys || keys.size === 0) return false
+  const raw = (labelName || '').trim()
+  if (!raw) return false
+  for (const key of slugLookupKeys(raw, LABEL_SKIP_OPTS)) {
+    if (keys.has(key) || keys.has(normalizeArtistKey(key))) return true
   }
   return false
 }

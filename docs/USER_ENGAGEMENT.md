@@ -276,7 +276,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 
 **Do not** write `claimed_by` to “fix the ranking”. That would treat them as verified for bookings RLS. The editorial table is a separate identity map: `user_id` + normalized credit key (`normalizeArtistKey`, e.g. `afghan headspin`, `gruv42`). A catalogue ficha (`artist_id`) is optional — the skip works without `/artists/<slug>`.
 
-**Collabs and other artists (closed decision, agosto 2026):** the artist board stays ranked by **songs saved** (save credits), not by unique fans and not by a “1 credit per user per artist” cap. A marked/claimed account **does not** credit *their own* name. The same save **does** credit everyone else on the track and any other artist they saved — **including the remixer** when `mix_name` is e.g. `Jem Haynes Remix` (the remixer is the breakbeat producer of that cut). Example: Afghan Headspin saves “Mamacita” (J-Break, Jan-B, Afghan Headspin) → **0** to Afghan Headspin, **+1** to J-Break and **+1** to Jan-B. If he saves the rest of the Dirty Kitchen Rave roster, those names go up. That is accepted: the board measures how many of an artist’s tracks landed in lists. With a small user base a label owner can inflate a collaborator (seen with **J-Break**); **do not** “fix” it by fichando the whole roster, zeroing all of that account’s artist-board credits, or changing the sort to unique fans. It dilutes when more **non-artist** saves exist.
+**Collabs and other artists:** the artist board stays ranked by **songs saved** (save credits), not by unique fans and not by a “1 credit per user per artist” cap. A marked/claimed account **does not** credit *their own* name. The same save **does** credit everyone else on the track — **including the remixer** — **unless** the editor also marked that account against the track’s **label** (`editorial_label_marks`). Example without a label mark: Afghan Headspin saves “Mamacita” (J-Break, Jan-B, Afghan Headspin) → **0** to Afghan Headspin, **+1** to J-Break and **+1** to Jan-B. With a label mark on **DIRTY KITCHEN RAVE**, that same save credits **nobody** on the artist board (My Tracks + track Top 100 unchanged). Saves of other labels still credit collaborators. Do **not** “fix” inflation by fichando the whole roster as artists, zeroing all of that account’s artist-board credits, or changing the sort to unique fans.
 
 **What does not count as a fix**
 
@@ -285,25 +285,27 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Deleting their “+” (they should still see the tracks in My Tracks).
 - Auto-enabling `accepts_bookings` on claim approve (they opt in from Mi cuenta).
 - Capping credits at 1 per `(user, artist)` or sorting the artist board by unique fans (the ranking is **songs saved**).
-- Silencing a marked account’s votes for **other** names (collaborators / label roster).
+- Silencing a marked account’s votes for **other labels** (collaborators outside the fichado sello).
 
 **Admin**
 
-- List: `/[lang]/administrator/users` column **Artista** — `—` / **Marcado** / **Reclamado**.
-- Detail: `/[lang]/administrator/users/[id]` — add credit name (**Marcar artista (fase 2)**) or remove a mark. Claimed fichas listed read-only (bookings open/closed).
-- API: `GET`/`PATCH /api/admin/users/[id]` with `editorial_artist_name` (string = upsert, `null` = clear all) or `remove_editorial_artist_key`.
+- List: `/[lang]/administrator/users` columns **Artista** — `—` / **Marcado** / **Reclamado** — and **Sello** — `—` / **Marcado**.
+- Detail: `/[lang]/administrator/users/[id]` — add credit name (**Marcar artista (fase 2)**) or label name (**Marcar sello**). Claimed fichas listed read-only (bookings open/closed).
+- API: `GET`/`PATCH /api/admin/users/[id]` with `editorial_artist_name` / `remove_editorial_artist_key` and `editorial_label_name` / `remove_editorial_label_key`.
 
 **Implementation**
 
 - Skip map: `src/lib/artist-self-credit.ts` (`loadSelfCreditSkipMap` = editorial rows + every `artists.claimed_by` name / `name_display` / slug). `isArtistSelfCreditSave` = that user is credited on the track (artists + remixer).
-- Artist board: bump skip in `src/app/api/public/charts/community-monthly/route.ts` (live **and** Monday snapshots). Track aggregates unchanged.
-- Soulmates (26 Aug 2026): same self-credit tracks omitted from **that user’s** Jaccard set in `src/app/api/breakbeat/soulmates/route.ts`. Not from everyone else’s sets. Recommendations use the same filtered sets.
-- Schema: `supabase/migrations/070_editorial_artist_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
+- Artist board: bump skip in `src/app/api/public/charts/community-monthly/route.ts` (live **and** Monday snapshots). Track aggregates unchanged. Label skip: if `shouldSkipLabelSave`, **no** artist credits from that save.
+- Soulmates (26 Aug 2026): same self-credit tracks omitted from **that user’s** Jaccard set in `src/app/api/breakbeat/soulmates/route.ts`. Not from everyone else’s sets. Recommendations use the same filtered sets. Label marks do **not** change Soulmates.
+- Schema: `supabase/migrations/070_editorial_artist_marks.sql` + `071_editorial_label_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
 ### Editorial marks in production (ops)
 
 How to mark: `/[lang]/administrator/users` → open the row → **Marcar artista (fase 2)** with the **credit name** as it appears on tracks (`Devis Hard`, not the email). That upserts `editorial_artist_marks` (`user_id` + `normalizeArtistKey`). Optional `artist_id` if `/artists/<slug>` exists. **Do not** write `claimed_by` or flip `accepts_bookings`.
+
+**Marcar sello:** same page → **Marcar sello** with the label string as it appears on tracks (`DIRTY KITCHEN RAVE`). Upserts `editorial_label_marks`. Optional `label_id` if `/labels/<slug>` exists. Not an ownership claim — it is a conduct mark (owner, roster artist, or erratic dump).
 
 Identity is **never** guessed from display name or email. Look the row up in Usuarios. Known email traps (do not invent the local-part):
 
@@ -322,9 +324,15 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `aranniadj@gmail.com` | Lady Arannia | `lady arannia` | `lady-arannia` | `18673d03-b462-4ddd-a56f-06a5f388c555` |
 | `davisoto@hotmail.com` | Devis Hard | `devis hard` | `devis-hard` | `9b83800a-5a40-4cdd-9e3d-f4b1a61160af` |
 
+**Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
+
+| Email | Label as on tracks | `label_key` | `user_id` |
+| --- | --- | --- | --- |
+| `afghanheadspin@gmail.com` | DIRTY KITCHEN RAVE | `dirty kitchen rave` | `4df84b27-8162-493e-8bbd-67284b277513` |
+
 **How to read a row that is still high after a mark.** `20 saves · 3 fans · 18 tracks` is **not** that account’s library. The skip already dropped their self-credits. Remaining credits are **other** public users (`is_tracks_public`). With a small base, the editorial login (`contacto@eskaladigital.com`, display **Optimal Breaks**) often dominates. Do **not** treat a leftover #7 as a broken skip, and do **not** hide the list or cap credits to “fix” it.
 
-**Audit — Afghan Headspin (25 Aug 2026).** First case: he saved his catalogue and sat #1. After the mark, **24** of his own «+» were skipped (Darkness, Mamacita, Ghost Mode, …). The board then showed **20 saves · 3 fans · 18 tracks**:
+**Audit — Afghan Headspin (25 Aug 2026).** First case: he saved his catalogue and sat #1. After the artist mark, **24** of his own «+» were skipped (Darkness, Mamacita, Ghost Mode, …). The board then showed **20 saves · 3 fans · 18 tracks**:
 
 | Fan | Email | Role | Saves that still credit him |
 | --- | --- | --- | --- |
@@ -332,7 +340,9 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | MestasDeejay | `mestasdeejay@gmail.com` | admin | **3** (Let It Be, My apocolypse, Wildcat) |
 | jennie | `jenniev52@outlook.com` | user | **1** (Let It Be) |
 
-16 + 3 + 1 = 20. Eighteen tracks because *Let It Be* is shared. His Mis Tracks and the **song** Top 100 still include his 24 saves. Collaborators he saved (J-Break, Jan-B, DKR roster) still get full artist-board credits — accepted; see the collab decision above.
+16 + 3 + 1 = 20. Eighteen tracks because *Let It Be* is shared. His Mis Tracks and the **song** Top 100 still include his 24 saves.
+
+**Audit — DKR dump (26 Aug 2026).** The same account had **107** public saves, **95** on DIRTY KITCHEN RAVE, injecting **132** artist-board credits (WeZ WhaTevR 18, J-Break 14, Kid Ellipsis 10, DJ Brownie 8, …). J-Break sat **#1** (35 saves, 14 from Afghan). After the label mark, those DKR saves credit nobody on the artist board. Collabs on **other** labels (Darkness / Raveart, Work It / Elektroshok, Fly So High / 13monkeys) still count.
 
 ### Artist board — weekly movement (not daily)
 
@@ -435,10 +445,11 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`; **remixer names** from `mix_name` via `remixer-credits.ts`).
 - `src/lib/remixer-credits.ts` — parse remixer names from `mix_name`; merge Beatport `remixers[]` into `artists[]` (scripts copy: `scripts/lib/remixer-credits.mjs`).
 - `src/lib/artist-related-content.ts` — artist/label chart links + New Releases accordion (`fetchArtistFeaturedPicks` matches `artist_names_text` **or** remixer in `mix_name`).
-- `src/lib/artist-self-credit.ts` — skip map (editorial marks + `claimed_by`); artist-board bump + Soulmates Jaccard (`isArtistSelfCreditSave`). Live marks + Afghan audit: *Editorial marks in production* above.
-- `src/app/api/admin/users/[id]/route.ts` — user detail + editorial mark / unmark.
+- `src/lib/artist-self-credit.ts` — skip map (editorial artist marks + `claimed_by`; editorial label marks); artist-board bump + Soulmates Jaccard (`isArtistSelfCreditSave`). Label skip is artist-board only (`shouldSkipLabelSave`). Live marks + Afghan/DKR audit: *Editorial marks in production* above.
+- `src/app/api/admin/users/[id]/route.ts` — user detail + editorial artist/label mark / unmark.
 - `src/components/CommunityMonthlyTop.tsx` — `/top100` UI (artist board 10→50 + track list).
 - `supabase/migrations/070_editorial_artist_marks.sql` — `editorial_artist_marks` (phase 2, no bookings).
+- `supabase/migrations/071_editorial_label_marks.sql` — `editorial_label_marks` (conduct mark, artist-board skip for that label).
 - `src/app/api/breakbeat/soulmates/route.ts` — Soulmates affinity (authenticated).
 - `supabase/migrations/053_saved_chart_tracks.sql` — table + RLS.
 - `supabase/migrations/056_community_top_and_soulmates.sql` — `profiles.is_tracks_public` + `idx_sct_created`.

@@ -3,15 +3,20 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { buildLastActivityAtByUserId } from '@/lib/admin-user-last-activity'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
-import type { EditorialArtistMarkRow } from '@/types/database'
+import type { EditorialArtistMarkRow, EditorialLabelMarkRow } from '@/types/database'
 
 type ServiceClient = ReturnType<typeof createServiceSupabase>
 
 async function loadArtistLevel(sb: ServiceClient, userId: string) {
-  const [{ data: marks }, { data: claimed }] = await Promise.all([
+  const [{ data: marks }, { data: labelMarks }, { data: claimed }] = await Promise.all([
     sb
       .from('editorial_artist_marks')
       .select('id, created_at, user_id, artist_key, artist_name, artist_id, created_by')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true }),
+    sb
+      .from('editorial_label_marks')
+      .select('id, created_at, user_id, label_key, label_name, label_id, created_by')
       .eq('user_id', userId)
       .order('created_at', { ascending: true }),
     sb
@@ -21,6 +26,7 @@ async function loadArtistLevel(sb: ServiceClient, userId: string) {
       .order('name'),
   ])
   const editorial_marks = (marks || []) as EditorialArtistMarkRow[]
+  const editorial_label_marks = (labelMarks || []) as EditorialLabelMarkRow[]
   const claimed_artists = (claimed || []) as {
     id: string
     name: string
@@ -29,7 +35,7 @@ async function loadArtistLevel(sb: ServiceClient, userId: string) {
   }[]
   const artist_level: 'user' | 'marked' | 'claimed' =
     claimed_artists.length > 0 ? 'claimed' : editorial_marks.length > 0 ? 'marked' : 'user'
-  return { editorial_marks, claimed_artists, artist_level }
+  return { editorial_marks, editorial_label_marks, claimed_artists, artist_level }
 }
 
 async function resolveCatalogArtist(sb: ServiceClient, rawName: string) {
@@ -42,6 +48,19 @@ async function resolveCatalogArtist(sb: ServiceClient, rawName: string) {
     .eq('slug', slugGuess)
     .maybeSingle()
   if (bySlug) return bySlug as { id: string; name: string | null; name_display: string | null; slug: string }
+  return null
+}
+
+async function resolveCatalogLabel(sb: ServiceClient, rawName: string) {
+  const key = normalizeArtistKey(rawName)
+  if (!key) return null
+  const slugGuess = key.replace(/\s+/g, '-')
+  const { data: bySlug } = await sb
+    .from('labels')
+    .select('id, name, slug')
+    .eq('slug', slugGuess)
+    .maybeSingle()
+  if (bySlug) return bySlug as { id: string; name: string | null; slug: string }
   return null
 }
 
@@ -102,6 +121,8 @@ export async function PATCH(
     role?: string
     editorial_artist_name?: string | null
     remove_editorial_artist_key?: string
+    editorial_label_name?: string | null
+    remove_editorial_label_key?: string
   }
   try {
     body = await request.json()
@@ -111,7 +132,9 @@ export async function PATCH(
 
   const wantsMark =
     Object.prototype.hasOwnProperty.call(body, 'editorial_artist_name') ||
-    typeof body.remove_editorial_artist_key === 'string'
+    typeof body.remove_editorial_artist_key === 'string' ||
+    Object.prototype.hasOwnProperty.call(body, 'editorial_label_name') ||
+    typeof body.remove_editorial_label_key === 'string'
   const role = body.role
   if (role !== undefined && role !== 'user' && role !== 'admin') {
     return NextResponse.json({ error: 'role debe ser user o admin' }, { status: 400 })
@@ -173,6 +196,38 @@ export async function PATCH(
         created_by: auth.userId,
       },
       { onConflict: 'user_id,artist_key' },
+    )
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (typeof body.remove_editorial_label_key === 'string' && body.remove_editorial_label_key.trim()) {
+    const { error } = await sb
+      .from('editorial_label_marks')
+      .delete()
+      .eq('user_id', id)
+      .eq('label_key', normalizeArtistKey(body.remove_editorial_label_key))
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (body.editorial_label_name === null) {
+    const { error } = await sb.from('editorial_label_marks').delete().eq('user_id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  } else if (typeof body.editorial_label_name === 'string') {
+    const labelName = body.editorial_label_name.trim().slice(0, 120)
+    const labelKey = normalizeArtistKey(labelName)
+    if (!labelKey) {
+      return NextResponse.json({ error: 'Indica el nombre del sello (como en los créditos).' }, { status: 400 })
+    }
+    const catalog = await resolveCatalogLabel(sb, labelName)
+    const { error } = await sb.from('editorial_label_marks').upsert(
+      {
+        user_id: id,
+        label_key: labelKey,
+        label_name: labelName,
+        label_id: catalog?.id ?? null,
+        created_by: auth.userId,
+      },
+      { onConflict: 'user_id,label_key' },
     )
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }

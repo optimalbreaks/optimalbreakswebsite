@@ -6,9 +6,11 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   adminGetUserDetail,
   adminMarkEditorialArtist,
+  adminMarkEditorialLabel,
   adminUpdateUserRole,
   type AdminArtistLevel,
   type AdminClaimedArtist,
+  type AdminEditorialLabelMark,
   type AdminEditorialMark,
 } from '@/lib/admin-api'
 
@@ -37,8 +39,10 @@ export default function AdminUserDetailPage() {
   const [role, setRole] = useState<'user' | 'admin'>('user')
   const [artistLevel, setArtistLevel] = useState<AdminArtistLevel>('user')
   const [editorialMarks, setEditorialMarks] = useState<AdminEditorialMark[]>([])
+  const [labelMarks, setLabelMarks] = useState<AdminEditorialLabelMark[]>([])
   const [claimedArtists, setClaimedArtists] = useState<AdminClaimedArtist[]>([])
   const [markName, setMarkName] = useState('')
+  const [labelMarkName, setLabelMarkName] = useState('')
   const [marking, setMarking] = useState(false)
 
   useEffect(() => {
@@ -58,6 +62,7 @@ export default function AdminUserDetailPage() {
         setRole(r === 'admin' ? 'admin' : 'user')
         setArtistLevel(d.artist_level ?? 'user')
         setEditorialMarks(d.editorial_marks ?? [])
+        setLabelMarks(d.editorial_label_marks ?? [])
         setClaimedArtists(d.claimed_artists ?? [])
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'))
@@ -67,10 +72,12 @@ export default function AdminUserDetailPage() {
   const applyLevel = (d: {
     artist_level: AdminArtistLevel
     editorial_marks: AdminEditorialMark[]
+    editorial_label_marks: AdminEditorialLabelMark[]
     claimed_artists: AdminClaimedArtist[]
   }) => {
     setArtistLevel(d.artist_level)
     setEditorialMarks(d.editorial_marks)
+    setLabelMarks(d.editorial_label_marks ?? [])
     setClaimedArtists(d.claimed_artists)
   }
 
@@ -98,6 +105,35 @@ export default function AdminUserDetailPage() {
       applyLevel(d)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo quitar el marcaje')
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  const handleMarkLabel = async () => {
+    if (!id || !labelMarkName.trim()) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialLabel(id, { editorial_label_name: labelMarkName.trim() })
+      applyLevel(d)
+      setLabelMarkName('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo marcar el sello')
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  const handleUnmarkLabel = async (key: string) => {
+    if (!id) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialLabel(id, { remove_editorial_label_key: key })
+      applyLevel(d)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo quitar el sello')
     } finally {
       setMarking(false)
     }
@@ -252,6 +288,52 @@ export default function AdminUserDetailPage() {
               className="admin-btn admin-btn--ghost"
             >
               {marking ? 'Guardando…' : 'Marcar artista (fase 2)'}
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t-[3px] border-[var(--ink)] pt-5 space-y-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)]">
+            Sello (Top de artistas)
+          </div>
+          <p className="admin-muted text-xs !mb-0">
+            Marca una conducta con un catálogo — dueño, artista del roster o dumping errático.
+            Los «+» de esta cuenta en temas de ese sello no suman a nadie en el Top de artistas.
+            Sí siguen en Mis Tracks y en el Top 100 de canciones. El nombre del sello debe
+            coincidir con el crédito de la pista (p. ej. DIRTY KITCHEN RAVE).
+          </p>
+          {labelMarks.length > 0 ? (
+            <ul className="m-0 p-0 list-none space-y-2">
+              {labelMarks.map((m) => (
+                <li key={m.id} className="flex items-center gap-2 text-sm">
+                  <span style={{ fontFamily: "'Courier Prime', monospace" }}>{m.label_name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUnmarkLabel(m.label_key)}
+                    disabled={marking}
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                  >
+                    Quitar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="text"
+              value={labelMarkName}
+              onChange={(e) => setLabelMarkName(e.target.value)}
+              placeholder="Nombre del sello (p. ej. DIRTY KITCHEN RAVE)"
+              className="admin-input max-w-xs"
+            />
+            <button
+              type="button"
+              onClick={handleMarkLabel}
+              disabled={marking || !labelMarkName.trim()}
+              className="admin-btn admin-btn--ghost"
+            >
+              {marking ? 'Guardando…' : 'Marcar sello'}
             </button>
           </div>
         </div>

@@ -147,6 +147,8 @@ export type AdminUserRow = {
   tracks_count: number
   /** user = normal · marked = fichaje editorial · claimed = reclamó ficha */
   artist_level?: AdminArtistLevel
+  /** Fichaje editorial de sello (no acredita el roster de ese sello en el Top de artistas). */
+  label_marked?: boolean
 }
 
 export async function adminListUsers(opts: {
@@ -176,6 +178,13 @@ export type AdminEditorialMark = {
   artist_id: string | null
 }
 
+export type AdminEditorialLabelMark = {
+  id: string
+  label_key: string
+  label_name: string
+  label_id: string | null
+}
+
 export type AdminClaimedArtist = {
   id: string
   name: string
@@ -192,6 +201,7 @@ export async function adminGetUserDetail(id: string): Promise<{
   profile: Record<string, unknown> | null
   artist_level?: AdminArtistLevel
   editorial_marks?: AdminEditorialMark[]
+  editorial_label_marks?: AdminEditorialLabelMark[]
   claimed_artists?: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`)
@@ -219,6 +229,29 @@ export async function adminMarkEditorialArtist(
   ok: boolean
   artist_level: AdminArtistLevel
   editorial_marks: AdminEditorialMark[]
+  editorial_label_marks: AdminEditorialLabelMark[]
+  claimed_artists: AdminClaimedArtist[]
+}> {
+  const res = await fetch(`${BASE}/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
+
+export async function adminMarkEditorialLabel(
+  id: string,
+  body:
+    | { editorial_label_name: string }
+    | { editorial_label_name: null }
+    | { remove_editorial_label_key: string },
+): Promise<{
+  ok: boolean
+  artist_level: AdminArtistLevel
+  editorial_marks: AdminEditorialMark[]
+  editorial_label_marks: AdminEditorialLabelMark[]
   claimed_artists: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`, {

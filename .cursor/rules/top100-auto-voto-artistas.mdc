@@ -13,7 +13,7 @@ alwaysApply: true
 
 Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.
 
-El tablero de artistas se ordena por **canciones guardadas** (créditos), no por fans únicos. Un label manager puede hinchar a un colaborador (p. ej. J-Break en DKR); **se acepta**. Se diluye cuando haya más saves de no-artistas. No “arreglarlo” con tope 1, ni ordenar por fans, ni anular todos los créditos de esa cuenta, ni fichar el roster entero.
+El tablero de artistas se ordena por **canciones guardadas** (créditos), no por fans únicos. Un label manager puede hinchar a un colaborador (p. ej. J-Break en DKR) **si no hay marca de sello**. Eso se corta fichando **cuenta + sello** (`editorial_label_marks`): esos «+» en temas de ese sello no acreditan a nadie en el tablero. No “arreglarlo” con tope 1, ni ordenar por fans, ni anular todos los créditos de esa cuenta, ni fichar el roster entero como artistas.
 
 ## Prohibido
 
@@ -21,24 +21,29 @@ El tablero de artistas se ordena por **canciones guardadas** (créditos), no por
 - Usar `claimed_by` solo para «arreglar el Top» (eso es verificación + RLS de bookings).
 - Poner `is_tracks_public = false` o borrar saves como parche de auto-voto.
 - Auto-activar `accepts_bookings` al aprobar un claim.
-- Aplicar el skip al agregado de **temas** del Top 100 (solo al bump de artistas en `community-monthly`, y al set Jaccard del fichado en `soulmates` — no al recuento de canciones).
+- Aplicar el skip al agregado de **temas** del Top 100 (solo al bump de artistas en `community-monthly`, y al set Jaccard del fichado en `soulmates` — no al recuento de canciones). El skip de sello tampoco toca el Top de canciones.
 - Cambiar el sort del tablero a unique fans o poner un tope de 1 crédito por `(usuario, artista)`.
-- Anular los votos de un fichado hacia **otros** nombres (colabs / roster del sello / remixers).
+- Anular *todos* los votos de un fichado hacia otros nombres (colabs en **otros** sellos / remixers fuera del sello marcado). El skip de sello es **solo** el catálogo fichado.
 
 ## Cómo fichar
 
 Panel: `/administrator/users/[id]` → «Marcar artista (fase 2)» con el **nombre de crédito** (p. ej. `Devis Hard`). **No** escribir `claimed_by`. No inferir el email: buscar la fila en Usuarios.
 
+Sello: misma ficha → «Marcar sello» con el **nombre tal como sale en el track** (p. ej. `DIRTY KITCHEN RAVE`). No hace falta que sea el dueño: vale un artista del roster o una cuenta con dumping errático. Independiente del fichaje de artista.
+
 Trampas de email (agosto 2026): `afghanheadspin@gmail.com` (no `afgan…`); `gruv42@me.com` (no `gruv42ruv42@…`); `aranniadj@gmail.com` (no `ranniadj@…`). Devis Hard = `davisoto@hotmail.com`. Tabla viva + IDs: `docs/USER_ENGAGEMENT.md` (*Editorial marks in production*).
 
 ## Cómo leer el tablero después del fichaje
 
-`N saves · M fans · K tracks` **no** es la biblioteca del marcado. El skip ya quitó su auto-voto. Lo que queda son **otros** usuarios públicos. Con pocos saves, la cuenta editorial (`contacto@eskaladigital.com` / Optimal Breaks) suele ser el grueso. Si un fichado sigue alto, auditar fans — no asumir que el skip falló, no ocultar la lista, no poner tope 1.
+`N saves · M fans · K tracks` **no** es la biblioteca del marcado. El skip ya quitó su auto-voto (y, si hay marca de sello, los créditos del roster de ese catálogo). Lo que queda son **otros** usuarios públicos. Con pocos saves, la cuenta editorial (`contacto@eskaladigital.com` / Optimal Breaks) suele ser el grueso. Si un fichado sigue alto, auditar fans — no asumir que el skip falló, no ocultar la lista, no poner tope 1.
 
 Caso cerrado (25 ago 2026): Afghan Headspin — 24 «+» propios saltados; 20 saves / 3 fans = Optimal Breaks 16 + MestasDeejay 3 + jennie 1. Detalle en la spec.
 
+Caso sello (26 ago 2026): la misma cuenta volcó DKR (95 de 107 saves). Marca `DIRTY KITCHEN RAVE`: WeZ WhaTevR / Kid Ellipsis / DJ Brownie / J-Break (créditos DKR) dejan de subir por él. Colabs en **otros** sellos (p. ej. Darkness en Raveart) sí siguen.
+
 ## Dónde vive
 
-- Skip: `src/lib/artist-self-credit.ts` → tablero en `community-monthly/route.ts` **y** set del fichado en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El Top de canciones no cambia.
-- Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)».
+- Skip artista: `src/lib/artist-self-credit.ts` → tablero en `community-monthly/route.ts` **y** set del fichado en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El Top de canciones no cambia.
+- Skip sello: misma lib (`loadLabelCreditSkipMap` / `shouldSkipLabelSave`) → **solo** el bump de artistas en `community-monthly` (no Soulmates, no Top de canciones).
+- Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)» y «Marcar sello».
 - Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels* + *Editorial marks in production*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).

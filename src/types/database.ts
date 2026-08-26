@@ -360,6 +360,13 @@ export interface Database {
         Update: Partial<Pick<EditorialArtistMarkRow, 'artist_key' | 'artist_name' | 'artist_id'>>
         Relationships: DbRelationship[]
       }
+      editorial_label_marks: {
+        Row: EditorialLabelMarkRow
+        Insert: Pick<EditorialLabelMarkRow, 'user_id' | 'label_key'> &
+          Partial<Pick<EditorialLabelMarkRow, 'label_name' | 'label_id' | 'created_by'>>
+        Update: Partial<Pick<EditorialLabelMarkRow, 'label_key' | 'label_name' | 'label_id'>>
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -562,6 +569,16 @@ export interface EditorialArtistMarkRow extends Record<string, unknown> {
   artist_key: string
   artist_name: string
   artist_id: string | null
+  created_by: string | null
+}
+
+export interface EditorialLabelMarkRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  user_id: string
+  label_key: string
+  label_name: string
+  label_id: string | null
   created_by: string | null
 }
 
