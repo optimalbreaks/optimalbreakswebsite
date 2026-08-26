@@ -2824,6 +2824,92 @@ async function runPatchOshunFestival2026(sb) {
   console.log('[patch-oshun-festival-2026] OK:', after)
 }
 
+const BREIKI_ELECTRONIC_FESTIVAL_SLUG = 'breiki-electronic-festival'
+const BREIKI_ELECTRONIC_FESTIVAL_TICKETS =
+  'https://www.monsterticket.com/evento/breiki-electronic-festival-3-edicion'
+const BREIKI_ELECTRONIC_FESTIVAL_IMAGE = '/images/events/breiki-electronic-festival-2026.webp'
+
+const BREIKI_ELECTRONIC_FESTIVAL_LINEUP = [
+  'Jan-B vs Mr.Fli',
+  'DJ Garry',
+  'Anita Breakz vs Lady Ourevitch',
+  'Nokaut',
+  'Yuls',
+  'Wascaman Jr',
+  'Vialbass vs Kaberbass',
+  'Cellux MC',
+  'Alhai',
+  'Formation Estepona',
+  'Puma',
+  'Fireheart',
+  'Mcaracoles',
+]
+
+const BREIKI_ELECTRONIC_FESTIVAL_ROW = {
+  name: 'BREIKI Electronic Festival',
+  description_en:
+    'Third edition of Breiki Electronic Festival, an inclusive and accessible family electronic music festival, on Saturday 19 September 2026 at Santa Rita Supperdisco, Málaga. Family Rave 16:00–21:00 (doors from 15:30). Poster line-up: Jan-B vs Mr.Fli, DJ Garry, Anita Breakz vs Lady Ourevitch, Nokaut, Yuls, Wascaman Jr, Vialbass vs Kaberbass, Cellux MC, plus Alhai, Formation Estepona, Puma, Fireheart and Mcaracoles. For families with kids and teens: confetti, kids’ parkineo, superheroes, quiet relax area, baby zone, face painting and terrace. Adults may not enter without a minor (max. four adults per child); under-18s need ID or family book, an adult and a printed authorisation. Under 2s free. No distilled alcohol (beer or wine for adults only). Tickets on MonsterTicket; first tranche sold out at cataloguing. Address: C/ de Alfredo Corrochano 85, 29006 Málaga. Tagline on the flyer: “En Andalucía comienza todo”.',
+  description_es:
+    'Tercera edición de Breiki Electronic Festival, festival familiar inclusivo y accesible de música electrónica, el sábado 19 de septiembre de 2026 en Santa Rita Supperdisco (Málaga). Family Rave 16:00–21:00 (apertura 15:30). Cartel: Jan-B vs Mr.Fli, DJ Garry, Anita Breakz vs Lady Ourevitch, Nokaut, Yuls, Wascaman Jr, Vialbass vs Kaberbass, Cellux MC, y también Alhai, Formation Estepona, Puma, Fireheart y Mcaracoles. Solo para familias con peques, adolescentes y ritmo: confeti, peque parkineo, superhéroes, zona relax sin música, baby zone, pintacaras y terraza. No entran adultos sin menor (máx. 4 adultos por menor); menores de 18 con DNI o libro de familia, adulto y autorización impresa. Bebés de menos de 2 años gratis. Sin alcohol destilado (cerveza o vino solo para adultos). Entradas en MonsterTicket; el 1.er tramo estaba agotado al catalogar. Dirección: C/ de Alfredo Corrochano 85, 29006 Málaga. Lema del flyer: «En Andalucía comienza todo».',
+  event_type: 'festival',
+  date_start: '2026-09-19',
+  date_end: null,
+  location: 'Santa Rita Supperdisco, Málaga, Spain',
+  city: 'Málaga',
+  country: 'Spain',
+  venue: 'Santa Rita Supperdisco',
+  address: 'C/ de Alfredo Corrochano, 85, 29006 Málaga',
+  website: null,
+  tickets_url: BREIKI_ELECTRONIC_FESTIVAL_TICKETS,
+  image_url: BREIKI_ELECTRONIC_FESTIVAL_IMAGE,
+  lineup: BREIKI_ELECTRONIC_FESTIVAL_LINEUP,
+  tags: [
+    'breiki',
+    'family rave',
+    'accesible',
+    'inclusivo',
+    'málaga',
+    'santa rita',
+    'breaks',
+    '2026',
+    'monsterticket',
+  ],
+  socials: {},
+  age_restriction:
+    'Todos los públicos. Menores de 18: DNI o libro de familia, adulto y autorización impresa. Adultos solo con menor (máx. 4 por menor). Menores de 2 años gratis.',
+  doors_open: '15:30',
+  doors_close: '21:00',
+}
+
+async function runPatchBreikiElectronicFestival2026(sb) {
+  const { data: before, error: e0 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, lineup')
+    .eq('slug', BREIKI_ELECTRONIC_FESTIVAL_SLUG)
+    .maybeSingle()
+  if (e0) throw e0
+  console.log('[patch-breiki-electronic-festival-2026] antes:', before || '(sin fila)')
+
+  const row = {
+    slug: BREIKI_ELECTRONIC_FESTIVAL_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...BREIKI_ELECTRONIC_FESTIVAL_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, image_url, tickets_url, lineup')
+    .eq('slug', BREIKI_ELECTRONIC_FESTIVAL_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-breiki-electronic-festival-2026] OK:', after)
+}
+
 const MAS_RUIDO_BLACK_HOLE_360_2026_SLUG = 'mas-ruido-black-hole-360-2026'
 const MAS_RUIDO_BLACK_HOLE_360_TICKETS =
   'https://www.monsterticket.com/evento/mas-ruido-black-hole-360'
@@ -5361,6 +5447,11 @@ async function main() {
 
   if (argv.includes('--patch-oshun-festival-2026')) {
     await runPatchOshunFestival2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-breiki-electronic-festival-2026')) {
+    await runPatchBreikiElectronicFestival2026(sb)
     return
   }
 

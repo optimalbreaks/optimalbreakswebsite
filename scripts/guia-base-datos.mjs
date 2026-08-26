@@ -345,6 +345,14 @@ const ACTIONS = [
       'UPSERT oshun-festival-2026: 15 ago 2026 Carpas Yerbabuena Barbate, primer avance lineup (Baymont Bross, Yo Speed, Bad Legs, Bowser, Darkbass, Xano…), oshun-festival-2026.webp, entradas sin parámetros RRPP.',
   },
   {
+    id: 'events-patch-breiki-electronic-festival-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-breiki-electronic-festival-2026',
+    npm: 'npm run db:guia -- run events-patch-breiki-electronic-festival-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT breiki-electronic-festival: 19 sept 2026 Santa Rita Supperdisco Málaga, family rave, cartel breiki-electronic-festival-2026.webp, MonsterTicket 3ª edición.',
+  },
+  {
     id: 'events-patch-mas-ruido-black-hole-360-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-mas-ruido-black-hole-360-2026',
     npm: 'npm run db:guia -- run events-patch-mas-ruido-black-hole-360-2026',
@@ -828,6 +836,7 @@ Punto de entrada unificado:
   events-patch-breaks-bloom-festival-2026  Breaks Bloom Festival, Hacienda El Mantillo Pilas 19 sept 2026
   events-patch-bellota-break-festival-2026  Bellota Break Festival, Calzadilla de los Barros 13 jun 2026
   events-patch-oshun-festival-2026  Oshun Festival, Carpas Yerbabuena Barbate 15 ago 2026
+  events-patch-breiki-electronic-festival-2026  Breiki Electronic Festival, Santa Rita Málaga 19 sept 2026
   events-patch-mas-ruido-black-hole-360-2026  +Ruido! Black Hole 360, O’Farrell San Fernando 18 abr 2026
   events-patch-la-caseta-del-breakbeat-2026  La Caseta del Breakbeat, Pandora Sevilla 25 abr 2026 (Fourvenues)
   events-patch-fruity-loops-03-06-2026  Fruity Loops, 3 jun 2026, entradas Fourvenues; cartel public/images/events/fruity-loops-03-06-2026.avif
@@ -1267,6 +1276,9 @@ function main() {
       break
     case 'events-patch-oshun-festival-2026':
       runNode('enriquecer-evento.mjs', ['--patch-oshun-festival-2026', ...rest])
+      break
+    case 'events-patch-breiki-electronic-festival-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-breiki-electronic-festival-2026', ...rest])
       break
     case 'events-patch-mas-ruido-black-hole-360-2026':
       runNode('enriquecer-evento.mjs', ['--patch-mas-ruido-black-hole-360-2026', ...rest])
