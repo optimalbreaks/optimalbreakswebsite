@@ -314,6 +314,8 @@ Helpers: `src/lib/auth-callback.ts` (`normalizeRelativeNext`, `isSafeAppPath`, `
 
 Use **custom SMTP** (e.g. OVH) under Auth settings if you want `From:` on your domain; disable link-tracking that rewrites URLs.
 
+**Product / campaign emails (not Auth):** OVH SMTP from `.env.local` + [`scripts/enviar-campana-mail.mjs`](scripts/enviar-campana-mail.mjs) (`npm run mail:campaign -- --test` then `--send`). Outlook-first tables, bilingual ES/EN, Beatport art converted to **inline JPEG (CID)**. Spec and first send (My Tracks / Top 100, 26 Aug 2026): [`docs/GUIA_MAILS.md`](docs/GUIA_MAILS.md).
+
 ---
 
 ## Project Structure
@@ -328,9 +330,11 @@ Layout below is relative to the **repo root** (the directory that contains `pack
 │   ├── ADMIN_CHAT_CAPTURA.md   # Admin chat widget (tools + Confirm, dates w/o year, PWA, OCR)
 │   ├── ARTIST_AI_AGENT.md      # Full guide: AI artist agent (ES/EN)
 │   ├── IMAGES_AND_WEBP.md      # public/images vs Storage, displayImageUrl, WebP rules
-│   └── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
+│   ├── USER_ENGAGEMENT.md      # Favorites, seen live, event attendance, ratings
+│   └── GUIA_MAILS.md           # Campaign + Auth mail (OVH SMTP, design, CID JPEGs)
 ├── mailing/
 │   ├── supabase/               # Auth email HTML → paste into Supabase Email templates (see README there)
+│   ├── save-tracks-top100.html # Last generated campaign HTML (script output)
 │   └── firma-*.html            # Email signature variants (not used by Supabase Auth)
 ├── data/
 │   └── artists/                # One JSON file per artist → npm run db:artist

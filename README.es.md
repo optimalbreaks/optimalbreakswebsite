@@ -28,6 +28,8 @@ Plataforma web **bilingüe (ES/EN)** sobre historia, artistas, sellos, eventos, 
 
 **Correos de autenticación (plantillas HTML para Supabase):** [`mailing/supabase/README.md`](./mailing/supabase/README.md) — confirmación de registro, invitación, magic link, cambio de correo, recuperación de contraseña, reautenticación. Flujo técnico actualizado en [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
 
+**Campañas (Mis Tracks, avisos de producto):** SMTP OVH + `npm run mail:campaign`. Diseño, JPEG incrustado, bilingüe, `--test` antes de `--send`. Guía: [`docs/GUIA_MAILS.md`](./docs/GUIA_MAILS.md).
+
 ---
 
 ## Stack principal
@@ -74,7 +76,7 @@ Detalle técnico en inglés: **[README.md — Performance & Core Web Vitals](./R
 
 **Plantillas HTML** en [`mailing/supabase/`](./mailing/supabase/): el botón principal usa **`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=…`** para que el primer clic vaya a **tu** `/auth/confirm`. Cópialas en **Authentication → Email**. Detalle: [`mailing/supabase/README.md`](./mailing/supabase/README.md).
 
-**SMTP propio (OVH, etc.):** opcional; desactiva el tracking de enlaces que reescriba URLs.
+**SMTP propio (OVH, etc.):** Auth (opcional en el dashboard) y **campañas** (`SMTP_*` en `.env.local`, `npm run mail:campaign`). Desactiva el tracking de enlaces que reescriba URLs. Campañas: [`docs/GUIA_MAILS.md`](./docs/GUIA_MAILS.md).
 
 Documentación en inglés: [README.md — Authentication](README.md#authentication-supabase-auth-and-email-templates).
 

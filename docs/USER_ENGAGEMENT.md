@@ -249,6 +249,8 @@ List API: `src/app/api/admin/users/route.ts`. Client: `src/app/[lang]/administra
 
 ## Community Top (public, all-time)
 
+**Campaign (26 Aug 2026):** registered users with few saves were emailed to use **My Tracks** (same `+`). Technique, design, SMTP: [`docs/GUIA_MAILS.md`](./GUIA_MAILS.md). Do not put community vote totals in that mail.
+
 Public, on-demand ranking of every **"+" save** in **My Tracks** (`saved_chart_tracks`) **across all time**. One save = one click on `SaveTrackButton`. Page: **`/[lang]/top100`** (`src/app/[lang]/top100/page.tsx`). `/[lang]/charts` only keeps a teaser card that links there (the ranking used to sit under *Retro Vinyl Picks* inside `ChartView`). Originally a monthly window; switched to an all-time accumulator after calendar months kept "drying up" the ranking once active users had emptied that month's catalogue into their lists. The slug `community-monthly` is preserved for compatibility — both the endpoint and the component file keep the historical name even though they no longer expose any monthly window.
 
 - **Endpoint:** `GET /api/public/charts/community-monthly?limit=N` (default `limit` 40, max 100 — the public page requests **100**). No `month` parameter — the response is always the all-time aggregate. **`top_tracks`** and **`top_artists`** (top **50** by save credits) come from the **same** pass over the same rows.

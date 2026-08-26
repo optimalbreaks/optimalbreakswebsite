@@ -31,8 +31,10 @@
 >   `profiles.booking_banned`. Motivo: la política existente *"Users update own profile"* permitiría a
 >   un usuario auto-desbanearse. La tabla no tiene políticas RLS (solo service role) y el ban se
 >   comprueba en la API del POST de bookings.
-> - **Emails transaccionales (§8) NO incluidos** en el MVP (sin proveedor de email decidido). El
->   descubrimiento se apoya en el check de registro + la pestaña Artista siempre visible en Mi cuenta.
+> - **Emails transaccionales (§8) NO incluidos** en el MVP de bookings. Hay **SMTP OVH + script de
+>   campaña** (`docs/GUIA_MAILS.md`) usado ya para Mis Tracks (ago 2026): mismo canal para avisos
+>   de booking / anuncio cuando se implementen. El descubrimiento in-app (check de registro +
+>   pestaña Artista) sigue siendo el mecanismo principal del MVP.
 > - Decisiones §9 por defecto en el MVP: categorías no reclamables `pioneer`/`uk_legend`; 1 ficha
 >   verificada por cuenta; presupuesto por rangos; una fecha opcional; rechazo silencioso.
 
@@ -376,9 +378,10 @@ Orden (decisión §2.19): **construir → probar con 2-3 artistas de confianza �
 | **Bienvenida a nuevos** (drip 2-3 días post-signup) | Opcional, cuando exista el proveedor | Email de bienvenida **general** (charts, guarda tracks… y si eres artista, reclama), nunca monotema «¿eres artista?» | Solo a quienes no marcaron el check en el registro; una vez, nunca recurrente |
 | **Avisos transaccionales** | Con el MVP idealmente | «Tienes una solicitud nueva» (sin el contenido entero: la bandeja es el registro) | El más importante de los cuatro; sin él la utilidad para el artista baja mucho |
 
-Infraestructura común a los cuatro usos: **un** proveedor transaccional (Resend o similar) +
-tabla de envíos (no repetir) + opt-out. Hoy solo existen los emails de Supabase Auth; Supabase
-no envía correos arbitrarios. El drip además necesita un programador (cron de Vercel o
+Infraestructura común a los cuatro usos: **SMTP OVH + script** ya documentado en
+[`docs/GUIA_MAILS.md`](./GUIA_MAILS.md) (primera campaña: Mis Tracks, ago 2026) — o un
+proveedor tipo Resend cuando el volumen lo pida — más tabla de envíos (no repetir) + opt-out.
+Supabase Auth **no** envía correos arbitrarios. El drip además necesita un programador (cron de Vercel o
 `pg_cron`). Decidir el proveedor **dentro del MVP** contando los cuatro usos, no montarlo solo
 para uno (ver §9.3).
 

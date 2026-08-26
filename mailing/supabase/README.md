@@ -70,6 +70,8 @@ Los correos enviados **manualmente** desde el panel de Supabase (“Send recover
 
 Si activas **SMTP personalizado**, desactiva el **tracking de enlaces** del proveedor si reescribe URLs y rompe la verificación.
 
+Los correos de **campaña** (Mis Tracks, avisos de producto) **no** salen de estas plantillas: van por script + OVH. Misma estética, otro canal. Guía: [`docs/GUIA_MAILS.md`](../../docs/GUIA_MAILS.md).
+
 ---
 
 *English summary:* Paste these HTML templates into **Supabase → Authentication → Email**. Primary links use **`{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=…`** so verification hits **`/{lang}/auth/confirm`** (server `verifyOtp`); **recovery** then redirects to **`/{lang}/reset-password`**. OAuth still uses **`/{lang}/auth/callback`**. See [README.md](../../README.md#authentication-supabase-auth-and-email-templates).
