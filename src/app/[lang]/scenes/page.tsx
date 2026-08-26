@@ -72,7 +72,7 @@ const FALLBACK_SCENES: FallbackScene[] = [
   },
 ]
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/scenes', 'scenes', {
     ogImagePath: sectionOgImagePath('scenes', lang),
@@ -80,7 +80,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   })
 }
 
-export default async function ScenesPage({ params }: { params: { lang: Locale } }) {
+export default async function ScenesPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase()

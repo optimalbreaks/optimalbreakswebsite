@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-export default async function LoginPage({ params }: { params: { lang: Locale } }) {
+export default async function LoginPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   return <LoginForm lang={lang} />
 }

@@ -12,9 +12,9 @@ export default async function AdminLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { lang: Locale }
+  params: Promise<{ lang: string }>
 }) {
-  const { lang } = await params
+  const { lang } = (await params) as { lang: Locale }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const key = (

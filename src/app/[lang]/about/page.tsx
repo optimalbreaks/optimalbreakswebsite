@@ -8,7 +8,7 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import type { Metadata } from 'next'
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/about', 'about', {
     ogImagePath: sectionOgImagePath('about', lang),
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   })
 }
 
-export default async function AboutPage({ params }: { params: { lang: Locale } }) {
+export default async function AboutPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
 
@@ -104,7 +104,7 @@ export default async function AboutPage({ params }: { params: { lang: Locale } }
               : 'OPTIMAL BREAKS IS AN INDEPENDENT PROJECT. MADE WITH BREAKS AND NOISE FROM MURCIA, SPAIN.'}
           </p>
           <p className="mt-2" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', letterSpacing: '2px', color: 'var(--dim)' }}>
-            NEXT.JS · SUPABASE · TAILWIND CSS · 2026
+            NEXT.JS 16 · REACT 19 · SUPABASE · TAILWIND · 2026
           </p>
         </div>
       </section>

@@ -14,7 +14,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import { SITE_URL, ogAlternateLocales } from '@/lib/seo'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
 
-export async function generateMetadata({ params }: { params: { lang: Locale; handle: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale; handle: string }> }): Promise<Metadata> {
   const { lang, handle } = await params
   const dict = await getDictionary(lang)
   const seo = dict.seo as { site_name: string; default_keywords: string }
@@ -91,7 +91,7 @@ async function fetchPayload(handle: string): Promise<PublicTracksPayload | null>
   return (await res.json()) as PublicTracksPayload
 }
 
-export default async function Page({ params }: { params: { lang: Locale; handle: string } }) {
+export default async function Page({ params }: { params: Promise<{ lang: Locale; handle: string }> }) {
   const { lang, handle } = await params
   const payload = await fetchPayload(handle)
   if (!payload) notFound()

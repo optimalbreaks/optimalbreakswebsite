@@ -57,7 +57,7 @@ const FEATURED_ARTISTS: {
   { slug: 'lady-waks', name: 'LADY WAKS', genres: ['Breaks', 'Radio', 'Community'], desc_en: 'Proof that the scene kept breathing through regular mixes, radio and online presence.', desc_es: 'Prueba de que la escena siguió respirando gracias a mixes regulares, radio y presencia online.' },
 ]
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '', 'home', {
     ogImagePath: HOME_OG_IMAGE,
@@ -155,7 +155,7 @@ function formatBlogPublishedAt(publishedAt: string, lang: Locale): string {
 export default async function HomePage({
   params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale }>
 }) {
   const { lang } = await params
   const dict = await getDictionary(lang)

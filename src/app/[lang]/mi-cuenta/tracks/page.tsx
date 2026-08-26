@@ -17,7 +17,7 @@ const TRACKS_OG_IMAGE = {
   type: 'image/jpeg',
 } as const
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   const dict = await getDictionary(lang)
   const seo = dict.seo as { site_name: string; default_keywords: string }
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   }
 }
 
-export default async function Page({ params }: { params: { lang: Locale } }) {
+export default async function Page({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   return (
     <UserSectionShell lang={lang} section="tracks">

@@ -1,5 +1,6 @@
 // ============================================
-// OPTIMAL BREAKS — Middleware (i18n + Auth)
+// OPTIMAL BREAKS — Proxy (i18n + Auth)
+// Next 16: antes middleware.ts (Edge). Ahora proxy en Node.
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -20,7 +21,7 @@ function getLocale(request: NextRequest): string {
   return i18n.defaultLocale
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip static files (incl. todo bajo /images/ aunque falte extensión, para no prefijar locale)
@@ -68,7 +69,7 @@ export async function middleware(request: NextRequest) {
 
   if (supabaseUrl && supabaseKey && hasAuthCookie) {
     // Aborta de verdad la petición a Auth si tarda: sin esto, un cuelgue de
-    // Supabase agota los 25 s del middleware y Vercel devuelve 504 en todo el sitio.
+    // Supabase agota los 25 s del proxy y Vercel devuelve 504 en todo el sitio.
     const AUTH_TIMEOUT_MS = 2_500
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       global: {

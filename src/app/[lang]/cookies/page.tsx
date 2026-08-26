@@ -7,12 +7,12 @@ import type { Metadata } from 'next'
 import { staticPageMetadata } from '@/lib/seo'
 import ManageConsentButton from '@/components/ManageConsentButton'
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/cookies', 'cookies')
 }
 
-export default async function CookiesPage({ params }: { params: { lang: Locale } }) {
+export default async function CookiesPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const es = lang === 'es'
 

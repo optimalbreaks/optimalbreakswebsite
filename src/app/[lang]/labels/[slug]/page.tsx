@@ -43,8 +43,8 @@ import ArtistFeaturedTracks from '@/components/ArtistFeaturedTracks'
 import ArtistShowcase, { type ShowcaseArtist } from '@/components/ArtistShowcase'
 
 type Props = {
-  params: { lang: Locale; slug: string }
-  searchParams?: Record<string, string | string[] | undefined>
+  params: Promise<{ lang: Locale; slug: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 /** `?play=beatport:<id>` debe influir en OG en tiempo de petición. */
@@ -127,7 +127,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   // Si la URL compartida lleva ?play=beatport:<id>, sobreescribimos OG con
   // la portada y título del track concreto del Top 10 del sello.
-  const sp = searchParams ?? {}
+  const sp = (await searchParams) ?? {}
   const parsedPlay = parsePlayParam(firstSearchParam(sp.play))
   if (parsedPlay?.kind === 'beatport') {
     const { data: topRow } = await supabase.from('labels').select('beatport_top_tracks').eq('slug', slug).single()

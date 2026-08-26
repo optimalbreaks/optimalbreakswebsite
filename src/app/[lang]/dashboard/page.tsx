@@ -26,7 +26,7 @@ function Fallback() {
   )
 }
 
-export default async function DashboardPage({ params }: { params: { lang: Locale } }) {
+export default async function DashboardPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   return (
     <Suspense fallback={<Fallback />}>

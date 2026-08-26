@@ -33,9 +33,9 @@ const TOP100_KEYWORDS: Record<Locale, string[]> = {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale }>
 }): Promise<Metadata> {
-  const { lang } = params
+  const { lang } = await params
   return staticPageMetadata(lang, '/top100', 'top100', {
     ogImagePath: sectionOgImagePath('top100', lang),
     ogImageAlt: sectionOgImageAlt('top100', lang),
@@ -46,9 +46,9 @@ export async function generateMetadata({
 export default async function Top100Page({
   params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale }>
 }) {
-  const lang = params.lang
+  const { lang } = await params
   const dict = await getDictionary(lang)
 
   const backLabel = lang === 'es' ? '← Volver a Charts' : '← Back to Charts'

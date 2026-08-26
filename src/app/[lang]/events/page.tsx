@@ -94,7 +94,7 @@ const FALLBACK_EVENTS: FallbackEvent[] = [
   },
 ]
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/events', 'events', {
     ogImagePath: sectionOgImagePath('events', lang),
@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
   })
 }
 
-export default async function EventsPage({ params }: { params: { lang: Locale } }) {
+export default async function EventsPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase()

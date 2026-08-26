@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-export default async function Page({ params }: { params: { lang: Locale } }) {
+export default async function Page({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   return (
     <UserSectionShell lang={lang} section="events">

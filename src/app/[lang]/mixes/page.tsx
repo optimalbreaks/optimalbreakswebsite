@@ -102,7 +102,7 @@ const FALLBACK_MIXES: FallbackMix[] = [
   },
 ]
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/mixes', 'mixes', {
     ogImagePath: sectionOgImagePath('mixes', lang),
@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: { params: { lang: Locale } })
 /** Catálogo editorial: revalidar a menudo para que nuevos UPSERT aparezcan sin redeploy completo. */
 export const revalidate = 60
 
-export default async function MixesPage({ params }: { params: { lang: Locale } }) {
+export default async function MixesPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase(60)

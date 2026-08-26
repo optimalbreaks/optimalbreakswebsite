@@ -13,7 +13,7 @@ import ShareButtons from '@/components/ShareButtons'
 import { descriptionLooksLikeHtml, splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type SceneSeoRow = Pick<Scene, 'name_en' | 'name_es' | 'description_en' | 'description_es' | 'image_url' | 'og_image_url'>
 
 function escapeRegExp(value: string) {

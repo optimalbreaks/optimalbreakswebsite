@@ -133,12 +133,14 @@ const nextConfig = {
   // Disable x-powered-by header
   poweredByHeader: false,
 
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.woff2$/i,
-      type: 'asset/resource',
-    })
-    return config
+  // Next 16: Turbopack por defecto. El import de .woff2 (Unbounded 900) iba
+  // por una regla webpack; aquí el equivalente.
+  turbopack: {
+    rules: {
+      '*.woff2': {
+        type: 'asset',
+      },
+    },
   },
 }
 

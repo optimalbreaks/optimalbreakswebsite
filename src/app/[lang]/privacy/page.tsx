@@ -6,12 +6,12 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Metadata } from 'next'
 import { staticPageMetadata } from '@/lib/seo'
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/privacy', 'privacy')
 }
 
-export default async function PrivacyPage({ params }: { params: { lang: Locale } }) {
+export default async function PrivacyPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const es = lang === 'es'
 

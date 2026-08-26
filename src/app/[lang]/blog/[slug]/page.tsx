@@ -19,7 +19,7 @@ import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import CardThumbnail from '@/components/CardThumbnail'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url'>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

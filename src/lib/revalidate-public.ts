@@ -4,5 +4,5 @@ import { revalidateTag } from 'next/cache'
 export const PUBLIC_CHARTS_CACHE_TAG = 'public-charts'
 
 export function revalidatePublicCharts(): void {
-  revalidateTag(PUBLIC_CHARTS_CACHE_TAG)
+  revalidateTag(PUBLIC_CHARTS_CACHE_TAG, 'max')
 }

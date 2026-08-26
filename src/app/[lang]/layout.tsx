@@ -4,6 +4,7 @@
 // ============================================
 
 import type { Metadata, Viewport } from 'next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import '@fontsource/unbounded/latin-700.css'
 import '@fontsource/unbounded/latin-900.css'
 import unbounded900LatinWoff2 from '@fontsource/unbounded/files/unbounded-latin-900-normal.woff2'
@@ -14,7 +15,13 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { AuthProvider } from '@/components/AuthProvider'
 import LazyDeckAudioProvider from '@/components/LazyDeckAudioProvider'
-import nextDynamic from 'next/dynamic'
+import ChartsPromoModal from '@/components/ChartsPromoModal'
+import CookieBanner from '@/components/CookieBanner'
+import DeferredFonts from '@/components/DeferredFonts'
+import BackToTop from '@/components/BackToTop'
+import AdminCaptureFab from '@/components/AdminCaptureFab'
+import GoogleAnalytics from '@/components/GoogleAnalytics'
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import {
   absoluteOgImage,
   DEFAULT_OG_IMAGE_PATH,
@@ -24,14 +31,6 @@ import {
   SITE_URL,
   smartTruncate,
 } from '@/lib/seo'
-
-const ChartsPromoModal = nextDynamic(() => import('@/components/ChartsPromoModal'), { ssr: false })
-const CookieBanner = nextDynamic(() => import('@/components/CookieBanner'), { ssr: false })
-const DeferredFonts = nextDynamic(() => import('@/components/DeferredFonts'), { ssr: false })
-const BackToTop = nextDynamic(() => import('@/components/BackToTop'), { ssr: false })
-const AdminCaptureFab = nextDynamic(() => import('@/components/AdminCaptureFab'), { ssr: false })
-const GoogleAnalytics = nextDynamic(() => import('@/components/GoogleAnalytics'), { ssr: false })
-const ServiceWorkerRegistration = nextDynamic(() => import('@/components/ServiceWorkerRegistration'), { ssr: false })
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -62,9 +61,9 @@ type SeoRoot = {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: Locale }>
+  params: Promise<{ lang: string }>
 }): Promise<Metadata> {
-  const { lang } = await params
+  const { lang } = (await params) as { lang: Locale }
   const dict = await getDictionary(lang)
   const seo = dict.seo as SeoRoot
   const home = seo.home
@@ -101,9 +100,9 @@ export default async function LangLayout({
   params,
 }: {
   children: React.ReactNode
-  params: { lang: Locale }
+  params: Promise<{ lang: string }>
 }) {
-  const { lang } = await params
+  const { lang } = (await params) as { lang: Locale }
   const dict = await getDictionary(lang)
   const h = dict.home
   const deckDict = {
@@ -184,6 +183,7 @@ export default async function LangLayout({
           <ChartsPromoModal lang={lang} dict={dict.charts_promo} />
           <ServiceWorkerRegistration />
           <GoogleAnalytics />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>

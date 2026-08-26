@@ -81,10 +81,11 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: { lang: Locale }
-  searchParams?: { play?: string; week?: string }
+  params: Promise<{ lang: Locale }>
+  searchParams?: Promise<{ play?: string; week?: string }>
 }): Promise<Metadata> {
-  const { lang } = params
+  const { lang } = await params
+  const query = (await searchParams) ?? {}
   const fallback = () =>
     staticPageMetadata(lang, '/charts', 'charts', {
       ogImagePath: sectionOgImagePath('charts', lang),
@@ -92,7 +93,7 @@ export async function generateMetadata({
       extraKeywords: CHARTS_KEYWORDS[lang],
     })
 
-  const parsed = parsePlayParam(searchParams?.play)
+  const parsed = parsePlayParam(query.play)
   if (!parsed) return fallback()
 
   if (parsed.kind === 'vinyl') {
@@ -182,7 +183,7 @@ export async function generateMetadata({
       ? `Escucha esta canción en Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`
       : `Listen to this track on Optimal Breaks${descParts.length ? ` · ${descParts.join(' · ')}` : ''}.`)
 
-    const week = searchParams?.week ? `&week=${encodeURIComponent(searchParams.week)}` : ''
+    const week = query.week ? `&week=${encodeURIComponent(query.week)}` : ''
     const path = `/charts?play=${encodeURIComponent(parsed.source)}:${parsed.id}${week}`
     const siteName = await siteNameForLang(lang)
 
@@ -205,10 +206,11 @@ export default async function ChartsPage({
   params,
   searchParams,
 }: {
-  params: { lang: Locale }
-  searchParams: { week?: string }
+  params: Promise<{ lang: Locale }>
+  searchParams: Promise<{ week?: string }>
 }) {
-  const lang = params.lang
+  const { lang } = await params
+  const query = await searchParams
   const dict = await getDictionary(lang)
   const supabase = chartsSupabase()
 
@@ -275,7 +277,7 @@ export default async function ChartsPage({
   }))
 
   const weekParamMonday =
-    chartEditionWeekMondayFromPublish(searchParams.week) ?? searchParams.week
+    chartEditionWeekMondayFromPublish(query.week) ?? query.week
   const validWeekParam =
     weekParamMonday && editions.some((e) => e.week_date === weekParamMonday)
       ? weekParamMonday

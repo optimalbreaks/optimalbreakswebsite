@@ -12,7 +12,7 @@ import ShareButtons from '@/components/ShareButtons'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
 
-type Props = { params: { lang: Locale; slug: string } }
+type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type OrganizationSeoRow = Pick<Organization, 'name' | 'description_en' | 'description_es' | 'image_url'>
 type LabelPreview = Pick<Label, 'slug' | 'name' | 'country' | 'founded_year' | 'is_active'>
 type EventPreview = Pick<BreakEvent, 'slug' | 'name' | 'date_start' | 'city' | 'country' | 'event_type' | 'venue'>

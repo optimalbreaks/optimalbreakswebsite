@@ -50,7 +50,7 @@ const SECTION_RANGES: Record<string, string> = {
   digital_era: '1998 — hoy',
 }
 
-export async function generateMetadata({ params }: { params: { lang: Locale } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/history', 'history')
 }
@@ -68,7 +68,7 @@ const SECTION_COLORS: Record<string, string> = {
   digital_era: 'var(--uv)',
 }
 
-export default async function HistoryPage({ params }: { params: { lang: Locale } }) {
+export default async function HistoryPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase()

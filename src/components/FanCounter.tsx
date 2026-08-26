@@ -17,10 +17,10 @@ interface FanCounterProps {
   lang: string
 }
 
-const TABLE_MAP: Record<string, { table: string; column: string }> = {
-  artist: { table: 'favorite_artists', column: 'artist_id' },
-  label: { table: 'favorite_labels', column: 'label_id' },
-  mix: { table: 'saved_mixes', column: 'mix_id' },
+const TABLE_MAP = {
+  artist: { table: 'favorite_artists' as const, column: 'artist_id' },
+  label: { table: 'favorite_labels' as const, column: 'label_id' },
+  mix: { table: 'saved_mixes' as const, column: 'mix_id' },
 }
 
 export default function FanCounter({ type, entityId, lang }: FanCounterProps) {
