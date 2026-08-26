@@ -344,6 +344,29 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
 **Audit — DKR dump (26 Aug 2026).** The same account had **107** public saves, **95** on DIRTY KITCHEN RAVE, injecting **132** artist-board credits (WeZ WhaTevR 18, J-Break 14, Kid Ellipsis 10, DJ Brownie 8, …). J-Break sat **#1** (35 saves, 14 from Afghan). After the label mark, those DKR saves credit nobody on the artist board. Collabs on **other** labels (Darkness / Raveart, Work It / Elektroshok, Fly So High / 13monkeys) still count.
 
+**Who still lifts J-Break and Afghan Headspin (26 Aug 2026, after both marks).** Public saves only. With a small base the board is mostly an **editorial chart**: the Optimal Breaks login is the bulk. There is no anonymous fourth fan stuffing these two names. Do **not** treat leftover #1/#2 as a broken skip.
+
+**J-Break — 26 credits · 4 fans** (9 Afghan DKR saves skipped)
+
+| Fan | Email | Role | Saves | Notes |
+| --- | --- | --- | ---: | --- |
+| Optimal Breaks | `contacto@eskaladigital.com` | admin | **19** | DKR + Raveart + Elektroshok + Samay + Br8kn |
+| Afghan Headspin | `afghanheadspin@gmail.com` | user (marked) | **5** | **Not** DKR: Darkness ×2 and ILL Behavior (Raveart), Work It (Elektroshok), Fly So High (13monkeys). Darkness is two source rows. |
+| jennie | `jenniev52@outlook.com` | user | **1** | Break Me Down (DKR) |
+| MestasDeejay | `mestasdeejay@gmail.com` | admin | **1** | Requiem (DKR) |
+
+19 + 5 + 1 + 1 = 26. Without Optimal Breaks he would not sit at the top.
+
+**Afghan Headspin — 21 credits · 3 fans** (11 self-credits + 13 DKR self-catalogue skipped; he does **not** credit himself)
+
+| Fan | Email | Role | Saves |
+| --- | --- | --- | ---: |
+| Optimal Breaks | `contacto@eskaladigital.com` | admin | **17** |
+| MestasDeejay | `mestasdeejay@gmail.com` | admin | **3** (Let It Be, My apocolypse, Wildcat) |
+| jennie | `jenniev52@outlook.com` | user | **1** (Let It Be) |
+
+17 + 3 + 1 = 21 (one more Optimal Breaks save than the 25 Aug snapshot of 16+3+1).
+
 ### Artist board — weekly movement (not daily)
 
 Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`): **NUEVO** / **▲ N** / **▼ N** / **═**, plus a weeks label. The ranking itself stays **all-time**.

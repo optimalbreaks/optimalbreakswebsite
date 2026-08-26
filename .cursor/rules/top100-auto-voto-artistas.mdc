@@ -41,6 +41,8 @@ Caso cerrado (25 ago 2026): Afghan Headspin — 24 «+» propios saltados; 20 sa
 
 Caso sello (26 ago 2026): la misma cuenta volcó DKR (95 de 107 saves). Marca `DIRTY KITCHEN RAVE`: WeZ WhaTevR / Kid Ellipsis / DJ Brownie / J-Break (créditos DKR) dejan de subir por él. Colabs en **otros** sellos (p. ej. Darkness en Raveart) sí siguen.
 
+Quién los sostiene **después** de las dos marcas (26 ago): no hay un cuarto fan anónimo. **J-Break 26 / 4 fans** = Optimal Breaks **19** + Afghan **5** (no DKR) + jennie 1 + Mestas 1. **Afghan Headspin 21 / 3 fans** = Optimal Breaks **17** + Mestas 3 + jennie 1 (él no se acredita). Si J-Break sigue #1/#2, es el login editorial, no un skip roto. Detalle en la spec.
+
 ## Dónde vive
 
 - Skip artista: `src/lib/artist-self-credit.ts` → tablero en `community-monthly/route.ts` **y** set del fichado en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El Top de canciones no cambia.
