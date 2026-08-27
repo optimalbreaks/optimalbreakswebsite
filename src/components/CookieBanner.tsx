@@ -48,7 +48,7 @@ export default function CookieBanner({ lang }: { lang: string }) {
   const es = lang === 'es'
   const [visible, setVisible] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [analytics, setAnalytics] = useState(false)
+  const [analytics, setAnalytics] = useState(true)
 
   useEffect(() => {
     const saved = readConsent()
@@ -228,23 +228,28 @@ export default function CookieBanner({ lang }: { lang: string }) {
           {/* ── buttons ── */}
           <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
             {showSettings ? (
-              <button onClick={saveSelection} className={`${btnSave} sm:flex-1`} style={btnStyle}>
-                {es ? 'Guardar preferencias' : 'Save preferences'}
-              </button>
-            ) : (
               <>
-                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={{ ...btnStyle, fontSize: '13px', padding: '12px 16px' }}>
+                <button onClick={rejectAll} className={`${btnOutline} sm:flex-1`} style={btnStyle}>
+                  {es ? 'Rechazar todas' : 'Reject all'}
+                </button>
+                <button onClick={saveSelection} className={`${btnSave} sm:flex-1`} style={btnStyle}>
+                  {es ? 'Guardar preferencias' : 'Save preferences'}
+                </button>
+                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={btnStyle}>
                   {es ? 'Aceptar todas' : 'Accept all'}
                 </button>
-                <button onClick={rejectAll} className={`${btnOutline} sm:flex-1`} style={btnStyle}>
-                  {es ? 'Rechazar' : 'Reject'}
-                </button>
+              </>
+            ) : (
+              <>
                 <button
                   onClick={() => setShowSettings(true)}
                   className={`${btnOutline} sm:flex-1`}
                   style={btnStyle}
                 >
                   {es ? 'Configurar' : 'Customize'}
+                </button>
+                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={{ ...btnStyle, fontSize: '13px', padding: '12px 16px' }}>
+                  {es ? 'Aceptar todas' : 'Accept all'}
                 </button>
               </>
             )}
