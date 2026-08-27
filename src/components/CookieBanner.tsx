@@ -104,6 +104,14 @@ export default function CookieBanner({ lang }: { lang: string }) {
 
   const save = useCallback((consent: CookieConsent) => {
     writeCookie(consent)
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      ;(window as any).gtag('consent', 'update', {
+        analytics_storage: consent.analytics ? 'granted' : 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+      })
+    }
     window.dispatchEvent(
       new CustomEvent('ob-cookie-consent', { detail: consent }),
     )
