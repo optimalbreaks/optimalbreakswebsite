@@ -3,6 +3,7 @@
 //
 // Reglas:
 // - Genéricas (*): permitir todo el sitio salvo zonas privadas/internas.
+// - Crawlers de IA (molde Furgocasa): GPTBot, OAI-SearchBot, Claude, etc.
 // - Crawlers de Open Graph (Facebook, WhatsApp, Twitter/X, LinkedIn, Meta):
 //   bloque dedicado que les permite explícitamente todo (incluido /api/og/*
 //   por si en el futuro hay endpoints OG dinámicos), para que generen las
@@ -40,6 +41,21 @@ const OG_CRAWLER_USER_AGENTS = [
   'Discordbot',
 ]
 
+/** Crawlers de asistentes de IA (GEO): molde Furgocasa / ACTTAX.
+ *  meta-externalagent ya está en OG (Allow /api/og/); no se duplica. */
+const AI_BOTS = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'Claude-SearchBot',
+  'Claude-User',
+  'Google-Extended',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Applebot-Extended',
+]
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -56,6 +72,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: ['/', '/api/og/'],
         disallow: COMMON_DISALLOW.filter((p) => p !== '/api/'),
       },
+      ...AI_BOTS.map((userAgent) => ({
+        userAgent,
+        allow: '/',
+        disallow: COMMON_DISALLOW,
+      })),
     ],
     sitemap: 'https://www.optimalbreaks.com/sitemap.xml',
   }
