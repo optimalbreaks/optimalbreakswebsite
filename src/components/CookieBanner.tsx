@@ -1,18 +1,13 @@
-// ============================================
-// OPTIMAL BREAKS — GDPR Cookie Consent (ePrivacy)
-// Granular categories: necessary (always on), analytics
-// ============================================
-
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
-/* ── types ─────────────────────────────────────────── */
-
 export type CookieConsent = {
   necessary: true
   analytics: boolean
+  functional: boolean
+  marketing: boolean
 }
 
 /** Nombre fijo: el script de Consent Mode en `[lang]/layout.tsx` lee la misma cookie. */
@@ -23,7 +18,8 @@ const CONSENT_SHOW_DELAY_MS = 4500
 /** Margen tras registrar LCP antes de abrir el banner. */
 const CONSENT_AFTER_LCP_MS = 600
 
-/* ── helpers ───────────────────────────────────────── */
+const ALL_ON: CookieConsent = { necessary: true, analytics: true, functional: true, marketing: true }
+const ONLY_NECESSARY: CookieConsent = { necessary: true, analytics: false, functional: false, marketing: false }
 
 function writeCookie(consent: CookieConsent) {
   const val = encodeURIComponent(JSON.stringify(consent))
@@ -36,25 +32,63 @@ export function readConsent(): CookieConsent | null {
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`))
   if (!match) return null
   try {
-    return JSON.parse(decodeURIComponent(match[1]))
+    const parsed = JSON.parse(decodeURIComponent(match[1])) as Partial<CookieConsent>
+    return {
+      necessary: true,
+      analytics: Boolean(parsed.analytics),
+      functional: Boolean(parsed.functional),
+      marketing: Boolean(parsed.marketing),
+    }
   } catch {
     return null
   }
 }
 
-/* ── component ─────────────────────────────────────── */
+function applyGtag(consent: CookieConsent) {
+  if (typeof window === 'undefined' || !(window as any).gtag) return
+  const ads = consent.marketing ? 'granted' : 'denied'
+  ;(window as any).gtag('consent', 'update', {
+    analytics_storage: consent.analytics ? 'granted' : 'denied',
+    ad_storage: ads,
+    ad_user_data: ads,
+    ad_personalization: ads,
+  })
+}
+
+function CookieGlyph({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2a9.5 9.5 0 0 0-1.2 18.93A10 10 0 1 0 21.8 11.4 7 7 0 0 1 12 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="8.2" cy="10" r="1.1" fill="currentColor" />
+      <circle cx="12.5" cy="8" r="1" fill="currentColor" />
+      <circle cx="10.5" cy="14.2" r="1.15" fill="currentColor" />
+    </svg>
+  )
+}
 
 export default function CookieBanner({ lang }: { lang: string }) {
   const es = lang === 'es'
   const [visible, setVisible] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [analytics, setAnalytics] = useState(true)
+  const [prefs, setPrefs] = useState<CookieConsent>(ALL_ON)
 
   useEffect(() => {
     const saved = readConsent()
     if (saved) {
-      setAnalytics(saved.analytics)
-      return
+      setPrefs(saved)
+      applyGtag(saved)
+    }
+
+    const openBanner = () => {
+      const current = readConsent()
+      if (current) setPrefs(current)
+      setShowSettings(true)
+      setVisible(true)
+    }
+    window.addEventListener('ob-open-cookie-banner', openBanner)
+
+    if (saved) {
+      return () => window.removeEventListener('ob-open-cookie-banner', openBanner)
     }
 
     let cancelled = false
@@ -85,14 +119,6 @@ export default function CookieBanner({ lang }: { lang: string }) {
       }
     }
 
-    const openBanner = () => {
-      const current = readConsent()
-      if (current) setAnalytics(current.analytics)
-      setShowSettings(true)
-      setVisible(true)
-    }
-    window.addEventListener('ob-open-cookie-banner', openBanner)
-
     return () => {
       cancelled = true
       if (delayTimer) clearTimeout(delayTimer)
@@ -104,156 +130,171 @@ export default function CookieBanner({ lang }: { lang: string }) {
 
   const save = useCallback((consent: CookieConsent) => {
     writeCookie(consent)
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('consent', 'update', {
-        analytics_storage: consent.analytics ? 'granted' : 'denied',
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-      })
-    }
-    window.dispatchEvent(
-      new CustomEvent('ob-cookie-consent', { detail: consent }),
-    )
+    applyGtag(consent)
+    window.dispatchEvent(new CustomEvent('ob-cookie-consent', { detail: consent }))
+    setPrefs(consent)
     setVisible(false)
     setShowSettings(false)
   }, [])
 
-  const acceptAll = () => save({ necessary: true, analytics: true })
-  const rejectAll = () => save({ necessary: true, analytics: false })
-  const saveSelection = () => save({ necessary: true, analytics })
-
-  // Reabierto desde footer vs 1ª visita (animación distinta).
-  const isReopen = visible && readConsent() !== null
+  const acceptAll = () => save(ALL_ON)
+  const rejectAll = () => save(ONLY_NECESSARY)
+  const saveSelection = () => save(prefs)
 
   if (!visible) return null
 
-  const font = { fontFamily: 'ui-monospace, "Courier Prime", monospace' } as const
-  const btnBase =
-    'px-5 py-2.5 border-[3px] border-[var(--ink)] text-center transition-all'
-  const btnOutline = `${btnBase} text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--paper)]`
-  const btnAccept = `${btnBase} bg-[var(--red)] text-white border-[var(--red)] shadow-[3px_3px_0_0_var(--ink)] hover:translate-y-[1px] hover:shadow-[1px_1px_0_0_var(--ink)]`
-  const btnSave = `${btnBase} bg-[var(--yellow)] text-[var(--ink)] shadow-[2px_2px_0_0_var(--ink)] hover:translate-y-[2px] hover:shadow-none`
-  const btnStyle = { ...font, fontSize: '12px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' as const }
+  const accent = 'var(--red)'
+
+  if (showSettings) {
+    return (
+      <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="cookie-settings-title">
+        <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <CookieGlyph className="h-8 w-8" />
+              <h2 id="cookie-settings-title" className="text-xl font-bold text-gray-900">
+                {es ? 'Configuración de cookies' : 'Cookie settings'}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowSettings(false)
+                if (readConsent()) setVisible(false)
+              }}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+              aria-label={es ? 'Cerrar' : 'Close'}
+            >
+              <span className="block w-5 h-5 text-lg leading-none">×</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            <p className="text-gray-600 mb-6">
+              {es
+                ? 'Elige qué tipos de cookies deseas aceptar. Las cookies necesarias no se pueden desactivar ya que son imprescindibles para el funcionamiento del sitio.'
+                : 'Choose which cookies to accept. Necessary cookies cannot be turned off because they are essential for the site to work.'}
+            </p>
+            <div className="space-y-4">
+              <ObCategory
+                title={es ? 'Cookies necesarias' : 'Necessary cookies'}
+                description={es ? 'Estas cookies son esenciales para el funcionamiento del sitio web. Sin ellas, el sitio no funcionaría correctamente.' : 'These cookies are essential for the website to work. Without them, the site would not function correctly.'}
+                enabled
+                required
+                alwaysOn={es ? 'Siempre activas' : 'Always on'}
+                accent={accent}
+              />
+              <ObCategory
+                title={es ? 'Cookies analíticas' : 'Analytics cookies'}
+                description={es ? 'Nos permiten contar las visitas y analizar cómo los usuarios navegan por el sitio para mejorarlo (Google Analytics).' : 'Allow us to count visits and analyse how users browse the site (Google Analytics).'}
+                enabled={prefs.analytics}
+                onChange={(v) => setPrefs((p) => ({ ...p, analytics: v }))}
+                accent={accent}
+              />
+              <ObCategory
+                title={es ? 'Cookies funcionales' : 'Functional cookies'}
+                description={es ? 'Permiten recordar tus preferencias para una experiencia más personalizada.' : 'Remember your preferences for a more personalised experience.'}
+                enabled={prefs.functional}
+                onChange={(v) => setPrefs((p) => ({ ...p, functional: v }))}
+                accent={accent}
+              />
+              <ObCategory
+                title={es ? 'Cookies de marketing' : 'Marketing cookies'}
+                description={es ? 'Se utilizan para mostrarte anuncios relevantes y medir la efectividad de las campañas publicitarias.' : 'Used to show you relevant ads and measure the effectiveness of advertising campaigns.'}
+                enabled={prefs.marketing}
+                onChange={(v) => setPrefs((p) => ({ ...p, marketing: v }))}
+                accent={accent}
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-6">
+              {es ? 'Para más información sobre cómo utilizamos las cookies, consulta nuestra' : 'For more information on how we use cookies, see our'}{' '}
+              <Link href={`/${lang}/cookies`} className="hover:underline" style={{ color: accent }} onClick={() => { setShowSettings(false); setVisible(false) }}>
+                {es ? 'Política de Cookies' : 'Cookie policy'}
+              </Link>
+              .
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <button type="button" onClick={rejectAll} className="flex-1 px-4 py-2.5 text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-white">
+              {es ? 'Rechazar todas' : 'Reject all'}
+            </button>
+            <button type="button" onClick={saveSelection} className="flex-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg font-medium hover:bg-gray-50">
+              {es ? 'Guardar preferencias' : 'Save preferences'}
+            </button>
+            <button type="button" onClick={acceptAll} className="flex-1 px-4 py-2.5 text-white rounded-lg font-medium" style={{ backgroundColor: accent }}>
+              {es ? 'Aceptar todas' : 'Accept all'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-[200]"
-      role="dialog"
-      aria-modal="true"
-      aria-label={es ? 'Consentimiento de cookies' : 'Cookie consent'}
-    >
-      <div
-        className={`bg-[var(--paper)] text-[var(--ink)] border-t-[6px] border-[var(--ink)] shadow-[0_-6px_0_rgba(0,0,0,0.12)] ${
-          isReopen ? '' : 'motion-safe:animate-[cookie-bar-in_0.35s_ease-out]'
-        }`}
-      >
-        <div className="p-4 sm:p-5 max-w-4xl mx-auto">
-          <h3
-            className="font-black text-base sm:text-lg uppercase tracking-tight mb-2 text-center sm:text-left"
-            style={{ fontFamily: 'system-ui, "Unbounded", sans-serif' }}
-          >
-            {es ? 'Privacidad y Cookies' : 'Privacy & Cookies'}
-          </h3>
-
-          <p
-            className="text-[12px] sm:text-[13px] leading-relaxed text-[var(--text-muted)] mb-4 text-center sm:text-left"
-            style={font}
-          >
-            {es
-              ? 'Usamos cookies necesarias para que el sitio funcione y cookies analíticas (Google Analytics) para mejorar tu experiencia. '
-              : 'We use necessary cookies for the site to work and analytics cookies (Google Analytics) to improve your experience. '}
-            <Link
-              href={`/${lang}/cookies`}
-              className="font-bold underline decoration-[var(--red)] underline-offset-2 hover:text-[var(--red)]"
-            >
-              {es ? 'Política de cookies' : 'Cookie policy'}
-            </Link>
-          </p>
-
-          {/* ── settings panel ── */}
-          {showSettings && (
-            <div className="mb-5 border-[3px] border-[var(--ink)] divide-y-[2px] divide-[var(--ink)]">
-              <div className="flex items-center justify-between p-3 sm:p-4">
-                <div className="flex-1 pr-4">
-                  <p className="font-black text-sm uppercase tracking-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-                    {es ? 'Necesarias' : 'Necessary'}
-                  </p>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-1" style={font}>
-                    {es
-                      ? 'Sesión, idioma, preferencia de cookies. Siempre activas.'
-                      : 'Session, language, cookie preferences. Always active.'}
-                  </p>
-                </div>
-                <div
-                  className="relative w-12 h-7 rounded-full bg-[var(--ink)] cursor-not-allowed opacity-60 shrink-0"
-                  title={es ? 'Siempre activas' : 'Always active'}
-                >
-                  <div className="absolute right-1 top-1 w-5 h-5 rounded-full bg-[var(--yellow)]" />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 sm:p-4">
-                <div className="flex-1 pr-4">
-                  <p className="font-black text-sm uppercase tracking-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-                    {es ? 'Analíticas' : 'Analytics'}
-                  </p>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-1" style={font}>
-                    {es
-                      ? 'Google Analytics: datos anónimos para mejorar el sitio.'
-                      : 'Google Analytics: anonymous data to improve the site.'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={analytics}
-                  onClick={() => setAnalytics((v) => !v)}
-                  className={`relative w-12 h-7 rounded-full shrink-0 transition-colors border-2 border-[var(--ink)] ${
-                    analytics ? 'bg-[var(--ink)]' : 'bg-[var(--paper-dark)]'
-                  }`}
-                >
-                  <div
-                    className={`absolute top-0.5 w-5 h-5 rounded-full transition-transform ${
-                      analytics
-                        ? 'translate-x-[22px] bg-[var(--yellow)]'
-                        : 'translate-x-[3px] bg-[var(--ink)]'
-                    }`}
-                  />
-                </button>
-              </div>
+    <div className="fixed bottom-0 left-0 right-0 z-[200] p-4 bg-white border-t border-gray-200 shadow-lg md:p-6" role="region" aria-label={es ? 'Banner de consentimiento de cookies' : 'Cookie consent banner'}>
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+          <div className="flex-1 flex items-start gap-3">
+            <CookieGlyph className="h-8 w-8 flex-shrink-0 mt-1" />
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{es ? 'Utilizamos cookies' : 'We use cookies'}</h3>
+              <p className="text-gray-600 text-sm">
+                {es
+                  ? 'Usamos cookies propias y de terceros para mejorar tu experiencia, analizar el tráfico y mostrarte contenido personalizado. Puedes aceptar todas o configurar tus preferencias. '
+                  : 'We use our own and third-party cookies to improve your experience, analyse traffic and show you personalised content. You can accept all or set your preferences. '}
+                <Link href={`/${lang}/cookies`} className="hover:underline" style={{ color: accent }}>
+                  {es ? 'Política de cookies' : 'Cookie policy'}
+                </Link>
+              </p>
             </div>
-          )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-shrink-0">
+            <button type="button" onClick={() => setShowSettings(true)} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 text-sm">
+              {es ? 'Configurar' : 'Settings'}
+            </button>
+            <button type="button" onClick={acceptAll} className="px-4 py-2 text-white rounded-lg font-medium text-sm" style={{ backgroundColor: accent }}>
+              {es ? 'Aceptar todas' : 'Accept all'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-          {/* ── buttons ── */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-            {showSettings ? (
-              <>
-                <button onClick={rejectAll} className={`${btnOutline} sm:flex-1`} style={btnStyle}>
-                  {es ? 'Rechazar todas' : 'Reject all'}
-                </button>
-                <button onClick={saveSelection} className={`${btnSave} sm:flex-1`} style={btnStyle}>
-                  {es ? 'Guardar preferencias' : 'Save preferences'}
-                </button>
-                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={btnStyle}>
-                  {es ? 'Aceptar todas' : 'Accept all'}
-                </button>
-              </>
+function ObCategory({
+  title,
+  description,
+  enabled,
+  required,
+  alwaysOn,
+  onChange,
+  accent,
+}: {
+  title: string
+  description: string
+  enabled: boolean
+  required?: boolean
+  alwaysOn?: string
+  onChange?: (v: boolean) => void
+  accent: string
+}) {
+  return (
+    <div className="p-4 rounded-xl border-2" style={enabled ? { borderColor: accent, backgroundColor: 'rgba(227, 30, 36, 0.05)' } : { borderColor: '#e5e7eb', backgroundColor: '#f9fafb' }}>
+      <div className="flex items-start gap-4">
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <h3 className="font-semibold text-gray-900">{title}</h3>
+            {required ? (
+              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full whitespace-nowrap">{alwaysOn}</span>
             ) : (
-              <>
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className={`${btnOutline} sm:flex-1`}
-                  style={btnStyle}
-                >
-                  {es ? 'Configurar' : 'Customize'}
-                </button>
-                <button onClick={acceptAll} className={`${btnAccept} sm:flex-1`} style={{ ...btnStyle, fontSize: '13px', padding: '12px 16px' }}>
-                  {es ? 'Aceptar todas' : 'Accept all'}
-                </button>
-              </>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" checked={enabled} onChange={(e) => onChange?.(e.target.checked)} aria-label={title} />
+                <span className="w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-[var(--red)] transition-colors" />
+                <span className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full border border-gray-300 shadow transition-transform peer-checked:translate-x-5" />
+              </label>
             )}
           </div>
+          <p className="text-sm text-gray-600">{description}</p>
         </div>
       </div>
     </div>

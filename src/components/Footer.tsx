@@ -161,18 +161,18 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
             <h2 className={headingClass}>{f.legal_title ?? 'Legal'}</h2>
             <ul className="flex flex-col gap-3" style={{ fontFamily: "'Courier Prime', monospace" }}>
               <li>
-                <Link href={`/${lang}/privacy`} className={linkClass}>
-                  {lang === 'es' ? 'Privacidad' : 'Privacy'}
+                <Link href={`/${lang}/terms`} className={linkClass}>
+                  {lang === 'es' ? 'Aviso legal' : 'Legal notice'}
                 </Link>
               </li>
               <li>
-                <Link href={`/${lang}/terms`} className={linkClass}>
-                  {lang === 'es' ? 'Términos' : 'Terms'}
+                <Link href={`/${lang}/privacy`} className={linkClass}>
+                  {lang === 'es' ? 'Política de privacidad' : 'Privacy policy'}
                 </Link>
               </li>
               <li>
                 <Link href={`/${lang}/cookies`} className={linkClass}>
-                  Cookies
+                  {lang === 'es' ? 'Política de cookies' : 'Cookie policy'}
                 </Link>
               </li>
               <li>
@@ -218,10 +218,20 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
               className="rounded-sm border-2 border-[var(--ink)] bg-[var(--ink)] px-4 py-3 text-center text-[15px] font-bold leading-snug text-[var(--paper)] shadow-[2px_2px_0_0_var(--red)] sm:text-left"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
-              {lang === 'es' ? 'Página web hecha con mucho' : 'Website made with lots of'}{' '}
+              {lang === 'es' ? 'Hecho con' : 'Made with'}{' '}
               <HeartIcon label={lang === 'es' ? 'amor' : 'love'} />{' '}
-              {lang === 'es' ? 'desde Murcia' : 'from Murcia'}{' '}
+              {lang === 'es' ? 'en Murcia' : 'in Murcia'}{' '}
               <SpainFlag label={lang === 'es' ? 'España' : 'Spain'} />
+              {' · '}
+              {lang === 'es' ? 'Web desarrollada por' : 'Website developed by'}{' '}
+              <a
+                href="https://www.eskaladigital.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline decoration-[var(--red)] underline-offset-2 hover:text-[var(--red)]"
+              >
+                ESKALA Agencia de Marketing Digital
+              </a>
             </p>
           ) : null}
           <p
