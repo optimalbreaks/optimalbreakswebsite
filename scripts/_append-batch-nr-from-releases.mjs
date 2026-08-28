@@ -18,7 +18,8 @@
  * `mix_name`. Este script fusiona ambos en `artists[]` (`scripts/lib/remixer-credits.mjs`).
  *
  * Modo actual: `/release/` y `/chart/` añaden **todas** las pistas; `/track/` una sola.
- * Acepta Beatport `/release/`, `/track/` o `/chart/`; Bandcamp `*.bandcamp.com/track/…` (un track por URL).
+ * Acepta Beatport `/release/`, `/track/` o `/chart/`; Bandcamp `*.bandcamp.com/track/…`,
+ * `/album/…` (todas las pistas) o `/music` (expande a álbumes y tracks de la tienda).
  *
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
@@ -359,10 +360,27 @@ function isBeatportChartUrl(url) {
   return /beatport\.com\/(?:[a-z]{2}\/)?chart\//i.test(url || '')
 }
 
-function isBandcampTrackUrl(url) {
+function isBandcampHost(url) {
   try {
-    const h = new URL(url).hostname.toLowerCase()
-    return h.endsWith('.bandcamp.com') && /\/track\//i.test(url)
+    return new URL(url).hostname.toLowerCase().endsWith('.bandcamp.com')
+  } catch {
+    return false
+  }
+}
+
+function isBandcampTrackUrl(url) {
+  return isBandcampHost(url) && /\/track\//i.test(url)
+}
+
+function isBandcampAlbumUrl(url) {
+  return isBandcampHost(url) && /\/album\//i.test(url)
+}
+
+function isBandcampMusicUrl(url) {
+  if (!isBandcampHost(url)) return false
+  try {
+    const p = new URL(url).pathname.replace(/\/+$/, '')
+    return p === '/music' || p === ''
   } catch {
     return false
   }
@@ -370,7 +388,7 @@ function isBandcampTrackUrl(url) {
 
 function isSupportedStoreUrl(url) {
   const u = (url || '').toLowerCase()
-  return /beatport\.com/i.test(u) || isBandcampTrackUrl(url)
+  return /beatport\.com/i.test(u) || isBandcampTrackUrl(url) || isBandcampAlbumUrl(url) || isBandcampMusicUrl(url)
 }
 
 function bandcampReleaseDateIso(raw) {
@@ -393,9 +411,47 @@ function titleCaseBandcamp(raw) {
   return s
 }
 
-function pickFromBandcampTralbum(obj, linkUrl) {
-  const track = obj.trackinfo?.[0]
-  if (!track?.title) return null
+function labelFromBandcampUrl(url) {
+  try {
+    const h = new URL(url).hostname.toLowerCase()
+    if (h === 'topdrawerdigital.bandcamp.com') return 'Top Drawer Digital Records'
+  } catch { /* noop */ }
+  return ''
+}
+
+function splitArtistNames(raw) {
+  const s = String(raw || '').trim()
+  if (/^me,\s*myself\s*&\s*i$/i.test(s)) return [{ name: 'Me, Myself & I' }]
+  return s
+    .split(/\s*(?:,|&| x )\s*/i)
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .map((name) => (name === 'Me, Myself, I' ? 'Me, Myself & I' : name))
+    .map((name) => ({ name }))
+}
+
+function parseBandcampTrackCredits(trackTitle, albumArtist) {
+  let title = titleCaseBandcamp(trackTitle)
+  let mix_name = ''
+  const remix = title.match(/\s*\(([^)]*remix[^)]*)\)\s*$/i)
+  if (remix) {
+    mix_name = remix[1].trim()
+    title = title.slice(0, remix.index).trim()
+  }
+  const album = (albumArtist || '').trim() || 'Unknown'
+  const va = /^(various(\s+artists)?|va)$/i.test(album)
+  if (va) {
+    const dash = title.match(/^(.+?)\s+[-–—]\s+(.+)$/)
+    if (dash) {
+      const artists = splitArtistNames(dash[1])
+      return { title: dash[2].trim(), mix_name, artists: artists.length ? artists : [{ name: album }] }
+    }
+  }
+  const artists = splitArtistNames(album)
+  return { title, mix_name, artists: artists.length ? artists : [{ name: album }] }
+}
+
+function picksFromBandcampTralbum(obj, pageUrl) {
   const rawDate =
     obj.album_release_date ||
     obj.release_date ||
@@ -404,42 +460,72 @@ function pickFromBandcampTralbum(obj, linkUrl) {
     null
   const rd = bandcampReleaseDateIso(rawDate)
   const y = rd ? Number.parseInt(rd.slice(0, 4), 10) : undefined
-  const artist = (obj.artist || obj.current?.artist || '').trim() || 'Unknown'
-  return {
-    title: titleCaseBandcamp(track.title),
-    mix_name: '',
-    artists: [{ name: artist }],
-    label: (obj.current?.album_title || '').trim(),
-    platform: 'bandcamp',
-    link_url: linkUrl.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://'),
-    link_label: '',
-    artwork_url: obj.art_id ? `https://f4.bcbits.com/img/a${obj.art_id}_10.jpg` : '',
-    sample_url: '',
-    bpm: null,
-    music_key: '',
-    release_year: Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : undefined,
-    release_date: rd || undefined,
-    note_en: '',
-    note_es: '',
+  const albumArtist = (obj.artist || obj.current?.artist || '').trim() || 'Unknown'
+  const label = labelFromBandcampUrl(pageUrl)
+  const origin = new URL(pageUrl).origin
+  const tracks = Array.isArray(obj.trackinfo) ? obj.trackinfo : []
+  const out = []
+  for (const track of tracks) {
+    if (!track?.title) continue
+    const path = track.title_link || track.url || ''
+    if (!path) continue
+    const linkUrl = new URL(path, origin).href.replace(/\/+$/, '').replace(/^http:\/\//i, 'https://')
+    const credits = parseBandcampTrackCredits(track.title, track.artist || albumArtist)
+    out.push({
+      title: credits.title,
+      mix_name: credits.mix_name,
+      artists: credits.artists,
+      label,
+      platform: 'bandcamp',
+      link_url: linkUrl,
+      link_label: '',
+      artwork_url: obj.art_id ? `https://f4.bcbits.com/img/a${obj.art_id}_10.jpg` : '',
+      sample_url: '',
+      bpm: null,
+      music_key: '',
+      release_year: Number.isFinite(y) && y >= 1970 && y <= 2100 ? y : undefined,
+      release_date: rd || undefined,
+      note_en: '',
+      note_es: '',
+    })
   }
+  return out
 }
 
-async function fetchBandcampTracks(url) {
+async function fetchBandcampHtml(url) {
   const res = await fetch(url.replace(/^http:\/\//i, 'https://'), {
     headers: { 'User-Agent': UA, Accept: 'text/html', 'Accept-Language': 'en-US,en;q=0.9' },
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const html = await res.text()
+  return res.text()
+}
+
+async function expandBandcampMusicPage(url) {
+  const html = await fetchBandcampHtml(url)
+  const origin = new URL(url).origin
+  const hrefs = [...html.matchAll(/href="(\/(album|track)\/[^"?#]+)"/g)].map((m) => m[1])
+  const seen = new Set()
+  const out = []
+  for (const h of hrefs) {
+    if (seen.has(h)) continue
+    seen.add(h)
+    out.push(`${origin}${h}`.replace(/\/+$/, ''))
+  }
+  return out
+}
+
+async function fetchBandcampTracks(url) {
+  const html = await fetchBandcampHtml(url)
   const tralbum = html.match(/data-tralbum="([^"]*)"/)
   if (!tralbum) throw new Error('no data-tralbum')
   const obj = JSON.parse(tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'))
-  const pick = pickFromBandcampTralbum(obj, url)
-  if (!pick?.title) throw new Error('sin título en tralbum')
-  return [pick]
+  const picks = picksFromBandcampTralbum(obj, url)
+  if (!picks.length) throw new Error('sin pistas en tralbum')
+  return picks
 }
 
 async function fetchTracks(url) {
-  if (isBandcampTrackUrl(url)) return fetchBandcampTracks(url)
+  if (isBandcampTrackUrl(url) || isBandcampAlbumUrl(url)) return fetchBandcampTracks(url)
   const cleanUrl = String(url).split('?')[0]
   const html = await fetchHttp(cleanUrl)
   const nd = extractNextData(html)
@@ -459,6 +545,20 @@ const queueSeenUrl = new Set()
 for (const row of importEntries) {
   if (!isSupportedStoreUrl(row.url || '')) continue
   const u = String(row.url).replace(/^http:\/\//i, 'https://').split('?')[0].replace(/\/+$/, '')
+  if (isBandcampMusicUrl(u)) {
+    try {
+      const children = await expandBandcampMusicPage(u)
+      console.log(`  ↳ /music → ${children.length} álbumes/tracks: ${u}`)
+      for (const child of children) {
+        if (queueSeenUrl.has(child)) continue
+        queueSeenUrl.add(child)
+        uniqQueue.push({ url: child, weekOverride: row.weekOverride })
+      }
+    } catch (e) {
+      console.error(`  Fallo al expandir /music ${u} → ${e.message || e}`)
+    }
+    continue
+  }
   if (queueSeenUrl.has(u)) continue
   queueSeenUrl.add(u)
   uniqQueue.push({ url: u, weekOverride: row.weekOverride })

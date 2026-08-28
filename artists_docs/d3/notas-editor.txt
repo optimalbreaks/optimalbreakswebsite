@@ -1,0 +1,33 @@
+Revisión editorial — D3 (agosto 2026)
+=====================================
+
+Identidad
+---------
+- Productor del catálogo Top Drawer Digital. NO confundir con otros D3 (rock, metal, otros electrónicos).
+- Señal de identidad: Evolving Loops (TDD Bandcamp) y All I Want (abre Abstractions 3).
+- Beatport 8244 mezcla TDD (Some More, A Loop) con house/otros D3. NO importar Top 10.
+
+Catálogo TDD documentado
+------------------------
+- Evolving Loops — Bandcamp 2022-08-05 (No U Turn, Eye Contact, A Loop, No More, Think iT!, Some More)
+- All I Want — track 01 de Abstractions 3 (TDDR100, 2023)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp: https://topdrawerdigital.bandcamp.com/album/evolving-loops
+- Bandcamp Abstractions 3.
+
+Decisiones
+----------
+- slug: d3
+- name: D3
+- real_name: null
+- country: UK
+- category: current
+- styles: Jungle Techno, Future Jungle / J-Tek, Hardcore Breaks, Breaks
+- related_artists: Lucas, Digitally Mashed, Rawtrachs, Strange Rollers
+- labels_founded: []
+- ANTI-HOMÓNIMO estricto. Si el contexto web habla de otro D3, ignorarlo.
+- sort_order: ~116
+- is_featured: false

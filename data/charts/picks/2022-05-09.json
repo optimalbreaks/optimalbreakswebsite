@@ -1,0 +1,49 @@
+{
+  "week_date": "2022-05-09",
+  "picks": [
+    {
+      "title": "Send You To Hell",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "RadioKillaZ"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/send-you-to-hell",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a787394230_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Argon",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "RadioKillaZ"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/argon-2",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a787394230_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    }
+  ]
+}

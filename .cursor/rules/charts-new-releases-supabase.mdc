@@ -10,6 +10,8 @@ alwaysApply: true
 ## Fuente en producción
 
 - La página **`/[lang]/charts`** lee **`chart_featured_tracks`** en Supabase (por edición **`chart_editions.week_date`**). **No** lee `data/charts/picks/*.json`.
+- **Corte 2026:** un pick con `release_date` (o `release_year`) anterior a **`2026-01-01`** no va a New Releases. Sale en **Selecciones de archivo / Archive Picks**, agrupado por **año**, mezclado con vinilos. Helper: `src/lib/charts-archive.ts`. Las 52 semanas recientes no bastan: `/charts` pide además las ediciones publicadas con `week_date < 2026-01-01`.
+- Bandcamp acepta `/track/`, `/album/` (todas las pistas) y `/music` (expande la tienda).
 
 ## Semana de la edición (no usar «la siguiente» ni la fecha del mensaje)
 

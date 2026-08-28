@@ -1,0 +1,37 @@
+Revisión editorial — Sanxion (agosto 2026)
+==========================================
+
+Identidad
+---------
+- Productor londinense de future jungle / hardcore breaks / rave. Texto Beatport Sanxion EP (Downbeat, 2014-09-09, DBP059): «London based… for over 10 years… underground Hardcore, Rave, Tearout Breaks, Future Jungle and Dubstep.»
+- Nombre histórico del future jungle / hardcore breaks británico; su presencia contextualiza TDD.
+- Colaborador habitual de Vinyl Junkie (Hold The Beat en Abstractions 3; Festival Breaks mix; Talk Too Much en Music Mondays).
+
+TDD y órbita
+------------
+- Backbone del sello (entrevista Vinyl Junkie 2023).
+- Abstractions 3 (2023): Hold The Beat (con Vinyl Junkie); Been Losin.
+- TDD X (2019): Some Kind Of Magic.
+- Remix: MotivBreaks — Free Your Soul (Sanxion Remix), TDD Bandcamp 2021.
+- Sanxion EP, Downbeat, 2014.
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Beatport Sanxion EP: https://www.beatport.com/release/sanxion-ep/1372730
+- Bandcamp TDD / Abstractions 3.
+- CUIDADO homónimos: no mezclar con otros «Sanxion» (p. ej. C64 / demo scene). Solo el productor UK de breaks/jungle/hardcore.
+
+Decisiones
+----------
+- slug: sanxion
+- name: Sanxion
+- real_name: null
+- country: UK (Londres documentado en ficha Downbeat 2014)
+- category: current
+- styles: Future Jungle / J-Tek, Hardcore Breaks, Rave Breaks, Jungle, Breaks
+- related_artists: Vinyl Junkie, Lucas, Digitally Mashed, Strange Rollers, RadioKillaZ, MotivBreaks
+- labels_founded: []
+- No inventar Beatport artist id si hay colisión. Buscar ficha del productor de breaks, no otro Sanxion.
+- sort_order: ~80
+- is_featured: false

@@ -1,0 +1,27 @@
+{
+  "week_date": "2021-12-20",
+  "picks": [
+    {
+      "title": "Monsters Revisited",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "100Me"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/100me-monsters-revisited",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a3967377372_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2021,
+      "release_date": "2021-12-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

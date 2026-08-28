@@ -1,0 +1,34 @@
+Revisión editorial — Pressa (agosto 2026)
+=========================================
+
+Identidad
+---------
+- Nombre canónico: Pressa (créditos TDD X: Joe Pressa — NO publicar como real_name).
+- Backbone de Top Drawer Digital desde el arranque (Vinyl Junkie 2023).
+- Hardcore / rave breaks del catálogo TDD.
+
+Catálogo TDD documentado
+------------------------
+- Time — Top Drawer Digital X (2019)
+- Rushin' Over Me — Abstractions 3 (TDDR100, 2023)
+- Créditos en Digitally Mashed Presents: Abstractions (2020)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp TDD X y Abstractions 3.
+- Vinyl Junkie 2023.
+
+Decisiones
+----------
+- slug: pressa
+- name: Pressa
+- real_name: null
+- country: UK
+- category: current
+- styles: Hardcore Breaks, Rave Breaks, Future Jungle / J-Tek, Breaks
+- related_artists: Lucas, Digitally Mashed, Strange Rollers, Sanxion, RadioKillaZ, Gav Ley, SwankOut
+- labels_founded: []
+- ANTI-HOMÓNIMO: Beatport artist 135377 mezcla TDD (Those Rollers) con trap/Sony Canada (Coi Leray, 6ixbuzz). NO importar Top 10.
+- sort_order: ~112
+- is_featured: false

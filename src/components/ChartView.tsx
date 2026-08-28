@@ -1,6 +1,6 @@
 // ============================================
 // OPTIMAL BREAKS — Charts page (Client Component)
-// Three sections: New Releases → 40 Breaks Vitales → Retro Vinyl Picks (al final)
+// Three sections: New Releases → 40 Breaks Vitales → Archive Picks (al final)
 // ============================================
 
 'use client'
@@ -33,6 +33,7 @@ import {
 } from '@/lib/youtube-play-coordinator'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
+import { featuredArchiveYearKey, isArchiveFeaturedTrack } from '@/lib/charts-archive'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
 type CanonRef = { source: ChartTrackSource; id: string }
@@ -172,10 +173,18 @@ type ChartWeekBundle = {
   vinyl: ChartVinylTrack[]
 }
 
+type ArchiveFeaturedEntry = { pick: ChartFeaturedTrack; weekDate: string }
+
+type ArchiveRow =
+  | { kind: 'vinyl'; track: ChartVinylTrack; weekDate: string }
+  | { kind: 'featured'; pick: ChartFeaturedTrack; weekDate: string }
+
 interface ChartViewProps {
   lang: Locale
   dict: any
   weeks: ChartWeekBundle[]
+  /** Picks de ediciones anteriores a 2026 (fuera de las 52 semanas recientes). */
+  archiveFeatured?: ArchiveFeaturedEntry[]
   defaultExpandedWeekDate: string
   /**
    * Mapa `nombreNormalizado → slug` de artistas existentes en `public.artists`.
@@ -195,7 +204,7 @@ interface ChartViewProps {
   labelImageMap?: Record<string, string>
 }
 
-// Clave de agrupación para vinilos sin año conocido en Retro Vinyl Picks.
+// Clave de agrupación para filas de archivo sin año conocido.
 const UNKNOWN_YEAR_KEY = '__unknown_year__'
 
 /** Semanas visibles al cargar New Releases / 40 Breaks; el resto tras «Cargar más». */
@@ -274,6 +283,33 @@ function sortVinylByArtist(tracks: ChartVinylTrack[], lang: Locale): ChartVinylT
     cmp = ta.localeCompare(tb, loc, { sensitivity: 'base' })
     if (cmp !== 0) return cmp
     return (A.mix_name || '').localeCompare(B.mix_name || '', loc, { sensitivity: 'base' })
+  })
+}
+
+function archiveRowArtistName(row: ArchiveRow): string {
+  return row.kind === 'vinyl' ? vinylPrimaryArtistName(row.track) : featuredPrimaryArtistName(row.pick)
+}
+
+function archiveRowTitle(row: ArchiveRow): string {
+  return row.kind === 'vinyl' ? row.track.title || '' : row.pick.title || ''
+}
+
+function archiveRowMix(row: ArchiveRow): string {
+  return row.kind === 'vinyl' ? row.track.mix_name || '' : row.pick.mix_name || ''
+}
+
+function sortArchiveRows(rows: ArchiveRow[], lang: Locale): ArchiveRow[] {
+  const loc = lang === 'es' ? 'es' : 'en'
+  return [...rows].sort((A, B) => {
+    const ka = archiveRowArtistName(A).toLocaleLowerCase(loc)
+    const kb = archiveRowArtistName(B).toLocaleLowerCase(loc)
+    let cmp = ka.localeCompare(kb, loc, { sensitivity: 'base' })
+    if (cmp !== 0) return cmp
+    cmp = archiveRowTitle(A).toLocaleLowerCase(loc).localeCompare(archiveRowTitle(B).toLocaleLowerCase(loc), loc, {
+      sensitivity: 'base',
+    })
+    if (cmp !== 0) return cmp
+    return archiveRowMix(A).localeCompare(archiveRowMix(B), loc, { sensitivity: 'base' })
   })
 }
 
@@ -815,6 +851,7 @@ export default function ChartView({
   lang,
   dict,
   weeks,
+  archiveFeatured = [],
   artistSlugMap,
   labelSlugMap,
   labelImageMap,
@@ -834,6 +871,7 @@ export default function ChartView({
 
   const [pendingPlay, setPendingPlay] = useState<
     | { kind: 'forty' | 'picks'; weekDate: string; trackId: string }
+    | { kind: 'archive'; yearKey: string; trackId: string }
     | null
   >(null)
 
@@ -842,9 +880,9 @@ export default function ChartView({
   //
   // Dos fuentes posibles:
   //
-  //   a) Hash del buscador global (⌘K): /charts#chart-row-<id> (40 Breaks o
-  //      New Releases) o /charts#chart-vinyl-row-<id> (Retro Vinyl Picks).
-  //      Si además lleva `?play=1`, arrancamos preview.
+  //   a) Hash del buscador global (⌘K): /charts#chart-row-<id> (40 Breaks,
+  //      New Releases o archivo digital) o /charts#chart-vinyl-row-<id>
+  //      (vinilo del archivo). Si además lleva `?play=1`, arrancamos preview.
   //
   //   b) Link compartido de una canción: /charts?play=chart:<id>,
   //      `?play=featured:<id>` o `?play=vinyl:<id>` (sin hash). Viene de
@@ -952,27 +990,48 @@ export default function ChartView({
             }
           }
         }
+        if (!weekDate && (!forceForty || forceForty === 'featured')) {
+          const extra = archiveFeatured.find((x) => x.pick.id === trackId)
+          if (extra) {
+            weekDate = extra.weekDate
+            inFeatured = true
+          }
+        }
+
+        if (!weekDate && inFeatured) {
+          const extra = archiveFeatured.find((x) => x.pick.id === trackId)
+          if (extra) weekDate = extra.weekDate
+        }
 
         if (weekDate) {
-          if (inFeatured) {
+          const featuredPick =
+            weeks.flatMap((w) => w.featured).find((p) => p.id === trackId)
+            ?? archiveFeatured.find((x) => x.pick.id === trackId)?.pick
+          const archiveHit = inFeatured && featuredPick && isArchiveFeaturedTrack(featuredPick)
+          if (inFeatured && archiveHit && featuredPick) {
+            const yearKey = featuredArchiveYearKey(featuredPick)
+            ensureOpenVinyl(yearKey)
+            if (wantsPlay) {
+              setPendingPlay({ kind: 'archive', yearKey, trackId })
+            }
+          } else if (inFeatured) {
             const picksIdx = weeks
-              .filter((w) => w.featured.length > 0)
+              .filter((w) => w.featured.filter((p) => !isArchiveFeaturedTrack(p)).length > 0)
               .findIndex((w) => w.edition.week_date === weekDate)
             if (picksIdx >= INITIAL_WEEKS_VISIBLE) setShowAllPicksWeeks(true)
             ensureOpenPicks(weekDate)
+            if (wantsPlay) {
+              setPendingPlay({ kind: 'picks', weekDate, trackId })
+            }
           } else {
             const fortyIdx = weeks
               .filter((w) => w.tracks.length > 0)
               .findIndex((w) => w.edition.week_date === weekDate)
             if (fortyIdx >= INITIAL_WEEKS_VISIBLE) setShowAllFortyWeeks(true)
             ensureOpenForty(weekDate)
-          }
-          if (wantsPlay) {
-            setPendingPlay({
-              kind: inFeatured ? 'picks' : 'forty',
-              weekDate,
-              trackId,
-            })
+            if (wantsPlay) {
+              setPendingPlay({ kind: 'forty', weekDate, trackId })
+            }
           }
         }
       }
@@ -1010,7 +1069,7 @@ export default function ChartView({
     applyDeepLink()
     window.addEventListener('hashchange', applyDeepLink)
     return () => window.removeEventListener('hashchange', applyDeepLink)
-  }, [weeks, ensureOpenVinyl, ensureOpenPicks, ensureOpenForty])
+  }, [weeks, archiveFeatured, ensureOpenVinyl, ensureOpenPicks, ensureOpenForty])
 
   // ---- Play-all state (delegado al provider global) ----
   const {
@@ -1090,6 +1149,12 @@ export default function ChartView({
         push(k, { source: 'vinyl', id: v.id })
       }
     }
+    for (const extra of archiveFeatured) {
+      const p = extra.pick
+      const artists = Array.isArray(p.artists) ? p.artists : []
+      const k = normUrl(p.link_url) || fallbackKey(p.title, p.mix_name, artistsToCsv(artists))
+      push(k, { source: 'featured', id: p.id })
+    }
 
     const chartByTrack = new Map<string, CanonRef[]>()
     const featuredByTrack = new Map<string, CanonRef[]>()
@@ -1114,7 +1179,7 @@ export default function ChartView({
     })
 
     return { chartByTrack, featuredByTrack, vinylByTrack }
-  }, [weeks])
+  }, [weeks, archiveFeatured])
 
   /**
    * Cada `PreviewTrack` lleva su propio paquete `save` con `relatedRefs` y
@@ -1238,12 +1303,29 @@ export default function ChartView({
   // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
   useEffect(() => {
     if (!pendingPlay) return
+    if (pendingPlay.kind === 'archive') {
+      const { yearKey, trackId } = pendingPlay
+      const rows = archiveByYear.get(yearKey) ?? []
+      const featured = rows.filter((r): r is Extract<ArchiveRow, { kind: 'featured' }> => r.kind === 'featured').map((r) => r.pick)
+      const weekDate = rows.find((r) => r.kind === 'featured' && r.pick.id === trackId)?.weekDate ?? ''
+      const bundle = buildFeaturedBundle(featured, canonicalGroups.featuredByTrack, weekDate)
+      const rowKey = `chart-row-${trackId}`
+      const idx = bundle.findIndex((m) => m.rowKey === rowKey)
+      if (idx >= 0) {
+        playFromIndex(`archive-${yearKey}`, bundle, idx)
+      }
+      setPendingPlay(null)
+      return
+    }
     const { kind, weekDate, trackId } = pendingPlay
     const week = weeks.find((w) => w.edition.week_date === weekDate)
     if (!week) return
 
     if (kind === 'picks') {
-      const sorted = sortFeaturedByArtist(week.featured, lang)
+      const sorted = sortFeaturedByArtist(
+        week.featured.filter((p) => !isArchiveFeaturedTrack(p)),
+        lang,
+      )
       const bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack, weekDate)
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
@@ -1298,7 +1380,12 @@ export default function ChartView({
     )
   }
 
-  const weeksWithFeatured = weeks.filter((w) => w.featured.length > 0)
+  const weeksWithFeatured = weeks
+    .map((w) => ({
+      ...w,
+      featured: w.featured.filter((p) => !isArchiveFeaturedTrack(p)),
+    }))
+    .filter((w) => w.featured.length > 0)
   // Las ediciones del chart se pueden crear vacías a principios de semana y
   // rellenarse a mitad de semana. Mientras estén a 0 temas NO se muestran en
   // «40 Breaks Vitales» para no confundir al visitante (ver conversación
@@ -1318,32 +1405,51 @@ export default function ChartView({
     : weeksWithTracks.slice(0, INITIAL_WEEKS_VISIBLE)
   const hiddenFortyWeeks = Math.max(0, weeksWithTracks.length - INITIAL_WEEKS_VISIBLE)
 
-  // Retro Vinyl Picks: se agrupan por año de lanzamiento (archivo histórico),
-  // no por semana. Al añadir un vinilo nuevo, se archiva en su año correspondiente.
-  // (useMemo: lo necesitan también el helper de autoplay/deep-link de vinilos
-  // y el overlay "Toca para escuchar", no solo el render.)
-  const vinylByYear = useMemo(() => {
-    const map = new Map<string, ChartVinylTrack[]>()
+  // Selecciones de archivo: vinilo + Beatport/Bandcamp anteriores a 2026,
+  // agrupados por año de lanzamiento (no por semana).
+  const archiveByYear = useMemo(() => {
+    const map = new Map<string, ArchiveRow[]>()
+    const push = (yearKey: string, row: ArchiveRow) => {
+      const arr = map.get(yearKey) ?? []
+      if (row.kind === 'vinyl') {
+        const dedupKey = vinylTrackDedupKey(row.track.title, row.track.mix_name, row.track.artists)
+        const existingIdx = arr.findIndex(
+          (t) => t.kind === 'vinyl' && vinylTrackDedupKey(t.track.title, t.track.mix_name, t.track.artists) === dedupKey,
+        )
+        if (existingIdx === -1) arr.push(row)
+        else if (vinylRowDisplayScore(row.track) > vinylRowDisplayScore((arr[existingIdx] as Extract<ArchiveRow, { kind: 'vinyl' }>).track)) {
+          arr[existingIdx] = row
+        }
+      } else {
+        const url = (row.pick.link_url || '').trim().toLowerCase()
+        if (url && arr.some((t) => t.kind === 'featured' && (t.pick.link_url || '').trim().toLowerCase() === url)) {
+          map.set(yearKey, arr)
+          return
+        }
+        if (arr.some((t) => t.kind === 'featured' && t.pick.id === row.pick.id)) {
+          map.set(yearKey, arr)
+          return
+        }
+        arr.push(row)
+      }
+      map.set(yearKey, arr)
+    }
     for (const w of weeks) {
       for (const v of w.vinyl) {
         const yearKey = typeof v.year === 'number' && Number.isFinite(v.year) ? String(v.year) : UNKNOWN_YEAR_KEY
-        const arr = map.get(yearKey) ?? []
-        const dedupKey = vinylTrackDedupKey(v.title, v.mix_name, v.artists)
-        const existingIdx = arr.findIndex(
-          (t) => vinylTrackDedupKey(t.title, t.mix_name, t.artists) === dedupKey,
-        )
-        if (existingIdx === -1) {
-          arr.push(v)
-        } else if (vinylRowDisplayScore(v) > vinylRowDisplayScore(arr[existingIdx])) {
-          arr[existingIdx] = v
-        }
-        map.set(yearKey, arr)
+        push(yearKey, { kind: 'vinyl', track: v, weekDate: w.edition.week_date })
+      }
+      for (const p of w.featured) {
+        if (!isArchiveFeaturedTrack(p)) continue
+        push(featuredArchiveYearKey(p), { kind: 'featured', pick: p, weekDate: w.edition.week_date })
       }
     }
+    for (const extra of archiveFeatured) {
+      push(featuredArchiveYearKey(extra.pick), { kind: 'featured', pick: extra.pick, weekDate: extra.weekDate })
+    }
     return map
-  }, [weeks])
-  // Orden descendente por año (más reciente primero); "sin año" al final.
-  const sortedVinylYears = Array.from(vinylByYear.keys()).sort((a, b) => {
+  }, [weeks, archiveFeatured])
+  const sortedArchiveYears = Array.from(archiveByYear.keys()).sort((a, b) => {
     if (a === UNKNOWN_YEAR_KEY) return 1
     if (b === UNKNOWN_YEAR_KEY) return -1
     return Number(b) - Number(a)
@@ -1574,10 +1680,10 @@ export default function ChartView({
       </section>
 
       {/* ================================================================ */}
-      {/* SECTION 3 — Retro Vinyl Picks (Discogs + YouTube)                */}
-      {/* Agrupado por año de lanzamiento (archivo histórico), no por semana */}
+      {/* SECTION 3 — Archive Picks (vinilo + Beatport/Bandcamp < 2026)    */}
+      {/* Agrupado por año de lanzamiento, no por semana                   */}
       {/* ================================================================ */}
-      {sortedVinylYears.length > 0 && (
+      {sortedArchiveYears.length > 0 && (
         <section className="mb-12 sm:mb-16">
           <header className="px-4 sm:px-0 mb-6 sm:mb-8">
             <span
@@ -1601,8 +1707,17 @@ export default function ChartView({
           </header>
 
           <div className="flex flex-col gap-2 px-2 sm:px-0">
-            {sortedVinylYears.map((yearKey) => {
-              const tracks = sortVinylByArtist(vinylByYear.get(yearKey) ?? [], lang)
+            {sortedArchiveYears.map((yearKey) => {
+              const rows = sortArchiveRows(archiveByYear.get(yearKey) ?? [], lang)
+              const featuredForYear = rows
+                .filter((r): r is Extract<ArchiveRow, { kind: 'featured' }> => r.kind === 'featured')
+                .map((r) => r.pick)
+              const archiveKey = `archive-${yearKey}`
+              const archiveBundle = buildFeaturedBundle(
+                featuredForYear,
+                canonicalGroups.featuredByTrack,
+                rows.find((r) => r.kind === 'featured')?.weekDate ?? '',
+              )
               const expanded = openVinyl.has(yearKey)
               const yearLabel = yearKey === UNKNOWN_YEAR_KEY ? c.vinyl_year_unknown : yearKey
               const panelId = `vinyl-year-panel-${yearKey}`
@@ -1638,26 +1753,53 @@ export default function ChartView({
                         {yearLabel}
                       </span>
                       <span className="text-[10px] sm:text-xs text-[var(--ink)]/50 font-bold shrink-0">
-                        {c.vinyl_count.replace('{n}', String(tracks.length))}
+                        {c.vinyl_count.replace('{n}', String(rows.length))}
                       </span>
                     </button>
+                    {archiveBundle.length > 0 ? (
+                      <div className="pr-2 sm:pr-3 shrink-0">
+                        {renderPlayAllBtn(archiveKey, archiveBundle)}
+                      </div>
+                    ) : null}
                   </div>
 
                   {expanded && (
                     <div id={panelId} role="region" aria-labelledby={triggerId}>
-                      {tracks.map((track) => (
-                        <VinylTrackRow
-                          key={track.id}
-                          track={track}
-                          dict={dict}
-                          lang={lang}
-                          autoplay={autoplayVinylId === track.id}
-                          artistSlugMap={artistSlugMap}
-                          labelSlugMap={labelSlugMap}
-                          labelImageMap={labelImageMap}
-                          relatedRefs={canonicalGroups.vinylByTrack.get(track.id)}
-                        />
-                      ))}
+                      {rows.map((row) => {
+                        if (row.kind === 'vinyl') {
+                          return (
+                            <VinylTrackRow
+                              key={`v-${row.track.id}`}
+                              track={row.track}
+                              dict={dict}
+                              lang={lang}
+                              autoplay={autoplayVinylId === row.track.id}
+                              artistSlugMap={artistSlugMap}
+                              labelSlugMap={labelSlugMap}
+                              labelImageMap={labelImageMap}
+                              relatedRefs={canonicalGroups.vinylByTrack.get(row.track.id)}
+                            />
+                          )
+                        }
+                        const rowKey = `chart-row-${row.pick.id}`
+                        const idx = archiveBundle.findIndex((m) => m.rowKey === rowKey)
+                        const isActive = activeRowKeyFor(archiveKey) === rowKey
+                        return (
+                          <FeaturedPickRow
+                            key={`f-${row.pick.id}`}
+                            pick={row.pick}
+                            dict={dict}
+                            lang={lang}
+                            weekDate={row.weekDate}
+                            isPlaying={isActive}
+                            isPaused={isActive && !previewPlaying}
+                            onPlay={idx >= 0 ? () => handleRowPlay(archiveKey, archiveBundle, idx, isActive) : undefined}
+                            artistSlugMap={artistSlugMap}
+                            labelSlugMap={labelSlugMap}
+                            relatedRefs={canonicalGroups.featuredByTrack.get(row.pick.id)}
+                          />
+                        )
+                      })}
                     </div>
                   )}
                 </section>

@@ -1,0 +1,71 @@
+{
+  "week_date": "2022-05-30",
+  "picks": [
+    {
+      "title": "Chamber",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Rawtrachs"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/chamber-2",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1073671669_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2022,
+      "release_date": "2022-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Feel So Alive",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Rawtrachs"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/feel-so-alive",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1073671669_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2022,
+      "release_date": "2022-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "The World",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Rawtrachs"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/the-world",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1073671669_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2022,
+      "release_date": "2022-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    }
+  ]
+}

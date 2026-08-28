@@ -1,0 +1,35 @@
+Revisión editorial — SwankOut (agosto 2026)
+===========================================
+
+Identidad
+---------
+- Nombre canónico: SwankOut (también Swankout en textos del sello).
+- Vinyl Junkie 2023: se unió un poco más tarde que el backbone inicial, pero «definitely left his mark on the TDD sound».
+- Vertiente rave / old-skool / VIP del catálogo.
+
+Catálogo TDD documentado
+------------------------
+- Get Darker (The VIP Remixes) — Bandcamp 2023-06-03 (Feelin' Ghetto VIP, Mobeus VIP, Ultimate Bad Boy VIP)
+- New Generation — Abstractions 3 (2023)
+- Gorgon — Top Drawer Digital X (2019)
+- Get Dark EP / Ultimate Bad Boy (Strictly Nuskool / TDD)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp: https://topdrawerdigital.bandcamp.com/album/get-darker-the-vip-remixes
+- Vinyl Junkie 2023.
+
+Decisiones
+----------
+- slug: swankout
+- name: SwankOut
+- name_display: SWANKOUT
+- real_name: null
+- country: UK
+- category: current
+- styles: Hardcore Breaks, Rave Breaks, Future Jungle / J-Tek, Breaks
+- related_artists: Lucas, Digitally Mashed, Strange Rollers, Pressa, Gav Ley, RadioKillaZ
+- labels_founded: []
+- sort_order: ~108
+- is_featured: false

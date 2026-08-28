@@ -12,6 +12,7 @@ import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/s
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
+import { CHARTS_EDITORIAL_START } from '@/lib/charts-archive'
 import ChartView from '@/components/ChartView'
 import {
   buildFullArtistSlugMap,
@@ -223,12 +224,26 @@ export default async function ChartsPage({
 
   const editions = (editionsRaw as ChartEdition[] | null) ?? []
   const editionIds = editions.map((e) => e.id)
+  const recentEditionIdSet = new Set(editionIds)
+
+  const { data: archiveEditionsRaw } = await supabase
+    .from('chart_editions')
+    .select('*')
+    .eq('is_published', true)
+    .lt('week_date', CHARTS_EDITORIAL_START)
+    .order('week_date', { ascending: false })
+
+  const archiveEditions = ((archiveEditionsRaw as ChartEdition[] | null) ?? []).filter(
+    (e) => !recentEditionIdSet.has(e.id),
+  )
+  const archiveEditionIds = archiveEditions.map((e) => e.id)
 
   let allTracks: ChartTrack[] = []
   let allFeatured: ChartFeaturedTrack[] = []
   let allVinyl: ChartVinylTrack[] = []
-  if (editionIds.length > 0) {
-    ;[allTracks, allFeatured, allVinyl] = await Promise.all([
+  let archiveOnlyFeatured: ChartFeaturedTrack[] = []
+  if (editionIds.length > 0 || archiveEditionIds.length > 0) {
+    ;[allTracks, allFeatured, allVinyl, archiveOnlyFeatured] = await Promise.all([
       fetchAllByEditionIds<ChartTrack>(supabase, 'chart_tracks', editionIds, 'position'),
       fetchAllByEditionIds<ChartFeaturedTrack>(
         supabase,
@@ -240,6 +255,12 @@ export default async function ChartsPage({
         supabase,
         'chart_vinyl_tracks',
         editionIds,
+        'sort_order',
+      ),
+      fetchAllByEditionIds<ChartFeaturedTrack>(
+        supabase,
+        'chart_featured_tracks',
+        archiveEditionIds,
         'sort_order',
       ),
     ])
@@ -276,6 +297,12 @@ export default async function ChartsPage({
     vinyl: vinylByEdition.get(edition.id) ?? [],
   }))
 
+  const archiveWeekByEditionId = new Map(archiveEditions.map((e) => [e.id, e.week_date]))
+  const archiveFeatured = archiveOnlyFeatured.map((pick) => ({
+    pick,
+    weekDate: archiveWeekByEditionId.get(pick.chart_edition_id) || '',
+  }))
+
   const weekParamMonday =
     chartEditionWeekMondayFromPublish(query.week) ?? query.week
   const validWeekParam =
@@ -304,6 +331,7 @@ export default async function ChartsPage({
   for (const t of allTracks) collectArtistNames(t.artists)
   for (const t of allFeatured) collectArtistNames(t.artists)
   for (const t of allVinyl) collectArtistNames(t.artists)
+  for (const t of archiveOnlyFeatured) collectArtistNames(t.artists)
 
   let artistSlugMap: Record<string, string> = {}
   if (chartArtistNames.size > 0) {
@@ -325,6 +353,10 @@ export default async function ChartsPage({
     if (name) chartLabelNames.add(name)
   }
   for (const t of allVinyl) {
+    const name = (t.label || '').trim()
+    if (name) chartLabelNames.add(name)
+  }
+  for (const t of archiveOnlyFeatured) {
     const name = (t.label || '').trim()
     if (name) chartLabelNames.add(name)
   }
@@ -362,6 +394,7 @@ export default async function ChartsPage({
         lang={lang}
         dict={dict}
         weeks={weeks}
+        archiveFeatured={archiveFeatured}
         defaultExpandedWeekDate={defaultExpandedWeekDate}
         artistSlugMap={artistSlugMap}
         labelSlugMap={labelSlugMap}

@@ -7,6 +7,7 @@ import type { ChartFeaturedTrack, Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
 import { extractRemixerNames } from '@/lib/remixer-credits'
+import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 
 function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
@@ -87,6 +88,8 @@ type ChartRow = {
   label: string | null
   position?: number | null
   year?: number | null
+  release_date?: string | null
+  release_year?: number | null
   artists?: unknown
   chart_editions?: { week_date: string } | { week_date: string }[] | null
 }
@@ -123,6 +126,7 @@ function chartSubtitle(
   position: number | null,
   weekDate: string | null,
   year: number | null,
+  releaseDate?: string | null,
 ): string {
   if (kind === 'chart') {
     const parts = [
@@ -133,14 +137,20 @@ function chartSubtitle(
     return parts.join(' · ')
   }
   if (kind === 'featured') {
+    const archive = isArchiveFeaturedTrack({
+      release_date: releaseDate,
+      release_year: year,
+    })
     const parts = [
-      lang === 'es' ? 'New Releases' : 'New Releases',
+      archive
+        ? lang === 'es' ? 'Selecciones de archivo' : 'Archive Picks'
+        : lang === 'es' ? 'New Releases' : 'New Releases',
       weekDate ? formatShortDate(weekDate, lang) : null,
     ].filter(Boolean)
     return parts.join(' · ')
   }
   const parts = [
-    lang === 'es' ? 'Retro Vinyl' : 'Retro Vinyl',
+    lang === 'es' ? 'Archivo' : 'Archive',
     year ? String(year) : null,
   ].filter(Boolean)
   return parts.join(' · ')
@@ -176,7 +186,7 @@ function dedupeChartRows(
 
     const weekDate = kind === 'vinyl' ? null : weekDateFromRow(row)
     const position = kind === 'chart' ? (row.position ?? null) : null
-    const year = kind === 'vinyl' ? (row.year ?? null) : null
+    const year = kind === 'vinyl' ? (row.year ?? null) : (row.release_year ?? null)
     const displayTitle = mix ? `${title} (${mix})` : title
     const artistNames = extractArtistNames(row.artists)
 
@@ -186,7 +196,7 @@ function dedupeChartRows(
       kind,
       weekDate,
       position,
-      subtitle: chartSubtitle(kind, lang, position, weekDate, year),
+      subtitle: chartSubtitle(kind, lang, position, weekDate, year, row.release_date),
       href: buildChartHref(lang, row.id, weekDate, kind),
       artistsText: artistNames.join(', '),
       artistNames,

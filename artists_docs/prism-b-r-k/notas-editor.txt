@@ -1,0 +1,33 @@
+Revisión editorial — Prism B.R.K (agosto 2026)
+==============================================
+
+Identidad
+---------
+- Nombre canónico: Prism B.R.K (también Prism BRK).
+- Productor TDD; The Yard Krew EP es la referencia de catálogo.
+
+Catálogo TDD documentado
+------------------------
+- The Yard Krew EP — Bandcamp 2022-11-04 (Yard Krew, Let Loose, Keep Em Moving, Lulus Trip)
+- Area 8 / Burning Love — Bandcamp TDD
+- XXX — Abstractions 3 (TDDR100, 2023)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp: https://topdrawerdigital.bandcamp.com/album/prism-b-r-k-the-yard-krew-ep
+- Bandcamp Abstractions 3.
+
+Decisiones
+----------
+- slug: prism-b-r-k
+- name: Prism B.R.K
+- name_display: PRISM B.R.K
+- real_name: null
+- country: UK
+- category: current
+- styles: Hardcore Breaks, Rave Breaks, Future Jungle / J-Tek, Breaks
+- related_artists: Lucas, Digitally Mashed, Rawtrachs, D3, Strange Rollers
+- labels_founded: []
+- sort_order: ~118
+- is_featured: false

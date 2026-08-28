@@ -1,0 +1,34 @@
+Revisión editorial — Gav Ley (agosto 2026)
+==========================================
+
+Identidad
+---------
+- Productor del backbone de Top Drawer Digital (entrevista Vinyl Junkie 2023).
+- Piano / rave old-school dentro del J-Tek / hardcore breaks del sello.
+- Strictly Nuskool sobre Abstractions 3: «Gav Ley takes it right back to the oldskool sounds of 92' with Let's Go, a piano led rave masterpiece».
+
+Catálogo TDD documentado
+------------------------
+- Let's Go / Lets Go — Abstractions 3 (TDDR100, 2023)
+- Requiem — Abstractions 3 (2023)
+- The End — Top Drawer Digital X (MMIX–MMXIX), 2019
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp Abstractions 3 y TDD X.
+- Vinyl Junkie 2023: Gav Ley en el backbone.
+
+Decisiones
+----------
+- slug: gav-ley
+- name: Gav Ley
+- real_name: null (no publicar «Gavin Sanley» aunque aparezca en créditos de TDD X)
+- country: UK (órbita TDD británica)
+- category: current
+- styles: Hardcore Breaks, Rave Breaks, Future Jungle / J-Tek, Breaks
+- related_artists: Lucas, Digitally Mashed, Strange Rollers, Sanxion, RadioKillaZ, Pressa, SwankOut
+- labels_founded: []
+- CUIDADO homónimos: solo el productor de TDD / rave breaks, no otros Gav / Ley.
+- sort_order: ~110
+- is_featured: false

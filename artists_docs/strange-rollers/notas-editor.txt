@@ -1,0 +1,39 @@
+Revisión editorial — Strange Rollers (agosto 2026)
+==================================================
+
+Rol
+---
+- Nombre central del ecosistema Top Drawer Digital desde el arranque del sello (2009).
+- El propio sello (texto Beatport The Get Down EP / TDDR098) dice que han sido «a fundamental part of the Top Drawer Digital journey right from the start» y parte del desarrollo del sonido «over the past two decades».
+- Proyecto 200Mcg con Lucas (alias documentado en la bio oficial de Lucas).
+- category: current (proyecto; no marcar crew salvo evidencia de dúo/colectivo). No inventar miembros.
+
+Catálogo documentado en TDD
+---------------------------
+- They All Darkside (Bandcamp, 2023; free download)
+- The Get Down EP — TDDR098, 2023-03-10 (Let It Go, The Get Down, Space Race)
+- Spirit / The Far Away — TDDR075, 2020-05-15
+- The Sweet & Sour EP — TDDR061 (Set Me Free, Sweet & Sour; remix Barry Blades)
+- Cortes en compilaciones: Abstractions 3 (Loading Room, My Vision Is Clear); TDD X (I Remember, 9tyfor)
+- Remixes / créditos Beatport: Touch (Summer 91 Remix), Ye Olde, Ambush, 100% Pure (con Lucas / Digitally Mashed credit)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Beatport artist: https://www.beatport.com/artist/strange-rollers/113105
+- Bandcamp TDD: The Get Down EP, They All Darkside
+- Vinyl Junkie 2023 (entrevista TDD): Strange Rollers en el backbone del sello.
+
+Decisiones
+----------
+- slug: strange-rollers
+- name: Strange Rollers
+- real_name: null
+- country: UK (órbita TDD británica; no hay sede ES ni otra)
+- styles: Future Jungle / J-Tek, Hardcore Breaks, Breaks, Bass, Rave Breaks
+- related_artists: Lucas, Digitally Mashed, Sanxion, RadioKillaZ
+- labels_founded: []
+- beatport_id: 113105
+- beatport_url: https://www.beatport.com/artist/strange-rollers/113105
+- sort_order: ~85
+- is_featured: false

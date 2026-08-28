@@ -1,0 +1,71 @@
+{
+  "week_date": "2023-03-06",
+  "picks": [
+    {
+      "title": "The Get Down",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Strange Rollers"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/the-get-down",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1933651482_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2023,
+      "release_date": "2023-03-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Let It Go",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Strange Rollers"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/let-it-go",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1933651482_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2023,
+      "release_date": "2023-03-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Space Race",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Strange Rollers"
+        }
+      ],
+      "label": "Top Drawer Digital Records",
+      "platform": "bandcamp",
+      "link_url": "https://topdrawerdigital.bandcamp.com/track/space-race-2",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a1933651482_10.jpg",
+      "sample_url": "",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2023,
+      "release_date": "2023-03-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    }
+  ]
+}

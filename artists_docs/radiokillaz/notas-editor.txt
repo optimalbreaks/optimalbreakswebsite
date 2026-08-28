@@ -1,0 +1,38 @@
+Revisión editorial — RadioKillaZ (agosto 2026)
+==============================================
+
+Identidad
+---------
+- Nombre canónico: RadioKillaZ (también Radiokillaz / RadioKillaz en textos del sello).
+- Vertiente rave / jungle / dark jungle breaks de Top Drawer Digital.
+- «Long term friends» del sello; años en recopilatorios antes del primer EP propio.
+
+Catálogo documentado
+--------------------
+- Send You To Hell / Argon — TDDR093. Bandcamp 2023-05-13 (texto: 13 May 2022); Beatport release 2022-04-29. Primer EP en TDD. Dark jungle breaks, sub, breakbeats de pista.
+- Sound Attack — en Abstractions 3: Jungle Techno Breaks (TDDR100, 2023).
+- Whose The Gangsta — en Top Drawer Digital X (2019).
+- Texto Bandcamp TDDR093: «instantly recognisable Dark Jungle Breaks Sound».
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp: https://topdrawerdigital.bandcamp.com/album/send-you-to-hell-argon
+- Beatport: https://www.beatport.com/release/send-you-to-hell-argon/3717825
+- Vinyl Junkie 2023: Radiokillaz en el backbone del sello.
+
+Decisiones
+----------
+- slug: radiokillaz
+- name: RadioKillaZ
+- name_display: RADIOKILLAZ
+- real_name: null
+- country: UK (órbita TDD británica; no hay sede ES). Si el modelo duda, UK es la lectura documentada del circuito, no un default de género.
+- category: current
+- styles: Jungle, Dark Jungle, Hardcore Breaks, Rave Breaks, Future Jungle / J-Tek
+- related_artists: SOLO Lucas, Digitally Mashed, Strange Rollers, Sanxion. No inventar miembros del proyecto (Tony Vibe, Harry Rox, etc. no van).
+- labels_founded: []
+- category: current (proyecto; crew solo si hay evidencia de formación estable)
+- sort_order: ~95
+- is_featured: false
+- No inventar miembros del proyecto ni ciudad exacta.

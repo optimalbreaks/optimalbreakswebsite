@@ -1,0 +1,32 @@
+Revisión editorial — Digitally Mashed (agosto 2026)
+===================================================
+
+Rol (prioridad máxima)
+----------------------
+- Cofundador de Top Drawer Digital Records con Lucas, 2009.
+- DJ oficial del sello: mixes, radio y clubs. Lucas produce y gestiona; Digitally Mashed representa la parte DJ/radio.
+- NO presentarlo como si fuera solo un productor del catálogo. La identidad pública es DJ / radio / cofundador.
+- labels_founded: Top Drawer Digital Records (con Lucas). No inventar Bass Elements como fundado en solitario.
+
+Fuentes
+-------
+- Brief editorial TDD + ficha Lucas (Vinyl Junkie 2023): «I'm not a DJ» (Lucas); Digitally Mashed = DJ oficial.
+- Mixcloud https://www.mixcloud.com/digitallymashed/ — Yorkshire, UK; veterano 20+ años; J-Tek / Future Jungle / 140 junto a Lucas @ TDD; pionero de esa escena al volver a finales de los 00; más tarde RIQ Yardrock (ragga jungle / jungle DnB); show house en Influx Radio; TDD / Bass Elements Show lunes 19–21 en 999fm.net y 1º/3º martes en nsbradio.co.uk.
+- LinkedIn público: Label DJ, Top Drawer Digital Ltd, desde mayo 2009; York, England. No publicar nombre civil.
+- Beatport: «Digitally Mashed Presents : Abstractions - Jungle Techno Breaks» TDMIX002, 2020-12-21 (mix 1 h del álbum Abstractions). Promo mix de Abstractions 3.
+- USB / cierre TDDR100: mix de Digitally Mashed del álbum final.
+
+Decisiones
+----------
+- slug: digitally-mashed
+- name: Digitally Mashed
+- real_name: null. NO publicar nombre civil aunque aparezca en LinkedIn u otra ficha.
+- country: UK (York / Yorkshire documentado)
+- category: current
+- era: 2000s-present (vuelta a escena late 00s + TDD 2009–2023)
+- styles: J-Tek, Future Jungle, Jungle Techno, Hardcore Breaks, Rave Breaks, Jungle
+- related_artists: Lucas, Strange Rollers, Sanxion, RadioKillaZ
+- is_featured: false
+- sort_order: ~90
+- Beatport: no forzar ID si no hay ficha de artista limpia (puede ser solo créditos de mix).
+- No inventar discografía de producción propia si no está documentada.

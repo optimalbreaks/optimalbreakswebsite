@@ -1,0 +1,32 @@
+Revisión editorial — Rawtrachs (agosto 2026)
+============================================
+
+Identidad
+---------
+- Productor del catálogo TDD; línea más oscura / jungle techno / future breaks.
+- Brief: Dark Futures como referencia representativa.
+
+Catálogo TDD documentado
+------------------------
+- Dark Futures — Bandcamp 2022-06-03 (Chamber, Feel So Alive, The World)
+- Nothing Ventured — abre Abstractions 3 (TDDR100, 2023)
+- Outerdimensional — Abstractions 3 (2023)
+
+Fuentes
+-------
+- Brief editorial TDD.
+- Bandcamp: https://topdrawerdigital.bandcamp.com/album/dark-futures
+- Bandcamp Abstractions 3.
+
+Decisiones
+----------
+- slug: rawtrachs
+- name: Rawtrachs
+- real_name: null
+- country: UK
+- category: current
+- styles: Jungle Techno, Future Jungle / J-Tek, Hardcore Breaks, Breaks
+- related_artists: Lucas, Digitally Mashed, D3, Prism B.R.K, Strange Rollers
+- labels_founded: []
+- sort_order: ~114
+- is_featured: false
