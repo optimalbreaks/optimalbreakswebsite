@@ -10,6 +10,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { formatTrackReleaseDisplay } from '@/lib/share-track'
+import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
 import type { ChartFeaturedTrack, SavedChartTrackSnapshot } from '@/types/database'
 
@@ -144,8 +145,7 @@ export default function ArtistFeaturedTracks({
         artist: artists,
         artworkUrl: pick.artwork_url || null,
         domId: `nr-row-${pick.id}`,
-        // Vuelta al origen desde el mini reproductor: la ficha de artista
-        // donde vive este bloque de New Releases.
+        // Vuelta al origen desde el mini reproductor: la ficha de artista/sello.
         originPath: pathname || undefined,
         save: {
           mode: 'ref' as const,
@@ -197,8 +197,8 @@ export default function ArtistFeaturedTracks({
   if (!picks.length) return null
 
   const title = heading
-    ?? (lang === 'es' ? 'NEW RELEASES EN OPTIMAL BREAKS' : 'NEW RELEASES ON OPTIMAL BREAKS')
-  const badgeLabel = badge ?? 'PICKS'
+    ?? (lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS')
+  const badgeLabel = badge ?? 'OB'
   const countLabel = `${picks.length} ${lang === 'es' ? (picks.length === 1 ? 'tema' : 'temas') : (picks.length === 1 ? 'track' : 'tracks')}`
   const playAllBtnLabel = myQueueActive
     ? `■ STOP ${previewIndex + 1}/${previewQueue.length}`
@@ -277,7 +277,7 @@ export default function ArtistFeaturedTracks({
                         title={lang === 'es' ? 'Ver en Charts' : 'View in Charts'}
                       >
                         <span className="text-[8px] font-black tracking-wider text-[var(--ink)]/50 uppercase">
-                          {kind === 'chart' ? '40' : 'NR'}
+                          {kind === 'chart' ? '40' : isArchiveFeaturedTrack(pick) ? 'ARCH' : 'NR'}
                         </span>
                         <span className="text-[9px] sm:text-[10px] font-bold text-[var(--ink)] text-center leading-tight px-0.5">
                           {kind === 'chart' && pick.position != null

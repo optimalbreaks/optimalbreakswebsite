@@ -422,6 +422,8 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   entityName={artist.name_display || artist.name}
                   artistSlugMap={artistSlugMap}
                   labelSlugMap={labelSlugMap}
+                  heading={lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
+                  badge="OB"
                   origin={{
                     kind: 'artist',
                     id: artist.id,

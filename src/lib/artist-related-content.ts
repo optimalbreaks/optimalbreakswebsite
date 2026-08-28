@@ -467,7 +467,43 @@ function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
   return out
 }
 
-/** Picks de New Releases: crédito en `artists[]` o remixer en `mix_name`. */
+const ON_SITE_PAGE = 1000
+
+async function fetchAllPages<T>(
+  run: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const out: T[] = []
+  for (let offset = 0; ; offset += ON_SITE_PAGE) {
+    const { data, error } = await run(offset, offset + ON_SITE_PAGE - 1)
+    if (error) return out
+    const rows = data ?? []
+    out.push(...rows)
+    if (rows.length < ON_SITE_PAGE) break
+  }
+  return out
+}
+
+function mergeOnSitePicks(chartPicks: ArtistFeaturedPick[], featuredPicks: ArtistFeaturedPick[]): ArtistFeaturedPick[] {
+  const seen = new Set<string>()
+  const out: ArtistFeaturedPick[] = []
+  const push = (pick: ArtistFeaturedPick) => {
+    const key = `${normKey(pick.title)}|${normKey(pick.mix_name || '')}`
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(pick)
+  }
+  for (const pick of featuredPicks) push(pick)
+  for (const pick of chartPicks) push(pick)
+  out.sort((a, b) => {
+    const ad = a.release_date || a.weekDate || ''
+    const bd = b.release_date || b.weekDate || ''
+    if (ad !== bd) return bd.localeCompare(ad)
+    return (a.position ?? 99) - (b.position ?? 99)
+  })
+  return out
+}
+
+/** Temas del artista en Optimal Breaks: 40 Breaks + New Releases + archivo. */
 export async function fetchArtistFeaturedPicks(
   supabase: SupabaseClient<Database>,
   artist: { name: string; name_display?: string | null; slug?: string },
@@ -477,18 +513,39 @@ export async function fetchArtistFeaturedPicks(
   const matchKeys = buildArtistMatchKeys(artist)
   const artistNamesOr = artistTrackOrFilter(terms)
 
-  const { data, error } = await supabase
-    .from('chart_featured_tracks')
-    .select(
-      'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)',
-    )
-    .or(artistNamesOr)
-    .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+  const featuredSelect =
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
+  const chartSelect =
+    'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
 
-  if (error || !data?.length) return []
-  return mapFeaturedPickRows(data as unknown as FeaturedPickRow[]).filter((p) =>
-    chartRowMatchesArtist(p, matchKeys),
-  )
+  const [featuredRows, chartRows] = await Promise.all([
+    fetchAllPages<FeaturedPickRow>((from, to) =>
+      supabase
+        .from('chart_featured_tracks')
+        .select(featuredSelect)
+        .or(artistNamesOr)
+        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+        .range(from, to),
+    ),
+    fetchAllPages<LabelChartPickRow>((from, to) =>
+      supabase
+        .from('chart_tracks')
+        .select(chartSelect)
+        .or(artistNamesOr)
+        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+        .order('position', { ascending: true })
+        .range(from, to),
+    ),
+  ])
+
+  const featured = mapFeaturedPickRows(featuredRows).filter((p) => chartRowMatchesArtist(p, matchKeys))
+  const fromForty: ArtistFeaturedPick[] = []
+  for (const row of chartRows) {
+    if (!chartRowMatchesArtist(row, matchKeys)) continue
+    const pick = mapChartTrackToPick(row)
+    if (pick) fromForty.push(pick)
+  }
+  return mergeOnSitePicks(fromForty, featured)
 }
 
 type LabelChartPickRow = {
@@ -549,8 +606,8 @@ function mapChartTrackToPick(row: LabelChartPickRow): ArtistFeaturedPick | null 
 }
 
 /**
- * Temas del sello en /charts (40 Breaks + New Releases) con audio y metadatos
- * para el desplegable reproducible de la ficha.
+ * Temas del sello en /charts (40 Breaks + New Releases + archivo) con audio
+ * y metadatos para el desplegable reproducible de la ficha.
  */
 export async function fetchLabelOnSitePicks(
   supabase: SupabaseClient<Database>,
@@ -561,54 +618,39 @@ export async function fetchLabelOnSitePicks(
   const ilike = `%${primaryTerm}%`
   const labelKey = normalizeForEntityMatch(label.name)
 
-  const [chartRes, featuredRes] = await Promise.all([
-    supabase
-      .from('chart_tracks')
-      .select(
-        'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)',
-      )
-      .ilike('label', ilike)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .order('position', { ascending: true })
-      .limit(24),
-    supabase
-      .from('chart_featured_tracks')
-      .select(
-        'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)',
-      )
-      .ilike('label', ilike)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .limit(40),
+  const featuredSelect =
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
+  const chartSelect =
+    'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
+
+  const [chartRows, featuredRows] = await Promise.all([
+    fetchAllPages<LabelChartPickRow>((from, to) =>
+      supabase
+        .from('chart_tracks')
+        .select(chartSelect)
+        .ilike('label', ilike)
+        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+        .order('position', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllPages<FeaturedPickRow>((from, to) =>
+      supabase
+        .from('chart_featured_tracks')
+        .select(featuredSelect)
+        .ilike('label', ilike)
+        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+        .range(from, to),
+    ),
   ])
 
-  const seen = new Set<string>()
-  const out: ArtistFeaturedPick[] = []
-
-  const push = (pick: ArtistFeaturedPick) => {
-    if (!labelFieldMatches(pick.label, labelKey)) return
-    const key = `${normKey(pick.title)}|${normKey(pick.mix_name || '')}`
-    if (seen.has(key)) return
-    seen.add(key)
-    out.push(pick)
-  }
-
-  for (const row of (chartRes.data || []) as unknown as LabelChartPickRow[]) {
+  const featured = mapFeaturedPickRows(featuredRows).filter((p) => labelFieldMatches(p.label, labelKey))
+  const fromForty: ArtistFeaturedPick[] = []
+  for (const row of chartRows) {
+    if (!labelFieldMatches(row.label, labelKey)) continue
     const pick = mapChartTrackToPick(row)
-    if (pick) push(pick)
+    if (pick) fromForty.push(pick)
   }
-  for (const pick of mapFeaturedPickRows((featuredRes.data || []) as unknown as FeaturedPickRow[])) {
-    push(pick)
-  }
-
-  out.sort((a, b) => {
-    if (a.weekDate !== b.weekDate) return b.weekDate.localeCompare(a.weekDate)
-    const ad = a.release_date || ''
-    const bd = b.release_date || ''
-    if (ad !== bd) return bd.localeCompare(ad)
-    return (a.position ?? 99) - (b.position ?? 99)
-  })
-
-  return out.slice(0, 40)
+  return mergeOnSitePicks(fromForty, featured)
 }
 
 export async function fetchLabelChartLinks(
