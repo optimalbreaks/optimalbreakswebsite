@@ -470,13 +470,13 @@ function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
 const ON_SITE_PAGE = 1000
 
 async function fetchAllPages<T>(
-  run: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  run: (from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
 ): Promise<T[]> {
   const out: T[] = []
   for (let offset = 0; ; offset += ON_SITE_PAGE) {
     const { data, error } = await run(offset, offset + ON_SITE_PAGE - 1)
     if (error) return out
-    const rows = data ?? []
+    const rows = (data as T[] | null) ?? []
     out.push(...rows)
     if (rows.length < ON_SITE_PAGE) break
   }
