@@ -57,6 +57,12 @@ const nextConfig = {
         destination: '/:lang/artists/aquasky-vs-masterblaster',
         permanent: true,
       },
+      /** Olibass 2026: ficha aplazada (15 ago) duplicaba la cita del 19 sept */
+      {
+        source: '/:lang/events/olibass-music-festival-2026-torredonjimeno',
+        destination: '/:lang/events/olibass-music-festival-open-air',
+        permanent: true,
+      },
     ]
   },
 
