@@ -323,6 +323,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `gruv42@me.com` | Gruv42 | `gruv42` | `gruv42` | `535d437f-5641-42aa-8c0a-a939ded2f6c3` |
 | `aranniadj@gmail.com` | Lady Arannia | `lady arannia` | `lady-arannia` | `18673d03-b462-4ddd-a56f-06a5f388c555` |
 | `davisoto@hotmail.com` | Devis Hard | `devis hard` | `devis-hard` | `9b83800a-5a40-4cdd-9e3d-f4b1a61160af` |
+| `jsrcortegana@hotmail.com` | Maxuka | `maxuka` | `maxuka` | `b4a12e54-3bb3-481e-93d1-f83ab72e081a` |
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 
@@ -366,6 +367,16 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | jennie | `jenniev52@outlook.com` | user | **1** (Let It Be) |
 
 17 + 3 + 1 = 21 (one more Optimal Breaks save than the 25 Aug snapshot of 16+3+1).
+
+**Audit — Maxuka (29 Aug 2026).** `jsrcortegana@hotmail.com` (Jesus) signed up 28 Aug and saved **9** of his own titles the same night (Downbeat, Run again, Empire, Freedom, Late Night, My Life, Nine, 808 Bitches, Low Pressure). All nine credited Maxuka; Freedom also credits JN CRUZ (that collab still counts). Before the mark that dump put him at **#3** (26 saves · 4 fans · 17 tracks), behind Shade K (32) and J-Break (26 / 4 fans / 19 tracks). After the artist mark those **9** self-credits drop: **#11 · 17 saves · 3 fans · 15 tracks**. Empire and Low Pressure leave the unique-track count (only he had saved them). Remaining fans:
+
+| Fan | Email | Role | Saves |
+| --- | --- | --- | ---: |
+| Optimal Breaks | `contacto@eskaladigital.com` | admin | **15** |
+| MestasDeejay | `mestasdeejay@gmail.com` | admin | **1** (Nine) |
+| jennie | `jenniev52@outlook.com` | user | **1** (Nine) |
+
+15 + 1 + 1 = 17. Monday `previous_rank` was already **11** — he had not saved yet at the ISO Monday cutoff — so the #3 spike was only this week’s live board. My Tracks and the song Top 100 still include his 9 saves. No label mark.
 
 ### Artist board — weekly movement (not daily)
 

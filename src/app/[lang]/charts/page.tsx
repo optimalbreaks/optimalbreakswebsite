@@ -36,7 +36,7 @@ function chartsSupabase() {
   return createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])
 }
 
-async function fetchAllByEditionIds<T>(
+async function fetchAllByEditionIds<T extends { id: string }>(
   supabase: ReturnType<typeof chartsSupabase>,
   table: 'chart_tracks' | 'chart_featured_tracks' | 'chart_vinyl_tracks',
   editionIds: string[],
@@ -44,16 +44,25 @@ async function fetchAllByEditionIds<T>(
 ): Promise<T[]> {
   if (editionIds.length === 0) return []
   const out: T[] = []
+  const seen = new Set<string>()
   for (let offset = 0; ; offset += SUPABASE_PAGE) {
     const { data, error } = await supabase
       .from(table)
       .select('*')
       .in('chart_edition_id', editionIds)
+      // Orden totalmente determinista: `sort_order`/`position` se repiten entre
+      // ediciones; paginar solo por esa columna duplica filas al cruzar páginas (>1000 NR).
+      .order('chart_edition_id', { ascending: true })
       .order(orderCol, { ascending: true })
+      .order('id', { ascending: true })
       .range(offset, offset + SUPABASE_PAGE - 1)
     if (error) throw new Error(`${table}: ${error.message}`)
     const rows = (data as T[] | null) ?? []
-    out.push(...rows)
+    for (const row of rows) {
+      if (seen.has(row.id)) continue
+      seen.add(row.id)
+      out.push(row)
+    }
     if (rows.length < SUPABASE_PAGE) break
   }
   return out
