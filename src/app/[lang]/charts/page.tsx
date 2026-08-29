@@ -57,7 +57,7 @@ async function fetchAllByEditionIds<T extends { id: string }>(
       .order('id', { ascending: true })
       .range(offset, offset + SUPABASE_PAGE - 1)
     if (error) throw new Error(`${table}: ${error.message}`)
-    const rows = (data as T[] | null) ?? []
+    const rows = (data as unknown as T[] | null) ?? []
     for (const row of rows) {
       if (seen.has(row.id)) continue
       seen.add(row.id)
