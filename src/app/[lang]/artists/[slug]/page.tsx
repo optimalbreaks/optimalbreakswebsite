@@ -306,7 +306,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const labelsArr = artist.labels_founded || []
   const recommendedMixes = artist.recommended_mixes || []
   const { chartLinks, mixLinks, artistEvents, trackHrefByTitle } = relatedContent
-  const sidebarChartLinks = chartLinks.filter((link) => link.kind !== 'featured')
+  const sidebarChartLinks = chartLinks.filter((link) => link.kind === 'chart')
   const hasOnSiteBlock =
     sidebarChartLinks.length > 0 || mixLinks.length > 0 || artistEvents.length > 0
   const hasLinksBlock =

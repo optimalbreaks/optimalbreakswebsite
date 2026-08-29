@@ -73,12 +73,14 @@ export type ArtistRelatedContent = {
   trackHrefByTitle: Map<string, string>
 }
 
-/** Pick editorial de New Releases enlazado a la semana (`chart_editions.week_date`). */
+/** Pick editorial en la ficha (40 Breaks, New Releases, archivo YouTube/Bandcamp). */
 export type ArtistFeaturedPick = ChartFeaturedTrack & {
   weekDate: string
-  /** `featured` = New Releases; `chart` = 40 Breaks Vitales. */
-  chartKind?: 'chart' | 'featured'
+  /** `featured` = NR / archivo digital; `chart` = 40 Breaks; `vinyl` = archivo YouTube. */
+  chartKind?: 'chart' | 'featured' | 'vinyl'
   position?: number | null
+  youtube_url?: string | null
+  discogs_url?: string | null
 }
 
 type ChartRow = {
@@ -150,7 +152,7 @@ function chartSubtitle(
     return parts.join(' · ')
   }
   const parts = [
-    lang === 'es' ? 'Archivo' : 'Archive',
+    lang === 'es' ? 'Selecciones de archivo' : 'Archive Picks',
     year ? String(year) : null,
   ].filter(Boolean)
   return parts.join(' · ')
@@ -483,7 +485,18 @@ async function fetchAllPages<T>(
   return out
 }
 
-function mergeOnSitePicks(chartPicks: ArtistFeaturedPick[], featuredPicks: ArtistFeaturedPick[]): ArtistFeaturedPick[] {
+function pickSortDate(p: ArtistFeaturedPick): string {
+  const day = (p.release_date || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return day
+  if (typeof p.release_year === 'number' && p.release_year > 0) return `${p.release_year}-12-31`
+  return p.weekDate || ''
+}
+
+function mergeOnSitePicks(
+  chartPicks: ArtistFeaturedPick[],
+  featuredPicks: ArtistFeaturedPick[],
+  vinylPicks: ArtistFeaturedPick[] = [],
+): ArtistFeaturedPick[] {
   const seen = new Set<string>()
   const out: ArtistFeaturedPick[] = []
   const push = (pick: ArtistFeaturedPick) => {
@@ -493,17 +506,18 @@ function mergeOnSitePicks(chartPicks: ArtistFeaturedPick[], featuredPicks: Artis
     out.push(pick)
   }
   for (const pick of featuredPicks) push(pick)
+  for (const pick of vinylPicks) push(pick)
   for (const pick of chartPicks) push(pick)
   out.sort((a, b) => {
-    const ad = a.release_date || a.weekDate || ''
-    const bd = b.release_date || b.weekDate || ''
+    const ad = pickSortDate(a)
+    const bd = pickSortDate(b)
     if (ad !== bd) return bd.localeCompare(ad)
     return (a.position ?? 99) - (b.position ?? 99)
   })
   return out
 }
 
-/** Temas del artista en Optimal Breaks: 40 Breaks + New Releases + archivo. */
+/** Temas del artista en Optimal Breaks: 40 Breaks + NR + archivo (Beatport/Bandcamp/YouTube). */
 export async function fetchArtistFeaturedPicks(
   supabase: SupabaseClient<Database>,
   artist: { name: string; name_display?: string | null; slug?: string },
@@ -517,8 +531,10 @@ export async function fetchArtistFeaturedPicks(
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
   const chartSelect =
     'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
+  const vinylSelect =
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 
-  const [featuredRows, chartRows] = await Promise.all([
+  const [featuredRows, chartRows, vinylRows] = await Promise.all([
     fetchAllPages<FeaturedPickRow>((from, to) =>
       supabase
         .from('chart_featured_tracks')
@@ -536,6 +552,14 @@ export async function fetchArtistFeaturedPicks(
         .order('position', { ascending: true })
         .range(from, to),
     ),
+    fetchAllPages<VinylPickRow>((from, to) =>
+      supabase
+        .from('chart_vinyl_tracks')
+        .select(vinylSelect)
+        .or(artistNamesOr)
+        .order('year', { ascending: false })
+        .range(from, to),
+    ),
   ])
 
   const featured = mapFeaturedPickRows(featuredRows).filter((p) => chartRowMatchesArtist(p, matchKeys))
@@ -545,7 +569,10 @@ export async function fetchArtistFeaturedPicks(
     const pick = mapChartTrackToPick(row)
     if (pick) fromForty.push(pick)
   }
-  return mergeOnSitePicks(fromForty, featured)
+  const fromVinyl = vinylRows
+    .filter((row) => chartRowMatchesArtist(row, matchKeys))
+    .map(mapVinylTrackToPick)
+  return mergeOnSitePicks(fromForty, featured, fromVinyl)
 }
 
 type LabelChartPickRow = {
@@ -572,6 +599,58 @@ function labelFieldMatches(rowLabel: string | null | undefined, labelKey: string
   const n = normalizeForEntityMatch(rowLabel || '')
   if (!n || !labelKey) return false
   return n === labelKey || n.includes(labelKey)
+}
+
+type VinylPickRow = {
+  id: string
+  chart_edition_id: string
+  sort_order: number | null
+  title: string | null
+  mix_name: string | null
+  label: string | null
+  artists?: unknown
+  year: number | null
+  format?: string | null
+  catalog_number?: string | null
+  discogs_url: string | null
+  youtube_url: string | null
+  artwork_url: string | null
+  note_en: string | null
+  note_es: string | null
+  chart_editions?: { week_date: string } | { week_date: string }[] | null
+}
+
+function mapVinylTrackToPick(row: VinylPickRow): ArtistFeaturedPick {
+  const editionWeek = weekDateFromRow(row as ChartRow)
+  const year = typeof row.year === 'number' && row.year > 0 ? row.year : null
+  const weekDate = editionWeek || (year ? `${year}-01-01` : '1970-01-01')
+  const artists = extractArtistNames(row.artists).map((name) => ({ name }))
+  return {
+    id: row.id,
+    chart_edition_id: row.chart_edition_id,
+    sort_order: row.sort_order ?? 0,
+    title: (row.title || '').trim() || '—',
+    mix_name: (row.mix_name || '').trim(),
+    artists,
+    label: row.label || '',
+    platform: 'youtube',
+    link_url: row.youtube_url || row.discogs_url || '',
+    link_label: '',
+    artwork_url: row.artwork_url,
+    sample_url: null,
+    bpm: null,
+    music_key: '',
+    release_year: year,
+    release_date: null,
+    spotify_url: null,
+    tidal_url: null,
+    note_en: row.note_en || '',
+    note_es: row.note_es || '',
+    weekDate,
+    chartKind: 'vinyl',
+    youtube_url: row.youtube_url,
+    discogs_url: row.discogs_url,
+  }
 }
 
 function mapChartTrackToPick(row: LabelChartPickRow): ArtistFeaturedPick | null {
@@ -606,8 +685,8 @@ function mapChartTrackToPick(row: LabelChartPickRow): ArtistFeaturedPick | null 
 }
 
 /**
- * Temas del sello en /charts (40 Breaks + New Releases + archivo) con audio
- * y metadatos para el desplegable reproducible de la ficha.
+ * Temas del sello en /charts (40 Breaks + NR + archivo YouTube/Bandcamp)
+ * para el desplegable reproducible de la ficha.
  */
 export async function fetchLabelOnSitePicks(
   supabase: SupabaseClient<Database>,
@@ -622,8 +701,10 @@ export async function fetchLabelOnSitePicks(
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
   const chartSelect =
     'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
+  const vinylSelect =
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 
-  const [chartRows, featuredRows] = await Promise.all([
+  const [chartRows, featuredRows, vinylRows] = await Promise.all([
     fetchAllPages<LabelChartPickRow>((from, to) =>
       supabase
         .from('chart_tracks')
@@ -641,6 +722,14 @@ export async function fetchLabelOnSitePicks(
         .order('week_date', { referencedTable: 'chart_editions', ascending: false })
         .range(from, to),
     ),
+    fetchAllPages<VinylPickRow>((from, to) =>
+      supabase
+        .from('chart_vinyl_tracks')
+        .select(vinylSelect)
+        .ilike('label', ilike)
+        .order('year', { ascending: false })
+        .range(from, to),
+    ),
   ])
 
   const featured = mapFeaturedPickRows(featuredRows).filter((p) => labelFieldMatches(p.label, labelKey))
@@ -650,7 +739,10 @@ export async function fetchLabelOnSitePicks(
     const pick = mapChartTrackToPick(row)
     if (pick) fromForty.push(pick)
   }
-  return mergeOnSitePicks(fromForty, featured)
+  const fromVinyl = vinylRows
+    .filter((row) => labelFieldMatches(row.label, labelKey))
+    .map(mapVinylTrackToPick)
+  return mergeOnSitePicks(fromForty, featured, fromVinyl)
 }
 
 export async function fetchLabelChartLinks(

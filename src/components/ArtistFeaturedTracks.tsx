@@ -9,10 +9,17 @@ import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
-import { formatTrackReleaseDisplay } from '@/lib/share-track'
+import { formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg } from '@/lib/share-track'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
-import type { ChartFeaturedTrack, SavedChartTrackSnapshot } from '@/types/database'
+import type { ChartFeaturedTrack, ChartTrackSource, SavedChartTrackSnapshot } from '@/types/database'
+import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import {
+  requestYouTubePlay,
+  releaseYouTubePlay,
+  subscribeYouTubePlay,
+} from '@/lib/youtube-play-coordinator'
+import { logTrackPlay } from '@/lib/track-play-log'
 
 interface Props {
   picks: ArtistFeaturedPick[]
@@ -71,6 +78,31 @@ function pickHasPreview(pick: ArtistFeaturedPick): boolean {
   return !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
 }
 
+function pickYoutubeUrl(pick: ArtistFeaturedPick): string | null {
+  const fromField = (pick.youtube_url || '').trim()
+  if (fromField) return fromField
+  const link = (pick.link_url || '').trim()
+  return extractYouTubeId(link) ? link : null
+}
+
+function pickYoutubeId(pick: ArtistFeaturedPick): string | null {
+  return extractYouTubeId(pickYoutubeUrl(pick))
+}
+
+function pickArtworkSrc(pick: ArtistFeaturedPick): string | null {
+  const yt = pickYoutubeUrl(pick)
+  if (pick.chartKind === 'vinyl' || yt) {
+    const cands = vinylArtworkCandidates(pick.artwork_url, yt, pick.label)
+    const first = cands[0]
+    if (!first) return null
+    if (/i\.ytimg\.com/i.test(first)) {
+      return `/api/og/image-proxy?src=${encodeURIComponent(first)}`
+    }
+    return first
+  }
+  return pick.artwork_url
+}
+
 function pickCtaLabel(lang: 'en' | 'es', pick: ArtistFeaturedPick): string {
   const custom = (pick.link_label || '').trim()
   if (custom) return custom
@@ -78,6 +110,7 @@ function pickCtaLabel(lang: 'en' | 'es', pick: ArtistFeaturedPick): string {
   if (plat === 'beatport') return 'BEATPORT'
   if (plat === 'bandcamp') return 'BANDCAMP'
   if (plat === 'soundcloud') return 'SOUNDCLOUD'
+  if (plat === 'youtube' || pickYoutubeId(pick)) return 'YOUTUBE'
   return lang === 'es' ? 'ENLACE' : 'LINK'
 }
 
@@ -90,8 +123,27 @@ function formatWeekLabel(weekDate: string, lang: 'en' | 'es'): string {
   })
 }
 
-function pickSource(pick: ArtistFeaturedPick): 'chart' | 'featured' {
-  return pick.chartKind === 'chart' ? 'chart' : 'featured'
+function pickSource(pick: ArtistFeaturedPick): ChartTrackSource {
+  if (pick.chartKind === 'chart') return 'chart'
+  if (pick.chartKind === 'vinyl') return 'vinyl'
+  return 'featured'
+}
+
+function pickChartHref(lang: 'en' | 'es', pick: ArtistFeaturedPick): string {
+  if (pick.chartKind === 'vinyl') return buildVinylSharePath(lang, pick.id)
+  return `/${lang}/charts?week=${pick.weekDate}#chart-row-${pick.id}`
+}
+
+function pickBadge(pick: ArtistFeaturedPick): '40' | 'ARCH' | 'NR' {
+  if (pick.chartKind === 'chart') return '40'
+  if (pick.chartKind === 'vinyl' || isArchiveFeaturedTrack(pick)) return 'ARCH'
+  return 'NR'
+}
+
+function pickBadgeSub(pick: ArtistFeaturedPick, lang: 'en' | 'es'): string {
+  if (pick.chartKind === 'chart' && pick.position != null) return `#${pick.position}`
+  if (pick.chartKind === 'vinyl' && pick.release_year) return String(pick.release_year)
+  return formatWeekLabel(pick.weekDate, lang)
 }
 
 export default function ArtistFeaturedTracks({
@@ -105,11 +157,31 @@ export default function ArtistFeaturedTracks({
   origin,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
   const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
     playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
+
+  const toggleYoutubeEmbed = useCallback((key: string, playKey: string) => {
+    setOpenYoutubeKey((prev) => {
+      if (prev === key) {
+        releaseYouTubePlay(key)
+        return null
+      }
+      stopPreview()
+      requestYouTubePlay(key)
+      logTrackPlay(playKey)
+      return key
+    })
+  }, [stopPreview])
+
+  useEffect(() => {
+    return subscribeYouTubePlay((activeId) => {
+      setOpenYoutubeKey((prev) => (prev && activeId !== prev ? null : prev))
+    })
+  }, [])
 
   // Hash #nr-row-<id> (click en el título del mini reproductor → volver al
   // origen): expande el panel para que la fila exista en el DOM; el scroll
@@ -149,14 +221,14 @@ export default function ArtistFeaturedTracks({
         originPath: pathname || undefined,
         save: {
           mode: 'ref' as const,
-          source: pickSource(pick),
+          source: pickSource(pick) === 'chart' ? 'chart' : 'featured',
           trackId: pick.id,
           canonicalUrl: pick.link_url || undefined,
           snapshot: buildSnapshot(pick, origin),
         },
         share: {
           mode: 'chart' as const,
-          source: pickSource(pick),
+          source: pickSource(pick) === 'chart' ? 'chart' : 'featured',
           trackId: pick.id,
           weekDate: pick.weekDate,
         },
@@ -165,6 +237,10 @@ export default function ArtistFeaturedTracks({
   }, [playablePicks, origin, pathname])
 
   const playFromPick = useCallback((pick: ArtistFeaturedPick) => {
+    if (openYoutubeKey) {
+      releaseYouTubePlay(openYoutubeKey)
+      setOpenYoutubeKey(null)
+    }
     // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚
     // debe DETENER la reproducción, no reiniciar el tema desde el principio).
     if (myQueueActive && previewQueue[previewIndex]?.rowKey === `nr-${pick.id}`) {
@@ -176,9 +252,13 @@ export default function ArtistFeaturedTracks({
     if (idx < 0) return
     setExpanded(true)
     playPreviewQueue(queue, idx, groupKey)
-  }, [buildQueue, groupKey, playPreviewQueue, myQueueActive, previewQueue, previewIndex, togglePreview])
+  }, [buildQueue, groupKey, playPreviewQueue, myQueueActive, previewQueue, previewIndex, togglePreview, openYoutubeKey])
 
   const handlePlayAllClick = useCallback(() => {
+    if (openYoutubeKey) {
+      releaseYouTubePlay(openYoutubeKey)
+      setOpenYoutubeKey(null)
+    }
     if (myQueueActive) {
       stopPreview()
       return
@@ -187,7 +267,7 @@ export default function ArtistFeaturedTracks({
     if (queue.length === 0) return
     setExpanded(true)
     playPreviewQueue(queue, 0, groupKey)
-  }, [myQueueActive, buildQueue, groupKey, playPreviewQueue, stopPreview])
+  }, [myQueueActive, buildQueue, groupKey, playPreviewQueue, stopPreview, openYoutubeKey])
 
   const isPlayingPick = useCallback((pick: ArtistFeaturedPick): boolean => {
     if (!myQueueActive) return false
@@ -256,18 +336,24 @@ export default function ArtistFeaturedTracks({
               const isPausedHere = isActive && !previewPlaying
               const rowId = `nr-row-${pick.id}`
               const canPlay = pickHasPreview(pick)
+              const ytId = pickYoutubeId(pick)
+              const ytSlot = `ob-artist-yt-${pick.id}`
+              const showYt = !!(ytId && openYoutubeKey === ytSlot)
               const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
               const note = lang === 'es' ? pick.note_es : pick.note_en
               const mixName = (pick.mix_name || '').trim()
               const artists = Array.isArray(pick.artists) ? pick.artists : []
               const kind = pickSource(pick)
-              const chartHref = `/${lang}/charts?week=${pick.weekDate}#chart-row-${pick.id}`
+              const chartHref = pickChartHref(lang, pick)
+              const artworkSrc = pickArtworkSrc(pick)
+              const discogsUrl = (pick.discogs_url || '').trim()
+              const rowHighlighted = isActive || showYt
 
               return (
                 <div
                   key={`${kind}-${pick.id}`}
                   id={rowId}
-                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -277,18 +363,21 @@ export default function ArtistFeaturedTracks({
                         title={lang === 'es' ? 'Ver en Charts' : 'View in Charts'}
                       >
                         <span className="text-[8px] font-black tracking-wider text-[var(--ink)]/50 uppercase">
-                          {kind === 'chart' ? '40' : isArchiveFeaturedTrack(pick) ? 'ARCH' : 'NR'}
+                          {pickBadge(pick)}
                         </span>
                         <span className="text-[9px] sm:text-[10px] font-bold text-[var(--ink)] text-center leading-tight px-0.5">
-                          {kind === 'chart' && pick.position != null
-                            ? `#${pick.position}`
-                            : formatWeekLabel(pick.weekDate, lang)}
+                          {pickBadgeSub(pick, lang)}
                         </span>
                       </Link>
 
-                      {pick.artwork_url ? (
+                      {artworkSrc ? (
                         <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                          <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+                          {vinylArtworkUseNativeImg(artworkSrc) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={artworkSrc} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                          ) : (
+                            <Image src={artworkSrc} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+                          )}
                         </div>
                       ) : null}
 
@@ -326,6 +415,18 @@ export default function ArtistFeaturedTracks({
                           {isActive && !isPausedHere ? '❚❚' : '▶'}
                         </button>
                       )}
+                      {ytId && !canPlay && (
+                        <button
+                          type="button"
+                          onClick={() => toggleYoutubeEmbed(ytSlot, pickYoutubeUrl(pick) || `t:vinyl:${pick.id}`)}
+                          className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
+                            ${showYt ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={showYt ? (lang === 'es' ? 'Pausar' : 'Pause') : (lang === 'es' ? 'Escuchar' : 'Play')}
+                        >
+                          {showYt ? '❚❚' : '▶'}
+                        </button>
+                      )}
                       {pick.bpm != null && pick.bpm > 0 ? (
                         <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
                           {pick.bpm}
@@ -337,23 +438,60 @@ export default function ArtistFeaturedTracks({
                         </span>
                       ) : null}
                       <SaveTrackButton
-                        source={pickSource(pick)}
+                        source={kind}
                         trackId={pick.id}
-                        canonicalUrl={pick.link_url}
+                        canonicalUrl={kind === 'vinyl' ? (pick.youtube_url || pick.discogs_url || pick.link_url) : pick.link_url}
                         snapshot={buildSnapshot(pick, origin)}
                         lang={lang}
                         size="sm"
                       />
-                      <TrackShareButton
-                        source={pickSource(pick)}
-                        trackId={pick.id}
-                        weekDate={pick.weekDate}
-                        lang={lang}
-                        shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
-                      />
-                      <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
-                      <TidalLinkButton url={pick.tidal_url} lang={lang} />
-                      {pick.link_url ? (
+                      {kind === 'vinyl' ? (
+                        <TrackShareButton
+                          path={buildVinylSharePath(lang, pick.id)}
+                          lang={lang}
+                          shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                        />
+                      ) : (
+                        <TrackShareButton
+                          source={kind === 'chart' ? 'chart' : 'featured'}
+                          trackId={pick.id}
+                          weekDate={pick.weekDate}
+                          lang={lang}
+                          shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                        />
+                      )}
+                      {kind !== 'vinyl' ? (
+                        <>
+                          <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
+                          <TidalLinkButton url={pick.tidal_url} lang={lang} />
+                        </>
+                      ) : null}
+                      {kind === 'vinyl' ? (
+                        <>
+                          {pick.youtube_url ? (
+                            <a
+                              href={pick.youtube_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+                              style={{ fontFamily: "'Courier Prime', monospace" }}
+                            >
+                              YOUTUBE
+                            </a>
+                          ) : null}
+                          {discogsUrl.includes('discogs.com') ? (
+                            <a
+                              href={discogsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center h-[36px] px-2.5 sm:h-auto sm:px-2 sm:py-1 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)] transition-all no-underline touch-manipulation whitespace-nowrap"
+                              style={{ fontFamily: "'Courier Prime', monospace" }}
+                            >
+                              DISCOGS
+                            </a>
+                          ) : null}
+                        </>
+                      ) : pick.link_url ? (
                         pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
                           <BeatportLinkButton url={pick.link_url} lang={lang} />
                         ) : (
@@ -370,6 +508,17 @@ export default function ArtistFeaturedTracks({
                       ) : null}
                     </div>
                   </div>
+                  {ytId && showYt ? (
+                    <div className="w-full max-w-sm">
+                      <LazyYouTubeEmbed
+                        videoId={ytId}
+                        title={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                        className="border-[3px] border-[var(--ink)]"
+                        autoplay
+                        playSlotId={ytSlot}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               )
             })}
