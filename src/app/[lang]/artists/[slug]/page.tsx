@@ -391,11 +391,12 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   title={`${artist.name} | Optimal Breaks`}
                   lang={lang}
                 />
-                {/* claimed_by NUNCA se pasa al cliente: solo el booleano accepts_bookings */}
+                {/* claimed_by NUNCA se pasa al cliente: solo booleanos */}
                 <BookingRequestButton
                   artistId={artist.id}
                   artistName={artist.name_display || artist.name}
                   accepts={artist.accepts_bookings === true}
+                  verified={Boolean(artist.claimed_by)}
                   lang={lang}
                 />
               </div>

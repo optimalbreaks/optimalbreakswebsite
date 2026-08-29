@@ -1,7 +1,7 @@
 // ============================================
 // OPTIMAL BREAKS — Booking request button + modal
-// Aparece en la ficha del artista SOLO si accepts_bookings = TRUE.
-// El vínculo claimed_by nunca llega al cliente (decisión §2.24).
+// El vínculo claimed_by nunca llega al cliente (decisión §2.24):
+// se pasa `verified` (booleano) + `accepts`. El formulario solo si accepts.
 // ============================================
 
 'use client'
@@ -16,6 +16,8 @@ interface Props {
   artistId: string
   artistName: string
   accepts: boolean
+  /** Claim aprobado. No es el UUID: solo para pintar estado si bookings están cerrados. */
+  verified?: boolean
   lang: string
 }
 
@@ -33,7 +35,7 @@ const inputClass =
   'w-full px-3 py-2 border-[3px] border-[var(--ink)] bg-[var(--paper)] outline-none focus:border-[var(--red)]'
 const inputStyle = { fontFamily: "'Special Elite', monospace", fontSize: '14px' }
 
-export default function BookingRequestButton({ artistId, artistName, accepts, lang }: Props) {
+export default function BookingRequestButton({ artistId, artistName, accepts, verified = false, lang }: Props) {
   const es = lang === 'es'
   const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
@@ -64,7 +66,24 @@ export default function BookingRequestButton({ artistId, artistName, accepts, la
     }
   }, [open, guest])
 
-  if (!accepts) return null
+  if (!accepts) {
+    if (!verified) return null
+    return (
+      <span
+        className="inline-flex items-center h-9 px-3.5 border-2 border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)]/70"
+        style={{
+          fontFamily: "'Courier Prime', monospace",
+          fontWeight: 700,
+          fontSize: '11px',
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+        }}
+        title={es ? 'Ficha verificada. El artista no acepta solicitudes de booking.' : 'Verified profile. This artist is not accepting booking requests.'}
+      >
+        {es ? 'VERIFICADO' : 'VERIFIED'}
+      </span>
+    )
+  }
 
   const openModal = () => {
     setError(null)
