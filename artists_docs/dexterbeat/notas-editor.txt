@@ -1,0 +1,95 @@
+Revisión editorial — DexterBeat (agosto 2026)
+=============================================
+
+Fuentes
+-------
+- Brief del editor (investigación propia).
+- Beatport: https://www.beatport.com/es/artist/dexterbeat/1244925 (id 1244925).
+- Bio histórica pública del proyecto (no Beatport): activo como DJ desde enero de 2016; salas, clubs y raves; creador de Lab Music OnubaBreak.
+- Catálogo comercial 2025–2026 (Beatport / Apple Music / Audiomack).
+
+Identidad (obligatorio)
+-----------------------
+- Nombre artístico: DexterBeat
+- name_display: DEXTERBEAT
+- slug: dexterbeat
+- Nombre real: NO confirmado. real_name = null. PROHIBIDO inferirlo de perfiles personales, emails o cuentas antiguas.
+- País: ES
+- Categoría: andalusian
+- Procedencia / escena: Huelva / Andalucía (Onuba = denominación histórica de Huelva). Asociación clara con OnubaBreak y la escena breakbeat andaluza. NO afirmar literalmente “nacido en Huelva” si no hay fuente que lo diga así; sí situarlo en el entorno onubense / andaluz.
+- Roles: DJ · productor · promotor / creador de plataforma.
+- Estado: activo.
+
+Cronología (no negociable)
+--------------------------
+- El proyecto NO empieza en 2025. Existe desde enero de 2016.
+- era: exactamente `2016-present` (NO `2020s-present`, NO `2025-present`).
+- En bio distinguir con claridad:
+  - Actividad como DJ / proyecto: 2016–presente (salas, clubs, raves).
+  - Publicaciones comerciales documentadas: 2025–presente.
+- First clearly documented commercial release: 2025.
+
+OnubaBreak
+----------
+- Creador de Lab Music OnubaBreak (proyecto / plataforma). Incluirlo de forma destacada: no es un productor de catálogo sin circuito.
+- labels_founded: ["Lab Music OnubaBreak"]
+- El nombre refuerza la conexión con Huelva / Onuba.
+
+Cartel histórico (tratar como auto-bio, no como lineup verificado festival a festival)
+--------------------------------------------------------------------------------------
+La bio histórica afirma que compartió cartel con: Atomic Hooligan, Anuschka, The Brainkiller, Colombo, Adrenalinez, Shade K, Basstyler, DestiluX, BeatSense, Binary, Javo, entre otros.
+- Mencionar en bio como dato procedente de su propia trayectoria pública, con prudencia (p. ej. “según su propia biografía de esos años”).
+- NO volcar esa lista entera en related_artists.
+- Sí permite afirmar Role: DJ · Producer (no es un productor de estudio sin cabina).
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass. Nada de Electronic ni Bass genérico.
+- Temas comerciales ~135–136 BPM.
+
+Sellos
+------
+- Casa principal: Sound Perfect Breakz Records (y su división New School).
+- Relación real con DIRTY KITCHEN RAVE (no solo un recopilatorio): Alien + UNIVERSAL BREAKS Vol.13.
+- Sello secundario: Solid Breaks Records.
+
+Colaboradores
+-------------
+- Colaborador principal / frecuente: Vkyng (ficha existente: vkyng).
+  Temas: Retro party, Biting cat, Get Lucky, Alien (tres sellos distintos).
+- Dr Beats (ficha existente: dr-beats): Hey Hey, 31 mar 2025, Sound Perfect Breakz. También de la zona de Huelva — encaja con la red local.
+- ChinoBreak: Dope, 16 ene 2026, Sound Perfect Breakz New School. NO tiene ficha: en bio, no forzar related si no hay ficha; si se incluye, solo el nombre.
+
+related_artists (solo artistas):
+- Vkyng
+- Dr Beats
+- (opcional) ChinoBreak
+NO meter Atomic Hooligan ni el resto del cartel histórico en related salvo que haya colaboración discográfica.
+
+Beatport (para el upsert posterior; el JSON del agente no lleva estos campos)
+----------------------------------------------------------------------------
+- beatport_id: 1244925
+- beatport_url: https://www.beatport.com/artist/dexterbeat/1244925
+
+Lanzamientos clave / essential tracks
+-------------------------------------
+1. Hey Hey — 2025 — Dr Beats & DexterBeat, Sound Perfect Breakz Records, 31 mar 2025, Breaks / Breakbeat / UK Bass, 135 BPM. Uno de los primeros comerciales fechados.
+2. Retro party — 2025 — con Vkyng, Sound Perfect Breakz.
+3. Get Lucky — 2025 — DexterBeat & Vkyng, Solid Breaks Records, 11 dic 2025.
+4. Biting cat — 2025 — con Vkyng, Sound Perfect Breakz.
+5. Alien — 2026 — Vkyng & DexterBeat, DIRTY KITCHEN RAVE, 135 BPM; luego en UNIVERSAL BREAKS Vol.13.
+6. Dope — 2026 — ChinoBreak & DexterBeat, Sound Perfect Breakz Records : New School, 16 ene 2026, 136 BPM.
+
+También: participación en Breakbeat Yearbook Vol.1 y Vol.4 (Sound Perfect Breakz). Audiomack destaca Dope, Get Lucky, 3i Atlas, Retro party, Biting cat. 3i Atlas se puede mencionar en bio si encaja; no es esencial.
+
+is_featured: false
+sort_order: entorno 110–130 (artista actual de escena andaluza con recorrido de DJ previo).
+
+NO publicar / no inventar
+-------------------------
+- Nombre real.
+- “Nacido en Huelva” como hecho literal.
+- era 2020s o 2025 como carrera general.
+- Géneros genéricos (Electronic, Bass).
+- URLs de redes si no están verificadas.
+- Que Lab Music OnubaBreak sea un sello discográfico de catálogo tipo Beatport: es proyecto/plataforma; labels_founded lo recoge como creador, la bio debe decirlo así.

@@ -1,0 +1,104 @@
+Revisión editorial — Burgos (agosto 2026)
+=========================================
+
+Fuentes
+-------
+- Brief del editor (investigación propia).
+- Beatport: https://www.beatport.com/artist/burgos/626321 (id 626321).
+- SoundCloud: misma biografía oficial que Beatport (DJ y productor de Córdoba).
+
+Identidad (obligatorio)
+-----------------------
+- Nombre artístico: Burgos (name: Burgos)
+- name_display: BURGOS
+- slug: burgos
+- Nombre real: NO confirmado. real_name = null. PROHIBIDO inferirlo de créditos de colaboradores (p. ej. Daniel Barrero es compositor de Cyber, no es Burgos) ni de perfiles personales.
+- País: ES
+- Categoría: andalusian
+- Origen / base: Córdoba · Andalucía · España. La bio oficial dice literalmente “DJ y productor de Córdoba”. Sin reservas.
+- Ha pinchado en Córdoba, Jaén, Sevilla, Granada, entre otros.
+- Roles: DJ · productor.
+- Estado: plenamente activo en 2026.
+
+Cronología (no negociable)
+--------------------------
+Separar etapas; NO usar `2020s-present` ni `2024-present`.
+- ~2010: asiste por primera vez a un evento de breakbeat y se engancha (aficionado / oyente).
+- 2018: primer equipo DJ.
+- 2019: empieza a estudiar composición/producción de breakbeat; primera oportunidad pinchando en un evento.
+- 2020: primer single en plataformas digitales.
+- era: exactamente `2019-present`
+- En bio: DJ activity 2019–present · Producer 2019–present · Official releases 2020–present.
+- Es un artista con varios años de recorrido, no alguien aparecido en 2024–2025.
+
+Enfoque / tono (aprovechar, sin copy promocional)
+-------------------------------------------------
+La bio oficial insiste en “salirse de lo que se lleva, de lo que todos hacen” y en que su conexión con el público viene de haber vivido el breakbeat como aficionado antes de ser DJ/productor.
+Redactar de forma sobria, p. ej.:
+His approach is strongly shaped by years spent inside the Andalusian breakbeat scene as a listener before becoming a DJ and producer.
+NO copiar el eslogan promocional literal.
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass. Nada de Bass, Electronic o Club como etiquetas principales.
+- Catálogo Beatport de forma abrumadora: Breaks / Breakbeat / UK Bass, ~130–135 BPM.
+  Shadow 130 · On My Mind 132 · Toy / Blaster / Yisos / Acid Boom / Return / Street 135.
+
+Sellos
+------
+Tres principales:
+- SPACE PIZZA Records — asociación más importante / casa principal. Cleka, Floatin' (con The Broken Rhythm), Shadow, Megatron, Toy, Blaster, Yisos, On My Mind (con Shade K), Lesson 28, Gotta Crush (con Lees Seynee), Low 24, etc.
+- Samay Records — relación actual muy fuerte: Sexy Sturdy, Set Up, Fresh, Street + recopilatorios. Street = 26 ago 2026, 135 BPM (lanzamiento más reciente indexado).
+- Raveart Records — Intense (2025), Acid Boom (2026), No Limit (2026). Acid Boom es nº1 dinámico de su Top Ten Beatport.
+
+Otros sellos (bio / key_releases, no “fundados”):
+Sound Perfect Breakz Records · Elektroshok Records · Frequency Fusion Records · Br8kn Records · LW Recordings · Guachinche Records (Hood).
+labels_founded: []
+
+Colaboradores
+-------------
+- Shade K (ficha existente: shade-k): colaborador frecuente / importante.
+  Hood — 2024 — Guachinche Records
+  Cyber — 2024 — Elektroshok Records (ambos productores; Daniel Barrero = compositor, NO es Burgos)
+  Froot — 2024 — Frequency Fusion Records
+  On My Mind — 2025/2026 — Space Pizza / LW Recordings
+  Pto kombo Remix — 2026
+- The Broken Rhythm — Floatin'
+- Lees Seynee — Gotta Crush
+- Razegod — open scars (rareza: aparece como Hip-Hop; mencionar de pasada que alguna vez se sale del breakbeat, sin redefinir la identidad).
+
+related_artists:
+- Shade K
+- The Broken Rhythm
+- Lees Seynee
+(Razegod: solo en bio, no forzar related.)
+
+Beatport (upsert posterior; el JSON del agente no lleva estos campos)
+---------------------------------------------------------------------
+- beatport_id: 626321
+- beatport_url: https://www.beatport.com/artist/burgos/626321
+
+Essential tracks / key_releases
+-------------------------------
+1. Cleka — 2021 — SPACE PIZZA Records, 5 jul 2021, 135 BPM. Primera etapa comercial documentada.
+2. Hood — 2024 — con Shade K, Guachinche Records.
+3. Cyber — 2024 — Shade K & Burgos, Elektroshok.
+4. Toy — 2025 — Space Pizza.
+5. On My Mind — 2025 — con Shade K; reeditado vía LW.
+6. Acid Boom — 2026 — Raveart; actualmente nº1 Beatport (posición dinámica: no anclar ranking en la bio como hecho eterno).
+7. Street — 2026 — Samay, publicación actual (26 ago 2026).
+
+Actividad 2026 (bio, etapa reciente): Lesson 28, Acid Boom, Gotta Crush, Fresh, On My Mind, Pto kombo Remix, No Limit, Low 24, Return, Street.
+
+is_featured: false
+sort_order: entorno 100–120 (andaluz consolidado, catálogo 2020–2026).
+
+NO publicar / no inventar
+-------------------------
+- Nombre real.
+- era 2020s o 2024 como carrera general.
+- Géneros genéricos (Electronic, Bass, Club).
+- URLs de redes si no están verificadas.
+- Tratar open scars / Hip-Hop como eje de su sonido.
+- Presentarlo como artista nuevo de 2025.
+- Afirmar posiciones de chart Beatport como permanentes.

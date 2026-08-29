@@ -526,7 +526,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-heat-opening-special-360-show-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPDATE opening-special-360-show (HEAT Opening Special 360° Show, Paris 15 Málaga 26 sept 2026): lineup 8 confirmaciones (Yo Speed, Jottafrank, Bowser, Bad Legs, Tortu, Bass & Crash, V. Aparicio, Jose Rodriguez), horario 01:00–07:00 y descripciones con promo cumpleaños.',
+      'UPDATE opening-special-360-show (HEAT Opening Special 360° Show, Paris 15 Málaga 26 sept 2026): cartel oficial en Storage (poster.webp) + copia public/images/events/heat-opening-special-360-show.webp; lineup del flyer (Tortu, Bad Legs, Jose Rodriguez, Yo Speed, Jottafrank, Bass & Crash, Bowser, V. Aparicio, Burgos, Reality, Cellux MC, Carlos Mejias VJ, Joseto LJ).',
   },
   {
     id: 'events-patch-finger-lickin-summer-takeover-2026',
@@ -858,7 +858,7 @@ Punto de entrada unificado:
   events-patch-coast-breakbeat-2026          Coast Breakbeat, Sala Teranga Torrox Costa 18 jul 2026 (Frequency Break, MonsterTicket)
   events-patch-breakclub-at-cosmos-club-2026 BREAKCLUB at COSMOS CLUB Sevilla 17 jul 2026 (MonsterTicket)
   events-patch-break-nation-by-420-sound-2026 Break Nation by 420 Sound, Sala Roka Málaga 19 sept 2026 (MonsterTicket)
-  events-patch-heat-opening-special-360-show-2026  HEAT Opening Special 360° Show, Paris 15 Málaga 26 sept 2026 (lineup 8 confirmaciones + horario 01:00–07:00)
+  events-patch-heat-opening-special-360-show-2026  HEAT Opening Special 360° Show, Paris 15 Málaga 26 sept 2026 (cartel oficial + lineup flyer)
   events-patch-finger-lickin-summer-takeover-2026  Finger Lickin' Summer Takeover, Concorde 2 Brighton 15 ago 2026 (Skiddle)
   events-patch-stanton-warriors-volks-brighton-2026  On the Beach afterparty, Volks Brighton 18 jul 2026 (Stanton Warriors, Calyx)
   events-patch-stanton-sessions-steelyard-london-2026  Stanton Sessions, The Steelyard London 10 oct 2026 (Skiddle)
