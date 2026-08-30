@@ -223,6 +223,7 @@ export default function ArtistFeaturedTracks({
           mode: 'ref' as const,
           source: pickSource(pick) === 'chart' ? 'chart' : 'featured',
           trackId: pick.id,
+          relatedRefs: pick.relatedRefs && pick.relatedRefs.length > 1 ? pick.relatedRefs : undefined,
           canonicalUrl: pick.link_url || undefined,
           snapshot: buildSnapshot(pick, origin),
         },
@@ -440,6 +441,7 @@ export default function ArtistFeaturedTracks({
                       <SaveTrackButton
                         source={kind}
                         trackId={pick.id}
+                        relatedRefs={pick.relatedRefs && pick.relatedRefs.length > 1 ? pick.relatedRefs : undefined}
                         canonicalUrl={kind === 'vinyl' ? (pick.youtube_url || pick.discogs_url || pick.link_url) : pick.link_url}
                         snapshot={buildSnapshot(pick, origin)}
                         lang={lang}

@@ -3,11 +3,13 @@
 // ============================================
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { ChartFeaturedTrack, Database } from '@/types/database'
+import type { ChartFeaturedTrack, ChartTrackSource, Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
+import { dedupeKeyForFeaturedLink } from '@/lib/beatport-next-data-tracks'
+import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 
 function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
@@ -81,6 +83,8 @@ export type ArtistFeaturedPick = ChartFeaturedTrack & {
   position?: number | null
   youtube_url?: string | null
   discogs_url?: string | null
+  /** Otras filas de charts que son el mismo corte (save cruzado 40 ↔ NR). */
+  relatedRefs?: Array<{ source: ChartTrackSource; id: string }>
 }
 
 type ChartRow = {
@@ -107,6 +111,57 @@ function extractArtistNames(raw: unknown): string[] {
     }
   }
   return names
+}
+
+/**
+ * Misma canción aunque el 40 Breaks meta el remix en el título
+ * («BIG 45 (Freestylers Remix)» + mix) y NR lo deje fuera («BIG 45» + mix).
+ */
+function titleMixIdentityKey(
+  title: string,
+  mixName: string | null | undefined,
+  artists?: unknown,
+): string {
+  let t = normKey(title)
+  let m = normKey(mixName || '')
+  const paren = t.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+  if (paren) {
+    const inner = paren[2]
+    if (!m || m === inner || inner.includes(m) || m.includes(inner)) {
+      t = paren[1].trim()
+      if (!m) m = inner
+    }
+  }
+  const artistsPart = extractArtistNames(artists)
+    .map(normKey)
+    .filter(Boolean)
+    .sort()
+    .join(',')
+  return `nm:${t}|${m}|${artistsPart}`
+}
+
+function pickSourceKind(pick: ArtistFeaturedPick): ChartTrackSource {
+  if (pick.chartKind === 'chart') return 'chart'
+  if (pick.chartKind === 'vinyl') return 'vinyl'
+  return 'featured'
+}
+
+function urlIdentityKey(pick: ArtistFeaturedPick): string {
+  if (pick.chartKind === 'vinyl') {
+    return normalizeTrackCanonicalUrl(pick.youtube_url || pick.link_url || '')
+  }
+  const raw = (pick.link_url || '').trim()
+  if (!raw) return ''
+  return dedupeKeyForFeaturedLink(raw)
+}
+
+function onSitePickKeys(pick: ArtistFeaturedPick): string[] {
+  const keys: string[] = []
+  const url = urlIdentityKey(pick)
+  if (url) keys.push(`u:${url}`)
+  const nm = titleMixIdentityKey(pick.title, pick.mix_name, pick.artists)
+  if (nm && nm !== 'nm:||') keys.push(nm)
+  return keys
 }
 
 function weekDateFromRow(row: ChartRow): string | null {
@@ -182,7 +237,7 @@ function dedupeChartRows(
 
     const title = (row.title || '').trim() || '—'
     const mix = (row.mix_name || '').trim()
-    const key = `${normKey(title)}|${normKey(mix)}`
+    const key = titleMixIdentityKey(title, mix, row.artists)
     if (seen.has(key)) return
     seen.add(key)
 
@@ -451,7 +506,7 @@ function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
 
     const title = (row.title || '').trim() || '—'
     const mix = (row.mix_name || '').trim()
-    const key = `${normKey(title)}|${normKey(mix)}`
+    const key = titleMixIdentityKey(title, mix, row.artists)
     if (seen.has(key)) continue
     seen.add(key)
 
@@ -492,19 +547,100 @@ function pickSortDate(p: ArtistFeaturedPick): string {
   return p.weekDate || ''
 }
 
+/** New Releases (curación editorial) por delante del 40; el vinilo no pisa lo digital. */
+function pickSourceRank(pick: ArtistFeaturedPick): number {
+  if (pick.chartKind === 'featured') return 0
+  if (pick.chartKind === 'chart') return 1
+  return 2
+}
+
+function isBetterOnSitePick(a: ArtistFeaturedPick, b: ArtistFeaturedPick): boolean {
+  const ra = pickSourceRank(a)
+  const rb = pickSourceRank(b)
+  if (ra !== rb) return ra < rb
+  const da = pickSortDate(a)
+  const db = pickSortDate(b)
+  if (da !== db) return da > db
+  return (a.position ?? 99) < (b.position ?? 99)
+}
+
+function mergeRelatedRefs(
+  ...picks: ArtistFeaturedPick[]
+): Array<{ source: ChartTrackSource; id: string }> {
+  const seen = new Set<string>()
+  const refs: Array<{ source: ChartTrackSource; id: string }> = []
+  for (const pick of picks) {
+    const incoming = pick.relatedRefs?.length
+      ? pick.relatedRefs
+      : [{ source: pickSourceKind(pick), id: pick.id }]
+    for (const ref of incoming) {
+      const k = `${ref.source}:${ref.id}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      refs.push(ref)
+    }
+  }
+  return refs
+}
+
+function mergeOnSitePickPair(a: ArtistFeaturedPick, b: ArtistFeaturedPick): ArtistFeaturedPick {
+  const winner = isBetterOnSitePick(a, b) ? a : b
+  const loser = winner === a ? b : a
+  return {
+    ...winner,
+    spotify_url: winner.spotify_url || loser.spotify_url,
+    tidal_url: winner.tidal_url || loser.tidal_url,
+    sample_url: winner.sample_url || loser.sample_url,
+    artwork_url: winner.artwork_url || loser.artwork_url,
+    link_url: winner.link_url || loser.link_url,
+    note_en: winner.note_en || loser.note_en,
+    note_es: winner.note_es || loser.note_es,
+    bpm: winner.bpm || loser.bpm,
+    music_key: winner.music_key || loser.music_key,
+    relatedRefs: mergeRelatedRefs(a, b),
+  }
+}
+
+/** Vinilo (YouTube) no se funde con Beatport: es otra escucha. 40 y NR sí. */
+function canCollapseOnSite(a: ArtistFeaturedPick, b: ArtistFeaturedPick): boolean {
+  return (a.chartKind === 'vinyl') === (b.chartKind === 'vinyl')
+}
+
 function mergeOnSitePicks(
   chartPicks: ArtistFeaturedPick[],
   featuredPicks: ArtistFeaturedPick[],
   vinylPicks: ArtistFeaturedPick[] = [],
 ): ArtistFeaturedPick[] {
-  const seen = new Set<string>()
   const out: ArtistFeaturedPick[] = []
+  const keyToIndex = new Map<string, number>()
+
   const push = (pick: ArtistFeaturedPick) => {
-    const key = `${normKey(pick.title)}|${normKey(pick.mix_name || '')}`
-    if (seen.has(key)) return
-    seen.add(key)
-    out.push(pick)
+    const keys = onSitePickKeys(pick)
+    let existingIdx: number | undefined
+    for (const k of keys) {
+      const idx = keyToIndex.get(k)
+      if (idx == null) continue
+      if (!canCollapseOnSite(out[idx], pick)) continue
+      existingIdx = idx
+      break
+    }
+    if (existingIdx == null) {
+      const idx = out.length
+      out.push({
+        ...pick,
+        relatedRefs: pick.relatedRefs?.length
+          ? pick.relatedRefs
+          : [{ source: pickSourceKind(pick), id: pick.id }],
+      })
+      for (const k of keys) keyToIndex.set(k, idx)
+      return
+    }
+    const merged = mergeOnSitePickPair(out[existingIdx], pick)
+    out[existingIdx] = merged
+    for (const k of onSitePickKeys(merged)) keyToIndex.set(k, existingIdx)
+    for (const k of keys) keyToIndex.set(k, existingIdx)
   }
+
   for (const pick of featuredPicks) push(pick)
   for (const pick of vinylPicks) push(pick)
   for (const pick of chartPicks) push(pick)
