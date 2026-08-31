@@ -1218,12 +1218,17 @@ export function DeckAudioProvider({
   // true cuando otra app tomó el FOCO DE AUDIO del SO y nos pausó (WhatsApp,
   // una llamada, otro reproductor…). Como un reproductor de música de verdad,
   // NO peleamos por recuperar el sonido: nos quedamos en pausa y esperamos a
-  // que el usuario pulse play. Se pone a true sólo si, tras una pausa del
-  // sistema, un ÚNICO reintento de `play()` es rechazado (señal de que el foco
-  // es de otra app). Un blip transitorio —una notificación con sonido— recupera
-  // sin marcar nada porque ese reintento sí arranca. Evita el bug "las
-  // canciones intentaban volverse a poner solas al abrir WhatsApp".
+  // que el usuario pulse play. Se pone a true si el SO nos pausa cuando YA
+  // estábamos en segundo plano (la canción sonaba, el usuario se fue, y
+  // otra app reclama el altavoz). En móvil `play()` SÍ arranca y le quita
+  // el audio a WhatsApp: no se puede usar «el reintento funcionó ⇒ era un
+  // blip» como señal. El reintento ~1,5 s queda sólo para la pausa al IR
+  // a background / lock (throttling del SO).
   const previewInterruptedRef = useRef(false)
+  // Timestamp del último `visibilitychange` → hidden. Distingue «el SO
+  // nos pausó al pasar a segundo plano» de «otra app nos cortó mientras
+  // ya sonábamos en background».
+  const previewHiddenAtRef = useRef(0)
   // Espejo de `previewBlocked` para los watchdogs (no pelear contra la
   // política de autoplay: ahí hace falta un gesto, no un reintento).
   const previewBlockedRef = useRef(false)
@@ -1846,6 +1851,7 @@ export function DeckAudioProvider({
         previewStartWatchdogRef.current = null
         if (previewIndexRef.current !== idx) return
         if (previewUserPausedRef.current || previewBlockedRef.current) return
+        if (previewInterruptedRef.current) return
         if (getActiveYouTubePlayId()) return // un embed tomó el relevo
         const a = previewAudioRef.current
         if (!a || !a.getAttribute('src')) return
@@ -1968,30 +1974,42 @@ export function DeckAudioProvider({
       a.addEventListener('pause', () => {
         if (previewUserPausedRef.current || a.ended || !hasRealSrc()) return
         if (!document.hidden) return
-        // Pausa no pedida por el usuario con la app en segundo plano: es una
-        // interrupción del SO (otra app suena, llamada, notificación con
-        // sonido). Marcamos el estado para el keeper/visibility.
         previewSystemPausedRef.current = true
         if (previewInterruptedRef.current) return
-        // Muchas interrupciones son un "blip" corto. Probamos UNA sola
-        // reanudación tras un instante: si el foco vuelve a ser nuestro, la
-        // música sigue (caso "voy en moto y suena una notificación"). Si otra
-        // app está sonando de verdad (WhatsApp, llamada), el `play()` se
-        // rechaza y nos quedamos en pausa como un reproductor de música
-        // normal, SIN pelear por el foco (bug "intentaba volverse a poner").
+
+        const hiddenAt = previewHiddenAtRef.current
+        const hiddenForMs = hiddenAt > 0 ? Date.now() - hiddenAt : 0
+        if (hiddenAt === 0) previewHiddenAtRef.current = Date.now()
+
+        const markInterrupted = () => {
+          previewInterruptedRef.current = true
+          try {
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
+          } catch { /* no-op */ }
+        }
+
+        // Ya sonábamos en segundo plano (el usuario se fue hace rato) y el
+        // SO nos acaba de pausar: otra app ha tomado el altavoz (nota de
+        // voz de WhatsApp, llamada…). En móvil `play()` SÍ arranca y le
+        // quita el audio a esa app — no reintentar. El umbral evita
+        // confundirlo con la pausa inmediata al ir a background / lock.
+        if (hiddenForMs > 1000) {
+          markInterrupted()
+          return
+        }
+
+        // Pausa al pasar a segundo plano / bloquear: un único reintento
+        // para no morir en la lockscreen por throttling del SO. Si ese
+        // `play()` se rechaza, back-off.
         window.setTimeout(() => {
           if (previewUserPausedRef.current || previewBlockedRef.current) return
           if (previewInterruptedRef.current) return
           if (getActiveYouTubePlayId()) return
           const el = previewAudioRef.current
           if (!el || el !== a || !el.getAttribute('src') || el.ended) return
-          if (!el.paused) return // ya volvió solo (blip terminado)
+          if (!el.paused) return
           void el.play().catch(() => {
-            // Otra app mantiene el foco de audio: dejamos de insistir.
-            previewInterruptedRef.current = true
-            try {
-              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'
-            } catch { /* no-op */ }
+            markInterrupted()
           })
         }, 1500)
       })
@@ -2216,7 +2234,11 @@ export function DeckAudioProvider({
   // `ended` final, recupera inmediatamente sin esperar al keeper.
   useEffect(() => {
     const onVisible = () => {
-      if (document.hidden) return
+      if (document.hidden) {
+        if (!previewHiddenAtRef.current) previewHiddenAtRef.current = Date.now()
+        return
+      }
+      previewHiddenAtRef.current = 0
       if (previewQueueRef.current.length === 0) return
       if (previewUserPausedRef.current || previewBlockedRef.current) return
       // Un embed activo (YouTube/SoundCloud) tiene prioridad: no auto-reanudar
@@ -2225,9 +2247,9 @@ export function DeckAudioProvider({
       const a = previewAudioRef.current
       if (!a || !a.getAttribute('src')) return
       if (a.ended) { advanceFromCurrentTrack(); return }
-      // Si otra app nos interrumpió (abrir WhatsApp, una llamada…), NO revivas
-      // la música al volver al primer plano: el usuario decide con play. Sí
-      // reanudamos las pausas benignas del SO (throttling en background sin que
+      // Si otra app nos interrumpió (nota de voz de WhatsApp, una llamada…),
+      // NO revivas la música al volver: el usuario decide con play. Sí
+      // reanudamos las pausas benignas del SO (throttling / lock sin que
       // otra fuente sonara), que nunca marcan `previewInterruptedRef`.
       if (previewInterruptedRef.current) return
       if (a.paused) void a.play().catch(() => { /* no-op */ })
