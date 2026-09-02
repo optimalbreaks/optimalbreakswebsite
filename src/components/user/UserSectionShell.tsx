@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { useArtistBookingInbox } from '@/hooks/useUserData'
 
 export type UserSectionKey =
   | 'overview'
@@ -148,6 +149,7 @@ interface Props {
 
 export default function UserSectionShell({ lang, section, children }: Props) {
   const { user, loading: authLoading } = useAuth()
+  const { newCount } = useArtistBookingInbox()
   const router = useRouter()
   const pathname = usePathname()
   const es = lang === 'es'
@@ -234,7 +236,7 @@ export default function UserSectionShell({ lang, section, children }: Props) {
               href={href}
               aria-current={isActive ? 'page' : undefined}
               title={fullLabel}
-              className={`group flex shrink-0 flex-col items-center justify-center gap-1 min-w-[4.25rem] sm:min-w-0 sm:flex-row sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 border-r-[3px] border-[var(--ink)] no-underline transition-colors ${
+              className={`group relative flex shrink-0 flex-col items-center justify-center gap-1 min-w-[4.25rem] sm:min-w-0 sm:flex-row sm:gap-2 px-2.5 sm:px-4 py-2.5 sm:py-3 border-r-[3px] border-[var(--ink)] no-underline transition-colors ${
                 isActive
                   ? 'bg-[var(--red)] text-white'
                   : 'text-[var(--ink)] hover:bg-[var(--yellow)]'
@@ -246,11 +248,23 @@ export default function UserSectionShell({ lang, section, children }: Props) {
                 textTransform: 'uppercase',
               }}
             >
-              <Icon
-                className={`w-5 h-5 sm:w-[1.125rem] sm:h-[1.125rem] shrink-0 ${
-                  isActive ? 'opacity-100' : 'opacity-90 group-hover:opacity-100'
-                }`}
-              />
+              <span className="relative">
+                <Icon
+                  className={`w-5 h-5 sm:w-[1.125rem] sm:h-[1.125rem] shrink-0 ${
+                    isActive ? 'opacity-100' : 'opacity-90 group-hover:opacity-100'
+                  }`}
+                />
+                {t.key === 'artist' && newCount > 0 && (
+                  <span
+                    className={`absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full border-2 flex items-center justify-center ${
+                      isActive ? 'bg-[var(--yellow)] text-[var(--ink)] border-white' : 'bg-[var(--red)] text-white border-[var(--ink)]'
+                    }`}
+                    style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', fontWeight: 700 }}
+                  >
+                    {newCount > 9 ? '9+' : newCount}
+                  </span>
+                )}
+              </span>
               <span className="sm:hidden text-[9px] leading-none tracking-wide text-center">
                 {shortLabel}
               </span>

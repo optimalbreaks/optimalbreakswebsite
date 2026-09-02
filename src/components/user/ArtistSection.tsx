@@ -174,7 +174,12 @@ function BookingInbox({ lang, inbox, onChange }: { lang: string; inbox: BookingW
 
   return (
     <div className="mb-8 border-4 border-[var(--ink)] p-6">
-      <h3 style={H3}>{es ? 'BANDEJA DE BOOKINGS' : 'BOOKING INBOX'}</h3>
+      <h3 style={H3}>
+        {es ? 'BANDEJA DE BOOKINGS' : 'BOOKING INBOX'}
+        {inbox.filter((b) => b.status === 'new').length > 0
+          ? ` (${inbox.filter((b) => b.status === 'new').length} ${es ? 'nueva' : 'new'})`
+          : ''}
+      </h3>
       {inbox.length === 0 ? (
         <p style={{ ...MONO, fontSize: '13px', color: 'var(--dim)' }}>
           {es ? 'Aún no has recibido solicitudes.' : 'No requests yet.'}

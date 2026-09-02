@@ -33,10 +33,10 @@
 >   `profiles.booking_banned`. Motivo: la política existente *"Users update own profile"* permitiría a
 >   un usuario auto-desbanearse. La tabla no tiene políticas RLS (solo service role) y el ban se
 >   comprueba en la API del POST de bookings.
-> - **Emails transaccionales (§8) NO incluidos** en el MVP de bookings. Hay **SMTP OVH + script de
->   campaña** (`docs/GUIA_MAILS.md`) usado ya para Mis Tracks (ago 2026): mismo canal para avisos
->   de booking / anuncio cuando se implementen. El descubrimiento in-app (check de registro +
->   pestaña Artista) sigue siendo el mecanismo principal del MVP.
+> - **Emails transaccionales de booking:** `src/lib/transactional-mail.ts` (SMTP OVH, mismo canal
+>   que `docs/GUIA_MAILS.md`). El POST de `/api/booking-requests` avisa al email confirmado de la
+>   cuenta `claimed_by` (sin el cuerpo de la solicitud). Requiere `SMTP_*` también en Vercel.
+>   El anuncio masivo a la base sigue siendo el script de campaña, no este canal.
 > - Decisiones §9 por defecto en el MVP: categorías no reclamables `pioneer`/`uk_legend`; 1 ficha
 >   verificada por cuenta; presupuesto por rangos; una fecha opcional; rechazo silencioso.
 

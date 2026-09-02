@@ -16,7 +16,21 @@ export async function GET() {
     .eq('claimed_by', auth.userId)
     .order('name')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data: data ?? [] })
+
+  const artists = (data ?? []) as { id: string }[]
+  const ids = artists.map((a) => a.id)
+  let newCount = 0
+  if (ids.length) {
+    const { count } = await svc
+      .from('booking_requests')
+      .select('*', { count: 'exact', head: true })
+      .in('artist_id', ids)
+      .eq('status', 'new')
+      .eq('hidden_by_admin', false)
+    newCount = count ?? 0
+  }
+
+  return NextResponse.json({ data: data ?? [], new_count: newCount })
 }
 
 // PATCH /api/artist-bookings/settings — el artista abre/cierra la recepción.

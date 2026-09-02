@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { getRouteUser } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { BOOKING_DAILY_LIMIT, isValidEmail } from '@/lib/bookings'
+import { notifyArtistOfNewBooking } from '@/lib/transactional-mail'
 import type { BookingRequestRow } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -89,10 +91,10 @@ export async function POST(request: NextRequest) {
   // Artista abierto a bookings
   const { data: artist } = await svc
     .from('artists')
-    .select('id, accepts_bookings, claimed_by')
+    .select('id, name, accepts_bookings, claimed_by')
     .eq('id', artistId)
     .maybeSingle()
-  const art = artist as { id: string; accepts_bookings: boolean; claimed_by: string | null } | null
+  const art = artist as { id: string; name: string; accepts_bookings: boolean; claimed_by: string | null } | null
   if (!art || !art.accepts_bookings) {
     return NextResponse.json(
       { error: 'Este artista no está recibiendo solicitudes ahora mismo.' },
@@ -159,6 +161,19 @@ export async function POST(request: NextRequest) {
       )
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (art.claimed_by) {
+    waitUntil(
+      notifyArtistOfNewBooking({
+        claimedByUserId: art.claimed_by,
+        artistName: art.name,
+        city,
+        eventDate: insert.event_date,
+      }).catch((err) => {
+        console.warn('[mail] aviso de booking falló', err)
+      }),
+    )
   }
 
   return NextResponse.json({ data }, { status: 201 })

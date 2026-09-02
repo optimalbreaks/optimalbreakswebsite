@@ -143,7 +143,7 @@ Hoy, en `listAudience()`:
 
 Para la **siguiente** campaña: cambiar el filtro (p. ej. 0 saves, sin login en 30 días, artistas sin claim). No reenviar el mismo HTML a quien ya lo recibió sin un criterio nuevo. Si hace falta no repetir: tabla `mail_sends` (user_id, campaign_id, sent_at) — aún no existe; montarla cuando haya segunda tanda.
 
-Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): avisos transaccionales y el anuncio de launch **pueden usar este mismo SMTP + diseño**. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips.
+Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): el aviso «tienes una solicitud nueva» ya corre en **`src/lib/transactional-mail.ts`** (mismo SMTP; el POST de `/api/booking-requests` lo dispara en `waitUntil`). El anuncio de launch a toda la base sigue siendo este script. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips. Pon **`SMTP_*` también en Vercel** o el aviso de booking no saldrá en producción.
 
 ---
 

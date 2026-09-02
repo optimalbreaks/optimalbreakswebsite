@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
+import { useArtistBookingInbox } from '@/hooks/useUserData'
 import { BUDGET_RANGES } from '@/lib/bookings'
 
 interface Props {
@@ -38,6 +39,8 @@ const inputStyle = { fontFamily: "'Special Elite', monospace", fontSize: '14px' 
 export default function BookingRequestButton({ artistId, artistName, accepts, verified = false, lang }: Props) {
   const es = lang === 'es'
   const { user } = useAuth()
+  const { artists, newCount } = useArtistBookingInbox()
+  const isOwnProfile = artists.some((a) => a.id === artistId)
   const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
   const [guest, setGuest] = useState(false)
@@ -65,6 +68,25 @@ export default function BookingRequestButton({ artistId, artistName, accepts, ve
       document.body.style.overflow = prev
     }
   }, [open, guest])
+
+  if (isOwnProfile) {
+    return (
+      <Link
+        href={`/${lang}/mi-cuenta/artista`}
+        className="inline-flex items-center gap-2 h-9 px-3.5 border-2 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] no-underline hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-all duration-200"
+        style={{
+          fontFamily: "'Courier Prime', monospace",
+          fontWeight: 700,
+          fontSize: '11px',
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+        }}
+      >
+        {es ? 'MI BANDEJA' : 'MY INBOX'}
+        {newCount > 0 ? ` (${newCount})` : ''}
+      </Link>
+    )
+  }
 
   if (!accepts) {
     if (!verified) return null

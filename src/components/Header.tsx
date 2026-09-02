@@ -9,6 +9,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
+import { useArtistBookingInbox } from '@/hooks/useUserData'
 import { createBrowserSupabase } from '@/lib/supabase'
 import CommandPalette from '@/components/CommandPalette'
 import type { Locale } from '@/lib/i18n-config'
@@ -45,6 +46,7 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
   const [isAdmin, setIsAdmin] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
   const { signOut } = useAuth()
+  const { isArtist, newCount } = useArtistBookingInbox()
   const es = lang === 'es'
 
   useEffect(() => {
@@ -97,6 +99,18 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
         >
           <span aria-hidden style={{ marginRight: 6 }}>★</span>
           {es ? 'Panel admin' : 'Admin panel'}
+        </Link>
+      )}
+      {isArtist && (
+        <Link
+          role="menuitem"
+          href={`/${lang}/mi-cuenta/artista`}
+          onClick={() => setOpen(false)}
+          className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--yellow)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
+          style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', textTransform: 'uppercase' }}
+        >
+          {es ? 'Artista' : 'Artist'}
+          {newCount > 0 ? ` (${newCount})` : ''}
         </Link>
       )}
       <Link
@@ -152,8 +166,13 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
           className="flex items-center gap-2 px-4 py-3 w-full h-full bg-transparent cursor-pointer transition-all duration-100 hover:bg-[var(--yellow)]"
           style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px' }}
         >
-          <span className="w-6 h-6 rounded-full bg-[var(--red)] text-white flex items-center justify-center shrink-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '10px' }}>
+          <span className="relative w-6 h-6 rounded-full bg-[var(--red)] text-white flex items-center justify-center shrink-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '10px' }}>
             {initial}
+            {newCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[var(--yellow)] text-[var(--ink)] border-2 border-[var(--ink)] flex items-center justify-center" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', fontWeight: 700 }}>
+                {newCount > 9 ? '9+' : newCount}
+              </span>
+            )}
           </span>
           <span className="hidden xl:inline" style={{ color: 'var(--ink)', textTransform: 'uppercase' }}>
             MY BREAKS
@@ -177,8 +196,13 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
         aria-label={es ? 'Menú de cuenta' : 'Account menu'}
         className="flex items-center px-3 py-3 h-full bg-transparent cursor-pointer hover:bg-[var(--yellow)]/40"
       >
-        <span className="w-7 h-7 rounded-full bg-[var(--red)] text-white flex items-center justify-center" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px' }}>
+        <span className="relative w-7 h-7 rounded-full bg-[var(--red)] text-white flex items-center justify-center" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px' }}>
           {initial}
+          {newCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-[var(--yellow)] text-[var(--ink)] border-2 border-[var(--ink)] flex items-center justify-center" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '8px', fontWeight: 700 }}>
+              {newCount > 9 ? '9+' : newCount}
+            </span>
+          )}
         </span>
       </button>
       {menuPanel}

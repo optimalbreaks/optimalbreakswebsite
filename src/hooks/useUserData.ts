@@ -787,3 +787,48 @@ export function useBreakbeatProfile() {
 
   return { profile, loading, generating, setGenerating, save, refetch: fetch }
 }
+
+export type VerifiedArtistLite = {
+  id: string
+  name: string
+  slug: string
+  accepts_bookings: boolean
+  image_url: string | null
+}
+
+/** Fichas verificadas del usuario + recuento de bookings en estado `new`. */
+export function useArtistBookingInbox() {
+  const { user } = useAuth()
+  const [artists, setArtists] = useState<VerifiedArtistLite[]>([])
+  const [newCount, setNewCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  const fetchInbox = useCallback(async () => {
+    if (!user) {
+      setArtists([])
+      setNewCount(0)
+      setLoading(false)
+      return
+    }
+    try {
+      const res = await fetch('/api/artist-bookings/settings')
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setArtists([])
+        setNewCount(0)
+        return
+      }
+      setArtists((json.data as VerifiedArtistLite[]) || [])
+      setNewCount(Number(json.new_count) || 0)
+    } catch {
+      setArtists([])
+      setNewCount(0)
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
+
+  useEffect(() => { fetchInbox() }, [fetchInbox])
+
+  return { artists, newCount, isArtist: artists.length > 0, loading, refetch: fetchInbox }
+}

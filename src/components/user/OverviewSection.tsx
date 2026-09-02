@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import {
   useFavoriteArtists,
   useFavoriteLabels,
@@ -15,6 +16,7 @@ import {
   useEventAttendance,
   useBreakbeatProfile,
   useSavedChartTracks,
+  useArtistBookingInbox,
 } from '@/hooks/useUserData'
 import type { BreakbeatProfileStats } from '@/types/database'
 import { decadeBucketToMidYearLabel } from '@/lib/breakbeat-profile-era'
@@ -706,6 +708,7 @@ export default function OverviewSection({ lang }: { lang: string }) {
   const { saved: savedMixes } = useSavedMixes()
   const { sightings } = useArtistSightings()
   const { attendance } = useEventAttendance()
+  const { newCount } = useArtistBookingInbox()
   const es = lang === 'es'
 
   const attended = Object.values(attendance).filter((s) => s === 'attended').length
@@ -722,6 +725,24 @@ export default function OverviewSection({ lang }: { lang: string }) {
 
   return (
     <div>
+      {newCount > 0 && (
+        <Link
+          href={`/${lang}/mi-cuenta/artista`}
+          className="mb-6 flex items-center justify-between gap-3 p-5 border-4 border-[var(--ink)] bg-[var(--yellow)] no-underline text-[var(--ink)] hover:bg-[var(--red)] hover:text-white"
+        >
+          <div>
+            <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', textTransform: 'uppercase' }}>
+              {es
+                ? `${newCount} solicitud${newCount === 1 ? '' : 'es'} de booking nueva${newCount === 1 ? '' : 's'}`
+                : `${newCount} new booking request${newCount === 1 ? '' : 's'}`}
+            </div>
+            <p className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px' }}>
+              {es ? 'Ábrela en Mi cuenta → Artista.' : 'Open it in My account → Artist.'}
+            </p>
+          </div>
+          <span className="cutout red shrink-0" style={{ fontSize: '10px' }}>{es ? 'VER BANDEJA' : 'OPEN INBOX'}</span>
+        </Link>
+      )}
       <BreakbeatDNA lang={lang} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
