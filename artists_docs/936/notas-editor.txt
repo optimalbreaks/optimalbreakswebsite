@@ -1,0 +1,88 @@
+Revisión editorial — 936 (septiembre 2026)
+==========================================
+
+Fuentes
+-------
+- Brief del editor (investigación propia).
+- Beatport: https://www.beatport.com/es/artist/936/2383913 (id 2383913).
+- No hay bio pública que cierre nombre real, ciudad o trayectoria anterior.
+
+Identidad (obligatorio)
+-----------------------
+- Nombre artístico: 936
+- name: 936
+- name_display: 936
+- slug: 936
+- Nombre real: NO confirmado. real_name = null. PROHIBIDO inferirlo.
+- País: string vacío "". NO poner ES. NO inferir España ni Andalucía por colaboradores (Ruler / Antequera) ni por sellos (Banana Club, Distorsion).
+- Categoría: current (NO andalusian).
+- Ciudad / procedencia: no confirmada. No inventar.
+- Roles: productor. Faceta DJ NO confirmada: no afirmar que es DJ.
+- Estado: plenamente activo.
+
+Cronología (no negociable)
+--------------------------
+- Catálogo visible arranca en 2026. No hay base para retroceder.
+- era: exactamente `2026-present` (NO `2020s-present`).
+- Primer lanzamiento claramente documentado: I Feel U — Ruler & 936 — Banana Club — 3 jul 2026 — Breaks / Breakbeat / UK Bass · 138 BPM.
+
+Sellos
+------
+- Casa principal: Distorsion Records.
+- Otro: Banana Club (I Feel U).
+- labels_founded: []
+
+Lanzamientos Distorsion (2026)
+------------------------------
+- Una Voz Que Me Llama — HarryJDC & 936 — 17 jul 2026 — UK Garage / Bassline | UK Garage.
+- Everybody Jump Up! — 936 — 14 ago 2026 — UK Garage / Bassline | UK Garage · 138 BPM.
+- 1 septiembre 2026, cuatro cortes nuevos:
+  Get The Knives Ready to Fight! — 140 BPM
+  Wap Wap! — 138 BPM
+  Luz De Luna — con DJ Goku — 136 BPM
+  Holding Pressure — 122 BPM
+- Keep The Pressure EP — DJ Goku & 936 — Distorsion Records. Contiene varios de los tracks del 1 sept (Luz De Luna + material propio). Key release estructurado más importante a día de hoy.
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass, UK Garage.
+- No solo breakbeat: Distorsion ya clasifica varios como UK Garage / Bassline (Everybody Jump Up!, Una Voz Que Me Llama).
+- Nada de Electronic, Bass o Club como etiquetas principales.
+
+Colaboradores
+-------------
+- Ruler (ficha existente: ruler; Raúl Muriel, Antequera). I Feel U. Sitúa a 936 cerca de la red española/andaluza actual de breaks; NO demuestra que 936 sea andaluz. Mencionar la red, no el origen.
+- HarryJDC — Una Voz Que Me Llama. Sin ficha.
+- DJ Goku — Luz De Luna + Keep The Pressure EP. Relación especialmente relevante (EP conjunto, no un single aislado). Sin ficha.
+
+related_artists:
+- Ruler
+- HarryJDC
+- DJ Goku
+
+Beatport (upsert posterior)
+---------------------------
+- beatport_id: 2383913
+- beatport_url: https://www.beatport.com/artist/936/2383913
+
+Essential / key_releases
+------------------------
+Catálogo muy reciente: no hablar de “esenciales históricos” de forma rotunda.
+1. I Feel U — 2026 — con Ruler, Banana Club.
+2. Una Voz Que Me Llama — 2026 — con HarryJDC, Distorsion; vertiente UK Garage.
+3. Everybody Jump Up! — 2026 — primer corte propio reciente claramente UK Garage.
+4. Wap Wap! — 2026 — Distorsion, 138 BPM.
+5. Get The Knives Ready to Fight! — 2026 — Distorsion, 140 BPM.
+6. Luz De Luna — 2026 — con DJ Goku.
+Key release: Keep The Pressure EP — DJ Goku & 936 — 2026.
+
+is_featured: false
+sort_order: entorno 140–160 (proyecto nuevo, catálogo 2026).
+
+NO publicar / no inventar
+-------------------------
+- Nombre real, ciudad, nacionalidad, que es andaluz o español.
+- Que es DJ.
+- era anterior a 2026.
+- URLs de redes si no están verificadas.
+- Inflar el catálogo como si tuviera años de recorrido.

@@ -324,6 +324,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `aranniadj@gmail.com` | Lady Arannia | `lady arannia` | `lady-arannia` | `18673d03-b462-4ddd-a56f-06a5f388c555` |
 | `davisoto@hotmail.com` | Devis Hard | `devis hard` | `devis-hard` | `9b83800a-5a40-4cdd-9e3d-f4b1a61160af` |
 | `jsrcortegana@hotmail.com` | Maxuka | `maxuka` | `maxuka` | `b4a12e54-3bb3-481e-93d1-f83ab72e081a` |
+| `dfastbeats@gmail.com` | D-Fast Beats | `d fast beats` | `d-fast-beats` | `6983497d-d714-4bf8-89ef-d57f3b6fe0fb` |
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 
@@ -377,6 +378,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | jennie | `jenniev52@outlook.com` | user | **1** (Nine) |
 
 15 + 1 + 1 = 17. Monday `previous_rank` was already **11** — he had not saved yet at the ISO Monday cutoff — so the #3 spike was only this week’s live board. My Tracks and the song Top 100 still include his 9 saves. No label mark.
+
+**Audit — D-Fast Beats (4 Sep 2026).** `dfastbeats@gmail.com` signed up 2 Sep. On 3 Sep he saved **49** tracks; **13** credit D-Fast Beats (his Beatport Top 10 + Reply, Slap It, Two Caps). Those 13 no longer bump *his* name on the artist board. Collabs still credit the other names (Danny Phr3ntic on No Focus; Dual Drop on Dark Lady). The rest of the list (Ed Solo, Afghan Headspin, Huda Hudia, Danny Phr3ntic, etc.) still counts in full. My Tracks and the song Top 100 keep the 13. No label mark (only two DFBEATS RECORDS saves, both his own titles — not a roster dump). Pending `artist_claims` `request_new` left untouched: this is fase 2, not a claim.
 
 ### Artist board — weekly movement (not daily)
 

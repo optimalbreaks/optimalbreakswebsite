@@ -1,8 +1,17 @@
-Revisión editorial — Evil Crew (agosto 2026)
-============================================
+Revisión editorial — Evil Crew (31 agosto 2026)
+===============================================
 
-Fuentes: brief del editor (Qobuz, Beatport, Dirty Break, Instagram @evilcrewmusic).
-Ficha previa: sin nombre real; era 2020s–present; esenciales y key_releases fechados 2020; bio llena de Optimal Breaks / 40 Breaks Vitales.
+Dos perfiles de Beatport (confirmado por Rubén: ambos son suyos).
+NO son una duplicación limpia del mismo alias.
+
+Perfiles Beatport
+-----------------
+- ACTUAL (canónico para Top 10 / beatport_id): Evil Crew / 1162066
+  https://www.beatport.com/artist/evil-crew/1162066
+- HISTÓRICO (enlace de archivo en socials «The Evil Crew»): The Evil Crew / 77682
+  https://www.beatport.com/artist/the-evil-crew/77682
+- El scraper del Top 10 solo admite UN beatport_id. Se queda 1162066.
+  No fusionar rankings ni scrapear 77682 encima.
 
 Identidad
 ---------
@@ -12,19 +21,36 @@ Identidad
   Bump It (con Playbass): Ruben Ortega Fernandez + Kevin Nea.
   DANCE WITH ME / UNIVERSAL BREAKS Vol. 2: Rubén Miguel Ortega Fernández + Antonio Jiménez Molina (SeekFlow).
   Instagram indexado como «EvilCrew Ruben».
-- country: ES. Sin ciudad/provincia sólida.
-- category: current. era: 2023-present. NO 2020s-present.
+- country: ES. Sin ciudad/provincia sólida en ficha (Myspace histórico: Nerja / Málaga; no usar hasta confirmar).
+- category: current.
+- era: late-2000s-present. NO 2023-present. NO 2000-present.
+  Primera publicación comercial verificable: Spek10 - Volume Two (Spektra), septiembre 2009.
+  Remix Summer 2012 (Bubu & Fofy) fechado en Beatport 29 jun 2010.
+  El año 2000 lo menciona el artista; aún no hay release que lo demuestre. Preguntar lineup + año de inicio.
 - Rol: productor (mejor documentado) · DJ.
-- beatport_id: 1162066
-- socials: https://www.instagram.com/evilcrewmusic/
+- socials: Instagram + The Evil Crew (Beatport archivo). El Beatport actual sale de beatport_url.
+
+Dos etapas (no negociable en la bio)
+------------------------------------
+1) The Evil Crew — formación (no alias individual).
+   Activa al menos desde finales de los 2000. Spektra Recordings.
+   VirtualeX documentado en 2010 como componente de la formación.
+   DJ Fen dedicó un programa especial en 2011 al álbum Problem - Reaction - Solution.
+   Temas: In Your Soul, Dirty Party, The Rhythm Is Doubt; álbum 2011; The Return!! EP 2012.
+   Myspace 2006 hablaba de dúo Alex (Alejandro Rivas) + Rubén: NO poner en bio
+   hasta que Rubén confirme el lineup. Fuente primaria pendiente.
+
+2) Evil Crew — etapa actual (2023–).
+   Proyecto asociado a Rubén Ortega Fernández. Continuación de esa trayectoria,
+   no un catálogo que «empieza» en 2023.
 
 Estilos
 -------
 Breakbeat · Breaks · UK Bass
 NO Electronic ni Club.
 
-Cronología
-----------
+Cronología etapa actual
+-----------------------
 2023: YA Krichu, Kak Chajka (Playbass & Evil Crew Break Edit) — Dirty Break, ago 2023; sonando 2022/23.
 DANCE WITH ME — SeekFlow & Evil Crew, DIRTY KITCHEN RAVE, 8 dic 2023.
 2025: She Knows — 23 jul, BBC031. Progress — 3 sep, BBC034. Blue Fire — Space Pizza, finales 2025.
@@ -32,6 +58,7 @@ DANCE WITH ME — SeekFlow & Evil Crew, DIRTY KITCHEN RAVE, 8 dic 2023.
 
 Sellos
 ------
+Temprano: Spektra Recordings.
 Principal 2026: Br8kn Records.
 También: Break Beat Connection, SPACE PIZZA, Pata Negra, DIRTY KITCHEN RAVE.
 Otros: Samay, Distorsion (Acid Moove con DataFunk), Architektur, Delicious Groove.
@@ -39,16 +66,23 @@ NO DistroKid.
 
 Colaboraciones
 --------------
-Central y recurrente: Playbass (Disolution, Progress, She Knows, So High, No Fear, Bump It, Busy, Blue Fire, Evil Eyes, RAVE MACHINE remix, Cunnilingus remix…).
+Etapa temprana: VirtualeX (miembro documentado). Lineup completo: preguntar a Rubén.
+Central y recurrente ahora: Playbass (Disolution, Progress, She Knows, So High, No Fear, Bump It, Busy, Blue Fire, Evil Eyes, RAVE MACHINE remix, Cunnilingus remix…).
 También: SeekFlow, Shade K, Jiro, DataFunk, AndrewFx, Macho, Rutek, TT Beats, Manxito, Wallmaster (Scream, Goth Fairy, Devil Doll, Kawaii, Wanna), J-Break.
 
 Essential / key
 ---------------
-DANCE WITH ME (2023) · Progress (2025) · She Knows (2025) · Wrap (2026) · Green Lion (2026) · Rhythm (2026) · Acid Moove
-Quitar Dopamine / Going Out y cualquier fecha 2020.
-related: Playbass, SeekFlow, Shade K, Jiro, DataFunk, AndrewFx, Wallmaster
+Tempranos: In Your Soul · Problem - Reaction - Solution (2011)
+Actuales: DANCE WITH ME (2023) · Progress (2025) · She Knows (2025) · Wrap (2026) · Green Lion (2026) · Rhythm (2026) · Acid Moove
+related: Playbass, VirtualeX, SeekFlow, Shade K, Jiro, DataFunk, AndrewFx, Wallmaster
 
 Bio
 ---
-Hechos: nombre civil, España sin ciudad, 2023–, Playbass como asociación no puntual, BBC, Br8kn 2026, Space Pizza, Pata Negra, Distorsion/Architektur.
+Abrir con las dos etapas. No decir que Evil Crew en solitario publica desde 2000.
 NO mencionar Optimal Breaks ni 40 Breaks Vitales. NO citar Qobuz/Shazam como fuentes en el texto público.
+
+Pendiente (preguntar a Rubén)
+-----------------------------
+- Quiénes formaban exactamente The Evil Crew.
+- Desde qué año considera él que empezó el proyecto.
+  Si confirma «2000/2001 y éramos X + Rubén/VirtualeX» → entonces sí 2000-present con fuente primaria.

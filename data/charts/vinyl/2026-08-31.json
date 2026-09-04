@@ -1,0 +1,43 @@
+{
+  "week_date": "2026-08-31",
+  "vinyl": [
+    {
+      "sort_order": 1,
+      "title": "Wrong",
+      "mix_name": "DJ Sharaz Night Sky Mix",
+      "artists": [
+        {
+          "name": "Sharaz"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": null,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=MJcuI-dcDqU",
+      "artwork_url": "https://i.ytimg.com/vi/MJcuI-dcDqU/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 2,
+      "title": "Just Be Good To Me",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Sharaz"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": null,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=CdE1klEt1Go",
+      "artwork_url": "https://i.ytimg.com/vi/CdE1klEt1Go/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}

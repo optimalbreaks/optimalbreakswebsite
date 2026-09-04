@@ -1,0 +1,319 @@
+{
+  "week_date": "2026-08-31",
+  "picks": [
+    {
+      "title": "Skorpion",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SulivanZ"
+        }
+      ],
+      "label": "Shadow Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/skorpion/30337128",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e0f156a8-447d-46a7-8714-4c03018b3934.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/77a149a3-6585-4a8a-a564-9596ba1543c0.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Gofio Canario",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dj Guanxe"
+        }
+      ],
+      "label": "Zyn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gofio-canario/30315381",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/43263c59-bd2d-44a9-a64b-05692336cbbe.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2912e1bb-0411-42a4-8b50-167868d7ae9b.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Alrodant-24 7Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Alrodant"
+        }
+      ],
+      "label": "ARDT Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/alrodant-24-7love/30308902",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6c340d38-7d3e-47cc-9883-b8fc5600d32d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7772f13d-ba52-4e76-a73e-36b1de1ad75f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Static Fury",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Blackdryft"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/static-fury/30298600",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/793135fd-39f9-46ca-9e33-d58bbfdefb4f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c3a90585-ce69-4120-a854-b83e9d8734ab.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Skar",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Timonk & Pumbass"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/skar/30178692",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3a8d2a90-20a2-4898-b3f7-0edb4198c4a7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/751ed998-ec68-4aa2-8d94-952dea029cd1.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Control",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kritycal System"
+        },
+        {
+          "name": "BrainBass"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/control/30177482",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a77979d9-e0e6-40e5-a276-26f1c85088b2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98134619-7274-4d28-8691-23e22ffdfdd1.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Clean",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "D-Fast Beats"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/clean/29917238",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e1bf5900-3495-43bc-a9bb-275284f408e7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/724caf07-1f18-4627-bb58-e800947a0b68.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Eskila",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Eskila"
+        }
+      ],
+      "label": "Juan Brito Rodriguez",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/eskila/30323256",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d1c544f9-12a6-4596-909f-861d2dc7051d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b31c099c-9350-45b9-987b-56e4509639c5.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Get The Knives Ready to Fight!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "936"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-the-knives-ready-to-fight/30314738",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c13aedd2-27b5-4585-86de-1d7f7e26a0d6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b65f5020-a95a-458d-9575-170ce930e7d2.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Wap Wap!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "936"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wap-wap/30314740",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c13aedd2-27b5-4585-86de-1d7f7e26a0d6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8561bbb6-585e-4c6e-ab16-6f76a255549b.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Luz De Luna",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Goku"
+        },
+        {
+          "name": "936"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/luz-de-luna/30314737",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c13aedd2-27b5-4585-86de-1d7f7e26a0d6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/26076fa4-0d8f-4ba0-8591-1fdf0769f30e.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Holding Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "936"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/holding-pressure/30314739",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c13aedd2-27b5-4585-86de-1d7f7e26a0d6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7e2b6f91-9c24-4b04-8ee0-612b3e83de8d.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "Das Motor",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Fane (RO)"
+        }
+      ],
+      "label": "TaiJi Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/das-motor/30301566",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/509fb011-1cf8-419b-b60d-d0918729669a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e4c1e712-d066-4cbe-850b-6eb76d861c82.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "Gimme More",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Beatloud"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gimme-more/30079565",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ce08a7fc-884e-45ea-8c69-4fbacebb281d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d850611a-205c-4394-97e1-797d883976e0.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-09-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    }
+  ]
+}

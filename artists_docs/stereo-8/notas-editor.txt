@@ -1,0 +1,107 @@
+Revisión editorial — Stereo 8 (septiembre 2026)
+===============================================
+
+La ficha actual es demasiado genérica (solo «trío británico de los 2000»). REESCRIBIR bios con la historia concreta de abajo. No conservar párrafos abstractos sobre «profesionalización del género» o «producción orientada al sistema de sonido».
+
+Identidad
+---------
+- name: Stereo 8
+- name_display: STEREO 8
+- slug: stereo-8
+- Tipo: trío / crew. category: crew
+- Miembros: Julian Smith · Simon Davis · Tom Hugh-Jones
+  Créditos de Flipmode (Juiced): J. Smith, S. Davies, T. Hugh-Jones. Otras bases: Julian Smith, Simon Davis, Tom Hugh-Jones. real_name: "Julian Smith, Simon Davis, Tom Hugh-Jones"
+- country: UK (Bristol en la bio, no solo «Reino Unido»)
+- Origen: Bristol · England · United Kingdom. Escena: noche BlowPop.
+  Material oficial Finger Lickin': “the Stereo 8 trio Julian, Simon and Tom from legendary Bristol breaks club BlowPop”. Prensa: Bristol-based Stereo 8.
+- Roles: DJs · producers
+- NO inventar ciudad distinta de Bristol.
+
+Cronología (no negociable)
+--------------------------
+- era: exactamente `2002-2006; live 2020s` (NO `2000s-present`: eso implica 25 años de discografía continua).
+- Producción original documentada: ~2002–2006. Reediciones/compilaciones después (p. ej. Groove Diggin' 2008 en Beatport = catálogo, no producción nueva).
+- Directo / reunión: 2020s. 16 mayo 2026: Finger Lickin' at Between the Bridges, Londres, cartel oficial del sello.
+- NO afirmar nuevo material de estudio en 2026. Sí: vuelven a escenarios. Legacy · Active live / reunited.
+
+Perfiles de los miembros
+------------------------
+- Simon y Julian: cultura house de principios de los 90.
+- Tom: hip-hop y funk; scratching.
+- Esa mezcla definía también sus sets. Sonido: breakbeat + funk + house + hip-hop + scratching + bass, estética Finger Lickin'. No solo nu skool duro.
+
+Debut
+-----
+- Groove Diggin' / Get Above Yourself — Finger Lickin' — nov 2002.
+- RA: nuevo artista Finger Lickin', atención, gira UK como DJs. Groove Diggin': funk, guitarras, bajo, breaks, house, energía Finger Lickin'. Get Above Yourself: beats más pesados, 303, club.
+- Beatport: Get Above Yourself 8 nov 2002; Groove Diggin' 11 nov 2002. Breaks / Breakbeat / UK Bass.
+
+Breakspoll
+----------
+- International Breakbeat Awards / Breakspoll de 2002 (ceremonia feb 2003): nominados a Best New Act junto a Raw as F*CK, Dan F, Ils, Nubreed.
+- Ese año Finger Lickin' ganó Best Label.
+- Dato histórico útil; no hincharlo.
+
+Can't Stop / Flipmode
+---------------------
+- Finger Lickin'. Can't Stop: bajo marcado, funk, beats gruesos. Flipmode: más técnico y agresivo.
+- Can't Stop: nº1 actual Beatport del trío. Get Above Yourself nº2, Groove Diggin' nº3.
+- Flipmode en Essential Mix de Lee Coombs, BBC Radio 1, 16 nov 2003. Dato de ficha: circulación entre DJs centrales del breaks británico.
+- Flipmode en soundtrack de Juiced (videojuego de carreras). Créditos: Performed by Stereo 8; written by Julian Smith, Simon Davies, Tom Hugh-Jones; licensed from Finger Lickin' Records.
+- Can't Stop en It's A Finger Lickin' Thang 3 (Soul Of Man, 5 años del sello). CMJ lo citó entre key tracks. RA situaba a Stereo 8 en el roster con Plump DJs, Krafty Kuts, Drumattic Twins, Lee Coombs, Soul Of Man. No comparar artísticamente; sí: familia Finger Lickin'.
+
+Stamina / Never Coming Back
+---------------------------
+- Finger Lickin', 26 jun 2006. Stamina feat. MC Jakes. DMC World 5/5, destacó Never Coming Back; Bristol-based.
+- Never Comin' Back en set de Tom Nemesis, mainstage Shambhala 2006: circulación internacional, no elemento central.
+
+Corpus
+------
+Discografía propia pequeña y concentrada. Beatport del trío británico (ID 2959, Finger Lickin'): Can't Stop, Flipmode, Groove Diggin', Get Above Yourself, Stamina feat. Jakes, Never Coming Back.
+NO importar catálogo del homónimo italiano (Le sere di sempre / Alessandro Pitoni / Fabrizio Bosso; Me Encontrei 2019). El Beatport Top 10 actual de la ficha YA es Finger Lickin' limpio: no re-scrapear a ciegas.
+
+Géneros
+-------
+- styles: Breakbeat, Nu Skool Breaks, Funky Breaks. Nada de Electro House ni Bass genérico. Electro/house como influencia en bio, no como etiqueta Electro House.
+
+labels_founded: []
+Sello principal: Finger Lickin' Records (en bio y key_releases, no como fundado).
+
+related_artists
+---------------
+- Lee Coombs (Essential Mix / Flipmode)
+- Soul Of Man (Thang 3)
+- Jakes / MC Jakes (Stamina)
+No volcar todo el roster Finger Lickin' en related.
+
+recommended_mixes
+-----------------
+- Lee Coombs — BBC Radio 1 Essential Mix, 16 November 2003 (incluye Flipmode)
+
+Essential tracks
+----------------
+Can't Stop (2003), Flipmode (2003), Groove Diggin' (2002), Get Above Yourself (2002), Never Coming Back (2006). Sexto opcional: Stamina feat. MC Jakes (2006).
+
+Key releases (solo tres)
+------------------------
+- Groove Diggin' / Get Above Yourself — 2002
+- Can't Stop / Flipmode — 2003
+- Stamina / Never Coming Back — 2006
+
+Beatport (conservar)
+--------------------
+- beatport_id: 2959
+- beatport_url: https://www.beatport.com/artist/stereo-8/2959
+- NO añadir tracks italianos.
+
+is_featured: false salvo que ya lo fuera.
+sort_order: consolidado histórico ~40–70.
+
+NO publicar
+-----------
+- Continuidad discográfica 2000s–present.
+- Nuevo álbum/estudio 2026.
+- Electro House, Bass.
+- Catálogo italiano.
+- Optimal Breaks / 40 Breaks.
+- Compararlos como equivalentes artísticos de Plump DJs / Krafty Kuts.

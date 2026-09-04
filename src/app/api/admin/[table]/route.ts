@@ -46,7 +46,16 @@ export async function GET(
   let query = sb.from(table).select('*', { count: 'exact' })
 
   if (search) {
-    query = query.ilike(SEARCH_COLUMNS[table], `%${search}%`)
+    const q = search.replace(/[,()]/g, ' ').trim()
+    if (q) {
+      if (table === 'artists') {
+        query = query.or(
+          `name.ilike.%${q}%,name_display.ilike.%${q}%,slug.ilike.%${q}%`,
+        )
+      } else {
+        query = query.ilike(SEARCH_COLUMNS[table], `%${q}%`)
+      }
+    }
   }
   query = query.order(order, { ascending: dir }).range(from, to)
 

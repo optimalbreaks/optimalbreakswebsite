@@ -1,0 +1,92 @@
+Revisión editorial — D-Fast Beats (septiembre 2026)
+===================================================
+
+La ficha actual es PLANTILLA DE CHART (menciona Optimal Breaks / 40 Breaks Vitales / chart metadata). REESCRIBIR bios desde cero. No conservar Reino Unido ni 2000s–present.
+
+Identidad
+---------
+- name: D-Fast Beats
+- name_display: D-FAST BEATS
+- slug: d-fast-beats
+- real_name: null. No publicar nombre civil.
+- country: ES. Fuente: bio de Instagram @d_fast_beats (1 sept 2026): «DJ Y Productor ANDALUZ». Sin ciudad concreta.
+- category: andalusian
+- Roles: DJ · productor. El Wicked 2023 Supreme's Birthday (D-Fast Beats Guest Mix, >90 min) respalda la faceta de selector.
+
+Cronología
+----------
+- era: exactamente `2021-present` (NO `2000s-present`).
+- Audiomack desde julio de 2021 (presencia pública).
+- Comercial claro: Fantastik — ONE7AUDIO — dic 2022 (remix DualDrop). Aliance — DFBEATS RECORDS — 18 jul 2023. Guest mix oct 2023.
+- En bio: presencia pública al menos 2021; lanzamientos comerciales desde 2022–2023.
+
+DFBEATS RECORDS
+---------------
+- Dueño de DFBEATS RECORDS (bio Instagram: «Dueño del sello discográfico DFBEATS RECORDS»; handle del sello @dfbeats.records). labels_founded: ["DFBEATS RECORDS"].
+- No es solo autoedición: Beatport muestra roster (JKR, Danny Phrentic, Dual Drop, SeekFlow, Phrentic, NeNu, Custom Breakz).
+- Catálogo propio: Aliance, Galaxy, Hope, Ya Ya Ya, Two Caps, 2 Night Vibes, Lemon Skills + remixes.
+- En bio: sello asociado / plataforma de su entorno, con roster de otros productores.
+
+Sellos (tres pilares)
+---------------------
+- Triple Seven Recordings — relación externa más fuerte: No Focus (Danny Phr3ntic Remix), Breakbeat, Mousse on Kettama, Feeling, Reply; 2000 (2024); Smile Swing (2025, Breaks / Glitch Hop / Swing Hop).
+- Samay Records — 2025–2026: Music, Lettal Poison, Slap It, OH OHH!, Party Everyday, Primitive + compilaciones. Music: Breaks / Breakbeat / UK Bass · 134 BPM.
+- DFBEATS RECORDS — ver arriba.
+- ONE7AUDIO — Fantastik (2022); You (reciente); UH OH! DNB Mix (Sub Urban feat. BENEE, 2023, gratuito) confirma Drum & Bass ocasional.
+- The Elements Of Tech & Bass Recordings — Back Street; THE BEST OF 2024 / 2025. 134 BPM. Asociación documentada, no principal.
+
+Álbum
+-----
+- Broken Sync — 2025 (Apple Music). Temas: Bad Habits, Word Pass, etc. Key release obligatorio (más estructural que singles de 2026).
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass, Drum & Bass. Breakbeat primero.
+- QUITAR Electronic y Bass.
+- Núcleo consistente Breaks / Breakbeat / UK Bass (2000, Fantastik, Music, Hope). Excursiones: UH OH! DNB Mix; Smile Swing (Glitch/Swing Hop).
+
+related_artists
+---------------
+- Danny Phr3ntic (ficha danny-phr3ntic) — remix de No Focus.
+- SeekFlow (ficha seekflow) — roster DFBEATS / colaboraciones.
+- DualDrop / Dual Drop — remix de Fantastik (sin ficha; se puede incluir el nombre).
+
+Actividad 2026
+--------------
+Primitive, You, Party Everyday, Leveraged, Lemon Skills, OH OHH!, 2 Night Vibes; Apple: Breakbeat, 7 Coronas, Reply, Slap It, 2 Night Vibes.
+
+Essential tracks
+----------------
+Fantastik (2022), Aliance (2023), 2000 (2024), Music (2025), Mousse on Kettama (2025), No Focus / No Focus (Danny Phr3ntic Remix), Breakbeat (2026). Se puede mantener Slap It o Reply para 2026.
+
+Key releases
+------------
+- Fantastik — 2022 — ONE7AUDIO
+- Aliance — 2023 — DFBEATS RECORDS
+- 2000 — 2024 — Triple Seven Recordings
+- Broken Sync — 2025 — álbum
+- Music — 2025 — Samay Records
+- No Focus — 2025/26 — Triple Seven
+- Breakbeat — 2026 — Triple Seven
+PROHIBIDO en note: Optimal Breaks, 40 Breaks, chart metadata.
+
+recommended_mixes
+-----------------
+- Wicked 2023 Supreme's Birthday (D-Fast Beats Guest Mix) si cabe (más de hora y media, oct 2023).
+
+Beatport (conservar / reponer)
+------------------------------
+- beatport_id: 681171
+- beatport_url: https://www.beatport.com/artist/d-fast-beats/681171
+
+is_featured: false
+sort_order: razonable ~110–130.
+
+NO publicar
+-----------
+- Reino Unido / UK / ciudad concreta (solo ANDALUZ, no municipio).
+- Nombre real.
+- era 2000s.
+- Que fundó DFBEATS RECORDS.
+- Electronic, Bass.
+- Cualquier mención a Optimal Breaks o al chart.

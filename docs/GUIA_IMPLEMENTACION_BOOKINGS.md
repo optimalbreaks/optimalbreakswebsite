@@ -502,8 +502,9 @@ ALCANCE (MVP completo, sin extras):
 
 6. ADMIN (/[lang]/administrator):
    - /claims: cola con filtros por estado, aprobar/rechazar/revocar con admin_notes; al
-     aprobar un request_new dejar claro en la UI que el alta editorial de la ficha se hace
-     con el flujo de siempre y luego se vincula (la API lo valida).
+     aprobar un request_new, buscar y seleccionar la ficha del catálogo (no pegar el UUID).
+     Si aún no existe, el alta editorial se hace con el flujo de siempre y luego se vincula
+     (la API lo valida).
    - /bookings: tabla completa (AdminTable), filtros por artista/estado/fecha, acciones
      ocultar (hidden_by_admin), notas y ban del remitente (booking_banned + reason).
    - Enlaces en el sidebar admin.

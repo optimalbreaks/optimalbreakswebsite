@@ -2266,6 +2266,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 100
+    },
+    {
+      "title": "DNA",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Youandi Raphael"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dna/30425646",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5f911962-9d91-4cf7-a002-49fdb317c838.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7637273c-f41e-44e2-b893-66b6dd3cbe37.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
     }
   ]
 }

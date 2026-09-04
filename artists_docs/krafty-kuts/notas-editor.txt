@@ -1,0 +1,110 @@
+Revisión editorial — Krafty Kuts (septiembre 2026)
+==================================================
+
+La ficha actual está bien encaminada pero se queda corta. AMPLIAR con hechos documentados. BORRAR el párrafo final que menciona Optimal Breaks / 40 Breaks Vitales.
+
+Conservar: slug krafty-kuts, name Krafty Kuts, name_display KRAFTY KUTS, real_name Martin Reeves, country UK, category uk_legend, is_featured true, sort_order 38, image_url /images/artists/krafty_kuts.webp, beatport_id 2163, beatport_url https://www.beatport.com/artist/krafty-kuts/2163
+
+Identidad
+---------
+- Origen: Inglaterra · Reino Unido. Base histórica: Brighton (en bio).
+- Roles: DJ · producer · turntablist · label owner · promoter.
+- Proyecto/banda: Wicked City (web oficial: ha tocado para audiencias de hasta 40.000; escenarios con The Prodigy y The Rolling Stones). Associated project, no sustituye a Krafty Kuts.
+- Colaborador histórico clave: A.Skillz.
+- Estado: plenamente activo 2026. Web oficial: pionero clave del movimiento británico de breakbeat y bass. Badge conceptual: pionero + activo, no solo legacy. NO usar el eslogan promocional «King of Breaks».
+
+Cronología
+----------
+- era: `late-1980s-present` (más preciso que 1990s-present).
+- En bio separar:
+  DJ / beat culture: finales de los 80–presente (grupo b-boy/breakdance; pasión por pinchar; competición DJ de joven; cadena de tiendas de discos — web oficial / Beatport).
+  Carrera discográfica como Krafty Kuts: 1998–presente.
+- Hechos de arranque (no solo «emerged from the late-'90s continuum»):
+  1998 — Funky Elements EP — FSUK / Ministry of Sound (debut).
+  1999 — Gimme The Funk — apoyo de Fatboy Slim, Southern Fried.
+  1999 — primer mix Slam The Breaks On.
+
+Supercharged y Brighton
+-----------------------
+- Supercharged con Lloyd Seymour / Skool Of Thought: noche de club de Brighton Y sello. RA atribuye Supercharged y Against The Grain a Krafty Kuts y Skool Of Thought.
+- Co-founded Supercharged club night / label with Skool Of Thought. Obligatorio en bio.
+
+Against The Grain
+-----------------
+- Cofundado 2000 por Krafty Kuts y Skool of Thought como extensión de Supercharged. Sello sigue presentándolos como co-propietarios. Más peso que ahora.
+
+Finger Lickin'
+--------------
+- No lo fundó. 2001: Finger Lickin' Funk Vol.1, Dangerous. 2003: Tricka Technology.
+
+Tricka Technology
+-----------------
+- A.Skillz & Krafty Kuts — 2003 — álbum conjunto (hip-hop, funk, breaks, turntablism, cut-and-paste). Kurtis Blow reinterpreta The Breaks en Gimme The Breaks. Relación duradera; 10º aniversario con nuevos trabajos. Key release obligatorio.
+
+Breakspoll (sin «King of Breaks»)
+---------------------------------
+- Beatport dice ocho premios; documentar hitos:
+  Best DJ 2004, 2005 y 2006.
+  2011: Best DJ; Best Album — Against The Grain Classics; Outstanding Contribution to Breaks — Krafty Kuts. Esta última es especialmente importante.
+- Freakshow: Best Album Breakspoll 2006 (frente a Aquasky, Atomic Hooligan, Elite Force, Freestylers). Escribir: Freakshow won Best Album at the International Breakbeat Awards. No «often treated as a key statement».
+
+Álbumes y mixes
+---------------
+- Freakshow — 2006 — Against The Grain. Incluye Bass Phenomenon. ATG lo usa como clásico del sello (junto a Push Up / Freestylers y Random Acts Of Kindness / Ed Solo & Skool Of Thought).
+- FabricLive.34 — 2007 (RA reseñó el mix).
+- Back To Mine — 2008.
+- Instant Vibes — 2010, con Abel Reynolds (Fingerlickin Management). RA: fundación Krafty/Martin Reeves + Reynolds. Salida para producciones propias y artistas nuevos.
+- Adventures of a Reluctant Superhero — 2012.
+- Turbulence — Against The Grain, 10 jul 2026. Atraviesa UK Garage, Breaks, Bassline, Jazz. Invitados: Skool Of Thought, Liliana Rose, MC Spyda, B Live, Scarlett Quinn. Demuestra que nunca fue solo nu skool. Actualización más importante de la ficha.
+
+labels_founded (los tres)
+-------------------------
+- Against the Grain
+- Supercharged
+- Instant Vibes
+
+Géneros
+-------
+- styles: Breakbeat, Nu Skool Breaks, Funky Breaks, Big Beat, Hip-Hop / Funk, UK Bass.
+- QUITAR Bass genérico. En bio (no tags): producción moderna también UKG, Bassline, D&B, jazz (Turbulence).
+
+related_artists
+---------------
+Estructurales: A.Skillz, Skool of Thought.
+Mantener/añadir: Freestylers, Plump DJs, Featurecast, Stanton Warriors, Guau, Fatboy Slim (Gimme The Funk).
+Bio: The Funk Hunters, Chali 2na, Kurtis Blow — sin lista infinita.
+
+recommended_mixes
+-----------------
+- FabricLive.34 (2007)
+- Back To Mine (2008)
+- Slam The Breaks On (1999)
+
+Essential tracks (6–8)
+----------------------
+Bass Phenomenon, Gimme The Funk, Funky Elements, Freakshow, Push, Get A Life, Tricka Technology o Gimme The Breaks, Nighthawk.
+Opcional 2026: New Ting o All Night (Turbulence).
+
+Key releases (etapas)
+---------------------
+Funky Elements EP — 1998
+Slam The Breaks On — 1999
+Tricka Technology — 2003 — with A.Skillz
+Freakshow — 2006 — Breakspoll Best Album
+FabricLive.34 — 2007
+Back To Mine — 2008
+Against The Grain Classics — 2010
+Adventures of a Reluctant Superhero — 2012
+Turbulence — 2026
+
+Vigencia 2026
+-------------
+DJ internacional activo (Finger Lickin' Summer Takeover Brighton, Cruisin Budapest, Be Cider Seaside, Mucky Weekender, Raveart Retro Halloween Málaga). Beatport 2026: All Night, Changes, New Ting, Curvy + Turbulence.
+
+NO publicar
+-----------
+- «King of Breaks».
+- Optimal Breaks / 40 Breaks Vitales.
+- Tratarlo solo como legacy inactivo.
+- Bass o Electronic como tag principal.
+- Inventar cifras de público salvo las 40.000 de Wicked City (web oficial).
