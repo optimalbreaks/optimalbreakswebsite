@@ -261,14 +261,69 @@ function artworkUrl(t) {
     if (img.uri) return String(img.uri)
     return ''
   }
+  const releaseImgUrl = t?.release?.image_url
+  if (releaseImgUrl) {
+    return String(releaseImgUrl).replace(/\{w\}/g, '250').replace(/\{h\}/g, '250')
+  }
   return pick(t?.release?.image) || pick(t?.image) || ''
 }
 
 function releaseDateIso(t) {
-  const raw = t?.publish_date || t?.new_release_date
+  const raw =
+    t?.publish_date ||
+    t?.new_release_date ||
+    t?.release?.release_date ||
+    t?.release?.publish_date
   if (!raw) return null
   const m = String(raw).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
   return m ? `${m[1]}-${m[2]}-${m[3]}` : null
+}
+
+/** Beatport 2026+: páginas /track/ usan query `track-details-{id}` con track_id/track_name. */
+function normalizeBeatportTrackBlob(data, pageUrl) {
+  if (!data || typeof data !== 'object') return null
+  if (data.id && data.slug) return data
+  const trackId = data.track_id
+  const trackName = data.track_name
+  if (!trackId || !trackName) return null
+  let slug = ''
+  if (pageUrl) {
+    const m = String(pageUrl).match(/\/track\/([^/]+)\/\d+/i)
+    if (m) slug = m[1]
+  }
+  if (!slug) {
+    slug = String(trackName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+  const release = data.release && typeof data.release === 'object' ? data.release : {}
+  const label = data.label && typeof data.label === 'object' ? data.label : {}
+  const releaseDate = release.release_date || release.publish_date || data.publish_date
+  const keyObj =
+    data.key && typeof data.key === 'object'
+      ? data.key
+      : data.key
+        ? { name: String(data.key), name_short: String(data.key) }
+        : {}
+  return {
+    id: trackId,
+    slug,
+    name: trackName,
+    mix_name: data.mix_name || '',
+    artists: data.artists || [],
+    remixers: data.remixers || [],
+    bpm: data.bpm,
+    key: keyObj,
+    sample_url: data.sample_url || '',
+    publish_date: releaseDate,
+    new_release_date: releaseDate,
+    release: {
+      ...release,
+      label: release.label || label,
+      image_url: release.image_url,
+    },
+  }
 }
 
 function pickFromTrackBlob(t) {
@@ -318,7 +373,7 @@ function findAllTracksFromChartNextData(nd) {
   return []
 }
 
-function findAllTracksFromReleaseNextData(nd) {
+function findAllTracksFromReleaseNextData(nd, pageUrl) {
   const qs = nd?.props?.pageProps?.dehydratedState?.queries || []
   for (const q of qs) {
     const key0 = Array.isArray(q?.queryKey) ? q.queryKey[0] : ''
@@ -342,8 +397,13 @@ function findAllTracksFromReleaseNextData(nd) {
   for (const q of qs) {
     const key0 = Array.isArray(q?.queryKey) ? q.queryKey[0] : ''
     const data = q?.state?.data
+    if (!data || typeof data !== 'object') continue
     if (typeof key0 === 'string' && /^track-\d+$/.test(key0) && data?.id && data?.slug) {
       const p = pickFromTrackBlob(data)
+      if (p?.title) return [p]
+    }
+    if (typeof key0 === 'string' && /^track-details-\d+$/.test(key0) && data?.track_id) {
+      const p = pickFromTrackBlob(normalizeBeatportTrackBlob(data, pageUrl))
       if (p?.title) return [p]
     }
   }
@@ -535,7 +595,7 @@ async function fetchTracks(url) {
     if (!chartTracks.length) throw new Error('chart sin pistas en __NEXT_DATA__')
     return chartTracks
   }
-  return findAllTracksFromReleaseNextData(nd)
+  return findAllTracksFromReleaseNextData(nd, cleanUrl)
 }
 
 const importEntries = parseImportLines(URLS_RAW)

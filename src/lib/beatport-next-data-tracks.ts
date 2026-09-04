@@ -36,15 +36,74 @@ function artworkUrl(t: Record<string, unknown>): string {
     if (img.uri) return String(img.uri)
     return ''
   }
-  const release = t.release as { image?: { dynamic_uri?: string; uri?: string } } | undefined
+  const release = t.release as { image?: { dynamic_uri?: string; uri?: string }; image_url?: string } | undefined
+  if (release?.image_url) {
+    return String(release.image_url).replace(/\{w\}/g, '250').replace(/\{h\}/g, '250')
+  }
   return pick(release?.image) || pick(t.image as { dynamic_uri?: string; uri?: string } | undefined) || ''
 }
 
 function releaseDateIso(t: Record<string, unknown>): string | null {
-  const raw = (t.publish_date || t.new_release_date) as string | undefined
+  const rel = t.release as { release_date?: string; publish_date?: string } | undefined
+  const raw = (t.publish_date || t.new_release_date || rel?.release_date || rel?.publish_date) as
+    | string
+    | undefined
   if (!raw) return null
   const m = String(raw).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
   return m ? `${m[1]}-${m[2]}-${m[3]}` : null
+}
+
+/** Beatport 2026+: páginas /track/ usan query `track-details-{id}`. */
+function normalizeBeatportTrackBlob(
+  data: Record<string, unknown>,
+  pageUrl?: string,
+): Record<string, unknown> | null {
+  if (!data || typeof data !== 'object') return null
+  if (data.id && data.slug) return data
+  const trackId = data.track_id as number | undefined
+  const trackName = data.track_name as string | undefined
+  if (!trackId || !trackName) return null
+  let slug = ''
+  if (pageUrl) {
+    const m = String(pageUrl).match(/\/track\/([^/]+)\/\d+/i)
+    if (m) slug = m[1]
+  }
+  if (!slug) {
+    slug = String(trackName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+  const release = (data.release as Record<string, unknown> | undefined) || {}
+  const label = (data.label as { name?: string } | undefined) || {}
+  const releaseDate = (release.release_date || release.publish_date || data.publish_date) as
+    | string
+    | undefined
+  const keyRaw = data.key
+  const keyObj =
+    keyRaw && typeof keyRaw === 'object'
+      ? keyRaw
+      : keyRaw
+        ? { name: String(keyRaw), name_short: String(keyRaw) }
+        : {}
+  return {
+    id: trackId,
+    slug,
+    name: trackName,
+    mix_name: data.mix_name || '',
+    artists: data.artists || [],
+    remixers: data.remixers || [],
+    bpm: data.bpm,
+    key: keyObj,
+    sample_url: data.sample_url || '',
+    publish_date: releaseDate,
+    new_release_date: releaseDate,
+    release: {
+      ...release,
+      label: (release.label as { name?: string } | undefined) || label,
+      image_url: release.image_url,
+    },
+  }
 }
 
 export function pickFromTrackBlob(t: Record<string, unknown>): BeatportPickInput | null {
@@ -75,9 +134,12 @@ export function pickFromTrackBlob(t: Record<string, unknown>): BeatportPickInput
   }
 }
 
-export function findAllTracksFromNextData(nd: {
-  props?: { pageProps?: { dehydratedState?: { queries?: unknown[] } } }
-}): BeatportPickInput[] {
+export function findAllTracksFromNextData(
+  nd: {
+    props?: { pageProps?: { dehydratedState?: { queries?: unknown[] } } }
+  },
+  pageUrl?: string,
+): BeatportPickInput[] {
   const qs = nd?.props?.pageProps?.dehydratedState?.queries || []
   for (const q of qs) {
     const qrec = q as { queryKey?: unknown[]; state?: { data?: unknown } }
@@ -104,8 +166,14 @@ export function findAllTracksFromNextData(nd: {
     const qrec = q as { queryKey?: unknown[]; state?: { data?: unknown } }
     const key0 = Array.isArray(qrec.queryKey) ? String(qrec.queryKey[0] || '') : ''
     const data = qrec.state?.data as Record<string, unknown> | undefined
+    if (!data || typeof data !== 'object') continue
     if (typeof key0 === 'string' && /^track-\d+$/.test(key0) && data?.id && data?.slug) {
       const p = pickFromTrackBlob(data)
+      if (p?.title) return [p]
+    }
+    if (typeof key0 === 'string' && /^track-details-\d+$/.test(key0) && data?.track_id) {
+      const normalized = normalizeBeatportTrackBlob(data, pageUrl)
+      const p = normalized ? pickFromTrackBlob(normalized) : null
       if (p?.title) return [p]
     }
   }
@@ -202,8 +270,8 @@ export function parseBeatportImportLines(text: string): { week_date_override: st
   return out
 }
 
-export function resolveTracksFromBeatportHtml(html: string): BeatportPickInput[] {
+export function resolveTracksFromBeatportHtml(html: string, pageUrl?: string): BeatportPickInput[] {
   const nd = extractNextData(html)
   if (!nd || typeof nd !== 'object') return []
-  return findAllTracksFromNextData(nd as Parameters<typeof findAllTracksFromNextData>[0])
+  return findAllTracksFromNextData(nd as Parameters<typeof findAllTracksFromNextData>[0], pageUrl)
 }

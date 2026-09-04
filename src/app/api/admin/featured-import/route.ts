@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
         .replace(/^https:\/\/beatport\.com/i, 'https://www.beatport.com')
 
       const html = await fetchBeatportPageHtml(normalized)
-      const tracks = resolveTracksFromBeatportHtml(html)
+      const tracks = resolveTracksFromBeatportHtml(html, normalized)
       if (!tracks.length) {
         failed.push({ url, reason: 'Sin pistas (__NEXT_DATA__ vacío o no parseable)' })
       } else if (tracks.length > 1) {
