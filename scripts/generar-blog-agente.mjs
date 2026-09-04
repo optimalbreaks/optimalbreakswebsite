@@ -52,13 +52,20 @@ function escHtml(s) {
 }
 
 function inlineFormat(s) {
-  // Marcadores temporales para links [texto](/ruta) antes de ** y escape
-  const marked = s.replace(/\[([^\]]+)\]\((\/[a-z0-9/_-]*)\)/gi, '\0LINK\0$1\0$2\0')
+  // Marcadores temporales para links internos y https antes de ** y escape
+  const marked = s
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, '\0EXT\0$1\0$2\0')
+    .replace(/\[([^\]]+)\]\((\/[a-z0-9/_-]*)\)/gi, '\0LINK\0$1\0$2\0')
   const parts = marked.split(/\*\*/)
   let html = parts.map((p, i) => (i % 2 ? `<strong>${escHtml(p)}</strong>` : escHtml(p))).join('')
   html = html.replace(
     /\0LINK\0([^\0]+)\0(\/[^\0]+)\0/g,
     (_, label, href) => `<a href="${escHtml(href)}">${escHtml(label)}</a>`,
+  )
+  html = html.replace(
+    /\0EXT\0([^\0]+)\0([^\0]+)\0/g,
+    (_, label, href) =>
+      `<a href="${escHtml(href)}" target="_blank" rel="noopener noreferrer">${escHtml(label)}</a>`,
   )
   return html
 }
@@ -283,6 +290,8 @@ function normalizePost(obj, expectedSlug, { featured }) {
     published_at: new Date().toISOString(),
     image_url: null,
     og_image_url: null,
+    beatport_tracks: Array.isArray(obj.beatport_tracks) ? obj.beatport_tracks : [],
+    beatport_release_url: String(obj.beatport_release_url || '').trim() || null,
     // Guardamos markdown fuente en JSON local (no columna BD)
     _body_md_es: bodyMdEs,
     _body_md_en: bodyMdEn,
@@ -313,6 +322,8 @@ async function upsertBlogPost(row) {
     published_at: row.published_at,
     image_url: row.image_url,
     og_image_url: row.og_image_url,
+    beatport_tracks: Array.isArray(row.beatport_tracks) ? row.beatport_tracks : [],
+    beatport_release_url: row.beatport_release_url || null,
   }
 
   const { data: existing, error: findErr } = await sb
@@ -472,6 +483,8 @@ Incluye URL de fuente junto a datos clave. No inventes.`
     author: row.author,
     is_featured: row.is_featured,
     is_published: row.is_published,
+    beatport_release_url: row.beatport_release_url || null,
+    beatport_tracks: Array.isArray(row.beatport_tracks) ? row.beatport_tracks : [],
   }
 
   if (args.stdout) {

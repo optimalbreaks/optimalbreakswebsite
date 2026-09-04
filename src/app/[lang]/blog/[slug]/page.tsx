@@ -13,11 +13,18 @@ import {
 } from '@/lib/seo'
 import { sanitizeHtml, sanitizeSlug, validateLocale } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
-import type { BlogPost } from '@/types/database'
+import type { BeatportTopTrack, BlogPost } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
 import CardThumbnail from '@/components/CardThumbnail'
+import BeatportTopTracks from '@/components/BeatportTopTracks'
+import {
+  buildFullArtistSlugMap,
+  buildFullLabelSlugMap,
+  filterArtistSlugMapForNames,
+} from '@/lib/artist-slug-map'
+import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url'>
@@ -73,6 +80,46 @@ export default async function BlogPostPage({ params }: Props) {
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
   const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
+  const albumTracks = Array.isArray(post.beatport_tracks)
+    ? (post.beatport_tracks as BeatportTopTrack[])
+    : []
+
+  let artistSlugMap: Record<string, string> | undefined
+  let labelSlugMap: Record<string, string> | undefined
+
+  if (albumTracks.length > 0) {
+    const trackArtistNames = new Set<string>()
+    const trackLabelNames = new Set<string>()
+    for (const t of albumTracks) {
+      for (const a of t.artists ?? []) {
+        const artistName = (a.name || '').trim()
+        if (artistName) trackArtistNames.add(artistName)
+      }
+      const labelName = (t.label || '').trim()
+      if (labelName) trackLabelNames.add(labelName)
+    }
+
+    const [allArtistLinkRows, { data: labelRows }] = await Promise.all([
+      fetchAllArtistLinkRows(supabase),
+      supabase.from('labels').select('name, slug'),
+    ])
+
+    artistSlugMap = filterArtistSlugMapForNames(
+      buildFullArtistSlugMap(allArtistLinkRows),
+      trackArtistNames,
+    )
+    labelSlugMap = filterArtistSlugMapForNames(
+      buildFullLabelSlugMap(
+        ((labelRows ?? []) as { slug: string; name: string | null }[]).map((r) => ({
+          slug: r.slug,
+          name: r.name,
+          name_display: null,
+        })),
+      ),
+      trackLabelNames,
+      { labelSuffixes: true },
+    )
+  }
   // wordCount aproximado para BlogPosting (sumando contenido sanitizado + tags
   // suelen sobrar; restamos rudimentariamente las etiquetas HTML).
   const wordCount = content.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length
@@ -161,6 +208,22 @@ export default async function BlogPostPage({ params }: Props) {
       {post.tags?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-8">
           {post.tags.map((t: string, i: number) => <span key={i} className="cutout fill">{t}</span>)}
+        </div>
+      )}
+
+      {albumTracks.length > 0 && (
+        <div className="mb-10">
+          <BeatportTopTracks
+            tracks={albumTracks}
+            beatportUrl={post.beatport_release_url || null}
+            lang={safeLang}
+            entityName={title}
+            artistSlugMap={artistSlugMap}
+            labelSlugMap={labelSlugMap}
+            heading={safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'}
+            defaultExpanded
+            badgeVariant="index"
+          />
         </div>
       )}
 

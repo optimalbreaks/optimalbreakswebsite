@@ -32,6 +32,15 @@ interface Props {
     slug?: string
     name?: string
   }
+  /** Cabecera del acordeón. Por defecto «TOP 10 BEATPORT». */
+  heading?: string
+  /** Si true, la lista sale abierta (álbum en blog; el Top 10 de ficha sigue cerrado). */
+  defaultExpanded?: boolean
+  /**
+   * `rank` = badge de chart (top 3 en rojo). `index` = numeración de álbum,
+   * todos iguales, para no parecer un Top 10.
+   */
+  badgeVariant?: 'rank' | 'index'
 }
 
 function buildSnapshot(
@@ -77,7 +86,17 @@ function proxyUrl(sampleUrl: string): string {
   return sampleUrl
 }
 
-function PositionBadge({ position }: { position: number }) {
+function PositionBadge({ position, variant = 'rank' }: { position: number; variant?: 'rank' | 'index' }) {
+  if (variant === 'index') {
+    return (
+      <span
+        className="inline-flex items-center justify-center shrink-0 font-black w-10 h-10 text-base bg-[var(--paper-dark)] text-[var(--ink)] border-[3px] border-[var(--ink)]"
+        style={{ fontFamily: "'Unbounded', sans-serif" }}
+      >
+        {position}
+      </span>
+    )
+  }
   const isTop3 = position <= 3
   const isTop10 = position <= 10
   return (
@@ -102,8 +121,11 @@ export default function BeatportTopTracks({
   artistSlugMap,
   labelSlugMap,
   origin,
+  heading,
+  defaultExpanded = false,
+  badgeVariant = 'rank',
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
   const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
@@ -271,8 +293,10 @@ export default function BeatportTopTracks({
   if (!tracks.length) return null
 
   const hasAnySample = playableTracks.length > 0
-  const title = 'TOP 10 BEATPORT'
-  const countLabel = `${tracks.length} tracks`
+  const title = heading || 'TOP 10 BEATPORT'
+  const countLabel = lang === 'es'
+    ? `${tracks.length} ${tracks.length === 1 ? 'corte' : 'cortes'}`
+    : `${tracks.length} ${tracks.length === 1 ? 'track' : 'tracks'}`
 
   const playAllBtnLabel = myQueueActive
     ? `■ STOP ${previewIndex + 1}/${previewQueue.length}`
@@ -341,7 +365,7 @@ export default function BeatportTopTracks({
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <PositionBadge position={t.position} />
+                      <PositionBadge position={t.position} variant={badgeVariant} />
 
                       {t.artwork_url && (
                         <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">

@@ -872,6 +872,10 @@ export interface BlogPost extends Record<string, unknown> {
   published_at: string
   is_published: boolean
   is_featured: boolean
+  /** Cortes Beatport para previews en el artículo (álbum / EP). Vacío = sin lista. */
+  beatport_tracks?: BeatportTopTrack[] | null
+  /** URL del release en Beatport cuando el artículo cubre un álbum o EP. */
+  beatport_release_url?: string | null
 }
 
 export interface Scene extends Record<string, unknown> {
