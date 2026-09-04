@@ -25,6 +25,7 @@ import {
   filterArtistSlugMapForNames,
 } from '@/lib/artist-slug-map'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
+import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url'>
@@ -86,10 +87,12 @@ export default async function BlogPostPage({ params }: Props) {
 
   let artistSlugMap: Record<string, string> | undefined
   let labelSlugMap: Record<string, string> | undefined
+  let saveRefsByUrl: ReturnType<typeof collectSaveRefsByBeatportUrl> | undefined
 
   if (albumTracks.length > 0) {
     const trackArtistNames = new Set<string>()
     const trackLabelNames = new Set<string>()
+    const titles = new Set<string>()
     for (const t of albumTracks) {
       for (const a of t.artists ?? []) {
         const artistName = (a.name || '').trim()
@@ -97,12 +100,28 @@ export default async function BlogPostPage({ params }: Props) {
       }
       const labelName = (t.label || '').trim()
       if (labelName) trackLabelNames.add(labelName)
+      const titleName = (t.title || '').trim()
+      if (titleName) titles.add(titleName)
     }
 
-    const [allArtistLinkRows, { data: labelRows }] = await Promise.all([
-      fetchAllArtistLinkRows(supabase),
-      supabase.from('labels').select('name, slug'),
-    ])
+    const titleList = Array.from(titles)
+    const [allArtistLinkRows, { data: labelRows }, { data: featuredRows }, { data: chartRows }] =
+      await Promise.all([
+        fetchAllArtistLinkRows(supabase),
+        supabase.from('labels').select('name, slug'),
+        titleList.length
+          ? supabase
+              .from('chart_featured_tracks')
+              .select('id, title, mix_name, artists, link_url')
+              .in('title', titleList)
+          : Promise.resolve({ data: [] as never[] }),
+        titleList.length
+          ? supabase
+              .from('chart_tracks')
+              .select('id, title, mix_name, artists, beatport_url')
+              .in('title', titleList)
+          : Promise.resolve({ data: [] as never[] }),
+      ])
 
     artistSlugMap = filterArtistSlugMapForNames(
       buildFullArtistSlugMap(allArtistLinkRows),
@@ -119,6 +138,22 @@ export default async function BlogPostPage({ params }: Props) {
       trackLabelNames,
       { labelSuffixes: true },
     )
+    saveRefsByUrl = collectSaveRefsByBeatportUrl(albumTracks, {
+      featured: (featuredRows ?? []) as {
+        id: string
+        title: string | null
+        mix_name: string | null
+        artists: unknown
+        link_url: string | null
+      }[],
+      chart: (chartRows ?? []) as {
+        id: string
+        title: string | null
+        mix_name: string | null
+        artists: unknown
+        beatport_url: string | null
+      }[],
+    })
   }
   // wordCount aproximado para BlogPosting (sumando contenido sanitizado + tags
   // suelen sobrar; restamos rudimentariamente las etiquetas HTML).
@@ -220,6 +255,7 @@ export default async function BlogPostPage({ params }: Props) {
             entityName={title}
             artistSlugMap={artistSlugMap}
             labelSlugMap={labelSlugMap}
+            saveRefsByUrl={saveRefsByUrl}
             heading={safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'}
             defaultExpanded
             badgeVariant="index"

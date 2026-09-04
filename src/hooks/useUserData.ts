@@ -392,6 +392,7 @@ export function useFavoriteToggle(type: FavoriteType, entityId: string) {
 export type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
 import type { SavedChartTrackSnapshot } from '@/types/database'
+import { trackSaveIdentityKey } from '@/lib/track-canonical-key'
 
 export interface SavedChartTrackRef {
   track_source: ChartTrackSource
@@ -503,7 +504,8 @@ export function useSavedChartTracks() {
   // Beatport Top 10 de un artista).
   const savedUrlSet = new Set(
     saved
-      .map((s) => normalizeCanonicalUrl(s.canonical_url))
+      .flatMap((s) => [s.canonical_url, s.snapshot?.beatport_url])
+      .map((u) => normalizeCanonicalUrl(u))
       .filter((s): s is string => !!s),
   )
 
@@ -512,6 +514,33 @@ export function useSavedChartTracks() {
   const isSavedByUrl = (url: string | null | undefined) => {
     const key = normalizeCanonicalUrl(url)
     return !!key && savedUrlSet.has(key)
+  }
+
+  const identityOfSaved = (row: SavedChartTrackRef) => {
+    if (row.track_source === 'vinyl') return ''
+    return trackSaveIdentityKey(
+      row.snapshot?.title,
+      row.snapshot?.mix_name,
+      row.snapshot?.artists,
+    )
+  }
+
+  /** URL canónica O (título + mix + artistas): single Beatport ≠ corte de álbum. */
+  const isSavedByIdentity = (opts: {
+    url?: string | null
+    snapshot?: SavedChartTrackSnapshot | null
+  }) => {
+    if (isSavedByUrl(opts.url)) return true
+    const snapUrl = opts.snapshot?.beatport_url
+    if (snapUrl && isSavedByUrl(snapUrl)) return true
+    const want = trackSaveIdentityKey(opts.snapshot?.title, opts.snapshot?.mix_name, opts.snapshot?.artists)
+    if (!want) return false
+    return saved.some((row) => {
+      if (identityOfSaved(row) === want) return true
+      const liveUrl = normalizeCanonicalUrl(row.canonical_url) || normalizeCanonicalUrl(row.snapshot?.beatport_url)
+      const incoming = normalizeCanonicalUrl(opts.url) || normalizeCanonicalUrl(snapUrl)
+      return !!incoming && liveUrl === incoming
+    })
   }
 
   const toggle = async (
@@ -624,10 +653,10 @@ export function useSavedChartTracks() {
     }
   }
 
-  // ---- Variante por URL canónica (beatport_top y otros sin id de tabla) ----
-  // Si CUALQUIER save ya coincide por URL canónica con `url`, se borran todos
-  // (cross-source). Si no, se inserta una fila con source='beatport_top' y
-  // `track_id` = id provisto (p.ej. beatport_id numérico en texto) o la URL.
+  // ---- Variante por URL / identidad (beatport_top y singles vs álbum) ----
+  // Si CUALQUIER save ya coincide por URL canónica O por título+mix+artistas
+  // (p.ej. single de abril vs corte del LP), se borran todos. Si no, insert
+  // `beatport_top`.
   const toggleByUrl = async (
     url: string,
     opts: {
@@ -641,9 +670,20 @@ export function useSavedChartTracks() {
 
     // Buscar TODAS las filas cuya URL canónica normalizada coincide, sin
     // importar la fuente. Un insert por URL coincidente es un borrado total.
-    const matching = saved.filter(
-      (r) => !!r.canonical_url && normalizeCanonicalUrl(r.canonical_url) === normalized,
+    const wantIdentity = trackSaveIdentityKey(
+      opts.snapshot?.title,
+      opts.snapshot?.mix_name,
+      opts.snapshot?.artists,
     )
+    const matching = saved.filter((r) => {
+      if (r.track_source === 'vinyl') {
+        return !!r.canonical_url && normalizeCanonicalUrl(r.canonical_url) === normalized
+      }
+      if (r.canonical_url && normalizeCanonicalUrl(r.canonical_url) === normalized) return true
+      if (r.snapshot?.beatport_url && normalizeCanonicalUrl(r.snapshot.beatport_url) === normalized) return true
+      if (wantIdentity && identityOfSaved(r) === wantIdentity) return true
+      return false
+    })
 
     if (matching.length > 0) {
       // Desmarca cross-source: borramos por pares (source, track_id) de todo
@@ -704,6 +744,7 @@ export function useSavedChartTracks() {
     loading,
     isSaved,
     isSavedByUrl,
+    isSavedByIdentity,
     isAnySaved,
     isAnySavedRefs,
     toggle,

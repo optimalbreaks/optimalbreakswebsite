@@ -24,7 +24,7 @@ import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
-import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
+import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
 import {
   requestYouTubePlay,
@@ -1132,10 +1132,14 @@ export default function ChartView({
       for (const t of w.tracks) {
         const k = normUrl(t.beatport_url) || fallbackKey(t.title, t.mix_name, artistsToCsv(t.artists))
         push(k, { source: 'chart', id: t.id })
+        const idK = trackSaveIdentityKey(t.title, t.mix_name, t.artists)
+        if (idK) push(idK, { source: 'chart', id: t.id })
       }
       for (const f of w.featured) {
         const k = normUrl(f.link_url) || fallbackKey(f.title, f.mix_name, artistsToCsv(f.artists))
         push(k, { source: 'featured', id: f.id })
+        const idK = trackSaveIdentityKey(f.title, f.mix_name, f.artists)
+        if (idK) push(idK, { source: 'featured', id: f.id })
       }
       for (const v of w.vinyl) {
         // OJO: `discogs_url` NO identifica una canción, sino el RELEASE completo
@@ -1154,6 +1158,8 @@ export default function ChartView({
       const artists = Array.isArray(p.artists) ? p.artists : []
       const k = normUrl(p.link_url) || fallbackKey(p.title, p.mix_name, artistsToCsv(artists))
       push(k, { source: 'featured', id: p.id })
+      const idK = trackSaveIdentityKey(p.title, p.mix_name, artists)
+      if (idK) push(idK, { source: 'featured', id: p.id })
     }
 
     const chartByTrack = new Map<string, CanonRef[]>()
@@ -1171,10 +1177,22 @@ export default function ChartView({
         unique.push(r)
       }
       if (unique.length < 2) return
+      const mergeInto = (map: Map<string, CanonRef[]>, trackId: string) => {
+        const prev = map.get(trackId) || []
+        const have = new Set(prev.map((x) => `${x.source}:${x.id}`))
+        const next = [...prev]
+        for (const r of unique) {
+          const k = `${r.source}:${r.id}`
+          if (have.has(k)) continue
+          have.add(k)
+          next.push(r)
+        }
+        if (next.length >= 2) map.set(trackId, next)
+      }
       for (const r of unique) {
-        if (r.source === 'chart') chartByTrack.set(r.id, unique)
-        else if (r.source === 'featured') featuredByTrack.set(r.id, unique)
-        else if (r.source === 'vinyl') vinylByTrack.set(r.id, unique)
+        if (r.source === 'chart') mergeInto(chartByTrack, r.id)
+        else if (r.source === 'featured') mergeInto(featuredByTrack, r.id)
+        else if (r.source === 'vinyl') mergeInto(vinylByTrack, r.id)
       }
     })
 

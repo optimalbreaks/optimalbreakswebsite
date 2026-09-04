@@ -18,6 +18,21 @@ export function fallbackTrackCanonicalKey(source: ChartTrackSource, id: string):
   return `t:${source}:${id}`
 }
 
+function artistNameTokens(artists: unknown): string[] {
+  let names: string[] = []
+  if (typeof artists === 'string') {
+    names = artists.split(',')
+  } else if (Array.isArray(artists)) {
+    names = artists.map((x) =>
+      x && typeof x === 'object' ? String((x as { name?: string }).name || '') : String(x || ''),
+    )
+  }
+  return names
+    .map((n) => n.trim().toLowerCase().replace(/\s+/g, ' '))
+    .filter(Boolean)
+    .sort()
+}
+
 function artistsNameKey(artists: unknown): string {
   if (typeof artists === 'string') return artists.trim().toLowerCase()
   if (!Array.isArray(artists)) return ''
@@ -26,6 +41,100 @@ function artistsNameKey(artists: unknown): string {
     .filter(Boolean)
     .join(', ')
     .toLowerCase()
+}
+
+/**
+ * Misma canción a ojos de Mis Tracks aunque Beatport asigne otro ID
+ * (single de abril vs corte del álbum en septiembre). Incluye mix para no
+ * fusionar Original Mix con Instrumental.
+ */
+export function trackSaveIdentityKey(
+  title: string | null | undefined,
+  mixName: string | null | undefined,
+  artists: unknown,
+): string {
+  const t = String(title || '').trim().toLowerCase()
+  if (!t || t === '—') return ''
+  const mix = String(mixName || '').trim().toLowerCase()
+  const names = artistNameTokens(artists)
+  if (!names.length) return ''
+  return `id:${t}|${mix}|${names.join('\u0001')}`
+}
+
+export type TrackSaveCatalogRef = { source: 'chart' | 'featured'; id: string }
+
+function beatportNumericId(url: string | null | undefined): string | null {
+  const m = String(url || '').match(/beatport\.com\/(?:[a-z]{2}\/)?track\/[^/]+\/(\d+)/i)
+  return m ? m[1] : null
+}
+
+/** Agrupa filas de charts/NR que son el mismo tema que un corte del álbum (blog / Top Beatport). */
+export function collectSaveRefsByBeatportUrl(
+  albumTracks: Array<{
+    beatport_url?: string | null
+    title: string
+    mix_name?: string | null
+    artists?: { name?: string }[]
+  }>,
+  catalog: {
+    featured?: Array<{
+      id: string
+      title: string | null
+      mix_name: string | null
+      artists: unknown
+      link_url: string | null
+    }>
+    chart?: Array<{
+      id: string
+      title: string | null
+      mix_name: string | null
+      artists: unknown
+      beatport_url: string | null
+    }>
+  },
+): Record<string, TrackSaveCatalogRef[]> {
+  const out: Record<string, TrackSaveCatalogRef[]> = {}
+  for (const t of albumTracks) {
+    const url = (t.beatport_url || '').trim()
+    if (!url) continue
+    const identity = trackSaveIdentityKey(t.title, t.mix_name, t.artists)
+    const albumBpId = beatportNumericId(url)
+    const refs: TrackSaveCatalogRef[] = []
+    const seen = new Set<string>()
+    const push = (source: TrackSaveCatalogRef['source'], id: string) => {
+      const k = `${source}:${id}`
+      if (!id || seen.has(k)) return
+      seen.add(k)
+      refs.push({ source, id })
+    }
+    for (const f of catalog.featured || []) {
+      const sameSong =
+        (identity && trackSaveIdentityKey(f.title, f.mix_name, f.artists) === identity) ||
+        (!!albumBpId && beatportNumericId(f.link_url) === albumBpId)
+      if (sameSong) push('featured', f.id)
+    }
+    for (const c of catalog.chart || []) {
+      const sameSong =
+        (identity && trackSaveIdentityKey(c.title, c.mix_name, c.artists) === identity) ||
+        (!!albumBpId && beatportNumericId(c.beatport_url) === albumBpId)
+      if (sameSong) push('chart', c.id)
+    }
+    refs.sort((a, b) => {
+      const aExact =
+        a.source === 'featured' &&
+        catalog.featured?.some((f) => f.id === a.id && beatportNumericId(f.link_url) === albumBpId)
+          ? 0
+          : 1
+      const bExact =
+        b.source === 'featured' &&
+        catalog.featured?.some((f) => f.id === b.id && beatportNumericId(f.link_url) === albumBpId)
+          ? 0
+          : 1
+      return aExact - bExact
+    })
+    if (refs.length) out[url] = refs
+  }
+  return out
 }
 
 function nameFallbackKey(

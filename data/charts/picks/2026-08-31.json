@@ -2084,31 +2084,6 @@
       "sort_order": 90
     },
     {
-      "title": "GIMME GIMME",
-      "mix_name": "Original Mix",
-      "artists": [
-        {
-          "name": "IVORY"
-        },
-        {
-          "name": "Specimen A"
-        }
-      ],
-      "label": "KNUCKLE DUSTER RECORDS",
-      "platform": "beatport",
-      "link_url": "https://www.beatport.com/track/gimme-gimme/27178193",
-      "link_label": "",
-      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f8393919-5c8b-4ffb-ab78-adabcc8fb2ef.jpg",
-      "sample_url": "https://geo-samples.beatport.com/track/e94c2f42-a2d4-4853-a463-6f180004207d.LOFI.mp3",
-      "bpm": 134,
-      "music_key": "Gb Major",
-      "release_year": 2026,
-      "release_date": "2026-09-02",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 91
-    },
-    {
       "title": "Bang",
       "mix_name": "Original Mix",
       "artists": [

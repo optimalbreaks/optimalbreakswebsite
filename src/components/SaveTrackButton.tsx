@@ -97,7 +97,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
   const { user } = useAuth()
   const {
     isSaved: isSavedFn,
-    isSavedByUrl,
+    isSavedByIdentity,
     isAnySaved,
     isAnySavedRefs,
     toggleGroup,
@@ -112,9 +112,10 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
   // URL match cross-source: si el usuario ya tiene la misma canción (por URL
   // canónica) guardada desde OTRA lista, el botón aparece en verde aunque
   // aquí sea una fila/ref que no está en su lista.
-  const matchByUrl = isUrlMode
-    ? isSavedByUrl(externalUrl as string)
-    : (canonicalUrl ? isSavedByUrl(canonicalUrl) : false)
+  const matchByUrl = isSavedByIdentity({
+    url: isUrlMode ? (externalUrl as string) : canonicalUrl,
+    snapshot: isUrlMode ? snapshot : refSnapshot,
+  })
 
   const isSaved = isUrlMode
     ? matchByUrl
@@ -163,7 +164,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
     // hacer click queremos borrar TODAS las coincidencias por URL para que
     // el botón quede blanco. Usamos toggleByUrl como desempate.
     if (matchByUrl && canonicalUrl && !(hasRefs ? isAnySavedRefs(relatedRefs as Array<{ source: ChartTrackSource; id: string }>) : (hasIds ? isAnySaved(source as ChartTrackSource, groupIds) : isSavedFn(source as ChartTrackSource, trackId as string)))) {
-      toggleByUrl(canonicalUrl)
+      toggleByUrl(canonicalUrl, { snapshot: refSnapshot ?? undefined })
       return
     }
     if (hasRefs) {

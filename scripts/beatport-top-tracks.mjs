@@ -527,6 +527,10 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false, autoF
 // ---------------------------------------------------------------------------
 async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, tracks, extra = {}) {
   const { artistHeroImageUrl = null, labelLogoUrl = null, dryRun = false } = extra
+  if (!tracks.length) {
+    console.log(`  ⚠ ${table}.${slug}: 0 tracks — no se escribe (evita borrar un Top 10 previo)`)
+    return
+  }
   const payload = {
     beatport_url: beatportUrl,
     beatport_id: beatportId,

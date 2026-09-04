@@ -16,6 +16,7 @@ import {
 } from '@/lib/share-track'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
+import type { TrackSaveCatalogRef } from '@/lib/track-canonical-key'
 
 interface Props {
   tracks: BeatportTopTrack[]
@@ -41,6 +42,12 @@ interface Props {
    * todos iguales, para no parecer un Top 10.
    */
   badgeVariant?: 'rank' | 'index'
+  /**
+   * Filas de charts/NR que son el mismo tema (otro ID de Beatport).
+   * Clave = `beatport_url` del corte. El "+" del álbum queda verde si
+   * cualquiera de esas refs ya está en Mis Tracks.
+   */
+  saveRefsByUrl?: Record<string, TrackSaveCatalogRef[]>
 }
 
 function buildSnapshot(
@@ -62,6 +69,35 @@ function buildSnapshot(
     spotify_url: t.spotify_url ?? null,
     tidal_url: t.tidal_url ?? null,
     origin,
+  }
+}
+
+function saveDataForTrack(
+  t: BeatportTopTrack,
+  origin: Props['origin'],
+  saveRefsByUrl?: Record<string, TrackSaveCatalogRef[]>,
+) {
+  if (!t.beatport_url) return undefined
+  const refs = saveRefsByUrl?.[t.beatport_url]
+  const snapshot = buildSnapshot(t, origin)
+  const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
+  if (refs && refs.length > 0) {
+    const primary = refs[0]
+    return {
+      mode: 'ref' as const,
+      source: primary.source,
+      trackId: primary.id,
+      relatedRefs: refs,
+      canonicalUrl: t.beatport_url,
+      snapshot,
+    }
+  }
+  return {
+    mode: 'url' as const,
+    externalUrl: t.beatport_url,
+    externalTrackId: bpId,
+    canonicalUrl: t.beatport_url,
+    snapshot,
   }
 }
 
@@ -124,6 +160,7 @@ export default function BeatportTopTracks({
   heading,
   defaultExpanded = false,
   badgeVariant = 'rank',
+  saveRefsByUrl,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
   const pathname = usePathname()
@@ -167,15 +204,7 @@ export default function BeatportTopTracks({
         // Vuelta al origen desde el mini reproductor: la ficha (artista o
         // sello) donde vive este Top 10. El hash #bp-row-N expande el panel.
         originPath: pathname || undefined,
-        save: t.beatport_url
-          ? {
-              mode: 'url' as const,
-              externalUrl: t.beatport_url,
-              externalTrackId: bpId,
-              canonicalUrl: t.beatport_url,
-              snapshot: buildSnapshot(t, origin),
-            }
-          : undefined,
+        save: saveDataForTrack(t, origin, saveRefsByUrl),
         share: sharePath
           ? { mode: 'path' as const, path: sharePath, storyMeta }
           : t.beatport_url
@@ -183,7 +212,7 @@ export default function BeatportTopTracks({
             : undefined,
       }
     })
-  }, [playableTracks, origin, pathname])
+  }, [playableTracks, origin, pathname, saveRefsByUrl])
 
   const playFromTrack = useCallback((t: BeatportTopTrack) => {
     // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚
@@ -256,15 +285,7 @@ export default function BeatportTopTracks({
         artworkUrl: t.artwork_url || null,
         domId: `bp-row-${t.position}`,
         originPath: pathname || undefined,
-        save: t.beatport_url
-          ? {
-              mode: 'url',
-              externalUrl: t.beatport_url,
-              externalTrackId: bpId,
-              canonicalUrl: t.beatport_url,
-              snapshot: buildSnapshot(t, origin),
-            }
-          : undefined,
+        save: saveDataForTrack(t, origin, saveRefsByUrl),
         share: sharePath
           ? { mode: 'path', path: sharePath, storyMeta }
           : t.beatport_url
@@ -288,7 +309,7 @@ export default function BeatportTopTracks({
       }
     }, 120)
     return () => window.clearTimeout(t)
-  }, [tracks, playableTracks, groupKey, playPreviewQueue, pathname, origin])
+  }, [tracks, playableTracks, groupKey, playPreviewQueue, pathname, origin, saveRefsByUrl])
 
   if (!tracks.length) return null
 
@@ -418,16 +439,33 @@ export default function BeatportTopTracks({
                           {t.key}
                         </span>
                       )}
-                      {t.beatport_url && (
-                        <SaveTrackButton
-                          externalUrl={t.beatport_url}
-                          externalTrackId={extractBeatportTrackId(t.beatport_url) ?? undefined}
-                          canonicalUrl={t.beatport_url}
-                          snapshot={buildSnapshot(t, origin)}
-                          lang={lang}
-                          size="sm"
-                        />
-                      )}
+                      {(() => {
+                        const save = saveDataForTrack(t, origin, saveRefsByUrl)
+                        if (!save) return null
+                        if (save.mode === 'ref') {
+                          return (
+                            <SaveTrackButton
+                              source={save.source}
+                              trackId={save.trackId}
+                              relatedRefs={save.relatedRefs}
+                              canonicalUrl={save.canonicalUrl}
+                              snapshot={save.snapshot}
+                              lang={lang}
+                              size="sm"
+                            />
+                          )
+                        }
+                        return (
+                          <SaveTrackButton
+                            externalUrl={save.externalUrl}
+                            externalTrackId={save.externalTrackId}
+                            canonicalUrl={save.canonicalUrl}
+                            snapshot={save.snapshot}
+                            lang={lang}
+                            size="sm"
+                          />
+                        )
+                      })()}
                       {(() => {
                         const bpId = extractBeatportTrackId(t.beatport_url)
                         if (!bpId || !pathname) return null
