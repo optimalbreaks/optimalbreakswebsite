@@ -46,7 +46,8 @@ Script: `scripts/enviar-campana-mail.mjs` · npm: `npm run mail:campaign`.
 Reglas que no se negocian:
 
 1. **Nunca** `--send` en el mismo turno en que se diseña. Primero `--test` a `contacto@`, el editor mira Outlook/Gmail, luego «mándalo».
-2. **Uno a uno**, no CCO. Pausa **1,5 s** (`SEND_GAP_MS`) entre envíos (OVH y spam).
+2. **Uno a uno**, no un CCO masivo a toda la audiencia. Pausa **1,5 s** (`SEND_GAP_MS`) entre envíos (OVH y spam).
+   **Copia a `contacto@`:** todo mail a un usuario (campaña o transaccional) lleva **Cc: contacto@optimalbreaks.com** para ver que salió. Si el To ya es contacto (borrador), no se duplica. Los de Auth (Supabase) no pueden llevar copia.
 3. **Solo emails confirmados** (`email_confirmed_at`). Sin confirmar = no hay destinatario.
 4. **Excluir** `SMTP_USER`, `contacto@optimalbreaks.com`, `contacto@eskaladigital.com`.
 5. Saludo y cifras **por persona** (`display_name` / primer nombre + recuento suyo). El resto del HTML (listas, portadas) se reutiliza.
@@ -143,7 +144,7 @@ Hoy, en `listAudience()`:
 
 Para la **siguiente** campaña: cambiar el filtro (p. ej. 0 saves, sin login en 30 días, artistas sin claim). No reenviar el mismo HTML a quien ya lo recibió sin un criterio nuevo. Si hace falta no repetir: tabla `mail_sends` (user_id, campaign_id, sent_at) — aún no existe; montarla cuando haya segunda tanda.
 
-Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): el aviso «tienes una solicitud nueva» ya corre en **`src/lib/transactional-mail.ts`** (mismo SMTP; el POST de `/api/booking-requests` lo dispara en `waitUntil`). El anuncio de launch a toda la base sigue siendo este script. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips. Pon **`SMTP_*` también en Vercel** o el aviso de booking no saldrá en producción.
+Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): el aviso «tienes una solicitud nueva» ya corre en **`src/lib/transactional-mail.ts`** (mismo SMTP; el POST de `/api/booking-requests` lo dispara en `waitUntil`). Al aprobar un claim se manda **ficha verificada** (interruptor cerrado hasta que el artista encienda «Abierto»). Borrador a contacto@: `npx tsx scripts/enviar-mail-claim-aprobado.ts`. Preview: [`mailing/claim-approved.html`](../mailing/claim-approved.html). El anuncio de launch a toda la base sigue siendo este script. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips. Pon **`SMTP_*` también en Vercel** o el aviso de booking no saldrá en producción.
 
 ---
 
@@ -187,7 +188,8 @@ npm run mail:campaign -- --send
 | `mailing/firma-*.html` | Firmas Outlook |
 | `.env.local` / `.env.local.example` | `SMTP_*` |
 | `src/app/api/og/image-proxy/route.ts` | Proxy de portadas (descarga) |
-| `src/lib/share-track.ts` | Deep-links `?play=` |
+| `src/lib/transactional-mail.ts` | Avisos de booking y de ficha verificada (SMTP OVH; borrador claim: `scripts/enviar-mail-claim-aprobado.ts`) |
+| `mailing/claim-approved.html` | Último HTML del borrador de ficha verificada |
 
 ---
 

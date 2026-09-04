@@ -474,9 +474,13 @@ function sleep(ms) {
 
 function mailPayload(to, html, greetingName, subject, attachments) {
   const from = process.env.SMTP_FROM || `Optimal Breaks <${process.env.SMTP_USER}>`
+  const ccRaw = (process.env.SMTP_USER || 'contacto@optimalbreaks.com').trim()
+  const cc =
+    ccRaw && String(to).trim().toLowerCase() !== ccRaw.toLowerCase() ? ccRaw : undefined
   return {
     from,
     to,
+    cc,
     replyTo: process.env.SMTP_USER,
     subject,
     html,

@@ -37,6 +37,9 @@
 >   que `docs/GUIA_MAILS.md`). El POST de `/api/booking-requests` avisa al email confirmado de la
 >   cuenta `claimed_by` (sin el cuerpo de la solicitud). Requiere `SMTP_*` también en Vercel.
 >   El anuncio masivo a la base sigue siendo el script de campaña, no este canal.
+>   Al **aprobar un claim** se manda un segundo transaccional (ficha verificada, interruptor
+>   de bookings cerrado hasta que el artista lo encienda). Todo mail a un usuario lleva
+>   **Cc: contacto@** (si el To no es ya contacto). Borrador: `npx tsx scripts/enviar-mail-claim-aprobado.ts`.
 > - Decisiones §9 por defecto en el MVP: categorías no reclamables `pioneer`/`uk_legend`; 1 ficha
 >   verificada por cuenta; presupuesto por rangos; una fecha opcional; rechazo silencioso.
 
@@ -107,8 +110,9 @@ usuario normal → **marcado editorial** (no auto-voto en Top artistas, sin book
 4. Se encuentra → «Esta es mi ficha» → solicitud `pending`. Mensaje: *«Pendiente de
    verificación. Te contactaremos.»*
 5. Administración contacta (foto / videollamada / conocimiento de escena) y aprueba o rechaza.
-6. Aprobado → vínculo `profiles ↔ artists`. En su ficha pública aparece el bloque de booking;
-   en Mi cuenta, su bandeja. **Sin permisos de edición.**
+6. Aprobado → vínculo `profiles ↔ artists` + correo transaccional de ficha verificada.
+   En Mi cuenta, su bandeja y el interruptor **Abierto** (nace cerrado). El botón público
+   de booking **no** sale hasta que él lo encienda. **Sin permisos de edición.**
 
 ### 3.2 DJ sin ficha
 

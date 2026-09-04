@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { waitUntil } from '@vercel/functions'
 import { getRouteUser, requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { notifyArtistOfClaimApproved } from '@/lib/transactional-mail'
 import type { ArtistClaimRow } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -83,10 +85,10 @@ export async function PATCH(
     }
     const { data: artist } = await svc
       .from('artists')
-      .select('id, claimed_by')
+      .select('id, name, slug, claimed_by')
       .eq('id', targetArtistId)
       .maybeSingle()
-    const art = artist as { id: string; claimed_by: string | null } | null
+    const art = artist as { id: string; name: string; slug: string; claimed_by: string | null } | null
     if (!art) return NextResponse.json({ error: 'Ficha no encontrada.' }, { status: 404 })
     if (art.claimed_by && art.claimed_by !== claim.user_id) {
       return NextResponse.json(
@@ -114,6 +116,15 @@ export async function PATCH(
       .select('*')
       .single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    waitUntil(
+      notifyArtistOfClaimApproved({
+        userId: claim.user_id,
+        artistName: art.name,
+        artistSlug: art.slug,
+      }).catch((err) => {
+        console.warn('[mail] aviso de ficha verificada falló', err)
+      }),
+    )
     return NextResponse.json({ data })
   }
 
