@@ -38,6 +38,47 @@
       "artwork_url": "https://i.ytimg.com/vi/CdE1klEt1Go/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 3,
+      "title": "Mr Jingles",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "2 Sinners"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": null,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=v93c0yggjfY",
+      "artwork_url": "https://i.ytimg.com/vi/v93c0yggjfY/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 4,
+      "title": "Nine",
+      "mix_name": "Elite Force Remix",
+      "artists": [
+        {
+          "name": "Downpressor"
+        },
+        {
+          "name": "Elite Force"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2002,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=bIo8ql5JaQE",
+      "artwork_url": "https://i.ytimg.com/vi/bIo8ql5JaQE/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

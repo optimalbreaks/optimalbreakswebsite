@@ -636,7 +636,7 @@ export interface BreakbeatProfileStats {
   sample_mixes?: string[]
   sample_tracks?: string[]
   /** Tracks que el usuario ha guardado explícitamente en "Mis Tracks"
-   *  (chart_tracks | chart_featured_tracks | chart_vinyl_tracks), formateadas
+   *  (chart | featured | vinyl | beatport_top), formateadas
    *  como "Artista — Título (año) [fuente]". */
   sample_saved_chart_tracks?: string[]
   /** Sellos que aparecen en las tracks guardadas del usuario, con conteo. */

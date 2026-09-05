@@ -8,6 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { extractBeatportTrackId } from '@/lib/share-track'
+import { isGenericVersionMixName } from '@/lib/track-canonical-key'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -672,6 +673,21 @@ export async function GET(request: NextRequest) {
   // marca la clave y los siguientes con la misma firma se descartan.
   const seenTrackKeys = new Set<string>()
 
+  function searchTrackDedupeKey(title: string, mix: string, artists: unknown): string {
+    let t = title
+    let m = mix
+    const paren = t.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+    if (paren) {
+      const inner = paren[2]
+      if (!m || m === inner || isGenericVersionMixName(inner)) {
+        t = paren[1].trim()
+        if (!m) m = inner
+      }
+    }
+    const mixKey = isGenericVersionMixName(m) ? '' : normForKey(m)
+    return `${normForKey(t)}|${mixKey}|${normForKey(firstArtistName(artists))}`
+  }
+
   function pushTrack(
     row: TrackRow,
     kind: 'chart' | 'featured' | 'vinyl',
@@ -680,11 +696,10 @@ export async function GET(request: NextRequest) {
     const mix = (row.mix_name || '').trim()
     const fullTitle = mix ? `${title} (${mix})` : title
     const artistsText = artistsToText(row.artists)
-    // Dedupe por titulo+mix+PRIMER artista (no todos). Una misma
-    // cancion puede aparecer en distintas ediciones con feats variables
-    // ("Guau" vs "Guau, Lutolsky"). Usando solo el primer artista, que
-    // suele ser el principal, ambas se consideran la misma.
-    const key = `${normForKey(title)}|${normForKey(mix)}|${normForKey(firstArtistName(row.artists))}`
+    // Dedupe por titulo+mix genérico+PRIMER artista. Original Mix e Instrumental
+    // del mismo tema cuentan una vez; un remix con nombre no. Feats variables
+    // ("Guau" vs "Guau, Lutolsky") siguen yendo por el primer artista.
+    const key = searchTrackDedupeKey(title, mix, row.artists)
     if (seenTrackKeys.has(key)) return
     seenTrackKeys.add(key)
     const yr = kind === 'vinyl' ? row.year : row.release_year
@@ -731,7 +746,7 @@ export async function GET(request: NextRequest) {
     for (const e of beatportTopIndex as BeatportTopEntry[]) {
       if (bpAdded >= 12) break
       if (!e.haystack.includes(bpNeedle)) continue
-      const key = `${normForKey(e.title)}|${normForKey(e.mix)}|${normForKey(e.firstArtist)}`
+      const key = searchTrackDedupeKey(e.title, e.mix, [{ name: e.firstArtist }])
       if (seenTrackKeys.has(key)) continue
       seenTrackKeys.add(key)
       const fullTitle = e.mix ? `${e.title} (${e.mix})` : e.title

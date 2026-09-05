@@ -43,10 +43,32 @@ function artistsNameKey(artists: unknown): string {
     .toLowerCase()
 }
 
+function foldTrackText(s: string): string {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Versión genérica del mismo corte (no es un remix con nombre).
+ * Original Mix e Instrumental de PITBULL son la misma canción en las
+ * listas únicas; «Freestylers Remix» o un VIP con nombre se quedan aparte.
+ */
+export function isGenericVersionMixName(mix: string | null | undefined): boolean {
+  const m = foldTrackText(mix)
+  if (!m) return true
+  return /^(original(\s+mix)?|instrumental|extended(\s+(mix|version))?|radio(\s+(edit|mix))?|club(\s+mix)?|vocal(\s+(mix|version))?)$/i.test(
+    m,
+  )
+}
+
 /**
  * Misma canción a ojos de Mis Tracks aunque Beatport asigne otro ID
  * (single de abril vs corte del álbum en septiembre). Incluye mix para no
- * fusionar Original Mix con Instrumental.
+ * fusionar Original Mix con Instrumental en el save por URL.
  */
 export function trackSaveIdentityKey(
   title: string | null | undefined,
@@ -59,6 +81,33 @@ export function trackSaveIdentityKey(
   const names = artistNameTokens(artists)
   if (!names.length) return ''
   return `id:${t}|${mix}|${names.join('\u0001')}`
+}
+
+/**
+ * Identidad de canción para listas únicas (ficha artista/sello, buscador).
+ * Single y corte de álbum (IDs Beatport distintos) y Original Mix vs Instrumental
+ * cuentan una vez. Las filas del catálogo no se borran: el merge lleva todos
+ * los UUID en `relatedRefs` para no perder «+».
+ */
+export function trackDisplayIdentityKey(
+  title: string | null | undefined,
+  mixName: string | null | undefined,
+  artists: unknown,
+): string {
+  let t = foldTrackText(title)
+  if (!t || t === '—') return ''
+  let m = foldTrackText(mixName)
+  const paren = t.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+  if (paren) {
+    const inner = foldTrackText(paren[2])
+    if (!m || m === inner || inner.includes(m) || m.includes(inner) || isGenericVersionMixName(inner)) {
+      t = paren[1].trim()
+      if (!m) m = inner
+    }
+  }
+  const mixPart = isGenericVersionMixName(m) ? '' : m
+  const names = artistNameTokens(artists)
+  return `nm:${t}|${mixPart}|${names.join(',')}`
 }
 
 export type TrackSaveCatalogRef = { source: 'chart' | 'featured'; id: string }

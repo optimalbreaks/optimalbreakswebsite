@@ -2339,78 +2339,188 @@ const FLORIDANCE_FESTIVAL_2026_SLUG = 'floridance-festival-2026'
 const FLORIDANCE_FESTIVAL_TICKETS =
   'https://www.monsterticket.com/evento/floridance-festival-2026'
 const FLORIDANCE_FESTIVAL_IMAGE = '/images/events/floridance-festival-2026.webp'
+const FLORIDANCE_FESTIVAL_HORARIOS_IMAGE =
+  'https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/events/floridance-festival-2026/horarios.webp'
 
+/** Cartel oficial A–Z (5 sept 2026). MonsterTicket no lista nombres. */
 const FLORIDANCE_FESTIVAL_2026_LINEUP = [
-  'La Gore',
+  'Pascal Kleiman',
+  'Stanton Warriors',
+  'Wizard',
   'Atomic Hooligan',
-  'DJ Man vs DJ Shemma',
-  'Tortu / Bad Legs',
-  'Aldo Ferrari / Perfect Kombo',
-  'Maribel / Rueda / Killerblitz',
-  'Leeroy Thornhill (ex-Prodigy)',
-  'Anuschka / Norbak',
-  'Yo Speed / Wally',
-  'Tilla Pink / Kill2beat',
+  'Ctrl-Z',
+  'Leeroy Thornhill',
+  'MC Ivory',
+  'La Gore',
+  'Aldo Ferrari',
+  'Anuschka',
+  'Bad Legs',
   'Deekbass',
+  'DJ Man vs DJ Shemma',
+  'Funkybitz',
+  'Heavy',
+  'Kill2Beat',
+  'Killerblitz',
+  'Lady Shade',
+  'Maribel',
+  'Norbak',
+  'Orebeat',
+  'Perfect Kombo',
+  'Rueda',
+  'Shade K',
+  'Tilla Pink',
+  'Tortu',
+  'Vand4los',
+  'Wally',
+  'Xema',
+  'Yo Speed',
+  'Benjamín Serdio VJ',
+  'Carlos Mejías VJ',
+  'Cellux MC',
 ]
 
-const FLORIDANCE_FESTIVAL_2026_ROW = {
-  name: 'Floridance Festival 2026',
-  description_en:
-    'Floridance Festival 2026 is presented by Animalia El Bicho Producciones at Estadio Municipal Antonio Pazos Puyana "Monago" in Rota (Cádiz). Saturday 5 September 2026. Official artwork "Avance line-up #2" adds La Gore, Atomic Hooligan, DJ Man vs DJ Shemma (first Animalia event tribute on the flyer), Tortu / Bad Legs, Aldo Ferrari / Perfect Kombo, Maribel / Rueda / Killerblitz alongside Leeroy Thornhill (ex-Prodigy), Anuschka / Norbak, Yo Speed / Wally, Tilla Pink / Kill2beat and Deekbass; more names may follow. Sponsor call-outs on the art include Cutty Sark whisky and Negrita rum; partners cited include Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario and Locura energy drink (per flyer). MonsterTicket lists genre breakbeat, hours 18:00-07:00, venue Av. de la Diputación 164, 18+ access and named ticket types (general/VIP tiers on the storefront; details may update). Casual dress and food trucks are noted on sale copy.',
-  description_es:
-    'Floridance Festival 2026, producido por Animalia El Bicho Producciones, en el Estadio Municipal Antonio Pazos Puyana "Monago" de Rota (Cádiz), sábado 5 de septiembre de 2026. El cartel marca "Avance line-up #2" con La Gore, Atomic Hooligan, DJ Man vs DJ Shemma (homenaje al primer evento Animalia en el flyer), Tortu / Bad Legs, Aldo Ferrari / Perfect Kombo, Maribel / Rueda / Killerblitz, Leeroy Thornhill (ex-Prodigy), Anuschka / Norbak, Yo Speed / Wally, Tilla Pink / Kill2beat y Deekbass (se irán sumando más nombres en siguientes comunicados). En el flyer figuran como patrocinio Cutty Sark y ron Negrita; entre colaboradores Ayuntamiento de Rota (Delegación de Juventud), Cayetano Todo Impresión, Rives, Legendario y Locura (bebida energética). MonsterTicket publica género breakbeat, horario 18:00h a 07:00h, dirección Av. de la Diputación 164, acceso desde 18 años y entradas nominativas con tipologías general/VIP según tienda.',
-  event_type: 'festival',
-  date_start: '2026-09-05',
-  date_end: null,
-  location: 'Estadio Municipal Antonio Pazos Puyana "Monago", Rota, Cádiz, Spain',
-  city: 'Rota',
-  country: 'Spain',
-  venue: 'Estadio Antonio Pazos Puyana "Monago"',
-  address: 'Av. de la Diputación, 164, Rota, Cádiz',
-  website: null,
-  tickets_url: FLORIDANCE_FESTIVAL_TICKETS,
-  doors_open: '18:00',
-  doors_close: '07:00',
-  image_url: FLORIDANCE_FESTIVAL_IMAGE,
-  lineup: FLORIDANCE_FESTIVAL_2026_LINEUP,
-  tags: [
-    'floridance festival',
-    'animalia el bicho producciones',
-    'rota',
-    'cadiz',
-    'breakbeat',
-    'antonio pazos puyana',
-    'monsterticket',
-    '2026',
-  ],
-  socials: {},
-  age_restriction: '18+',
-}
+const FLORIDANCE_CUTTY_SARK = 'Escenario 30 Aniversario Cutty Sark'
+const FLORIDANCE_NEGRITA = 'Escenario Floridance Negrita'
+
+const FLORIDANCE_FESTIVAL_2026_STAGES = [
+  {
+    name: FLORIDANCE_CUTTY_SARK,
+    description_es: 'Escenario 30 aniversario (Cutty Sark). Apertura 18:00; cierre 06:00. Horarios oficiales del cartel «Modificación horarios».',
+    description_en: '30th-anniversary stage (Cutty Sark). Opens 18:00; closes 06:00. Official “schedule modification” flyer.',
+    lineup: [
+      'Deekbass',
+      'Kill2Beat',
+      'Tilla Pink',
+      'La Gore',
+      'Xema vs Heavy',
+      'Stanton Warriors',
+      'DJ Man vs Shemma',
+      'Tortu',
+      'Vand4los (Bad Legs, Seekflow, JTT, L-Essence)',
+      'Wizard vs Ivory',
+      'Yo Speed',
+      'Anuschka',
+      'Aldo Ferrari',
+    ],
+  },
+  {
+    name: FLORIDANCE_NEGRITA,
+    description_es: 'Escenario Floridance (Negrita). Apertura 18:30; cierre 05:30. Horarios oficiales del cartel «Modificación horarios».',
+    description_en: 'Floridance stage (Negrita). Opens 18:30; closes 05:30. Official “schedule modification” flyer.',
+    lineup: [
+      'Funkybitz',
+      'Lady Shade',
+      'Perfect Kombo',
+      'Leeroy Thornhill',
+      'Killerblitz',
+      'Wally',
+      'Orebeat',
+      'Atomic Hooligan',
+      'Rueda vs Maribel',
+      'Ctrl-Z',
+      'Pascal Kleiman',
+      'Shade K vs Norbak',
+    ],
+  },
+]
+
+const FLORIDANCE_FESTIVAL_2026_SCHEDULE = [
+  { time: '18:00', artist: 'Deekbass', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '18:30', artist: 'Funkybitz', stage: FLORIDANCE_NEGRITA },
+  { time: '18:45', artist: 'Kill2Beat', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '19:15', artist: 'Lady Shade', stage: FLORIDANCE_NEGRITA },
+  { time: '19:30', artist: 'Tilla Pink', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '20:00', artist: 'Perfect Kombo', stage: FLORIDANCE_NEGRITA },
+  { time: '20:15', artist: 'La Gore', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '20:45', artist: 'Leeroy Thornhill', stage: FLORIDANCE_NEGRITA },
+  { time: '21:00', artist: 'Xema vs Heavy', stage: FLORIDANCE_CUTTY_SARK, is_b2b: true },
+  { time: '21:45', artist: 'Killerblitz', stage: FLORIDANCE_NEGRITA },
+  { time: '22:00', artist: 'Stanton Warriors', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '22:30', artist: 'Wally', stage: FLORIDANCE_NEGRITA },
+  { time: '23:00', artist: 'DJ Man vs Shemma', stage: FLORIDANCE_CUTTY_SARK, is_b2b: true },
+  { time: '23:30', artist: 'Orebeat', stage: FLORIDANCE_NEGRITA },
+  { time: '00:00', artist: 'Tortu', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '00:30', artist: 'Atomic Hooligan', stage: FLORIDANCE_NEGRITA },
+  { time: '01:00', artist: 'Vand4los (Bad Legs, Seekflow, JTT, L-Essence)', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '01:30', artist: 'Rueda vs Maribel', stage: FLORIDANCE_NEGRITA, is_b2b: true },
+  { time: '02:00', artist: 'Wizard vs Ivory', stage: FLORIDANCE_CUTTY_SARK, is_b2b: true },
+  { time: '02:30', artist: 'Ctrl-Z', stage: FLORIDANCE_NEGRITA },
+  { time: '03:00', artist: 'Yo Speed', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '03:30', artist: 'Pascal Kleiman', stage: FLORIDANCE_NEGRITA },
+  { time: '04:00', artist: 'Anuschka', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '04:30', artist: 'Shade K vs Norbak', stage: FLORIDANCE_NEGRITA, is_b2b: true },
+  { time: '05:00', artist: 'Aldo Ferrari', stage: FLORIDANCE_CUTTY_SARK },
+  { time: '05:30', artist: 'Cierre', stage: FLORIDANCE_NEGRITA },
+  { time: '06:00', artist: 'Cierre', stage: FLORIDANCE_CUTTY_SARK },
+]
+
+const FLORIDANCE_FESTIVAL_2026_DESC_ES =
+  'Floridance Fest 2026, de Animalia El Bicho Producciones (desde 1999), es el sábado 5 de septiembre en el Estadio Municipal Antonio Pazos Puyana «Monago» de Rota (Cádiz): solo breakbeat, pista de césped a pie de playa, foodtrucks, merchandising y pintacaras de Fluornation. Vestimenta casual; solo mayores de 18 años con DNI; entradas nominativas.\n\nDos escenarios con horarios oficiales (modificación publicada por Animalia). Escenario 30 Aniversario Cutty Sark: Deekbass 18:00, Kill2Beat, Tilla Pink, La Gore, Xema vs Heavy, Stanton Warriors, DJ Man vs Shemma, Tortu, Vand4los (Bad Legs, Seekflow, JTT, L-Essence) a las 01:00, Wizard vs Ivory, Yo Speed, Anuschka y Aldo Ferrari (cierre 06:00). Escenario Floridance Negrita: Funkybitz 18:30, Lady Shade, Perfect Kombo, Leeroy Thornhill (ex-Prodigy), Killerblitz, Wally, Orebeat, Atomic Hooligan, Rueda vs Maribel, Ctrl-Z, Pascal Kleiman y Shade K vs Norbak (cierre 05:30). Visuales: Benjamín Serdio VJ y Carlos Mejías VJ. Presentación: Cellux MC.\n\nVenta en MonsterTicket y floridance.es. Patrocinan Cutty Sark, Negrita, Cruzcampo y Fuze Tea; colaboran Ayuntamiento de Rota (Delegación de Juventud), Cayetano, Rives, Legendario, Locura y Rota Dance.'
+
+const FLORIDANCE_FESTIVAL_2026_DESC_EN =
+  'Floridance Fest 2026, from Animalia El Bicho Producciones (since 1999), is on Saturday 5 September at Estadio Municipal Antonio Pazos Puyana “Monago” in Rota (Cádiz): breakbeat only, a grass dancefloor by the beach, food trucks, merch and Fluornation face painting. Casual dress; 18+ with ID; nominative tickets.\n\nTwo stages with official times (Animalia’s published schedule update). 30th Anniversary Cutty Sark stage: Deekbass 18:00, Kill2Beat, Tilla Pink, La Gore, Xema vs Heavy, Stanton Warriors, DJ Man vs Shemma, Tortu, Vand4los (Bad Legs, Seekflow, JTT, L-Essence) at 01:00, Wizard vs Ivory, Yo Speed, Anuschka and Aldo Ferrari (close 06:00). Floridance Negrita stage: Funkybitz 18:30, Lady Shade, Perfect Kombo, Leeroy Thornhill (ex-Prodigy), Killerblitz, Wally, Orebeat, Atomic Hooligan, Rueda vs Maribel, Ctrl-Z, Pascal Kleiman and Shade K vs Norbak (close 05:30). Visuals: Benjamín Serdio VJ and Carlos Mejías VJ. Host: Cellux MC.\n\nTickets via MonsterTicket and floridance.es. Sponsors on the flyer: Cutty Sark, Negrita, Cruzcampo and Fuze Tea; partners include Ayuntamiento de Rota (youth department), Cayetano, Rives, Legendario, Locura and Rota Dance.'
 
 async function runPatchFloridanceFestival2026(sb) {
   const { data: before, error: e0 } = await sb
     .from('events')
-    .select('slug, name, date_start, city, venue, image_url')
+    .select('slug, name, date_start, date_end, city, venue, image_url, lineup, stages')
     .eq('slug', FLORIDANCE_FESTIVAL_2026_SLUG)
     .maybeSingle()
   if (e0) throw e0
-  console.log('[patch-floridance-festival-2026] antes:', before || '(sin fila)')
-
-  const row = {
-    slug: FLORIDANCE_FESTIVAL_2026_SLUG,
-    ...EVENT_ROW_DEFAULTS,
-    ...FLORIDANCE_FESTIVAL_2026_ROW,
-    is_featured: false,
-    promoter_organization_id: null,
+  if (!before) {
+    console.error('[patch-floridance-festival-2026] No existe fila:', FLORIDANCE_FESTIVAL_2026_SLUG)
+    process.exit(1)
   }
+  console.log(
+    '[patch-floridance-festival-2026] antes: lineup',
+    before.lineup?.length || 0,
+    '| stages',
+    before.stages?.length || 0,
+    '| date_end',
+    before.date_end,
+  )
 
-  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  const { error: e1 } = await sb
+    .from('events')
+    .update({
+      name: 'Floridance Fest 2026',
+      lineup: FLORIDANCE_FESTIVAL_2026_LINEUP,
+      stages: FLORIDANCE_FESTIVAL_2026_STAGES,
+      schedule: FLORIDANCE_FESTIVAL_2026_SCHEDULE,
+      socials: {
+        facebook: 'https://www.facebook.com/animalia.elbichoproduciones',
+        instagram: 'https://www.instagram.com/animalia_el_bicho_producciones/',
+        schedule_image: FLORIDANCE_FESTIVAL_HORARIOS_IMAGE,
+      },
+      date_start: '2026-09-05',
+      date_end: '2026-09-05',
+      country: 'Spain',
+      capacity: null,
+      doors_open: '18:00',
+      doors_close: '07:00',
+      age_restriction: '18+',
+      tickets_url: FLORIDANCE_FESTIVAL_TICKETS,
+      website: 'https://floridance.es/evento/floridance-festival-2026',
+      image_url: FLORIDANCE_FESTIVAL_IMAGE,
+      description_es: FLORIDANCE_FESTIVAL_2026_DESC_ES,
+      description_en: FLORIDANCE_FESTIVAL_2026_DESC_EN,
+      tags: [
+        'floridance',
+        'breakbeat',
+        'festival',
+        'rota',
+        'cádiz',
+        'animalia',
+        'monsterticket',
+        '2026',
+      ],
+    })
+    .eq('slug', FLORIDANCE_FESTIVAL_2026_SLUG)
   if (e1) throw e1
 
   const { data: after, error: e2 } = await sb
     .from('events')
-    .select('slug, name, date_start, city, venue, image_url, tickets_url, address')
+    .select('slug, name, date_start, date_end, lineup, stages, schedule, socials, tickets_url')
     .eq('slug', FLORIDANCE_FESTIVAL_2026_SLUG)
     .maybeSingle()
   if (e2) throw e2

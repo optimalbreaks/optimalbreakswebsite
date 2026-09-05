@@ -64,7 +64,13 @@ Generated taste analysis shown on **`/[lang]/dashboard`** (`BreakbeatDNA` inside
 
 ### Unlock
 
-The UI requires a minimum of **3** combined inputs (favorite artists + labels + events + saved mixes + saved chart tracks + attendance keys) before “generate” is enabled. The API (`POST /api/breakbeat-profile`) also hashes the current catalog IDs so a regenerate is a no-op when inputs have not changed (`input_hash`).
+The UI requires a minimum of **3** combined inputs (favorite artists + labels + events + saved mixes + saved chart tracks + attendance keys) before “generate” is enabled. The API stores an `input_hash` of those catalog IDs; the dashboard **Regenerar** always POSTs again (it does not skip on the same hash).
+
+### What actually feeds the text
+
+The first paragraph (subgenres, countries, artist categories, scene hints) still comes from **favorite artist/label fichas**. Saved tracks do **not** have style tags, so they cannot rewrite that spine.
+
+**Mis Tracks** (`saved_chart_tracks`) feed years, recurring artists/labels, and the cited-track sample. That path must hydrate **all four** sources (`chart` | `featured` | `vinyl` | `beatport_top`), paginate past PostgREST’s 1000-row default, and **chunk `.in('id', …)`** (`selectByIds` in `src/lib/supabase-admin.ts`, 200 ids). A single `.in()` of hundreds of New Release UUIDs fails silently and the DNA falls back to favorites plus a handful of weekly-top rows. `beatport_top` has no live table: use the embedded `snapshot`. The prompt sample is recency-first and mixed by source (not the first 10 `chart` rows). Implementation: `src/app/api/breakbeat-profile/route.ts`.
 
 ### Table
 

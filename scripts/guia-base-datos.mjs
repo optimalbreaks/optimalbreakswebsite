@@ -422,7 +422,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-floridance-festival-2026',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'UPSERT floridance-festival-2026: 5 sept Rota Estadio Monago Animalia; avance lineup #2 cartel floridance-festival-2026.webp; MonsterTicket.',
+      'UPDATE floridance-festival-2026: sábado 5 sept Rota Estadio Monago; cartel oficial A–Z (sin escenarios vacíos); 18:00–07:00; MonsterTicket + floridance.es.',
   },
   {
     id: 'events-patch-electrolunch-xxl-picnic-76-sevilla-2026',
@@ -845,7 +845,7 @@ Punto de entrada unificado:
   events-patch-dreambeach-costa-del-sol-2026  Dreambeach Costa del Sol, Vélez-Málaga 31 jul–1 ago 2026 (breaks en cartel)
   events-patch-iberican-breaks-festival-2026  IBÉRICAN Breaks Festival, Olvera 16 may 2026 (Terraza Manhattan, MonsterTicket)
   events-patch-solaris-fest-matalascanas-2026  Solaris Fest, Matalascañas 20 jun 2026 (Surfasaurus, MonsterTicket, cartel local WebP)
-  events-patch-floridance-festival-2026  Floridance Festival 2026, Rota 5 sept Estadio Monago (Animalia, MonsterTicket)
+  events-patch-floridance-festival-2026  Floridance Fest 2026, Rota 5 sept Estadio Monago (cartel oficial A–Z)
   events-patch-electrolunch-xxl-picnic-76-sevilla-2026  Electrolunch XXL · Picnic 76, Parque Magallanes Sevilla 9 may 2026 (Stanton Warriors + locales, ultimaentrada.com)
   events-patch-breakdown-orlando-2026  BREAKDOWN (Huda Hudia), Broken Strings Brewery Orlando 27 jun 2026 (Fully Loaded + Rave Royalty, Eventbrite)
   events-patch-power-breakbeat-con-autobots-2026  Power Breakbeat + Autobots, Sala Roka Málaga 25 jul 2026 (MonsterTicket)

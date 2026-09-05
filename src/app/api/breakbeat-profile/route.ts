@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database } from '@/types/database'
-import type { BreakbeatProfileStats } from '@/types/database'
+import type { Database, SavedChartTrackSnapshot, BreakbeatProfileStats } from '@/types/database'
 import { artistEraToReferenceYear, normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
+import { fetchAllRows, selectByIds } from '@/lib/supabase-admin'
 
 // =============================================
 // POST /api/breakbeat-profile
@@ -67,20 +67,30 @@ type MixProfileInput = {
   duration_minutes?: number | null
 }
 
+type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
+
 /**
- * Track guardado por el usuario en "Mis Tracks". Unificamos las tres fuentes
- * polimórficas (chart_tracks, chart_featured_tracks, chart_vinyl_tracks) en un
- * único shape para que la lectura del ADN breakbeatero trate por igual a las
- * tracks del Top 40, a las new releases y a las selecciones de retro-vinilo.
+ * Track guardado por el usuario en "Mis Tracks". Unificamos las cuatro fuentes
+ * (40 Breaks, New Releases, vinilo retro y Top 10 Beatport de ficha) para que
+ * el ADN no trate el «+» de charts como si fuera toda la caja.
  */
 type ChartTrackProfileInput = {
-  source: 'chart' | 'featured' | 'vinyl'
+  source: ChartTrackSource
   title: string
   mix_name: string
   artist_names: string[]
   label: string
   year: number | null
   bpm: number | null
+  created_at: string | null
+}
+
+type SavedTrackRow = {
+  track_source: ChartTrackSource
+  track_id: string
+  canonical_url: string | null
+  snapshot: SavedChartTrackSnapshot | null
+  created_at: string | null
 }
 
 async function getAuthenticatedUser() {
@@ -112,6 +122,85 @@ function hashInputs(ids: string[]): string {
     h = ((h << 5) - h + sorted.charCodeAt(i)) | 0
   }
   return Math.abs(h).toString(36)
+}
+
+function artistsToNames(raw: unknown): string[] {
+  if (typeof raw === 'string') {
+    return raw.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((a) => {
+      if (!a) return ''
+      if (typeof a === 'string') return a
+      if (typeof a === 'object' && a && 'name' in (a as object)) return String((a as { name?: unknown }).name || '')
+      return ''
+    })
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+function yearFromRelease(year: number | null | undefined, releaseDate?: string | null): number | null {
+  if (year != null && Number.isFinite(year) && year > 0) return year
+  if (releaseDate && /^\d{4}/.test(releaseDate)) return parseInt(releaseDate.slice(0, 4), 10)
+  return null
+}
+
+function trackFromSnapshot(
+  source: ChartTrackSource,
+  snap: SavedChartTrackSnapshot | Record<string, unknown> | null | undefined,
+  createdAt: string | null,
+): ChartTrackProfileInput | null {
+  if (!snap || typeof snap !== 'object') return null
+  const title = String((snap as SavedChartTrackSnapshot).title || '').trim()
+  const artistNames = artistsToNames((snap as SavedChartTrackSnapshot).artists)
+  if (!title && artistNames.length === 0) return null
+  const year = yearFromRelease(
+    (snap as SavedChartTrackSnapshot).year ?? null,
+    (snap as SavedChartTrackSnapshot).release_date ?? null,
+  )
+  return {
+    source,
+    title,
+    mix_name: String((snap as SavedChartTrackSnapshot).mix_name || ''),
+    artist_names: artistNames,
+    label: String((snap as SavedChartTrackSnapshot).label || ''),
+    year,
+    bpm: (snap as SavedChartTrackSnapshot).bpm ?? null,
+    created_at: createdAt,
+  }
+}
+
+/** Muestra para el prompt: recientes primero, mezclando fuentes (no las 10 primeras del Top 40). */
+function pickSampleSavedTrackLines(tracks: ChartTrackProfileInput[], limit = 24): string[] {
+  const sorted = [...tracks].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+  const buckets: Record<ChartTrackSource, ChartTrackProfileInput[]> = {
+    featured: [],
+    chart: [],
+    vinyl: [],
+    beatport_top: [],
+  }
+  for (const t of sorted) buckets[t.source].push(t)
+
+  const out: string[] = []
+  const seen = new Set<string>()
+  const sources: ChartTrackSource[] = ['featured', 'chart', 'vinyl', 'beatport_top']
+  for (let i = 0; out.length < limit; i++) {
+    let added = false
+    for (const src of sources) {
+      const t = buckets[src][i]
+      if (!t) continue
+      const line = chartTrackContextLine(t, 'es')
+      const key = line.replace(/\s*\[[^\]]+\]\s*$/, '').trim().toLowerCase()
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      out.push(line)
+      added = true
+      if (out.length >= limit) break
+    }
+    if (!added) break
+  }
+  return out
 }
 
 function takeUniqueNonEmpty(values: Array<string | null | undefined>, limit = 5): string[] {
@@ -218,6 +307,7 @@ function formatChartTrackSource(source: ChartTrackProfileInput['source'], lang: 
     chart: { es: 'top semanal', en: 'weekly top' },
     featured: { es: 'new release', en: 'new release' },
     vinyl: { es: 'vinilo retro', en: 'retro vinyl' },
+    beatport_top: { es: 'top beatport de ficha', en: 'profile Beatport top' },
   }
   const row = map[source] || { es: 'track guardado', en: 'saved track' }
   return lang === 'es' ? row.es : row.en
@@ -308,7 +398,7 @@ function formatArtistRelease(release: { title: string; year?: number | null; not
  */
 function stripTrackSourceTag(line: string): string {
   return line
-    .replace(/\s*\[(top semanal|new release|vinilo retro|weekly top|retro vinyl|saved track|track guardado)\]\s*$/i, '')
+    .replace(/\s*\[(top semanal|new release|vinilo retro|weekly top|retro vinyl|top beatport de ficha|profile Beatport top|saved track|track guardado)\]\s*$/i, '')
     .trim()
 }
 
@@ -508,10 +598,7 @@ function computeStats(
   // Contextos de "Mis Tracks": una lista en ES rica en evidencias para el prompt.
   // El idioma concreto lo resuelve el prompt al inyectar los datos; aquí dejamos
   // una única serialización ya legible.
-  const sampleSavedChartTracks = takeUniqueNonEmpty(
-    chartTracks.map((t) => chartTrackContextLine(t, 'es')),
-    10,
-  )
+  const sampleSavedChartTracks = pickSampleSavedTrackLines(chartTracks, 24)
   const dominantEras = topPctEntries(eraDistribution, 5)
   const dominantYears = topYearEntries(yearDistribution, 6)
 
@@ -643,7 +730,7 @@ QUÉ DEBES CUBRIR (repártelo por los párrafos como quieras, no hace falta segu
 - Subgéneros y geografía dominantes y qué suena realmente ahí.
 - Décadas y años que más pesan y qué sugiere eso del tipo de escucha (rave 90s, nu skool 2000s, mutaciones bass posteriores…).
 - Artistas concretos, mezclando los que el usuario tiene guardados con los que aparecen en las tracks guardadas.
-- Tracks de "Mis Tracks": si hay, cita al menos 4-6 por título y artista (y año si aparece). Jamás con marcadores entre corchetes: reformúlalos en prosa indicando de forma natural si salen del top semanal, de novedades o de rescates en vinilo retro.
+- Tracks de "Mis Tracks": si hay, cita al menos 6-10 por título y artista (y año si aparece). Jamás con marcadores entre corchetes: reformúlalos en prosa indicando de forma natural si salen del top semanal, de novedades, de rescates en vinilo retro o del Top 10 Beatport de una ficha.
 - Releases/álbumes/compilaciones cuando los datos los aportan.
 - Sellos: combina los sellos guardados con los sellos que más se repiten en las tracks guardadas (eso es evidencia fuerte de apuesta editorial).
 - Mixes: habla de formatos de escucha (sesión larga en vídeo, programa de radio, set de pista, podcast…) y menciona algún título concreto si existe.
@@ -682,7 +769,7 @@ DATOS DEL PERFIL:
 - Mixes guardados (muestra): ${sampleMixesStr || 'sin datos'}
 - Mixes recomendados desde artistas: ${recommendedMixesStr || 'sin datos'}
 - Contexto de mixes: ${mixContextsStr || 'sin datos'}
-- Tracks guardadas por el usuario en "Mis Tracks" (total ${savedTracksCount}; fuentes entre corchetes = top semanal / new release / vinilo retro): ${savedChartTracksStr || 'sin datos'}
+- Tracks guardadas por el usuario en "Mis Tracks" (total ${savedTracksCount}; fuentes entre corchetes = top semanal / new release / vinilo retro / top beatport de ficha): ${savedChartTracksStr || 'sin datos'}
 - Artistas que más se repiten en esas tracks guardadas: ${savedTrackArtistsStr || 'sin datos'}
 - Sellos que más se repiten en esas tracks guardadas: ${savedTrackLabelsStr || 'sin datos'}
 - Pistas de escena inferibles desde los datos: ${sceneHintsStr || 'sin datos suficientes'}
@@ -704,7 +791,7 @@ WHAT YOU MUST COVER (distribute freely across paragraphs):
 - Dominant subgenres and geography and what that actually sounds like.
 - Decades and years that weigh most and what that suggests about the type of listening (90s rave, 2000s nu skool, later bass mutations…).
 - Concrete artists, blending saved favourites with artists that show up in the saved tracks.
-- Tracks from "My Tracks": if present, cite at least 4-6 by title and artist (and year when available). Never with bracketed markers: rephrase in prose whether they come from the weekly top, new releases or retro vinyl rescues.
+- Tracks from "My Tracks": if present, cite at least 6-10 by title and artist (and year when available). Never with bracketed markers: rephrase in prose whether they come from the weekly top, new releases, retro vinyl rescues or a profile Beatport Top 10.
 - Releases/albums/compilations when the data supports it.
 - Labels: combine saved labels with labels that recur in the saved tracks (strong editorial evidence).
 - Mixes: listening formats (long video session, radio show, club set, podcast…) and mention a concrete title if present.
@@ -743,7 +830,7 @@ PROFILE DATA:
 - Saved mixes (sample): ${sampleMixesStr || 'no data'}
 - Recommended mixes from artists: ${recommendedMixesStr || 'no data'}
 - Mix contexts: ${mixContextsStr || 'no data'}
-- User-saved tracks in "My Tracks" (total ${savedTracksCount}; bracketed label = weekly top / new release / retro vinyl; Spanish labels preserved for consistency): ${savedChartTracksStr || 'no data'}
+- User-saved tracks in "My Tracks" (total ${savedTracksCount}; bracketed label = weekly top / new release / retro vinyl / profile Beatport top): ${savedChartTracksStr || 'no data'}
 - Artists that recur most across those saved tracks: ${savedTrackArtistsStr || 'no data'}
 - Labels that recur most across those saved tracks: ${savedTrackLabelsStr || 'no data'}
 - Scene hints inferred from the data: ${sceneHintsStr || 'not enough data'}
@@ -1066,27 +1153,42 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const lang: 'es' | 'en' = body.lang === 'en' ? 'en' : 'es'
 
-    // Fetch all user data in parallel
-    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes, savedTracksRes] = await Promise.all([
+    // Favoritos y asistencia (páginas cortas). Mis Tracks se pagina: el default
+    // de PostgREST (1000) se queda corto en cuentas editoriales.
+    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes, savedTracksPage] = await Promise.all([
       supabase.from('favorite_artists').select('artist_id').eq('user_id', user.id),
       supabase.from('favorite_labels').select('label_id').eq('user_id', user.id),
       supabase.from('event_attendance').select('event_id, status').eq('user_id', user.id),
       supabase.from('favorite_events').select('event_id').eq('user_id', user.id),
       supabase.from('saved_mixes').select('mix_id').eq('user_id', user.id),
-      supabase.from('saved_chart_tracks').select('track_source, track_id').eq('user_id', user.id),
+      fetchAllRows<SavedTrackRow>((from, to) =>
+        supabase
+          .from('saved_chart_tracks')
+          .select('track_source, track_id, canonical_url, snapshot, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .range(from, to),
+      ),
     ])
 
-    const artistIds = favArtistsRes.data?.map((d: any) => d.artist_id) || []
-    const labelIds = favLabelsRes.data?.map((d: any) => d.label_id) || []
-    const eventIds = Array.from(new Set([
-      ...(attendanceRes.data?.map((d: any) => d.event_id) || []),
-      ...(favEventsRes.data?.map((d: any) => d.event_id) || []),
-    ]))
-    const mixIds = savedMixesRes.data?.map((d: any) => d.mix_id) || []
+    if (savedTracksPage.error) {
+      console.error('[breakbeat-profile] saved_chart_tracks:', savedTracksPage.error)
+    }
 
-    // Desglose polimórfico de "Mis Tracks" por tabla origen.
-    const savedTrackRows: Array<{ track_source: 'chart' | 'featured' | 'vinyl'; track_id: string }> =
-      (savedTracksRes.data as any[])?.map((r: any) => ({ track_source: r.track_source, track_id: r.track_id })) || []
+    const artistIds = favArtistsRes.data?.map((d: { artist_id: string }) => d.artist_id) || []
+    const labelIds = favLabelsRes.data?.map((d: { label_id: string }) => d.label_id) || []
+    const eventIds = Array.from(new Set([
+      ...(attendanceRes.data?.map((d: { event_id: string }) => d.event_id) || []),
+      ...(favEventsRes.data?.map((d: { event_id: string }) => d.event_id) || []),
+    ]))
+    const mixIds = savedMixesRes.data?.map((d: { mix_id: string }) => d.mix_id) || []
+
+    const savedTrackRows: SavedTrackRow[] = (savedTracksPage.data || []).filter((r) =>
+      r.track_source === 'chart'
+      || r.track_source === 'featured'
+      || r.track_source === 'vinyl'
+      || r.track_source === 'beatport_top',
+    )
     const chartTrackIds = savedTrackRows.filter((r) => r.track_source === 'chart').map((r) => r.track_id)
     const featuredTrackIds = savedTrackRows.filter((r) => r.track_source === 'featured').map((r) => r.track_id)
     const vinylTrackIds = savedTrackRows.filter((r) => r.track_source === 'vinyl').map((r) => r.track_id)
@@ -1103,77 +1205,111 @@ export async function POST(request: NextRequest) {
 
     const currentHash = hashInputs(allIds)
 
-    // Fetch entity details in parallel
+    // Fetch entity details in parallel. `.in('id', 700 UUIDs)` tumba PostgREST;
+    // el Top 100 ya trocea — aquí igual, o las New Releases no entran al ADN.
+    type ChartLive = { id: string; title: string | null; mix_name: string | null; artists: unknown; label: string | null; bpm: number | null; release_year: number | null; release_date?: string | null }
+    type FeatLive = { id: string; title: string | null; mix_name?: string | null; artists: unknown; label: string | null; release_year: number | null; release_date?: string | null }
+    type VinylLive = { id: string; title: string | null; mix_name: string | null; artists: unknown; label: string | null; year: number | null }
+
     const [artistsRes, labelsRes, eventsRes, mixesRes, chartTracksRes, featuredTracksRes, vinylTracksRes] = await Promise.all([
       artistIds.length > 0
-        ? supabase.from('artists').select('name, styles, country, era, category, essential_tracks, recommended_mixes, key_releases').in('id', artistIds)
-        : { data: [] },
+        ? selectByIds<ArtistProfileInput>(artistIds, (chunk) =>
+          supabase.from('artists').select('name, styles, country, era, category, essential_tracks, recommended_mixes, key_releases').in('id', chunk),
+        )
+        : { data: [] as ArtistProfileInput[] },
       labelIds.length > 0
-        ? supabase.from('labels').select('name, country, founded_year, is_active, key_artists, key_releases').in('id', labelIds)
-        : { data: [] },
+        ? selectByIds<LabelProfileInput>(labelIds, (chunk) =>
+          supabase.from('labels').select('name, country, founded_year, is_active, key_artists, key_releases').in('id', chunk),
+        )
+        : { data: [] as LabelProfileInput[] },
       eventIds.length > 0
-        ? supabase.from('events').select('name, event_type, country, city, venue, lineup, date_start, tags').in('id', eventIds)
-        : { data: [] },
+        ? selectByIds<EventProfileInput>(eventIds, (chunk) =>
+          supabase.from('events').select('name, event_type, country, city, venue, lineup, date_start, tags').in('id', chunk),
+        )
+        : { data: [] as EventProfileInput[] },
       mixIds.length > 0
-        ? supabase.from('mixes').select('title, artist_name, mix_type, year, platform, duration_minutes').in('id', mixIds)
-        : { data: [] },
+        ? selectByIds<MixProfileInput>(mixIds, (chunk) =>
+          supabase.from('mixes').select('title, artist_name, mix_type, year, platform, duration_minutes').in('id', chunk),
+        )
+        : { data: [] as MixProfileInput[] },
       chartTrackIds.length > 0
-        ? supabase.from('chart_tracks').select('id, title, mix_name, artists, label, bpm, release_year').in('id', chartTrackIds)
-        : { data: [] },
+        ? selectByIds<ChartLive>(chartTrackIds, (chunk) =>
+          supabase.from('chart_tracks').select('id, title, mix_name, artists, label, bpm, release_year, release_date').in('id', chunk),
+        )
+        : { data: [] as ChartLive[] },
       featuredTrackIds.length > 0
-        ? supabase.from('chart_featured_tracks').select('id, title, artists, label, release_year').in('id', featuredTrackIds)
-        : { data: [] },
+        ? selectByIds<FeatLive>(featuredTrackIds, (chunk) =>
+          supabase.from('chart_featured_tracks').select('id, title, mix_name, artists, label, release_year, release_date').in('id', chunk),
+        )
+        : { data: [] as FeatLive[] },
       vinylTrackIds.length > 0
-        ? supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year').in('id', vinylTrackIds)
-        : { data: [] },
+        ? selectByIds<VinylLive>(vinylTrackIds, (chunk) =>
+          supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year').in('id', chunk),
+        )
+        : { data: [] as VinylLive[] },
     ])
 
-    /**
-     * Normaliza la columna `artists` (JSONB: [{ name, url?, ... }]) a una lista
-     * plana de strings. Tolerante a null y a elementos malformados.
-     */
-    const artistsToNames = (raw: unknown): string[] => {
-      if (!Array.isArray(raw)) return []
-      return raw
-        .map((a) => {
-          if (!a) return ''
-          if (typeof a === 'string') return a
-          if (typeof a === 'object' && a && 'name' in (a as any)) return String((a as any).name || '')
-          return ''
-        })
-        .map((s) => s.trim())
-        .filter(Boolean)
-    }
+    const chartById = new Map((chartTracksRes.data || []).map((t) => [t.id, t]))
+    const featuredById = new Map((featuredTracksRes.data || []).map((t) => [t.id, t]))
+    const vinylById = new Map((vinylTracksRes.data || []).map((t) => [t.id, t]))
 
-    const chartTracksInput: ChartTrackProfileInput[] = [
-      ...((chartTracksRes.data as any[]) || []).map((t) => ({
-        source: 'chart' as const,
-        title: t.title || '',
-        mix_name: t.mix_name || '',
-        artist_names: artistsToNames(t.artists),
-        label: t.label || '',
-        year: t.release_year ?? null,
-        bpm: t.bpm ?? null,
-      })),
-      ...((featuredTracksRes.data as any[]) || []).map((t) => ({
-        source: 'featured' as const,
-        title: t.title || '',
-        mix_name: '',
-        artist_names: artistsToNames(t.artists),
-        label: t.label || '',
-        year: t.release_year ?? null,
-        bpm: null,
-      })),
-      ...((vinylTracksRes.data as any[]) || []).map((t) => ({
-        source: 'vinyl' as const,
-        title: t.title || '',
-        mix_name: t.mix_name || '',
-        artist_names: artistsToNames(t.artists),
-        label: t.label || '',
-        year: t.year ?? null,
-        bpm: null,
-      })),
-    ]
+    const chartTracksInput: ChartTrackProfileInput[] = []
+    for (const row of savedTrackRows) {
+      const createdAt = row.created_at || null
+      if (row.track_source === 'beatport_top') {
+        const fromSnap = trackFromSnapshot('beatport_top', row.snapshot, createdAt)
+        if (fromSnap) chartTracksInput.push(fromSnap)
+        continue
+      }
+      if (row.track_source === 'chart') {
+        const live = chartById.get(row.track_id)
+        if (live) {
+          chartTracksInput.push({
+            source: 'chart',
+            title: live.title || '',
+            mix_name: live.mix_name || '',
+            artist_names: artistsToNames(live.artists),
+            label: live.label || '',
+            year: yearFromRelease(live.release_year, live.release_date ?? null),
+            bpm: live.bpm ?? null,
+            created_at: createdAt,
+          })
+          continue
+        }
+      } else if (row.track_source === 'featured') {
+        const live = featuredById.get(row.track_id)
+        if (live) {
+          chartTracksInput.push({
+            source: 'featured',
+            title: live.title || '',
+            mix_name: live.mix_name || '',
+            artist_names: artistsToNames(live.artists),
+            label: live.label || '',
+            year: yearFromRelease(live.release_year, live.release_date ?? null),
+            bpm: null,
+            created_at: createdAt,
+          })
+          continue
+        }
+      } else if (row.track_source === 'vinyl') {
+        const live = vinylById.get(row.track_id)
+        if (live) {
+          chartTracksInput.push({
+            source: 'vinyl',
+            title: live.title || '',
+            mix_name: live.mix_name || '',
+            artist_names: artistsToNames(live.artists),
+            label: live.label || '',
+            year: live.year ?? null,
+            bpm: null,
+            created_at: createdAt,
+          })
+          continue
+        }
+      }
+      const fromSnap = trackFromSnapshot(row.track_source, row.snapshot, createdAt)
+      if (fromSnap) chartTracksInput.push(fromSnap)
+    }
 
     const stats = computeStats(
       (artistsRes.data as any[]) || [],

@@ -188,6 +188,29 @@ function formatDoorTime(t: string | null | undefined): string {
   return m ? `${m[1]}:${m[2]}` : t
 }
 
+const EVENT_SOCIAL_META_KEYS = new Set(['schedule_image', 'horarios'])
+
+function eventScheduleImageUrl(socials: Record<string, string> | null | undefined): string | null {
+  const raw = socials?.schedule_image || socials?.horarios
+  const url = typeof raw === 'string' ? raw.trim() : ''
+  return url || null
+}
+
+function eventPublicSocials(socials: Record<string, string> | null | undefined): [string, string][] {
+  return Object.entries(socials ?? {}).filter(([key, url]) => {
+    if (EVENT_SOCIAL_META_KEYS.has(key)) return false
+    return typeof url === 'string' && url.trim().length > 0
+  })
+}
+
+/** Escenarios vacíos (nombre genérico, sin lineup ni texto) no deben tapar el cartel plano. */
+function stageHasVisibleContent(stage: EventStage): boolean {
+  if ((stage.lineup?.length ?? 0) > 0) return true
+  if (stage.description_es?.trim()) return true
+  if (stage.description_en?.trim()) return true
+  return false
+}
+
 function dateStampParts(dateStr: string | null, lang: Locale): { day: string; month: string; line: string } | null {
   if (!dateStr) return null
   try {
@@ -423,7 +446,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   }
 
   const stages = (event.stages ?? []) as EventStage[]
+  const visibleStages = stages.filter(stageHasVisibleContent)
   const schedule = (event.schedule ?? []) as EventScheduleSlot[]
+  const publicSocials = eventPublicSocials(event.socials as Record<string, string> | null)
+  const scheduleImageUrl = eventScheduleImageUrl(event.socials as Record<string, string> | null)
   const tags = (event.tags ?? []) as string[]
   const mapLink = mapsUrl(event.coords as { lat: number; lng: number } | null, event.address ?? event.location)
   const notice = eventNoticeKind(event)
@@ -580,8 +606,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     festivalSections = null
   }
   const useFestivalSpark =
-    hasFlatLineup || stages.length > 0 || event.event_type === 'festival'
-  const hasLineupAnchor = stages.length > 0 || hasFlatLineup
+    hasFlatLineup || visibleStages.length > 0 || event.event_type === 'festival'
+  const hasLineupAnchor = visibleStages.length > 0 || hasFlatLineup
   const stamp = dateStampParts(event.date_start, lang)
 
   return (
@@ -837,11 +863,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* ── STAGES + LINEUP ── */}
-      {stages.length > 0 ? (
+      {visibleStages.length > 0 ? (
         <section id="event-lineup" className="mb-10 scroll-mt-24">
           <SectionHeading>{ev.detail_stages}</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {stages.map((stage, i) => (
+            {visibleStages.map((stage, i) => (
               <div key={i} className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
                 <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', color: 'var(--yellow)', marginBottom: '4px', marginTop: 0 }}>
                   {stage.name}
@@ -886,9 +912,25 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       ) : null}
 
       {/* ── SCHEDULE / HORARIOS ── */}
-      {schedule.length > 0 && (
+      {(schedule.length > 0 || scheduleImageUrl) && (
         <section className="mb-10">
           <SectionHeading>{ev.detail_schedule}</SectionHeading>
+          {scheduleImageUrl && (
+            <div className="mb-4 max-w-[720px]">
+              <EventPosterLightbox
+                src={versionedImageUrl(scheduleImageUrl, imageCacheVersion(event.updated_at))}
+                alt={
+                  lang === 'es'
+                    ? `Horarios oficiales de ${event.name}`
+                    : `${event.name} official timetable`
+                }
+                zoomAria={ev.poster_zoom_aria}
+                closeLabel={ev.poster_close}
+                lightboxTitle={ev.detail_schedule}
+              />
+            </div>
+          )}
+          {schedule.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Array.from(scheduleByStage.entries()).map(([stageName, slots]) => (
               <div key={stageName} className="border-4 border-[var(--ink)] overflow-hidden">
@@ -933,6 +975,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               </div>
             ))}
           </div>
+          )}
         </section>
       )}
 
@@ -978,7 +1021,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       )}
 
       {/* ── LINKS / SOCIALS ── */}
-      {(event.website || event.tickets_url || Object.keys(event.socials ?? {}).length > 0) && (
+      {(event.website || event.tickets_url || publicSocials.length > 0) && (
         <section className="mb-10">
           <SectionHeading>{cancelled ? ev.detail_links_cancelled ?? ev.detail_links : ev.detail_links}</SectionHeading>
           <div className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
@@ -1009,7 +1052,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                     : `${secondaryTicketsLinkLabel(event.tickets_url, lang)} →`}
                 </a>
               )}
-              {Object.entries(event.socials ?? {}).map(([key, url]) => (
+              {publicSocials.map(([key, url]) => (
                 <a
                   key={key}
                   href={url as string}

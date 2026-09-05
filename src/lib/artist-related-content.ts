@@ -9,7 +9,7 @@ import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import { dedupeKeyForFeaturedLink } from '@/lib/beatport-next-data-tracks'
-import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
+import { normalizeTrackCanonicalUrl, trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 
 function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
@@ -114,30 +114,16 @@ function extractArtistNames(raw: unknown): string[] {
 }
 
 /**
- * Misma canción aunque el 40 Breaks meta el remix en el título
- * («BIG 45 (Freestylers Remix)» + mix) y NR lo deje fuera («BIG 45» + mix).
+ * Misma canción en listas únicas: título + artistas, ignorando Original Mix /
+ * Instrumental. Un remix con nombre (p. ej. Freestylers Remix) sigue aparte.
+ * No borra filas de catálogo; el merge junta UUID en relatedRefs.
  */
 function titleMixIdentityKey(
   title: string,
   mixName: string | null | undefined,
   artists?: unknown,
 ): string {
-  let t = normKey(title)
-  let m = normKey(mixName || '')
-  const paren = t.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
-  if (paren) {
-    const inner = paren[2]
-    if (!m || m === inner || inner.includes(m) || m.includes(inner)) {
-      t = paren[1].trim()
-      if (!m) m = inner
-    }
-  }
-  const artistsPart = extractArtistNames(artists)
-    .map(normKey)
-    .filter(Boolean)
-    .sort()
-    .join(',')
-  return `nm:${t}|${m}|${artistsPart}`
+  return trackDisplayIdentityKey(title, mixName, artists)
 }
 
 function pickSourceKind(pick: ArtistFeaturedPick): ChartTrackSource {
@@ -497,29 +483,14 @@ type FeaturedPickRow = ChartFeaturedTrack & {
 }
 
 function mapFeaturedPickRows(rows: FeaturedPickRow[]): ArtistFeaturedPick[] {
-  const seen = new Set<string>()
   const out: ArtistFeaturedPick[] = []
 
   for (const row of rows) {
     const weekDate = weekDateFromRow(row as ChartRow)
     if (!weekDate) continue
-
-    const title = (row.title || '').trim() || '—'
-    const mix = (row.mix_name || '').trim()
-    const key = titleMixIdentityKey(title, mix, row.artists)
-    if (seen.has(key)) continue
-    seen.add(key)
-
     const { chart_editions: _ce, ...pick } = row
     out.push({ ...pick, weekDate, chartKind: 'featured' })
   }
-
-  out.sort((a, b) => {
-    const ad = a.release_date || ''
-    const bd = b.release_date || ''
-    if (ad !== bd) return bd.localeCompare(ad)
-    return b.weekDate.localeCompare(a.weekDate)
-  })
 
   return out
 }
@@ -554,10 +525,24 @@ function pickSourceRank(pick: ArtistFeaturedPick): number {
   return 2
 }
 
+function mixVersionRank(mix: string | null | undefined): number {
+  const m = (mix || '').trim().toLowerCase()
+  if (!m || /^original(\s+mix)?$/.test(m)) return 0
+  if (/^extended(\s+(mix|version))?$/.test(m)) return 1
+  if (/^radio(\s+(edit|mix))?$/.test(m) || /^club(\s+mix)?$/.test(m) || /^vocal(\s+(mix|version))?$/.test(m)) {
+    return 2
+  }
+  if (/^instrumental$/.test(m)) return 3
+  return 4
+}
+
 function isBetterOnSitePick(a: ArtistFeaturedPick, b: ArtistFeaturedPick): boolean {
   const ra = pickSourceRank(a)
   const rb = pickSourceRank(b)
   if (ra !== rb) return ra < rb
+  const ma = mixVersionRank(a.mix_name)
+  const mb = mixVersionRank(b.mix_name)
+  if (ma !== mb) return ma < mb
   const da = pickSortDate(a)
   const db = pickSortDate(b)
   if (da !== db) return da > db
