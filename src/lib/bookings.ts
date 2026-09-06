@@ -59,6 +59,7 @@ export const CLAIM_STATUS_LABELS: Record<ArtistClaimStatus, { es: string; en: st
   rejected: { es: 'Rechazada', en: 'Rejected' },
   cancelled: { es: 'Cancelada', en: 'Cancelled' },
   revoked: { es: 'Revocada', en: 'Revoked' },
+  superseded: { es: 'Cancelada: ficha ya verificada por otra cuenta', en: 'Cancelled: profile already verified' },
 }
 
 export function isValidEmail(value: string): boolean {

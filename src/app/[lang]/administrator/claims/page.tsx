@@ -21,7 +21,7 @@ type ArtistHit = {
   claimed_by: string | null
 }
 
-const STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'revoked'] as const
+const STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'revoked', 'superseded'] as const
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
 function ClaimArtistPicker({

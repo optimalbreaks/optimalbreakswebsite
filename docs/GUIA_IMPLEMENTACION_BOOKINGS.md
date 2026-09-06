@@ -137,6 +137,9 @@ Estados del bloque:
 - **Verificado:** el bloque se convierte en su rincón de artista: enlace a la ficha pública +
   bandeja de solicitudes.
 - **Rechazada:** «No pudimos verificar la solicitud» (redacción por decidir).
+- **Superseded:** otra cuenta se verificó como esa ficha. La solicitud deja de ser cancelable
+  y el historial muestra «Cancelada: ficha ya verificada por otra cuenta». Al aprobar un claim
+  se cierran así las demás pendientes del mismo `artist_id`.
 
 ### 3.4 Solicitante de booking (promotor / usuario)
 
@@ -197,7 +200,7 @@ CREATE TABLE public.artist_claims (
   -- relación con la ficha: 'artist' (soy yo) | 'manager' | 'agency'
   relationship TEXT NOT NULL DEFAULT 'artist',
   status TEXT NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'revoked')),
+    CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'revoked', 'superseded')),
   admin_notes TEXT DEFAULT '',
   resolved_at TIMESTAMPTZ,
   resolved_by UUID REFERENCES public.profiles(id)

@@ -553,7 +553,7 @@ export interface EventRatingRow extends Record<string, unknown> {
 
 export type ArtistClaimKind = 'claim_existing' | 'request_new'
 export type ArtistClaimRelationship = 'artist' | 'manager' | 'agency'
-export type ArtistClaimStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'revoked'
+export type ArtistClaimStatus = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'revoked' | 'superseded'
 
 export interface ArtistClaimRow extends Record<string, unknown> {
   id: string

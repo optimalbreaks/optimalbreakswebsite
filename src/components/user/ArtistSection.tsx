@@ -88,8 +88,8 @@ export default function ArtistSection({ lang }: { lang: string }) {
         <PendingClaim lang={lang} claim={pendingClaim} onChange={reload} />
       )}
 
-      {claims.some((c) => ['rejected', 'revoked', 'cancelled'].includes(c.status)) && (
-        <ResolvedClaims lang={lang} claims={claims.filter((c) => ['rejected', 'revoked', 'cancelled'].includes(c.status))} />
+      {claims.some((c) => ['rejected', 'revoked', 'cancelled', 'superseded'].includes(c.status)) && (
+        <ResolvedClaims lang={lang} claims={claims.filter((c) => ['rejected', 'revoked', 'cancelled', 'superseded'].includes(c.status))} />
       )}
 
       {canStartClaim && verified.length === 0 && (

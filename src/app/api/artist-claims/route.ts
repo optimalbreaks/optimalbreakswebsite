@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRouteUser } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { CLAIM_SUPERSEDED_NOTE, supersedeCompetingClaims } from '@/lib/artist-claims'
 import { isClaimableCategory, isValidEmail } from '@/lib/bookings'
 import type { ArtistClaimRow } from '@/types/database'
 
@@ -19,17 +20,41 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const claims = (data as ArtistClaimRow[]) || []
+  let claims = (data as ArtistClaimRow[]) || []
   const artistIds = Array.from(
     new Set(claims.map((c) => c.artist_id).filter((v): v is string => !!v)),
   )
   const nameById: Record<string, { name: string; slug: string }> = {}
   if (artistIds.length) {
     const svc = createServiceSupabase()
-    const { data: arts } = await svc.from('artists').select('id, name, slug').in('id', artistIds)
-    ;(arts as { id: string; name: string; slug: string }[] | null)?.forEach((a) => {
+    const { data: arts } = await svc
+      .from('artists')
+      .select('id, name, slug, claimed_by')
+      .in('id', artistIds)
+    const claimedBy: Record<string, string | null> = {}
+    ;(arts as { id: string; name: string; slug: string; claimed_by: string | null }[] | null)?.forEach((a) => {
       nameById[a.id] = { name: a.name, slug: a.slug }
+      claimedBy[a.id] = a.claimed_by
     })
+    const stale = claims.filter(
+      (c) =>
+        c.status === 'pending' &&
+        c.artist_id &&
+        claimedBy[c.artist_id] &&
+        claimedBy[c.artist_id] !== auth.userId,
+    )
+    if (stale.length) {
+      await Promise.all(
+        Array.from(new Set(stale.map((c) => c.artist_id as string))).map((artistId) =>
+          supersedeCompetingClaims(svc, { artistId, exceptUserId: claimedBy[artistId] ?? undefined }),
+        ),
+      )
+      claims = claims.map((c) =>
+        stale.some((s) => s.id === c.id)
+          ? { ...c, status: 'superseded', admin_notes: CLAIM_SUPERSEDED_NOTE }
+          : c,
+      )
+    }
   }
 
   return NextResponse.json({

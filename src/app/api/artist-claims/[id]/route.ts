@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
 import { getRouteUser, requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { supersedeCompetingClaims } from '@/lib/artist-claims'
 import { notifyArtistOfClaimApproved } from '@/lib/transactional-mail'
 import type { ArtistClaimRow } from '@/types/database'
 
@@ -116,6 +117,11 @@ export async function PATCH(
       .select('*')
       .single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    await supersedeCompetingClaims(svc, {
+      artistId: targetArtistId,
+      exceptClaimId: id,
+      resolvedBy: admin.userId,
+    })
     waitUntil(
       notifyArtistOfClaimApproved({
         userId: claim.user_id,
