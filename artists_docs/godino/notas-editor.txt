@@ -1,0 +1,125 @@
+Revisión editorial — Godino (septiembre 2026)
+==============================================
+
+La ficha actual es genérica («DJ/productor andaluz», «continuo contemporáneo», «mutación permanente», «sonido de coche»). REESCRIBIR. BORRAR Optimal Breaks / 40 Breaks. Conservar slug godino, name Godino, name_display GODINO, image_url actual (retrato en Storage), sort_order 132.
+
+Identidad
+---------
+- real_name: Antonio Godino Martínez (SoundCloud: Antonio Godino; Facebook: Antonio Godino Martinez).
+- country: ES
+- category: andalusian
+- Origen / base: Jamilena, Jaén, Andalucía, Spain. Beatport: «Jienense amante de los ritmos rotos afincado en Jamilena.» Entrevista House Andújar 2026: natural de Jamilena. NO tratarlo como deducción.
+- Roles: DJ · Producer · Promoter.
+
+Cronología (no negociable)
+--------------------------
+- era: `mid-2000s-present` (casi 20 años de cabina según bio Beatport).
+- NO dejar `2010s-present`.
+- NO inventar año exacto de debut (ni 2006 ni 2007).
+- Actividad discográfica visible especialmente desde 2024–2025; avalancha 2026.
+- NO convertir «casi 20 años pinchando» en «publica desde 2006».
+
+Hecho territorial clave (entrevista 2026)
+-----------------------------------------
+En Jamilena, en los años 90, ya se escuchaba breakbeat en salas pequeñas; pasaban DJs como Kultur y Anuschka. Godino creció con eso. Definición propia del breakbeat: «La electrónica por excelencia de Andalucía.» Usar esa frase. Es territorial, no un hobby tardío.
+
+Break Sound Radio
+-----------------
+- DJ, productor y promotor del colectivo/promotora Break Sound Radio (bio Beatport).
+- Sesiones documentadas al menos 2019–2020 (p. ej. Break Sound Radio 1 — 2020). Eventos propios en redes 2019–2020.
+- Dato central, no un aside.
+
+OLIBASS Music Festival
+----------------------
+- Fundador / creador / dueño (Beatport: «dueño y creador de OLIBASS MUSIC FESTIVAL»). House Andújar: uno de los impulsores.
+- Desde 2022: nació por la necesidad de un evento breakbeat potente en Jaén (el público existía; faltaba el festival).
+- 2025: Krafty Kuts, Plump DJs, ED 209, Ragga Twins, Shade K, Colombo, etc.
+- 2026: sigue expandiéndose.
+- En la bio debe ir ARRIBA, no como nota de sesiones. labels_founded: [] (es festival, no sello).
+
+Directo
+-------
+- Beatport: Industrial Copera, Dreambeach, DOMO, OLIBASS.
+- Entrevista: Paris 15, elrow, Oasis, Híbrida Fest, Opening Summer Fest.
+- Dreambeach = el momento más importante de su carrera (declaración propia: reconocimiento a años de trabajo).
+- Carteles compartidos (bio oficial): Wade, Nico Moreno, R3HAB, Fatima Hajji, Andy C, Stanton Warriors, Deekline, ED209, Loco Dice.
+- En bio, UNA frase: ha compartido cartel con Stanton Warriors, Deekline, Andy C, Fatima Hajji, Wade y Loco Dice. No volcar la lista entera en cabecera.
+
+Producción
+----------
+- 2024: Sunshine (Break Mix) — oct 2024 (SoundCloud); Give Me Love — dic 2024, Space Pizza Records.
+- 2026 (Beatport, no exhaustivo): Want This (DKR), Your Life (ElectroBreakz), Escape Plan (Raveart), Related (Samay), Dreams (Frequency Fusion), Monkey Mumble (Samay), Bootyfunky con Maxuka (Tasty Pepper), No Sleep (Br8kn), Sonar (Samay), I Dont Give (Warriors Beat Return), Dankie (Sound Perfect Breakz), Your Love (Funktasty), The Energy (Samay), Exponent (ElectroBreakz), Another Fantasy (Solid Breaks), Faster (13monkeys), Dark (Frequency Fusion), Memphis (DKR), NAM (Raveart).
+- Sellos principales recientes: Samay Records · Raveart Records · Frequency Fusion Records (jienense, según Godino) · Sound Perfect Breakz · Funktasty Crew Records · DIRTY KITCHEN RAVE.
+- Otros: Br8kn, Warriors Beat Return, ElectroBreakz, Solid Breaks, 13monkeys, Space Pizza.
+- QUITAR la frase de que «el hilo más claro es Solid Breaks, Sound Perfect y Samay»: se ha quedado corta.
+
+Rigor
+-----
+QUITAR de key_releases y de la bio. Alias común; no hay evidencia clara de que Rigor (2025) sea un álbum de ESTE Godino.
+
+Styles
+------
+Breakbeat, Breaks, UK Bass, Electro.
+(Bass music en la prosa; no hace falta el tag genérico «Bass» si Electro + UK Bass cubren.)
+
+related_artists
+---------------
+- Maxuka (Bootyfunky, 2026; la entrevista anticipa la collab).
+- No inventar. Cellux / Reality eran créditos de un mix OLIBASS, no colaboradores discográficos confirmados: NO mantenerlos salvo que haya release conjunto.
+
+recommended_mixes
+-----------------
+Conservar si siguen siendo sesiones suyas documentadas:
+- Romerias 2022 - Dj Godino - B.S.R.
+- OLIBASS 2023 - GODINO - CELLUX & REALITY
+- Godino - Romerias 2024
+No inventar mixes nuevos.
+
+Essential tracks
+----------------
+Give Me Love (2024, Space Pizza)
+Want This (2026, DKR)
+Escape Plan (2026, Raveart)
+Dreams (2026, Frequency Fusion)
+Your Love (2026, Funktasty)
+Dark (2026, Frequency Fusion)
+NAM (2026, Raveart)
+Bootyfunky (2026, con Maxuka, Tasty Pepper)
+
+Key releases (años correctos; SIN Rigor)
+----------------------------------------
+- Give Me Love — 2024 — Space Pizza Records
+- Want This — 2026 — DIRTY KITCHEN RAVE
+- Escape Plan — 2026 — Raveart Records
+- Dreams — 2026 — Frequency Fusion Records
+- Your Love — 2026 — Funktasty Crew Records
+- Dark — 2026 — Frequency Fusion Records
+- NAM — 2026 — Raveart Records
+- Bootyfunky — 2026 — con Maxuka, Tasty Pepper
+
+Beatport Top 100 (entrevista)
+-----------------------------
+Declaración del artista: llegó a tener cuatro temas simultáneos en el Top 100 de Beatport. Formularlo como afirmación de entrevista, NO como ranking verificado.
+
+Beatport ficha
+--------------
+- beatport_id: 1280587
+- beatport_url: https://www.beatport.com/artist/godino/1280587
+- Ya tiene Top 10; se refrescará después.
+
+Socials a conservar / añadir
+----------------------------
+- soundcloud: https://soundcloud.com/godino
+- instagram: https://www.instagram.com/godino_original/
+- beatport: https://www.beatport.com/artist/godino/1280587
+
+PROHIBIDO
+---------
+- Jamilena como «parece» / deducción.
+- era 2010s-present.
+- Rigor.
+- Inventar año exacto de primera cabina.
+- Cifras de oyentes Spotify.
+- Optimal Breaks / 40 Breaks.
+- Párrafos de «mutación permanente», «sonido de coche», «lógica de pista andaluza» como relleno.
+- Convertir OLIBASS en sello (labels_founded vacío).

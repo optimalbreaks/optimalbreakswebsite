@@ -1,0 +1,81 @@
+Revisión editorial — Twook (septiembre 2026)
+============================================
+
+La ficha actual es genérica («productor reciente de breaks duros», «functional dancefloor»). REESCRIBIR. BORRAR Optimal Breaks / 40 Breaks. Conservar slug twook, name Twook, name_display TWOOK, image_url actual (retrato en Storage), sort_order 128.
+
+Identidad
+---------
+- real_name: null. No inferir.
+- country: ES
+- category: andalusian
+- Origen: Andalucía · España. NO inventar Sevilla. Pure Bassline 7º aniversario (2 abr 2026, Sevilla) es un bolo, no prueba de ciudad.
+- Spotify: «figura emergente de la electrónica andaluza». Bandcamp: Twook — Spain, underground del sur de Europa.
+- Roles: producer · DJ / electronic artist.
+- Estética: artista enmascarado; horror cinema. La máscara es extensión del misterio/oscuridad/imprevisibilidad (bio Beatport). Spotify: guitarras metaleras, tensión cinematográfica, enfoque apocalíptico. Beatport: voces inquietantes, texturas distorsionadas, basslines retorcidas, subgraves agresivos. Borrar el párrafo genérico de «estructuras funcionales de pista».
+
+Cronología (no negociable)
+--------------------------
+- era: `2020s-present` (etapa del alias Twook).
+- Experiencia underground electrónico: más de 20 años (bio oficial Beatport + Spotify: detrás de la máscara no hay un recién llegado).
+- PROHIBIDO convertir eso en «Twook publica desde 2004» o era 2000s.
+- Fórmula: identidad actual de un artista con +20 años de underground; etapa discográfica visible como Twook especialmente desde 2024–2025.
+- Bass Relay (DJ Karpin & Twook, Ook Records): no usar 2014 para ampliar la cronología de Twook. Metadata antigua / homónimos posibles. Mencionar como collab actual del sello, sin fechar el alias en 2014.
+
+Despegue discográfico Twook
+---------------------------
+- Chump — Rough Division — 13 nov 2024 — Breaks / Breakbeat / UK Bass · 135 BPM. Primera referencia comercial clara.
+- 2025 avalancha: Power Full (Ook, 24 ene), Lokko (Raveart, 19 feb, 135), Facesun (Ook, 20 mar), Contagion (Ook, 22 may), Liberado (Raveart, 2 jul), Slasher, Dark Siren, Immortal, Nullfire, Firing, Stalker, Ragga Voodoo, What?, This Ain't Music.
+- 2026: Koupe, Profaned Prayer, Whisper, Acid Crawler, Gryslou, Scar Bass, Slap; también Falling For Ages, Recovered Files, Stop the Rot.
+- NO fechar Scar Bass, Gryslou ni Slap como 2025: Bandcamp oficial = 2026.
+
+Ook Records
+-----------
+- Fundador y CEO (bio Beatport). Spotify: dirige el sello desde su «búnker».
+- labels_founded: ["Ook Records"]
+- Casa principal; catálogo casi su universo: Power Full, Facesun, Contagion, Demonfucked, Slasher, Dark Siren, Phantom Line, Immortal, Nullfire, Bass Relay, Firing, Stalker, Ragga Voodoo, This Ain't Music, What?, Koupe, Profaned Prayer, Whisper, Acid Crawler, Gryslou, Scar Bass.
+
+Otros sellos
+------------
+- Raveart Records: asociación externa más clara (Lokko, Liberado).
+- Rough Division: Chump original 2024.
+- LW Recordings: reedición/compilación de Chump; Bass Selections.
+- Elektroshok Records: Iluxion.
+
+Sonido
+------
+- styles: Breakbeat, Dark 2-Step, UK Garage, UK Bass, Deep Dubstep.
+- QUITAR Electro y Bass genérico.
+- Chart propio Beatport «Twook Selektion Bass»: Breakbeat + UK Garage + Dubstep; géneros Breaks/UK Bass, Dubstep, UK Garage/Bassline, 140 / Deep Dubstep / Grime.
+
+related_artists
+---------------
+- DJ Karpin (Bass Relay; ficha dj-karpin). No más nombres inventados.
+
+Essential tracks
+----------------
+Chump (2024), Facesun (2025), Contagion (2025), Liberado (2025), Dark Siren (2025), Ragga Voodoo (2025), Profaned Prayer (2026), Gryslou o Scar Bass (2026).
+
+Key releases (años correctos)
+-----------------------------
+- Chump — 2024 — Rough Division
+- Facesun — 2025 — Ook Records
+- Contagion — 2025 — Ook Records
+- Liberado — 2025 — Raveart Records
+- Dark Siren — 2025 — Ook Records
+- Ragga Voodoo — 2025 — Ook Records
+- Profaned Prayer — 2026 — Ook Records
+- Scar Bass — 2026 — Ook Records
+
+Beatport
+--------
+- beatport_id: 1114645
+- beatport_url: https://www.beatport.com/artist/twook/1114645
+
+NO publicar
+-----------
+- Sevilla como ciudad.
+- Twook activo desde 2004 / 2014.
+- Cifras de oyentes Spotify (dinámicas).
+- Optimal Breaks / 40 Breaks.
+- Electro, Bass genérico.
+- Nombre real.

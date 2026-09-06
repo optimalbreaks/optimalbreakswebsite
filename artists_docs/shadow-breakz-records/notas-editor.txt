@@ -1,0 +1,45 @@
+Alta editorial — Shadow Breakz Records (septiembre 2026)
+=======================================================
+
+Slug: shadow-breakz-records. Name: Shadow Breakz Records.
+country: ES. founded_year: null (actividad visible 2026 en catálogo SWBZ; no inventar año).
+is_active: true. is_featured: false.
+
+Identidad
+---------
+- Base: Huelva, Spain (Bandcamp del sello).
+- Bandcamp/SoundCloud oficiales: «Record label specializing in BreakBeat, NeuroBreaks, 2Step & DnB. Music For The Underground. Founder: SulivanZ»
+- Fundador: SulivanZ (fuente primaria del propio sello).
+- No es un imprint ajeno: el catálogo gira alrededor de SulivanZ y SuvanBreaks vs SulivanZ.
+
+Sonido
+------
+Breakbeat, neurobreaks, 2-step, UK garage/bassline, drum & bass. También material 140 y alguna experimentación electrónica (Electro BlackOut EP).
+
+Catálogo representativo
+-----------------------
+- SWBZ_001 Destroy The City [Silent City] EP (2026)
+- SWBZ_002 Rude Street Justice (álbum, 2026)
+- SWBZ_003 Feel Like That — SuvanBreaks vs SulivanZ
+- SWBZ_004 Underground Gangsta — SuvanBreaks vs SulivanZ
+- SWBZ_005 Midnight Rave EP (2026; estética coches: Celica, Acura Type R)
+- SWBZ_007 Electro BlackOut EP (21 jul 2026)
+- SWBZ_010 Neuro Sci-Fi (ago 2026)
+- Oscillate, Let Me Groove, I'm Still Alive, Fxck Legs (Beatport 2026)
+
+key_artists: SulivanZ. SuvanBreaks solo si se trata como acreditación de release (vs SulivanZ).
+
+Beatport
+--------
+Buscar id numérico del sello. Artista: https://www.beatport.com/artist/sulivanz/2402453
+
+URLs
+----
+- https://shadowbreakzrecords.bandcamp.com/
+- https://soundcloud.com/shadowbreakzrecords
+
+PROHIBIDO
+---------
+- Inventar roster amplio.
+- Inventar año de fundación exacto.
+- Confundir con otros «Shadow» / breakz homónimos.

@@ -1,0 +1,108 @@
+Revisión editorial — Woter (septiembre 2026)
+============================================
+
+La ficha actual es genérica («continuo andaluz», «sensibilidad sureña», «heredó ese marco»). REESCRIBIR. BORRAR Optimal Breaks / 40 Breaks. Conservar slug woter, name Woter, name_display WOTER, image_url actual (retrato Storage), sort_order 126.
+
+Identidad
+---------
+- real_name: null. No inferir.
+- country: ES
+- category: andalusian
+- Base: Málaga, Andalucía, Spain. Bandcamp oficial: «WoTeR — Málaga, Spain». NO decir «vinculado a Málaga a través del booking».
+- Grafía: Woter / WoTeR (Beatport y Bandcamp usan WoTeR). name_display se queda WOTER.
+- Roles: DJ · Producer · Remixer (bio Beatport y Bandcamp).
+
+Cronología
+----------
+- era: `2013-present`
+- Beatport: «WoTeR / Producer / Remixer / Dj Since 2013». Bandcamp: «Since 2013».
+- QUITAR `2010s-present`.
+- Status: Active. 2026: Worldwide, Moment, Close Your Eyes, Everyday, Cinematic; Samay Summer Compilation 2026.
+
+Booking
+-------
+- Desnivel Music (Málaga, Spain). Bandcamp oficial.
+
+Samay Records = casa principal
+------------------------------
+To The Limit (2023), Break It Down (2024), I Remember (2025, 132 BPM), Ge To Funk (2025, 138 BPM), Bring The House, Secret Investigation, Another Round, Mystery, Bam Bam, Live It Up, Break Me Down, Éxtasis, Everyday con Pit Voorhees, Moment, compilaciones Samay.
+
+Br8kn Records = segunda relación
+--------------------------------
+Two Guns, Power, Final Round, Cinematic (con Bazco); 1,2,3,4; Electric Dance; Close Your Eyes; Worldwide.
+
+Otros sellos
+------------
+- ElectroBreakz — Rave Revolution
+- SOUNDSYSTEM BASSROCK — Badman 2025 remaster
+- Architektur Records — Capture The Sounds
+- Diablo Loco — Shut Up
+- Sound Perfect Breakz Records — compilaciones
+No reducir el catálogo a «Samay + dos cortes en charts».
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass.
+- QUITAR Andalusian Breakbeat, Electro, Bass, Club.
+- NO poner UK Garage como género principal (solo tag de un remix Bandcamp de Sandstorm).
+
+Remixer
+-------
+Darude — Sandstorm (WoTeR 2025 Breaks Remix); Shockwave — The 2nd Day (WoTeR & Bazco Remix); Skin Out (Woter Remix) para Darkus & Paul Bassrock.
+
+Colaboradores
+-------------
+- Bazco: el más frecuente (Two Guns, Power, Final Round, Cinematic; remix Shockwave).
+- Pit Voorhees — Everyday
+- J-Break — Knives
+- BLOW (SP) — To Night
+- Brothers Bud + J-Break — Smash It
+related_artists: Bazco, Pit Voorhees, J-Break, BLOW (SP), Brothers Bud.
+J-Break, BLOW (SP) y Brothers Bud tienen ficha. Bazco y Pit Voorhees no: igual van como nombres.
+
+Essential tracks
+----------------
+To The Limit (2023, Samay)
+Break It Down (2024, Samay)
+Rave Revolution (ElectroBreakz; nº1 Top Ten Beatport)
+Badman (Badman 2025 Remaster, SOUNDSYSTEM BASSROCK)
+I Remember (2025, Samay, 132 BPM)
+Ge To Funk (2025, Samay, 138 BPM)
+Power (con Bazco, Br8kn)
+Knives (con J-Break)
+Worldwide (2026)
+Moment (2026)
+
+Key releases (máx. 8; SIN Éxtasis/Mystery como únicos; SIN notas «Optimal Breaks»)
+------------------------------------------------------------------------------
+- To The Limit — 2023 — Samay Records
+- Break It Down — 2024 — Samay Records
+- Rave Revolution — ElectroBreakz
+- Badman — 2025 remaster — SOUNDSYSTEM BASSROCK
+- I Remember — 2025 — Samay Records
+- Power — con Bazco — Br8kn Records
+- Knives — con J-Break
+- Worldwide — 2026 — Br8kn Records
+
+Beatport
+--------
+- beatport_id: 310684
+- beatport_url: https://www.beatport.com/artist/woter/310684
+- Top 10 vacío ahora: scrapear después.
+
+Socials
+-------
+- beatport: https://www.beatport.com/artist/woter/310684
+- bandcamp: https://woter2024.bandcamp.com/
+
+PROHIBIDO
+---------
+- Málaga como deducción / «a través del booking».
+- era 2010s-present.
+- UK Garage como estilo principal.
+- Electro / Bass / Club / Andalusian Breakbeat como tags.
+- Inventar nombre real.
+- Cifras Spotify.
+- Optimal Breaks / 40 Breaks.
+- Párrafos de «continuo», «sensibilidad sureña», «heredó ese marco».
+- labels_founded (no fundó Samay).

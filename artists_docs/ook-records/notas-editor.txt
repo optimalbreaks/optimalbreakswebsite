@@ -1,0 +1,60 @@
+Alta editorial — Ook Records (septiembre 2026)
+==============================================
+
+Sello propio de Twook. Slug: ook-records. Name: Ook Records.
+
+Identidad
+---------
+- Fundador y CEO: Twook (bio oficial Beatport + Spotify: dirige el sello desde su «búnker»).
+- country: ES. NO inventar ciudad (Twook es andaluz; el sello no tiene sede pública confirmada).
+- founded_year: null. No inventar. Primera referencia comercial clara del sello: Power Full (Twook), 24 enero 2025. Actividad visible 2025–presente.
+- is_active: true
+- is_featured: false
+
+Sonido / línea
+--------------
+- Casa de Twook: breakbeat, dark 2-step, UK garage, UK bass, deep dubstep / 140.
+- Estética horror / masked / cine de terror alineada con el artista.
+- No es un sello de roster amplio documentado: está construido alrededor del universo de Twook.
+
+Artistas
+--------
+- key_artists: Twook (núcleo), DJ Karpin (Bass Relay, Ook Records, Beatport 9 oct 2025).
+- No inventar más nombres.
+
+Catálogo representativo (Twook salvo donde se indique)
+-----------------------------------------------------
+- Power Full — 24 ene 2025 (primer corte Ook claramente documentado)
+- Facesun — 20 mar 2025
+- Contagion — 22 may 2025
+- Dark Siren — 2025
+- Immortal — 2025
+- Bass Relay — DJ Karpin & Twook — 9 oct 2025 (Beatport release 5106786)
+- Ragga Voodoo — 2025 (nº1 Top Ten Ook en Beatport según brief editorial)
+- Profaned Prayer — 2026
+- Gryslou — 2026
+- Scar Bass — 2026 (Bandcamp 12 jun 2026)
+
+Más títulos del universo (mencionar en bio, no hace falta todos en key_releases):
+Demonfucked, Slasher, Phantom Line, Nullfire, Firing, Stalker, This Ain't Music, What?, Koupe, Whisper, Acid Crawler, Falling For Ages, Recovered Files, Stop the Rot.
+
+Beatport
+--------
+- beatport_id: 127934
+- beatport_url: https://www.beatport.com/label/ook-records/127934
+- Track de referencia: https://www.beatport.com/track/this-ain-t-music/20997392
+- Release Bass Relay: https://www.beatport.com/release/bass-relay/5106786
+- No confundir con releases titulados «Ook Records Vol. 02».
+
+Otras URLs
+----------
+- Artista: https://www.beatport.com/artist/twook/1114645
+- Bandcamp artista: https://twookmusic.bandcamp.com/
+- NO inventar website propio si no hay URL estable del sello (Beacons es del artista).
+
+PROHIBIDO
+---------
+- Inventar fundación 2004 / 2014.
+- Usar Bass Relay 2014 (metadata vieja). El release Beatport Ook es 2025-10-09.
+- Inventar roster, premios, ciudad, oyentes Spotify.
+- Confundir con otros «Ook» / homónimos.

@@ -1,0 +1,95 @@
+Alta editorial — SulivanZ (septiembre 2026)
+===========================================
+
+Alta nueva. Slug: sulivanz. Name: SulivanZ. name_display: SULIVANZ.
+sort_order: 135. is_featured: false. image_url: null (foto después).
+
+Identidad
+---------
+- real_name: null. No inventar.
+- country: ES
+- category: andalusian
+- Base: Huelva, Andalucía, Spain. Bandcamp oficial: «SulivanZ — Huelva, Spain». Tags de releases: Huelva.
+- Roles: DJ · Producer.
+
+Cronología (no negociable)
+--------------------------
+- era: `2024-present`
+- Actividad productiva pública al menos desde 2024 (colecciones Bandcamp TRACKS 2024 / 2025 / 2026).
+- Fase comercial Beatport / sello: 2026–present.
+- NO decir que debuta en Beatport 2026 como si no existiera antes.
+- NO inventar año anterior a 2024.
+
+Sonido
+------
+- styles: Breakbeat, Neurobreaks, 2-Step, UK Garage, Drum & Bass.
+- Él mismo: «DJ / Producer — BreakBeat, NeuroBreaks, 2Step Bassline & DnB.» Linktree: Breakbeat · 2Step · UK Garage · Drum & Bass.
+- También tearout y 140 BPM (Oscillate, Let Me Groove, Fxck Legs, Alright Copy).
+- NO poner Electronica como estilo principal (algunos cortes Beatport jul 2026: Mothership, Alien 21, Dark Revelation, Silver Demon). Mencionar en bio como experimentación más amplia.
+
+Shadow Breakz Records
+---------------------
+- Sello propio. Bandcamp y SoundCloud del sello: «Founder: SulivanZ». Base Huelva.
+- labels_founded: ["Shadow Breakz Records"]
+- Catálogo SWBZ_001 Destroy The City [Silent City] EP, SWBZ_002 Rude Street Justice, etc.
+- 2026 Beatport: Oscillate, Let Me Groove, I'm Still Alive, Fxck Legs, Alright Copy, Acura Type R 1997, Celica Frequenzy T23.
+- Estética de títulos: coches japoneses, sci-fi/cyber, calle, neuro.
+
+SuvanBreaks
+-----------
+- Aparece como «SuvanBreaks vs SulivanZ» (Underground Gangsta, Feel Like That, Laser Disk, Rude Street Justice).
+- SoundCloud: Annihilate The City — Producer: SuvanBreaks, EP Destroy The City.
+- Linktree personal enlaza «Made in SuvanBreaks».
+- Redactar con prudencia: proyecto asociado / posible alias paralelo (D&B/bootlegs), no afirmar identidad 100% hasta que él lo confirme.
+- related_artists: ["SuvanBreaks"] solo si se trata como nombre de proyecto. Si es alias propio, mejor NO duplicar como artista relacionado (no hay ficha). Dejar related_artists: [] o ["SuvanBreaks"] como proyecto asociado. Preferir [] y explicarlo en bio.
+
+Cultura free / bootlegs
+-----------------------
+Bandcamp: Favela do Brasil, Aquí no hay quien baile bootleg, AKISTEP, Sem Fronteiras, Jarfaiter - Kemando Rueda (SulivanZ 2 Step Mix), Samurai Jack 6.35.
+TRACKS 2026: Quejío Andalúh, Born Slippy bootleg, Hotta DnB Edit, Saca Prende y Sorprende DnB Edit, mixes SuvanBreaks (More Fire Crew, Player One, T Power, Pornstarz).
+Mencionar: edits + bootlegs + free downloads en paralelo a releases oficiales. Quejío Andalúh = referencia andaluza explícita.
+
+DJ / series
+-----------
+BASSLINE TAPES — 2STEP/UKG MINIMIX SERIES
+REGGAELUCIÓN Vol.1
+Justifica rol DJ, no solo productor.
+
+Key releases
+------------
+- Neural Strike Protocol EP — 2025 (Bandcamp, oct 2025; obra estructurada previa a oleada Beatport)
+- Destroy The City [Silent City] EP — 2026 — Shadow Breakz (SWBZ_001). Annihilate The City = D&B
+- Rude Street Justice — 2026 — álbum (SWBZ_002; CD1/CD2/CDX). Él lo presenta como lanzamiento principal.
+- Tracks 2026 — colección free download
+
+Essential tracks (pocos; no fabricar canon de 10)
+-------------------------------------------------
+Quejío Andalúh (2026)
+Annihilate The City (2026)
+Underground Gangsta (2026, SuvanBreaks + SulivanZ)
+Oscillate (2026, 140 BPM)
+Let Me Groove (2026)
+Fxck Legs (2026)
+
+Beatport
+--------
+- beatport_id: 2402453
+- beatport_url: https://www.beatport.com/artist/sulivanz/2402453
+
+Socials
+-------
+- bandcamp: https://sulivanz.bandcamp.com/
+- beatport: https://www.beatport.com/artist/sulivanz/2402453
+- Sello Bandcamp: https://shadowbreakzrecords.bandcamp.com/
+- SoundCloud sello: https://soundcloud.com/shadowbreakzrecords
+Si hay SoundCloud/YouTube/Instagram del artista en Bandcamp, incluir solo URLs https claras.
+
+PROHIBIDO
+---------
+- Inventar nombre real.
+- Inventar actividad pre-2024.
+- Electronica como género principal.
+- Cifras Spotify.
+- Optimal Breaks / 40 Breaks.
+- Tratar SuvanBreaks como identidad cerrada al 100%.
+- Crear ficha de SuvanBreaks.
