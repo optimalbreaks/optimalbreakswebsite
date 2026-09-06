@@ -1,0 +1,67 @@
+Alta editorial — BABU (ESP) (septiembre 2026)
+=============================================
+
+Alta NUEVA. Catálogo mínimo. NO inventar. NO rellenar huecos.
+
+Identidad
+---------
+- slug: babu-esp
+- name: BABU (ESP)
+- name_display: BABU (ESP)
+- real_name: null. PROHIBIDO Oscar Somarriba / cualquier Babu homónimo (RA Madrid, etc.). El perfil Beatport BABU (ESP) es identidad nueva y distinta hasta prueba.
+- country: ES
+- category: current  (NO andalusian: no hay ciudad. NO pioneer/uk_legend/crew.)
+- era: `2026-present`
+- is_featured: false
+- sort_order: 145
+- image_url: null (foto después si Beatport tiene hero)
+
+Roles: Producer. No afirmar DJ, bookings ni escena local.
+
+Sonido
+------
+- styles: Breakbeat, UK Bass, Bass
+- NO: Nu Skool Breaks, Electro, Jungle, Drum & Bass, Andalusian Breakbeat.
+- ElectroBreakz publica electro, pero Mantra está clasificado Breaks / Breakbeat / UK Bass, no Electro.
+
+Catálogo verificado (solo esto)
+-------------------------------
+1. Mantra — ElectroBreakz — 25 ago 2026 — 138 BPM · G♭ minor · Breaks / Breakbeat / UK Bass. Beatport Exclusive.
+2. Murdah Killa — Br8kn Records — 4 sep 2026 — 138 BPM · F minor · Breaks / Breakbeat / UK Bass.
+
+labels_founded: []
+related_artists: []
+recommended_mixes: []
+
+Essential tracks (solo 2)
+-------------------------
+Mantra
+Murdah Killa
+
+Key releases
+------------
+- Mantra — 2026 — ElectroBreakz
+- Murdah Killa — 2026 — Br8kn Records
+
+Beatport
+--------
+- beatport_id: 2447337
+- beatport_url: https://www.beatport.com/artist/babu-esp/2447337
+
+BIO (micro, factual; no más)
+----------------------------
+ES (usar este tono, no ampliar):
+BABU (ESP) es un productor español de breakbeat cuya actividad discográfica comenzó a aparecer en Beatport en 2026. Su música se sitúa dentro del breakbeat contemporáneo y el UK bass, con producciones de alta energía orientadas a la pista.
+
+Su primer material disponible bajo esta identidad incluye “Mantra”, publicado por ElectroBreakz en agosto de 2026, y “Murdah Killa”, editado por Br8kn Records en septiembre del mismo año. Ambos tracks se mueven en torno a los 138 BPM y sitúan a BABU dentro de la nueva generación de productores vinculados a la escena breaks.
+
+Con un catálogo todavía en sus primeras etapas, BABU (ESP) es un proyecto emergente cuya evolución habrá que seguir a medida que aparezcan nuevos lanzamientos.
+
+PROHIBIDO
+---------
+- Nombre real, ciudad, Andalucía, edad, alias previos, redes no verificadas.
+- «promesa», «años en cabina», «influencias UK», colectivos, conciertos.
+- Confundir con otros Babu.
+- Inventar esenciales extra.
+- Optimal Breaks / 40 Breaks.
+- Cifras Spotify.

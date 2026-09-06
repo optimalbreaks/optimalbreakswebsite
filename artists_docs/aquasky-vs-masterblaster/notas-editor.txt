@@ -1,0 +1,81 @@
+Revisión editorial — Aquasky Vs Masterblaster (septiembre 2026)
+==============================================================
+
+REESCRIBIR. Conservar slug aquasky-vs-masterblaster, name Aquasky Vs Masterblaster, name_display AQUASKY VS MASTERBLASTER, category uk_legend, sort_order 74.
+CONSERVAR image_url EXACTA de BD:
+https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/artists/aquasky-vs-masterblaster/portrait.webp
+(retrato editorial de los sleeping bags). NO tocar foto.
+
+ERROR GRAVE — borrar por completo
+---------------------------------
+Steve Pycroft NO tiene nada que ver. Es otro músico británico (Kaleidoscope Orchestra). QUITAR de bio, related_artists y cualquier mención.
+Masterblaster NO es un cuarto integrante ni un colaborador externo.
+
+Identidad (no negociable)
+-------------------------
+Aquasky vs. Masterblaster = los TRES de Aquasky:
+- Dave Wallace
+- Kieron Bailey
+- Brent Newitt
+Moving Shadow acredita Seville / Fairlite como escrito/producido solo por esos tres.
+«vs. Masterblaster» se añadió para diferenciar el breakbeat del D&B que publicaban como Aquasky. La gente pensó que Masterblaster era otra persona; por eso abandonaron el nombre (RA ~2005: vuelven a publicar breaks como Aquasky).
+Dos fichas (Aquasky + esta) se MANTIENEN por archivo. Deben quedar enlazadas: NO son dos grupos distintos. Beatport: Aquasky #749 y Masterblaster #15859; los discos históricos salen acreditados a ambos.
+
+Cronología
+----------
+- era: `early-2000s` (identidad consolidada ~2000–2001; abandonada mediados de los 2000). QUITAR `late-1990s-2000s`.
+- Aquasky nace Bournemouth, 90s, D&B en Moving Shadow (Dezires / Images), Reinforced, etc. Polydor. Tras Bodyshock y Aftershock, bajan BPM hacia nu skool (conexión Adam Freeland).
+- category: uk_legend (SE QUEDA).
+
+Styles
+------
+Breakbeat, Nu Skool Breaks, UK Bass, Bass.
+QUITAR Drum & Bass y Jungle de los tags (esas raíces van en la BIO: precisamente el alias existe para diferenciarlas).
+
+Sellos
+------
+labels_founded: ["Passenger", "777"]
+- Passenger: 1997. Breakfastaz, Backdraft, Baitercell & Schumacher, The Autobots, Ragga Twins…
+- 777: sello hermano, 2004.
+
+Key releases
+------------
+- Beat The System — 2002 — Botchit & Scarper
+- Stayfresh — 2004 — Shadow Cryptic
+  Stayfresh NO es 2006 (eso es confusión con Teamplayers / etapa posterior Aquasky).
+  RA review 30 abr 2004; lanzamiento marzo 2004. RA 2004: álbum de pista; Coffee y Take It To The Floor con apoyo DJ. MoMA PS1 NY 2004 como Aquasky vs. Masterblaster.
+
+Essential tracks
+----------------
+777
+Disco Biscuit
+Satellite Channel (Aquasky, Masterblaster — Passenger)
+Megatron
+Loko (feat. The Ragga Twins)
+Renegade Snares (Aquasky vs. Masterblaster Remix de Omni Trio, Moving Shadow)
+QUITAR Party Skank (Beatport lo acredita solo como Aquasky).
+
+related_artists
+---------------
+Aquasky (obligatorio; misma gente).
+The Ragga Twins (ficha the-ragga-twins; Loko).
+NO Steve Pycroft. NO Dave Wallace como ficha (no existe). Los tres miembros van en la bio.
+
+Beatport
+--------
+- beatport_id: 749 (Aquasky; el usuario lo da como ficha canónica)
+- beatport_url: https://www.beatport.com/artist/aquasky/749
+- Alias Beatport Masterblaster: https://www.beatport.com/artist/masterblaster/15859 (mencionar en bio/socials, no crear tercera ficha)
+
+BIO: usar el texto editorial del brief (ES) y equivalente EN. Hechos: Bournemouth, Moving Shadow, Aftershock/Freeland, vs. Masterblaster = misma gente, Beat The System 2002, Stayfresh 2004, Passenger 1997, 777 2004, abandono del alias mediados 2000s, no son dos grupos.
+
+PROHIBIDO
+---------
+- Steve Pycroft.
+- Masterblaster como persona / cuarto miembro.
+- Stayfresh 2006.
+- Party Skank en esenciales.
+- D&B/Jungle como tags de ESTA ficha.
+- Inventar nombre civil extra.
+- Optimal Breaks / 40 Breaks.
+- Cambiar image_url.

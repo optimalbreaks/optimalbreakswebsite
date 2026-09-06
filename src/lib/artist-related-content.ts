@@ -15,6 +15,15 @@ function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
 }
 
+/** PostgREST `.or()` trata `( ) , . :` como sintaxis. Sin comillas, `BABU (ESP)` tumba el filtro entero. */
+function quoteOrFilterValue(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`
+}
+
+function orIlikeClause(column: string, term: string): string {
+  return `${column}.ilike.${quoteOrFilterValue(`%${term}%`)}`
+}
+
 function normKey(s: string): string {
   return s
     .toLowerCase()
@@ -283,12 +292,12 @@ function buildArtistMatchKeys(
 }
 
 function orIlikeFilter(column: string, terms: string[]): string {
-  return terms.map((t) => `${column}.ilike.%${t}%`).join(',')
+  return terms.map((t) => orIlikeClause(column, t)).join(',')
 }
 
 function artistTrackOrFilter(terms: string[]): string {
   return terms
-    .flatMap((t) => [`artist_names_text.ilike.%${t}%`, `mix_name.ilike.%${t}%`])
+    .flatMap((t) => [orIlikeClause('artist_names_text', t), orIlikeClause('mix_name', t)])
     .join(',')
 }
 
@@ -388,7 +397,7 @@ export async function fetchArtistRelatedContent(
   const matchKeys = buildArtistMatchKeys(artist)
   const artistNamesOr = artistTrackOrFilter(terms)
   const lineupOr = orIlikeFilter('lineup_text', terms)
-  const mixOr = [`artist_id.eq.${artist.id}`, ...terms.map((t) => `artist_name.ilike.%${t}%`)].join(',')
+  const mixOr = [`artist_id.eq.${artist.id}`, ...terms.map((t) => orIlikeClause('artist_name', t))].join(',')
 
   const [mixesRes, chartRes, featuredRes, vinylRes, upcomingEventsRes, pastEventsRes] = await Promise.all([
     supabase
@@ -503,7 +512,10 @@ async function fetchAllPages<T>(
   const out: T[] = []
   for (let offset = 0; ; offset += ON_SITE_PAGE) {
     const { data, error } = await run(offset, offset + ON_SITE_PAGE - 1)
-    if (error) return out
+    if (error) {
+      console.warn('[artist-related-content] fetchAllPages:', error.message)
+      return out
+    }
     const rows = (data as T[] | null) ?? []
     out.push(...rows)
     if (rows.length < ON_SITE_PAGE) break
