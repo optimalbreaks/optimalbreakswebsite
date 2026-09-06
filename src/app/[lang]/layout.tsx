@@ -20,6 +20,7 @@ import CookieBanner from '@/components/CookieBanner'
 import DeferredFonts from '@/components/DeferredFonts'
 import BackToTop from '@/components/BackToTop'
 import AdminCaptureFab from '@/components/AdminCaptureFab'
+import ArtistNetworkFab from '@/components/ArtistNetworkFab'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration'
 import {
@@ -178,6 +179,7 @@ export default async function LangLayout({
             <Footer dict={dict} lang={lang} />
             <BackToTop ariaLabel={dict.a11y.backToTop} />
             <AdminCaptureFab />
+            <ArtistNetworkFab />
           </LazyDeckAudioProvider>
           <CookieBanner lang={lang} />
           <ChartsPromoModal lang={lang} dict={dict.charts_promo} />

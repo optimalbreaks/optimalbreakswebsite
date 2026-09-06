@@ -145,6 +145,37 @@ export type AdminChatMessageRow = {
   created_at: string
 }
 
+export type ArtistNetworkKind = 'dm' | 'group'
+
+export type ArtistNetworkThreadRow = {
+  id: string
+  kind: ArtistNetworkKind
+  title: string | null
+  dm_key: string | null
+  created_by: string
+  last_message_at: string | null
+  last_message_preview: string
+  last_sender_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ArtistNetworkMemberRow = {
+  thread_id: string
+  user_id: string
+  artist_id: string | null
+  last_read_at: string | null
+  joined_at: string
+}
+
+export type ArtistNetworkMessageRow = {
+  id: string
+  thread_id: string
+  sender_id: string
+  body: string
+  created_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -365,6 +396,26 @@ export interface Database {
         Insert: Pick<EditorialLabelMarkRow, 'user_id' | 'label_key'> &
           Partial<Pick<EditorialLabelMarkRow, 'label_name' | 'label_id' | 'created_by'>>
         Update: Partial<Pick<EditorialLabelMarkRow, 'label_key' | 'label_name' | 'label_id'>>
+        Relationships: DbRelationship[]
+      }
+      artist_network_threads: {
+        Row: ArtistNetworkThreadRow
+        Insert: Pick<ArtistNetworkThreadRow, 'kind' | 'created_by'> &
+          Partial<Omit<ArtistNetworkThreadRow, 'id' | 'kind' | 'created_by'>>
+        Update: Partial<Omit<ArtistNetworkThreadRow, 'id' | 'created_at' | 'created_by'>>
+        Relationships: DbRelationship[]
+      }
+      artist_network_members: {
+        Row: ArtistNetworkMemberRow
+        Insert: Pick<ArtistNetworkMemberRow, 'thread_id' | 'user_id'> &
+          Partial<Pick<ArtistNetworkMemberRow, 'artist_id' | 'last_read_at' | 'joined_at'>>
+        Update: Partial<Pick<ArtistNetworkMemberRow, 'last_read_at'>>
+        Relationships: DbRelationship[]
+      }
+      artist_network_messages: {
+        Row: ArtistNetworkMessageRow
+        Insert: Omit<ArtistNetworkMessageRow, 'id' | 'created_at'>
+        Update: never
         Relationships: DbRelationship[]
       }
     }

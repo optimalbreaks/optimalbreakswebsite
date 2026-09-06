@@ -9,6 +9,7 @@ import { OB_CHART_PLAYALL_BAR_EVENT, useOptionalDeckAudio } from '@/components/D
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import { i18n } from '@/lib/i18n-config'
 import AgentChat from '@/components/admin/AgentChat'
+import { ArtistNetworkPanel } from '@/components/ArtistNetworkFab'
 
 /** Abrir el widget de chat editorial (admin) desde sidebar, páginas, etc. */
 export const OB_ADMIN_CHAT_OPEN_EVENT = 'ob-admin-chat-open'
@@ -35,13 +36,16 @@ function AdminChatWidgetInner() {
   const { user, loading: authLoading } = useAuth()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { sessionActive, mode } = useOptionalDeckAudio()
+  const { sessionActive, mode: deckMode } = useOptionalDeckAudio()
   const vvOffset = useViewportBottomOffset()
   const [isAdmin, setIsAdmin] = useState(false)
   const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
   const [isSm, setIsSm] = useState(false)
   const [open, setOpen] = useState(false)
   const [mountedChat, setMountedChat] = useState(false)
+  const [chatMode, setChatMode] = useState<'editorial' | 'network'>('editorial')
+  const [networkMounted, setNetworkMounted] = useState(false)
+  const [networkUnread, setNetworkUnread] = useState(0)
   const [domReady, setDomReady] = useState(false)
   const [vvBox, setVvBox] = useState<VvBox | null>(null)
 
@@ -74,6 +78,22 @@ function AdminChatWidgetInner() {
   }, [user?.id])
 
   useEffect(() => {
+    if (!isAdmin || !user?.id) return
+    const tick = () => {
+      fetch('/api/artist-network/unread')
+        .then((r) => r.json())
+        .then((json: { unread?: number }) => setNetworkUnread(Number(json.unread) || 0))
+        .catch(() => {})
+    }
+    const kick = window.setTimeout(tick, 0)
+    const t = window.setInterval(tick, open && chatMode === 'network' ? 4000 : 30000)
+    return () => {
+      window.clearTimeout(kick)
+      window.clearInterval(t)
+    }
+  }, [isAdmin, user?.id, open, chatMode])
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return
     const mq = window.matchMedia('(min-width: 640px)')
     const sync = () => setIsSm(mq.matches)
@@ -94,6 +114,7 @@ function AdminChatWidgetInner() {
   useEffect(() => {
     const onOpen = () => {
       setMountedChat(true)
+      setChatMode('editorial')
       setOpen(true)
     }
     const onClose = () => setOpen(false)
@@ -110,6 +131,7 @@ function AdminChatWidgetInner() {
     if (!isAdmin) return
     if (onCapturePage || shareHint) {
       setMountedChat(true)
+      setChatMode('editorial')
       setOpen(true)
     }
   }, [isAdmin, onCapturePage, shareHint])
@@ -192,7 +214,7 @@ function AdminChatWidgetInner() {
     }
   }, [open, isSm])
 
-  const bottomBarVisible = sessionActive || mode !== 'idle' || chartPlayAllBar
+  const bottomBarVisible = sessionActive || deckMode !== 'idle' || chartPlayAllBar
 
   if (!domReady || authLoading || !user || !isAdmin) return null
 
@@ -206,7 +228,10 @@ function AdminChatWidgetInner() {
       : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))'
 
   const fabBottom = vvOffset ? `calc(${baseBottom} + ${vvOffset}px)` : baseBottom
-  const label = lang === 'es' ? 'Chat editorial' : 'Editorial chat'
+  const fabLabel = lang === 'es' ? 'Chat' : 'Chat'
+  const editorialLabel = lang === 'es' ? 'Editorial' : 'Editorial'
+  const networkLabel = lang === 'es' ? 'Artistas' : 'Artists'
+  const headerBg = chatMode === 'network' ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white'
   const mobileSheet = open && !isSm
 
   const panelStyle: CSSProperties = mobileSheet
@@ -250,11 +275,16 @@ function AdminChatWidgetInner() {
             bottom: fabBottom,
             left: 'max(1rem, env(safe-area-inset-left, 0px))',
           }}
-          aria-label={label}
+          aria-label={fabLabel}
           aria-expanded={false}
-          title={label}
+          title={fabLabel}
         >
           💬
+          {networkUnread > 0 ? (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[var(--yellow)] text-[var(--ink)] border-2 border-[var(--ink)] text-[10px] leading-[14px] font-black">
+              {networkUnread > 9 ? '9+' : networkUnread}
+            </span>
+          ) : null}
         </button>
       ) : null}
 
@@ -282,20 +312,49 @@ function AdminChatWidgetInner() {
         style={panelStyle}
         role="dialog"
         aria-modal="true"
-        aria-label={label}
+        aria-label={fabLabel}
         data-ob-overlay
         hidden={!open}
       >
-        <header className="ob-admin-chat-panel__bar shrink-0 flex items-center gap-2 px-3 border-b-4 border-[var(--ink)] bg-[var(--red)] text-white">
-          <span
-            className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider"
-            style={{ fontFamily: "'Courier Prime', monospace" }}
-          >
-            {label}
-          </span>
+        <header className={`ob-admin-chat-panel__bar shrink-0 flex items-center gap-2 px-3 border-b-4 border-[var(--ink)] ${headerBg}`}>
+          <div className="min-w-0 flex-1 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setChatMode('editorial')}
+              className={`min-w-0 truncate px-1 py-1 text-[11px] font-bold uppercase tracking-wider ${
+                chatMode === 'editorial' ? 'underline decoration-2 underline-offset-2' : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {editorialLabel}
+            </button>
+            <span className="opacity-40 text-[11px] font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>/</span>
+            <button
+              type="button"
+              onClick={() => {
+                setNetworkMounted(true)
+                setChatMode('network')
+              }}
+              className={`min-w-0 truncate px-1 py-1 text-[11px] font-bold uppercase tracking-wider ${
+                chatMode === 'network' ? 'underline decoration-2 underline-offset-2' : 'opacity-60 hover:opacity-100'
+              }`}
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {networkLabel}
+              {networkUnread > 0 && chatMode !== 'network' ? (
+                <span className="ml-1 inline-block min-w-[14px] px-0.5 bg-[var(--ink)] text-[var(--yellow)] text-[9px] leading-[14px]">
+                  {networkUnread > 9 ? '9+' : networkUnread}
+                </span>
+              ) : null}
+            </button>
+          </div>
           <button
             type="button"
-            className="flex h-11 w-11 shrink-0 items-center justify-center border-[2px] border-white/80 bg-transparent text-white hover:bg-white hover:text-[var(--red)] touch-manipulation"
+            className={`flex h-11 w-11 shrink-0 items-center justify-center border-[2px] bg-transparent touch-manipulation ${
+              chatMode === 'network'
+                ? 'border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]'
+                : 'border-white/80 text-white hover:bg-white hover:text-[var(--red)]'
+            }`}
             style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 900, fontSize: '18px' }}
             aria-label={lang === 'es' ? 'Minimizar chat' : 'Minimize chat'}
             onClick={() => setOpen(false)}
@@ -305,7 +364,14 @@ function AdminChatWidgetInner() {
         </header>
         <div className="ob-admin-chat-panel__body flex-1 min-h-0 flex flex-col">
           {mountedChat ? (
-            <AgentChat lang={lang} mode="widget" shareQuery={searchParams} />
+            <div className={`flex-1 min-h-0 flex flex-col ${chatMode === 'editorial' ? '' : 'hidden'}`}>
+              <AgentChat lang={lang} mode="widget" shareQuery={searchParams} />
+            </div>
+          ) : null}
+          {networkMounted ? (
+            <div className={`flex-1 min-h-0 flex flex-col ${chatMode === 'network' ? '' : 'hidden'}`}>
+              <ArtistNetworkPanel active={open && chatMode === 'network'} />
+            </div>
           ) : null}
         </div>
       </div>

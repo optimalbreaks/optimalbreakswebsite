@@ -23,9 +23,10 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: Lo
     { t: '5. Contenido de terceros', p: 'Optimal Breaks puede incluir enlaces a sitios web de terceros (Beatport, SoundCloud, YouTube, etc.). No somos responsables del contenido, políticas de privacidad o prácticas de estos sitios.' },
     { t: '6. Música y audio', p: 'Los archivos de audio incluidos en el sitio son originales o se utilizan con licencia. La reproducción mediante el DJ deck del sitio es únicamente para uso personal y demostración.' },
     { t: '7. Envíos de usuarios', p: 'Si envías sugerencias de artistas, eventos o contenido, concedes a Optimal Breaks una licencia no exclusiva para utilizar esa información en el contexto del sitio.' },
-    { t: '8. Limitación de responsabilidad', p: 'Optimal Breaks se proporciona "tal cual". No garantizamos la exactitud, integridad o actualidad de toda la información publicada. No nos hacemos responsables de daños derivados del uso del sitio.' },
-    { t: '9. Modificaciones', p: 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán efectivos desde su publicación en esta página.' },
-    { t: '10. Legislación aplicable', p: 'Estos términos se rigen por la legislación española y europea. Cualquier disputa se someterá a los tribunales de Murcia, España.' },
+    { t: '8. Red de artistas', p: 'Los artistas con ficha verificada pueden enviarse mensajes privados a través de la red interna. Esos mensajes se alojan en Optimal Breaks (no son secretos frente al operador) y se usan para prestar el servicio y moderarlo. El uso abusivo puede conllevar la revocación de la verificación.' },
+    { t: '9. Limitación de responsabilidad', p: 'Optimal Breaks se proporciona "tal cual". No garantizamos la exactitud, integridad o actualidad de toda la información publicada. No nos hacemos responsables de daños derivados del uso del sitio.' },
+    { t: '10. Modificaciones', p: 'Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán efectivos desde su publicación en esta página.' },
+    { t: '11. Legislación aplicable', p: 'Estos términos se rigen por la legislación española y europea. Cualquier disputa se someterá a los tribunales de Murcia, España.' },
   ] : [
     { t: '1. Acceptance of Terms', p: 'By accessing and using Optimal Breaks (www.optimalbreaks.com), you agree to these terms of use. If you disagree, please do not use this website.' },
     { t: '2. Service Description', p: 'Optimal Breaks is an informational and cultural platform dedicated to the history, artists, labels, events, and culture of breakbeat. Content is provided for informational and entertainment purposes.' },
@@ -34,9 +35,10 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: Lo
     { t: '5. Third-Party Content', p: 'Optimal Breaks may include links to third-party websites (Beatport, SoundCloud, YouTube, etc.). We are not responsible for the content, privacy policies, or practices of these sites.' },
     { t: '6. Music and Audio', p: 'Audio files on the site are original or used under license. Playback through the site\'s DJ deck is for personal use and demonstration only.' },
     { t: '7. User Submissions', p: 'If you submit artist, event, or content suggestions, you grant Optimal Breaks a non-exclusive license to use that information in the context of the site.' },
-    { t: '8. Limitation of Liability', p: 'Optimal Breaks is provided "as is." We do not guarantee the accuracy, completeness, or timeliness of all published information. We are not liable for damages arising from use of the site.' },
-    { t: '9. Modifications', p: 'We reserve the right to modify these terms at any time. Changes will be effective upon publication on this page.' },
-    { t: '10. Governing Law', p: 'These terms are governed by Spanish and European law. Any dispute shall be submitted to the courts of Murcia, Spain.' },
+    { t: '8. Artist network', p: 'Artists with a verified profile may send each other private messages through the internal network. Those messages are hosted by Optimal Breaks (they are not secret from the operator) and are used to provide and moderate the service. Abuse may lead to revocation of verification.' },
+    { t: '9. Limitation of Liability', p: 'Optimal Breaks is provided "as is." We do not guarantee the accuracy, completeness, or timeliness of all published information. We are not liable for damages arising from use of the site.' },
+    { t: '10. Modifications', p: 'We reserve the right to modify these terms at any time. Changes will be effective upon publication on this page.' },
+    { t: '11. Governing Law', p: 'These terms are governed by Spanish and European law. Any dispute shall be submitted to the courts of Murcia, Spain.' },
   ]
 
   return (
@@ -46,7 +48,7 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: Lo
         <span className="hl">{es ? 'TÉRMINOS DE USO' : 'TERMS OF USE'}</span>
       </h1>
       <p className="mb-8" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>
-        {es ? 'Última actualización: Marzo 2026' : 'Last updated: March 2026'}
+        {es ? 'Última actualización: Septiembre 2026' : 'Last updated: September 2026'}
       </p>
       <div className="space-y-8" style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8 }}>
         {sections.map((s, i) => (

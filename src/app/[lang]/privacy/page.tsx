@@ -24,6 +24,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
     { t: '6. Derechos del usuario', p: 'Tienes derecho a acceder, rectificar, suprimir, limitar el tratamiento, portabilidad y oposición al tratamiento de tus datos personales. Puedes ejercer estos derechos enviando un correo a info@optimalbreaks.com.' },
     { t: '7. Retención de datos', p: 'Los datos analíticos se conservan durante un máximo de 26 meses. Los datos de contacto se conservan mientras sea necesario para resolver la consulta y, en todo caso, durante los plazos legales aplicables.' },
     { t: '8. Contacto', p: 'Para cualquier consulta relacionada con la privacidad, contacta con nosotros en info@optimalbreaks.com.' },
+    { t: '9. Cuentas, bookings y red de artistas', p: 'Si creas una cuenta, tratamos el email, el nombre de perfil y la actividad de la cuenta (favoritos, temas guardados, solicitudes de booking). Si verificas una ficha de artista, los mensajes de la red interna de artistas se alojan en nuestros servidores en claro: el hilo no es público para otros artistas, pero el operador de Optimal Breaks puede acceder a él para moderación, seguridad y funcionamiento del servicio. No es mensajería cifrada de extremo a extremo. Puedes ejercer tus derechos RGPD en info@optimalbreaks.com.' },
   ] : [
     { t: '1. Data Controller', p: 'Optimal Breaks is an independent project based in Murcia, Spain. Contact email: info@optimalbreaks.com.' },
     { t: '2. Data We Collect', p: 'We only collect technical browsing data (IP address, browser type, pages visited) through analytics cookies. We do not collect personally identifiable data unless voluntarily provided by the user through contact forms.' },
@@ -33,6 +34,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
     { t: '6. User Rights', p: 'You have the right to access, rectify, delete, restrict processing, portability, and object to the processing of your personal data. You can exercise these rights by sending an email to info@optimalbreaks.com.' },
     { t: '7. Data Retention', p: 'Analytics data is retained for a maximum of 26 months. Contact data is retained as long as necessary to resolve the inquiry and, in any case, for the applicable legal periods.' },
     { t: '8. Contact', p: 'For any privacy-related inquiries, contact us at info@optimalbreaks.com.' },
+    { t: '9. Accounts, bookings and artist network', p: 'If you create an account, we process your email, profile name and account activity (favorites, saved tracks, booking requests). If you verify an artist profile, messages in the internal artist network are stored on our servers in plaintext: a thread is not public to other artists, but the Optimal Breaks operator may access it for moderation, safety and operation of the service. This is not end-to-end encrypted messaging. You may exercise your GDPR rights at info@optimalbreaks.com.' },
   ]
 
   return (
@@ -42,7 +44,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
         <span className="hl">{es ? 'POLÍTICA DE PRIVACIDAD' : 'PRIVACY POLICY'}</span>
       </h1>
       <p className="mb-8" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '12px', color: 'var(--dim)' }}>
-        {es ? 'Última actualización: Marzo 2026' : 'Last updated: March 2026'}
+        {es ? 'Última actualización: Septiembre 2026' : 'Last updated: September 2026'}
       </p>
       <div className="space-y-8" style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8 }}>
         {sections.map((s, i) => (

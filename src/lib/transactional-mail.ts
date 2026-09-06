@@ -254,7 +254,7 @@ function claimApprovedHtml(opts: {
                 Hola, <strong>${name}</strong>. Ya hemos verificado tu ficha.
               </p>
               <p style="margin:0 0 16px 0;font-family:Courier New,Courier,monospace;font-size:13px;line-height:1.5;color:#4a4238;">
-                A partir de ahora puedes recibir solicitudes de booking. El interruptor nace cerrado: en Mi cuenta → Artista enciende «Abierto» cuando quieras que el botón salga en tu página. Cada solicitud llega a tu bandeja (y te avisamos por correo). No respondas a este mensaje.
+                A partir de ahora puedes recibir solicitudes de booking. El interruptor nace cerrado: en Mi cuenta → Artista enciende «Abierto» cuando quieras que el botón salga en tu página. Cada solicitud llega a tu bandeja (y te avisamos por correo). También tienes la red de artistas: el icono 💬 abajo a la izquierda abre la agenda de fichas reclamadas para escribirles, da igual si los bookings están cerrados. No respondas a este mensaje.
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
@@ -274,7 +274,7 @@ function claimApprovedHtml(opts: {
                 Hi, <strong>${name}</strong>. Your profile is verified.
               </p>
               <p style="margin:0 0 16px 0;font-family:Courier New,Courier,monospace;font-size:13px;line-height:1.5;color:#4a4238;">
-                You can now receive booking requests. The switch starts off: in My account → Artist turn on «Open» when you want the button on your page. Each request lands in your inbox (we email you too). Don’t reply to this message.
+                You can now receive booking requests. The switch starts off: in My account → Artist turn on «Open» when you want the button on your page. Each request lands in your inbox (we email you too). You also get the artist network: the 💬 icon at the bottom left opens the directory of claimed profiles so you can message them, whether bookings are open or not. Don’t reply to this message.
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0">
                 <tr>
@@ -323,11 +323,13 @@ export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Pr
     text: [
       `Hola, ${opts.artistName}. Ya hemos verificado tu ficha.`,
       `Puedes recibir solicitudes de booking. Enciende «Abierto» en Mi cuenta → Artista.`,
+      `La red de artistas está en el icono 💬 (abajo a la izquierda), aunque los bookings estén cerrados.`,
       `Mi cuenta: ${SITE_URL}/es/mi-cuenta/artista`,
       `Ficha: ${SITE_URL}/es/artists/${opts.artistSlug}`,
       '',
       `Hi, ${opts.artistName}. Your profile is verified.`,
       `You can receive booking requests. Turn on «Open» in My account → Artist.`,
+      `The artist network is the 💬 icon (bottom left), even if bookings are closed.`,
       `My account: ${SITE_URL}/en/mi-cuenta/artista`,
       `Page: ${SITE_URL}/en/artists/${opts.artistSlug}`,
     ].join('\n'),

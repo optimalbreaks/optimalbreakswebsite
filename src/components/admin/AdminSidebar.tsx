@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
   { key: 'claims', label: 'Verificaciones', icon: '✔', path: '/claims' },
   { key: 'bookings', label: 'Bookings', icon: '✉', path: '/bookings' },
+  { key: 'red', label: 'Red artistas', icon: '💬', path: '/red' },
   { key: 'artists', label: 'Artistas', icon: '♫', path: '/artists' },
   { key: 'labels', label: 'Sellos', icon: '◈', path: '/labels' },
   { key: 'events', label: 'Eventos', icon: '⚡', path: '/events' },
