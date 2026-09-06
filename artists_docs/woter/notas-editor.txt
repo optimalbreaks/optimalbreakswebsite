@@ -1,3 +1,11 @@
+Corrección del artista (6 sep 2026)
+===================================
+Woter: «soy de Vva de Algaidas ( Málaga )».
+Usar el topónimo oficial: Villanueva de Algaidas (Málaga).
+Es procedencia («soy de»), no «afincado en la ciudad de Málaga».
+Bandcamp sigue diciendo «Málaga, Spain» (provincia). No contradice esto.
+NO decir que vive en Málaga capital.
+
 Revisión editorial — Woter (septiembre 2026)
 ============================================
 
@@ -8,7 +16,7 @@ Identidad
 - real_name: null. No inferir.
 - country: ES
 - category: andalusian
-- Base: Málaga, Andalucía, Spain. Bandcamp oficial: «WoTeR — Málaga, Spain». NO decir «vinculado a Málaga a través del booking».
+- Procedencia (el artista, 6 sep 2026): Villanueva de Algaidas (Málaga). NO «afincado en Málaga» como si fuera la capital. Bandcamp: «WoTeR — Málaga, Spain» = provincia.
 - Grafía: Woter / WoTeR (Beatport y Bandcamp usan WoTeR). name_display se queda WOTER.
 - Roles: DJ · Producer · Remixer (bio Beatport y Bandcamp).
 
