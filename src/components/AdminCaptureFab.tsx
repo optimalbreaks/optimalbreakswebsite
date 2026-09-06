@@ -232,6 +232,14 @@ function AdminChatWidgetInner() {
   const editorialLabel = lang === 'es' ? 'Editorial' : 'Editorial'
   const networkLabel = lang === 'es' ? 'Artistas' : 'Artists'
   const headerBg = chatMode === 'network' ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white'
+  const tabOn =
+    chatMode === 'network'
+      ? 'bg-[var(--ink)] text-[var(--yellow)]'
+      : 'bg-white text-[var(--red)]'
+  const tabOff =
+    chatMode === 'network'
+      ? 'text-[var(--ink)]/70 hover:text-[var(--ink)]'
+      : 'text-white/75 hover:text-white'
   const mobileSheet = open && !isSm
 
   const panelStyle: CSSProperties = mobileSheet
@@ -317,26 +325,35 @@ function AdminChatWidgetInner() {
         hidden={!open}
       >
         <header className={`ob-admin-chat-panel__bar shrink-0 flex items-center gap-2 px-3 border-b-4 border-[var(--ink)] ${headerBg}`}>
-          <div className="min-w-0 flex-1 flex items-center gap-1">
+          <div
+            className={`min-w-0 flex-1 grid grid-cols-2 border-2 ${
+              chatMode === 'network' ? 'border-[var(--ink)]' : 'border-white/80'
+            }`}
+            role="tablist"
+            aria-label={lang === 'es' ? 'Tipo de chat' : 'Chat type'}
+          >
             <button
               type="button"
+              role="tab"
+              aria-selected={chatMode === 'editorial'}
               onClick={() => setChatMode('editorial')}
-              className={`min-w-0 truncate px-1 py-1 text-[11px] font-bold uppercase tracking-wider ${
-                chatMode === 'editorial' ? 'underline decoration-2 underline-offset-2' : 'opacity-60 hover:opacity-100'
+              className={`min-w-0 truncate px-2 py-2 text-[11px] font-bold uppercase tracking-wider touch-manipulation ${
+                chatMode === 'editorial' ? tabOn : tabOff
               }`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
               {editorialLabel}
             </button>
-            <span className="opacity-40 text-[11px] font-bold" style={{ fontFamily: "'Courier Prime', monospace" }}>/</span>
             <button
               type="button"
+              role="tab"
+              aria-selected={chatMode === 'network'}
               onClick={() => {
                 setNetworkMounted(true)
                 setChatMode('network')
               }}
-              className={`min-w-0 truncate px-1 py-1 text-[11px] font-bold uppercase tracking-wider ${
-                chatMode === 'network' ? 'underline decoration-2 underline-offset-2' : 'opacity-60 hover:opacity-100'
+              className={`min-w-0 truncate px-2 py-2 text-[11px] font-bold uppercase tracking-wider touch-manipulation ${
+                chatMode === 'network' ? tabOn : tabOff
               }`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >

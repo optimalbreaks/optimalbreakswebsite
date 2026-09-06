@@ -43,7 +43,7 @@ function artistsNameKey(artists: unknown): string {
     .toLowerCase()
 }
 
-function foldTrackText(s: string): string {
+function foldTrackText(s: string | null | undefined): string {
   return String(s || '')
     .toLowerCase()
     .normalize('NFD')
