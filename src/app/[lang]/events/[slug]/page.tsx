@@ -42,6 +42,7 @@ type EventSeoRow = Pick<
   | 'description_es'
   | 'image_url'
   | 'og_image_url'
+  | 'updated_at'
   | 'date_start'
   | 'date_end'
   | 'venue'
@@ -310,7 +311,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: raw } = await supabase
     .from('events')
     .select(
-      'name, description_en, description_es, image_url, og_image_url, date_start, date_end, venue, city, country, doors_open, doors_close, tags',
+      'name, description_en, description_es, image_url, og_image_url, updated_at, date_start, date_end, venue, city, country, doors_open, doors_close, tags',
     )
     .eq('slug', slug)
     .single()
@@ -356,9 +357,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (ogStart) extraOgTags['event:start_time'] = ogStart
   if (ogEnd && ogEnd !== ogStart) extraOgTags['event:end_time'] = ogEnd
 
-  // El og:image lo emite la convención `opengraph-image.tsx` del segmento, que
-  // versiona la URL con `events.updated_at` vía `generateImageMetadata`
-  // (`…/opengraph-image/<epoch>`): cartel siempre fresco en Facebook/WhatsApp.
+  // Igual que las fichas de artista: Facebook baja el JPEG de Storage.
+  // La convención opengraph-image.tsx de este segmento devolvía el placeholder
+  // «OB» (el fetch del cartel fallaba en Vercel) y pisaba este og:image.
+  const ogImage = versionedImageUrl(
+    data.og_image_url || data.image_url,
+    imageCacheVersion(data.updated_at),
+  )
   return detailPageMetadata(
     lang,
     `/events/${slug}`,
@@ -366,9 +371,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     seoTitle,
     description,
     'event',
-    null,
+    ogImage,
     undefined,
-    true,
+    false,
     extraOgTags,
   )
 }

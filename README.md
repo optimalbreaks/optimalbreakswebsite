@@ -242,7 +242,7 @@ All OG images are declared **1200 × 630 PNG** (Meta's recommended size, `1.91:1
 | Route | Component | Notes |
 |-------|-----------|-------|
 | `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Branded fanzine card for the home + fallback for every page that doesn't override. Satori JSX — every container with multiple children sets `display: flex` (required by Satori; missing it causes a 500 on the route). |
-| `/:lang/events/[slug]/opengraph-image` | `sharp` composite in `opengraph-image.tsx` | **The event poster itself**. Full 1200×630 frame with the flyer `contain`-centered on INK (`#1a1a1a`), so square / vertical / horizontal flyers are never cropped. Rendered as a PNG `Response` (not Satori/`ImageResponse`): iPhone JPEGs with Display P3 ICC and WebP data URLs were 500ing the route and WhatsApp/Facebook got no card. Date, venue and lineup stay in the HTML/OG description. |
+| `/:lang/events/[slug]` (`generateMetadata`) | `events.og_image_url` or `image_url` | Same as artist pages: Facebook/WhatsApp fetch the JPEG from Storage. No per-event `opengraph-image.tsx` (that route was serving the «OB» fallback). Olibass uses a 1200×630 contain of the full flyer (logo + date, no crop). |
 | `/:lang/<charts\|mixes>` (static) | `public/images/opengraph/sections/<charts\|mixes>-screenshot.png` | Section screenshots generated via `npm run og:sections`. Copy keys under `seo.charts` / `seo.mixes` in dictionaries. |
 | `/:lang/<charts\|artists\|labels>?play=…` | `generateMetadata` overrides (see **Per-track sharing**) | Rewrites `og:title` / `og:description` / `og:image` to the shared track (Beatport `artwork_url`) when the query carries `?play=<source>:<id>`. |
 

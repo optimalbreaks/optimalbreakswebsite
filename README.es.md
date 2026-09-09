@@ -421,7 +421,7 @@ Todas las imágenes OG son **PNG 1200 × 630** (tamaño recomendado por Meta, `1
 | Ruta | Componente / origen | Notas |
 |------|---------------------|-------|
 | `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Tarjeta fanzine de marca — home + fallback cuando una página no sobreescribe OG. Es JSX de Satori: **todo `<div>` con varios hijos necesita `display: flex`** (sin eso la ruta devuelve 500). |
-| `/:lang/events/[slug]/opengraph-image` | `sharp` en `opengraph-image.tsx` | **El propio cartel del evento**. 1200×630 con el flyer centrado (`contain`) sobre INK (`#1a1a1a`), así **nunca se recortan** flyers cuadrados, verticales u horizontales. Sale como `Response` PNG (no Satori/`ImageResponse`): los JPEG de iPhone con ICC Display P3 y los WebP en data URL devolvían 500 y WhatsApp/Facebook se quedaban sin tarjeta. Fecha, recinto y lineup van en la descripción OG / HTML. |
+| `/:lang/events/[slug]` (`generateMetadata`) | `events.og_image_url` o `image_url` | Igual que las fichas de artista: Facebook/WhatsApp bajan el JPEG de Storage. No hay `opengraph-image.tsx` por evento (esa ruta servía el placeholder «OB»). Olibass usa un 1200×630 con el flyer entero (logo y fecha, sin recorte). |
 | `/:lang/<charts\|mixes>` (estática) | `public/images/opengraph/sections/<charts\|mixes>-screenshot.png` | Capturas generadas con `npm run og:sections`. Textos en `seo.charts` / `seo.mixes` de los diccionarios. |
 | `/:lang/<charts\|artists\|labels>?play=…` | Sobreescritura dinámica en `generateMetadata` (ver **Compartir canción**) | Reescribe `og:title` / `og:description` / `og:image` al track compartido (artwork de Beatport). |
 
