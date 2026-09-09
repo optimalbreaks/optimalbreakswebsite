@@ -27,6 +27,7 @@ import {
   splitFestivalDescriptionSections,
   splitProseForDisplay,
 } from '@/lib/bio-format'
+import { countLineupArtistNames } from '@/lib/artist-entity-match'
 import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { getDictionary } from '@/lib/dictionaries'
 
@@ -809,7 +810,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           stamp={stamp}
           doorsOpen={event.doors_open}
           doorsClose={event.doors_close}
-          lineupCount={event.lineup?.length ?? 0}
+          lineupCount={countLineupArtistNames(allArtistNames)}
           showLineupLink={hasLineupAnchor}
           venue={event.venue}
           city={event.city}

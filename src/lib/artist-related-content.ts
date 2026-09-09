@@ -5,7 +5,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ChartFeaturedTrack, ChartTrackSource, Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
-import { normalizeForEntityMatch } from '@/lib/artist-entity-match'
+import { normalizeForEntityMatch, splitLineupSlotNames } from '@/lib/artist-entity-match'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import { dedupeKeyForFeaturedLink } from '@/lib/beatport-next-data-tracks'
@@ -344,11 +344,14 @@ function collectLineupNames(lineup: unknown, stages: unknown): string[] {
 }
 
 function lineupEntryMatchesArtist(lineupName: string, matchKeys: Set<string>): boolean {
-  const n = normalizeForEntityMatch(lineupName)
-  if (!n) return false
-  if (matchKeys.has(n)) return true
-  const depref = n.replace(/^(dj|mc|the)\s+/, '')
-  return depref !== n && matchKeys.has(depref)
+  for (const part of splitLineupSlotNames(lineupName)) {
+    const n = normalizeForEntityMatch(part)
+    if (!n) continue
+    if (matchKeys.has(n)) return true
+    const depref = n.replace(/^(dj|mc|the)\s+/, '')
+    if (depref !== n && matchKeys.has(depref)) return true
+  }
+  return false
 }
 
 function eventRowMatchesArtist(row: EventRow, matchKeys: Set<string>): boolean {

@@ -95,6 +95,31 @@ export function resolveArtistSlug(
 }
 
 /**
+ * Slot de cartel "A vs B" / "A b2b B" → nombres sueltos.
+ * No parte "Cut & Run" ni otros dúos con `&`.
+ */
+export function splitLineupSlotNames(slot: string): string[] {
+  const t = slot.trim()
+  if (!t) return []
+  return t
+    .split(/\s+(?:vs\.?|versus|b2b|x)\s+/i)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+/** Cuenta artistas del cartel, no filas: un "vs" son dos nombres. */
+export function countLineupArtistNames(slots: Iterable<string>): number {
+  const names = new Set<string>()
+  for (const slot of slots) {
+    for (const name of splitLineupSlotNames(slot)) {
+      const key = normalizeForEntityMatch(name)
+      if (key) names.add(key)
+    }
+  }
+  return names.size
+}
+
+/**
  * "A & B" en related_artists → dos nombres enlazables. No parte "Shut Up and Dance".
  */
 export function splitRelatedArtistNames(relatedName: string): string[] {
