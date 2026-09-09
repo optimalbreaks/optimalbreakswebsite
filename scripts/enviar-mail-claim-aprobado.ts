@@ -50,6 +50,8 @@ function loadEnvLocal() {
 }
 
 function argValue(flag: string, fallback: string) {
+  const eq = process.argv.find((a) => a.startsWith(`${flag}=`))
+  if (eq) return eq.slice(flag.length + 1) || fallback
   const i = process.argv.indexOf(flag)
   if (i === -1) return fallback
   return process.argv[i + 1] || fallback

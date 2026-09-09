@@ -207,6 +207,17 @@ export default function AdminClaimsPage() {
       })
       const json = await res.json()
       if (!res.ok) { alert(json.error || 'Error'); return }
+      if (action === 'approve') {
+        if (json.mail === 'sent') {
+          alert('Ficha verificada. Mail enviado al artista (copia a contacto@optimalbreaks.com).')
+        } else if (json.mail === 'skipped_no_smtp') {
+          alert('Ficha verificada, pero el mail NO salió: faltan SMTP_* en Vercel.')
+        } else if (json.mail === 'skipped_no_email') {
+          alert('Ficha verificada, pero el mail NO salió: la cuenta no tiene email confirmado.')
+        } else {
+          alert('Ficha verificada, pero el mail falló. Revisa el log o reenvía con el script.')
+        }
+      }
       setPicked((prev) => {
         const next = { ...prev }
         delete next[id]

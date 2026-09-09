@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { waitUntil } from '@vercel/functions'
 import { getRouteUser, requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { supersedeCompetingClaims } from '@/lib/artist-claims'
@@ -122,16 +121,17 @@ export async function PATCH(
       exceptClaimId: id,
       resolvedBy: admin.userId,
     })
-    waitUntil(
-      notifyArtistOfClaimApproved({
+    let mail: 'sent' | 'skipped_no_smtp' | 'skipped_no_email' | 'failed' = 'failed'
+    try {
+      mail = await notifyArtistOfClaimApproved({
         userId: claim.user_id,
         artistName: art.name,
         artistSlug: art.slug,
-      }).catch((err) => {
-        console.warn('[mail] aviso de ficha verificada falló', err)
-      }),
-    )
-    return NextResponse.json({ data })
+      })
+    } catch (err) {
+      console.warn('[mail] aviso de ficha verificada falló', err)
+    }
+    return NextResponse.json({ data, mail })
   }
 
   if (action === 'reject') {

@@ -71,6 +71,8 @@ async function confirmedAccountEmail(userId: string): Promise<string | null> {
   return data.user.email
 }
 
+export type TransactionalMailResult = 'sent' | 'skipped_no_smtp' | 'skipped_no_email'
+
 async function sendTransactional(opts: {
   to: string
   subject: string
@@ -300,10 +302,10 @@ function claimApprovedHtml(opts: {
  * Aviso al aprobar un claim: ficha verificada, bookings con interruptor (nace cerrado).
  * `draft: true` manda solo a contacto@ con barra BORRADOR.
  */
-export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Promise<void> {
+export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Promise<TransactionalMailResult> {
   if (!smtpReady()) {
     console.warn('[mail] SMTP no configurado: aviso de ficha verificada no enviado')
-    return
+    return 'skipped_no_smtp'
   }
 
   const to = opts.draft
@@ -311,7 +313,7 @@ export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Pr
     : await confirmedAccountEmail(opts.userId)
   if (!to) {
     if (opts.draft) console.warn('[mail] SMTP_USER vacío: no hay destino para el borrador')
-    return
+    return 'skipped_no_email'
   }
 
   const html = claimApprovedHtml(opts)
@@ -334,6 +336,7 @@ export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Pr
       `Page: ${SITE_URL}/en/artists/${opts.artistSlug}`,
     ].join('\n'),
   })
+  return 'sent'
 }
 
 /** HTML del mail de ficha verificada (preview en disco / tests). */
