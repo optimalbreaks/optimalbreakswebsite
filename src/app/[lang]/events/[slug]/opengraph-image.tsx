@@ -180,7 +180,7 @@ export default async function Image({ params, id }: Props & { id: string }) {
 
   try {
     const png = await renderEventOgPng(poster, notice, lang)
-    return new Response(png, {
+    return new Response(new Uint8Array(png), {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
