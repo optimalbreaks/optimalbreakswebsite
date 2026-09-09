@@ -454,6 +454,7 @@
     "title": "Blog",
     "subtitle": "The project’s editorial layer: essays, comparisons, scene memory and retrospectives",
     "featured_heading": "Featured",
+    "most_read_heading": "Most read",
     "more_articles": "More articles",
     "pagination_prev": "Previous",
     "pagination_next": "Next",
@@ -461,7 +462,7 @@
   },
   "charts": {
     "title": "40 Breaks Vitales",
-    "subtitle": "Weekly breakbeat chart: 40 tracks from the current scene, drawn from Beatport’s live genre Top 100 at generation time and narrowed by editorial curation.",
+    "subtitle": "Beatport’s weekly Top 40 for Breaks / Breakbeat / UK Bass: the first 40 positions of the live genre Top 100, as-is, at the moment of the snapshot. No editorial filter — this is the scene’s sales thermometer. Optimal’s own picks live in New Releases.",
     "method_note": "",
     "week_label": "Week of",
     "new_entry": "NEW",
@@ -494,12 +495,12 @@
     "picks_toggle_hide": "Collapse New releases",
     "forty_toggle_show": "Expand 40 Breaks Vitales",
     "forty_toggle_hide": "Collapse 40 Breaks Vitales",
-    "forty_kicker": "WEEKLY CHART",
+    "forty_kicker": "BEATPORT TOP 40",
     "picks_empty": "No editorial picks for this week.",
     "picks_kicker": "NEW RELEASES",
     "picks_title": "New Releases",
-    "picks_subtitle": "Hand-picked new releases from the breakbeat scene — curated weekly by the Optimal Breaks team. Listed A–Z by primary artist name (not a ranked chart).",
-    "picks_intro": "Hand-picked this week by the team. Titles, artwork and links are set manually — nothing is fetched automatically from stores.",
+    "picks_subtitle": "The Optimal Breaks selection: every week we listen through the hundreds of releases landing on Beatport and other stores and pick the real breakbeat by ear. Listed A–Z by primary artist name (not a ranked chart).",
+    "picks_intro": "Hand-picked by ear each week by the team — no algorithms. Titles, artwork and links are set manually.",
     "picks_count": "{n} picks",
     "picks_open_beatport": "BEATPORT",
     "picks_open_bandcamp": "BANDCAMP",
@@ -654,7 +655,7 @@
     },
     "charts": {
       "title": "Your Favorite Break Radio — weekly charts & new releases",
-      "description": "Your FAVORITE BREAK RADIO. All the best BREAKBEAT BANGERS one click away. 40 Breaks Vitales weekly chart, new releases and hand-picked vinyl picks every week."
+      "description": "Your FAVORITE BREAK RADIO. All the best BREAKBEAT BANGERS one click away. Beatport Breaks Top 40, ear-picked New Releases and vinyl archive."
     },
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",

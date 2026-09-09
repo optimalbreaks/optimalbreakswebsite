@@ -79,6 +79,28 @@
       "artwork_url": "https://i.ytimg.com/vi/bIo8ql5JaQE/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 5,
+      "title": "Blaze A Trail",
+      "mix_name": "The Breakfastaz Remix",
+      "artists": [
+        {
+          "name": "Ivory"
+        },
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": null,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=JDqoiiUEFIo",
+      "artwork_url": "https://i.ytimg.com/vi/JDqoiiUEFIo/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

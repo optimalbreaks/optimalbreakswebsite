@@ -343,6 +343,49 @@ function isTopTracksEmpty(v) {
   return v.length === 0
 }
 
+/**
+ * Fichas Beatport que mezclan homónimos. Solo se guardan cortes de estos sellos
+ * (el bloque de la web sigue llamándose Top 10).
+ */
+const ARTIST_TOP10_LABEL_ALLOWLIST = {
+  lucas: ['dirty kitchen rave', 'top drawer digital', 'bass elements'],
+}
+
+function normalizeLabelKey(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .trim()
+}
+
+function applyArtistTop10LabelAllowlist(catalogSlug, tracks) {
+  const allow = ARTIST_TOP10_LABEL_ALLOWLIST[catalogSlug]
+  if (!allow?.length || !Array.isArray(tracks)) return tracks
+  const seen = new Set()
+  const kept = []
+  let dropped = 0
+  for (const t of tracks) {
+    const lab = normalizeLabelKey(t.label)
+    if (!allow.some((a) => lab.includes(a))) {
+      dropped++
+      continue
+    }
+    const artistKey = (t.artists || []).map((a) => normalizeLabelKey(a.name)).sort().join('|')
+    const key = `${normalizeLabelKey(t.title)}\0${normalizeLabelKey(t.mix_name)}\0${artistKey}`
+    if (seen.has(key)) {
+      dropped++
+      continue
+    }
+    seen.add(key)
+    kept.push({ ...t, position: kept.length + 1 })
+  }
+  if (dropped) {
+    console.log(`  ↳ Filtro homónimos (${catalogSlug}): ${kept.length} propios, ${dropped} quitados`)
+  }
+  return kept
+}
+
 /** Slug en la URL canónica de Beatport (distinto del slug OB en algunos artistas). */
 function parseBeatportSlugFromUrl(beatportUrl, kind) {
   if (!beatportUrl || typeof beatportUrl !== 'string') return null
@@ -527,6 +570,7 @@ async function scrapeTopTracks(type, slug, beatportId, { headless = false, autoF
 // ---------------------------------------------------------------------------
 async function upsertTopTracks(supabase, table, slug, beatportUrl, beatportId, tracks, extra = {}) {
   const { artistHeroImageUrl = null, labelLogoUrl = null, dryRun = false } = extra
+  if (table === 'artists') tracks = applyArtistTop10LabelAllowlist(slug, tracks)
   if (!tracks.length) {
     console.log(`  ⚠ ${table}.${slug}: 0 tracks — no se escribe (evita borrar un Top 10 previo)`)
     return
@@ -866,7 +910,9 @@ async function main() {
 
   console.log(`\n  Beatport Top 10 — ${type}: ${slug} (id ${beatportId})${dryRun ? ' [DRY-RUN]' : ''}${headless ? ' [HEADLESS]' : ''}\n`)
 
-  const { tracks, beatport_url, artistHeroImageUrl, labelLogoUrl } = await scrapeTopTracks(type, slug, beatportId, { headless })
+  const scraped = await scrapeTopTracks(type, slug, beatportId, { headless })
+  const tracks = type === 'artist' ? applyArtistTop10LabelAllowlist(slug, scraped.tracks) : scraped.tracks
+  const { beatport_url, artistHeroImageUrl, labelLogoUrl } = scraped
 
   for (const t of tracks) {
     const artists = t.artists.map(a => a.name).join(', ')

@@ -2478,6 +2478,75 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 109
+    },
+    {
+      "title": "Subterra",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "MacGroove"
+        }
+      ],
+      "label": "Syncopated Soul",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/subterra/30383924",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4fe1c872-9602-46bc-ad2a-ff2892cd0869.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/375b1db2-cf9f-4fcb-9c05-7a51e766350e.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 110
+    },
+    {
+      "title": "Set Me Free",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Swarov"
+        }
+      ],
+      "label": "Boomtic Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/set-me-free/30026942",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c5faf8c-c8d9-41aa-91c5-ae86a4e4a239.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e538e6fb-c5fd-406b-84fa-59720220cc85.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 111
+    },
+    {
+      "title": "Electric Chair",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Evil Crew"
+        },
+        {
+          "name": "URSO (SP)"
+        }
+      ],
+      "label": "Super Pig Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/electric-chair/29116888",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/81560656-5889-4bf6-bbba-b9c99c8d2f8f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b80ec57c-fb80-429c-95b8-c6d2def3706d.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 112
     }
   ]
 }

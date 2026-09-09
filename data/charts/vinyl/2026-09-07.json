@@ -1,0 +1,62 @@
+{
+  "week_date": "2026-09-07",
+  "vinyl": [
+    {
+      "sort_order": 1,
+      "title": "Let There Be Light",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Paradox 3000"
+        }
+      ],
+      "label": "Punk Funk",
+      "catalog_number": "PUNK9001",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/409321",
+      "youtube_url": "https://www.youtube.com/watch?v=TTEroYXDC9I",
+      "artwork_url": "https://i.ytimg.com/vi/TTEroYXDC9I/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 2,
+      "title": "Bulgaria",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Paradox 3000"
+        }
+      ],
+      "label": "Punk Funk",
+      "catalog_number": "PUNK9001",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/409321",
+      "youtube_url": "https://www.youtube.com/watch?v=iW01ViTrylw",
+      "artwork_url": "https://i.ytimg.com/vi/iW01ViTrylw/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 3,
+      "title": "Luvstruck",
+      "mix_name": "Breakbeat Remix",
+      "artists": [
+        {
+          "name": "Southside Spinners"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2001,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=b_iS7ZNuDVo",
+      "artwork_url": "https://i.ytimg.com/vi/b_iS7ZNuDVo/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}

@@ -205,7 +205,7 @@ export interface Database {
       }
       blog_posts: {
         Row: BlogPost
-        Insert: Omit<BlogPost, 'id' | 'created_at'>
+        Insert: Omit<BlogPost, 'id' | 'created_at' | 'view_count'> & { view_count?: number }
         Update: Partial<Omit<BlogPost, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
@@ -418,6 +418,13 @@ export interface Database {
         Update: never
         Relationships: DbRelationship[]
       }
+      mail_dispatches: {
+        Row: MailDispatchRow
+        Insert: Pick<MailDispatchRow, 'kind' | 'status' | 'to_email'> &
+          Partial<Omit<MailDispatchRow, 'id' | 'kind' | 'status' | 'to_email'>>
+        Update: never
+        Relationships: DbRelationship[]
+      }
     }
     Views: {
       [_ in never]: never
@@ -434,6 +441,10 @@ export interface Database {
       track_play_counts_for_keys: {
         Args: { p_keys: string[] }
         Returns: { canonical_key: string; play_count: number }[]
+      }
+      increment_blog_post_view: {
+        Args: { p_slug: string }
+        Returns: undefined
       }
     }
   }
@@ -549,6 +560,28 @@ export interface EventRatingRow extends Record<string, unknown> {
   venue: string
   city: string
   country: string
+}
+
+export type MailDispatchKind = 'claim_approved' | 'booking_new'
+export type MailDispatchStatus = 'sent' | 'failed' | 'skipped'
+
+export interface MailDispatchRow {
+  id: string
+  created_at: string
+  updated_at: string
+  sent_at: string
+  kind: MailDispatchKind
+  status: MailDispatchStatus
+  to_email: string
+  cc_email: string | null
+  subject: string
+  user_id: string | null
+  artist_id: string | null
+  claim_id: string | null
+  booking_request_id: string | null
+  smtp_message_id: string | null
+  error_message: string | null
+  metadata: Record<string, string | boolean | number | null>
 }
 
 export type ArtistClaimKind = 'claim_existing' | 'request_new'
@@ -923,6 +956,8 @@ export interface BlogPost extends Record<string, unknown> {
   published_at: string
   is_published: boolean
   is_featured: boolean
+  /** Lecturas de la ficha pública. No se pisa en UPSERT editorial. */
+  view_count: number
   /** Cortes Beatport para previews en el artículo (álbum / EP). Vacío = sin lista. */
   beatport_tracks?: BeatportTopTrack[] | null
   /** URL del release en Beatport cuando el artículo cubre un álbum o EP. */

@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
+import { BLOG_LIST_SELECT, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 
 // Paginación por ?page=: render por petición; los datos van por Data Cache
 // (createCachedSupabase, revalidate 300 s), sin golpear Supabase por visita.
@@ -83,20 +84,7 @@ const FALLBACK_POSTS: FallbackPost[] = [
   },
 ]
 
-type BlogListRow = Pick<
-  BlogPost,
-  | 'slug'
-  | 'title_en'
-  | 'title_es'
-  | 'excerpt_en'
-  | 'excerpt_es'
-  | 'category'
-  | 'published_at'
-  | 'tags'
-  | 'author'
-  | 'image_url'
-  | 'is_featured'
->
+type BlogListRow = BlogSpotlightRow & Pick<BlogPost, 'tags' | 'author'>
 
 function formatBlogListDate(publishedAt: string | null | undefined, lang: Locale): string {
   if (!publishedAt) return ''
@@ -280,9 +268,6 @@ export async function generateMetadata({
   }
 }
 
-const BLOG_SELECT =
-  'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured'
-
 export default async function BlogPage({
   params,
   searchParams,
@@ -302,49 +287,40 @@ export default async function BlogPage({
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
 
-  const { count: restTotal } = await supabase
+  const { posts: featuredRaw, byViews } = await fetchBlogSpotlight<BlogListRow>(
+    supabase,
+    BLOG_LIST_SELECT,
+  )
+  const featured = featuredRaw
+  const featuredSlugs = featured.map((p) => p.slug)
+  const excludeFeatured = featuredSlugs.length > 0
+
+  let restCountQuery = supabase
     .from('blog_posts')
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
-    .eq('is_featured', false)
+  if (excludeFeatured) {
+    restCountQuery = restCountQuery.not('slug', 'in', `(${featuredSlugs.join(',')})`)
+  }
+  const { count: restTotal } = await restCountQuery
 
   const totalRest = restTotal ?? 0
   const totalPages = Math.max(1, Math.ceil(totalRest / BLOG_PAGE_SIZE))
   let currentPage = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1
   if (currentPage > totalPages) currentPage = totalPages
 
-  let featured: BlogListRow[] = []
-  let restPage: BlogListRow[] = []
-
-  if (currentPage === 1) {
-    const [{ data: feat }, { data: rest }] = await Promise.all([
-      supabase
-        .from('blog_posts')
-        .select(BLOG_SELECT)
-        .eq('is_published', true)
-        .eq('is_featured', true)
-        .order('published_at', { ascending: false }),
-      supabase
-        .from('blog_posts')
-        .select(BLOG_SELECT)
-        .eq('is_published', true)
-        .eq('is_featured', false)
-        .order('published_at', { ascending: false })
-        .range(0, BLOG_PAGE_SIZE - 1),
-    ])
-    featured = (feat || []) as BlogListRow[]
-    restPage = (rest || []) as BlogListRow[]
-  } else {
-    const offset = (currentPage - 1) * BLOG_PAGE_SIZE
-    const { data: rest } = await supabase
-      .from('blog_posts')
-      .select(BLOG_SELECT)
-      .eq('is_published', true)
-      .eq('is_featured', false)
-      .order('published_at', { ascending: false })
-      .range(offset, offset + BLOG_PAGE_SIZE - 1)
-    restPage = (rest || []) as BlogListRow[]
+  const restOffset = (currentPage - 1) * BLOG_PAGE_SIZE
+  let restQuery = supabase
+    .from('blog_posts')
+    .select(BLOG_LIST_SELECT)
+    .eq('is_published', true)
+  if (excludeFeatured) {
+    restQuery = restQuery.not('slug', 'in', `(${featuredSlugs.join(',')})`)
   }
+  const { data: rest } = await restQuery
+    .order('published_at', { ascending: false })
+    .range(restOffset, restOffset + BLOG_PAGE_SIZE - 1)
+  const restPage = (rest || []) as BlogListRow[]
 
   const hasAnyPost = (publishedCount ?? 0) > 0
 
@@ -360,7 +336,9 @@ export default async function BlogPage({
           <div>
             {currentPage === 1 && featured.length > 0 ? (
               <div className="mb-10 sm:mb-12">
-                <h2 className="sec-tag mb-4 sm:mb-5">{dict.blog.featured_heading}</h2>
+                <h2 className="sec-tag mb-4 sm:mb-5">
+                  {byViews ? dict.blog.most_read_heading : dict.blog.featured_heading}
+                </h2>
                 <div className="space-y-0 border-4 border-[var(--ink)]">
                   {featured.map((p) => (
                     <BlogIndexRow key={p.slug} p={p} lang={lang} />

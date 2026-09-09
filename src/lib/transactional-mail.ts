@@ -6,6 +6,7 @@
 
 import nodemailer from 'nodemailer'
 import { createServiceSupabase } from './supabase-admin'
+import type { MailDispatchKind, MailDispatchStatus } from '@/types/database'
 
 const SITE_URL = 'https://www.optimalbreaks.com'
 
@@ -14,6 +15,9 @@ type BookingNotice = {
   artistName: string
   city: string
   eventDate: string | null
+  artistId?: string | null
+  bookingRequestId?: string | null
+  source?: string
 }
 
 type ClaimApprovedNotice = {
@@ -22,6 +26,14 @@ type ClaimApprovedNotice = {
   artistSlug: string
   /** Solo a contacto@, con barra BORRADOR. No manda al artista. */
   draft?: boolean
+  artistId?: string | null
+  claimId?: string | null
+  source?: string
+}
+
+function uuidOrNull(value?: string | null): string | null {
+  const v = (value || '').trim()
+  return v || null
 }
 
 function smtpReady(): boolean {
@@ -71,25 +83,63 @@ async function confirmedAccountEmail(userId: string): Promise<string | null> {
   return data.user.email
 }
 
-export type TransactionalMailResult = 'sent' | 'skipped_no_smtp' | 'skipped_no_email'
+export type TransactionalMailResult = 'sent' | 'skipped_no_smtp' | 'skipped_no_email' | 'failed'
 
 async function sendTransactional(opts: {
   to: string
   subject: string
   html: string
   text: string
-}) {
+}): Promise<{ messageId: string | null; cc: string | null }> {
   const transport = createTransport()
-  const cc = editorialCopy(opts.to)
-  await transport.sendMail({
+  const cc = editorialCopy(opts.to) ?? null
+  const info = await transport.sendMail({
     from: process.env.SMTP_FROM || `Optimal Breaks <${process.env.SMTP_USER}>`,
     to: opts.to,
-    cc,
+    cc: cc || undefined,
     replyTo: process.env.SMTP_USER,
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
   })
+  return { messageId: info.messageId || null, cc }
+}
+
+async function recordMailDispatch(row: {
+  kind: MailDispatchKind
+  status: MailDispatchStatus
+  toEmail: string
+  ccEmail?: string | null
+  subject: string
+  userId?: string | null
+  artistId?: string | null
+  claimId?: string | null
+  bookingRequestId?: string | null
+  smtpMessageId?: string | null
+  errorMessage?: string | null
+  metadata?: Record<string, string | boolean | number | null>
+}): Promise<void> {
+  try {
+    const svc = createServiceSupabase()
+    const { error } = await svc.from('mail_dispatches').insert({
+      kind: row.kind,
+      status: row.status,
+      to_email: row.toEmail,
+      cc_email: row.ccEmail ?? null,
+      subject: row.subject,
+      user_id: uuidOrNull(row.userId),
+      artist_id: uuidOrNull(row.artistId),
+      claim_id: uuidOrNull(row.claimId),
+      booking_request_id: uuidOrNull(row.bookingRequestId),
+      smtp_message_id: row.smtpMessageId ?? null,
+      error_message: row.errorMessage ?? null,
+      metadata: row.metadata ?? {},
+      sent_at: new Date().toISOString(),
+    })
+    if (error) console.warn('[mail] no se pudo registrar el envío', error.message)
+  } catch (err) {
+    console.warn('[mail] no se pudo registrar el envío', err)
+  }
 }
 
 /** Copia a contacto@ en todo mail a un usuario. Si el To ya es contacto, no duplicar. */
@@ -189,28 +239,83 @@ function bookingNoticeHtml(opts: {
  * Si falta SMTP o el envío falla, no tira la creación de la solicitud.
  */
 export async function notifyArtistOfNewBooking(opts: BookingNotice): Promise<void> {
+  const subject = `Nueva solicitud de booking / New booking request — ${opts.artistName}`
+  const dateBit = opts.eventDate ? ` · ${opts.eventDate}` : ''
+  const meta = { source: opts.source || 'booking_create' }
+  const ids = {
+    userId: opts.claimedByUserId,
+    artistId: opts.artistId,
+    bookingRequestId: opts.bookingRequestId,
+  }
+
   if (!smtpReady()) {
     console.warn('[mail] SMTP no configurado: aviso de booking no enviado')
+    const to = (await confirmedAccountEmail(opts.claimedByUserId)) || '(sin-smtp)'
+    await recordMailDispatch({
+      kind: 'booking_new',
+      status: 'skipped',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: 'smtp_not_configured',
+      metadata: { ...meta, skip_reason: 'smtp_not_configured' },
+      ...ids,
+    })
     return
   }
 
   const to = await confirmedAccountEmail(opts.claimedByUserId)
-  if (!to) return
+  if (!to) {
+    await recordMailDispatch({
+      kind: 'booking_new',
+      status: 'skipped',
+      toEmail: '(sin-email-confirmado)',
+      subject,
+      errorMessage: 'email_unconfirmed',
+      metadata: { ...meta, skip_reason: 'email_unconfirmed' },
+      ...ids,
+    })
+    return
+  }
 
-  const html = bookingNoticeHtml(opts)
-  const dateBit = opts.eventDate ? ` · ${opts.eventDate}` : ''
-  await sendTransactional({
-    to,
-    subject: `Nueva solicitud de booking / New booking request — ${opts.artistName}`,
-    html,
-    text: [
-      `Hola, ${opts.artistName}. Tienes una solicitud nueva (${opts.city}${dateBit}).`,
-      `Bandeja: ${SITE_URL}/es/mi-cuenta/artista`,
-      '',
-      `Hi, ${opts.artistName}. You have a new booking request (${opts.city}${dateBit}).`,
-      `Inbox: ${SITE_URL}/en/mi-cuenta/artista`,
-    ].join('\n'),
-  })
+  try {
+    const html = bookingNoticeHtml(opts)
+    const sent = await sendTransactional({
+      to,
+      subject,
+      html,
+      text: [
+        `Hola, ${opts.artistName}. Tienes una solicitud nueva (${opts.city}${dateBit}).`,
+        `Bandeja: ${SITE_URL}/es/mi-cuenta/artista`,
+        '',
+        `Hi, ${opts.artistName}. You have a new booking request (${opts.city}${dateBit}).`,
+        `Inbox: ${SITE_URL}/en/mi-cuenta/artista`,
+      ].join('\n'),
+    })
+    await recordMailDispatch({
+      kind: 'booking_new',
+      status: 'sent',
+      toEmail: to,
+      ccEmail: sent.cc,
+      subject,
+      smtpMessageId: sent.messageId,
+      metadata: meta,
+      ...ids,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn('[mail] aviso de booking falló', message)
+    await recordMailDispatch({
+      kind: 'booking_new',
+      status: 'failed',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: message.slice(0, 500),
+      metadata: meta,
+      ...ids,
+    })
+  }
 }
 
 function claimApprovedHtml(opts: {
@@ -303,8 +408,33 @@ function claimApprovedHtml(opts: {
  * `draft: true` manda solo a contacto@ con barra BORRADOR.
  */
 export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Promise<TransactionalMailResult> {
+  const prefix = opts.draft ? '[BORRADOR] ' : ''
+  const subject = `${prefix}Ficha verificada / Profile verified — ${opts.artistName}`
+  const meta: Record<string, string | boolean | number | null> = {
+    source: opts.source || (opts.draft ? 'claim_draft' : 'claim_approve'),
+    draft: Boolean(opts.draft),
+  }
+  const ids = {
+    userId: opts.userId,
+    artistId: opts.artistId,
+    claimId: opts.claimId,
+  }
+
   if (!smtpReady()) {
     console.warn('[mail] SMTP no configurado: aviso de ficha verificada no enviado')
+    const to = opts.draft
+      ? (process.env.SMTP_USER || '').trim() || '(sin-smtp)'
+      : (await confirmedAccountEmail(opts.userId)) || '(sin-smtp)'
+    await recordMailDispatch({
+      kind: 'claim_approved',
+      status: 'skipped',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: 'smtp_not_configured',
+      metadata: { ...meta, skip_reason: 'smtp_not_configured' },
+      ...ids,
+    })
     return 'skipped_no_smtp'
   }
 
@@ -313,30 +443,64 @@ export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Pr
     : await confirmedAccountEmail(opts.userId)
   if (!to) {
     if (opts.draft) console.warn('[mail] SMTP_USER vacío: no hay destino para el borrador')
+    await recordMailDispatch({
+      kind: 'claim_approved',
+      status: 'skipped',
+      toEmail: opts.draft ? '(sin-smtp-user)' : '(sin-email-confirmado)',
+      subject,
+      errorMessage: opts.draft ? 'smtp_user_empty' : 'email_unconfirmed',
+      metadata: { ...meta, skip_reason: opts.draft ? 'smtp_user_empty' : 'email_unconfirmed' },
+      ...ids,
+    })
     return 'skipped_no_email'
   }
 
-  const html = claimApprovedHtml(opts)
-  const prefix = opts.draft ? '[BORRADOR] ' : ''
-  await sendTransactional({
-    to,
-    subject: `${prefix}Ficha verificada / Profile verified — ${opts.artistName}`,
-    html,
-    text: [
-      `Hola, ${opts.artistName}. Ya hemos verificado tu ficha.`,
-      `Puedes recibir solicitudes de booking. Enciende «Abierto» en Mi cuenta → Artista.`,
-      `La red de artistas está en el icono 💬 (abajo a la izquierda), aunque los bookings estén cerrados.`,
-      `Mi cuenta: ${SITE_URL}/es/mi-cuenta/artista`,
-      `Ficha: ${SITE_URL}/es/artists/${opts.artistSlug}`,
-      '',
-      `Hi, ${opts.artistName}. Your profile is verified.`,
-      `You can receive booking requests. Turn on «Open» in My account → Artist.`,
-      `The artist network is the 💬 icon (bottom left), even if bookings are closed.`,
-      `My account: ${SITE_URL}/en/mi-cuenta/artista`,
-      `Page: ${SITE_URL}/en/artists/${opts.artistSlug}`,
-    ].join('\n'),
-  })
-  return 'sent'
+  try {
+    const html = claimApprovedHtml(opts)
+    const sent = await sendTransactional({
+      to,
+      subject,
+      html,
+      text: [
+        `Hola, ${opts.artistName}. Ya hemos verificado tu ficha.`,
+        `Puedes recibir solicitudes de booking. Enciende «Abierto» en Mi cuenta → Artista.`,
+        `La red de artistas está en el icono 💬 (abajo a la izquierda), aunque los bookings estén cerrados.`,
+        `Mi cuenta: ${SITE_URL}/es/mi-cuenta/artista`,
+        `Ficha: ${SITE_URL}/es/artists/${opts.artistSlug}`,
+        '',
+        `Hi, ${opts.artistName}. Your profile is verified.`,
+        `You can receive booking requests. Turn on «Open» in My account → Artist.`,
+        `The artist network is the 💬 icon (bottom left), even if bookings are closed.`,
+        `My account: ${SITE_URL}/en/mi-cuenta/artista`,
+        `Page: ${SITE_URL}/en/artists/${opts.artistSlug}`,
+      ].join('\n'),
+    })
+    await recordMailDispatch({
+      kind: 'claim_approved',
+      status: 'sent',
+      toEmail: to,
+      ccEmail: sent.cc,
+      subject,
+      smtpMessageId: sent.messageId,
+      metadata: meta,
+      ...ids,
+    })
+    return 'sent'
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.warn('[mail] aviso de ficha verificada falló', message)
+    await recordMailDispatch({
+      kind: 'claim_approved',
+      status: 'failed',
+      toEmail: to,
+      ccEmail: editorialCopy(to) ?? null,
+      subject,
+      errorMessage: message.slice(0, 500),
+      metadata: meta,
+      ...ids,
+    })
+    return 'failed'
+  }
 }
 
 /** HTML del mail de ficha verificada (preview en disco / tests). */

@@ -651,18 +651,18 @@ const ACTIONS = [
   {
     id: 'chart-propose',
     run: 'node scripts/guia-base-datos.mjs run chart-propose [--sources beatport,juno]',
-    npm: 'npm run db:chart -- --dry-run [--sources beatport,juno]',
-    creds: 'OPENAI_API_KEY (curación IA); Supabase opcional para historial previo',
+    npm: 'npm run db:chart -- --dry-run [--ai]',
+    creds: 'Ninguna (OPENAI_API_KEY solo con --ai)',
     description:
-      '40 Breaks Vitales: scrapea Beatport + fuentes opcionales, IA elige 40, muestra propuesta en terminal (dry-run). No sube a BD.',
+      '40 Breaks Vitales: scrapea el Top 100 de Beatport (Breaks) y muestra las 40 primeras posiciones tal cual (dry-run). Sin IA desde sep-2026; --ai reactiva la curación antigua. No sube a BD.',
   },
   {
     id: 'chart-confirm',
     run: 'node scripts/guia-base-datos.mjs run chart-confirm [--week 2026-03-30] [--sources beatport,juno]',
-    npm: 'npm run db:chart -- --confirm [--week 2026-03-30]',
-    creds: 'OPENAI_API_KEY + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    npm: 'npm run db:chart -- --confirm [--week 2026-03-30] [--ai]',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (OPENAI_API_KEY solo con --ai)',
     description:
-      '40 Breaks Vitales: scrapea, cura con IA y sube a Supabase (chart_editions + chart_tracks). Publica automáticamente.',
+      '40 Breaks Vitales: foto literal del Top 40 de Beatport (Breaks) y UPSERT en Supabase (chart_editions + chart_tracks). Publica automáticamente. Sin IA desde sep-2026: ▲/▼ = movimiento real de ventas. Salta ediciones sin 40 al comparar con la anterior.',
   },
   {
     id: 'chart-featured-file',

@@ -1,0 +1,118 @@
+{
+  "week_date": "2026-09-07",
+  "picks": [
+    {
+      "title": "Revenge",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Boogy"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/revenge/30302043",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6579cf97-02e3-4db4-995d-c22afa91bb25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/77d5d772-5796-4274-aee0-8cd0017bad90.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Feel That",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-that/30297152",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6d28206e-d0c7-4893-baae-a72f91ba1c93.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fb281c17-4aee-42b7-8ca3-47e5c9014c26.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Smack That Shit",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "STICK2BREAKS"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/smack-that-shit/30235692",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/70d211d6-7b3c-48e0-884b-c22202dc4d20.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f89c215b-d4b9-4c0e-aa1d-23bcb3976195.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-09-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "New Day",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Hero"
+        }
+      ],
+      "label": "Solitude Studios",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/new-day/22906524",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c4510a3e-12f4-42b7-8d0c-d8994e927909.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/faa94169-a230-4918-a8f4-3eeedc95df26.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "New Day",
+      "mix_name": "Special J Remix",
+      "artists": [
+        {
+          "name": "DJ Hero"
+        },
+        {
+          "name": "Special J"
+        }
+      ],
+      "label": "Solitude Studios",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/new-day/22906525",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c4510a3e-12f4-42b7-8d0c-d8994e927909.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/54e8e395-42c1-4b49-b142-3622c8473360.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    }
+  ]
+}

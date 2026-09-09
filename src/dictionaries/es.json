@@ -356,6 +356,7 @@
     "title": "Blog",
     "subtitle": "Capa editorial del proyecto: articulos, comparativas, memoria de escena y retrospectivas",
     "featured_heading": "Destacados",
+    "most_read_heading": "Más leídos",
     "more_articles": "Más artículos",
     "pagination_prev": "Anterior",
     "pagination_next": "Siguiente",
@@ -363,7 +364,7 @@
   },
   "charts": {
     "title": "40 Breaks Vitales",
-    "subtitle": "Chart semanal de breakbeat: 40 temas de la escena actual, tomados del Top 100 en vivo de Beatport en el momento de generar la lista y pasados por curación editorial.",
+    "subtitle": "Top 40 semanal de Beatport en el género Breaks / Breakbeat / UK Bass: las 40 primeras posiciones del Top 100 en vivo, tal cual, en el momento de tomar la foto. Sin filtro editorial — es el termómetro de ventas de la escena. La selección de Optimal está en New Releases.",
     "method_note": "",
     "week_label": "Semana del",
     "new_entry": "NUEVO",
@@ -396,12 +397,12 @@
     "picks_toggle_hide": "Plegar nuevos lanzamientos",
     "forty_toggle_show": "Desplegar 40 Breaks Vitales",
     "forty_toggle_hide": "Plegar 40 Breaks Vitales",
-    "forty_kicker": "CHART SEMANAL",
+    "forty_kicker": "TOP 40 BEATPORT",
     "picks_empty": "Sin destacados editoriales esta semana.",
     "picks_kicker": "NUEVOS LANZAMIENTOS",
     "picks_title": "New Releases",
-    "picks_subtitle": "Selección de nuevos lanzamientos de la escena breakbeat, curados semanalmente por el equipo de Optimal Breaks. Orden alfabético por nombre de artista (sin clasificación por puestos).",
-    "picks_intro": "Selección semanal del equipo. Títulos, carátula y enlaces se cargan a mano; no se consultan tiendas automáticamente.",
+    "picks_subtitle": "La selección de Optimal Breaks: cada semana escuchamos los cientos de lanzamientos que entran en Beatport y otras tiendas y elegimos de oído el breakbeat de verdad. Orden alfabético por nombre de artista (sin clasificación por puestos).",
+    "picks_intro": "Selección semanal a oído del equipo, sin algoritmos. Títulos, carátula y enlaces se cargan a mano.",
     "picks_count": "{n} destacados",
     "picks_open_beatport": "BEATPORT",
     "picks_open_bandcamp": "BANDCAMP",
@@ -552,7 +553,7 @@
     },
     "charts": {
       "title": "Tu Radio de Break Favorita — charts semanales y nuevos lanzamientos",
-      "description": "Tu RADIO DE BREAK FAVORITA. Todos los TEMAZOS de BREAKBEAT a un solo clic. Chart semanal 40 Breaks Vitales, nuevos lanzamientos y vinilos curados cada semana."
+      "description": "Tu RADIO DE BREAK FAVORITA. Todos los TEMAZOS de BREAKBEAT a un solo clic. Top 40 de Beatport (Breaks), New Releases curados de oído y archivo de vinilo."
     },
     "top100": {
       "title": "Top 100 de la Comunidad — los breaks más guardados por la escena",

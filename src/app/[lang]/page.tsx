@@ -13,7 +13,8 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import type { Artist, BeatportTopTrack, BlogPost, BreakEvent } from '@/types/database'
+import { BLOG_HOME_SELECT, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import type { Artist, BeatportTopTrack, BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
@@ -133,10 +134,7 @@ function eventLocationLine(e: Pick<BreakEvent, 'venue' | 'city' | 'country'>): s
   return parts.length ? parts.join(' — ') : '—'
 }
 
-type HomeBlogRow = Pick<
-  BlogPost,
-  'slug' | 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'category' | 'published_at' | 'image_url'
->
+type HomeBlogRow = BlogSpotlightRow
 
 function formatBlogPublishedAt(publishedAt: string, lang: Locale): string {
   try {
@@ -265,15 +263,10 @@ export default async function HomePage({
           postponed: false,
         }))
 
-  const { data: featuredBlogRaw } = await supabase
-    .from('blog_posts')
-    .select('slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, image_url')
-    .eq('is_published', true)
-    .eq('is_featured', true)
-    .order('published_at', { ascending: false })
-    .limit(3)
-
-  const featuredBlogPosts = (featuredBlogRaw || []) as HomeBlogRow[]
+  const { posts: featuredBlogPosts } = await fetchBlogSpotlight<HomeBlogRow>(
+    supabase,
+    BLOG_HOME_SELECT,
+  )
 
   const sectionBlog =
     'section_blog' in h

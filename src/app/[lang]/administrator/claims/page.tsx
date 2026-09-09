@@ -209,7 +209,7 @@ export default function AdminClaimsPage() {
       if (!res.ok) { alert(json.error || 'Error'); return }
       if (action === 'approve') {
         if (json.mail === 'sent') {
-          alert('Ficha verificada. Mail enviado al artista (copia a contacto@optimalbreaks.com).')
+          alert('Ficha verificada. Mail enviado al artista (copia a contacto@optimalbreaks.com). Queda en Mails.')
         } else if (json.mail === 'skipped_no_smtp') {
           alert('Ficha verificada, pero el mail NO salió: faltan SMTP_* en Vercel.')
         } else if (json.mail === 'skipped_no_email') {

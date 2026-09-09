@@ -17,6 +17,7 @@ import type { BeatportTopTrack, BlogPost } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
+import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import {
@@ -205,6 +206,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20 max-w-[800px] mx-auto">
+      <BlogViewTracker slug={safeSlug} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }} />
       <Link href={`/${safeLang}/blog`} className="btn-back"><span className="arrow">←</span> {safeLang === 'es' ? 'Volver al Blog' : 'Back to Blog'}</Link>
 

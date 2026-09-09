@@ -170,6 +170,9 @@ export async function POST(request: NextRequest) {
         artistName: art.name,
         city,
         eventDate: insert.event_date,
+        artistId: art.id,
+        bookingRequestId: (data as BookingRequestRow).id,
+        source: 'booking_create',
       }).catch((err) => {
         console.warn('[mail] aviso de booking falló', err)
       }),

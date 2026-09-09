@@ -1,0 +1,114 @@
+Alta editorial — Ro73 (septiembre 2026)
+=======================================
+
+Alta NUEVA. Hay material fiable: no hacer bio genérica, no inventar.
+
+Identidad
+---------
+- slug: ro73
+- name: Ro73
+- name_display: RO73
+- real_name: Isaac  (SoundCloud oficial: «Ro73 — Isaac — Sevilla». NO inventar apellido.)
+- country: ES
+- category: andalusian
+- Base: Sevilla · Andalucía · Spain. Beatport: «productor y DJ de Sevilla». SoundCloud: Sevilla.
+- era: `2023-present`  (primer release verificado: Welcome, 25 ago 2023. NO inventar carrera anterior.)
+- is_featured: false
+- sort_order: 148
+- image_url: null (foto después)
+- labels_founded: []
+- recommended_mixes: []
+
+Roles: DJ · Producer.
+
+Sonido
+------
+- styles: Breakbeat, Breaks, UK Bass
+- Beatport es consistente: Feelings Founded, Experience, Destroy, Back Curls = Breaks / Breakbeat / UK Bass.
+- NO añadir Nu Skool, Electro, Jungle, D&B ni más etiquetas.
+
+Sellos
+------
+- Principal: Samay Records (Feelings Founded, Experience, Destroy, Back Curls, Neo Genesis + compilaciones).
+- Otro eje: ElectroBreakz (My Earth, Destiny, My Cosmos; Imagination = Fortuny + Ro73 + Jordaz (ESP)).
+- Otros: Close Your Eyes (My Breath), Br8kn Records (My Heart), Architektur Records (Mantra remix), ONE7AUDIO (7 Coronas), Xclubsive Recordings / Spektra orbit (Welcome, 2023).
+
+Colaboradores (related_artists)
+-------------------------------
+Fortuny
+Jordaz (ESP)
+Thunder Breakz
+PhoenixRising
+D-Fast Beats
+
+Fortuny = colaborador frecuente (ElectroBreakz). No afirmar que son un dúo.
+
+Catálogo ancla
+--------------
+- Welcome — 2023 — Xclubsive Recordings / Spektra orbit (25 ago 2023). Primer bloque documentado.
+- Feelings Founded — 2024 — Samay Records — 128 BPM. Bio propia lo destaca.
+- Experience — 2025 — Samay — con Jordaz (ESP)
+- Destroy — 2025 — Samay — con Thunder Breakz
+- Back Curls — Samay
+- Neo Genesis — Samay
+- My Earth / Destiny / My Cosmos — ElectroBreakz — con Fortuny
+- Imagination — ElectroBreakz — Fortuny + Ro73 + Jordaz (ESP)
+- My Breath — 2026 — Close Your Eyes. Bio propia lo destaca.
+- Big Eyes — destacado en bio propia.
+- My Heart — Br8kn — con PhoenixRising
+- 7 Coronas — 2026 — ONE7AUDIO — con D-Fast Beats
+- Mantra (Ro73 Remix) — 2025 — Architektur Records — Jiro & Kid Panel. El sello lo presentó como «fast rising Spanish breaker Ro73». Citar esa valoración como del sello, no como juicio nuestro.
+- 2026 también: Burden, Imagination, My Cosmos (Spotify / catálogo reciente).
+
+Top 100 Beatport
+----------------
+La bio oficial de Beatport dice que sus producciones han alcanzado el Top 100 en varias ocasiones. Redactar como «según su biografía oficial», sin lista chart-by-chart. Temas que esa bio destaca: My Breath, Big Eyes, Feelings Founded.
+
+Essential tracks
+----------------
+Feelings Founded
+My Breath
+Big Eyes
+My Earth
+Experience
+Destroy
+My Heart
+7 Coronas
+
+Key releases
+------------
+- Welcome — 2023 — Xclubsive Recordings / Spektra orbit
+- Feelings Founded — 2024 — Samay Records
+- Experience — 2025 — Samay Records, with Jordaz (ESP)
+- Destroy — 2025 — Samay Records, with Thunder Breakz
+- My Earth — ElectroBreakz, with Fortuny
+- Mantra (Ro73 Remix) — 2025 — Architektur Records
+- My Breath — 2026 — Close Your Eyes
+- 7 Coronas — 2026 — ONE7AUDIO, with D-Fast Beats
+
+Beatport
+--------
+- beatport_id: 1113665
+- beatport_url: https://www.beatport.com/artist/ro73/1113665
+
+BIO (usar este tono y estos hechos; no ampliar con ciudad inventada, edad, alias, bookings)
+-------------------------------------------------------------------------------------------
+ES:
+Ro73 es un DJ y productor de Sevilla, Andalucía, activo dentro del breakbeat contemporáneo y con una discografía pública documentada al menos desde 2023. Su producción se sitúa principalmente dentro de Breaks / Breakbeat / UK Bass y ha conseguido entrar en varias ocasiones en el Top 100 de Beatport, según su biografía oficial.
+
+Uno de sus primeros lanzamientos claramente documentados es Welcome, publicado en 2023, seguido por una etapa especialmente vinculada a Samay Records, donde ha editado trabajos como Feelings Founded, Experience, Destroy, Back Curls y Neo Genesis.
+
+En paralelo ha desarrollado una relación destacada con ElectroBreakz, especialmente a través de colaboraciones con Fortuny como My Earth, Destiny y My Cosmos. También ha trabajado con artistas como Jordaz (ESP), Thunder Breakz, PhoenixRising y D-Fast Beats.
+
+Su faceta como remixer incluye trabajos para Architektur Records, donde reinterpretó Mantra de Jiro & Kid Panel; el propio sello lo presentó como un productor español de breaks en rápido crecimiento.
+
+En 2026 continúa plenamente activo con nuevos lanzamientos como My Breath, My Cosmos, 7 Coronas, Burden e Imagination, ampliando su presencia dentro del circuito actual de breakbeat español.
+
+PROHIBIDO
+---------
+- Apellido de Isaac.
+- Carrera anterior a 2023.
+- Inventar cifras exactas de Top 100 o posiciones.
+- Optimal Breaks / 40 Breaks.
+- Cifras Spotify.
+- Convertir «fast rising» de Architektur en narrativa de «promesa» nuestra.

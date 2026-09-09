@@ -39,7 +39,8 @@
 >   El anuncio masivo a la base sigue siendo el script de campaña, no este canal.
 >   Al **aprobar un claim** se manda un segundo transaccional (ficha verificada, interruptor
 >   de bookings cerrado hasta que el artista lo encienda). Todo mail a un usuario lleva
->   **Cc: contacto@** (si el To no es ya contacto). Borrador: `npx tsx scripts/enviar-mail-claim-aprobado.ts`.
+>   **Cc: contacto@** (si el To no es ya contacto). Cada intento se guarda en
+>   **`mail_dispatches`** (panel `/administrator/mails`). Borrador: `npx tsx scripts/enviar-mail-claim-aprobado.ts`.
 > - Decisiones §9 por defecto en el MVP: categorías no reclamables `pioneer`/`uk_legend`; 1 ficha
 >   verificada por cuenta; presupuesto por rangos; una fecha opcional; rechazo silencioso.
 

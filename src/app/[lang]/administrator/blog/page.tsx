@@ -22,6 +22,7 @@ interface BlogPost {
   published_at: string
   is_published: boolean
   is_featured: boolean
+  view_count: number
 }
 
 const TABLE = 'blog_posts'
@@ -39,6 +40,11 @@ const columns = [
     key: 'is_featured',
     label: 'Featured',
     render: (v: boolean) => (v ? '✓' : '✗'),
+  },
+  {
+    key: 'view_count',
+    label: 'Lecturas',
+    render: (v: number | null | undefined) => String(v ?? 0),
   },
 ]
 

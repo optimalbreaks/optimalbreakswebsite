@@ -142,9 +142,13 @@ Hoy, en `listAudience()`:
 - recuento **único** `track_source:track_id` en `saved_chart_tracks` (paginar de 1000)
 - entra si: email confirmado, **&lt; `SAVE_CAP` (100)**, no está en `SKIP_EMAILS`
 
-Para la **siguiente** campaña: cambiar el filtro (p. ej. 0 saves, sin login en 30 días, artistas sin claim). No reenviar el mismo HTML a quien ya lo recibió sin un criterio nuevo. Si hace falta no repetir: tabla `mail_sends` (user_id, campaign_id, sent_at) — aún no existe; montarla cuando haya segunda tanda.
+Para la **siguiente** campaña: cambiar el filtro (p. ej. 0 saves, sin login en 30 días, artistas sin claim). No reenviar el mismo HTML a quien ya lo recibió sin un criterio nuevo. Si hace falta no repetir: ampliar `mail_dispatches` con `kind = campaign` (o una tabla `mail_sends` aparte) cuando haya segunda tanda.
 
-Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): el aviso «tienes una solicitud nueva» ya corre en **`src/lib/transactional-mail.ts`** (mismo SMTP; el POST de `/api/booking-requests` lo dispara en `waitUntil`). Al aprobar un claim se manda **ficha verificada** (interruptor cerrado hasta que el artista encienda «Abierto»). Borrador a contacto@: `npx tsx scripts/enviar-mail-claim-aprobado.ts`. Preview: [`mailing/claim-approved.html`](../mailing/claim-approved.html). El anuncio de launch a toda la base sigue siendo este script. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips. Pon **`SMTP_*` también en Vercel** o el aviso de booking no saldrá en producción.
+### Registro de envíos transaccionales (`mail_dispatches`)
+
+Molde Furgocasa (`booking_email_dispatches`): cada intento deja fila (no el cuerpo). Kinds actuales: `claim_approved`, `booking_new`. Status: `sent` / `failed` / `skipped` (sin SMTP o email sin confirmar). Columnas útiles: `to_email`, `cc_email`, `subject`, `smtp_message_id`, `error_message`, `claim_id` / `booking_request_id`. Un booking solo puede tener un `sent` (índice único); un claim registra cada reenvío. Panel: `/administrator/mails`. Migración `076_mail_dispatches.sql`. El 8 sep 2026 al aprobar BABU no hay fila: la tabla no existía.
+
+Bookings ([`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md) §8): el aviso «tienes una solicitud nueva» ya corre en **`src/lib/transactional-mail.ts`** (mismo SMTP; el POST de `/api/booking-requests` lo dispara en `waitUntil` y **escribe** `mail_dispatches`). Al aprobar un claim se manda **ficha verificada** (interruptor cerrado hasta que el artista encienda «Abierto») y se registra igual. Borrador a contacto@: `npx tsx scripts/enviar-mail-claim-aprobado.ts`. Preview: [`mailing/claim-approved.html`](../mailing/claim-approved.html). El anuncio de launch a toda la base sigue siendo este script. No montar Resend solo para uno de esos usos. Una bala de «anuncio a toda la base»: no gastarlas en drips. Pon **`SMTP_*` también en Vercel** o el aviso de booking no saldrá en producción.
 
 ---
 
@@ -188,7 +192,8 @@ npm run mail:campaign -- --send
 | `mailing/firma-*.html` | Firmas Outlook |
 | `.env.local` / `.env.local.example` | `SMTP_*` |
 | `src/app/api/og/image-proxy/route.ts` | Proxy de portadas (descarga) |
-| `src/lib/transactional-mail.ts` | Avisos de booking y de ficha verificada (SMTP OVH; borrador claim: `scripts/enviar-mail-claim-aprobado.ts`) |
+| `src/lib/transactional-mail.ts` | Avisos de booking y de ficha verificada (SMTP OVH; registra `mail_dispatches`; borrador claim: `scripts/enviar-mail-claim-aprobado.ts`) |
+| `src/app/[lang]/administrator/mails/page.tsx` | Panel del registro de envíos |
 | `mailing/claim-approved.html` | Último HTML del borrador de ficha verificada |
 
 ---

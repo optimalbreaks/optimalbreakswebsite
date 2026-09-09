@@ -106,6 +106,10 @@ export async function PUT(
   if (!id) {
     return NextResponse.json({ error: 'Se requiere el campo id' }, { status: 400 })
   }
+  if (table === 'blog_posts') {
+    delete fields.view_count
+    delete fields.created_at
+  }
 
   const sb = createServiceSupabase()
   const { data, error } = await sb.from(table).update(fields).eq('id', id).select().single()

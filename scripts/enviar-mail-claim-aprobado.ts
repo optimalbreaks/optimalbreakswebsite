@@ -3,8 +3,8 @@
  *
  *   npx tsx scripts/enviar-mail-claim-aprobado.ts
  *       → borrador a contacto@ (barra BORRADOR).
- *   npx tsx scripts/enviar-mail-claim-aprobado.ts --send --user=<uuid>
- *       → al artista (Cc contacto@). Sin barra BORRADOR.
+ *   npx tsx scripts/enviar-mail-claim-aprobado.ts --send --user=<uuid> [--claim=<uuid>] [--artist=<uuid>]
+ *       → al artista (Cc contacto@). Sin barra BORRADOR. Deja fila en mail_dispatches.
  *
  * SMTP OVH en .env.local. Guía: docs/GUIA_MAILS.md
  */
@@ -63,6 +63,8 @@ const doSend = process.argv.includes('--send')
 const artistName = argValue('--name', 'D-Fast Beats')
 const artistSlug = argValue('--slug', 'd-fast-beats')
 const userId = argValue('--user', '6983497d-d714-4bf8-89ef-d57f3b6fe0fb')
+const artistId = argValue('--artist', '')
+const claimId = argValue('--claim', '')
 
 const html = renderClaimApprovedHtml({ artistName, artistSlug, draft: !doSend })
 writeFileSync(OUT_HTML, html, 'utf8')
@@ -73,6 +75,9 @@ notifyArtistOfClaimApproved({
   artistName,
   artistSlug,
   draft: !doSend,
+  artistId: artistId || null,
+  claimId: claimId || null,
+  source: doSend ? 'script' : 'claim_draft',
 })
   .then(() => {
     if (doSend) console.log('Enviado al artista', userId, '(Cc', process.env.SMTP_USER, ')')

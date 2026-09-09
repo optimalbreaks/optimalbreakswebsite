@@ -253,7 +253,7 @@ Regla para agentes Cursor: `.cursor/rules/charts-catalog-discovery.mdc`. Detalle
 
 ## Beatport: Top 10 en fichas de artista y sello
 
-Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**.
+Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**. El 40 semanal es, desde **sep-2026**, una **foto literal de las 40 primeras posiciones** del Top 100 de Breaks en Beatport, sin IA (`--ai` reactiva la curación antigua solo bajo petición); las ediciones anteriores se hicieron con OpenAI reordenando. La curación de Optimal está en **New Releases**.
 
 1. **Migración** — Aplica **`supabase/migrations/046_beatport_top_tracks.sql`** en Supabase (columnas `beatport_id`, `beatport_url`, `beatport_top_tracks`, `beatport_top_tracks_updated_at` en `artists` y `labels`).
 2. **ID en la URL de Beatport** — La ficha canónica es `https://www.beatport.com/artist/<slug>/<id>` o `/label/<slug>/<id>`. El `<slug>` debe ser el mismo que en Optimal Breaks; el `<id>` es el número final (ej.: Deekline → `deekline` + `3171`).

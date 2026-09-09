@@ -1,7 +1,10 @@
 Revisión editorial — Lucas (agosto 2026)
 =======================================
 
-CUIDADO: Beatport artist 4092 mezcla homónimos (Solo Ora, Senza Freno, Lifestyle, BASS & DROP). No importar el Top 10 si viene contaminado.
+CUIDADO: Beatport artist 4092 mezcla homónimos (Anjunabeats, Iboga, SHIBUI, Solo Ora…).
+El Top 10 de la ficha SÍ se muestra, pero filtrado a sellos suyos:
+DIRTY KITCHEN RAVE · Top Drawer Digital · Bass Elements.
+`ARTIST_TOP10_LABEL_ALLOWLIST.lucas` en scripts/beatport-top-tracks.mjs. No volver a importar el ranking crudo.
 
 Fuentes
 -------

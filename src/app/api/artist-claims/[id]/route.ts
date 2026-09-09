@@ -127,6 +127,9 @@ export async function PATCH(
         userId: claim.user_id,
         artistName: art.name,
         artistSlug: art.slug,
+        artistId: targetArtistId,
+        claimId: id,
+        source: 'claim_approve',
       })
     } catch (err) {
       console.warn('[mail] aviso de ficha verificada falló', err)

@@ -1,5 +1,12 @@
 /**
- * OPTIMAL BREAKS — 40 Breaks Vitales: scraping + curación IA + UPSERT Supabase
+ * OPTIMAL BREAKS — 40 Breaks Vitales: foto del Top 40 de Beatport + UPSERT Supabase
+ *
+ * Desde sep-2026 el chart es LITERAL: las 40 primeras posiciones del Top 100 en vivo
+ * del género Breaks / Breakbeat / UK Bass, en el orden de Beatport. Sin IA. Así el
+ * ▲/▼ refleja movimiento real de ventas y la lista es reproducible. La curación
+ * editorial de Optimal vive en New Releases (selección de oído), no aquí.
+ * `--ai` reactiva el antiguo paso de OpenAI (elige y reordena 40 de los 100) solo
+ * si alguien lo pide expresamente. Ediciones anteriores a sep-2026 se hicieron con IA.
  *
  * Remixers: al escribir filas, fusiona Beatport `remixers[]` + `mix_name` en `artists[]`
  * (`scripts/lib/remixer-credits.mjs`) — mismo criterio que New Releases / Top 10.
@@ -11,12 +18,12 @@
  *   node scripts/chart-40-breaks.mjs --dry-run
  *   node scripts/chart-40-breaks.mjs --confirm
  *   node scripts/chart-40-breaks.mjs --confirm --week 2026-03-30
- *   node scripts/chart-40-breaks.mjs --sources beatport,juno
+ *   node scripts/chart-40-breaks.mjs --confirm --ai        (curación IA, legado)
  *
  * Credenciales (.env.local):
- *   OPENAI_API_KEY             (curación IA)
  *   NEXT_PUBLIC_SUPABASE_URL   (siempre)
  *   SUPABASE_SERVICE_ROLE_KEY  (siempre)
+ *   OPENAI_API_KEY             (solo con --ai)
  */
 
 import { execFileSync } from 'child_process'
@@ -240,10 +247,18 @@ function parseBeatportNextData(html) {
 
     const artworkUrl = artworkUrlFromBeatportEntity(t)
 
+    // Beatport a veces repite el mix en el nombre («New Ting (Extended)» + mix «Extended»):
+    // la UI pinta `title (mix_name)` y saldría doble. Quitar el sufijo redundante.
+    const mixName = (t.mix_name || '').trim()
+    let title = (t.name || '').trim()
+    if (mixName && title.toLowerCase().endsWith(`(${mixName.toLowerCase()})`)) {
+      title = title.slice(0, -(mixName.length + 2)).trim()
+    }
+
     return {
       position: i + 1,
-      title: (t.name || '').trim(),
-      mix_name: (t.mix_name || '').trim(),
+      title,
+      mix_name: mixName,
       artists,
       label: t.release?.label?.name || '',
       bpm: t.bpm || null,
@@ -533,7 +548,21 @@ function beatportTrackToCuratedRow(t) {
   }
 }
 
-/** Si OpenAI cae: Top Beatport con máx. 2 temas por artista principal. */
+/** Modo por defecto (sep-2026): las `n` primeras posiciones de Beatport, tal cual. */
+function curateBeatportLiteral(beatportTracks, n = 40) {
+  const out = []
+  const seen = new Set()
+  for (const t of beatportTracks) {
+    const id = beatportTrackIdFromUrl(t.beatport_url)
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    out.push(beatportTrackToCuratedRow(t))
+    if (out.length >= n) break
+  }
+  return out
+}
+
+/** Si OpenAI cae (solo --ai): Top Beatport con máx. 2 temas por artista principal. */
 function curateBeatportFallback(beatportTracks, n = 40) {
   console.log(`  ⚠ Fallback editorial: Top Beatport (máx. 2 por artista principal)`)
   const out = []
@@ -576,21 +605,28 @@ async function getPreviousEdition(supabase, currentWeekDate) {
   // re-run), NO debemos compararnos contra nosotros mismos: eso produciría
   // "NEW" en todos los tracks y rompería los movimientos (▲/▼/═) y el
   // contador `weeks_in_chart`.
-  let q = supabase
-    .from('chart_editions')
-    .select('id, week_date')
-    .eq('is_published', true)
-  if (currentWeekDate) q = q.lt('week_date', currentWeekDate)
-  const { data } = await q.order('week_date', { ascending: false }).limit(1)
-  if (!data?.[0]) return { edition: null, tracks: [] }
+  // Además, NR/vinilo publican ediciones sin `chart_tracks` (p. ej. 31 ago 2026):
+  // saltar esas semanas huecas hasta el último 40 real.
+  let before = currentWeekDate
+  for (let i = 0; i < 12; i++) {
+    let q = supabase
+      .from('chart_editions')
+      .select('id, week_date')
+      .eq('is_published', true)
+    if (before) q = q.lt('week_date', before)
+    const { data } = await q.order('week_date', { ascending: false }).limit(1)
+    if (!data?.[0]) return { edition: null, tracks: [] }
 
-  const { data: tracks } = await supabase
-    .from('chart_tracks')
-    .select('title, artists, position, weeks_in_chart')
-    .eq('chart_edition_id', data[0].id)
-    .order('position')
+    const { data: tracks } = await supabase
+      .from('chart_tracks')
+      .select('title, artists, position, weeks_in_chart')
+      .eq('chart_edition_id', data[0].id)
+      .order('position')
 
-  return { edition: data[0], tracks: tracks || [] }
+    if (tracks?.length) return { edition: data[0], tracks }
+    before = data[0].week_date
+  }
+  return { edition: null, tracks: [] }
 }
 
 function enrichWithHistory(curated, previousTracks) {
@@ -789,8 +825,8 @@ async function uploadToSupabase(supabase, tracks, weekDate, sources) {
       .insert({
         week_date: weekDate,
         title,
-        description_en: `The 40 breakbeat tracks defining the week of ${weekDate}.`,
-        description_es: `Los 40 temas de breakbeat que definen la semana del ${weekDate}.`,
+        description_en: `Beatport Breaks / Breakbeat / UK Bass Top 40 for the week of ${weekDate}.`,
+        description_es: `Top 40 de Beatport (Breaks / Breakbeat / UK Bass) de la semana del ${weekDate}.`,
         sources,
         is_published: true,
         published_at: new Date().toISOString(),
@@ -889,6 +925,7 @@ async function main() {
   const args = process.argv.slice(2)
   const dryRun = args.includes('--dry-run')
   const confirm = args.includes('--confirm')
+  const useAi = args.includes('--ai')
   const weekIdx = args.indexOf('--week')
   const weekDate = currentWeekMonday(
     weekIdx !== -1 && args[weekIdx + 1] ? args[weekIdx + 1] : undefined,
@@ -908,15 +945,16 @@ Uso:
   node scripts/chart-40-breaks.mjs --dry-run              Proponer chart (solo terminal)
   node scripts/chart-40-breaks.mjs --confirm               Proponer y subir a Supabase
   node scripts/chart-40-breaks.mjs --confirm --week 2026-03-30  Fecha específica
-  node scripts/chart-40-breaks.mjs --sources beatport,juno --dry-run
+  node scripts/chart-40-breaks.mjs --confirm --ai          Curación IA (legado, no por defecto)
 
-Fuentes disponibles: beatport, juno
+Por defecto: las 40 primeras posiciones del Top 100 de Beatport, sin IA.
+Fuentes disponibles: beatport, juno (Juno solo influye con --ai)
 `)
     process.exit(0)
   }
 
   console.log(`\n▸ 40 Breaks Vitales — ${dryRun ? 'DRY RUN' : 'CONFIRM'} — Semana ${weekDate}`)
-  console.log(`  Fuentes: ${sourcesArg.join(', ')}`)
+  console.log(`  Fuentes: ${sourcesArg.join(', ')} · Modo: ${useAi ? 'curación IA (legado)' : 'Top 40 literal de Beatport'}`)
 
   // 1. Scrape
   let beatportTracks = []
@@ -934,13 +972,18 @@ Fuentes disponibles: beatport, juno
     process.exit(1)
   }
 
-  // 2. AI curation (fallback Top Beatport si la API falla)
+  // 2. Selección: por defecto foto literal del Top 40 de Beatport. Con --ai,
+  //    el antiguo paso de OpenAI (fallback Top Beatport si la API falla).
   let curated
-  try {
-    curated = await curateWithAI(beatportTracks, junoTracks)
-  } catch (err) {
-    console.log(`  ⚠ Curación IA: ${err.message}`)
-    curated = curateBeatportFallback(beatportTracks, 40)
+  if (useAi) {
+    try {
+      curated = await curateWithAI(beatportTracks, junoTracks)
+    } catch (err) {
+      console.log(`  ⚠ Curación IA: ${err.message}`)
+      curated = curateBeatportFallback(beatportTracks, 40)
+    }
+  } else {
+    curated = curateBeatportLiteral(beatportTracks, 40)
   }
   curated = dedupeCuratedTracks(curated, beatportTracks, 40)
   curated = curated.map((t, i) => ({ ...t, position: i + 1 }))

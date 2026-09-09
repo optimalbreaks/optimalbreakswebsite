@@ -35,6 +35,7 @@ export default function BlogEditPage() {
     published_at: '',
     is_published: false,
     is_featured: false,
+    view_count: 0,
   })
 
   useEffect(() => {
@@ -178,6 +179,9 @@ export default function BlogEditPage() {
           />
           <span className="admin-muted normal-case">Destacado</span>
         </label>
+        <span className="admin-muted normal-case">
+          Lecturas: <strong>{form.view_count ?? 0}</strong>
+        </span>
       </div>
     </AdminForm>
   )
