@@ -159,13 +159,6 @@ function websiteLinkLabel(url: string, lang: Locale): string {
   return 'Web'
 }
 
-function secondaryTicketsLinkLabel(url: string, lang: Locale): string {
-  if (isMonsterTicketUrl(url)) {
-    return lang === 'es' ? 'Compra de entradas' : 'Buy tickets'
-  }
-  return lang === 'es' ? 'Entradas' : 'Tickets'
-}
-
 function eventTypeLabel(type: string, lang: Locale): string {
   const map: Record<string, { es: string; en: string }> = {
     festival: { es: 'Festival', en: 'Festival' },
@@ -469,18 +462,28 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     posterDateLabel || null,
   ].filter(Boolean) as string[]
   const posterAlt = posterAltBits.join(' · ')
+  const hasTicketsUrl = Boolean((event.tickets_url ?? '').trim())
   const hasMonsterTicketLink =
     isMonsterTicketUrl(event.tickets_url) || isMonsterTicketUrl(event.website)
   const hasPartnerTicketingLink =
     hasMonsterTicketLink ||
     isKnownTicketingSiteUrl(event.tickets_url) ||
     isKnownTicketingSiteUrl(event.website)
-  /** Hero: CTA rojo si hay URL de compra y (upcoming, MonsterTicket u otro ticketer conocido p. ej. Skiddle). */
+  /** Hero: CTA rojo si hay venta (tickets_url, upcoming, o ticketer conocido). */
   const showHeroTicketCta =
     !cancelled &&
     ticketHeroHref.length > 0 &&
     !isEventPastByDate(event) &&
-    (event.event_type === 'upcoming' || hasPartnerTicketingLink)
+    (hasTicketsUrl || event.event_type === 'upcoming' || hasPartnerTicketingLink)
+  const ticketCtaClassName =
+    'mt-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-4 text-center text-white shadow-[5px_5px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)] no-underline'
+  const ticketCtaStyle = {
+    fontFamily: "'Darker Grotesque', sans-serif",
+    fontWeight: 900,
+    fontSize: 'clamp(18px, 4vw, 22px)',
+    letterSpacing: '1px',
+    textTransform: 'uppercase' as const,
+  }
 
   const scheduleByStage = new Map<string, EventScheduleSlot[]>()
   for (const slot of schedule) {
@@ -761,6 +764,19 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               </div>
             )}
 
+            {/* CTA de entradas: arriba de favoritos/compartir, que no se pierda */}
+            {showHeroTicketCta && (
+              <a
+                href={ticketHeroHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={ticketCtaClassName}
+                style={ticketCtaStyle}
+              >
+                {primaryTicketCtaLabel(event.tickets_url, event.website, lang)} →
+              </a>
+            )}
+
             {/* Favorite + attendance + fan counter + share */}
             <div className="flex flex-wrap items-center gap-3 mt-5">
               <FavoriteButton type="event" entityId={event.id} size="md" lang={lang} />
@@ -779,18 +795,6 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
               <ShareButtons url={`/${lang}/events/${slug}`} title={`${event.name} | Optimal Breaks`} lang={lang} />
             </div>
 
-            {/* CTA: tickets (upcoming, MonsterTicket u otros ticketers conocidos + URL) */}
-            {showHeroTicketCta && (
-              <a
-                href={ticketHeroHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-3.5 text-center text-white shadow-[4px_4px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)] no-underline"
-                style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '18px', letterSpacing: '1px', textTransform: 'uppercase' }}
-              >
-                {primaryTicketCtaLabel(event.tickets_url, event.website, lang)} →
-              </a>
-            )}
             {cancelled && (
               <div
                 className="mt-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--ink)] px-6 py-3.5 text-center text-[var(--yellow)]"
@@ -1026,8 +1030,19 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         <section className="mb-10">
           <SectionHeading>{cancelled ? ev.detail_links_cancelled ?? ev.detail_links : ev.detail_links}</SectionHeading>
           <div className="border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] p-5 sm:p-6">
+            {event.tickets_url && !cancelled && (
+              <a
+                href={event.tickets_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-5 block w-full max-w-xl border-4 border-[var(--ink)] bg-[var(--red)] px-6 py-4 text-center text-white shadow-[5px_5px_0_var(--yellow)] no-underline hover:translate-x-[2px] hover:translate-y-[2px]"
+                style={ticketCtaStyle}
+              >
+                {primaryTicketCtaLabel(event.tickets_url, event.website, lang)} →
+              </a>
+            )}
             <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {event.website && (
+              {event.website && event.website !== event.tickets_url && (
                 <a
                   href={event.website}
                   target="_blank"
@@ -1040,7 +1055,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                     : `${websiteLinkLabel(event.website, lang)} →`}
                 </a>
               )}
-              {event.tickets_url && event.tickets_url !== event.website && (
+              {cancelled && event.tickets_url && (
                 <a
                   href={event.tickets_url}
                   target="_blank"
@@ -1048,9 +1063,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="text-[var(--yellow)] hover:text-white transition-colors"
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', letterSpacing: '1px', textTransform: 'uppercase' }}
                 >
-                  {cancelled
-                    ? `${ev.tickets_refunds ?? (lang === 'es' ? 'Venta / reembolsos' : 'Sale / refunds')} →`
-                    : `${secondaryTicketsLinkLabel(event.tickets_url, lang)} →`}
+                  {`${ev.tickets_refunds ?? (lang === 'es' ? 'Venta / reembolsos' : 'Sale / refunds')} →`}
                 </a>
               )}
               {publicSocials.map(([key, url]) => (
