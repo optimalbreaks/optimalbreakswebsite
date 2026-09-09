@@ -12,7 +12,7 @@ import {
   SITE_URL,
 } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
-import type { Artist, BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
+import type { BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
 import { eventNoticeKind } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -27,7 +27,12 @@ import {
   splitFestivalDescriptionSections,
   splitProseForDisplay,
 } from '@/lib/bio-format'
-import { countLineupArtistNames } from '@/lib/artist-entity-match'
+import {
+  buildArtistSlugLookup,
+  fetchAllArtistLinkRows,
+  flattenLineupArtistNames,
+  resolveArtistSlug,
+} from '@/lib/artist-entity-match'
 import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { getDictionary } from '@/lib/dictionaries'
 
@@ -497,19 +502,17 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     scheduleByStage.get(key)!.push(slot)
   }
 
-  const allArtistNames = new Set<string>()
-  for (const s of stages) s.lineup?.forEach((a) => allArtistNames.add(a))
-  event.lineup?.forEach((a: string) => allArtistNames.add(a))
-  for (const slot of schedule) if (slot.artist) allArtistNames.add(slot.artist)
+  const rawLineupSlots: string[] = []
+  for (const s of stages) s.lineup?.forEach((a) => rawLineupSlots.push(a))
+  event.lineup?.forEach((a: string) => rawLineupSlots.push(a))
+  for (const slot of schedule) if (slot.artist) rawLineupSlots.push(slot.artist)
+  const lineupArtistNames = flattenLineupArtistNames(rawLineupSlots)
 
+  const artistSlugByName = buildArtistSlugLookup(await fetchAllArtistLinkRows(supabase))
   const artistSlugs = new Map<string, string>()
-  if (allArtistNames.size > 0) {
-    const { data: matchedArtists } = await supabase
-      .from('artists')
-      .select('name, slug')
-      .in('name', Array.from(allArtistNames))
-    const rows = (matchedArtists ?? []) as Pick<Artist, 'name' | 'slug'>[]
-    for (const a of rows) artistSlugs.set(a.name, a.slug)
+  for (const name of lineupArtistNames) {
+    const resolved = resolveArtistSlug(name, artistSlugByName)
+    if (resolved) artistSlugs.set(name, resolved)
   }
 
   const { data: relatedRaw } = await supabase
@@ -550,7 +553,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
       ? null
       : event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null),
     ageRestriction: event.age_restriction,
-    lineupNames: Array.from(allArtistNames),
+    lineupNames: lineupArtistNames,
     cancelled,
     postponed,
     refundsUrl: cancelled
@@ -559,7 +562,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   })
 
   // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList (+ FAQ si hay datos) ──
-  const performersForLd = Array.from(allArtistNames).map((name) => ({
+  const performersForLd = lineupArtistNames.map((name) => ({
     name,
     slug: artistSlugs.get(name) ?? null,
   }))
@@ -819,7 +822,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           stamp={stamp}
           doorsOpen={event.doors_open}
           doorsClose={event.doors_close}
-          lineupCount={countLineupArtistNames(allArtistNames)}
+          lineupCount={lineupArtistNames.length}
           showLineupLink={hasLineupAnchor}
           venue={event.venue}
           city={event.city}
@@ -893,11 +896,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                 )}
                 {stage.lineup && stage.lineup.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
-                    {stage.lineup.map((a, j) => {
-                      const aSlug = artistSlugs.get(a)
+                    {flattenLineupArtistNames(stage.lineup).map((a, j) => {
+                      const aSlug = artistSlugs.get(a) ?? resolveArtistSlug(a, artistSlugByName)
                       return aSlug
-                        ? <Link key={j} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
-                        : <span key={j} className="cutout red">{a}</span>
+                        ? <Link key={`${a}-${j}`} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
+                        : <span key={`${a}-${j}`} className="cutout red">{a}</span>
                     })}
                   </div>
                 )}
@@ -910,11 +913,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           <SectionHeading>{ev.detail_lineup}</SectionHeading>
           <div className="p-5 sm:p-6 bg-[var(--ink)] text-[var(--paper)] border-4 border-[var(--ink)]">
             <div className="flex flex-wrap gap-2">
-              {event.lineup.map((a: string, i: number) => {
+              {lineupArtistNames.map((a, i) => {
                 const aSlug = artistSlugs.get(a)
                 return aSlug
-                  ? <Link key={i} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
-                  : <span key={i} className="cutout red">{a}</span>
+                  ? <Link key={`${a}-${i}`} href={`/${lang}/artists/${aSlug}`} className="cutout red no-underline">{a}</Link>
+                  : <span key={`${a}-${i}`} className="cutout red">{a}</span>
               })}
             </div>
           </div>
@@ -963,7 +966,9 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                         style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 800, fontSize: '15px' }}
                       >
                         {(() => {
-                          const aSlug = artistSlugs.get(slot.artist)
+                          const aSlug =
+                            artistSlugs.get(slot.artist) ??
+                            resolveArtistSlug(slot.artist, artistSlugByName)
                           return aSlug
                             ? <Link href={`/${lang}/artists/${aSlug}`} className="no-underline text-inherit hover:text-[var(--red)] transition-colors">{slot.artist}</Link>
                             : slot.artist

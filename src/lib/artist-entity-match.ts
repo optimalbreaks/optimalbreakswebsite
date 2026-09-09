@@ -107,16 +107,35 @@ export function splitLineupSlotNames(slot: string): string[] {
     .filter(Boolean)
 }
 
-/** Cuenta artistas del cartel, no filas: un "vs" son dos nombres. */
-export function countLineupArtistNames(slots: Iterable<string>): number {
-  const names = new Set<string>()
+/** Quita el billing entre paréntesis: "Anuschka (Special Birthday Set)" → "Anuschka". */
+export function lineupCreditDisplayName(part: string): string {
+  const t = part.trim()
+  if (!t) return ''
+  return t.replace(/\s*\([^)]*\)\s*$/g, '').trim() || t
+}
+
+/**
+ * Cartel plano: un "vs" son dos nombres, sin duplicados, en orden.
+ * "Cut & Run" se queda como un acto.
+ */
+export function flattenLineupArtistNames(slots: Iterable<string>): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
   for (const slot of slots) {
-    for (const name of splitLineupSlotNames(slot)) {
-      const key = normalizeForEntityMatch(name)
-      if (key) names.add(key)
+    for (const part of splitLineupSlotNames(slot)) {
+      const display = lineupCreditDisplayName(part)
+      const key = normalizeForEntityMatch(display)
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      out.push(display)
     }
   }
-  return names.size
+  return out
+}
+
+/** Cuenta artistas del cartel, no filas: un "vs" son dos nombres. */
+export function countLineupArtistNames(slots: Iterable<string>): number {
+  return flattenLineupArtistNames(slots).length
 }
 
 /**
