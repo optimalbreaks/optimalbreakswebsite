@@ -287,10 +287,7 @@ export default async function BlogPage({
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
 
-  const { posts: featuredRaw, byViews } = await fetchBlogSpotlight<BlogListRow>(
-    supabase,
-    BLOG_LIST_SELECT,
-  )
+  const { posts: featuredRaw, byViews } = await fetchBlogSpotlight(supabase)
   const featured = featuredRaw
   const featuredSlugs = featured.map((p) => p.slug)
   const excludeFeatured = featuredSlugs.length > 0

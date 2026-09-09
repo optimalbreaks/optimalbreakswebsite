@@ -205,7 +205,7 @@ export interface Database {
       }
       blog_posts: {
         Row: BlogPost
-        Insert: Omit<BlogPost, 'id' | 'created_at' | 'view_count'> & { view_count?: number }
+        Insert: Omit<BlogPost, 'id' | 'created_at'>
         Update: Partial<Omit<BlogPost, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
@@ -444,7 +444,7 @@ export interface Database {
       }
       increment_blog_post_view: {
         Args: { p_slug: string }
-        Returns: undefined
+        Returns: null
       }
     }
   }
@@ -565,7 +565,15 @@ export interface EventRatingRow extends Record<string, unknown> {
 export type MailDispatchKind = 'claim_approved' | 'booking_new'
 export type MailDispatchStatus = 'sent' | 'failed' | 'skipped'
 
-export interface MailDispatchRow {
+/** Sin index signature / `unknown`: rompe el cliente tipado de Supabase (build Vercel → `never`). */
+export type MailDispatchMetadata = {
+  source?: string
+  note?: string
+  skip_reason?: string
+  draft?: boolean
+}
+
+export type MailDispatchRow = {
   id: string
   created_at: string
   updated_at: string
@@ -581,7 +589,7 @@ export interface MailDispatchRow {
   booking_request_id: string | null
   smtp_message_id: string | null
   error_message: string | null
-  metadata: Record<string, string | boolean | number | null>
+  metadata: MailDispatchMetadata
 }
 
 export type ArtistClaimKind = 'claim_existing' | 'request_new'
@@ -957,7 +965,7 @@ export interface BlogPost extends Record<string, unknown> {
   is_published: boolean
   is_featured: boolean
   /** Lecturas de la ficha pública. No se pisa en UPSERT editorial. */
-  view_count: number
+  view_count?: number
   /** Cortes Beatport para previews en el artículo (álbum / EP). Vacío = sin lista. */
   beatport_tracks?: BeatportTopTrack[] | null
   /** URL del release en Beatport cuando el artículo cubre un álbum o EP. */

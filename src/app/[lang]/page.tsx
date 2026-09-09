@@ -13,7 +13,7 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { BLOG_HOME_SELECT, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import type { Artist, BeatportTopTrack, BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
@@ -263,10 +263,7 @@ export default async function HomePage({
           postponed: false,
         }))
 
-  const { posts: featuredBlogPosts } = await fetchBlogSpotlight<HomeBlogRow>(
-    supabase,
-    BLOG_HOME_SELECT,
-  )
+  const { posts: featuredBlogPosts } = await fetchBlogSpotlight(supabase)
 
   const sectionBlog =
     'section_blog' in h

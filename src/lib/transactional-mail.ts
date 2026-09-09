@@ -6,7 +6,7 @@
 
 import nodemailer from 'nodemailer'
 import { createServiceSupabase } from './supabase-admin'
-import type { MailDispatchKind, MailDispatchStatus } from '@/types/database'
+import type { MailDispatchKind, MailDispatchMetadata, MailDispatchStatus } from '@/types/database'
 
 const SITE_URL = 'https://www.optimalbreaks.com'
 
@@ -117,7 +117,7 @@ async function recordMailDispatch(row: {
   bookingRequestId?: string | null
   smtpMessageId?: string | null
   errorMessage?: string | null
-  metadata?: Record<string, string | boolean | number | null>
+  metadata?: MailDispatchMetadata
 }): Promise<void> {
   try {
     const svc = createServiceSupabase()
@@ -410,7 +410,7 @@ function claimApprovedHtml(opts: {
 export async function notifyArtistOfClaimApproved(opts: ClaimApprovedNotice): Promise<TransactionalMailResult> {
   const prefix = opts.draft ? '[BORRADOR] ' : ''
   const subject = `${prefix}Ficha verificada / Profile verified — ${opts.artistName}`
-  const meta: Record<string, string | boolean | number | null> = {
+  const meta: MailDispatchMetadata = {
     source: opts.source || (opts.draft ? 'claim_draft' : 'claim_approve'),
     draft: Boolean(opts.draft),
   }
