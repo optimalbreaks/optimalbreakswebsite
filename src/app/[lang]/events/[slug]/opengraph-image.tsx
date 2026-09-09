@@ -1,10 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — Open Graph image dinámica por evento
 // /:lang/events/:slug/opengraph-image  →  PNG 1200×630
-// Sirve directamente el cartel del evento: la imagen se decodifica
-// internamente (WebP/AVIF → PNG vía sharp) y se centra con `contain`
-// sobre fondo INK, así carteles cuadrados/verticales/horizontales se
-// muestran completos sin recortes en Facebook / WhatsApp / LinkedIn / X.
+// El cartel se compone con `sharp` (contain sobre INK). No pasa por
+// Satori/`ImageResponse`: un JPEG de iPhone (P3 + ICC) o un WebP como
+// data URL tira la ruta con 500 y WhatsApp/Facebook se quedan sin tarjeta.
 // ============================================
 
 import { ImageResponse } from 'next/og'
@@ -18,6 +17,9 @@ export const alt = 'Optimal Breaks — Event'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 export const runtime = 'nodejs'
+
+const INK = { r: 26, g: 26, b: 26 }
+const MAX_POSTER_BYTES = 8 * 1024 * 1024
 
 type Props = { params: Promise<{ lang: string; slug: string }> }
 
@@ -39,9 +41,11 @@ export async function generateImageMetadata({ params }: Props) {
   const row = (data as { updated_at: string | null; tags?: string[] | null } | null) ?? null
   const t = row?.updated_at ? Date.parse(row.updated_at) : NaN
   const epoch = Number.isFinite(t) ? String(t) : '0'
-  // `-cxl` cambia la URL de og:image aunque updated_at no se toque (caché de WhatsApp/FB).
+  // Sufijo de aviso: cambia la URL aunque updated_at no se toque.
   const notice = eventNoticeKind(row)
-  const id = notice === 'cancelled' ? `${epoch}-cxl` : notice === 'postponed' ? `${epoch}-pstd` : epoch
+  const base = notice === 'cancelled' ? `${epoch}-cxl` : notice === 'postponed' ? `${epoch}-pstd` : epoch
+  // `-v2`: cambia el path de og:image (WhatsApp/FB cachean por URL).
+  const id = `${base}-v2`
   return [{ id, alt, size, contentType }]
 }
 
@@ -52,103 +56,105 @@ type EventOgRow = {
   tags?: string[] | null
 }
 
-const EXT_MIME: Record<string, string> = {
-  '.webp': 'image/webp',
-  '.avif': 'image/avif',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-}
-
-/** Formatos que Satori (motor de `next/og`) **no** sabe decodificar y hay que
- * convertir a PNG antes de pasarlos al `<img>`. WebP/AVIF revientan el
- * `ImageResponse` con 500. */
-const NEEDS_RENCODE = new Set(['image/webp', 'image/avif'])
-
-function mimeFromUrl(url: string): string {
-  const clean = url.split('?')[0].split('#')[0].toLowerCase()
-  const ext = path.extname(clean)
-  return EXT_MIME[ext] ?? 'image/jpeg'
-}
-
-/** Re-encode WebP/AVIF a PNG con `sharp`. Cualquier otro formato pasa intacto.
- * Aprovechamos para redimensionar al frame del OG (1200×630, fit inside) para
- * que el cartel quepa entero respetando su aspect ratio (centrado por CSS
- * `object-fit: contain` sobre fondo INK) y bajar el peso del data URL que se
- * inyecta en `ImageResponse`. Cualquier error se contiene devolviendo `null`
- * (el OG cae al placeholder "OB" en vez de tirar la ruta con 500). */
-async function ensureSatoriCompatible(
-  buf: Buffer,
-  mime: string,
-): Promise<{ buf: Buffer; mime: string } | null> {
-  try {
-    const sharpMod = await import('sharp')
-    const sharp = (sharpMod as { default?: typeof import('sharp') }).default ?? (sharpMod as unknown as typeof import('sharp'))
-    const needsRencode = NEEDS_RENCODE.has(mime)
-    const pipeline = sharp(buf).resize({
-      width: 1200,
-      height: 630,
-      fit: 'inside',
-      withoutEnlargement: false,
-    })
-    if (needsRencode) {
-      const png = await pipeline.png({ compressionLevel: 9 }).toBuffer()
-      return { buf: png, mime: 'image/png' }
-    }
-    if (mime === 'image/jpeg') {
-      const jpg = await pipeline.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
-      return { buf: jpg, mime: 'image/jpeg' }
-    }
-    if (mime === 'image/png') {
-      const png = await pipeline.png({ compressionLevel: 9 }).toBuffer()
-      return { buf: png, mime: 'image/png' }
-    }
-    return { buf, mime }
-  } catch {
-    if (NEEDS_RENCODE.has(mime)) return null
-    return { buf, mime }
-  }
-}
-
-async function loadPosterDataUrl(
+async function loadPosterBuffer(
   rawUrl: string | null | undefined,
   version: string | null,
-): Promise<string | null> {
+): Promise<Buffer | null> {
   const url = rawUrl?.trim()
   if (!url) return null
   try {
-    let buf: Buffer | null = null
-    let mime: string = mimeFromUrl(url)
-
     if (url.startsWith('/')) {
       const filePath = path.join(process.cwd(), 'public', url.replace(/^\/+/, ''))
-      buf = await fs.readFile(filePath)
-    } else if (url.startsWith('http://') || url.startsWith('https://')) {
-      // El cartel vive en una ruta fija de Storage (media/events/<slug>/poster.*),
-      // así que `?v=<updated_at>` es lo único que invalida Data Cache y CDN de
-      // Supabase al reemplazarlo. Con versión la respuesta es inmutable
-      // (force-cache); sin ella, revalidamos cada 5 min — nunca caché indefinida.
-      const fetchUrl = version ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url
-      const res = await fetch(
-        fetchUrl,
-        version ? { cache: 'force-cache' } : { next: { revalidate: 300 } },
-      )
-      if (!res.ok) return null
-      const ct = res.headers.get('content-type')?.split(';')[0]?.trim()
-      if (ct) mime = ct
-      const ab = await res.arrayBuffer()
-      buf = Buffer.from(ab)
-    } else {
-      return null
+      return await fs.readFile(filePath)
     }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return null
 
-    const safe = await ensureSatoriCompatible(buf, mime)
-    if (!safe) return null
-    return `data:${safe.mime};base64,${safe.buf.toString('base64')}`
+    const fetchUrl = version ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url
+    const res = await fetch(
+      fetchUrl,
+      version ? { cache: 'force-cache' } : { next: { revalidate: 300 } },
+    )
+    if (!res.ok) return null
+    const len = Number(res.headers.get('content-length') || 0)
+    if (Number.isFinite(len) && len > MAX_POSTER_BYTES) return null
+    const ab = await res.arrayBuffer()
+    if (ab.byteLength > MAX_POSTER_BYTES) return null
+    return Buffer.from(ab)
   } catch {
     return null
   }
+}
+
+function stampSvg(label: string, tone: 'cancel' | 'postpone'): Buffer {
+  const bg = tone === 'postpone' ? '#f7e733' : '#d62828'
+  const fg = tone === 'postpone' ? '#1a1a1a' : '#f4efe6'
+  const escaped = label
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  return Buffer.from(
+    `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="630" fill="rgba(26,26,26,0.32)"/>
+      <g transform="translate(600 315) rotate(-13)">
+        <rect x="-750" y="-70" width="1500" height="140" fill="${bg}" stroke="#1a1a1a" stroke-width="8"/>
+        <text x="0" y="32" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" letter-spacing="10" fill="${fg}">${escaped}</text>
+      </g>
+    </svg>`,
+  )
+}
+
+function placeholderSvg(): Buffer {
+  return Buffer.from(
+    `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="630" fill="#1a1a1a"/>
+      <text x="600" y="400" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="240" font-weight="900" letter-spacing="-8" fill="#d62828">OB</text>
+    </svg>`,
+  )
+}
+
+async function renderEventOgPng(
+  poster: Buffer | null,
+  notice: ReturnType<typeof eventNoticeKind>,
+  lang: string,
+): Promise<Buffer> {
+  const sharpMod = await import('sharp')
+  const sharp = sharpMod.default ?? (sharpMod as unknown as typeof import('sharp'))
+
+  const layers: { input: Buffer; gravity: 'centre' }[] = []
+
+  if (poster) {
+    const fitted = await sharp(poster)
+      .rotate()
+      .resize(1200, 630, { fit: 'inside', withoutEnlargement: false })
+      .toColorspace('srgb')
+      .png({ compressionLevel: 8 })
+      .toBuffer()
+    layers.push({ input: fitted, gravity: 'centre' })
+  } else {
+    layers.push({ input: placeholderSvg(), gravity: 'centre' })
+  }
+
+  if (notice) {
+    const label =
+      notice === 'postponed'
+        ? lang === 'en'
+          ? 'POSTPONED'
+          : 'APLAZADO'
+        : lang === 'en'
+          ? 'CANCELLED'
+          : 'CANCELADO'
+    layers.push({
+      input: stampSvg(label, notice === 'postponed' ? 'postpone' : 'cancel'),
+      gravity: 'centre',
+    })
+  }
+
+  return sharp({
+    create: { width: 1200, height: 630, channels: 3, background: INK },
+  })
+    .composite(layers)
+    .png({ compressionLevel: 8 })
+    .toBuffer()
 }
 
 export default async function Image({ params, id }: Props & { id: string }) {
@@ -162,32 +168,27 @@ export default async function Image({ params, id }: Props & { id: string }) {
     .single()
   const row = (data as EventOgRow | null) ?? null
 
-  // Versión de caché del cartel: el id de `generateImageMetadata` (epoch de
-  // updated_at) o, si no llegara, el updated_at de la propia fila.
   const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
   const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
-  const version = id && id !== '0' ? id.replace(/-cxl$/, '').replace(/-pstd$/, '') : fallbackVersion
+  const version =
+    id && id !== '0'
+      ? id.replace(/-v2$/, '').replace(/-cxl$/, '').replace(/-pstd$/, '')
+      : fallbackVersion
   const posterSource = row?.og_image_url || row?.image_url || null
-  const posterDataUrl = await loadPosterDataUrl(posterSource, version)
+  const poster = await loadPosterBuffer(posterSource, version)
   const notice = eventNoticeKind(row)
 
-  return new ImageResponse(
-    (
-      <EventOgImage
-        posterDataUrl={posterDataUrl}
-        cancelled={Boolean(notice)}
-        cancelledLabel={
-          notice === 'postponed'
-            ? lang === 'en'
-              ? 'POSTPONED'
-              : 'APLAZADO'
-            : lang === 'en'
-              ? 'CANCELLED'
-              : 'CANCELADO'
-        }
-        stampTone={notice === 'postponed' ? 'postpone' : 'cancel'}
-      />
-    ),
-    { ...size },
-  )
+  try {
+    const png = await renderEventOgPng(poster, notice, lang)
+    return new Response(png, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+      },
+    })
+  } catch (err) {
+    console.error('[event-og]', err instanceof Error ? err.message : err)
+    // Último recurso: tarjeta Satori sin cartel (la ruta /opengraph-image de marca sí vive).
+    return new ImageResponse(<EventOgImage posterDataUrl={null} />, { ...size })
+  }
 }
