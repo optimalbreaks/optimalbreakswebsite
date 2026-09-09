@@ -45,7 +45,7 @@ export async function generateImageMetadata({ params }: Props) {
   const notice = eventNoticeKind(row)
   const base = notice === 'cancelled' ? `${epoch}-cxl` : notice === 'postponed' ? `${epoch}-pstd` : epoch
   // `-v2`: cambia el path de og:image (WhatsApp/FB cachean por URL).
-  const id = `${base}-v3`
+  const id = `${base}-v4`
   return [{ id, alt, size, contentType }]
 }
 
@@ -70,10 +70,10 @@ async function loadPosterBuffer(
     if (!url.startsWith('http://') && !url.startsWith('https://')) return null
 
     const fetchUrl = version ? `${url}${url.includes('?') ? '&' : '?'}v=${version}` : url
-    const res = await fetch(
-      fetchUrl,
-      version ? { cache: 'force-cache' } : { next: { revalidate: 300 } },
-    )
+    const res = await fetch(fetchUrl, {
+      headers: { Accept: 'image/jpeg,image/png,image/webp,image/*;q=0.8' },
+      next: { revalidate: 300 },
+    })
     if (!res.ok) return null
     const len = Number(res.headers.get('content-length') || 0)
     if (Number.isFinite(len) && len > MAX_POSTER_BYTES) return null
@@ -157,10 +157,6 @@ async function renderEventOgJpeg(
     .toBuffer()
 }
 
-function ogFrame(dataUrl: string | null) {
-  return <EventOgImage posterDataUrl={dataUrl} />
-}
-
 export default async function Image({ params, id }: Props & { id: string }) {
   try {
     const { lang, slug } = await params
@@ -177,22 +173,52 @@ export default async function Image({ params, id }: Props & { id: string }) {
     const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
     const version =
       id && id !== '0'
-        ? id.replace(/-v3$/, '').replace(/-v2$/, '').replace(/-cxl$/, '').replace(/-pstd$/, '')
+        ? id
+            .replace(/-v4$/, '')
+            .replace(/-v3$/, '')
+            .replace(/-v2$/, '')
+            .replace(/-cxl$/, '')
+            .replace(/-pstd$/, '')
         : fallbackVersion
     const posterSource = row?.og_image_url || row?.image_url || null
     const poster = await loadPosterBuffer(posterSource, version)
     const notice = eventNoticeKind(row)
+    const remoteUrl =
+      posterSource && /^https?:\/\//i.test(posterSource.trim()) ? posterSource.trim() : null
 
     try {
       const jpeg = await renderEventOgJpeg(poster, notice, lang)
-      const dataUrl = `data:image/jpeg;base64,${jpeg.toString('base64')}`
-      return new ImageResponse(ogFrame(dataUrl), { ...size })
+      // Si no bajó el cartel, no servir el placeholder «OB»: Facebook lo toma por la tarjeta.
+      const dataUrl =
+        poster || !remoteUrl
+          ? `data:image/jpeg;base64,${jpeg.toString('base64')}`
+          : remoteUrl
+      return new ImageResponse(
+        <EventOgImage
+          posterDataUrl={dataUrl}
+          cancelled={Boolean(notice)}
+          cancelledLabel={
+            notice === 'postponed'
+              ? lang === 'en'
+                ? 'POSTPONED'
+                : 'APLAZADO'
+              : lang === 'en'
+                ? 'CANCELLED'
+                : 'CANCELADO'
+          }
+          stampTone={notice === 'postponed' ? 'postpone' : 'cancel'}
+        />,
+        { ...size },
+      )
     } catch (err) {
       console.error('[event-og] sharp', err instanceof Error ? err.message : err)
-      return new ImageResponse(ogFrame(null), { ...size })
+      return new ImageResponse(
+        <EventOgImage posterDataUrl={remoteUrl} />,
+        { ...size },
+      )
     }
   } catch (err) {
     console.error('[event-og]', err instanceof Error ? err.message : err)
-    return new ImageResponse(ogFrame(null), { ...size })
+    return new ImageResponse(<EventOgImage posterDataUrl={null} />, { ...size })
   }
 }
