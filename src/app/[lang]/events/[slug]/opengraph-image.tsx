@@ -1,9 +1,9 @@
 // ============================================
 // OPTIMAL BREAKS — Open Graph image dinámica por evento
 // /:lang/events/:slug/opengraph-image  →  PNG 1200×630
-// El cartel se compone con `sharp` (contain sobre INK). No pasa por
-// Satori/`ImageResponse`: un JPEG de iPhone (P3 + ICC) o un WebP como
-// data URL tira la ruta con 500 y WhatsApp/Facebook se quedan sin tarjeta.
+// El cartel se encaja con `sharp` (contain, sRGB) y se entrega con
+// `ImageResponse`. Un `new Response(Buffer)` en esta convención de archivo
+// devuelve 500 en Vercel; el JPEG crudo de iPhone (P3 + ICC) también.
 // ============================================
 
 import { ImageResponse } from 'next/og'
@@ -45,7 +45,7 @@ export async function generateImageMetadata({ params }: Props) {
   const notice = eventNoticeKind(row)
   const base = notice === 'cancelled' ? `${epoch}-cxl` : notice === 'postponed' ? `${epoch}-pstd` : epoch
   // `-v2`: cambia el path de og:image (WhatsApp/FB cachean por URL).
-  const id = `${base}-v2`
+  const id = `${base}-v3`
   return [{ id, alt, size, contentType }]
 }
 
@@ -112,7 +112,7 @@ function placeholderSvg(): Buffer {
   )
 }
 
-async function renderEventOgPng(
+async function renderEventOgJpeg(
   poster: Buffer | null,
   notice: ReturnType<typeof eventNoticeKind>,
   lang: string,
@@ -153,42 +153,46 @@ async function renderEventOgPng(
     create: { width: 1200, height: 630, channels: 3, background: INK },
   })
     .composite(layers)
-    .png({ compressionLevel: 8 })
+    .jpeg({ quality: 80, mozjpeg: true })
     .toBuffer()
 }
 
+function ogFrame(dataUrl: string | null) {
+  return <EventOgImage posterDataUrl={dataUrl} />
+}
+
 export default async function Image({ params, id }: Props & { id: string }) {
-  const { lang, slug } = await params
-
-  const supabase = createCachedSupabase()
-  const { data } = await supabase
-    .from('events')
-    .select('image_url, og_image_url, updated_at, tags')
-    .eq('slug', slug)
-    .single()
-  const row = (data as EventOgRow | null) ?? null
-
-  const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
-  const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
-  const version =
-    id && id !== '0'
-      ? id.replace(/-v2$/, '').replace(/-cxl$/, '').replace(/-pstd$/, '')
-      : fallbackVersion
-  const posterSource = row?.og_image_url || row?.image_url || null
-  const poster = await loadPosterBuffer(posterSource, version)
-  const notice = eventNoticeKind(row)
-
   try {
-    const png = await renderEventOgPng(poster, notice, lang)
-    return new Response(new Uint8Array(png), {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
-      },
-    })
+    const { lang, slug } = await params
+
+    const supabase = createCachedSupabase()
+    const { data } = await supabase
+      .from('events')
+      .select('image_url, og_image_url, updated_at, tags')
+      .eq('slug', slug)
+      .single()
+    const row = (data as EventOgRow | null) ?? null
+
+    const parsedVersion = row?.updated_at ? Date.parse(row.updated_at) : NaN
+    const fallbackVersion = Number.isFinite(parsedVersion) ? String(parsedVersion) : null
+    const version =
+      id && id !== '0'
+        ? id.replace(/-v3$/, '').replace(/-v2$/, '').replace(/-cxl$/, '').replace(/-pstd$/, '')
+        : fallbackVersion
+    const posterSource = row?.og_image_url || row?.image_url || null
+    const poster = await loadPosterBuffer(posterSource, version)
+    const notice = eventNoticeKind(row)
+
+    try {
+      const jpeg = await renderEventOgJpeg(poster, notice, lang)
+      const dataUrl = `data:image/jpeg;base64,${jpeg.toString('base64')}`
+      return new ImageResponse(ogFrame(dataUrl), { ...size })
+    } catch (err) {
+      console.error('[event-og] sharp', err instanceof Error ? err.message : err)
+      return new ImageResponse(ogFrame(null), { ...size })
+    }
   } catch (err) {
     console.error('[event-og]', err instanceof Error ? err.message : err)
-    // Último recurso: tarjeta Satori sin cartel (la ruta /opengraph-image de marca sí vive).
-    return new ImageResponse(<EventOgImage posterDataUrl={null} />, { ...size })
+    return new ImageResponse(ogFrame(null), { ...size })
   }
 }
