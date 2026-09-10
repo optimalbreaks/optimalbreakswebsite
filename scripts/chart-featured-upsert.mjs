@@ -321,23 +321,40 @@ function requireSupabase() {
   return createClient(url, key, { auth: { persistSession: false } })
 }
 
-/** Tras UPSERT local, purga la Data Cache de /charts en producción (si hay secret + URL). */
+/** Tras UPSERT local, purga la Data Cache de /charts en producción. */
 async function pingPublicChartsRevalidate() {
-  const secret = process.env.REVALIDATE_SECRET?.trim()
+  const secret = (
+    process.env.REVALIDATE_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    ''
+  ).trim()
   const base = (
     process.env.SITE_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VERCEL_URL
-  )?.trim()
-  if (!secret || !base) return
+    process.env.VERCEL_URL ||
+    'https://www.optimalbreaks.com'
+  ).trim()
+  if (!secret) {
+    console.warn(
+      '  ⚠ Sin REVALIDATE_SECRET / service role: /charts sigue con la semana cacheada hasta el próximo deploy.',
+    )
+    return
+  }
   const origin = /^https?:\/\//i.test(base) ? base : `https://${base}`
-  const url = `${origin.replace(/\/$/, '')}/api/revalidate?secret=${encodeURIComponent(secret)}`
+  const url = `${origin.replace(/\/$/, '')}/api/revalidate`
   try {
-    const res = await fetch(url, { method: 'POST' })
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret }),
+    })
     if (res.ok) {
       console.log('  ↳ Caché web pública invalidada (/charts).')
     } else {
-      console.warn(`  ⚠ Revalidate HTTP ${res.status} — los picks pueden tardar ~5 min en verse online.`)
+      console.warn(
+        `  ⚠ Revalidate HTTP ${res.status} — /charts puede seguir mostrando la semana vieja hasta un deploy.`,
+      )
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
