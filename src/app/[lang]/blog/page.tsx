@@ -12,6 +12,7 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import { BLOG_LIST_SELECT, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 
 // Paginación por ?page=: render por petición; los datos van por Data Cache
 // (createCachedSupabase, revalidate 300 s), sin golpear Supabase por visita.
@@ -177,6 +178,8 @@ function BlogPagination({
 function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
   const title = lang === 'es' ? p.title_es : p.title_en
   const dateStr = formatBlogListDate(p.published_at, lang)
+  const coverSrc = proxyCatalogArtworkForDisplay(p.image_url) || p.image_url
+  const albumCover = /geo-media\.beatport\.com|\/api\/og\/image-proxy/i.test(coverSrc || '')
   return (
     <Link
       href={`/${lang}/blog/${p.slug}`}
@@ -184,9 +187,10 @@ function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
     >
       <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">
         <CardThumbnail
-          src={p.image_url}
+          src={coverSrc}
           alt={title}
-          aspectClass="aspect-[16/9] sm:aspect-[4/3]"
+          aspectClass={albumCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[4/3]'}
+          fit={albumCover ? 'contain' : 'cover'}
           frameClass="border-0"
         />
       </div>

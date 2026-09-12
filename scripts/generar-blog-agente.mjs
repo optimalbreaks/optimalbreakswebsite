@@ -288,8 +288,8 @@ function normalizePost(obj, expectedSlug, { featured }) {
     is_published: obj.is_published !== false,
     is_featured: featured || obj.is_featured === true,
     published_at: new Date().toISOString(),
-    image_url: null,
-    og_image_url: null,
+    image_url: String(obj.image_url || '').trim() || null,
+    og_image_url: String(obj.og_image_url || '').trim() || null,
     beatport_tracks: Array.isArray(obj.beatport_tracks) ? obj.beatport_tracks : [],
     beatport_release_url: String(obj.beatport_release_url || '').trim() || null,
     // Guardamos markdown fuente en JSON local (no columna BD)
@@ -335,8 +335,8 @@ async function upsertBlogPost(row) {
 
   if (existing?.id) {
     // Conservar portada y fecha original si ya existía
-    if (existing.image_url) payload.image_url = existing.image_url
-    if (existing.og_image_url) payload.og_image_url = existing.og_image_url
+    if (existing.image_url && !payload.image_url) payload.image_url = existing.image_url
+    if (existing.og_image_url && !payload.og_image_url) payload.og_image_url = existing.og_image_url
     if (existing.published_at) payload.published_at = existing.published_at
     const { error } = await sb.from('blog_posts').update(payload).eq('id', existing.id)
     if (error) throw new Error(`UPDATE blog_posts: ${error.message}`)
@@ -431,7 +431,7 @@ async function main() {
       `[blog-agent] OK ${result.action} id=${result.id} → /es/blog/${row.slug} — ${row.title_es}`,
     )
     console.log(
-      '[blog-agent] Portada: null (genera con npm run blog:refresh-images si quieres imagen)',
+      `[blog-agent] Portada: ${row.image_url || 'null'} (si falta, npm run blog:refresh-images o artwork Beatport)`,
     )
     return
   }
@@ -441,8 +441,12 @@ async function main() {
 
   let research = ''
   if (!args.noSearch) {
-    const q = `${args.titleHint} breakbeat definición qué es`
-    const blogPrompt = `Investiga en la web: ${q}
+    const isDefinition = /qu[eé]\s+es\b|what is\b|definici[oó]n/i.test(args.titleHint)
+    const q = isDefinition
+      ? `${args.titleHint} breakbeat definición qué es`
+      : `${args.titleHint} breakbeat Beatport`
+    const blogPrompt = isDefinition
+      ? `Investiga en la web: ${q}
 
 Devuelve SOLO un resumen factual en texto plano (sin markdown) útil para un artículo enciclopédico sobre breakbeat:
 - Definición musical (ritmo, BPM aproximados, contraste con four-on-the-floor)
@@ -450,6 +454,13 @@ Devuelve SOLO un resumen factual en texto plano (sin markdown) útil para un art
 - Líneas principales: UK hardcore/rave, big beat, nu skool, Florida breaks, jungle/DnB adyacente, UK bass
 - Escenas territoriales relevantes (UK, EE. UU., España/Andalucía) si aparecen en fuentes serias
 Incluye URL de fuente junto a datos clave. No inventes.`
+      : `Investiga en la web el tema de este artículo editorial de Optimal Breaks: ${args.titleHint}
+
+Devuelve SOLO un resumen factual en texto plano (sin markdown):
+- Artista(s), sello, fecha de publicación, catálogo, tracklist, BPM/género si aparecen
+- Singles previos que formen parte del disco, charts o apoyo editorial de Beatport
+- Contexto de escena (breakbeat, UK bass, Andalucía) y URLs oficiales junto a cada dato
+No inventes. Si es un álbum, prioriza la ficha de tienda (Beatport) y la discografía del artista.`
     const web = await fetchWebResearchContext(q, {
       prompt: blogPrompt,
       logPrefix: '[blog-agent]',
@@ -483,6 +494,7 @@ Incluye URL de fuente junto a datos clave. No inventes.`
     author: row.author,
     is_featured: row.is_featured,
     is_published: row.is_published,
+    image_url: row.image_url || null,
     beatport_release_url: row.beatport_release_url || null,
     beatport_tracks: Array.isArray(row.beatport_tracks) ? row.beatport_tracks : [],
   }
@@ -509,7 +521,7 @@ Incluye URL de fuente junto a datos clave. No inventes.`
     `[blog-agent] OK ${result.action} id=${result.id} → /es/blog/${row.slug} — ${row.title_es}`,
   )
   console.log(
-    '[blog-agent] Portada: null (genera con npm run blog:refresh-images si quieres imagen)',
+    `[blog-agent] Portada: ${row.image_url || 'null'} (si falta, npm run blog:refresh-images o artwork Beatport)`,
   )
 }
 

@@ -25,11 +25,15 @@ import {
   buildFullLabelSlugMap,
   filterArtistSlugMapForNames,
 } from '@/lib/artist-slug-map'
+import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
-type BlogSeoRow = Pick<BlogPost, 'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url'>
+type BlogSeoRow = Pick<
+  BlogPost,
+  'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url' | 'beatport_tracks'
+>
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -39,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createCachedSupabase()
   const { data: raw } = await supabase
     .from('blog_posts')
-    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url')
+    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks')
     .eq('slug', safeSlug)
     .eq('is_published', true)
     .single()
@@ -48,8 +52,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = safeLang === 'es' ? data.title_es : data.title_en
   const description = safeLang === 'es' ? data.excerpt_es : data.excerpt_en
   const siteName = await siteNameForLang(safeLang)
+  const albumArt =
+    data.image_url ||
+    (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
+    null
   // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
-  return detailPageMetadata(safeLang, `/blog/${safeSlug}`, siteName, title, description, 'article', data.image_url || data.og_image_url)
+  return detailPageMetadata(
+    safeLang,
+    `/blog/${safeSlug}`,
+    siteName,
+    title,
+    description,
+    'article',
+    publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
+  )
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -85,6 +101,9 @@ export default async function BlogPostPage({ params }: Props) {
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
+  const coverRaw = post.image_url || albumTracks[0]?.artwork_url || null
+  const coverSrc = proxyCatalogArtworkForDisplay(coverRaw) || coverRaw
+  const albumCover = albumTracks.length > 0
 
   let artistSlugMap: Record<string, string> | undefined
   let labelSlugMap: Record<string, string> | undefined
@@ -170,7 +189,7 @@ export default async function BlogPostPage({ params }: Props) {
       // dateModified hasta tener un campo dedicado en la BD.
       dateModified: post.published_at,
       authorName: post.author || null,
-      imageUrl: post.image_url || post.og_image_url || null,
+      imageUrl: publicOgArtworkUrl(coverRaw) || coverSrc || post.og_image_url || null,
       category: post.category || null,
       tags: post.tags ?? [],
       inLanguage: safeLang,
@@ -238,8 +257,20 @@ export default async function BlogPostPage({ params }: Props) {
         <ShareButtons url={`/${safeLang}/blog/${safeSlug}`} title={`${title} | Optimal Breaks`} lang={safeLang} />
       </div>
 
-      <div className="mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden">
-        <CardThumbnail src={post.image_url} alt={coverAlt} aspectClass="aspect-[16/9] sm:aspect-[21/9]" frameClass="border-0" />
+      <div
+        className={`mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden ${
+          albumCover ? 'bg-[var(--paper-dark)]' : ''
+        }`}
+      >
+        <div className={albumCover ? 'mx-auto w-full max-w-[560px]' : undefined}>
+          <CardThumbnail
+            src={coverSrc}
+            alt={coverAlt}
+            aspectClass={albumCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[21/9]'}
+            fit={albumCover ? 'contain' : 'cover'}
+            frameClass="border-0"
+          />
+        </div>
       </div>
 
       {post.tags?.length > 0 && (

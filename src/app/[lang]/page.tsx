@@ -20,6 +20,7 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
+import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
 import ArtistShowcase, { type ShowcaseArtist } from '@/components/ArtistShowcase'
@@ -647,7 +648,7 @@ export default async function HomePage({
                   className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
                 >
                   <CardThumbnail
-                    src={p.image_url}
+                    src={proxyCatalogArtworkForDisplay(p.image_url) || p.image_url}
                     alt={title}
                     aspectClass="aspect-[16/9] w-full"
                     frameClass="border-b-[3px] border-[var(--ink)]"

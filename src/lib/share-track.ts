@@ -328,6 +328,17 @@ export function proxyDiscogsArtworkForDisplay(rawUrl: string | null | undefined)
   return u
 }
 
+/** Beatport (y Discogs) vía `/api/og/image-proxy`; Beatport se sube a 1400×1400. */
+export function proxyCatalogArtworkForDisplay(rawUrl: string | null | undefined): string | null {
+  const raw = (rawUrl || '').trim()
+  if (!raw) return null
+  const u = upscaleTrackArtworkForOg(raw) || raw
+  if (/geo-media\.beatport\.com/i.test(u) || /i\.discogs\.com/i.test(u)) {
+    return `/api/og/image-proxy?${new URLSearchParams({ src: u })}`
+  }
+  return u
+}
+
 /** Orden: carátula → logo sello → miniatura YouTube. */
 export function vinylArtworkCandidates(
   artworkUrl: string | null | undefined,
