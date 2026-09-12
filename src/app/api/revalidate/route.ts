@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   revalidateArtistSlug,
+  revalidateBlogSlug,
   revalidatePublicCharts,
   revalidatePublicCatalog,
 } from '@/lib/revalidate-public'
@@ -29,6 +30,7 @@ async function providedSecret(request: NextRequest): Promise<string> {
 type RevalidateBody = {
   secret?: unknown
   artistSlug?: unknown
+  blogSlug?: unknown
   slug?: unknown
   catalog?: unknown
 }
@@ -64,11 +66,15 @@ export async function POST(request: NextRequest) {
         ? body.slug
         : ''
   const artistSlug = artistSlugRaw.trim()
+  const blogSlug =
+    typeof body.blogSlug === 'string' ? body.blogSlug.trim() : ''
   const catalogOnly =
     body.catalog === true ||
     request.nextUrl.searchParams.get('catalog') === '1'
 
-  if (artistSlug) {
+  if (blogSlug) {
+    revalidated.push(...revalidateBlogSlug(blogSlug))
+  } else if (artistSlug) {
     revalidated.push(...revalidateArtistSlug(artistSlug))
   } else if (catalogOnly) {
     revalidatePublicCatalog()

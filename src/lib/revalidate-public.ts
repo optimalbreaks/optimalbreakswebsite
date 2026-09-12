@@ -30,3 +30,19 @@ export function revalidateArtistSlug(slug: string): string[] {
   revalidatePublicCatalog()
   return paths
 }
+
+/** Invalida ficha de blog, índice y home (spotlight) en ES/EN. */
+export function revalidateBlogSlug(slug: string): string[] {
+  const clean = slug.trim().replace(/^\/+|\/+$/g, '')
+  const paths: string[] = []
+  for (const lang of PUBLIC_LANGS) {
+    paths.push(`/${lang}/blog/${clean}`)
+    paths.push(`/${lang}/blog`)
+    paths.push(`/${lang}`)
+  }
+  for (const p of paths) {
+    revalidatePath(p)
+  }
+  revalidatePublicCatalog()
+  return paths
+}

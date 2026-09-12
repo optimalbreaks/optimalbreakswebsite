@@ -6,7 +6,7 @@ import { loadEnvLocal } from './artist-upsert.mjs'
 
 loadEnvLocal()
 
-export async function pingPublicRevalidate({ artistSlug } = {}) {
+export async function pingPublicRevalidate({ artistSlug, blogSlug } = {}) {
   const secret = (
     process.env.REVALIDATE_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -28,7 +28,8 @@ export async function pingPublicRevalidate({ artistSlug } = {}) {
   const origin = /^https?:\/\//i.test(base) ? base : `https://${base}`
   const url = `${origin.replace(/\/$/, '')}/api/revalidate`
   const body = { secret }
-  if (artistSlug) body.artistSlug = String(artistSlug).trim()
+  if (blogSlug) body.blogSlug = String(blogSlug).trim()
+  else if (artistSlug) body.artistSlug = String(artistSlug).trim()
   else body.catalog = true
   try {
     const res = await fetch(url, {
@@ -39,7 +40,9 @@ export async function pingPublicRevalidate({ artistSlug } = {}) {
     if (res.ok) {
       const json = await res.json().catch(() => ({}))
       const paths = Array.isArray(json.revalidated) ? json.revalidated : []
-      if (artistSlug) {
+      if (blogSlug) {
+        console.log(`  ↳ Caché web invalidada (blog ${blogSlug}${paths.length ? `: ${paths.join(', ')}` : ''}).`)
+      } else if (artistSlug) {
         console.log(`  ↳ Caché web invalidada (artista ${artistSlug}${paths.length ? `: ${paths.join(', ')}` : ''}).`)
       } else {
         console.log('  ↳ Caché web pública invalidada (catálogo).')

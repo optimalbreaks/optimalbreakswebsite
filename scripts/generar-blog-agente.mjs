@@ -21,6 +21,7 @@ import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { createClient } from '@supabase/supabase-js'
 import { loadEnvLocal, supabaseApiCredentials } from './lib/artist-upsert.mjs'
+import { pingPublicRevalidate } from './lib/ping-public-revalidate.mjs'
 import {
   fetchWebResearchContext,
   openAiChatCompletionsBody,
@@ -340,11 +341,13 @@ async function upsertBlogPost(row) {
     if (existing.published_at) payload.published_at = existing.published_at
     const { error } = await sb.from('blog_posts').update(payload).eq('id', existing.id)
     if (error) throw new Error(`UPDATE blog_posts: ${error.message}`)
+    await pingPublicRevalidate({ blogSlug: row.slug })
     return { id: existing.id, action: 'update' }
   }
 
   const { data, error } = await sb.from('blog_posts').insert(payload).select('id').single()
   if (error) throw new Error(`INSERT blog_posts: ${error.message}`)
+  await pingPublicRevalidate({ blogSlug: row.slug })
   return { id: data.id, action: 'insert' }
 }
 

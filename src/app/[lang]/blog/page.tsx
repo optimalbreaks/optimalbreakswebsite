@@ -3,6 +3,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import type { BlogPost } from '@/types/database'
@@ -284,7 +285,7 @@ export default async function BlogPage({
   const rawPage = Array.isArray(sp.page) ? sp.page[0] : sp.page
   const parsed = parseInt(rawPage || '1', 10)
   const dict = await getDictionary(lang)
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
 
   const { count: publishedCount } = await supabase
     .from('blog_posts')

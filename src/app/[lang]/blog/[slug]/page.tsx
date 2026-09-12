@@ -4,6 +4,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import {
   blogPostingJsonLd,
   breadcrumbJsonLd,
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const safeLang = validateLocale(lang)
   const safeSlug = sanitizeSlug(slug)
   if (!safeSlug) return { title: safeLang === 'es' ? 'Entrada no encontrada' : 'Post not found', robots: { index: false, follow: true } }
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: raw } = await supabase
     .from('blog_posts')
     .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks')
@@ -72,7 +73,7 @@ export default async function BlogPostPage({ params }: Props) {
   const { lang, slug } = await params
   const safeLang = validateLocale(lang)
   const safeSlug = sanitizeSlug(slug)
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   let rawPost: unknown = null
   if (safeSlug) {
     const res = await supabase.from('blog_posts').select('*').eq('slug', safeSlug).eq('is_published', true).single()
