@@ -2,7 +2,11 @@
 // OPTIMAL BREAKS — Artist Detail Page
 // ============================================
 
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { createCachedSupabase } from '@/lib/supabase-server'
+
+const catalogSupabase = () =>
+  createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
 import {
   buildArtistSlugLookup,
   fetchAllArtistLinkRows,
@@ -122,7 +126,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { lang, slug: rawSlug } = await params
   redirectSiSlugEsNombreDeImagenEstatica(rawSlug)
   const slug = sanitizeSlug(rawSlug)
-  const supabase = createCachedSupabase()
+  const supabase = catalogSupabase()
   const { data: raw } = await supabase
     .from('artists')
     .select('name, bio_en, bio_es, image_url, og_image_url, styles, country, era')
@@ -198,7 +202,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const editSightingRaw = firstSearchParam(sp.editSighting)
   const editSightingId = editSightingRaw && UUID_RE.test(editSightingRaw) ? editSightingRaw : null
   const slug = sanitizeSlug(rawSlug)
-  const supabase = createCachedSupabase()
+  const supabase = catalogSupabase()
   const { data: rawArtist } = await supabase
     .from('artists')
     .select('*')

@@ -18,6 +18,7 @@ import { readFileSync, existsSync } from 'fs'
 import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { upsertArtist, validateArtistRow } from './lib/artist-upsert.mjs'
+import { pingPublicRevalidate } from './lib/ping-public-revalidate.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -64,6 +65,7 @@ async function main() {
   console.log(`  Slug:    ${row.slug}`)
   console.log(`  Nombre:  ${row.name}`)
   console.log(`  Creado:  ${row.created_at}`)
+  await pingPublicRevalidate({ artistSlug: row.slug })
 }
 
 main().catch((err) => {

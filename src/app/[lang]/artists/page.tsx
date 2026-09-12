@@ -3,6 +3,7 @@
 // ============================================
 
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
@@ -77,7 +78,7 @@ export default async function ArtistsPage({ params }: { params: Promise<{ lang: 
   const dict = await getDictionary(lang)
 
   // Try Supabase, fallback to empty
-  const supabase = createCachedSupabase()
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: artists } = await supabase
     .from('artists')
     .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, beatport_top_tracks')
