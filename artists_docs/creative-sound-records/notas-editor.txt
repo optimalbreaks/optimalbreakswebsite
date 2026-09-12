@@ -1,0 +1,139 @@
+Alta editorial — Creative Sound Records (septiembre 2026)
+=========================================================
+
+Slug: creative-sound-records
+Name: Creative Sound Records
+country: ES
+founded_year: 2012
+is_active: true
+is_featured: false
+
+Beatport (obligatorio en ficha)
+-------------------------------
+- beatport_id: 71717
+- beatport_url: https://www.beatport.com/label/creative-sound-records/71717
+- Página ES: https://www.beatport.com/es/label/creative-sound-records/71717
+- En Beatport, filtro Breaks / Breakbeat / UK Bass: alrededor de ~299 resultados (dato de volumen, NO ranking de calidad; no comparar como tabla de méritos). Sirve solo para decir que el catálogo breakbeat es considerable, no emergente.
+
+INVARIANTE HISTÓRICA (no negociable)
+------------------------------------
+NO describir Creative Sound Records como un sello de breakbeat fundado en 2018 o 2020.
+NO poner Deep House / Tech House como géneros actuales.
+SÍ mencionar Deep House / Tech House en la historia de origen.
+
+Historia correcta:
+1. 2012 → nace en España como sello de Deep House / Tech House.
+2. Finales de los 2010 → muta hacia breakbeat y bass music.
+3. El cambio hacia breakbeat está claramente documentado desde 2018.
+4. 2025–2026 → plataforma especialmente activa para productores españoles emergentes de breaks/bass.
+
+Fundación
+---------
+- Resident Advisor fecha el nacimiento en 2012, España.
+- Fundador original: OscaRomero.
+- Romero estaba ligado a Delicious Recordings y creó Creative Sound Records como nueva marca para distribución digital (Beatport, iTunes, Spotify y otras tiendas).
+- Filosofía inicial: expresamente Deep House y Tech-House.
+
+Transformación breakbeat (~2018)
+--------------------------------
+En noviembre de 2018, una cuenta identificada como Creative Sound escribe en Hispasonic:
+«somos Crash Bass, DJs y productores»
+y habla de «todo el material nuestro y de nuestro sello CREATIVE SOUND RECORDS».
+
+Crash Bass ya publicaba breakbeat en el sello ese mismo año:
+- Sweet Dreams feat. Alexandra — septiembre 2018 — Creative Sound Records — Breakbeat
+- Ready Or Not — 2018/2019 — Creative Sound Records
+- Sex On The Beach — Crash Bass & Pressure NUT — 2018 — Jungle / Drum & Bass
+
+Crash Bass = productores andaluces NaTBeazT y DJ Chacon.
+
+PROHIBIDO afirmar como hecho cerrado:
+«Crash Bass acquired / took over Creative Sound Records from OscaRomero.»
+No hay fuente suficientemente explícita de compraventa o relevo legal.
+
+Formulación segura (usar esta):
+- Original founder: OscaRomero
+- Breakbeat-era management / strong association: Crash Bass
+- Exact ownership transition: not publicly confirmed
+En español: fundador original OscaRomero; asociación fuerte / gestión de la etapa breakbeat ligada a Crash Bass; el relevo de propiedad no está confirmado en fuente pública.
+
+Bowser — clave en la primera etapa breakbeat
+-------------------------------------------
+Catálogo finales 2018–2019:
+- Dance Kingdom — diciembre 2018 — Breaks / Breakbeat / UK Bass
+- Rock Da House — abril 2019 — Breaks / Breakbeat / UK Bass
+Años después reaparece en varios de los tracks de mayor rendimiento del sello.
+Bowser es uno de los nombres clave para entender la transición hacia el Creative Sound actual.
+
+Bowser + MBreaks
+----------------
+- Another Level — Bowser & MBreaks — 2022 — 132 BPM — Breaks / Breakbeat / UK Bass
+  Según BeatStats, el track históricamente más fuerte del sello dentro de Breaks / Breakbeat / UK Bass.
+- Missing — Bowser & MBreaks — 2023 — UK Garage / Bassline — 133 BPM
+El sello no se quedó en breakbeat clásico: incorporó también UKG / Bassline.
+
+Catálogo histórico (peso, no sello emergente)
+---------------------------------------------
+BeatStats sitúa entre artistas fuertes del catálogo:
+Bowser, Basstyler, DJ Brownie, MBreaks, Geon, GreenFlamez, Deekembeat, Bad Legs, Ravers Tactics, BassKlap, The Pattern Sound, Hankook, Perfect Kombo.
+
+Tracks históricamente destacados:
+- Another Level — Bowser & MBreaks
+- 4 Your Love — DJ Brownie
+- Your Love — Basstyler
+- Flangotron — Geon
+- Chromatic — Bowser
+- Plodicus — Bowser
+- Robotic — Bad Legs
+- Feelings — Ravers Tactics & GreenFlamez
+- Acidmorphosis — BassKlap
+
+Artistas históricos destacados (además): Cude, Deekembeat, Hankook, Perfect Kombo, GreenFlamez, Geon, Bad Legs, DJ Brownie, Basstyler, MBreaks, Bowser.
+
+Etapa 2025–2026 — roster actual
+-------------------------------
+Plataforma activa para productores españoles emergentes.
+
+Artistas actuales / recurrentes:
+- Kritycal System (central ahora: Holidays Chinese, Quimic Due, Never Give Up Now, Is Over con Kaos Beat, Nonstop, Lifeline Double, Rise Me Up)
+- Vital Drums (Back On The Keep, Back, Dance Floor)
+- The Pattern Sound (core current; varios en Top Ten del sello: Control The Flow con Olivobreaks, Move You Pattern, Blaze, Inner Pattern)
+- Kaos Beat (So Fire, Take Me Air con Kritycal System, Show Me, Adrenaline Spoken)
+- Bass Rhythm (Firefly)
+- BrainBass (Make Way — Drum & Bass, 87 BPM / 174 half-time equivalent)
+- Crash Bass (sigue siendo nombre de la etapa breakbeat; no borrar)
+
+Géneros
+-------
+Core actuales: Breakbeat · Breaks · UK Bass
+Secundarios actuales: UK Garage / Bassline · Drum & Bass
+Históricos de origen (NO actuales): Deep House · Tech House
+Históricamente también Jungle/D&B con Crash Bass (Sex On The Beach, 2018).
+
+key_artists (prioridad; máximo ~12, sin duplicar)
+------------------------------------------------
+Kritycal System, The Pattern Sound, Crash Bass, Bowser, MBreaks, Kaos Beat, Vital Drums, Basstyler, DJ Brownie, Geon, Bass Rhythm, BrainBass
+
+(Si hay que recortar, no quitar: Kritycal System, The Pattern Sound, Crash Bass, Bowser, MBreaks.)
+
+key_releases (representativos, no inventar)
+-------------------------------------------
+- Crash Bass feat. Alexandra - Sweet Dreams (2018)
+- Crash Bass - Ready Or Not
+- Crash Bass & Pressure NUT - Sex On The Beach (2018)
+- Bowser - Dance Kingdom (2018)
+- Bowser - Rock Da House (2019)
+- Bowser & MBreaks - Another Level (2022)
+- Bowser & MBreaks - Missing (2023)
+- DJ Brownie - 4 Your Love
+- Basstyler - Your Love
+- Geon - Flangotron
+
+Estado: Active.
+
+website: null salvo URL oficial https clara distinta de Beatport. Beatport va en beatport_url, no como website.
+image_url: null (el logo se elige después con label-photo).
+
+Tono
+----
+Archivo de escena, no marketing. Distinguir con claridad las DOS épocas. No mezclar fundación house con identidad breakbeat actual. No usar el volumen Beatport (~299) como ranking frente a Toast & Jam / DKR / Banana Club / Fantazia.
