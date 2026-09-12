@@ -780,6 +780,10 @@ export function useProfile() {
     if (!user) return
     const { data } = await supabase.from('profiles').update(updates).eq('id', user.id).select().single()
     if (data) setProfile(data as UserProfile)
+    const nextName = typeof updates.display_name === 'string' ? updates.display_name.trim() : ''
+    if (nextName) {
+      await supabase.auth.updateUser({ data: { full_name: nextName } })
+    }
   }
 
   return { profile, loading, update, refetch: fetch }

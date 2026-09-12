@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
 import { useAuth } from '@/components/AuthProvider'
-import { useArtistBookingInbox } from '@/hooks/useUserData'
+import { useArtistBookingInbox, useProfile } from '@/hooks/useUserData'
 
 export type UserSectionKey =
   | 'overview'
@@ -149,6 +149,7 @@ interface Props {
 
 export default function UserSectionShell({ lang, section, children }: Props) {
   const { user, loading: authLoading } = useAuth()
+  const { profile } = useProfile()
   const { newCount } = useArtistBookingInbox()
   const router = useRouter()
   const pathname = usePathname()
@@ -203,7 +204,7 @@ export default function UserSectionShell({ lang, section, children }: Props) {
           }}
         >
           <span style={{ color: 'var(--yellow)' }}>
-            {user.user_metadata?.full_name || user.email?.split('@')[0] || 'BREAKER'}
+            {profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'BREAKER'}
           </span>
         </h1>
         <p

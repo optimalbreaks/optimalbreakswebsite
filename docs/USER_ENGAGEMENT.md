@@ -331,6 +331,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `davisoto@hotmail.com` | Devis Hard | `devis hard` | `devis-hard` | `9b83800a-5a40-4cdd-9e3d-f4b1a61160af` |
 | `jsrcortegana@hotmail.com` | Maxuka | `maxuka` | `maxuka` | `b4a12e54-3bb3-481e-93d1-f83ab72e081a` |
 | `dfastbeats@gmail.com` | D-Fast Beats | `d fast beats` | `d-fast-beats` | `6983497d-d714-4bf8-89ef-d57f3b6fe0fb` |
+| `kritycalsystem@gmail.com` | Kritycal System | `kritycal system` | `kritycal-system` | `0340589d-1bbb-463e-8bba-cdbe9c6d061e` |
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 

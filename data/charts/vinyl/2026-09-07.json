@@ -57,6 +57,88 @@
       "artwork_url": "https://i.ytimg.com/vi/b_iS7ZNuDVo/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 4,
+      "title": "Mind Beats",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bill Vega"
+        },
+        {
+          "name": "New Decade"
+        }
+      ],
+      "label": "Wireframe",
+      "catalog_number": "WF 004",
+      "year": 2003,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=GVKM9Gi-5BE",
+      "artwork_url": "https://i.ytimg.com/vi/GVKM9Gi-5BE/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 5,
+      "title": "Up To No Good",
+      "mix_name": "Johnny Cage Remix",
+      "artists": [
+        {
+          "name": "Porn Kings"
+        },
+        {
+          "name": "Johnny Cage"
+        }
+      ],
+      "label": "Vinyl Club Breakbeat Alliance",
+      "catalog_number": "WARR001",
+      "year": 2022,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=SY7peo2sAGA",
+      "artwork_url": "https://i.ytimg.com/vi/SY7peo2sAGA/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 6,
+      "title": "Funk Legit",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Johnny Cage"
+        }
+      ],
+      "label": "Hoodwink Records",
+      "catalog_number": "HD 048",
+      "year": 2001,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=MC6NTALxHGc",
+      "artwork_url": "https://i.ytimg.com/vi/MC6NTALxHGc/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 7,
+      "title": "Flipside",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Madam Breaks"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": null,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=AFOuDDlZtLw",
+      "artwork_url": "https://i.ytimg.com/vi/AFOuDDlZtLw/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

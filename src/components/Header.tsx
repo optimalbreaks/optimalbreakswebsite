@@ -44,6 +44,7 @@ function FlagGB({ className }: { className?: string }) {
 function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; variant: 'desktop' | 'mobile' }) {
   const [open, setOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const { signOut } = useAuth()
   const { isArtist, newCount } = useArtistBookingInbox()
@@ -55,10 +56,14 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
       const sb = createBrowserSupabase()
       const { data } = await sb
         .from('profiles')
-        .select('role')
+        .select('role, display_name')
         .eq('id', user.id)
         .single()
-      if (!cancelled) setIsAdmin((data as { role?: string } | null)?.role === 'admin')
+      if (!cancelled) {
+        const row = data as { role?: string; display_name?: string | null } | null
+        setIsAdmin(row?.role === 'admin')
+        setDisplayName(row?.display_name ?? null)
+      }
     })()
     return () => { cancelled = true }
   }, [user.id])
@@ -82,7 +87,7 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
     }
   }, [open])
 
-  const initial = (user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()
+  const initial = (displayName || user.user_metadata?.full_name || user.email || '?')[0].toUpperCase()
   const menuPanel = open && (
     <div
       role="menu"
