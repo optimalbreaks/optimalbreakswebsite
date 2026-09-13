@@ -1,0 +1,28 @@
+{
+  "week_date": "2026-09-14",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Take My Home",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kritycal System"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "hosted",
+      "link_url": "https://www.optimalbreaks.com/music/kritycal-system-take-my-home.mp3",
+      "link_label": "",
+      "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp",
+      "sample_url": null,
+      "full_audio_url": "/music/kritycal-system-take-my-home.mp3",
+      "bpm": null,
+      "music_key": "",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+    }
+  ]
+}

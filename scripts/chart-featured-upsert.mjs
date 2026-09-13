@@ -611,6 +611,7 @@ async function main() {
       link_label: (p.link_label || '').trim(),
       artwork_url: (p.artwork_url || '').trim() || null,
       sample_url: (p.sample_url || '').trim() || null,
+      full_audio_url: (p.full_audio_url || '').trim() || null,
       bpm,
       music_key: (p.music_key || '').trim(),
       release_year:
