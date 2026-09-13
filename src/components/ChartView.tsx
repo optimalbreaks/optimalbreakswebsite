@@ -419,7 +419,8 @@ function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
     title: p.title, mix_name: p.mix_name || null, artists: snapshotFromArtists(p.artists),
     label: p.label || null, year: p.release_year || null, release_date: p.release_date ?? null, bpm: p.bpm || null, music_key: p.music_key || null,
     artwork_url: p.artwork_url || null, sample_url: p.sample_url || null,
-    beatport_url: p.link_url || null,
+    full_audio_url: p.full_audio_url || null,
+    beatport_url: p.platform !== 'hosted' ? (p.link_url || null) : null,
   }
 }
 function buildChartSnapshot(t: ChartTrack) {
@@ -445,7 +446,8 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const note = lang === 'es' ? pick.note_es : pick.note_en
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
-  const hasSample = !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
+  const hasFullAudio = !!pick.full_audio_url
+  const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
   return (
@@ -455,6 +457,11 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
               <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+              {hasFullAudio ? (
+                <div className="absolute bottom-0 inset-x-0 bg-[var(--yellow)] text-[var(--ink)] text-[7px] font-black tracking-widest text-center leading-tight py-[2px]" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  COMPLETO
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -486,6 +493,15 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
               {isPlaying && !isPaused ? '❚❚' : '▶'}
             </button>
           )}
+          {hasFullAudio ? (
+            <span
+              className="inline-flex items-center gap-1 h-[36px] px-2 text-[10px] font-black tracking-wider bg-[var(--red)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5 whitespace-nowrap select-none"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+              title="Tema completo disponible — Full track available"
+            >
+              ● FULL AUDIO
+            </span>
+          ) : null}
           {pick.bpm != null && pick.bpm > 0 ? (
             <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {pick.bpm}
@@ -506,7 +522,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
           />
           <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} dict={dict} lang={lang} />
           <TidalLinkButton url={pick.tidal_url} lang={lang} />
-          {pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
+          {pick.platform === 'hosted' ? null : pick.platform === 'beatport' && !(pick.link_label || '').trim() ? (
             <BeatportLinkButton url={pick.link_url} dict={dict} lang={lang} />
           ) : (
             <a
@@ -1218,6 +1234,7 @@ export default function ChartView({
     for (const p of featured) {
       let src = ''
       if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
+      else if (p.full_audio_url) src = p.full_audio_url  // audio completo alojado: ruta directa sin proxy
       else if (p.sample_url) src = previewAudioSrc(p.sample_url)
       if (!src) continue
       const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''

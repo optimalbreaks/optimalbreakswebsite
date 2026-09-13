@@ -57,6 +57,13 @@ export type ChartFeaturedTrack = {
   spotify_url: string | null
   /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
   tidal_url: string | null
+  /**
+   * Audio completo alojado por Optimal Breaks (MP3/WebM).
+   * Nulo = solo preview de Beatport/Bandcamp.
+   * Cuando está relleno se muestra el badge "FULL AUDIO" y el player reproduce el tema entero.
+   * platform = 'hosted' indica que el link_url también apunta a nuestro hosting (no Beatport/tienda).
+   */
+  full_audio_url: string | null
   note_en: string
   note_es: string
 }
@@ -483,6 +490,8 @@ export interface SavedChartTrackSnapshot {
   music_key?: string | null
   artwork_url?: string | null
   sample_url?: string | null
+  /** Audio completo alojado en Optimal Breaks (capturado en snapshot para "Mis Tracks"). */
+  full_audio_url?: string | null
   beatport_url?: string | null
   /** Enlaces de streaming verificados capturados al guardar (beatport_top). */
   spotify_url?: string | null
