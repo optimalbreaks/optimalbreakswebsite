@@ -59,11 +59,11 @@ export type ChartFeaturedTrack = {
   tidal_url: string | null
   /**
    * Audio completo alojado por Optimal Breaks (MP3/WebM).
-   * Nulo = solo preview de Beatport/Bandcamp.
+   * Nulo / ausente = solo preview de Beatport/Bandcamp.
    * Cuando está relleno se muestra el badge "FULL AUDIO" y el player reproduce el tema entero.
    * platform = 'hosted' indica que el link_url también apunta a nuestro hosting (no Beatport/tienda).
    */
-  full_audio_url: string | null
+  full_audio_url?: string | null
   note_en: string
   note_es: string
 }

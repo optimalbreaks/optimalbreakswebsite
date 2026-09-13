@@ -419,7 +419,7 @@ function buildFeaturedSnapshot(p: ChartFeaturedTrack) {
     title: p.title, mix_name: p.mix_name || null, artists: snapshotFromArtists(p.artists),
     label: p.label || null, year: p.release_year || null, release_date: p.release_date ?? null, bpm: p.bpm || null, music_key: p.music_key || null,
     artwork_url: p.artwork_url || null, sample_url: p.sample_url || null,
-    full_audio_url: p.full_audio_url || null,
+    full_audio_url: p.full_audio_url ?? null,
     beatport_url: p.platform !== 'hosted' ? (p.link_url || null) : null,
   }
 }
@@ -446,7 +446,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const note = lang === 'es' ? pick.note_es : pick.note_en
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
-  const hasFullAudio = !!pick.full_audio_url
+  const hasFullAudio = !!(pick.full_audio_url ?? null)
   const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
@@ -1234,7 +1234,7 @@ export default function ChartView({
     for (const p of featured) {
       let src = ''
       if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
-      else if (p.full_audio_url) src = p.full_audio_url  // audio completo alojado: ruta directa sin proxy
+      else if (p.full_audio_url ?? null) src = p.full_audio_url!  // audio completo alojado: ruta directa sin proxy
       else if (p.sample_url) src = previewAudioSrc(p.sample_url)
       if (!src) continue
       const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
