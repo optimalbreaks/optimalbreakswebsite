@@ -16,13 +16,35 @@
       "link_label": "",
       "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp",
       "sample_url": "https://geo-samples.beatport.com/track/f1686231-a4f1-4c01-a8ef-171f920da65f.LOFI.mp3",
-      "full_audio_url": "/music/kritycal-system-take-my-home.mp3",
+      "full_audio_url": "/api/audio/kritycal-system-take-my-home.mp3",
       "bpm": 135,
       "music_key": "G Major",
       "release_year": 2026,
       "release_date": "2026-09-14",
       "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
       "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+    },
+    {
+      "title": "Till We Lose Control",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "BYTE ME MUSIC",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/till-we-lose-control/30347058",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8aa10b20-20b0-4d0c-be75-079a4107ac01.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2a895190-5f25-4117-a8bf-0ba94feb142c.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

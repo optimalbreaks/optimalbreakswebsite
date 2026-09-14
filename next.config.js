@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Audio completo alojado (exclusivas): los MP3 viven fuera de public/ y los
+  // sirve /api/audio/[file] con URL firmada + Referer. Hay que incluirlos en el
+  // trace de esa lambda o en Vercel el fs.stat devuelve ENOENT.
+  outputFileTracingIncludes: {
+    '/api/audio/*': ['./private/music/**/*'],
+  },
+
   images: {
     remotePatterns: [
       {
