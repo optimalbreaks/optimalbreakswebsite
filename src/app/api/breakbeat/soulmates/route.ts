@@ -35,9 +35,17 @@ import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
+// Cálculo on-demand sobre toda la tabla de saves: nunca cachear (por usuario)
+// y dar margen a Vercel cuando Supabase va justo de Disk IO (el default de
+// 10-15 s cortaba en 504 y la UI se quedaba «cargando»).
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
 const MIN_SELF = 5
 const MIN_OTHER = 3
 const MIN_COMMON = 2
+
+const NO_STORE = { 'Cache-Control': 'private, no-store' }
 
 type SavedRow = {
   user_id: string
@@ -121,6 +129,10 @@ async function getAuthenticatedUser() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!
   const supabase = createServerClient<Database>(url, key, {
+    global: {
+      // Auth colgado ≠ petición colgada: 8 s y devolvemos 401/500 con JSON.
+      fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(8000) }),
+    },
     cookies: {
       getAll() { return cookieStore.getAll() },
       setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
@@ -150,16 +162,30 @@ interface CanonicalMeta {
 }
 
 export async function GET(_request: NextRequest) {
+  try {
+    return await computeSoulmates()
+  } catch (e) {
+    // Nunca dejar escapar una excepción: la UI espera JSON y un HTML 500 de
+    // Vercel la dejaba sin mensaje útil.
+    console.error('[OB] soulmates:', e)
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Error interno' },
+      { status: 500, headers: NO_STORE },
+    )
+  }
+}
+
+async function computeSoulmates() {
   const { user } = await getAuthenticatedUser()
   if (!user) {
-    return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: NO_STORE })
   }
 
   let sb: ReturnType<typeof createServiceSupabase>
   try {
     sb = createServiceSupabase()
   } catch {
-    return NextResponse.json({ error: 'Servidor no configurado' }, { status: 503 })
+    return NextResponse.json({ error: 'Servidor no configurado' }, { status: 503, headers: NO_STORE })
   }
 
   // 0) Visibilidad propia. Si el usuario tiene su lista marcada como privada,
@@ -182,7 +208,7 @@ export async function GET(_request: NextRequest) {
       } : null,
       soulmates: [],
       recommended_tracks: [],
-    })
+    }, { headers: NO_STORE })
   }
 
   // 1) Cargar TODOS los saves de usuarios con lista pública.
@@ -190,7 +216,7 @@ export async function GET(_request: NextRequest) {
     .from('profiles')
     .select('id, username, display_name, avatar_url, country, is_tracks_public')
     .eq('is_tracks_public', true)
-  if (pubErr) return NextResponse.json({ error: pubErr.message }, { status: 500 })
+  if (pubErr) return NextResponse.json({ error: pubErr.message }, { status: 500, headers: NO_STORE })
   const allowedIds = new Set(((pubProfiles as ProfileMini[] | null) ?? []).map((p) => p.id))
   if (!allowedIds.has(user.id)) allowedIds.add(user.id)
 
@@ -208,9 +234,9 @@ export async function GET(_request: NextRequest) {
     ),
     loadSelfCreditSkipMap(sb),
   ])
-  if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
+  if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500, headers: NO_STORE })
 
-  const saved = savedData.filter((s) => allowedIds.has(s.user_id))
+  const saved = savedData.filter((s) => allowedIds.has(s.user_id) && s.track_source && s.track_id)
 
   // 2) Catálogo canónico necesario para mapear (source, id) → canonical_key.
   const chartIds = Array.from(new Set(saved.filter((s) => s.track_source === 'chart').map((s) => s.track_id)))
@@ -382,7 +408,7 @@ export async function GET(_request: NextRequest) {
       },
       soulmates: [],
       recommended_tracks: [],
-    })
+    }, { headers: NO_STORE })
   }
 
   // 4) Para cada candidato, calculamos la similitud Jaccard.
@@ -430,8 +456,7 @@ export async function GET(_request: NextRequest) {
   affinities.sort((a, b) =>
     b.jaccard - a.jaccard ||
     b.common_count - a.common_count ||
-    a.user.display_name?.localeCompare(b.user.display_name || '') ||
-    0,
+    (a.user.display_name || '').localeCompare(b.user.display_name || ''),
   )
 
   const top = affinities.slice(0, 10)
@@ -512,5 +537,5 @@ export async function GET(_request: NextRequest) {
       }).filter(Boolean),
     })),
     recommended_tracks,
-  })
+  }, { headers: NO_STORE })
 }
