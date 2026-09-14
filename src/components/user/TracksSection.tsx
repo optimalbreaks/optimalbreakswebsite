@@ -91,7 +91,7 @@ export type PublicTracksPayload = {
   }>
   tracks: {
     chart: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; beatport_url: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; week_date?: string | null }>
-    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
+    featured: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; release_date?: string | null; bpm: number | null; music_key: string | null; artwork_url: string | null; link_url: string | null; link_label: string | null; platform: string | null; spotify_url?: string | null; tidal_url?: string | null; sample_url: string | null; full_audio_url?: string | null; note_en: string | null; note_es: string | null; week_date?: string | null }>
     vinyl: Array<{ id: string; title: string; mix_name: string | null; artists: string; label: string | null; year: number | null; artwork_url: string | null; discogs_url: string | null; youtube_url: string | null; note_en: string | null; note_es: string | null }>
   }
 }
@@ -119,6 +119,8 @@ type UnifiedTrack = {
   /** Enlace verificado al track en TIDAL; el botón solo sale con match. */
   tidal_url?: string | null
   sample_url?: string | null
+  /** Audio completo alojado (exclusivas). Mis Tracks lo usa para el play, igual que ChartView. */
+  full_audio_url?: string | null
   youtube_url?: string | null
   platform?: string
   note?: string
@@ -253,7 +255,7 @@ function assembleUnifiedTracks(
       external_label: f.link_label || (f.platform ? String(f.platform).toUpperCase() : 'LINK'),
       spotify_url: f.spotify_url ?? null,
       tidal_url: f.tidal_url ?? null,
-      sample_url: f.sample_url, platform: f.platform,
+      sample_url: f.sample_url, full_audio_url: f.full_audio_url ?? null, platform: f.platform,
       note: lang === 'es' ? f.note_es : f.note_en,
       week_date: f.week_date ?? null,
     })
@@ -321,6 +323,7 @@ function assembleUnifiedTracks(
       music_key: (snap.music_key as string | undefined) || undefined,
       artwork_url: (snap.artwork_url as string | null | undefined) || null,
       sample_url: (snap.sample_url as string | null | undefined) || null,
+      full_audio_url: (snap.full_audio_url as string | null | undefined) || null,
     }
     if (s.track_source === 'featured') {
       byKey.set(mapKey, {
@@ -388,6 +391,7 @@ function assembleUnifiedTracks(
     }
     existing.refs!.push({ source: t.source, id: t.id })
     if (!existing.sample_url && t.sample_url) existing.sample_url = t.sample_url
+    if (!existing.full_audio_url && t.full_audio_url) existing.full_audio_url = t.full_audio_url
     if (!existing.youtube_url && t.youtube_url) existing.youtube_url = t.youtube_url
     if (!existing.artwork_url && t.artwork_url) existing.artwork_url = t.artwork_url
     if (!existing.bpm && t.bpm) existing.bpm = t.bpm
@@ -410,6 +414,7 @@ const ALL_PLAYBACK_KINDS: PlaybackKind[] = ['beatport', 'bandcamp', 'youtube']
 // prioridad al audio preview (Beatport/Bandcamp) porque es el que suena en
 // segundo plano; si no hay audio pero sí vídeo, es YouTube.
 function playbackOf(t: UnifiedTrack): PlaybackKind {
+  if (t.full_audio_url) return 'beatport'
   if (t.sample_url) return 'beatport'
   if (t.platform === 'bandcamp' && t.external_url) return 'bandcamp'
   if (t.youtube_url) return 'youtube'
@@ -637,7 +642,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           supabase.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('id', chunk),
         ),
         selectByIds<any>(featuredIds, (chunk) =>
-          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, note_en, note_es').in('id', chunk),
+          supabase.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url, note_en, note_es').in('id', chunk),
         ),
         selectByIds<any>(vinylIds, (chunk) =>
           supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, format, catalog_number, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
@@ -923,6 +928,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // <audio>). Los vinilos YouTube siguen en la lista pero no entran en PLAY ALL
   // ni en la cola — se escuchan con el enlace externo (ABRIR / YouTube).
   const isStreamPlayable = (t: UnifiedTrack) => {
+    if (t.full_audio_url) return true
     if (t.sample_url) return true
     if (t.platform === 'bandcamp' && t.external_url) return true
     return false
@@ -991,12 +997,15 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   }, [lang])
 
   const toPreviewTrack = useCallback((t: UnifiedTrack): PreviewTrack | null => {
+    const hosted = (t.full_audio_url || '').trim()
     const src =
-      t.platform === 'bandcamp' && t.external_url
-        ? previewAudioSrc('', 'bandcamp', t.external_url)
-        : t.sample_url
-          ? previewAudioSrc(t.sample_url, t.platform || undefined, t.external_url)
-          : ''
+      hosted
+        ? hosted
+        : t.platform === 'bandcamp' && t.external_url
+          ? previewAudioSrc('', 'bandcamp', t.external_url)
+          : t.sample_url
+            ? previewAudioSrc(t.sample_url, t.platform || undefined, t.external_url)
+            : ''
     if (!src) return null
     const useUrlMode = isShared && t.source === 'beatport_top' && !!(t.external_url || t.canonical_url)
     return {
@@ -1401,7 +1410,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
           {visibleRows.map((t, i) => {
             const isCurrent = activeRowKey === t.key
             const isPausedHere = isCurrent && !previewPlaying
-            const hasAudio = !!(t.sample_url || (t.platform === 'bandcamp' && t.external_url))
+            const hasAudio = !!(t.full_audio_url || t.sample_url || (t.platform === 'bandcamp' && t.external_url))
             const ytId = extractYouTubeId(t.youtube_url)
             const showYtEmbed = ytId && openYoutubeKey === t.key
             const rowHighlighted = isCurrent || showYtEmbed

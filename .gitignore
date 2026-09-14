@@ -55,6 +55,10 @@ public/images/promo/Foto *
 # Correos de artistas (PII). El resto de artists_docs sí se versiona (notas, EPK).
 artists_docs/**/email*
 
+# Originales de audio que envían los artistas (WAV/JPG en subcarpetas por fecha).
+# Los derivados servibles (MP3 + WebP) viven directamente en public/music/ y SÍ se versionan.
+public/music/*/
+
 # Logs de lotes NR / imports de vinilos / bios y colas pendientes (trabajo del agente)
 data/charts/**/*.log
 data/charts/*.log

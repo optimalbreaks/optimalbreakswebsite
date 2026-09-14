@@ -90,18 +90,28 @@ Tracks históricamente destacados:
 
 Artistas históricos destacados (además): Cude, Deekembeat, Hankook, Perfect Kombo, GreenFlamez, Geon, Bad Legs, DJ Brownie, Basstyler, MBreaks, Bowser.
 
-Etapa 2025–2026 — roster actual
--------------------------------
-Plataforma activa para productores españoles emergentes.
+Etapa 2025–2026 — roster actual (hero de artistas)
+--------------------------------------------------
+Pedido del CEO del sello (sep 2026): el showcase / key_artists de la ficha pública
+incluye SOLO a quienes trabajan ahora con el sello.
 
-Artistas actuales / recurrentes:
-- Kritycal System (central ahora: Holidays Chinese, Quimic Due, Never Give Up Now, Is Over con Kaos Beat, Nonstop, Lifeline Double, Rise Me Up)
-- Vital Drums (Back On The Keep, Back, Dance Floor)
-- The Pattern Sound (core current; varios en Top Ten del sello: Control The Flow con Olivobreaks, Move You Pattern, Blaze, Inner Pattern)
-- Kaos Beat (So Fire, Take Me Air con Kritycal System, Show Me, Adrenaline Spoken)
-- Bass Rhythm (Firefly)
-- BrainBass (Make Way — Drum & Bass, 87 BPM / 174 half-time equivalent)
-- Crash Bass (sigue siendo nombre de la etapa breakbeat; no borrar)
+key_artists (únicos; este orden):
+- Kritycal System
+- Kaos Beat
+- BrainBass
+- Bass Rhythm
+- The Pattern Sound
+
+NO van en el hero (son catálogo pasado; sí pueden aparecer en la bio histórica,
+lanzamientos clave y temas del Top 10 / New Releases si Beatport o el chart los traen):
+Crash Bass, Bowser, MBreaks, Vital Drums, Basstyler, DJ Brownie, Geon,
+GreenFlamez, Bad Legs, Deekembeat, Hankook, Perfect Kombo, Cude.
+
+Kritycal System (central ahora: Holidays Chinese, Quimic Due, Never Give Up Now, Is Over con Kaos Beat, Nonstop, Lifeline Double, Rise Me Up)
+The Pattern Sound (varios en Top Ten: Control The Flow con Olivobreaks, Move You Pattern, Blaze, Inner Pattern)
+Kaos Beat (So Fire, Take Me Air con Kritycal System, Show Me, Adrenaline Spoken)
+Bass Rhythm (Firefly)
+BrainBass (Make Way — Drum & Bass, 87 BPM / 174 half-time equivalent)
 
 Géneros
 -------
@@ -110,13 +120,7 @@ Secundarios actuales: UK Garage / Bassline · Drum & Bass
 Históricos de origen (NO actuales): Deep House · Tech House
 Históricamente también Jungle/D&B con Crash Bass (Sex On The Beach, 2018).
 
-key_artists (prioridad; máximo ~12, sin duplicar)
-------------------------------------------------
-Kritycal System, The Pattern Sound, Crash Bass, Bowser, MBreaks, Kaos Beat, Vital Drums, Basstyler, DJ Brownie, Geon, Bass Rhythm, BrainBass
-
-(Si hay que recortar, no quitar: Kritycal System, The Pattern Sound, Crash Bass, Bowser, MBreaks.)
-
-key_releases (representativos, no inventar)
+key_releases (representativos históricos; no son el hero de artistas)
 -------------------------------------------
 - Crash Bass feat. Alexandra - Sweet Dreams (2018)
 - Crash Bass - Ready Or Not

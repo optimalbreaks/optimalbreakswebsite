@@ -7,6 +7,8 @@
  *
  * Por defecto solo lee el JSON. Opcionalmente obtiene `release_date` (YYYY-MM-DD)
  * desde la tienda: Beatport (__NEXT_DATA__) o Bandcamp (`data-tralbum` → album_release_date).
+ * En Beatport, si faltan, también rellena `bpm`, `music_key` y `sample_url` (Playwright si Cloudflare 403).
+ * No pisa `full_audio_url` ni artwork editorial.
  *
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-03-30.json
  *   node scripts/chart-featured-upsert.mjs data/charts/picks/2026-04-20.json --create-edition
@@ -15,6 +17,7 @@
  *
  * Flags:
  *   --enrich-release-dates    (alias: --enrich-beatport-dates) Rellena `release_date` vía URL del pick.
+ *                             En Beatport: también bpm / music_key / sample_url si están vacíos.
  *   --write-json              Tras enriquecer, guarda de nuevo el JSON (pretty-print).
  *   --force-release-dates     (alias: --force-beatport-dates) Fuerza refetch aunque ya haya fecha válida.
  *   --backfill-remixer-credits  Sin JSON: UPDATE `artists[]` en filas vivas (featured + 40 Breaks + vinyl) y reescribe `data/charts/picks/*.json`. Mismos UUID.
@@ -149,45 +152,249 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-/** Fecha YYYY-MM-DD desde la página pública del track (publish_date / new_release_date en NEXT_DATA). */
-async function fetchBeatportPublishDate(trackUrl) {
+const UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
+function beatportCanonicalFetchUrl(originalUrl) {
+  const u = (originalUrl || '').trim().replace(/^http:\/\//i, 'https://')
+  return u.replace(/^(https:\/\/www\.beatport\.com)\/[a-z]{2}\//i, '$1/')
+}
+
+async function launchChromiumBrowser() {
+  let chromium
+  const forcePw = String(process.env.NR_APPEND_FORCE_PLAYWRIGHT || '').trim() === '1'
+  if (forcePw) {
+    ;({ chromium } = await import('playwright'))
+  } else {
+    try {
+      ;({ chromium } = await import('patchright'))
+    } catch {
+      ;({ chromium } = await import('playwright'))
+    }
+  }
+  const args = [
+    '--disable-blink-features=AutomationControlled',
+    '--disable-dev-shm-usage',
+    '--no-sandbox',
+  ]
   try {
-    const res = await fetch(trackUrl, {
+    return await chromium.launch({ channel: 'chrome', headless: true, args })
+  } catch {
+    return await chromium.launch({ headless: true, args })
+  }
+}
+
+async function fetchBeatportHeadless(originalUrl) {
+  const url = beatportCanonicalFetchUrl(originalUrl)
+  const browser = await launchChromiumBrowser()
+  try {
+    const ctx = await browser.newContext({
+      userAgent: UA,
+      locale: 'en-US',
+      viewport: { width: 1366, height: 800 },
+      extraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
+    })
+    await ctx.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false })
+      Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] })
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] })
+    })
+    const page = await ctx.newPage()
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
+      const deadline = Date.now() + 180000
+      while (Date.now() < deadline) {
+        const has = await page
+          .evaluate(() => !!document.querySelector('script#__NEXT_DATA__'))
+          .catch(() => false)
+        if (has) break
+        await page.waitForTimeout(1500).catch(() => {})
+      }
+      const ok = await page
+        .evaluate(() => !!document.querySelector('script#__NEXT_DATA__'))
+        .catch(() => false)
+      if (!ok) throw new Error('__NEXT_DATA__ no apareció')
+      return await page.content()
+    } finally {
+      await ctx.close().catch(() => {})
+    }
+  } finally {
+    try {
+      await browser.close()
+    } catch {}
+  }
+}
+
+async function fetchBeatportHtml(originalUrl) {
+  const url = beatportCanonicalFetchUrl(originalUrl)
+  try {
+    const res = await fetch(url, {
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': UA,
         Accept: 'text/html,application/xhtml+xml',
         'Accept-Language': 'en-US,en;q=0.9',
       },
     })
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
-    const html = await res.text()
-    const marker = '__NEXT_DATA__'
-    const idx = html.indexOf(marker)
-    if (idx === -1) return { ok: false, error: 'no __NEXT_DATA__' }
-    const start = html.indexOf('>', idx) + 1
-    const end = html.indexOf('</script>', start)
-    const nextData = JSON.parse(html.slice(start, end).trim())
-
-    const queries = nextData?.props?.pageProps?.dehydratedState?.queries || []
-    for (const q of queries) {
-      const d = q?.state?.data
-      if (!d || typeof d !== 'object') continue
-      const candidates = [d, d.track, d.results, d.data]
-      for (const c of candidates) {
-        if (!c) continue
-        const arr = Array.isArray(c) ? c : [c]
-        for (const obj of arr) {
-          if (!obj || typeof obj !== 'object') continue
-          const raw = obj.publish_date || obj.new_release_date
-          if (typeof raw === 'string') {
-            const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
-            if (m) return { ok: true, date: `${m[1]}-${m[2]}-${m[3]}` }
-          }
-        }
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 503) {
+        console.log(`     ↳ HTTP ${res.status} → headless`)
+        return fetchBeatportHeadless(originalUrl)
       }
+      throw new Error(`HTTP ${res.status}`)
     }
-    return { ok: false, error: 'publish_date no encontrado en NEXT_DATA' }
+    const html = await res.text()
+    if (!html.includes('__NEXT_DATA__') || /Just a moment/i.test(html)) {
+      console.log('     ↳ Cloudflare / sin NEXT_DATA → headless')
+      return fetchBeatportHeadless(originalUrl)
+    }
+    return html
+  } catch (err) {
+    const msg = (err?.message || String(err)).toLowerCase()
+    if (
+      msg.includes('fetch failed') ||
+      msg.includes('econnreset') ||
+      msg.includes('network') ||
+      msg.includes('timeout') ||
+      msg.includes('socket')
+    ) {
+      console.log(`     ↳ fetch fallback → headless (${(err.message || '').slice(0, 60)})`)
+      return fetchBeatportHeadless(originalUrl)
+    }
+    throw err
+  }
+}
+
+function extractNextDataJson(html) {
+  const marker = '__NEXT_DATA__'
+  const idx = html.indexOf(marker)
+  if (idx === -1) return null
+  const start = html.indexOf('>', idx) + 1
+  const end = html.indexOf('</script>', start)
+  try {
+    return JSON.parse(html.slice(start, end).trim())
+  } catch {
+    return null
+  }
+}
+
+function beatportTrackIdFromUrl(url) {
+  const m = String(url || '').match(/\/track\/[^/]+\/(\d+)/i)
+  return m ? m[1] : null
+}
+
+function musicKeyFromBlob(obj) {
+  const k = obj?.key
+  if (typeof k === 'string' && k.trim()) return k.trim()
+  if (k && typeof k === 'object') {
+    return String(k.name || k.name_short || k.camelot_name || '').trim()
+  }
+  if (typeof obj?.key_name === 'string' && obj.key_name.trim()) return obj.key_name.trim()
+  if (typeof obj?.musical_key === 'string' && obj.musical_key.trim()) return obj.musical_key.trim()
+  return ''
+}
+
+function normalizeTrackDetailsBlob(data) {
+  if (!data || typeof data !== 'object') return null
+  if (data.id && (data.slug || data.key || data.bpm || data.sample_url)) return data
+  const trackId = data.track_id
+  if (!trackId) return null
+  return {
+    id: trackId,
+    bpm: data.bpm,
+    key: data.key,
+    key_name: data.key_name,
+    musical_key: data.musical_key,
+    sample_url: data.sample_url,
+    mix_name: data.mix_name,
+    publish_date: data.publish_date || data.new_release_date || data.release?.release_date,
+    new_release_date: data.new_release_date,
+    release: data.release,
+  }
+}
+
+function dateFromBlob(obj) {
+  const raw =
+    obj?.publish_date ||
+    obj?.new_release_date ||
+    obj?.release?.release_date ||
+    obj?.release?.publish_date
+  if (typeof raw !== 'string') return null
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : null
+}
+
+function metaFromTrackBlob(obj) {
+  if (!obj || typeof obj !== 'object') return null
+  const bpmRaw = obj.bpm
+  const bpmNum = Number(bpmRaw)
+  const bpm = Number.isFinite(bpmNum) && bpmNum > 0 ? bpmNum : null
+  const music_key = musicKeyFromBlob(obj)
+  const sample_url = typeof obj.sample_url === 'string' ? obj.sample_url.trim() : ''
+  const date = dateFromBlob(obj)
+  if (!date && bpm == null && !music_key && !sample_url) return null
+  return {
+    date,
+    bpm,
+    music_key,
+    sample_url: sample_url || null,
+  }
+}
+
+function findBeatportTrackBlob(nextData, trackId) {
+  const qs = nextData?.props?.pageProps?.dehydratedState?.queries || []
+  for (const q of qs) {
+    const key0 = Array.isArray(q?.queryKey) ? String(q.queryKey[0] || '') : ''
+    const data = q?.state?.data
+    if (!data || typeof data !== 'object') continue
+    if (typeof key0 === 'string' && /^track-details-\d+$/.test(key0) && data.track_id) {
+      const n = normalizeTrackDetailsBlob(data)
+      if (n) return n
+    }
+    if (typeof key0 === 'string' && /^track-\d+$/.test(key0) && data.id) {
+      return data
+    }
+  }
+  const found = { blob: null, fallback: null }
+  const walk = (node) => {
+    if (!node || typeof node !== 'object' || found.blob) return
+    if (Array.isArray(node)) {
+      for (const x of node) walk(x)
+      return
+    }
+    const id = node.id ?? node.track_id
+    const looksLikeTrack = !!(node.sample_url || node.bpm || node.key || node.mix_name)
+    if (id != null && String(id) === String(trackId) && looksLikeTrack) {
+      found.blob = node
+      return
+    }
+    if (!found.fallback && looksLikeTrack && (node.sample_url || node.key) && node.bpm) {
+      found.fallback = node
+    }
+    for (const v of Object.values(node)) {
+      if (v && typeof v === 'object') walk(v)
+    }
+  }
+  walk(nextData)
+  return found.blob || found.fallback
+}
+
+/** BPM, tonalidad, sample y fecha desde la ficha pública Beatport (__NEXT_DATA__). */
+async function fetchBeatportTrackMeta(trackUrl) {
+  try {
+    const html = await fetchBeatportHtml(trackUrl)
+    const nextData = extractNextDataJson(html)
+    if (!nextData) return { ok: false, error: 'no __NEXT_DATA__' }
+    const trackId = beatportTrackIdFromUrl(trackUrl)
+    const blob = findBeatportTrackBlob(nextData, trackId)
+    const meta = metaFromTrackBlob(blob)
+    if (!meta) return { ok: false, error: 'metadatos de track no encontrados en NEXT_DATA' }
+    if (!meta.music_key) {
+      const k = blob?.key
+      console.log(
+        `     ↳ sin tonalidad. key=${JSON.stringify(k)} · campos=${Object.keys(blob || {}).filter((x) => /key/i.test(x)).join(',') || 'ninguno'}`,
+      )
+    }
+    return { ok: true, ...meta }
   } catch (err) {
     return { ok: false, error: err.message || String(err) }
   }
@@ -240,7 +447,7 @@ async function fetchPickReleaseDateFromStoreUrl(url) {
   if (/^www\.beatport\.com\/track\//.test(n) || /^beatport\.com\/track\//.test(n)) {
     let u = (url || '').trim().replace(/^http:\/\//i, 'https://')
     u = u.replace(/^https:\/\/(www\.)?beatport\.com/i, 'https://www.beatport.com')
-    return fetchBeatportPublishDate(u)
+    return fetchBeatportTrackMeta(u)
   }
   if (/\.bandcamp\.com\/track\//.test(n)) {
     return fetchBandcampReleaseDateFromTrackPage(url.trim())
@@ -269,43 +476,68 @@ function hasValidReleaseDate(p) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s)
 }
 
+function pickMissingBeatportChips(p) {
+  const bpmMissing = p.bpm == null || !(Number(p.bpm) > 0)
+  const keyMissing = !(p.music_key || '').trim()
+  const sampleMissing = !(p.sample_url || '').trim()
+  return bpmMissing || keyMissing || sampleMissing
+}
+
+function pickNeedsStoreEnrich(p, force) {
+  const url = (p.link_url || '').trim()
+  if (!isEnrichableStoreUrl(url)) return false
+  if (force) return true
+  if (!hasValidReleaseDate(p)) return true
+  if (isBeatportTrackUrl(url) && pickMissingBeatportChips(p)) return true
+  return false
+}
+
 async function enrichPicksStoreReleaseDates(picks, { force, verbose }) {
   let ok = 0
   let fail = 0
-  const need = picks.filter((p) => {
-    const url = (p.link_url || '').trim()
-    if (!isEnrichableStoreUrl(url)) return false
-    if (force) return true
-    return !hasValidReleaseDate(p)
-  })
+  const need = picks.filter((p) => pickNeedsStoreEnrich(p, force))
   if (need.length === 0) {
     console.log(
-      '  ↳ Tiendas: ningún pick con URL Beatport/Bandcamp necesita release_date (--force-release-dates para repetir).',
+      '  ↳ Tiendas: ningún pick Beatport/Bandcamp necesita fecha ni chips (--force-release-dates para repetir).',
     )
     return
   }
-  console.log(`  ↳ Tiendas (Beatport/Bandcamp): obteniendo release_date para ${need.length} pick(s)...`)
+  console.log(`  ↳ Tiendas (Beatport/Bandcamp): enriqueciendo ${need.length} pick(s)...`)
   for (let i = 0; i < need.length; i++) {
     const p = need[i]
     const url = (p.link_url || '').trim()
     const res = await fetchPickReleaseDateFromStoreUrl(url)
     if (res.ok) {
-      p.release_date = res.date
-      const y = parseInt(res.date.slice(0, 4), 10)
-      if (Number.isFinite(y) && y >= 1970 && y <= 2100) {
-        if (p.release_year == null || !Number.isFinite(Number(p.release_year))) {
-          p.release_year = y
+      if (res.date && (force || !hasValidReleaseDate(p))) {
+        p.release_date = res.date
+        const y = parseInt(res.date.slice(0, 4), 10)
+        if (Number.isFinite(y) && y >= 1970 && y <= 2100) {
+          if (p.release_year == null || !Number.isFinite(Number(p.release_year))) {
+            p.release_year = y
+          }
         }
       }
+      if (res.bpm != null && (force || p.bpm == null || !(Number(p.bpm) > 0))) {
+        p.bpm = res.bpm
+      }
+      if (res.music_key && (force || !(p.music_key || '').trim())) {
+        p.music_key = res.music_key
+      }
+      if (res.sample_url && (force || !(p.sample_url || '').trim())) {
+        p.sample_url = res.sample_url
+      }
       ok++
-      if (verbose) console.log(`     ✓ [${i + 1}/${need.length}] ${(p.title || '').slice(0, 48)} → ${res.date}`)
+      console.log(
+        `     ✓ [${i + 1}/${need.length}] ${(p.title || '').slice(0, 48)} → ${p.release_date || '—'} · ${p.bpm ?? '—'} · ${p.music_key || '—'}`,
+      )
+      if (verbose && p.sample_url) console.log(`       sample: ${String(p.sample_url).slice(0, 80)}`)
     } else {
       fail++
       console.warn(`     ✗ [${i + 1}/${need.length}] ${(p.title || '?').slice(0, 40)}: ${res.error}`)
     }
     await sleep(550)
   }
-  console.log(`  ↳ Tiendas: ${ok} fechas OK, ${fail} fallos.`)
+  console.log(`  ↳ Tiendas: ${ok} OK, ${fail} fallos.`)
 }
 
 function requireSupabase() {

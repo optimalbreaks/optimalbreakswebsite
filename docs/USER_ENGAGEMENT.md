@@ -332,6 +332,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `jsrcortegana@hotmail.com` | Maxuka | `maxuka` | `maxuka` | `b4a12e54-3bb3-481e-93d1-f83ab72e081a` |
 | `dfastbeats@gmail.com` | D-Fast Beats | `d fast beats` | `d-fast-beats` | `6983497d-d714-4bf8-89ef-d57f3b6fe0fb` |
 | `kritycalsystem@gmail.com` | Kritycal System | `kritycal system` | `kritycal-system` | `0340589d-1bbb-463e-8bba-cdbe9c6d061e` |
+| `kaosbeatproducer2@gmail.com` | Kaos Beat | `kaos beat` | `kaos-beat` | `f9977e86-c530-4e29-9ac7-931d952b35bb` |
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 
@@ -387,6 +388,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 15 + 1 + 1 = 17. Monday `previous_rank` was already **11** — he had not saved yet at the ISO Monday cutoff — so the #3 spike was only this week’s live board. My Tracks and the song Top 100 still include his 9 saves. No label mark.
 
 **Audit — D-Fast Beats (4 Sep 2026).** `dfastbeats@gmail.com` signed up 2 Sep. On 3 Sep he saved **49** tracks; **13** credit D-Fast Beats (his Beatport Top 10 + Reply, Slap It, Two Caps). Those 13 no longer bump *his* name on the artist board. Collabs still credit the other names (Danny Phr3ntic on No Focus; Dual Drop on Dark Lady). The rest of the list (Ed Solo, Afghan Headspin, Huda Hudia, Danny Phr3ntic, etc.) still counts in full. My Tracks and the song Top 100 keep the 13. No label mark (only two DFBEATS RECORDS saves, both his own titles — not a roster dump). Pending `artist_claims` `request_new` left untouched: this is fase 2, not a claim.
+
+**Audit — Kaos Beat (12 Sep 2026).** `kaosbeatproducer2@gmail.com` signed up 12 Sep (`display_name` Kaos Beat). Catalog ficha `/artists/kaos-beat` already existed (`claimed_by` left null). One public save at mark time, snapshot empty — not a catalogue dump. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit Kaos Beat will skip *his* name on the artist board; My Tracks and the song Top 100 stay as-is.
 
 ### Artist board — weekly movement (not daily)
 
