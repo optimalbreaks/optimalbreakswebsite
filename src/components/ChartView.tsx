@@ -452,8 +452,9 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
 
   // Fila «exclusive full track» (mockups/full-audio-row.html, variante C+A):
   // fondo amarillo suave en toda la fila + banner rojo a todo el ancho arriba.
+  // Tailwind 3: el modificador de opacidad no funciona sobre var(--…) → hex directo.
   const rowStateClasses = hasFullAudio
-    ? `bg-[var(--yellow)]/25 ${isPlaying ? 'border-[var(--red)]/40' : 'border-[var(--ink)]/10'}`
+    ? `bg-[#f7e733]/30 ${isPlaying ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}`
     : isPlaying
       ? 'bg-[var(--red)]/15 border-[var(--red)]/30'
       : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'
