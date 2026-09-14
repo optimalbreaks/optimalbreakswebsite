@@ -837,6 +837,17 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 ---
 
+## Hosted full tracks (artist exclusives)
+
+Sometimes an artist gifts the community the **full track** for free streaming on the site (first case: Kritycal System — *Take My Home*, Sep 2026). These are regular New Releases picks with `chart_featured_tracks.full_audio_url` filled in (migration `078`; the column is **optional** in `ChartFeaturedTrack` / `SavedChartTrackSnapshot`).
+
+- **Storage:** the MP3 (192 kbps, converted from the artist's WAV with ffmpeg) lives in **`private/music/`** — *not* `public/`, so it can't be downloaded by direct URL. Original WAV/JPG folders under `public/music/*/` are gitignored. Artwork goes to the Supabase `media` bucket as WebP.
+- **Delivery:** **`/api/audio/[file]`** — requests coming from our own pages (Sec-Fetch-Site / Referer check) get a 302 to a **signed URL** (HMAC-SHA256, 6 h expiry, secret `AUDIO_STREAM_SECRET` → fallback `SUPABASE_SERVICE_ROLE_KEY`) which streams the file with **Range** support. Address-bar hits, hotlinks and shared signed links → 403 / expire on their own. `next.config.js` has `outputFileTracingIncludes` for `private/music/**` so Vercel bundles the files into the lambda. This is a SoundCloud/Bandcamp-level barrier, **not DRM** — a technical user can still capture the stream.
+- **UI (`ChartView.tsx`):** the row gets a soft yellow background (`bg-[#f7e733]/30` — Tailwind 3 can't apply opacity modifiers to `var(…)`), a full-width red top banner ("EXCLUSIVE FULL TRACK — LISTEN IN FULL, FREE") and a red **▶ PLAY FULL** button. `buildFeaturedBundle` prefers `full_audio_url` over `sample_url`; My Tracks (`/api/public/user-tracks` + `TracksSection`) propagates and plays it too.
+- **Workflow for the next exclusive:** see `.cursor/rules/audio-completo-exclusivas.mdc` (step-by-step recipe: ffmpeg → `private/music/` → pick JSON with `full_audio_url: "/api/audio/<slug>.mp3"` → `chart-featured-upsert`).
+
+---
+
 ## Editorial vetoes (entities **not** to create)
 
 A short, hard-coded list of names that look like a label or artist on Beatport / Bandcamp but **must not** become a profile on Optimal Breaks:

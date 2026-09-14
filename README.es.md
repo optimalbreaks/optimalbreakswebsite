@@ -621,6 +621,17 @@ Detalle técnico y tabla de archivos en [README.md — Global audio system](./RE
 
 ---
 
+## Audio completo alojado (exclusivas de artistas)
+
+A veces un artista cede el **tema entero** para streaming gratuito en la web (primer caso: Kritycal System — *Take My Home*, sep 2026). Son picks normales de New Releases con `chart_featured_tracks.full_audio_url` relleno (migración `078`).
+
+- **Almacenamiento:** el MP3 (192 kbps desde el WAV del artista, ffmpeg) vive en **`private/music/`** — *no* en `public/`, para que no sea descargable por URL directa. Los originales WAV/JPG en `public/music/*/` están gitignorados. El artwork va al bucket `media` de Supabase en WebP.
+- **Entrega:** **`/api/audio/[file]`** — las peticiones de la propia web (check `Sec-Fetch-Site` / `Referer`) reciben un 302 a una **URL firmada** (HMAC, caducidad 6 h) que sirve el archivo con soporte **Range** (seek). Barra de direcciones, hotlinks y enlaces firmados compartidos → 403 / mueren solos. `next.config.js` incluye `private/music/**` en el trace de la lambda (`outputFileTracingIncludes`). Es una barrera tipo SoundCloud/Bandcamp, **no DRM**: quien sabe, puede capturar el stream.
+- **UI (`ChartView.tsx`):** fila con fondo amarillo suave, banner rojo a sangre arriba («EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS») y botón rojo **▶ PLAY FULL**. El player prefiere `full_audio_url` sobre `sample_url`; Mis Tracks también lo propaga y lo reproduce entero.
+- **Receta para la próxima exclusiva:** `.cursor/rules/audio-completo-exclusivas.mdc` (paso a paso: ffmpeg → `private/music/` → pick JSON con `full_audio_url: "/api/audio/<slug>.mp3"` → `chart-featured-upsert`).
+
+---
+
 ## Secciones del sitio
 
 Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`), eventos, escenas, blog, mixes, about, **login** (auth y recuperación por correo), **reset-password** (tras enlace de Supabase), **dashboard** (usuario), **`/administrator`** (solo `profiles.role = admin`: CRUD + imágenes; sin enlace en el menú público), páginas legales. En **inicio**: hasta **4 eventos próximos** (`date_start` ≥ hoy) y fallback si no hay datos (ver sección *Home — línea temporal* arriba). Listados desde Supabase en artistas, sellos, eventos, escenas y mixes: **tres vistas** (grande / compacto / lista; por defecto compacto). En **eventos**: pie semáforo, hover y CTA MonsterTicket en ficha (ver *Vistas de listado*). En **mixes**: filtros y **carga perezosa de embeds** (ver sección *Vistas de listado* arriba y [README.md](./README.md)).

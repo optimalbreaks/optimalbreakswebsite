@@ -1,0 +1,39 @@
+---
+description: Audio completo alojado (exclusivas de artistas) — MP3 protegido en /api/audio, columna full_audio_url y receta paso a paso
+alwaysApply: true
+---
+
+# Audio completo alojado (exclusivas cedidas por artistas)
+
+Contexto (sep 2026): Kritycal System cedió **Take My Home** entero para streaming gratuito en la web (primer caso). Cuando un artista pase otra canción completa, la receta es esta — no reinventar.
+
+## Arquitectura (no negociable)
+
+1. **El MP3 NO va en `public/`.** Vive en **`private/music/<slug>.mp3`** (versionado en Git; los originales WAV/JPG en subcarpetas `public/music/*/` están gitignorados y NO se suben). Un MP3 en `public/` es descargable por URL directa — eso rompe el trato con el artista.
+2. **Se sirve por `src/app/api/audio/[file]/route.ts`**: sin firma solo acepta peticiones de la propia web (`Sec-Fetch-Site: same-origin` o `Referer` del mismo host) y responde **302 a la URL firmada** (HMAC-SHA256, caducidad **6 h**, secreto = `AUDIO_STREAM_SECRET` o fallback `SUPABASE_SERVICE_ROLE_KEY`). Con firma válida sirve el archivo con soporte **Range** (seek). URL pegada en barra de direcciones / hotlink / curl → **403**. Enlace firmado compartido → muere al caducar; si la petición sigue viniendo de la web, se re-firma solo (302). El `<audio>` del deck sigue la redirección sin cambios de cliente.
+3. **`next.config.js` → `outputFileTracingIncludes: { '/api/audio/*': ['./private/music/**/*'] }`.** Sin esto, en Vercel la lambda no empaqueta los MP3 y da 404. No quitarlo.
+4. **Columna `chart_featured_tracks.full_audio_url`** (migración `078`). Nulo = solo preview de tienda; relleno (`/api/audio/<slug>.mp3`) = streaming completo. En `src/types/database.ts` es **opcional** (`full_audio_url?: string | null`) en `ChartFeaturedTrack` y `SavedChartTrackSnapshot` — hacerla obligatoria rompe `featured-import` y `artist-related-content`.
+5. **Esto no es DRM.** Barrera media tipo SoundCloud/Bandcamp: el usuario normal no descarga; alguien técnico siempre puede capturar el stream. No prometer blindaje absoluto al artista; el MP3 publicado es 192 kbps, el WAV master no sale del disco/Dropbox.
+
+## Receta — próxima exclusiva
+
+1. Guardar WAV+artwork del artista en `public/music/<fecha> - <artista> - <título>/` (gitignorado).
+2. `ffmpeg -i <wav> -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP (`npm run images:to-webp`) subido al bucket `media` de Supabase (`music/<slug>.webp`).
+3. Pick en `data/charts/picks/<lunes>.json` con `full_audio_url: "/api/audio/<slug>.mp3"` (+ `link_url` de Beatport si existe; la semana la manda el release, regla `charts-new-releases-supabase`).
+4. `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<lunes>.json` (el upsert respeta `full_audio_url`; `--enrich-release-dates` rellena bpm/key/sample de Beatport sin pisarlo).
+5. Commit del MP3 + JSON. Nada más: la UI y Mis Tracks ya reaccionan solos a `full_audio_url`.
+
+## UI (ya cableada — no duplicar)
+
+- **`ChartView.tsx`** (`FeaturedPickRow`): fila con **fondo amarillo** `bg-[#f7e733]/30` (Tailwind 3 no soporta modificador de opacidad sobre `var(--yellow)` → hex directo), **banner rojo** a sangre arriba («EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS») y botón **▶ PLAY FULL** rojo. `buildFeaturedBundle` prefiere `full_audio_url` sobre `sample_url`.
+- **Mis Tracks**: `/api/public/user-tracks` y `TracksSection.tsx` propagan `full_audio_url` (selects enumerados — al añadir columnas hay que ampliarlos, regla `charts-enlaces-streaming` §5) y el snapshot del save la captura.
+- Textos editoriales en `note_en` / `note_es` del pick.
+
+## Prohibido
+
+- Volver a poner el MP3 (o un symlink) bajo `public/`.
+- Quitar el check de Referer, la caducidad o el `outputFileTracingIncludes`.
+- Usar `full_audio_url` para material sin cesión expresa del artista (los previews siguen siendo `sample_url` de tienda).
+- Cachear la respuesta de `/api/audio` en CDN (va `Cache-Control: private, no-store` a propósito).
+
+README (EN): **Hosted full tracks (artist exclusives)**. README (ES): **Audio completo alojado (exclusivas de artistas)**.
