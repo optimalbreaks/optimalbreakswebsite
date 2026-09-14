@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Fila "Exclusive Full Track" en New Releases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #e8dcc8;
+    --paper-dark: #d9ccb4;
+    --ink: #1a1a1a;
+    --red: #d62828;
+    --uv: #7b2ff7;
+    --cyan: #0891b2;
+    --yellow: #f7e733;
+    --green: #4caf50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Courier Prime', monospace;
+    padding: 32px 16px 80px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  h1 { font-family: 'Unbounded', sans-serif; font-size: 22px; margin-bottom: 6px; }
+  p.intro { font-size: 13px; color: rgba(26,26,26,.65); margin-bottom: 28px; }
+  .variant-label {
+    display: inline-block;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5px 12px;
+    margin: 38px 0 10px;
+  }
+  .variant-note { font-size: 12px; color: rgba(26,26,26,.6); margin-bottom: 10px; max-width: 640px; }
+
+  /* ====== contenedor de semana (como /charts) ====== */
+  .week-box {
+    border: 3px solid var(--ink);
+    background: var(--paper);
+  }
+  .week-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    border-bottom: 3px solid rgba(26,26,26,.15);
+    font-size: 12px; font-weight: 700;
+  }
+  .week-head .tag { background: var(--green); color: #fff; font-size: 10px; padding: 2px 7px; font-weight: 700; }
+
+  /* ====== fila estándar ====== */
+  .row {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 3px solid rgba(26,26,26,.1);
+  }
+  .row-main { display: flex; align-items: flex-start; gap: 12px; }
+  .art {
+    flex-shrink: 0; width: 64px; height: 64px;
+    border: 3px solid var(--ink);
+    background: var(--paper-dark);
+    position: relative; overflow: hidden;
+  }
+  .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art .completo {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--yellow); color: var(--ink);
+    font-size: 7px; font-weight: 700; letter-spacing: .15em;
+    text-align: center; padding: 2px 0;
+  }
+  .meta { flex: 1; min-width: 0; }
+  .title { font-family: 'Unbounded', sans-serif; font-size: 15px; font-weight: 900; line-height: 1.25; }
+  .title .mix { font-family: 'Courier Prime', monospace; font-weight: 400; font-size: 11px; color: rgba(26,26,26,.5); margin-left: 6px; }
+  .credits { font-size: 12.5px; margin-top: 3px; }
+  .credits .artist { color: var(--red); font-weight: 700; }
+  .credits .sep { color: rgba(26,26,26,.3); margin: 0 6px; }
+  .credits .label-name { color: var(--red); }
+  .credits .date { color: rgba(26,26,26,.45); font-weight: 700; }
+  .note { font-size: 11.5px; color: rgba(26,26,26,.55); margin-top: 5px; line-height: 1.5; }
+
+  /* ====== barra de acción ====== */
+  .bar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+  .btn, .pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 28px; padding: 0 9px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    border: 2px solid var(--ink);
+    background: transparent; color: var(--ink);
+    white-space: nowrap; cursor: pointer;
+  }
+  .pill-full { background: var(--red); color: #fff; }
+  .pill-bpm { background: var(--uv); color: #fff; }
+  .pill-key { background: var(--cyan); color: #fff; }
+  .circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid var(--ink); font-size: 12px; cursor: pointer; background: transparent;
+  }
+  .circle.save { background: var(--green); color: #fff; border-color: var(--ink); }
+  .btn-store { background: var(--ink); color: var(--paper); }
+
+  /* ═══════════════════════════════════════════════
+     VARIANTE A — Banner rojo arriba + fondo rojo claro
+     ═══════════════════════════════════════════════ */
+  .row-exclusive-a {
+    background: rgba(214, 40, 40, 0.09);
+    border-bottom: 3px solid rgba(214, 40, 40, 0.35);
+    padding: 0 0 14px;
+  }
+  .banner-a {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--red); color: #fff;
+    padding: 6px 18px;
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    margin-bottom: 12px;
+  }
+  .banner-a .dot { animation: blink 1.4s infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  .banner-a .en { margin-left: auto; font-weight: 400; opacity: .75; font-size: 10px; letter-spacing: .05em; }
+  .row-exclusive-a .row-main, .row-exclusive-a .bar { padding-left: 18px; padding-right: 18px; }
+
+  /* ═══════════════════════════════════════════════
+     VARIANTE B — Marco rojo completo (caja dentro de la lista)
+     ═══════════════════════════════════════════════ */
+  .row-exclusive-b {
+    border: 3px solid var(--red);
+    background: rgba(214, 40, 40, 0.07);
+    margin: 10px 12px;
+    padding: 0 0 14px;
+    position: relative;
+  }
+  .banner-b {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--red); color: #fff;
+    padding: 5px 14px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
+    margin-bottom: 12px;
+  }
+  .row-exclusive-b .row-main, .row-exclusive-b .bar { padding-left: 16px; padding-right: 16px; }
+
+  /* ═══════════════════════════════════════════════
+     VARIANTE C — Fondo amarillo suave + banner rojo (riso)
+     ═══════════════════════════════════════════════ */
+  .row-exclusive-c {
+    background: rgba(247, 231, 51, 0.28);
+    border-bottom: 3px solid rgba(26,26,26,.1);
+    padding: 0 0 14px;
+    position: relative;
+  }
+  .banner-c {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--red); color: #fff;
+    padding: 6px 18px;
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    margin-bottom: 12px;
+    border-bottom: 3px solid var(--ink);
+  }
+  .row-exclusive-c .row-main, .row-exclusive-c .bar { padding-left: 18px; padding-right: 18px; }
+
+  @media (max-width: 560px) {
+    .bar { flex-wrap: wrap; }
+    .banner-a .en, .banner-c .en { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Fila «Exclusive Full Track»</h1>
+<p class="intro">Cuatro versiones de la misma fila dentro de la semana de New Releases. La fila normal de abajo (Bring Your Booty) sirve de contexto para ver el contraste.</p>
+
+<!-- ══════════════ 0. ACTUAL (referencia) ══════════════ -->
+<div class="variant-label">0 · ACTUAL (como está hoy)</div>
+<p class="variant-note">Badge amarillo «COMPLETO» sobre el artwork + pill rojo «● FULL AUDIO» en la barra. El texto de la nota queda igual que cualquier otra nota editorial.</p>
+
+<div class="week-box">
+  <div class="week-head"><span>▼ Week of 14 September 2026</span><span class="tag">CURRENT</span></div>
+
+  <div class="row">
+    <div class="row-main">
+      <div class="art">
+        <img src="https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp" alt="">
+        <div class="completo">COMPLETO</div>
+      </div>
+      <div class="meta">
+        <div class="title">Take My Home <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">Kritycal System</span><span class="sep">|</span><span class="label-name">Creative Sound Records</span><span class="sep">|</span><span class="date">2026-09-14</span></div>
+        <div class="note">Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.</div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn">▶</button>
+      <span class="pill pill-full">● FULL AUDIO</span>
+      <span class="pill pill-key">G Major</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-main">
+      <div class="art" style="display:flex;align-items:center;justify-content:center;font-size:22px;">🍌</div>
+      <div class="meta">
+        <div class="title">Bring Your Booty <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">AceNoise, Drill Rocks</span><span class="sep">|</span><span class="label-name">Banana Club</span><span class="sep">|</span><span class="date">2026-09-11</span></div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn">▶</button>
+      <span class="pill pill-bpm">137</span>
+      <span class="pill pill-key">F Minor</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ A. Banner arriba + fondo rojo claro ══════════════ -->
+<div class="variant-label" style="background:var(--red);">A · BANNER ROJO ARRIBA + FONDO ROJO CLARO</div>
+<p class="variant-note">Lo que propones: la fila entera con fondo rojo suave y una franja roja a todo el ancho arriba que grita «EXCLUSIVE FULL TRACK». El punto parpadea como un «live». El pill de la barra ya no hace falta (la franja lo dice más alto), así la barra queda limpia.</p>
+
+<div class="week-box">
+  <div class="week-head"><span>▼ Week of 14 September 2026</span><span class="tag">CURRENT</span></div>
+
+  <div class="row row-exclusive-a">
+    <div class="banner-a"><span class="dot">●</span> EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS <span class="en">FULL STREAMING · NO PREVIEW</span></div>
+    <div class="row-main">
+      <div class="art">
+        <img src="https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp" alt="">
+      </div>
+      <div class="meta">
+        <div class="title">Take My Home <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">Kritycal System</span><span class="sep">|</span><span class="label-name">Creative Sound Records</span><span class="sep">|</span><span class="date">2026-09-14</span></div>
+        <div class="note">Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.</div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn" style="background:var(--red);color:#fff;">▶ PLAY FULL</button>
+      <span class="pill pill-key">G Major</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-main">
+      <div class="art" style="display:flex;align-items:center;justify-content:center;font-size:22px;">🍌</div>
+      <div class="meta">
+        <div class="title">Bring Your Booty <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">AceNoise, Drill Rocks</span><span class="sep">|</span><span class="label-name">Banana Club</span><span class="sep">|</span><span class="date">2026-09-11</span></div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn">▶</button>
+      <span class="pill pill-bpm">137</span>
+      <span class="pill pill-key">F Minor</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ B. Caja con marco rojo ══════════════ -->
+<div class="variant-label" style="background:var(--red);">B · CAJA CON MARCO ROJO (destacado tipo «featured»)</div>
+<p class="variant-note">La fila se separa de la lista y se convierte en una caja con borde rojo de 3px, como un anuncio destacado. El banner rojo es una pestaña (no ocupa todo el ancho). Es el que más rompe el ritmo de la lista — máxima jerarquía.</p>
+
+<div class="week-box">
+  <div class="week-head"><span>▼ Week of 14 September 2026</span><span class="tag">CURRENT</span></div>
+
+  <div class="row row-exclusive-b">
+    <div class="banner-b">★ EXCLUSIVE FULL TRACK</div>
+    <div class="row-main">
+      <div class="art">
+        <img src="https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp" alt="">
+      </div>
+      <div class="meta">
+        <div class="title">Take My Home <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">Kritycal System</span><span class="sep">|</span><span class="label-name">Creative Sound Records</span><span class="sep">|</span><span class="date">2026-09-14</span></div>
+        <div class="note">Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.</div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn" style="background:var(--red);color:#fff;">▶ PLAY FULL</button>
+      <span class="pill pill-key">G Major</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-main">
+      <div class="art" style="display:flex;align-items:center;justify-content:center;font-size:22px;">🍌</div>
+      <div class="meta">
+        <div class="title">Bring Your Booty <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">AceNoise, Drill Rocks</span><span class="sep">|</span><span class="label-name">Banana Club</span><span class="sep">|</span><span class="date">2026-09-11</span></div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn">▶</button>
+      <span class="pill pill-bpm">137</span>
+      <span class="pill pill-key">F Minor</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ C. Fondo amarillo + banner rojo ══════════════ -->
+<div class="variant-label" style="background:var(--red);">C · FONDO AMARILLO SUAVE + BANNER ROJO (dúo riso)</div>
+<p class="variant-note">Variante con el amarillo de la marca de fondo (como un subrayado fluorescente) y la franja roja arriba con borde negro inferior, más «cartel de rave». El rojo sobre amarillo es la combinación más agresiva de la paleta.</p>
+
+<div class="week-box">
+  <div class="week-head"><span>▼ Week of 14 September 2026</span><span class="tag">CURRENT</span></div>
+
+  <div class="row row-exclusive-c">
+    <div class="banner-c"><span class="dot" style="animation:blink 1.4s infinite;">●</span> EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS <span class="en" style="margin-left:auto;font-weight:400;opacity:.75;font-size:10px;">FULL STREAMING · NO PREVIEW</span></div>
+    <div class="row-main">
+      <div class="art">
+        <img src="https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-take-my-home.webp" alt="">
+      </div>
+      <div class="meta">
+        <div class="title">Take My Home <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">Kritycal System</span><span class="sep">|</span><span class="label-name">Creative Sound Records</span><span class="sep">|</span><span class="date">2026-09-14</span></div>
+        <div class="note">Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.</div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn" style="background:var(--red);color:#fff;">▶ PLAY FULL</button>
+      <span class="pill pill-key">G Major</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="row-main">
+      <div class="art" style="display:flex;align-items:center;justify-content:center;font-size:22px;">🍌</div>
+      <div class="meta">
+        <div class="title">Bring Your Booty <span class="mix">Original Mix</span></div>
+        <div class="credits"><span class="artist">AceNoise, Drill Rocks</span><span class="sep">|</span><span class="label-name">Banana Club</span><span class="sep">|</span><span class="date">2026-09-11</span></div>
+      </div>
+    </div>
+    <div class="bar">
+      <button class="btn">▶</button>
+      <span class="pill pill-bpm">137</span>
+      <span class="pill pill-key">F Minor</span>
+      <span class="circle save">✓</span>
+      <span class="circle">🔗</span>
+      <span class="circle" style="background:#1DB954;color:#fff;">S</span>
+      <button class="btn btn-store">BEATPORT</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -450,18 +450,31 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
+  // Fila «exclusive full track» (mockups/full-audio-row.html, variante C+A):
+  // fondo amarillo suave en toda la fila + banner rojo a todo el ancho arriba.
+  const rowStateClasses = hasFullAudio
+    ? `bg-[var(--yellow)]/25 ${isPlaying ? 'border-[var(--red)]/40' : 'border-[var(--ink)]/10'}`
+    : isPlaying
+      ? 'bg-[var(--red)]/15 border-[var(--red)]/30'
+      : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'
+
   return (
-    <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isPlaying ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}>
+    <div id={`chart-row-${pick.id}`} className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowStateClasses}`}>
+      {hasFullAudio ? (
+        <div
+          className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--red)] text-white px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          <span className="animate-pulse shrink-0">●</span>
+          <span className="truncate">{lang === 'es' ? 'EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS' : 'EXCLUSIVE FULL TRACK — LISTEN IN FULL, FREE'}</span>
+          <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">FULL STREAMING · NO PREVIEW</span>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           {pick.artwork_url ? (
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
               <Image src={pick.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
-              {hasFullAudio ? (
-                <div className="absolute bottom-0 inset-x-0 bg-[var(--yellow)] text-[var(--ink)] text-[7px] font-black tracking-widest text-center leading-tight py-[2px]" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                  COMPLETO
-                </div>
-              ) : null}
             </div>
           ) : null}
 
@@ -484,24 +497,15 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
             <button
               type="button"
               onClick={onPlay}
-              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
-                ${isPlaying ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
+              className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation whitespace-nowrap
+                ${isPlaying || hasFullAudio ? 'bg-[var(--red)] text-white hover:bg-[var(--ink)] active:bg-[var(--ink)]' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
               style={{ fontFamily: "'Courier Prime', monospace" }}
               title={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
               aria-label={isPlaying && !isPaused ? c.preview_pause : c.preview_play}
             >
-              {isPlaying && !isPaused ? '❚❚' : '▶'}
+              {isPlaying && !isPaused ? '❚❚' : hasFullAudio ? '▶ PLAY FULL' : '▶'}
             </button>
           )}
-          {hasFullAudio ? (
-            <span
-              className="inline-flex items-center gap-1 h-[36px] px-2 text-[10px] font-black tracking-wider bg-[var(--red)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5 whitespace-nowrap select-none"
-              style={{ fontFamily: "'Courier Prime', monospace" }}
-              title="Tema completo disponible — Full track available"
-            >
-              ● FULL AUDIO
-            </span>
-          ) : null}
           {pick.bpm != null && pick.bpm > 0 ? (
             <span className="inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider bg-[var(--uv)] text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {pick.bpm}
