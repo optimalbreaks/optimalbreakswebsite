@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
   const [count, setCount] = useState(0)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortKey, setSortKey] = useState<string | null>('last_activity_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [drawer, setDrawer] = useState<{ user: AdminUserRow; tab: DrawerTab } | null>(null)
   const [error, setError] = useState<string | null>(null)
