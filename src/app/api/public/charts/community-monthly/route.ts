@@ -21,6 +21,8 @@
 //     acredita SU propio nombre (sí el de colaboradores; el Top 100 de temas
 //     no se toca). Si además hay `editorial_label_marks`, un save de ese sello
 //     no acredita a nadie en el tablero. Ver `artist-self-credit.ts`.
+//   - top_countries: podio (3) de países por nacionalidad de TODOS los
+//     artistas con créditos de save — artistas con ≥1 save y suma de saves.
 //
 // Nota histórica: el endpoint y el archivo mantienen el slug
 // `community-monthly` por compatibilidad — antes este top era mensual y
@@ -40,6 +42,7 @@ import {
   normalizeArtistKey,
 } from '@/lib/artist-slug-map'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
+import { countryIsoCodesFromCode } from '@/lib/seo'
 import {
   loadLabelCreditSkipMap,
   loadSelfCreditSkipMap,
@@ -361,6 +364,7 @@ export async function GET(request: NextRequest) {
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
       top_artists: [],
+      top_countries: [],
     })
   }
 
@@ -865,6 +869,47 @@ export async function GET(request: NextRequest) {
     }
   })
 
+  // Podio de países: nacionalidad (artists.country) de TODOS los artistas
+  // con créditos de save (no solo el top 50 del tablero). Un país compuesto
+  // («AU/UK») acredita a ambos. Solo cuentan artistas con ficha en catálogo
+  // y país relleno — sin ficha no hay nacionalidad que sumar.
+  type CountryAgg = { save_count: number; _artists: Set<string>; _users: Set<string> }
+  const countryAgg = new Map<string, CountryAgg>()
+  for (const [key, a] of Array.from(artistAgg.entries())) {
+    const slug =
+      artistSlugMap[key] ||
+      artistSlugMap[key.startsWith('the ') ? key.slice(4) : `the ${key}`] ||
+      null
+    if (!slug) continue
+    const country = catalogBySlug.get(slug)?.country || null
+    for (const iso of countryIsoCodesFromCode(country)) {
+      let row = countryAgg.get(iso)
+      if (!row) {
+        row = { save_count: 0, _artists: new Set(), _users: new Set() }
+        countryAgg.set(iso, row)
+      }
+      row.save_count += a.save_count
+      row._artists.add(key)
+      a._users.forEach((uid) => row._users.add(uid))
+    }
+  }
+  const top_countries = Array.from(countryAgg.entries())
+    .map(([iso, cAgg]) => ({
+      iso,
+      save_count: cAgg.save_count,
+      artist_count: cAgg._artists.size,
+      unique_users: cAgg._users.size,
+    }))
+    .sort(
+      (a, b) =>
+        b.save_count - a.save_count ||
+        b.artist_count - a.artist_count ||
+        b.unique_users - a.unique_users ||
+        a.iso.localeCompare(b.iso),
+    )
+    .slice(0, 3)
+    .map((c, idx) => ({ rank: idx + 1, ...c }))
+
   // Solo contamos lo que de verdad se renderiza en el ranking. Los saves
   // huérfanos sin meta ni snapshot se descartan (no aparecen como tema en
   // el top, así que tampoco deben sumar al contador). Esto mantiene la
@@ -883,5 +928,6 @@ export async function GET(request: NextRequest) {
     totals,
     top_tracks,
     top_artists,
+    top_countries,
   })
 }

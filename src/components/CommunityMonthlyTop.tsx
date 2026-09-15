@@ -22,6 +22,8 @@ import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvi
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import CardThumbnail from '@/components/CardThumbnail'
 import CountryBadge from '@/components/CountryBadge'
+import { CountryFlagSvg } from '@/components/country-flag-svgs'
+import { countryDisplayFromCode } from '@/lib/seo'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
@@ -98,11 +100,22 @@ interface CommunityTopArtist {
   weeks_at_1?: number
 }
 
+interface CommunityTopCountry {
+  rank: number
+  /** ISO 3166-1 alpha-2 en minúsculas (es, gb, us…). */
+  iso: string
+  save_count: number
+  /** Artistas del catálogo de ese país con al menos un save. */
+  artist_count: number
+  unique_users: number
+}
+
 interface ApiResponse {
   scope: 'all_time'
   totals: { saves: number; unique_tracks: number; unique_users: number }
   top_tracks: CommunityTopTrack[]
   top_artists?: CommunityTopArtist[]
+  top_countries?: CommunityTopCountry[]
 }
 
 interface Props {
@@ -657,9 +670,114 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
       </section>
     ) : null
 
+  // Podio de países — pura estética podio olímpico pasada por fanzine:
+  // tres peanas de altura distinta (2º · 1º · 3º), bandera protagonista,
+  // rayas diagonales de obra en las bases y sello ácido para el nº 1.
+  const countryRows = data?.top_countries || []
+  const countriesBlock =
+    !loading && !error && data && countryRows.length > 0 ? (
+      <section id="community-top-countries" className="mb-12 sm:mb-16 scroll-mt-24">
+        <header className="px-4 sm:px-0 mb-6 sm:mb-8">
+          <span
+            className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--uv)] text-white border-2 border-[var(--ink)] mb-3"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {cm.countries_kicker || 'PODIO DE PAÍSES'}
+          </span>
+          <h2
+            className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+            style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+          >
+            {cm.countries_title || '¿Qué escena manda?'}
+          </h2>
+          <p
+            className="text-sm sm:text-base text-[var(--ink)]/60"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {cm.countries_subtitle ||
+              'Los tres países cuyos artistas acumulan más saves en Mis Tracks. Cuentan todos los artistas del catálogo con al menos un save — el podio suma los saves de cada bandera.'}
+          </p>
+        </header>
+        <div className="grid grid-cols-3 items-end gap-2 sm:gap-4 mx-2 sm:mx-0 pt-3">
+          {countryRows.map((ct) => {
+            const isFirst = ct.rank === 1
+            // El nº 1 va al centro (orden visual 2º · 1º · 3º, como un podio).
+            const orderCls = ct.rank === 1 ? 'order-2' : ct.rank === 2 ? 'order-1' : 'order-3'
+            const baseCls = isFirst
+              ? 'h-20 sm:h-32 bg-[var(--red)] text-white'
+              : ct.rank === 2
+                ? 'h-14 sm:h-20 bg-[var(--ink)] text-[var(--paper)]'
+                : 'h-9 sm:h-12 bg-[var(--cyan)] text-white'
+            const stripes = ct.rank === 2
+              ? 'repeating-linear-gradient(-45deg, transparent 0 10px, rgba(255,255,255,0.08) 10px 20px)'
+              : 'repeating-linear-gradient(-45deg, transparent 0 10px, rgba(0,0,0,0.16) 10px 20px)'
+            const countryName = countryDisplayFromCode(ct.iso, lang) || ct.iso.toUpperCase()
+            const artistsLabel = (ct.artist_count === 1
+              ? cm.countries_artist_one || '{n} artista con saves'
+              : cm.countries_artists || '{n} artistas con saves'
+            ).replace('{n}', String(ct.artist_count))
+            return (
+              <div key={ct.iso} className={`flex flex-col ${orderCls}`}>
+                <div className="relative border-[3px] border-b-0 border-[var(--ink)] bg-[var(--paper)] px-1.5 pt-4 pb-3 sm:px-4 sm:pt-6 sm:pb-5 text-center">
+                  {isFirst && (
+                    <span
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 -rotate-3 whitespace-nowrap bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] px-1.5 py-0.5 text-[8px] sm:text-[10px] font-black tracking-[2px]"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      {cm.countries_first_tag || 'ESCENA Nº 1'}
+                    </span>
+                  )}
+                  <span className="inline-block border-[3px] border-[var(--ink)] leading-none">
+                    <CountryFlagSvg iso={ct.iso} size="lg" className="block" />
+                  </span>
+                  <div
+                    className="mt-2 sm:mt-3 text-[11px] sm:text-lg font-black uppercase leading-tight break-words"
+                    style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+                  >
+                    {countryName}
+                  </div>
+                  <div
+                    className="mt-1.5 sm:mt-2 text-2xl sm:text-4xl font-black tabular-nums leading-none"
+                    style={{ fontFamily: "'Unbounded', sans-serif", color: isFirst ? 'var(--red)' : 'var(--ink)' }}
+                  >
+                    {ct.save_count}
+                  </div>
+                  <div
+                    className="text-[8px] sm:text-[10px] font-bold tracking-[2px] text-[var(--ink)]/50 uppercase"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {cm.countries_saves || 'saves'}
+                  </div>
+                  <div
+                    className="mt-2 sm:mt-3 border-t-2 border-[var(--ink)]/15 pt-1.5 sm:pt-2 text-[9px] sm:text-[11px] font-bold text-[var(--ink)]/60 tabular-nums"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {artistsLabel}
+                  </div>
+                </div>
+                <div
+                  className={`flex items-center justify-center border-[3px] border-[var(--ink)] ${baseCls}`}
+                  style={{ backgroundImage: stripes }}
+                >
+                  <span
+                    className="font-black leading-none text-2xl sm:text-4xl"
+                    style={{ fontFamily: "'Unbounded', sans-serif" }}
+                  >
+                    {ct.rank}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    ) : null
+
   return (
     <>
       {artistsBlock}
+
+      {countriesBlock}
 
       <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24">
       <header className="px-4 sm:px-0 mb-6 sm:mb-8">

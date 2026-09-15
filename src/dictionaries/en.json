@@ -558,7 +558,14 @@
       "artists_load_more": "Load more",
       "artists_load_more_title": "Show up to 50 artists",
       "artists_show_less": "Show less",
-      "artists_show_less_title": "Back to the top 10"
+      "artists_show_less_title": "Back to the top 10",
+      "countries_kicker": "COUNTRY PODIUM",
+      "countries_title": "Which scene runs it?",
+      "countries_subtitle": "The three countries whose artists rack up the most saves in My Tracks. Every catalogue artist with at least one save counts — the podium adds up each flag's saves.",
+      "countries_saves": "saves",
+      "countries_artists": "{n} artists with saves",
+      "countries_artist_one": "{n} artist with saves",
+      "countries_first_tag": "TOP SCENE"
     }
   },
   "charts_promo": {

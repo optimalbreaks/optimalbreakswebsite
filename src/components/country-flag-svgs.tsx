@@ -307,6 +307,8 @@ const FLAG_DIMS = {
   xs: 'w-4 h-[11px]',
   sm: 'w-6 h-[17px]',
   md: 'w-8 h-[22px]',
+  /** Podio de países del Top 100 — bandera protagonista. */
+  lg: 'w-14 h-[38px] sm:w-20 sm:h-[54px]',
 } as const
 
 export function CountryFlagSvg({
