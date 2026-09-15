@@ -417,9 +417,9 @@ Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`):
 
 - **Two clocks (do not mix them):**
   - **The list is live.** Rank #1 / #4 / #12 updates as soon as someone saves (or unsaves). The page does **not** wait until next Monday to move a name.
-  - **The variation is Monday-to-Monday.** Arrows compare **live rank now** vs **rank at this ISO Monday 00:00 UTC** (saves with `created_at` before that cutoff). ═ means “same as Monday”, not “same as yesterday”.
-- **Cadence:** **weekly**, not daily. Same week boundary as the editorial charts. Next Monday a new baseline is taken.
-- **Live inside the week:** because “now” keeps moving, arrows can change mid-week (e.g. Monday #4 → Thursday #3 → **▲ 1**). The Monday snapshot stays fixed until the following Monday.
+  - **The variation compares against the PREVIOUS ISO Monday.** Arrows compare **live rank now** vs **rank at the previous ISO Monday 00:00 UTC** (saves with `created_at` before that cutoff). ═ means “same as the start of last week”, not “same as yesterday”. Changed Sep 2026: it used to compare vs *this* Monday, which erased weekend overtakes as soon as the ISO week reset (Huda Hudia passed Ed Solo on Sunday ~21:00 UTC and 3 h later both showed ═).
+- **Cadence:** **weekly**, not daily. Same week boundary as the editorial charts. Next Monday the baseline advances one week.
+- **Live inside the week:** because “now” keeps moving, arrows can change mid-week (e.g. previous Monday #4 → Thursday #3 → **▲ 1**). The baseline snapshot stays fixed until the following Monday.
 - **No snapshot table / no cron.** Rebuilt on each request from `saved_chart_tracks.created_at` (`artistMondaySnapshots` in `community-monthly/route.ts`). `idx_sct_created` (migration **056**) helps the recency tie-break and this reconstruction.
 - **Caveat:** an unsave **deletes** the row, so last week’s reconstructed board is “current remaining saves before Monday”, not a photographic archive of what was on screen then.
 
@@ -427,14 +427,14 @@ Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`):
 
 | Field | Meaning |
 | --- | --- |
-| `previous_rank` | Rank on this board (top 50) at Monday 00:00 UTC. `null` = was **not** in last week’s top 50 → UI **NUEVO**. |
+| `previous_rank` | Rank on this board (top 50) at the **previous** ISO Monday 00:00 UTC (fallback: this Monday if history starts this week). `null` = was **not** in the top 50 then → UI **NUEVO**. |
 | `weeks_in_top10` | Consecutive ISO weeks **on the board** (the 50), **not** weeks at the current rank. Field name is historical (the board used to be 10). UI label `X sem.` on ranks 2–50 when `> 1`. |
 | `weeks_at_1` | Consecutive ISO weeks at **#1** only. UI label `X sem. nº 1` when the leader has `> 1`. |
 
 **UI**
 
 - On-page copy: `charts.community_monthly.artists_subtitle` (ES/EN) states live list + Monday-to-Monday arrows.
-- Arrows = this week’s **position change** vs Monday. Weeks = **tenure** (board vs throne).
+- Arrows = **position change** vs the previous Monday. Weeks = **tenure** (board vs throne).
 - Rank **#1** box is always red. One editorial line under the subtitle, #1 only: new leader / climbs to #1 / holds / streak (≥ 4 weeks at #1). Copy in `charts.community_monthly` (`leader_new`, `leader_climbs`, `leader_holds`, `leader_streak`).
 - Movement is **not** shown on the Top 100 **tracks** list.
 

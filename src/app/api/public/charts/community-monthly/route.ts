@@ -14,8 +14,10 @@
 //   - limit: opcional, 5–100 (default 40) — solo afecta top_tracks.
 //   - top_artists: top 50 por créditos de save (la UI enseña 10 y «Cargar más»).
 //     Cada fila lleva movimiento semanal reconstruido desde `created_at`
-//     (lunes ISO UTC): previous_rank (null = no estaba en el top 50 al
-//     empezar la semana), weeks_in_top10 (semanas seguidas en este tablero),
+//     (lunes ISO UTC): previous_rank = puesto en el snapshot del LUNES
+//     ANTERIOR (null = no estaba en el top 50 entonces) — así un sorpasso
+//     de fin de semana mantiene su ▲/▼ toda la semana siguiente —,
+//     weeks_in_top10 (semanas seguidas en este tablero),
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
 //     Un save de un usuario fichado editorialmente o con claim aprobado no
 //     acredita SU propio nombre (sí el de colaboradores; el Top 100 de temas
@@ -818,7 +820,14 @@ export async function GET(request: NextRequest) {
 
   const thisMonday = isoMondayUtc(new Date())
   const mondaySnapshots = artistMondaySnapshots(artistCredits, thisMonday)
-  const previousRanks = mondaySnapshots.get(thisMonday) || new Map<string, number>()
+  // Movimiento estilo chart clásico: comparamos el puesto actual contra el
+  // snapshot del LUNES ANTERIOR (no el de esta semana). Así un sorpasso de
+  // fin de semana no se «borra» al reiniciar la semana ISO: la flecha luce
+  // durante toda la semana siguiente (decisión editorial, sep 2026).
+  const previousRanks =
+    mondaySnapshots.get(addDaysYmdUtc(thisMonday, -7)) ||
+    mondaySnapshots.get(thisMonday) ||
+    new Map<string, number>()
 
   let artistSlugMap: Record<string, string> = {}
   const catalogBySlug = new Map<string, { image_url: string | null; country: string | null }>()
