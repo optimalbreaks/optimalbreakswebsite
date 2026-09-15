@@ -694,6 +694,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // cuelga más largo), medallón oro/plata/bronce con numeral romano y
   // laureles, filete decó y remate en punta de banderín.
   const countryRows = data?.top_countries || []
+  const maxCountrySaves = Math.max(...countryRows.map((c) => c.save_count), 1)
   const countriesBlock =
     !loading && !error && data && countryRows.length > 0 ? (
       <section id="community-top-countries" className="mb-12 sm:mb-16 scroll-mt-24">
@@ -724,29 +725,32 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--paper)]/80" />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--paper)]/80" />
           </div>
+          {/* El banderín más largo es el que más saves acumula (líder = 100%); el resto cuelga proporcionalmente. */}
           <div className="grid grid-cols-3 items-start gap-3 sm:gap-8 px-2 sm:px-10">
             {countryRows.map((ct) => {
               // El oro va al centro (orden visual 2º · 1º · 3º) y cuelga más.
               const orderCls = ct.rank === 1 ? 'order-2' : ct.rank === 2 ? 'order-1' : 'order-3'
+              // Altura proporcional a los saves (barra de progreso): el líder marca el máximo,
+              // los demás cuelgan menos según su ratio. Suelo del 45% para que no quede un muñón.
+              const saveRatio = Math.min(1, Math.max(0.45, ct.save_count / maxCountrySaves))
+              const hangMobile = Math.round(210 + saveRatio * 90) // 210 → 300 px
+              const hangDesktop = Math.round(300 + saveRatio * 140) // 300 → 440 px
               const medal = ct.rank === 1
                 ? {
                     bg: '#C9A227',
                     roman: 'I',
                     label: cm.countries_medal_gold || 'ORO',
-                    hang: 'min-h-[300px] sm:min-h-[440px]',
                   }
                 : ct.rank === 2
                   ? {
                       bg: '#A8ADB4',
                       roman: 'II',
                       label: cm.countries_medal_silver || 'PLATA',
-                      hang: 'min-h-[260px] sm:min-h-[380px]',
                     }
                   : {
                       bg: '#A9713D',
                       roman: 'III',
                       label: cm.countries_medal_bronze || 'BRONCE',
-                      hang: 'min-h-[230px] sm:min-h-[330px]',
                     }
               const countryName = countryDisplayFromCode(ct.iso, lang) || ct.iso.toUpperCase()
               const artistsLabel = (ct.artist_count === 1
@@ -756,7 +760,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               return (
                 <div key={ct.iso} className={`flex flex-col ${orderCls}`}>
                   <div
-                    className={`flex flex-col items-center border-[3px] border-t-0 border-b-0 border-[var(--ink)] bg-[var(--paper)] px-1.5 pt-4 sm:px-4 sm:pt-7 text-center ${medal.hang}`}
+                    className="flex flex-col items-center border-[3px] border-t-0 border-b-0 border-[var(--ink)] bg-[var(--paper)] px-1.5 pt-4 sm:px-4 sm:pt-7 text-center min-h-[var(--pod-h)] sm:min-h-[var(--pod-h-sm)]"
+                    style={{ ['--pod-h' as string]: `${hangMobile}px`, ['--pod-h-sm' as string]: `${hangDesktop}px` }}
                   >
                     {/* Medallón con numeral romano, flanqueado por laureles. */}
                     <div className="flex items-center justify-center gap-0.5 sm:gap-1.5">
