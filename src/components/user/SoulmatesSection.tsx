@@ -620,8 +620,8 @@ export default function SoulmatesSection({ lang }: Props) {
             </h3>
             <p className="text-sm text-[var(--ink)]/60 mb-4 max-w-2xl" style={{ fontFamily: MONO }}>
               {es
-                ? 'Canciones que dos o más de tus almas gemelas tienen guardadas y tú aún no. El número amarillo de cada fila indica cuántas de ellas la tienen: si su gusto coincide con el tuyo, seguramente te encaje.'
-                : 'Tracks that two or more of your soulmates have saved and you don’t — yet. The yellow number on each row is how many of them saved it: if their taste lines up with yours, it probably fits you too.'}
+                ? 'Canciones que 2 o más de tus almas gemelas tienen guardadas y tú aún no. El recuadro verde indica cuántas almas gemelas la tienen: si alguna tiene 3, 4 o más, sube arriba.'
+                : 'Tracks that 2+ of your soulmates have saved and you don’t yet. The green badge shows how many soulmates saved it: if a track has 3, 4 or more, it rises to the top.'}
             </p>
             <ul className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-[3px] divide-[var(--ink)]/10">
               {data.recommended_tracks.map((t) => {
@@ -641,8 +641,8 @@ export default function SoulmatesSection({ lang }: Props) {
                     <span
                       className="inline-flex flex-col items-center justify-center w-12 h-12 shrink-0 font-black border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)] tabular-nums"
                       title={es
-                        ? `${t.soulmates_count} de tus almas gemelas tienen guardada esta canción`
-                        : `${t.soulmates_count} of your soulmates saved this track`}
+                        ? `${t.soulmates_count} almas gemelas de tu Top 10 tienen guardada esta canción`
+                        : `${t.soulmates_count} soulmates from your Top 10 saved this track`}
                       style={{ fontFamily: MONO }}
                     >
                       <span className="text-lg font-black leading-none" style={{ fontFamily: DISPLAY }}>{t.soulmates_count}</span>
