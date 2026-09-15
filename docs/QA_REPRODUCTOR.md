@@ -31,7 +31,7 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 - **I7** Seek (barra de progreso arrastrable + lockscreen).
 - **I8** Estado visual sincronizado (icono ▶/❚❚, fila resaltada, contador `n/total`).
 - **I9** Media Session / lockscreen (título, carátula, controles) en móvil/PWA.
-- **I10** Autoplay bloqueado (deep-link en pestaña nueva) → overlay "toca para escuchar".
+- **I10** Enlace compartido (`?play=chart:|featured:<uuid>` o `?play=beatport:<id>`) → modal «TOCA PARA ESCUCHAR» (`TapToPlayOverlay`) **sin** intento de autoplay, en PC y móvil; el tap reproduce. El overlay del provider (`PreviewAutoplayOverlay`) solo aplica al flujo ⌘K (`?play=1`) si el navegador bloquea con `NotAllowedError`.
 - **I11** Miniaturas de YouTube vía proxy propio (no en negro con adblockers). **Verificar en producción.**
 - **I12** Formatos: sample mp3, Bandcamp, SoundCloud, YouTube, sample Beatport.
 
@@ -91,4 +91,4 @@ Arrancar en cada tipo de fuente A y comprobar que silencia una fuente activa B �
 
 ## Solo verificable en navegador (no cubierto por revisión de código)
 
-I7 (seek en lockscreen), I9 (Media Session iOS/Android), I10 (overlay de autoplay real), I11 (miniaturas en producción) y la exclusión entre **ventana PWA + pestaña** en un móvil físico.
+I7 (seek en lockscreen), I9 (Media Session iOS/Android), I10 (modal de enlace compartido en móvil real), I11 (miniaturas en producción) y la exclusión entre **ventana PWA + pestaña** en un móvil físico.
