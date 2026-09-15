@@ -406,20 +406,44 @@ export default function SoulmatesSection({ lang }: Props) {
           </div>
         )}
 
-        {/* RESUMEN */}
+        {/* RESUMEN — recuadros informativos (no son botones): un número + qué significa */}
         {ready && (
-          <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8" role="list">
             {[
-              { n: data.self?.saved_count ?? 0, l: es ? 'TRACKS ÚNICOS' : 'UNIQUE TRACKS', bg: 'bg-[var(--paper)]' },
-              { n: data.soulmates.length, l: es ? 'ALMAS GEMELAS' : 'SOULMATES', bg: 'bg-[var(--yellow)]' },
-              { n: data.recommended_tracks.length, l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER', bg: 'bg-[var(--acid)]' },
+              {
+                n: data.self?.saved_count ?? 0,
+                l: es ? 'TRACKS GUARDADOS' : 'SAVED TRACKS',
+                d: es ? 'Tu colección en Mis Tracks' : 'Your collection in My Tracks',
+                bg: 'bg-[var(--paper)]',
+              },
+              {
+                n: data.soulmates.length,
+                l: es ? 'ALMAS GEMELAS' : 'SOULMATES',
+                d: es ? 'Usuarios que más coinciden contigo (Top 10)' : 'Users whose taste matches yours most (Top 10)',
+                bg: 'bg-[var(--yellow)]',
+              },
+              {
+                n: data.recommended_tracks.length,
+                l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER',
+                d: es ? 'Temas suyos que tú aún no tienes' : 'Their tracks you don’t have yet',
+                bg: 'bg-[var(--acid)]',
+              },
             ].map((s) => (
-              <div key={s.l} className={`border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg}`}>
-                <div className="font-black leading-none tabular-nums" style={{ fontFamily: DISPLAY, fontSize: 'clamp(22px, 5vw, 34px)' }}>
+              <div
+                key={s.l}
+                role="listitem"
+                className={`border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block`}
+              >
+                <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
                   {s.n}
                 </div>
-                <div className="mt-1.5 text-[9px] sm:text-[10px] tracking-[1.5px] text-[var(--ink)]/70" style={{ fontFamily: MONO, fontWeight: 700 }}>
-                  {s.l}
+                <div className="sm:mt-2">
+                  <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase" style={{ fontFamily: MONO }}>
+                    {s.l}
+                  </div>
+                  <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
+                    {s.d}
+                  </div>
                 </div>
               </div>
             ))}
@@ -439,9 +463,14 @@ export default function SoulmatesSection({ lang }: Props) {
         {/* TOP 10 DE ALMAS GEMELAS */}
         {ready && data.soulmates.length > 0 && (
           <section className="mb-10">
-            <h3 className="font-black mb-4" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
-              {`Top ${data.soulmates.length}`}
+            <h3 className="font-black mb-1.5" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
+              {es ? `Tus ${data.soulmates.length} almas gemelas` : `Your ${data.soulmates.length} soulmates`}
             </h3>
+            <p className="text-[11px] sm:text-xs text-[var(--ink)]/60 mb-4 max-w-2xl leading-snug" style={{ fontFamily: MONO }}>
+              {es
+                ? 'Ordenadas por afinidad: el % rojo es cuánto se solapan vuestras dos colecciones. La barra lo compara con tu alma gemela nº1.'
+                : 'Sorted by affinity: the red % is how much your two collections overlap. The bar compares it to your #1 soulmate.'}
+            </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {data.soulmates.map((sm, i) => {
                 const common = (sm.sample_common_tracks || []).filter((t): t is CommonTrack => !!t && !!t.title)
@@ -480,11 +509,14 @@ export default function SoulmatesSection({ lang }: Props) {
                         </p>
                       </div>
                       <span
-                        className="shrink-0 inline-block px-2 py-1 text-[11px] font-black tracking-wider bg-[var(--red)] text-white border-2 border-[var(--ink)] tabular-nums"
+                        className="shrink-0 inline-flex flex-col items-center justify-center px-2 py-1 bg-[var(--red)] text-white border-2 border-[var(--ink)] tabular-nums"
                         style={{ fontFamily: MONO }}
-                        title={es ? 'Similitud Jaccard' : 'Jaccard similarity'}
+                        title={es
+                          ? 'Afinidad: proporción de temas compartidos sobre el total de vuestras dos listas (índice Jaccard).'
+                          : 'Affinity: share of tracks in common out of both your lists combined (Jaccard index).'}
                       >
-                        {pct(sm.jaccard)}
+                        <span className="text-[13px] font-black leading-none">{pct(sm.jaccard)}</span>
+                        <span className="text-[7px] tracking-[1px] mt-0.5 opacity-80">{es ? 'AFINIDAD' : 'AFFINITY'}</span>
                       </span>
                     </div>
 
@@ -493,10 +525,16 @@ export default function SoulmatesSection({ lang }: Props) {
                       <div className="h-full bg-[var(--red)]" style={{ width: `${rel}%` }} />
                     </div>
 
-                    <p className="text-[11px] text-[var(--ink)]/60 mb-2 tabular-nums" style={{ fontFamily: MONO }}>
+                    <p
+                      className="text-[11px] text-[var(--ink)]/60 mb-2 tabular-nums"
+                      style={{ fontFamily: MONO }}
+                      title={es
+                        ? 'Temas que ambos habéis guardado, y qué parte suponen de tu lista y de la suya.'
+                        : 'Tracks you both saved, and what share they are of your list and of theirs.'}
+                    >
                       {(es
-                        ? '{n} en común · {self_pct} de las tuyas · {other_pct} de las suyas'
-                        : '{n} in common · {self_pct} of yours · {other_pct} of theirs')
+                        ? '{n} temas en común · {self_pct} de tu lista · {other_pct} de la suya'
+                        : '{n} tracks in common · {self_pct} of your list · {other_pct} of theirs')
                         .replace('{n}', String(sm.common_count ?? 0))
                         .replace('{self_pct}', pct(sm.overlap_self))
                         .replace('{other_pct}', pct(sm.overlap_other))}
@@ -540,8 +578,8 @@ export default function SoulmatesSection({ lang }: Props) {
             </h3>
             <p className="text-sm text-[var(--ink)]/60 mb-4 max-w-2xl" style={{ fontFamily: MONO }}>
               {es
-                ? 'Canciones que dos o más almas gemelas tienen guardadas y tú aún no. Lógica del 90/10 de FilmAffinity: si su gusto coincide con el tuyo, este 10% que les falta a tus listas seguramente te encaje.'
-                : 'Tracks that two or more soulmates have saved and you don’t — yet. Same logic as FilmAffinity’s 90/10: if their taste lines up with yours, the bits you’re missing probably fit you too.'}
+                ? 'Canciones que dos o más de tus almas gemelas tienen guardadas y tú aún no. El número amarillo de cada fila indica cuántas de ellas la tienen: si su gusto coincide con el tuyo, seguramente te encaje.'
+                : 'Tracks that two or more of your soulmates have saved and you don’t — yet. The yellow number on each row is how many of them saved it: if their taste lines up with yours, it probably fits you too.'}
             </p>
             <ul className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-[3px] divide-[var(--ink)]/10">
               {data.recommended_tracks.map((t) => {
@@ -560,11 +598,13 @@ export default function SoulmatesSection({ lang }: Props) {
                   <li key={t.canonical_key} className="flex items-center gap-3 py-3 px-3 sm:px-4 hover:bg-[var(--yellow)]/10 transition-colors">
                     <span
                       className="inline-flex flex-col items-center justify-center w-11 h-11 shrink-0 font-black border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
-                      title={es ? 'Almas gemelas que la tienen' : 'Soulmates with this track'}
+                      title={es
+                        ? `${t.soulmates_count} de tus almas gemelas tienen guardada esta canción`
+                        : `${t.soulmates_count} of your soulmates saved this track`}
                       style={{ fontFamily: DISPLAY }}
                     >
                       <span className="text-base leading-none">{t.soulmates_count}</span>
-                      <span className="text-[7px] tracking-[1px] mt-0.5 opacity-80">{es ? 'AFINES' : 'FANS'}</span>
+                      <span className="text-[7px] tracking-[1px] mt-0.5 opacity-80">{es ? 'GEMELAS' : 'MATCHES'}</span>
                     </span>
                     <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative flex items-center justify-center">
                       {isHttpUrl(t.artwork_url) ? (
