@@ -170,37 +170,134 @@ class SoulmatesErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 }
 
 // ---------- Skeleton de carga ----------
+// Mensajes rotatorios mientras se cruza la lista con toda la comunidad. Mismo
+// tono breakbeatero que la pantalla del ADN ("Pinchando tu ADN"), pero aquí
+// buscando gente con tu mismo gusto.
+const SM_MESSAGES_ES = [
+  'Cruzando tu lista con toda la comunidad…',
+  'Buscando quién comparte tus breaks…',
+  'Midiendo afinidades a golpe de Jaccard…',
+  'Peinando miles de temas guardados…',
+  'Encontrando a tu gente en la pista…',
+  'Descartando lo que ya tienes fichado…',
+  'Ordenando el Top 10 de almas gemelas…',
+  'Preparando lo que te estás perdiendo…',
+]
+const SM_MESSAGES_EN = [
+  'Crossing your list with the whole community…',
+  'Finding who shares your breaks…',
+  'Measuring affinities the Jaccard way…',
+  'Combing thousands of saved tracks…',
+  'Finding your people on the dancefloor…',
+  'Dropping what you already saved…',
+  'Sorting the Top 10 soulmates…',
+  'Prepping what you’re missing…',
+]
+
+// Pantalla de carga con estética fanzine (ecualizador + cinta + barra de
+// escaneo), en línea (no modal). Sustituye a las cajas vacías: mientras el
+// endpoint calcula las afinidades, el hueco no se queda en blanco.
 function LoadingSkeleton({ es }: { es: boolean }) {
+  const [progress, setProgress] = useState(0)
+  const [msgIdx, setMsgIdx] = useState(0)
+  const messages = es ? SM_MESSAGES_ES : SM_MESSAGES_EN
+
+  useEffect(() => {
+    const tickProgress = window.setInterval(() => {
+      setProgress((p) => {
+        if (p >= 95) return p
+        const step = Math.max(0.6, (95 - p) * 0.06)
+        return Math.min(95, p + step)
+      })
+    }, 300)
+    const tickMsg = window.setInterval(() => {
+      setMsgIdx((i) => (i + 1) % messages.length)
+    }, 2200)
+    return () => {
+      window.clearInterval(tickProgress)
+      window.clearInterval(tickMsg)
+    }
+  }, [messages.length])
+
+  const currentPct = Math.round(progress)
+  const eqBars = [
+    { dur: 0.48, delay: 0.00 }, { dur: 0.62, delay: 0.08 }, { dur: 0.38, delay: 0.18 },
+    { dur: 0.72, delay: 0.02 }, { dur: 0.50, delay: 0.24 }, { dur: 0.44, delay: 0.12 },
+    { dur: 0.66, delay: 0.30 }, { dur: 0.40, delay: 0.06 }, { dur: 0.56, delay: 0.20 },
+  ]
+  const tapeText = es
+    ? 'CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · '
+    : 'MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · '
+
   return (
-    <div aria-busy="true" aria-live="polite">
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="border-[3px] border-[var(--ink)] p-3 sm:p-4">
-            <div className="h-7 sm:h-9 w-12 bg-[var(--ink)]/10 animate-pulse mb-2" />
-            <div className="h-2.5 w-20 bg-[var(--ink)]/10 animate-pulse" />
+    <div aria-busy="true" aria-live="polite" className="flex justify-center py-6">
+      <style>{`
+        @keyframes smEq { 0%,100% { transform: scaleY(0.18) } 50% { transform: scaleY(1) } }
+        @keyframes smTape { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+        @keyframes smScan { from { background-position: 0 0 } to { background-position: 40px 0 } }
+        @keyframes smBlink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
+      `}</style>
+
+      <div
+        className="w-full max-w-[560px] border-[6px] border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)]"
+        style={{ boxShadow: '10px 10px 0 var(--red)' }}
+      >
+        {/* Cinta cabecera con texto en loop */}
+        <div className="relative overflow-hidden border-b-[6px] border-[var(--ink)]" style={{ background: 'var(--yellow)', height: 34 }} aria-hidden>
+          <div
+            className="absolute inset-y-0 left-0 flex items-center whitespace-nowrap"
+            style={{ fontFamily: MONO, fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', animation: 'smTape 18s linear infinite', minWidth: '200%' }}
+          >
+            <span>{tapeText.repeat(2)}</span>
           </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="border-[3px] border-[var(--ink)] p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-[var(--ink)]/10 animate-pulse" />
-              <div className="w-12 h-12 bg-[var(--ink)]/10 animate-pulse" />
-              <div className="flex-1">
-                <div className="h-3.5 w-2/3 bg-[var(--ink)]/10 animate-pulse mb-2" />
-                <div className="h-2.5 w-1/3 bg-[var(--ink)]/10 animate-pulse" />
-              </div>
+        </div>
+
+        <div className="px-6 sm:px-8 pt-6 pb-7">
+          {/* REC + etiqueta */}
+          <div className="flex items-center justify-between mb-5" style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '2px' }}>
+            <div className="flex items-center gap-2">
+              <span aria-hidden style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--red)', animation: 'smBlink 1s steps(1,end) infinite' }} />
+              <span style={{ fontWeight: 700 }}>SCAN</span>
             </div>
-            <div className="h-2 w-full bg-[var(--ink)]/10 animate-pulse mb-3" />
-            <div className="h-2.5 w-5/6 bg-[var(--ink)]/10 animate-pulse mb-1.5" />
-            <div className="h-2.5 w-4/6 bg-[var(--ink)]/10 animate-pulse" />
+            <span style={{ opacity: 0.6 }}>// TRK 01 — SIDE A</span>
           </div>
-        ))}
+
+          {/* Ecualizador */}
+          <div className="mx-auto mb-6 flex items-end justify-center gap-[6px] border-[3px] border-[var(--ink)] p-3" style={{ height: 120, background: 'var(--paper-dark, #e8dcc8)' }} aria-hidden>
+            {eqBars.map((b, i) => (
+              <span key={i} style={{ display: 'inline-block', width: 14, height: '100%', background: 'var(--ink)', transformOrigin: 'bottom', animation: `smEq ${b.dur}s ease-in-out ${b.delay}s infinite` }} />
+            ))}
+          </div>
+
+          {/* Título */}
+          <div className="mb-1" style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'clamp(22px, 5vw, 30px)', letterSpacing: '-1.2px', lineHeight: 1, textTransform: 'uppercase' }}>
+            {es ? 'Buscando tus almas gemelas' : 'Finding your soulmates'}
+          </div>
+          <div className="mb-5" style={{ fontFamily: MONO, fontSize: '11px', letterSpacing: '2px', opacity: 0.55, textTransform: 'uppercase' }}>
+            // {es ? 'Cruzando tu lista con toda la comunidad' : 'Matching your list against the community'}
+          </div>
+
+          {/* Mensaje rotatorio */}
+          <div className="border-[3px] border-[var(--ink)] mb-6 px-3 py-3 flex items-start gap-2 min-h-[64px]" style={{ background: 'var(--yellow)' }}>
+            <span aria-hidden style={{ fontFamily: MONO, fontWeight: 900, fontSize: '14px', color: 'var(--red)', lineHeight: 1.45, flexShrink: 0 }}>&gt;</span>
+            <span style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.45, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {messages[msgIdx]}
+            </span>
+          </div>
+
+          {/* Barra de escaneo */}
+          <div className="flex items-end justify-between mb-1" style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '2px' }}>
+            <span style={{ opacity: 0.55 }}>{es ? 'PROGRESO' : 'PROGRESS'}</span>
+            <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: '22px', letterSpacing: '-1px', color: 'var(--red)', lineHeight: 1 }}>
+              {String(currentPct).padStart(2, '0')}%
+            </span>
+          </div>
+          <div className="relative h-6 border-[3px] border-[var(--ink)] overflow-hidden" style={{ background: 'var(--paper)' }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={currentPct}>
+            <div className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out" style={{ width: `${currentPct}%`, background: 'var(--ink)' }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'repeating-linear-gradient(45deg, var(--yellow) 0 8px, transparent 8px 16px)', animation: 'smScan 0.9s linear infinite', opacity: currentPct > 0 ? 0.55 : 0 }} />
+          </div>
+        </div>
       </div>
-      <p className="mt-6 text-center text-xs text-[var(--ink)]/60 tracking-wider" style={{ fontFamily: MONO }}>
-        {es ? 'CALCULANDO AFINIDADES CON TODA LA COMUNIDAD…' : 'CALCULATING AFFINITIES ACROSS THE COMMUNITY…'}
-      </p>
     </div>
   )
 }
