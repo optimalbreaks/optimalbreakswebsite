@@ -15,7 +15,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { DeckAudioContext } from '@/components/deck-audio-context'
+import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-audio-context'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
@@ -163,8 +163,6 @@ export interface PreviewAudioApi {
   previewQueue: PreviewTrack[]
   previewIndex: number
   previewPlaying: boolean
-  previewProgress: number
-  previewDuration: number
   previewGroupKey: string | null
   /** true cuando `audio.play()` falló por NotAllowedError (autoplay bloqueado
    *  por el navegador tras un deep-link). La UI usa esto para pintar el
@@ -185,18 +183,36 @@ export interface DeckSideState {
   playing: boolean
 }
 
+/**
+ * Valores de ALTA FRECUENCIA del reproductor (ver nota en
+ * `deck-audio-context.ts`). Viven en `DeckAudioProgressContext`, separados
+ * del contexto principal, para que los ticks de progreso (~120 ms) y la
+ * rotación de los platos (60 fps) NO re-rendericen a los consumidores
+ * grandes (ChartView, TracksSection, Top 100…) — solo a las mini barras
+ * y al deck de la portada, que son quienes pintan estos números.
+ */
+export interface DeckAudioProgressValue {
+  /** Progreso/duración del deck audible (legacy compat, según crossfader). */
+  progress: number
+  duration: number
+  deckA: DeckSideState
+  deckB: DeckSideState
+  leftRotation: number
+  rightRotation: number
+  mixProgress: number
+  mixDuration: number
+  previewProgress: number
+  previewDuration: number
+}
+
 interface DeckAudioContextValue {
   dict: DeckDict
   isPlaying: boolean
   crossfader: number
   setCrossfader: (v: number) => void
   currentTrack: number
-  progress: number
-  duration: number
   scratchingLeft: boolean
   scratchingRight: boolean
-  leftRotation: number
-  rightRotation: number
   sessionActive: boolean
   initAudio: () => void
   togglePlay: () => void
@@ -208,8 +224,6 @@ interface DeckAudioContextValue {
   track: DeckTrack
   fmt: (s: number) => string
   // Dual-deck extensions
-  deckA: DeckSideState
-  deckB: DeckSideState
   activeSide: 'A' | 'B'
   trackA: DeckTrack
   trackB: DeckTrack
@@ -219,8 +233,6 @@ interface DeckAudioContextValue {
   mode: PlayerMode
   currentMix: MixTrack | null
   mixPlaying: boolean
-  mixProgress: number
-  mixDuration: number
   playMix: (mix: MixTrack) => void
   toggleMixPlayback: () => void
   stopMix: () => void
@@ -229,8 +241,6 @@ interface DeckAudioContextValue {
   previewQueue: PreviewTrack[]
   previewIndex: number
   previewPlaying: boolean
-  previewProgress: number
-  previewDuration: number
   previewGroupKey: string | null
   previewBlocked: boolean
   playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
@@ -243,6 +253,10 @@ interface DeckAudioContextValue {
 
 export type DeckAudioShellBind = {
   value: DeckAudioContextValue
+  /** Valores de alta frecuencia (ticks de progreso / rotaciones): van en su
+   *  propio contexto para no re-renderizar a los consumidores del value
+   *  principal en cada tick. */
+  progress: DeckAudioProgressValue
   wrapperPb?: string
   overlays: ReactNode
 }
@@ -256,6 +270,23 @@ export function useDeckAudio() {
 /** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
 export function useDeckAudioMaybe(): DeckAudioContextValue | null {
   return useContext(DeckAudioContext) as DeckAudioContextValue | null
+}
+
+/**
+ * Valores de alta frecuencia (progreso/duración/rotaciones). SOLO deben
+ * consumirlo componentes que pinten esos números (mini barras, deck de la
+ * portada): se re-renderizan en cada tick (~120 ms; 60 fps con el deck
+ * girando). El resto de la UI debe usar `useDeckAudio`/`usePreviewAudio`.
+ */
+export function useDeckAudioProgress(): DeckAudioProgressValue {
+  const ctx = useContext(DeckAudioProgressContext) as DeckAudioProgressValue | null
+  if (!ctx) throw new Error('useDeckAudioProgress must be used within DeckAudioProvider')
+  return ctx
+}
+
+/** null si el motor de audio aún no se ha cargado (LazyDeckAudioProvider). */
+export function useDeckAudioProgressMaybe(): DeckAudioProgressValue | null {
+  return useContext(DeckAudioProgressContext) as DeckAudioProgressValue | null
 }
 
 /** Para UI global (BackToTop) cuando el provider aún no ha cargado en rutas ligeras. */
@@ -278,8 +309,6 @@ export function usePreviewAudio(): PreviewAudioApi {
     previewQueue: ctx.previewQueue,
     previewIndex: ctx.previewIndex,
     previewPlaying: ctx.previewPlaying,
-    previewProgress: ctx.previewProgress,
-    previewDuration: ctx.previewDuration,
     previewGroupKey: ctx.previewGroupKey,
     previewBlocked: ctx.previewBlocked,
     playPreviewQueue: ctx.playPreviewQueue,
@@ -300,8 +329,6 @@ export function usePreviewAudioMaybe(): PreviewAudioApi | null {
     previewQueue: ctx.previewQueue,
     previewIndex: ctx.previewIndex,
     previewPlaying: ctx.previewPlaying,
-    previewProgress: ctx.previewProgress,
-    previewDuration: ctx.previewDuration,
     previewGroupKey: ctx.previewGroupKey,
     previewBlocked: ctx.previewBlocked,
     playPreviewQueue: ctx.playPreviewQueue,
@@ -856,10 +883,10 @@ function highlightPreviewRow(el: HTMLElement) {
 function MiniPreviewBar({ lang }: { lang: Locale }) {
   const {
     previewQueue, previewIndex, previewPlaying,
-    previewProgress, previewDuration,
     togglePreview, stopPreview, previewNext, previewPrev,
     seekPreviewToRatio, fmt,
   } = useDeckAudio()
+  const { previewProgress, previewDuration } = useDeckAudioProgress()
   const router = useRouter()
   const es = lang === 'es'
   const cur = previewQueue[previewIndex]
@@ -1004,7 +1031,8 @@ function MiniPreviewBar({ lang }: { lang: Locale }) {
 
 // ─── Adapter: DJ Deck (home, dual-deck A/B) ──────────────────────────────
 function MiniDeckBarInner({ lang }: { lang: Locale }) {
-  const { isPlaying, togglePlay, initAudio, switchTrack, track, progress, duration, fmt, seekToRatio } = useDeckAudio()
+  const { isPlaying, togglePlay, initAudio, switchTrack, track, fmt, seekToRatio } = useDeckAudio()
+  const { progress, duration } = useDeckAudioProgress()
   const es = lang === 'es'
 
   return (
@@ -1056,7 +1084,8 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
 
 // ─── Adapter: Mix (SoundCloud / MP3 largos) ──────────────────────────────
 function MiniMixBar({ lang }: { lang: Locale }) {
-  const { currentMix, mixPlaying, mixProgress, mixDuration, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
+  const { currentMix, mixPlaying, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
+  const { mixProgress, mixDuration } = useDeckAudioProgress()
   const es = lang === 'es'
   if (!currentMix) return null
 
@@ -2407,6 +2436,12 @@ export function DeckAudioProvider({
   }, [playingA, playingB, currentMix, stopMixInternal, previewQueue.length, stopPreviewInternal])
 
   // === Context value ===
+  // OJO: aquí NO van los valores de alta frecuencia (progreso/duración/
+  // rotaciones). Van en `progressValue` (DeckAudioProgressContext) para que
+  // el tick de ~120 ms del rAF no re-renderice a TODOS los consumidores del
+  // contexto principal (ChartView entero, TracksSection, Top 100…): eso
+  // producía lag general de página durante la reproducción y retrasaba el
+  // repintado del botón "+" de la barra al auto-avanzar de pista.
   const value = useMemo<DeckAudioContextValue>(
     () => ({
       dict,
@@ -2414,12 +2449,8 @@ export function DeckAudioProvider({
       crossfader,
       setCrossfader,
       currentTrack,
-      progress,
-      duration,
       scratchingLeft,
       scratchingRight,
-      leftRotation,
-      rightRotation,
       sessionActive,
       initAudio,
       togglePlay,
@@ -2430,8 +2461,6 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
-      deckA,
-      deckB,
       activeSide,
       trackA,
       trackB,
@@ -2440,8 +2469,6 @@ export function DeckAudioProvider({
       mode,
       currentMix,
       mixPlaying,
-      mixProgress,
-      mixDuration,
       playMix,
       toggleMixPlayback,
       stopMix,
@@ -2449,8 +2476,6 @@ export function DeckAudioProvider({
       previewQueue,
       previewIndex,
       previewPlaying,
-      previewProgress,
-      previewDuration,
       previewGroupKey,
       previewBlocked,
       playPreviewQueue,
@@ -2466,12 +2491,8 @@ export function DeckAudioProvider({
       isPlaying,
       crossfader,
       currentTrack,
-      progress,
-      duration,
       scratchingLeft,
       scratchingRight,
-      leftRotation,
-      rightRotation,
       sessionActive,
       initAudio,
       togglePlay,
@@ -2482,8 +2503,8 @@ export function DeckAudioProvider({
       handleScratchEnd,
       track,
       fmt,
-      trackIdxA, progressA, durationA, playingA,
-      trackIdxB, progressB, durationB, playingB,
+      trackIdxA, playingA,
+      trackIdxB, playingB,
       activeSide,
       trackA,
       trackB,
@@ -2492,8 +2513,6 @@ export function DeckAudioProvider({
       mode,
       currentMix,
       mixPlaying,
-      mixProgress,
-      mixDuration,
       playMix,
       toggleMixPlayback,
       stopMix,
@@ -2501,8 +2520,6 @@ export function DeckAudioProvider({
       previewQueue,
       previewIndex,
       previewPlaying,
-      previewProgress,
-      previewDuration,
       previewGroupKey,
       previewBlocked,
       playPreviewQueue,
@@ -2511,6 +2528,37 @@ export function DeckAudioProvider({
       previewNext,
       previewPrev,
       seekPreviewToRatio,
+    ]
+  )
+
+  // Valores de alta frecuencia: cambian en cada tick del rAF (~120 ms; las
+  // rotaciones del deck a 60 fps). Solo los consumen las mini barras y el
+  // deck de la portada vía `useDeckAudioProgress()`.
+  const progressValue = useMemo<DeckAudioProgressValue>(
+    () => ({
+      progress,
+      duration,
+      deckA,
+      deckB,
+      leftRotation,
+      rightRotation,
+      mixProgress,
+      mixDuration,
+      previewProgress,
+      previewDuration,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      progress,
+      duration,
+      trackIdxA, progressA, durationA, playingA,
+      trackIdxB, progressB, durationB, playingB,
+      leftRotation,
+      rightRotation,
+      mixProgress,
+      mixDuration,
+      previewProgress,
+      previewDuration,
     ]
   )
 
@@ -2557,15 +2605,17 @@ export function DeckAudioProvider({
 
   useLayoutEffect(() => {
     if (!engineOnly || !onBind) return
-    onBind({ value, wrapperPb, overlays })
-  }, [engineOnly, onBind, value, wrapperPb, overlays])
+    onBind({ value, progress: progressValue, wrapperPb, overlays })
+  }, [engineOnly, onBind, value, progressValue, wrapperPb, overlays])
 
   if (engineOnly) return null
 
   return (
     <DeckAudioContext.Provider value={value}>
-      <div className={wrapperPb}>{children}</div>
-      {overlays}
+      <DeckAudioProgressContext.Provider value={progressValue}>
+        <div className={wrapperPb}>{children}</div>
+        {overlays}
+      </DeckAudioProgressContext.Provider>
     </DeckAudioContext.Provider>
   )
 }

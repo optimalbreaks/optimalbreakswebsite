@@ -8,7 +8,12 @@
 import { useState, type CSSProperties } from 'react'
 import { DECK_TRACKS } from '@/lib/deck-tracks'
 import { useAudioEngineGate } from '@/components/LazyDeckAudioProvider'
-import { useDeckAudioMaybe, type DeckDict, type DeckSideState } from '@/components/DeckAudioProvider'
+import {
+  useDeckAudioMaybe,
+  useDeckAudioProgressMaybe,
+  type DeckDict,
+  type DeckSideState,
+} from '@/components/DeckAudioProvider'
 
 interface DjDeckProps {
   dict: Record<string, unknown> & {
@@ -423,9 +428,21 @@ const IDLE_SIDE: DeckSideState = { trackIdx: 0, progress: 0, duration: 0, playin
 function useDjDeckControl(propDict: DjDeckProps['dict']) {
   const gate = useAudioEngineGate()
   const live = useDeckAudioMaybe()
+  // Progreso/rotaciones viven en un contexto aparte (alta frecuencia); el
+  // deck de la portada SÍ los pinta (platos girando, barras de progreso),
+  // así que aquí los fusionamos con el value principal.
+  const liveProgress = useDeckAudioProgressMaybe()
   const [crossfader, setCrossfader] = useState(50)
 
-  if (live) return live
+  if (live && liveProgress) {
+    return {
+      ...live,
+      deckA: liveProgress.deckA,
+      deckB: liveProgress.deckB,
+      leftRotation: liveProgress.leftRotation,
+      rightRotation: liveProgress.rightRotation,
+    }
+  }
 
   const d: DeckDict = {
     play: 'PLAY',

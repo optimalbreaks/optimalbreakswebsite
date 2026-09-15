@@ -23,8 +23,6 @@ export function usePreviewAudioGated(): PreviewAudioApi {
     previewQueue: [],
     previewIndex: 0,
     previewPlaying: false,
-    previewProgress: 0,
-    previewDuration: 0,
     previewGroupKey: null,
     previewBlocked: false,
     playPreviewQueue: (items: PreviewTrack[], startIndex = 0, groupKey?: string) => {

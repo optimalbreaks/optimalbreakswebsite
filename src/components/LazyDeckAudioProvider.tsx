@@ -12,9 +12,9 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import type { Locale } from '@/lib/i18n-config'
-import type { DeckDict, DeckAudioShellBind } from '@/components/DeckAudioProvider'
+import type { DeckDict, DeckAudioShellBind, DeckAudioProgressValue } from '@/components/DeckAudioProvider'
 import PendingActionRunner from '@/components/PendingActionRunner'
-import { DeckAudioContext } from '@/components/deck-audio-context'
+import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-audio-context'
 import {
   type AudioPendingAction,
   hasActiveAudioSession,
@@ -52,7 +52,12 @@ export default function LazyDeckAudioProvider({
   dict: DeckDict
 }) {
   const [Engine, setEngine] = useState<EngineComponent | null>(null)
-  const [shell, setShell] = useState<DeckAudioShellBind | null>(null)
+  // Shell "lento" (API + overlays): cambia solo con acciones reales (play/
+  // pausa/cambio de pista). El progreso va en su propio estado/contexto para
+  // que el tick de ~120 ms no invalide el value principal y no re-renderice
+  // a los consumidores grandes (ChartView, TracksSection…).
+  const [shell, setShell] = useState<Omit<DeckAudioShellBind, 'progress'> | null>(null)
+  const [progressValue, setProgressValue] = useState<DeckAudioProgressValue | null>(null)
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null)
   const loadPromiseRef = useRef<Promise<void> | null>(null)
   const pendingRef = useRef<AudioPendingAction | null>(null)
@@ -105,8 +110,9 @@ export default function LazyDeckAudioProvider({
       ) {
         return prev
       }
-      return bind
+      return { value: bind.value, wrapperPb: bind.wrapperPb, overlays: bind.overlays }
     })
+    setProgressValue(bind.progress)
   }, [])
 
   const gate = useMemo<AudioEngineGate>(
@@ -120,16 +126,20 @@ export default function LazyDeckAudioProvider({
   return (
     <AudioEngineGateContext.Provider value={gate}>
       <DeckAudioContext.Provider value={shell?.value ?? null}>
-        <div className={shell?.wrapperPb}>{children}</div>
-        {shell?.value && <PendingActionRunner pendingRef={pendingRef} />}
-        {shell?.overlays && portalEl
-          ? createPortal(
-              <DeckAudioContext.Provider value={shell.value}>
-                {shell.overlays}
-              </DeckAudioContext.Provider>,
-              portalEl,
-            )
-          : null}
+        <DeckAudioProgressContext.Provider value={progressValue}>
+          <div className={shell?.wrapperPb}>{children}</div>
+          {shell?.value && <PendingActionRunner pendingRef={pendingRef} />}
+          {shell?.overlays && portalEl
+            ? createPortal(
+                <DeckAudioContext.Provider value={shell.value}>
+                  <DeckAudioProgressContext.Provider value={progressValue}>
+                    {shell.overlays}
+                  </DeckAudioProgressContext.Provider>
+                </DeckAudioContext.Provider>,
+                portalEl,
+              )
+            : null}
+        </DeckAudioProgressContext.Provider>
       </DeckAudioContext.Provider>
       {Engine && <Engine lang={lang} dict={dict} engineOnly onBind={onBind} />}
     </AudioEngineGateContext.Provider>

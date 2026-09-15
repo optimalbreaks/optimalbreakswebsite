@@ -1,0 +1,26 @@
+---
+description: Nada de pruebas en local — commit + push y Narciso prueba en producción
+alwaysApply: true
+---
+
+# Sin pruebas en local: se lanza y se prueba en público
+
+Narciso lo ha pedido expresamente (sep 2026, tras repetirlo varias veces): el agente **no** monta pruebas en local. El flujo es: ajustar el código → verificación estática → **commit + push** → Narciso lo prueba en la web desplegada (Vercel).
+
+## Prohibido
+
+- Arrancar `npm run dev` (o reutilizar un dev server vivo) para probar el cambio.
+- Abrir `localhost` en el navegador (tool de browser o manual) para reproducir bugs o validar fixes.
+- `npm start`, previews locales, capturas de pantalla en local, etc.
+- Dejar el trabajo "pendiente de que lo pruebe el agente": tras verificar y hacer push, el turno del agente en código termina y prueba Narciso.
+
+## Sí (y obligatorio antes del push)
+
+- **Verificación estática**: `npx tsc --noEmit`, lints de los archivos tocados y `npm run build`. Eso no es "probar en local", es no romper el deploy.
+- Leer código, logs o datos para diagnosticar: sin límite.
+- Probar contra la **web pública** (`https://www.optimalbreaks.com`) con el navegador si hace falta reproducir un bug ya desplegado.
+- Commit + push directo al terminar (remoto = cuenta **optimalbreaks**; avisar antes del push por si pide permiso, regla `github-avisar-cuenta`).
+
+## Excepción
+
+Solo si Narciso pide explícitamente en ese chat "pruébalo en local" / "arranca el dev".
