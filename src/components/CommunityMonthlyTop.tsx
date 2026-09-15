@@ -831,17 +831,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     >
                       {artistsLabel}
                     </div>
-                    {/* Cola decorativa: rombo + cinta de peligro rojo/amarillo que rellena el
-                        sobrante del banderín (los altos lucen larga; el corto apenas se ve). */}
+                    {/* Cola minimalista (deco olímpico años 30): una sola línea vertical roja
+                        que rellena el sobrante del banderín, rematada en rombo. */}
                     <div className="mt-3 sm:mt-4 flex-1 w-full flex flex-col items-center justify-start">
-                      <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rotate-45 bg-[var(--red)] border-[2px] sm:border-[3px] border-[var(--ink)] shrink-0 -mb-[6px] sm:-mb-[7px] relative z-[1]" />
-                      <span
-                        className="w-4 sm:w-6 flex-1 min-h-[10px] border-[2px] sm:border-[3px] border-[var(--ink)]"
-                        style={{
-                          backgroundImage:
-                            'repeating-linear-gradient(45deg, var(--red) 0, var(--red) 6px, var(--yellow) 6px, var(--yellow) 12px)',
-                        }}
-                      />
+                      <span className="w-[2px] sm:w-[3px] flex-1 min-h-[8px] bg-[var(--red)]" />
+                      <span className="mt-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 rotate-45 bg-[var(--red)] shrink-0" />
                     </div>
                   </div>
                   {/* Punta del banderín (V invertida con borde). */}
