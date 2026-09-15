@@ -19,7 +19,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Component, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useProfile } from '@/hooks/useUserData'
+import { useProfile, useSavedChartTracks } from '@/hooks/useUserData'
+import type { SavedChartTrackSnapshot } from '@/types/database'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
@@ -207,6 +208,12 @@ function LoadingSkeleton({ es }: { es: boolean }) {
 export default function SoulmatesSection({ lang }: Props) {
   const es = lang === 'es'
   const { update } = useProfile()
+  // Saves del propio usuario: para descartar de las recomendaciones lo que YA
+  // tiene (mismo criterio que pinta el botón "+" en verde: URL canónica,
+  // beatport_url o título+mix+artistas). El endpoint solo deduplica por URL,
+  // así que aquí afinamos para que la lista "para descubrir" nunca muestre un
+  // tema ya guardado (que saldría en verde).
+  const { saved: mySaved, isSavedByIdentity } = useSavedChartTracks()
   const [data, setData] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savingFlag, setSavingFlag] = useState(false)
@@ -261,9 +268,28 @@ export default function SoulmatesSection({ lang }: Props) {
   // TracksSection (mismo motor de /tracks: play global, guardar, compartir,
   // Spotify/TIDAL/Beatport, vídeo YouTube). Así cada fila se comporta igual
   // que en Mis Tracks sin duplicar la lógica del reproductor.
+  // Recomendaciones realmente "nuevas" para el visitante (descarta lo que ya
+  // tiene guardado por identidad/URL — lo mismo que pondría el botón en verde).
+  const visibleRecos = useMemo(() => {
+    const recs = data?.recommended_tracks ?? []
+    if (!recs.length) return []
+    return recs.filter((t) => !isSavedByIdentity({
+      url: t.external_url ?? t.beatport_url ?? null,
+      snapshot: {
+        title: t.title,
+        mix_name: t.mix_name,
+        artists: t.artists,
+        beatport_url: t.beatport_url ?? t.external_url ?? null,
+      } as unknown as SavedChartTrackSnapshot,
+    }))
+  // `mySaved` es la dependencia real (los closures de isSavedByIdentity se
+  // rehacen con cada cambio de saves).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.recommended_tracks, mySaved])
+
   const recoPayload = useMemo((): PublicTracksPayload | null => {
-    const recs = data?.recommended_tracks
-    if (!recs?.length || !data?.self) return null
+    const recs = visibleRecos
+    if (!recs.length || !data?.self) return null
     const base = Date.now()
     const isYt = (u: string | null) => !!u && /(?:youtu\.be|youtube\.com)/i.test(u)
     const chart: PublicTracksPayload['tracks']['chart'] = []
@@ -341,16 +367,16 @@ export default function SoulmatesSection({ lang }: Props) {
       saved,
       tracks: { chart, featured, vinyl },
     }
-  }, [data])
+  }, [visibleRecos, data?.self])
 
   // rowKey (`${source}:${id}`) → nº de almas gemelas que tienen el tema.
   const recoBadges = useMemo(() => {
     const m: Record<string, number> = {}
-    for (const t of data?.recommended_tracks ?? []) {
+    for (const t of visibleRecos) {
       m[`${t.primary.source}:${t.primary.id}`] = t.soulmates_count
     }
     return m
-  }, [data?.recommended_tracks])
+  }, [visibleRecos])
 
   const enableSharing = async () => {
     setSavingFlag(true)
@@ -480,13 +506,13 @@ export default function SoulmatesSection({ lang }: Props) {
                   to: data.soulmates.length > 0 ? 'soulmates-top' : null,
                 },
                 {
-                  n: data.recommended_tracks.length,
+                  n: visibleRecos.length,
                   l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER',
                   d: es
                     ? 'Temas que 2 o más de tus almas gemelas tienen guardados y tú aún no. Es la lista «Lo que te estás perdiendo» (abajo).'
                     : 'Tracks that 2+ of your soulmates saved and you haven’t yet. That’s the “What you’re missing” list (below).',
                   bg: 'bg-[var(--acid)]',
-                  to: data.recommended_tracks.length > 0 ? 'soulmates-recos' : null,
+                  to: visibleRecos.length > 0 ? 'soulmates-recos' : null,
                 },
               ].map((s) => {
                 const clickable = !!s.to
