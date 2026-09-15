@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedMixes } from '@/hooks/useUserData'
 import CardThumbnail from '@/components/CardThumbnail'
-import LoadingBreaks from '@/components/LoadingBreaks'
 import FavoriteButton from '@/components/FavoriteButton'
 import type { ViewMode } from '@/components/ViewToggle'
 import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
@@ -52,7 +51,9 @@ export default function MixesSection({ lang }: { lang: string }) {
           {es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}
         </p>
       ) : mixesLoading ? (
-        <LoadingBreaks es={es} title={es ? 'Cargando mixes' : 'Loading mixes'} />
+        <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
+          {es ? 'Cargando mixes…' : 'Loading mixes…'}
+        </p>
       ) : mixes.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
           {es ? 'No se pudieron cargar los mixes. Puede que hayan sido eliminados.' : 'Could not load mixes. They may have been removed.'}

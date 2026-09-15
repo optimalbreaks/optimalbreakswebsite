@@ -16,7 +16,6 @@ import {
 } from '@/hooks/useUserData'
 import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
-import LoadingBreaks from '@/components/LoadingBreaks'
 import type { ViewMode } from '@/components/ViewToggle'
 import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import {
@@ -291,7 +290,7 @@ export default function FavoritesSection({ lang }: { lang: string }) {
         {mixIds.length === 0 ? (
           <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>{es ? 'Guarda mixes desde la sección de Mixes.' : 'Save mixes from the Mixes section.'}</p>
         ) : mixes.length === 0 ? (
-          <LoadingBreaks es={es} title={es ? 'Cargando mixes' : 'Loading mixes'} />
+          <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>{es ? 'Cargando mixes…' : 'Loading mixes…'}</p>
         ) : mixView === 'large' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-[18px]">
             {mixes.map((m) => {

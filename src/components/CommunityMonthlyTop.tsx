@@ -25,7 +25,6 @@ import CountryBadge from '@/components/CountryBadge'
 import { CountryFlagSvg } from '@/components/country-flag-svgs'
 import { countryDisplayFromCode } from '@/lib/seo'
 import SaveTrackButton from '@/components/SaveTrackButton'
-import LoadingBreaks from '@/components/LoadingBreaks'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildFullArtistSlugMap,
@@ -924,11 +923,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         </div>
 
         {loading && (
-          <LoadingBreaks
-            es={lang === 'es'}
-            title={lang === 'es' ? 'Cargando el Top 100' : 'Loading the Top 100'}
-            subtitle={lang === 'es' ? 'Contando los saves de toda la comunidad' : 'Counting saves across the community'}
-          />
+          <div className="p-8 text-center text-sm text-[var(--ink)]/50" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            {cm.loading || 'Cargando ranking…'}
+          </div>
         )}
 
         {!loading && error && (
