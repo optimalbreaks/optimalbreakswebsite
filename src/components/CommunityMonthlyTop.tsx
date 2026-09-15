@@ -780,9 +780,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     >
                       {medal.label}
                     </div>
-                    <span className="mt-3 sm:mt-5 inline-block border-[3px] border-[var(--ink)] leading-none">
-                      <CountryFlagSvg iso={ct.iso} size="lg" className="block" />
-                    </span>
+                    <CountryFlagSvg iso={ct.iso} size="lg" className="block mt-3 sm:mt-5" />
                     <div
                       className="mt-2 sm:mt-4 text-[10px] sm:text-base font-black uppercase leading-tight break-words tracking-[1px] sm:tracking-[3px]"
                       style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
