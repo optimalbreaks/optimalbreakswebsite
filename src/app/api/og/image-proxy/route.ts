@@ -38,7 +38,11 @@ export async function GET(request: NextRequest) {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'image/jpeg,image/png,image/webp,*/*',
+        // OJO: sin `image/webp`. El CDN de Beatport (sep 2026) negocia formato
+        // por Accept y devuelve WebP si lo anuncias — y WhatsApp/Facebook NO
+        // renderizan previews og:image en WebP (el link se comparte sin foto).
+        // Pidiendo solo JPEG/PNG, Beatport sirve la JPEG original.
+        Accept: 'image/jpeg,image/png;q=0.9,*/*;q=0.5',
       },
       next: { revalidate: 86400 },
     })
