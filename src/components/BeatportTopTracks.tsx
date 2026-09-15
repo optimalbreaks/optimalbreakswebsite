@@ -6,12 +6,14 @@ import { usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildBeatportSharePath,
   parsePlayParam,
   formatTrackReleaseDisplay,
   extractBeatportTrackId,
+  proxyCatalogArtworkForDisplay,
   trackStoryMeta,
 } from '@/lib/share-track'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
@@ -169,6 +171,20 @@ export default function BeatportTopTracks({
     playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
+  // Enlace compartido de un corte del Top 10 (`?play=beatport:<id>`): NADA de
+  // autoplay (misma regla de producto que /charts). Se arma este modal «Toca
+  // para escuchar» con la cola preparada y es el tap del receptor (gesto real,
+  // válido en PC y móvil) quien arranca la reproducción.
+  const [pendingTapPlay, setPendingTapPlay] = useState<{
+    queue: PreviewTrack[]
+    idx: number
+    rowKey: string
+    title: string
+    mixName: string | null
+    artist: string
+    artworkUrl: string | null
+  } | null>(null)
+
   // groupKey estable para identificar "mi" cola dentro del provider global.
   // Distingue artista de sello y así, si navegas entre fichas, cada Top 10
   // tiene su propio identificador. Si no hay origin, usamos entityName.
@@ -176,6 +192,14 @@ export default function BeatportTopTracks({
     () => `bp-top:${origin?.kind ?? 'x'}:${origin?.id ?? entityName ?? beatportUrl ?? 'unknown'}`,
     [origin?.kind, origin?.id, entityName, beatportUrl],
   )
+
+  // Tap del receptor en el modal: gesto real → arranca la cola desde el corte
+  // compartido, exactamente igual que pulsar ▶ en esa fila.
+  const handleTapPlay = useCallback(() => {
+    if (!pendingTapPlay) return
+    playPreviewQueue(pendingTapPlay.queue, pendingTapPlay.idx, groupKey)
+    setPendingTapPlay(null)
+  }, [pendingTapPlay, playPreviewQueue, groupKey])
 
   const myQueueActive = previewGroupKey === groupKey && previewQueue.length > 0
 
@@ -296,6 +320,20 @@ export default function BeatportTopTracks({
     const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
     didAutoPlayRef.current = true
     setExpanded(true)
+    // Regla de producto (sep 2026): el enlace compartido NO hace autoplay.
+    // Se arma el modal «Toca para escuchar» (carátula + título + ▶) y el tap
+    // del receptor reproduce — igual que los links compartidos de /charts.
+    if (idx >= 0 && target.sample_url) {
+      setPendingTapPlay({
+        queue,
+        idx,
+        rowKey: `bp-${target.position}`,
+        title: target.title,
+        mixName: target.mix_name || null,
+        artist: target.artists.map((a) => a.name).filter(Boolean).join(', '),
+        artworkUrl: target.artwork_url || null,
+      })
+    }
     // Pequeño delay para esperar a que el panel expanda antes de hacer scroll.
     const t = window.setTimeout(() => {
       const el = document.getElementById(`bp-row-${target.position}`)
@@ -304,12 +342,9 @@ export default function BeatportTopTracks({
         el.classList.add('ring-4', 'ring-[var(--red)]')
         window.setTimeout(() => el.classList.remove('ring-4', 'ring-[var(--red)]'), 2200)
       }
-      if (idx >= 0 && target.sample_url) {
-        playPreviewQueue(queue, idx, groupKey)
-      }
     }, 120)
     return () => window.clearTimeout(t)
-  }, [tracks, playableTracks, groupKey, playPreviewQueue, pathname, origin, saveRefsByUrl])
+  }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl])
 
   if (!tracks.length) return null
 
@@ -490,6 +525,24 @@ export default function BeatportTopTracks({
             })}
           </div>
         </div>
+      )}
+      {/* Deep-link compartido (?play=beatport:<id>): modal «Toca para escuchar».
+          El tap (gesto real) lanza la cola — nunca autoplay. */}
+      {pendingTapPlay && (
+        <TapToPlayOverlay
+          title={pendingTapPlay.title}
+          mixName={pendingTapPlay.mixName}
+          artistText={pendingTapPlay.artist}
+          artworkCandidates={[
+            proxyCatalogArtworkForDisplay(pendingTapPlay.artworkUrl),
+            pendingTapPlay.artworkUrl,
+          ].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i)}
+          resetKey={pendingTapPlay.rowKey}
+          ariaLabel={lang === 'es' ? 'Toca para escuchar el track' : 'Tap to play the track'}
+          lang={lang}
+          onPlay={handleTapPlay}
+          onDismiss={() => setPendingTapPlay(null)}
+        />
       )}
     </section>
   )
