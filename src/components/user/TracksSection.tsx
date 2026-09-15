@@ -16,6 +16,7 @@ import { createBrowserSupabase } from '@/lib/supabase'
 import { useSavedChartTracks, type ChartTrackSource } from '@/hooks/useUserData'
 import { useAuth } from '@/components/AuthProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import LoadingBreaks from '@/components/LoadingBreaks'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack, PreviewShareData } from '@/components/DeckAudioProvider'
@@ -1207,11 +1208,15 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
   }, [shareUrl, es])
 
   if ((loading || tracksLoading) && tracks.length === 0) {
-    return <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', color: 'var(--dim)' }}>
-      {isShared
-        ? (es ? 'Cargando tracks…' : 'Loading tracks…')
-        : (es ? 'Cargando tus tracks…' : 'Loading your tracks…')}
-    </p>
+    return (
+      <LoadingBreaks
+        es={es}
+        title={isShared
+          ? (es ? 'Cargando tracks' : 'Loading tracks')
+          : (es ? 'Cargando tus tracks' : 'Loading your tracks')}
+        subtitle={es ? 'Sacando los temas de la maleta' : 'Pulling the tracks out of the bag'}
+      />
+    )
   }
 
   return (
