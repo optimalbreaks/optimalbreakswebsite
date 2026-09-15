@@ -22,6 +22,7 @@ import { Component, useCallback, useEffect, useMemo, useState, type ReactNode } 
 import { useProfile, useSavedChartTracks } from '@/hooks/useUserData'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
+import LoadingBreaks from '@/components/LoadingBreaks'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -194,111 +195,20 @@ const SM_MESSAGES_EN = [
   'Prepping what you’re missing…',
 ]
 
-// Pantalla de carga con estética fanzine (ecualizador + cinta + barra de
-// escaneo), en línea (no modal). Sustituye a las cajas vacías: mientras el
-// endpoint calcula las afinidades, el hueco no se queda en blanco.
+// Pantalla de carga fanzine compartida (src/components/LoadingBreaks.tsx) con
+// textos propios de Almas Gemelas. Mientras el endpoint calcula afinidades,
+// el hueco no se queda en blanco.
 function LoadingSkeleton({ es }: { es: boolean }) {
-  const [progress, setProgress] = useState(0)
-  const [msgIdx, setMsgIdx] = useState(0)
-  const messages = es ? SM_MESSAGES_ES : SM_MESSAGES_EN
-
-  useEffect(() => {
-    const tickProgress = window.setInterval(() => {
-      setProgress((p) => {
-        if (p >= 95) return p
-        const step = Math.max(0.6, (95 - p) * 0.06)
-        return Math.min(95, p + step)
-      })
-    }, 300)
-    const tickMsg = window.setInterval(() => {
-      setMsgIdx((i) => (i + 1) % messages.length)
-    }, 2200)
-    return () => {
-      window.clearInterval(tickProgress)
-      window.clearInterval(tickMsg)
-    }
-  }, [messages.length])
-
-  const currentPct = Math.round(progress)
-  const eqBars = [
-    { dur: 0.48, delay: 0.00 }, { dur: 0.62, delay: 0.08 }, { dur: 0.38, delay: 0.18 },
-    { dur: 0.72, delay: 0.02 }, { dur: 0.50, delay: 0.24 }, { dur: 0.44, delay: 0.12 },
-    { dur: 0.66, delay: 0.30 }, { dur: 0.40, delay: 0.06 }, { dur: 0.56, delay: 0.20 },
-  ]
-  const tapeText = es
-    ? 'CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · '
-    : 'MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · '
-
   return (
-    <div aria-busy="true" aria-live="polite" className="flex justify-center py-6">
-      <style>{`
-        @keyframes smEq { 0%,100% { transform: scaleY(0.18) } 50% { transform: scaleY(1) } }
-        @keyframes smTape { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-        @keyframes smScan { from { background-position: 0 0 } to { background-position: 40px 0 } }
-        @keyframes smBlink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
-      `}</style>
-
-      <div
-        className="w-full max-w-[560px] border-[6px] border-[var(--ink)] bg-[var(--paper)] text-[var(--ink)]"
-        style={{ boxShadow: '10px 10px 0 var(--red)' }}
-      >
-        {/* Cinta cabecera con texto en loop */}
-        <div className="relative overflow-hidden border-b-[6px] border-[var(--ink)]" style={{ background: 'var(--yellow)', height: 34 }} aria-hidden>
-          <div
-            className="absolute inset-y-0 left-0 flex items-center whitespace-nowrap"
-            style={{ fontFamily: MONO, fontWeight: 700, fontSize: '11px', letterSpacing: '2px', color: 'var(--ink)', animation: 'smTape 18s linear infinite', minWidth: '200%' }}
-          >
-            <span>{tapeText.repeat(2)}</span>
-          </div>
-        </div>
-
-        <div className="px-6 sm:px-8 pt-6 pb-7">
-          {/* REC + etiqueta */}
-          <div className="flex items-center justify-between mb-5" style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '2px' }}>
-            <div className="flex items-center gap-2">
-              <span aria-hidden style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--red)', animation: 'smBlink 1s steps(1,end) infinite' }} />
-              <span style={{ fontWeight: 700 }}>SCAN</span>
-            </div>
-            <span style={{ opacity: 0.6 }}>// TRK 01 — SIDE A</span>
-          </div>
-
-          {/* Ecualizador */}
-          <div className="mx-auto mb-6 flex items-end justify-center gap-[6px] border-[3px] border-[var(--ink)] p-3" style={{ height: 120, background: 'var(--paper-dark, #e8dcc8)' }} aria-hidden>
-            {eqBars.map((b, i) => (
-              <span key={i} style={{ display: 'inline-block', width: 14, height: '100%', background: 'var(--ink)', transformOrigin: 'bottom', animation: `smEq ${b.dur}s ease-in-out ${b.delay}s infinite` }} />
-            ))}
-          </div>
-
-          {/* Título */}
-          <div className="mb-1" style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'clamp(22px, 5vw, 30px)', letterSpacing: '-1.2px', lineHeight: 1, textTransform: 'uppercase' }}>
-            {es ? 'Buscando tus almas gemelas' : 'Finding your soulmates'}
-          </div>
-          <div className="mb-5" style={{ fontFamily: MONO, fontSize: '11px', letterSpacing: '2px', opacity: 0.55, textTransform: 'uppercase' }}>
-            // {es ? 'Cruzando tu lista con toda la comunidad' : 'Matching your list against the community'}
-          </div>
-
-          {/* Mensaje rotatorio */}
-          <div className="border-[3px] border-[var(--ink)] mb-6 px-3 py-3 flex items-start gap-2 min-h-[64px]" style={{ background: 'var(--yellow)' }}>
-            <span aria-hidden style={{ fontFamily: MONO, fontWeight: 900, fontSize: '14px', color: 'var(--red)', lineHeight: 1.45, flexShrink: 0 }}>&gt;</span>
-            <span style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', lineHeight: 1.45, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {messages[msgIdx]}
-            </span>
-          </div>
-
-          {/* Barra de escaneo */}
-          <div className="flex items-end justify-between mb-1" style={{ fontFamily: MONO, fontSize: '10px', letterSpacing: '2px' }}>
-            <span style={{ opacity: 0.55 }}>{es ? 'PROGRESO' : 'PROGRESS'}</span>
-            <span style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: '22px', letterSpacing: '-1px', color: 'var(--red)', lineHeight: 1 }}>
-              {String(currentPct).padStart(2, '0')}%
-            </span>
-          </div>
-          <div className="relative h-6 border-[3px] border-[var(--ink)] overflow-hidden" style={{ background: 'var(--paper)' }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={currentPct}>
-            <div className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out" style={{ width: `${currentPct}%`, background: 'var(--ink)' }} />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'repeating-linear-gradient(45deg, var(--yellow) 0 8px, transparent 8px 16px)', animation: 'smScan 0.9s linear infinite', opacity: currentPct > 0 ? 0.55 : 0 }} />
-          </div>
-        </div>
-      </div>
-    </div>
+    <LoadingBreaks
+      es={es}
+      title={es ? 'Buscando tus almas gemelas' : 'Finding your soulmates'}
+      subtitle={es ? 'Cruzando tu lista con toda la comunidad' : 'Matching your list against the community'}
+      messages={es ? SM_MESSAGES_ES : SM_MESSAGES_EN}
+      tape={es
+        ? 'CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · CRUZANDO LISTAS · OPTIMAL BREAKS · ALMAS GEMELAS · SIDE A · '
+        : 'MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · MATCHING LISTS · OPTIMAL BREAKS · SOULMATES · SIDE A · '}
+    />
   )
 }
 
