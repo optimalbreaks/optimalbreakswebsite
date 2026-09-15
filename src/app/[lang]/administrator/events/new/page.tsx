@@ -6,7 +6,7 @@ import { adminCreate } from '@/lib/admin-api'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ArrayEditor from '@/components/admin/ArrayEditor'
-import ImageUpload from '@/components/admin/ImageUpload'
+import ImageUpload, { ImageGalleryUpload } from '@/components/admin/ImageUpload'
 import SlugField from '@/components/admin/SlugField'
 
 const EVENT_TYPES = [
@@ -33,6 +33,7 @@ export default function EventsNewPage() {
     country: '',
     venue: '',
     image_url: null as string | null,
+    gallery_urls: [] as string[],
     website: '',
     lineup: [] as string[],
     is_featured: false,
@@ -49,6 +50,7 @@ export default function EventsNewPage() {
         date_start: form.date_start || null,
         date_end: form.date_end || null,
         venue: form.venue || null,
+        gallery_urls: (form.gallery_urls || []).map((u) => u.trim()).filter(Boolean),
       })
       router.push(`/${lang}/administrator/events`)
     } finally {
@@ -166,9 +168,18 @@ export default function EventsNewPage() {
 
       <div>
         <ImageUpload
-          label="Imagen"
+          label="Cartel de portada"
           value={form.image_url}
           onChange={(v) => set('image_url', v)}
+        />
+      </div>
+
+      <div className="md:col-span-2">
+        <ImageGalleryUpload
+          label="Más imágenes"
+          hint="Horario, hoja de info u otros flyers. El de portada de arriba es el que sale en el listado."
+          value={form.gallery_urls}
+          onChange={(v) => set('gallery_urls', v)}
         />
       </div>
 

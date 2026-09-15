@@ -13,7 +13,7 @@ import {
 } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/types/database'
-import { eventNoticeKind } from '@/types/database'
+import { eventNoticeKind, normalizeEventGalleryUrls } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ShareButtons from '@/components/ShareButtons'
@@ -194,6 +194,17 @@ function eventScheduleImageUrl(socials: Record<string, string> | null | undefine
   const raw = socials?.schedule_image || socials?.horarios
   const url = typeof raw === 'string' ? raw.trim() : ''
   return url || null
+}
+
+function eventGalleryItemAlt(url: string, name: string, index: number, lang: Locale): string {
+  const u = url.toLowerCase()
+  if (u.includes('horario') || u.includes('schedule') || u.includes('timetable')) {
+    return lang === 'es' ? `Horarios de ${name}` : `${name} timetable`
+  }
+  if (u.includes('info')) {
+    return lang === 'es' ? `Información de ${name}` : `${name} info sheet`
+  }
+  return lang === 'es' ? `${name} — cartel ${index + 2}` : `${name} — flyer ${index + 2}`
 }
 
 function eventPublicSocials(socials: Record<string, string> | null | undefined): [string, string][] {
@@ -427,6 +438,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     poster_zoom_aria: string
     poster_close: string
     poster_lightbox_title: string
+    poster_prev?: string
+    poster_next?: string
     detail_about: string
     detail_lineup: string
     detail_stages: string
@@ -454,6 +467,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   const schedule = (event.schedule ?? []) as EventScheduleSlot[]
   const publicSocials = eventPublicSocials(event.socials as Record<string, string> | null)
   const scheduleImageUrl = eventScheduleImageUrl(event.socials as Record<string, string> | null)
+  const galleryUrls = normalizeEventGalleryUrls(event.gallery_urls, event.image_url)
   const tags = (event.tags ?? []) as string[]
   const mapLink = mapsUrl(event.coords as { lat: number; lng: number } | null, event.address ?? event.location)
   const notice = eventNoticeKind(event)
@@ -472,6 +486,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     posterDateLabel || null,
   ].filter(Boolean) as string[]
   const posterAlt = posterAltBits.join(' · ')
+  const extraImages = galleryUrls.map((url, i) => ({
+    src: versionedImageUrl(url, imageCacheVersion(event.updated_at)) || url,
+    alt: eventGalleryItemAlt(url, event.name, i, lang),
+  }))
   const hasTicketsUrl = Boolean((event.tickets_url ?? '').trim())
   const hasMonsterTicketLink =
     isMonsterTicketUrl(event.tickets_url) || isMonsterTicketUrl(event.website)
@@ -678,9 +696,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
             <EventPosterLightbox
               src={versionedImageUrl(event.image_url, imageCacheVersion(event.updated_at))}
               alt={posterAlt}
+              extraImages={extraImages}
               zoomAria={ev.poster_zoom_aria}
               closeLabel={ev.poster_close}
               lightboxTitle={ev.poster_lightbox_title}
+              prevLabel={ev.poster_prev ?? (lang === 'es' ? 'Cartel anterior' : 'Previous flyer')}
+              nextLabel={ev.poster_next ?? (lang === 'es' ? 'Cartel siguiente' : 'Next flyer')}
               cancelled={Boolean(notice)}
               cancelledLabel={noticeStamp}
               stampTone={postponed ? 'postpone' : 'cancel'}

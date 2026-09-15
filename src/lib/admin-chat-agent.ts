@@ -367,7 +367,7 @@ const TOOL_DEFINITIONS = [
     function: {
       name: 'stage_upsert_event',
       description:
-        'Preparar alta/actualización de EVENTO/fiesta. Requiere confirmación. date_start/date_end en YYYY-MM-DD; si el cartel no trae año, usa la próxima fecha futura (nunca un año pasado).',
+        'Preparar alta/actualización de EVENTO/fiesta. Requiere confirmación. date_start/date_end en YYYY-MM-DD; si el cartel no trae año, usa la próxima fecha futura (nunca un año pasado). Si hay varias imágenes adjuntas, la 1ª es portada y el resto (horario, info) van a la galería.',
       parameters: {
         type: 'object',
         properties: {

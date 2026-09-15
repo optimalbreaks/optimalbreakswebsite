@@ -307,6 +307,22 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Schema: `supabase/migrations/070_editorial_artist_marks.sql` + `071_editorial_label_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
+### Artist profile opt-outs (no `/artists` ficha)
+
+Some artists asked **not** to have a catalogue profile on Optimal Breaks. This is **not** a ban on their music — only on bios, portraits, `/artists/<slug>` and agent/bootstrap fichas.
+
+| Name | Beatport artist id | Status |
+| --- | --- | --- |
+| **Vazteria X** (VAZTERIA X) | `227121` | Opt-out **Aug 2026**. Asked explicitly not to be part of the site. Ficha deleted. |
+
+**Allowed (and keep as-is):** the **name on track credits** (40 Breaks, New Releases, vinyl, Beatport Top 10 of others), event line-ups, label strings, **«+» saves**, Community Top track list, remixer credits in charts.
+
+**Forbidden:** recreate `artists` / `data/artists/vazteria-x.json`, portrait, `run agent` / `artist-json` / `stage_upsert_artist`, link to `/artists/vazteria-x`, blog/history/scene copy that profiles the person. Do **not** delete picks or rewrite chart history to hide the name.
+
+**Implementation:** `ARTIST_PROFILE_VETO_SLUGS` in `scripts/lib/artist-upsert.mjs` blocks profile UPSERT; full rule: `.cursor/rules/artistas-opt-out-perfil.mdc`. Also listed under [README — Editorial vetoes](../README.md#editorial-vetoes-entities-not-to-create).
+
+**Admin Mis Tracks audits (Sep 2026):** crossing editorial saves (`contacto@eskaladigital.com`) against artist names **without** a slug often ranks **Vazteria X** at the top (many «+» on their own releases). That is **expected** — it is **not** a signal to create a ficha. Exclude opt-out names from “missing profile” shortlists and bootstrap batches. Expand this table **only** after explicit editor confirmation.
+
 ### Editorial marks in production (ops)
 
 How to mark: `/[lang]/administrator/users` → open the row → **Marcar artista (fase 2)** with the **credit name** as it appears on tracks (`Devis Hard`, not the email). That upserts `editorial_artist_marks` (`user_id` + `normalizeArtistKey`). Optional `artist_id` if `/artists/<slug>` exists. **Do not** write `claimed_by` or flip `accepts_bookings`.

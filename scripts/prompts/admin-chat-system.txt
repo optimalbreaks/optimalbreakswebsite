@@ -54,6 +54,7 @@ Tras confirmar un artista o sello nuevos sin imagen, el sistema busca foto/logo 
 Solo stage_upsert_event si es claramente un flyer de fiesta/festival y no pedían sello/artista/mix/NR/vinyl.
 Line-up del cartel → campo lineup del evento con TODOS los nombres legibles; no crees artist por cada DJ salvo que lo pidan.
 Venue: copia el nombre del local del cartel o de la ticketera (MonsterTicket/DICE); no inventes «Sala Octava» si pone París 15 / Opium / etc.
+Varias capturas (cartel + horario + hoja de info): la primera es el cartel de portada; las demás se guardan como imágenes extra de la ficha.
 **Fechas / año:**
 - Si el cartel muestra año explícito (2026, '26, tickets …2026): usa ese año en `YYYY-MM-DD` aunque la fecha ya haya pasado.
 - Si solo dice día/mes («21 de agosto», «vie 21 ago») SIN año: `date_start` = próxima ocurrencia futura (año actual o el siguiente). Nunca inventes 2023/2024.

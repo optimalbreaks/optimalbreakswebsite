@@ -870,7 +870,7 @@ Editorial growth of the catalogue from **published** editions of **40 Breaks Vit
 ### Artists — threshold **≥ 3** appearances
 
 1. Count artist **credits** across all published editions (union of 40 Breaks + New Releases). One credit = one row where the name appears in `artists[]`. **Remixers belong in `artists[]`** (Beatport `remixers[]` + parsed `mix_name`); after the Aug 2026 backfill a remixer-only pick still counts toward the ≥ 3 threshold.
-2. Match against `data/artists/` (name / stripped name / slug; aliases in `CHART_NAME_TO_SLUG` inside `sync-chart-artists.mjs` / `enrich-chart-artists-agent.mjs`).
+2. Match against `data/artists/` (name / stripped name / slug; aliases in `CHART_NAME_TO_SLUG` inside `sync-chart-artists.mjs` / `enrich-chart-artists-agent.mjs`). **Skip** [profile opt-outs](./docs/USER_ENGAGEMENT.md#artist-profile-opt-outs-no-artists-ficha) (today: **Vazteria X** — tracks yes, `/artists` ficha no).
 3. Candidates with **≥ 3** appearances and **no** local JSON → create with the agent:
    ```bash
    # SSL inspection (Acttax): see TLS notes below; Node < 22.15 needs OB_NO_SYSTEM_CA=1

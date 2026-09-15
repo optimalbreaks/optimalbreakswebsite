@@ -20,6 +20,10 @@ El **agente de fichas de artista** genera con OpenAI (y búsqueda opcional) un o
 
 Los archivos **`data/artists/*.json`** están en **`.gitignore`** (canónico en Supabase); se generan o editan solo en local.
 
+### Opt-out de ficha (no confundir con «sin ficha»)
+
+Algunos artistas pidieron **no** tener perfil en `/artists` aunque sus temas sigan en charts y saves. Hoy: **Vazteria X** (`vazteria-x`, Beatport `227121`) — agosto 2026, ficha borrada. **Canciones sí; bio, retrato y ficha no.** El UPSERT lo bloquea `ARTIST_PROFILE_VETO_SLUGS` en `artist-upsert.mjs`. No usar el agente ni bootstrap ≥3 para recrearlo; en auditorías de saves admin tampoco es candidato aunque salga arriba del ranking. Regla: `.cursor/rules/artistas-opt-out-perfil.mdc`; [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md#artist-profile-opt-outs-no-artists-ficha).
+
 ### Archivos implicados
 
 | Ruta | Rol |
@@ -172,6 +176,10 @@ The **artist profile agent** uses OpenAI (and optional web search) to produce an
 - **`--stdout`** — print JSON to stdout; no disk or DB writes.
 
 **`data/artists/*.json`** files are **gitignored** (Supabase is canonical); create or edit them only locally.
+
+### Profile opt-outs (not the same as “missing profile”)
+
+Some artists asked **not** to have an `/artists` profile while their tracks stay in charts and saves. Today: **Vazteria X** (`vazteria-x`, Beatport `227121`) — Aug 2026, profile deleted. **Tracks yes; bio, portrait and ficha no.** UPSERT is blocked by `ARTIST_PROFILE_VETO_SLUGS` in `artist-upsert.mjs`. Do not recreate via agent or ≥3 bootstrap; exclude from admin save audits even when they rank at the top. Rule: `.cursor/rules/artistas-opt-out-perfil.mdc`; [`docs/USER_ENGAGEMENT.md`](./USER_ENGAGEMENT.md#artist-profile-opt-outs-no-artists-ficha).
 
 ### Files involved
 

@@ -900,6 +900,8 @@ export interface BreakEvent extends Record<string, unknown> {
   country: string
   venue: string | null
   image_url: string | null
+  /** Flyers extra (horario, hoja de info…). El cartel de portada es `image_url`. */
+  gallery_urls: string[]
   og_image_url: string | null
   website: string | null
   lineup: string[]
@@ -916,6 +918,24 @@ export interface BreakEvent extends Record<string, unknown> {
   doors_close: string | null
   address: string | null
   coords: { lat: number; lng: number } | null
+}
+
+/** URLs extra de un evento, sin vacíos ni duplicados ni el cartel de portada. */
+export function normalizeEventGalleryUrls(
+  urls: unknown,
+  coverUrl?: string | null,
+): string[] {
+  if (!Array.isArray(urls)) return []
+  const cover = typeof coverUrl === 'string' ? coverUrl.trim() : ''
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of urls) {
+    const u = typeof raw === 'string' ? raw.trim() : ''
+    if (!u || u === cover || seen.has(u)) continue
+    seen.add(u)
+    out.push(u)
+  }
+  return out
 }
 
 function normalizeEventTag(tag: string): string {

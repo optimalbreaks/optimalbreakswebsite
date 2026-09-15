@@ -77,7 +77,7 @@ Evento · Sello · Artista · New Release · Vinyl pick · Mix = **hint** (`inte
 | Tool | Destino |
 |------|---------|
 | `search_catalog` / `get_record` | Lectura `artists\|labels\|events\|mixes` |
-| `stage_upsert_event` | `events` (+ enrich/cartel tras confirmar) |
+| `stage_upsert_event` | `events` (+ enrich/cartel tras confirmar). Varias capturas: 1ª = portada, resto = `gallery_urls` (horario/info) |
 | `stage_upsert_label` | `POST /api/admin/agent/label` → `labels` |
 | `stage_upsert_artist` | `POST /api/admin/agent` → `artists` |
 | `stage_upsert_mix` | `mixes` |

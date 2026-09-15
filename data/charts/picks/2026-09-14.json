@@ -45,6 +45,160 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 2
+    },
+    {
+      "title": "Rap Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rap-night/30190970",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cf53819a-d57e-4f7d-a816-0096c114f93b.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Progresive",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/progresive/30190969",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1c4e912c-0e64-44fe-a073-f8f42da4f31f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "Fast Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fast-night/30190964",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1ec35a6a-1e32-4e90-87fc-2ea8050d48cd.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Fantasy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fantasy/30190963",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0004a73c-aaaf-4637-9254-d801dc8aae73.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Double Crush",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/double-crush/30190962",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d72b226b-4ad6-402f-aa1e-0a2252044461.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Badman Rasta",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/badman-rasta/30190961",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2b7ca757-fadf-440f-aea4-80db289a276f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "2112",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "THE RETURN GOOD"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/2112/30190960",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dfcd3785-d1cc-457a-bd5c-50090473bce5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c37f3d9a-b6a1-477e-abb3-69c87c5eb8a0.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
     }
   ]
 }

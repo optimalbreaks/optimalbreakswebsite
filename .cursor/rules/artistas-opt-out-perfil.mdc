@@ -25,3 +25,7 @@ Lista de **opt-out de ficha**, no de catálogo musical. Ampliar **solo** si el u
 - No borrar picks ni reescribir historial musical para «ocultar» al artista.
 
 Si el bootstrap de charts (≥ 3 créditos) lo propone como alta: **saltar**. Si el editor pide ficha: recordar el opt-out y no crearla.
+
+## Auditorías «artistas sin ficha» (Mis Tracks admin)
+
+Al cruzar los saves de `contacto@eskaladigital.com` con nombres que no resuelven slug en `/artists`, **Vazteria X** suele salir arriba del ranking (muchos «+» en sus propios temas). **No** es candidato a ficha: excluir siempre de listas «missing profile», prioridades de bootstrap y propuestas del agente. Las **canciones** siguen en charts, saves y Top 100; la **persona** no tiene perfil. Detalle: `docs/USER_ENGAGEMENT.md` (*Artist profile opt-outs*).

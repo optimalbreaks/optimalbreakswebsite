@@ -601,6 +601,20 @@ function isChatScreenshotUrl(url: unknown): boolean {
   return typeof url === 'string' && url.includes('/media/chat/')
 }
 
+function mergeEventGalleryUrls(existing: unknown, incoming: string[], exclude: string[] = []): string[] {
+  const skip = new Set(exclude.map((u) => String(u || '').trim()).filter(Boolean))
+  const seen = new Set<string>()
+  const out: string[] = []
+  const all = [...(Array.isArray(existing) ? existing : []), ...incoming]
+  for (const raw of all) {
+    const u = typeof raw === 'string' ? raw.trim() : ''
+    if (!u || skip.has(u) || seen.has(u)) continue
+    seen.add(u)
+    out.push(u)
+  }
+  return out
+}
+
 type ExistingEventRow = {
   id: string
   slug: string
@@ -608,6 +622,7 @@ type ExistingEventRow = {
   date_start: string | null
   city: string | null
   image_url: string | null
+  gallery_urls?: string[] | null
 }
 
 /**
@@ -696,12 +711,20 @@ async function upsertEventAction(
   if (action.use_attached_image && attachedImageUrls[0]) {
     row.image_url = attachedImageUrls[0]
   }
+  const attachedExtras = action.use_attached_image
+    ? attachedImageUrls.slice(1)
+    : attachedImageUrls
+  if (attachedExtras.length) {
+    row.gallery_urls = mergeEventGalleryUrls([], attachedExtras, [
+      typeof row.image_url === 'string' ? row.image_url : '',
+    ])
+  }
 
   // Duplicados: buscar por slug Y por nombre normalizado (p. ej. mismo evento con otro slug)
   const { data: allEvents } = await fetchAllRows<ExistingEventRow>((from, to) =>
     sb
       .from('events')
-      .select('id, slug, name, date_start, city, image_url')
+      .select('id, slug, name, date_start, city, image_url, gallery_urls')
       .order('id', { ascending: true })
       .range(from, to),
   )
@@ -737,6 +760,18 @@ async function upsertEventAction(
       existing.image_url.startsWith('https://') &&
       !isChatScreenshotUrl(existing.image_url)
     if (!hasGoodImage && row.image_url) patch.image_url = row.image_url
+    const galleryIncoming =
+      action.use_attached_image && attachedImageUrls.length
+        ? hasGoodImage
+          ? attachedImageUrls
+          : attachedImageUrls.slice(1)
+        : attachedExtras
+    if (galleryIncoming.length) {
+      patch.gallery_urls = mergeEventGalleryUrls(existing.gallery_urls, galleryIncoming, [
+        typeof patch.image_url === 'string' ? patch.image_url : '',
+        existing.image_url || '',
+      ])
+    }
     if (Array.isArray(row.lineup) && (row.lineup as string[]).length) patch.lineup = row.lineup
     if (Array.isArray(row.tags) && (row.tags as string[]).length) patch.tags = row.tags
     if (typeof row.description_es === 'string' && row.description_es.trim()) {
@@ -1519,7 +1554,7 @@ Si faltan datos críticos, reply pidiendo el dato y deja actions vacío.
   }
   text += `MENSAJE DEL EDITOR:\n${opts.message || defaultNoText}\n`
   if (opts.attachedPublicUrls.length) {
-    text += `\nIMÁGENES SUBIDAS (Storage)${treatAsEvent ? '. En action event usa use_attached_image=true' : ''}:\n`
+    text += `\nIMÁGENES SUBIDAS (Storage)${treatAsEvent ? '. En action event usa use_attached_image=true. La 1ª es portada; el resto (horario, hoja de info) se guardan como imágenes extra.' : ''}:\n`
     opts.attachedPublicUrls.forEach((u, i) => {
       text += `${i + 1}. ${u}\n`
     })
