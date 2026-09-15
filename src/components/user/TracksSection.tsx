@@ -150,6 +150,8 @@ type UnifiedTrack = {
    * track desde una lista compartida.
    */
   canonical_url?: string | null
+  /** Clave canónica calculada en el dedup; se reutiliza en el filtro Descubrimiento. */
+  canonKey?: string
 }
 
 function previewAudioSrc(sampleUrl: string, platform?: string, linkUrl?: string | null): string {
@@ -215,6 +217,52 @@ type SavedRowLike = {
   canonical_url?: string | null
   snapshot?: Record<string, any> | null
   created_at?: string | null
+}
+
+/**
+ * Normaliza una URL a una clave estable de canción (YouTube → `yt:<id>`, resto
+ * → host+path sin query). Es la misma normalización que usa el dedup de la
+ * lista; la extraemos a nivel de módulo para poder comparar la lista de un
+ * usuario con la del visitante (modo "Descubrimiento").
+ */
+function normalizeTrackUrl(u: string): string {
+  const yt = extractYouTubeId(u)
+  if (yt) return `yt:${yt}`
+  try {
+    const url = new URL(u)
+    return `${url.host}${url.pathname.replace(/\/$/, '')}`
+  } catch {
+    return u.replace(/[?#].*$/, '').replace(/\/$/, '')
+  }
+}
+
+function trackNameKey(title?: string | null, mix?: string | null, artists?: string | null): string {
+  return `nm:${(title || '').toLowerCase()}|${(mix || '').toLowerCase()}|${(artists || '').toLowerCase()}`
+}
+
+/** Clave canónica de un UnifiedTrack (ver `canonicalKey` histórico del dedup). */
+function canonKeyForUnified(t: UnifiedTrack): string {
+  if (t.source === 'vinyl') {
+    const yt = (t.youtube_url || '').trim().toLowerCase()
+    if (yt) return normalizeTrackUrl(yt)
+    return trackNameKey(t.title, t.mix_name, t.artists)
+  }
+  const u = (t.external_url || '').trim().toLowerCase()
+  if (u) return normalizeTrackUrl(u)
+  return trackNameKey(t.title, t.mix_name, t.artists)
+}
+
+/** Misma clave, pero a partir de una fila cruda de `saved_chart_tracks` (snapshot). */
+function canonKeyForSavedRow(row: SavedRowLike): string {
+  const snap = (row.snapshot || {}) as Record<string, any>
+  if (row.track_source === 'vinyl') {
+    const yt = String(snap.youtube_url || row.canonical_url || '').trim().toLowerCase()
+    if (yt) return normalizeTrackUrl(yt)
+    return trackNameKey(snap.title, snap.mix_name, snap.artists)
+  }
+  const u = String(row.canonical_url || snap.beatport_url || '').trim().toLowerCase()
+  if (u) return normalizeTrackUrl(u)
+  return trackNameKey(snap.title, snap.mix_name, snap.artists)
 }
 
 /**
@@ -361,32 +409,12 @@ function assembleUnifiedTracks(
     })
     .filter(Boolean) as UnifiedTrack[]
 
-  const normalizeUrl = (u: string) => {
-    const yt = extractYouTubeId(u)
-    if (yt) return `yt:${yt}`
-    try {
-      const url = new URL(u)
-      return `${url.host}${url.pathname.replace(/\/$/, '')}`
-    } catch {
-      return u.replace(/[?#].*$/, '').replace(/\/$/, '')
-    }
-  }
-  const canonicalKey = (t: UnifiedTrack) => {
-    if (t.source === 'vinyl') {
-      const yt = (t.youtube_url || '').trim().toLowerCase()
-      if (yt) return normalizeUrl(yt)
-      return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
-    }
-    const u = (t.external_url || '').trim().toLowerCase()
-    if (u) return normalizeUrl(u)
-    return `nm:${(t.title || '').toLowerCase()}|${(t.mix_name || '').toLowerCase()}|${(t.artists || '').toLowerCase()}`
-  }
   const byCanon = new Map<string, UnifiedTrack>()
   for (const t of ordered) {
-    const k = canonicalKey(t)
+    const k = canonKeyForUnified(t)
     const existing = byCanon.get(k)
     if (!existing) {
-      byCanon.set(k, { ...t, refs: [{ source: t.source, id: t.id }] })
+      byCanon.set(k, { ...t, refs: [{ source: t.source, id: t.id }], canonKey: k })
       continue
     }
     existing.refs!.push({ source: t.source, id: t.id })
@@ -548,6 +576,9 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   // Se inicializa automáticamente al `{min, max}` real en cuanto tenemos los
   // tracks; el usuario luego puede acotarlo arrastrando los pomos del slider.
   const [yearRange, setYearRange] = useState<[number, number] | null>(null)
+  // Modo "Descubrimiento" (solo en listas compartidas): deja únicamente las
+  // canciones del dueño que el visitante logueado NO tiene guardadas.
+  const [discoveryMode, setDiscoveryMode] = useState(false)
   const [sortBy, setSortBy] = useState<SortBy>('added')
   const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
   const [labelSlugMap, setLabelSlugMap] = useState<Record<string, string>>({})
@@ -809,8 +840,36 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const yearRangeIsFull = !!yearBounds && !!yearRange
     && yearRange[0] === yearBounds.min && yearRange[1] === yearBounds.max
 
+  // Claves canónicas de lo que el VISITANTE ya tiene guardado (solo relevante
+  // en listas compartidas). En modo propio no aplica el descubrimiento.
+  // `ownHook.saved` siempre son los saves del usuario logueado, aunque en modo
+  // compartido `saved`/`loading` de arriba apunten al dueño de la lista.
+  const mySavedKeys = useMemo(() => {
+    if (!isShared) return null
+    const set = new Set<string>()
+    for (const r of ownHook.saved) set.add(canonKeyForSavedRow(r))
+    return set
+  }, [isShared, ownHook.saved])
+
+  // El botón de descubrimiento solo tiene sentido si el visitante está
+  // logueado (para saber qué tiene) y ya cargó su propia lista.
+  const discoveryReady = isShared && !!user && !ownHook.loading
+  const discoveryCount = useMemo(() => {
+    if (!mySavedKeys) return 0
+    return tracks.filter((t) => !mySavedKeys.has(t.canonKey || canonKeyForUnified(t))).length
+  }, [mySavedKeys, tracks])
+
+  // Si deja de tener sentido (dejó de estar logueado / no es lista compartida),
+  // apagamos el modo para no “esconder” toda la lista sin explicación.
+  useEffect(() => {
+    if (!discoveryReady && discoveryMode) setDiscoveryMode(false)
+  }, [discoveryReady, discoveryMode])
+
   const filtered = useMemo(() => {
     let out = tracks
+    if (isShared && discoveryMode && mySavedKeys) {
+      out = out.filter((t) => !mySavedKeys.has(t.canonKey || canonKeyForUnified(t)))
+    }
     if (activeKinds.size !== ALL_PLAYBACK_KINDS.length) {
       out = out.filter((t) => activeKinds.has(playbackOf(t)))
     }
@@ -825,7 +884,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       })
     }
     return out
-  }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull])
+  }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull, isShared, discoveryMode, mySavedKeys])
 
   const toggleKind = (k: PlaybackKind) => {
     setActiveKinds((prev) => {
@@ -872,7 +931,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
   useEffect(() => {
     setVisibleCount(LIST_PAGE_SIZE)
-  }, [sortBy, activeKinds])
+  }, [sortBy, activeKinds, discoveryMode])
 
   const visibleRows = useMemo(
     () => sorted.slice(0, visibleCount),
@@ -1166,6 +1225,68 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         </div>
       ) : null}
 
+      {/* MODO DESCUBRIMIENTO — solo listas compartidas. Deja las canciones del
+          dueño que el visitante todavía no tiene en su propia lista, para
+          poder reproducirlas / guardarlas como "cola de descubrimiento". */}
+      {isShared && tracks.length > 0 ? (
+        (() => {
+          const ownerName = (publicPayload!.owner.display_name || publicPayload!.owner.username || (es ? 'este usuario' : 'this user')).toString()
+          return (
+            <div className="mb-4 p-3 border-[3px] border-[var(--ink)] bg-[var(--acid)]/25 flex items-center justify-between gap-3 flex-wrap">
+              <div className="min-w-0 flex-1">
+                <p className="font-black uppercase" style={{ fontFamily: "'Unbounded', sans-serif", fontSize: '13px', color: 'var(--ink)' }}>
+                  {es ? '🔍 Descubrimiento' : '🔍 Discovery'}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  {discoveryReady
+                    ? (es
+                        ? `Deja solo los temas de ${ownerName} que tú aún no tienes guardados. Ideal para escucharlos del tirón y quedarte con los que te molen.`
+                        : `Shows only ${ownerName}'s tracks you haven't saved yet. Perfect to play them all and keep the ones you like.`)
+                    : (es
+                        ? `Inicia sesión para ver qué temas de ${ownerName} te faltan y reproducirlos del tirón.`
+                        : `Log in to see which of ${ownerName}'s tracks you're missing and play them all.`)}
+                </p>
+              </div>
+              {discoveryReady ? (
+                <button
+                  type="button"
+                  onClick={() => setDiscoveryMode((v) => !v)}
+                  aria-pressed={discoveryMode}
+                  disabled={discoveryCount === 0 && !discoveryMode}
+                  className={`shrink-0 inline-flex items-center gap-1.5 min-h-[40px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                    discoveryMode
+                      ? 'bg-[var(--red)] text-white'
+                      : 'bg-[var(--ink)] text-[var(--acid)] hover:bg-[var(--red)] hover:text-white'
+                  }`}
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={es
+                    ? (discoveryCount === 0
+                        ? `Ya tienes todos los temas de ${ownerName}`
+                        : `Filtrar: solo los ${discoveryCount} temas que no tienes`)
+                    : (discoveryCount === 0
+                        ? `You already have all of ${ownerName}'s tracks`
+                        : `Filter: only the ${discoveryCount} tracks you don't have`)}
+                >
+                  {discoveryMode
+                    ? (es ? '✕ VER TODAS' : '✕ SHOW ALL')
+                    : discoveryCount === 0
+                      ? (es ? '✓ LAS TIENES TODAS' : '✓ YOU HAVE THEM ALL')
+                      : (es ? `SOLO NUEVAS (${discoveryCount})` : `ONLY NEW (${discoveryCount})`)}
+                </button>
+              ) : (
+                <Link
+                  href={`/${lang}/mi-cuenta`}
+                  className="shrink-0 inline-flex items-center gap-1.5 min-h-[40px] px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--acid)] no-underline hover:bg-[var(--red)] hover:text-white transition-all whitespace-nowrap"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {es ? 'INICIAR SESIÓN' : 'LOG IN'}
+                </Link>
+              )}
+            </div>
+          )
+        })()
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
           {isShared
@@ -1316,7 +1437,11 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         </div>
       ) : sorted.length === 0 ? (
         <p style={{ fontFamily: "'Special Elite', monospace", color: 'var(--dim)' }}>
-          {es ? 'Nada guardado en esta categoría todavía.' : 'Nothing saved in this category yet.'}
+          {isShared && discoveryMode
+            ? (es
+                ? '¡Ya tienes guardados todos los temas de esta lista (en la fuente/años seleccionados)! No hay nada nuevo que descubrir aquí.'
+                : 'You already saved every track in this list (for the selected source/years)! Nothing new to discover here.')
+            : (es ? 'Nada guardado en esta categoría todavía.' : 'Nothing saved in this category yet.')}
         </p>
       ) : (
         <>
@@ -1327,6 +1452,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
             const clearFilters = () => {
               setActiveKinds(new Set(ALL_PLAYBACK_KINDS))
               if (yearBounds) setYearRange([yearBounds.min, yearBounds.max])
+              setDiscoveryMode(false)
             }
             // La barra se muestra siempre que haya algo que controlar: pistas
             // con audio reproducible, o filtros activos aunque no haya audio
