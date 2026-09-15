@@ -145,6 +145,15 @@ export default async function LangLayout({
   return (
     <html lang={lang}>
       <head>
+        {/* Recargar una página arranca arriba (o en el #ancla del enlace), no donde el navegador
+            restauraría el scroll: en páginas con datos cargados en cliente el documento aún es corto
+            al restaurar y el navegador clavaba la vista abajo (footer) hasta que llegaba el contenido. */}
+        <script
+          id="ob-scroll-restoration"
+          dangerouslySetInnerHTML={{
+            __html: `try{if('scrollRestoration' in history){history.scrollRestoration='manual'}}catch(e){}`,
+          }}
+        />
         <link
           rel="preload"
           href={unbounded900LatinWoff2}
