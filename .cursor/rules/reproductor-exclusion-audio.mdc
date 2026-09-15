@@ -17,6 +17,15 @@ Coordinador: **`src/lib/youtube-play-coordinator.ts`**. Motor global: **`src/com
 5. **Media Session:** el effect del deck en `DeckAudioProvider` **no** limpia metadata/handlers cuando `mode === 'preview'` (condición `mode !== 'mix' && mode !== 'preview'`). Si se restaura la limpieza en preview, la lockscreen de iOS queda huérfana.
 6. **Manifest PWA** (`public/manifest.json`): mantener `id: "/"`, `scope: "/"` y `launch_handler.client_mode: "focus-existing"`. El manifest está precacheado por `public/sw.js`: **bumpear `CACHE_NAME`** (hoy `ob-v5`) al cambiarlo.
 
+## Enlaces compartidos de temas: modal, NUNCA autoplay (regla de producto, sep 2026)
+
+Decisión expresa de Narciso (repetida varias veces): al abrir un enlace compartido de un tema, el receptor ve el **modal «TOCA PARA ESCUCHAR»** (`src/components/TapToPlayOverlay.tsx`: carátula + título + artista + ▶) y es **su tap** el que reproduce. **Prohibido** intentar `play()` al aterrizar.
+
+- Aterrizajes: `/charts?play=chart:|featured:|vinyl:<id>` (ChartView, `pendingPlay.autoplay=false`) y ficha artista/sello `?play=beatport:<id>` (BeatportTopTracks, `pendingTapPlay`).
+- Motivo técnico: sin gesto el `play()` siempre falla, y en WebKit móvil el rechazo llega como `AbortError` (no `NotAllowedError`), así que el overlay del provider gateado por ese nombre **no salía en móvil** (bug sep 2026). No volver al patrón «intenta autoplay y enseña modal si falla».
+- Única excepción con arranque automático: el buscador global ⌘K (`#chart-row-<id>` + `?play=1`, gesto dentro de la sesión) → `pendingPlay.autoplay=true`.
+- **No cambiar los formatos de URL de compartir** (`buildTrackSharePath`, `buildVinylSharePath`, `buildBeatportSharePath`): hay enlaces ya publicados en Instagram que deben seguir funcionando.
+
 ## Referencias
 
 README (EN): **Global audio system → Embed coordinator & mobile consistency**. README (ES): **Sistema de audio global → Coordinador de embeds y consistencia en móvil**.
