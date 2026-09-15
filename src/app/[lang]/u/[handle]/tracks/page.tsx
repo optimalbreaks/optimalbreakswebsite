@@ -143,6 +143,13 @@ export default async function Page({ params }: { params: Promise<{ lang: Locale;
           >
             {es ? '▶ IR A CHARTS' : '▶ GO TO CHARTS'}
           </Link>
+          <Link
+            href={`/${lang}/mi-cuenta/almas-gemelas`}
+            className="inline-flex items-center gap-1 px-3 py-2 border-2 border-[var(--paper)]/30 text-[var(--paper)] no-underline hover:border-[var(--yellow)] hover:text-[var(--yellow)] transition-colors"
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px' }}
+          >
+            {es ? '↩ VOLVER A ALMAS GEMELAS' : '↩ GO BACK TO SOULMATES'}
+          </Link>
         </div>
       </section>
 
