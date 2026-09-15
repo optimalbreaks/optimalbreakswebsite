@@ -122,6 +122,10 @@ function isHttpUrl(u: string | null | undefined): u is string {
   return typeof u === 'string' && /^https?:\/\//i.test(u.trim())
 }
 
+function isImageSrc(u: string | null | undefined): u is string {
+  return typeof u === 'string' && (/^https?:\/\//i.test(u.trim()) || u.trim().startsWith('/'))
+}
+
 // ---------- Error boundary local (no tirar toda la página) ----------
 type BoundaryProps = { es: boolean; onRetry: () => void; children: ReactNode }
 type BoundaryState = { error: Error | null }
@@ -635,20 +639,26 @@ export default function SoulmatesSection({ lang }: Props) {
                 return (
                   <li key={t.canonical_key} className="flex items-center gap-3 py-3 px-3 sm:px-4 hover:bg-[var(--yellow)]/10 transition-colors">
                     <span
-                      className="inline-flex flex-col items-center justify-center w-11 h-11 shrink-0 font-black border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)]"
+                      className="inline-flex flex-col items-center justify-center w-12 h-12 shrink-0 font-black border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)] tabular-nums"
                       title={es
                         ? `${t.soulmates_count} de tus almas gemelas tienen guardada esta canción`
                         : `${t.soulmates_count} of your soulmates saved this track`}
-                      style={{ fontFamily: DISPLAY }}
+                      style={{ fontFamily: MONO }}
                     >
-                      <span className="text-base leading-none">{t.soulmates_count}</span>
-                      <span className="text-[7px] tracking-[1px] mt-0.5 opacity-80">{es ? 'GEMELAS' : 'MATCHES'}</span>
+                      <span className="text-lg font-black leading-none" style={{ fontFamily: DISPLAY }}>{t.soulmates_count}</span>
+                      <span className="text-[8px] leading-none tracking-[0.5px] mt-1 opacity-80">{es ? 'GEM.' : 'MATES'}</span>
                     </span>
                     <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative flex items-center justify-center">
-                      {isHttpUrl(t.artwork_url) ? (
+                      {isImageSrc(t.artwork_url) ? (
                         <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="56px" unoptimized />
                       ) : (
-                        <span className="text-[var(--ink)]/30 text-lg" aria-hidden>♪</span>
+                        <span
+                          className="w-full h-full flex items-center justify-center bg-[var(--yellow)] text-[var(--red)]"
+                          style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: '18px' }}
+                          aria-hidden
+                        >
+                          ♪
+                        </span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

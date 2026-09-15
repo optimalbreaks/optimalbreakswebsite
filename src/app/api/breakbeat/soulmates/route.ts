@@ -379,11 +379,21 @@ async function computeSoulmates() {
       if (m.primary.source === 'vinyl') return 2
       return 1
     }
-    return rank(next) > rank(prev) ? next : prev
+    const prevRank = rank(prev)
+    const nextRank = rank(next)
+    if (nextRank > prevRank) return { ...next, artwork_url: next.artwork_url || prev.artwork_url }
+    if (nextRank === prevRank && !prev.artwork_url && next.artwork_url) return next
+    return prev
   }
 
   for (const s of saved) {
-    const meta = metaByRefKey.get(`${s.track_source}:${s.track_id}`)
+    const metaRaw = metaByRefKey.get(`${s.track_source}:${s.track_id}`)
+    if (!metaRaw) continue
+    const snap = (s.snapshot || {}) as Record<string, unknown>
+    const snapArtwork = typeof snap.artwork_url === 'string' ? snap.artwork_url.trim() : ''
+    const meta = metaRaw.artwork_url || !snapArtwork
+      ? metaRaw
+      : { ...metaRaw, artwork_url: snapArtwork }
     if (!meta) continue
     const key = meta.canonical_key
     metaByKey.set(key, preferMeta(metaByKey.get(key), meta))
