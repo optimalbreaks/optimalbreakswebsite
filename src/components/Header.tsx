@@ -91,7 +91,7 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
   const menuPanel = open && (
     <div
       role="menu"
-      className="absolute right-0 top-full min-w-[200px] bg-[var(--paper)] border-4 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] z-[200]"
+      className="absolute right-0 top-full min-w-[220px] bg-[var(--paper)] border-4 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] z-[200]"
     >
       {isAdmin && (
         <Link
@@ -118,6 +118,17 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
           {newCount > 0 ? ` (${newCount})` : ''}
         </Link>
       )}
+      <Link
+        role="menuitem"
+        href={`/${lang}/mi-cuenta/almas-gemelas`}
+        onClick={() => setOpen(false)}
+        className="block px-4 py-3 no-underline border-b-[3px] border-[var(--ink)] bg-[var(--uv)] text-white hover:bg-[var(--ink)] hover:text-[var(--uv)]"
+        style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
+        title={es ? 'Encuentra usuarios con gustos parecidos a los tuyos' : 'Find users whose taste overlaps yours'}
+      >
+        <span aria-hidden style={{ marginRight: 6 }}>♥</span>
+        {es ? 'Almas gemelas' : 'Soulmates'}
+      </Link>
       <Link
         role="menuitem"
         href={`/${lang}/mi-cuenta/tracks`}
