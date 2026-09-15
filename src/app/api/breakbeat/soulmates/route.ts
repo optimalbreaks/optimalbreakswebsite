@@ -76,6 +76,11 @@ type ChartRow = {
   release_date: string | null
   artwork_url: string | null
   beatport_url: string | null
+  bpm: number | null
+  music_key: string | null
+  sample_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
 }
 type FeatRow = {
   id: string
@@ -88,7 +93,16 @@ type FeatRow = {
   release_date: string | null
   artwork_url: string | null
   link_url: string | null
+  link_label: string | null
   platform: string | null
+  bpm: number | null
+  music_key: string | null
+  sample_url: string | null
+  full_audio_url: string | null
+  spotify_url: string | null
+  tidal_url: string | null
+  note_en: string | null
+  note_es: string | null
 }
 type VinylRow = {
   id: string
@@ -100,6 +114,8 @@ type VinylRow = {
   artwork_url: string | null
   discogs_url: string | null
   youtube_url: string | null
+  note_en: string | null
+  note_es: string | null
 }
 type EditionRow = { id: string; week_date: string }
 
@@ -159,6 +175,21 @@ interface CanonicalMeta {
   artwork_url: string | null
   external_url: string | null
   primary: { source: ChartTrackSource; id: string; week_date: string | null }
+  // Campos ricos para que /almas-gemelas pinte cada recomendación como una
+  // fila de /tracks (play, info, links, guardar, compartir). Opcionales:
+  // vinyl no tiene bpm/sample; beatport_top los saca del snapshot.
+  bpm?: number | null
+  music_key?: string | null
+  sample_url?: string | null
+  full_audio_url?: string | null
+  spotify_url?: string | null
+  tidal_url?: string | null
+  platform?: string | null
+  link_label?: string | null
+  beatport_url?: string | null
+  youtube_url?: string | null
+  note_en?: string | null
+  note_es?: string | null
 }
 
 export async function GET(_request: NextRequest) {
@@ -246,17 +277,17 @@ async function computeSoulmates() {
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
       ? selectByIds<ChartRow>(chartIds, (chunk) =>
-          sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url').in('id', chunk),
+          sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, beatport_url, bpm, music_key, sample_url, spotify_url, tidal_url').in('id', chunk),
         )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
       ? selectByIds<FeatRow>(featIds, (chunk) =>
-          sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, platform').in('id', chunk),
+          sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, artwork_url, link_url, link_label, platform, bpm, music_key, sample_url, full_audio_url, spotify_url, tidal_url, note_en, note_es').in('id', chunk),
         )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
       ? selectByIds<VinylRow>(vinylIds, (chunk) =>
-          sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('id', chunk),
+          sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url, note_en, note_es').in('id', chunk),
         )
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
@@ -285,6 +316,12 @@ async function computeSoulmates() {
       artwork_url: c.artwork_url,
       external_url: c.beatport_url,
       primary: { source: 'chart', id: c.id, week_date: c.chart_edition_id ? weekByEdition.get(c.chart_edition_id) || null : null },
+      bpm: c.bpm,
+      music_key: c.music_key,
+      sample_url: c.sample_url,
+      spotify_url: c.spotify_url,
+      tidal_url: c.tidal_url,
+      beatport_url: c.beatport_url,
     })
   }
   for (const f of ((featRes.data || []) as FeatRow[])) {
@@ -300,6 +337,17 @@ async function computeSoulmates() {
       artwork_url: f.artwork_url,
       external_url: f.link_url,
       primary: { source: 'featured', id: f.id, week_date: f.chart_edition_id ? weekByEdition.get(f.chart_edition_id) || null : null },
+      bpm: f.bpm,
+      music_key: f.music_key,
+      sample_url: f.sample_url,
+      full_audio_url: f.full_audio_url,
+      spotify_url: f.spotify_url,
+      tidal_url: f.tidal_url,
+      platform: f.platform,
+      link_label: f.link_label,
+      beatport_url: f.link_url,
+      note_en: f.note_en,
+      note_es: f.note_es,
     })
   }
   for (const v of ((vinylRes.data || []) as VinylRow[])) {
@@ -315,6 +363,9 @@ async function computeSoulmates() {
       artwork_url: v.artwork_url,
       external_url: v.discogs_url || v.youtube_url,
       primary: { source: 'vinyl', id: v.id, week_date: null },
+      youtube_url: v.youtube_url,
+      note_en: v.note_en,
+      note_es: v.note_es,
     })
   }
   for (const s of saved) {
@@ -339,6 +390,15 @@ async function computeSoulmates() {
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: (externalUrl as string | null) ?? null,
       primary: { source: s.track_source, id: s.track_id, week_date: null },
+      bpm: typeof snap.bpm === 'number' ? (snap.bpm as number) : null,
+      music_key: (snap.music_key as string | null) ?? null,
+      sample_url: (snap.sample_url as string | null) ?? null,
+      full_audio_url: (snap.full_audio_url as string | null) ?? null,
+      spotify_url: (snap.spotify_url as string | null) ?? null,
+      tidal_url: (snap.tidal_url as string | null) ?? null,
+      platform: (snap.platform as string | null) ?? null,
+      beatport_url: (snap.beatport_url as string | null) ?? null,
+      youtube_url: snapYoutube || null,
     })
   }
 
@@ -362,6 +422,13 @@ async function computeSoulmates() {
       artwork_url: (snap.artwork_url as string | null) ?? null,
       external_url: beatport_url,
       primary: { source: 'beatport_top', id: s.track_id, week_date: null },
+      bpm: typeof snap.bpm === 'number' ? (snap.bpm as number) : null,
+      music_key: (snap.music_key as string | null) ?? null,
+      sample_url: (snap.sample_url as string | null) ?? null,
+      full_audio_url: (snap.full_audio_url as string | null) ?? null,
+      spotify_url: (snap.spotify_url as string | null) ?? null,
+      tidal_url: (snap.tidal_url as string | null) ?? null,
+      beatport_url: (beatport_url as string | null) ?? null,
     })
   }
 
@@ -506,6 +573,19 @@ async function computeSoulmates() {
       soulmates_count: r.info.count,
       soulmate_ids: Array.from(r.info.saved_by),
       primary: r.meta!.primary,
+      // Campos ricos para pintar la fila como en /tracks (play/info/links).
+      bpm: r.meta!.bpm ?? null,
+      music_key: r.meta!.music_key ?? null,
+      sample_url: r.meta!.sample_url ?? null,
+      full_audio_url: r.meta!.full_audio_url ?? null,
+      spotify_url: r.meta!.spotify_url ?? null,
+      tidal_url: r.meta!.tidal_url ?? null,
+      platform: r.meta!.platform ?? null,
+      link_label: r.meta!.link_label ?? null,
+      beatport_url: r.meta!.beatport_url ?? null,
+      youtube_url: r.meta!.youtube_url ?? null,
+      note_en: r.meta!.note_en ?? null,
+      note_es: r.meta!.note_es ?? null,
     }))
 
   return NextResponse.json({

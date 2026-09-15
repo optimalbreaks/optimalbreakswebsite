@@ -444,6 +444,17 @@ interface TracksSectionProps {
    *  pre-cargado del servidor en vez del hook del usuario, y oculta el botón
    *  de compartir (que solo tiene sentido en la lista propia). */
   publicPayload?: PublicTracksPayload
+  /** Modo embebido (p. ej. recomendaciones de Almas Gemelas): oculta el
+   *  cabecero de dueño, el botón de compartir y el bloque de descubrimiento.
+   *  Se sigue usando el payload como fuente, pero sin el "cascarón" propio de
+   *  la página compartida. */
+  embedded?: boolean
+  /** Insignia opcional por fila (rowKey `${source}:${id}` → número). Se pinta
+   *  a la izquierda de la carátula. Lo usa la lista de recomendaciones para
+   *  mostrar cuántas almas gemelas tienen cada tema. */
+  rowBadges?: Record<string, number>
+  /** Etiqueta corta bajo el número de la insignia (por defecto ninguna). */
+  rowBadgeLabel?: string
 }
 
 /**
@@ -541,7 +552,7 @@ function YearRangeSlider({
   )
 }
 
-export default function TracksSection({ lang, publicPayload }: TracksSectionProps) {
+export default function TracksSection({ lang, publicPayload, embedded = false, rowBadges, rowBadgeLabel }: TracksSectionProps) {
   const isShared = !!publicPayload
   const pathname = usePathname()
   const { user } = useAuth()
@@ -1205,7 +1216,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
   return (
     <div>
-      {isShared && publicPayload ? (
+      {isShared && publicPayload && !embedded ? (
         <div className="mb-4 p-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)]/30 flex items-center gap-3">
           <div className="shrink-0 w-11 h-11 rounded-full border-2 border-[var(--ink)] bg-[var(--paper-dark)] overflow-hidden relative">
             {publicPayload.owner.avatar_url ? (
@@ -1230,7 +1241,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       {/* MODO DESCUBRIMIENTO — solo listas compartidas. Deja las canciones del
           dueño que el visitante todavía no tiene en su propia lista, para
           poder reproducirlas / guardarlas como "cola de descubrimiento". */}
-      {isShared && tracks.length > 0 ? (
+      {isShared && !embedded && tracks.length > 0 ? (
         (() => {
           const ownerName = (publicPayload!.owner.display_name || publicPayload!.owner.username || (es ? 'este usuario' : 'this user')).toString()
           return (
@@ -1289,7 +1300,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
         })()
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className={`flex flex-wrap items-center justify-between gap-3 mb-4 ${embedded ? 'hidden' : ''}`}>
         <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '20px', textTransform: 'uppercase' }}>
           {isShared
             ? (es ? `TRACKS DE ${(publicPayload!.owner.display_name || publicPayload!.owner.username || 'BREAKER').toString().toUpperCase()}` : `${(publicPayload!.owner.display_name || publicPayload!.owner.username || 'BREAKER').toString().toUpperCase()}'S TRACKS`)
@@ -1553,6 +1564,19 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
+                    {rowBadges && rowBadges[t.key] != null ? (
+                      <span
+                        className="inline-flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)] tabular-nums"
+                        title={es
+                          ? `${rowBadges[t.key]} almas gemelas de tu Top 10 tienen guardada esta canción`
+                          : `${rowBadges[t.key]} soulmates from your Top 10 saved this track`}
+                      >
+                        <span className="text-lg font-black leading-none" style={{ fontFamily: "'Unbounded', sans-serif" }}>{rowBadges[t.key]}</span>
+                        {rowBadgeLabel ? (
+                          <span className="text-[8px] leading-none tracking-[0.5px] mt-1 opacity-80" style={{ fontFamily: "'Courier Prime', monospace" }}>{rowBadgeLabel}</span>
+                        ) : null}
+                      </span>
+                    ) : null}
                     {t.artwork_url ? (
                       <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
                         <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" loading={i < 6 ? 'eager' : 'lazy'} priority={i < 4} />

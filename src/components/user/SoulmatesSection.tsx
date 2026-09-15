@@ -18,17 +18,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Component, useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Component, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useProfile } from '@/hooks/useUserData'
-import { formatTrackReleaseDisplay } from '@/lib/share-track'
-import { ArtistNames, LabelName } from '@/components/ArtistNames'
-import {
-  buildFullArtistSlugMap,
-  buildFullLabelSlugMap,
-  filterArtistSlugMapForNames,
-  splitArtistDisplayLine,
-} from '@/lib/artist-slug-map'
-import { createBrowserSupabase } from '@/lib/supabase'
+import TracksSection, { type PublicTracksPayload } from '@/components/user/TracksSection'
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
 
@@ -77,6 +69,19 @@ interface RecommendedTrack {
   soulmates_count: number
   soulmate_ids: string[]
   primary: { source: ChartTrackSource; id: string; week_date: string | null }
+  // Campos ricos (para pintar cada fila como en /tracks).
+  bpm?: number | null
+  music_key?: string | null
+  sample_url?: string | null
+  full_audio_url?: string | null
+  spotify_url?: string | null
+  tidal_url?: string | null
+  platform?: string | null
+  link_label?: string | null
+  beatport_url?: string | null
+  youtube_url?: string | null
+  note_en?: string | null
+  note_es?: string | null
 }
 
 interface ApiResponse {
@@ -120,10 +125,6 @@ function avatarInitial(u: SoulmateUser) {
 
 function isHttpUrl(u: string | null | undefined): u is string {
   return typeof u === 'string' && /^https?:\/\//i.test(u.trim())
-}
-
-function isImageSrc(u: string | null | undefined): u is string {
-  return typeof u === 'string' && (/^https?:\/\//i.test(u.trim()) || u.trim().startsWith('/'))
 }
 
 // ---------- Error boundary local (no tirar toda la página) ----------
@@ -209,8 +210,6 @@ export default function SoulmatesSection({ lang }: Props) {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savingFlag, setSavingFlag] = useState(false)
-  const [artistSlugMap, setArtistSlugMap] = useState<Record<string, string>>({})
-  const [labelSlugMap, setLabelSlugMap] = useState<Record<string, string>>({})
   // `attempt` sube con cada reintento; `settledAttempt` marca el último que
   // terminó (bien o mal). loading = hay un intento en vuelo.
   const [attempt, setAttempt] = useState(0)
@@ -258,58 +257,99 @@ export default function SoulmatesSection({ lang }: Props) {
 
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
 
-  useEffect(() => {
-    const tracks = data?.recommended_tracks
-    // Sin recomendaciones no hay nada que enlazar; los mapas viejos no molestan
-    // (solo se consultan para nombres presentes en la lista actual).
-    if (!tracks?.length) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const artistNames = new Set<string>()
-        const labelNames = new Set<string>()
-        for (const t of tracks) {
-          for (const name of splitArtistDisplayLine(t.artists || '')) artistNames.add(name)
-          const label = (t.label || '').trim()
-          if (label) labelNames.add(label)
-        }
-        const supabase = createBrowserSupabase()
-        const [{ data: artistRows }, { data: labelRows }] = await Promise.all([
-          artistNames.size
-            ? supabase.from('artists').select('slug, name, name_display').limit(5000)
-            : Promise.resolve({ data: [] as { slug: string; name: string | null; name_display: string | null }[] }),
-          labelNames.size
-            ? supabase.from('labels').select('slug, name').limit(5000)
-            : Promise.resolve({ data: [] as { slug: string; name: string | null }[] }),
-        ])
-        if (cancelled) return
-        setArtistSlugMap(
-          filterArtistSlugMapForNames(
-            buildFullArtistSlugMap(
-              (artistRows as { slug: string; name: string | null; name_display: string | null }[]) || [],
-            ),
-            artistNames,
-          ),
-        )
-        setLabelSlugMap(
-          filterArtistSlugMapForNames(
-            buildFullLabelSlugMap(
-              ((labelRows as { slug: string; name: string | null }[]) || []).map((r) => ({
-                slug: r.slug,
-                name: r.name,
-                name_display: null,
-              })),
-            ),
-            labelNames,
-            { labelSuffixes: true },
-          ),
-        )
-      } catch (e) {
-        // Los enlaces a fichas son un extra: si falla, los nombres salen en texto plano.
-        console.error('[OB] Soulmates slug maps:', e)
+  // Convierte las recomendaciones en un PublicTracksPayload para reutilizar
+  // TracksSection (mismo motor de /tracks: play global, guardar, compartir,
+  // Spotify/TIDAL/Beatport, vídeo YouTube). Así cada fila se comporta igual
+  // que en Mis Tracks sin duplicar la lógica del reproductor.
+  const recoPayload = useMemo((): PublicTracksPayload | null => {
+    const recs = data?.recommended_tracks
+    if (!recs?.length || !data?.self) return null
+    const base = Date.now()
+    const isYt = (u: string | null) => !!u && /(?:youtu\.be|youtube\.com)/i.test(u)
+    const chart: PublicTracksPayload['tracks']['chart'] = []
+    const featured: PublicTracksPayload['tracks']['featured'] = []
+    const vinyl: PublicTracksPayload['tracks']['vinyl'] = []
+    const saved: PublicTracksPayload['saved'] = []
+
+    recs.forEach((t, i) => {
+      const src = t.primary.source
+      const id = t.primary.id
+      const snapshot: Record<string, any> = {
+        title: t.title,
+        mix_name: t.mix_name,
+        artists: t.artists,
+        label: t.label,
+        year: t.year,
+        release_date: t.release_date,
+        artwork_url: t.artwork_url,
+        beatport_url: t.beatport_url ?? t.external_url,
+        sample_url: t.sample_url,
+        full_audio_url: t.full_audio_url,
+        spotify_url: t.spotify_url,
+        tidal_url: t.tidal_url,
+        bpm: t.bpm,
+        music_key: t.music_key,
+        platform: t.platform,
+        youtube_url: t.youtube_url,
       }
-    })()
-    return () => { cancelled = true }
+      saved.push({
+        track_source: src,
+        track_id: id,
+        canonical_url: t.external_url ?? t.beatport_url ?? null,
+        snapshot,
+        // Orden descendente sintético → conserva el orden del API (por nº de
+        // almas gemelas) bajo el sort por defecto "AÑADIDO".
+        created_at: new Date(base - i * 60_000).toISOString(),
+      })
+      if (src === 'chart') {
+        chart.push({
+          id, title: t.title, mix_name: t.mix_name, artists: t.artists, label: t.label,
+          year: t.year, release_date: t.release_date, bpm: t.bpm ?? null, music_key: t.music_key ?? null,
+          artwork_url: t.artwork_url, beatport_url: t.beatport_url ?? t.external_url,
+          spotify_url: t.spotify_url ?? null, tidal_url: t.tidal_url ?? null,
+          sample_url: t.sample_url ?? null, week_date: t.primary.week_date,
+        })
+      } else if (src === 'featured') {
+        featured.push({
+          id, title: t.title, mix_name: t.mix_name, artists: t.artists, label: t.label,
+          year: t.year, release_date: t.release_date, bpm: t.bpm ?? null, music_key: t.music_key ?? null,
+          artwork_url: t.artwork_url, link_url: t.external_url, link_label: t.link_label ?? null,
+          platform: t.platform ?? null, spotify_url: t.spotify_url ?? null, tidal_url: t.tidal_url ?? null,
+          sample_url: t.sample_url ?? null, full_audio_url: t.full_audio_url ?? null,
+          note_en: t.note_en ?? null, note_es: t.note_es ?? null, week_date: t.primary.week_date,
+        })
+      } else if (src === 'vinyl') {
+        vinyl.push({
+          id, title: t.title, mix_name: t.mix_name, artists: t.artists, label: t.label,
+          year: t.year, artwork_url: t.artwork_url,
+          discogs_url: t.external_url && !isYt(t.external_url) ? t.external_url : null,
+          youtube_url: t.youtube_url ?? (isYt(t.external_url) ? t.external_url : null),
+          note_en: t.note_en ?? null, note_es: t.note_es ?? null,
+        })
+      }
+      // beatport_top: sin fila viva; TracksSection lo reconstruye del snapshot.
+    })
+
+    return {
+      owner: {
+        id: data.self.id,
+        username: data.self.username,
+        display_name: data.self.display_name,
+        avatar_url: data.self.avatar_url,
+        country: null,
+      },
+      saved,
+      tracks: { chart, featured, vinyl },
+    }
+  }, [data])
+
+  // rowKey (`${source}:${id}`) → nº de almas gemelas que tienen el tema.
+  const recoBadges = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const t of data?.recommended_tracks ?? []) {
+      m[`${t.primary.source}:${t.primary.id}`] = t.soulmates_count
+    }
+    return m
   }, [data?.recommended_tracks])
 
   const enableSharing = async () => {
@@ -612,88 +652,27 @@ export default function SoulmatesSection({ lang }: Props) {
           </section>
         )}
 
-        {/* RECOMENDACIONES BASADAS EN LAS ALMAS GEMELAS */}
-        {ready && data.recommended_tracks.length > 0 && (
+        {/* RECOMENDACIONES BASADAS EN LAS ALMAS GEMELAS
+            Reutiliza TracksSection (mismo motor que /tracks) en modo embebido:
+            cada fila trae play, BPM/tonalidad, guardar (+), compartir y
+            enlaces a Spotify/TIDAL/Beatport, más el vídeo de los vinilos. */}
+        {ready && recoPayload && (
           <section id="soulmates-recos" className="scroll-mt-24">
             <h3 className="font-black mb-2" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
               {es ? 'Lo que te estás perdiendo' : 'What you’re missing'}
             </h3>
             <p className="text-sm text-[var(--ink)]/60 mb-4 max-w-2xl" style={{ fontFamily: MONO }}>
               {es
-                ? 'Canciones que 2 o más de tus almas gemelas tienen guardadas y tú aún no. El recuadro verde indica cuántas almas gemelas la tienen: si alguna tiene 3, 4 o más, sube arriba.'
-                : 'Tracks that 2+ of your soulmates have saved and you don’t yet. The green badge shows how many soulmates saved it: if a track has 3, 4 or more, it rises to the top.'}
+                ? 'Canciones que 2 o más de tus almas gemelas tienen guardadas y tú aún no. El recuadro verde indica cuántas almas gemelas la tienen: si alguna tiene 3, 4 o más, sube arriba. Puedes escucharlas, guardarlas (+) y abrirlas en Beatport/Spotify/TIDAL, igual que en Mis Tracks.'
+                : 'Tracks that 2+ of your soulmates have saved and you don’t yet. The green badge shows how many soulmates saved it: if a track has 3, 4 or more, it rises to the top. You can play, save (+) and open them on Beatport/Spotify/TIDAL, just like in My Tracks.'}
             </p>
-            <ul className="border-[3px] border-[var(--ink)] bg-[var(--paper)] divide-y-[3px] divide-[var(--ink)]/10">
-              {data.recommended_tracks.map((t) => {
-                const p = t.primary || { source: 'featured' as ChartTrackSource, id: '', week_date: null }
-                const internalHref = (() => {
-                  if (p.source === 'chart' && p.week_date && p.id) {
-                    return `/${lang}/charts?week=${p.week_date}&play=chart:${p.id}`
-                  }
-                  if (p.source === 'featured' && p.week_date && p.id) {
-                    return `/${lang}/charts?week=${p.week_date}&play=featured:${p.id}`
-                  }
-                  return null
-                })()
-                const rd = formatTrackReleaseDisplay(t.release_date, t.year)
-                return (
-                  <li key={t.canonical_key} className="flex items-center gap-3 py-3 px-3 sm:px-4 hover:bg-[var(--yellow)]/10 transition-colors">
-                    <span
-                      className="inline-flex flex-col items-center justify-center w-12 h-12 shrink-0 font-black border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)] tabular-nums"
-                      title={es
-                        ? `${t.soulmates_count} almas gemelas de tu Top 10 tienen guardada esta canción`
-                        : `${t.soulmates_count} soulmates from your Top 10 saved this track`}
-                      style={{ fontFamily: MONO }}
-                    >
-                      <span className="text-lg font-black leading-none" style={{ fontFamily: DISPLAY }}>{t.soulmates_count}</span>
-                      <span className="text-[8px] leading-none tracking-[0.5px] mt-1 opacity-80">{es ? 'GEM.' : 'MATES'}</span>
-                    </span>
-                    <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative flex items-center justify-center">
-                      {isImageSrc(t.artwork_url) ? (
-                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="56px" unoptimized />
-                      ) : (
-                        <span
-                          className="w-full h-full flex items-center justify-center bg-[var(--yellow)] text-[var(--red)]"
-                          style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: '18px' }}
-                          aria-hidden
-                        >
-                          ♪
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-sm truncate" style={{ fontFamily: DISPLAY }}>
-                        {internalHref ? (
-                          <Link href={internalHref} className="hover:text-[var(--red)] transition-colors no-underline">{t.title}</Link>
-                        ) : t.title}
-                        {t.mix_name && <span className="font-normal text-[10px] text-[var(--ink)]/50 ml-1.5">{t.mix_name}</span>}
-                      </h4>
-                      <p className="text-[11px] text-[var(--ink)]/60 break-words" style={{ fontFamily: MONO }}>
-                        <ArtistNames
-                          artists={splitArtistDisplayLine(t.artists || '').map((name) => ({ name }))}
-                          mixName={t.mix_name}
-                          slugMap={artistSlugMap}
-                          lang={lang}
-                        />
-                        {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
-                        {rd ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="whitespace-nowrap tabular-nums">{rd}</span></> : null}
-                      </p>
-                    </div>
-                    {isHttpUrl(t.external_url) && (
-                      <a
-                        href={t.external_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 inline-flex items-center justify-center px-3 py-1.5 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white transition-all no-underline whitespace-nowrap"
-                        style={{ fontFamily: MONO }}
-                      >
-                        {p.source === 'vinyl' ? (/discogs\.com/i.test(t.external_url) ? 'DISCOGS' : 'YOUTUBE') : 'BEATPORT'}
-                      </a>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+            <TracksSection
+              lang={lang}
+              publicPayload={recoPayload}
+              embedded
+              rowBadges={recoBadges}
+              rowBadgeLabel={es ? 'GEM.' : 'MATES'}
+            />
           </section>
         )}
 
