@@ -406,48 +406,64 @@ export default function SoulmatesSection({ lang }: Props) {
           </div>
         )}
 
-        {/* RESUMEN — recuadros informativos (no son botones): un número + qué significa */}
+        {/* RESUMEN — recuadros informativos (no son botones): un número + qué significa.
+            El objetivo es que cada cifra se explique sola: de dónde sale y a qué
+            sección de abajo corresponde. */}
         {ready && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8" role="list">
-            {[
-              {
-                n: data.self?.saved_count ?? 0,
-                l: es ? 'TRACKS GUARDADOS' : 'SAVED TRACKS',
-                d: es ? 'Tu colección en Mis Tracks' : 'Your collection in My Tracks',
-                bg: 'bg-[var(--paper)]',
-              },
-              {
-                n: data.soulmates.length,
-                l: es ? 'ALMAS GEMELAS' : 'SOULMATES',
-                d: es ? 'Usuarios que más coinciden contigo (Top 10)' : 'Users whose taste matches yours most (Top 10)',
-                bg: 'bg-[var(--yellow)]',
-              },
-              {
-                n: data.recommended_tracks.length,
-                l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER',
-                d: es ? 'Temas suyos que tú aún no tienes' : 'Their tracks you don’t have yet',
-                bg: 'bg-[var(--acid)]',
-              },
-            ].map((s) => (
-              <div
-                key={s.l}
-                role="listitem"
-                className={`border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block`}
-              >
-                <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
-                  {s.n}
-                </div>
-                <div className="sm:mt-2">
-                  <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase" style={{ fontFamily: MONO }}>
-                    {s.l}
+          <>
+            <p className="text-[11px] sm:text-xs text-[var(--ink)]/60 mb-3 max-w-2xl leading-snug" style={{ fontFamily: MONO }}>
+              {es
+                ? 'Resumen de tu radar de afinidad. Cada recuadro se explica solo:'
+                : 'Your affinity radar at a glance. Each box explains itself:'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8" role="list">
+              {[
+                {
+                  n: data.self?.saved_count ?? 0,
+                  l: es ? 'TUS TRACKS' : 'YOUR TRACKS',
+                  d: es
+                    ? 'Canciones únicas que has guardado en Mis Tracks. Es la base con la que te comparamos.'
+                    : 'Unique tracks you saved in My Tracks. The basis we compare you against.',
+                  bg: 'bg-[var(--paper)]',
+                },
+                {
+                  n: data.soulmates.length,
+                  l: es ? 'ALMAS GEMELAS' : 'SOULMATES',
+                  d: es
+                    ? 'Usuarios cuyos gustos más coinciden con los tuyos. Enseñamos como mucho el Top 10 (abajo).'
+                    : 'Users whose taste overlaps yours the most. We show the Top 10 at most (below).',
+                  bg: 'bg-[var(--yellow)]',
+                },
+                {
+                  n: data.recommended_tracks.length,
+                  l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER',
+                  d: es
+                    ? 'Temas que 2 o más de tus almas gemelas tienen guardados y tú aún no. Es la lista «Lo que te estás perdiendo» (abajo).'
+                    : 'Tracks that 2+ of your soulmates saved and you haven’t yet. That’s the “What you’re missing” list (below).',
+                  bg: 'bg-[var(--acid)]',
+                },
+              ].map((s) => (
+                <div
+                  key={s.l}
+                  role="listitem"
+                  title={s.d}
+                  className={`border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block`}
+                >
+                  <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
+                    {s.n}
                   </div>
-                  <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
-                    {s.d}
+                  <div className="sm:mt-2">
+                    <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase" style={{ fontFamily: MONO }}>
+                      {s.l}
+                    </div>
+                    <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
+                      {s.d}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {ready && data.soulmates.length === 0 && (

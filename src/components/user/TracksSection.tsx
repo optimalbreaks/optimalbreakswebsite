@@ -252,19 +252,6 @@ function canonKeyForUnified(t: UnifiedTrack): string {
   return trackNameKey(t.title, t.mix_name, t.artists)
 }
 
-/** Misma clave, pero a partir de una fila cruda de `saved_chart_tracks` (snapshot). */
-function canonKeyForSavedRow(row: SavedRowLike): string {
-  const snap = (row.snapshot || {}) as Record<string, any>
-  if (row.track_source === 'vinyl') {
-    const yt = String(snap.youtube_url || row.canonical_url || '').trim().toLowerCase()
-    if (yt) return normalizeTrackUrl(yt)
-    return trackNameKey(snap.title, snap.mix_name, snap.artists)
-  }
-  const u = String(row.canonical_url || snap.beatport_url || '').trim().toLowerCase()
-  if (u) return normalizeTrackUrl(u)
-  return trackNameKey(snap.title, snap.mix_name, snap.artists)
-}
-
 /**
  * Une saves + filas vivas (o solo snapshots) en la lista deduplicada.
  * Sin `live` todavía se puede pintar: el snapshot de `saved_chart_tracks`
@@ -840,24 +827,39 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
   const yearRangeIsFull = !!yearBounds && !!yearRange
     && yearRange[0] === yearBounds.min && yearRange[1] === yearBounds.max
 
-  // Claves canónicas de lo que el VISITANTE ya tiene guardado (solo relevante
-  // en listas compartidas). En modo propio no aplica el descubrimiento.
-  // `ownHook.saved` siempre son los saves del usuario logueado, aunque en modo
-  // compartido `saved`/`loading` de arriba apunten al dueño de la lista.
-  const mySavedKeys = useMemo(() => {
-    if (!isShared) return null
-    const set = new Set<string>()
-    for (const r of ownHook.saved) set.add(canonKeyForSavedRow(r))
-    return set
-  }, [isShared, ownHook.saved])
+  // ¿El VISITANTE ya tiene guardada esta canción? Replica EXACTAMENTE la
+  // lógica del botón "+"/círculo verde de cada fila:
+  //   · beatport_top con URL → isSavedByIdentity(url + snapshot)
+  //   · resto → isSaved(source, id) OR isSavedByIdentity(url + snapshot)
+  // Así "SOLO NUEVAS" coincide 1:1 con lo que se ve en verde (antes usábamos
+  // una clave propia que no cubría los saves cruzados por URL/identidad).
+  // `ownHook.*` opera sobre el store del usuario logueado (el visitante),
+  // aunque `saved`/`loading` de arriba apunten al dueño de la lista.
+  const viewerHasTrack = useCallback((t: UnifiedTrack): boolean => {
+    if (t.source === 'beatport_top' && (t.external_url || t.canonical_url)) {
+      return ownHook.isSavedByIdentity({
+        url: (t.external_url || t.canonical_url) ?? null,
+        snapshot: t.snapshot ?? null,
+      })
+    }
+    return (
+      ownHook.isSaved(t.source, t.id) ||
+      ownHook.isSavedByIdentity({
+        url: (t.external_url || t.youtube_url || t.canonical_url) ?? null,
+        snapshot: t.snapshot ?? null,
+      })
+    )
+  // ownHook.saved es la dependencia real: sus closures se rehacen con cada save.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownHook.saved])
 
   // El botón de descubrimiento solo tiene sentido si el visitante está
   // logueado (para saber qué tiene) y ya cargó su propia lista.
   const discoveryReady = isShared && !!user && !ownHook.loading
   const discoveryCount = useMemo(() => {
-    if (!mySavedKeys) return 0
-    return tracks.filter((t) => !mySavedKeys.has(t.canonKey || canonKeyForUnified(t))).length
-  }, [mySavedKeys, tracks])
+    if (!isShared || !user) return 0
+    return tracks.filter((t) => !viewerHasTrack(t)).length
+  }, [isShared, user, tracks, viewerHasTrack])
 
   // Si deja de tener sentido (dejó de estar logueado / no es lista compartida),
   // apagamos el modo para no “esconder” toda la lista sin explicación.
@@ -867,8 +869,8 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
 
   const filtered = useMemo(() => {
     let out = tracks
-    if (isShared && discoveryMode && mySavedKeys) {
-      out = out.filter((t) => !mySavedKeys.has(t.canonKey || canonKeyForUnified(t)))
+    if (isShared && discoveryMode) {
+      out = out.filter((t) => !viewerHasTrack(t))
     }
     if (activeKinds.size !== ALL_PLAYBACK_KINDS.length) {
       out = out.filter((t) => activeKinds.has(playbackOf(t)))
@@ -884,7 +886,7 @@ export default function TracksSection({ lang, publicPayload }: TracksSectionProp
       })
     }
     return out
-  }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull, isShared, discoveryMode, mySavedKeys])
+  }, [tracks, activeKinds, yearRange, yearBounds, yearRangeIsFull, isShared, discoveryMode, viewerHasTrack])
 
   const toggleKind = (k: PlaybackKind) => {
     setActiveKinds((prev) => {
