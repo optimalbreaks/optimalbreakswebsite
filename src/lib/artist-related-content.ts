@@ -263,6 +263,11 @@ function dedupeChartRows(
   return out
 }
 
+/** «Welder B» en ficha vs «WelderB» en metadatos de charts. */
+function compactEntityKey(s: string): string {
+  return normalizeForEntityMatch(s).replace(/[^a-z0-9]/g, '')
+}
+
 function artistSearchTerms(
   artist: { name: string; name_display?: string | null; slug?: string },
 ): string[] {
@@ -273,6 +278,10 @@ function artistSearchTerms(
     terms.add(t)
     const depref = escIlike(t.replace(/^(dj|mc|the)\s+/i, '').trim())
     if (depref.length >= 2) terms.add(depref)
+    const noSpaces = escIlike(t.replace(/\s+/g, ''))
+    if (noSpaces.length >= 2 && noSpaces !== t) terms.add(noSpaces)
+    const noParens = escIlike(t.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim())
+    if (noParens.length >= 2 && noParens !== t) terms.add(noParens)
   }
   addTerm(artist.name)
   if (artist.name_display) addTerm(artist.name_display)
@@ -287,6 +296,8 @@ function buildArtistMatchKeys(
   for (const term of artistSearchTerms(artist)) {
     const n = normalizeForEntityMatch(term)
     if (n.length >= 2) keys.add(n)
+    const compact = compactEntityKey(term)
+    if (compact.length >= 4) keys.add(compact)
   }
   return keys
 }
@@ -344,12 +355,19 @@ function collectLineupNames(lineup: unknown, stages: unknown): string[] {
 }
 
 function lineupEntryMatchesArtist(lineupName: string, matchKeys: Set<string>): boolean {
+  const compactKeys = new Set<string>()
+  for (const key of matchKeys) {
+    const c = compactEntityKey(key)
+    if (c.length >= 4) compactKeys.add(c)
+  }
   for (const part of splitLineupSlotNames(lineupName)) {
     const n = normalizeForEntityMatch(part)
     if (!n) continue
     if (matchKeys.has(n)) return true
     const depref = n.replace(/^(dj|mc|the)\s+/, '')
     if (depref !== n && matchKeys.has(depref)) return true
+    const compact = compactEntityKey(part)
+    if (compact.length >= 4 && compactKeys.has(compact)) return true
   }
   return false
 }
