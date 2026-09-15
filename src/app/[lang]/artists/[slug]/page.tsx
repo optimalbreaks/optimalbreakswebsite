@@ -27,6 +27,7 @@ import {
   beatportTrackDetailPath,
   beatportTrackOpenGraphCopy,
 } from '@/lib/share-track'
+import { findBeatportTopFallbackTrack } from '@/lib/beatport-top-fallback'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -165,7 +166,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       .eq('slug', slug)
       .single()
     const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
-    const track = findBeatportTopTrackById(list, parsedPlay.id)
+    // Si el corte ya rotó fuera del Top 10, rescatarlo de charts/NR/snapshots
+    // para que el preview de WhatsApp/X siga enseñando la canción compartida.
+    const track =
+      findBeatportTopTrackById(list, parsedPlay.id) ??
+      (await findBeatportTopFallbackTrack(parsedPlay.id))
     if (track) {
       const og = beatportTrackOpenGraphCopy(track, lang)
       return detailPageMetadata(
@@ -230,6 +235,19 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
         </div>
       </div>
     )
+  }
+
+  // Rescate del enlace compartido (regla «el enlace nunca se queda mudo»):
+  // si `?play=beatport:<id>` ya no está en el Top 10 vigente de la ficha,
+  // recuperar el corte de charts/NR o del snapshot de un save para que el
+  // modal «Toca para escuchar» suene igual.
+  const playParsed = parsePlayParam(firstSearchParam(sp.play))
+  let beatportPlayFallback: BeatportTopTrack | null = null
+  if (playParsed?.kind === 'beatport') {
+    const topList = (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+    if (!findBeatportTopTrackById(topList, playParsed.id)) {
+      beatportPlayFallback = await findBeatportTopFallbackTrack(playParsed.id)
+    }
   }
 
   const [{ data: labelRows }, allArtistLinkRows, relatedContent, featuredPicks] = await Promise.all([
@@ -404,9 +422,9 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   lang={lang}
                 />
               </div>
-              {(artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+              {((artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length || beatportPlayFallback) ? (
                 <BeatportTopTracks
-                  tracks={artist.beatport_top_tracks as BeatportTopTrack[]}
+                  tracks={(artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []}
                   beatportUrl={artist.beatport_url}
                   lang={lang}
                   entityName={artist.name_display || artist.name}
@@ -418,6 +436,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                     slug: artist.slug,
                     name: artist.name_display || artist.name,
                   }}
+                  fallbackTrack={beatportPlayFallback}
                 />
               ) : null}
               {featuredPicks.length > 0 ? (

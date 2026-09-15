@@ -50,6 +50,15 @@ interface Props {
    * cualquiera de esas refs ya está en Mis Tracks.
    */
   saveRefsByUrl?: Record<string, TrackSaveCatalogRef[]>
+  /**
+   * Rescate «el enlace nunca se queda mudo» (sep 2026): cuando el
+   * `?play=beatport:<id>` del enlace compartido ya NO está en el Top 10
+   * vigente de esta ficha, el servidor recupera el corte de charts/NR o del
+   * snapshot de un save (`findBeatportTopFallbackTrack`) y lo pasa aquí.
+   * Con él armamos el modal «Toca para escuchar» con una cola de un solo
+   * tema. No pinta fila nueva en la lista.
+   */
+  fallbackTrack?: BeatportTopTrack | null
 }
 
 function buildSnapshot(
@@ -163,6 +172,7 @@ export default function BeatportTopTracks({
   defaultExpanded = false,
   badgeVariant = 'rank',
   saveRefsByUrl,
+  fallbackTrack,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded)
   const pathname = usePathname()
@@ -289,12 +299,51 @@ export default function BeatportTopTracks({
   useEffect(() => {
     if (didAutoPlayRef.current) return
     if (typeof window === 'undefined') return
-    if (!tracks.length) return
+    if (!tracks.length && !fallbackTrack) return
     const params = new URLSearchParams(window.location.search)
     const parsed = parsePlayParam(params.get('play'))
     if (!parsed || parsed.kind !== 'beatport') return
     const target = tracks.find((t) => extractBeatportTrackId(t.beatport_url) === parsed.id)
-    if (!target) return
+    if (!target) {
+      // Rescate «el enlace nunca se queda mudo»: el corte ya no está en el
+      // Top 10 vigente de esta ficha (rota con cada re-scrape), pero el
+      // servidor lo recuperó de charts/NR o del snapshot de un save. Se arma
+      // el mismo modal «Toca para escuchar» con una cola de UN solo tema —
+      // sin fila en la lista, sin scroll — y el tap del receptor reproduce.
+      const fb =
+        fallbackTrack && extractBeatportTrackId(fallbackTrack.beatport_url) === parsed.id
+          ? fallbackTrack
+          : null
+      if (!fb || !fb.sample_url) return
+      didAutoPlayRef.current = true
+      const sharePath = pathname ? buildBeatportSharePath(pathname, parsed.id) : null
+      const fbStoryMeta = storyMetaFromTop(fb)
+      const fbRowKey = `bp-fallback-${parsed.id}`
+      const fbQueue: PreviewTrack[] = [{
+        rowKey: fbRowKey,
+        src: proxyUrl(fb.sample_url),
+        title: fb.title,
+        artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
+        artworkUrl: fb.artwork_url || null,
+        originPath: pathname || undefined,
+        save: saveDataForTrack(fb, origin, saveRefsByUrl),
+        share: sharePath
+          ? { mode: 'path', path: sharePath, storyMeta: fbStoryMeta }
+          : fb.beatport_url
+            ? { mode: 'url', externalUrl: fb.beatport_url, storyMeta: fbStoryMeta }
+            : undefined,
+      }]
+      setPendingTapPlay({
+        queue: fbQueue,
+        idx: 0,
+        rowKey: fbRowKey,
+        title: fb.title,
+        mixName: fb.mix_name || null,
+        artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
+        artworkUrl: fb.artwork_url || null,
+      })
+      return
+    }
     const queue = playableTracks.map<PreviewTrack>((t) => {
       const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
       const sharePath = bpId && pathname
@@ -344,9 +393,28 @@ export default function BeatportTopTracks({
       }
     }, 120)
     return () => window.clearTimeout(t)
-  }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl])
+  }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl, fallbackTrack])
 
-  if (!tracks.length) return null
+  // Modal del enlace compartido: se renderiza también cuando la ficha no
+  // tiene Top 10 vigente (solo fallback) — el enlace debe sonar igual.
+  const tapOverlay = pendingTapPlay ? (
+    <TapToPlayOverlay
+      title={pendingTapPlay.title}
+      mixName={pendingTapPlay.mixName}
+      artistText={pendingTapPlay.artist}
+      artworkCandidates={[
+        proxyCatalogArtworkForDisplay(pendingTapPlay.artworkUrl),
+        pendingTapPlay.artworkUrl,
+      ].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i)}
+      resetKey={pendingTapPlay.rowKey}
+      ariaLabel={lang === 'es' ? 'Toca para escuchar el track' : 'Tap to play the track'}
+      lang={lang}
+      onPlay={handleTapPlay}
+      onDismiss={() => setPendingTapPlay(null)}
+    />
+  ) : null
+
+  if (!tracks.length) return tapOverlay
 
   const hasAnySample = playableTracks.length > 0
   const title = heading || 'TOP 10 BEATPORT'
@@ -528,22 +596,7 @@ export default function BeatportTopTracks({
       )}
       {/* Deep-link compartido (?play=beatport:<id>): modal «Toca para escuchar».
           El tap (gesto real) lanza la cola — nunca autoplay. */}
-      {pendingTapPlay && (
-        <TapToPlayOverlay
-          title={pendingTapPlay.title}
-          mixName={pendingTapPlay.mixName}
-          artistText={pendingTapPlay.artist}
-          artworkCandidates={[
-            proxyCatalogArtworkForDisplay(pendingTapPlay.artworkUrl),
-            pendingTapPlay.artworkUrl,
-          ].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i)}
-          resetKey={pendingTapPlay.rowKey}
-          ariaLabel={lang === 'es' ? 'Toca para escuchar el track' : 'Tap to play the track'}
-          lang={lang}
-          onPlay={handleTapPlay}
-          onDismiss={() => setPendingTapPlay(null)}
-        />
-      )}
+      {tapOverlay}
     </section>
   )
 }

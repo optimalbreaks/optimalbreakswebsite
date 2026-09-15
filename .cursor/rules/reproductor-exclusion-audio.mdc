@@ -25,6 +25,7 @@ Decisión expresa de Narciso (repetida varias veces): al abrir un enlace compart
 - Motivo técnico: sin gesto el `play()` siempre falla, y en WebKit móvil el rechazo llega como `AbortError` (no `NotAllowedError`), así que el overlay del provider gateado por ese nombre **no salía en móvil** (bug sep 2026). No volver al patrón «intenta autoplay y enseña modal si falla».
 - Única excepción con arranque automático: el buscador global ⌘K (`#chart-row-<id>` + `?play=1`, gesto dentro de la sesión) → `pendingPlay.autoplay=true`.
 - **No cambiar los formatos de URL de compartir** (`buildTrackSharePath`, `buildVinylSharePath`, `buildBeatportSharePath`): hay enlaces ya publicados en Instagram que deben seguir funcionando.
+- **Un enlace compartido nunca se queda mudo:** si `?play=beatport:<id>` ya no está en el Top 10 vigente de la ficha (rotan con cada re-scrape), el servidor lo rescata con **`findBeatportTopFallbackTrack`** (`src/lib/beatport-top-fallback.ts`): `chart_tracks` → `chart_featured_tracks` → snapshot de cualquier save `beatport_top` (service role). La ficha lo pasa a `<BeatportTopTracks fallbackTrack>` → mismo modal, cola de un solo tema. No quitar este rescate ni el uso del mismo helper en el OG de `generateMetadata`.
 
 ## Referencias
 

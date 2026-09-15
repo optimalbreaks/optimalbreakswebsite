@@ -29,6 +29,7 @@ import {
   beatportTrackDetailPath,
   beatportTrackOpenGraphCopy,
 } from '@/lib/share-track'
+import { findBeatportTopFallbackTrack } from '@/lib/beatport-top-fallback'
 import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
@@ -132,7 +133,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (parsedPlay?.kind === 'beatport') {
     const { data: topRow } = await supabase.from('labels').select('beatport_top_tracks').eq('slug', slug).single()
     const list = (topRow as { beatport_top_tracks: BeatportTopTrack[] | null } | null)?.beatport_top_tracks ?? []
-    const track = findBeatportTopTrackById(list, parsedPlay.id)
+    // Si el corte ya rotó fuera del Top 10, rescatarlo de charts/NR/snapshots
+    // para que el preview de WhatsApp/X siga enseñando la canción compartida.
+    const track =
+      findBeatportTopTrackById(list, parsedPlay.id) ??
+      (await findBeatportTopFallbackTrack(parsedPlay.id))
     if (track) {
       const og = beatportTrackOpenGraphCopy(track, lang)
       return detailPageMetadata(
@@ -151,7 +156,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return detailPageMetadata(lang, `/labels/${slug}`, siteName, seoTitle, description, 'website', defaultOgImage, keywords)
 }
 
-export default async function LabelDetailPage({ params }: Props) {
+export default async function LabelDetailPage({ params, searchParams }: Props) {
   const { lang, slug } = await params
   const supabase = createCachedSupabase(0)
   const readSupabase = createCachedSupabase(0)
@@ -161,6 +166,20 @@ export default async function LabelDetailPage({ params }: Props) {
     .eq('slug', slug)
     .single()
   const label = rawLabel as LabelPageRow | null
+
+  // Rescate del enlace compartido (regla «el enlace nunca se queda mudo»):
+  // si `?play=beatport:<id>` ya no está en el Top 10 vigente del sello,
+  // recuperar el corte de charts/NR o del snapshot de un save para que el
+  // modal «Toca para escuchar» suene igual.
+  const spPage = (await searchParams) ?? {}
+  const playParsed = parsePlayParam(firstSearchParam(spPage.play))
+  let beatportPlayFallback: BeatportTopTrack | null = null
+  if (label && playParsed?.kind === 'beatport') {
+    const topList = (label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+    if (!findBeatportTopTrackById(topList, playParsed.id)) {
+      beatportPlayFallback = await findBeatportTopFallbackTrack(playParsed.id)
+    }
+  }
 
   const [allArtistLinkRows, onSitePicks, { data: labelRows }] = await Promise.all([
     fetchAllArtistLinkRows(readSupabase),
@@ -355,15 +374,16 @@ export default async function LabelDetailPage({ params }: Props) {
               <FanCounter type="label" entityId={label.id} lang={lang} />
               <ShareButtons url={`/${lang}/labels/${slug}`} title={`${label.name} | Optimal Breaks`} lang={lang} />
             </div>
-            {(label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length ? (
+            {((label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length || beatportPlayFallback) ? (
               <BeatportTopTracks
-                tracks={label.beatport_top_tracks as BeatportTopTrack[]}
+                tracks={(label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []}
                 beatportUrl={label.beatport_url}
                 lang={lang}
                 entityName={label.name}
                 artistSlugMap={artistSlugMap}
                 labelSlugMap={labelSlugMap}
                 origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
+                fallbackTrack={beatportPlayFallback}
               />
             ) : null}
             {onSitePicks.length > 0 ? (
