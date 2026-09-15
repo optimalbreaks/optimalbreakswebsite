@@ -694,18 +694,22 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // cuelga más largo), medallón oro/plata/bronce con numeral romano y
   // laureles, filete decó y remate en punta de banderín.
   const countryRows = data?.top_countries || []
-  // Podio proporcional: el país nº1 (más saves) = 100% de la altura; el resto es su % real.
+  // Podio proporcional: el país nº1 (más saves) = 100% de la altura; el resto según sus saves.
   const maxCountrySaves = Math.max(...countryRows.map((c) => c.save_count), 1)
-  const minCountryRatio = countryRows.length
-    ? Math.max(0.001, Math.min(...countryRows.map((c) => c.save_count / maxCountrySaves)))
+  // Compresión de la diferencia: conservamos el 75% del hueco respecto al líder (−25%), para que
+  // se note la proporción sin que el podio se dispare de alto. nº1 sigue en 100%.
+  const POD_SPREAD = 0.75
+  const podRatio = (saves: number) => 1 - (1 - Math.min(1, saves / maxCountrySaves)) * POD_SPREAD
+  const minPodRatio = countryRows.length
+    ? Math.max(0.001, Math.min(...countryRows.map((c) => podRatio(c.save_count))))
     : 1
   // Contenido mínimo del banderín (medalla + bandera + nombre a 2 líneas + número + etiquetas):
-  // el banderín más corto no puede bajar de aquí o se recorta. El líder se escala a partir de esto
-  // para que TODOS mantengan su % real (nº1 = 100%). Tope anti-torres por si el nº3 fuese ínfimo.
+  // el banderín más corto no puede bajar de aquí o se recorta. El líder se escala a partir de esto.
+  // Tope anti-torres por si el nº3 fuese ínfimo.
   const POD_CONTENT_MIN_SM = 360 // escritorio
   const POD_CONTENT_MIN = 250 // móvil
-  const podMaxSm = Math.min(820, Math.max(360, Math.round(POD_CONTENT_MIN_SM / minCountryRatio)))
-  const podMax = Math.min(600, Math.max(250, Math.round(POD_CONTENT_MIN / minCountryRatio)))
+  const podMaxSm = Math.min(720, Math.max(360, Math.round(POD_CONTENT_MIN_SM / minPodRatio)))
+  const podMax = Math.min(560, Math.max(250, Math.round(POD_CONTENT_MIN / minPodRatio)))
   const countriesBlock =
     !loading && !error && data && countryRows.length > 0 ? (
       <section id="community-top-countries" className="mb-12 sm:mb-16 scroll-mt-24">
@@ -741,8 +745,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             {countryRows.map((ct) => {
               // El oro va al centro (orden visual 2º · 1º · 3º) y cuelga más.
               const orderCls = ct.rank === 1 ? 'order-2' : ct.rank === 2 ? 'order-1' : 'order-3'
-              // Altura = % real de saves respecto al líder (nº1 = 100%). Sin suelo artificial.
-              const saveRatio = Math.min(1, ct.save_count / maxCountrySaves)
+              // Altura según saves respecto al líder (nº1 = 100%), con la diferencia comprimida −25%.
+              const saveRatio = podRatio(ct.save_count)
               const hangMobile = Math.round(saveRatio * podMax)
               const hangDesktop = Math.round(saveRatio * podMaxSm)
               const medal = ct.rank === 1
