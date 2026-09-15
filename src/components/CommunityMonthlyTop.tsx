@@ -706,8 +706,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
   // Contenido mínimo del banderín (medalla + bandera + nombre a 2 líneas + número + etiquetas):
   // el banderín más corto no puede bajar de aquí o se recorta. El líder se escala a partir de esto.
   // Tope anti-torres por si el nº3 fuese ínfimo.
-  const POD_CONTENT_MIN_SM = 360 // escritorio
-  const POD_CONTENT_MIN = 250 // móvil
+  const POD_CONTENT_MIN_SM = 395 // escritorio (incluye rombo + tramo mínimo de cinta)
+  const POD_CONTENT_MIN = 275 // móvil
   const podMaxSm = Math.min(720, Math.max(360, Math.round(POD_CONTENT_MIN_SM / minPodRatio)))
   const podMax = Math.min(560, Math.max(250, Math.round(POD_CONTENT_MIN / minPodRatio)))
   const countriesBlock =
@@ -831,7 +831,18 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     >
                       {artistsLabel}
                     </div>
-                    <div className="flex-1" />
+                    {/* Cola decorativa: rombo + cinta de peligro rojo/amarillo que rellena el
+                        sobrante del banderín (los altos lucen larga; el corto apenas se ve). */}
+                    <div className="mt-3 sm:mt-4 flex-1 w-full flex flex-col items-center justify-start">
+                      <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rotate-45 bg-[var(--red)] border-[2px] sm:border-[3px] border-[var(--ink)] shrink-0 -mb-[6px] sm:-mb-[7px] relative z-[1]" />
+                      <span
+                        className="w-4 sm:w-6 flex-1 min-h-[10px] border-[2px] sm:border-[3px] border-[var(--ink)]"
+                        style={{
+                          backgroundImage:
+                            'repeating-linear-gradient(45deg, var(--red) 0, var(--red) 6px, var(--yellow) 6px, var(--yellow) 12px)',
+                        }}
+                      />
+                    </div>
                   </div>
                   {/* Punta del banderín (V invertida con borde). */}
                   <svg
