@@ -433,6 +433,7 @@ export default function SoulmatesSection({ lang }: Props) {
                     ? 'Usuarios cuyos gustos más coinciden con los tuyos. Enseñamos como mucho el Top 10 (abajo).'
                     : 'Users whose taste overlaps yours the most. We show the Top 10 at most (below).',
                   bg: 'bg-[var(--yellow)]',
+                  to: data.soulmates.length > 0 ? 'soulmates-top' : null,
                 },
                 {
                   n: data.recommended_tracks.length,
@@ -441,27 +442,48 @@ export default function SoulmatesSection({ lang }: Props) {
                     ? 'Temas que 2 o más de tus almas gemelas tienen guardados y tú aún no. Es la lista «Lo que te estás perdiendo» (abajo).'
                     : 'Tracks that 2+ of your soulmates saved and you haven’t yet. That’s the “What you’re missing” list (below).',
                   bg: 'bg-[var(--acid)]',
+                  to: data.recommended_tracks.length > 0 ? 'soulmates-recos' : null,
                 },
-              ].map((s) => (
-                <div
-                  key={s.l}
-                  role="listitem"
-                  title={s.d}
-                  className={`border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block`}
-                >
-                  <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
-                    {s.n}
-                  </div>
-                  <div className="sm:mt-2">
-                    <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase" style={{ fontFamily: MONO }}>
-                      {s.l}
+              ].map((s) => {
+                const clickable = !!s.to
+                const scrollTo = () => {
+                  if (!s.to) return
+                  document.getElementById(s.to)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+                const inner = (
+                  <>
+                    <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
+                      {s.n}
                     </div>
-                    <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
-                      {s.d}
+                    <div className="sm:mt-2 text-left">
+                      <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase flex items-center gap-1" style={{ fontFamily: MONO }}>
+                        {s.l}
+                        {clickable && <span aria-hidden className="text-[var(--ink)]/50">↓</span>}
+                      </div>
+                      <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
+                        {s.d}
+                      </div>
                     </div>
+                  </>
+                )
+                const cls = `border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block w-full`
+                return clickable ? (
+                  <button
+                    key={s.l}
+                    type="button"
+                    role="listitem"
+                    onClick={scrollTo}
+                    title={es ? `${s.d} · Pulsa para ir a la lista` : `${s.d} · Click to jump to the list`}
+                    className={`${cls} text-left cursor-pointer transition-transform hover:-translate-y-0.5 hover:shadow-[3px_3px_0_var(--ink)]`}
+                  >
+                    {inner}
+                  </button>
+                ) : (
+                  <div key={s.l} role="listitem" title={s.d} className={cls}>
+                    {inner}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
@@ -478,7 +500,7 @@ export default function SoulmatesSection({ lang }: Props) {
 
         {/* TOP 10 DE ALMAS GEMELAS */}
         {ready && data.soulmates.length > 0 && (
-          <section className="mb-10">
+          <section id="soulmates-top" className="mb-10 scroll-mt-24">
             <h3 className="font-black mb-1.5" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
               {es ? `Tus ${data.soulmates.length} almas gemelas` : `Your ${data.soulmates.length} soulmates`}
             </h3>
@@ -588,7 +610,7 @@ export default function SoulmatesSection({ lang }: Props) {
 
         {/* RECOMENDACIONES BASADAS EN LAS ALMAS GEMELAS */}
         {ready && data.recommended_tracks.length > 0 && (
-          <section>
+          <section id="soulmates-recos" className="scroll-mt-24">
             <h3 className="font-black mb-2" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
               {es ? 'Lo que te estás perdiendo' : 'What you’re missing'}
             </h3>
