@@ -919,8 +919,12 @@ export default function ChartView({
   const [pendingVinylPlay, setPendingVinylPlay] = useState<PendingVinylPlay | null>(null)
 
   const [pendingPlay, setPendingPlay] = useState<
-    | { kind: 'forty' | 'picks'; weekDate: string; trackId: string }
-    | { kind: 'archive'; yearKey: string; trackId: string }
+    // `autoplay`: solo el buscador global (⌘K, `?play=1`) intenta arrancar el
+    // audio al vuelo. Los enlaces COMPARTIDOS (`?play=source:id`) llegan con
+    // `autoplay: false` → mostramos SIEMPRE el modal «Toca para escuchar» y es
+    // el tap del usuario quien reproduce (gesto real: funciona en PC y móvil).
+    | { kind: 'forty' | 'picks'; weekDate: string; trackId: string; autoplay: boolean }
+    | { kind: 'archive'; yearKey: string; trackId: string; autoplay: boolean }
     | null
   >(null)
 
@@ -952,6 +956,15 @@ export default function ChartView({
       const search = new URLSearchParams(window.location.search)
       const playRaw = search.get('play')
       const parsed = parsePlayParam(playRaw)
+
+      // Enlaces compartidos de un tema (`?play=chart:id` / `featured:id` desde
+      // `TrackShareButton`) NUNCA hacen autoplay: enseñan el modal «Toca para
+      // escuchar» y el tap del usuario reproduce. Solo el deep-link del buscador
+      // global (⌘K → `#chart-row-id` + `?play=1`, dentro de la sesión, con gesto
+      // previo) intenta arrancar solo. Antes se intentaba autoplay siempre y el
+      // modal dependía de que el navegador rechazara con NotAllowedError; en
+      // móvil (WebKit) el rechazo llega como AbortError y el modal no aparecía.
+      const autoplayOnLoad = parsed?.kind === 'legacy'
 
       // Determina kind/id/domId y si tenemos que arrancar el player.
       let kind: 'chart' | 'vinyl' | null = null
@@ -1067,7 +1080,7 @@ export default function ChartView({
             const yearKey = featuredArchiveYearKey(featuredPick)
             ensureOpenVinyl(yearKey)
             if (wantsPlay) {
-              setPendingPlay({ kind: 'archive', yearKey, trackId })
+              setPendingPlay({ kind: 'archive', yearKey, trackId, autoplay: autoplayOnLoad })
             }
           } else if (inFeatured) {
             const picksIdx = weeks
@@ -1076,7 +1089,7 @@ export default function ChartView({
             if (picksIdx >= INITIAL_WEEKS_VISIBLE) setShowAllPicksWeeks(true)
             ensureOpenPicks(weekDate)
             if (wantsPlay) {
-              setPendingPlay({ kind: 'picks', weekDate, trackId })
+              setPendingPlay({ kind: 'picks', weekDate, trackId, autoplay: autoplayOnLoad })
             }
           } else {
             const fortyIdx = weeks
@@ -1085,7 +1098,7 @@ export default function ChartView({
             if (fortyIdx >= INITIAL_WEEKS_VISIBLE) setShowAllFortyWeeks(true)
             ensureOpenForty(weekDate)
             if (wantsPlay) {
-              setPendingPlay({ kind: 'forty', weekDate, trackId })
+              setPendingPlay({ kind: 'forty', weekDate, trackId, autoplay: autoplayOnLoad })
             }
           }
         }
@@ -1377,13 +1390,16 @@ export default function ChartView({
   // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
   useEffect(() => {
     if (!pendingPlay) return
-    // Intento de autoplay + emergente armado con el mismo bundle. Si el
-    // navegador deja sonar, el emergente se cierra solo (efecto más abajo);
-    // si no, el usuario tiene el ▶ con el nombre del tema delante.
+    // Enlace COMPARTIDO (`autoplay === false`): NO intentamos reproducir; solo
+    // armamos el modal «Toca para escuchar» con este bundle, y el tap del
+    // usuario (gesto real) arranca el tema — en PC y en móvil por igual.
+    // ⌘K (`autoplay === true`): intento de arranque + modal como respaldo si el
+    // navegador lo bloquea.
+    const autoplay = pendingPlay.autoplay
     const armDeepLinkPlay = (sectionKey: string, bundle: PlayAllBundle, idx: number) => {
       const m = bundle[idx]
       if (!m) return
-      playFromIndex(sectionKey, bundle, idx)
+      if (autoplay) playFromIndex(sectionKey, bundle, idx)
       setPendingTapPlay({
         rowKey: m.rowKey,
         sectionKey,
