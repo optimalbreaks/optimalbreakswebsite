@@ -161,7 +161,7 @@ ${extraNotes}
 CHECKLIST V2 (obligatorio antes de cerrar la respuesta):
 - Solo un objeto JSON parseable; sin markdown, sin texto fuera del JSON, sin campos extra.
 - Prioridad de fuentes: ${revise ? 'notas del artista / documentacion > ficha actual > ' : ''}notas del editor > contexto web > conocimiento general.
-${revise ? '- Modo revision: no sustituyas las biografias por un borrador nuevo; conserva y mejora el texto de la FICHA ACTUAL salvo correcciones documentadas.\n' : ''}${revise && poorObBoilerplate ? '- EXCEPCION (bio basura OB/chart): reescribe bio_en y bio_es desde cero; no repitas ni amplíes el texto de autopromo.\n' : ''}
+${revise ? '- Modo revision: conserva los hechos útiles de la FICHA ACTUAL, pero reescribe y condensa libremente cualquier párrafo genérico, repetitivo o de relleno.\n' : ''}${revise && poorObBoilerplate ? '- EXCEPCION (bio basura OB/chart): reescribe bio_en y bio_es desde cero; no repitas ni amplíes el texto de autopromo.\n' : ''}
 - PROHIBIDO en biografias y key_releases.note: Optimal Breaks, 40 Breaks Vitales, listado extendido, chart metadata.
 - No inventes charts, fechas exactas, premios, sellos, colaboraciones ni URLs sin base razonable.
 - slug EXACTO (kebab-case, solo a-z, 0-9, guiones): "${slug}"
