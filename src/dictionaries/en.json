@@ -567,7 +567,9 @@
       "countries_saves": "saves",
       "countries_artists": "{n} artists with saves",
       "countries_artist_one": "{n} artist with saves",
-      "countries_first_tag": "TOP SCENE"
+      "countries_medal_gold": "GOLD",
+      "countries_medal_silver": "SILVER",
+      "countries_medal_bronze": "BRONZE"
     }
   },
   "charts_promo": {

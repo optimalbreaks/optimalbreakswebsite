@@ -220,6 +220,24 @@ function leaderHeadline(leader: CommunityTopArtist, cm: Record<string, string>):
   return (cm.leader_holds || '{name} se mantiene en el nº 1').replace('{name}', name)
 }
 
+/** Rama de laurel olímpica (flanquea el medallón del podio de países). */
+function LaurelBranch({ mirrored = false, className = '' }: { mirrored?: boolean; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 44"
+      className={className}
+      style={mirrored ? { transform: 'scaleX(-1)' } : undefined}
+      aria-hidden
+    >
+      <path d="M15 42 C8 34 4 24 6 8" fill="none" stroke="currentColor" strokeWidth="2" />
+      <ellipse cx="6" cy="7" rx="2.4" ry="4.8" transform="rotate(-16 6 7)" fill="currentColor" />
+      <ellipse cx="5" cy="16" rx="2.5" ry="5.2" transform="rotate(-30 5 16)" fill="currentColor" />
+      <ellipse cx="7" cy="25" rx="2.7" ry="5.4" transform="rotate(-42 7 25)" fill="currentColor" />
+      <ellipse cx="11" cy="33" rx="2.7" ry="5.4" transform="rotate(-54 11 33)" fill="currentColor" />
+    </svg>
+  )
+}
+
 function SaveCountBadge({ count, label }: { count: number; label: string }) {
   // Badge similar a `PositionBadge` del chart pero con el número de saves.
   const isHot = count >= 5
@@ -670,9 +688,10 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
       </section>
     ) : null
 
-  // Podio de países — pura estética podio olímpico pasada por fanzine:
-  // tres peanas de altura distinta (2º · 1º · 3º), bandera protagonista,
-  // rayas diagonales de obra en las bases y sello ácido para el nº 1.
+  // Podio de países — estética cartel olímpico años 30 (Berlín '36):
+  // banderines verticales colgando de una viga negra (el oro al centro,
+  // cuelga más largo), medallón oro/plata/bronce con numeral romano y
+  // laureles, filete decó y remate en punta de banderín.
   const countryRows = data?.top_countries || []
   const countriesBlock =
     !loading && !error && data && countryRows.length > 0 ? (
@@ -698,77 +717,124 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               'Los tres países cuyos artistas acumulan más saves en Mis Tracks. Cuentan todos los artistas del catálogo con al menos un save — el podio suma los saves de cada bandera.'}
           </p>
         </header>
-        <div className="grid grid-cols-3 items-end gap-2 sm:gap-4 mx-2 sm:mx-0 pt-3">
-          {countryRows.map((ct) => {
-            const isFirst = ct.rank === 1
-            // El nº 1 va al centro (orden visual 2º · 1º · 3º, como un podio).
-            const orderCls = ct.rank === 1 ? 'order-2' : ct.rank === 2 ? 'order-1' : 'order-3'
-            const baseCls = isFirst
-              ? 'h-20 sm:h-32 bg-[var(--red)] text-white'
-              : ct.rank === 2
-                ? 'h-14 sm:h-20 bg-[var(--ink)] text-[var(--paper)]'
-                : 'h-9 sm:h-12 bg-[var(--cyan)] text-white'
-            const stripes = ct.rank === 2
-              ? 'repeating-linear-gradient(-45deg, transparent 0 10px, rgba(255,255,255,0.08) 10px 20px)'
-              : 'repeating-linear-gradient(-45deg, transparent 0 10px, rgba(0,0,0,0.16) 10px 20px)'
-            const countryName = countryDisplayFromCode(ct.iso, lang) || ct.iso.toUpperCase()
-            const artistsLabel = (ct.artist_count === 1
-              ? cm.countries_artist_one || '{n} artista con saves'
-              : cm.countries_artists || '{n} artistas con saves'
-            ).replace('{n}', String(ct.artist_count))
-            return (
-              <div key={ct.iso} className={`flex flex-col ${orderCls}`}>
-                <div className="relative border-[3px] border-b-0 border-[var(--ink)] bg-[var(--paper)] px-1.5 pt-4 pb-3 sm:px-4 sm:pt-6 sm:pb-5 text-center">
-                  {isFirst && (
-                    <span
-                      className="absolute -top-3 left-1/2 -translate-x-1/2 -rotate-3 whitespace-nowrap bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] px-1.5 py-0.5 text-[8px] sm:text-[10px] font-black tracking-[2px]"
+        <div className="mx-2 sm:mx-0">
+          {/* Viga de la que cuelgan los banderines (con remaches). */}
+          <div className="relative h-3 sm:h-4 bg-[var(--ink)]">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--paper)]/80" />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[var(--paper)]/80" />
+          </div>
+          <div className="grid grid-cols-3 items-start gap-3 sm:gap-8 px-2 sm:px-10">
+            {countryRows.map((ct) => {
+              // El oro va al centro (orden visual 2º · 1º · 3º) y cuelga más.
+              const orderCls = ct.rank === 1 ? 'order-2' : ct.rank === 2 ? 'order-1' : 'order-3'
+              const medal = ct.rank === 1
+                ? {
+                    bg: '#C9A227',
+                    roman: 'I',
+                    label: cm.countries_medal_gold || 'ORO',
+                    hang: 'min-h-[300px] sm:min-h-[440px]',
+                  }
+                : ct.rank === 2
+                  ? {
+                      bg: '#A8ADB4',
+                      roman: 'II',
+                      label: cm.countries_medal_silver || 'PLATA',
+                      hang: 'min-h-[260px] sm:min-h-[380px]',
+                    }
+                  : {
+                      bg: '#A9713D',
+                      roman: 'III',
+                      label: cm.countries_medal_bronze || 'BRONCE',
+                      hang: 'min-h-[230px] sm:min-h-[330px]',
+                    }
+              const countryName = countryDisplayFromCode(ct.iso, lang) || ct.iso.toUpperCase()
+              const artistsLabel = (ct.artist_count === 1
+                ? cm.countries_artist_one || '{n} artista con saves'
+                : cm.countries_artists || '{n} artistas con saves'
+              ).replace('{n}', String(ct.artist_count))
+              return (
+                <div key={ct.iso} className={`flex flex-col ${orderCls}`}>
+                  <div
+                    className={`flex flex-col items-center border-[3px] border-t-0 border-b-0 border-[var(--ink)] bg-[var(--paper)] px-1.5 pt-4 sm:px-4 sm:pt-7 text-center ${medal.hang}`}
+                  >
+                    {/* Medallón con numeral romano, flanqueado por laureles. */}
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1.5">
+                      <LaurelBranch className="w-3.5 h-8 sm:w-5 sm:h-11 text-[var(--ink)]/65 shrink-0" />
+                      <span
+                        className="inline-flex items-center justify-center w-11 h-11 sm:w-16 sm:h-16 rounded-full border-[3px] border-[var(--ink)] shadow-[inset_0_0_0_3px_rgba(0,0,0,0.18)]"
+                        style={{ backgroundColor: medal.bg }}
+                        title={`#${ct.rank}`}
+                      >
+                        <span
+                          className="font-black text-base sm:text-2xl leading-none text-[var(--ink)]"
+                          style={{ fontFamily: "'Unbounded', sans-serif" }}
+                        >
+                          {medal.roman}
+                        </span>
+                      </span>
+                      <LaurelBranch mirrored className="w-3.5 h-8 sm:w-5 sm:h-11 text-[var(--ink)]/65 shrink-0" />
+                    </div>
+                    <div
+                      className="mt-1.5 sm:mt-2 text-[8px] sm:text-[10px] font-bold tracking-[3px] sm:tracking-[4px] text-[var(--ink)]/60 uppercase"
                       style={{ fontFamily: "'Courier Prime', monospace" }}
                     >
-                      {cm.countries_first_tag || 'ESCENA Nº 1'}
+                      {medal.label}
+                    </div>
+                    <span className="mt-3 sm:mt-5 inline-block border-[3px] border-[var(--ink)] leading-none">
+                      <CountryFlagSvg iso={ct.iso} size="lg" className="block" />
                     </span>
-                  )}
-                  <span className="inline-block border-[3px] border-[var(--ink)] leading-none">
-                    <CountryFlagSvg iso={ct.iso} size="lg" className="block" />
-                  </span>
-                  <div
-                    className="mt-2 sm:mt-3 text-[11px] sm:text-lg font-black uppercase leading-tight break-words"
-                    style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-                  >
-                    {countryName}
+                    <div
+                      className="mt-2 sm:mt-4 text-[10px] sm:text-base font-black uppercase leading-tight break-words tracking-[1px] sm:tracking-[3px]"
+                      style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+                    >
+                      {countryName}
+                    </div>
+                    {/* Filete decó línea–rombo–línea. */}
+                    <div className="flex items-center gap-1.5 w-3/4 my-2 sm:my-4">
+                      <span className="flex-1 h-[2px] bg-[var(--ink)]/50" />
+                      <span className="w-1.5 h-1.5 rotate-45 bg-[var(--ink)] shrink-0" />
+                      <span className="flex-1 h-[2px] bg-[var(--ink)]/50" />
+                    </div>
+                    <div
+                      className="text-2xl sm:text-4xl font-black tabular-nums leading-none"
+                      style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+                    >
+                      {ct.save_count}
+                    </div>
+                    <div
+                      className="mt-1 text-[8px] sm:text-[10px] font-bold tracking-[3px] sm:tracking-[4px] text-[var(--ink)]/55 uppercase"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      {cm.countries_saves || 'saves'}
+                    </div>
+                    <div
+                      className="mt-2 sm:mt-3 text-[9px] sm:text-[11px] font-bold text-[var(--ink)]/60 tabular-nums"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      {artistsLabel}
+                    </div>
+                    <div className="flex-1" />
                   </div>
-                  <div
-                    className="mt-1.5 sm:mt-2 text-2xl sm:text-4xl font-black tabular-nums leading-none"
-                    style={{ fontFamily: "'Unbounded', sans-serif", color: isFirst ? 'var(--red)' : 'var(--ink)' }}
+                  {/* Punta del banderín (V invertida con borde). */}
+                  <svg
+                    viewBox="0 0 100 18"
+                    preserveAspectRatio="none"
+                    className="block w-full h-4 sm:h-6 -mt-px"
+                    aria-hidden
                   >
-                    {ct.save_count}
-                  </div>
-                  <div
-                    className="text-[8px] sm:text-[10px] font-bold tracking-[2px] text-[var(--ink)]/50 uppercase"
-                    style={{ fontFamily: "'Courier Prime', monospace" }}
-                  >
-                    {cm.countries_saves || 'saves'}
-                  </div>
-                  <div
-                    className="mt-2 sm:mt-3 border-t-2 border-[var(--ink)]/15 pt-1.5 sm:pt-2 text-[9px] sm:text-[11px] font-bold text-[var(--ink)]/60 tabular-nums"
-                    style={{ fontFamily: "'Courier Prime', monospace" }}
-                  >
-                    {artistsLabel}
-                  </div>
+                    <polygon points="0,0 100,0 50,16" style={{ fill: 'var(--paper)' }} />
+                    <path
+                      d="M0 0 L50 16 L100 0"
+                      fill="none"
+                      style={{ stroke: 'var(--ink)' }}
+                      strokeWidth="3"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
                 </div>
-                <div
-                  className={`flex items-center justify-center border-[3px] border-[var(--ink)] ${baseCls}`}
-                  style={{ backgroundImage: stripes }}
-                >
-                  <span
-                    className="font-black leading-none text-2xl sm:text-4xl"
-                    style={{ fontFamily: "'Unbounded', sans-serif" }}
-                  >
-                    {ct.rank}
-                  </span>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </section>
     ) : null

@@ -469,7 +469,9 @@
       "countries_saves": "saves",
       "countries_artists": "{n} artistas con saves",
       "countries_artist_one": "{n} artista con saves",
-      "countries_first_tag": "ESCENA Nº 1"
+      "countries_medal_gold": "ORO",
+      "countries_medal_silver": "PLATA",
+      "countries_medal_bronze": "BRONCE"
     }
   },
   "charts_promo": {
