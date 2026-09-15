@@ -23,7 +23,7 @@ import type {
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
 import {
@@ -94,37 +94,65 @@ function VinylArtwork({
 
 type PendingVinylPlay = { trackId: string; yearKey: string; track: ChartVinylTrack }
 
-function VinylAutoplayOverlay({
-  pending,
+/**
+ * Deep-link de 40 Breaks / New Releases (`?play=chart:<id>` / `featured:<id>`):
+ * lo que hace falta para (re)lanzar la cola desde un gesto del usuario si el
+ * autoplay no arranca. `bundle`/`index` son los mismos que usó el intento
+ * automático; `rowKey` identifica la fila para saber cuándo ya está sonando.
+ */
+type PendingTapPlay = {
+  rowKey: string
+  sectionKey: string
+  bundle: PreviewTrack[]
+  index: number
+  title: string
+  artist: string
+  artworkUrl: string | null
+}
+
+/**
+ * Emergente «Toca para escuchar» compartido por vinilo (YouTube) y por los
+ * temas de chart/featured (cola de preview). Un link compartido de un tema
+ * DEBE acabar sonando: los navegadores (móvil sobre todo) bloquean el
+ * `play()` sin gesto, así que el emergente ofrece ese gesto con el nombre del
+ * tema. Tocar fuera lo cierra sin reproducir.
+ */
+function TapToPlayOverlay({
+  title,
+  mixName,
+  artistText,
+  artworkCandidates,
+  resetKey,
+  ariaLabel,
   lang,
   onPlay,
   onDismiss,
 }: {
-  pending: PendingVinylPlay
+  title: string
+  mixName?: string | null
+  artistText: string
+  /** Fuentes de carátula en orden de preferencia; se salta a la siguiente si una falla. */
+  artworkCandidates: string[]
+  /** Cambiar de tema reinicia el fallback de carátula. */
+  resetKey: string
+  ariaLabel: string
   lang: Locale
   onPlay: () => void
   onDismiss: () => void
 }) {
-  const { track } = pending
-  const artists = Array.isArray(track.artists) ? track.artists : []
-  const artistText = artists.map((a) => a.name).filter(Boolean).join(', ')
   const es = lang === 'es'
-  const candidates = useMemo(
-    () => vinylArtworkCandidates(track.artwork_url, track.youtube_url, track.label),
-    [track.artwork_url, track.youtube_url, track.label],
-  )
   const [idx, setIdx] = useState(0)
 
-  useEffect(() => { setIdx(0) }, [track.id, track.artwork_url, track.youtube_url, track.label])
+  useEffect(() => { setIdx(0) }, [resetKey])
 
-  const src = candidates[idx] ?? null
+  const src = artworkCandidates[idx] ?? null
 
   return (
     <div
       className="fixed inset-0 z-[95] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
       role="dialog"
       aria-modal="true"
-      aria-label={es ? 'Toca para escuchar el vinilo' : 'Tap to play the vinyl'}
+      aria-label={ariaLabel}
       onClick={onDismiss}
     >
       <button
@@ -137,13 +165,13 @@ function VinylAutoplayOverlay({
           {src ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              key={`${track.id}-${idx}-${src}`}
+              key={`${resetKey}-${idx}-${src}`}
               src={src}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
               referrerPolicy="no-referrer"
               onError={() => {
-                setIdx((i) => (i + 1 < candidates.length ? i + 1 : candidates.length))
+                setIdx((i) => (i + 1 < artworkCandidates.length ? i + 1 : artworkCandidates.length))
               }}
             />
           ) : (
@@ -155,8 +183,8 @@ function VinylAutoplayOverlay({
             {es ? '▶ TOCA PARA ESCUCHAR' : '▶ TAP TO PLAY'}
           </div>
           <div className="text-sm sm:text-base font-black text-[var(--ink)] truncate leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
-            {track.title}
-            {(track.mix_name || '').trim() ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{track.mix_name}</span> : null}
+            {title}
+            {(mixName || '').trim() ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mixName}</span> : null}
           </div>
           {artistText && <div className="text-[11px] sm:text-xs text-[var(--ink)]/70 truncate">{artistText}</div>}
         </div>
@@ -896,6 +924,12 @@ export default function ChartView({
     | null
   >(null)
 
+  // Emergente «Toca para escuchar» para deep-links de chart/featured. Se arma
+  // a la vez que el intento de autoplay y se retira solo cuando ese tema ya
+  // está sonando; si el autoplay no arranca (política del navegador, motor
+  // aún cargando, error silencioso…), el tap del usuario lo lanza de verdad.
+  const [pendingTapPlay, setPendingTapPlay] = useState<PendingTapPlay | null>(null)
+
   // ---- Deep-link: abrir acordeón correcto, hacer scroll al track y (opcional)
   // iniciar reproducción -----------------------------------------------------
   //
@@ -1094,7 +1128,7 @@ export default function ChartView({
 
   // ---- Play-all state (delegado al provider global) ----
   const {
-    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying, previewBlocked,
     playPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
@@ -1343,6 +1377,23 @@ export default function ChartView({
   // petición pendiente o cuando `weeks` se actualiza por cualquier motivo.
   useEffect(() => {
     if (!pendingPlay) return
+    // Intento de autoplay + emergente armado con el mismo bundle. Si el
+    // navegador deja sonar, el emergente se cierra solo (efecto más abajo);
+    // si no, el usuario tiene el ▶ con el nombre del tema delante.
+    const armDeepLinkPlay = (sectionKey: string, bundle: PlayAllBundle, idx: number) => {
+      const m = bundle[idx]
+      if (!m) return
+      playFromIndex(sectionKey, bundle, idx)
+      setPendingTapPlay({
+        rowKey: m.rowKey,
+        sectionKey,
+        bundle,
+        index: idx,
+        title: m.title,
+        artist: m.artist,
+        artworkUrl: m.artworkUrl ?? null,
+      })
+    }
     if (pendingPlay.kind === 'archive') {
       const { yearKey, trackId } = pendingPlay
       const rows = archiveByYear.get(yearKey) ?? []
@@ -1352,7 +1403,7 @@ export default function ChartView({
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
-        playFromIndex(`archive-${yearKey}`, bundle, idx)
+        armDeepLinkPlay(`archive-${yearKey}`, bundle, idx)
       }
       setPendingPlay(null)
       return
@@ -1370,14 +1421,14 @@ export default function ChartView({
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
-        playFromIndex(`picks-${weekDate}`, bundle, idx)
+        armDeepLinkPlay(`picks-${weekDate}`, bundle, idx)
       }
     } else {
       const bundle = buildTrackBundle(week.tracks, canonicalGroups.chartByTrack, weekDate)
       const rowKey = `chart-row-${trackId}`
       const idx = bundle.findIndex((m) => m.rowKey === rowKey)
       if (idx >= 0) {
-        playFromIndex(`forty-${weekDate}`, bundle, idx)
+        armDeepLinkPlay(`forty-${weekDate}`, bundle, idx)
       }
     }
     setPendingPlay(null)
@@ -1385,6 +1436,36 @@ export default function ChartView({
     // falta meterlo en deps porque `weeks` ya lo recalcula.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingPlay, weeks, lang, playFromIndex, buildFeaturedBundle, buildTrackBundle])
+
+  // El tema del deep-link ya suena → retirar el emergente. Comparamos por
+  // fila activa dentro de su grupo, no solo por `previewPlaying`, para no
+  // cerrarlo porque esté sonando otra cosa (p. ej. una cola anterior).
+  const pendingTapRowActive =
+    !!pendingTapPlay &&
+    previewGroupKey === pendingTapPlay.sectionKey &&
+    previewQueue[previewIndex]?.rowKey === pendingTapPlay.rowKey
+  const pendingTapPlaying = pendingTapRowActive && previewPlaying
+  useEffect(() => {
+    if (pendingTapPlaying) setPendingTapPlay(null)
+  }, [pendingTapPlaying])
+  // El motor rechazó el autoplay (NotAllowedError) y levanta su propio
+  // «Toca para escuchar» sobre esta misma cola: le cedemos el emergente para
+  // no duplicarlo ni reaparecer si el usuario lo cierra tocando fuera.
+  useEffect(() => {
+    if (previewBlocked) setPendingTapPlay(null)
+  }, [previewBlocked])
+
+  // Tap del usuario en el emergente: gesto real, así que el `play()` no cae
+  // en la política de autoplay. Si la cola ya está cargada en esa fila (el
+  // intento automático la dejó en pausa), reanudamos; si no, la lanzamos.
+  const handlePendingTapPlay = useCallback(() => {
+    if (!pendingTapPlay) return
+    if (pendingTapRowActive) {
+      if (!previewPlaying) togglePreview()
+      return
+    }
+    playFromIndex(pendingTapPlay.sectionKey, pendingTapPlay.bundle, pendingTapPlay.index)
+  }, [pendingTapPlay, pendingTapRowActive, previewPlaying, togglePreview, playFromIndex])
 
   // Dado un sectionKey, ¿es la cola actualmente activa del provider?
   const isGroupActive = useCallback((sectionKey: string) => previewGroupKey === sectionKey, [previewGroupKey])
@@ -1909,8 +1990,18 @@ export default function ChartView({
           (modo `preview`) para que siga sonando al cambiar de ruta. */}
 
       {pendingVinylPlay && (
-        <VinylAutoplayOverlay
-          pending={pendingVinylPlay}
+        <TapToPlayOverlay
+          title={pendingVinylPlay.track.title}
+          mixName={pendingVinylPlay.track.mix_name}
+          artistText={(Array.isArray(pendingVinylPlay.track.artists) ? pendingVinylPlay.track.artists : [])
+            .map((a) => a.name).filter(Boolean).join(', ')}
+          artworkCandidates={vinylArtworkCandidates(
+            pendingVinylPlay.track.artwork_url,
+            pendingVinylPlay.track.youtube_url,
+            pendingVinylPlay.track.label,
+          )}
+          resetKey={pendingVinylPlay.track.id}
+          ariaLabel={lang === 'es' ? 'Toca para escuchar el vinilo' : 'Tap to play the vinyl'}
           lang={lang}
           onPlay={() => {
             const { trackId, yearKey } = pendingVinylPlay
@@ -1919,6 +2010,25 @@ export default function ChartView({
             setAutoplayVinylId(trackId)
           }}
           onDismiss={() => setPendingVinylPlay(null)}
+        />
+      )}
+      {/* Deep-link de chart/featured: emergente propio mientras el tema no
+          suene. Si el motor ya levantó su «Toca para escuchar» (autoplay
+          rechazado con NotAllowedError), no lo duplicamos: ese tap también
+          arranca este mismo tema. */}
+      {pendingTapPlay && !pendingTapPlaying && !previewBlocked && !pendingVinylPlay && (
+        <TapToPlayOverlay
+          title={pendingTapPlay.title}
+          artistText={pendingTapPlay.artist}
+          artworkCandidates={[
+            proxyCatalogArtworkForDisplay(pendingTapPlay.artworkUrl),
+            pendingTapPlay.artworkUrl,
+          ].filter((u, i, arr): u is string => !!u && arr.indexOf(u) === i)}
+          resetKey={pendingTapPlay.rowKey}
+          ariaLabel={lang === 'es' ? 'Toca para escuchar el track' : 'Tap to play the track'}
+          lang={lang}
+          onPlay={handlePendingTapPlay}
+          onDismiss={() => setPendingTapPlay(null)}
         />
       )}
     </div>

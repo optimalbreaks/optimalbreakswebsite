@@ -374,7 +374,7 @@ export const OB_CHART_PLAYALL_BAR_EVENT = 'ob-chart-playall-bar'
  */
 function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
   const ctx = useDeckAudio()
-  const { previewBlocked, previewQueue, previewIndex, togglePreview } = ctx
+  const { previewBlocked, previewQueue, previewIndex, togglePreview, stopPreview } = ctx
   const [artworkFailed, setArtworkFailed] = useState(false)
   const track = previewQueue[previewIndex]
   const artworkUrl = track?.artworkUrl || ''
@@ -390,10 +390,13 @@ function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
       role="dialog"
       aria-modal="true"
       aria-label={es ? 'Toca para escuchar el track' : 'Tap to play the track'}
+      // Tocar fuera = cerrar sin escuchar: vaciamos la cola (y con ella
+      // `previewBlocked`), si no el emergente reaparecería en el siguiente render.
+      onClick={stopPreview}
     >
       <button
         type="button"
-        onClick={togglePreview}
+        onClick={(e) => { e.stopPropagation(); togglePreview() }}
         className="flex items-center gap-3 sm:gap-4 bg-[var(--paper)] border-[4px] border-[var(--ink)] px-3 sm:px-5 py-3 sm:py-4 max-w-[520px] w-full hover:bg-[var(--yellow)] active:bg-[var(--yellow)] transition-colors cursor-pointer touch-manipulation text-left"
         style={{ fontFamily: "'Courier Prime', monospace" }}
       >
