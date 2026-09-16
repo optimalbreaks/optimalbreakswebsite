@@ -25,6 +25,8 @@ type AdminClaim = ArtistClaimRow & {
 const STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'revoked', 'superseded'] as const
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
 
+type Notice = { kind: 'ok' | 'err'; text: string }
+
 function ClaimArtistPicker({
   lang,
   selected,
@@ -190,6 +192,7 @@ export default function AdminClaimsPage() {
 
   const [smtpReady, setSmtpReady] = useState<boolean | null>(null)
   const [testingSmtp, setTestingSmtp] = useState(false)
+  const [notice, setNotice] = useState<Notice | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -228,16 +231,19 @@ export default function AdminClaimsPage() {
         cache: 'no-store',
       })
       const json = await res.json().catch(() => ({}))
-      if (!res.ok) { alert((json as { error?: string }).error || `Error ${res.status}`); return }
+      if (!res.ok) {
+        setNotice({ kind: 'err', text: (json as { error?: string }).error || `Error ${res.status}` })
+        return
+      }
       if (action === 'approve') {
         if (json.mail === 'sent' || json.mail === 'queued') {
-          alert('Ficha verificada. El mail al artista se está enviando (copia a contacto@). Queda en Mails.')
+          setNotice({ kind: 'ok', text: 'Ficha verificada. Mail en camino (copia a contacto@).' })
         } else if (json.mail === 'skipped_no_smtp') {
-          alert('Ficha verificada, pero el mail NO salió: faltan SMTP_* en Vercel.')
+          setNotice({ kind: 'err', text: 'Ficha verificada, pero el mail no salió: faltan SMTP_* en Vercel.' })
         } else if (json.mail === 'skipped_no_email') {
-          alert('Ficha verificada, pero el mail NO salió: la cuenta no tiene email confirmado.')
+          setNotice({ kind: 'err', text: 'Ficha verificada, pero el mail no salió: la cuenta no tiene email confirmado.' })
         } else {
-          alert('Ficha verificada. Revisa Mails si no ves el envío.')
+          setNotice({ kind: 'ok', text: 'Ficha verificada. Revisa Mails si no ves el envío.' })
         }
         setPicked((prev) => {
           const next = { ...prev }
@@ -255,7 +261,7 @@ export default function AdminClaimsPage() {
       })
       await load()
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Error de red al guardar')
+      setNotice({ kind: 'err', text: e instanceof Error ? e.message : 'Error de red al guardar' })
     } finally {
       setBusy(null)
     }
@@ -270,6 +276,37 @@ export default function AdminClaimsPage() {
         busca y selecciona la ficha del catálogo (o créala antes en <em>Artistas</em> si aún no existe).
         Un usuario solo puede tener <strong>una</strong> solicitud viva (pendiente o aprobada).
       </p>
+
+      {notice && (
+        <div
+          className="mb-4 max-w-3xl p-3 border-[3px] border-[var(--ink)] flex items-start justify-between gap-3"
+          style={{
+            background: notice.kind === 'ok' ? 'var(--yellow)' : 'var(--red)',
+            color: notice.kind === 'ok' ? 'var(--ink)' : 'white',
+          }}
+        >
+          <p className="m-0" style={{ ...MONO, fontSize: '13px', fontWeight: 700, lineHeight: 1.45 }}>
+            {notice.text}
+          </p>
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            className="shrink-0"
+            style={{
+              ...MONO,
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              background: 'transparent',
+              border: 'none',
+              color: 'inherit',
+              textTransform: 'uppercase',
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
 
       {smtpReady === false && (
         <div className="mb-4 p-3 border-[3px] border-[var(--red)] bg-[var(--paper)] max-w-3xl" style={{ ...MONO, fontSize: '12px' }}>
@@ -295,15 +332,15 @@ export default function AdminClaimsPage() {
                 })
                 const json = await res.json()
                 if (!res.ok) {
-                  alert(json.error || 'No se pudo probar el SMTP')
+                  setNotice({ kind: 'err', text: json.error || 'No se pudo probar el SMTP' })
                   return
                 }
                 if (json.mail === 'sent') {
-                  alert('Prueba OK. Borrador enviado a contacto@optimalbreaks.com. Revisa Mails.')
+                  setNotice({ kind: 'ok', text: 'Prueba OK. Borrador enviado a contacto@.' })
                 } else if (json.mail === 'skipped_no_smtp') {
-                  alert('Sigue sin SMTP en este entorno.')
+                  setNotice({ kind: 'err', text: 'Sigue sin SMTP en este entorno.' })
                 } else {
-                  alert(json.error || 'La prueba de SMTP falló.')
+                  setNotice({ kind: 'err', text: json.error || 'La prueba de SMTP falló.' })
                 }
               } finally {
                 setTestingSmtp(false)
@@ -392,7 +429,7 @@ export default function AdminClaimsPage() {
                     <button
                       onClick={() => {
                         if (c.kind === 'request_new' && !picked[c.id]?.id) {
-                          alert('Elige una ficha del catálogo para poder aprobar esta alta nueva.')
+                          setNotice({ kind: 'err', text: 'Elige una ficha del catálogo para poder aprobar esta alta nueva.' })
                           return
                         }
                         act(c.id, 'approve', c.kind === 'request_new' ? { artist_id: picked[c.id]?.id } : {})
