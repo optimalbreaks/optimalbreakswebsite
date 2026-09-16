@@ -21,6 +21,17 @@ export type BlogSpotlightRow = Pick<
 > &
   Pick<BlogPost, 'tags' | 'author'>
 
+/** Cartel/flyer (no paisaje IA 16:9): mostrar entero, sin recorte 21:9. */
+export function isBlogPosterCover(
+  imageUrl: string | null | undefined,
+  opts?: { album?: boolean; slug?: string },
+) {
+  if (opts?.album) return true
+  if (opts?.slug === 'guau-yo-speed-australian-tour-2026') return true
+  const url = imageUrl || ''
+  return /\/images\/(blog|events)\//i.test(url) || /-poster\.(webp|jpe?g|png)(?:\?|$)/i.test(url)
+}
+
 /**
  * Destacados del blog: top por lecturas cuando ya hay señal.
  * Si nadie tiene visitas, se mantiene el criterio editorial (`is_featured`).

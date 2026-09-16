@@ -13,7 +13,7 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import type { Artist, BeatportTopTrack, BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
@@ -650,7 +650,12 @@ export default async function HomePage({
                   <CardThumbnail
                     src={proxyCatalogArtworkForDisplay(p.image_url) || p.image_url}
                     alt={title}
-                    aspectClass="aspect-[16/9] w-full"
+                    aspectClass={
+                      isBlogPosterCover(p.image_url, { slug: p.slug })
+                        ? 'aspect-square w-full'
+                        : 'aspect-[16/9] w-full'
+                    }
+                    fit={isBlogPosterCover(p.image_url, { slug: p.slug }) ? 'contain' : 'cover'}
                     frameClass="border-b-[3px] border-[var(--ink)]"
                   />
                   <div className="flex flex-col flex-grow p-4 sm:p-5">

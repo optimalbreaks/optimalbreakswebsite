@@ -29,6 +29,7 @@ import {
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
+import { isBlogPosterCover } from '@/lib/blog-spotlight'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<
@@ -105,6 +106,7 @@ export default async function BlogPostPage({ params }: Props) {
   const coverRaw = post.image_url || albumTracks[0]?.artwork_url || null
   const coverSrc = proxyCatalogArtworkForDisplay(coverRaw) || coverRaw
   const albumCover = albumTracks.length > 0
+  const posterCover = isBlogPosterCover(coverRaw, { album: albumCover, slug: safeSlug })
 
   let artistSlugMap: Record<string, string> | undefined
   let labelSlugMap: Record<string, string> | undefined
@@ -260,15 +262,15 @@ export default async function BlogPostPage({ params }: Props) {
 
       <div
         className={`mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden ${
-          albumCover ? 'bg-[var(--paper-dark)]' : ''
+          posterCover ? 'bg-[var(--paper-dark)]' : ''
         }`}
       >
-        <div className={albumCover ? 'mx-auto w-full max-w-[560px]' : undefined}>
+        <div className={posterCover ? 'mx-auto w-full max-w-[560px]' : undefined}>
           <CardThumbnail
             src={coverSrc}
             alt={coverAlt}
-            aspectClass={albumCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[21/9]'}
-            fit={albumCover ? 'contain' : 'cover'}
+            aspectClass={posterCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[21/9]'}
+            fit={posterCover ? 'contain' : 'cover'}
             frameClass="border-0"
           />
         </div>
