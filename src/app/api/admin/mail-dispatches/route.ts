@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
+import { notifyArtistOfClaimApproved } from '@/lib/transactional-mail'
 import type { MailDispatchKind, MailDispatchRow, MailDispatchStatus } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -52,4 +53,38 @@ export async function GET(request: NextRequest) {
       artist_slug: r.artist_id ? artistById[r.artist_id]?.slug ?? null : null,
     })),
   })
+}
+
+// POST /api/admin/mail-dispatches { action: 'test_smtp' }
+// Borrador a contacto@ para comprobar SMTP en Vercel sin escribirle al artista.
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (!auth.ok) return auth.response
+
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+  if (String(body.action || '') !== 'test_smtp') {
+    return NextResponse.json({ error: 'Acción inválida.' }, { status: 400 })
+  }
+
+  try {
+    const mail = await notifyArtistOfClaimApproved({
+      userId: '',
+      artistName: 'Prueba SMTP',
+      artistSlug: 'prueba-smtp',
+      draft: true,
+      source: 'smtp_test',
+    })
+    return NextResponse.json({ mail })
+  } catch (err) {
+    console.warn('[mail] prueba SMTP falló', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'La prueba de SMTP falló.', mail: 'failed' },
+      { status: 500 },
+    )
+  }
 }

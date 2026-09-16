@@ -187,11 +187,21 @@ export default function AdminClaimsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [picked, setPicked] = useState<Record<string, ArtistHit | null>>({})
 
+  const [smtpReady, setSmtpReady] = useState<boolean | null>(null)
+  const [testingSmtp, setTestingSmtp] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/admin/claims?status=${status}`)
+    const res = await fetch(`/api/admin/claims?status=${status}`, { cache: 'no-store' })
     const json = await res.json()
-    setClaims(json.data || [])
+    const rows = Array.isArray(json.data) ? (json.data as AdminClaim[]) : []
+    const seen = new Set<string>()
+    setClaims(rows.filter((c) => {
+      if (seen.has(c.id)) return false
+      seen.add(c.id)
+      return true
+    }))
+    if (typeof json.smtp_ready === 'boolean') setSmtpReady(json.smtp_ready)
     setLoading(false)
   }, [status])
 
@@ -217,6 +227,14 @@ export default function AdminClaimsPage() {
         } else {
           alert('Ficha verificada, pero el mail falló. Revisa el log o reenvía con el script.')
         }
+        setPicked((prev) => {
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+        setClaims((prev) => prev.filter((c) => c.id !== id))
+        setStatus('approved')
+        return
       }
       setPicked((prev) => {
         const next = { ...prev }
@@ -236,7 +254,54 @@ export default function AdminClaimsPage() {
         Reclamaciones de ficha (artistas verificados). Aprobar vincula la ficha
         a la cuenta para que reciba solicitudes de booking. En una <strong>alta nueva</strong>{' '}
         busca y selecciona la ficha del catálogo (o créala antes en <em>Artistas</em> si aún no existe).
+        Un usuario solo puede tener <strong>una</strong> solicitud viva (pendiente o aprobada).
       </p>
+
+      {smtpReady === false && (
+        <div className="mb-4 p-3 border-[3px] border-[var(--red)] bg-[var(--paper)] max-w-3xl" style={{ ...MONO, fontSize: '12px' }}>
+          SMTP no está en Vercel (`SMTP_USER` + `SMTP_PASS`). Al aprobar se verifica la ficha pero el mail no sale.
+        </div>
+      )}
+      {smtpReady === true && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 max-w-3xl">
+          <span className="admin-muted" style={{ ...MONO, fontSize: '12px' }}>
+            SMTP listo en este entorno.
+          </span>
+          <button
+            type="button"
+            disabled={testingSmtp}
+            onClick={async () => {
+              setTestingSmtp(true)
+              try {
+                const res = await fetch('/api/admin/mail-dispatches', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'test_smtp' }),
+                  cache: 'no-store',
+                })
+                const json = await res.json()
+                if (!res.ok) {
+                  alert(json.error || 'No se pudo probar el SMTP')
+                  return
+                }
+                if (json.mail === 'sent') {
+                  alert('Prueba OK. Borrador enviado a contacto@optimalbreaks.com. Revisa Mails.')
+                } else if (json.mail === 'skipped_no_smtp') {
+                  alert('Sigue sin SMTP en este entorno.')
+                } else {
+                  alert(json.error || 'La prueba de SMTP falló.')
+                }
+              } finally {
+                setTestingSmtp(false)
+              }
+            }}
+            className="cutout outline"
+            style={{ cursor: 'pointer', fontSize: '11px' }}
+          >
+            {testingSmtp ? 'PROBANDO…' : 'PROBAR SMTP'}
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-6">
         {STATUSES.map((s) => (

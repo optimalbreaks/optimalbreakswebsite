@@ -99,15 +99,16 @@ export async function POST(request: NextRequest) {
 
   const svc = createServiceSupabase()
 
-  // El usuario no puede tener ya una ficha aprobada (MVP: 1 ficha por cuenta, §9.2)
-  const { count: approvedCount } = await svc
+  // Un usuario = una solicitud viva (pendiente o aprobada). El historial
+  // rejected/cancelled/revoked/superseded no cuenta.
+  const { count: liveCount } = await svc
     .from('artist_claims')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', auth.userId)
-    .eq('status', 'approved')
-  if ((approvedCount ?? 0) > 0) {
+    .in('status', ['pending', 'approved'])
+  if ((liveCount ?? 0) > 0) {
     return NextResponse.json(
-      { error: 'Ya tienes una ficha de artista verificada.' },
+      { error: 'Ya tienes una solicitud de verificación o una ficha verificada.' },
       { status: 409 },
     )
   }
@@ -144,7 +145,12 @@ export async function POST(request: NextRequest) {
     }
     if (art.claimed_by) {
       return NextResponse.json(
-        { error: 'Esta ficha ya está verificada por otra cuenta.' },
+        {
+          error:
+            art.claimed_by === auth.userId
+              ? 'Ya tienes esta ficha verificada.'
+              : 'Esta ficha ya está verificada por otra cuenta.',
+        },
         { status: 409 },
       )
     }
@@ -180,10 +186,10 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) {
-    // 23505 = unique_violation (índice uniq_pending_claim_per_user)
+    // 23505 = unique_violation (índice uniq_live_claim_per_user / pending)
     if ((error as { code?: string }).code === '23505') {
       return NextResponse.json(
-        { error: 'Ya tienes una solicitud pendiente. Espera a que la revisemos.' },
+        { error: 'Ya tienes una solicitud de verificación o una ficha verificada.' },
         { status: 409 },
       )
     }

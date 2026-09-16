@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
+import { smtpReady } from '@/lib/transactional-mail'
 import type { ArtistClaimRow, ArtistClaimStatus } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -54,14 +55,25 @@ export async function GET(request: NextRequest) {
     }),
   )
 
-  return NextResponse.json({
-    data: claims.map((c) => ({
-      ...c,
-      artist_name: c.artist_id ? artistById[c.artist_id]?.name ?? null : null,
-      artist_slug: c.artist_id ? artistById[c.artist_id]?.slug ?? null : null,
-      user_display_name: profileById[c.user_id]?.display_name ?? null,
-      user_username: profileById[c.user_id]?.username ?? null,
-      user_email: emailById[c.user_id] ?? null,
-    })),
+  const seen = new Set<string>()
+  const unique = claims.filter((c) => {
+    if (seen.has(c.id)) return false
+    seen.add(c.id)
+    return true
   })
+
+  return NextResponse.json(
+    {
+      data: unique.map((c) => ({
+        ...c,
+        artist_name: c.artist_id ? artistById[c.artist_id]?.name ?? null : null,
+        artist_slug: c.artist_id ? artistById[c.artist_id]?.slug ?? null : null,
+        user_display_name: profileById[c.user_id]?.display_name ?? null,
+        user_username: profileById[c.user_id]?.username ?? null,
+        user_email: emailById[c.user_id] ?? null,
+      })),
+      smtp_ready: smtpReady(),
+    },
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 }

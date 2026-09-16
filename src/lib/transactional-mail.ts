@@ -36,7 +36,7 @@ function uuidOrNull(value?: string | null): string | null {
   return v || null
 }
 
-function smtpReady(): boolean {
+export function smtpReady(): boolean {
   return Boolean(process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim())
 }
 
