@@ -6,19 +6,20 @@ import { adminList } from '@/lib/admin-api'
 import { CLAIM_STATUS_LABELS } from '@/lib/bookings'
 import type { ArtistClaimRow } from '@/types/database'
 
+type ArtistHit = {
+  id: string
+  name: string
+  slug: string
+  claimed_by: string | null
+}
+
 type AdminClaim = ArtistClaimRow & {
   artist_name: string | null
   artist_slug: string | null
   user_display_name: string | null
   user_username: string | null
   user_email: string | null
-}
-
-type ArtistHit = {
-  id: string
-  name: string
-  slug: string
-  claimed_by: string | null
+  suggested_artist?: ArtistHit | null
 }
 
 const STATUSES = ['pending', 'approved', 'rejected', 'cancelled', 'revoked', 'superseded'] as const
@@ -196,11 +197,21 @@ export default function AdminClaimsPage() {
     const json = await res.json()
     const rows = Array.isArray(json.data) ? (json.data as AdminClaim[]) : []
     const seen = new Set<string>()
-    setClaims(rows.filter((c) => {
+    const unique = rows.filter((c) => {
       if (seen.has(c.id)) return false
       seen.add(c.id)
       return true
-    }))
+    })
+    setClaims(unique)
+    setPicked((prev) => {
+      const next = { ...prev }
+      for (const c of unique) {
+        if (c.kind === 'request_new' && c.suggested_artist?.id && !next[c.id]) {
+          next[c.id] = c.suggested_artist
+        }
+      }
+      return next
+    })
     if (typeof json.smtp_ready === 'boolean') setSmtpReady(json.smtp_ready)
     setLoading(false)
   }, [status])
@@ -214,18 +225,19 @@ export default function AdminClaimsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, admin_notes: notes[id] || '', ...extra }),
+        cache: 'no-store',
       })
-      const json = await res.json()
-      if (!res.ok) { alert(json.error || 'Error'); return }
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) { alert((json as { error?: string }).error || `Error ${res.status}`); return }
       if (action === 'approve') {
-        if (json.mail === 'sent') {
-          alert('Ficha verificada. Mail enviado al artista (copia a contacto@optimalbreaks.com). Queda en Mails.')
+        if (json.mail === 'sent' || json.mail === 'queued') {
+          alert('Ficha verificada. El mail al artista se está enviando (copia a contacto@). Queda en Mails.')
         } else if (json.mail === 'skipped_no_smtp') {
           alert('Ficha verificada, pero el mail NO salió: faltan SMTP_* en Vercel.')
         } else if (json.mail === 'skipped_no_email') {
           alert('Ficha verificada, pero el mail NO salió: la cuenta no tiene email confirmado.')
         } else {
-          alert('Ficha verificada, pero el mail falló. Revisa el log o reenvía con el script.')
+          alert('Ficha verificada. Revisa Mails si no ves el envío.')
         }
         setPicked((prev) => {
           const next = { ...prev }
@@ -242,6 +254,8 @@ export default function AdminClaimsPage() {
         return next
       })
       await load()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error de red al guardar')
     } finally {
       setBusy(null)
     }
@@ -370,17 +384,23 @@ export default function AdminClaimsPage() {
                     />
                   )}
                   {c.kind === 'request_new' && !picked[c.id]?.id && (
-                    <p className="admin-muted" style={{ ...MONO, fontSize: '11px' }}>
-                      Elige una ficha del catálogo para poder aprobar.
+                    <p className="text-[var(--red)]" style={{ ...MONO, fontSize: '11px', fontWeight: 700 }}>
+                      Esta es un alta nueva: busca y elige la ficha del catálogo (o créala en Artistas) y luego pulsa Aprobar.
                     </p>
                   )}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => act(c.id, 'approve', c.kind === 'request_new' ? { artist_id: picked[c.id]?.id } : {})}
-                      disabled={busy === c.id || (c.kind === 'request_new' && !picked[c.id]?.id)}
+                      onClick={() => {
+                        if (c.kind === 'request_new' && !picked[c.id]?.id) {
+                          alert('Elige una ficha del catálogo para poder aprobar esta alta nueva.')
+                          return
+                        }
+                        act(c.id, 'approve', c.kind === 'request_new' ? { artist_id: picked[c.id]?.id } : {})
+                      }}
+                      disabled={busy === c.id}
                       className="cutout red" style={{ cursor: 'pointer' }}
                     >
-                      APROBAR
+                      {busy === c.id ? 'GUARDANDO…' : 'APROBAR'}
                     </button>
                     <button onClick={() => act(c.id, 'reject')} disabled={busy === c.id} className="cutout outline" style={{ cursor: 'pointer' }}>
                       RECHAZAR

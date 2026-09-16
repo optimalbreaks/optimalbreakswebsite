@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions'
 import { NextRequest, NextResponse } from 'next/server'
 import { getRouteUser, requireAdmin } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
@@ -121,20 +122,19 @@ export async function PATCH(
       exceptClaimId: id,
       resolvedBy: admin.userId,
     })
-    let mail: 'sent' | 'skipped_no_smtp' | 'skipped_no_email' | 'failed' = 'failed'
-    try {
-      mail = await notifyArtistOfClaimApproved({
+    waitUntil(
+      notifyArtistOfClaimApproved({
         userId: claim.user_id,
         artistName: art.name,
         artistSlug: art.slug,
         artistId: targetArtistId,
         claimId: id,
         source: 'claim_approve',
-      })
-    } catch (err) {
-      console.warn('[mail] aviso de ficha verificada falló', err)
-    }
-    return NextResponse.json({ data, mail })
+      }).catch((err) => {
+        console.warn('[mail] aviso de ficha verificada falló', err)
+      }),
+    )
+    return NextResponse.json({ data, mail: 'queued' })
   }
 
   if (action === 'reject') {

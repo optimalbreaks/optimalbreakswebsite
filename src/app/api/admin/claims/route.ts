@@ -55,6 +55,40 @@ export async function GET(request: NextRequest) {
     }),
   )
 
+  const suggestedByClaim: Record<string, { id: string; name: string; slug: string; claimed_by: string | null }> = {}
+  const proposedNames = Array.from(
+    new Set(
+      claims
+        .filter((c) => c.kind === 'request_new' && !c.artist_id && c.proposed_name.trim())
+        .map((c) => c.proposed_name.trim()),
+    ),
+  )
+  if (proposedNames.length) {
+    const hits: { id: string; name: string; slug: string; claimed_by: string | null }[] = []
+    await Promise.all(
+      proposedNames.map(async (name) => {
+        const { data } = await svc
+          .from('artists')
+          .select('id, name, slug, claimed_by')
+          .ilike('name', name)
+          .limit(3)
+        if (Array.isArray(data)) hits.push(...(data as typeof hits))
+      }),
+    )
+    const byNorm = new Map<string, typeof hits>()
+    for (const a of hits) {
+      const key = a.name.trim().toLowerCase()
+      const list = byNorm.get(key) || []
+      list.push(a)
+      byNorm.set(key, list)
+    }
+    for (const c of claims) {
+      if (c.kind !== 'request_new' || c.artist_id || !c.proposed_name.trim()) continue
+      const list = byNorm.get(c.proposed_name.trim().toLowerCase()) || []
+      if (list.length === 1) suggestedByClaim[c.id] = list[0]
+    }
+  }
+
   const seen = new Set<string>()
   const unique = claims.filter((c) => {
     if (seen.has(c.id)) return false
@@ -71,6 +105,7 @@ export async function GET(request: NextRequest) {
         user_display_name: profileById[c.user_id]?.display_name ?? null,
         user_username: profileById[c.user_id]?.username ?? null,
         user_email: emailById[c.user_id] ?? null,
+        suggested_artist: suggestedByClaim[c.id] ?? null,
       })),
       smtp_ready: smtpReady(),
     },
