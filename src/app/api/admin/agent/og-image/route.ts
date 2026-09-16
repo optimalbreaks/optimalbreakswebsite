@@ -118,7 +118,7 @@ async function generateAndUpload(
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
 
-  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-2'
+  const model = process.env.OG_IMAGE_MODEL?.trim() || 'gpt-image-2.5-sunburst'
 
   const genRes = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',

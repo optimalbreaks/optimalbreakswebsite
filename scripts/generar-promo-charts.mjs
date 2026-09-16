@@ -3,7 +3,7 @@
 // OPTIMAL BREAKS — Imagen promocional para el modal de CHARTS
 // Salida: public/images/promo/charts-promo.webp        (ES)
 //         public/images/promo/charts-promo-en.webp     (EN)
-// 1024×1536 portrait · gpt-image-2 → sharp → WebP calidad 88
+// 1024×1536 portrait · gpt-image-2.5-sunburst → sharp → WebP calidad 88
 // ============================================
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
@@ -119,7 +119,7 @@ const SUPPORTED_LANGS = Object.keys(PROMPTS)
 
 async function generatePromoImage(prompt) {
   const key = env('OPENAI_API_KEY')
-  const model = process.env.PROMO_IMAGE_MODEL?.trim() || 'gpt-image-2'
+  const model = process.env.PROMO_IMAGE_MODEL?.trim() || 'gpt-image-2.5-sunburst'
 
   const body = {
     model,
@@ -172,7 +172,7 @@ Opciones:
 
 Variables:
   OPENAI_API_KEY       (requerida salvo --dry-run)
-  PROMO_IMAGE_MODEL    opcional, default 'gpt-image-2'
+  PROMO_IMAGE_MODEL    opcional, default 'gpt-image-2.5-sunburst'
 
 Ejemplos:
   npm run promo:charts                         # genera ES + EN si faltan

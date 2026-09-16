@@ -7,7 +7,7 @@
 // hazard stripes, plaque inferior, halftone, sello de goma, papel rasgado)
 // al formato OG landscape esperado por la app, y produce ES + EN.
 //
-// gpt-image-2 → 1536×1024 → sharp (cover-resize + recorte centrado + marco crema) → PNG
+// gpt-image-2.5-sunburst → 1536×1024 → sharp (cover-resize + recorte centrado + marco crema) → PNG
 // Compatible con `src/lib/og-section-images.ts` y `staticPageMetadata`.
 //
 // Uso:
@@ -454,7 +454,7 @@ function fileFor(sectionKey, lang) {
 
 async function generateOgImage(prompt) {
   const key = env('OPENAI_API_KEY')
-  const model = process.env.OG_PROMO_IMAGE_MODEL?.trim() || 'gpt-image-2'
+  const model = process.env.OG_PROMO_IMAGE_MODEL?.trim() || 'gpt-image-2.5-sunburst'
 
   const body = {
     model,
@@ -538,7 +538,7 @@ Opciones:
 
 Variables:
   OPENAI_API_KEY              (requerida salvo --dry-run)
-  OG_PROMO_IMAGE_MODEL        opcional, default 'gpt-image-2'
+  OG_PROMO_IMAGE_MODEL        opcional, default 'gpt-image-2.5-sunburst'
   OG_PROMO_CROP_BIAS          0–1, sesgo vertical al recortar (default 0.41)
   OG_PROMO_FRAME_PADDING      0–0.14 fracción de marco crema (default 0.045)
 

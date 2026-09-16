@@ -53,8 +53,9 @@ function escHtml(s) {
 }
 
 function inlineFormat(s) {
-  // Marcadores temporales para links internos y https antes de ** y escape
+  // Marcadores temporales para imágenes, links internos y https antes de ** y escape
   const marked = s
+    .replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)/gi, '\0IMG\0$1\0$2\0')
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, '\0EXT\0$1\0$2\0')
     .replace(/\[([^\]]+)\]\((\/[a-z0-9/_-]*)\)/gi, '\0LINK\0$1\0$2\0')
   const parts = marked.split(/\*\*/)
@@ -67,6 +68,10 @@ function inlineFormat(s) {
     /\0EXT\0([^\0]+)\0([^\0]+)\0/g,
     (_, label, href) =>
       `<a href="${escHtml(href)}" target="_blank" rel="noopener noreferrer">${escHtml(label)}</a>`,
+  )
+  html = html.replace(
+    /\0IMG\0([^\0]*)\0([^\0]+)\0/g,
+    (_, alt, src) => `<img src="${escHtml(src)}" alt="${escHtml(alt)}" />`,
   )
   return html
 }
@@ -97,6 +102,13 @@ function markdownishToHtml(src) {
     if (t === '---') {
       flushPara()
       out.push('<hr/>')
+      i++
+      continue
+    }
+    const imgBlock = t.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)$/i)
+    if (imgBlock) {
+      flushPara()
+      out.push(`<img src="${escHtml(imgBlock[2])}" alt="${escHtml(imgBlock[1])}" />`)
       i++
       continue
     }

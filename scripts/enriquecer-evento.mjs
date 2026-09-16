@@ -4477,9 +4477,9 @@ const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_LINEUP = [
 const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_ROW = {
   name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Melbourne)',
   description_en:
-    'Rhythmiic Productions presents the Melbourne leg of the Guau + Yo Speed Australian Tour 2026 at The Industrique, Coburg North (Melbourne), Saturday 3 October 2026. Spanish breaks & bass headliners Guau and Yo Speed each play a solo set and close with Guau B2B Yo Speed — same format as the four-city October tour (Perth, Sydney, Brisbane, Melbourne). Local support still marked “coming soon” on the official Industrique listing at cataloguing time. R18. Address 5–7 Louvain Street, Coburg North VIC 3058. One of four distinct tour stops — not the Perth, Sydney or Brisbane dates.',
+    'Rhythmiic Productions presents the Melbourne leg of the Guau + Yo Speed Australian Tour 2026 at The Industrique, Coburg North (Melbourne), Saturday 3 October 2026, 20:00–03:00. Spanish breaks & bass headliners Guau and Yo Speed each play a solo set and close with Guau B2B Yo Speed — same format as the four-city October tour (Perth, Sydney, Brisbane, Melbourne). Local support still marked “Full Lineup Coming Soon” on the official Industrique listing at cataloguing time. R18. Address 5–7 Louvain Street, Coburg North VIC 3058. One of four distinct tour stops — not the Perth, Sydney or Brisbane dates.',
   description_es:
-    'Rhythmiic Productions presenta la parada de Melbourne de la gira australiana Guau + Yo Speed 2026 en The Industrique, Coburg North (Melbourne), el sábado 3 de octubre de 2026. Los referentes españoles del breaks & bass Guau y Yo Speed con set en solitario cada uno y cierre Guau B2B Yo Speed — mismo formato que las cuatro ciudades de octubre (Perth, Sydney, Brisbane, Melbourne). Refuerzo local aún “coming soon” en la ficha oficial de Industrique al catalogar. R18. Dirección 5–7 Louvain Street, Coburg North VIC 3058. Una de las cuatro paradas del tour — no confundir con Perth, Sydney o Brisbane.',
+    'Rhythmiic Productions presenta la parada de Melbourne de la gira australiana Guau + Yo Speed 2026 en The Industrique, Coburg North (Melbourne), el sábado 3 de octubre de 2026, de 20:00 a 03:00 h. Los referentes españoles del breaks & bass Guau y Yo Speed con set en solitario cada uno y cierre Guau B2B Yo Speed — mismo formato que las cuatro ciudades de octubre (Perth, Sydney, Brisbane, Melbourne). Refuerzo local aún “Full Lineup Coming Soon” en la ficha oficial de Industrique al catalogar. R18. Dirección 5–7 Louvain Street, Coburg North VIC 3058. Una de las cuatro paradas del tour — no confundir con Perth, Sydney o Brisbane.',
   event_type: 'club_night',
   date_start: '2026-10-03',
   date_end: null,
@@ -4513,6 +4513,8 @@ const BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_2026_ROW = {
     Tickets: BREAKS_BASS_GUAU_YO_SPEED_MELBOURNE_TICKETS,
   },
   age_restriction: '18+',
+  doors_open: '20:00',
+  doors_close: '03:00',
   coords: { lat: -37.7271, lng: 144.9608 },
 }
 
@@ -4545,18 +4547,19 @@ const BRIGHTSIDE_WEB = 'https://www.thebrightside.com.au/'
 const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_LINEUP = [
   'Guau',
   'Yo Speed',
-  'Guau B2B Yo Speed',
-  'Kenny Beeper',
-  'Bosketta',
-  'Rhythmiic',
+  'Kid Kenobi',
+  'Guau B2B Yo Speed B2B Kid Kenobi',
+  'Grug B2B Duos',
+  'Kenny Beeper B2B Bustaflux',
+  'Rhythmiic B2B Bosketta',
 ]
 
 const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_ROW = {
   name: 'Breaks & Bass — Guau + Yo Speed Australian Tour (Brisbane)',
   description_en:
-    'Rhythmiic Productions presents the Brisbane leg of the Guau + Yo Speed Australian Tour 2026: Monday 5 October 2026 (October long weekend) at The Brightside Outdoors, Fortitude Valley, 15:00–21:00 AEST. Guau and Yo Speed solo sets plus closing Guau B2B Yo Speed; local support Kenny Beeper, Bosketta and Rhythmiic per Oztix listing. Day-party format — distinct from the Perth (2 Oct), Sydney (4 Oct) and Melbourne (3 Oct) tour dates. 18+. The Brightside, Fortitude Valley QLD.',
+    'Rhythmiic Productions presents the Brisbane leg of the Guau + Yo Speed Australian Tour 2026: Monday 5 October 2026 (October long weekend) at The Brightside Outdoors, Fortitude Valley, 14:30–21:30 AEST. Solo sets from Guau, Yo Speed and Kid Kenobi plus a closing Guau B2B Yo Speed B2B Kid Kenobi; local support Grug B2B Duos, Kenny Beeper B2B Bustaflux and Rhythmiic B2B Bosketta per Oztix. Day-party format — distinct from the Perth (2 Oct), Sydney (4 Oct) and Melbourne (3 Oct) tour dates. 18+. The Brightside, Fortitude Valley QLD.',
   description_es:
-    'Rhythmiic Productions presenta la parada de Brisbane de la gira australiana Guau + Yo Speed 2026: lunes 5 de octubre de 2026 (long weekend de octubre) en The Brightside Outdoors, Fortitude Valley, de 15:00 a 21:00 h (AEST). Sets en solitario de Guau y Yo Speed y cierre Guau B2B Yo Speed; refuerzo local Kenny Beeper, Bosketta y Rhythmiic según Oztix. Formato day party — distinto de Perth (2 oct), Sydney (4 oct) y Melbourne (3 oct). 18+. The Brightside, Fortitude Valley QLD.',
+    'Rhythmiic Productions presenta la parada de Brisbane de la gira australiana Guau + Yo Speed 2026: lunes 5 de octubre de 2026 (long weekend de octubre) en The Brightside Outdoors, Fortitude Valley, de 14:30 a 21:30 h (AEST). Sets en solitario de Guau, Yo Speed y Kid Kenobi y cierre Guau B2B Yo Speed B2B Kid Kenobi; refuerzo local Grug B2B Duos, Kenny Beeper B2B Bustaflux y Rhythmiic B2B Bosketta según Oztix. Formato day party — distinto de Perth (2 oct), Sydney (4 oct) y Melbourne (3 oct). 18+. The Brightside, Fortitude Valley QLD.',
   event_type: 'club_night',
   date_start: '2026-10-05',
   date_end: null,
@@ -4593,8 +4596,8 @@ const BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_2026_ROW = {
     Oztix: BREAKS_BASS_GUAU_YO_SPEED_BRISBANE_TICKETS,
   },
   age_restriction: '18+',
-  doors_open: '15:00',
-  doors_close: '21:00',
+  doors_open: '14:30',
+  doors_close: '21:30',
   coords: { lat: -27.4572, lng: 153.0354 },
 }
 
