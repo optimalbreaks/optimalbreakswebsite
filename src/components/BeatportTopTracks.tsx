@@ -19,6 +19,7 @@ import {
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 import type { TrackSaveCatalogRef } from '@/lib/track-canonical-key'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 
 interface Props {
   tracks: BeatportTopTrack[]
@@ -234,6 +235,7 @@ export default function BeatportTopTracks({
         title: t.title,
         artist: t.artists.map(a => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
+        ...catalogLockScreenFields(t.mix_name, t.label),
         domId: `bp-row-${t.position}`,
         // Vuelta al origen desde el mini reproductor: la ficha (artista o
         // sello) donde vive este Top 10. El hash #bp-row-N expande el panel.
@@ -325,6 +327,7 @@ export default function BeatportTopTracks({
         title: fb.title,
         artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
         artworkUrl: fb.artwork_url || null,
+        ...catalogLockScreenFields(fb.mix_name, fb.label),
         originPath: pathname || undefined,
         save: saveDataForTrack(fb, origin, saveRefsByUrl),
         share: sharePath
@@ -356,6 +359,7 @@ export default function BeatportTopTracks({
         title: t.title,
         artist: t.artists.map((a) => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
+        ...catalogLockScreenFields(t.mix_name, t.label),
         domId: `bp-row-${t.position}`,
         originPath: pathname || undefined,
         save: saveDataForTrack(t, origin, saveRefsByUrl),

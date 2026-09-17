@@ -20,6 +20,7 @@ import {
   extractBeatportTrackId,
   trackStoryMeta,
 } from '@/lib/share-track'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
 
 export type ShowcaseArtist = {
@@ -177,6 +178,7 @@ export default function ArtistShowcase({
         title: t.title,
         artist: t.artists.map((x) => x.name).join(', '),
         artworkUrl: t.artwork_url || null,
+        ...catalogLockScreenFields(t.mix_name, t.label),
         domId: `${idPrefix}-${a.slug}`,
         // Vuelta al origen desde el mini reproductor: la tarjeta del artista
         // en la home (las pistas del showcase no tienen fila propia).

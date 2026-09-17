@@ -66,9 +66,9 @@ export default function MixesSection({ lang }: { lang: string }) {
               <div key={m.id} className="border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] overflow-hidden group">
                 <FavoriteButton type="mix" entityId={m.id} lang={lang} />
                 {ytId ? (
-                  <YouTubeIframe videoId={ytId} title={m.title} />
+                  <YouTubeIframe videoId={ytId} title={m.title} artist={m.artist_name} artworkUrl={m.image_url} />
                 ) : scTrackUrl ? (
-                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} />
+                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} artist={m.artist_name} artworkUrl={m.image_url} />
                 ) : (
                   <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
                 )}
@@ -105,9 +105,9 @@ export default function MixesSection({ lang }: { lang: string }) {
               <div key={m.id} className="border-b-[3px] border-r-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] group flex flex-col overflow-hidden relative">
                 <FavoriteButton type="mix" entityId={m.id} lang={lang} />
                 {ytId ? (
-                  <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+                  <YouTubeIframe videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" artist={m.artist_name} artworkUrl={m.image_url} />
                 ) : scTrackUrl ? (
-                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} className="border-b-[3px] border-[var(--ink)]" />
+                  <SoundCloudVisualEmbed trackUrl={scTrackUrl} title={m.title} className="border-b-[3px] border-[var(--ink)]" artist={m.artist_name} artworkUrl={m.image_url} />
                 ) : (
                   <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
                 )}

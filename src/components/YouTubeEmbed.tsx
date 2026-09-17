@@ -7,6 +7,12 @@ import {
   requestYouTubePlay,
   unregisterYouTubeEmbed,
 } from '@/lib/youtube-play-coordinator'
+import {
+  applyNowPlaying,
+  clearNowPlaying,
+  refreshNowPlaying,
+  type NowPlayingInfo,
+} from '@/lib/now-playing-session'
 
 export function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null
@@ -31,6 +37,26 @@ function proxiedThumbUrl(videoId: string): string {
   return `/api/og/image-proxy?src=${encodeURIComponent(target)}`
 }
 
+function nowPlayingForVideo(
+  videoId: string,
+  title: string,
+  explicit?: NowPlayingInfo,
+): NowPlayingInfo {
+  const ytArt = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+  if (explicit) {
+    return { ...explicit, artworkUrl: explicit.artworkUrl || ytArt }
+  }
+  const parts = title.split(/\s+[—–-]\s+/)
+  if (parts.length >= 2) {
+    return {
+      title: parts[0]!.trim(),
+      artist: parts.slice(1).join(' — ').trim(),
+      artworkUrl: ytArt,
+    }
+  }
+  return { title, artworkUrl: ytArt }
+}
+
 export function LazyYouTubeEmbed({
   videoId,
   title,
@@ -39,6 +65,7 @@ export function LazyYouTubeEmbed({
   autoplay = false,
   playSlotId,
   onPlayRecorded,
+  nowPlaying,
 }: {
   videoId: string
   title: string
@@ -55,6 +82,8 @@ export function LazyYouTubeEmbed({
   playSlotId?: string
   /** Llamado una vez cuando el usuario inicia la reproducción (click o autoplay). */
   onPlayRecorded?: () => void
+  /** Metadatos de lockscreen. Si faltan, se parsea `title` (`Tema — Artista`). */
+  nowPlaying?: NowPlayingInfo
 }) {
   // El iframe (pesado) se monta solo al pulsar play o con autoplay (deep-link /
   // filas con botón externo). Así /mixes no monta decenas de iframes a la vez
@@ -62,11 +91,16 @@ export function LazyYouTubeEmbed({
   const [mountIframe, setMountIframe] = useState(autoplay)
   const [embedSrc, setEmbedSrc] = useState<string | null>(null)
   const playRecordedRef = useRef(false)
+  const nowPlayingGenRef = useRef(0)
 
   const recordPlayOnce = () => {
     if (!onPlayRecorded || playRecordedRef.current) return
     playRecordedRef.current = true
     onPlayRecorded()
+  }
+
+  const pushNowPlaying = () => {
+    nowPlayingGenRef.current = applyNowPlaying(nowPlayingForVideo(videoId, title, nowPlaying))
   }
 
   useEffect(() => {
@@ -80,6 +114,12 @@ export function LazyYouTubeEmbed({
     )
   }, [mountIframe, videoId])
 
+  const npTitle = nowPlaying?.title
+  const npArtist = nowPlaying?.artist
+  const npAlbum = nowPlaying?.album
+  const npMix = nowPlaying?.mixName
+  const npArt = nowPlaying?.artworkUrl
+
   useEffect(() => {
     if (!playSlotId || !mountIframe || !embedSrc) return
     const stop = () => {
@@ -89,6 +129,23 @@ export function LazyYouTubeEmbed({
     registerYouTubeEmbed(playSlotId, stop)
     return () => unregisterYouTubeEmbed(playSlotId)
   }, [playSlotId, mountIframe, embedSrc])
+
+  // Lockscreen mientras el iframe suena: YouTube pisa Media Session con el
+  // título del vídeo; re-aplicamos el nuestro y, al bloquear, visibilitychange
+  // del módulo lo vuelve a empujar. El token evita borrar una sesión posterior
+  // (preview) si este embed se desmonta tarde.
+  useEffect(() => {
+    if (!mountIframe || !embedSrc) return
+    const gen = applyNowPlaying(nowPlayingForVideo(videoId, title, nowPlaying))
+    nowPlayingGenRef.current = gen
+    const iv = window.setInterval(() => refreshNowPlaying(), 1500)
+    return () => {
+      window.clearInterval(iv)
+      clearNowPlaying(gen)
+    }
+    // Campos primitivos: el objeto `nowPlaying` es inline en los padres.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mountIframe, embedSrc, videoId, title, npTitle, npArtist, npAlbum, npMix, npArt])
 
   // Autoplay (deep-link / ?play=1): el iframe no pasa por handlePlay; escuchar PLAYING vía API.
   useEffect(() => {
@@ -112,7 +169,10 @@ export function LazyYouTubeEmbed({
             player = new YT.Player(iframeId, {
               events: {
                 onStateChange: (e: { data: number }) => {
-                  if (e.data === YT.PlayerState.PLAYING) recordPlayOnce()
+                  if (e.data === YT.PlayerState.PLAYING) {
+                    recordPlayOnce()
+                    refreshNowPlaying()
+                  }
                 },
               },
             }) as { destroy?: () => void }
@@ -137,6 +197,7 @@ export function LazyYouTubeEmbed({
     if (playSlotId) requestYouTubePlay(playSlotId)
     setMountIframe(true)
     recordPlayOnce()
+    pushNowPlaying()
   }
 
   return (

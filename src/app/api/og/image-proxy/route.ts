@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Sirve carátulas Beatport bajo nuestro dominio para `og:image`.
- * Meta/Facebook suele recibir 403 al pedir directamente `geo-media.beatport.com`
- * con su user-agent; el HTML ya trae título/desc pero sin imagen válida el preview
- * queda roto o genérico.
+ * Sirve carátulas Beatport/Discogs/YouTube bajo nuestro dominio para `og:image`
+ * y para `MediaMetadata.artwork` (pantalla de bloqueo). Meta/Facebook suele
+ * recibir 403 al pedir `geo-media.beatport.com` directo; iOS tira la sesión
+ * de Media Session si la carátula es cross-origin sin CORS.
  *
  * Ruta bajo `/api/og/` para alinearse con `robots.ts` (Allow explícito OG crawlers).
  */
@@ -15,6 +15,18 @@ const ALLOWED_HOSTS = new Set([
   'img.youtube.com',
 ])
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Cross-Origin-Resource-Policy': 'cross-origin',
+  'Timing-Allow-Origin': '*',
+} as const
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
 
 export async function GET(request: NextRequest) {
   const raw = request.nextUrl.searchParams.get('src')
@@ -74,6 +86,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': ct,
         'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+        ...CORS_HEADERS,
       },
     })
   } catch {

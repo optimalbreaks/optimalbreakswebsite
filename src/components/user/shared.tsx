@@ -46,13 +46,26 @@ export function formatMixDateLine(m: any, lang: string): string {
  * `LazyYouTubeEmbed` (portada + click-to-play + slot exclusivo), igual que
  * las tarjetas de /mixes.
  */
-export function YouTubeIframe({ videoId, title, className = '' }: { videoId: string; title: string; className?: string }) {
+export function YouTubeIframe({
+  videoId,
+  title,
+  className = '',
+  artist,
+  artworkUrl,
+}: {
+  videoId: string
+  title: string
+  className?: string
+  artist?: string | null
+  artworkUrl?: string | null
+}) {
   return (
     <LazyYouTubeEmbed
       videoId={videoId}
       title={title}
       className={className}
       playSlotId={`dash-yt-${videoId}`}
+      nowPlaying={{ title, artist: artist || undefined, artworkUrl: artworkUrl || undefined, album: 'Mix' }}
     />
   )
 }

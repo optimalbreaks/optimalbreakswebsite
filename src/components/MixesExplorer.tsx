@@ -24,12 +24,16 @@ function LazyYouTubeEmbed({
   className = '',
   mixId,
   autoplay = false,
+  artist,
+  artworkUrl,
 }: {
   videoId: string
   title: string
   className?: string
   mixId?: string
   autoplay?: boolean
+  artist?: string | null
+  artworkUrl?: string | null
 }) {
   const iframeId = mixId ? `ob-yt-${mixId}` : undefined
 
@@ -42,6 +46,7 @@ function LazyYouTubeEmbed({
       autoplay={autoplay}
       playSlotId={mixId ? `mix-${mixId}` : undefined}
       onPlayRecorded={mixId ? () => logMixPlayOncePerBrowserSession(mixId) : undefined}
+      nowPlaying={{ title, artist: artist || undefined, artworkUrl: artworkUrl || undefined, album: 'Mix' }}
     />
   )
 }
@@ -52,11 +57,15 @@ function LazySoundCloudEmbed({
   title,
   className = '',
   mixId,
+  artist,
+  artworkUrl,
 }: {
   trackUrl: string
   title: string
   className?: string
   mixId?: string
+  artist?: string | null
+  artworkUrl?: string | null
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [mountIframe, setMountIframe] = useState(false)
@@ -86,6 +95,7 @@ function LazySoundCloudEmbed({
     mixId ? `sc-mix-${mixId}` : undefined,
     mixId ? () => logMixPlayOncePerBrowserSession(mixId) : undefined,
     mountIframe,
+    { title, artist: artist || undefined, artworkUrl: artworkUrl || undefined, album: 'SoundCloud' },
   )
 
   return (
@@ -580,9 +590,9 @@ function LargeGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} autoplay={autoplayMixId === m.id} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
             ) : scTrackUrl ? (
-              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} mixId={m.id} />
+              <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} mixId={m.id} artist={m.artist_name} artworkUrl={m.image_url} />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
             )}
@@ -660,13 +670,15 @@ function CompactGrid({
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
             {ytId ? (
-              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} />
+              <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
             ) : scTrackUrl ? (
               <LazySoundCloudEmbed
                 trackUrl={scTrackUrl}
                 title={m.title}
                 className="border-b-[3px] border-[var(--ink)]"
                 mixId={m.id}
+                artist={m.artist_name}
+                artworkUrl={m.image_url}
               />
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
@@ -761,7 +773,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} />
+                  <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
                 </div>
               </div>
             </div>
@@ -804,7 +816,7 @@ function ListView({
                   </a>
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
-                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} />
+                  <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} artist={m.artist_name} artworkUrl={m.image_url} />
                 </div>
               </div>
             </div>

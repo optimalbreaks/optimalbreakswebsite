@@ -22,7 +22,7 @@ import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import SoundCloudWidget, { type SoundCloudWidgetHandle } from '@/components/SoundCloudWidget'
 import { canonicalKeyFromTrackPlaySave } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -34,6 +34,11 @@ import {
   registerGlobalPlaybackStopper,
   stopAllYouTube,
 } from '@/lib/youtube-play-coordinator'
+import {
+  applyNowPlaying,
+  clearNowPlaying,
+  refreshNowPlaying,
+} from '@/lib/now-playing-session'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
@@ -148,6 +153,10 @@ export interface PreviewTrack {
   title: string
   artist: string
   artworkUrl?: string | null
+  /** Versión (Original Mix, remix…). La lockscreen la pliega al título. */
+  mixName?: string | null
+  /** Sello u otro contexto corto → campo `album` de Media Session. */
+  album?: string | null
   domId?: string
   originPath?: string
   save?: PreviewSaveData
@@ -1147,6 +1156,7 @@ export function DeckAudioProvider({
   engineOnly?: boolean
   onBind?: (bind: DeckAudioShellBind) => void
 }) {
+  const pathname = usePathname()
   // === Dual-deck audio refs ===
   const audioRefA = useRef<HTMLAudioElement | null>(null)
   const audioRefB = useRef<HTMLAudioElement | null>(null)
@@ -1644,8 +1654,8 @@ export function DeckAudioProvider({
     setMixProgress(0)
     setMixDuration(0)
     setCurrentMix(null)
+    clearNowPlaying()
     if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = null
       navigator.mediaSession.setActionHandler('play', null)
       navigator.mediaSession.setActionHandler('pause', null)
       navigator.mediaSession.setActionHandler('seekbackward', null)
@@ -1705,14 +1715,13 @@ export function DeckAudioProvider({
       // SC widget will auto-play via onReady; state managed by callbacks
     }
 
-    // Media Session
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: mix.title,
-        artist: mix.artist,
-        artwork: mix.imageUrl ? [{ src: mix.imageUrl, sizes: '512x512', type: 'image/jpeg' }] : [],
-      })
-    }
+    // Media Session — lockscreen: título, artista, carátula (same-origin).
+    applyNowPlaying({
+      title: mix.title,
+      artist: mix.artist,
+      album: mix.source === 'soundcloud' ? 'SoundCloud' : 'Optimal Breaks',
+      artworkUrl: mix.imageUrl,
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, stopMixInternal, logMixPlayOnce])
 
@@ -1782,8 +1791,8 @@ export function DeckAudioProvider({
     setPreviewProgress(0)
     setPreviewDuration(0)
     setPreviewGroupKey(null)
+    clearNowPlaying()
     if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = null
       navigator.mediaSession.setActionHandler('play', null)
       navigator.mediaSession.setActionHandler('pause', null)
       navigator.mediaSession.setActionHandler('previoustrack', null)
@@ -2050,6 +2059,11 @@ export function DeckAudioProvider({
         // audio ha vuelto a ser nuestro.
         previewSystemPausedRef.current = false
         previewInterruptedRef.current = false
+        // iOS solo pinta MediaMetadata de forma fiable tras el evento play.
+        refreshNowPlaying()
+      })
+      a.addEventListener('playing', () => {
+        refreshNowPlaying()
       })
       previewAudioRef.current = a
     }
@@ -2085,18 +2099,18 @@ export function DeckAudioProvider({
     // (típico en background con la red throttleada al cambiar de tema).
     armPreviewStartWatchdog(idx)
 
-    // mediaSession — titular, artwork y controles.
+    // mediaSession — titular, artwork (same-origin) y album/sello.
+    // Se vuelve a aplicar en play()/playing y al bloquear la pantalla
+    // (`now-playing-session`): iOS a menudo ignora el primer set.
+    const m = queue[idx]
+    applyNowPlaying({
+      title: m.title || '',
+      artist: m.artist,
+      mixName: m.mixName,
+      album: m.album,
+      artworkUrl: m.artworkUrl,
+    })
     if ('mediaSession' in navigator) {
-      const m = queue[idx]
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: m.title || '',
-        artist: m.artist || 'Optimal Breaks',
-        artwork: m.artworkUrl
-          ? [{ src: m.artworkUrl, sizes: '512x512', type: 'image/jpeg' }]
-          : [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
-      })
-      // Señala al SO que estamos reproduciendo (icono correcto en la
-      // lockscreen; también ayuda a iOS a NO inferir ±10 s por sí solo).
       try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
   }, [stopPreviewInternal, advanceFromCurrentTrack, preloadNextPreview, armPreviewStartWatchdog])
@@ -2112,6 +2126,31 @@ export function DeckAudioProvider({
   // para que `advanceFromCurrentTrack` siempre lea valores frescos.
   useEffect(() => { previewQueueRef.current = previewQueue }, [previewQueue])
   useEffect(() => { previewIndexRef.current = previewIndex }, [previewIndex])
+
+  // Mantén la lockscreen alineada con la pista actual (navegación Next.js
+  // pisa `document.title`; iOS usa ese título si Media Session flaquea).
+  useEffect(() => {
+    if (previewQueue.length === 0) return
+    const m = previewQueue[previewIndex]
+    if (!m) return
+    applyNowPlaying({
+      title: m.title || '',
+      artist: m.artist,
+      mixName: m.mixName,
+      album: m.album,
+      artworkUrl: m.artworkUrl,
+    })
+  }, [previewQueue, previewIndex, pathname])
+
+  useEffect(() => {
+    if (mode !== 'mix' || !currentMix) return
+    applyNowPlaying({
+      title: currentMix.title,
+      artist: currentMix.artist,
+      album: currentMix.source === 'soundcloud' ? 'SoundCloud' : 'Optimal Breaks',
+      artworkUrl: currentMix.imageUrl,
+    })
+  }, [mode, currentMix, pathname])
 
   const playPreviewQueue = useCallback((items: PreviewTrack[], startIndex = 0, groupKey?: string) => {
     if (!items.length) return
@@ -2154,6 +2193,7 @@ export function DeckAudioProvider({
         const m = previewQueueRef.current[previewIndexRef.current]
         const playKey = m?.save ? canonicalKeyFromTrackPlaySave(m.save) : null
         if (playKey) logTrackPlay(playKey)
+        refreshNowPlaying()
         if ('mediaSession' in navigator) {
           try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
         }
@@ -2373,6 +2413,7 @@ export function DeckAudioProvider({
   const handleScPlay = useCallback(() => {
     setMixPlaying(true)
     logMixPlayOnce()
+    refreshNowPlaying()
   }, [logMixPlayOnce])
 
   const handleScHandleRef = useCallback((h: SoundCloudWidgetHandle | null) => {
@@ -2384,10 +2425,10 @@ export function DeckAudioProvider({
     if (!('mediaSession' in navigator)) return
     if (mode === 'deck' && sessionActive && (playingA || playingB)) {
       const t = crossfader < 50 ? trackA : trackB
-      navigator.mediaSession.metadata = new MediaMetadata({
+      applyNowPlaying({
         title: t.title,
-        artist: 'OB Deck',
-        artwork: [{ src: '/icon-512.png', sizes: '512x512', type: 'image/png' }],
+        artist: t.artist,
+        album: 'OB Deck',
       })
       navigator.mediaSession.setActionHandler('play', () => {
         if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume()
@@ -2398,11 +2439,11 @@ export function DeckAudioProvider({
       navigator.mediaSession.setActionHandler('nexttrack', () => switchTrack(1))
     } else if (mode !== 'mix' && mode !== 'preview') {
       // OJO: en modo 'preview' la Media Session la gestiona el bloque de
-      // preview (metadata en loadAndPlayPreviewAt + handlers en su effect).
-      // Antes este else limpiaba metadata/handlers también con mode==='preview'
-      // (este effect corre después), dejando la lockscreen de iOS huérfana:
-      // sin título, botones muertos o apuntando a otra sesión.
-      navigator.mediaSession.metadata = null
+      // preview (applyNowPlaying en loadAndPlayPreviewAt + handlers en su
+      // effect). Antes este else limpiaba metadata/handlers también con
+      // mode==='preview' (este effect corre después), dejando la lockscreen
+      // de iOS huérfana: sin título, botones muertos o apuntando a otra sesión.
+      clearNowPlaying()
       navigator.mediaSession.setActionHandler('play', null)
       navigator.mediaSession.setActionHandler('pause', null)
       navigator.mediaSession.setActionHandler('previoustrack', null)

@@ -50,6 +50,7 @@ import {
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
 import { logTrackPlay } from '@/lib/track-play-log'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 
 const COMMUNITY_TOP_LIMIT = 100
@@ -445,6 +446,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         title: t.title,
         artist: t.artists,
         artworkUrl: t.artwork_url || null,
+        ...catalogLockScreenFields(t.mix_name, t.label),
         domId: `community-top-${t.canonical_key}`,
         // Vuelta al origen desde el mini reproductor: el Top 100 público.
         // Las filas se montan al terminar el fetch; el reproductor reintenta
@@ -1200,6 +1202,13 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         className="border-[3px] border-[var(--ink)]"
                         autoplay
                         playSlotId={t.canonical_key}
+                        nowPlaying={{
+                          title: t.title,
+                          artist: t.artists,
+                          mixName: t.mix_name,
+                          album: t.label,
+                          artworkUrl: t.artwork_url,
+                        }}
                       />
                     </div>
                   ) : null}

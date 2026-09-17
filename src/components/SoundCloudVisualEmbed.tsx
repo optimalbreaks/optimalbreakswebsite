@@ -13,6 +13,11 @@ import {
   requestYouTubePlay,
   unregisterYouTubeEmbed,
 } from '@/lib/youtube-play-coordinator'
+import {
+  applyNowPlaying,
+  clearNowPlaying,
+  type NowPlayingInfo,
+} from '@/lib/now-playing-session'
 
 type ScWidgetHandle = {
   bind: (ev: string, fn: () => void) => void
@@ -37,9 +42,13 @@ export function useSoundCloudExclusivePlayback(
   slotId: string | undefined,
   onPlay?: () => void,
   enabled = true,
+  nowPlaying?: NowPlayingInfo,
 ) {
   const onPlayRef = useRef(onPlay)
   useEffect(() => { onPlayRef.current = onPlay }, [onPlay])
+  const nowPlayingRef = useRef(nowPlaying)
+  useEffect(() => { nowPlayingRef.current = nowPlaying }, [nowPlaying])
+  const genRef = useRef(0)
 
   useEffect(() => {
     if (!enabled || !iframeId || !slotId) return
@@ -63,10 +72,15 @@ export function useSoundCloudExclusivePlayback(
               registerYouTubeEmbed(slotId, () => {
                 try { widget?.pause() } catch { /* iframe ya fuera del DOM */ }
               })
+              const info = nowPlayingRef.current
+              if (info) genRef.current = applyNowPlaying(info)
               onPlayRef.current?.()
             })
             if (events.PAUSE) widget.bind(events.PAUSE, () => releaseYouTubePlay(slotId))
-            if (events.FINISH) widget.bind(events.FINISH, () => releaseYouTubePlay(slotId))
+            if (events.FINISH) widget.bind(events.FINISH, () => {
+              releaseYouTubePlay(slotId)
+              clearNowPlaying(genRef.current)
+            })
           } catch {
             /* Widget API puede fallar según políticas del navegador */
           }
@@ -84,6 +98,7 @@ export function useSoundCloudExclusivePlayback(
         }
       } catch { /* no-op */ }
       unregisterYouTubeEmbed(slotId)
+      clearNowPlaying(genRef.current)
     }
   }, [enabled, iframeId, slotId])
 }
@@ -115,15 +130,25 @@ export default function SoundCloudVisualEmbed({
   trackUrl,
   title,
   className = '',
+  artist,
+  artworkUrl,
 }: {
   trackUrl: string
   title: string
   className?: string
+  artist?: string | null
+  artworkUrl?: string | null
 }) {
   const src = buildSoundCloudVisualPlayerSrc(trackUrl)
   const reactId = useId()
   const iframeId = `ob-scv-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`
-  useSoundCloudExclusivePlayback(iframeId, iframeId)
+  useSoundCloudExclusivePlayback(
+    iframeId,
+    iframeId,
+    undefined,
+    true,
+    { title, artist: artist || undefined, artworkUrl: artworkUrl || undefined, album: 'SoundCloud' },
+  )
   return (
     <div
       className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] aspect-video ${className}`}

@@ -20,6 +20,7 @@ import {
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
 import { logTrackPlay } from '@/lib/track-play-log'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 
 interface Props {
   picks: ArtistFeaturedPick[]
@@ -216,6 +217,7 @@ export default function ArtistFeaturedTracks({
         title: pick.title,
         artist: artists,
         artworkUrl: pick.artwork_url || null,
+        ...catalogLockScreenFields(pick.mix_name, pick.label),
         domId: `nr-row-${pick.id}`,
         // Vuelta al origen desde el mini reproductor: la ficha de artista/sello.
         originPath: pathname || undefined,
@@ -518,6 +520,13 @@ export default function ArtistFeaturedTracks({
                         className="border-[3px] border-[var(--ink)]"
                         autoplay
                         playSlotId={ytSlot}
+                        nowPlaying={{
+                          title: pick.title,
+                          artist: artists.map((a) => a.name).filter(Boolean).join(', '),
+                          mixName: pick.mix_name,
+                          album: pick.label,
+                          artworkUrl: pick.artwork_url,
+                        }}
                       />
                     </div>
                   ) : null}

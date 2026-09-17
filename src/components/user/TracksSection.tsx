@@ -27,6 +27,7 @@ import {
   subscribeYouTubePlay,
 } from '@/lib/youtube-play-coordinator'
 import { logTrackPlay } from '@/lib/track-play-log'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -1087,6 +1088,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
       title: t.title,
       artist: t.artists,
       artworkUrl: t.artwork_url ?? null,
+      ...catalogLockScreenFields(t.mix_name, t.label),
       // Vuelta al origen desde el mini reproductor: esta misma lista (Mis
       // Tracks o la lista pública /u/<handle>/tracks). El hash
       // #mytracks-row-<key> amplía la paginación hasta la fila (ver efecto
@@ -1774,6 +1776,13 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                       className="border-[3px] border-[var(--ink)]"
                       autoplay
                       playSlotId={t.key}
+                      nowPlaying={{
+                        title: t.title,
+                        artist: t.artists,
+                        mixName: t.mix_name,
+                        album: t.label,
+                        artworkUrl: t.artwork_url,
+                      }}
                     />
                   </div>
                 ) : null}

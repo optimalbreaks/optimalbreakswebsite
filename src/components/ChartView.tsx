@@ -27,6 +27,7 @@ import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButto
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, vinylTrackDedupKey, vinylRowDisplayScore } from '@/lib/share-track'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
+import { catalogLockScreenFields } from '@/lib/now-playing-session'
 import {
   requestYouTubePlay,
   releaseYouTubePlay,
@@ -609,6 +610,13 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
             className="border-[3px] border-[var(--ink)]"
             autoplay
             playSlotId={playSlotId}
+            nowPlaying={{
+              title: track.title,
+              artist: artists.map((a: ChartVinylArtist) => a.name).join(', '),
+              mixName: track.mix_name,
+              album: track.label,
+              artworkUrl: track.artwork_url,
+            }}
           />
         </div>
       )}
@@ -1216,6 +1224,7 @@ export default function ChartView({
         title: p.title,
         artist: artists,
         artworkUrl: p.artwork_url || null,
+        ...catalogLockScreenFields(p.mix_name, p.label),
         domId: `chart-row-${p.id}`,
         // Vuelta al origen desde el mini reproductor: /charts con la semana
         // de esta edición (el hash #chart-row-<id> expande el acordeón).
@@ -1254,6 +1263,7 @@ export default function ChartView({
         title: t.title,
         artist: artists,
         artworkUrl: t.artwork_url || null,
+        ...catalogLockScreenFields(t.mix_name, t.label),
         domId: `chart-row-${t.id}`,
         originPath: weekDate ? `/${lang}/charts?week=${weekDate}` : `/${lang}/charts`,
         save: {
