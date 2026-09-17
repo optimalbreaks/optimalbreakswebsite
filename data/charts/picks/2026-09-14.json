@@ -199,6 +199,363 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 9
+    },
+    {
+      "title": "Nemesis",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SulivanZ"
+        }
+      ],
+      "label": "Shadow Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nemesis/30538112",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/78eb5434-5e31-47c5-9a6d-567bbd988a51.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fcfc3021-70eb-4f29-b0a3-6994b08d2478.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Kat-Out",
+      "mix_name": "Fiscal Remix",
+      "artists": [
+        {
+          "name": "MIAU"
+        },
+        {
+          "name": "Fiscal"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kat-out/30350947",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/53aaffb3-db71-4db3-9afb-d1cff70535f8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/da7abad9-0a14-40cc-922e-2debb139079a.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Blaster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/blaster/30158327",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/869c4478-09f8-4433-9e76-0685c404800c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/024d4d41-0046-4fe1-b387-ed5db88b97ea.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-09-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "Gallo Azul",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Killerblitz"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gallo-azul/30080101",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f337db34-fccb-4590-af72-9bc864533e88.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cc309d5f-b5e5-4ac4-ae50-61301703d1cb.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "My Mind",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "STICK2BREAKS"
+        }
+      ],
+      "label": "Antona Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-mind/29739903",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9db44ba2-3489-42fa-933c-eb3e09a9d41b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/244906b1-e487-4c78-b6cc-cdc81a019e45.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Time Stops",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Luccid"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/time-stops/30425657",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c4b6fe0-3140-4871-8d83-a563cfd736e9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ad6e1f63-54b3-41a7-a14c-cdbd25d5def0.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Shift T Phase",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SellRude"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shift-t-phase/30401807",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/797964d1-9930-4f46-9592-8ea79a0dc987.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d276993b-55fe-40d6-b736-c008a38a3d55.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "Pioneers",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Destroyers"
+        },
+        {
+          "name": "Guau"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pioneers/30258364",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cbc84eeb-b769-4bcb-af1c-186d853adea1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9ff35555-0160-4022-9484-cf399102a86d.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Jump Around",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Macho"
+        },
+        {
+          "name": "Anuschka"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jump-around/30114557",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f81b2906-15b1-439c-baea-9a5f41e0bcbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/29e618d3-e2eb-4fe0-9d82-890c1425366a.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Rayo De Luz",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Tony Lizana"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rayo-de-luz/30190876",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a45e4b4f-0157-4af1-8de2-f8b406e8948b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6677c571-4388-451d-a559-754e4e599725.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19
+    },
+    {
+      "title": "=OV3RL0AD =",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "RAZRWAV"
+        }
+      ],
+      "label": "Break Beat Connection",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ov3rl0ad/30079205",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b18f5e71-af2a-47db-98a4-bb70ea1b82b5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1fd2a6b3-a7ef-4464-b9fd-a6174068cc50.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
+    },
+    {
+      "title": "BREAK IRANIANO",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Stimulus"
+        },
+        {
+          "name": "Q-Rush"
+        },
+        {
+          "name": "Bronka"
+        }
+      ],
+      "label": "Baile Service",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/break-iraniano/30349420",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e321c59-4e08-4065-b31d-314d50a88263.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f0cc0ce5-eb70-4863-b8a5-9bc339a46559.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
+    },
+    {
+      "title": "SE CONCENTRA",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Mc Buret"
+        },
+        {
+          "name": "DJ SAZE"
+        },
+        {
+          "name": "MC BF"
+        },
+        {
+          "name": "Bronka"
+        }
+      ],
+      "label": "Baile Service",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/se-concentra/30349422",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e321c59-4e08-4065-b31d-314d50a88263.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9cd7c4f-a9a1-49f0-997c-bd00b51d4fe3.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 22
+    },
+    {
+      "title": "VEM PPK",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bronka"
+        }
+      ],
+      "label": "Baile Service",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/vem-ppk/30349423",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e321c59-4e08-4065-b31d-314d50a88263.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d542d890-420c-4f0c-83bf-fc4f28fc50d4.LOFI.mp3",
+      "bpm": 114,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 23
+    },
+    {
+      "title": "VEM DE 4",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bronka"
+        },
+        {
+          "name": "Naken"
+        }
+      ],
+      "label": "Baile Service",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/vem-de-4/30349424",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e321c59-4e08-4065-b31d-314d50a88263.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5591d3d2-3fbd-4e60-b6d6-d780c04fe362.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 24
     }
   ]
 }
