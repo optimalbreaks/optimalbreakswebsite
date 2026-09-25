@@ -149,6 +149,8 @@ export type AdminUserRow = {
   artist_level?: AdminArtistLevel
   /** Fichaje editorial de sello (no acredita el roster de ese sello en el Top de artistas). */
   label_marked?: boolean
+  /** Familiar de un artista fichado o reclamado: sus «+» no acreditan ese nombre. */
+  family_marked?: boolean
 }
 
 export async function adminListUsers(opts: {
@@ -185,6 +187,13 @@ export type AdminEditorialLabelMark = {
   label_id: string | null
 }
 
+export type AdminEditorialFamilyMark = {
+  id: string
+  artist_key: string
+  artist_name: string
+  artist_id: string | null
+}
+
 export type AdminClaimedArtist = {
   id: string
   name: string
@@ -202,6 +211,7 @@ export async function adminGetUserDetail(id: string): Promise<{
   artist_level?: AdminArtistLevel
   editorial_marks?: AdminEditorialMark[]
   editorial_label_marks?: AdminEditorialLabelMark[]
+  editorial_family_marks?: AdminEditorialFamilyMark[]
   claimed_artists?: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`)
@@ -230,6 +240,30 @@ export async function adminMarkEditorialArtist(
   artist_level: AdminArtistLevel
   editorial_marks: AdminEditorialMark[]
   editorial_label_marks: AdminEditorialLabelMark[]
+  editorial_family_marks: AdminEditorialFamilyMark[]
+  claimed_artists: AdminClaimedArtist[]
+}> {
+  const res = await fetch(`${BASE}/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText)
+  return res.json()
+}
+
+export async function adminMarkEditorialFamily(
+  id: string,
+  body:
+    | { editorial_family_name: string }
+    | { editorial_family_name: null }
+    | { remove_editorial_family_key: string },
+): Promise<{
+  ok: boolean
+  artist_level: AdminArtistLevel
+  editorial_marks: AdminEditorialMark[]
+  editorial_label_marks: AdminEditorialLabelMark[]
+  editorial_family_marks: AdminEditorialFamilyMark[]
   claimed_artists: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`, {
@@ -252,6 +286,7 @@ export async function adminMarkEditorialLabel(
   artist_level: AdminArtistLevel
   editorial_marks: AdminEditorialMark[]
   editorial_label_marks: AdminEditorialLabelMark[]
+  editorial_family_marks: AdminEditorialFamilyMark[]
   claimed_artists: AdminClaimedArtist[]
 }> {
   const res = await fetch(`${BASE}/users/${id}`, {

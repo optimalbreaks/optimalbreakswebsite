@@ -5,6 +5,11 @@
 // En Almas Gemelas ese mismo tema no entra en el set Jaccard del fichado.
 // Fase 3 (bookings) no vive aquí: solo `claimed_by` + `accepts_bookings`.
 //
+// Familiar (`editorial_family_marks`): la cuenta no es el artista. El editor
+// la ficha contra el nombre de crédito de un fichado o reclamado. Esos «+»
+// no suman a ESE nombre en el tablero (mismo skip que el auto-voto). Colabs
+// de otros nombres sí. Mis Tracks y el Top de canciones no cambian.
+//
 // Sello editorial (`editorial_label_marks`): independiente del nombre propio.
 // Si el editor marca cuenta + sello, un save cuyo `label` coincide no acredita
 // a NADIE en el tablero de artistas (roster / colabs de ese catálogo). Mis
@@ -52,6 +57,18 @@ export async function loadSelfCreditSkipMap(sb: ServiceClient): Promise<SelfCred
     .from('editorial_artist_marks')
     .select('user_id, artist_key, artist_name')
   for (const row of (marks || []) as {
+    user_id: string
+    artist_key: string | null
+    artist_name: string | null
+  }[]) {
+    addSkipKey(map, row.user_id, row.artist_key)
+    addSkipKey(map, row.user_id, row.artist_name)
+  }
+
+  const { data: family } = await sb
+    .from('editorial_family_marks')
+    .select('user_id, artist_key, artist_name')
+  for (const row of (family || []) as {
     user_id: string
     artist_key: string | null
     artist_name: string | null

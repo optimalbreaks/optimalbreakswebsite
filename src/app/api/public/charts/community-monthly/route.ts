@@ -19,10 +19,11 @@
 //     de fin de semana mantiene su ▲/▼ toda la semana siguiente —,
 //     weeks_in_top10 (semanas seguidas en este tablero),
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
-//     Un save de un usuario fichado editorialmente o con claim aprobado no
-//     acredita SU propio nombre (sí el de colaboradores; el Top 100 de temas
-//     no se toca). Si además hay `editorial_label_marks`, un save de ese sello
-//     no acredita a nadie en el tablero. Ver `artist-self-credit.ts`.
+//     Un save de un usuario fichado editorialmente, con claim aprobado o
+//     marcado como familiar de ese nombre no acredita ESE nombre (sí el de
+//     colaboradores; el Top 100 de temas no se toca). Si además hay
+//     `editorial_label_marks`, un save de ese sello no acredita a nadie en
+//     el tablero. Ver `artist-self-credit.ts`.
 //   - top_countries: podio (3) de países por nacionalidad de TODOS los
 //     artistas con créditos de save — artistas con ≥1 save y suma de saves.
 //

@@ -131,6 +131,16 @@ export default function AdminUsersPage() {
         ),
     },
     {
+      key: 'family_marked',
+      label: 'Familiar',
+      render: (_: unknown, row: AdminUserRow) =>
+        row.family_marked ? (
+          <span className="font-bold">Marcado</span>
+        ) : (
+          <span className="text-[var(--text-muted)]">—</span>
+        ),
+    },
+    {
       key: 'favorites_count',
       label: 'Favoritos',
       sortDefault: 'desc' as const,
@@ -186,6 +196,9 @@ export default function AdminUsersPage() {
         <strong>Sello</strong> = fichaje de conducta sobre un catálogo (dueño, roster o dumping
         errático): esos «+» en temas de ese sello no suman a <em>nadie</em> en el Top de artistas.
         El Top 100 de canciones y Mis Tracks no cambian.{' '}
+        <strong>Familiar</strong> = cuenta del círculo de un artista ya fichado o reclamado
+        (primo, pareja). Sus «+» no suman a <em>ese</em> nombre en el Top de artistas; los
+        créditos de otros en el mismo tema sí. El Top 100 de canciones y Mis Tracks no cambian.{' '}
         <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
         perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>

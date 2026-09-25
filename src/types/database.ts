@@ -405,6 +405,13 @@ export interface Database {
         Update: Partial<Pick<EditorialLabelMarkRow, 'label_key' | 'label_name' | 'label_id'>>
         Relationships: DbRelationship[]
       }
+      editorial_family_marks: {
+        Row: EditorialFamilyMarkRow
+        Insert: Pick<EditorialFamilyMarkRow, 'user_id' | 'artist_key'> &
+          Partial<Pick<EditorialFamilyMarkRow, 'artist_name' | 'artist_id' | 'created_by'>>
+        Update: Partial<Pick<EditorialFamilyMarkRow, 'artist_key' | 'artist_name' | 'artist_id'>>
+        Relationships: DbRelationship[]
+      }
       artist_network_threads: {
         Row: ArtistNetworkThreadRow
         Insert: Pick<ArtistNetworkThreadRow, 'kind' | 'created_by'> &
@@ -680,6 +687,16 @@ export interface EditorialLabelMarkRow extends Record<string, unknown> {
   label_key: string
   label_name: string
   label_id: string | null
+  created_by: string | null
+}
+
+export interface EditorialFamilyMarkRow extends Record<string, unknown> {
+  id: string
+  created_at: string
+  user_id: string
+  artist_key: string
+  artist_name: string
+  artist_id: string | null
   created_by: string | null
 }
 

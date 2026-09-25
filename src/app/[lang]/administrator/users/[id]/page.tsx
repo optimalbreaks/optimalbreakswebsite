@@ -6,10 +6,12 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   adminGetUserDetail,
   adminMarkEditorialArtist,
+  adminMarkEditorialFamily,
   adminMarkEditorialLabel,
   adminUpdateUserRole,
   type AdminArtistLevel,
   type AdminClaimedArtist,
+  type AdminEditorialFamilyMark,
   type AdminEditorialLabelMark,
   type AdminEditorialMark,
 } from '@/lib/admin-api'
@@ -40,9 +42,11 @@ export default function AdminUserDetailPage() {
   const [artistLevel, setArtistLevel] = useState<AdminArtistLevel>('user')
   const [editorialMarks, setEditorialMarks] = useState<AdminEditorialMark[]>([])
   const [labelMarks, setLabelMarks] = useState<AdminEditorialLabelMark[]>([])
+  const [familyMarks, setFamilyMarks] = useState<AdminEditorialFamilyMark[]>([])
   const [claimedArtists, setClaimedArtists] = useState<AdminClaimedArtist[]>([])
   const [markName, setMarkName] = useState('')
   const [labelMarkName, setLabelMarkName] = useState('')
+  const [familyMarkName, setFamilyMarkName] = useState('')
   const [marking, setMarking] = useState(false)
 
   useEffect(() => {
@@ -63,6 +67,7 @@ export default function AdminUserDetailPage() {
         setArtistLevel(d.artist_level ?? 'user')
         setEditorialMarks(d.editorial_marks ?? [])
         setLabelMarks(d.editorial_label_marks ?? [])
+        setFamilyMarks(d.editorial_family_marks ?? [])
         setClaimedArtists(d.claimed_artists ?? [])
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'))
@@ -73,11 +78,13 @@ export default function AdminUserDetailPage() {
     artist_level: AdminArtistLevel
     editorial_marks: AdminEditorialMark[]
     editorial_label_marks: AdminEditorialLabelMark[]
+    editorial_family_marks: AdminEditorialFamilyMark[]
     claimed_artists: AdminClaimedArtist[]
   }) => {
     setArtistLevel(d.artist_level)
     setEditorialMarks(d.editorial_marks)
     setLabelMarks(d.editorial_label_marks ?? [])
+    setFamilyMarks(d.editorial_family_marks ?? [])
     setClaimedArtists(d.claimed_artists)
   }
 
@@ -134,6 +141,35 @@ export default function AdminUserDetailPage() {
       applyLevel(d)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo quitar el sello')
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  const handleMarkFamily = async () => {
+    if (!id || !familyMarkName.trim()) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialFamily(id, { editorial_family_name: familyMarkName.trim() })
+      applyLevel(d)
+      setFamilyMarkName('')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo marcar el familiar')
+    } finally {
+      setMarking(false)
+    }
+  }
+
+  const handleUnmarkFamily = async (key: string) => {
+    if (!id) return
+    setMarking(true)
+    setError(null)
+    try {
+      const d = await adminMarkEditorialFamily(id, { remove_editorial_family_key: key })
+      applyLevel(d)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'No se pudo quitar el familiar')
     } finally {
       setMarking(false)
     }
@@ -334,6 +370,51 @@ export default function AdminUserDetailPage() {
               className="admin-btn admin-btn--ghost"
             >
               {marking ? 'Guardando…' : 'Marcar sello'}
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t-[3px] border-[var(--ink)] pt-5 space-y-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--dim)]">
+            Familiar de artista
+          </div>
+          <p className="admin-muted text-xs !mb-0">
+            Cuenta del círculo de un artista ya fichado o reclamado (primo, pareja). No es él.
+            Sus «+» no suman a ese nombre en el Top de artistas; los créditos de otros en el
+            mismo tema sí. Siguen en Mis Tracks y en el Top 100 de canciones. No abre bookings.
+          </p>
+          {familyMarks.length > 0 ? (
+            <ul className="m-0 p-0 list-none space-y-2">
+              {familyMarks.map((m) => (
+                <li key={m.id} className="flex items-center gap-2 text-sm">
+                  <span style={{ fontFamily: "'Courier Prime', monospace" }}>{m.artist_name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUnmarkFamily(m.artist_key)}
+                    disabled={marking}
+                    className="admin-btn admin-btn--ghost admin-btn--sm"
+                  >
+                    Quitar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="text"
+              value={familyMarkName}
+              onChange={(e) => setFamilyMarkName(e.target.value)}
+              placeholder="Nombre del artista (p. ej. Devis Hard)"
+              className="admin-input max-w-xs"
+            />
+            <button
+              type="button"
+              onClick={handleMarkFamily}
+              disabled={marking || !familyMarkName.trim()}
+              className="admin-btn admin-btn--ghost"
+            >
+              {marking ? 'Guardando…' : 'Marcar familiar'}
             </button>
           </div>
         </div>

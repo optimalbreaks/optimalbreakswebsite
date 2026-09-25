@@ -308,7 +308,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 - Skip map: `src/lib/artist-self-credit.ts` (`loadSelfCreditSkipMap` = editorial rows + every `artists.claimed_by` name / `name_display` / slug). `isArtistSelfCreditSave` = that user is credited on the track (artists + remixer).
 - Artist board: bump skip in `src/app/api/public/charts/community-monthly/route.ts` (live **and** Monday snapshots). Track aggregates unchanged. Label skip: if `shouldSkipLabelSave`, **no** artist credits from that save.
 - Soulmates (26 Aug 2026): same self-credit tracks omitted from **that user’s** Jaccard set in `src/app/api/breakbeat/soulmates/route.ts`. Not from everyone else’s sets. Recommendations use the same filtered sets. Label marks do **not** change Soulmates.
-- Schema: `supabase/migrations/070_editorial_artist_marks.sql` + `071_editorial_label_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
+- Schema: `supabase/migrations/070_editorial_artist_marks.sql` + `071_editorial_label_marks.sql` + `081_editorial_family_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
 
 ### Artist profile opt-outs (no `/artists` ficha)
@@ -353,6 +353,15 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `dfastbeats@gmail.com` | D-Fast Beats | `d fast beats` | `d-fast-beats` | `6983497d-d714-4bf8-89ef-d57f3b6fe0fb` |
 | `kritycalsystem@gmail.com` | Kritycal System | `kritycal system` | `kritycal-system` | `0340589d-1bbb-463e-8bba-cdbe9c6d061e` |
 | `kaosbeatproducer2@gmail.com` | Kaos Beat | `kaos beat` | `kaos-beat` | `f9977e86-c530-4e29-9ac7-931d952b35bb` |
+
+**Family marks** (25 Sep 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board. Other credits on the same track still count. My Tracks and the song Top 100 stay. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
+
+| Email | Display | Related credit | `artist_key` | `user_id` |
+| --- | --- | --- | --- | --- |
+| `modastrongwoman@gmail.com` | Paqui | Devis Hard | `devis hard` | `16732a6f-98ee-494f-9174-81b8d735bf66` |
+| `olesuprimodecai@gmail.com` | Suprime | Devis Hard | `devis hard` | `7971e1da-40c9-49d7-80e5-1a21d249c8ac` |
+
+**Audit — Devis Hard circle (22 Sep 2026).** Paqui signed up 22:56 and Suprime at 23:01 (Europe/Madrid). Each saved the same 21 tracks in under 30 seconds. 20 credit Devis Hard; *Feel This* (DJ Brownie, Kaleidoscope) does not. After the family mark those 20 no longer bump Devis Hard. Collab names on those tracks (Bass Invaderz, PhoenixRising, Jormek, The Push, Paket, AndrewFx, DJ Brownie, K5, SluG (FL), Bzrnt, Jiro, Montylla) still count. *Feel This* still credits DJ Brownie. My Tracks and the song Top 100 keep all 21.
 
 **Label marks** (26 Aug 2026). Add a row when you fichas a account+label.
 

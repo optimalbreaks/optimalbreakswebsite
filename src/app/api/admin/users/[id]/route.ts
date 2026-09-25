@@ -3,12 +3,12 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { buildLastActivityAtByUserId } from '@/lib/admin-user-last-activity'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
-import type { EditorialArtistMarkRow, EditorialLabelMarkRow } from '@/types/database'
+import type { EditorialArtistMarkRow, EditorialFamilyMarkRow, EditorialLabelMarkRow } from '@/types/database'
 
 type ServiceClient = ReturnType<typeof createServiceSupabase>
 
 async function loadArtistLevel(sb: ServiceClient, userId: string) {
-  const [{ data: marks }, { data: labelMarks }, { data: claimed }] = await Promise.all([
+  const [{ data: marks }, { data: labelMarks }, { data: familyMarks }, { data: claimed }] = await Promise.all([
     sb
       .from('editorial_artist_marks')
       .select('id, created_at, user_id, artist_key, artist_name, artist_id, created_by')
@@ -20,6 +20,11 @@ async function loadArtistLevel(sb: ServiceClient, userId: string) {
       .eq('user_id', userId)
       .order('created_at', { ascending: true }),
     sb
+      .from('editorial_family_marks')
+      .select('id, created_at, user_id, artist_key, artist_name, artist_id, created_by')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true }),
+    sb
       .from('artists')
       .select('id, name, slug, accepts_bookings')
       .eq('claimed_by', userId)
@@ -27,6 +32,7 @@ async function loadArtistLevel(sb: ServiceClient, userId: string) {
   ])
   const editorial_marks = (marks || []) as EditorialArtistMarkRow[]
   const editorial_label_marks = (labelMarks || []) as EditorialLabelMarkRow[]
+  const editorial_family_marks = (familyMarks || []) as EditorialFamilyMarkRow[]
   const claimed_artists = (claimed || []) as {
     id: string
     name: string
@@ -35,7 +41,7 @@ async function loadArtistLevel(sb: ServiceClient, userId: string) {
   }[]
   const artist_level: 'user' | 'marked' | 'claimed' =
     claimed_artists.length > 0 ? 'claimed' : editorial_marks.length > 0 ? 'marked' : 'user'
-  return { editorial_marks, editorial_label_marks, claimed_artists, artist_level }
+  return { editorial_marks, editorial_label_marks, editorial_family_marks, claimed_artists, artist_level }
 }
 
 async function resolveCatalogArtist(sb: ServiceClient, rawName: string) {
@@ -123,6 +129,8 @@ export async function PATCH(
     remove_editorial_artist_key?: string
     editorial_label_name?: string | null
     remove_editorial_label_key?: string
+    editorial_family_name?: string | null
+    remove_editorial_family_key?: string
   }
   try {
     body = await request.json()
@@ -134,7 +142,9 @@ export async function PATCH(
     Object.prototype.hasOwnProperty.call(body, 'editorial_artist_name') ||
     typeof body.remove_editorial_artist_key === 'string' ||
     Object.prototype.hasOwnProperty.call(body, 'editorial_label_name') ||
-    typeof body.remove_editorial_label_key === 'string'
+    typeof body.remove_editorial_label_key === 'string' ||
+    Object.prototype.hasOwnProperty.call(body, 'editorial_family_name') ||
+    typeof body.remove_editorial_family_key === 'string'
   const role = body.role
   if (role !== undefined && role !== 'user' && role !== 'admin') {
     return NextResponse.json({ error: 'role debe ser user o admin' }, { status: 400 })
@@ -228,6 +238,38 @@ export async function PATCH(
         created_by: auth.userId,
       },
       { onConflict: 'user_id,label_key' },
+    )
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (typeof body.remove_editorial_family_key === 'string' && body.remove_editorial_family_key.trim()) {
+    const { error } = await sb
+      .from('editorial_family_marks')
+      .delete()
+      .eq('user_id', id)
+      .eq('artist_key', normalizeArtistKey(body.remove_editorial_family_key))
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (body.editorial_family_name === null) {
+    const { error } = await sb.from('editorial_family_marks').delete().eq('user_id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  } else if (typeof body.editorial_family_name === 'string') {
+    const artistName = body.editorial_family_name.trim().slice(0, 120)
+    const artistKey = normalizeArtistKey(artistName)
+    if (!artistKey) {
+      return NextResponse.json({ error: 'Indica el nombre del artista (crédito).' }, { status: 400 })
+    }
+    const catalog = await resolveCatalogArtist(sb, artistName)
+    const { error } = await sb.from('editorial_family_marks').upsert(
+      {
+        user_id: id,
+        artist_key: artistKey,
+        artist_name: artistName,
+        artist_id: catalog?.id ?? null,
+        created_by: auth.userId,
+      },
+      { onConflict: 'user_id,artist_key' },
     )
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }

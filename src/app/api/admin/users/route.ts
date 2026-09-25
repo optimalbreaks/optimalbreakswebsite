@@ -280,9 +280,23 @@ async function attachLabelMarks(
   return out
 }
 
+async function attachFamilyMarks(
+  sb: ServiceClient,
+  ids: string[],
+): Promise<Record<string, boolean>> {
+  const out: Record<string, boolean> = {}
+  for (const id of ids) out[id] = false
+  if (ids.length === 0) return out
+  const { data: marks } = await sb.from('editorial_family_marks').select('user_id').in('user_id', ids)
+  for (const row of (marks || []) as { user_id: string }[]) {
+    out[row.user_id] = true
+  }
+  return out
+}
+
 async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
   const ids = rows.map((r) => r.id)
-  const [counts, lastActivity, artistLevels, labelMarks] = await Promise.all([
+  const [counts, lastActivity, artistLevels, labelMarks, familyMarks] = await Promise.all([
     buildEngagementCounts(sb, ids),
     buildLastActivityAtByUserId(
       sb,
@@ -291,6 +305,7 @@ async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
     ),
     attachArtistLevels(sb, ids),
     attachLabelMarks(sb, ids),
+    attachFamilyMarks(sb, ids),
   ])
   return rows.map((r) => ({
     ...r,
@@ -300,6 +315,7 @@ async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
     last_activity_at: lastActivity[r.id] ?? null,
     artist_level: artistLevels[r.id] ?? 'user',
     label_marked: labelMarks[r.id] ?? false,
+    family_marked: familyMarks[r.id] ?? false,
   }))
 }
 
@@ -585,6 +601,7 @@ export async function GET(request: NextRequest) {
       )
       const artistLevels = await attachArtistLevels(sb, rows.map((r) => r.id))
       const labelMarks = await attachLabelMarks(sb, rows.map((r) => r.id))
+      const familyMarks = await attachFamilyMarks(sb, rows.map((r) => r.id))
       const data = rows.map((r) => ({
         ...r,
         favorites_count: counts[r.id]?.favorites ?? 0,
@@ -593,6 +610,7 @@ export async function GET(request: NextRequest) {
         last_activity_at: lastActivity[r.id] ?? null,
         artist_level: artistLevels[r.id] ?? 'user',
         label_marked: labelMarks[r.id] ?? false,
+        family_marked: familyMarks[r.id] ?? false,
       }))
       return NextResponse.json({ data, count, page, limit })
     }
@@ -630,6 +648,7 @@ export async function GET(request: NextRequest) {
       )
       const artistLevels = await attachArtistLevels(sb, pageRows.map((r) => r.id))
       const labelMarks = await attachLabelMarks(sb, pageRows.map((r) => r.id))
+      const familyMarks = await attachFamilyMarks(sb, pageRows.map((r) => r.id))
       const data = pageRows.map((r) => ({
         ...r,
         favorites_count: pageCounts[r.id]?.favorites ?? 0,
@@ -638,6 +657,7 @@ export async function GET(request: NextRequest) {
         last_activity_at: lastActivity[r.id] ?? null,
         artist_level: artistLevels[r.id] ?? 'user',
         label_marked: labelMarks[r.id] ?? false,
+        family_marked: familyMarks[r.id] ?? false,
       }))
       return NextResponse.json({ data, count, page, limit })
     }
