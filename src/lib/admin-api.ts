@@ -151,6 +151,14 @@ export type AdminUserRow = {
   label_marked?: boolean
   /** Familiar de un artista fichado o reclamado: sus «+» no acreditan ese nombre. */
   family_marked?: boolean
+  /** Nombres de crédito del fichaje editorial (columna Artista = Marcado). */
+  artist_mark_names?: string[]
+  /** Fichas reclamadas (columna Artista = Reclamado). */
+  claimed_artist_names?: string[]
+  /** Sellos fichados en esta cuenta. */
+  label_mark_names?: string[]
+  /** Artistas de los que esta cuenta es familiar. */
+  family_mark_names?: string[]
 }
 
 export async function adminListUsers(opts: {

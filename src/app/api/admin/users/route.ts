@@ -246,36 +246,52 @@ async function buildEngagementCounts(
   return out
 }
 
+function pushName(map: Record<string, string[]>, id: string | null | undefined, name: string | null | undefined) {
+  const key = (id || '').trim()
+  const label = (name || '').trim()
+  if (!key || !label) return
+  const list = map[key] ?? []
+  if (!list.includes(label)) list.push(label)
+  map[key] = list
+}
+
 async function attachArtistLevels(
   sb: ServiceClient,
   ids: string[],
-): Promise<Record<string, 'user' | 'marked' | 'claimed'>> {
-  const out: Record<string, 'user' | 'marked' | 'claimed'> = {}
-  for (const id of ids) out[id] = 'user'
-  if (ids.length === 0) return out
+): Promise<{
+  levels: Record<string, 'user' | 'marked' | 'claimed'>
+  artistNames: Record<string, string[]>
+  claimedNames: Record<string, string[]>
+}> {
+  const levels: Record<string, 'user' | 'marked' | 'claimed'> = {}
+  const artistNames: Record<string, string[]> = {}
+  const claimedNames: Record<string, string[]> = {}
+  for (const id of ids) levels[id] = 'user'
+  if (ids.length === 0) return { levels, artistNames, claimedNames }
   const [{ data: marks }, { data: claimed }] = await Promise.all([
-    sb.from('editorial_artist_marks').select('user_id').in('user_id', ids),
-    sb.from('artists').select('claimed_by').in('claimed_by', ids),
+    sb.from('editorial_artist_marks').select('user_id, artist_name').in('user_id', ids),
+    sb.from('artists').select('claimed_by, name').in('claimed_by', ids),
   ])
-  for (const row of (marks || []) as { user_id: string }[]) {
-    if (out[row.user_id] === 'user') out[row.user_id] = 'marked'
+  for (const row of (marks || []) as { user_id: string; artist_name: string | null }[]) {
+    if (levels[row.user_id] === 'user') levels[row.user_id] = 'marked'
+    pushName(artistNames, row.user_id, row.artist_name)
   }
-  for (const row of (claimed || []) as { claimed_by: string | null }[]) {
-    if (row.claimed_by) out[row.claimed_by] = 'claimed'
+  for (const row of (claimed || []) as { claimed_by: string | null; name: string | null }[]) {
+    if (row.claimed_by) levels[row.claimed_by] = 'claimed'
+    pushName(claimedNames, row.claimed_by, row.name)
   }
-  return out
+  return { levels, artistNames, claimedNames }
 }
 
 async function attachLabelMarks(
   sb: ServiceClient,
   ids: string[],
-): Promise<Record<string, boolean>> {
-  const out: Record<string, boolean> = {}
-  for (const id of ids) out[id] = false
+): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {}
   if (ids.length === 0) return out
-  const { data: marks } = await sb.from('editorial_label_marks').select('user_id').in('user_id', ids)
-  for (const row of (marks || []) as { user_id: string }[]) {
-    out[row.user_id] = true
+  const { data: marks } = await sb.from('editorial_label_marks').select('user_id, label_name').in('user_id', ids)
+  for (const row of (marks || []) as { user_id: string; label_name: string | null }[]) {
+    pushName(out, row.user_id, row.label_name)
   }
   return out
 }
@@ -283,15 +299,37 @@ async function attachLabelMarks(
 async function attachFamilyMarks(
   sb: ServiceClient,
   ids: string[],
-): Promise<Record<string, boolean>> {
-  const out: Record<string, boolean> = {}
-  for (const id of ids) out[id] = false
+): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {}
   if (ids.length === 0) return out
-  const { data: marks } = await sb.from('editorial_family_marks').select('user_id').in('user_id', ids)
-  for (const row of (marks || []) as { user_id: string }[]) {
-    out[row.user_id] = true
+  const { data: marks } = await sb.from('editorial_family_marks').select('user_id, artist_name').in('user_id', ids)
+  for (const row of (marks || []) as { user_id: string; artist_name: string | null }[]) {
+    pushName(out, row.user_id, row.artist_name)
   }
   return out
+}
+
+function markFields(
+  id: string,
+  artist: {
+    levels: Record<string, 'user' | 'marked' | 'claimed'>
+    artistNames: Record<string, string[]>
+    claimedNames: Record<string, string[]>
+  },
+  labelNames: Record<string, string[]>,
+  familyNames: Record<string, string[]>,
+) {
+  const labels = labelNames[id] ?? []
+  const family = familyNames[id] ?? []
+  return {
+    artist_level: artist.levels[id] ?? 'user',
+    artist_mark_names: artist.artistNames[id] ?? [],
+    claimed_artist_names: artist.claimedNames[id] ?? [],
+    label_mark_names: labels,
+    family_mark_names: family,
+    label_marked: labels.length > 0,
+    family_marked: family.length > 0,
+  }
 }
 
 async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
@@ -313,9 +351,7 @@ async function attachEngagement(sb: ServiceClient, rows: BaseRow[]) {
     mixes_count: counts[r.id]?.mixes ?? 0,
     tracks_count: counts[r.id]?.tracks ?? 0,
     last_activity_at: lastActivity[r.id] ?? null,
-    artist_level: artistLevels[r.id] ?? 'user',
-    label_marked: labelMarks[r.id] ?? false,
-    family_marked: familyMarks[r.id] ?? false,
+    ...markFields(r.id, artistLevels, labelMarks, familyMarks),
   }))
 }
 
@@ -608,9 +644,7 @@ export async function GET(request: NextRequest) {
         mixes_count: counts[r.id]?.mixes ?? 0,
         tracks_count: counts[r.id]?.tracks ?? 0,
         last_activity_at: lastActivity[r.id] ?? null,
-        artist_level: artistLevels[r.id] ?? 'user',
-        label_marked: labelMarks[r.id] ?? false,
-        family_marked: familyMarks[r.id] ?? false,
+        ...markFields(r.id, artistLevels, labelMarks, familyMarks),
       }))
       return NextResponse.json({ data, count, page, limit })
     }
@@ -655,9 +689,7 @@ export async function GET(request: NextRequest) {
         mixes_count: pageCounts[r.id]?.mixes ?? 0,
         tracks_count: pageCounts[r.id]?.tracks ?? 0,
         last_activity_at: lastActivity[r.id] ?? null,
-        artist_level: artistLevels[r.id] ?? 'user',
-        label_marked: labelMarks[r.id] ?? false,
-        family_marked: familyMarks[r.id] ?? false,
+        ...markFields(r.id, artistLevels, labelMarks, familyMarks),
       }))
       return NextResponse.json({ data, count, page, limit })
     }

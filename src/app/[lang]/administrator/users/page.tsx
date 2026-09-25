@@ -17,6 +17,97 @@ function fmtDate(iso: string | null) {
   }
 }
 
+const HOVER_DELAY_MS = 600
+
+function MarkHint({ text, names, accent }: { text: string; names: string[]; accent?: boolean }) {
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const timer = useRef<number | null>(null)
+  const openedBy = useRef<'hover' | 'click' | null>(null)
+  const [open, setOpen] = useState(false)
+  const [box, setBox] = useState<{ top: number; left: number } | null>(null)
+  const label = names.map((n) => n.trim()).filter(Boolean).join(' · ') || '—'
+
+  const clearTimer = () => {
+    if (timer.current != null) window.clearTimeout(timer.current)
+    timer.current = null
+  }
+
+  const place = () => {
+    const el = btnRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const left = Math.min(r.left, window.innerWidth - 220)
+    setBox({ top: r.bottom + 6, left: Math.max(8, left) })
+  }
+
+  const show = (via: 'hover' | 'click') => {
+    openedBy.current = via
+    place()
+    setOpen(true)
+  }
+
+  const hide = () => {
+    clearTimer()
+    openedBy.current = null
+    setOpen(false)
+  }
+
+  useEffect(() => () => clearTimer(), [])
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (btnRef.current?.contains(e.target as Node)) return
+      hide()
+    }
+    const onScroll = () => hide()
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('scroll', onScroll, true)
+    }
+  }, [open])
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`font-bold bg-transparent border-0 p-0 cursor-pointer ${accent ? 'text-[var(--red)]' : 'text-[var(--ink)]'}`}
+        onPointerEnter={(e) => {
+          if (e.pointerType !== 'mouse') return
+          clearTimer()
+          timer.current = window.setTimeout(() => show('hover'), HOVER_DELAY_MS)
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType !== 'mouse') return
+          if (openedBy.current === 'click') return
+          hide()
+        }}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          clearTimer()
+          if (open) hide()
+          else show('click')
+        }}
+      >
+        {text}
+      </button>
+      {open && box ? (
+        <span
+          role="tooltip"
+          className="fixed z-[80] max-w-[220px] border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1 text-xs font-bold text-[var(--ink)] shadow-[3px_3px_0_var(--ink)]"
+          style={{ top: box.top, left: box.left, fontFamily: "'Courier Prime', monospace" }}
+        >
+          {label}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
 function CountCell({
   value,
   onOpen,
@@ -112,10 +203,11 @@ export default function AdminUsersPage() {
       render: (_: unknown, row: AdminUserRow) => {
         const level = row.artist_level || 'user'
         if (level === 'claimed') {
-          return <span className="font-bold text-[var(--red)]">Reclamado</span>
+          const names = row.claimed_artist_names?.length ? row.claimed_artist_names : row.artist_mark_names ?? []
+          return <MarkHint text="Reclamado" names={names} accent />
         }
         if (level === 'marked') {
-          return <span className="font-bold">Marcado</span>
+          return <MarkHint text="Marcado" names={row.artist_mark_names ?? []} />
         }
         return <span className="text-[var(--text-muted)]">—</span>
       },
@@ -125,7 +217,7 @@ export default function AdminUsersPage() {
       label: 'Sello',
       render: (_: unknown, row: AdminUserRow) =>
         row.label_marked ? (
-          <span className="font-bold">Marcado</span>
+          <MarkHint text="Marcado" names={row.label_mark_names ?? []} />
         ) : (
           <span className="text-[var(--text-muted)]">—</span>
         ),
@@ -135,7 +227,7 @@ export default function AdminUsersPage() {
       label: 'Familiar',
       render: (_: unknown, row: AdminUserRow) =>
         row.family_marked ? (
-          <span className="font-bold">Marcado</span>
+          <MarkHint text="Marcado" names={row.family_mark_names ?? []} />
         ) : (
           <span className="text-[var(--text-muted)]">—</span>
         ),
