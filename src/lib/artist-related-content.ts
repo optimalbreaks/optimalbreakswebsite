@@ -282,6 +282,12 @@ function artistSearchTerms(
     if (noSpaces.length >= 2 && noSpaces !== t) terms.add(noSpaces)
     const noParens = escIlike(t.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim())
     if (noParens.length >= 2 && noParens !== t) terms.add(noParens)
+    // «Jordaz ESP» en ficha vs «Jordaz (ESP)» en créditos de Beatport/charts.
+    const region = /^(.+?)\s+([a-z]{2,3})$/i.exec(t)
+    if (region && region[1].length >= 2) {
+      const wrapped = escIlike(`${region[1]} (${region[2]})`)
+      if (wrapped !== t) terms.add(wrapped)
+    }
   }
   addTerm(artist.name)
   if (artist.name_display) addTerm(artist.name_display)
@@ -360,7 +366,10 @@ function lineupEntryMatchesArtist(lineupName: string, matchKeys: Set<string>): b
     const c = compactEntityKey(key)
     if (c.length >= 4) compactKeys.add(c)
   }
-  for (const part of splitLineupSlotNames(lineupName)) {
+  const parts = splitLineupSlotNames(lineupName).flatMap((part) =>
+    part.split(/\s+(?:feat\.?|ft\.?|featuring)\s+/i).map((s) => s.trim()).filter(Boolean),
+  )
+  for (const part of parts) {
     const n = normalizeForEntityMatch(part)
     if (!n) continue
     if (matchKeys.has(n)) return true
