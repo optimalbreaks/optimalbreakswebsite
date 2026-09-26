@@ -353,6 +353,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `dfastbeats@gmail.com` | D-Fast Beats | `d fast beats` | `d-fast-beats` | `6983497d-d714-4bf8-89ef-d57f3b6fe0fb` |
 | `kritycalsystem@gmail.com` | Kritycal System | `kritycal system` | `kritycal-system` | `0340589d-1bbb-463e-8bba-cdbe9c6d061e` |
 | `kaosbeatproducer2@gmail.com` | Kaos Beat | `kaos beat` | `kaos-beat` | `f9977e86-c530-4e29-9ac7-931d952b35bb` |
+| `djro73@gmail.com` | Ro73 | `ro73` | `ro73` | `b15202cd-547d-4abe-8523-7de09459c9ef` |
 
 **Family marks** (25 Sep 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board. Other credits on the same track still count. My Tracks and the song Top 100 stay. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
