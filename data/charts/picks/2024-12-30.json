@@ -1,0 +1,27 @@
+{
+  "week_date": "2024-12-30",
+  "picks": [
+    {
+      "title": "Dance Robot",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Aggresivnes"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dance-robot/19896047",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4206ed15-90de-476b-bcd1-e6b92b3e53b6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1b61c966-f326-4c16-a61b-22cc3f9c34cb.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

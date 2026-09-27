@@ -66,6 +66,34 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 3
+    },
+    {
+      "title": "Give It Out",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SellRude"
+        },
+        {
+          "name": "Prodigal Kids"
+        },
+        {
+          "name": "Bass Master"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/give-it-out-/21881223",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/12236b40-ec06-41eb-9679-0c63ff826df6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4622d925-f920-48bc-b246-60c6fbfac41e.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
     }
   ]
 }

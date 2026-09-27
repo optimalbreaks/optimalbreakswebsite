@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-11-24",
+  "picks": [
+    {
+      "title": "The Duat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deydad"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-duat/22311328",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/94c20fd3-dad9-415d-9a64-d20bffaefbd3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/869d4cd8-cd72-4537-9563-62680ec09c01.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}
