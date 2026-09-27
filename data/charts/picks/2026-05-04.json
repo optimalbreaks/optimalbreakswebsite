@@ -1318,6 +1318,105 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 58
+    },
+    {
+      "title": "Dancefloor",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Devis Hard",
+          "beatport_url": "https://www.beatport.com/artist/devis-hard/"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dancefloor/28568298",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04aa6bcb-a8a1-4630-a7fd-9078cb21111f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9dbfe22d-e9cd-493f-aaed-14c309b3159b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59,
+      "spotify_url": "https://open.spotify.com/track/7EWUM7cUkXUoqOT1b166pv",
+      "tidal_url": "https://tidal.com/browse/track/517152862"
+    },
+    {
+      "title": "I Get Busy On Em'",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "StatiX (USA)",
+          "beatport_url": "https://www.beatport.com/artist/statix-usa/"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-get-busy-on-em/28463280",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/da8d5e58-2c41-471b-9dd3-97534f599ee3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7d2827d0-1093-4810-8d5a-c6d4c02fba7f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60,
+      "spotify_url": "https://open.spotify.com/track/3Wbd0tj7qI0l0QvqVRdIIe",
+      "tidal_url": "https://tidal.com/browse/track/517887477"
+    },
+    {
+      "title": "Grain",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kassian",
+          "beatport_url": "https://www.beatport.com/artist/kassian/"
+        }
+      ],
+      "label": "Faux Poly",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/grain/26923498",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/58603d92-d490-461b-adcd-0ba8e4c6ec78.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0323b02d-0f6d-4645-9cc3-28a25be8f281.LOFI.mp3",
+      "bpm": 145,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61,
+      "spotify_url": "https://open.spotify.com/track/2cdx2u1EO1BtPaWrWyvPpn",
+      "tidal_url": "https://tidal.com/browse/track/506516241"
+    },
+    {
+      "title": "Hallucinate",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Mak & Pasteman",
+          "beatport_url": "https://www.beatport.com/artist/mak-pasteman/"
+        }
+      ],
+      "label": "17 Steps",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hallucinate/28417116",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/955e3822-bcdf-415d-876d-557672c7b5b9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/310543de-c444-4e0d-a34f-1e616fab3631.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62,
+      "spotify_url": "https://open.spotify.com/track/4bLuIpj9rVH7tZVYSkk2tn"
     }
   ]
 }

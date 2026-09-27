@@ -202,6 +202,18 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 - **Otros comandos relacionados:** **`npm run db:chart:vinyl`** (vinilos del archivo desde JSON; identidad = **ID de YouTube**, no Discogs); **`npm run db:chart:backfill-new-releases`** (relleno histórico desde 40 Breaks). Los picks Beatport/Bandcamp **anteriores a 2026-01-01** no se listan en New Releases: van a **Selecciones de archivo** (por año), misma tabla `chart_featured_tracks`. Más contexto en inglés: [README.md — Beatport (incluye New Releases)](./README.md#beatport-weekly-chart-vs-top-10-on-profiles).
 - **IDs inmutables (no romper Mis Tracks):** el `id` de `chart_tracks` / `chart_featured_tracks` / `chart_vinyl_tracks` es lo que guarda el “+” en `saved_chart_tracks`. El upsert semanal **actualiza** la fila viva (40 Breaks = URL Beatport, NR = `link_url`, vinilo = vídeo YouTube). **Prohibido** borrar e insertar la misma canción (eso regeneraba UUID y huérfana los saves). UUID nuevo solo si el tema no estaba en esa edición. Si quitas un pick de la semana, la fila del catálogo puede desaparecer; quien lo guardó **con snapshot** lo sigue viendo. Huérfanos con URL: `node scripts/saved-tracks-rebind.mjs`. Regla: **`.cursor/rules/charts-ids-inmutables-saves.mdc`**.
 
+### YouTube vs Beatport (Selecciones de archivo)
+
+Política editorial **sep 2026** (descubrimientos del equipo por YouTube):
+
+- **New Releases** y archivo digital (release antes o desde **2026-01-01**, según corte editorial) viven en **`chart_featured_tracks`** (Beatport/Bandcamp): **semana** o **año** según release, con botones **Spotify** y **TIDAL** tras el matcher.
+- **YouTube** solo alimenta **`chart_vinyl_tracks`**: en la web se agrupa por **año de lanzamiento**; la `week_date` del JSON es solo contenedor en BD.
+- **No duplicar** el mismo tema por YouTube si ya está (o debe estar) en Beatport: saldrían **dos filas** en `/charts` (una con streaming, otra solo embed) y la prioridad editorial es la **vía tienda**.
+- Antes de `npm run db:chart:vinyl`: comprobar Beatport y si el tema ya está en NR/archivo digital; si sí → import NR (`featured-import` / `db:chart:featured`) y `db:chart:spotify` / `db:chart:tidal`, **sin** vinilo.
+- YouTube queda para histórico, vinilo, white labels, bootlegs o temas **sin** listing en tienda.
+
+Regla Cursor (agente): **`.cursor/rules/charts-youtube-vs-beatport.mdc`**.
+
 ### Enlaces «Abrir en Spotify» / «Abrir en TIDAL» en `/charts`
 
 Cada fila de **40 Breaks Vitales** y **New Releases** muestra un botón **SPOTIFY** (`SpotifyLinkButton` en `ChartView.tsx`): quien tenga cuenta de Spotify puede escuchar el tema completo allí (no podemos alojar audio íntegro por derechos). Dos modos:
@@ -253,7 +265,7 @@ Regla para agentes Cursor: `.cursor/rules/charts-catalog-discovery.mdc`. Detalle
 
 ## Beatport: Top 10 en fichas de artista y sello
 
-Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**. El 40 semanal es, desde **sep-2026**, una **foto literal de las 40 primeras posiciones** del Top 100 de Breaks en Beatport, sin IA (`--ai` reactiva la curación antigua solo bajo petición); las ediciones anteriores se hicieron con OpenAI reordenando. La curación de Optimal está en **New Releases**.
+Distinto del **chart semanal** (“40 Breaks Vitales”, `npm run db:chart` / `chart-40-breaks.mjs`): aquí se guarda el **Top 10 de ventas** que Beatport muestra en la ficha de un **artista** o **sello**. El 40 semanal es, desde **sep-2026**, una **foto literal de las 40 primeras posiciones** del Top 100 de Breaks en Beatport, sin IA (`--ai` reactiva la curación antigua solo bajo petición); las ediciones anteriores se hicieron con OpenAI reordenando. La curación de Optimal está en **New Releases**. **En la web pública (27 sep 2026) esa lista ya no se muestra** en `/charts`: las filas siguen en `chart_tracks` por los guardados y los enlaces `?play=chart:`. Los temas que solo estaban ahí pasaron a New Releases (2026, semana del lanzamiento) o a Selecciones de archivo (años anteriores).
 
 1. **Migración** — Aplica **`supabase/migrations/046_beatport_top_tracks.sql`** en Supabase (columnas `beatport_id`, `beatport_url`, `beatport_top_tracks`, `beatport_top_tracks_updated_at` en `artists` y `labels`).
 2. **ID en la URL de Beatport** — La ficha canónica es `https://www.beatport.com/artist/<slug>/<id>` o `/label/<slug>/<id>`. El `<slug>` debe ser el mismo que en Optimal Breaks; el `<id>` es el número final (ej.: Deekline → `deekline` + `3171`).

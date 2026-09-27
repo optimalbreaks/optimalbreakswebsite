@@ -1,0 +1,30 @@
+{
+  "week_date": "2026-01-26",
+  "picks": [
+    {
+      "title": "Manticore",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Dusky",
+          "beatport_url": "https://www.beatport.com/artist/dusky/23160920"
+        }
+      ],
+      "label": "17 Steps",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/manticore/23160920",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6d872817-196a-438b-abf7-ce93e739331a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e4764378-fd8d-4d8d-8074-1440e28558ff.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/3QrcVUaPX6v9eIsz2SyVWV",
+      "tidal_url": "https://tidal.com/browse/track/492096237"
+    }
+  ]
+}

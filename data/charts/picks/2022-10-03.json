@@ -1,0 +1,30 @@
+{
+  "week_date": "2022-10-03",
+  "picks": [
+    {
+      "title": "Kammy (like i do)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Fred again..",
+          "beatport_url": "https://www.beatport.com/artist/fred-again/"
+        }
+      ],
+      "label": "Atlantic Records UK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kammy-like-i-do/16997024",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5881cad4-b7bd-46cc-8950-2aa35f4023a5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/08fffb81-e192-4e17-bd7d-c7662533a396.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/1tOEEEM8DFyZq3CxSHeq5f",
+      "tidal_url": "https://tidal.com/browse/track/248376165"
+    }
+  ]
+}

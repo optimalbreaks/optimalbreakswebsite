@@ -1,0 +1,30 @@
+{
+  "week_date": "2025-09-08",
+  "picks": [
+    {
+      "title": "SPARK UP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Efan",
+          "beatport_url": "https://www.beatport.com/artist/efan/12345678"
+        }
+      ],
+      "label": "DistroKid",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/spark-up/21495348",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2e5b6db-cdad-4300-a490-06afe7fded09.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/29660dab-ce04-486c-a16d-33482e8246d7.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/1FJuwflrvoFT9Om3pBELnK",
+      "tidal_url": "https://tidal.com/browse/track/458004686"
+    }
+  ]
+}

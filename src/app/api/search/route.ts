@@ -245,7 +245,6 @@ export async function GET(request: NextRequest) {
     scenesRes,
     postsRes,
     orgsRes,
-    chartTracksRes,
     chartFeaturedRes,
     chartVinylRes,
     beatportTopIndex,
@@ -310,28 +309,15 @@ export async function GET(request: NextRequest) {
       .select('id, slug, name, image_url, country, base_city')
       .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
       .limit(4),
-    // 40 Breaks Vitales (Beatport weekly chart). `artist_names_text` es la
-    // denormalización STORED de `artists[].name` (migración 051) para que
-    // `ilike` pille también el nombre del artista dentro del JSONB.
-    // Orden: primero `chart_editions.week_date` DESC (edición más reciente
-    // = la que /charts renderiza más arriba, garantizando que el deep-link
-    // `#chart-row-<id>` encuentre el DOM), después `position` ASC. Así el
-    // dedupe se queda con la fila VISIBLE más reciente del tema, no con
-    // una edición antigua que no esté renderizada.
-    supabase
-      .from('chart_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, position, chart_editions!inner(week_date)')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .order('position', { ascending: true })
-      .limit(40),
-    // New Releases (semana "fenomenal"): igual, priorizar edición más reciente.
+    // New Releases y archivo digital. Los 40 Breaks Vitales no se listan
+    // en la web (sep 2026); sus temas viven aquí o en el Top 10 de la ficha.
+    // `artist_names_text` es la denormalización STORED de `artists[].name`.
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, chart_editions!inner(week_date)')
       .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .limit(30),
+      .limit(40),
     // Retro Vinyl Picks (Discogs)
     supabase
       .from('chart_vinyl_tracks')
@@ -661,16 +647,8 @@ export async function GET(request: NextRequest) {
     artists: unknown
   }
 
-  // Una misma canción puede aparecer varias veces: en distintas ediciones
-  // semanales (40 Breaks vitales cambia pero los temas se repiten varias
-  // semanas) y, a veces, en más de un chart (también en New Releases).
-  // Deduplicamos por firma `titulo|mix|artistas` normalizada, dando
-  // prioridad al chart principal para elegir qué entrada se queda:
-  //   1º chart_tracks (40 Breaks vitales) — más relevante
-  //   2º chart_featured_tracks (New Releases)
-  //   3º chart_vinyl_tracks (Retro Vinyl)
-  // Los `for` se ejecutan en ese orden, así que el primero que entra
-  // marca la clave y los siguientes con la misma firma se descartan.
+  // Una misma canción puede aparecer en New Releases y en el archivo.
+  // Deduplicamos por firma `titulo|mix|artistas`. Primero featured, luego vinilo.
   const seenTrackKeys = new Set<string>()
 
   function searchTrackDedupeKey(title: string, mix: string, artists: unknown): string {
@@ -728,7 +706,6 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  for (const t of (chartTracksRes.data || []) as TrackRow[]) pushTrack(t, 'chart')
   for (const t of (chartFeaturedRes.data || []) as TrackRow[]) pushTrack(t, 'featured')
   for (const t of (chartVinylRes.data || []) as TrackRow[]) pushTrack(t, 'vinyl')
 

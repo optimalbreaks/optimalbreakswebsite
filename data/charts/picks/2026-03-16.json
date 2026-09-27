@@ -25,6 +25,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Folding the Horizon",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sphera",
+          "beatport_url": "https://www.beatport.com/artist/sphera/123456"
+        }
+      ],
+      "label": "Stereo Society",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/folding-the-horizon/26824647",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9a78580d-3d06-431b-95a1-67916b44a70d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b454eb6e-8ee9-4e70-8b9c-f91539ce012c.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "spotify_url": "https://open.spotify.com/track/1VBEJMd6H7jCFvYqwubrrP",
+      "tidal_url": "https://tidal.com/browse/track/504538384"
     }
   ]
 }

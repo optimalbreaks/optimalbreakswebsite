@@ -2381,6 +2381,138 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 104
+    },
+    {
+      "title": "Stay",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Julian Fijma",
+          "beatport_url": "https://www.beatport.com/artist/julian-fijma/1026325"
+        },
+        {
+          "name": "sawayaka",
+          "beatport_url": "https://www.beatport.com/artist/sawayaka/2450051"
+        }
+      ],
+      "label": "Fijma Trax",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/stay/30236637",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e10d1ab0-f9b8-4afc-89c1-459c891a42a8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/09fe4f71-d103-4e5f-b803-3ab60991d7bb.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105,
+      "spotify_url": "https://open.spotify.com/track/4Ei2huAv185ZuCuhWcfyE9",
+      "tidal_url": "https://tidal.com/browse/track/552220041"
+    },
+    {
+      "title": "West X",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "X Prod",
+          "beatport_url": "https://www.beatport.com/artist/x-prod/1107803"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/west-x/29727921",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4374c868-a6e0-4128-a60c-8198435415bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2fd9b294-fd8e-407e-b5b8-83a35159a2df.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106,
+      "spotify_url": "https://open.spotify.com/track/4YvFrqmJJ6F9QcAhX3zWzf",
+      "tidal_url": "https://tidal.com/browse/track/551682114"
+    },
+    {
+      "title": "Jiggle That",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Suburbia",
+          "beatport_url": "https://www.beatport.com/artist/suburbia/347142"
+        }
+      ],
+      "label": "ESSEntial.",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jiggle-that/29549567",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f09b5219-3928-41e0-8b33-ddfef7dea08c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/59e0dd4b-5f05-41e5-8881-4ede563bd0dc.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Db Major",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107,
+      "spotify_url": "https://open.spotify.com/track/3ikcVjz0ADmh8kk812zMPY",
+      "tidal_url": "https://tidal.com/browse/track/538708972"
+    },
+    {
+      "title": "Dem A So'",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hypho",
+          "beatport_url": null
+        },
+        {
+          "name": "Nina (UK)",
+          "beatport_url": null
+        }
+      ],
+      "label": "Mid:night Cut",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dem-a-so/29874108",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d95bc80-8468-42c8-8c87-7027abf4096f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/59f8bc1f-bf94-4daa-917f-b3d34e291d38.LOFI.mp3",
+      "bpm": 141,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 108,
+      "spotify_url": "https://open.spotify.com/track/1nuX1MmF9rpHPrWl3uf8kv",
+      "tidal_url": "https://tidal.com/browse/track/551682978"
+    },
+    {
+      "title": "Pulse Driver",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Linero",
+          "beatport_url": null
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pulse-driver/29550377",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0ac8c24b-c225-421e-b87b-a8a6b591bf4f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b58567df-71f5-427c-8740-8f7518fb76f5.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 109,
+      "spotify_url": "https://open.spotify.com/track/6xM3PfTXyF3B2F5sXrBAhC"
     }
   ]
 }

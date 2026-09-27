@@ -1147,6 +1147,129 @@
       "note_en": "From The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp).",
       "note_es": "Del bundle The Breakfastaz — The Big Breakfast Bundle! (DJ QUEST / Bandcamp).",
       "release_date": "2026-04-10"
+    },
+    {
+      "title": "Jump Over",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FM-3",
+          "beatport_url": "https://www.beatport.com/artist/fm-3/"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jump-over/26789828",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2cc2bef6-affc-4287-96b7-6e5f4f4f9f82.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/77faefd9-b40e-47b9-b285-6566621289b8.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51,
+      "spotify_url": "https://open.spotify.com/track/5bDw50HqmceZqEXEH1K6rX",
+      "tidal_url": "https://tidal.com/browse/track/301706725"
+    },
+    {
+      "title": "Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bowser",
+          "beatport_url": "https://www.beatport.com/artist/bowser/123456"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pressure/26770711",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/923f8822-5cc8-47f4-91aa-8369d35f3e28.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/78dd9fb7-89c1-4e84-bf4d-fc8e1cbc0017.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52,
+      "spotify_url": "https://open.spotify.com/track/7vb4kco3x6GIxndadUaSKt",
+      "tidal_url": "https://tidal.com/browse/track/511658123"
+    },
+    {
+      "title": "Cardboard Break",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Icey",
+          "beatport_url": "https://www.beatport.com/artist/dj-icey/123456"
+        }
+      ],
+      "label": "Zone Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cardboard-break/26942380",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eaafe6d1-2e61-4487-aca0-288d1930b57e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bca26212-549c-402c-8a62-1263f83f7a1b.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "Bassline Addict",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FM-3",
+          "beatport_url": "https://www.beatport.com/artist/fm-3/"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bassline-addict/26789822",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2cc2bef6-affc-4287-96b7-6e5f4f4f9f82.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0baf3eec-6027-4a8b-af87-7c49ca5c4f98.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54,
+      "spotify_url": "https://open.spotify.com/track/7BajUCl4MDcaWGgzIWgfC5",
+      "tidal_url": "https://tidal.com/browse/track/512084683"
+    },
+    {
+      "title": "Homing Device",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Scuba",
+          "beatport_url": "https://www.beatport.com/artist/scuba/"
+        }
+      ],
+      "label": "Hotflush Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/homing-device/27205353",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e0c5b976-c7ec-41f7-b88d-b2099a4151c8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0b0ea976-3447-4f2b-afea-b80a46dbb8d9.LOFI.mp3",
+      "bpm": 70,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55,
+      "spotify_url": "https://open.spotify.com/track/5KE1K5bySLphwaTaRp4isS",
+      "tidal_url": "https://tidal.com/browse/track/530767403"
     }
   ]
 }

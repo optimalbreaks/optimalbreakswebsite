@@ -5,7 +5,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ChartFeaturedTrack, ChartTrackSource, Database } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
-import { normalizeForEntityMatch, splitLineupSlotNames } from '@/lib/artist-entity-match'
+import {
+  normalizeForEntityMatch,
+  resolveArtistSlug,
+  splitLineupSlotNames,
+} from '@/lib/artist-entity-match'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import { dedupeKeyForFeaturedLink } from '@/lib/beatport-next-data-tracks'
@@ -215,7 +219,6 @@ function dedupeChartRows(
   lang: Locale,
   caps: { chart?: number; featured?: number; vinyl?: number; total?: number } = {},
 ): ArtistChartLink[] {
-  const chartCap = caps.chart ?? 12
   const featuredCap = caps.featured ?? 24
   const vinylCap = caps.vinyl ?? 8
   const totalCap = caps.total ?? 40
@@ -225,8 +228,9 @@ function dedupeChartRows(
   const counts = { chart: 0, featured: 0, vinyl: 0 }
 
   const push = (row: ChartRow, kind: 'chart' | 'featured' | 'vinyl') => {
+    // Los 40 Breaks Vitales no se listan en fichas públicas (sep 2026).
+    if (kind === 'chart') return
     if (out.length >= totalCap) return
-    if (kind === 'chart' && counts.chart >= chartCap) return
     if (kind === 'featured' && counts.featured >= featuredCap) return
     if (kind === 'vinyl' && counts.vinyl >= vinylCap) return
 
@@ -237,7 +241,7 @@ function dedupeChartRows(
     seen.add(key)
 
     const weekDate = kind === 'vinyl' ? null : weekDateFromRow(row)
-    const position = kind === 'chart' ? (row.position ?? null) : null
+    const position = null
     const year = kind === 'vinyl' ? (row.year ?? null) : (row.release_year ?? null)
     const displayTitle = mix ? `${title} (${mix})` : title
     const artistNames = extractArtistNames(row.artists)
@@ -295,11 +299,28 @@ function artistSearchTerms(
   return Array.from(terms)
 }
 
+/** Todos los nombres del catálogo que apuntan al mismo slug (alias / name_display). */
+function artistSearchTermsForCatalog(
+  artist: { name: string; name_display?: string | null; slug?: string },
+  slugByNormalizedName?: Map<string, string>,
+): string[] {
+  const terms = artistSearchTerms(artist)
+  if (!artist.slug || !slugByNormalizedName) return terms
+  const seen = new Set(terms.map((t) => normalizeForEntityMatch(t)))
+  for (const [norm, slug] of slugByNormalizedName) {
+    if (slug !== artist.slug || norm.length < 2 || seen.has(norm)) continue
+    seen.add(norm)
+    terms.push(escIlike(norm))
+  }
+  return terms
+}
+
 function buildArtistMatchKeys(
   artist: { name: string; name_display?: string | null; slug?: string },
+  slugByNormalizedName?: Map<string, string>,
 ): Set<string> {
   const keys = new Set<string>()
-  for (const term of artistSearchTerms(artist)) {
+  for (const term of artistSearchTermsForCatalog(artist, slugByNormalizedName)) {
     const n = normalizeForEntityMatch(term)
     if (n.length >= 2) keys.add(n)
     const compact = compactEntityKey(term)
@@ -321,7 +342,17 @@ function artistTrackOrFilter(terms: string[]): string {
 function chartRowMatchesArtist(
   row: { artists?: unknown; mix_name?: string | null },
   matchKeys: Set<string>,
+  artistSlug?: string,
+  slugByNormalizedName?: Map<string, string>,
 ): boolean {
+  if (artistSlug && slugByNormalizedName) {
+    for (const name of extractArtistNames(row.artists)) {
+      if (resolveArtistSlug(name, slugByNormalizedName) === artistSlug) return true
+    }
+    for (const name of extractRemixerNames(row.mix_name)) {
+      if (resolveArtistSlug(name, slugByNormalizedName) === artistSlug) return true
+    }
+  }
   for (const name of extractArtistNames(row.artists)) {
     if (lineupEntryMatchesArtist(name, matchKeys)) return true
   }
@@ -417,43 +448,48 @@ export async function fetchArtistRelatedContent(
   supabase: SupabaseClient<Database>,
   artist: { id: string; name: string; name_display?: string | null; slug: string },
   lang: Locale,
+  slugByNormalizedName?: Map<string, string>,
 ): Promise<ArtistRelatedContent> {
   const base = (path: string) => `/${lang}${path}`
   const todayIso = new Date().toISOString().slice(0, 10)
   const pastCutoff = new Date()
   pastCutoff.setFullYear(pastCutoff.getFullYear() - 1)
   const pastCutoffIso = pastCutoff.toISOString().slice(0, 10)
-  const terms = artistSearchTerms(artist)
-  const matchKeys = buildArtistMatchKeys(artist)
+  const terms = artistSearchTermsForCatalog(artist, slugByNormalizedName)
+  const matchKeys = buildArtistMatchKeys(artist, slugByNormalizedName)
   const artistNamesOr = artistTrackOrFilter(terms)
   const lineupOr = orIlikeFilter('lineup_text', terms)
   const mixOr = [`artist_id.eq.${artist.id}`, ...terms.map((t) => orIlikeClause('artist_name', t))].join(',')
+  const rowMatches = (r: { artists?: unknown; mix_name?: string | null }) =>
+    chartRowMatchesArtist(r, matchKeys, artist.slug, slugByNormalizedName)
 
-  const [mixesRes, chartRes, featuredRes, vinylRes, upcomingEventsRes, pastEventsRes] = await Promise.all([
+  const featuredLinkSelect =
+    'id, title, mix_name, label, artists, release_year, release_date, chart_editions!inner(week_date)'
+  const vinylLinkSelect = 'id, title, mix_name, label, year, artists'
+
+  const [mixesRes, featuredRows, vinylRows, upcomingEventsRes, pastEventsRes] = await Promise.all([
     supabase
       .from('mixes')
       .select('slug, title, year')
       .or(mixOr)
       .order('published_at', { ascending: false })
       .limit(6),
-    supabase
-      .from('chart_tracks')
-      .select('id, title, mix_name, label, position, artists, chart_editions!inner(week_date)')
-      .or(artistNamesOr)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .order('position', { ascending: true })
-      .limit(24),
-    supabase
-      .from('chart_featured_tracks')
-      .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
-      .or(artistNamesOr)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .limit(48),
-    supabase
-      .from('chart_vinyl_tracks')
-      .select('id, title, mix_name, label, year, artists')
-      .or(artistNamesOr)
-      .limit(10),
+    fetchAllPages<ChartRow>((from, to) =>
+      supabase
+        .from('chart_featured_tracks')
+        .select(featuredLinkSelect)
+        .or(artistNamesOr)
+        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
+        .range(from, to),
+    ),
+    fetchAllPages<ChartRow>((from, to) =>
+      supabase
+        .from('chart_vinyl_tracks')
+        .select(vinylLinkSelect)
+        .or(artistNamesOr)
+        .order('year', { ascending: false })
+        .range(from, to),
+    ),
     supabase
       .from('events')
       .select('slug, name, date_start, city, lineup, stages')
@@ -472,9 +508,9 @@ export async function fetchArtistRelatedContent(
   ])
 
   const chartLinks = dedupeChartRows(
-    ((chartRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
-    ((featuredRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
-    ((vinylRes.data || []) as unknown as ChartRow[]).filter((r) => chartRowMatchesArtist(r, matchKeys)),
+    [],
+    featuredRows.filter(rowMatches),
+    vinylRows.filter(rowMatches),
     lang,
   )
 
@@ -684,35 +720,27 @@ function mergeOnSitePicks(
 export async function fetchArtistFeaturedPicks(
   supabase: SupabaseClient<Database>,
   artist: { name: string; name_display?: string | null; slug?: string },
+  slugByNormalizedName?: Map<string, string>,
 ): Promise<ArtistFeaturedPick[]> {
-  const terms = artistSearchTerms(artist)
+  const terms = artistSearchTermsForCatalog(artist, slugByNormalizedName)
   if (terms.length === 0) return []
-  const matchKeys = buildArtistMatchKeys(artist)
+  const matchKeys = buildArtistMatchKeys(artist, slugByNormalizedName)
   const artistNamesOr = artistTrackOrFilter(terms)
+  const rowMatches = (r: { artists?: unknown; mix_name?: string | null }) =>
+    chartRowMatchesArtist(r, matchKeys, artist.slug, slugByNormalizedName)
 
   const featuredSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
-  const chartSelect =
-    'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
   const vinylSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 
-  const [featuredRows, chartRows, vinylRows] = await Promise.all([
+  const [featuredRows, vinylRows] = await Promise.all([
     fetchAllPages<FeaturedPickRow>((from, to) =>
       supabase
         .from('chart_featured_tracks')
         .select(featuredSelect)
         .or(artistNamesOr)
         .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-        .range(from, to),
-    ),
-    fetchAllPages<LabelChartPickRow>((from, to) =>
-      supabase
-        .from('chart_tracks')
-        .select(chartSelect)
-        .or(artistNamesOr)
-        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-        .order('position', { ascending: true })
         .range(from, to),
     ),
     fetchAllPages<VinylPickRow>((from, to) =>
@@ -725,37 +753,9 @@ export async function fetchArtistFeaturedPicks(
     ),
   ])
 
-  const featured = mapFeaturedPickRows(featuredRows).filter((p) => chartRowMatchesArtist(p, matchKeys))
-  const fromForty: ArtistFeaturedPick[] = []
-  for (const row of chartRows) {
-    if (!chartRowMatchesArtist(row, matchKeys)) continue
-    const pick = mapChartTrackToPick(row)
-    if (pick) fromForty.push(pick)
-  }
-  const fromVinyl = vinylRows
-    .filter((row) => chartRowMatchesArtist(row, matchKeys))
-    .map(mapVinylTrackToPick)
-  return mergeOnSitePicks(fromForty, featured, fromVinyl)
-}
-
-type LabelChartPickRow = {
-  id: string
-  chart_edition_id: string
-  position: number | null
-  title: string | null
-  mix_name: string | null
-  label: string | null
-  artists?: unknown
-  bpm: number | null
-  music_key: string | null
-  release_year: number | null
-  release_date: string | null
-  beatport_url: string | null
-  spotify_url: string | null
-  tidal_url: string | null
-  artwork_url: string | null
-  sample_url: string | null
-  chart_editions?: { week_date: string } | { week_date: string }[] | null
+  const featured = mapFeaturedPickRows(featuredRows).filter(rowMatches)
+  const fromVinyl = vinylRows.filter(rowMatches).map(mapVinylTrackToPick)
+  return mergeOnSitePicks([], featured, fromVinyl)
 }
 
 function labelFieldMatches(rowLabel: string | null | undefined, labelKey: string): boolean {
@@ -816,40 +816,8 @@ function mapVinylTrackToPick(row: VinylPickRow): ArtistFeaturedPick {
   }
 }
 
-function mapChartTrackToPick(row: LabelChartPickRow): ArtistFeaturedPick | null {
-  const weekDate = weekDateFromRow(row as ChartRow)
-  if (!weekDate) return null
-  const artists = extractArtistNames(row.artists).map((name) => ({ name }))
-  return {
-    id: row.id,
-    chart_edition_id: row.chart_edition_id,
-    sort_order: row.position ?? 0,
-    title: (row.title || '').trim() || '—',
-    mix_name: (row.mix_name || '').trim(),
-    artists,
-    label: row.label || '',
-    platform: 'beatport',
-    link_url: row.beatport_url || '',
-    link_label: '',
-    artwork_url: row.artwork_url,
-    sample_url: row.sample_url,
-    bpm: row.bpm,
-    music_key: row.music_key || '',
-    release_year: row.release_year,
-    release_date: row.release_date,
-    spotify_url: row.spotify_url,
-    tidal_url: row.tidal_url,
-    note_en: '',
-    note_es: '',
-    weekDate,
-    chartKind: 'chart',
-    position: row.position ?? null,
-  }
-}
-
 /**
- * Temas del sello en /charts (40 Breaks + NR + archivo YouTube/Bandcamp)
- * para el desplegable reproducible de la ficha.
+ * Temas del sello en /charts (New Releases + archivo) para el desplegable de la ficha.
  */
 export async function fetchLabelOnSitePicks(
   supabase: SupabaseClient<Database>,
@@ -862,21 +830,10 @@ export async function fetchLabelOnSitePicks(
 
   const featuredSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
-  const chartSelect =
-    'id, chart_edition_id, position, title, mix_name, label, artists, bpm, music_key, release_year, release_date, beatport_url, spotify_url, tidal_url, artwork_url, sample_url, chart_editions!inner(week_date)'
   const vinylSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 
-  const [chartRows, featuredRows, vinylRows] = await Promise.all([
-    fetchAllPages<LabelChartPickRow>((from, to) =>
-      supabase
-        .from('chart_tracks')
-        .select(chartSelect)
-        .ilike('label', ilike)
-        .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-        .order('position', { ascending: true })
-        .range(from, to),
-    ),
+  const [featuredRows, vinylRows] = await Promise.all([
     fetchAllPages<FeaturedPickRow>((from, to) =>
       supabase
         .from('chart_featured_tracks')
@@ -896,16 +853,10 @@ export async function fetchLabelOnSitePicks(
   ])
 
   const featured = mapFeaturedPickRows(featuredRows).filter((p) => labelFieldMatches(p.label, labelKey))
-  const fromForty: ArtistFeaturedPick[] = []
-  for (const row of chartRows) {
-    if (!labelFieldMatches(row.label, labelKey)) continue
-    const pick = mapChartTrackToPick(row)
-    if (pick) fromForty.push(pick)
-  }
   const fromVinyl = vinylRows
     .filter((row) => labelFieldMatches(row.label, labelKey))
     .map(mapVinylTrackToPick)
-  return mergeOnSitePicks(fromForty, featured, fromVinyl)
+  return mergeOnSitePicks([], featured, fromVinyl)
 }
 
 export async function fetchLabelChartLinks(
@@ -917,14 +868,7 @@ export async function fetchLabelChartLinks(
   if (primaryTerm.length < 2) return []
   const ilike = `%${primaryTerm}%`
 
-  const [chartRes, featuredRes, vinylRes] = await Promise.all([
-    supabase
-      .from('chart_tracks')
-      .select('id, title, mix_name, label, position, artists, chart_editions!inner(week_date)')
-      .ilike('label', ilike)
-      .order('week_date', { referencedTable: 'chart_editions', ascending: false })
-      .order('position', { ascending: true })
-      .limit(24),
+  const [featuredRes, vinylRes] = await Promise.all([
     supabase
       .from('chart_featured_tracks')
       .select('id, title, mix_name, label, artists, chart_editions!inner(week_date)')
@@ -939,7 +883,7 @@ export async function fetchLabelChartLinks(
   ])
 
   return dedupeChartRows(
-    (chartRes.data || []) as unknown as ChartRow[],
+    [],
     (featuredRes.data || []) as unknown as ChartRow[],
     (vinylRes.data || []) as unknown as ChartRow[],
     lang,

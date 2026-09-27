@@ -2309,6 +2309,58 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 101
+    },
+    {
+      "title": "Bazooka",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Borez",
+          "beatport_url": null
+        },
+        {
+          "name": "Dominic B UK",
+          "beatport_url": null
+        }
+      ],
+      "label": "Rebel Bass",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bazooka/29880825",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1a93a6f4-0966-495f-9dab-196355bb7ec5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ab929c57-26e4-412c-9522-2cd637bd8ad0.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102,
+      "spotify_url": "https://open.spotify.com/track/7gyo6268YueWIIGu68fqJR",
+      "tidal_url": "https://tidal.com/browse/track/547599758"
+    },
+    {
+      "title": "Hydra",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "PERCYBASS"
+        }
+      ],
+      "label": "HIGRND",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hydra/29662939",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a8947892-51da-40d2-86eb-9b8974c62e02.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef923c5f-d98a-4d3e-af5f-300915732add.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-08-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103,
+      "spotify_url": "https://open.spotify.com/track/7149TNDpDUIfJNBwmDTO4c"
     }
   ]
 }

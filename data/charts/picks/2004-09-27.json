@@ -1,0 +1,30 @@
+{
+  "week_date": "2004-09-27",
+  "picks": [
+    {
+      "title": "Sweet Harmony",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Liquid",
+          "beatport_url": "https://www.beatport.com/artist/liquid/12345678"
+        }
+      ],
+      "label": "XL Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sweet-harmony/105238",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/45978fb1-3678-4381-ac12-a0d66664086d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/16eadc8a-9256-415d-bb63-6d0a99c32a25.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2004,
+      "release_date": "2004-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/2P79o8njc5X9NbgiGbRwpx",
+      "tidal_url": "https://tidal.com/browse/track/2210043"
+    }
+  ]
+}

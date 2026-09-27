@@ -2034,6 +2034,84 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 90
+    },
+    {
+      "title": "U Give Me Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Supafly, Baauer",
+          "beatport_url": "https://www.beatport.com/artist/supafly/123456"
+        }
+      ],
+      "label": "LUCKYME.",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/u-give-me-love/28353569",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d59eb5b2-ec56-429a-be24-959398261c55.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3cf1acf0-e73d-4e8a-a553-25a145e9e611.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 91,
+      "spotify_url": "https://open.spotify.com/track/3zsX7GhU7sdbGkSmxMhq75",
+      "tidal_url": "https://tidal.com/browse/track/507829738"
+    },
+    {
+      "title": "Down For You (feat. Jyll)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Franky Wah",
+          "beatport_url": "https://www.beatport.com/artist/franky-wah/12345678"
+        },
+        {
+          "name": "Jyll",
+          "beatport_url": "https://www.beatport.com/artist/jyll/12345678"
+        }
+      ],
+      "label": "SHÈN Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/down-for-you-feat-jyll/28681511",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/225e80ea-cdcc-494a-98d4-4dcd702eaf10.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b04dd03e-6e11-4762-a2d9-a2ee80f17878.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92,
+      "spotify_url": "https://open.spotify.com/track/5N0hLKYNwYhTLQsGyLz8As"
+    },
+    {
+      "title": "Excuses",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sennix",
+          "beatport_url": "https://www.beatport.com/artist/sennix/"
+        }
+      ],
+      "label": "No Mercy",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/excuses/28526641",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/725698fd-694c-4162-b17a-8fe6a8b66eb5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a1e39618-3c32-4edd-8786-6a8c093c07f2.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93,
+      "spotify_url": "https://open.spotify.com/track/1NfqYnAHobty5NbrUlYH6U",
+      "tidal_url": "https://tidal.com/browse/track/516514136"
     }
   ]
 }

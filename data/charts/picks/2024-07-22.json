@@ -1,0 +1,30 @@
+{
+  "week_date": "2024-07-22",
+  "picks": [
+    {
+      "title": "Party",
+      "mix_name": "Extended",
+      "artists": [
+        {
+          "name": "Darby",
+          "beatport_url": "https://www.beatport.com/artist/darby/"
+        }
+      ],
+      "label": "NIGHTMODE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/party/19254561",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b7bc122f-cea4-4e10-ae72-4d789080a336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/57d01693-7177-403c-bc77-c17580fc0fdb.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Gb Major",
+      "release_year": 2024,
+      "release_date": "2024-07-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/7JjY69WrRWHtY09Wn9V1tv",
+      "tidal_url": "https://tidal.com/browse/track/374264420"
+    }
+  ]
+}

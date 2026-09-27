@@ -171,7 +171,7 @@
         {
           "href": "/charts",
           "label": "Tracks",
-          "hint": "40 Breaks Vitales, weekly chart"
+          "hint": "New Releases and archive"
         },
         {
           "href": "/scenes",
@@ -577,7 +577,6 @@
     "title": "Have you heard our lists yet?",
     "subtitle": "The Optimal Breaks Charts are your open booth: hit play, dig new gems, save your favourite tracks and help shape the rhythm of the breakbeat scene.",
     "bullets": [
-      "<strong>40 Breaks Vitales</strong> — weekly chart curated from Beatport's Top 100.",
       "<strong>New Releases</strong> — weekly pick of fresh breakbeat drops.",
       "<strong>Archive Picks</strong> — pre-2026 catalogue (vinyl, Beatport and Bandcamp) by year.",
       "<strong>Community Top 100</strong> — the ranking that comes from your saves.",

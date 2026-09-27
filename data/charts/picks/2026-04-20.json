@@ -1637,6 +1637,35 @@
       "note_es": "",
       "sort_order": 71,
       "release_date": "2026-04-25"
+    },
+    {
+      "title": "Raw Flava",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "J Wax",
+          "beatport_url": null
+        },
+        {
+          "name": "Seah",
+          "beatport_url": null
+        }
+      ],
+      "label": "No Instruction",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/raw-flava/28311085",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dca41d87-8b0d-43a0-8550-59fcb0a62c64.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6ded9e42-d230-47ec-9dc9-a8d3535b4548.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72,
+      "spotify_url": "https://open.spotify.com/track/20PUfdaXDjgM8yLpag0SKL",
+      "tidal_url": "https://tidal.com/browse/track/511718787"
     }
   ]
 }

@@ -2818,6 +2818,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 124
+    },
+    {
+      "title": "No Style",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sorza",
+          "beatport_url": "https://www.beatport.com/artist/sorza/12345678"
+        }
+      ],
+      "label": "All The People",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/no-style/29397748",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/39bd2344-8a12-4acc-95f8-5841883434a4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cc30ff54-460e-4829-b4c0-941a86d9af0f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-07-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 125,
+      "spotify_url": "https://open.spotify.com/track/5Fn0HFhZ5Ey1jxrGNTZmHO",
+      "tidal_url": "https://tidal.com/browse/track/534701539"
     }
   ]
 }

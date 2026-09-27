@@ -2261,6 +2261,163 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 98
+    },
+    {
+      "title": "Scut 2",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Rom",
+          "beatport_url": "https://www.beatport.com/artist/rom/123456"
+        },
+        {
+          "name": "Skrillex",
+          "beatport_url": "https://www.beatport.com/artist/skrillex/123456"
+        }
+      ],
+      "label": "OWSLA/Atlantic",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/scut-2/29191179",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/74ff9a30-f54c-4514-9457-915db93e18ce.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d50f96c3-f13e-4d21-82a7-70956d4e26bc.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99,
+      "spotify_url": "https://open.spotify.com/track/2v873M58ZtPMgxply7f11E",
+      "tidal_url": "https://tidal.com/browse/track/530161626"
+    },
+    {
+      "title": "Catch Yourself",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Nuage",
+          "beatport_url": "https://www.beatport.com/artist/nuage/"
+        }
+      ],
+      "label": "Shall Not Fade",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/catch-yourself/28771696",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c13cae7-bc66-45f1-a306-b41a744ae17f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/aa07ccae-b212-4b58-bfb4-fa4d20e96142.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100,
+      "spotify_url": "https://open.spotify.com/track/3KDGYXevCeGXtzTNY8nwU1",
+      "tidal_url": "https://tidal.com/browse/track/520081629"
+    },
+    {
+      "title": "Adrenaline",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hugo Massien",
+          "beatport_url": "https://www.beatport.com/artist/hugo-massien/"
+        }
+      ],
+      "label": "Inexplicable Audio",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/adrenaline/28715506",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/97bb2818-71f7-43f4-9703-5fecc26a946a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2fc4f816-0e9d-4357-9148-9c8fb18d97fb.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101,
+      "spotify_url": "https://open.spotify.com/track/1bm0RZtKcR3zSPbt5RjNLg",
+      "tidal_url": "https://tidal.com/browse/track/528019968"
+    },
+    {
+      "title": "Dre's World",
+      "mix_name": "Makèz Remix",
+      "artists": [
+        {
+          "name": "Detroit Rising",
+          "beatport_url": "https://www.beatport.com/artist/detroit-rising/"
+        },
+        {
+          "name": "Makèz"
+        }
+      ],
+      "label": "Down Jazz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dres-world/28520437",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8db9ccd8-c887-4242-a1f8-9fe69c5b717a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/951f3c9b-fead-4723-b277-c266574bdbdc.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102,
+      "spotify_url": "https://open.spotify.com/track/1RCnQOLFT788IgA72OmsuK",
+      "tidal_url": "https://tidal.com/browse/track/502817868"
+    },
+    {
+      "title": "Electric Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Robert Babicz",
+          "beatport_url": "https://www.beatport.com/artist/robert-babicz/"
+        }
+      ],
+      "label": "Dark Flower",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/electric-love/28683545",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a8ab18c3-a3d0-4fd9-ad02-4255b44433fa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/aa31e27e-2384-43fe-91d6-bc94bfa6b331.LOFI.mp3",
+      "bpm": 120,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103,
+      "spotify_url": "https://open.spotify.com/track/56lbtJ6o6vgVZK66A7dVqk",
+      "tidal_url": "https://tidal.com/browse/track/518865960"
+    },
+    {
+      "title": "Anlecta",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Sound Quelle, Braxton",
+          "beatport_url": "https://www.beatport.com/artist/sound-quelle/123456"
+        }
+      ],
+      "label": "Colorize (Enhanced)",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/anlecta/28882250",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/773f7c55-2b52-4de8-ac8d-dae428378b09.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2e9a3f21-55c6-4087-a8d0-50db7daf6ca6.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104,
+      "spotify_url": "https://open.spotify.com/track/2BCVKorIm9QjX7ipO9IWMv",
+      "tidal_url": "https://tidal.com/browse/track/522190226"
     }
   ]
 }

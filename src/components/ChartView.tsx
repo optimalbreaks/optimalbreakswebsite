@@ -1644,8 +1644,10 @@ export default function ChartView({
       )}
 
       {/* ================================================================ */}
-      {/* SECTION 2 — 40 Breaks Vitales (Beatport chart)                   */}
+      {/* 40 Breaks Vitales: siguen en chart_tracks (saves, ?play=chart:). */}
+      {/* Sep 2026: no se listan en la web pública.                        */}
       {/* ================================================================ */}
+      {false && (
       <section className="mb-12 sm:mb-16">
         <header className="px-4 sm:px-0 mb-6 sm:mb-8">
           <span
@@ -1745,6 +1747,7 @@ export default function ChartView({
           )}
         </div>
       </section>
+      )}
 
       {/* ================================================================ */}
       {/* SECTION 3 — Archive Picks (vinilo + Beatport/Bandcamp < 2026)    */}

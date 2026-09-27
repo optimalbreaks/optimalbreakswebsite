@@ -1,0 +1,80 @@
+{
+  "week_date": "2026-01-19",
+  "picks": [
+    {
+      "title": "Golden dark",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "George D"
+        },
+        {
+          "name": "Dj Guanxe"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records : New School",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/golden-dark/23038316",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/828f56fc-1817-41be-82ab-80d23b273116.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/52455c3b-fb1c-40d5-8cca-f0fef322e476.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Answer All My Prayers",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Nick Smith, Peekaboo, Nitepunk, LYNY, SAYAK DAS",
+          "beatport_url": "https://www.beatport.com/artist/nick-smith-peekaboo-nitepunk-lyny-sayak-das/"
+        }
+      ],
+      "label": "Major Recordings/Warner Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/answer-all-my-prayers/23642943",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77fea7e6-fe2e-40b5-ab68-fa969d472c9b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a4eb0dc0-67bb-4fd4-b846-2e3717fd05ca.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "spotify_url": "https://open.spotify.com/track/5X45P7eCFuyC0Z1OVtRDwB",
+      "tidal_url": "https://tidal.com/browse/track/482832642"
+    },
+    {
+      "title": "Party Time",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Peekaboo",
+          "beatport_url": "https://www.beatport.com/artist/peekaboo/"
+        }
+      ],
+      "label": "Major Recordings/Warner Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/party-time/23642941",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77fea7e6-fe2e-40b5-ab68-fa969d472c9b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/200ef71a-c990-45aa-81df-078079d12569.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "spotify_url": "https://open.spotify.com/track/36CR1ccUVsVdeklVNGa6ag",
+      "tidal_url": "https://tidal.com/browse/track/483165930"
+    }
+  ]
+}

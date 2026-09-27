@@ -103,7 +103,7 @@
         { "href": "/events", "label": "Eventos", "hint": "Agenda y archivo" },
         { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
-        { "href": "/charts", "label": "Tracks", "hint": "40 Breaks Vitales, chart semanal" },
+        { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
         { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
@@ -479,7 +479,6 @@
     "title": "¿Aún no has escuchado nuestras listas?",
     "subtitle": "Los Charts de Optimal Breaks son tu cabina abierta: dale al play, descubre nuevas joyas, guarda tus tracks favoritos y ayuda a marcar el ritmo de la escena breakbeat.",
     "bullets": [
-      "<strong>40 Breaks Vitales</strong> — chart semanal curado del Top 100 de Beatport.",
       "<strong>New Releases</strong> — selección semanal de nuevos lanzamientos.",
       "<strong>Selecciones de archivo</strong> — catálogo anterior a 2026 (vinilo, Beatport y Bandcamp) por año.",
       "<strong>Top 100 de la Comunidad</strong> — el ranking que sale de tus saves.",

@@ -186,6 +186,103 @@
       "note_en": "",
       "note_es": "",
       "release_date": "2026-04-03"
+    },
+    {
+      "title": "How Deep Is Your Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk",
+          "beatport_url": "https://www.beatport.com/artist/brothers-of-funk/"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/how-deep-is-your-love/26915264",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64584937-e9d9-4013-adf0-7fdfebfee499.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5a01c5f8-06ff-4ea7-8fe7-675f74c5960f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9,
+      "spotify_url": "https://open.spotify.com/track/4UQ8yXueUTTs3h7pYRHMKl",
+      "tidal_url": "https://tidal.com/browse/track/532451755"
+    },
+    {
+      "title": "Set sail on another ship",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Chris Stussy",
+          "beatport_url": "https://www.beatport.com/artist/chris-stussy/123456"
+        }
+      ],
+      "label": "Up The Stuss",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/set-sail-on-another-ship/27932581",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/892e590d-cd19-4340-ba04-aa76abadfa4c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/344c973f-e9f8-4d1e-b835-1e4c302d9371.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10,
+      "spotify_url": "https://open.spotify.com/track/35DRfphOlKAqFBkdUACuwZ",
+      "tidal_url": "https://tidal.com/browse/track/502521687"
+    },
+    {
+      "title": "You Are Now Rocking",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "DJ Self",
+          "beatport_url": "https://www.beatport.com/artist/dj-self/123456"
+        }
+      ],
+      "label": "Zone Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/you-are-now-rocking/26931499",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/83cbc7f6-c98e-4686-98a0-cf5fac9fdf8c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d9cc6f89-0a76-4d2d-bf21-9d3c8e420521.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Never Made It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "JDOUBLE",
+          "beatport_url": "https://www.beatport.com/artist/jdouble/123456"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/never-made-it/24378895",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6fddc37a-ae33-440d-bf5e-0a20da9f6f57.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d7323e06-b6be-43b8-b888-7eaed164f6cb.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12,
+      "tidal_url": "https://tidal.com/browse/track/502829396"
     }
   ]
 }

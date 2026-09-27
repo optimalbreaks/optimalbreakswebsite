@@ -1774,6 +1774,57 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 76
+    },
+    {
+      "title": "The Source",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deydad"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-source/27816107",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4f1936f-f033-42be-8997-836a65171b42.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3a1cceb-4bf5-45b4-acd4-d3736241e563.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Feel My Luv",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Keith Mackenzie",
+          "beatport_url": "https://www.beatport.com/artist/keith-mackenzie/12345678"
+        },
+        {
+          "name": "Leona la Cruz",
+          "beatport_url": "https://www.beatport.com/artist/leona-la-cruz/12345678"
+        }
+      ],
+      "label": "Illeven Eleven",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-my-luv/28786834",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8c750214-d0f3-47b4-a15c-80f187aa532d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9b937904-9a5f-43fe-ab44-55818ab926e0.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78,
+      "spotify_url": "https://open.spotify.com/track/36PFbvaPPqsLQMo9mC5xS0",
+      "tidal_url": "https://tidal.com/browse/track/516777484"
     }
   ]
 }

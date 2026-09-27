@@ -2080,6 +2080,33 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 91
+    },
+    {
+      "title": "Higher (Sorza Remix)",
+      "mix_name": "Sorza Remix",
+      "artists": [
+        {
+          "name": "The Glitch Mob",
+          "beatport_url": "https://www.beatport.com/artist/the-glitch-mob/12345678"
+        },
+        {
+          "name": "Sorza"
+        }
+      ],
+      "label": "All The People",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/higher/29381860",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/de8a6113-0410-4e4c-9013-3169b73049da.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/454cd126-e40e-4dab-b713-4cd6361a8944.LOFI.mp3",
+      "bpm": 146,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-06-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92,
+      "spotify_url": "https://open.spotify.com/track/1UxQsESd8BTQtVcWRaWerz"
     }
   ]
 }

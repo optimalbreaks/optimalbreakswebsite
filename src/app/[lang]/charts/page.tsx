@@ -75,7 +75,7 @@ const CHARTS_KEYWORDS: Record<Locale, string[]> = {
     'chart breakbeat semanal',
     'nuevos lanzamientos breakbeat',
     'top breakbeat',
-    '40 Breaks Vitales',
+    'selecciones de archivo breakbeat',
   ],
   en: [
     'online breakbeat radio',
@@ -83,7 +83,7 @@ const CHARTS_KEYWORDS: Record<Locale, string[]> = {
     'weekly breakbeat chart',
     'new breakbeat releases',
     'top breakbeat',
-    '40 Breaks Vitales',
+    'breakbeat archive picks',
   ],
 }
 
@@ -224,12 +224,15 @@ export default async function ChartsPage({
   const dict = await getDictionary(lang)
   const supabase = chartsSupabase()
 
+  // Todas las ediciones de 2026: New Releases vive ahí. Sin tope de 52,
+  // porque al meter semanas históricas de 2026 el corte dejaría fuera
+  // lunes ya publicados. El archivo (week_date < 2026) va en la query de abajo.
   const { data: editionsRaw } = await supabase
     .from('chart_editions')
     .select('*')
     .eq('is_published', true)
+    .gte('week_date', CHARTS_EDITORIAL_START)
     .order('week_date', { ascending: false })
-    .limit(52)
 
   const editions = (editionsRaw as ChartEdition[] | null) ?? []
   const editionIds = editions.map((e) => e.id)

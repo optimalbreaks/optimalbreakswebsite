@@ -1,0 +1,76 @@
+{
+  "week_date": "2026-03-09",
+  "picks": [
+    {
+      "title": "Piscis",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Cude"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/piscis/23948289",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b6f9c02b-1249-40d8-b864-a64b37c5905d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f55c0127-fa70-45dc-bd8d-01f0d9e175af.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Deal With The Matter",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dub Elements",
+          "beatport_url": "https://www.beatport.com/artist/dub-elements/12345678"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/deal-with-the-matter/23947293",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d79c0159-e208-4bac-a0f3-be8982e56061.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0ef92a07-7096-45d7-86a3-8709c87bac21.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "spotify_url": "https://open.spotify.com/track/3imvfPfoNAw2Cdtk5O83GA",
+      "tidal_url": "https://tidal.com/browse/track/495388185"
+    },
+    {
+      "title": "Smurf Banger",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/artist/ondamike/12345678"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/smurf-banger/23705886",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2089ae4d-f37d-4727-b71c-3660b2094bf4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9645a468-f344-4489-9b70-cdf8ed8b8313.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "spotify_url": "https://open.spotify.com/track/4I3nS9EAQvjo5NmLVS9uB0"
+    }
+  ]
+}

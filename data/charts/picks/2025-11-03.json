@@ -1,0 +1,30 @@
+{
+  "week_date": "2025-11-03",
+  "picks": [
+    {
+      "title": "De Moma",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Raredub",
+          "beatport_url": "https://www.beatport.com/artist/raredub/"
+        }
+      ],
+      "label": "Steel City Dance Discs",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/de-moma/22296446",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/477e0700-5ff8-4079-804a-94ab2aff9d9e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8dd6f14b-287f-47f8-a6a4-11eff4b84d55.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/6ec9rAyv9Jj3jQMma4Zn70",
+      "tidal_url": "https://tidal.com/browse/track/468005920"
+    }
+  ]
+}

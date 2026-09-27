@@ -1,0 +1,30 @@
+{
+  "week_date": "2024-10-21",
+  "picks": [
+    {
+      "title": "Arachnids",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Disclosure",
+          "beatport_url": "https://www.beatport.com/artist/disclosure/"
+        }
+      ],
+      "label": "Warehouse Project Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/arachnids/19596144",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/388c3107-d749-4214-b113-b7448b1cfebf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/22d98a06-7d6f-4d68-805a-960a4ea152c0.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-10-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/4j3EJMATYxJ4ftJbVeAFWu",
+      "tidal_url": "https://tidal.com/browse/track/391205216"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "week_date": "2025-09-15",
+  "picks": [
+    {
+      "title": "Fool Me Twice",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bakey"
+        }
+      ],
+      "label": "Warehouse Project Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fool-me-twice/21560055",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b33d4644-1f17-461a-b406-bfcda091c2a7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/15ccae37-f04a-45ff-a7a5-dffa5a00e206.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/7JClWYi1C90K4OmS9TyJ6V",
+      "tidal_url": "https://tidal.com/browse/track/458549718"
+    }
+  ]
+}

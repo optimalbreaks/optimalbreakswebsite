@@ -1933,6 +1933,133 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 85
+    },
+    {
+      "title": "Tronik Rave",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Unknown Artist",
+          "beatport_url": "https://www.beatport.com/artist/unknown-artist/28596"
+        }
+      ],
+      "label": "Rave 2 The Grave",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tronik-rave/29297707",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b2bc2cf6-562b-4a23-a1fe-5a9e213388e7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/348f4370-8ae1-4bb5-a349-7b1d053d32f6.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86,
+      "tidal_url": "https://tidal.com/browse/track/532668946"
+    },
+    {
+      "title": "Little Lies",
+      "mix_name": "2026 Breakbeat Mix",
+      "artists": [
+        {
+          "name": "Ondamike",
+          "beatport_url": "https://www.beatport.com/artist/ondamike/201484"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/little-lies/29347623",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/73fedbc9-eef6-49e9-ada4-14eb001bd7e9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b9b37e1b-7c5e-4d22-a9cc-9406813f54e6.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Make Me",
+      "mix_name": "Original mix",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/998525"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me/29657549",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f1080f07-c09a-424a-b102-e34fb0204ed6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d418497e-6991-4075-a81f-f5aa0a5a5d59.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88,
+      "spotify_url": "https://open.spotify.com/track/5DXq55rpsgjzY5wyBzBuSb"
+    },
+    {
+      "title": "Sweet Faith",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dream Frequency",
+          "beatport_url": null
+        },
+        {
+          "name": "K69",
+          "beatport_url": null
+        }
+      ],
+      "label": "Cleveland City",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sweet-faith/29578024",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/54c7f6c9-34af-4016-a843-f663eefeb752.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d47d6b40-95a2-4045-8537-8d87166c4c21.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89,
+      "spotify_url": "https://open.spotify.com/track/57NeBVejuI2rQXAUev7Wit",
+      "tidal_url": "https://tidal.com/browse/track/539498930"
+    },
+    {
+      "title": "Make Me",
+      "mix_name": "Devis Hard remix",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/998525"
+        },
+        {
+          "name": "Devis Hard"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me/29657550",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f1080f07-c09a-424a-b102-e34fb0204ed6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6559af25-4535-49fc-8642-93f8cae8d8fb.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90,
+      "spotify_url": "https://open.spotify.com/track/1Wk4BY089NfVWafK4rr1uG"
     }
   ]
 }

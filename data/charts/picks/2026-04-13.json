@@ -1305,6 +1305,56 @@
       "note_es": "",
       "sort_order": 57,
       "release_date": "2026-04-16"
+    },
+    {
+      "title": "Dance 85",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Terenti G",
+          "beatport_url": "https://www.beatport.com/artist/terenti-g/12345678"
+        }
+      ],
+      "label": "Close Your Eyes",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dance-85/26903198",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2b03ec53-fb61-4e3d-96c3-e4306a87dade.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fc1b1602-8482-453c-81e4-560a5c2a33f3.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58,
+      "spotify_url": "https://open.spotify.com/track/2qWrQyIzneVuDzxG8pm4KR",
+      "tidal_url": "https://tidal.com/browse/track/514135560"
+    },
+    {
+      "title": "Feel It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Loosid",
+          "beatport_url": "https://www.beatport.com/artist/loosid/12345678"
+        }
+      ],
+      "label": "Create Music Group",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-it/28303401",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7864e16c-4fc9-4abc-b010-55dd15e567f8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e2e2340c-1bea-4443-a62e-a5aeef5f12ce.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59,
+      "spotify_url": "https://open.spotify.com/track/6zCJzA8UAEaGy2gNDuwOzh",
+      "tidal_url": "https://tidal.com/browse/track/511548938"
     }
   ]
 }

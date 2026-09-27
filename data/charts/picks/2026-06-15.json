@@ -2379,6 +2379,55 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 105
+    },
+    {
+      "title": "Circle of Light",
+      "mix_name": "feat. Antony Szmierek",
+      "artists": [
+        {
+          "name": "Because of Art",
+          "beatport_url": "https://www.beatport.com/artist/because-of-art/"
+        }
+      ],
+      "label": "Stress Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/circle-of-light-feat-antony-szmierek/29022311",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8a6bc790-9119-49bd-b9fb-fb92625dd700.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b6dfb1f7-1c28-4f0a-bc28-2511bc852eb8.LOFI.mp3",
+      "bpm": 111,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-06-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106,
+      "spotify_url": "https://open.spotify.com/track/6a6ui28fBRRlc0TcdXoIbM",
+      "tidal_url": "https://tidal.com/browse/track/438491094"
+    },
+    {
+      "title": "Ducko",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bowser"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ducko/28892804",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e2ccadfe-fd7b-45b7-a9dd-ff362229fdab.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d26f7349-98ef-42bc-be39-01be4c9ee5b2.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107,
+      "spotify_url": "https://open.spotify.com/track/5Huiwm0o4106HwpTcnaBvD",
+      "tidal_url": "https://tidal.com/browse/track/535500029"
     }
   ]
 }

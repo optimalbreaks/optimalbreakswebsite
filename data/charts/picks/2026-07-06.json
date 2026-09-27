@@ -2341,6 +2341,180 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 103
+    },
+    {
+      "title": "Dizzy & Hollow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dizzy-hollow/29179946",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/751ad5a7-8d24-42ba-a461-8601d4e17e77.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6b7307dd-b6aa-4542-b1f8-478a01aded47.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104,
+      "spotify_url": "https://open.spotify.com/track/5V1ehluy3Dwch8v9XUlNH7",
+      "tidal_url": "https://tidal.com/browse/track/539057706"
+    },
+    {
+      "title": "Rapture",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk",
+          "beatport_url": "https://www.beatport.com/artist/brothers-of-funk/12345678"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rapture/29209270",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/456ad51a-a753-49d3-bf80-0849ea76211a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b05cffb4-e0cf-477d-a12a-bc4651c7d08f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105,
+      "spotify_url": "https://open.spotify.com/track/62CkblDidzNZyHM4dGCh9i",
+      "tidal_url": "https://tidal.com/browse/track/532451754"
+    },
+    {
+      "title": "How Deep Is Your Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Brothers Of Funk",
+          "beatport_url": "https://www.beatport.com/artist/brothers-of-funk/12345678"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/how-deep-is-your-love/29209271",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/456ad51a-a753-49d3-bf80-0849ea76211a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a41811bf-07f3-4eaa-b9c4-2d40f453bc15.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106,
+      "spotify_url": "https://open.spotify.com/track/4UQ8yXueUTTs3h7pYRHMKl",
+      "tidal_url": "https://tidal.com/browse/track/532451755"
+    },
+    {
+      "title": "Vision Mission",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Raxon",
+          "beatport_url": "https://www.beatport.com/artist/raxon/100975"
+        }
+      ],
+      "label": "Lone Romantic",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/vision-mission/29131905",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/18477e21-daae-4049-beb1-9e87520d415c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/32859c00-6277-4d65-a3b8-f4372afc07a3.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107,
+      "spotify_url": "https://open.spotify.com/track/2xYo5luVam4WS95449IPmJ",
+      "tidal_url": "https://tidal.com/browse/track/528979465"
+    },
+    {
+      "title": "Life's Too Short",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hot Since 82",
+          "beatport_url": "https://www.beatport.com/artist/hot-since-82/29450514"
+        }
+      ],
+      "label": "Knee Deep In Sound",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lifes-too-short/29450514",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26b574db-67c2-4f75-92be-c0626eeafafa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e1bab1dc-2d2a-4246-ac2d-1cac530cb8f4.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 108,
+      "spotify_url": "https://open.spotify.com/track/4g0kbbdXakIB8hZIyibxUL",
+      "tidal_url": "https://tidal.com/browse/track/535839923"
+    },
+    {
+      "title": "Liquid Reflections",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Yo Speed",
+          "beatport_url": "https://www.beatport.com/artist/yo-speed/29179949"
+        }
+      ],
+      "label": "N/A",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/liquid-reflections/29179949",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/751ad5a7-8d24-42ba-a461-8601d4e17e77.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3db11c19-6b7b-47cd-a866-418066e5ce4b.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 109,
+      "spotify_url": "https://open.spotify.com/track/7C7nwYFcihw6BHC31oVvvK",
+      "tidal_url": "https://tidal.com/browse/track/539057713"
+    },
+    {
+      "title": "Higher & Faster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FM-3",
+          "beatport_url": null
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/higher-faster/29167312",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5052ee9b-0bc3-491e-ad95-fca1e8538b67.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4dea44a9-49a7-4b4c-98ab-c2a8281d1597.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 110,
+      "spotify_url": "https://open.spotify.com/track/6yX28ayf9PWliviMatwZf1",
+      "tidal_url": "https://tidal.com/browse/track/538568744"
     }
   ]
 }

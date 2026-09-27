@@ -1,0 +1,80 @@
+{
+  "week_date": "2026-03-02",
+  "picks": [
+    {
+      "title": "Higher",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kaan Duzarat",
+          "beatport_url": "https://www.beatport.com/artist/kaan-duzarat/"
+        }
+      ],
+      "label": "Bounce TR",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/higher/24202091",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a6b783cc-8137-49dc-9753-ec49eb43445e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/83059069-6817-427c-aafc-e887756fa796.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/1T30Wzo3VuxPTGjTXZQVho",
+      "tidal_url": "https://tidal.com/browse/track/498785467"
+    },
+    {
+      "title": "This Is The Way",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Sidney Charles",
+          "beatport_url": "https://www.beatport.com/artist/sidney-charles/12345678"
+        }
+      ],
+      "label": "Factory 93 Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/this-is-the-way/23273401",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a3a2779a-41a3-4f4d-8550-98063f62ff39.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9db32be1-e538-4e64-bd6b-b56783904f50.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "spotify_url": "https://open.spotify.com/track/3CM7e7Hwqk3144p0jS8P9p",
+      "tidal_url": "https://tidal.com/browse/track/486609496"
+    },
+    {
+      "title": "Pixels In The Dark",
+      "mix_name": "Extended Club Mix",
+      "artists": [
+        {
+          "name": "DJ Icey",
+          "beatport_url": "https://www.beatport.com/artist/dj-icey/12345678"
+        }
+      ],
+      "label": "Zone Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pixels-in-the-dark/26856072",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1ed35e8a-3d22-425b-a40c-ed4c30a68f2a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/076ccbcd-b494-4eed-b748-cc26bc6f0a5f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Db Major",
+      "release_year": 2026,
+      "release_date": "2026-03-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "spotify_url": "https://open.spotify.com/track/7ipsAnCHtpj7yzhZQAyKHS",
+      "tidal_url": "https://tidal.com/browse/track/505151622"
+    }
+  ]
+}

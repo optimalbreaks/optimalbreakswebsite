@@ -2288,6 +2288,85 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 101
+    },
+    {
+      "title": "Baby Monster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Maceo Plex",
+          "beatport_url": "https://www.beatport.com/artist/maceo-plex/119538"
+        },
+        {
+          "name": "Baby Monsta",
+          "beatport_url": "https://www.beatport.com/artist/baby-monsta/2409783"
+        }
+      ],
+      "label": "Rekids",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/baby-monster/30076247",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db1ad385-5bc1-44ab-a212-80ac2ba3d72a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/81c2d80a-5fef-4628-b964-737f47e00b5f.LOFI.mp3",
+      "bpm": 83,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102,
+      "spotify_url": "https://open.spotify.com/track/27QsM8TFfgiuop3vXv7Hib",
+      "tidal_url": "https://tidal.com/browse/track/548817790"
+    },
+    {
+      "title": "Flute Jam",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Maceo Plex",
+          "beatport_url": "https://www.beatport.com/artist/maceo-plex/119538"
+        }
+      ],
+      "label": "Rekids",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flute-jam/30076246",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db1ad385-5bc1-44ab-a212-80ac2ba3d72a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4c7f7e11-b712-4e88-9ec0-c08f0ef09bab.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103,
+      "spotify_url": "https://open.spotify.com/track/0xn4wZDwzzzguXzjoDbCJ1",
+      "tidal_url": "https://tidal.com/browse/track/548817789"
+    },
+    {
+      "title": "Cold Flow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Maceo Plex",
+          "beatport_url": "https://www.beatport.com/artist/maceo-plex/119538"
+        }
+      ],
+      "label": "Rekids",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cold-flow/30076248",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db1ad385-5bc1-44ab-a212-80ac2ba3d72a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/375e480f-d69c-4eab-b7cc-b0b5c01fa8e7.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-08-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104,
+      "spotify_url": "https://open.spotify.com/track/6w7kELuk1gc0Ed63fwKSBB",
+      "tidal_url": "https://tidal.com/browse/track/548817791"
     }
   ]
 }

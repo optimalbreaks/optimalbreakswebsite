@@ -1,0 +1,29 @@
+{
+  "week_date": "2025-03-03",
+  "picks": [
+    {
+      "title": "Handle With Care",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Conducta"
+        }
+      ],
+      "label": "Conducta",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/handle-with-care/20171745",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4e1ec3a8-4711-44b0-bbfc-ad62c603fefa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2f4e6b61-2de9-4635-9a57-50c72c1fa985.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/4zfgGrMsGjveZJbp5Id7qX",
+      "tidal_url": "https://tidal.com/browse/track/418653992"
+    }
+  ]
+}

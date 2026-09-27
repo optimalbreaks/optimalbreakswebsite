@@ -1353,6 +1353,212 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 60
+    },
+    {
+      "title": "We're Not Alone",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Nero"
+        },
+        {
+          "name": "Taiki Nulight"
+        },
+        {
+          "name": "Emily Makis"
+        }
+      ],
+      "label": "UKF",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/were-not-alone/29615768",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/84056b3d-8d07-4eca-b30a-85bdfb43429b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0ab3629c-8eea-4028-9a32-38e6c405eebf.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "Digital single on UKF (UKF309, July 2026) — Nero and Taiki Nulight reunite on a breaks-leaning cut with Emily Makis, following their rework of Innocence.",
+      "note_es": "Single digital en UKF (UKF309, julio 2026) — Nero y Taiki Nulight se reúnen en un corte con veta breaks y voz de Emily Makis, tras su rework of Innocence.",
+      "sort_order": 61
+    },
+    {
+      "title": "Make Me",
+      "mix_name": "(Urso (SP) remix)",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/29916304"
+        },
+        {
+          "name": "Urso (SP)"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me/29916304",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/02d5db98-02a3-4adf-95e2-cc4c2c987847.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/75eab5a8-eb82-46cb-8c1f-1627516beae6.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62,
+      "spotify_url": "https://open.spotify.com/track/1JiyU60aaUYg3NhLq9Botr"
+    },
+    {
+      "title": "Devil",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Joe Allen (UK)",
+          "beatport_url": "https://www.beatport.com/artist/joe-allen-uk/1463963"
+        }
+      ],
+      "label": "HOUSE RULES RECORDS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/devil/29609619",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/59c092a8-83c2-414d-9104-1adfdc6c89a3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9dfb7590-a565-42a1-bf76-0c69fcdc6e30.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63,
+      "spotify_url": "https://open.spotify.com/track/4OpdquYcCysdcFji3qe5Y2"
+    },
+    {
+      "title": "You Had It",
+      "mix_name": "Rasco & DJ Jonay Remix",
+      "artists": [
+        {
+          "name": "Dope Ammo"
+        },
+        {
+          "name": "Rasco"
+        },
+        {
+          "name": "Elisabeth Troy"
+        },
+        {
+          "name": "DJ Jonay"
+        },
+        {
+          "name": "Kleu"
+        }
+      ],
+      "label": "Dope Ammo",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/you-had-it/29957859",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2a475cdc-121a-4b4f-bbf1-45f4797037d2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/51cdba67-3b7f-4f43-8d4e-dd76d6a8cfd0.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64,
+      "spotify_url": "https://open.spotify.com/track/0Xa40GxNOta7eMVNAq7hoX",
+      "tidal_url": "https://tidal.com/browse/track/546808485"
+    },
+    {
+      "title": "Make Me",
+      "mix_name": "(Amber Jane remix)",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/29916301"
+        },
+        {
+          "name": "Amber Jane"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me/29916301",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/02d5db98-02a3-4adf-95e2-cc4c2c987847.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4d7b895a-ee2d-47fe-a836-629a78915df2.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65,
+      "spotify_url": "https://open.spotify.com/track/1JiyU60aaUYg3NhLq9Botr"
+    },
+    {
+      "title": "Low Down Deep",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hypho",
+          "beatport_url": null
+        },
+        {
+          "name": "PAV4N",
+          "beatport_url": null
+        },
+        {
+          "name": "Neumonic",
+          "beatport_url": null
+        },
+        {
+          "name": "Who Knew",
+          "beatport_url": null
+        }
+      ],
+      "label": "Night Bass Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/low-down-deep/29867224",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/07194158-810a-4636-8345-3a22170b7465.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3ca5c896-bf0e-4c65-a900-eebacf61099e.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66,
+      "spotify_url": "https://open.spotify.com/track/0Y7h77kGDEpjcufAwFv3w9",
+      "tidal_url": "https://tidal.com/browse/track/545225776"
+    },
+    {
+      "title": "Make Me",
+      "mix_name": "(Dj Brownie remix)",
+      "artists": [
+        {
+          "name": "SluG (FL)",
+          "beatport_url": "https://www.beatport.com/artist/slug-fl/29916302"
+        },
+        {
+          "name": "Dj Brownie"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me/29916302",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/02d5db98-02a3-4adf-95e2-cc4c2c987847.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50abf107-3875-4df2-b350-4070f0f0b8b1.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67,
+      "spotify_url": "https://open.spotify.com/track/1JiyU60aaUYg3NhLq9Botr"
     }
   ]
 }

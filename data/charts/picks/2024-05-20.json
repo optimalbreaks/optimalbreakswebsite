@@ -1,0 +1,29 @@
+{
+  "week_date": "2024-05-20",
+  "picks": [
+    {
+      "title": "Low Rider",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Hatori Hanso"
+        }
+      ],
+      "label": "Pilot (UK)",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/low-rider/18938434",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/01d91b75-83ef-4bea-b775-9bd137b1316d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ff4e6dd3-abc0-424f-83d5-1f82dbb3f3aa.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1,
+      "spotify_url": "https://open.spotify.com/track/7bGPBupGapPGzqGJAsQ7UG",
+      "tidal_url": "https://tidal.com/browse/track/363296741"
+    }
+  ]
+}
