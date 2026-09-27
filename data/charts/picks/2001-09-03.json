@@ -1,0 +1,27 @@
+{
+  "week_date": "2001-09-03",
+  "picks": [
+    {
+      "title": "Club Shaker",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Atomic Hooligan"
+        }
+      ],
+      "label": "Botchit & Scarper",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/club-shaker/5258738",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e09093fd-5461-4213-b566-4e039afd4139.png",
+      "sample_url": "https://geo-samples.beatport.com/track/3a9b835f-aab1-4c65-b8e1-47de5eaf5110.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "G Minor",
+      "release_year": 2001,
+      "release_date": "2001-09-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}
