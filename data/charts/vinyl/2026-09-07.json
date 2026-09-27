@@ -202,6 +202,151 @@
       "artwork_url": "https://i.ytimg.com/vi/1OuPM1rs9zs/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 13,
+      "title": "Peace",
+      "mix_name": "BSD Remix",
+      "artists": [
+        {
+          "name": "Depeche Mode"
+        },
+        {
+          "name": "BSD"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2010,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=njvzRGeVG44",
+      "artwork_url": "https://i.ytimg.com/vi/njvzRGeVG44/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 14,
+      "title": "Backchat",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Atomic Hooligan"
+        }
+      ],
+      "label": "2S2",
+      "catalog_number": "2S2 007",
+      "year": 2002,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/158782-Atomic-Hooligan-Dreams-Of-Life-Backchat",
+      "youtube_url": "https://www.youtube.com/watch?v=etuuJFSyvVs",
+      "artwork_url": "https://i.ytimg.com/vi/etuuJFSyvVs/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 15,
+      "title": "Reverendo",
+      "mix_name": "Deep Impact Remix",
+      "artists": [
+        {
+          "name": "Peter Paul"
+        },
+        {
+          "name": "Deep Impact"
+        }
+      ],
+      "label": "Lot49",
+      "catalog_number": "LOT49016",
+      "year": 2006,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/699689-Peter-Paul-Reverendo",
+      "youtube_url": "https://www.youtube.com/watch?v=zTXwaX8koRU",
+      "artwork_url": "https://i.ytimg.com/vi/zTXwaX8koRU/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 16,
+      "title": "Kalma",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "DJ Isy"
+        }
+      ],
+      "label": "Spanish Breakz Recordings",
+      "catalog_number": "SPBR001",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/325434-DJ-Isy-Thanke-Kalma",
+      "youtube_url": "https://www.youtube.com/watch?v=-tFhaCYtQU4",
+      "artwork_url": "https://i.ytimg.com/vi/-tFhaCYtQU4/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 17,
+      "title": "Co-Nun-Drum",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Creative Invasion Collective"
+        }
+      ],
+      "label": "Boom Box Records",
+      "catalog_number": "BBR 08",
+      "year": 2000,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/104488-Creative-Invasion-Collective-Co-Nun-Drum-Broccoli",
+      "youtube_url": "https://www.youtube.com/watch?v=vLZobbhWIVM",
+      "artwork_url": "https://i.ytimg.com/vi/vLZobbhWIVM/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 18,
+      "title": "Seven of Mine",
+      "mix_name": "Skool of Thought Mix",
+      "artists": [
+        {
+          "name": "Echoic"
+        },
+        {
+          "name": "Ransom"
+        },
+        {
+          "name": "Skool of Thought"
+        }
+      ],
+      "label": "Supercharged",
+      "catalog_number": "001",
+      "year": 2002,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=vVg5qXYE3mA",
+      "artwork_url": "https://i.ytimg.com/vi/vVg5qXYE3mA/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 19,
+      "title": "Rock This Place",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "General Midi"
+        }
+      ],
+      "label": "Distinct'ive Records",
+      "catalog_number": "DISNCD156",
+      "year": 2005,
+      "format": "CD",
+      "discogs_url": "https://www.discogs.com/release/550951-General-Midi-Midi-Style",
+      "youtube_url": "https://www.youtube.com/watch?v=qhpvpFhgSnw",
+      "artwork_url": "https://i.ytimg.com/vi/qhpvpFhgSnw/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

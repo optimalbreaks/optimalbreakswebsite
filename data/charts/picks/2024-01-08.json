@@ -1,0 +1,30 @@
+{
+  "week_date": "2024-01-08",
+  "picks": [
+    {
+      "title": "Clown Town",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Shade K"
+        },
+        {
+          "name": "Bad Legs"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/clown-town/18514873",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c1da285-1fbb-46b7-982f-a64d63032931.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/76de67ce-c90e-4f12-8671-239f2dc1b000.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2024,
+      "release_date": "2024-01-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

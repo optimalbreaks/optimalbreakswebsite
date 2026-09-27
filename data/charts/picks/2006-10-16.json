@@ -1,0 +1,27 @@
+{
+  "week_date": "2006-10-16",
+  "picks": [
+    {
+      "title": "Jump N Twist",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Freestylers"
+        }
+      ],
+      "label": "Altra Moda",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jump-n-twist/7422217",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1c6f321b-ebee-4d4b-9f26-7b27ed8770bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f93a1bff-5110-484d-9ced-91fb39c34f7a.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2006,
+      "release_date": "2006-10-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

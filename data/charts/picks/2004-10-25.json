@@ -1,0 +1,27 @@
+{
+  "week_date": "2004-10-25",
+  "picks": [
+    {
+      "title": "Kick It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Breakfastaz"
+        }
+      ],
+      "label": "Mob",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kick-it/18191",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/370ce8ae-127f-494e-9690-6ed888a1b0b3.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Major",
+      "release_year": 2004,
+      "release_date": "2004-10-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

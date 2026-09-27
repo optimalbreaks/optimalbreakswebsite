@@ -1,0 +1,27 @@
+{
+  "week_date": "2024-01-15",
+  "picks": [
+    {
+      "title": "Cyborg",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sans"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cyborg/18471531",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f1b13996-e8be-4360-bee7-d1a5ff1630b3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0f71fc04-8591-4755-97dd-79c57e9e201e.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-01-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

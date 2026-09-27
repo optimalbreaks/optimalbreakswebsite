@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-05-26",
+  "picks": [
+    {
+      "title": "Bring It Back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sans"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bring-it-back/20422662",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d7c32792-4771-48c6-9a5d-4555e9e3ece4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/067250c5-f699-4dea-aca1-629349984b4b.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}
