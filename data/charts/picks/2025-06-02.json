@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-06-02",
+  "picks": [
+    {
+      "title": "Dark Storm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Nosk"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-storm/20438663",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ef23791e-830e-4de2-9b90-d89a2f497a2b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98212f2f-932a-4414-82ca-5ea9a5a231c9.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-06-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -391,6 +391,25 @@
       "artwork_url": "https://i.ytimg.com/vi/k0bS4BKMMJE/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 22,
+      "title": "Street Schit",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Factor E"
+        }
+      ],
+      "label": "20K Freaks Recordings",
+      "catalog_number": "20k",
+      "year": 2003,
+      "format": "CD",
+      "discogs_url": "https://www.discogs.com/release/171251-Factor-E-Direct",
+      "youtube_url": "https://www.youtube.com/watch?v=avUbiMypdEs",
+      "artwork_url": "https://i.ytimg.com/vi/avUbiMypdEs/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
