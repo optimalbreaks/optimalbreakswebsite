@@ -1,11 +1,11 @@
 ---
-description: Umbrales para descubrir artistas/sellos desde 40 Breaks + New Releases
+description: Umbrales para descubrir artistas/sellos desde filas históricas de chart_tracks + New Releases
 alwaysApply: true
 ---
 
 # Charts → catálogo (artistas y sellos)
 
-Fuente: ediciones **publicadas** de **`chart_tracks`** (40 Breaks Vitales) + **`chart_featured_tracks`** (New Releases). **No** usar Retro Vinyl (`chart_vinyl_tracks`) para estos umbrales.
+Fuente: ediciones **publicadas** de **`chart_tracks`** (40 Breaks Vitales: filas históricas; la lista ya no es pública desde el 27 sep 2026) + **`chart_featured_tracks`** (New Releases y archivo digital). **No** usar el archivo YouTube (`chart_vinyl_tracks`) para estos umbrales.
 
 ## Artistas — umbral ≥ 3
 

@@ -47,7 +47,7 @@ El UPSERT de NR **actualiza** por `link_url`; **no** borra e inserta el mismo pi
 
 ## YouTube (archivo) — no sustituye NR
 
-Si el mismo tema está en Beatport, **no** darlo de alta en `chart_vinyl_tracks` por YouTube: usar esta vía (featured). Detalle: **`.cursor/rules/charts-youtube-vs-beatport.mdc`**.
+Si el mismo tema está en Beatport o Bandcamp, **no** darlo de alta en `chart_vinyl_tracks` por YouTube: usar `chart_featured_tracks` (New Releases si el release es de 2026 en adelante; archivo por año si es anterior). Detalle: **`.cursor/rules/charts-youtube-vs-beatport.mdc`**.
 
 ## Referencia rápida
 
