@@ -4377,6 +4377,259 @@ async function runPatchDeeklineIronCowOrlando2026(sb) {
   console.log('[patch-deekline-iron-cow-orlando-2026] OK:', after)
 }
 
+const HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_SLUG =
+  'heritage-king-of-the-beats-birmingham-2026'
+const HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_SKIDDLE =
+  'https://www.skiddle.com/whats-on/Birmingham/Hare-And-Hounds-Kings-Heath/Heritage-presents-FaithFoundations-and-King-of-the-BeatsMORE/42342999/'
+const HARE_AND_HOUNDS_WEB = 'https://www.hareandhoundskingsheath.co.uk/'
+
+const HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_STAGES = [
+  {
+    name: 'King of the Beats',
+    description_en: 'Breaks room. Skiddle listing 42342999.',
+    description_es: 'Sala de breaks. Ficha Skiddle 42342999.',
+    lineup: [
+      'Krafty Kuts',
+      'Plump DJs',
+      'Freestylers',
+      'DJ SS',
+      'Mistress Mo',
+      'Chris Wyatt',
+      'Alex Hammond',
+    ],
+  },
+  {
+    name: 'Faith',
+    description_en: 'House and club classics room.',
+    description_es: 'Sala de house y clásicos de club.',
+    lineup: [
+      'Terry Farley',
+      'Dave Jarvis',
+      'Stuart Patterson',
+      'Neil Rushton',
+      'Wade Teo B2B Alex Hammond',
+    ],
+  },
+]
+
+const HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_LINEUP = [
+  'Krafty Kuts',
+  'Plump DJs',
+  'Freestylers',
+  'DJ SS',
+  'Mistress Mo',
+  'Chris Wyatt',
+  'Alex Hammond',
+  'Terry Farley',
+  'Dave Jarvis',
+  'Stuart Patterson',
+  'Neil Rushton',
+  'Wade Teo',
+]
+
+const HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_ROW = {
+  name: 'Heritage presents: Faith & King of the Beats',
+  description_en:
+    'Heritage returns to Hare & Hounds, Kings Heath, on Saturday 7 November 2026 with two rooms: King of the Beats (Krafty Kuts, Plump DJs, Freestylers, DJ SS, Mistress Mo, Chris Wyatt, Alex Hammond) and Faith (Terry Farley, Dave Jarvis, Stuart Patterson, Neil Rushton, Wade Teo B2B Alex Hammond). Doors 21:00, last entry 01:00, close 02:00. 18+. Address 106 High Street, Kings Heath, Birmingham B14 7JZ. Tickets on Skiddle (listing 42342999), from about £14.',
+  description_es:
+    'Heritage vuelve al Hare & Hounds de Kings Heath el sábado 7 de noviembre de 2026 con dos salas: King of the Beats (Krafty Kuts, Plump DJs, Freestylers, DJ SS, Mistress Mo, Chris Wyatt, Alex Hammond) y Faith (Terry Farley, Dave Jarvis, Stuart Patterson, Neil Rushton, Wade Teo B2B Alex Hammond). Apertura 21:00, último acceso 01:00, cierre 02:00. +18. Dirección 106 High Street, Kings Heath, Birmingham B14 7JZ. Entradas en Skiddle (ficha 42342999), desde unas 14 £.',
+  event_type: 'club_night',
+  date_start: '2026-11-07',
+  date_end: null,
+  location: 'Hare & Hounds, Kings Heath, Birmingham, United Kingdom',
+  city: 'Birmingham',
+  country: 'United Kingdom',
+  venue: 'Hare & Hounds',
+  address: '106 High Street, Kings Heath, Birmingham B14 7JZ',
+  website: HARE_AND_HOUNDS_WEB,
+  tickets_url: HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_SKIDDLE,
+  lineup: HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_LINEUP,
+  stages: HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_STAGES,
+  tags: [
+    'heritage',
+    'king of the beats',
+    'krafty kuts',
+    'plump djs',
+    'freestylers',
+    'hare and hounds',
+    'birmingham',
+    'kings heath',
+    'breakbeat',
+    'breaks',
+    'house',
+    '2026',
+    'skiddle',
+    'united kingdom',
+  ],
+  socials: {
+    'Hare & Hounds': HARE_AND_HOUNDS_WEB,
+    Skiddle: HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_SKIDDLE,
+  },
+  age_restriction: '18+',
+  doors_open: '21:00',
+  doors_close: '02:00',
+  coords: { lat: 52.4353506, lng: -1.8927483 },
+}
+
+async function runPatchHeritageKingOfTheBeatsBirmingham2026(sb) {
+  const row = {
+    slug: HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url')
+    .eq('slug', HERITAGE_KING_OF_THE_BEATS_BIRMINGHAM_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-heritage-king-of-the-beats-birmingham-2026] OK:', after)
+}
+
+const HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_SLUG = 'hindsight-fright-night-taunton-2026'
+const HINDSIGHT_FRIGHT_NIGHT_TAUNTON_SKIDDLE =
+  'https://www.skiddle.com/whats-on/Taunton/Labyrinth/Hindsights-27th-Birthday---Fright-Night/42596837/'
+
+const HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_STAGES = [
+  {
+    name: 'King of the Beats',
+    description_en:
+      'Downstairs. CrashThe90s presents King of the Beats. Skiddle listing 42596837.',
+    description_es:
+      'Abajo. CrashThe90s presenta King of the Beats. Ficha Skiddle 42596837.',
+    lineup: [
+      'Plump DJs',
+      'Krafty Kuts',
+      'Freestylers',
+      'Creature Craig',
+      'Dave Moore',
+      "Joe 'Freeze' Taylor",
+      'Che & Leona Funk',
+      'Frankie',
+      'Danny Manning',
+    ],
+  },
+  {
+    name: 'Hindsight',
+    description_en:
+      'Upstairs: hard dance, hard house and trance. Matt OD plays an Organ Donors classics set. Hosted by Si the Sigh and DMC. A third room was still unpublished when this was catalogued.',
+    description_es:
+      'Arriba: hard dance, hard house y trance. Matt OD hace un set de clásicos de Organ Donors. Presentan Si the Sigh y DMC. Una tercera sala seguía sin publicar cuando se catalogó.',
+    lineup: [
+      'Blu Peter',
+      'LAB4 B2B Pulsar',
+      'Matt OD',
+      'M-Zone',
+      'Nick the Kid B2B Iain Cross',
+      'Just Josh',
+      'Louk B2B Smile.E',
+      'Jake Ayres B2B Dave Scott',
+      'Rennz B2B Marcio',
+      'Mark Hashimi B2B Hardgroover',
+      'Si the Sigh',
+      'DMC',
+    ],
+  },
+]
+
+const HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_LINEUP = [
+  'Plump DJs',
+  'Krafty Kuts',
+  'Freestylers',
+  'Creature Craig',
+  'Dave Moore',
+  "Joe 'Freeze' Taylor",
+  'Che & Leona Funk',
+  'Frankie',
+  'Danny Manning',
+  'Blu Peter',
+  'LAB4',
+  'Pulsar',
+  'Matt OD',
+  'M-Zone',
+  'Nick the Kid',
+  'Iain Cross',
+  'Just Josh',
+  'Louk',
+  'Smile.E',
+  'Jake Ayres',
+  'Dave Scott',
+  'Rennz',
+  'Marcio',
+  'Mark Hashimi',
+  'Hardgroover',
+  'Si the Sigh',
+  'DMC',
+]
+
+const HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_ROW = {
+  name: "Hindsight's 27th Birthday — Fright Night",
+  description_en:
+    "Hindsight's 27th birthday at Labyrinth, Taunton (the former Dellers Wharf), Friday 13 November 2026, 19:00–04:00, with CrashThe90s. Downstairs is King of the Beats: Plump DJs, Krafty Kuts and Freestylers, plus Creature Craig, Dave Moore, Joe 'Freeze' Taylor, Che & Leona Funk, Frankie and Danny Manning. Upstairs is hard dance and trance: Blu Peter (Reactivate classics, first South West appearance in decades), LAB4 B2B Pulsar, Matt OD (Organ Donors classics), M-Zone, Nick the Kid B2B Iain Cross, Just Josh, Louk B2B Smile.E, Jake Ayres B2B Dave Scott, Rennz B2B Marcio and Mark Hashimi B2B Hardgroover, hosted by Si the Sigh and DMC. A third room was still TBA on the Skiddle listing. 18+. Address 4–6 Bridge Street, Taunton TA1 1UB. Early-bird tickets were £15 on Skiddle (listing 42596837). Last Hindsight date of 2026.",
+  description_es:
+    '27º aniversario de Hindsight en Labyrinth, Taunton (el antiguo Dellers Wharf), viernes 13 de noviembre de 2026, de 19:00 a 04:00, con CrashThe90s. Abajo, King of the Beats: Plump DJs, Krafty Kuts y Freestylers, más Creature Craig, Dave Moore, Joe \'Freeze\' Taylor, Che & Leona Funk, Frankie y Danny Manning. Arriba, hard dance y trance: Blu Peter (clásicos Reactivate, primera vez en el suroeste en décadas), LAB4 B2B Pulsar, Matt OD (clásicos de Organ Donors), M-Zone, Nick the Kid B2B Iain Cross, Just Josh, Louk B2B Smile.E, Jake Ayres B2B Dave Scott, Rennz B2B Marcio y Mark Hashimi B2B Hardgroover, con Si the Sigh y DMC. Una tercera sala seguía sin anunciar en la ficha de Skiddle. +18. Dirección 4–6 Bridge Street, Taunton TA1 1UB. El early bird salió a 15 £ en Skiddle (ficha 42596837). Última cita de Hindsight en 2026.',
+  event_type: 'club_night',
+  date_start: '2026-11-13',
+  date_end: null,
+  location: 'Labyrinth, Taunton, United Kingdom',
+  city: 'Taunton',
+  country: 'United Kingdom',
+  venue: 'Labyrinth',
+  address: '4–6 Bridge Street, Taunton TA1 1UB',
+  website: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_SKIDDLE,
+  tickets_url: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_SKIDDLE,
+  lineup: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_LINEUP,
+  stages: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_STAGES,
+  tags: [
+    'hindsight',
+    'fright night',
+    'king of the beats',
+    'crashthe90s',
+    'krafty kuts',
+    'plump djs',
+    'freestylers',
+    'labyrinth',
+    'taunton',
+    'breakbeat',
+    'breaks',
+    'hard dance',
+    'trance',
+    '2026',
+    'skiddle',
+    'united kingdom',
+  ],
+  socials: {
+    Skiddle: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_SKIDDLE,
+  },
+  age_restriction: '18+',
+  doors_open: '19:00',
+  doors_close: '04:00',
+  coords: { lat: 51.0179173, lng: -3.1039481 },
+}
+
+async function runPatchHindsightFrightNightTaunton2026(sb) {
+  const row = {
+    slug: HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_SLUG,
+    ...EVENT_ROW_DEFAULTS,
+    ...HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_ROW,
+    is_featured: false,
+    promoter_organization_id: null,
+  }
+  const { error: e1 } = await sb.from('events').upsert(row, { onConflict: 'slug' })
+  if (e1) throw e1
+  const { data: after, error: e2 } = await sb
+    .from('events')
+    .select('slug, name, date_start, city, venue, lineup, tickets_url')
+    .eq('slug', HINDSIGHT_FRIGHT_NIGHT_TAUNTON_2026_SLUG)
+    .maybeSingle()
+  if (e2) throw e2
+  console.log('[patch-hindsight-fright-night-taunton-2026] OK:', after)
+}
+
 const BREAKS_BASS_GUAU_YO_SPEED_PERTH_2026_SLUG = 'breaks-bass-guau-yo-speed-perth-2026'
 const BREAKS_BASS_GUAU_YO_SPEED_PERTH_RA = 'https://ra.co/events/2503896'
 const BREAKS_BASS_GUAU_YO_SPEED_PERTH_TICKETS =
@@ -5688,6 +5941,16 @@ async function main() {
 
   if (argv.includes('--patch-deekline-iron-cow-orlando-2026')) {
     await runPatchDeeklineIronCowOrlando2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-heritage-king-of-the-beats-birmingham-2026')) {
+    await runPatchHeritageKingOfTheBeatsBirmingham2026(sb)
+    return
+  }
+
+  if (argv.includes('--patch-hindsight-fright-night-taunton-2026')) {
+    await runPatchHindsightFrightNightTaunton2026(sb)
     return
   }
 

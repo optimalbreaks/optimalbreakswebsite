@@ -443,21 +443,6 @@
     },
     {
       "sort_order": 28,
-      "title": "We're Not Alone",
-      "mix_name": "",
-      "artists": [{ "name": "Nero" }, { "name": "Taiki Nulight" }, { "name": "Emily Makis" }],
-      "label": "UKF",
-      "catalog_number": "UKF309",
-      "year": 2026,
-      "format": "Digital",
-      "discogs_url": "",
-      "youtube_url": "https://www.youtube.com/watch?v=Odh5jWhdHcc",
-      "artwork_url": "https://i.ytimg.com/vi/Odh5jWhdHcc/hqdefault.jpg",
-      "note_en": "Digital single on UKF (UKF309, July 2026) — Nero and Taiki Nulight reunite on a breaks-leaning cut with Emily Makis, following their rework of Innocence.",
-      "note_es": "Single digital en UKF (UKF309, julio 2026) — Nero y Taiki Nulight se reúnen en un corte con veta breaks y voz de Emily Makis, tras su rework de Innocence."
-    },
-    {
-      "sort_order": 29,
       "title": "Take California",
       "mix_name": "",
       "artists": [{ "name": "Propellerheads" }],
@@ -472,7 +457,7 @@
       "note_es": "Cara A del 12\" de Propellerheads en Wall Of Sound (WALLT 024, noviembre 1996) — Take California abre un pack big-beat de tres temas con Big Dog y Props Got Skills en la contracara."
     },
     {
-      "sort_order": 30,
+      "sort_order": 29,
       "title": "Children Of The 80's (I Still Love You)",
       "mix_name": "",
       "artists": [{ "name": "DJ Infiniti" }],
@@ -487,7 +472,7 @@
       "note_es": "Cara A del 12\" de DJ Infiniti en 941 Electro (941-017, abril 2001) — clásico del Florida breaks, con Running Away en la contracara. Remaster en YouTube publicado el 16 ago 2012."
     },
     {
-      "sort_order": 31,
+      "sort_order": 30,
       "title": "Do Dis",
       "mix_name": "",
       "artists": [{ "name": "Backdraft" }, { "name": "Poet Shadeo" }],

@@ -45,6 +45,10 @@ El remixer es el productor de la **versión breakbeat**. Beatport lo deja en `re
 
 El UPSERT de NR **actualiza** por `link_url`; **no** borra e inserta el mismo pick (eso cambiaría `chart_featured_tracks.id` y rompería `saved_chart_tracks`). Detalle: regla **`charts-ids-inmutables-saves`**.
 
+## YouTube (archivo) — no sustituye NR
+
+Si el mismo tema está en Beatport, **no** darlo de alta en `chart_vinyl_tracks` por YouTube: usar esta vía (featured). Detalle: **`.cursor/rules/charts-youtube-vs-beatport.mdc`**.
+
 ## Referencia rápida
 
 - Guía BD: entrada **`chart-featured-file`** / **`featured-import-admin`** en `scripts/guia-base-datos.mjs`.

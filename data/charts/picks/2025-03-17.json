@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-03-17",
+  "picks": [
+    {
+      "title": "Rocket Man",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Huda Hudia"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rocket-man/20280925",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fdee7f9f-6dab-401f-9673-9d8cc8476413.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7953edc7-2534-41e5-ba05-5593f0027747.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

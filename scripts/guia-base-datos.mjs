@@ -553,6 +553,22 @@ const ACTIONS = [
       'UPSERT stanton-sessions-steelyard-london-2026: Stanton Warriors Presents Stanton Sessions, The Steelyard London 10 oct 2026, Skiddle.',
   },
   {
+    id: 'events-patch-heritage-king-of-the-beats-birmingham-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-heritage-king-of-the-beats-birmingham-2026',
+    npm: 'npm run db:guia -- run events-patch-heritage-king-of-the-beats-birmingham-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT heritage-king-of-the-beats-birmingham-2026: Heritage / King of the Beats + Faith, Hare & Hounds Kings Heath 7 nov 2026 (Krafty Kuts, Plump DJs, Freestylers), Skiddle 42342999.',
+  },
+  {
+    id: 'events-patch-hindsight-fright-night-taunton-2026',
+    run: 'node scripts/guia-base-datos.mjs run events-patch-hindsight-fright-night-taunton-2026',
+    npm: 'npm run db:guia -- run events-patch-hindsight-fright-night-taunton-2026',
+    creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'UPSERT hindsight-fright-night-taunton-2026: Hindsight 27th Birthday Fright Night, Labyrinth Taunton 13 nov 2026 (King of the Beats: Plump DJs, Krafty Kuts, Freestylers), Skiddle 42596837.',
+  },
+  {
     id: 'events-patch-deekline-iron-cow-orlando-2026',
     run: 'node scripts/guia-base-datos.mjs run events-patch-deekline-iron-cow-orlando-2026',
     npm: 'npm run db:guia -- run events-patch-deekline-iron-cow-orlando-2026',
@@ -702,7 +718,7 @@ const ACTIONS = [
     npm: 'npm run db:chart:vinyl -- data/charts/vinyl/2026-04-06.json',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Retro Vinyl Picks semanales en /charts: UPSERT manual desde JSON (chart_vinyl_tracks). Datos de Discogs + YouTube. La edición week_date debe existir.',
+      'Selecciones de archivo (YouTube/Discogs) en chart_vinyl_tracks: UPSERT desde JSON. En la web agrupa por año; week_date = contenedor BD. No duplicar temas ya en chart_featured_tracks (Beatport/NR): priorizar featured-import o db:chart:featured para Spotify/TIDAL. Regla .cursor/rules/charts-youtube-vs-beatport.mdc',
   },
   {
     id: 'chart-vinyl-discogs',
@@ -862,6 +878,8 @@ Punto de entrada unificado:
   events-patch-finger-lickin-summer-takeover-2026  Finger Lickin' Summer Takeover, Concorde 2 Brighton 15 ago 2026 (Skiddle)
   events-patch-stanton-warriors-volks-brighton-2026  On the Beach afterparty, Volks Brighton 18 jul 2026 (Stanton Warriors, Calyx)
   events-patch-stanton-sessions-steelyard-london-2026  Stanton Sessions, The Steelyard London 10 oct 2026 (Skiddle)
+  events-patch-heritage-king-of-the-beats-birmingham-2026  Heritage / King of the Beats, Hare & Hounds Birmingham 7 nov 2026 (Skiddle)
+  events-patch-hindsight-fright-night-taunton-2026  Hindsight Fright Night, Labyrinth Taunton 13 nov 2026 (Skiddle)
   events-patch-deekline-iron-cow-orlando-2026  Deekline @ Iron Cow Orlando 18 jul 2026 (Happeningnext)
   events-patch-breaks-bass-guau-yo-speed-perth-2026  Breaks & Bass Guau + Yo Speed, The Aberdeen Perth 2 oct 2026 (Megatix / RA)
   events-patch-breaks-bass-guau-yo-speed-melbourne-2026  Guau + Yo Speed tour, The Industrique Melbourne 3 oct 2026
@@ -1363,6 +1381,15 @@ function main() {
       break
     case 'events-patch-stanton-sessions-steelyard-london-2026':
       runNode('enriquecer-evento.mjs', ['--patch-stanton-sessions-steelyard-london-2026', ...rest])
+      break
+    case 'events-patch-heritage-king-of-the-beats-birmingham-2026':
+      runNode('enriquecer-evento.mjs', [
+        '--patch-heritage-king-of-the-beats-birmingham-2026',
+        ...rest,
+      ])
+      break
+    case 'events-patch-hindsight-fright-night-taunton-2026':
+      runNode('enriquecer-evento.mjs', ['--patch-hindsight-fright-night-taunton-2026', ...rest])
       break
     case 'events-patch-deekline-iron-cow-orlando-2026':
       runNode('enriquecer-evento.mjs', ['--patch-deekline-iron-cow-orlando-2026', ...rest])

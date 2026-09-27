@@ -1,0 +1,27 @@
+{
+  "week_date": "2023-09-25",
+  "picks": [
+    {
+      "title": "Crush",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Citybox"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/crush/17970713",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ce826af5-65c1-416a-88ae-d8caba84bdf0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39d6838c-6fed-402c-b3f2-c357382975b2.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Ab Major",
+      "release_year": 2023,
+      "release_date": "2023-09-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

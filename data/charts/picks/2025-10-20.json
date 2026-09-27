@@ -1,0 +1,30 @@
+{
+  "week_date": "2025-10-20",
+  "picks": [
+    {
+      "title": "I Don't Care",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Anuschka"
+        },
+        {
+          "name": "SeekFlow"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-dont-care/21555577",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b1b3f54-03c1-4902-89ac-87a9ec466e3b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e04fc0a-6cb2-45d2-a68d-f1b1da6f660f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-10-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -25,6 +25,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Renascentia",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deydad"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/renascentia/23232976",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f55bb18-aaf3-4c6b-8ad9-7c3f747bd6b5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8ba8cacd-3832-43e0-a186-bac66866ae71.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

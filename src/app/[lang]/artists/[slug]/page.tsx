@@ -250,11 +250,13 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     }
   }
 
-  const [{ data: labelRows }, allArtistLinkRows, relatedContent, featuredPicks] = await Promise.all([
+  const allArtistLinkRows = await fetchAllArtistLinkRows(supabase)
+  const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
+
+  const [{ data: labelRows }, relatedContent, featuredPicks] = await Promise.all([
     supabase.from('labels').select('name, slug'),
-    fetchAllArtistLinkRows(supabase),
-    fetchArtistRelatedContent(supabase, artist, lang),
-    fetchArtistFeaturedPicks(supabase, artist),
+    fetchArtistRelatedContent(supabase, artist, lang, artistSlugByName),
+    fetchArtistFeaturedPicks(supabase, artist, artistSlugByName),
   ])
 
   const labelSlugByName = new Map<string, string>()
@@ -262,8 +264,6 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     const key = normalizeForEntityMatch(row.name)
     if (key && !labelSlugByName.has(key)) labelSlugByName.set(key, row.slug)
   }
-
-  const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
   const trackArtistNames = new Set<string>()
   const trackLabelNames = new Set<string>()
   for (const t of (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []) {

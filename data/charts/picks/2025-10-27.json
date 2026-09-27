@@ -1,0 +1,71 @@
+{
+  "week_date": "2025-10-27",
+  "picks": [
+    {
+      "title": "Parallel instance",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "UNREAL [SP]"
+        }
+      ],
+      "label": "Audiogore",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/parallel-instance/22234693",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2deaec00-6f04-4d3f-b2b5-638055176a11.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b9031944-389a-4dd5-af16-847de3603b2d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-10-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Nebula Interface",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "UNREAL [SP]"
+        }
+      ],
+      "label": "Audiogore",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nebula-interface/22234692",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2deaec00-6f04-4d3f-b2b5-638055176a11.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7b5cc240-9666-4a83-a365-0357aafe85cc.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Switch",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/switch/21556118",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ddb19bdf-5b4c-4ae2-8390-659edc751fe0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/21c565c4-919c-4627-8d19-1f62882ca254.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    }
+  ]
+}

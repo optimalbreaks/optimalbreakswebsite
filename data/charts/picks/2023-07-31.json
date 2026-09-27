@@ -1,0 +1,27 @@
+{
+  "week_date": "2023-07-31",
+  "picks": [
+    {
+      "title": "They Lie To Us",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Citybox"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/they-lie-to-us/17815907",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5aba1746-733e-41c4-b2c7-c9d2ca53f330.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8609e412-b0fc-4f87-9abd-31fb0cdc3df8.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Major",
+      "release_year": 2023,
+      "release_date": "2023-08-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

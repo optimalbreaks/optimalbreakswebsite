@@ -55,8 +55,19 @@ import { collectBeatportArtistCredits } from './lib/remixer-credits.mjs'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
-const URLS_RAW = `
+function loadBatchUrlsRaw() {
+  const fromEnv = (process.env.NR_BATCH_URLS_TEXT || '').trim()
+  if (fromEnv) return fromEnv
+  const file = (process.env.NR_BATCH_URLS_FILE || '').trim()
+  if (file) {
+    const abs = resolve(ROOT, file)
+    if (!existsSync(abs)) throw new Error(`NR_BATCH_URLS_FILE no existe: ${abs}`)
+    return readFileSync(abs, 'utf8')
+  }
+  return `
 `
+}
+const URLS_RAW = loadBatchUrlsRaw()
 
 /** Lunes ISO de la semana del lanzamiento (`src/lib/beatport-next-data-tracks.ts`, misma que admin import). */
 function chartEditionWeekMondayFromPublish(isoYYYYMMDD) {

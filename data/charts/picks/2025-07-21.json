@@ -1,0 +1,27 @@
+{
+  "week_date": "2025-07-21",
+  "picks": [
+    {
+      "title": "Ready",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Sans"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ready/20546481",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6f5af98f-f355-4fb7-99fe-8f41fbde8e8a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9091d7c3-fd08-47e4-a554-3d83c735a7ee.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "week_date": "2024-02-05",
+  "picks": [
+    {
+      "title": "Sleep When U Die",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Dub Elements"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sleep-when-u-die/18526339",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ee2ac924-de6c-4fce-b024-985dc40a613f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1a5a3ce9-fd68-4c09-9d23-dfe9cc6c31ca.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-02-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

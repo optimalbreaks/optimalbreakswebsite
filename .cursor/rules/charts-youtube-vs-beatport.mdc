@@ -1,0 +1,45 @@
+---
+description: Selecciones de archivo (YouTube/vinilo) vs New Releases (Beatport): no duplicar; priorizar tienda para Spotify/TIDAL.
+alwaysApply: true
+---
+
+# Charts — YouTube (archivo) vs Beatport (New Releases / digital)
+
+## Contexto editorial (sep 2026)
+
+Parte del equipo pasa **descubrimientos por YouTube** para **Selecciones de archivo**. Eso es válido, pero **no** debe duplicar temas que ya viven (o deben vivir) en **`chart_featured_tracks`** vía **Beatport/Bandcamp**.
+
+## Dos vías, dos tablas
+
+| Vía | Tabla | Dónde se ve en `/charts` | Spotify / TIDAL |
+|-----|--------|---------------------------|-----------------|
+| **Beatport / Bandcamp** (import NR, JSON picks) | `chart_featured_tracks` | **New Releases** por **semana** (release ≥ 2026-01-01) o **archivo digital** por **año** (release &lt; 2026) | Sí (`spotify_url` / `tidal_url` + matcher) |
+| **YouTube** (JSON vinilo + upsert) | `chart_vinyl_tracks` | **Selecciones de archivo** por **año** (`year` en fila; `week_date` solo contenedor en BD) | **No** (embed YouTube; sin botones streaming a propósito) |
+
+**Prioridad:** si el tema está en Beatport (o Bandcamp para NR), la vía editorial es **New Releases**, no YouTube. La fórmula completa del sitio (preview tienda + **Spotify** + **TIDAL** + Beatport) depende de `link_url` en featured, no del vinilo.
+
+## Invariante (no negociable)
+
+1. **Prohibido** meter en `chart_vinyl_tracks` un enlace de YouTube del **mismo tema** que ya está en `chart_featured_tracks` (misma canción: título + mix + artistas, criterio `trackDisplayIdentityKey` en `src/lib/track-canonical-key.ts` o equivalente en scripts).
+2. **Antes de cada alta YouTube**, el agente **comprueba** Beatport (búsqueda / URL conocida) y **`chart_featured_tracks`** (+ ediciones publicadas). Si coincide → **no** hacer `chart-vinyl-file`; indicar import NR (`featured-import` o `db:chart:featured`) y, si falta, `db:chart:spotify` / `db:chart:tidal`.
+3. **YouTube solo** cuando no hay listing usable en tienda: histórico, white label, bootleg, rip sin `link_url`, o material que **no** está en Beatport/Bandcamp.
+4. La UI **no deduplica** vinilo ↔ featured en el acordeón de archivo: dos filas = dos UUID, dos saves posibles, una sin Spotify/TIDAL. Evitarlo en origen, no “arreglarlo” después en UI.
+
+## Flujo operativo (equipo + agente)
+
+**Enlaces YouTube del equipo:**
+
+1. Identificar título / artista / mix (oEmbed + metadatos).
+2. ¿Existe en Beatport? → **NR**, semana = lunes ISO del release (`charts-new-releases-supabase`).
+3. ¿Ya en BD como featured (misma identidad)? → **Saltar** YouTube; opcional rellenar streaming si faltan matches.
+4. Si no hay tienda → `data/charts/vinyl/<contenedor>.json` + `run chart-vinyl-file` (identidad fila = **ID YouTube**, regla `charts-ids-inmutables-saves`).
+
+**New Releases** = por semana. **Selecciones de archivo** = por año. No confundir `week_date` del JSON de vinilo con el año que ve el usuario.
+
+## Referencias
+
+- Vinilo UPSERT: `npm run db:chart:vinyl -- …` / `run chart-vinyl-file`
+- NR: `charts-new-releases-supabase.mdc`, `featured-import`, `db:chart:featured`
+- Streaming: `charts-enlaces-streaming.mdc`
+- README (ES): sección *YouTube vs Beatport (archivo)*
+- README (EN): *Archive YouTube vs Beatport (New Releases)*

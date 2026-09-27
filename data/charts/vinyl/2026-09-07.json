@@ -161,6 +161,132 @@
       "artwork_url": "https://i.ytimg.com/vi/9YEdMGR-oZE/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 9,
+      "title": "The Duat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Deydad"
+        }
+      ],
+      "label": "83",
+      "catalog_number": "",
+      "year": 2025,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=4coWI40eJGk",
+      "artwork_url": "https://i.ytimg.com/vi/4coWI40eJGk/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 10,
+      "title": "Give It Out",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SellRude"
+        },
+        {
+          "name": "Bass Master"
+        },
+        {
+          "name": "Prodigal Kids"
+        }
+      ],
+      "label": "Rough Division",
+      "catalog_number": "ROU266",
+      "year": 2025,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=mgrDYURSmgk",
+      "artwork_url": "https://i.ytimg.com/vi/mgrDYURSmgk/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 11,
+      "title": "Tetrinsky",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Shade K"
+        }
+      ],
+      "label": "Space Pizza Records",
+      "catalog_number": "",
+      "year": 2021,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=yA4LAewb9_U",
+      "artwork_url": "https://i.ytimg.com/vi/yA4LAewb9_U/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 12,
+      "title": "Same Frequency",
+      "mix_name": "Sonic Correction Remix",
+      "artists": [
+        {
+          "name": "Brothers Of Dub"
+        },
+        {
+          "name": "Future Funk Squad"
+        }
+      ],
+      "label": "Forged Recordings",
+      "catalog_number": "FGD006",
+      "year": 2001,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/104136",
+      "youtube_url": "https://www.youtube.com/watch?v=1OuPM1rs9zs",
+      "artwork_url": "https://i.ytimg.com/vi/1OuPM1rs9zs/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 13,
+      "title": "Dance Robot",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Aggresivnes"
+        }
+      ],
+      "label": "Raveart Records",
+      "catalog_number": "RAR221",
+      "year": 2025,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=C1Eraw_frHo",
+      "artwork_url": "https://i.ytimg.com/vi/C1Eraw_frHo/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 14,
+      "title": "Badman",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "FM-3"
+        },
+        {
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "catalog_number": "ESR682",
+      "year": 2025,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=TeZed1eDU4w",
+      "artwork_url": "https://i.ytimg.com/vi/TeZed1eDU4w/hqdefault.jpg",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
