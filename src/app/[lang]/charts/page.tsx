@@ -17,6 +17,8 @@ import LoadingBreaks from '@/components/LoadingBreaks'
 import { Suspense } from 'react'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, slugLookupKeys } from '@/lib/artist-slug-map'
 import { fetchAllPages } from '@/lib/supabase-paginate'
+import { resolveSharedLanding } from '@/lib/shared-track-landing'
+import SharedTrackLanding from '@/components/SharedTrackLanding'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
 // petición. Los datos siguen viniendo de la Data Cache (createCachedSupabase,
@@ -176,18 +178,24 @@ export default async function ChartsPage({
   searchParams,
 }: {
   params: Promise<{ lang: Locale }>
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string; play?: string }>
 }) {
   const { lang } = await params
-  // ?week= y ?play= los resuelve el cliente al abrir solo esa sección.
-  await searchParams
-  const dict = await getDictionary(lang)
+  const query = await searchParams
+  // Tema compartido (`?play=featured|chart|vinyl:<id>`): se resuelve AQUÍ, con
+  // una consulta por id cacheada, para pintar el emergente en el HTML inicial
+  // — sin esperar al cargador, a ChartView ni a la descarga de la semana/año.
+  const [dict, sharedLanding] = await Promise.all([
+    getDictionary(lang),
+    resolveSharedLanding(chartsSupabase(), typeof query.play === 'string' ? query.play : null),
+  ])
   const c = dict.charts
 
   // La cabecera sale al instante; el esquema (semanas/años) llega por streaming
   // con el cargador fanzine debajo, como en /top100.
   return (
     <main className="min-h-screen bg-[var(--paper)]">
+      {sharedLanding ? <SharedTrackLanding landing={sharedLanding} lang={lang} /> : null}
       <div className="max-w-4xl mx-auto px-0 sm:px-4 py-6 sm:py-10">
         <header className="px-4 sm:px-0 mb-10 sm:mb-14 text-center">
           <h1
@@ -215,13 +223,21 @@ export default async function ChartsPage({
           </div>
         )}
       >
-        <ChartsBody lang={lang} dict={dict} />
+        <ChartsBody lang={lang} dict={dict} sharedLandingHandled={!!sharedLanding} />
       </Suspense>
     </main>
   )
 }
 
-async function ChartsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnType<typeof getDictionary>> }) {
+async function ChartsBody({
+  lang,
+  dict,
+  sharedLandingHandled,
+}: {
+  lang: Locale
+  dict: Awaited<ReturnType<typeof getDictionary>>
+  sharedLandingHandled: boolean
+}) {
   const supabase = chartsSupabase()
 
   // Totales nada más. Los temas llegan al pulsar ▶ en la semana o el año.
@@ -270,6 +286,7 @@ async function ChartsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnTy
       artistSlugMap={artistSlugMap}
       labelSlugMap={labelSlugMap}
       labelImageMap={labelImageMap}
+      sharedLandingHandled={sharedLandingHandled}
       hideHeader
     />
   )

@@ -40,13 +40,16 @@ export default function TapToPlayOverlay({
   const es = lang === 'es'
   const [idx, setIdx] = useState(0)
 
-  useEffect(() => { setIdx(0) }, [resetKey])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- otra portada al cambiar de tema
+    setIdx(0)
+  }, [resetKey])
 
   const src = artworkCandidates[idx] ?? null
 
   return (
     <div
-      className="fixed inset-0 z-[95] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[205] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-4"
       role="dialog"
       aria-modal="true"
       aria-label={ariaLabel}

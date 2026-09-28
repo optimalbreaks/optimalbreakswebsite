@@ -5,6 +5,7 @@
 
 'use client'
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- el diccionario i18n llega sin tipo estrecho */
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -22,6 +23,7 @@ import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg } from '@/lib/share-track'
+import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
 import { catalogLockScreenFields } from '@/lib/now-playing-session'
@@ -52,6 +54,7 @@ function VinylArtwork({
   const [idx, setIdx] = useState(0)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- la portada vuelve a la primera candidata si cambia el tema
     setIdx(0)
   }, [track.id, track.artwork_url, track.youtube_url, track.label])
 
@@ -137,6 +140,12 @@ interface ChartViewProps {
   labelImageMap?: Record<string, string>
   /** La página ya pinta el h1 + subtítulo (streaming con cargador debajo). */
   hideHeader?: boolean
+  /**
+   * El servidor ya pintó el emergente de `?play=` (SharedTrackLanding).
+   * No duplicar «Toca para escuchar»: al llegar la semana/año solo se
+   * registra la cola para ampliarla sin reiniciar el audio.
+   */
+  sharedLandingHandled?: boolean
 }
 
 // Clave de agrupación para filas de archivo sin año conocido.
@@ -440,6 +449,7 @@ function VinylTrackRow({ track, dict, lang, autoplay = false, artistSlugMap, lab
       requestYouTubePlay(playSlotId)
       const playKey = normalizeTrackCanonicalUrl(track.youtube_url) || `t:vinyl:${track.id}`
       logTrackPlay(playKey)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- el deep-link de vinilo abre el reproductor al montar
       setShowPlayer(true)
     }
   }, [autoplay, playSlotId, track.youtube_url, track.id])
@@ -682,6 +692,7 @@ export default function ChartView({
   labelSlugMap,
   labelImageMap,
   hideHeader = false,
+  sharedLandingHandled = false,
 }: ChartViewProps) {
   const c = dict.charts
 
@@ -796,6 +807,14 @@ export default function ChartView({
     | null
   >(null)
 
+  // Semana/año del tema que el aterrizaje ya está ofreciendo. Al llegar las
+  // filas se registra la cola completa (shared-track-bus).
+  const [sharedHandoff, setSharedHandoff] = useState<
+    | { kind: 'picks'; weekDate: string; trackId: string }
+    | { kind: 'archive'; yearKey: string; trackId: string }
+    | null
+  >(null)
+
   // Emergente «Toca para escuchar» para deep-links de chart/featured. Se arma
   // a la vez que el intento de autoplay y se retira solo cuando ese tema ya
   // está sonando; si el autoplay no arranca (política del navegador, motor
@@ -893,7 +912,9 @@ export default function ChartView({
         if (idx >= INITIAL_WEEKS_VISIBLE) setShowAllPicksWeeks(true)
         ensureOpenPicks(target.week)
         loadPicks(target.week)
-        if (wantsPlay) {
+        if (wantsPlay && sharedLandingHandled && kind === 'chart') {
+          setSharedHandoff({ kind: 'picks', weekDate: target.week, trackId })
+        } else if (wantsPlay) {
           setPendingPlay({ kind: 'picks', weekDate: target.week, trackId, autoplay: autoplayOnLoad })
         }
       } else {
@@ -901,7 +922,9 @@ export default function ChartView({
         const loaded = archiveRowsRef.current[target.year]
         if (loaded) revealArchiveRow(target.year, trackId, loaded)
         else archiveRevealRef.current[target.year] = trackId
-        if (kind === 'vinyl' && wantsPlay) {
+        if (sharedLandingHandled && wantsPlay && kind === 'chart') {
+          setSharedHandoff({ kind: 'archive', yearKey: target.year, trackId })
+        } else if (kind === 'vinyl' && wantsPlay && !sharedLandingHandled) {
           if (loaded) resolveVinylIntent({ trackId, yearKey: target.year }, loaded)
           else vinylIntentRef.current = { trackId, yearKey: target.year }
         } else if (wantsPlay) {
@@ -917,7 +940,7 @@ export default function ChartView({
       seq += 1
       window.removeEventListener('hashchange', applyDeepLink)
     }
-  }, [pickWeeks, ensureOpenPicks, ensureOpenVinyl, loadPicks, loadArchive, revealArchiveRow])
+  }, [pickWeeks, ensureOpenPicks, ensureOpenVinyl, loadPicks, loadArchive, revealArchiveRow, sharedLandingHandled])
 
   // Scroll + destello a la fila del deep-link en cuanto exista en el DOM
   // (la sección se abre y sus temas llegan por fetch).
@@ -1173,6 +1196,7 @@ export default function ChartView({
       if (idx >= 0) {
         armDeepLinkPlay(`archive-${yearKey}`, bundle, idx)
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- el deep-link ya se aplicó a esta semana
       setPendingPlay(null)
       return
     }
@@ -1188,9 +1212,59 @@ export default function ChartView({
     if (idx >= 0) {
       armDeepLinkPlay(`picks-${weekDate}`, bundle, idx)
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- el deep-link ya se aplicó a esta semana
     setPendingPlay(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingPlay, pickByWeek, archiveByYearLoaded, lang, playFromIndex, buildFeaturedBundle])
+
+  // Aterrizaje ya visible: al llegar la semana/año, registrar la cola. Si el
+  // tema suelto ya suena, ampliar (mismo src ⇒ el motor no reinicia el audio).
+  useEffect(() => {
+    if (!sharedHandoff) return
+    const trackId = sharedHandoff.trackId
+    const rowKey = `chart-row-${trackId}`
+    let sectionKey = ''
+    let bundle: PlayAllBundle = []
+    if (sharedHandoff.kind === 'archive') {
+      const { yearKey } = sharedHandoff
+      if (!(yearKey in archiveByYearLoaded)) return
+      const rows = archiveByYearLoaded[yearKey]
+      const featured = rows
+        .filter((r): r is Extract<ArchiveRow, { kind: 'featured' }> => r.kind === 'featured')
+        .map((r) => r.pick)
+      const weekDate = rows.find((r) => r.kind === 'featured' && r.pick.id === trackId)?.weekDate ?? ''
+      bundle = buildFeaturedBundle(featured, canonicalGroups.featuredByTrack, weekDate)
+      sectionKey = `archive-${yearKey}`
+    } else {
+      const { weekDate } = sharedHandoff
+      if (!(weekDate in pickByWeek)) return
+      const sorted = sortFeaturedByArtist(
+        pickByWeek[weekDate].filter((p) => !isArchiveFeaturedTrack(p)),
+        lang,
+      )
+      bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack, weekDate)
+      sectionKey = `picks-${weekDate}`
+    }
+    const idx = bundle.findIndex((m) => m.rowKey === rowKey)
+    if (idx < 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- la semana ya llegó y el tema no está en la cola
+      setSharedHandoff(null)
+      return
+    }
+    registerSharedBundle(rowKey, { sectionKey, bundle, index: idx })
+    const current = previewQueue[previewIndex]
+    const playingAlone =
+      previewPlaying &&
+      current?.rowKey === rowKey &&
+      current.src === bundle[idx]?.src &&
+      (previewQueue.length !== bundle.length || previewGroupKey !== sectionKey)
+    if (playingAlone) playFromIndex(sectionKey, bundle, idx)
+    setSharedHandoff(null)
+  }, [
+    sharedHandoff, pickByWeek, archiveByYearLoaded, lang,
+    buildFeaturedBundle, canonicalGroups.featuredByTrack,
+    previewQueue, previewIndex, previewGroupKey, previewPlaying, playFromIndex,
+  ])
 
   // El tema del deep-link ya suena → retirar el emergente. Comparamos por
   // fila activa dentro de su grupo, no solo por `previewPlaying`, para no
@@ -1201,12 +1275,14 @@ export default function ChartView({
     previewQueue[previewIndex]?.rowKey === pendingTapPlay.rowKey
   const pendingTapPlaying = pendingTapRowActive && previewPlaying
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- el emergente se retira cuando el tema ya suena
     if (pendingTapPlaying) setPendingTapPlay(null)
   }, [pendingTapPlaying])
   // El motor rechazó el autoplay (NotAllowedError) y levanta su propio
   // «Toca para escuchar» sobre esta misma cola: le cedemos el emergente para
   // no duplicarlo ni reaparecer si el usuario lo cierra tocando fuera.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- si el motor muestra su propio emergente, no duplicarlo
     if (previewBlocked) setPendingTapPlay(null)
   }, [previewBlocked])
 
@@ -1317,6 +1393,7 @@ export default function ChartView({
       bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack, weekDate)
       ensureOpenPicks(weekDate)
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- la sección ya está en memoria; arranca la cola una sola vez
     setPendingPlayAll(null)
     const first = bundle?.[0]
     if (!bundle || !first) return

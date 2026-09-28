@@ -382,6 +382,18 @@ export function claimAudio(source: AudioClaimSource) {
   window.dispatchEvent(new CustomEvent('ob-audio-claim', { detail: { source } }))
 }
 
+/** Misma URL de preview aunque una venga relativa y el `<audio>` la haya absolutizado. */
+function previewSrcEquals(audio: HTMLAudioElement, targetSrc: string): boolean {
+  const attr = audio.getAttribute('src')
+  if (!attr) return false
+  if (attr === targetSrc) return true
+  try {
+    return new URL(attr, window.location.href).href === new URL(targetSrc, window.location.href).href
+  } catch {
+    return false
+  }
+}
+
 /** El provider emite esto al mostrar/ocultar la barra fija de preview
  *  (chart / Top 10 / Mis Tracks) para que `BackToTop` suba el botón por
  *  encima. Se mantiene el nombre histórico (`ob-chart-playall-bar`) por
@@ -2185,7 +2197,7 @@ export function DeckAudioProvider({
     // Si el src ya es el pedido (arrancado en el gesto), no se toca: así no
     // se corta ni se reinicia lo que ya está sonando.
     const targetSrc = queue[idx].src
-    if (audio.getAttribute('src') !== targetSrc) {
+    if (!previewSrcEquals(audio, targetSrc)) {
       try { audio.pause() } catch { /* no-op */ }
       audio.src = targetSrc
     } else if (audio.ended) {
@@ -2270,6 +2282,19 @@ export function DeckAudioProvider({
   const playPreviewQueue = useCallback((items: PreviewTrack[], startIndex = 0, groupKey?: string) => {
     if (!items.length) return
     const clampedIdx = Math.max(0, Math.min(items.length - 1, startIndex))
+    const next = items[clampedIdx]
+    const current = previewQueueRef.current[previewIndexRef.current]
+    const audio = previewAudioRef.current
+    // Aterrizaje de un enlace compartido: la cola pasa de 1 tema a la semana
+    // entera. Mismo tema y misma URL → no recargar el <audio> (no corta ni
+    // vuelve a 0:00) y no poner el progreso a cero.
+    const sameTrack =
+      !!next &&
+      !!current &&
+      !!audio &&
+      current.rowKey === next.rowKey &&
+      current.src === next.src &&
+      previewSrcEquals(audio, next.src)
 
     // Preview excluye deck y mix: claim → el handler global para las
     // otras fuentes, y aquí mismo paramos deck/mix por si acaso.
@@ -2283,10 +2308,16 @@ export function DeckAudioProvider({
     setPreviewQueue(items)
     setPreviewIndex(clampedIdx)
     setPreviewGroupKey(groupKey ?? null)
+    if (sameTrack) {
+      previewQueueRef.current = items
+      previewIndexRef.current = clampedIdx
+      preloadNextPreview(items, clampedIdx)
+      return
+    }
     setPreviewProgress(0)
     setPreviewDuration(0)
     loadAndPlayPreviewAt(items, clampedIdx)
-  }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt])
+  }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt, preloadNextPreview])
 
   const togglePreviewRef = useRef<(() => void) | null>(null)
 
