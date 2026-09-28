@@ -77,6 +77,7 @@ export default function LazyDeckAudioProvider({
       document.body.appendChild(host)
       owned = true
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- el host del portal se crea en el DOM
     setPortalEl(host)
     return () => {
       if (owned && host && host.parentNode) host.parentNode.removeChild(host)
@@ -99,6 +100,24 @@ export default function LazyDeckAudioProvider({
   useEffect(() => {
     if (hasActiveAudioSession()) void requestLoad()
   }, [requestLoad])
+
+  // Precarga del chunk del motor cuando el navegador está ocioso (sin montarlo):
+  // así el primer ▶ no espera a la descarga. El audio ya arranca dentro del
+  // gesto (lib/audio-unlock), esto solo acorta lo que tarda en aparecer la barra.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const warm = () => { void import('@/components/DeckAudioProvider').catch(() => {}) }
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    if (win.requestIdleCallback) {
+      const id = win.requestIdleCallback(warm, { timeout: 6000 })
+      return () => win.cancelIdleCallback?.(id)
+    }
+    const t = window.setTimeout(warm, 3000)
+    return () => window.clearTimeout(t)
+  }, [])
 
   const onBind = useCallback((bind: DeckAudioShellBind) => {
     setShell((prev) => {

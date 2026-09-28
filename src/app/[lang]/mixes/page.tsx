@@ -12,6 +12,7 @@ import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import MixesExplorer from '@/components/MixesExplorer'
 import { mixSortTimestamp } from '@/lib/mix-datetime-local'
+import { fetchAllPages } from '@/lib/supabase-paginate'
 
 type FallbackMix = {
   type: string
@@ -119,12 +120,17 @@ export default async function MixesPage({ params }: { params: Promise<{ lang: Lo
   const supabase = createCachedSupabase(60)
   // No ordenar por published_at en SQL: si la migración 021 no está aplicada en Supabase,
   // PostgREST falla y data queda vacío → se muestra el fallback estático.
-  const { data: mixes } = await supabase
-    .from('mixes')
-    .select('*')
-    .order('year', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
-  const raw = (mixes || []) as Mix[]
+  // Paginado (bloques de 500, orden estable con `id`): PostgREST corta en
+  // 1.000 filas y la Data Cache no guarda respuestas de más de 2 MB.
+  const raw = await fetchAllPages<Mix>((from, to) =>
+    supabase
+      .from('mixes')
+      .select('*')
+      .order('year', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+  ).catch(() => [] as Mix[])
   /** Orden coherente con MixesExplorer: published_at → año catalogado (no fecha de importación). */
   const list = [...raw].sort((a, b) => mixSortTimestamp(b) - mixSortTimestamp(a))
 

@@ -25,10 +25,11 @@ export function useFavoriteArtists() {
   const fetch = useCallback(async () => {
     if (!user) { setFavorites([]); setLoading(false); return }
     const { data } = await supabase.from('favorite_artists').select('artist_id').eq('user_id', user.id)
-    setFavorites(data?.map((d: any) => d.artist_id) || [])
+    setFavorites(data?.map((d: { artist_id: string }) => d.artist_id) || [])
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const toggle = async (artistId: string) => {
@@ -56,10 +57,11 @@ export function useFavoriteLabels() {
   const fetch = useCallback(async () => {
     if (!user) { setFavorites([]); setLoading(false); return }
     const { data } = await supabase.from('favorite_labels').select('label_id').eq('user_id', user.id)
-    setFavorites(data?.map((d: any) => d.label_id) || [])
+    setFavorites(data?.map((d: { label_id: string }) => d.label_id) || [])
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const toggle = async (labelId: string) => {
@@ -87,10 +89,11 @@ export function useSavedMixes() {
   const fetch = useCallback(async () => {
     if (!user) { setSaved([]); setLoading(false); return }
     const { data } = await supabase.from('saved_mixes').select('mix_id').eq('user_id', user.id)
-    setSaved(data?.map((d: any) => d.mix_id) || [])
+    setSaved(data?.map((d: { mix_id: string }) => d.mix_id) || [])
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const toggle = async (mixId: string) => {
@@ -118,10 +121,11 @@ export function useFavoriteEvents() {
   const fetch = useCallback(async () => {
     if (!user) { setFavorites([]); setLoading(false); return }
     const { data } = await supabase.from('favorite_events').select('event_id').eq('user_id', user.id)
-    setFavorites(data?.map((d: any) => d.event_id) || [])
+    setFavorites(data?.map((d: { event_id: string }) => d.event_id) || [])
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const toggle = async (eventId: string) => {
@@ -152,11 +156,12 @@ export function useEventAttendance() {
     if (!user) { setAttendance({}); setLoading(false); return }
     const { data } = await supabase.from('event_attendance').select('event_id, status').eq('user_id', user.id)
     const map: Record<string, AttendanceStatus> = {}
-    data?.forEach((d: any) => { map[d.event_id] = d.status })
+    data?.forEach((d: { event_id: string; status: AttendanceStatus }) => { map[d.event_id] = d.status })
     setAttendance(map)
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const setStatus = async (eventId: string, status: AttendanceStatus) => {
@@ -221,6 +226,7 @@ export function useArtistSightings() {
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const add = async (sighting: Omit<Sighting, 'id'>) => {
@@ -287,7 +293,15 @@ export function useEventRatings() {
       .select('event_id, rating, review, attended_at, venue, city, country')
       .eq('user_id', user.id)
     const map: Record<string, EventRatingSummary> = {}
-    data?.forEach((d: any) => {
+    data?.forEach((d: {
+      event_id: string
+      rating: number
+      review: string | null
+      attended_at: string | null
+      venue: string | null
+      city: string | null
+      country: string | null
+    }) => {
       map[d.event_id] = {
         rating: d.rating,
         review: d.review || '',
@@ -301,6 +315,7 @@ export function useEventRatings() {
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const rate = async (eventId: string, data: EventRatingSave) => {
@@ -347,40 +362,102 @@ const FAV_CONFIG: Record<FavoriteType, { table: string; column: string }> = {
   mix: { table: 'saved_mixes', column: 'mix_id' },
 }
 
+// Almacén compartido de favoritos por tipo (a nivel de módulo).
+// ANTES: cada <FavoriteButton> lanzaba SU PROPIA consulta a Supabase al
+// montarse. En /mixes, /events, /artists o /labels eso eran N peticiones por
+// visita de un usuario logueado (una por tarjeta), creciendo con el catálogo.
+// AHORA: una sola consulta por tipo y usuario (todos sus ids), compartida por
+// todos los botones; los cambios se propagan al instante a todas las tarjetas.
+type FavStore = {
+  userId: string | null
+  ids: Set<string>
+  loaded: boolean
+  inflight: Promise<void> | null
+  listeners: Set<() => void>
+}
+
+const favStores: Record<FavoriteType, FavStore> = {
+  artist: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
+  label: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
+  event: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
+  mix: { userId: null, ids: new Set(), loaded: false, inflight: null, listeners: new Set() },
+}
+
+function notifyFav(type: FavoriteType) {
+  favStores[type].listeners.forEach((l) => l())
+}
+
+function ensureFavoritesLoaded(type: FavoriteType, userId: string): Promise<void> {
+  const store = favStores[type]
+  if (store.userId === userId && store.loaded) return Promise.resolve()
+  if (store.userId === userId && store.inflight) return store.inflight
+  const cfg = FAV_CONFIG[type]
+  store.userId = userId
+  store.loaded = false
+  store.ids = new Set()
+  const run = (async () => {
+    const PAGE = 1000
+    const ids = new Set<string>()
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from(cfg.table)
+        .select(cfg.column)
+        .eq('user_id', userId)
+        .range(from, from + PAGE - 1)
+      if (error) break
+      const rows = (data as Record<string, string>[] | null) ?? []
+      rows.forEach((r) => { if (r[cfg.column]) ids.add(r[cfg.column]) })
+      if (rows.length < PAGE) break
+    }
+    // Si mientras tanto cambió el usuario, descartamos este resultado.
+    if (store.userId !== userId) return
+    store.ids = ids
+    store.loaded = true
+    store.inflight = null
+    notifyFav(type)
+  })()
+  store.inflight = run
+  return run
+}
+
 export function useFavoriteToggle(type: FavoriteType, entityId: string) {
   const { user } = useAuth()
-  const [isFavorite, setIsFavorite] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const store = favStores[type]
   const cfg = FAV_CONFIG[type]
+  const [, forceRender] = useState(0)
 
   useEffect(() => {
-    let cancelled = false
-    const check = async () => {
-      if (!user || !entityId) { setIsFavorite(false); setLoading(false); return }
+    const listener = () => forceRender((n) => n + 1)
+    store.listeners.add(listener)
+    return () => { store.listeners.delete(listener) }
+  }, [store])
 
-      const { count } = await supabase
-        .from(cfg.table)
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq(cfg.column, entityId)
-      if (!cancelled) setIsFavorite((count ?? 0) > 0)
-      if (!cancelled) setLoading(false)
-    }
-    check()
-    return () => { cancelled = true }
-  }, [user, entityId, type, cfg.table, cfg.column])
+  useEffect(() => {
+    if (!user) return
+    void ensureFavoritesLoaded(type, user.id)
+  }, [user, type])
+
+  const ready = !!user && store.userId === user.id && store.loaded
+  const isFavorite = ready && !!entityId && store.ids.has(entityId)
+  const loading = !!user && !ready
 
   const toggle = useCallback(async () => {
     if (!user || !entityId) return
-
-    if (isFavorite) {
-      await supabase.from(cfg.table).delete().eq('user_id', user.id).eq(cfg.column, entityId)
-      setIsFavorite(false)
-    } else {
-      await supabase.from(cfg.table).insert({ user_id: user.id, [cfg.column]: entityId })
-      setIsFavorite(true)
+    const was = store.ids.has(entityId)
+    // Optimista: todas las tarjetas del mismo elemento se actualizan ya.
+    if (was) store.ids.delete(entityId)
+    else store.ids.add(entityId)
+    notifyFav(type)
+    const { error } = was
+      ? await supabase.from(cfg.table).delete().eq('user_id', user.id).eq(cfg.column, entityId)
+      : await supabase.from(cfg.table).insert({ user_id: user.id, [cfg.column]: entityId })
+    if (error) {
+      // Revertir si la escritura falló.
+      if (was) store.ids.add(entityId)
+      else store.ids.delete(entityId)
+      notifyFav(type)
     }
-  }, [user, entityId, isFavorite, type, cfg.table, cfg.column])
+  }, [user, entityId, type, store, cfg.table, cfg.column])
 
   return { isFavorite, loading, toggle, isLoggedIn: !!user }
 }
@@ -446,6 +523,40 @@ function setSavedChartTracksCache(
   savedChartTracksListeners.forEach((l) => l(savedChartTracksCache))
 }
 
+// Índices derivados de los guardados (claves, URLs canónicas, identidad
+// título+mix+artistas), calculados UNA vez por cada cambio de la lista y
+// compartidos por todas las instancias. Antes cada <SaveTrackButton> los
+// reconstruía en cada render parseando todas las URLs del usuario: con un año
+// del archivo abierto (cientos/miles de filas) y muchos guardados, un solo
+// toggle costaba millones de operaciones y la página se congelaba.
+type SavedDerived = {
+  rows: SavedChartTrackRef[]
+  keySet: Set<string>
+  urlSet: Set<string>
+  identitySet: Set<string>
+}
+let savedDerivedCache: SavedDerived | null = null
+
+function deriveSaved(rows: SavedChartTrackRef[]): SavedDerived {
+  if (savedDerivedCache && savedDerivedCache.rows === rows) return savedDerivedCache
+  const keySet = new Set<string>()
+  const urlSet = new Set<string>()
+  const identitySet = new Set<string>()
+  for (const s of rows) {
+    keySet.add(makeKey(s.track_source, s.track_id))
+    for (const u of [s.canonical_url, s.snapshot?.beatport_url]) {
+      const k = normalizeCanonicalUrl(u)
+      if (k) urlSet.add(k)
+    }
+    if (s.track_source !== 'vinyl') {
+      const id = trackSaveIdentityKey(s.snapshot?.title, s.snapshot?.mix_name, s.snapshot?.artists)
+      if (id) identitySet.add(id)
+    }
+  }
+  savedDerivedCache = { rows, keySet, urlSet, identitySet }
+  return savedDerivedCache
+}
+
 export function useSavedChartTracks() {
   const { user } = useAuth()
   const [saved, setSaved] = useState<SavedChartTrackRef[]>(savedChartTracksCache)
@@ -489,25 +600,23 @@ export function useSavedChartTracks() {
     // Solo refetch de red si cambia el usuario; si ya tenemos cache válida,
     // nos basta con suscribirnos. Evita "loading…" y parpadeos entre rutas.
     if (user && user.id === savedChartTracksUserId) {
+      /* eslint-disable react-hooks/set-state-in-effect -- adoptar la cache ya cargada */
       setSaved(savedChartTracksCache)
       setLoading(false)
+      /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
     fetch()
   }, [fetch, user])
 
-  const savedSet = new Set(saved.map((s) => makeKey(s.track_source, s.track_id)))
+  const derived = deriveSaved(saved)
+  const savedSet = derived.keySet
 
   // Set de URLs canónicas de todos los saves del usuario (cualquier fuente).
   // Se usa para mostrar en verde un botón "+" cuyo Beatport URL coincida con
   // una canción ya guardada desde otra lista (p.ej. 40 Breaks Vitales vs
   // Beatport Top 10 de un artista).
-  const savedUrlSet = new Set(
-    saved
-      .flatMap((s) => [s.canonical_url, s.snapshot?.beatport_url])
-      .map((u) => normalizeCanonicalUrl(u))
-      .filter((s): s is string => !!s),
-  )
+  const savedUrlSet = derived.urlSet
 
   const isSaved = (source: ChartTrackSource, id: string) => savedSet.has(makeKey(source, id))
 
@@ -535,12 +644,11 @@ export function useSavedChartTracks() {
     if (snapUrl && isSavedByUrl(snapUrl)) return true
     const want = trackSaveIdentityKey(opts.snapshot?.title, opts.snapshot?.mix_name, opts.snapshot?.artists)
     if (!want) return false
-    return saved.some((row) => {
-      if (identityOfSaved(row) === want) return true
-      const liveUrl = normalizeCanonicalUrl(row.canonical_url) || normalizeCanonicalUrl(row.snapshot?.beatport_url)
-      const incoming = normalizeCanonicalUrl(opts.url) || normalizeCanonicalUrl(snapUrl)
-      return !!incoming && liveUrl === incoming
-    })
+    // O(1) con los índices precalculados (antes recorría todos los guardados
+    // parseando URLs en cada llamada).
+    if (derived.identitySet.has(want)) return true
+    const incoming = normalizeCanonicalUrl(opts.url) || normalizeCanonicalUrl(snapUrl)
+    return !!incoming && savedUrlSet.has(incoming)
   }
 
   const toggle = async (
@@ -774,6 +882,7 @@ export function useProfile() {
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const update = async (updates: Partial<Omit<ProfileRow, 'id'>>) => {
@@ -809,6 +918,7 @@ export function useBreakbeatProfile() {
     setLoading(false)
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetch() }, [fetch])
 
   const save = async (row: {
@@ -873,6 +983,7 @@ export function useArtistBookingInbox() {
     }
   }, [user])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- carga al cambiar de usuario
   useEffect(() => { fetchInbox() }, [fetchInbox])
 
   return { artists, newCount, isArtist: artists.length > 0, loading, refetch: fetchInbox }

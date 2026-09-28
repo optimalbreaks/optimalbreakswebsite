@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadYouTubeIframeAPI } from '@/lib/mix-play-session-log'
 import {
   registerYouTubeEmbed,
@@ -88,27 +88,34 @@ export function LazyYouTubeEmbed({
   // El iframe (pesado) se monta solo al pulsar play o con autoplay (deep-link /
   // filas con botón externo). Así /mixes no monta decenas de iframes a la vez
   // (eso pillaba la página) y muestra la portada vía proxy mientras tanto.
-  const [mountIframe, setMountIframe] = useState(autoplay)
+  const [mountIframe, setMountIframe] = useState(!!autoplay)
   const [embedSrc, setEmbedSrc] = useState<string | null>(null)
+  // Si autoplay pasa a true después del primer render (deep-link), monta el iframe.
+  // No se fuerza en cada render: cerrar el embed (setMountIframe(false)) debe poder
+  // quedarse así mientras autoplay sigue en true.
+  const [autoplaySeen, setAutoplaySeen] = useState(!!autoplay)
+  if (!!autoplay !== autoplaySeen) {
+    setAutoplaySeen(!!autoplay)
+    if (autoplay) setMountIframe(true)
+  }
   const playRecordedRef = useRef(false)
   const nowPlayingGenRef = useRef(0)
 
-  const recordPlayOnce = () => {
+  const recordPlayOnce = useCallback(() => {
     if (!onPlayRecorded || playRecordedRef.current) return
     playRecordedRef.current = true
     onPlayRecorded()
-  }
+  }, [onPlayRecorded])
 
   const pushNowPlaying = () => {
     nowPlayingGenRef.current = applyNowPlaying(nowPlayingForVideo(videoId, title, nowPlaying))
   }
 
-  useEffect(() => {
-    if (autoplay) setMountIframe(true)
-  }, [autoplay])
-
+  // origin solo existe en el cliente; calcularlo en el render desalinea el HTML
+  // del servidor (autoplay) con el del cliente.
   useEffect(() => {
     if (!mountIframe) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- origin del navegador
     setEmbedSrc(
       `https://www.youtube.com/embed/${videoId}?rel=0&enablejsapi=1&autoplay=1&origin=${encodeURIComponent(window.location.origin)}`,
     )
@@ -191,7 +198,7 @@ export function LazyYouTubeEmbed({
         /* */
       }
     }
-  }, [mountIframe, embedSrc, iframeId, onPlayRecorded, autoplay])
+  }, [mountIframe, embedSrc, iframeId, onPlayRecorded, autoplay, recordPlayOnce])
 
   const handlePlay = () => {
     if (playSlotId) requestYouTubePlay(playSlotId)
@@ -231,6 +238,9 @@ function YouTubePosterButton({
   title: string
   onPlay: () => void
 }) {
+  // Siempre por el proxy propio: i.ytimg.com directo queda en negro detrás
+  // del proxy de Acttax y de los adblockers. `loading="lazy"` evita bajar
+  // todas las portadas al entrar en /mixes.
   const [broken, setBroken] = useState(false)
 
   return (
@@ -245,6 +255,7 @@ function YouTubePosterButton({
         <img
           src={proxiedThumbUrl(videoId)}
           alt={title}
+          loading="lazy"
           decoding="async"
           onError={() => setBroken(true)}
           className="absolute inset-0 h-full w-full object-cover"

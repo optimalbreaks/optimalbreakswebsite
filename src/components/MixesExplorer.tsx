@@ -51,7 +51,12 @@ function LazyYouTubeEmbed({
   )
 }
 
-/** Misma estrategia que YouTube: iframe SoundCloud solo cuando entra en zona visible. */
+/**
+ * Misma estrategia que YouTube: portada + botón y el iframe SOLO al pulsar.
+ * Antes el iframe se montaba al acercarse al viewport y nunca se desmontaba:
+ * haciendo scroll por el catálogo se acumulaban decenas de iframes de varios
+ * MB cada uno (en móvil acababa cerrándose la pestaña).
+ */
 function LazySoundCloudEmbed({
   trackUrl,
   title,
@@ -69,23 +74,9 @@ function LazySoundCloudEmbed({
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [mountIframe, setMountIframe] = useState(false)
-  const src = buildSoundCloudVisualPlayerSrc(trackUrl)
-
-  useEffect(() => {
-    const el = rootRef.current
-    if (!el || mountIframe) return
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setMountIframe(true)
-          obs.disconnect()
-        }
-      },
-      { root: null, rootMargin: '380px 0px', threshold: 0.01 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [mountIframe])
+  // Montado tras un clic del usuario: pedimos autoplay para no obligar a un
+  // segundo toque (si el navegador lo bloquea, el play del widget funciona).
+  const src = buildSoundCloudVisualPlayerSrc(trackUrl).replace('auto_play=false', 'auto_play=true')
 
   // Coordinación «una sola fuente audible» + métrica de play. El hook reclama
   // el slot al detectar PLAY dentro del widget (para preview/mix/deck y cierra
@@ -109,19 +100,42 @@ function LazySoundCloudEmbed({
           title={title}
           src={src}
           allow="autoplay"
-          loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
           className="absolute inset-0 h-full w-full border-0"
         />
       ) : (
-        <div className="absolute inset-0 bg-[var(--paper-dark)]" aria-hidden />
+        <button
+          type="button"
+          onClick={() => setMountIframe(true)}
+          aria-label={title}
+          className="group/sc absolute inset-0 h-full w-full cursor-pointer border-0 p-0 bg-[var(--ink)]"
+        >
+          {artworkUrl ? (
+            <CardThumbnail
+              src={artworkUrl}
+              alt={title}
+              heightClass="h-full"
+              frameClass=""
+              sizes="(max-width: 640px) 50vw, 25vw"
+            />
+          ) : null}
+          <span className="absolute inset-0 bg-black/15 transition-colors group-hover/sc:bg-black/30" aria-hidden />
+          <span
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-[58px] h-[40px] rounded-[10px] bg-[#ff5500] shadow-lg"
+            aria-hidden
+          >
+            <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white" aria-hidden>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        </button>
       )}
     </div>
   )
 }
 
 function getMixTrack(m: Mix): MixTrack | null {
-  const audioUrl = (m as any).audio_url as string | null | undefined
+  const audioUrl = m.audio_url
   if (audioUrl) {
     return { id: m.id, title: m.title, artist: m.artist_name, imageUrl: m.image_url, source: 'mp3', src: audioUrl }
   }
@@ -249,11 +263,20 @@ interface Props {
   lang: string
 }
 
+/** Tarjetas por año en el primer pintado; el resto entra por tramos («Ver más»). */
+const MIXES_PAGE = 24
+
 export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [search, setSearch] = useState('')
   const [yearFilter, setYearFilter] = useState<YearFilterValue>('all')
   const [platform, setPlatform] = useState<'all' | Mix['platform']>('all')
+  // Cuántas tarjetas se pintan por año. Antes se pintaba TODO el catálogo
+  // (las filtradas solo se ocultaban con CSS), con su portada y su botón de
+  // favorito cada una: el coste crecía con cada mix nuevo.
+  // (Los tramos solo crecen; no se reinician al filtrar para no chocar con el
+  // enlace profundo #mix-<id>, que amplía el tramo de su año.)
+  const [visibleByYear, setVisibleByYear] = useState<Record<string, number>>({})
   // ID del mix cuyo iframe de YouTube debe arrancar con autoplay=1 tras la
   // navegación desde el buscador global (⌘K) con `?play=1`.
   const [autoplayMixId, setAutoplayMixId] = useState<string | null>(null)
@@ -283,6 +306,16 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
       setSearch('')
       setYearFilter('all')
       setPlatform('all')
+      // Y amplía el tramo de su año para que la tarjeta esté pintada aunque
+      // quede más abajo de las primeras MIXES_PAGE.
+      for (const g of groupMixesByPublicationYear(mixes)) {
+        const pos = g.items.findIndex((m) => m.id === mixId)
+        if (pos >= 0) {
+          const k = String(g.key)
+          setVisibleByYear((v) => ({ ...v, [k]: Math.max(v[k] ?? MIXES_PAGE, pos + 1) }))
+          break
+        }
+      }
 
       if (wantsPlay) {
         const track = getMixTrack(target)
@@ -367,7 +400,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
 
   const filtered = useMemo(() => mixes.filter(isMixVisible), [mixes, isMixVisible])
 
-  /** Siempre el catálogo completo por años: las filas ocultas con `hidden` mantienen iframes ya cargados al quitar filtros. */
+  /** Catálogo completo agrupado por años; el filtro y los tramos se aplican al pintar. */
   const yearGroups = useMemo(() => groupMixesByPublicationYear(mixes), [mixes])
 
   const hasNonDefaultFilters =
@@ -506,14 +539,19 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
         </p>
       ) : (
         <div className="space-y-10 sm:space-y-14">
-          {yearGroups.map(({ key, items }, idx) => {
+          {yearGroups.map(({ key, items: yearItems }, idx) => {
             const title = key === 'undated' ? (dict.year_undated ?? '—') : String(key)
-            const sectionHasVisible = items.some(isMixVisible)
+            // Solo las tarjetas que pasan el filtro, y por tramos.
+            const visibleItems = yearItems.filter(isMixVisible)
+            if (visibleItems.length === 0) return null
+            const yearKey = String(key)
+            const limit = visibleByYear[yearKey] ?? MIXES_PAGE
+            const items = visibleItems.slice(0, limit)
+            const remaining = visibleItems.length - items.length
             return (
               <section
                 key={String(key)}
                 aria-labelledby={`mixes-year-${key}`}
-                className={sectionHasVisible ? undefined : 'hidden'}
               >
                 <h2
                   id={`mixes-year-${key}`}
@@ -535,6 +573,20 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
                 ) : (
                   <ListView mixes={items} lang={lang} isMixVisible={isMixVisible} autoplayMixId={autoplayMixId} />
                 )}
+                {remaining > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleByYear((v) => ({ ...v, [yearKey]: (v[yearKey] ?? MIXES_PAGE) + MIXES_PAGE }))
+                    }
+                    className="w-full px-4 py-3 text-xs font-black tracking-wider text-[var(--ink)] border-[3px] border-t-0 border-[var(--ink)] bg-[var(--paper)] hover:bg-[var(--yellow)]/40 active:bg-[var(--yellow)]/60 transition-colors cursor-pointer"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {lang === 'es'
+                      ? `Ver más (${remaining} restantes) ↓`
+                      : `Show more (${remaining} remaining) ↓`}
+                  </button>
+                ) : null}
               </section>
             )
           })}

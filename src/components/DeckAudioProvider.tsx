@@ -18,6 +18,15 @@ import {
 import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-audio-context'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
 import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
+import {
+  assignAudioSrc,
+  connectDeckAudio,
+  getInitialDeckIndexes,
+  getSharedAudioContext,
+  getSharedDeckAudio,
+  getSharedMixAudio,
+  getSharedPreviewAudio,
+} from '@/lib/audio-unlock'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
 import Image from 'next/image'
@@ -44,6 +53,9 @@ import TrackShareButton from '@/components/TrackShareButton'
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { TrackStoryMeta } from '@/lib/share-track'
+
+/** Elementos <audio> compartidos a los que ya se engancharon listeners (una vez). */
+const wiredAudioEls = new WeakSet<HTMLAudioElement>()
 
 export interface DeckDict {
   play: string
@@ -242,6 +254,8 @@ interface DeckAudioContextValue {
   mode: PlayerMode
   currentMix: MixTrack | null
   mixPlaying: boolean
+  /** El mix no se pudo cargar (archivo caído, pista privada…). */
+  mixError: boolean
   playMix: (mix: MixTrack) => void
   toggleMixPlayback: () => void
   stopMix: () => void
@@ -389,7 +403,11 @@ function PreviewAutoplayOverlay({ lang }: { lang: Locale }) {
   const artworkUrl = track?.artworkUrl || ''
   // Reset del fallback si cambia la pista actual; así un tema siguiente vuelve
   // a intentar cargar su portada en vez de mostrar para siempre el placeholder.
-  useEffect(() => { setArtworkFailed(false) }, [artworkUrl])
+  const [artworkUrlSeen, setArtworkUrlSeen] = useState(artworkUrl)
+  if (artworkUrl !== artworkUrlSeen) {
+    setArtworkUrlSeen(artworkUrl)
+    setArtworkFailed(false)
+  }
   if (!previewBlocked || !track) return null
   const es = lang === 'es'
   const showArtwork = !!artworkUrl && !artworkFailed
@@ -1096,7 +1114,7 @@ function MiniDeckBarInner({ lang }: { lang: Locale }) {
 
 // ─── Adapter: Mix (SoundCloud / MP3 largos) ──────────────────────────────
 function MiniMixBar({ lang }: { lang: Locale }) {
-  const { currentMix, mixPlaying, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
+  const { currentMix, mixPlaying, mixError, toggleMixPlayback, stopMix, seekMixToRatio, fmt } = useDeckAudio()
   const { mixProgress, mixDuration } = useDeckAudioProgress()
   const es = lang === 'es'
   if (!currentMix) return null
@@ -1111,7 +1129,13 @@ function MiniMixBar({ lang }: { lang: Locale }) {
       fmt={fmt}
       title={currentMix.title}
       subtitleBelow={
-        <>
+        mixError ? (
+          <span className="font-bold text-[var(--red)]">
+            {es
+              ? '⚠ No se pudo cargar este mix. Pulsa ▶ para reintentar.'
+              : '⚠ This mix could not be loaded. Press ▶ to retry.'}
+          </span>
+        ) : <>
           {currentMix.artist}
           <span className="ml-1.5 text-[var(--ink)]/30">·</span>
           <span className="ml-1.5 text-[9px] font-bold tracking-wider uppercase text-[var(--ink)]/35">
@@ -1165,10 +1189,6 @@ export function DeckAudioProvider({
   const gainRefB = useRef<GainNode | null>(null)
   const lastScratchTimeRef = useRef<number>(0)
 
-  // Legacy single-track references (used by context consumers that rely on `track`)
-  const audioRef = audioRefA
-
-  const [isPlaying, setIsPlaying] = useState(false)
   const [sessionActive, setSessionActive] = useState(false)
   const [crossfader, setCrossfader] = useState(0) // 0=A, 100=B
 
@@ -1177,15 +1197,15 @@ export function DeckAudioProvider({
   const trackIdxARef = useRef(0)
   const trackIdxBRef = useRef(1)
 
-  const [currentTrack, setCurrentTrack] = useState(0) // legacy compat
-
+  // Mismas pistas iniciales que enseña (y precarga) el deck antes de cargar
+  // el motor: ver lib/audio-unlock. Va en efecto (no en el useState) para no
+  // desajustar la hidratación: el aleatorio solo existe en el cliente.
   useEffect(() => {
-    const a = Math.floor(Math.random() * DECK_TRACKS.length)
-    let b = (a + 1) % DECK_TRACKS.length
-    if (b === a) b = (a + 2) % DECK_TRACKS.length
+    const { a, b } = getInitialDeckIndexes()
+    /* eslint-disable react-hooks/set-state-in-effect -- índices aleatorios tras montar */
     setTrackIdxA(a); trackIdxARef.current = a
     setTrackIdxB(b); trackIdxBRef.current = b
-    setCurrentTrack(a)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   const [progressA, setProgressA] = useState(0)
@@ -1216,9 +1236,17 @@ export function DeckAudioProvider({
   const [mixPlaying, setMixPlaying] = useState(false)
   const [mixProgress, setMixProgress] = useState(0)
   const [mixDuration, setMixDuration] = useState(0)
+  /** true si el mix no se puede reproducir (archivo caído, SoundCloud privado…). */
+  const [mixError, setMixError] = useState(false)
   const mixAudioRef = useRef<HTMLAudioElement | null>(null)
+  // Espejo del progreso para los handlers de la pantalla de bloqueo (±10 s)
+  // sin re-registrarlos 4 veces por segundo.
+  const mixProgressRef = useRef(0)
+  const mixDurationRef = useRef(0)
   const scHandleRef = useRef<SoundCloudWidgetHandle | null>(null)
   const [scTrackUrl, setScTrackUrl] = useState<string | null>(null)
+  // Fuerza a remontar el widget al reintentar la MISMA pista de SoundCloud.
+  const [scNonce, setScNonce] = useState(0)
 
   // === Preview player state (persiste entre rutas) ===
   const [previewQueue, setPreviewQueue] = useState<PreviewTrack[]>([])
@@ -1300,8 +1328,10 @@ export function DeckAudioProvider({
     }
   }, [sessionActive, mode, previewQueue.length])
 
-  // Helper to create and wire an audio element through a GainNode
+  // Adopta el <audio> compartido del lado (quizá ya arrancado dentro del gesto
+  // por el deck «gated») y lo enruta por el AudioContext compartido.
   const createDeckAudio = useCallback((
+    side: 'A' | 'B',
     ref: React.MutableRefObject<HTMLAudioElement | null>,
     gainRef: React.MutableRefObject<GainNode | null>,
     file: string,
@@ -1309,27 +1339,25 @@ export function DeckAudioProvider({
     onEnded: () => void,
   ) => {
     if (ref.current) return
-    const audio = new Audio(file)
-    audio.crossOrigin = 'anonymous'
-    audio.preload = 'auto'
-    audio.addEventListener('loadedmetadata', () => onDuration(audio.duration))
-    audio.addEventListener('ended', onEnded)
+    const audio = getSharedDeckAudio(side)
+    if (!audio.getAttribute('src')) audio.src = file
+    if (!wiredAudioEls.has(audio)) {
+      wiredAudioEls.add(audio)
+      audio.addEventListener('loadedmetadata', () => onDuration(audio.duration))
+      audio.addEventListener('ended', onEnded)
+    }
+    if (Number.isFinite(audio.duration) && audio.duration > 0) onDuration(audio.duration)
     ref.current = audio
 
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext()
-    }
-    const ctx = audioCtxRef.current
-    const source = ctx.createMediaElementSource(audio)
-    const gain = ctx.createGain()
-    source.connect(gain)
-    gain.connect(ctx.destination)
-    gainRef.current = gain
+    audioCtxRef.current = getSharedAudioContext()
+    gainRef.current = connectDeckAudio(side)
   }, [])
 
   const initAudio = useCallback(() => {
+    const ctx = getSharedAudioContext()
+    if (ctx && ctx.state === 'suspended') void ctx.resume().catch(() => {})
     createDeckAudio(
-      audioRefA, gainRefA,
+      'A', audioRefA, gainRefA,
       DECK_TRACKS[trackIdxARef.current].file,
       (d) => setDurationA(d),
       () => {
@@ -1343,7 +1371,7 @@ export function DeckAudioProvider({
     )
 
     createDeckAudio(
-      audioRefB, gainRefB,
+      'B', audioRefB, gainRefB,
       DECK_TRACKS[trackIdxBRef.current].file,
       (d) => setDurationB(d),
       () => {
@@ -1373,6 +1401,9 @@ export function DeckAudioProvider({
   const lastProgressFlushRef = useRef<{ A: number; B: number }>({ A: 0, B: 0 })
   const PROGRESS_FLUSH_MS = 120
   useEffect(() => {
+    // Sin nada sonando en el deck no hace falta bucle: antes corría a 60 fps
+    // para siempre (batería) en cuanto se cargaba el motor.
+    if (!playingA && !playingB) return
     const tick = (time: number) => {
       if (!lastTickRef.current) lastTickRef.current = time
       const deltaMs = time - lastTickRef.current
@@ -1416,10 +1447,34 @@ export function DeckAudioProvider({
     }
   }, [crossfader])
 
-  // Keep legacy `currentTrack` in sync with active side
-  useEffect(() => {
-    setCurrentTrack(crossfader < 50 ? trackIdxA : trackIdxB)
-  }, [crossfader, trackIdxA, trackIdxB])
+  // Para el mix que suena: pararlo antes de arrancar un lado del deck.
+  // Declarado aquí (y no más abajo) porque `togglePlaySide` lo llama.
+  const stopMixInternal = useCallback(() => {
+    if (mixAudioRef.current) {
+      mixAudioRef.current.pause()
+      // `src = ''` hacía que algunos navegadores pidieran la URL de la página
+      // como audio (petición inútil + evento error). Así se vacía de verdad.
+      mixAudioRef.current.removeAttribute('src')
+      try { mixAudioRef.current.load() } catch { /* no-op */ }
+    }
+    if (scHandleRef.current) {
+      scHandleRef.current.pause()
+    }
+    setScTrackUrl(null)
+    scHandleRef.current = null
+    setMixPlaying(false)
+    setMixProgress(0)
+    setMixDuration(0)
+    setMixError(false)
+    setCurrentMix(null)
+    clearNowPlaying()
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', null)
+      navigator.mediaSession.setActionHandler('pause', null)
+      navigator.mediaSession.setActionHandler('seekbackward', null)
+      navigator.mediaSession.setActionHandler('seekforward', null)
+    }
+  }, [])
 
   // Toggle play for a specific side
   const togglePlaySide = useCallback((side: 'A' | 'B') => {
@@ -1441,7 +1496,8 @@ export function DeckAudioProvider({
         claimAudio('deck')
         setPlayingA(true)
         audio.playbackRate = 1
-        void audio.play().catch(() => {})
+        // Si el navegador rechaza el play, la UI no debe seguir «sonando».
+        void audio.play().catch(() => setPlayingA(false))
         if (playingB) setCrossfader(50)
         else setCrossfader(0)
       }
@@ -1455,23 +1511,17 @@ export function DeckAudioProvider({
         claimAudio('deck')
         setPlayingB(true)
         audio.playbackRate = 1
-        void audio.play().catch(() => {})
+        void audio.play().catch(() => setPlayingB(false))
         if (playingA) setCrossfader(50)
         else setCrossfader(100)
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initAudio, playingA, playingB, mode])
+  }, [initAudio, playingA, playingB, mode, stopMixInternal])
 
   // Legacy togglePlay = toggle the active side
   const togglePlay = useCallback(() => {
     togglePlaySide(crossfader < 50 ? 'A' : 'B')
   }, [togglePlaySide, crossfader])
-
-  // isPlaying = whichever side is audible
-  useEffect(() => {
-    setIsPlaying((crossfader <= 50 && playingA) || (crossfader >= 50 && playingB))
-  }, [crossfader, playingA, playingB])
 
   // === Scratch handlers (adapted for dual deck) ===
   const handleScratchStart = useCallback(
@@ -1536,7 +1586,7 @@ export function DeckAudioProvider({
 
             osc.start(now)
             osc.stop(now + 0.08)
-          } catch (err) {}
+          } catch { /* scratch osc no-op */ }
         }
       }
 
@@ -1573,7 +1623,6 @@ export function DeckAudioProvider({
       }
       step()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scratchingLeft, scratchingRight, playingA, playingB])
 
   // Switch track on a specific side
@@ -1617,6 +1666,10 @@ export function DeckAudioProvider({
 
   const fmt = useCallback((s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`, [])
 
+  // Lado audible y si suena: derivados (antes un efecto los copiaba a estado
+  // un frame más tarde). Con el fader en 50 se oyen los dos.
+  const currentTrack = crossfader < 50 ? trackIdxA : trackIdxB
+  const isPlaying = (crossfader <= 50 && playingA) || (crossfader >= 50 && playingB)
   const track = DECK_TRACKS[currentTrack]
   const trackA = DECK_TRACKS[trackIdxA]
   const trackB = DECK_TRACKS[trackIdxB]
@@ -1640,41 +1693,79 @@ export function DeckAudioProvider({
     }).catch(() => {})
   }, [])
 
-  const stopMixInternal = useCallback(() => {
-    if (mixAudioRef.current) {
-      mixAudioRef.current.pause()
-      mixAudioRef.current.src = ''
-    }
-    if (scHandleRef.current) {
-      scHandleRef.current.pause()
-    }
-    setScTrackUrl(null)
-    scHandleRef.current = null
-    setMixPlaying(false)
-    setMixProgress(0)
-    setMixDuration(0)
-    setCurrentMix(null)
-    clearNowPlaying()
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
-      navigator.mediaSession.setActionHandler('seekbackward', null)
-      navigator.mediaSession.setActionHandler('seekforward', null)
-    }
-  }, [])
+  // Engancha los listeners del <audio> de mixes UNA sola vez. Antes cada
+  // playMix añadía otra tanda (loadedmetadata/timeupdate/ended) al mismo
+  // elemento y se acumulaban; tampoco había `error` (una exclusiva que daba
+  // 403/404 dejaba la barra en 0:00 para siempre) ni `play`/`pause` (pausar
+  // con auriculares o desde la pantalla de bloqueo desincronizaba el botón).
+  const wireMixAudio = useCallback((audio: HTMLAudioElement) => {
+    if (wiredAudioEls.has(audio)) return
+    wiredAudioEls.add(audio)
+    const hasSrc = () => !!audio.getAttribute('src')
+    audio.addEventListener('loadedmetadata', () => {
+      if (hasSrc()) setMixDuration(Number.isFinite(audio.duration) ? audio.duration : 0)
+    })
+    audio.addEventListener('timeupdate', () => {
+      if (hasSrc()) setMixProgress(audio.currentTime)
+    })
+    audio.addEventListener('play', () => {
+      if (!hasSrc()) return
+      setMixPlaying(true)
+      setMixError(false)
+    })
+    audio.addEventListener('playing', () => {
+      if (!hasSrc()) return
+      setMixPlaying(true)
+      logMixPlayOnce()
+      refreshNowPlaying()
+    })
+    audio.addEventListener('pause', () => {
+      if (hasSrc()) setMixPlaying(false)
+    })
+    audio.addEventListener('ended', () => {
+      if (!hasSrc()) return
+      setMixPlaying(false)
+      setMode((m) => (m === 'mix' ? 'idle' : m))
+      setCurrentMix(null)
+      clearNowPlaying()
+    })
+    audio.addEventListener('error', () => {
+      if (!hasSrc()) return
+      setMixPlaying(false)
+      setMixError(true)
+    })
+  }, [logMixPlayOnce])
 
   // === Mix player: playMix ===
   const playMix = useCallback((mix: MixTrack) => {
     claimAudio('mix')
-    // Pause the deck if it's playing
-    if (isPlaying && audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.playbackRate = 1
-      setIsPlaying(false)
+    // Parar el deck en AMBOS lados. Antes solo se pausaba `audioRef` (= A):
+    // con el lado B sonando, el mix y el deck sonaban a la vez.
+    if (audioRefA.current && playingA) {
+      audioRefA.current.pause()
+      audioRefA.current.playbackRate = 1
+      setPlayingA(false)
     }
+    if (audioRefB.current && playingB) {
+      audioRefB.current.pause()
+      audioRefB.current.playbackRate = 1
+      setPlayingB(false)
+    }
+    setSessionActive(false)
 
-    // Stop any previous mix
-    stopMixInternal()
+    // Stop any previous mix (sin tocar el <audio> si es el mismo MP3 que
+    // ya se arrancó dentro del gesto: ver lib/audio-unlock).
+    const shared = mix.source === 'mp3' ? getSharedMixAudio() : null
+    // (Si el elemento quedó en error, no cuenta: hay que volver a cargarlo.)
+    const alreadyPrimed = !!shared && shared.getAttribute('src') === mix.src && !shared.error
+    if (alreadyPrimed) {
+      if (scHandleRef.current) scHandleRef.current.pause()
+      setScTrackUrl(null)
+      scHandleRef.current = null
+      setMixError(false)
+    } else {
+      stopMixInternal()
+    }
 
     mixPlayLoggedRef.current = false
     currentMixIdRef.current = mix.id
@@ -1684,33 +1775,28 @@ export function DeckAudioProvider({
     setMixProgress(0)
     setMixDuration(0)
 
-    if (mix.source === 'mp3') {
-      if (!mixAudioRef.current) {
-        mixAudioRef.current = new Audio()
-      }
-      const audio = mixAudioRef.current
-      audio.src = mix.src
-      audio.preload = 'auto'
+    if (mix.source === 'mp3' && shared) {
+      mixAudioRef.current = shared
+      wireMixAudio(shared)
+      if (!alreadyPrimed) shared.src = mix.src
+      shared.preload = 'auto'
+      if (Number.isFinite(shared.duration) && shared.duration > 0) setMixDuration(shared.duration)
 
-      const onLoaded = () => setMixDuration(audio.duration)
-      const onTimeUpdate = () => setMixProgress(audio.currentTime)
-      const onEnded = () => {
-        setMixPlaying(false)
-        setMode('idle')
-      }
-
-      audio.addEventListener('loadedmetadata', onLoaded)
-      audio.addEventListener('timeupdate', onTimeUpdate)
-      audio.addEventListener('ended', onEnded)
-
-      void audio
+      void shared
         .play()
         .then(() => {
           setMixPlaying(true)
           logMixPlayOnce()
         })
-        .catch(() => {})
+        .catch((err: unknown) => {
+          setMixPlaying(false)
+          // NotAllowedError = falta un gesto: el ▶ de la barra lo arranca.
+          // Cualquier otro error = el archivo no carga: se avisa en la barra.
+          const name = (err && typeof err === 'object' && 'name' in err) ? (err as { name?: string }).name : ''
+          if (name !== 'NotAllowedError' && name !== 'AbortError') setMixError(true)
+        })
     } else if (mix.source === 'soundcloud') {
+      setScNonce((n) => n + 1)
       setScTrackUrl(mix.src)
       // SC widget will auto-play via onReady; state managed by callbacks
     }
@@ -1722,32 +1808,52 @@ export function DeckAudioProvider({
       album: mix.source === 'soundcloud' ? 'SoundCloud' : 'Optimal Breaks',
       artworkUrl: mix.imageUrl,
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying, stopMixInternal, logMixPlayOnce])
+  }, [playingA, playingB, stopMixInternal, logMixPlayOnce, wireMixAudio])
+
+  // === Mix player: play / pause explícitos (pantalla de bloqueo, auriculares) ===
+  const resumeMix = useCallback(() => {
+    if (!currentMix) return
+    broadcastPlaybackClaim()
+    stopAllYouTube()
+    if (currentMix.source === 'mp3' && mixAudioRef.current) {
+      setMixError(false)
+      void mixAudioRef.current.play().catch(() => {})
+    } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
+      scHandleRef.current.play()
+    }
+  }, [currentMix])
+
+  const pauseMix = useCallback(() => {
+    if (!currentMix) return
+    if (currentMix.source === 'mp3' && mixAudioRef.current) {
+      mixAudioRef.current.pause()
+    } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
+      scHandleRef.current.pause()
+    }
+    setMixPlaying(false)
+  }, [currentMix])
 
   // === Mix player: toggle pause/resume ===
   const toggleMixPlayback = useCallback(() => {
     if (!currentMix) return
 
-    if (currentMix.source === 'mp3' && mixAudioRef.current) {
-      if (mixPlaying) {
-        mixAudioRef.current.pause()
-        setMixPlaying(false)
-      } else {
-        broadcastPlaybackClaim()
-        void mixAudioRef.current.play().then(() => setMixPlaying(true)).catch(() => {})
-      }
-    } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
-      if (mixPlaying) {
-        scHandleRef.current.pause()
-        setMixPlaying(false)
-      } else {
-        broadcastPlaybackClaim()
-        scHandleRef.current.play()
-        setMixPlaying(true)
-      }
+    // Tras un error, ▶ = reintentar desde cero (recarga el MP3 o el widget).
+    if (mixError) {
+      playMix(currentMix)
+      return
     }
-  }, [currentMix, mixPlaying])
+
+    if (currentMix.source === 'mp3' && mixAudioRef.current) {
+      // Estado REAL del elemento (no `mixPlaying`, que podía estar desfasado
+      // si el SO o unos auriculares pausaron el audio).
+      if (!mixAudioRef.current.paused) pauseMix()
+      else resumeMix()
+    } else if (currentMix.source === 'soundcloud' && scHandleRef.current) {
+      // El estado real llega por los eventos PLAY/PAUSE del widget.
+      if (mixPlaying) pauseMix()
+      else resumeMix()
+    }
+  }, [currentMix, mixPlaying, mixError, playMix, pauseMix, resumeMix])
 
   // === Mix player: stop ===
   const stopMix = useCallback(() => {
@@ -1872,10 +1978,7 @@ export function DeckAudioProvider({
       pre.muted = true
       previewPreloadRef.current = pre
     }
-    if (pre.getAttribute('src') !== next.src) {
-      pre.src = next.src
-      try { pre.load() } catch { /* no-op */ }
-    }
+    assignAudioSrc(pre, next.src)
   }, [])
 
   // Watchdog de arranque: si tras (auto-)avanzar la pista el <audio> no
@@ -1937,9 +2040,14 @@ export function DeckAudioProvider({
       previewStartWatchdogRef.current = null
     }
 
-    if (!previewAudioRef.current) {
-      const a = new Audio()
-      a.preload = 'auto'
+    // <audio> compartido (lib/audio-unlock): si el usuario pulsó ▶ antes de
+    // que cargara el motor, este elemento YA arrancó dentro de su gesto, así
+    // que lo adoptamos en vez de crear otro (el nuevo caería en autoplay
+    // bloqueado en iOS). Los listeners se enganchan una sola vez.
+    if (!previewAudioRef.current) previewAudioRef.current = getSharedPreviewAudio()
+    if (!wiredAudioEls.has(previewAudioRef.current)) {
+      const a = previewAudioRef.current
+      wiredAudioEls.add(a)
       a.addEventListener('loadedmetadata', () => {
         if (previewAudioRef.current === a) {
           setPreviewDuration(a.duration || 0)
@@ -2065,7 +2173,6 @@ export function DeckAudioProvider({
       a.addEventListener('playing', () => {
         refreshNowPlaying()
       })
-      previewAudioRef.current = a
     }
     const audio = previewAudioRef.current
     // Pause antes de cambiar src: en algunos navegadores móviles el
@@ -2075,8 +2182,16 @@ export function DeckAudioProvider({
     // tema cambia automáticamente al final del anterior, dejando el
     // siguiente `play()` en NotAllowedError silencioso (el bug que el
     // usuario describía como «termina y no pasa al siguiente»).
-    try { audio.pause() } catch { /* no-op */ }
-    audio.src = queue[idx].src
+    // Si el src ya es el pedido (arrancado en el gesto), no se toca: así no
+    // se corta ni se reinicia lo que ya está sonando.
+    const targetSrc = queue[idx].src
+    if (audio.getAttribute('src') !== targetSrc) {
+      try { audio.pause() } catch { /* no-op */ }
+      audio.src = targetSrc
+    } else if (audio.ended) {
+      try { audio.currentTime = 0 } catch { /* no-op */ }
+    }
+    if (Number.isFinite(audio.duration) && audio.duration > 0) setPreviewDuration(audio.duration)
     audio.play()
       .then(() => {
         setPreviewPlaying(true)
@@ -2113,7 +2228,7 @@ export function DeckAudioProvider({
     if ('mediaSession' in navigator) {
       try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
     }
-  }, [stopPreviewInternal, advanceFromCurrentTrack, preloadNextPreview, armPreviewStartWatchdog])
+  }, [advanceFromCurrentTrack, preloadNextPreview, armPreviewStartWatchdog])
 
   // Mantén `loadAndPlayRef` apuntando a la versión más reciente; los
   // listeners del <audio> la usan vía la ref para no quedarse colgados
@@ -2171,8 +2286,29 @@ export function DeckAudioProvider({
     setPreviewProgress(0)
     setPreviewDuration(0)
     loadAndPlayPreviewAt(items, clampedIdx)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt])
+
+  const togglePreviewRef = useRef<(() => void) | null>(null)
+
+  // Play / pause EXPLÍCITOS para la pantalla de bloqueo y los auriculares.
+  // Antes ambos handlers llamaban a `togglePreview`: si el SO ya había
+  // pausado el audio y llegaba un «pause», la música se reanudaba.
+  const resumePreview = useCallback(() => {
+    const a = previewAudioRef.current
+    if (!a || previewQueueRef.current.length === 0) return
+    if (!a.paused) return
+    togglePreviewRef.current?.()
+  }, [])
+
+  const pausePreview = useCallback(() => {
+    const a = previewAudioRef.current
+    if (!a || previewQueueRef.current.length === 0) return
+    if (a.paused) {
+      setPreviewPlaying(false)
+      return
+    }
+    togglePreviewRef.current?.()
+  }, [])
 
   const togglePreview = useCallback(() => {
     if (previewQueue.length === 0) return
@@ -2208,28 +2344,34 @@ export function DeckAudioProvider({
     }
   }, [previewQueue.length])
 
+  useEffect(() => { togglePreviewRef.current = togglePreview }, [togglePreview])
+
   const stopPreview = useCallback(() => {
     stopPreviewInternal()
     setMode((m) => (m === 'preview' ? 'idle' : m))
   }, [stopPreviewInternal])
 
+  // Siguiente / anterior leyendo cola e índice de las refs. Antes el
+  // `loadAndPlayPreviewAt` iba DENTRO del updater de `setPreviewIndex`: los
+  // updaters deben ser puros (React puede re-ejecutarlos; en desarrollo con
+  // StrictMode se reproducía dos veces).
   const previewNext = useCallback(() => {
-    setPreviewIndex((prev) => {
-      const next = prev + 1
-      if (next >= previewQueue.length) return prev
-      loadAndPlayPreviewAt(previewQueue, next)
-      return next
-    })
-  }, [previewQueue, loadAndPlayPreviewAt])
+    const q = previewQueueRef.current
+    const next = previewIndexRef.current + 1
+    if (next >= q.length) return
+    previewIndexRef.current = next
+    setPreviewIndex(next)
+    loadAndPlayPreviewAt(q, next)
+  }, [loadAndPlayPreviewAt])
 
   const previewPrev = useCallback(() => {
-    setPreviewIndex((prev) => {
-      const next = prev - 1
-      if (next < 0) return prev
-      loadAndPlayPreviewAt(previewQueue, next)
-      return next
-    })
-  }, [previewQueue, loadAndPlayPreviewAt])
+    const q = previewQueueRef.current
+    const next = previewIndexRef.current - 1
+    if (next < 0 || next >= q.length) return
+    previewIndexRef.current = next
+    setPreviewIndex(next)
+    loadAndPlayPreviewAt(q, next)
+  }, [loadAndPlayPreviewAt])
 
   const seekPreviewToRatio = useCallback((ratio: number) => {
     const clamped = Math.max(0, Math.min(1, ratio))
@@ -2341,8 +2483,8 @@ export function DeckAudioProvider({
   useEffect(() => {
     if (previewQueue.length === 0) return
     if (!('mediaSession' in navigator)) return
-    navigator.mediaSession.setActionHandler('play', () => togglePreview())
-    navigator.mediaSession.setActionHandler('pause', () => togglePreview())
+    navigator.mediaSession.setActionHandler('play', () => resumePreview())
+    navigator.mediaSession.setActionHandler('pause', () => pausePreview())
     navigator.mediaSession.setActionHandler('previoustrack', () => previewPrev())
     navigator.mediaSession.setActionHandler('nexttrack', () => previewNext())
     try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch { /* no-op */ }
@@ -2361,7 +2503,7 @@ export function DeckAudioProvider({
       // Limpieza al desmontar o al salir del preview: los handlers se
       // re-asignan desde `stopPreviewInternal` si corresponde.
     }
-  }, [previewQueue.length, previewIndex, togglePreview, previewPrev, previewNext, seekPreviewToRatio, previewDuration])
+  }, [previewQueue.length, previewIndex, resumePreview, pausePreview, previewPrev, previewNext, seekPreviewToRatio, previewDuration])
 
   // Emite evento para BackToTop (compat con OB_CHART_PLAYALL_BAR_EVENT).
   useEffect(() => {
@@ -2371,28 +2513,41 @@ export function DeckAudioProvider({
     )
   }, [previewQueue.length])
 
-  // === Media Session action handlers (update when mix state changes) ===
+  useEffect(() => { mixProgressRef.current = mixProgress }, [mixProgress])
+  useEffect(() => { mixDurationRef.current = mixDuration }, [mixDuration])
+
+  // === Media Session action handlers (mix) ===
+  // play/pause EXPLÍCITOS: antes ambos llamaban a toggle y, si el estado
+  // estaba desfasado (pausa del SO), el «pause» de la pantalla de bloqueo
+  // reanudaba la música. Tampoco se re-registran en cada tick de progreso.
   useEffect(() => {
     if (mode !== 'mix' || !('mediaSession' in navigator)) return
 
-    navigator.mediaSession.setActionHandler('play', () => {
-      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume()
-      toggleMixPlayback()
-    })
-    navigator.mediaSession.setActionHandler('pause', () => {
-      toggleMixPlayback()
-    })
+    navigator.mediaSession.setActionHandler('play', () => resumeMix())
+    navigator.mediaSession.setActionHandler('pause', () => pauseMix())
+    try { navigator.mediaSession.setActionHandler('previoustrack', null) } catch { /* no-op */ }
+    try { navigator.mediaSession.setActionHandler('nexttrack', null) } catch { /* no-op */ }
     navigator.mediaSession.setActionHandler('seekbackward', () => {
-      seekMixToRatio(Math.max(0, (mixProgress - 10) / (mixDuration || 1)))
+      const d = mixDurationRef.current || 1
+      seekMixToRatio(Math.max(0, (mixProgressRef.current - 10) / d))
     })
     navigator.mediaSession.setActionHandler('seekforward', () => {
-      seekMixToRatio(Math.min(1, (mixProgress + 10) / (mixDuration || 1)))
+      const d = mixDurationRef.current || 1
+      seekMixToRatio(Math.min(1, (mixProgressRef.current + 10) / d))
     })
-  }, [mode, mixProgress, mixDuration, toggleMixPlayback, seekMixToRatio])
+  }, [mode, resumeMix, pauseMix, seekMixToRatio])
 
   // === SC Widget callbacks ===
+  // READY no significa «sonando»: si el navegador bloquea el autoplay del
+  // iframe (habitual en iOS), antes la barra mostraba «pausa» sin sonido.
+  // El estado real llega con los eventos PLAY/PAUSE del widget.
   const handleScReady = useCallback(() => {
-    setMixPlaying(true)
+    setMixError(false)
+  }, [])
+
+  const handleScError = useCallback(() => {
+    setMixPlaying(false)
+    setMixError(true)
   }, [])
 
   const handleScProgress = useCallback((posMs: number, durMs: number) => {
@@ -2402,8 +2557,10 @@ export function DeckAudioProvider({
 
   const handleScFinish = useCallback(() => {
     setMixPlaying(false)
-    setMode('idle')
+    setMode((m) => (m === 'mix' ? 'idle' : m))
     setCurrentMix(null)
+    setScTrackUrl(null)
+    clearNowPlaying()
   }, [])
 
   const handleScPause = useCallback(() => {
@@ -2412,6 +2569,7 @@ export function DeckAudioProvider({
 
   const handleScPlay = useCallback(() => {
     setMixPlaying(true)
+    setMixError(false)
     logMixPlayOnce()
     refreshNowPlaying()
   }, [logMixPlayOnce])
@@ -2513,6 +2671,7 @@ export function DeckAudioProvider({
       mode,
       currentMix,
       mixPlaying,
+      mixError,
       playMix,
       toggleMixPlayback,
       stopMix,
@@ -2557,6 +2716,7 @@ export function DeckAudioProvider({
       mode,
       currentMix,
       mixPlaying,
+      mixError,
       playMix,
       toggleMixPlayback,
       stopMix,
@@ -2624,7 +2784,9 @@ export function DeckAudioProvider({
         <PreviewAutoplayOverlay lang={lang} />
         {scTrackUrl && (
           <SoundCloudWidget
+            key={scNonce}
             trackUrl={scTrackUrl}
+            onError={handleScError}
             onReady={handleScReady}
             onPlay={handleScPlay}
             onPause={handleScPause}
@@ -2638,12 +2800,14 @@ export function DeckAudioProvider({
     [
       lang,
       scTrackUrl,
+      scNonce,
       handleScReady,
       handleScPlay,
       handleScPause,
       handleScFinish,
       handleScProgress,
       handleScHandleRef,
+      handleScError,
     ],
   )
 

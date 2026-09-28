@@ -8,10 +8,19 @@ import {
   type PreviewAudioApi,
   type PreviewTrack,
 } from '@/components/DeckAudioProvider'
+import { primeMixInGesture, primePreviewInGesture } from '@/lib/audio-unlock'
+import { stopAllYouTube } from '@/lib/youtube-play-coordinator'
 
 const noop = () => {}
 
-/** Preview: carga el motor solo al primer play. */
+/**
+ * Preview: carga el motor solo al primer play.
+ *
+ * IMPORTANTE: `primePreviewInGesture` arranca el <audio> compartido DENTRO
+ * del click (síncrono). Sin esto, en iOS el `play()` llegaba cuando el chunk
+ * del motor terminaba de descargarse — fuera del gesto — y el navegador lo
+ * bloqueaba (primer toque = modal «Toca para escuchar»).
+ */
 export function usePreviewAudioGated(): PreviewAudioApi {
   const gate = useAudioEngineGate()
   const live = usePreviewAudioMaybe()
@@ -26,7 +35,11 @@ export function usePreviewAudioGated(): PreviewAudioApi {
     previewGroupKey: null,
     previewBlocked: false,
     playPreviewQueue: (items: PreviewTrack[], startIndex = 0, groupKey?: string) => {
-      void gate.requestLoad({ kind: 'preview', items, startIndex, groupKey })
+      if (!items.length) return
+      const idx = Math.max(0, Math.min(items.length - 1, startIndex))
+      stopAllYouTube()
+      primePreviewInGesture(items[idx]?.src)
+      void gate.requestLoad({ kind: 'preview', items, startIndex: idx, groupKey })
     },
     togglePreview: noop,
     stopPreview: noop,
@@ -36,7 +49,7 @@ export function usePreviewAudioGated(): PreviewAudioApi {
   }
 }
 
-/** Mixes: carga el motor solo al primer play. */
+/** Mixes: carga el motor solo al primer play (MP3 arrancado dentro del gesto). */
 export function useMixAudioGated(): {
   playMix: (track: MixTrack) => void
   toggleMixPlayback: () => void
@@ -59,6 +72,8 @@ export function useMixAudioGated(): {
 
   return {
     playMix: (track) => {
+      stopAllYouTube()
+      if (track.source === 'mp3') primeMixInGesture(track.src)
       void gate.requestLoad({ kind: 'mix', track })
     },
     // Motor aún no cargado ⇒ nada suena ⇒ parar/toggle son no-ops.

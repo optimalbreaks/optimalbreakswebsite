@@ -23,6 +23,18 @@ function client() {
   return createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])
 }
 
+/**
+ * Caché de CDN (Vercel) para las respuestas públicas: la misma ventana que la
+ * Data Cache (5 min) + servir copia caducada mientras se regenera. Antes la
+ * respuesta no llevaba cabecera y cada apertura de acordeón invocaba la
+ * función aunque los datos no hubieran cambiado.
+ */
+const PUBLIC_CACHE = { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
+
+function ok(body: unknown) {
+  return NextResponse.json(body, { headers: PUBLIC_CACHE })
+}
+
 export async function GET(req: NextRequest) {
   const kind = req.nextUrl.searchParams.get('kind') || ''
   try {
@@ -30,7 +42,7 @@ export async function GET(req: NextRequest) {
       const week = (req.nextUrl.searchParams.get('week') || '').slice(0, 10)
       if (!WEEK.test(week)) return NextResponse.json({ error: 'week' }, { status: 400 })
       const tracks = await loadPickWeek(client(), week)
-      return NextResponse.json({ tracks })
+      return ok({ tracks })
     }
     if (kind === 'archive') {
       const year = req.nextUrl.searchParams.get('year') || ''
@@ -38,13 +50,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'year' }, { status: 400 })
       }
       const rows = await loadArchiveYear(client(), year)
-      return NextResponse.json({ rows })
+      return ok({ rows })
     }
     if (kind === 'locate') {
       const id = req.nextUrl.searchParams.get('id') || ''
       if (!ID.test(id)) return NextResponse.json({ error: 'id' }, { status: 400 })
       const target = await locateChartTrack(client(), id)
-      return NextResponse.json({ target })
+      return ok({ target })
     }
     return NextResponse.json({ error: 'kind' }, { status: 400 })
   } catch (err) {

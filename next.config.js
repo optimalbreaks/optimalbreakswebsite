@@ -80,19 +80,11 @@ const nextConfig = {
 
   // Security headers
   async headers() {
-    const noStoreArtists = [
-      {
-        key: 'Cache-Control',
-        value: 'private, no-cache, no-store, max-age=0, must-revalidate',
-      },
-      {
-        key: 'CDN-Cache-Control',
-        value: 'no-store',
-      },
-    ]
+    // (sep 2026) Eliminado el `Cache-Control: no-store` de /:lang/artists*:
+    // contradecía la Data Cache (revalidate 300 s, ver artists/layout.tsx),
+    // impedía la caché de CDN y desactivaba el back/forward cache del
+    // navegador (volver atrás recargaba la ficha entera).
     return [
-      { source: '/:lang/artists', headers: noStoreArtists },
-      { source: '/:lang/artists/:slug*', headers: noStoreArtists },
       {
         source: '/(.*)',
         headers: [

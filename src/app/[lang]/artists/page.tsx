@@ -16,6 +16,7 @@ import { ARTIST_ERAS, FEATURED_ARTISTS, artistSlug } from '@/lib/artists-timelin
 import CardThumbnail from '@/components/CardThumbnail'
 import ArtistsExplorer from '@/components/ArtistsExplorer'
 import CountryBadge from '@/components/CountryBadge'
+import { fetchAllPages } from '@/lib/supabase-paginate'
 
 const FEATURED_ARTIST_DESCRIPTIONS: Record<string, { es: string; en: string; country: string }> = {
   'DJ KOOL HERC': {
@@ -79,20 +80,29 @@ export default async function ArtistsPage({ params }: { params: Promise<{ lang: 
 
   // Try Supabase, fallback to empty
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
-  const { data: artists } = await supabase
-    .from('artists')
-    .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, beatport_top_tracks')
-    .order('name_display', { ascending: true })
 
+  // - Paginado: PostgREST corta en 1.000 filas; a partir del artista 1.001 el
+  //   listado habría perdido fichas sin dar error.
+  // - `bp_first:beatport_top_tracks->0`: solo el PRIMER tema del Top 10 (o
+  //   null). Antes se descargaba el JSON completo de todos los artistas solo
+  //   para saber si tenían Top 10.
   type ArtistListRow = Pick<
     Artist,
-    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url' | 'beatport_top_tracks'
-  >
-  const list = (artists || []) as ArtistListRow[]
-  const listForUi = list.map(({ beatport_top_tracks, ...a }) => ({
+    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
+  > & { bp_first: unknown }
+  const list = await fetchAllPages<ArtistListRow>((from, to) =>
+    supabase
+      .from('artists')
+      .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, bp_first:beatport_top_tracks->0')
+      .order('name_display', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to),
+  ).catch(() => [] as ArtistListRow[])
+
+  const listForUi = list.map(({ bp_first, ...a }) => ({
     ...a,
     image_url: displayArtistImageUrl(a.slug, a.image_url) ?? null,
-    has_beatport_top: Array.isArray(beatport_top_tracks) && beatport_top_tracks.length > 0,
+    has_beatport_top: bp_first != null,
   }))
   return (
     <div className="lined min-h-screen">

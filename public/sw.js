@@ -6,10 +6,31 @@
 
 // v5: manifest con id/scope/launch_handler (consistencia del reproductor en
 // PWA móvil) — el bump invalida el manifest.json precacheado en clientes.
-const CACHE_NAME = 'ob-v5'
+// v6 (sep 2026): el SW deja de tocar el audio (Range/206 rompía iOS), ya no
+// guarda HTML privado (/mi-cuenta, admin, login) ni respuestas de error, y
+// la caché de páginas tiene tope. El bump borra la caché v5 con MP3/HTML viejos.
+const CACHE_NAME = 'ob-v6'
+/** Máximo de páginas HTML guardadas para el modo offline (las más recientes). */
+const MAX_HTML_ENTRIES = 40
+/** Rutas con datos del usuario o de administración: nunca a la caché. */
+const PRIVATE_PATH_RE = /^\/(?:[a-z]{2}\/)?(?:mi-cuenta|administrator|dashboard|login|reset-password|auth|u\/)/
+
+async function trimCache(cacheName, max) {
+  try {
+    const cache = await caches.open(cacheName)
+    const keys = await cache.keys()
+    // Solo recortamos HTML; los estáticos precacheados se quedan.
+    const html = keys.filter((k) => !STATIC_ASSETS.includes(new URL(k.url).pathname))
+    const excess = html.length - max
+    for (let i = 0; i < excess; i++) await cache.delete(html[i])
+  } catch {
+    /* no-op */
+  }
+}
 const SHARE_INBOX = 'ob-share-inbox'
+// Sin '/': redirige a /es o /en y una respuesta redirigida no puede servirse
+// para una navegación (Chrome da error de red en modo offline).
 const STATIC_ASSETS = [
-  '/',
   '/favicon.svg',
   '/manifest.json',
 ]
@@ -103,46 +124,54 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api')) return
   if (url.hostname.includes('supabase')) return
 
-  // Music & mix audio files: cache first
-  if (url.pathname.startsWith('/music/') || url.pathname.startsWith('/mixes-audio/') || /\.(mp3|m4a|ogg|wav)(\?|$)/.test(url.pathname)) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request).then((response) => {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          return response
-        })
-      })
-    )
-    return
-  }
-
-  // Fichas / listado artistas: siempre red (no guardar HTML; evita bios viejas tras db:artist)
+  // Audio / vídeo: NUNCA pasar por el SW. El <audio> pide con `Range` y espera
+  // 206; la Cache API no guarda 206 y devolver un 200 completo a una petición
+  // Range hace fallar la reproducción en iOS Safari / PWA. El navegador y la
+  // caché HTTP ya lo gestionan bien por sí solos.
   if (
-    request.headers.get('accept')?.includes('text/html') &&
-    url.pathname.includes('/artists')
+    request.destination === 'audio' ||
+    request.destination === 'video' ||
+    request.headers.has('range') ||
+    url.pathname.startsWith('/music/') ||
+    /\.(mp3|m4a|ogg|wav|flac)$/i.test(url.pathname)
   ) {
-    event.respondWith(fetch(request))
     return
   }
 
-  // Otras páginas: red primero, caché si falla la red
-  if (request.headers.get('accept')?.includes('text/html')) {
+  // Terceros (imágenes de CDNs, YouTube…): que los gestione el navegador.
+  if (url.origin !== self.location.origin) return
+
+  const isHtml = request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')
+
+  if (isHtml) {
+    // Páginas privadas y fichas de artista: solo red (sin guardar).
+    if (PRIVATE_PATH_RE.test(url.pathname) || url.pathname.includes('/artists')) return
+
+    // Resto de páginas: red primero; guardamos solo respuestas OK y no
+    // redirigidas, con tope de entradas; offline → última copia.
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          if (response.ok && !response.redirected && response.type === 'basic') {
+            const clone = response.clone()
+            event.waitUntil(
+              caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put(request, clone))
+                .then(() => trimCache(CACHE_NAME, MAX_HTML_ENTRIES))
+                .catch(() => {}),
+            )
+          }
           return response
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+        .catch(() => caches.match(request).then((cached) => cached || Response.error())),
     )
     return
   }
 
-  // Other assets: cache first
-  event.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request))
-  )
+  // Estáticos precacheados (manifest, favicon): caché primero.
+  if (STATIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(caches.match(request).then((cached) => cached || fetch(request)))
+  }
+  // Todo lo demás: sin intervención del SW.
 })

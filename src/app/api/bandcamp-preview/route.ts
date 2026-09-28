@@ -1,8 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { AUDIO_PROXY_UA, streamAudioUpstream } from '@/lib/audio-upstream'
 
-const UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-const MAX_SIZE = 10 * 1024 * 1024
+/**
+ * Preview de Bandcamp: resuelve el MP3 (mp3-128) a partir de la página del
+ * tema y lo reenvía con soporte Range.
+ *
+ * Antes cada petición (y Safari hace varias por pista con Range) volvía a
+ * descargar y parsear el HTML de Bandcamp y luego el MP3 entero. Ahora la
+ * página se cachea 1 h en la Data Cache (las URLs de stream de Bandcamp
+ * llevan token con caducidad; si el token cacheado ya no vale, se resuelve
+ * de nuevo sin caché y se reintenta una vez).
+ */
+const PAGE_REVALIDATE_S = 3600
+
+async function resolveMp3Url(trackUrl: string, fresh: boolean): Promise<string | null> {
+  const page = await fetch(trackUrl, {
+    headers: { 'User-Agent': AUDIO_PROXY_UA, Accept: 'text/html' },
+    signal: AbortSignal.timeout(10_000),
+    ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: PAGE_REVALIDATE_S } }),
+  })
+  if (!page.ok) return null
+  const html = await page.text()
+  const tralbum = html.match(/data-tralbum="([^"]*)"/)
+  if (!tralbum) return null
+  try {
+    const decoded = tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+    const obj = JSON.parse(decoded)
+    const mp3: unknown = obj?.trackinfo?.[0]?.file?.['mp3-128']
+    return typeof mp3 === 'string' && mp3.startsWith('http') ? mp3 : null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   const trackUrl = request.nextUrl.searchParams.get('track')
@@ -17,68 +46,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
   }
 
-  if (!parsed.hostname.endsWith('.bandcamp.com')) {
+  if (parsed.protocol !== 'https:' || !parsed.hostname.endsWith('.bandcamp.com')) {
     return NextResponse.json({ error: 'Not a Bandcamp URL' }, { status: 403 })
   }
 
+  const cacheControl = 'public, max-age=3600, s-maxage=3600'
   try {
-    const page = await fetch(trackUrl, {
-      headers: { 'User-Agent': UA, Accept: 'text/html' },
-    })
-    if (!page.ok) {
-      return NextResponse.json(
-        { error: `Bandcamp returned ${page.status}` },
-        { status: 502 },
-      )
+    const cachedMp3 = await resolveMp3Url(parsed.toString(), false)
+    if (cachedMp3) {
+      const res = await streamAudioUpstream(request, cachedMp3, cacheControl)
+      if (res.status !== 502) return res
     }
-
-    const html = await page.text()
-    const tralbum = html.match(/data-tralbum="([^"]*)"/)
-    if (!tralbum) {
-      return NextResponse.json({ error: 'No track data found' }, { status: 404 })
+    // Token caducado o página sin datos en caché: resolver de nuevo.
+    const freshMp3 = await resolveMp3Url(parsed.toString(), true)
+    if (!freshMp3) {
+      return NextResponse.json({ error: 'No preview available' }, { status: 404 })
     }
-
-    const decoded = tralbum[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-    const obj = JSON.parse(decoded)
-    const mp3Url: string | undefined = obj?.trackinfo?.[0]?.file?.['mp3-128']
-
-    if (!mp3Url) {
-      return NextResponse.json(
-        { error: 'No preview available' },
-        { status: 404 },
-      )
-    }
-
-    const upstream = await fetch(mp3Url, {
-      headers: { 'User-Agent': UA },
-    })
-
-    if (!upstream.ok) {
-      return NextResponse.json(
-        { error: `Stream ${upstream.status}` },
-        { status: upstream.status },
-      )
-    }
-
-    const cl = parseInt(upstream.headers.get('content-length') || '0', 10)
-    if (cl > MAX_SIZE) {
-      return NextResponse.json({ error: 'File too large' }, { status: 413 })
-    }
-
-    const body = upstream.body
-    if (!body) {
-      return NextResponse.json({ error: 'Empty stream' }, { status: 502 })
-    }
-
-    return new NextResponse(body, {
-      status: 200,
-      headers: {
-        'Content-Type': upstream.headers.get('content-type') || 'audio/mpeg',
-        'Content-Length': upstream.headers.get('content-length') || '',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-        'Accept-Ranges': 'bytes',
-      },
-    })
+    return streamAudioUpstream(request, freshMp3, cacheControl)
   } catch {
     return NextResponse.json({ error: 'Proxy failed' }, { status: 502 })
   }

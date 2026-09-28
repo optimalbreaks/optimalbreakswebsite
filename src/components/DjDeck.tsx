@@ -5,8 +5,9 @@
 
 'use client'
 
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { DECK_TRACKS } from '@/lib/deck-tracks'
+import { getInitialDeckIndexes, primeDeckInGesture } from '@/lib/audio-unlock'
 import { useAudioEngineGate } from '@/components/LazyDeckAudioProvider'
 import {
   useDeckAudioMaybe,
@@ -198,8 +199,6 @@ function Platter({
   rotation,
   playing,
   scratching,
-  track,
-  labelColor,
   onScratchStart,
   onScratchMove,
   onScratchEnd,
@@ -432,7 +431,17 @@ function useDjDeckControl(propDict: DjDeckProps['dict']) {
   // deck de la portada SÍ los pinta (platos girando, barras de progreso),
   // así que aquí los fusionamos con el value principal.
   const liveProgress = useDeckAudioProgressMaybe()
-  const [crossfader, setCrossfader] = useState(50)
+  // Mismo valor inicial que el motor (0 = lado A): antes era 50 y el fader
+  // «saltaba» al cargar el motor.
+  const [crossfader, setCrossfader] = useState(0)
+  // Pistas iniciales: las mismas que usará el motor (lib/audio-unlock). En SSR
+  // se pintan 0/1 y tras montar se sincronizan (evita desajuste de hidratación
+  // y que suene un tema distinto al que muestra el display).
+  const [initialIdx, setInitialIdx] = useState<{ a: number; b: number }>({ a: 0, b: 1 })
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mismo aleatorio que el motor, tras hidratar
+    setInitialIdx(getInitialDeckIndexes())
+  }, [])
 
   if (live && liveProgress) {
     return {
@@ -463,21 +472,26 @@ function useDjDeckControl(propDict: DjDeckProps['dict']) {
     leftRotation: 0,
     rightRotation: 0,
     fmt: fmtTime,
-    deckA: IDLE_SIDE,
-    deckB: IDLE_SIDE,
+    deckA: { ...IDLE_SIDE, trackIdx: initialIdx.a },
+    deckB: { ...IDLE_SIDE, trackIdx: initialIdx.b },
     activeSide: 'A' as const,
-    trackA: DECK_TRACKS[0],
-    trackB: DECK_TRACKS[1],
+    trackA: DECK_TRACKS[initialIdx.a],
+    trackB: DECK_TRACKS[initialIdx.b],
     initAudio: () => {
-      void gate.requestLoad()
+      // Los botones llaman initAudio() y justo después toggle/switch: la
+      // acción pendiente la registra esa segunda llamada.
     },
     handleScratchStart: () => {},
     handleScratchMove: () => {},
     handleScratchEnd: () => {},
     switchTrackOnSide: (side: 'A' | 'B', direction: -1 | 1) => {
+      primeDeckInGesture(side, false)
       void gate.requestLoad({ kind: 'deck-switch', side, direction })
     },
     togglePlaySide: (side: 'A' | 'B') => {
+      // AudioContext + <audio> arrancados DENTRO del toque (iOS): si no, el
+      // deck «sonaba» (platos girando) pero en silencio.
+      primeDeckInGesture(side, true)
       void gate.requestLoad({ kind: 'deck-toggle', side })
     },
   }

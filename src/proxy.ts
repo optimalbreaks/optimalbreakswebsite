@@ -5,18 +5,22 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { i18n } from '@/lib/i18n-config'
+import { i18n, type Locale } from '@/lib/i18n-config'
+
+function isLocale(value: string): value is Locale {
+  return (i18n.locales as readonly string[]).includes(value)
+}
 
 const LOCALE_COOKIE = 'OB_LOCALE'
 
 function getLocale(request: NextRequest): string {
   const cookie = request.cookies.get(LOCALE_COOKIE)?.value
-  if (cookie && i18n.locales.includes(cookie as any)) return cookie
+  if (cookie && isLocale(cookie)) return cookie
 
   const acceptLanguage = request.headers.get('accept-language')
   if (acceptLanguage) {
     const preferred = acceptLanguage.split(',')[0].split('-')[0].toLowerCase()
-    if (i18n.locales.includes(preferred as any)) return preferred
+    if (isLocale(preferred)) return preferred
   }
   return i18n.defaultLocale
 }
@@ -67,7 +71,16 @@ export async function proxy(request: NextRequest) {
     .getAll()
     .some((c) => c.name.includes('-auth-token') || c.name.startsWith('sb-'))
 
-  if (supabaseUrl && supabaseKey && hasAuthCookie) {
+  // Los prefetch de <Link> (Next los lanza en bloque al ver enlaces en
+  // pantalla) NO necesitan refrescar la sesión: antes cada uno hacía un viaje
+  // a Supabase Auth y añadía hasta 2,5 s a cada navegación de un usuario
+  // logueado. La navegación real sí refresca.
+  const isPrefetch =
+    request.headers.has('next-router-prefetch') ||
+    request.headers.get('purpose') === 'prefetch' ||
+    (request.headers.get('sec-purpose') || '').includes('prefetch')
+
+  if (supabaseUrl && supabaseKey && hasAuthCookie && !isPrefetch) {
     // Aborta de verdad la petición a Auth si tarda: sin esto, un cuelgue de
     // Supabase agota los 25 s del proxy y Vercel devuelve 504 en todo el sitio.
     const AUTH_TIMEOUT_MS = 2_500
@@ -93,8 +106,15 @@ export async function proxy(request: NextRequest) {
     })
 
     try {
-      // Refresca la sesión (mantiene al usuario logueado)
-      await supabase.auth.getUser()
+      // Refresca la sesión (mantiene al usuario logueado). `getClaims()`
+      // valida el JWT en local cuando el proyecto usa claves asimétricas (sin
+      // viaje de red) y solo llama a Auth si el token ha caducado y hay que
+      // refrescarlo. Si la versión de supabase-js no lo trae, `getUser()`.
+      const auth = supabase.auth as typeof supabase.auth & {
+        getClaims?: () => Promise<unknown>
+      }
+      if (typeof auth.getClaims === 'function') await auth.getClaims()
+      else await supabase.auth.getUser()
     } catch {
       // Auth caído o lento: seguir sirviendo la página sin refrescar cookies
     }
@@ -104,7 +124,7 @@ export async function proxy(request: NextRequest) {
   const segments = pathname.split('/')
   if (segments.length >= 2 && segments[1]) {
     const urlLocale = segments[1].toLowerCase()
-    if (urlLocale.length === 2 && !i18n.locales.includes(urlLocale as any)) {
+    if (urlLocale.length === 2 && !isLocale(urlLocale)) {
       request.nextUrl.pathname = `/${i18n.defaultLocale}${pathname.slice(3)}`
       return NextResponse.redirect(request.nextUrl)
     }

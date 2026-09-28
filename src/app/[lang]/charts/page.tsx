@@ -16,6 +16,7 @@ import ChartView from '@/components/ChartView'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import { Suspense } from 'react'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, slugLookupKeys } from '@/lib/artist-slug-map'
+import { fetchAllPages } from '@/lib/supabase-paginate'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
 // petición. Los datos siguen viniendo de la Data Cache (createCachedSupabase,
@@ -226,19 +227,28 @@ async function ChartsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnTy
   // Totales nada más. Los temas llegan al pulsar ▶ en la semana o el año.
   const { pickWeeks, archiveYears } = await loadChartsOutline(supabase)
 
-  const { data: dbArtists } = await supabase
-    .from('artists')
-    .select('slug, name, name_display')
-    .limit(5000)
-  const artistRows = (dbArtists as { slug: string; name: string | null; name_display: string | null }[] | null) ?? []
+  // Paginado y ordenado: `.limit(5000)` no servía porque PostgREST corta en
+  // `max_rows` (1.000 por defecto) y, sin ORDER BY, qué artistas quedaban
+  // fuera era aleatorio (sus nombres dejaban de enlazar a la ficha).
+  type ArtistSlugRow = { slug: string; name: string | null; name_display: string | null }
+  type LabelSlugRow = { slug: string; name: string | null; image_url: string | null }
+  const [artistRows, labelRows] = await Promise.all([
+    fetchAllPages<ArtistSlugRow>((from, to) =>
+      supabase
+        .from('artists')
+        .select('slug, name, name_display')
+        .order('slug', { ascending: true })
+        .range(from, to),
+    ).catch(() => [] as ArtistSlugRow[]),
+    fetchAllPages<LabelSlugRow>((from, to) =>
+      supabase
+        .from('labels')
+        .select('slug, name, image_url')
+        .order('slug', { ascending: true })
+        .range(from, to),
+    ).catch(() => [] as LabelSlugRow[]),
+  ])
   const artistSlugMap = buildFullArtistSlugMap(artistRows)
-
-  const { data: dbLabels } = await supabase
-    .from('labels')
-    .select('slug, name, image_url')
-    .limit(5000)
-  const labelRows =
-    (dbLabels as { slug: string; name: string | null; image_url: string | null }[] | null) ?? []
   const labelSlugMap = buildFullLabelSlugMap(
     labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null })),
   )

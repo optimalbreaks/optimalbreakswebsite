@@ -9,6 +9,7 @@
  *
  *   node scripts/spotify-match-charts.mjs                       # Spotify, charts pendientes (spotify_url NULL)
  *   node scripts/spotify-match-charts.mjs --service=tidal       # TIDAL (tidal_url NULL)
+ *   node scripts/spotify-match-charts.mjs --from=2026-01-01 --until=2027-01-01
  *   node scripts/spotify-match-charts.mjs --week=2026-08-10     # solo esa edición (lunes ISO)
  *   node scripts/spotify-match-charts.mjs --table=featured      # chart | featured | all (charts)
  *   node scripts/spotify-match-charts.mjs --table=beatport      # Top 10 Beatport de artists + labels (JSONB)
@@ -86,6 +87,9 @@ function argValue(name, def = null) {
   return hit ? hit.slice(p.length) : def
 }
 const WEEK = argValue('week')
+const FROM = (argValue('from') || '').trim()
+const UNTIL = (argValue('until') || '').trim()
+const ARTIST = (argValue('artist') || '').trim()
 const SLUG = (argValue('slug') || '').trim()
 const TABLE = (argValue('table', 'all') || 'all').toLowerCase()
 const DRY_RUN = argv.includes('--dry-run')
@@ -147,11 +151,15 @@ async function fetchRows(table) {
     if (!eds.length) throw new Error(`No hay chart_editions con week_date=${WEEK}`)
     filters.push(`chart_edition_id=eq.${eds[0].id}`)
   }
+  if (FROM) filters.push(`release_date=gte.${FROM}`)
+  if (UNTIL) filters.push(`release_date=lt.${UNTIL}`)
+  if (ARTIST) filters.push(`artist_names_text=ilike.*${encodeURIComponent(ARTIST)}*`)
   const filterStr = filters.length ? `&${filters.join('&')}` : ''
+  const order = FROM || UNTIL ? 'release_date.desc,id' : 'id'
   const rows = []
   const PAGE = 500
   for (let offset = 0; ; offset += PAGE) {
-    const page = await sbGet(`${table}?select=${cols}${filterStr}&order=id&limit=${PAGE}&offset=${offset}`)
+    const page = await sbGet(`${table}?select=${cols}${filterStr}&order=${order}&limit=${PAGE}&offset=${offset}`)
     rows.push(...page)
     if (page.length < PAGE) break
     if (LIMIT && rows.length >= LIMIT) break
@@ -402,7 +410,7 @@ async function pingPublicChartsRevalidate() {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ secret }),
+      body: JSON.stringify({ secret, catalog: true }),
     })
     if (res.ok) console.log('  ↳ Caché web pública invalidada (/charts).')
     else {
@@ -457,7 +465,8 @@ function rowLabel(row) {
 
 async function processTable(table) {
   const rows = await fetchRows(table)
-  console.log(`\n■ ${table}: ${rows.length} filas ${FORCE ? '(--force: re-matcheo)' : 'pendientes'}${WEEK ? ` — semana ${WEEK}` : ''}`)
+  const range = `${FROM || UNTIL ? ` — release ${FROM || '…'} → ${UNTIL || '…'}` : ''}${ARTIST ? ` — artista «${ARTIST}»` : ''}`
+  console.log(`\n■ ${table}: ${rows.length} filas ${FORCE ? '(--force: re-matcheo)' : 'pendientes'}${WEEK ? ` — semana ${WEEK}` : ''}${range}`)
   let matched = 0
   let notFound = 0
   const misses = []

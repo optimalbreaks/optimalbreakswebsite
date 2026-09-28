@@ -417,10 +417,25 @@ function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: Br
   return out
 }
 
+/** Tarjetas por año en el primer pintado; el resto entra por tramos («Ver más»). */
+const EVENTS_PAGE = 40
+
 export default function EventsExplorer({ events, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
   const [when, setWhen] = useState<DateWhen>('all')
   const [country, setCountry] = useState<string | 'all'>('all')
+  // Cuántas tarjetas se pintan en cada año. Con el catálogo creciendo sin
+  // límite, pintar TODO de golpe (cada tarjeta con cartel + favorito) hacía
+  // la página cada vez más lenta. El calendario sí recibe el año completo.
+  const [visibleByYear, setVisibleByYear] = useState<Record<string, number>>({})
+  // Al cambiar el filtro se vuelve al primer tramo. Ajuste en el render (no
+  // en un efecto) para que el listado no pinte un frame con el tramo viejo.
+  const filterKey = `${when}\0${country}`
+  const [visibleFilterKey, setVisibleFilterKey] = useState(filterKey)
+  if (filterKey !== visibleFilterKey) {
+    setVisibleFilterKey(filterKey)
+    setVisibleByYear({})
+  }
   const [calDayModal, setCalDayModal] = useState<null | { events: BreakEvent[]; date: Date }>(null)
   const [calPortalMounted, setCalPortalMounted] = useState(false)
 
@@ -441,13 +456,17 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
     [dict, lang],
   )
 
+  // El portal del día solo existe en el cliente (document.body).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- montaje de portal
     setCalPortalMounted(true)
   }, [])
 
-  useEffect(() => {
+  const [viewForModal, setViewForModal] = useState(view)
+  if (view !== viewForModal) {
+    setViewForModal(view)
     if (view !== 'calendar') setCalDayModal(null)
-  }, [view])
+  }
 
   useEffect(() => {
     if (!calDayModal) return undefined
@@ -583,8 +602,13 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
         </p>
       ) : (
         <div className="space-y-10 sm:space-y-14">
-          {yearGroups.map(({ key, items }, idx) => {
+          {yearGroups.map(({ key, items: allItems }, idx) => {
             const title = key === 'undated' ? (df?.undated ?? '—') : String(key)
+            const yearKey = String(key)
+            const limit = visibleByYear[yearKey] ?? EVENTS_PAGE
+            const paged = view !== 'calendar' && allItems.length > limit
+            const items = paged ? allItems.slice(0, limit) : allItems
+            const remaining = allItems.length - items.length
             return (
               <section key={String(key)} aria-labelledby={`events-year-${key}`}>
                 <h2
@@ -631,6 +655,20 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
                 ) : (
                   <ListView events={items} lang={lang} />
                 )}
+                {paged && remaining > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleByYear((v) => ({ ...v, [yearKey]: (v[yearKey] ?? EVENTS_PAGE) + EVENTS_PAGE }))
+                    }
+                    className="mt-0 w-full px-4 py-3 text-xs font-black tracking-wider text-[var(--ink)] border-[3px] border-t-0 border-[var(--ink)] bg-[var(--paper)] hover:bg-[var(--yellow)]/40 active:bg-[var(--yellow)]/60 transition-colors cursor-pointer"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {lang === 'es'
+                      ? `Ver más (${remaining} restantes) ↓`
+                      : `Show more (${remaining} remaining) ↓`}
+                  </button>
+                ) : null}
               </section>
             )
           })}

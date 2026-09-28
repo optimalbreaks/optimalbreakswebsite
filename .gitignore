@@ -45,6 +45,12 @@ tmp-*.json
 tmp-*.png
 _tmp-*
 scripts/_tmp-*
+# Progreso de lotes de archivo (se reescribe al correr el script; no es código)
+scripts/_archive-*-progress.txt
+
+# Carteles originales de Karmic Waves (fuentes locales de push-karmic-waves-events).
+# El zip y los JPG/PNG no los sirve la web; lo publicado va a Storage.
+karmic_waves_events/
 
 # Carruseles / exports de Instagram (no los sirve la web)
 instagram_images/

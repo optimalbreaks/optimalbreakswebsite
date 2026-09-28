@@ -14,6 +14,22 @@ import CardThumbnail from '@/components/CardThumbnail'
 import EventsExplorer from '@/components/EventsExplorer'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import { Suspense } from 'react'
+import { fetchAllPages } from '@/lib/supabase-paginate'
+
+/**
+ * El listado solo enseña un extracto de ~220 caracteres de la descripción
+ * (modal del calendario). Mandar el HTML completo de TODOS los eventos al
+ * cliente hacía crecer la página con cada evento pasado. Aquí se deja el
+ * texto plano recortado; la descripción completa sigue en la ficha.
+ */
+const LIST_DESCRIPTION_MAX = 300
+
+function plainExcerpt(html: string | null | undefined): string {
+  if (!html) return ''
+  const plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!plain) return ''
+  return plain.length <= LIST_DESCRIPTION_MAX ? plain : `${plain.slice(0, LIST_DESCRIPTION_MAX).trim()}…`
+}
 
 type FallbackEvent = {
   date_es: string
@@ -135,14 +151,26 @@ export default async function EventsPage({ params }: { params: Promise<{ lang: L
 
 async function EventsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnType<typeof getDictionary>> }) {
   const supabase = createCachedSupabase()
-  const { data: events } = await supabase.from('events').select('*').order('date_start', { ascending: false })
-  const list = ((events || []) as BreakEvent[])
+  // Paginado (bloques de 500, orden estable): PostgREST corta en 1.000 filas y
+  // la Data Cache no guarda respuestas de más de 2 MB. Sin esto, el evento
+  // 1.001 desaparecía del listado y la caché dejaba de funcionar en silencio.
+  const events = await fetchAllPages<BreakEvent>((from, to) =>
+    supabase
+      .from('events')
+      .select('*')
+      .order('date_start', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+  ).catch(() => [] as BreakEvent[])
+  const list = events
     .map((e) => ({
       ...e,
+      description_es: plainExcerpt(e.description_es),
+      description_en: plainExcerpt(e.description_en),
       // Cartel versionado: la ruta en Storage es fija, `?v=<updated_at>` evita
       // que CDN/navegador sigan enseñando el cartel viejo tras reemplazarlo.
       image_url: versionedImageUrl(e.image_url, imageCacheVersion(e.updated_at)),
-    }))
+    }) as BreakEvent)
     .sort((a, b) => {
     if (a.event_type === 'upcoming' && b.event_type !== 'upcoming') return -1
     if (a.event_type !== 'upcoming' && b.event_type === 'upcoming') return 1
