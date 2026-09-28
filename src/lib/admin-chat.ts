@@ -1,5 +1,6 @@
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
+import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-country'
 import { pathToFileURL } from 'url'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
@@ -195,7 +196,7 @@ function loadSystemPrompt(): string {
   const p = path.resolve(process.cwd(), 'scripts', 'prompts', 'admin-chat-system.txt')
   if (existsSync(p)) return readFileSync(p, 'utf8').trim()
   // Fallback si el bundle no incluye scripts/prompts
-  return `Eres el asistente editorial de Optimal Breaks. Con capturas de cartel, lee el evento y devuelve JSON { "reply":"...", "actions":[{ "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, "lineup":[], "city":"", "country":"ES", "date_start":null }] }. Upsert directo, sin pedir confirmación.`
+  return `Eres el asistente editorial de Optimal Breaks. Con capturas de cartel, lee el evento y devuelve JSON { "reply":"...", "actions":[{ "type":"event", "slug":"...", "name":"...", "use_attached_image":true, "enrich":true, "lineup":[], "city":"", "country":"Spain", "date_start":null }] }. País siempre en inglés (Spain, United Kingdom, United States…). Upsert directo, sin pedir confirmación.`
 }
 
 function stripJsonFence(raw: string): string {
@@ -371,7 +372,7 @@ export function eventActionFromScreenshotFacts(
     slug,
     name,
     city: facts.city?.trim() || 'TBA',
-    country: (facts.country || 'ES').trim() || 'ES',
+    country: normalizeEventCountry(facts.country) || DEFAULT_EVENT_COUNTRY,
     venue: facts.venue?.trim() || undefined,
     date_start: facts.date_start || null,
     lineup: Array.isArray(facts.lineup)
@@ -675,16 +676,19 @@ async function upsertEventAction(
     : 'upcoming'
 
   const city = action.city?.trim() || 'TBA'
+  // País canónico (inglés): el chat solía escribir `ES` y el filtro de /events
+  // salía triplicado (`ES` / `España` / `Spain`). Ver src/lib/event-country.ts.
+  const country = normalizeEventCountry(action.country) || DEFAULT_EVENT_COUNTRY
   const location =
     action.location?.trim() ||
-    [city, (action.country || 'ES').trim()].filter(Boolean).join(', ')
+    [city, country].filter(Boolean).join(', ')
   const dateStart = normalizeUpcomingEventDate(action.date_start)
   const dateEnd = normalizeUpcomingEventDate(action.date_end) || dateStart
 
   const row: Record<string, unknown> = {
     slug,
     name,
-    country: (action.country || 'ES').trim() || 'ES',
+    country,
     city,
     venue: action.venue?.trim() || null,
     location,

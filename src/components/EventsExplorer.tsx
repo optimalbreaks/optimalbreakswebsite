@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
+import { normalizeEventCountry } from '@/lib/event-country'
 import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
@@ -25,9 +26,8 @@ type DateFilterDict = {
   no_results: string
 }
 
-function normalizeCountry(s: string | null | undefined): string {
-  return String(s ?? '').trim()
-}
+// País canónico (inglés) para el filtro: `ES` / `España` / `Spain` son uno.
+const normalizeCountry = normalizeEventCountry
 
 interface Props {
   events: BreakEvent[]

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { adminCreate } from '@/lib/admin-api'
+import { normalizeEventCountry } from '@/lib/event-country'
 import AdminForm from '@/components/admin/AdminForm'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ArrayEditor from '@/components/admin/ArrayEditor'
@@ -47,6 +48,7 @@ export default function EventsNewPage() {
     try {
       await adminCreate('events', {
         ...form,
+        country: normalizeEventCountry(form.country),
         date_start: form.date_start || null,
         date_end: form.date_end || null,
         venue: form.venue || null,
