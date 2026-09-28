@@ -142,6 +142,49 @@ const UNKNOWN_YEAR_KEY = '__unknown_year__'
 
 /** Semanas visibles al cargar New Releases / 40 Breaks; el resto tras «Cargar más». */
 const INITIAL_WEEKS_VISIBLE = 10
+/** Filas que se pintan de golpe al abrir un año del archivo; el resto entra por tramos. */
+const ARCHIVE_PAGE = 60
+
+function archiveRowId(row: ArchiveRow): string {
+  return row.kind === 'vinyl' ? row.track.id : row.pick.id
+}
+
+/**
+ * Pie de un año del archivo con «Ver más»: auto-revela el siguiente tramo al
+ * entrar en pantalla y deja el botón como alternativa. Un año puede tener
+ * ~2.000 filas; pintarlas todas de golpe bloquea el hilo (bug 28 sep 2026).
+ */
+function RevealMoreRows({ yearKey, remaining, onMore, lang }: {
+  yearKey: string
+  remaining: number
+  onMore: (yearKey: string) => void
+  lang: Locale
+}) {
+  const ref = useRef<HTMLButtonElement | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) onMore(yearKey)
+    }, { rootMargin: '400px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [onMore, yearKey, remaining])
+  const label = lang === 'es'
+    ? `Ver más (${remaining} restantes)`
+    : `Show more (${remaining} remaining)`
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onClick={() => onMore(yearKey)}
+      className="w-full px-4 py-3 text-xs font-black tracking-wider text-[var(--ink)] border-t-[3px] border-[var(--ink)] hover:bg-[var(--yellow)]/25 active:bg-[var(--yellow)]/40 transition-colors"
+      style={{ fontFamily: "'Courier Prime', monospace" }}
+    >
+      {label} ↓
+    </button>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -649,6 +692,19 @@ export default function ChartView({
   const pickRequested = useRef<Set<string>>(new Set())
   const archiveRequested = useRef<Set<string>>(new Set())
   const archiveRowsRef = useRef<Record<string, ArchiveRow[]>>({})
+  /** Cuántas filas de cada año están pintadas (tramos de ARCHIVE_PAGE). */
+  const [archiveVisible, setArchiveVisible] = useState<Record<string, number>>({})
+  /** Deep-link a una fila del archivo: hay que revelar hasta ella cuando lleguen los datos. */
+  const archiveRevealRef = useRef<Record<string, string>>({})
+  const revealArchiveRow = useCallback((yearKey: string, trackId: string, rows: ArchiveRow[]) => {
+    const idx = rows.findIndex((r) => archiveRowId(r) === trackId)
+    if (idx < 0) return
+    const needed = Math.ceil((idx + 1) / ARCHIVE_PAGE) * ARCHIVE_PAGE
+    setArchiveVisible((s) => (s[yearKey] ?? ARCHIVE_PAGE) >= needed ? s : { ...s, [yearKey]: needed })
+  }, [])
+  const showMoreArchive = useCallback((yearKey: string) => {
+    setArchiveVisible((s) => ({ ...s, [yearKey]: (s[yearKey] ?? ARCHIVE_PAGE) + ARCHIVE_PAGE }))
+  }, [])
   /** Fila a la que hay que hacer scroll cuando exista en el DOM (deep-link). */
   const scrollTargetRef = useRef<string | null>(null)
   /** Vinilo pedido por deep-link cuyo año aún se está descargando. */
@@ -687,7 +743,9 @@ export default function ChartView({
         return r.json() as Promise<{ rows?: ArchiveRow[] }>
       })
       .then((body) => {
-        const rows = body.rows ?? []
+        // Se guarda YA ordenado (A–Z por artista): reordenar ~2.000 filas en
+        // cada render era parte del bloqueo al abrir un año grande.
+        const rows = sortArchiveRows(body.rows ?? [], lang)
         archiveRowsRef.current[yearKey] = rows
         setArchiveByYearLoaded((s) => ({ ...s, [yearKey]: rows }))
         setArchivePhase((s) => {
@@ -695,6 +753,11 @@ export default function ChartView({
           delete next[yearKey]
           return next
         })
+        const reveal = archiveRevealRef.current[yearKey]
+        if (reveal) {
+          delete archiveRevealRef.current[yearKey]
+          revealArchiveRow(yearKey, reveal, rows)
+        }
         const intent = vinylIntentRef.current
         if (intent && intent.yearKey === yearKey) {
           vinylIntentRef.current = null
@@ -705,7 +768,7 @@ export default function ChartView({
         archiveRequested.current.delete(yearKey)
         setArchivePhase((s) => ({ ...s, [yearKey]: 'error' }))
       })
-  }, [])
+  }, [lang, revealArchiveRow])
 
   const [autoplayVinylId, setAutoplayVinylId] = useState<string | null>(null)
 
@@ -832,8 +895,10 @@ export default function ChartView({
         }
       } else {
         ensureOpenVinyl(target.year)
+        const loaded = archiveRowsRef.current[target.year]
+        if (loaded) revealArchiveRow(target.year, trackId, loaded)
+        else archiveRevealRef.current[target.year] = trackId
         if (kind === 'vinyl' && wantsPlay) {
-          const loaded = archiveRowsRef.current[target.year]
           if (loaded) resolveVinylIntent({ trackId, yearKey: target.year }, loaded)
           else vinylIntentRef.current = { trackId, yearKey: target.year }
         } else if (wantsPlay) {
@@ -849,7 +914,7 @@ export default function ChartView({
       seq += 1
       window.removeEventListener('hashchange', applyDeepLink)
     }
-  }, [pickWeeks, ensureOpenPicks, ensureOpenVinyl, loadPicks, loadArchive])
+  }, [pickWeeks, ensureOpenPicks, ensureOpenVinyl, loadPicks, loadArchive, revealArchiveRow])
 
   // Scroll + destello a la fila del deep-link en cuanto exista en el DOM
   // (la sección se abre y sus temas llegan por fetch).
@@ -863,7 +928,7 @@ export default function ChartView({
     el.classList.add('!bg-[var(--yellow)]/25')
     const timer = window.setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1800)
     return () => window.clearTimeout(timer)
-  }, [pickByWeek, archiveByYearLoaded, showAllPicksWeeks, openPicks, openVinyl])
+  }, [pickByWeek, archiveByYearLoaded, archiveVisible, showAllPicksWeeks, openPicks, openVinyl])
 
   // ---- Play-all state (delegado al provider global) ----
   const {
@@ -1188,6 +1253,26 @@ export default function ChartView({
     )
   }
 
+  // Bundle de «reproducir todo» + índice por fila de cada año cargado, calculado
+  // una vez por cambio de datos (no en cada render ni con findIndex por fila).
+  const archiveBundles = useMemo(() => {
+    const out: Record<string, { bundle: PlayAllBundle; idxByRowKey: Map<string, number> }> = {}
+    for (const [yearKey, rows] of Object.entries(archiveByYearLoaded)) {
+      const featured = rows
+        .filter((r): r is Extract<ArchiveRow, { kind: 'featured' }> => r.kind === 'featured')
+        .map((r) => r.pick)
+      const bundle = buildFeaturedBundle(
+        featured,
+        canonicalGroups.featuredByTrack,
+        rows.find((r) => r.kind === 'featured')?.weekDate ?? '',
+      )
+      const idxByRowKey = new Map<string, number>()
+      bundle.forEach((m, i) => idxByRowKey.set(m.rowKey, i))
+      out[yearKey] = { bundle, idxByRowKey }
+    }
+    return out
+  }, [archiveByYearLoaded, canonicalGroups.featuredByTrack, buildFeaturedBundle])
+
   const visiblePicksWeeks = showAllPicksWeeks
     ? pickWeeks
     : pickWeeks.slice(0, INITIAL_WEEKS_VISIBLE)
@@ -1366,16 +1451,13 @@ export default function ChartView({
 
           <div className="flex flex-col gap-2 px-2 sm:px-0">
             {archiveYears.map(({ yearKey, count }) => {
-              const rows = sortArchiveRows(archiveByYearLoaded[yearKey] ?? [], lang)
-              const featuredForYear = rows
-                .filter((r): r is Extract<ArchiveRow, { kind: 'featured' }> => r.kind === 'featured')
-                .map((r) => r.pick)
+              const rows = archiveByYearLoaded[yearKey] ?? []
               const archiveKey = `archive-${yearKey}`
-              const archiveBundle = buildFeaturedBundle(
-                featuredForYear,
-                canonicalGroups.featuredByTrack,
-                rows.find((r) => r.kind === 'featured')?.weekDate ?? '',
-              )
+              const archiveBundle = archiveBundles[yearKey]?.bundle ?? []
+              const archiveIdx = archiveBundles[yearKey]?.idxByRowKey
+              const visibleCount = archiveVisible[yearKey] ?? ARCHIVE_PAGE
+              const visibleRows = rows.length > visibleCount ? rows.slice(0, visibleCount) : rows
+              const remaining = rows.length - visibleRows.length
               const expanded = openVinyl.has(yearKey)
               const phase = archivePhase[yearKey]
               const yearLabel = yearKey === UNKNOWN_YEAR_KEY ? c.vinyl_year_unknown : yearKey
@@ -1444,7 +1526,7 @@ export default function ChartView({
                           {lang === 'es' ? 'No se han podido cargar. Reintentar.' : 'Could not load. Retry.'}
                         </button>
                       ) : null}
-                      {rows.map((row) => {
+                      {visibleRows.map((row) => {
                         if (row.kind === 'vinyl') {
                           return (
                             <VinylTrackRow
@@ -1461,7 +1543,7 @@ export default function ChartView({
                           )
                         }
                         const rowKey = `chart-row-${row.pick.id}`
-                        const idx = archiveBundle.findIndex((m) => m.rowKey === rowKey)
+                        const idx = archiveIdx?.get(rowKey) ?? -1
                         const isActive = activeRowKeyFor(archiveKey) === rowKey
                         return (
                           <FeaturedPickRow
@@ -1479,6 +1561,14 @@ export default function ChartView({
                           />
                         )
                       })}
+                      {remaining > 0 ? (
+                        <RevealMoreRows
+                          yearKey={yearKey}
+                          remaining={remaining}
+                          lang={lang}
+                          onMore={showMoreArchive}
+                        />
+                      ) : null}
                     </div>
                   )}
                 </section>
