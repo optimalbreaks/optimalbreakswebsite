@@ -22,6 +22,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Love Your Life",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ed Solo"
+        },
+        {
+          "name": "Skool Of Thought"
+        }
+      ],
+      "label": "Against The Grain",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/love-your-life/17745059",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/56e14a06-3c12-4af7-9de9-692dc4f2696f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bb5bbbc2-d141-4e31-8b7b-f4fbf4ed6421.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2023,
+      "release_date": "2023-02-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

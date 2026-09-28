@@ -1,0 +1,27 @@
+{
+  "week_date": "2008-10-20",
+  "picks": [
+    {
+      "title": "Scram",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Plump DJs"
+        }
+      ],
+      "label": "Finger Lickin Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/scram-original-mix/705244",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e8bf24b0-c949-485b-9f9c-67e3c14c60ea.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eda8c3fb-0445-40cf-8652-ba1e6bfa4fe6.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "C Major",
+      "release_year": 2008,
+      "release_date": "2008-10-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}
