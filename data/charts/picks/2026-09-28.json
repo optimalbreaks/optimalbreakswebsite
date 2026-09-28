@@ -1,0 +1,29 @@
+{
+  "week_date": "2026-09-28",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Bandido & Maleante",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kritycal System"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bandido-maleante/29540534",
+      "link_label": "",
+      "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-bandido-maleante.webp",
+      "sample_url": "https://geo-samples.beatport.com/track/06916d7e-622b-4674-a8b6-d542d170760b.LOFI.mp3",
+      "full_audio_url": "/api/audio/kritycal-system-bandido-maleante.mp3",
+      "spotify_url": "https://open.spotify.com/track/0jzyRiOBK91mbvMfM3gmA4",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-28",
+      "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+    }
+  ]
+}
