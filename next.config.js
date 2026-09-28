@@ -8,6 +8,11 @@ const nextConfig = {
   },
 
   images: {
+    // Carteles/retratos vía next/image (CardThumbnail): las variantes
+    // optimizadas se quedan en el edge 1 día aunque Storage mande max-age=3600.
+    // Los carteles de eventos van versionados (?v=updated_at), así que un
+    // reemplazo no se queda atrapado en esta caché.
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: 'https',

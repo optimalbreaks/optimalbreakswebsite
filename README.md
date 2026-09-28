@@ -182,6 +182,18 @@ DOM order follows **newest publication years first**.
 
 Optimisations target **mobile Lighthouse** (LCP, CLS, unused JS) without changing product behaviour once the user presses Play.
 
+### Catalogue thumbnails via `next/image` (`CardThumbnail`, Sep 2026)
+
+Posters, portraits and logos are stored at original size (measured 28 Sep 2026: **114 event posters = 38.6 MB**, average 340 KB, two above 1 MB) and were painted with a raw `<img>` into 56–400 px cards, so `/events` downloaded ~39 MB. `src/components/CardThumbnail.tsx` (used by events, artists, labels, scenes, blog, home, favourites…) now renders **`next/image` with `fill` + `sizes`**: Vercel Image Optimization serves the width the card actually needs, in WebP, cached at the edge (`images.minimumCacheTTL: 86400`; event posters carry `?v=updated_at`, so replacements are not trapped by that cache).
+
+- **`sizes`** defaults to a catalogue card (`100vw / 50vw / 400px`). Pass a tighter value where the frame is smaller: `EventsExplorer` uses `LARGE_POSTER_SIZES`, `COMPACT_POSTER_SIZES` (10 columns → `10vw`), `LIST_POSTER_SIZES` (`56px`) and `CALENDAR_MODAL_POSTER_SIZES`. Wrong `sizes` = the old full-size download again.
+- **`preload`** (Next 16 name; `priority` is deprecated) on the first cards of the first year group (5 in large, 10 in compact) for LCP; the rest stay `loading="lazy"`.
+- Hosts outside `images.remotePatterns` (`next.config.js`) fall back to `unoptimized` automatically (`canOptimize`) instead of a 400 from the optimizer. If you add an image CDN, extend both the config and `OPTIMIZABLE_HOST`.
+- Broken URLs (404 in Storage) still fall back to the branded placeholder (`onError`).
+- `/events` page: header renders immediately, the list streams inside `<Suspense fallback={<LoadingBreaks/>}>` (same pattern as `/charts` and `/top100`).
+
+Do not go back to `<img>` in `CardThumbnail`, and do not set `unoptimized` globally.
+
 ### Lazy global audio (`LazyDeckAudioProvider`)
 
 **`DeckAudioProvider`** (~1900 lines, preview queue, mini-bars, Web Audio deck) is **not** in the initial JS bundle on most routes. **`LazyDeckAudioProvider`** wraps the app in `src/app/[lang]/layout.tsx` and dynamically `import()`s the real provider when:

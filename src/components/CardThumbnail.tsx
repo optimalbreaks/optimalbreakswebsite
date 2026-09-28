@@ -2,13 +2,37 @@
 
 // ============================================
 // OPTIMAL BREAKS — Imagen de tarjeta (DB image_url + placeholder)
+// ----------------------------------------------
+// Desde el 28 sep 2026 va sobre `next/image` (Vercel Image Optimization):
+// los carteles/retratos se guardan a tamaño original (114 carteles de eventos
+// = 38,6 MB; medias de 340 KB, picos de 2 MB) y se pintaban en tarjetas de
+// 160–400 px con <img> crudo. Con `fill` + `sizes` el edge sirve la anchura
+// que toca en WebP/AVIF y la cachea. Hosts fuera de `images.remotePatterns`
+// (next.config.js) caen a `unoptimized` para no romper con 400.
 // ============================================
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Image from 'next/image'
 import { displayImageUrl } from '@/lib/image-url'
 
 /** Marca de sitio cuando no hay retrato/logo en BD (OG home punk). */
 const MISSING_IMAGE_FALLBACK = '/images/opengraph_OB_punk.png'
+
+/** Anchura típica de una tarjeta del catálogo: 1 col en móvil, 2 en tablet, ≤ 400 px en escritorio. */
+const DEFAULT_SIZES = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px'
+
+/** Espejo de `images.remotePatterns` en next.config.js. */
+const OPTIMIZABLE_HOST = /(^|\.)(supabase\.co|geo-media\.beatport\.com|f4\.bcbits\.com|i\.ytimg\.com|sndcdn\.com|mzstatic\.com|img\.youtube\.com|i\.discogs\.com)$/i
+
+function canOptimize(url: string): boolean {
+  if (url.startsWith('/images/')) return true
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' && OPTIMIZABLE_HOST.test(u.hostname)
+  } catch {
+    return false
+  }
+}
 
 interface CardThumbnailProps {
   src?: string | null
@@ -27,6 +51,14 @@ interface CardThumbnailProps {
    * Sin esto, `group-hover:scale` no coincide con el nombre del grupo y el cartel no reacciona.
    */
   groupHoverGroup?: 'link'
+  /**
+   * `sizes` de next/image: anchura que ocupará la imagen por breakpoint. Por
+   * defecto la de una tarjeta del catálogo; pásalo más ajustado en listas
+   * estrechas (p. ej. `160px` en la vista lista de eventos).
+   */
+  sizes?: string
+  /** Primeras tarjetas visibles: precarga en vez de lazy (mejora LCP). */
+  preload?: boolean
 }
 
 export default function CardThumbnail({
@@ -38,6 +70,8 @@ export default function CardThumbnail({
   frameClass = 'border-b-[3px] border-[var(--ink)]',
   className = '',
   groupHoverGroup,
+  sizes = DEFAULT_SIZES,
+  preload = false,
 }: CardThumbnailProps) {
   const url = displayImageUrl(src)?.trim()
   const box = heightClass ?? aspectClass
@@ -53,9 +87,17 @@ export default function CardThumbnail({
       className={`relative w-full shrink-0 overflow-hidden bg-[var(--paper-dark)] ${frameClass} ${box} ${className}`}
     >
       {url ? (
-        <CardThumbnailRemoteImage src={url} alt={alt} fit={fit} imgFit={imgFit} groupHoverGroup={groupHoverGroup} />
+        <CardThumbnailRemoteImage
+          src={url}
+          alt={alt}
+          fit={fit}
+          imgFit={imgFit}
+          groupHoverGroup={groupHoverGroup}
+          sizes={sizes}
+          preload={preload}
+        />
       ) : (
-        <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} />
+        <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} sizes={sizes} />
       )}
     </div>
   )
@@ -68,32 +110,36 @@ function CardThumbnailRemoteImage({
   fit,
   imgFit,
   groupHoverGroup,
+  sizes,
+  preload,
 }: {
   src: string
   alt: string
   fit: 'cover' | 'contain'
   imgFit: string
   groupHoverGroup?: 'link'
+  sizes: string
+  preload: boolean
 }) {
-  const [broken, setBroken] = useState(false)
-
-  useEffect(() => {
-    setBroken(false)
-  }, [src])
+  // Se guarda QUÉ src falló: si cambia el src, el fallback se levanta solo.
+  const [brokenSrc, setBrokenSrc] = useState<string | null>(null)
+  const broken = brokenSrc === src
 
   if (broken) {
-    return <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} />
+    return <BrandedMissingThumbnail alt={alt} fit={fit} groupHoverGroup={groupHoverGroup} sizes={sizes} />
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- URLs dinámicas desde Supabase / CMS
-    <img
+    <Image
       src={src}
       alt={alt}
-      onError={() => setBroken(true)}
-      className={`absolute inset-0 h-full w-full ${imgFit}`}
-      loading="lazy"
-      decoding="async"
+      fill
+      sizes={sizes}
+      unoptimized={!canOptimize(src)}
+      preload={preload || undefined}
+      loading={preload ? undefined : 'lazy'}
+      onError={() => setBrokenSrc(src)}
+      className={imgFit}
     />
   )
 }
@@ -102,10 +148,12 @@ function BrandedMissingThumbnail({
   alt,
   fit,
   groupHoverGroup,
+  sizes,
 }: {
   alt: string
   fit: 'cover' | 'contain'
   groupHoverGroup?: 'link'
+  sizes: string
 }) {
   const fallbackUrl = displayImageUrl(MISSING_IMAGE_FALLBACK) ?? MISSING_IMAGE_FALLBACK
   const imgFit =
@@ -117,14 +165,7 @@ function BrandedMissingThumbnail({
 
   return (
     <div className="absolute inset-0" role="img" aria-label={alt}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- asset estático bajo /images/ */}
-      <img
-        src={fallbackUrl}
-        alt=""
-        className={`absolute inset-0 h-full w-full ${imgFit}`}
-        loading="lazy"
-        decoding="async"
-      />
+      <Image src={fallbackUrl} alt="" fill sizes={sizes} loading="lazy" className={imgFit} />
       <div
         className="absolute inset-0 bg-[var(--paper-dark)]/35 pointer-events-none"
         aria-hidden

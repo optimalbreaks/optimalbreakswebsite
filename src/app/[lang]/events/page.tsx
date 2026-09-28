@@ -12,6 +12,8 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
 import EventsExplorer from '@/components/EventsExplorer'
+import LoadingBreaks from '@/components/LoadingBreaks'
+import { Suspense } from 'react'
 
 type FallbackEvent = {
   date_es: string
@@ -105,6 +107,33 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
 export default async function EventsPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const dict = await getDictionary(lang)
+  // Cabecera al instante; el listado llega por streaming con el cargador
+  // fanzine debajo (mismo patrón que /charts y /top100).
+  return (
+    <div className="lined min-h-screen">
+      <section className="px-4 sm:px-6 pt-10 pb-10 sm:pt-16 sm:pb-12 border-b-[5px] border-[var(--ink)]">
+        <div className="sec-tag">EVENTS</div>
+        <h1 className="sec-title">{dict.events.title}<br /><span className="hl">BREAKBEAT</span></h1>
+        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '17px', lineHeight: 1.8, maxWidth: '700px', color: 'var(--dim)' }}>{dict.events.subtitle}</p>
+      </section>
+      <section className="px-4 sm:px-6 py-10 sm:py-12">
+        <Suspense
+          fallback={(
+            <LoadingBreaks
+              es={lang === 'es'}
+              title={lang === 'es' ? 'Cargando los eventos' : 'Loading the events'}
+              subtitle={lang === 'es' ? 'Ordenando fechas y carteles' : 'Sorting dates and posters'}
+            />
+          )}
+        >
+          <EventsBody lang={lang} dict={dict} />
+        </Suspense>
+      </section>
+    </div>
+  )
+}
+
+async function EventsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnType<typeof getDictionary>> }) {
   const supabase = createCachedSupabase()
   const { data: events } = await supabase.from('events').select('*').order('date_start', { ascending: false })
   const list = ((events || []) as BreakEvent[])
@@ -122,13 +151,7 @@ export default async function EventsPage({ params }: { params: Promise<{ lang: L
     return bTime - aTime
   })
   return (
-    <div className="lined min-h-screen">
-      <section className="px-4 sm:px-6 pt-10 pb-10 sm:pt-16 sm:pb-12 border-b-[5px] border-[var(--ink)]">
-        <div className="sec-tag">EVENTS</div>
-        <h1 className="sec-title">{dict.events.title}<br /><span className="hl">BREAKBEAT</span></h1>
-        <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '17px', lineHeight: 1.8, maxWidth: '700px', color: 'var(--dim)' }}>{dict.events.subtitle}</p>
-      </section>
-      <section className="px-4 sm:px-6 py-10 sm:py-12">
+    <>
         {list.length > 0 ? (
           <EventsExplorer events={list} dict={dict.events} lang={lang} />
         ) : (
@@ -176,7 +199,6 @@ export default async function EventsPage({ params }: { params: Promise<{ lang: L
             </div>
           </div>
         )}
-      </section>
-    </div>
+    </>
   )
 }

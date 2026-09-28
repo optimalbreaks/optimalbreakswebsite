@@ -290,7 +290,7 @@ function CalendarDayEventsModal({
                 <article key={e.slug} className="pb-10 border-b-[2px] border-[var(--ink)] last:border-b-0 last:pb-0">
                   <div className="flex flex-col sm:flex-row gap-4">
                     <div className="relative sm:w-[min(42%,160px)] shrink-0 overflow-hidden bg-[var(--paper)]">
-                      <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" />
+                      <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" sizes={CALENDAR_MODAL_POSTER_SIZES} />
                       {notice ? (
                         <EventCancelledStamp
                           label={noticeStampLabel(lang, notice)}
@@ -625,9 +625,9 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
                     <ListView events={items} lang={lang} />
                   </div>
                 ) : view === 'large' ? (
-                  <LargeGrid events={items} lang={lang} />
+                  <LargeGrid events={items} lang={lang} preloadCount={idx === 0 ? 5 : 0} />
                 ) : view === 'compact' ? (
-                  <CompactGrid events={items} lang={lang} />
+                  <CompactGrid events={items} lang={lang} preloadCount={idx === 0 ? 10 : 0} />
                 ) : (
                   <ListView events={items} lang={lang} />
                 )}
@@ -805,10 +805,17 @@ function MonthMiniCalendar({
   )
 }
 
-function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
+// `sizes` = anchura real del cartel en cada rejilla (next/image pide al edge
+// solo esa anchura; sin esto bajaría el original de 300 KB–2 MB por tarjeta).
+const LARGE_POSTER_SIZES = '(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw'
+const COMPACT_POSTER_SIZES = '(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 15vw, 10vw'
+const LIST_POSTER_SIZES = '56px'
+const CALENDAR_MODAL_POSTER_SIZES = '(max-width: 640px) 100vw, 160px'
+
+function LargeGrid({ events, lang, preloadCount = 0 }: { events: BreakEvent[]; lang: string; preloadCount?: number }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)] items-stretch">
-      {events.map((e) => {
+      {events.map((e, i) => {
         const past = isEventPast(e)
         const notice = eventNoticeKind(e)
         return (
@@ -823,7 +830,7 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
               past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
             }`}
           >
-            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
+            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" sizes={LARGE_POSTER_SIZES} preload={i < preloadCount} />
             {notice ? (
               <EventCancelledStamp
                 label={noticeStampLabel(lang, notice)}
@@ -868,10 +875,10 @@ function LargeGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
   )
 }
 
-function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
+function CompactGrid({ events, lang, preloadCount = 0 }: { events: BreakEvent[]; lang: string; preloadCount?: number }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-stretch">
-      {events.map((e) => {
+      {events.map((e, i) => {
         const past = isEventPast(e)
         const notice = eventNoticeKind(e)
         return (
@@ -885,7 +892,7 @@ function CompactGrid({ events, lang }: { events: BreakEvent[]; lang: string }) {
               past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
             }`}
           >
-            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" />
+            <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" fit="cover" groupHoverGroup="link" sizes={COMPACT_POSTER_SIZES} preload={i < preloadCount} />
             {notice ? (
               <EventCancelledStamp
                 label={noticeStampLabel(lang, notice)}
@@ -938,7 +945,7 @@ function ListView({ events, lang }: { events: BreakEvent[]; lang: string }) {
                   past ? EVENT_POSTER_STRIP_HOVER_PAST : EVENT_POSTER_STRIP_HOVER_UPCOMING
                 }`}
               >
-                <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" groupHoverGroup="link" />
+                <CardThumbnail src={e.image_url} alt={e.name} aspectClass="aspect-poster w-full" frameClass="" fit="cover" groupHoverGroup="link" sizes={LIST_POSTER_SIZES} />
                 {notice ? (
                   <EventCancelledStamp
                     label={noticeStampLabel(lang, notice)}

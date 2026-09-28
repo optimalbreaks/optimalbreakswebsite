@@ -56,6 +56,18 @@ El bloque oscuro **Timeline** de la portada (`src/components/Timeline.tsx`) toma
 
 Optimizaciones para **Lighthouse móvil** (LCP, CLS, JS no usado) sin cambiar el comportamiento tras pulsar Play.
 
+### Miniaturas del catálogo con `next/image` (`CardThumbnail`, sep 2026)
+
+Carteles, retratos y logos se guardan a tamaño original (medido el 28 sep 2026: **114 carteles de eventos = 38,6 MB**, media 340 KB, dos de más de 1 MB) y se pintaban con `<img>` crudo en tarjetas de 56–400 px: `/events` bajaba ~39 MB. `src/components/CardThumbnail.tsx` (eventos, artistas, sellos, escenas, blog, home, favoritos…) pinta ahora **`next/image` con `fill` + `sizes`**: Vercel Image Optimization sirve la anchura que necesita la tarjeta, en WebP, cacheada en el edge (`images.minimumCacheTTL: 86400`; los carteles de eventos llevan `?v=updated_at`, así que un reemplazo no se queda atrapado en esa caché).
+
+- **`sizes`** por defecto = tarjeta del catálogo (`100vw / 50vw / 400px`). Pásalo más ajustado donde el marco es menor: `EventsExplorer` usa `LARGE_POSTER_SIZES`, `COMPACT_POSTER_SIZES` (10 columnas → `10vw`), `LIST_POSTER_SIZES` (`56px`) y `CALENDAR_MODAL_POSTER_SIZES`. Un `sizes` mal puesto = otra vez la descarga completa.
+- **`preload`** (nombre en Next 16; `priority` está deprecado) en las primeras tarjetas del primer grupo de año (5 en grande, 10 en compacto) para el LCP; el resto sigue `loading="lazy"`.
+- Hosts fuera de `images.remotePatterns` (`next.config.js`) caen solos a `unoptimized` (`canOptimize`) en vez de un 400 del optimizador. Si añades un CDN de imágenes, amplía la config y `OPTIMIZABLE_HOST`.
+- URLs rotas (404 en Storage) siguen cayendo al placeholder de marca (`onError`).
+- Página `/events`: la cabecera sale al instante y el listado llega por streaming dentro de `<Suspense fallback={<LoadingBreaks/>}>` (mismo patrón que `/charts` y `/top100`).
+
+No volver a `<img>` en `CardThumbnail` ni poner `unoptimized` global.
+
 - **Audio global diferido:** **`LazyDeckAudioProvider`** en el layout; **`DeckAudioProvider`** solo se importa al **primer Play** (deck, mix, preview) o si **`sessionStorage`** (`ob_audio_active`) indica sesión activa. Hooks **`usePreviewAudioGated`** / **`useMixAudioGated`** en charts, Top 10, mixes y Mis Tracks; cabina home con controles offline hasta el primer gesto. El provider mantiene un **shell estable** alrededor de `{children}` (no remonta el árbol de la página al cargar el motor — el acordeón de `/charts` no se colapsa al primer play) y **portala** el reproductor a `<div id="ob-audio-overlays">` bajo `document.body` para que `position: fixed` siempre ancle al viewport real. Tanto **`MiniPlayerShell`** como **`BackToTop`** compensan el **`visualViewport`** en **PWA iOS** (`resize` / `scroll` / `pageshow`) para que tras bloquear/desbloquear el móvil sigan pegados al borde inferior visible.
 - **Fuentes:** subsets **latin** de Unbounded en layout + **preload** del woff2 del 900; Special Elite fuera del CSS bloqueante (`DeferredFonts`).
 - **Otros:** `DjDeck` con `dynamic()`; modal de charts solo tras engagement (2ª página o 40 s); GA/SW/BackToTop dinámicos; **`/history`** con revalidate 300; quitado `force-dynamic` del layout global.
