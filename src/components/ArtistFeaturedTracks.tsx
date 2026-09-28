@@ -9,7 +9,7 @@ import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
-import { formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg } from '@/lib/share-track'
+import { formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
 import type { ChartFeaturedTrack, ChartTrackSource, SavedChartTrackSnapshot } from '@/types/database'
@@ -36,6 +36,23 @@ interface Props {
     slug?: string
     name?: string
   }
+  /** Saves de la comunidad, por id de fila (incluye relatedRefs). */
+  saveCounts?: Record<string, number>
+}
+
+const ON_SITE_PAGE = 24
+type OnSiteSort = 'release' | 'title' | 'saves'
+
+function pickSaveCount(pick: ArtistFeaturedPick, counts: Record<string, number> | undefined): number {
+  const ids = pick.relatedRefs?.length ? pick.relatedRefs.map((r) => r.id) : [pick.id]
+  const seen = new Set<string>()
+  let n = 0
+  for (const id of ids) {
+    if (seen.has(id)) continue
+    seen.add(id)
+    n += counts?.[id] || 0
+  }
+  return n
 }
 
 function buildSnapshot(
@@ -156,8 +173,12 @@ export default function ArtistFeaturedTracks({
   heading,
   badge,
   origin,
+  saveCounts,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
+  const [sortBy, setSortBy] = useState<OnSiteSort>('release')
+  const [visibleCount, setVisibleCount] = useState(ON_SITE_PAGE)
   const [openYoutubeKey, setOpenYoutubeKey] = useState<string | null>(null)
   const pathname = usePathname()
   const {
@@ -187,15 +208,60 @@ export default function ArtistFeaturedTracks({
   // Hash #nr-row-<id> (click en el título del mini reproductor → volver al
   // origen): expande el panel para que la fila exista en el DOM; el scroll
   // y el destello los hace el propio reproductor cuando la encuentra.
+  const years = useMemo(() => {
+    const set = new Set<number>()
+    for (const pick of picks) {
+      const y = effectiveReleaseYear(pick.release_date, pick.release_year)
+      if (y) set.add(y)
+    }
+    return [...set].sort((a, b) => b - a)
+  }, [picks])
+
+  const sortedPicks = useMemo(() => {
+    const loc = lang === 'es' ? 'es' : 'en'
+    const arr = picks.filter((pick) => {
+      if (yearFilter === 'all') return true
+      return effectiveReleaseYear(pick.release_date, pick.release_year) === yearFilter
+    })
+    arr.sort((a, b) => {
+      if (sortBy === 'title') {
+        const byTitle = a.title.localeCompare(b.title, loc, { sensitivity: 'base' })
+        if (byTitle !== 0) return byTitle
+      } else if (sortBy === 'saves') {
+        const bySaves = pickSaveCount(b, saveCounts) - pickSaveCount(a, saveCounts)
+        if (bySaves !== 0) return bySaves
+      }
+      return releaseSortTimestampMs(b.release_date, b.release_year)
+        - releaseSortTimestampMs(a.release_date, a.release_year)
+    })
+    return arr
+  }, [picks, yearFilter, sortBy, lang, saveCounts])
+
+  // Al cambiar filtro u orden la paginación vuelve al principio (sin efecto).
+  const [pageKey, setPageKey] = useState(`${yearFilter}|${sortBy}`)
+  const currentPageKey = `${yearFilter}|${sortBy}`
+  if (pageKey !== currentPageKey) {
+    setPageKey(currentPageKey)
+    setVisibleCount(ON_SITE_PAGE)
+  }
+
+  const visiblePicks = sortedPicks.slice(0, visibleCount)
+  const showTools = years.length > 1 || picks.length > ON_SITE_PAGE
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     const applyHash = () => {
-      if (window.location.hash.startsWith('#nr-row-')) setExpanded(true)
+      const hash = window.location.hash
+      if (!hash.startsWith('#nr-row-')) return
+      setExpanded(true)
+      const id = hash.slice('#nr-row-'.length)
+      const idx = sortedPicks.findIndex((pick) => pick.id === id)
+      if (idx >= ON_SITE_PAGE) setVisibleCount(idx + 1)
     }
     applyHash()
     window.addEventListener('hashchange', applyHash)
     return () => window.removeEventListener('hashchange', applyHash)
-  }, [])
+  }, [sortedPicks])
 
   const groupKey = useMemo(
     () => `ob-nr:${origin?.id ?? entityName}`,
@@ -203,7 +269,7 @@ export default function ArtistFeaturedTracks({
   )
 
   const myQueueActive = previewGroupKey === groupKey && previewQueue.length > 0
-  const playablePicks = useMemo(() => picks.filter(pickHasPreview), [picks])
+  const playablePicks = useMemo(() => sortedPicks.filter(pickHasPreview), [sortedPicks])
 
   const buildQueue = useCallback((): PreviewTrack[] => {
     return playablePicks.map((pick) => {
@@ -333,8 +399,68 @@ export default function ArtistFeaturedTracks({
 
       {expanded && (
         <div role="region">
-          <div className="border-t-4 border-[var(--ink)]">
-            {picks.map((pick) => {
+          {showTools ? (
+            <div className="border-t-4 border-[var(--ink)] bg-[var(--paper-dark)] px-3 sm:px-5 py-3 flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold tracking-[2px] text-[var(--ink)]/55 mr-1" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  {lang === 'es' ? 'ORDEN' : 'SORT'}
+                </span>
+                {([
+                  ['release', lang === 'es' ? 'FECHA' : 'RELEASE'],
+                  ['title', lang === 'es' ? 'TÍTULO' : 'TITLE'],
+                  ['saves', 'SAVES'],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSortBy(key)}
+                    className={`h-[28px] px-2 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] cursor-pointer touch-manipulation ${sortBy === key ? 'bg-[var(--ink)] text-[var(--paper)]' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {years.length > 1 ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold tracking-[2px] text-[var(--ink)]/55 mr-1" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                    {lang === 'es' ? 'AÑO' : 'YEAR'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setYearFilter('all')}
+                    className={`h-[28px] px-2 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] cursor-pointer touch-manipulation ${yearFilter === 'all' ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {lang === 'es' ? 'TODOS' : 'ALL'}
+                  </button>
+                  {years.map((y) => (
+                    <button
+                      key={y}
+                      type="button"
+                      onClick={() => setYearFilter(y)}
+                      className={`h-[28px] px-2 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] cursor-pointer touch-manipulation tabular-nums ${yearFilter === y ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--yellow)]'}`}
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {sortedPicks.length !== picks.length ? (
+                <p className="text-[10px] font-bold tracking-wider text-[var(--ink)]/50" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  {sortedPicks.length} / {picks.length}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <div className={`${showTools ? 'border-t-[3px]' : 'border-t-4'} border-[var(--ink)]`}>
+            {sortedPicks.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-[var(--ink)]/60" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                {lang === 'es' ? 'Ningún tema en ese año.' : 'No tracks in that year.'}
+              </p>
+            ) : null}
+            {visiblePicks.map((pick) => {
               const isActive = isPlayingPick(pick)
               const isPausedHere = isActive && !previewPlaying
               const rowId = `nr-row-${pick.id}`
@@ -343,6 +469,7 @@ export default function ArtistFeaturedTracks({
               const ytSlot = `ob-artist-yt-${pick.id}`
               const showYt = !!(ytId && openYoutubeKey === ytSlot)
               const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
+              const saveCount = pickSaveCount(pick, saveCounts)
               const note = lang === 'es' ? pick.note_es : pick.note_en
               const mixName = (pick.mix_name || '').trim()
               const artists = Array.isArray(pick.artists) ? pick.artists : []
@@ -396,6 +523,7 @@ export default function ArtistFeaturedTracks({
                           <ArtistNames artists={artists} mixName={mixName} slugMap={artistSlugMap} lang={lang} />
                           {pick.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={pick.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
+                          {saveCount > 0 ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{saveCount} saves</span></> : null}
                         </p>
                         {note ? (
                           <p className="text-xs text-[var(--ink)]/55 mt-1 leading-relaxed" style={{ fontFamily: "'Courier Prime', monospace" }}>
@@ -533,6 +661,21 @@ export default function ArtistFeaturedTracks({
                 </div>
               )
             })}
+            {visibleCount < sortedPicks.length ? (
+              <div className="px-3 sm:px-5 py-3 flex items-center justify-between gap-3 border-t-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
+                <span className="text-[10px] font-bold tracking-wider text-[var(--ink)]/55 tabular-nums" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                  {visiblePicks.length} / {sortedPicks.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((n) => Math.min(n + ON_SITE_PAGE, sortedPicks.length))}
+                  className="h-[32px] px-3 text-[10px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] cursor-pointer touch-manipulation"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                >
+                  {lang === 'es' ? 'VER MÁS' : 'SHOW MORE'}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

@@ -44,7 +44,9 @@ import BookingRequestButton from '@/components/BookingRequestButton'
 import {
   fetchArtistRelatedContent,
   fetchArtistFeaturedPicks,
+  fetchOnSiteSaveCounts,
   normalizeTrackTitleKey,
+  onSitePickTrackIds,
   resolveRecommendedMixHref,
 } from '@/lib/artist-related-content'
 
@@ -258,6 +260,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     fetchArtistRelatedContent(supabase, artist, lang, artistSlugByName),
     fetchArtistFeaturedPicks(supabase, artist, artistSlugByName),
   ])
+  const onSiteSaveCounts = await fetchOnSiteSaveCounts(onSitePickTrackIds(featuredPicks))
 
   const labelSlugByName = new Map<string, string>()
   for (const row of labelRows ?? []) {
@@ -448,6 +451,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   labelSlugMap={labelSlugMap}
                   heading={lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
                   badge="OB"
+                  saveCounts={onSiteSaveCounts}
                   origin={{
                     kind: 'artist',
                     id: artist.id,

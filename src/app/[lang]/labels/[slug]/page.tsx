@@ -12,7 +12,7 @@ import {
   resolveArtistSlug,
 } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
-import { fetchLabelOnSitePicks } from '@/lib/artist-related-content'
+import { fetchLabelOnSitePicks, fetchOnSiteSaveCounts, onSitePickTrackIds } from '@/lib/artist-related-content'
 import CountryBadge from '@/components/CountryBadge'
 import {
   breadcrumbJsonLd,
@@ -186,6 +186,7 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
     label ? fetchLabelOnSitePicks(readSupabase, { name: label.name }) : Promise.resolve([]),
     supabase.from('labels').select('name, slug'),
   ])
+  const onSiteSaveCounts = await fetchOnSiteSaveCounts(onSitePickTrackIds(onSitePicks))
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
   const keyArtistNames = (label?.key_artists ?? []).map((n) => n.trim()).filter(Boolean)
   const rosterSlugs = Array.from(new Set(
@@ -395,6 +396,7 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
                 labelSlugMap={labelSlugMap}
                 heading={lang === 'es' ? 'EN OPTIMAL BREAKS' : 'ON OPTIMAL BREAKS'}
                 badge="OB"
+                saveCounts={onSiteSaveCounts}
                 origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
               />
             ) : null}

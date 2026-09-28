@@ -6,66 +6,22 @@ import { createCachedSupabase } from '@/lib/supabase-server'
 import { PUBLIC_CHARTS_CACHE_TAG } from '@/lib/revalidate-public'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import type { ChartEdition, ChartFeaturedTrack, ChartTrack, ChartVinylTrack, ChartFeaturedArtist, ChartTrackArtist, ChartVinylArtist } from '@/types/database'
+import type { ChartFeaturedArtist, ChartTrackArtist, ChartVinylArtist } from '@/types/database'
 import type { Metadata } from 'next'
 import { detailPageMetadata, siteNameForLang, staticPageMetadata } from '@/lib/seo'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
-import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
-import { CHARTS_EDITORIAL_START } from '@/lib/charts-archive'
+import { loadChartsOutline } from '@/lib/charts-sections'
 import ChartView from '@/components/ChartView'
-import {
-  buildFullArtistSlugMap,
-  buildFullLabelSlugMap,
-  filterArtistSlugMapForNames,
-  findLabelSlug,
-  normalizeArtistKey,
-} from '@/lib/artist-slug-map'
+import { buildFullArtistSlugMap, buildFullLabelSlugMap, slugLookupKeys } from '@/lib/artist-slug-map'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
 // petición. Los datos siguen viniendo de la Data Cache (createCachedSupabase,
 // revalidate 300 s), así que esto NO golpea Supabase en cada visita.
 export const dynamic = 'force-dynamic'
 
-/** PostgREST / cliente Supabase corta en 1000 filas por defecto. Sin `.range` paginado,
- * New Releases (y pronto 40 Breaks/vinyl) se ven “recortados” a ~67 por semana cuando
- * el total de filas supera 1000 — no se borran en BD; la página no las carga. */
-const SUPABASE_PAGE = 1000
-
 function chartsSupabase() {
   return createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])
-}
-
-async function fetchAllByEditionIds<T extends { id: string }>(
-  supabase: ReturnType<typeof chartsSupabase>,
-  table: 'chart_tracks' | 'chart_featured_tracks' | 'chart_vinyl_tracks',
-  editionIds: string[],
-  orderCol: 'position' | 'sort_order',
-): Promise<T[]> {
-  if (editionIds.length === 0) return []
-  const out: T[] = []
-  const seen = new Set<string>()
-  for (let offset = 0; ; offset += SUPABASE_PAGE) {
-    const { data, error } = await supabase
-      .from(table)
-      .select('*')
-      .in('chart_edition_id', editionIds)
-      // Orden totalmente determinista: `sort_order`/`position` se repiten entre
-      // ediciones; paginar solo por esa columna duplica filas al cruzar páginas (>1000 NR).
-      .order('chart_edition_id', { ascending: true })
-      .order(orderCol, { ascending: true })
-      .order('id', { ascending: true })
-      .range(offset, offset + SUPABASE_PAGE - 1)
-    if (error) throw new Error(`${table}: ${error.message}`)
-    const rows = (data as unknown as T[] | null) ?? []
-    for (const row of rows) {
-      if (seen.has(row.id)) continue
-      seen.add(row.id)
-      out.push(row)
-    }
-    if (rows.length < SUPABASE_PAGE) break
-  }
-  return out
 }
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
@@ -220,184 +176,37 @@ export default async function ChartsPage({
   searchParams: Promise<{ week?: string }>
 }) {
   const { lang } = await params
-  const query = await searchParams
+  // ?week= y ?play= los resuelve el cliente al abrir solo esa sección.
+  await searchParams
   const dict = await getDictionary(lang)
   const supabase = chartsSupabase()
 
-  // Todas las ediciones de 2026: New Releases vive ahí. Sin tope de 52,
-  // porque al meter semanas históricas de 2026 el corte dejaría fuera
-  // lunes ya publicados. El archivo (week_date < 2026) va en la query de abajo.
-  const { data: editionsRaw } = await supabase
-    .from('chart_editions')
-    .select('*')
-    .eq('is_published', true)
-    .gte('week_date', CHARTS_EDITORIAL_START)
-    .order('week_date', { ascending: false })
+  // Totales nada más. Los temas llegan al pulsar ▶ en la semana o el año.
+  const { pickWeeks, archiveYears } = await loadChartsOutline(supabase)
 
-  const editions = (editionsRaw as ChartEdition[] | null) ?? []
-  const editionIds = editions.map((e) => e.id)
-  const recentEditionIdSet = new Set(editionIds)
+  const { data: dbArtists } = await supabase
+    .from('artists')
+    .select('slug, name, name_display')
+    .limit(5000)
+  const artistRows = (dbArtists as { slug: string; name: string | null; name_display: string | null }[] | null) ?? []
+  const artistSlugMap = buildFullArtistSlugMap(artistRows)
 
-  const { data: archiveEditionsRaw } = await supabase
-    .from('chart_editions')
-    .select('*')
-    .eq('is_published', true)
-    .lt('week_date', CHARTS_EDITORIAL_START)
-    .order('week_date', { ascending: false })
-
-  const archiveEditions = ((archiveEditionsRaw as ChartEdition[] | null) ?? []).filter(
-    (e) => !recentEditionIdSet.has(e.id),
+  const { data: dbLabels } = await supabase
+    .from('labels')
+    .select('slug, name, image_url')
+    .limit(5000)
+  const labelRows =
+    (dbLabels as { slug: string; name: string | null; image_url: string | null }[] | null) ?? []
+  const labelSlugMap = buildFullLabelSlugMap(
+    labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null })),
   )
-  const archiveEditionIds = archiveEditions.map((e) => e.id)
-
-  let allTracks: ChartTrack[] = []
-  let allFeatured: ChartFeaturedTrack[] = []
-  let allVinyl: ChartVinylTrack[] = []
-  let archiveOnlyFeatured: ChartFeaturedTrack[] = []
-  if (editionIds.length > 0 || archiveEditionIds.length > 0) {
-    ;[allTracks, allFeatured, allVinyl, archiveOnlyFeatured] = await Promise.all([
-      fetchAllByEditionIds<ChartTrack>(supabase, 'chart_tracks', editionIds, 'position'),
-      fetchAllByEditionIds<ChartFeaturedTrack>(
-        supabase,
-        'chart_featured_tracks',
-        editionIds,
-        'sort_order',
-      ),
-      fetchAllByEditionIds<ChartVinylTrack>(
-        supabase,
-        'chart_vinyl_tracks',
-        editionIds,
-        'sort_order',
-      ),
-      fetchAllByEditionIds<ChartFeaturedTrack>(
-        supabase,
-        'chart_featured_tracks',
-        archiveEditionIds,
-        'sort_order',
-      ),
-    ])
-  }
-
-  const byEdition = new Map<string, ChartTrack[]>()
-  for (const t of allTracks) {
-    const id = t.chart_edition_id
-    const list = byEdition.get(id) ?? []
-    list.push(t)
-    byEdition.set(id, list)
-  }
-
-  const featuredByEdition = new Map<string, ChartFeaturedTrack[]>()
-  for (const row of allFeatured) {
-    const id = row.chart_edition_id
-    const list = featuredByEdition.get(id) ?? []
-    list.push(row)
-    featuredByEdition.set(id, list)
-  }
-
-  const vinylByEdition = new Map<string, ChartVinylTrack[]>()
-  for (const row of allVinyl) {
-    const id = row.chart_edition_id
-    const list = vinylByEdition.get(id) ?? []
-    list.push(row)
-    vinylByEdition.set(id, list)
-  }
-
-  const weeks = editions.map((edition) => ({
-    edition,
-    tracks: byEdition.get(edition.id) ?? [],
-    featured: featuredByEdition.get(edition.id) ?? [],
-    vinyl: vinylByEdition.get(edition.id) ?? [],
-  }))
-
-  const archiveWeekByEditionId = new Map(archiveEditions.map((e) => [e.id, e.week_date]))
-  const archiveFeatured = archiveOnlyFeatured.map((pick) => ({
-    pick,
-    weekDate: archiveWeekByEditionId.get(pick.chart_edition_id) || '',
-  }))
-
-  const weekParamMonday =
-    chartEditionWeekMondayFromPublish(query.week) ?? query.week
-  const validWeekParam =
-    weekParamMonday && editions.some((e) => e.week_date === weekParamMonday)
-      ? weekParamMonday
-      : undefined
-
-  const defaultExpandedWeekDate =
-    validWeekParam ?? editions[0]?.week_date ?? ''
-
-  // ---- Mapa `nombreNormalizado → slug` de artistas existentes en BD ----
-  // Se usa en `ChartView` para convertir el nombre del artista de cada fila en
-  // un enlace INTERNO a `/[lang]/artists/<slug>` cuando el artista existe en
-  // `public.artists`. Si no hay ficha, el nombre queda como texto: Beatport /
-  // Spotify / TIDAL solo salen en sus botones de fila.
-  const chartArtistNames = new Set<string>()
-  const collectArtistNames = (
-    arr: (ChartTrackArtist | ChartFeaturedArtist | ChartVinylArtist)[] | null | undefined,
-  ) => {
-    if (!Array.isArray(arr)) return
-    for (const a of arr) {
-      const name = (a?.name || '').trim()
-      if (name) chartArtistNames.add(name)
+  const labelImageMap: Record<string, string> = {}
+  for (const r of labelRows) {
+    const img = (r.image_url || '').trim()
+    if (!img || !r.name) continue
+    for (const key of slugLookupKeys(r.name, { labelSuffixes: true })) {
+      if (!labelImageMap[key]) labelImageMap[key] = img
     }
-  }
-  for (const t of allTracks) collectArtistNames(t.artists)
-  for (const t of allFeatured) collectArtistNames(t.artists)
-  for (const t of allVinyl) collectArtistNames(t.artists)
-  for (const t of archiveOnlyFeatured) collectArtistNames(t.artists)
-
-  let artistSlugMap: Record<string, string> = {}
-  if (chartArtistNames.size > 0) {
-    const { data: dbArtists } = await supabase
-      .from('artists')
-      .select('slug, name, name_display')
-      .limit(5000)
-    const rows = (dbArtists as { slug: string; name: string | null; name_display: string | null }[] | null) ?? []
-    artistSlugMap = filterArtistSlugMapForNames(buildFullArtistSlugMap(rows), chartArtistNames)
-  }
-
-  const chartLabelNames = new Set<string>()
-  for (const t of allTracks) {
-    const name = (t.label || '').trim()
-    if (name) chartLabelNames.add(name)
-  }
-  for (const t of allFeatured) {
-    const name = (t.label || '').trim()
-    if (name) chartLabelNames.add(name)
-  }
-  for (const t of allVinyl) {
-    const name = (t.label || '').trim()
-    if (name) chartLabelNames.add(name)
-  }
-  for (const t of archiveOnlyFeatured) {
-    const name = (t.label || '').trim()
-    if (name) chartLabelNames.add(name)
-  }
-
-  let labelImageMap: Record<string, string> = {}
-  let labelSlugMap: Record<string, string> = {}
-  if (chartLabelNames.size > 0) {
-    const { data: dbLabels } = await supabase
-      .from('labels')
-      .select('slug, name, image_url')
-      .limit(5000)
-    const labelRows =
-      (dbLabels as { slug: string; name: string | null; image_url: string | null }[] | null) ?? []
-    const fullLabelMap = buildFullLabelSlugMap(
-      labelRows.map((r) => ({ slug: r.slug, name: r.name, name_display: null })),
-    )
-    labelSlugMap = filterArtistSlugMapForNames(fullLabelMap, chartLabelNames, { labelSuffixes: true })
-    const imagesBySlug = new Map<string, string>()
-    for (const r of labelRows) {
-      const img = (r.image_url || '').trim()
-      if (img && !imagesBySlug.has(r.slug)) imagesBySlug.set(r.slug, img)
-    }
-    Array.from(chartLabelNames).forEach((raw) => {
-      const slug = findLabelSlug(raw, fullLabelMap)
-      const img = slug ? imagesBySlug.get(slug) : undefined
-      if (!img) return
-      const key = normalizeArtistKey(raw)
-      if (key) labelImageMap[key] = img
-    })
   }
 
   return (
@@ -405,9 +214,8 @@ export default async function ChartsPage({
       <ChartView
         lang={lang}
         dict={dict}
-        weeks={weeks}
-        archiveFeatured={archiveFeatured}
-        defaultExpandedWeekDate={defaultExpandedWeekDate}
+        pickWeeks={pickWeeks}
+        archiveYears={archiveYears}
         artistSlugMap={artistSlugMap}
         labelSlugMap={labelSlugMap}
         labelImageMap={labelImageMap}

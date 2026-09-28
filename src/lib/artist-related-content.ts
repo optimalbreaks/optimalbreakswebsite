@@ -2,8 +2,12 @@
 // OPTIMAL BREAKS — Artist cross-links (charts, mixes, events)
 // ============================================
 
+import { createHash } from 'node:crypto'
+import { unstable_cache } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ChartFeaturedTrack, ChartTrackSource, Database } from '@/types/database'
+import { createServiceSupabase, IN_ID_CHUNK } from '@/lib/supabase-admin'
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import type { Locale } from '@/lib/i18n-config'
 import {
   normalizeForEntityMatch,
@@ -889,6 +893,62 @@ export async function fetchLabelChartLinks(
     lang,
     { chart: 12, featured: 24, vinyl: 8, total: 40 },
   )
+}
+
+/** Ids de fila (y fusiones) para cruzar saves de «En Optimal Breaks». */
+export function onSitePickTrackIds(
+  picks: Array<{ id: string; relatedRefs?: Array<{ id: string }> | null }>,
+): string[] {
+  const ids: string[] = []
+  for (const pick of picks) {
+    if (pick.relatedRefs?.length) {
+      for (const ref of pick.relatedRefs) ids.push(ref.id)
+    } else ids.push(pick.id)
+  }
+  return ids
+}
+
+async function countSavedChartTracks(ids: string[]): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {}
+  const sb = createServiceSupabase()
+  for (let i = 0; i < ids.length; i += IN_ID_CHUNK) {
+    const chunk = ids.slice(i, i + IN_ID_CHUNK)
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb
+        .from('saved_chart_tracks')
+        .select('track_id')
+        .in('track_id', chunk)
+        .order('id', { ascending: true })
+        .range(from, from + 999)
+      if (error) throw new Error(error.message)
+      for (const row of data || []) {
+        const id = row.track_id
+        counts[id] = (counts[id] || 0) + 1
+      }
+      if (!data || data.length < 1000) break
+    }
+  }
+  return counts
+}
+
+/**
+ * Saves de la comunidad por id de tema. `saved_chart_tracks` no es público
+ * (RLS), así que va por service role y queda en la Data Cache del catálogo.
+ */
+export async function fetchOnSiteSaveCounts(ids: string[]): Promise<Record<string, number>> {
+  const unique = [...new Set(ids.filter(Boolean))].sort()
+  if (unique.length === 0) return {}
+  const key = createHash('sha1').update(unique.join(',')).digest('hex')
+  try {
+    return await unstable_cache(
+      async () => countSavedChartTracks(unique),
+      ['on-site-save-counts', key],
+      { revalidate: 300, tags: [PUBLIC_CATALOG_CACHE_TAG] },
+    )()
+  } catch (err) {
+    console.warn('[on-site-saves]', err instanceof Error ? err.message : err)
+    return {}
+  }
 }
 
 /** Intenta enlazar un texto editorial de mix con una fila del catálogo. */
