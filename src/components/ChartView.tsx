@@ -1227,23 +1227,47 @@ export default function ChartView({
     return previewQueue[previewIndex]?.rowKey ?? null
   }, [previewGroupKey, previewQueue, previewIndex])
 
-  function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle) {
-    if (bundle.length === 0) return undefined
+  // «Reproducir todo» sobre una sección cuyos temas aún no se han descargado:
+  // el botón sale sin expandir; al pulsarlo se pide la sección y, cuando llega,
+  // arranca la cola (patrón ⌘K: intento de play + modal «Toca para escuchar»
+  // de respaldo si el navegador lo bloquea al no estar ya dentro del gesto).
+  const [pendingPlayAll, setPendingPlayAll] = useState<string | null>(null)
+
+  /**
+   * @param loadable Sección con temas (count > 0) todavía sin descargar: cómo
+   *   pedirla. Si se pasa y el bundle está vacío, el botón sale igualmente y
+   *   dispara carga + reproducción.
+   */
+  function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle, loadable?: { load: () => void }) {
+    const deferred = bundle.length === 0
+    if (deferred && !loadable) return undefined
     const isActive = isGroupActive(sectionKey)
+    const isPending = deferred && pendingPlayAll === sectionKey
     const current = isActive ? (previewIndex + 1) : 0
     const total = isActive ? previewQueue.length : bundle.length
 
     return (
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); handlePlayAllClick(sectionKey, bundle) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (deferred) {
+            if (isPending) return
+            setPendingPlayAll(sectionKey)
+            loadable!.load()
+            return
+          }
+          handlePlayAllClick(sectionKey, bundle)
+        }}
         className={`inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1 text-[10px] sm:text-[11px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation select-none whitespace-nowrap
           ${isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)] hover:text-white active:bg-[var(--red)]'}`}
         style={{ fontFamily: "'Courier Prime', monospace" }}
         title={isActive ? c.stop_all_title : c.play_all_title}
         aria-label={isActive ? c.stop_all_title : c.play_all_title}
+        aria-busy={isPending || undefined}
       >
         {isActive ? c.stop_all : c.play_all}
+        {isPending && <span className="text-[9px] font-bold opacity-80" aria-hidden>…</span>}
         {isActive && (
           <span className="text-[9px] font-bold opacity-80 tabular-nums">
             {c.play_all_counter.replace('{current}', String(current)).replace('{total}', String(total))}
@@ -1272,6 +1296,41 @@ export default function ChartView({
     }
     return out
   }, [archiveByYearLoaded, canonicalGroups.featuredByTrack, buildFeaturedBundle])
+
+  // «Reproducir todo» diferido: en cuanto la sección pedida tiene sus temas,
+  // se abre, arranca la cola desde el primero y se arma el modal de respaldo.
+  useEffect(() => {
+    if (!pendingPlayAll) return
+    let bundle: PlayAllBundle | null = null
+    if (pendingPlayAll.startsWith('archive-')) {
+      const yearKey = pendingPlayAll.slice('archive-'.length)
+      if (!(yearKey in archiveByYearLoaded)) return
+      bundle = archiveBundles[yearKey]?.bundle ?? []
+      ensureOpenVinyl(yearKey)
+    } else if (pendingPlayAll.startsWith('picks-')) {
+      const weekDate = pendingPlayAll.slice('picks-'.length)
+      if (!(weekDate in pickByWeek)) return
+      const sorted = sortFeaturedByArtist(pickByWeek[weekDate].filter((p) => !isArchiveFeaturedTrack(p)), lang)
+      bundle = buildFeaturedBundle(sorted, canonicalGroups.featuredByTrack, weekDate)
+      ensureOpenPicks(weekDate)
+    }
+    setPendingPlayAll(null)
+    const first = bundle?.[0]
+    if (!bundle || !first) return
+    playFromIndex(pendingPlayAll, bundle, 0)
+    setPendingTapPlay({
+      rowKey: first.rowKey,
+      sectionKey: pendingPlayAll,
+      bundle,
+      index: 0,
+      title: first.title,
+      artist: first.artist,
+      artworkUrl: first.artworkUrl ?? null,
+    })
+  }, [
+    pendingPlayAll, archiveByYearLoaded, archiveBundles, pickByWeek, lang,
+    buildFeaturedBundle, canonicalGroups.featuredByTrack, ensureOpenVinyl, ensureOpenPicks, playFromIndex,
+  ])
 
   const visiblePicksWeeks = showAllPicksWeeks
     ? pickWeeks
@@ -1365,7 +1424,11 @@ export default function ChartView({
                   }}
                   label="picks"
                   dict={dict}
-                  playAllSlot={featuredSorted.length > 0 ? renderPlayAllBtn(picksKey, picksBundle) : undefined}
+                  playAllSlot={renderPlayAllBtn(
+                    picksKey,
+                    picksBundle,
+                    !(week.weekDate in pickByWeek) && week.count > 0 ? { load: () => loadPicks(week.weekDate) } : undefined,
+                  )}
                 >
                   {expanded && phase === 'loading' ? (
                     <p className="px-4 py-4 text-xs font-bold tracking-wider text-[var(--ink)]/55" style={{ fontFamily: "'Courier Prime', monospace" }}>
@@ -1502,11 +1565,14 @@ export default function ChartView({
                         {c.vinyl_count.replace('{n}', String(count))}
                       </span>
                     </button>
-                    {archiveBundle.length > 0 ? (
-                      <div className="pr-2 sm:pr-3 shrink-0">
-                        {renderPlayAllBtn(archiveKey, archiveBundle)}
-                      </div>
-                    ) : null}
+                    {(() => {
+                      const btn = renderPlayAllBtn(
+                        archiveKey,
+                        archiveBundle,
+                        !(yearKey in archiveByYearLoaded) && count > 0 ? { load: () => loadArchive(yearKey) } : undefined,
+                      )
+                      return btn ? <div className="pr-2 sm:pr-3 shrink-0">{btn}</div> : null
+                    })()}
                   </div>
 
                   {expanded && (

@@ -985,6 +985,33 @@ The same song can sit in a Top 10 and in New Releases. The “+” matches on th
 
 ## Beatport: weekly chart vs Top 10 on profiles
 
+### `/charts` — progressive loading (Sep 2026)
+
+**Why.** By late September 2026 the catalogue behind `/charts` was ~36 New Releases weeks plus **989 archive editions** (~11,200 rows, ~10 MB of PostgREST JSON). The page fetched and rendered all of it on every request: Vercel returned **5xx** on `/es/charts`, and even when it survived, expanding a year with ~1,900 rows froze the tab. Fixed on 28 Sep 2026 (`5b13320f`, `e2ac4a89`).
+
+**Model.** The server renders only the **outline**; the tracks of a section are fetched when that section is opened or played.
+
+| Piece | Where | What it does |
+|---|---|---|
+| `loadChartsOutline(supabase)` | `src/lib/charts-sections.ts` | Slim selects (`id, link_url, release_date, release_year, chart_edition_id`) over published editions → `pickWeeks[]` (week, **count**, edition number, `isLatest`) and `archiveYears[]` (year, **count**, vinyl + digital deduped exactly like the full render). Counts on every header are real, no rows shipped. |
+| `loadPickWeek(supabase, week)` | same | Full rows of one New Releases week (`select('*')`, non-archive picks only). |
+| `loadArchiveYear(supabase, yearKey)` | same | Featured rows whose release falls in that year (`release_date` range **or** `release_year`) + `chart_vinyl_tracks.year`, deduped (`vinylTrackDedupKey` / lowercase `link_url`) and returned as `ArchiveSectionRow[]` (`{kind:'vinyl'|'featured', …, weekDate}`). `__unknown_year__` = rows without any date. |
+| `locateChartTrack(supabase, id)` | same | Given a featured or vinyl UUID, returns `{kind:'picks', week}` or `{kind:'archive', year}`. Used by deep-links. |
+| `GET /api/public/charts/section` | `src/app/api/public/charts/section/route.ts` | `?kind=picks&week=YYYY-MM-DD` → `{tracks}`; `?kind=archive&year=YYYY\|__unknown_year__` → `{rows}`; `?kind=locate&id=<uuid>` → `{target}`. Reads through **`createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])`** (Data Cache, same 5-minute policy as every public read). |
+| `src/app/[lang]/charts/page.tsx` | | Calls `loadChartsOutline` + artist/label slug maps only. Still `dynamic = 'force-dynamic'` (`?week=`, `?play=`). |
+| `src/app/[lang]/charts/loading.tsx` | | Route boundary with the fanzine `LoadingBreaks` (same as `/top100`). Shows instantly while the outline is built. |
+| `ChartView.tsx` | | Client state: `pickByWeek`, `archiveByYearLoaded` (stored **already sorted** A–Z), `pickPhase` / `archivePhase` (`loading` / `error` + retry button), `archiveVisible` (rows painted per year), `pendingPlayAll`. |
+
+**Client behaviour.**
+
+- **Open a week / year** → `loadPicks(week)` / `loadArchive(year)`: one fetch per section, guarded by a `Set` ref so a section is never requested twice. Inline «Cargando temas…» while it arrives; «No se han podido cargar. Reintentar.» on failure.
+- **Archive years render in chunks of `ARCHIVE_PAGE = 60`.** A `RevealMoreRows` footer (`IntersectionObserver`, `rootMargin: 400px`) paints the next 60 as you scroll, and doubles as a «Ver más (N restantes)» button. Sorting happens once when the rows arrive; the «play all» bundle and the row→index map are memoised per year (`archiveBundles`), not recomputed per render. That is what stopped the freeze.
+- **▶ Play all without expanding.** Every week/year header with `count > 0` shows the play-all button even before its rows exist. Clicking it sets `pendingPlayAll = 'archive-<year>' | 'picks-<week>'`, fetches the section, and when the rows land an effect opens the section, calls `playFromIndex(section, bundle, 0)` and arms the «Toca para escuchar» modal as fallback (the ⌘K pattern: the `play()` no longer runs inside the click gesture, so mobile WebKit may block it — the modal auto-closes if playback actually started). «Play all» always queues the **whole** section, not just the 60 rows painted.
+- **Deep-links keep working** without the catalogue in memory: `?play=featured:<id>` / `?play=chart:<id>` / `?play=vinyl:<id>` and ⌘K's `#chart-row-<id>` / `#chart-vinyl-row-<id>` call `?kind=locate`, open the right week/year (revealing extra weeks past the first 10 if needed), fetch it, **reveal rows up to the target** (`revealArchiveRow`), scroll + flash the row, and arm the modal (shared links: modal only, never autoplay; ⌘K `?play=1`: play attempt + modal). Share URL formats are unchanged.
+- **Cross-section save grouping** (`canonicalGroups` → `SaveTrackButton relatedRefs`) is computed over the sections loaded so far.
+
+**Do not** bring the full-catalogue fetch back into `page.tsx`, switch the section API off the cached client, or render a whole year at once. If a year gets slow again, tune `ARCHIVE_PAGE`, not the architecture. Cursor rules that still apply: `supabase-cache-lecturas-publicas`, `reproductor-exclusion-audio` (shared links → modal), `charts-ids-inmutables-saves`.
+
 ### New Releases (editorial picks on `/charts`)
 
 > **Invariant rule:** each featured pick belongs in the **`week_date`** edition, defined as **the ISO Monday of the calendar week that contains that track's release date** from the store (Beatport: `publish_date` in scraped `__NEXT_DATA__`). The day you paste URLs, chat cadence, or “the next timeline row” does **not** choose the bucket; see `.cursor/rules/charts-new-releases-supabase.mdc`.

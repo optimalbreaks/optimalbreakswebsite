@@ -24,3 +24,7 @@ Narciso lo ha pedido expresamente (sep 2026, tras repetirlo varias veces): el ag
 ## Excepción
 
 Solo si Narciso pide explícitamente en ese chat "pruébalo en local" / "arranca el dev".
+
+## Si Narciso tiene el dev abierto y "no va" (proxy Acttax)
+
+`TypeError: fetch failed` + `UNABLE_TO_VERIFY_LEAF_SIGNATURE` en la terminal del `npm run dev` = el proxy de Acttax (SSL inspection); Node no fía su certificado y **ninguna** llamada a Supabase pasa (la home sale vacía, `/charts` lanza el error). No es el bug de producción ni del código: se arranca con `$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npm run dev` (Node 22.14 no admite `--use-system-ca`). Decirlo y seguir con el flujo commit + push.

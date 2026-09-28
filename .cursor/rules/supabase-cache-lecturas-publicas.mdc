@@ -16,6 +16,7 @@ La instancia de Supabase agotó su **Disk IO Budget**: cada visita pública (bot
 3. **Middleware** (`src/middleware.ts`): `auth.getUser()` **solo** si la petición trae cookies de sesión de Supabase; el fetch a Auth lleva **`AbortSignal.timeout(2500)`** y try/catch. No quitar el guard de cookies ni el timeout: son lo que impide que una caída de Supabase tumbe el sitio entero.
 4. **No** restaurar `revalidate = 0` / `fetchCache = 'force-no-store'` en `[lang]/artists/layout.tsx` (ni equivalentes en otros segmentos públicos) salvo petición explícita del usuario consciente del coste en Disk IO.
 5. `/charts` y `/blog` declaran `export const dynamic = 'force-dynamic'` porque dependen de `searchParams` (`?week=`, `?play=`, `?page=`); sus fetch siguen pasando por la Data Cache. No quitarlo.
+6. **`/charts` carga por secciones (28 sep 2026).** La página solo pide el esquema (`loadChartsOutline`, `src/lib/charts-sections.ts`: semanas y años con recuentos, selects finos). Los temas de cada semana/año llegan por **`/api/public/charts/section`** (`kind=picks|archive|locate`), que también lee con `createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])`. **Prohibido** volver a bajar el catálogo completo (~11k filas, ~10 MB) en `page.tsx`: eso fue el 5xx de producción. Detalle: README «`/charts` — progressive loading».
 
 ## Consecuencia editorial
 

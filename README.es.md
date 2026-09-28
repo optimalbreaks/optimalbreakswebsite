@@ -205,6 +205,35 @@ Una misma canción puede estar a la vez en un Top 10 y en New Releases. El «+»
 
 **40 Breaks Vitales** (`chart_tracks`) no es una vía de entrada. Desde el 27 sep 2026 no se lista en la web. Las filas siguen en la base por los saves antiguos y los enlaces `?play=chart:`. Los temas que solo estaban ahí se copiaron a New Releases o al archivo según su fecha de lanzamiento.
 
+## `/charts` — carga progresiva (sep 2026)
+
+**Por qué.** A finales de septiembre de 2026 el catálogo de `/charts` eran ~36 semanas de New Releases más **989 ediciones de archivo** (~11.200 filas, ~10 MB de JSON de PostgREST). La página lo bajaba y lo pintaba todo en cada visita: Vercel devolvía **5xx** en `/es/charts` y, cuando sobrevivía, abrir un año de ~1.900 filas dejaba la pestaña bloqueada. Arreglado el 28 sep 2026 (`5b13320f`, `e2ac4a89`).
+
+**Modelo.** El servidor pinta solo el **esquema**; los temas de cada sección se piden cuando se abre o se reproduce esa sección.
+
+| Pieza | Dónde | Qué hace |
+|---|---|---|
+| `loadChartsOutline(supabase)` | `src/lib/charts-sections.ts` | Selects finos (`id, link_url, release_date, release_year, chart_edition_id`) sobre ediciones publicadas → `pickWeeks[]` (semana, **recuento**, nº de edición, `isLatest`) y `archiveYears[]` (año, **recuento**, vinilo + digital deduplicados igual que el render completo). Los números de cada cabecera son reales sin enviar filas. |
+| `loadPickWeek(supabase, week)` | ídem | Filas completas de una semana de New Releases (`select('*')`, solo picks no-archivo). |
+| `loadArchiveYear(supabase, yearKey)` | ídem | Featured cuyo release cae en ese año (rango `release_date` **o** `release_year`) + `chart_vinyl_tracks.year`, deduplicados (`vinylTrackDedupKey` / `link_url` en minúsculas) y devueltos como `ArchiveSectionRow[]` (`{kind:'vinyl'\|'featured', …, weekDate}`). `__unknown_year__` = filas sin fecha. |
+| `locateChartTrack(supabase, id)` | ídem | Dado un UUID featured o vinyl devuelve `{kind:'picks', week}` o `{kind:'archive', year}`. Lo usan los deep-links. |
+| `GET /api/public/charts/section` | `src/app/api/public/charts/section/route.ts` | `?kind=picks&week=YYYY-MM-DD` → `{tracks}`; `?kind=archive&year=YYYY\|__unknown_year__` → `{rows}`; `?kind=locate&id=<uuid>` → `{target}`. Lee con **`createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])`** (Data Cache, misma política de 5 min que toda lectura pública). |
+| `src/app/[lang]/charts/page.tsx` | | Solo `loadChartsOutline` + mapas de slugs de artistas/sellos. Sigue con `dynamic = 'force-dynamic'` (`?week=`, `?play=`). |
+| `src/app/[lang]/charts/loading.tsx` | | Boundary de ruta con el cargador fanzine `LoadingBreaks` (el mismo que `/top100`). Sale al instante mientras se monta el esquema. |
+| `ChartView.tsx` | | Estado cliente: `pickByWeek`, `archiveByYearLoaded` (guardado **ya ordenado** A–Z), `pickPhase` / `archivePhase` (`loading` / `error` + botón reintentar), `archiveVisible` (filas pintadas por año), `pendingPlayAll`. |
+
+**Comportamiento en cliente.**
+
+- **Abrir una semana / un año** → `loadPicks(week)` / `loadArchive(year)`: un fetch por sección, con un `Set` en ref para no pedir dos veces la misma. «Cargando temas…» mientras llega; «No se han podido cargar. Reintentar.» si falla.
+- **Los años del archivo se pintan por tramos de `ARCHIVE_PAGE = 60`.** Un pie `RevealMoreRows` (`IntersectionObserver`, `rootMargin: 400px`) pinta los 60 siguientes según bajas y sirve a la vez de botón «Ver más (N restantes)». Se ordena una sola vez al recibir las filas; el bundle de «reproducir todo» y el mapa fila→índice se memorizan por año (`archiveBundles`), no se recalculan en cada render. Eso es lo que quitó el bloqueo.
+- **▶ Reproducir todo sin expandir.** Toda cabecera de semana/año con `count > 0` muestra el botón aunque sus filas no existan aún. Al pulsarlo se fija `pendingPlayAll = 'archive-<año>' | 'picks-<semana>'`, se pide la sección y, al llegar, un efecto la abre, llama `playFromIndex(sección, bundle, 0)` y arma el modal «Toca para escuchar» de respaldo (patrón ⌘K: el `play()` ya no corre dentro del gesto del clic, así que WebKit móvil puede bloquearlo; el modal se cierra solo si el audio arrancó). «Reproducir todo» encola la sección **entera**, no solo las 60 filas pintadas.
+- **Los deep-links siguen funcionando** sin el catálogo en memoria: `?play=featured:<id>` / `?play=chart:<id>` / `?play=vinyl:<id>` y el `#chart-row-<id>` / `#chart-vinyl-row-<id>` de ⌘K llaman a `?kind=locate`, abren la semana/año que toca (mostrando las semanas ocultas tras las 10 primeras si hace falta), la piden, **revelan filas hasta el destino** (`revealArchiveRow`), hacen scroll + destello y arman el modal (enlace compartido: solo modal, nunca autoplay; ⌘K `?play=1`: intento de play + modal). Los formatos de URL de compartir no cambian.
+- **La agrupación de saves entre secciones** (`canonicalGroups` → `SaveTrackButton relatedRefs`) se calcula sobre las secciones cargadas hasta el momento.
+
+**No** volver a meter el fetch del catálogo completo en `page.tsx`, ni sacar la API de secciones del cliente cacheado, ni pintar un año entero de golpe. Si un año vuelve a ir lento, se ajusta `ARCHIVE_PAGE`, no la arquitectura. Reglas Cursor que siguen vigentes: `supabase-cache-lecturas-publicas`, `reproductor-exclusion-audio` (enlaces compartidos → modal), `charts-ids-inmutables-saves`.
+
+**Dev en local detrás del proxy Acttax:** Node no fía el certificado del proxy (SSL inspection) y todos los `fetch` a Supabase fallan con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (`/charts` lanza el error; la home lo traga y sale vacía). Arrancar con `$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npm run dev`. No es un bug del repo ni ocurre en Vercel.
+
 ## New Releases (novedades editoriales en `/charts`)
 
 > **Regla invariante:** los picks se **clasifican por semana según la fecha de release del tema en la tienda** (para Beatport: el día que esa tienda muestra como release / `publish_date` en scrape). **`week_date` en JSON = lunes ISO de esa semana de release.** Nada más (ni el día en que pegas URLs ni “la siguiente fila temporal del repo”) determina esa semana; ver `.cursor/rules/charts-new-releases-supabase.mdc`.
