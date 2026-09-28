@@ -9,10 +9,13 @@
 // renderizar <LoadingBreaks /> mientras espera.
 //
 // ⚠️ A PROPÓSITO NO va en el `loading.tsx` global de rutas (`[lang]/loading.tsx`):
-// ese boundary cubre TAMBIÉN /charts y /artists, donde aterrizan los enlaces
-// compartidos con el modal «Toca para escuchar» (regla reproductor-exclusion-
-// audio). Decisión de Narciso (sep 2026): en esas dos superficies no se mete
-// este cargador; el resto de secciones con fetch en cliente, sí.
+// ese boundary cubre TAMBIÉN /artists, donde aterrizan los enlaces compartidos
+// con el modal «Toca para escuchar» (regla reproductor-exclusion-audio).
+// /charts SÍ lo usa desde el 28 sep 2026 (`[lang]/charts/loading.tsx`, petición
+// de Narciso al pasar la página a carga progresiva): el cargador sale mientras
+// el servidor monta el esquema de semanas/años y desaparece al llegar el HTML;
+// el modal de los enlaces compartidos sigue saliendo después, sin autoplay.
+// Como `loading.tsx` no recibe `lang`, título y subtítulo aceptan `{ es, en }`.
 //
 // El % sube con curva asintótica y se frena en 95: el 100 real llega cuando
 // el contenido sustituye al cargador (no mentimos al usuario).
@@ -47,13 +50,20 @@ const GENERIC_MESSAGES_EN = [
   'Opening the venue…',
 ]
 
+type BilingualText = string | { es: string; en: string }
+
+function pickText(value: BilingualText | undefined, isEs: boolean): string | undefined {
+  if (value === undefined || typeof value === 'string') return value
+  return isEs ? value.es : value.en
+}
+
 interface LoadingBreaksProps {
   /** Forzar idioma; si no se pasa, se deduce del pathname (/es/…). */
   es?: boolean
   /** Título grande (por defecto "Cargando breaks" / "Loading breaks"). */
-  title?: string
+  title?: BilingualText
   /** Línea pequeña bajo el título. */
-  subtitle?: string
+  subtitle?: BilingualText
   /** Mensajes rotatorios propios (si no, los genéricos del idioma). */
   messages?: string[]
   /** Texto de la cinta superior en loop. */
@@ -64,6 +74,8 @@ export default function LoadingBreaks({ es, title, subtitle, messages, tape }: L
   const pathname = usePathname()
   const isEs = typeof es === 'boolean' ? es : (pathname?.startsWith('/es') ?? false)
   const msgs = messages && messages.length > 0 ? messages : (isEs ? GENERIC_MESSAGES_ES : GENERIC_MESSAGES_EN)
+  const titleText = pickText(title, isEs)
+  const subtitleText = pickText(subtitle, isEs)
   const [progress, setProgress] = useState(0)
   const [msgIdx, setMsgIdx] = useState(0)
 
@@ -137,10 +149,10 @@ export default function LoadingBreaks({ es, title, subtitle, messages, tape }: L
 
           {/* Título */}
           <div className="mb-1" style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 'clamp(22px, 5vw, 30px)', letterSpacing: '-1.2px', lineHeight: 1, textTransform: 'uppercase' }}>
-            {title ?? (isEs ? 'Cargando breaks' : 'Loading breaks')}
+            {titleText ?? (isEs ? 'Cargando breaks' : 'Loading breaks')}
           </div>
           <div className="mb-5" style={{ fontFamily: MONO, fontSize: '11px', letterSpacing: '2px', opacity: 0.55, textTransform: 'uppercase' }}>
-            // {subtitle ?? (isEs ? 'Un momento — montando la sesión' : 'One moment — setting up the session')}
+            // {subtitleText ?? (isEs ? 'Un momento — montando la sesión' : 'One moment — setting up the session')}
           </div>
 
           {/* Mensaje rotatorio */}
