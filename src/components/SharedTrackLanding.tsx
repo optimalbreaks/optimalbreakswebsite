@@ -18,6 +18,7 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import type { Locale } from '@/lib/i18n-config'
 import type { SharedLanding } from '@/lib/shared-track-landing'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
@@ -71,7 +72,7 @@ export default function SharedTrackLanding({ landing, lang }: { landing: SharedL
   const [tapped, setTapped] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const { playPreviewQueue, previewQueue, previewIndex, previewPlaying } = usePreviewAudioGated()
+  const { playPreviewQueue, extendPreviewQueue, previewQueue, previewIndex, previewPlaying } = usePreviewAudioGated()
 
   const item = useMemo<PreviewTrack | null>(() => {
     if (landing.status !== 'audio') return null
@@ -101,17 +102,36 @@ export default function SharedTrackLanding({ landing, lang }: { landing: SharedL
 
   const ourRowKey = landing.status === 'audio' ? landing.rowKey : null
   const isOursPlaying = !!ourRowKey && previewQueue[previewIndex]?.rowKey === ourRowKey && previewPlaying
-  // Ya suena → el emergente se retira y la barra toma el relevo. Si el motor
-  // pide su «Toca para escuchar», este sigue encima (z-205) para no dejar
-  // un segundo emergente visible.
-  const open = !dismissed && !(tapped && isOursPlaying)
+  // Ya suena → el emergente se retira PARA SIEMPRE y la barra toma el relevo.
+  // Si luego el usuario pausa o cambia de tema, no vuelve a salir (antes
+  // reaparecía al pausar y a los 12 s ofrecía «reintentar» sobre un tema que
+  // ya había sonado). Si el motor pide su «Toca para escuchar», este sigue
+  // encima (z-205) para no dejar un segundo emergente visible.
+  // (`played` se fija durante el render: patrón «guardar info de renders
+  // anteriores» de React, sin setState en efecto.)
+  const [played, setPlayed] = useState(false)
+  if (tapped && isOursPlaying && !played) setPlayed(true)
+  const open = !dismissed && !played
 
   // Red lenta / audio caído: tras un tiempo sin sonar, ofrecer reintento.
   useEffect(() => {
-    if (!tapped || isOursPlaying) return
+    if (!tapped || played || isOursPlaying) return
     const t = window.setTimeout(() => setFailed(true), PLAY_TIMEOUT_MS)
     return () => window.clearTimeout(t)
-  }, [tapped, isOursPlaying])
+  }, [tapped, played, isOursPlaying])
+
+  // Carrera tap ↔ llegada de la semana: si ChartView registró la sección
+  // mientras el motor aún se montaba (su efecto no vio el tema en la cola), la
+  // cola se habría quedado en 1. En cuanto el motor tiene nuestro tema, se
+  // amplía aquí SIN tocar el audio (extendPreviewQueue). Idempotente.
+  const currentRowKey = previewQueue[previewIndex]?.rowKey ?? null
+  useEffect(() => {
+    if (!ourRowKey || currentRowKey !== ourRowKey) return
+    const reg = getSharedBundle(ourRowKey)
+    if (!reg || reg.bundle.length <= previewQueue.length) return
+    if (reg.bundle[reg.index]?.rowKey !== ourRowKey) return
+    extendPreviewQueue(reg.bundle, reg.index, reg.sectionKey)
+  }, [ourRowKey, currentRowKey, previewQueue.length, extendPreviewQueue])
 
   if (!open) return null
 
@@ -269,19 +289,18 @@ export default function SharedTrackLanding({ landing, lang }: { landing: SharedL
     )
   }
 
-  return (
+  // En el HTML inicial el diálogo va inline (el receptor lo ve antes del
+  // cargador). Tras hidratar se porta a `document.body`: el `<main>` del layout
+  // es `relative z-[1]` y atrapa el z-[205], así que el banner de cookies
+  // (z-200, hermano del main) tapaba el play en móvil. El banner sigue ahí al
+  // cerrar. `data-ob-overlay` hace que otros modales esperen a que este se cierre.
+  const overlay = (
     <div
-      // z por encima del banner de cookies (z-200): quien abre un enlace
-      // compartido suele ser un visitante nuevo y el banner aparece a los
-      // pocos segundos; en móviles pequeños tapaba el botón de play. El
-      // banner sigue ahí al cerrar el emergente. `data-ob-overlay` hace que
-      // otros modales esperen a que este se cierre.
       data-ob-overlay=""
       className="fixed inset-0 z-[205] flex items-center justify-center bg-[var(--ink)]/70 backdrop-blur-sm px-3 sm:px-4 py-6 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={kicker}
-      // Tocar fuera cierra, salvo mientras carga el audio que el usuario pidió.
       onClick={() => { if (!(tapped && !failed)) close() }}
     >
       <div
@@ -294,4 +313,7 @@ export default function SharedTrackLanding({ landing, lang }: { landing: SharedL
       </div>
     </div>
   )
+
+  if (hydrated) return createPortal(overlay, document.body)
+  return overlay
 }

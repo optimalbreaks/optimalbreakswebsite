@@ -190,6 +190,11 @@ export interface PreviewAudioApi {
    *  overlay "Toca para escuchar" y recuperar con un gesto del usuario. */
   previewBlocked: boolean
   playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
+  /** Amplía la cola alrededor del tema que YA suena (enlace compartido →
+   *  llega la semana entera). Solo actualiza cola, índice y grupo: no toca el
+   *  `<audio>` (ni pause, ni src, ni play, ni progreso, ni watchdog). Si el
+   *  item de `index` no es el tema actual (mismo `rowKey`), no hace nada. */
+  extendPreviewQueue: (items: PreviewTrack[], index: number, groupKey?: string) => void
   togglePreview: () => void
   stopPreview: () => void
   previewNext: () => void
@@ -267,6 +272,7 @@ interface DeckAudioContextValue {
   previewGroupKey: string | null
   previewBlocked: boolean
   playPreviewQueue: (items: PreviewTrack[], startIndex?: number, groupKey?: string) => void
+  extendPreviewQueue: (items: PreviewTrack[], index: number, groupKey?: string) => void
   togglePreview: () => void
   stopPreview: () => void
   previewNext: () => void
@@ -335,6 +341,7 @@ export function usePreviewAudio(): PreviewAudioApi {
     previewGroupKey: ctx.previewGroupKey,
     previewBlocked: ctx.previewBlocked,
     playPreviewQueue: ctx.playPreviewQueue,
+    extendPreviewQueue: ctx.extendPreviewQueue,
     togglePreview: ctx.togglePreview,
     stopPreview: ctx.stopPreview,
     previewNext: ctx.previewNext,
@@ -355,6 +362,7 @@ export function usePreviewAudioMaybe(): PreviewAudioApi | null {
     previewGroupKey: ctx.previewGroupKey,
     previewBlocked: ctx.previewBlocked,
     playPreviewQueue: ctx.playPreviewQueue,
+    extendPreviewQueue: ctx.extendPreviewQueue,
     togglePreview: ctx.togglePreview,
     stopPreview: ctx.stopPreview,
     previewNext: ctx.previewNext,
@@ -2002,6 +2010,15 @@ export function DeckAudioProvider({
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
     }
+    // «Ya suena» = no pausado y con posición, o con datos suficientes
+    // (readyState ≥ HAVE_FUTURE_DATA) sin pausa. Cubre el <audio> compartido
+    // arrancado dentro del gesto ANTES de que el motor enganchara sus
+    // listeners (ese `playing` no lo vimos): un tema que suena nunca se
+    // reintenta, recarga ni salta.
+    const alreadyPlaying = (a: HTMLAudioElement) =>
+      !a.paused && !a.ended && (a.currentTime > 0 || a.readyState >= 3)
+    const armed = previewAudioRef.current
+    if (armed && alreadyPlaying(armed)) return
     const schedule = () => {
       previewStartWatchdogRef.current = setTimeout(() => {
         previewStartWatchdogRef.current = null
@@ -2011,7 +2028,7 @@ export function DeckAudioProvider({
         if (getActiveYouTubePlayId()) return // un embed tomó el relevo
         const a = previewAudioRef.current
         if (!a || !a.getAttribute('src')) return
-        if (!a.paused && a.currentTime > 0) return // ya suena
+        if (alreadyPlaying(a)) return // ya suena
         if (a.ended) { advanceFromCurrentTrack(); return }
         if (previewStartAttemptsRef.current >= 3) {
           // Tras varios intentos sin arrancar hay que distinguir la causa:
@@ -2318,6 +2335,31 @@ export function DeckAudioProvider({
     setPreviewDuration(0)
     loadAndPlayPreviewAt(items, clampedIdx)
   }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt, preloadNextPreview])
+
+  // Ampliación de cola SIN tocar el <audio>. Caso: enlace compartido — el
+  // receptor toca el emergente y suena el tema suelto; cuando ChartView baja la
+  // semana/año, la cola pasa a ser la sección entera con ese mismo tema en su
+  // posición. Nada de pause/src/play/progreso/watchdog/claimAudio/logTrackPlay:
+  // el audio que suena (o está en pausa, si el usuario pausó) no se entera.
+  // Si el `src` del item difiere del que suena, se conserva el que suena.
+  const extendPreviewQueue = useCallback((items: PreviewTrack[], index: number, groupKey?: string) => {
+    if (!items.length) return
+    const idx = Math.max(0, Math.min(items.length - 1, index))
+    const current = previewQueueRef.current[previewIndexRef.current]
+    const next = items[idx]
+    if (!current || !next || current.rowKey !== next.rowKey) return
+    let queue = items
+    if (next.src !== current.src) {
+      queue = items.slice()
+      queue[idx] = { ...next, src: current.src }
+    }
+    previewQueueRef.current = queue
+    previewIndexRef.current = idx
+    setPreviewQueue(queue)
+    setPreviewIndex(idx)
+    setPreviewGroupKey(groupKey ?? null)
+    preloadNextPreview(queue, idx)
+  }, [preloadNextPreview])
 
   const togglePreviewRef = useRef<(() => void) | null>(null)
 
@@ -2713,6 +2755,7 @@ export function DeckAudioProvider({
       previewGroupKey,
       previewBlocked,
       playPreviewQueue,
+      extendPreviewQueue,
       togglePreview,
       stopPreview,
       previewNext,
@@ -2758,6 +2801,7 @@ export function DeckAudioProvider({
       previewGroupKey,
       previewBlocked,
       playPreviewQueue,
+      extendPreviewQueue,
       togglePreview,
       stopPreview,
       previewNext,

@@ -41,6 +41,9 @@ export function usePreviewAudioGated(): PreviewAudioApi {
       primePreviewInGesture(items[idx]?.src)
       void gate.requestLoad({ kind: 'preview', items, startIndex: idx, groupKey })
     },
+    // Sin motor no hay cola que ampliar (el aterrizaje vuelve a intentarlo
+    // cuando el motor ya tiene el tema sonando).
+    extendPreviewQueue: noop,
     togglePreview: noop,
     stopPreview: noop,
     previewNext: noop,

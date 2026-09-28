@@ -959,7 +959,7 @@ export default function ChartView({
   // ---- Play-all state (delegado al provider global) ----
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying, previewBlocked,
-    playPreviewQueue, stopPreview, togglePreview,
+    playPreviewQueue, extendPreviewQueue, stopPreview, togglePreview,
   } = usePreviewAudioGated()
 
   type PlayAllBundle = PreviewTrack[]
@@ -1252,18 +1252,20 @@ export default function ChartView({
       return
     }
     registerSharedBundle(rowKey, { sectionKey, bundle, index: idx })
+    // Si el tema suelto ya está en el motor (sonando o en pausa), ampliar la
+    // cola SIN tocar el audio. Si el motor aún no lo tiene (el tap acaba de
+    // ocurrir y el motor está montándose), el emergente lo amplía él mismo al
+    // ver su tema en la cola (shared-track-bus ya tiene la sección).
     const current = previewQueue[previewIndex]
-    const playingAlone =
-      previewPlaying &&
+    const alone =
       current?.rowKey === rowKey &&
-      current.src === bundle[idx]?.src &&
       (previewQueue.length !== bundle.length || previewGroupKey !== sectionKey)
-    if (playingAlone) playFromIndex(sectionKey, bundle, idx)
+    if (alone) extendPreviewQueue(bundle, idx, sectionKey)
     setSharedHandoff(null)
   }, [
     sharedHandoff, pickByWeek, archiveByYearLoaded, lang,
     buildFeaturedBundle, canonicalGroups.featuredByTrack,
-    previewQueue, previewIndex, previewGroupKey, previewPlaying, playFromIndex,
+    previewQueue, previewIndex, previewGroupKey, extendPreviewQueue,
   ])
 
   // El tema del deep-link ya suena → retirar el emergente. Comparamos por
