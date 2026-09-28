@@ -4,7 +4,7 @@ const nextConfig = {
   // sirve /api/audio/[file] con URL firmada + Referer. Hay que incluirlos en el
   // trace de esa lambda o en Vercel el fs.stat devuelve ENOENT.
   outputFileTracingIncludes: {
-    '/api/audio/*': ['./private/music/**/*'],
+    '/api/audio/*': ['./private/music/*.mp3'],
   },
 
   images: {

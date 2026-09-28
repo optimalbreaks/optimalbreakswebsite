@@ -9,16 +9,16 @@ Contexto (sep 2026): Kritycal System cedió **Take My Home** entero para streami
 
 ## Arquitectura (no negociable)
 
-1. **El MP3 NO va en `public/`.** Vive en **`private/music/<slug>.mp3`** (versionado en Git; los originales WAV/JPG en subcarpetas `public/music/*/` están gitignorados y NO se suben). Un MP3 en `public/` es descargable por URL directa — eso rompe el trato con el artista.
+1. **El MP3 NO va en `public/`.** Vive en **`private/music/<slug>.mp3`** y **sí** se versiona: Vercel lo empaqueta en la lambda. Los másteres (WAV, FLAC, JPG, WebP) se quedan en el **mismo** `private/music/` y están **gitignorados** (`private/music/*` + excepción `*.mp3`). No hacer `git add` de un WAV: es el regalo del artista y no puede acabar en GitHub ni en el deploy. Un MP3 en `public/` es descargable por URL directa — eso rompe el trato.
 2. **Se sirve por `src/app/api/audio/[file]/route.ts`**: sin firma solo acepta peticiones de la propia web (`Sec-Fetch-Site: same-origin` o `Referer` del mismo host) y responde **302 a la URL firmada** (HMAC-SHA256, caducidad **6 h**, secreto = `AUDIO_STREAM_SECRET` o fallback `SUPABASE_SERVICE_ROLE_KEY`). Con firma válida sirve el archivo con soporte **Range** (seek). URL pegada en barra de direcciones / hotlink / curl → **403**. Enlace firmado compartido → muere al caducar; si la petición sigue viniendo de la web, se re-firma solo (302). El `<audio>` del deck sigue la redirección sin cambios de cliente.
-3. **`next.config.js` → `outputFileTracingIncludes: { '/api/audio/*': ['./private/music/**/*'] }`.** Sin esto, en Vercel la lambda no empaqueta los MP3 y da 404. No quitarlo.
+3. **`next.config.js` → `outputFileTracingIncludes: { '/api/audio/*': ['./private/music/*.mp3'] }`.** Sin esto, en Vercel la lambda no empaqueta los MP3 y da 404. No ampliar el glob a `**/*`: un WAV sentado en esa carpeta no debe entrar en el deploy.
 4. **Columna `chart_featured_tracks.full_audio_url`** (migración `078`). Nulo = solo preview de tienda; relleno (`/api/audio/<slug>.mp3`) = streaming completo. En `src/types/database.ts` es **opcional** (`full_audio_url?: string | null`) en `ChartFeaturedTrack` y `SavedChartTrackSnapshot` — hacerla obligatoria rompe `featured-import` y `artist-related-content`.
 5. **Esto no es DRM.** Barrera media tipo SoundCloud/Bandcamp: el usuario normal no descarga; alguien técnico siempre puede capturar el stream. No prometer blindaje absoluto al artista; el MP3 publicado es 192 kbps, el WAV master no sale del disco/Dropbox.
 
 ## Receta — próxima exclusiva
 
-1. Guardar WAV+artwork del artista en `public/music/<fecha> - <artista> - <título>/` (gitignorado).
-2. `ffmpeg -i <wav> -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP (`npm run images:to-webp`) subido al bucket `media` de Supabase (`music/<slug>.webp`).
+1. Dejar el WAV y la carátula en `private/music/` (gitignorados; no se suben).
+2. `ffmpeg -i <wav> -codec:a libmp3lame -b:a 192k private/music/<slug>.mp3` y artwork → WebP subido al bucket `media` de Supabase (`music/<slug>.webp`). El WebP local, si se genera ahí, tampoco se versiona.
 3. Pick en `data/charts/picks/<lunes>.json` con `full_audio_url: "/api/audio/<slug>.mp3"` (+ `link_url` de Beatport si existe; la semana la manda el release, regla `charts-new-releases-supabase`).
 4. `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<lunes>.json` (el upsert respeta `full_audio_url`; `--enrich-release-dates` rellena bpm/key/sample de Beatport sin pisarlo).
 5. Commit del MP3 + JSON. Nada más: la UI y Mis Tracks ya reaccionan solos a `full_audio_url`.
