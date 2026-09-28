@@ -135,6 +135,8 @@ interface ChartViewProps {
   labelSlugMap?: Record<string, string>
   /** `nombreNormalizado → image_url` de sellos con logo en BD (fallback vinilo). */
   labelImageMap?: Record<string, string>
+  /** La página ya pinta el h1 + subtítulo (streaming con cargador debajo). */
+  hideHeader?: boolean
 }
 
 // Clave de agrupación para filas de archivo sin año conocido.
@@ -679,6 +681,7 @@ export default function ChartView({
   artistSlugMap,
   labelSlugMap,
   labelImageMap,
+  hideHeader = false,
 }: ChartViewProps) {
   const c = dict.charts
 
@@ -1339,10 +1342,12 @@ export default function ChartView({
 
   if (pickWeeks.length === 0 && archiveYears.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-3xl sm:text-5xl font-black mb-4" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
-          {c.radio_title}
-        </h1>
+      <div className={`max-w-4xl mx-auto px-4 text-center ${hideHeader ? 'pb-20' : 'py-20'}`}>
+        {!hideHeader && (
+          <h1 className="text-3xl sm:text-5xl font-black mb-4" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
+            {c.radio_title}
+          </h1>
+        )}
         <p className="text-base text-[var(--ink)]/60" style={{ fontFamily: "'Courier Prime', monospace" }}>
           {c.no_chart_yet}
         </p>
@@ -1351,24 +1356,28 @@ export default function ChartView({
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-0 sm:px-4 py-6 sm:py-10">
+    <div className={`max-w-4xl mx-auto px-0 sm:px-4 ${hideHeader ? 'pb-6 sm:pb-10' : 'py-6 sm:py-10'}`}>
       {/* ================================================================ */}
       {/* PAGE HEADER — "La radio de Optimal Breaks"                       */}
+      {/* (con `hideHeader` lo pinta la página en el server, antes del     */}
+      {/* streaming del esquema; ver charts/page.tsx)                      */}
       {/* ================================================================ */}
-      <header className="px-4 sm:px-0 mb-10 sm:mb-14 text-center">
-        <h1
-          className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
-          style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
-        >
-          {c.radio_title}
-        </h1>
-        <p
-          className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl mx-auto"
-          style={{ fontFamily: "'Courier Prime', monospace" }}
-        >
-          {c.radio_subtitle}
-        </p>
-      </header>
+      {!hideHeader && (
+        <header className="px-4 sm:px-0 mb-10 sm:mb-14 text-center">
+          <h1
+            className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+            style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+          >
+            {c.radio_title}
+          </h1>
+          <p
+            className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl mx-auto"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {c.radio_subtitle}
+          </p>
+        </header>
+      )}
 
       {/* ================================================================ */}
       {/* SECTION 1 — New releases (editorial picks)                       */}

@@ -13,6 +13,8 @@ import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { parsePlayParam, formatTrackReleaseDisplay, publicOgArtworkUrl, vinylOgArtworkUrl } from '@/lib/share-track'
 import { loadChartsOutline } from '@/lib/charts-sections'
 import ChartView from '@/components/ChartView'
+import LoadingBreaks from '@/components/LoadingBreaks'
+import { Suspense } from 'react'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, slugLookupKeys } from '@/lib/artist-slug-map'
 
 // La página depende de searchParams (?week=, ?play=): debe renderizarse por
@@ -179,6 +181,46 @@ export default async function ChartsPage({
   // ?week= y ?play= los resuelve el cliente al abrir solo esa sección.
   await searchParams
   const dict = await getDictionary(lang)
+  const c = dict.charts
+
+  // La cabecera sale al instante; el esquema (semanas/años) llega por streaming
+  // con el cargador fanzine debajo, como en /top100.
+  return (
+    <main className="min-h-screen bg-[var(--paper)]">
+      <div className="max-w-4xl mx-auto px-0 sm:px-4 py-6 sm:py-10">
+        <header className="px-4 sm:px-0 mb-10 sm:mb-14 text-center">
+          <h1
+            className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
+            style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
+          >
+            {c.radio_title}
+          </h1>
+          <p
+            className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl mx-auto"
+            style={{ fontFamily: "'Courier Prime', monospace" }}
+          >
+            {c.radio_subtitle}
+          </p>
+        </header>
+      </div>
+      <Suspense
+        fallback={(
+          <div className="max-w-4xl mx-auto px-4 pb-16">
+            <LoadingBreaks
+              es={lang === 'es'}
+              title={lang === 'es' ? 'Cargando los charts' : 'Loading the charts'}
+              subtitle={lang === 'es' ? 'Montando semanas y archivo por año' : 'Building weeks and the archive by year'}
+            />
+          </div>
+        )}
+      >
+        <ChartsBody lang={lang} dict={dict} />
+      </Suspense>
+    </main>
+  )
+}
+
+async function ChartsBody({ lang, dict }: { lang: Locale; dict: Awaited<ReturnType<typeof getDictionary>> }) {
   const supabase = chartsSupabase()
 
   // Totales nada más. Los temas llegan al pulsar ▶ en la semana o el año.
@@ -210,16 +252,15 @@ export default async function ChartsPage({
   }
 
   return (
-    <main className="min-h-screen bg-[var(--paper)]">
-      <ChartView
-        lang={lang}
-        dict={dict}
-        pickWeeks={pickWeeks}
-        archiveYears={archiveYears}
-        artistSlugMap={artistSlugMap}
-        labelSlugMap={labelSlugMap}
-        labelImageMap={labelImageMap}
-      />
-    </main>
+    <ChartView
+      lang={lang}
+      dict={dict}
+      pickWeeks={pickWeeks}
+      archiveYears={archiveYears}
+      artistSlugMap={artistSlugMap}
+      labelSlugMap={labelSlugMap}
+      labelImageMap={labelImageMap}
+      hideHeader
+    />
   )
 }

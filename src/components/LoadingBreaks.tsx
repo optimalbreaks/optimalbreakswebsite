@@ -11,11 +11,13 @@
 // ⚠️ A PROPÓSITO NO va en el `loading.tsx` global de rutas (`[lang]/loading.tsx`):
 // ese boundary cubre TAMBIÉN /artists, donde aterrizan los enlaces compartidos
 // con el modal «Toca para escuchar» (regla reproductor-exclusion-audio).
-// /charts SÍ lo usa desde el 28 sep 2026 (`[lang]/charts/loading.tsx`, petición
-// de Narciso al pasar la página a carga progresiva): el cargador sale mientras
-// el servidor monta el esquema de semanas/años y desaparece al llegar el HTML;
-// el modal de los enlaces compartidos sigue saliendo después, sin autoplay.
-// Como `loading.tsx` no recibe `lang`, título y subtítulo aceptan `{ es, en }`.
+// /charts SÍ lo usa desde el 28 sep 2026 (petición de Narciso al pasar la
+// página a carga progresiva), pero como fallback de un `<Suspense>` en
+// `charts/page.tsx` — la cabecera (h1) sale al instante y el cargador debajo,
+// igual que en /top100 — no como `loading.tsx` de ruta (eso lo pintaba solo,
+// sin cabecera). El modal de los enlaces compartidos sigue saliendo después,
+// sin autoplay. Título y subtítulo aceptan también `{ es, en }` por si se usa
+// desde un boundary sin `lang`.
 //
 // El % sube con curva asintótica y se frena en 95: el 100 real llega cuando
 // el contenido sustituye al cargador (no mentimos al usuario).
