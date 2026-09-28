@@ -29,6 +29,10 @@ Las filas que ya tienen su propio botón ▶ (**`/charts`** vinilo, **Mis Tracks
 
 En `localhost` el proxy corre en tu red; si bloquea `i.ytimg.com`, la portada sale como placeholder a rayas **en local**. En producción (Vercel) se ve bien. **Probar portadas en la web desplegada, no en local.**
 
+## No alojar el vídeo nosotros
+
+Una sesión que nos pasen en vídeo **no** se guarda en `private/music` ni se sirve por `/api/audio` (eso es solo el MP3 de una exclusiva de un tema; ver **`audio-completo-exclusivas`**). El archivo se sube a un YouTube no listado y la ficha de `/mixes` embebe `video_url` como el resto. El vídeo lo sigue sirviendo YouTube.
+
 ## Referencia
 
 README (EN/ES): sección **Mixes** → «YouTube cards — poster facade + proxied thumbnail» / «Tarjetas de YouTube — portada (facade) + miniatura vía proxy».

@@ -5,7 +5,12 @@ alwaysApply: true
 
 # Audio completo alojado (exclusivas cedidas por artistas)
 
-Contexto (sep 2026): Kritycal System cedió **Take My Home** entero para streaming gratuito en la web (primer caso). Cuando un artista pase otra canción completa, la receta es esta — no reinventar.
+Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuito en la web. Cuando un artista pase otra canción completa, la receta es esta — no reinventar.
+
+| Tema | Semana NR | Archivo | Nota |
+|---|---|---|---|
+| **Take My Home** | `2026-09-14` | `private/music/kritycal-system-take-my-home.mp3` | Primer caso. |
+| **Bandido & Maleante** | `2026-09-28` | `private/music/kritycal-system-bandido-maleante.mp3` | El primer WAV era una demo de **1:25**. El máster (28 sep) dura **3:58**, igual que Spotify. Se reencodó el **mismo** MP3; `full_audio_url` no cambió. Beatport `/track/bandido-maleante/29540534`. TIDAL sin match fiable. |
 
 ## Arquitectura (no negociable)
 
@@ -22,6 +27,15 @@ Contexto (sep 2026): Kritycal System cedió **Take My Home** entero para streami
 3. Pick en `data/charts/picks/<lunes>.json` con `full_audio_url: "/api/audio/<slug>.mp3"` (+ `link_url` de Beatport si existe; la semana la manda el release, regla `charts-new-releases-supabase`).
 4. `node --use-system-ca scripts/chart-featured-upsert.mjs data/charts/picks/<lunes>.json` (el upsert respeta `full_audio_url`; `--enrich-release-dates` rellena bpm/key/sample de Beatport sin pisarlo).
 5. Commit del MP3 + JSON. Nada más: la UI y Mis Tracks ya reaccionan solos a `full_audio_url`.
+6. **Si el artista manda después el máster** (el primer archivo era una demo): `ffmpeg` otra vez **encima del mismo** `<slug>.mp3`. No cambiar `full_audio_url` ni crear otra fila. Commit + push del MP3: hasta que Vercel despliega, la web sigue sirviendo el archivo anterior. Comprobar la duración del WAV antes de codificar (ffprobe) y compararla con Beatport/Spotify.
+
+## Sesiones y mixes en vídeo — no es esta receta
+
+Una sesión de una hora en vídeo pesa cientos de MB o 1–2 GB. No entra en Git ni en la lambda, y `/api/audio` solo acepta `.mp3`. **No** alojar el vídeo en `private/music` ni en `public/`.
+
+- **Vídeo:** el artista pasa el archivo → se sube a un YouTube **no listado** del canal y `/mixes` lo embebe como el resto (`video_url`). El vídeo lo sirve YouTube.
+- **Solo audio de una sesión:** un MP3 de una hora a 192 kbps son ~80 MB. Unos pocos llenan el tope de la función de Vercel. **No** va a `private/music`. Haría falta un almacén aparte; no improvisarlo en el repo.
+- Una exclusiva es cesión del propio tema. Una sesión lleva discos de otra gente: incrustar YouTube no es lo mismo que alojar el archivo nosotros.
 
 ## UI (ya cableada — no duplicar)
 
@@ -34,6 +48,8 @@ Contexto (sep 2026): Kritycal System cedió **Take My Home** entero para streami
 - Volver a poner el MP3 (o un symlink) bajo `public/`.
 - Quitar el check de Referer, la caducidad o el `outputFileTracingIncludes`.
 - Usar `full_audio_url` para material sin cesión expresa del artista (los previews siguen siendo `sample_url` de tienda).
+- Meter un WAV, un FLAC, una carátula o un vídeo de sesión en Git o en el glob de `outputFileTracingIncludes`.
+- Tratar un mix o una sesión como si fuera una exclusiva de un tema.
 - Cachear la respuesta de `/api/audio` en CDN (va `Cache-Control: private, no-store` a propósito).
 
 README (EN): **Hosted full tracks (artist exclusives)**. README (ES): **Audio completo alojado (exclusivas de artistas)**.
