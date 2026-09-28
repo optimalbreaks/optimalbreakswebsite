@@ -141,7 +141,7 @@ When Supabase returns rows, these five sections use **client components** that o
 
 Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` in `src/components/`. Labels for the buttons live under each section in `src/dictionaries/en.json` and `es.json` (`view_large`, `view_compact`, `view_list`).
 
-**Mixes (`MixesExplorer`, `/[lang]/mixes`):** a session video is **not hosted on this site**. YouTube or SoundCloud serves it; the row only stores the link and embeds the player. If someone sends the file, upload it to an unlisted YouTube video. It does not go in `private/music` or `/api/audio` (that path is the MP3 of a single-track exclusive; see *Hosted full tracks*). Filters by **year**, **platform** (YouTube, SoundCloud, …), and **text search** on title + artist. Filter logic is unchanged from a user perspective; the implementation keeps the **full catalog mounted** and toggles visibility with Tailwind’s **`hidden` class** on non-matching cards so **embeds are not destroyed** when you clear filters (avoid using only the HTML `hidden` attribute on the same node as `display: flex` — author styles win and wrong rows could stay visible). SoundCloud continues to use the visual player (`SoundCloudVisualEmbed` URL builder; lazy wrapper in `MixesExplorer`), mounted on demand by an `IntersectionObserver`.
+**Mixes (`MixesExplorer`, `/[lang]/mixes`):** a session video is **not hosted on this site**. YouTube or SoundCloud serves it; the row only stores the link and embeds the player. If someone sends the file, upload it to an unlisted YouTube video. It does not go in `private/music` or `/api/audio` (that path is the MP3 of a single-track exclusive; see *Hosted full tracks*). Filters by **year**, **platform** (YouTube, SoundCloud, …), and **text search** on title + artist. Each year paints the first **`MIXES_PAGE = 24`** cards; the rest arrive via «Ver más» (+24). Slices only grow — changing filters does not reset them, so `#mix-<id>` is not pushed back off the page. That deep-link clears filters, raises the year’s slice to `max(24, index+1)`, then waits one frame plus **160 ms** before scrolling (if the card is not in the DOM yet, the scroll is skipped). **YouTube and SoundCloud do not mount an iframe on scroll:** poster + play, iframe only on click (`LazyYouTubeEmbed`, `LazySoundCloudEmbed` with `auto_play=true`). An `IntersectionObserver` mount piled up dozens of iframes and closed the tab on mobile. A mix with `audio_url` (or an `.mp3` in `embed_url`) plays through the global engine; a failed URL shows «No se pudo cargar este mix. Pulsa ▶ para reintentar.» and ▶ calls `playMix` again. Each heart reads the shared `useFavoriteToggle` store: one `saved_mixes` query per logged-in visit, not one per card.
 
 **YouTube cards — poster facade + proxied thumbnail (`LazyYouTubeEmbed` in `src/components/YouTubeEmbed.tsx`):** YouTube cards do **not** auto-mount the player. Each card shows a **poster** (the video thumbnail) with a red play button, and the heavy `youtube.com/embed/…` iframe mounts **only when the user clicks play** (then `autoplay=1`, exclusive via the play coordinator). This is deliberate and **must not regress to auto-mounting many iframes at once**:
 
@@ -152,7 +152,7 @@ Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplo
 
 DOM order follows **newest publication years first**.
 
-**Events (`EventsExplorer`, `/[lang]/events`):** **Compact** cards use a fluid grid `repeat(auto-fill, minmax(9.25rem, 1fr))` with date and title at **11px** (28 Sep 2026 — the old `3 / 5 / 7 / 10` columns put 9px type on ~100px cards at 768 and 1133). Poster `sizes`: `(max-width: 700px) 46vw, 200px`. Large and list views are unchanged. Detail: [Tablet layout](#tablet-layout-28-sep-2026). Footer acts as a **traffic light** by calendar day: **past** events (last day `date_end` or `date_start` before today, local midnight) use **`var(--red)`** with **white** text; **still upcoming** use the **brand yellow** **`var(--yellow)`** (same token as the logo / navbar) with **`var(--ink)`** text. **Hover** lightens the footer with `color-mix(…, white, 50%)` on both colours; the **strip behind the poster** uses a matching tint (**red mix** when past, solid yellow when upcoming) so image and footer read as one unit. The card `<Link>` is **`group/link`**, so **`group-hover/link:`** on the footer fires when hovering the image (and vice versa). **`CardThumbnail`** uses **`groupHoverGroup="link"`** for poster zoom. Rows use **`items-stretch`**, **`h-full`** on the link, and **`flex-1`** / **`min-h-*`** on the footer so **footer heights align** within each grid row (large and compact). **Calendar year view** (`view_calendar`): each day with events is **red** if every event touching that day is **past**, **yellow** if at least one is still **upcoming** (same `isEventPast` rule); legend copy in **`calendar_legend_past`** / **`calendar_legend_upcoming`**. **Clicking a day** opens a **portal modal** (poster, dates, location, lineup excerpt, description snippet, **CTA link** to the full event page — no direct navigation from the cell). Copy under **`calendar_modal_*`** keys in `en.json` / `es.json`.
+**Events (`EventsExplorer`, `/[lang]/events`):** **Compact** cards use a fluid grid `repeat(auto-fill, minmax(9.25rem, 1fr))` with date and title at **11px** (28 Sep 2026 — the old `3 / 5 / 7 / 10` columns put 9px type on ~100px cards at 768 and 1133). Poster `sizes`: `(max-width: 700px) 46vw, 200px`. Large and list views are unchanged. Detail: [Tablet layout](#tablet-layout-28-sep-2026). Footer acts as a **traffic light** by calendar day: **past** events (last day `date_end` or `date_start` before today, local midnight) use **`var(--red)`** with **white** text; **still upcoming** use the **brand yellow** **`var(--yellow)`** (same token as the logo / navbar) with **`var(--ink)`** text. **Hover** lightens the footer with `color-mix(…, white, 50%)` on both colours; the **strip behind the poster** uses a matching tint (**red mix** when past, solid yellow when upcoming) so image and footer read as one unit. The card `<Link>` is **`group/link`**, so **`group-hover/link:`** on the footer fires when hovering the image (and vice versa). **`CardThumbnail`** uses **`groupHoverGroup="link"`** for poster zoom. Rows use **`items-stretch`**, **`h-full`** on the link, and **`flex-1`** / **`min-h-*`** on the footer so **footer heights align** within each grid row (large and compact). **Calendar year view** (`view_calendar`): each day with events is **red** if every event touching that day is **past**, **yellow** if at least one is still **upcoming** (same `isEventPast` rule); legend copy in **`calendar_legend_past`** / **`calendar_legend_upcoming`**. **Clicking a day** opens a **portal modal** (poster, dates, location, lineup excerpt, description snippet, **CTA link** to the full event page — no direct navigation from the cell). Copy under **`calendar_modal_*`** keys in `en.json` / `es.json`. **Slices (28 Sep 2026):** large, compact and list paint **`EVENTS_PAGE = 40`** cards per year; the rest arrive via «Ver más». Calendar view receives the **whole year** (`paged` only when `view !== 'calendar'`). Changing the date or country filter resets the slice during render. Each heart reads the shared `useFavoriteToggle` store (one `favorite_events` query per user, not one per card).
 
 **Event detail (`/[lang]/events/[slug]`):** Full-width **hero ticket CTA** when there is a ticket/website URL, the event is **not past** by date (`isEventPastByDate`: last calendar day of the event before today), and either **`event_type === 'upcoming'`** or **`tickets_url` / `website`** is a **MonsterTicket** host (`monsterticket.com`, `monsterticket.es`, including subdomains). **`preferredHeroTicketUrl`** prefers MonsterTicket over other URLs. Copy for MonsterTicket: **“Compra de entradas”** / **“Buy tickets”**; generic links keep **“Comprar entradas”** / **“Get tickets”**.
 
@@ -1090,6 +1090,56 @@ The same song can sit in a Top 10 and in New Releases. The “+” matches on th
 - **Cross-section save grouping** (`canonicalGroups` → `SaveTrackButton relatedRefs`) is computed over the sections loaded so far.
 
 **Do not** bring the full-catalogue fetch back into `page.tsx`, switch the section API off the cached client, render a whole year at once, move `SharedTrackLanding` inside the charts Suspense, or arm `TapToPlayOverlay` on a link the server landing already handled. If a year gets slow again, tune `ARCHIVE_PAGE`, not the architecture. Cursor rules that still apply: `supabase-cache-lecturas-publicas`, `reproductor-exclusion-audio` (shared links → modal, portal above the cookie banner), `charts-ids-inmutables-saves`.
+
+## Local verification — 28 Sep 2026 (evening)
+
+The audit of the player, of `/charts` / `/events` / `/mixes` loading, and of PostgREST paging was already in the working tree. This pass compiled it, cleared lint on those files, and exercised it at `http://localhost:3000`. **Not pushed.** Migration `082_growth_indexes.sql` was already applied and was not touched. Preview autoplay / background watchdogs were not changed. Spanish write-up, same facts: [README.es.md — Verificación en local](./README.es.md#verificación-en-local--28-sep-2026-noche).
+
+### Build
+
+| Check | Result |
+|---|---|
+| `npm run build` (Next 16.3.3, Turbopack) | OK before the lint-only edits: TypeScript 12.4 s, 134 pages. |
+| `npx tsc --noEmit` | OK after those edits. `next build` was not re-run while the dev server held `.next` (Dropbox `EPERM` on rename). |
+| ESLint on the audited files | 0 errors, 0 warnings. |
+| `npm run lint` on the whole repo | Still red: **172 pre-existing errors**, none in this round’s files (`admin-chat.ts`, `supabase.ts`, cookie banner, …). Left as they were. |
+
+`eslint -f unix` exits 2 because that formatter is no longer shipped with ESLint. That is not a code failure.
+
+### Lint edits (behaviour kept)
+
+React Compiler rules (`set-state-in-effect`, `immutability`, `preserve-manual-memoization`) flagged the round. No optimisation was reverted to silence them.
+
+- **`DeckAudioProvider`:** `isPlaying` and `currentTrack` are derived from the crossfader and `playingA` / `playingB`. The initial deck index stays in an effect (a render-time random index would mismatch SSR). `stopMixInternal` is declared **before** `togglePlaySide`. Next-track preload uses `assignAudioSrc` (`src/lib/audio-unlock.ts`). The element that is already playing does not: a matching `src` is left alone so gesture-started audio is not cut.
+- **`proxy.ts`:** locale checks use `isLocale()`. Missing `getClaims` still falls through to `getUser()`.
+- **`useUserData.ts`:** favourite rows are concretely typed. The fetch on user change stays in `useEffect`.
+- **`EventsExplorer` / `YouTubeEmbed`:** filter reset and the autoplay latch happen during render. The calendar portal and `embedSrc` (needs `window.location.origin`) stay in an effect.
+- **`artists/page.tsx`:** the `bp_first:beatport_top_tracks->0` select was already cast. It was not removed.
+
+### Browser (dev, anonymous)
+
+| Check | Result |
+|---|---|
+| `/es/charts` week 2026-09-21 | OK. Accordion, Body Control and Nose Bleed. Request `kind=picks&week=2026-09-21`. |
+| Archive 2024 | OK. `kind=archive&year=2024`, 1825 rows. |
+| Play / next / previous | OK. Nose Bleed → Off the Rails → Nose Bleed. |
+| `Cache-Control` on `/api/public/charts/section` | OK. `public, s-maxage=300, stale-while-revalidate=600`. |
+| `/api/audio-proxy` with `Range: bytes=0-1` | OK. **206**, `Content-Range: bytes 0-1/1440899`, `audio/mpeg`. |
+| YouTube posters on `/es/mixes` | OK. `loading="lazy"`. `src` is `/api/og/image-proxy?src=https://i.ytimg.com/...`. The browser does not request `i.ytimg.com` directly. |
+| SoundCloud | OK. Zero iframes on entry. Clicking the poster mounts `w.soundcloud.com/player` with `visual=true` and `auto_play=true`. |
+| «Ver más» on mixes | OK. 74 cards → 98 (+24). |
+| Broken MP3 mix | Not executable. All 105 `/es/mixes` rows have `audio_url` null. The warning and the ▶ retry live on the mini-bar (`mixError` → `playMix` again). |
+| «Ver más» on `/es/events` | OK. 2026 starts at 40 and continues in steps of 40. |
+| Events calendar | OK. No «Ver más». 2026: 58 days with events — the full year. |
+| One `saved_mixes` request | Not executable without a session. Logged out, `useFavoriteToggle` fetches nothing. Logged in, the module store issues **one** in-flight query per type, shared by every card. |
+| Home deck and crossfader | OK. ▶ on deck A switches to ■ STOP on the same track (EPIC ODYSSEY) and `document.title` follows it. Deck B stays stopped. The crossfader stays at **0** (idle used to be 50 and jumped when the engine mounted). |
+| Service worker | Code review OK, not run via `npm start`. Dev does not register it. Audio, video, a `Range` header, `/music/`, audio extensions and cross-origin requests return **before** any `respondWith`. `CACHE_NAME` is `ob-v6`. |
+
+### Left as noted
+
+- `#mix-<id>?play=1` waits one frame and **160 ms** before looking up the card. A slower render skips the scroll.
+- The 2026 calendar had about 90 distinct names in `aria-label`s and 88 in the fully expanded list. The gap is two, not a 40-card slice: a multi-day event, or a name that already contains ` · ` (day buttons join names with that separator).
+- Whole-repo `npm run lint` stays red because of those 172 errors outside this round.
 
 ### New Releases (editorial picks on `/charts`)
 

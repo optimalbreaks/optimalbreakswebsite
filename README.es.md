@@ -247,6 +247,56 @@ Una misma canción puede estar a la vez en un Top 10 y en New Releases. El «+»
 
 **Dev en local detrás del proxy Acttax:** Node no fía el certificado del proxy (SSL inspection) y todos los `fetch` a Supabase fallan con `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (`/charts` lanza el error; la home lo traga y sale vacía). Arrancar con `$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npm run dev`. No es un bug del repo ni ocurre en Vercel.
 
+## Verificación en local — 28 sep 2026 (noche)
+
+Ronda de auditoría del reproductor, de la carga de `/charts`, `/events` y `/mixes`, y de la paginación de PostgREST. El código ya estaba escrito; esta pasada lo compiló, ajustó el lint de esos archivos y lo probó en `http://localhost:3000`. **No se ha hecho push.** La migración `082_growth_indexes.sql` ya estaba aplicada en Supabase y no se ha vuelto a tocar. Los watchdogs de autoplay del preview no se han modificado.
+
+### Compilación
+
+| Comprobación | Resultado |
+|---|---|
+| `npm run build` (Next 16.3.3, Turbopack) | OK antes de los retoques de lint: TypeScript 12,4 s, 134 páginas. |
+| `npx tsc --noEmit` | OK después de esos retoques. No se relanzó `next build` con el dev server abierto: Dropbox bloquea el renombre de `.next` (`EPERM`). |
+| ESLint de los archivos de la ronda | 0 errores y 0 avisos. |
+| `npm run lint` del repo entero | Sigue en rojo: **172 errores previos**, ninguno en los archivos de esta ronda (`admin-chat.ts`, `supabase.ts`, banner de cookies, etc.). No se han tocado. |
+
+Un intento de lint con `-f unix` sale con código 2 porque ese formateador ya no viene con ESLint. No es un fallo del código.
+
+### Ajustes de lint (el comportamiento se queda)
+
+El compilador de React (`react-hooks/set-state-in-effect`, `immutability`, `preserve-manual-memoization`) marcaba los archivos de la ronda. No se ha revertido ninguna optimización para callar el aviso.
+
+- **`DeckAudioProvider`:** `isPlaying` y `currentTrack` se derivan del crossfader y de `playingA` / `playingB` (mismo resultado, en el mismo render). El índice inicial del deck sigue en un efecto: si se calculara en el render, el HTML del servidor no coincidiría con el cliente. `stopMixInternal` va **antes** de `togglePlaySide` (antes se usaba sin estar declarado). El preload de la pista **siguiente** usa `assignAudioSrc` (`src/lib/audio-unlock.ts`); el `<audio>` que ya suena no pasa por ahí, así que un `src` igual no corta el audio arrancado en el gesto.
+- **`proxy.ts`:** los tres `includes` de idioma usan el guard `isLocale()`, sin `as any`. Si `getClaims` no existe en el cliente instalado, el código sigue cayendo a `getUser()`.
+- **`useUserData.ts`:** las filas de favoritos tienen tipo concreto. La carga al cambiar de usuario sigue en `useEffect`.
+- **`EventsExplorer` / `YouTubeEmbed`:** el reset al cambiar filtro o al soltar el autoplay ocurre durante el render. El portal del calendario y `embedSrc` (necesita `window.location.origin`) siguen en efecto.
+- **`artists/page.tsx`:** el select `bp_first:beatport_top_tracks->0` ya tipaba con cast. No se ha quitado.
+
+### Pruebas (dev, anónimo)
+
+| Prueba | Resultado |
+|---|---|
+| `/es/charts` semana 2026-09-21 | OK. Acordeón, Body Control y Nose Bleed. Petición `kind=picks&week=2026-09-21`. |
+| Archivo 2024 | OK. `kind=archive&year=2024`, 1825 filas. |
+| ▶ / siguiente / anterior | OK. Nose Bleed → Off the Rails → Nose Bleed. |
+| `Cache-Control` de `/api/public/charts/section` | OK. `public, s-maxage=300, stale-while-revalidate=600`. |
+| `/api/audio-proxy` con `Range: bytes=0-1` | OK. **206**, `Content-Range: bytes 0-1/1440899`, `audio/mpeg`. Sample de Beatport. |
+| Portadas YouTube en `/es/mixes` | OK. `loading="lazy"`. El `src` es `/api/og/image-proxy?src=https://i.ytimg.com/...`. El navegador no pide `i.ytimg.com` directo. |
+| SoundCloud | OK. Cero iframes al entrar. Al pulsar la portada monta `w.soundcloud.com/player` con `visual=true` y `auto_play=true`. |
+| «Ver más» en mixes | OK. 74 tarjetas → 98 (+24, `MIXES_PAGE`). |
+| Mix MP3 con URL rota | No ejecutable. Las 105 filas de `/es/mixes` traen `audio_url` nulo. El aviso y el reintento están en la mini-barra (`mixError` → ▶ llama otra vez a `playMix`). |
+| «Ver más» en `/es/events` | OK. 2026 arranca en 40 (`EVENTS_PAGE`) y sigue por tramos de 40. |
+| Calendario de eventos | OK. Sin «Ver más». 2026: 58 días con eventos. Es el año entero. |
+| Una sola petición a `saved_mixes` | No ejecutable sin sesión. Sin usuario, `useFavoriteToggle` no pide nada. Con usuario, el almacén de módulo hace **una** consulta en vuelo por tipo (artista, sello, evento, mix), compartida por todas las tarjetas. |
+| Portada, deck y crossfader | OK. ▶ en el deck A deja ■ STOP en el mismo tema (EPIC ODYSSEY) y `document.title` pasa a ese tema. El deck B no arranca. El crossfader se queda en **0** (el reposo ya no es 50: saltaba al cargar el motor). |
+| Service worker | Revisión de código OK, sin `npm start`. En dev no se registra. Audio, vídeo, cabecera `Range`, `/music/`, extensiones de audio y peticiones cross-origin salen del `fetch` **antes** de cualquier `respondWith`. `CACHE_NAME` = `ob-v6`. |
+
+### Lo que queda anotado y no se ha cambiado
+
+- El deep-link `#mix-<id>?play=1` espera un frame y **160 ms** antes de buscar la tarjeta. Si ese render tarda más, el scroll no ocurre.
+- En el calendario de 2026 había unos 90 nombres distintos en los `aria-label` y 88 en el listado ya expandido. La diferencia es de dos, no de un tramo de 40: un evento de varios días, o un nombre que ya contiene ` · ` (el botón junta los nombres con ese separador).
+- `npm run lint` del repo no está limpio por los 172 errores previos de fuera de esta ronda.
+
 **Archivo histórico desde Beatport (piloto).** `scripts/_archive-artist-discography.mjs` lee `/artist/…/tracks` con `publish_date` hasta el 31 dic 2025, agrupa cada tema en el lunes ISO de su release y hace **INSERT** en `chart_featured_tracks` (no borra picks ya publicados; un tema que ya está, mismo id Beatport, se salta). Lo de 2026 no entra por aquí: eso es New Releases (`--nr-2026` es el flag aparte). El progreso de cada lote (`scripts/_archive-*-progress.txt`) está en `.gitignore`.
 
 ## New Releases (novedades editoriales en `/charts`)
@@ -493,7 +543,7 @@ En **Artistas**, **Sellos**, **Eventos**, **Escenas** y **Mixes** (cuando hay fi
 
 Componentes: `ViewToggle.tsx` más `ArtistsExplorer`, `LabelsExplorer`, `EventsExplorer`, `ScenesExplorer`, `MixesExplorer` en `src/components/`. Textos en `src/dictionaries/es.json` y `en.json` (`view_large`, `view_compact`, `view_list`).
 
-**Eventos (`EventsExplorer`, `/[lang]/events`):** La vista **compacta** usa `repeat(auto-fill, minmax(9.25rem, 1fr))` y la fecha y el título van a **11 px** (28 sep 2026: antes eran 3 / 5 / 7 / 10 columnas y el texto a 9 px, con tarjetas de ~100 px a 768 y 1133). `sizes` del cartel: `(max-width: 700px) 46vw, 200px`. Grande y lista no cambian. Detalle: [Maquetación tablet](#maquetación-tablet-28-sep-2026). El pie de tarjeta funciona como **semáforo** por día calendario: **pasados** (último día `date_end` o `date_start` anterior a hoy, medianoche local) van en **`var(--red)`** con texto **blanco**; **próximos** usan el **amarillo de marca** **`var(--yellow)`** (mismo token que logo/navbar) con **`var(--ink)`**. El **hover** aclara el pie con `color-mix` hacia blanco; la **franja detrás del cartel** refuerza el estado (mezcla con rojo si pasó, amarillo sólido si es próximo). El `<Link>` es **`group/link`** y el pie usa **`group-hover/link:`** para reaccionar al pasar por la imagen (y al revés). **`CardThumbnail`** lleva **`groupHoverGroup="link"`** para el zoom. Rejilla con **`items-stretch`**, enlace **`h-full`** y pie con **`flex-1`** / **`min-h-*`** para **alinear alturas de pie** en cada fila. **Vista calendario por año:** cada día con eventos va en **rojo** si todos los eventos que tocan ese día están **pasados**, en **amarillo** si queda alguno **próximo** (misma regla `isEventPast`); leyendas **`calendar_legend_past`** / **`calendar_legend_upcoming`**. Al **pulsar un día** se abre un **modal** (cartel, fechas, ubicación, lineup resumido, texto breve y enlace a la ficha; no se navega directo desde la celda). Textos **`calendar_modal_*`** en diccionarios.
+**Eventos (`EventsExplorer`, `/[lang]/events`):** La vista **compacta** usa `repeat(auto-fill, minmax(9.25rem, 1fr))` y la fecha y el título van a **11 px** (28 sep 2026: antes eran 3 / 5 / 7 / 10 columnas y el texto a 9 px, con tarjetas de ~100 px a 768 y 1133). `sizes` del cartel: `(max-width: 700px) 46vw, 200px`. Grande y lista no cambian. Detalle: [Maquetación tablet](#maquetación-tablet-28-sep-2026). El pie de tarjeta funciona como **semáforo** por día calendario: **pasados** (último día `date_end` o `date_start` anterior a hoy, medianoche local) van en **`var(--red)`** con texto **blanco**; **próximos** usan el **amarillo de marca** **`var(--yellow)`** (mismo token que logo/navbar) con **`var(--ink)`**. El **hover** aclara el pie con `color-mix` hacia blanco; la **franja detrás del cartel** refuerza el estado (mezcla con rojo si pasó, amarillo sólido si es próximo). El `<Link>` es **`group/link`** y el pie usa **`group-hover/link:`** para reaccionar al pasar por la imagen (y al revés). **`CardThumbnail`** lleva **`groupHoverGroup="link"`** para el zoom. Rejilla con **`items-stretch`**, enlace **`h-full`** y pie con **`flex-1`** / **`min-h-*`** para **alinear alturas de pie** en cada fila. **Vista calendario por año:** cada día con eventos va en **rojo** si todos los eventos que tocan ese día están **pasados**, en **amarillo** si queda alguno **próximo** (misma regla `isEventPast`); leyendas **`calendar_legend_past`** / **`calendar_legend_upcoming`**. Al **pulsar un día** se abre un **modal** (cartel, fechas, ubicación, lineup resumido, texto breve y enlace a la ficha; no se navega directo desde la celda). Textos **`calendar_modal_*`** en diccionarios. **Tramos (28 sep 2026):** grande, compacto y lista pintan **`EVENTS_PAGE = 40`** tarjetas por año y el resto entra con «Ver más». La vista calendario recibe el año **entero** (`paged` solo si `view !== 'calendar'`). Cambiar fecha o país vuelve al primer tramo durante el render. El corazón de cada tarjeta lee el almacén compartido de `useFavoriteToggle` (una consulta a `favorite_events` por usuario, no una por tarjeta).
 
 **Ficha de evento (`/[lang]/events/[slug]`):** CTA ancha de compra en el **hero** si hay URL de entradas o web, el evento **no está pasado** por fecha (último día del evento antes que hoy) y además **`event_type === 'upcoming'`** o el enlace es **MonsterTicket** (`monsterticket.com` / `.es` y subdominios). Se prioriza URL MonsterTicket. Textos acordados para MonsterTicket: **«Compra de entradas»** / **«Buy tickets»**; enlaces genéricos: **«Comprar entradas»** / **«Get tickets»**. Detalle en inglés: [README.md — Directory listing views](./README.md#directory-listing-views-artists-labels-events-scenes-mixes).
 
@@ -550,7 +600,7 @@ Aunque `robots.txt` permita a `facebookexternalhit`, el **Sharing Debugger de Me
 
 La misma lista de UAs está reflejada en `robots.txt` (`src/app/robots.ts` → `OG_CRAWLER_USER_AGENTS`) para que ambas capas coincidan.
 
-**Mixes (`MixesExplorer`, `/[lang]/mixes`):** el vídeo de una sesión **no se aloja en esta web**. YouTube o SoundCloud lo sirven; la ficha solo guarda el enlace y embebe el reproductor. Si nos pasan el archivo, se sube a un YouTube no listado. No va a `private/music` ni a `/api/audio` (eso es el MP3 de una exclusiva de un tema; ver *Audio completo alojado*). Filtros por **año**, **plataforma** (YouTube, SoundCloud, …) y **búsqueda** en título + artista. La lógica de filtrado para el usuario es la misma; por debajo se mantiene **montado todo el catálogo** y las filas que no cumplen el filtro usan la clase **`hidden` de Tailwind** (no basta el atributo HTML `hidden` en el mismo nodo que `display: flex`, porque el estilo del autor gana y pueden seguir viéndose tarjetas incorrectas). Así los **embeds no se destruyen** al quitar filtros. SoundCloud sigue el player visual (URLs como en `SoundCloudVisualEmbed`; el envoltorio lazy está en `MixesExplorer`), montado bajo demanda con `IntersectionObserver`. En el DOM los años van **de más reciente a más antiguo**.
+**Mixes (`MixesExplorer`, `/[lang]/mixes`):** el vídeo de una sesión **no se aloja en esta web**. YouTube o SoundCloud lo sirven; la ficha solo guarda el enlace y embebe el reproductor. Si nos pasan el archivo, se sube a un YouTube no listado. No va a `private/music` ni a `/api/audio` (eso es el MP3 de una exclusiva de un tema; ver *Audio completo alojado*). Filtros por **año**, **plataforma** (YouTube, SoundCloud, …) y **búsqueda** en título + artista. Cada año pinta las primeras **`MIXES_PAGE = 24`** tarjetas; el resto entra con «Ver más» (+24). Los tramos solo crecen: filtrar no los reinicia, para no chocar con `#mix-<id>`. Ese deep-link limpia filtros, sube el tramo del año a `max(24, posición+1)` y, un frame más **160 ms** después, hace scroll si la tarjeta ya está en el DOM. **YouTube y SoundCloud no montan el iframe al hacer scroll:** portada + play, y el iframe solo al clic (`LazyYouTubeEmbed`, `LazySoundCloudEmbed` con `auto_play=true`). Volver a un `IntersectionObserver` acumulaba decenas de iframes y en móvil cerraba la pestaña. Un mix con `audio_url` (o un `.mp3` en `embed_url`) suena por el motor global; si la URL falla, la mini-barra enseña «No se pudo cargar este mix. Pulsa ▶ para reintentar.» y ▶ vuelve a llamar a `playMix`. El corazón de cada tarjeta usa el almacén de `useFavoriteToggle`: logueado, **una** lectura de `saved_mixes` por visita, no una por tarjeta. En el DOM los años van **de más reciente a más antiguo**.
 
 **Tarjetas de YouTube — portada (facade) + miniatura vía proxy (`LazyYouTubeEmbed` en `src/components/YouTubeEmbed.tsx`):** las tarjetas de YouTube **no** montan el reproductor solas. Cada tarjeta muestra una **portada** (la miniatura del vídeo) con un play rojo, y el iframe pesado `youtube.com/embed/…` se monta **solo al pulsar play** (entonces `autoplay=1`, exclusivo vía el coordinador de reproducción). Esto es **deliberado** y **no debe volver a auto-montar muchos iframes a la vez**:
 

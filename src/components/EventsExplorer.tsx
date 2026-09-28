@@ -846,7 +846,7 @@ function MonthMiniCalendar({
 // `sizes` = anchura real del cartel en cada rejilla (next/image pide al edge
 // solo esa anchura; sin esto bajaría el original de 300 KB–2 MB por tarjeta).
 const LARGE_POSTER_SIZES = '(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw'
-const COMPACT_POSTER_SIZES = '(max-width: 640px) 33vw, (max-width: 768px) 20vw, (max-width: 1024px) 15vw, 10vw'
+const COMPACT_POSTER_SIZES = '(max-width: 700px) 46vw, 200px'
 const LIST_POSTER_SIZES = '56px'
 const CALENDAR_MODAL_POSTER_SIZES = '(max-width: 640px) 100vw, 160px'
 
@@ -915,7 +915,7 @@ function LargeGrid({ events, lang, preloadCount = 0 }: { events: BreakEvent[]; l
 
 function CompactGrid({ events, lang, preloadCount = 0 }: { events: BreakEvent[]; lang: string; preloadCount?: number }) {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-0 border-4 border-[var(--ink)] items-stretch">
+    <div className="grid gap-0 border-4 border-[var(--ink)] items-stretch [grid-template-columns:repeat(auto-fill,minmax(9.25rem,1fr))]">
       {events.map((e, i) => {
         const past = isEventPast(e)
         const notice = eventNoticeKind(e)
@@ -946,10 +946,10 @@ function CompactGrid({ events, lang, preloadCount = 0 }: { events: BreakEvent[];
                 : `bg-[var(--yellow)] text-[var(--ink)] ${EVENT_FOOTER_HOVER_UPCOMING}`
             }`}
           >
-            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '9px', color: 'inherit' }}>
+            <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'inherit' }}>
               {e.date_start || 'TBA'}
             </div>
-            <div className="mt-0.5 line-clamp-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '9px', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15, color: 'inherit' }}>
+            <div className="mt-0.5 line-clamp-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2, color: 'inherit' }}>
               {e.name}
             </div>
           </div>

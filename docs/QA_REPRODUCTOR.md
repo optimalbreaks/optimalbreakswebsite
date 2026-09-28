@@ -31,7 +31,8 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 - **I7** Seek (barra de progreso arrastrable + lockscreen).
 - **I8** Estado visual sincronizado (icono ▶/❚❚, fila resaltada, contador `n/total`).
 - **I9** Media Session / lockscreen (título, carátula, controles) en móvil/PWA.
-- **I10** Enlace compartido (`?play=chart:|featured:<uuid>` o `?play=beatport:<id>`) → modal «TOCA PARA ESCUCHAR» (`TapToPlayOverlay`) **sin** intento de autoplay, en PC y móvil; el tap reproduce. El overlay del provider (`PreviewAutoplayOverlay`) solo aplica al flujo ⌘K (`?play=1`) si el navegador bloquea con `NotAllowedError`.
+- **I10** Enlace compartido **sin** intento de autoplay, en PC y móvil; el tap reproduce. En `/charts` (`?play=chart:|featured:|vinyl:<uuid>`) el emergente es **`SharedTrackLanding`**: va en el HTML inicial, **antes** de que desaparezca «Cargando los charts», y no se apila un segundo «Toca para escuchar» cuando llega la semana/año. El contador pasa de `1 / 1` a `N / total` sin cortar el audio (⏭ sigue en esa sección). `chart:` se queda en `1 / 1` (los 40 Breaks no se listan). El vinilo suena dentro del diálogo. Id inexistente: «ya no está disponible». En fichas, `?play=beatport:<id>` sigue siendo **`TapToPlayOverlay`**. El overlay del provider (`PreviewAutoplayOverlay`) solo aplica al flujo ⌘K (`?play=1`) si el navegador bloquea con `NotAllowedError`.
+- **I10b** Primer visita, cookie `ob_consent` borrada, viewport **375×667**: el botón de play del aterrizaje se ve y recibe el toque por encima del banner de cookies. El diálogo se porta a `document.body` (`z-[205]`); el `<main class="relative z-[1]">` no debe volver a atraparlo.
 - **I11** Miniaturas de YouTube vía proxy propio (no en negro con adblockers). **Verificar en producción.**
 - **I12** Formatos: sample mp3, Bandcamp, SoundCloud, YouTube, sample Beatport.
 

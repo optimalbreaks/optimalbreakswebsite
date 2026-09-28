@@ -17,6 +17,7 @@ La instancia de Supabase agotó su **Disk IO Budget**: cada visita pública (bot
 4. **No** restaurar `revalidate = 0` / `fetchCache = 'force-no-store'` en `[lang]/artists/layout.tsx` (ni equivalentes en otros segmentos públicos) salvo petición explícita del usuario consciente del coste en Disk IO.
 5. `/charts` y `/blog` declaran `export const dynamic = 'force-dynamic'` porque dependen de `searchParams` (`?week=`, `?play=`, `?page=`); sus fetch siguen pasando por la Data Cache. No quitarlo.
 6. **`/charts` carga por secciones (28 sep 2026).** La página solo pide el esquema (`loadChartsOutline`, `src/lib/charts-sections.ts`: semanas y años con recuentos, selects finos). Los temas de cada semana/año llegan por **`/api/public/charts/section`** (`kind=picks|archive|locate`), que también lee con `createCachedSupabase(300, [PUBLIC_CHARTS_CACHE_TAG])`. **Prohibido** volver a bajar el catálogo completo (~11k filas, ~10 MB) en `page.tsx`: eso fue el 5xx de producción. Detalle: README «`/charts` — progressive loading».
+7. **Paginación obligatoria en listados que crecen (28 sep 2026).** PostgREST corta a 1.000 filas sin error y la Data Cache descarta entradas > 2 MB. Artistas, eventos, mixes, los mapas de slugs de `/charts` y el esquema de charts pasan por **`fetchAllPages` / `fetchAllPagesParallel`** (`src/lib/supabase-paginate.ts`, páginas de 500, `ORDER BY` estable). **Prohibido** un `select` sin `.range()` sobre esas tablas. Índices: migración **`082_growth_indexes.sql`** (ya aplicada).
 
 ## Consecuencia editorial
 

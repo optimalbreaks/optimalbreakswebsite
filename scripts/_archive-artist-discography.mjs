@@ -231,6 +231,26 @@ function beatportIdFromLink(url) {
   return m ? m[1] : ''
 }
 
+function foldTrackText(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Mismo título + mismo mix + mismos artistas. Otro mix no cuenta como duplicado. */
+function sameMixIdentity(title, mix, artistNames) {
+  const t = foldTrackText(title)
+  const names = (Array.isArray(artistNames) ? artistNames : String(artistNames || '').split(','))
+    .map((n) => foldTrackText(n))
+    .filter(Boolean)
+    .sort()
+  if (!t || !names.length) return ''
+  return `${t}\u0001${foldTrackText(mix)}\u0001${names.join('|')}`
+}
+
 async function waitForNextData(page) {
   const deadline = Date.now() + 150000
   while (Date.now() < deadline) {
@@ -383,8 +403,13 @@ if (TODO.length === 0) {
 }
 console.log(`Cola: ${TODO.length} artistas${already.size ? ` (${already.size} ya cerrados)` : ''}${NR2026 ? ` · New Releases ${NR_FROM} → ${NR_UNTIL}` : ''}`)
 
-const existingLinks = await loadAll(supabase, 'chart_featured_tracks', 'link_url')
+const existingLinks = await loadAll(supabase, 'chart_featured_tracks', 'link_url, title, mix_name, artist_names_text')
 const existingIds = new Set(existingLinks.map((r) => beatportIdFromLink(r.link_url)).filter(Boolean))
+const existingIdentities = new Set()
+for (const row of existingLinks) {
+  const key = sameMixIdentity(row.title, row.mix_name, row.artist_names_text)
+  if (key) existingIdentities.add(key)
+}
 const editions = await loadAll(supabase, 'chart_editions', 'id, week_date')
 const editionByWeek = new Map(editions.map((e) => [e.week_date, e.id]))
 const sortRows = await loadAll(supabase, 'chart_featured_tracks', 'chart_edition_id, sort_order')
@@ -459,7 +484,11 @@ async function persistFresh(fresh) {
       const { error } = await supabase.from('chart_featured_tracks').insert(rows)
       if (error) throw new Error(`insert ${week}: ${error.message}`)
       maxSort.set(editionId, sort)
-      for (const p of slicePicks) existingIds.add(p.beatportId)
+      for (const p of slicePicks) {
+        existingIds.add(p.beatportId)
+        const key = sameMixIdentity(p.title, p.mix_name, (p.artists || []).map((a) => a.name))
+        if (key) existingIdentities.add(key)
+      }
       added += rows.length
     }
   }
@@ -538,7 +567,21 @@ try {
       byId.set(pick.beatportId, pick)
     }
     const unique = [...byId.values()]
-    const fresh = unique.filter((p) => !existingIds.has(p.beatportId))
+    const chosen = new Map()
+    const fresh = []
+    for (const p of unique) {
+      if (existingIds.has(p.beatportId)) continue
+      const key = sameMixIdentity(p.title, p.mix_name, (p.artists || []).map((a) => a.name))
+      if (key && existingIdentities.has(key)) continue
+      if (key && chosen.has(key)) {
+        const prev = chosen.get(key)
+        if (String(p.release_date || '9999') < String(prev.release_date || '9999')) chosen.set(key, p)
+        continue
+      }
+      if (key) chosen.set(key, p)
+      else fresh.push(p)
+    }
+    fresh.push(...chosen.values())
     const years = new Map()
     for (const p of fresh) {
       const y = String(p.release_year)

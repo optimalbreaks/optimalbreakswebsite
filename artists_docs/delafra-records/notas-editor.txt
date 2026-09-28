@@ -1,0 +1,102 @@
+Alta editorial — DELAFRÄ Records (septiembre 2026)
+==================================================
+
+Slug: delafra-records
+Name: DELAFRÄ Records
+(Beatport y New Releases ya usan exactamente «DELAFRÄ Records». Instagram se presenta como «Delafra Records | Breakbeat». Web: «DELAFRA RECORDS – Made in Jerez». El usuario escribió «Delafrá Records». Canon de ficha = DELAFRÄ Records.)
+
+country: ES
+founded_year: 2026
+(Actividad discográfica documentada desde el 2 enero 2026. Catálogo DLFR001–DLFR019 en el mismo año. No hay fuente primaria de fundación anterior; no adelantar 2025.)
+is_active: true
+is_featured: false
+
+Geografía / lema
+----------------
+- Base: Jerez de la Frontera, Cádiz. Lema oficial de la web: «Made in Jerez».
+- Instagram: https://www.instagram.com/delafrarecords/
+  Bio IG: «Breakbeat label» · «Underground electronic music» · «New releases»
+  Demos: label@delafrarecords.com (NO poner el email en la ficha pública).
+- Web: https://delafrarecords.com/
+- Beatport: https://www.beatport.com/label/delafra-records/134327  id 134327
+
+NO confundir con la bodega De La Riva / jerez wine. El sello es discográfico. Sí es legítimo señalar que varios títulos del catálogo usan vocabulario jerezano documentado (Compás del Sur, Venencia, Tiempo y Solera) como identidad de escena, no como vínculo con una bodega.
+
+Identidad
+---------
+Sello andaluz de breakbeat / breaks / UK bass, nativo digital, 2026. Plataforma «Made in Jerez» del circuito breaks jerezano/andaluz contemporáneo. También ha publicado UK Garage / 2-Step (Maxuka — Party Echo).
+
+No inventar fundador. Killerblitz (Jerez) tiene en DELAFRÄ su casa principal en 2026; Four Motion es proyecto jerezano activo desde ~2007. Eso explica el anclaje local, no autoriza a decir «fundado por Killerblitz» ni «por Four Motion».
+
+Catálogo (códigos DLFR, 2026)
+-----------------------------
+- DLFR001 (probable) Müme — Love And Sanity — 2026-01-02 — Breaks/Breakbeat/UK Bass
+- DLFR002 WelderB — Neologic — 2026-01-16
+- DLFR003 Killerblitz — Compás del Sur — 2026-01-30 — pico #6 género Beatport (Beatport Top Tracker)
+- Killerblitz — Cataclismo — 2026-02-13
+- GodFader — Jerusalén — 2026-02-27
+- DLFR004 Staxia & Killerblitz — Venencia — 2026-03-06
+- WelderB — Stock Light — 2026-04-03
+- Crazybreaks (Esp) — Inner Noise — 2026-04-17
+- Crazybreaks (Esp) — Electro space — ~2026-05-01
+- RMG — Formigal — 2026-05-15
+- DLFR012 Four Motion — Paranoia — 2026-06-05
+- WelderB — Whispers — 2026-06-19
+- Perfect Kombo & Four Motion — Bad Vip
+- DLFR014 Staxia & Four Motion — Criminal — 2026-07-17
+- Dagan — No Scape (Beatport Top Ten del sello)
+- DLFR016 URSO (SP) — On My Head — 2026-08-14
+- DLFR017 Killerblitz — Tiempo y Solera — 2026-08-21
+- DLFR018 Maxuka — Party Echo — 2026-09-04/18 — UK Garage / 2-Step
+- DLFR019 Killerblitz — John Kramer — 2026-09-18
+
+Géneros
+-------
+Core: Breakbeat · Breaks · UK Bass
+Secundario: UK Garage / 2-Step
+Formato: singles digitales (Beatport / Volumo). No hay ficha Discogs del sello a sep 2026.
+
+key_artists (hero del sello; roster actual documentado)
+-------------------------------------------------------
+Orden:
+1. Killerblitz
+2. Four Motion
+3. Staxia
+4. Welder B
+5. Maxuka
+6. Perfect Kombo
+7. URSO (SP)
+8. Müme
+
+En bio se pueden citar también Crazybreaks (Esp), GodFader, RMG, Dagan como catálogo 2026, sin meterlos todos en el hero.
+
+Usar «Welder B» (nombre de ficha OB), no «WelderB», para que resuelva el slug.
+
+key_releases
+------------
+- Müme - Love And Sanity (2026)
+- Welder B - Neologic (2026)
+- Killerblitz - Compás del Sur (2026)
+- Staxia & Killerblitz - Venencia (2026)
+- Four Motion - Paranoia (2026)
+- Staxia & Four Motion - Criminal (2026)
+- Perfect Kombo & Four Motion - Bad Vip
+- URSO (SP) - On My Head (2026)
+- Killerblitz - Tiempo y Solera (2026)
+- Maxuka - Party Echo (2026)
+- Killerblitz - John Kramer (2026)
+
+website: https://delafrarecords.com/
+beatport_id: 134327
+beatport_url: https://www.beatport.com/label/delafra-records/134327
+image_url: null (logo después vía Beatport / label-photo)
+discogs: no hay match fiable; no inventar.
+
+PROHIBIDO
+---------
+- Inventar fundador o año anterior a 2026.
+- Tratarlo como sello histórico andaluz de los 2000 (eso es Four Motion, no el imprint).
+- Confundirlo con De La Riva (vino) o Delmark/Delabel.
+- Poner Deep House u otros géneros no documentados.
+- Email de demos en la ficha pública.
+- Ranking de calidad por el #6 de Compás del Sur: se puede decir que fue el original más visible del sello en Beatport en 2026, sin inflar.
