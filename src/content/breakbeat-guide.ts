@@ -93,8 +93,8 @@ const es: BreakbeatGuide = {
       id: 'canarias',
       title: 'El breakbeat en Canarias',
       paragraphs: [
-        'Canarias sostiene otra tradición, con Tenerife como foco histórico: old skool, rave, hardcore y breakbeat desde finales de los ochenta. La prensa local ya lo trata como repertorio colectivo del archipiélago. Quien creció en esa escuela conoció el ritmo roto en las islas antes de que, hacia 2011, llegaran sesiones andaluzas.',
-        'La figura pública de esa línea es DJ Jonay. La generación que publica ahora tiene en [Suga7](/artists/suga7) un puente entre el old skool canario y el breakbeat de pista. La ficha está en [la escena del breakbeat canario](/scenes/canary-breakbeat).',
+        'Canarias sostiene otra tradición, con Tenerife como foco histórico: old skool rave, hardcore, jungle y breakbeat, con raíces en el cambio de los ochenta a los noventa y un arranque profesional fechado a comienzos de los noventa. La prensa local ya lo trata como repertorio colectivo del archipiélago. Para una generación de la escena, esa escuela local precedió a la llegada de las sesiones andaluzas, hacia 2011.',
+        'La figura pública de esa línea es DJ Jonay. Quien publica ahora tiene ficha en [Suga7](/artists/suga7), de Tenerife, y en [AndrewFx](/artists/andrewfx), de La Palma. El relato está en [la escena del breakbeat canario](/scenes/canary-breakbeat).',
       ],
     },
     {
@@ -221,8 +221,8 @@ const en: BreakbeatGuide = {
       id: 'canary-islands',
       title: 'Breakbeat in the Canary Islands',
       paragraphs: [
-        'The Canary Islands carry their own tradition, with Tenerife as the historical centre: old skool, rave, hardcore and breakbeat from the late 1980s. Local press already treats it as a shared repertoire of the archipelago. People who grew up in that school knew broken beats on the islands before Andalusian sessions started arriving around 2011.',
-        'The public figure of that line is DJ Jonay. The generation releasing music now has [Suga7](/artists/suga7) as a bridge between Canarian old skool and club breakbeat. The entry is [the Canarian breakbeat scene](/scenes/canary-breakbeat).',
+        'The Canary Islands carry their own tradition, with Tenerife as the historical centre: old skool rave, hardcore, jungle and breakbeat, rooted at the turn of the 1980s and 1990s, with a professional start dated to the early 1990s. Local press already treats it as a shared repertoire of the archipelago. For one generation of the scene, that local school came before the Andalusian sets that arrived around 2011.',
+        'The public figure of that line is DJ Jonay. Among people releasing music now, [Suga7](/artists/suga7), from Tenerife, and [AndrewFx](/artists/andrewfx), from La Palma, already have entries. The full account is [the Canarian breakbeat scene](/scenes/canary-breakbeat).',
       ],
     },
     {
