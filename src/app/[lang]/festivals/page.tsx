@@ -1,6 +1,8 @@
 // ============================================
 // OPTIMAL BREAKS — Índice de festivales (/festivals)
-// Enlaza las páginas permanentes por marca: próxima fecha o última edición.
+// Orden: primero los que tienen fecha próxima (la más cercana), luego el resto
+// por la última fecha. No es alfabético. Encima, las próximas fechas de
+// festival agrupadas por mes (carteles, no teselas de /agenda).
 // ============================================
 
 import type { Metadata } from 'next'
@@ -17,13 +19,17 @@ import {
   MIN_SERIES_EDITIONS,
   todayYmdMadrid,
 } from '@/lib/event-series'
-import { shortDateRange } from '@/lib/event-agenda'
-import { loadAgendaEvents } from '@/lib/agenda-data'
+import { cityDisplayName, monthLabel, shortDateRange, slugifyCity } from '@/lib/event-agenda'
+import { loadAgendaEvents, type AgendaEventFull } from '@/lib/agenda-data'
 import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { isEventCancelled } from '@/types/database'
+import AgendaEventGrid from '@/components/AgendaEventGrid'
 import CardThumbnail from '@/components/CardThumbnail'
 
 type Props = { params: Promise<{ lang: Locale }> }
+
+const MONO = "'Courier Prime', monospace"
+const TYPE = "'Special Elite', monospace"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params
@@ -34,8 +40,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     siteName,
     lang === 'es' ? 'Festivales breakbeat: fechas, carteles y ediciones' : 'Breakbeat festivals: dates, line-ups and editions',
     lang === 'es'
-      ? 'Los festivales y ciclos breakbeat que sigue Optimal Breaks: próxima edición, carteles y el archivo de todas sus ediciones.'
-      : 'The breakbeat festivals and series followed by Optimal Breaks: next edition, line-ups and the archive of every edition.',
+      ? 'Los festivales breakbeat que sigue Optimal Breaks, por próxima fecha: carteles, ediciones y la agenda de las citas anunciadas.'
+      : 'The breakbeat festivals followed by Optimal Breaks, by next date: posters, editions and the upcoming festival calendar.',
+  )
+}
+
+function Heading({ children, note }: { children: React.ReactNode; note?: React.ReactNode }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <h2 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: 'clamp(20px, 3.5vw, 26px)', letterSpacing: '2px', margin: 0 }}>
+          {children}
+        </h2>
+        <div className="mt-1 h-[3px] w-12 bg-[var(--red)]" />
+      </div>
+      {note}
+    </div>
   )
 }
 
@@ -45,37 +65,54 @@ export default async function FestivalsIndexPage({ params }: Props) {
   const today = todayYmdMadrid()
   const all = await loadAgendaEvents()
 
-  const nextOf = (list: typeof all) =>
+  const upcomingOf = (list: typeof all) =>
     list
       .filter((e) => !isEventCancelled(e) && isUpcomingOrOngoing(e, today))
-      .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))[0] ?? null
+      .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))
   const inBrand = new Set(FESTIVAL_BRANDS.flatMap((b) => b.editions))
-  // Festivales con varias ediciones (marca) y, aparte, los de un solo formato.
+
   const rows = [
     ...FESTIVAL_BRANDS.map((brand) => {
       const editions = eventsOfBrand(brand, all)
       if (editions.length < MIN_SERIES_EDITIONS) return null
-      const next = nextOf(editions)
       const subs = seriesOfBrand(brand)
         .map((s) => ({ series: s, n: eventsOfSeries(s, editions).length }))
         .filter((x) => x.n > 0)
-      return { series: { slug: brand.slug, name: brand.name }, editions, next, show: next ?? editions[0], subs }
+      return { slug: brand.slug, name: brand.name, editions, subs }
     }),
     ...FESTIVAL_SERIES.filter((s) => !inBrand.has(s.slug)).map((series) => {
       const editions = eventsOfSeries(series, all)
       if (editions.length < MIN_SERIES_EDITIONS) return null
-      const next = nextOf(editions)
-      return { series: { slug: series.slug, name: series.name }, editions, next, show: next ?? editions[0], subs: [] }
+      return { slug: series.slug, name: series.name, editions, subs: [] as { series: typeof series; n: number }[] }
     }),
   ]
     .filter((r): r is NonNullable<typeof r> => r !== null)
-    // Primero los que tienen próxima edición (por fecha), luego el resto por nº de ediciones.
+    .map((r) => {
+      const upcoming = upcomingOf(r.editions)
+      const next = upcoming[0] ?? null
+      const latest = r.editions[0]
+      const cities = Array.from(new Set(r.editions.map((e) => slugifyCity(e.city)).filter(Boolean))).map((c) =>
+        cityDisplayName(r.editions.filter((e) => slugifyCity(e.city) === c)),
+      )
+      const years = r.editions.map((e) => (e.date_start ?? '').slice(0, 4)).filter(Boolean).sort()
+      return { ...r, upcoming, next, latest, show: next ?? latest, cities, firstYear: years[0] ?? null }
+    })
     .sort((a, b) => {
       if (a.next && !b.next) return -1
       if (!a.next && b.next) return 1
       if (a.next && b.next) return String(a.next.date_start).localeCompare(String(b.next.date_start))
-      return b.editions.length - a.editions.length
+      return String(b.latest.date_start ?? '').localeCompare(String(a.latest.date_start ?? ''))
     })
+
+  const upcomingFestivalEvents = rows.flatMap((r) => r.upcoming)
+    .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))
+  const byMonth = new Map<string, AgendaEventFull[]>()
+  for (const e of upcomingFestivalEvents) {
+    const key = (e.date_start ?? '').slice(0, 7)
+    if (!key) continue
+    byMonth.set(key, [...(byMonth.get(key) ?? []), e])
+  }
+  const monthGroups = Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b))
 
   const jsonLd = breadcrumbJsonLd([
     { name: es ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
@@ -91,68 +128,117 @@ export default async function FestivalsIndexPage({ params }: Props) {
           <h1 className="sec-title sec-title--compact">
             {es ? 'Festivales ' : 'Breakbeat '}<span className="hl">{es ? 'breakbeat' : 'festivals'}</span>
           </h1>
-          <p className="mt-4 max-w-[720px]" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8 }}>
+          <p className="mt-4 max-w-[760px]" style={{ fontFamily: TYPE, fontSize: '16px', lineHeight: 1.8 }}>
             {es
-              ? 'Cada festival tiene aquí una página fija con su próxima edición, el archivo de todas las anteriores y los artistas que han pasado por su cartel.'
-              : 'Each festival has a permanent page here with its next edition, the archive of every previous one and the artists who have played it.'}
+              ? 'Primero las próximas citas, por fecha. Cada festival tiene su página fija con todas las ediciones, carteles, sesiones y artistas. Las noches de club que no son festival están en la agenda.'
+              : 'Upcoming dates first, by date. Each festival has a permanent page with every edition, posters, sets and artists. Club nights that are not a festival live in the listings.'}
           </p>
+          <nav className="mt-5 flex flex-wrap gap-2" aria-label={es ? 'En esta página' : 'On this page'}>
+            {monthGroups.map(([key, list]) => (
+              <a key={key} href={`#mes-${key}`} className="cutout red no-underline">
+                {monthLabel(key, lang)} · {list.length}
+              </a>
+            ))}
+            <a href="#festivales" className="cutout fill no-underline">
+              {es ? 'Todos los festivales' : 'All festivals'} · {rows.length}
+            </a>
+          </nav>
 
-          <ul className="list-none m-0 p-0 mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rows.map(({ series, editions, next, show, subs }) => (
-              <li key={series.slug} className="flex flex-col gap-2">
-                <Link
-                  href={`/${lang}/festivals/${series.slug}`}
-                  className="flex gap-4 border-[3px] border-[var(--ink)] bg-[var(--paper)] p-3 no-underline text-[var(--ink)] transition-all hover:bg-[var(--yellow)] sm:hover:shadow-[6px_6px_0_var(--ink)]"
-                >
-                  <div className="w-[84px] shrink-0 border-[2px] border-[var(--ink)]">
-                    <CardThumbnail
-                      src={versionedImageUrl(show.image_url, imageCacheVersion(show.updated_at))}
-                      alt=""
-                      aspectClass="aspect-poster w-full"
-                      frameClass=""
-                      sizes="84px"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '16px', lineHeight: 1.1, textTransform: 'uppercase' }}>
-                      {series.name}
+          {monthGroups.map(([key, list]) => (
+            <section key={key} id={`mes-${key}`} className="mt-10 scroll-mt-24">
+              <Heading
+                note={
+                  <Link href={`/${lang}/agenda/${key}`} className="cutout outline no-underline text-[var(--ink)]" style={{ margin: 0 }}>
+                    {es ? 'Toda la agenda del mes →' : 'Full month listings →'}
+                  </Link>
+                }
+              >
+                {monthLabel(key, lang)}
+              </Heading>
+              <AgendaEventGrid events={list} lang={lang} />
+            </section>
+          ))}
+
+          <section id="festivales" className="mt-12 scroll-mt-24">
+            <Heading
+              note={
+                <span style={{ fontFamily: MONO, fontSize: '12px', color: 'var(--dim)' }}>
+                  {es ? 'Por próxima fecha' : 'By next date'}
+                </span>
+              }
+            >
+              {es ? 'Todos los festivales' : 'All festivals'}
+            </Heading>
+            <ul className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {rows.map((r) => (
+                <li key={r.slug} className="flex flex-col border-[3px] border-[var(--ink)] bg-[var(--paper)] transition-shadow hover:shadow-[6px_6px_0_var(--ink)]">
+                  <Link href={`/${lang}/festivals/${r.slug}`} className="group flex flex-1 flex-col no-underline text-[var(--ink)]">
+                    <div className="relative border-b-[3px] border-[var(--ink)]">
+                      <CardThumbnail
+                        src={versionedImageUrl(r.show.image_url, imageCacheVersion(r.show.updated_at))}
+                        alt={es ? `Cartel de ${r.show.name}` : `${r.show.name} poster`}
+                        aspectClass="aspect-[4/5] w-full"
+                        frameClass=""
+                        sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw"
+                      />
+                      <span
+                        className="absolute left-3 top-3 border-[2px] border-[var(--ink)] px-2 py-1"
+                        style={{
+                          fontFamily: MONO,
+                          fontWeight: 700,
+                          fontSize: '11px',
+                          letterSpacing: '1.5px',
+                          textTransform: 'uppercase',
+                          background: r.next ? 'var(--red)' : 'var(--paper)',
+                          color: r.next ? '#fff' : 'var(--ink)',
+                        }}
+                      >
+                        {r.next
+                          ? `${es ? 'Próxima' : 'Next'} · ${shortDateRange(r.next.date_start, r.next.date_end, lang)}`
+                          : `${es ? 'Última' : 'Latest'} · ${shortDateRange(r.show.date_start, r.show.date_end, lang)}`}
+                      </span>
                     </div>
-                    <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '15px', color: next ? 'var(--red)' : 'var(--dim)' }}>
-                      {next
-                        ? `${es ? 'Próxima: ' : 'Next: '}${shortDateRange(next.date_start, next.date_end, lang)}`
-                        : `${es ? 'Última: ' : 'Latest: '}${shortDateRange(show.date_start, show.date_end, lang)}`}
+                    <div className="flex flex-1 flex-col p-4">
+                      <div
+                        className="group-hover:text-[var(--red)] transition-colors"
+                        style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '19px', lineHeight: 1.1, textTransform: 'uppercase' }}
+                      >
+                        {r.name}
+                      </div>
+                      <div className="mt-2" style={{ fontFamily: MONO, fontSize: '13px' }}>
+                        {r.cities.slice(0, 3).join(' · ')}
+                      </div>
+                      <div className="mt-1" style={{ fontFamily: MONO, fontSize: '12px', color: 'var(--dim)' }}>
+                        {r.subs.length > 0 ? `${r.subs.length} ${es ? 'ediciones' : 'editions'} · ` : ''}
+                        {r.editions.length} {es ? 'eventos' : 'events'}
+                        {r.firstYear ? ` · ${es ? 'desde' : 'since'} ${r.firstYear}` : ''}
+                      </div>
                     </div>
-                    <div className="mt-1 text-[12px] text-[var(--text-muted)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                      {subs.length > 0
-                        ? `${subs.length} ${es ? 'ediciones' : 'editions'} · ${editions.length} ${es ? 'eventos' : 'events'}`
-                        : `${editions.length} ${es ? (editions.length === 1 ? 'edición' : 'ediciones') : editions.length === 1 ? 'edition' : 'editions'}`}
-                      {show.city ? ` · ${show.city}` : ''}
-                    </div>
-                  </div>
-                </Link>
-                {subs.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {subs.map(({ series: s, n }) =>
-                      n >= MIN_SERIES_EDITIONS ? (
-                        <Link key={s.slug} href={`/${lang}/festivals/${s.slug}`} className="cutout fill no-underline" style={{ margin: 0 }}>
-                          {s.name} →
-                        </Link>
-                      ) : (
-                        <Link key={s.slug} href={`/${lang}/festivals/${series.slug}#edition-${s.slug}`} className="cutout outline no-underline text-[var(--ink)]" style={{ margin: 0 }}>
+                  </Link>
+                  {r.subs.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 border-t-[2px] border-dashed border-[var(--ink)] px-4 py-3">
+                      {r.subs.map(({ series: s, n }) => (
+                        <Link
+                          key={s.slug}
+                          href={n >= MIN_SERIES_EDITIONS ? `/${lang}/festivals/${s.slug}` : `/${lang}/festivals/${r.slug}#edition-${s.slug}`}
+                          className={n >= MIN_SERIES_EDITIONS ? 'cutout fill no-underline' : 'cutout outline no-underline text-[var(--ink)]'}
+                          style={{ margin: 0 }}
+                        >
                           {s.name}
                         </Link>
-                      ),
-                    )}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-          <p className="mt-10">
+          <p className="mt-12 flex flex-wrap gap-3">
             <Link href={`/${lang}/agenda`} className="btn-back">
-              {es ? 'Agenda breakbeat por ciudad y mes →' : 'Breakbeat listings by city and month →'}
+              {es ? 'Agenda por ciudad y mes (todas las fiestas) →' : 'Listings by city and month (every night) →'}
             </Link>
+            <Link href={`/${lang}/events`} className="btn-back">{es ? 'Todos los eventos →' : 'All events →'}</Link>
           </p>
         </div>
       </div>
