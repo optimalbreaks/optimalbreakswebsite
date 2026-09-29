@@ -90,6 +90,14 @@ const es: BreakbeatGuide = {
       ],
     },
     {
+      id: 'canarias',
+      title: 'El breakbeat en Canarias',
+      paragraphs: [
+        'Canarias sostiene otra tradición, con Tenerife como foco histórico: old skool, rave, hardcore y breakbeat desde finales de los ochenta. La prensa local ya lo trata como repertorio colectivo del archipiélago. Quien creció en esa escuela conoció el ritmo roto en las islas antes de que, hacia 2011, llegaran sesiones andaluzas.',
+        'La figura pública de esa línea es DJ Jonay. La generación que publica ahora tiene en [Suga7](/artists/suga7) un puente entre el old skool canario y el breakbeat de pista. La ficha está en [la escena del breakbeat canario](/scenes/canary-breakbeat).',
+      ],
+    },
+    {
       id: 'subgeneros',
       title: 'Subgéneros del breakbeat',
       paragraphs: [
@@ -99,6 +107,7 @@ const es: BreakbeatGuide = {
         'Florida breaks: la escena de Orlando y Miami, con fuerte influencia del electro y el Miami bass.',
         'Acid breaks, progressive breaks y breakstep: variantes que cruzan el break con el acid house, el trance progresivo o el dubstep.',
         'Breakbeat andaluz: la lectura del sur de España, masiva en los 90 y de nuevo en auge.',
+        'Breakbeat canario: la lectura insular, con Tenerife como foco, entre el old skool rave y el breakbeat contemporáneo.',
       ],
     },
     {
@@ -209,6 +218,14 @@ const en: BreakbeatGuide = {
       ],
     },
     {
+      id: 'canary-islands',
+      title: 'Breakbeat in the Canary Islands',
+      paragraphs: [
+        'The Canary Islands carry their own tradition, with Tenerife as the historical centre: old skool, rave, hardcore and breakbeat from the late 1980s. Local press already treats it as a shared repertoire of the archipelago. People who grew up in that school knew broken beats on the islands before Andalusian sessions started arriving around 2011.',
+        'The public figure of that line is DJ Jonay. The generation releasing music now has [Suga7](/artists/suga7) as a bridge between Canarian old skool and club breakbeat. The entry is [the Canarian breakbeat scene](/scenes/canary-breakbeat).',
+      ],
+    },
+    {
       id: 'subgenres',
       title: 'Breakbeat subgenres',
       paragraphs: [
@@ -218,6 +235,7 @@ const en: BreakbeatGuide = {
         'Florida breaks: the Orlando and Miami scene, strongly shaped by electro and Miami bass.',
         'Acid breaks, progressive breaks and breakstep: variants that cross the break with acid house, progressive trance or dubstep.',
         'Andalusian breakbeat: southern Spain\'s take, huge in the 90s and on the rise again.',
+        'Canarian breakbeat: the island reading, with Tenerife at its centre, between old skool rave and contemporary breakbeat.',
       ],
     },
     {

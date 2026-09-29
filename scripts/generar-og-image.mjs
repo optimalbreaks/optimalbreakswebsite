@@ -126,6 +126,11 @@ Warehouse o club de Moscú/San Petersburgo: arquitectura industrial soviética d
 
 Ambiente y detalle:
 Radio club, comunidad online y festival dedicado sugeridos por equipamiento y multitud anónima, sin banderas ni símbolos políticos legibles.`,
+  'canary-breakbeat': `Sujeto:
+Noche de club o carnaval en Tenerife: costa atlántica oscura, luces de pista cálidas y cian, sound system en un recinto junto al mar o en un escenario urbano de Santa Cruz, sensación de rave old skool, hardcore y breakbeat isleño desde los años noventa hasta hoy.
+
+Ambiente y detalle:
+Vinilos de hardcore y breaks fuera de foco, humedad atlántica, arquitectura canaria borrosa, multitud anónima de espaldas. Sin banderas, sin texto, sin el Teide como postal turística.`,
   'latin-america-breaks': `Sujeto:
 Rooftop o club latinoamericano nocturno (Ciudad de México, Bogotá o Buenos Aires sugeridos de forma genérica): luces vibrantes, mezcla digital-era y cultura de club local, escena emergente 2010s–presente.
 
