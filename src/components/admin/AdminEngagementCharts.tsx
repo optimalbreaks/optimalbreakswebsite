@@ -280,10 +280,12 @@ export function TopShareDonut({
   rows,
   valueKey,
   labelKey,
+  unit = 'plays',
 }: {
   rows: Record<string, unknown>[]
   valueKey: string
   labelKey: string
+  unit?: string
 }) {
   const { items, total, topPct } = useMemo(() => {
     if (!rows.length) return { items: [] as { name: string; value: number; pct: number }[], total: 0, topPct: 0 }
@@ -320,7 +322,7 @@ export function TopShareDonut({
         style={mono}
       >
         <p className="text-[11px] font-black uppercase tracking-wide">
-          El top 5 acapara el <span style={display}>{topPct}%</span> del total ({total.toLocaleString()} plays)
+          El top 5 acapara el <span style={display}>{topPct}%</span> del total ({total.toLocaleString()} {unit})
         </p>
       </div>
       <ol className="space-y-2 list-none m-0 p-0">

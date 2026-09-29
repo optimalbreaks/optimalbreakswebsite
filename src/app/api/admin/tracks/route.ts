@@ -84,9 +84,26 @@ export async function GET(request: NextRequest) {
   if (savedErr) return NextResponse.json({ error: savedErr.message }, { status: 500 })
   const saved = savedData
 
+  const weekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000
+  let savesLast7d = 0
+  const bySource = { chart: 0, featured: 0, vinyl: 0, beatport_top: 0 }
+  for (const s of saved) {
+    if (s.track_source in bySource) bySource[s.track_source as ChartTrackSource] += 1
+    if (!s.created_at) continue
+    const t = Date.parse(s.created_at)
+    if (Number.isFinite(t) && t >= weekAgoMs) savesLast7d += 1
+  }
+
   if (saved.length === 0) {
     return NextResponse.json({
-      totals: { saves: 0, unique_tracks: 0, unique_users: 0, by_kind: { beatport: 0, bandcamp: 0, youtube: 0 } },
+      totals: {
+        saves: 0,
+        unique_tracks: 0,
+        unique_users: 0,
+        saves_last_7d: 0,
+        by_kind: { beatport: 0, bandcamp: 0, youtube: 0 },
+        by_source: bySource,
+      },
       top_tracks: [],
       top_labels: [],
       top_artists: [],
@@ -268,7 +285,9 @@ export async function GET(request: NextRequest) {
     saves: saved.length,
     unique_tracks: aggregates.length,
     unique_users: new Set(saved.map((s) => s.user_id)).size,
+    saves_last_7d: savesLast7d,
     by_kind,
+    by_source: bySource,
   }
 
   return NextResponse.json({ totals, top_tracks, top_labels, top_artists })

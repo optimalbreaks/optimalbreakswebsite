@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
@@ -135,12 +135,175 @@ function DetailToggle({ label, children }: { label: string; children: ReactNode 
 const TABS = [
   { id: 'overview', label: 'General' },
   { id: 'audio', label: 'Audio' },
+  { id: 'saved', label: 'Guardados' },
   { id: 'community', label: 'Comunidad' },
   { id: 'events', label: 'Eventos' },
   { id: 'ratings', label: 'Notas' },
 ] as const
 
+type SavedSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
+type SavedKind = 'beatport' | 'bandcamp' | 'youtube'
+
+type SavedTrack = {
+  canonical_key: string
+  title: string
+  mix_name: string | null
+  artists: string
+  label: string | null
+  save_count: number
+  unique_users: number
+}
+
+type SavedPayload = {
+  totals: {
+    saves: number
+    unique_tracks: number
+    unique_users: number
+    saves_last_7d: number
+    by_kind: Record<SavedKind, number>
+    by_source: Record<SavedSource, number>
+  }
+  top_tracks: SavedTrack[]
+  top_labels: { name: string; save_count: number }[]
+  top_artists: { name: string; save_count: number }[]
+}
+
+const SAVED_SOURCE_LABEL: Record<SavedSource, string> = {
+  featured: 'New Releases',
+  beatport_top: 'Top 10 Beatport',
+  vinyl: 'YouTube',
+  chart: '40 Breaks',
+}
+
+const SAVED_KIND_LABEL: Record<SavedKind, string> = {
+  beatport: 'Beatport',
+  bandcamp: 'Bandcamp',
+  youtube: 'YouTube',
+}
+
+function savedTrackLabel(t: SavedTrack): string {
+  const mix = t.mix_name ? ` (${t.mix_name})` : ''
+  const who = t.artists ? ` — ${t.artists}` : ''
+  return `${t.title || 'Sin título'}${mix}${who}`
+}
+
+function SavedKpi({ label, value, sub, accent }: { label: string; value: number; sub: string; accent: string }) {
+  return (
+    <div
+      className="relative flex flex-col justify-between p-4 border-[3px] border-[var(--ink)] bg-[#fffef6]"
+      style={{ boxShadow: '4px 4px 0 var(--ink)' }}
+    >
+      <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: accent }} />
+      <div className="text-[10px] font-black uppercase tracking-[2px] text-[var(--ink)]/55 mb-3" style={mono}>
+        {label}
+      </div>
+      <div className="text-3xl font-black leading-none text-[var(--ink)]" style={display}>
+        {value.toLocaleString('es-ES')}
+      </div>
+      <p className="text-[10px] font-bold text-[var(--ink)]/45 mt-2 leading-snug" style={mono}>
+        {sub}
+      </p>
+    </div>
+  )
+}
+
 type TabId = (typeof TABS)[number]['id']
+
+function SavedTracksPanel({ payload, tracksHref }: { payload: SavedPayload; tracksHref: string }) {
+  const totals = payload.totals
+  const sourceRows = (Object.keys(SAVED_SOURCE_LABEL) as SavedSource[])
+    .map((key) => ({ name: SAVED_SOURCE_LABEL[key], value: totals.by_source?.[key] ?? 0 }))
+    .filter((r) => r.value > 0)
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'es'))
+  const kindRows = (Object.keys(SAVED_KIND_LABEL) as SavedKind[])
+    .map((key) => ({ name: SAVED_KIND_LABEL[key], value: totals.by_kind?.[key] ?? 0 }))
+    .filter((r) => r.value > 0)
+    .sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'es'))
+  const trackRows = payload.top_tracks as unknown as Row[]
+  const trackRank = rowsToRankByKey(trackRows, (r) => savedTrackLabel(r as unknown as SavedTrack), 'save_count', 12)
+  const artistRank = rowsToRankByKey(payload.top_artists as unknown as Row[], (r) => str(r.name), 'save_count', 10)
+  const labelRank = rowsToRankByKey(payload.top_labels as unknown as Row[], (r) => str(r.name), 'save_count', 10)
+  const shareRows = payload.top_tracks.map((t) => ({
+    title: savedTrackLabel(t),
+    save_count: t.save_count,
+  }))
+  const tableRows = payload.top_tracks.slice(0, 40)
+
+  return (
+    <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <SavedKpi label="Guardados" value={totals.saves} sub="Cada «+» en Mis Tracks" accent="var(--red)" />
+        <SavedKpi label="Últimos 7 días" value={totals.saves_last_7d ?? 0} sub="Altas nuevas de temas" accent="var(--yellow)" />
+        <SavedKpi label="Temas únicos" value={totals.unique_tracks} sub="Misma canción, una sola vez" accent="var(--uv)" />
+        <SavedKpi label="Usuarios" value={totals.unique_users} sub="Cuentas con al menos un «+»" accent="var(--cyan)" />
+      </div>
+
+      <p className="text-[10px] font-bold text-[var(--ink)]/45 leading-relaxed" style={mono}>
+        Cuenta todos los «+», también los de cuentas fichadas. El Top 100 público sí les quita el auto-voto.
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="Temas más guardados" hint="Agrupados por URL. El remix cuenta aparte del original." accent="var(--red)">
+          <HorizontalRankBars rows={trackRank} valueLabel="+" color="var(--red)" />
+          <DetailToggle label="Tabla · 40 primeros">
+            <DataTable
+              columns={[
+                { key: 'title', label: 'Tema' },
+                { key: 'artists', label: 'Artistas' },
+                { key: 'save_count', label: '+', align: 'right' },
+                { key: 'unique_users', label: 'Users', align: 'right' },
+              ]}
+              rows={tableRows.map((t) => ({
+                title: t.mix_name ? `${t.title} (${t.mix_name})` : t.title,
+                artists: t.artists || '—',
+                save_count: String(t.save_count),
+                unique_users: String(t.unique_users),
+              }))}
+              empty="Nadie ha guardado temas todavía."
+            />
+          </DetailToggle>
+        </Section>
+        <Section title="¿Quién manda?" hint="Si pocos temas concentran casi todos los «+»" accent="var(--yellow)">
+          <TopShareDonut rows={shareRows} valueKey="save_count" labelKey="title" unit="guardados" />
+        </Section>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="De dónde se guarda" hint="New Releases, archivo YouTube, Top 10 de ficha o 40 Breaks" accent="var(--cyan)">
+          {sourceRows.length > 0 ? (
+            <HorizontalRankBars rows={sourceRows} valueLabel="+" color="var(--cyan)" />
+          ) : (
+            <EmptyState message="Sin guardados" />
+          )}
+        </Section>
+        <Section title="Tienda del tema" hint="Beatport, Bandcamp o YouTube" accent="var(--uv)">
+          {kindRows.length > 0 ? (
+            <HorizontalRankBars rows={kindRows} valueLabel="+" color="var(--uv)" />
+          ) : (
+            <EmptyState message="Sin guardados" />
+          )}
+        </Section>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Section title="Artistas en los «+»" hint="Cada crédito del tema suma. Incluye remixers." accent="var(--pink)">
+          <HorizontalRankBars rows={artistRank} valueLabel="+" color="var(--pink)" />
+        </Section>
+        <Section title="Sellos en los «+»" accent="var(--orange)">
+          <HorizontalRankBars rows={labelRank} valueLabel="+" color="var(--orange)" />
+        </Section>
+      </div>
+
+      <Link
+        href={tracksHref}
+        className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[2px] text-[var(--ink)] hover:text-[var(--red)] no-underline"
+        style={mono}
+      >
+        Listado completo, búsqueda e importar New Releases →
+      </Link>
+    </>
+  )
+}
 
 export default function AdminEngagementStatsPage() {
   const { lang } = useParams<{ lang: string }>()
@@ -150,6 +313,10 @@ export default function AdminEngagementStatsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<TabId>('overview')
+  const [savedPayload, setSavedPayload] = useState<SavedPayload | null>(null)
+  const [savedErr, setSavedErr] = useState<string | null>(null)
+  const [savedLoading, setSavedLoading] = useState(false)
+  const savedRequested = useRef(false)
 
   useEffect(() => {
     fetch('/api/admin/engagement-stats')
@@ -164,6 +331,23 @@ export default function AdminEngagementStatsPage() {
       .catch((e: Error) => setErr(e.message))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'saved' || savedRequested.current) return
+    savedRequested.current = true
+    setSavedLoading(true)
+    fetch('/api/admin/tracks')
+      .then(async (r) => {
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}))
+          throw new Error((j as { error?: string }).error || r.statusText)
+        }
+        return r.json() as Promise<SavedPayload>
+      })
+      .then(setSavedPayload)
+      .catch((e: Error) => setSavedErr(e.message))
+      .finally(() => setSavedLoading(false))
+  }, [tab])
 
   const summary = (payload?.mix_plays_summary || {}) as Row
   const trackSummary = (payload?.track_plays_summary || {}) as Row
@@ -245,7 +429,7 @@ export default function AdminEngagementStatsPage() {
             Estadísticas
           </h1>
           <p className="text-sm text-[var(--ink)]/50 mt-2 max-w-xl" style={mono}>
-            Plays, favoritos, asistencia a eventos y valoraciones de la comunidad.
+            Plays, temas guardados, favoritos, asistencia a eventos y valoraciones de la comunidad.
           </p>
           {!loading && payload && typeof payload.generated_at === 'string' && (
             <p className="text-[10px] font-bold text-[var(--ink)]/35 mt-2 uppercase tracking-wider" style={mono}>
@@ -390,6 +574,28 @@ export default function AdminEngagementStatsPage() {
                   />
                 </Section>
               </div>
+            </div>
+          )}
+
+          {tab === 'saved' && (
+            <div className="space-y-5">
+              {savedLoading && (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 border-[3px] border-[var(--ink)] bg-[#fffef6]" style={{ boxShadow: '4px 4px 0 var(--ink)' }}>
+                  <span className="text-2xl animate-pulse">+</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-[var(--ink)]/50" style={mono}>
+                    Cargando guardados…
+                  </span>
+                </div>
+              )}
+              {savedErr && (
+                <div className="border-[3px] border-[var(--red)] bg-[var(--red)]/10 p-5" style={mono}>
+                  <h3 className="text-sm font-black uppercase text-[var(--red)]">Error al cargar guardados</h3>
+                  <p className="text-xs font-bold mt-1 text-[var(--ink)]/70">{savedErr}</p>
+                </div>
+              )}
+              {!savedLoading && !savedErr && savedPayload && (
+                <SavedTracksPanel payload={savedPayload} tracksHref={`${base}/tracks`} />
+              )}
             </div>
           )}
 
