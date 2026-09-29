@@ -22,7 +22,15 @@ import {
   mixMediaJsonLd,
   mixThumbnailUrl,
 } from '@/lib/mix-sessions'
-import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
+import {
+  eventsOfBrand,
+  eventsOfSeries,
+  festivalBrandOfSeries,
+  festivalSeriesForEventName,
+  MIN_SERIES_EDITIONS,
+  seasonOfEvent,
+} from '@/lib/event-series'
+import { loadAgendaEvents } from '@/lib/agenda-data'
 import { buildArtistSlugLookup, fetchAllArtistLinkRows, flattenLineupArtistNames, resolveArtistSlug } from '@/lib/artist-entity-match'
 import { splitProseForDisplay } from '@/lib/bio-format'
 import { formatMixDateLine } from '@/lib/mix-datetime-local'
@@ -51,9 +59,14 @@ const loadMixPage = cache(async (slug: string) => {
       .maybeSingle()
     event = (data as MixEvent | null) ?? null
   }
-  const series = event ? festivalSeriesForEventName(event.name) : null
-  const season = series && event ? seasonOfEvent(series, event) : null
-  return { mix, event, series, season }
+  const seriesRaw = event ? festivalSeriesForEventName(event.name) : null
+  const season = seriesRaw && event ? seasonOfEvent(seriesRaw, event) : null
+  // Solo enlazar páginas publicadas (≥ MIN_SERIES_EDITIONS eventos)
+  const agenda = seriesRaw ? await loadAgendaEvents() : []
+  const series = seriesRaw && eventsOfSeries(seriesRaw, agenda).length >= MIN_SERIES_EDITIONS ? seriesRaw : null
+  const brandRaw = festivalBrandOfSeries(seriesRaw?.slug)
+  const brand = brandRaw && eventsOfBrand(brandRaw, agenda).length >= MIN_SERIES_EDITIONS ? brandRaw : null
+  return { mix, event, series, season, brand }
 })
 
 function eventDateLabel(e: Pick<BreakEvent, 'date_start'>, lang: Locale): string {
@@ -111,7 +124,7 @@ export default async function MixDetailPage({ params }: Props) {
   const { lang, slug } = await params
   const data = await loadMixPage(slug)
   if (!data) notFound()
-  const { mix, event, series, season } = data
+  const { mix, event, series, season, brand } = data
   const es = lang === 'es'
   const supabase = createCachedSupabase()
 
@@ -139,7 +152,9 @@ export default async function MixDetailPage({ params }: Props) {
   })
   const crumbs = [
     { name: es ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
-    { name: 'Mixes', url: `${SITE_URL}/${lang}/mixes` },
+    ...(brand
+      ? [{ name: brand.name, url: `${SITE_URL}/${lang}/festivals/${brand.slug}` }]
+      : [{ name: 'Mixes', url: `${SITE_URL}/${lang}/mixes` }]),
     ...(series ? [{ name: series.name, url: `${SITE_URL}/${lang}/festivals/${series.slug}` }] : []),
     ...(event && eventUrl ? [{ name: event.name, url: eventUrl }] : []),
     { name: title, url: pageUrl },
@@ -190,6 +205,11 @@ export default async function MixDetailPage({ params }: Props) {
             {event && (
               <Link href={`/${lang}/events/${event.slug}`} className="cutout outline no-underline text-[var(--ink)]">
                 {es ? 'Evento: ' : 'Event: '}{event.name} →
+              </Link>
+            )}
+            {brand && (
+              <Link href={`/${lang}/festivals/${brand.slug}`} className="cutout outline no-underline text-[var(--ink)]">
+                {es ? 'Festival: ' : 'Festival: '}{brand.name} →
               </Link>
             )}
             {series && (

@@ -8,8 +8,11 @@ import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
 import { breadcrumbJsonLd, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import {
+  eventsOfBrand,
   eventsOfSeries,
+  FESTIVAL_BRANDS,
   FESTIVAL_SERIES,
+  seriesOfBrand,
   isUpcomingOrOngoing,
   MIN_SERIES_EDITIONS,
   todayYmdMadrid,
@@ -42,15 +45,29 @@ export default async function FestivalsIndexPage({ params }: Props) {
   const today = todayYmdMadrid()
   const all = await loadAgendaEvents()
 
-  const rows = FESTIVAL_SERIES.map((series) => {
-    const editions = eventsOfSeries(series, all)
-    if (editions.length < MIN_SERIES_EDITIONS) return null
-    const next =
-      editions
-        .filter((e) => !isEventCancelled(e) && isUpcomingOrOngoing(e, today))
-        .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))[0] ?? null
-    return { series, editions, next, show: next ?? editions[0] }
-  })
+  const nextOf = (list: typeof all) =>
+    list
+      .filter((e) => !isEventCancelled(e) && isUpcomingOrOngoing(e, today))
+      .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))[0] ?? null
+  const inBrand = new Set(FESTIVAL_BRANDS.flatMap((b) => b.editions))
+  // Festivales con varias ediciones (marca) y, aparte, los de un solo formato.
+  const rows = [
+    ...FESTIVAL_BRANDS.map((brand) => {
+      const editions = eventsOfBrand(brand, all)
+      if (editions.length < MIN_SERIES_EDITIONS) return null
+      const next = nextOf(editions)
+      const subs = seriesOfBrand(brand)
+        .map((s) => ({ series: s, n: eventsOfSeries(s, editions).length }))
+        .filter((x) => x.n > 0)
+      return { series: { slug: brand.slug, name: brand.name }, editions, next, show: next ?? editions[0], subs }
+    }),
+    ...FESTIVAL_SERIES.filter((s) => !inBrand.has(s.slug)).map((series) => {
+      const editions = eventsOfSeries(series, all)
+      if (editions.length < MIN_SERIES_EDITIONS) return null
+      const next = nextOf(editions)
+      return { series: { slug: series.slug, name: series.name }, editions, next, show: next ?? editions[0], subs: [] }
+    }),
+  ]
     .filter((r): r is NonNullable<typeof r> => r !== null)
     // Primero los que tienen próxima edición (por fecha), luego el resto por nº de ediciones.
     .sort((a, b) => {
@@ -81,8 +98,8 @@ export default async function FestivalsIndexPage({ params }: Props) {
           </p>
 
           <ul className="list-none m-0 p-0 mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rows.map(({ series, editions, next, show }) => (
-              <li key={series.slug}>
+            {rows.map(({ series, editions, next, show, subs }) => (
+              <li key={series.slug} className="flex flex-col gap-2">
                 <Link
                   href={`/${lang}/festivals/${series.slug}`}
                   className="flex gap-4 border-[3px] border-[var(--ink)] bg-[var(--paper)] p-3 no-underline text-[var(--ink)] transition-all hover:bg-[var(--yellow)] sm:hover:shadow-[6px_6px_0_var(--ink)]"
@@ -106,11 +123,28 @@ export default async function FestivalsIndexPage({ params }: Props) {
                         : `${es ? 'Última: ' : 'Latest: '}${shortDateRange(show.date_start, show.date_end, lang)}`}
                     </div>
                     <div className="mt-1 text-[12px] text-[var(--text-muted)]" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                      {editions.length} {es ? (editions.length === 1 ? 'edición' : 'ediciones') : editions.length === 1 ? 'edition' : 'editions'}
+                      {subs.length > 0
+                        ? `${subs.length} ${es ? 'ediciones' : 'editions'} · ${editions.length} ${es ? 'eventos' : 'events'}`
+                        : `${editions.length} ${es ? (editions.length === 1 ? 'edición' : 'ediciones') : editions.length === 1 ? 'edition' : 'editions'}`}
                       {show.city ? ` · ${show.city}` : ''}
                     </div>
                   </div>
                 </Link>
+                {subs.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {subs.map(({ series: s, n }) =>
+                      n >= MIN_SERIES_EDITIONS ? (
+                        <Link key={s.slug} href={`/${lang}/festivals/${s.slug}`} className="cutout fill no-underline" style={{ margin: 0 }}>
+                          {s.name} →
+                        </Link>
+                      ) : (
+                        <Link key={s.slug} href={`/${lang}/festivals/${series.slug}#edition-${s.slug}`} className="cutout outline no-underline text-[var(--ink)]" style={{ margin: 0 }}>
+                          {s.name}
+                        </Link>
+                      ),
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

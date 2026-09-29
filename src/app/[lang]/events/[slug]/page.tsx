@@ -39,6 +39,8 @@ import { getDictionary } from '@/lib/dictionaries'
 import { applyIndexPolicy, eventIndexability } from '@/lib/index-policy'
 import {
   eventSeriesStem,
+  eventsOfBrand,
+  festivalBrandOfSeries,
   festivalSeriesForEventName,
   isSameSeries,
   isUpcomingOrOngoing,
@@ -47,6 +49,7 @@ import {
   todayYmdMadrid,
 } from '@/lib/event-series'
 import { eventLabelWithYear, loadMixesForEvents, mixMediaJsonLd } from '@/lib/mix-sessions'
+import { loadAgendaEvents } from '@/lib/agenda-data'
 import { MixSessionGrid } from '@/components/MixesExplorer'
 
 type Props = {
@@ -562,6 +565,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     festivalSeries !== null &&
     1 + seriesEditions.filter((e) => festivalSeriesForEventName(e.name)?.slug === festivalSeries.slug).length >=
       MIN_SERIES_EDITIONS
+  // Festival (marca) por encima de la edición: Raveart › Raveart Summer Festival › este evento
+  const festivalBrand = festivalBrandOfSeries(festivalSeries?.slug)
+  const hasBrandPage =
+    festivalBrand !== null && eventsOfBrand(festivalBrand, await loadAgendaEvents()).length >= MIN_SERIES_EDITIONS
   const todayYmd = todayYmdMadrid()
   const upcomingEditions = !isUpcomingOrOngoing(event, todayYmd)
     ? seriesEditions
@@ -639,7 +646,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   )
   const breadcrumbLd = breadcrumbJsonLd([
     { name: lang === 'es' ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },
-    { name: lang === 'es' ? 'Eventos' : 'Events', url: `${SITE_URL}/${lang}/events` },
+    ...(festivalBrand && hasBrandPage
+      ? [{ name: festivalBrand.name, url: `${SITE_URL}/${lang}/festivals/${festivalBrand.slug}` }]
+      : [{ name: lang === 'es' ? 'Eventos' : 'Events', url: `${SITE_URL}/${lang}/events` }]),
+    ...(festivalSeries && hasSeriesPage
+      ? [{ name: festivalSeries.name, url: `${SITE_URL}/${lang}/festivals/${festivalSeries.slug}` }]
+      : []),
     { name: event.name, url: `${SITE_URL}/${lang}/events/${slug}` },
   ])
   const faqLd = faqPageJsonLd(faqItems)
@@ -833,6 +845,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="cutout outline no-underline text-[var(--ink)]"
                 >
                   {lang === 'es' ? 'Promueve: ' : 'By: '}{event.promoter.name}
+                </Link>
+              )}
+              {festivalBrand && hasBrandPage && (
+                <Link
+                  href={`/${lang}/festivals/${festivalBrand.slug}`}
+                  className="cutout outline no-underline text-[var(--ink)]"
+                >
+                  {lang === 'es' ? 'Festival: ' : 'Festival: '}{festivalBrand.name} →
                 </Link>
               )}
               {festivalSeries && hasSeriesPage && (

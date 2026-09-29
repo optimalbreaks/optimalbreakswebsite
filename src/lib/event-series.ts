@@ -99,7 +99,7 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'oshun-festival', name: 'Oshun Festival', aliases: ['oshun'] },
   { slug: 'floridance-festival', name: 'Floridance Festival', aliases: ['floridance'] },
   { slug: 'circus-nation', name: 'Circus Nation', aliases: ['circus nation'] },
-  { slug: 'olibass-music-festival', name: 'Olibass Music Festival', aliases: ['olibass'], exclude: ['snow', 'winter', 'invierno'] },
+  { slug: 'olibass-open-air', name: 'Olibass Open Air', aliases: ['olibass'], exclude: ['snow', 'winter', 'invierno'] },
   { slug: 'olibass-snow-edition', name: 'Olibass Snow Edition', aliases: ['olibass snow', 'olibass music festival snow', 'olibass winter', 'olibass invierno'] },
   { slug: 'farewell-summer-festival', name: 'Farewell Summer Festival', aliases: ['farewell summer'] },
   { slug: 'dreambeach', name: 'Dreambeach', aliases: ['dreambeach'] },
@@ -132,6 +132,49 @@ const SERIES_GLOBAL_EXCLUDE = ['presentacion oficial', 'presentacion del cartel'
 
 export function festivalSeriesBySlug(slug: string): FestivalSeries | null {
   return FESTIVAL_SERIES.find((s) => s.slug === slug) ?? null
+}
+
+/**
+ * Tres niveles: FESTIVAL (marca: Raveart, Olibass) › EDICIÓN (formato que se
+ * repite: Raveart Summer Festival, Olibass Snow Edition = cada FESTIVAL_SERIES)
+ * › EVENTO (el día con su cartel: /events/<slug>, sin cambios).
+ * Una marca con un solo formato (Dreambeach, Oshun…) no va aquí: su página de
+ * edición ya es la del festival. Un evento suelto no pertenece a ninguna.
+ * El slug de una marca no puede coincidir con el de una edición.
+ */
+export type FestivalBrand = {
+  slug: string
+  name: string
+  /** Slugs de FESTIVAL_SERIES, en el orden en que se muestran. */
+  editions: string[]
+  intro_es?: string
+  intro_en?: string
+}
+
+export const FESTIVAL_BRANDS: FestivalBrand[] = [
+  { slug: 'raveart', name: 'Raveart', editions: ['raveart-summer-festival', 'raveart-winter-festival', 'retro-halloween'] },
+  { slug: 'olibass-music-festival', name: 'Olibass Music Festival', editions: ['olibass-open-air', 'olibass-snow-edition'] },
+]
+
+export function festivalBrandBySlug(slug: string): FestivalBrand | null {
+  return FESTIVAL_BRANDS.find((b) => b.slug === slug) ?? null
+}
+
+export function festivalBrandOfSeries(seriesSlug: string | null | undefined): FestivalBrand | null {
+  if (!seriesSlug) return null
+  return FESTIVAL_BRANDS.find((b) => b.editions.includes(seriesSlug)) ?? null
+}
+
+export function seriesOfBrand(brand: FestivalBrand): FestivalSeries[] {
+  return brand.editions.map(festivalSeriesBySlug).filter((s): s is FestivalSeries => s !== null)
+}
+
+/** Eventos de todas las ediciones de la marca, más reciente primero. */
+export function eventsOfBrand<T extends SeriesEventLike>(brand: FestivalBrand, events: T[]): T[] {
+  const slugs = new Set(brand.editions)
+  return events
+    .filter((e) => slugs.has(festivalSeriesForEventName(e.name)?.slug ?? ''))
+    .sort((a, b) => String(b.date_start ?? '').localeCompare(String(a.date_start ?? '')))
 }
 
 /** Temporada de una edición: primero por el nombre, si no por el mes de inicio. */

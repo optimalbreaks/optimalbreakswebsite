@@ -893,7 +893,7 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
   }
 
   let platform = String(action.platform || 'other')
-  let video_url = httpsOrNull(action.video_url)
+  const video_url = httpsOrNull(action.video_url)
   let embed_url = httpsOrNull(action.embed_url)
   let image_url = httpsOrNull(action.image_url)
   let mix_type = String(action.mix_type || 'youtube_session')
