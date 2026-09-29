@@ -69,6 +69,12 @@ const nextConfig = {
         destination: '/:lang/artists/aquasky-vs-masterblaster',
         permanent: true,
       },
+      /** Retro Halloween 2026: Raveart cambió Málaga Forum (31 oct) por Complejo Embrujo (1 nov) */
+      {
+        source: '/:lang/events/raveart-retro-halloween-2026-malaga-forum',
+        destination: '/:lang/events/raveart-retro-halloween-2026',
+        permanent: true,
+      },
       /** Olibass 2026: ficha aplazada (15 ago) duplicaba la cita del 19 sept */
       {
         source: '/:lang/events/olibass-music-festival-2026-torredonjimeno',

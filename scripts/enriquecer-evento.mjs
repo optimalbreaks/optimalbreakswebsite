@@ -512,15 +512,74 @@ async function runPatchRaveartRetroHalloween2025Poster(sb) {
   console.log('[patch-retro-halloween-2025] despues:', after)
 }
 
-const RAVEART_RETRO_HALLOWEEN_2026_SLUG = 'raveart-retro-halloween-2026-malaga-forum'
+const RAVEART_RETRO_HALLOWEEN_2026_SLUG = 'raveart-retro-halloween-2026'
+const RAVEART_RETRO_HALLOWEEN_2026_OLD_SLUG = 'raveart-retro-halloween-2026-malaga-forum'
+const RAVEART_RETRO_HALLOWEEN_2026_IMAGE = '/images/events/raveart-retro-halloween-2026.webp'
+const RAVEART_RETRO_HALLOWEEN_2026_BANNER = '/images/events/raveart-retro-halloween-2026-banner.webp'
+const RAVEART_RETRO_HALLOWEEN_2026_TICKETS =
+  'https://www.monsterticket.com/evento/retro-halloween-2026'
 
-/** Cartel oficial ÁREA ONLY VINYLS / 1ª tanda (A-Z en flyer y comunicado Raveart, ago 2026). */
+/** Cartel A-Z oficial (sept 2026), Complejo Embrujo. */
+const RAVEART_RH_2026_LINEUP = [
+  '2 Bad Mice',
+  'Adam VYT',
+  'Aggresivnes',
+  'Aldo Ferrari',
+  'Altern8',
+  'Amaya Dejota',
+  'Amnexiac',
+  'Anuschka',
+  'Baby D',
+  'Bartdon',
+  'Bubu',
+  'Chris Carter',
+  'Colombo',
+  'Ctrl-Z',
+  'Damián',
+  'Deekline',
+  'Deep Impact',
+  'Destroyers',
+  'DJ Jonay',
+  'Felipe Volumen',
+  'Heavy',
+  'Huda Hudia',
+  'Jams',
+  'Jan B',
+  'Kevin R',
+  'Killer',
+  'Kos DJ',
+  'Krafty Kuts',
+  'Kuka Morales',
+  'Madam Breaks',
+  'Maribel',
+  'Memo aka Kid Caravan',
+  'Mr Fli',
+  'Norbak',
+  'Paco Delamait',
+  'Perfect Kombo',
+  'Prody',
+  'Rasco',
+  'Ricardo del Toro',
+  'Rueda',
+  'Rupe',
+  'Saturn DJ',
+  'Sekret Chadow',
+  'Shemma',
+  'Slag Brothers',
+  'V. Aparicio',
+  'Wally',
+  'Warren',
+  'Xema',
+  'Benjamin VJ',
+  'Carlos Mejías VJ',
+  'Cellux MC',
+]
+
 const RAVEART_RH_2026_ONLY_VINYLS = [
   'Adam VYT',
   'Aldo Ferrari',
   'Amaya Dejota',
   'Anuschka',
-  'Baymont Bross',
   'Heavy',
   'Maribel',
   'Norbak',
@@ -531,7 +590,6 @@ const RAVEART_RH_2026_ONLY_VINYLS = [
   'Carlos Mejías VJ',
 ]
 
-/** Cartel oficial ÁREA UNIVERSAL / 2ª tanda (A-Z en flyer y comunicado Raveart, ago 2026). */
 const RAVEART_RH_2026_UNIVERSAL = [
   'Bartdon',
   'Chris Carter',
@@ -545,73 +603,122 @@ const RAVEART_RH_2026_UNIVERSAL = [
   'Xema',
 ]
 
-const RAVEART_RH_2026_LINEUP = [
-  ...new Set([...RAVEART_RH_2026_ONLY_VINYLS, ...RAVEART_RH_2026_UNIVERSAL]),
-].sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+const RAVEART_RH_2026_OLD_SCHOOL = [
+  'Baby D',
+  'Felipe Volumen',
+  'Jams',
+  'Killer',
+  'Kuka Morales',
+  'Paco Delamait',
+  'Shemma',
+  'Wally',
+  'Warren',
+]
+
+const RAVEART_RH_2026_ANNIVERSARY = [
+  'Aggresivnes',
+  'Amnexiac',
+  'Bubu',
+  'Colombo',
+  'Damián',
+  'Deekline',
+  'Destroyers',
+  'Huda Hudia',
+  'Jan B',
+  'Krafty Kuts',
+  'Mr Fli',
+  'Sekret Chadow',
+]
 
 const RAVEART_RH_2026_STAGES = [
   {
     name: 'ÁREA ONLY VINYLS',
     description_en:
-      'Vinyl-only cabin: turntables and physical format, with visuals by Carlos Mejías VJ. First published wave — a Spanish-scene bill.',
+      'Vinyl-only cabin: turntables and physical format, with visuals by Carlos Mejías VJ.',
     description_es:
-      'Cabina de vinilo: platos y formato físico, con visuales de Carlos Mejías VJ. Primera oleada publicada: cartel de la escena nacional.',
+      'Cabina de vinilo: platos y formato físico, con visuales de Carlos Mejías VJ.',
     lineup: RAVEART_RH_2026_ONLY_VINYLS,
-  },
-  {
-    name: 'ÁREA ANNIVERSARY',
-    description_en:
-      'From 2002 to 2026: retro meeting the current catalogue. Line-up not yet published.',
-    description_es:
-      'De 2002 a 2026: lo retro con el catálogo actual. Line-up por confirmar.',
-    lineup: [],
   },
   {
     name: 'ÁREA UNIVERSAL',
     description_en:
-      'Electronic classics through 2010. Second published wave, with UK guests Chris Carter, Deep Impact, Madam Breaks and Slag Brothers.',
+      'Electronic classics through 2010, with UK guests Chris Carter, Deep Impact, Madam Breaks and Slag Brothers.',
     description_es:
-      'Clásicos electrónicos hasta 2010. Segunda oleada publicada, con invitados del Reino Unido: Chris Carter, Deep Impact, Madam Breaks y Slag Brothers.',
+      'Clásicos electrónicos hasta 2010, con invitados del Reino Unido: Chris Carter, Deep Impact, Madam Breaks y Slag Brothers.',
     lineup: RAVEART_RH_2026_UNIVERSAL,
   },
   {
     name: 'ÁREA OLD SCHOOL',
-    description_en:
-      'The earliest layer: classics through 2000. Line-up not yet published.',
-    description_es:
-      'La capa más temprana: clásicos hasta el año 2000. Line-up por confirmar.',
-    lineup: [],
+    description_en: 'The earliest layer: rave and club classics through 2000.',
+    description_es: 'La capa más temprana: clásicos rave y de club hasta el año 2000.',
+    lineup: RAVEART_RH_2026_OLD_SCHOOL,
+  },
+  {
+    name: 'ÁREA ANNIVERSARY',
+    description_en: 'From 2002 to 2026: retro meeting the current catalogue.',
+    description_es: 'De 2002 a 2026: lo retro con el catálogo actual.',
+    lineup: RAVEART_RH_2026_ANNIVERSARY,
   },
 ]
+
+const RAVEART_RH_2026_DESC_ES =
+  'Raveart celebra Retro Halloween el domingo 1 de noviembre de 2026 en Complejo Embrujo (Las Gabias, Granada), el mismo recinto de la edición de 2025. Un anuncio anterior situó la cita de 2026 en Málaga Forum el 31 de octubre; el cartel oficial A-Z y la venta en MonsterTicket confirman Embrujo y el 1 de noviembre. Horario 18:00–07:00. Prohibida la entrada a menores de 18 años. Entradas nominativas (envío el 28 de octubre de 2026): general con consumición mínima válida hasta las 20:00 h, y VIP, según tramos de MonsterTicket.\n\nEl cartel A-Z incluye 2 Bad Mice, Altern8, Baby D, Chris Carter, Deekline, Huda Hudia, Krafty Kuts y Slag Brothers, junto a una amplia representación nacional (Anuschka, Norbak, Rasco, Colombo, Destroyers, Ctrl-Z, Perfect Kombo y más). Visuales de Benjamin VJ y Carlos Mejías VJ; presentación de Cellux MC. Cuatro áreas (Only Vinyls, Universal, Old School, Anniversary) según las oleadas publicadas por Raveart.\n\nVenta en MonsterTicket y raveart.es. Consultas: info@raveart.es y 657 733 208.\n\nCómo llegar: Complejo Embrujo, Carretera Las Gabias–La Malahá s/n, Las Gabias (Granada).'
+
+const RAVEART_RH_2026_DESC_EN =
+  'Raveart stages Retro Halloween on Sunday 1 November 2026 at Complejo Embrujo (Las Gabias, Granada), the same site as the 2025 edition. An earlier announcement had placed the 2026 date at Málaga Forum on 31 October; the official A-Z poster and the MonsterTicket sale now list Embrujo on 1 November. Doors 18:00–07:00. 18+ only. Nominative tickets (issued 28 October 2026): general admission includes a minimum spend valid until 20:00, plus VIP, per MonsterTicket tranches.\n\nThe A-Z bill includes 2 Bad Mice, Altern8, Baby D, Chris Carter, Deekline, Huda Hudia, Krafty Kuts and Slag Brothers, with a wide Spanish-scene line (Anuschka, Norbak, Rasco, Colombo, Destroyers, Ctrl-Z, Perfect Kombo and more). Visuals by Benjamin VJ and Carlos Mejías VJ; host Cellux MC. Four areas (Only Vinyls, Universal, Old School, Anniversary) follow Raveart’s published waves.\n\nTickets on MonsterTicket and raveart.es. Promoter info-line: info@raveart.es and 657 733 208.\n\nHow to get there: Complejo Embrujo, Carretera Las Gabias–La Malahá s/n, Las Gabias (Granada).'
 
 async function runPatchRaveartRetroHalloween2026Lineup(sb) {
   const { data: before, error: e0 } = await sb
     .from('events')
-    .select('slug, name, lineup, stages, tags, socials, description_es, address')
-    .eq('slug', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    .select('id, slug, name, lineup, stages, tags, socials, promoter_organization_id')
+    .in('slug', [RAVEART_RETRO_HALLOWEEN_2026_SLUG, RAVEART_RETRO_HALLOWEEN_2026_OLD_SLUG])
     .maybeSingle()
   if (e0) throw e0
   if (!before) {
-    console.error('[patch-retro-halloween-2026] No existe fila:', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    console.error(
+      '[patch-retro-halloween-2026] No existe fila:',
+      RAVEART_RETRO_HALLOWEEN_2026_SLUG,
+      'ni',
+      RAVEART_RETRO_HALLOWEEN_2026_OLD_SLUG,
+    )
     process.exit(1)
   }
   console.log(
-    '[patch-retro-halloween-2026] antes: lineup',
+    '[patch-retro-halloween-2026] antes:',
+    before.slug,
+    '| lineup',
     before.lineup?.length || 0,
     '| stages',
     Array.isArray(before.stages) ? before.stages.length : 0,
   )
 
+  const { data: org, error: eo } = await sb
+    .from('organizations')
+    .select('id')
+    .eq('slug', 'raveart')
+    .maybeSingle()
+  if (eo) throw eo
+
   const tags = [
-    ...new Set([
-      ...(before.tags || []),
-      'only vinyls',
-      'área universal',
-      'anniversary',
-      'old school',
-      'vinilo',
-      'málaga forum',
-    ]),
+    ...new Set(
+      [
+        ...(before.tags || []),
+        'retro halloween',
+        'halloween',
+        'raveart',
+        'breakbeat',
+        'only vinyls',
+        'área universal',
+        'anniversary',
+        'old school',
+        'vinilo',
+        'complejo embrujo',
+        'las gabias',
+        'granada',
+        '2026',
+        'monsterticket',
+      ].filter((t) => t && t.toLowerCase() !== 'málaga forum' && t.toLowerCase() !== 'malaga forum'),
+    ),
   ]
   const prevSocials =
     before.socials && typeof before.socials === 'object' ? before.socials : {}
@@ -620,24 +727,39 @@ async function runPatchRaveartRetroHalloween2026Lineup(sb) {
     instagram: 'https://www.instagram.com/raveartprod/',
     email: 'mailto:info@raveart.es',
     phone: 'tel:+34657733208',
-    MonsterTicket: 'https://www.monsterticket.com/evento/retro-halloween-2026',
+    MonsterTicket: RAVEART_RETRO_HALLOWEEN_2026_TICKETS,
   }
 
   const { error: e1 } = await sb
     .from('events')
     .update({
+      slug: RAVEART_RETRO_HALLOWEEN_2026_SLUG,
+      name: 'Raveart Retro Halloween',
+      event_type: 'festival',
+      date_start: '2026-11-01',
+      date_end: '2026-11-01',
+      city: 'Las Gabias',
+      country: 'Spain',
+      venue: 'Complejo Embrujo',
+      location: 'Complejo Embrujo, Las Gabias, Granada',
+      address: 'Carretera Las Gabias - La Malahá s/n, 18110 Las Gabias, Granada',
+      coords: { lat: 37.113, lng: -3.6655 },
+      doors_open: '18:00',
+      doors_close: '07:00',
+      age_restriction: '18+',
+      website: 'https://www.raveart.es',
+      tickets_url: RAVEART_RETRO_HALLOWEEN_2026_TICKETS,
+      image_url: RAVEART_RETRO_HALLOWEEN_2026_IMAGE,
+      gallery_urls: [RAVEART_RETRO_HALLOWEEN_2026_BANNER],
       lineup: RAVEART_RH_2026_LINEUP,
       stages: RAVEART_RH_2026_STAGES,
       tags,
       socials,
-      address: 'Ctra. de la Azucarera Intelhorce, 7, Churriana, Málaga',
-      location: 'Málaga Forum, Churriana, Málaga',
-      description_es:
-        'Raveart celebra Retro Halloween el sábado 31 de octubre de 2026 en el Málaga Forum de Churriana: la primera vez que la cita aterriza en la Costa del Sol, después de la edición de 2025 en Complejo Embrujo (Las Gabias, Granada). Doce horas de breaks y electrónica clásica, de tarde a madrugada, con estética Halloween y cuatro áreas pensadas por época y formato. Only Vinyls —primera oleada publicada— reivindica los platos y el disco físico, con cartel de la escena nacional y visuales de Carlos Mejías. Universal —segunda oleada— cubre clásicos hasta 2010 e introduce los primeros internacionales del cartel, todos del Reino Unido: Chris Carter, Deep Impact, Madam Breaks y Slag Brothers. Anniversary (2002–2026) y Old School (hasta 2000) se anunciarán más adelante.\n\nHorario de apertura: el recinto abre a las 14:00 h y la programación se extiende hasta las 02:00 h. Prohibida la entrada a menores de 18 años.\n\nEntrada general: incluye consumición mínima, válida hasta las 17:00 h, según las condiciones publicadas por Raveart.\n\nEntrada VIP: zona VIP, copa, vaso, bono ReAcceso en los horarios que fije la organización y acceso sin colas.\n\nVenta de entradas en raveart.es. Consultas al promotor: info@raveart.es y 657 733 208.\n\nCómo llegar: Málaga Forum está en la Ctra. de la Azucarera Intelhorce, 7, Churriana (Málaga).',
-      description_en:
-        'Raveart stages Retro Halloween on Saturday 31 October 2026 at Málaga Forum in Churriana — the first time the date lands on the Costa del Sol, after the 2025 edition at Complejo Embrujo (Las Gabias, Granada). Twelve hours of breaks and classic electronics, afternoon into the small hours, with Halloween production and four areas split by era and format. Only Vinyls — the first published wave — is a turntable cabin for physical format, with a Spanish-scene bill and visuals by Carlos Mejías. Universal — the second wave — runs classics through 2010 and brings in the bill’s first international names, all from the UK: Chris Carter, Deep Impact, Madam Breaks and Slag Brothers. Anniversary (2002–2026) and Old School (through 2000) are still to come.\n\nDoors 14:00; the programme runs through 02:00. 18+ only.\n\nGeneral admission includes a minimum spend valid until 17:00, per Raveart’s published terms.\n\nVIP adds VIP zone, drink, glass, re-entry pass at the hours set by the promoter, and queue-free access.\n\nTickets and sales on raveart.es. Promoter info-line: info@raveart.es and 657 733 208.\n\nHow to get there: Málaga Forum, Ctra. de la Azucarera Intelhorce, 7, Churriana (Málaga).',
+      description_es: RAVEART_RH_2026_DESC_ES,
+      description_en: RAVEART_RH_2026_DESC_EN,
+      promoter_organization_id: org?.id || before.promoter_organization_id || null,
     })
-    .eq('slug', RAVEART_RETRO_HALLOWEEN_2026_SLUG)
+    .eq('id', before.id)
   if (e1) throw e1
 
   const { data: after, error: e2 } = await sb
@@ -1369,9 +1491,9 @@ const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_LINEUP = [
 const RAVEART_RVT_RETRO_HALLOWEEN_PRESENT_EL_TREN_2026_ROW = {
   name: 'RVT by Raveart: Retro Halloween 2026 (Presentación oficial)',
   description_en:
-    'Raveart presents the official Retro Halloween 2026 launch at Sala El Tren (Granada): RVT Booking & Clubbing breakbeat night separate from the main Retro Halloween festival at Málaga Forum on 31 October 2026. Saturday 12 September 2026, 01:00–07:00. Official poster: headliner Backdraft plus versus sets Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli and BLNK vs Tilla Pink. Flyer offer: entry with free lanyard, beer and re-entry (per promoter artwork). Address Ctra. de Málaga 136, Chana, Granada. Tickets via MonsterTicket; info@rvtpro.com / rvtpro.com.',
+    'Raveart presents the official Retro Halloween 2026 launch at Sala El Tren (Granada): RVT Booking & Clubbing breakbeat night separate from the main Retro Halloween festival at Complejo Embrujo (Las Gabias, Granada) on 1 November 2026. Saturday 12 September 2026, 01:00–07:00. Official poster: headliner Backdraft plus versus sets Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli and BLNK vs Tilla Pink. Flyer offer: entry with free lanyard, beer and re-entry (per promoter artwork). Address Ctra. de Málaga 136, Chana, Granada. Tickets via MonsterTicket; info@rvtpro.com / rvtpro.com.',
   description_es:
-    'Raveart presenta la presentación oficial de Retro Halloween 2026 en Sala El Tren (Granada): noche breakbeat de RVT Booking & Clubbing, distinta del festival Retro Halloween en Málaga Forum el 31 de octubre de 2026. Sábado 12 de septiembre de 2026, 1:00h–7:00h. Cartel oficial: cabeza de cartel Backdraft y enfrentamientos Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli y BLNK vs Tilla Pink. Oferta del cartel: entrada con lanyard gratis, cerveza y reacceso (según artwork del promotor). Ctra. de Málaga 136, Chana, Granada. Entradas en MonsterTicket; info@rvtpro.com / rvtpro.com.',
+    'Raveart presenta la presentación oficial de Retro Halloween 2026 en Sala El Tren (Granada): noche breakbeat de RVT Booking & Clubbing, distinta del festival Retro Halloween en Complejo Embrujo (Las Gabias, Granada) el 1 de noviembre de 2026. Sábado 12 de septiembre de 2026, 1:00h–7:00h. Cartel oficial: cabeza de cartel Backdraft y enfrentamientos Aggresivnes vs Paket, Prody vs Bubu, Datafunk vs Destroyers, Saturn DJ vs Mr Fli y BLNK vs Tilla Pink. Oferta del cartel: entrada con lanyard gratis, cerveza y reacceso (según artwork del promotor). Ctra. de Málaga 136, Chana, Granada. Entradas en MonsterTicket; info@rvtpro.com / rvtpro.com.',
   event_type: 'club_night',
   date_start: '2026-09-12',
   date_end: null,

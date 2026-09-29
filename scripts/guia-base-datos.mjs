@@ -238,7 +238,7 @@ const ACTIONS = [
     npm: 'npm run db:guia -- run events-patch-raveart-retro-halloween-2026-lineup',
     creds: 'NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
     description:
-      'Line-up por áreas en raveart-retro-halloween-2026-malaga-forum: 1ª tanda Only Vinyls y 2ª tanda Universal (UK + nacionales); VIP, info-line y @raveartprod. Anniversary y Old School TBA.',
+      'Retro Halloween 2026 vuelve a Complejo Embrujo (Las Gabias, Granada), domingo 1 nov 2026. Slug raveart-retro-halloween-2026 (redirige el antiguo malaga-forum). Cartel A-Z + cuatro áreas; MonsterTicket.',
   },
   {
     id: 'events-patch-kultura-breakz-ii-aniversario-2026',
@@ -838,7 +838,7 @@ Punto de entrada unificado:
   events-patch-raveart-rvt-summer-festival-presentacion-oficial-el-tren-granada-2026  RVT Summer Festival presentación, El Tren Granada 9 may 2026
   events-patch-raveart-rvt-retro-halloween-presentacion-oficial-el-tren-granada-2026  Retro Halloween presentación oficial, El Tren Granada 12 sept 2026
   events-patch-raveart-retro-halloween-2025-poster  cartel public/images → raveart-retro-halloween-2025
-  events-patch-raveart-retro-halloween-2026-lineup  line-up Only Vinyls + Universal en raveart-retro-halloween-2026-malaga-forum
+  events-patch-raveart-retro-halloween-2026-lineup  Retro Halloween 2026 Complejo Embrujo (1 nov), slug raveart-retro-halloween-2026
   events-patch-kultura-breakz-ii-aniversario-2026  II Aniversario Kultura Breakz, Pandora Sevilla 2 may 2026
   events-patch-pure-bassline-7-aniversario-2026  Pure Bassline 7º Aniversario, Pandora Sevilla 2 abr 2026
   events-patch-pure-bassline-15-agosto-2026-sevilla  Made in Spain Festival (Pure Bassline), White Beach Antilla Lepe 15 ago 2026 (5º avance cartel, Fourvenues rollercoaster)
