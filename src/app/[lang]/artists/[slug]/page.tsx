@@ -18,6 +18,7 @@ import {
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import CountryBadge from '@/components/CountryBadge'
 import { breadcrumbJsonLd, countryNameFromCode, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
+import { applyIndexPolicy, artistIndexability } from '@/lib/index-policy'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { sanitizeSlug } from '@/lib/security'
@@ -190,15 +191,21 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   // `website` (no `profile`): Meta/WhatsApp priorizan og:image del track/ficha;
   // con `profile` a veces ignoran la carátula y el preview en Facebook queda roto.
-  return detailPageMetadata(
+  // Política de indexación (fase 2 SEO): bio corta o sin traducir → noindex en ese idioma.
+  return applyIndexPolicy(
+    detailPageMetadata(
+      lang,
+      `/artists/${slug}`,
+      siteName,
+      `${meta.name} | ${siteName}`,
+      description,
+      'website',
+      ogPortrait,
+      keywords,
+    ),
     lang,
     `/artists/${slug}`,
-    siteName,
-    `${meta.name} | ${siteName}`,
-    description,
-    'website',
-    ogPortrait,
-    keywords,
+    artistIndexability(meta),
   )
 }
 

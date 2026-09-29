@@ -445,6 +445,16 @@ export default async function HomePage({
           </div>
         </div>
 
+        <div className="mt-6">
+          <Link
+            href={`/${lang}/breakbeat`}
+            className="inline-block no-underline border-[3px] border-[var(--ink)] px-5 py-3 bg-[var(--ink)] text-[var(--paper)] shadow-[4px_4px_0_var(--red)] hover:bg-[var(--red)] hover:text-white transition-colors"
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase' }}
+          >
+            {lang === 'es' ? 'Guía completa: qué es el breakbeat →' : 'Full guide: what is breakbeat →'}
+          </Link>
+        </div>
+
         {/* Facts */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-0 mt-8 sm:mt-10">
           {[

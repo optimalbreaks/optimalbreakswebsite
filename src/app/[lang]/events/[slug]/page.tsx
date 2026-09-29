@@ -35,6 +35,15 @@ import {
 } from '@/lib/artist-entity-match'
 import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { getDictionary } from '@/lib/dictionaries'
+import { applyIndexPolicy, eventIndexability } from '@/lib/index-policy'
+import {
+  eventSeriesStem,
+  festivalSeriesForEventName,
+  isSameSeries,
+  isUpcomingOrOngoing,
+  seasonOfEvent,
+  todayYmdMadrid,
+} from '@/lib/event-series'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -327,12 +336,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: raw } = await supabase
     .from('events')
     .select(
-      'name, description_en, description_es, image_url, og_image_url, updated_at, date_start, date_end, venue, city, country, doors_open, doors_close, tags',
+      'name, description_en, description_es, image_url, og_image_url, updated_at, date_start, date_end, venue, city, country, doors_open, doors_close, tags, lineup',
     )
     .eq('slug', slug)
     .single()
   const data = raw as
-    | (EventSeoRow & { doors_open: string | null; doors_close: string | null })
+    | (EventSeoRow & { doors_open: string | null; doors_close: string | null; lineup: string[] | null })
     | null
   if (!data?.name)
     return {
@@ -380,17 +389,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     data.og_image_url || data.image_url,
     imageCacheVersion(data.updated_at),
   )
-  return detailPageMetadata(
+  return applyIndexPolicy(
+    detailPageMetadata(
+      lang,
+      `/events/${slug}`,
+      siteName,
+      seoTitle,
+      description,
+      'event',
+      ogImage,
+      undefined,
+      false,
+      extraOgTags,
+    ),
     lang,
     `/events/${slug}`,
-    siteName,
-    seoTitle,
-    description,
-    'event',
-    ogImage,
-    undefined,
-    false,
-    extraOgTags,
+    eventIndexability(data),
   )
 }
 
@@ -552,6 +566,25 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
 
   const rawDesc = lang === 'es' ? event.description_es : event.description_en
 
+  // Serie de festival (página permanente /festivals/<serie>) y, si esta
+  // edición ya pasó, la siguiente edición anunciada: así la ficha vieja
+  // (que sigue recibiendo búsquedas) manda tráfico a la nueva.
+  const festivalSeries = festivalSeriesForEventName(event.name)
+  const todayYmd = todayYmdMadrid()
+  const upcomingEditions = !isUpcomingOrOngoing(event, todayYmd)
+    ? seriesEditions
+        .filter((e) => (e.date_start ?? '').slice(0, 10) >= todayYmd)
+        .sort((a, b) => String(a.date_start ?? '').localeCompare(String(b.date_start ?? '')))
+    : []
+  // Marcas con temporadas (Olibass verano/invierno): primero la misma temporada.
+  const currentSeason = festivalSeries ? seasonOfEvent(festivalSeries, event) : null
+  const nextEdition =
+    (currentSeason && festivalSeries
+      ? upcomingEditions.find((e) => seasonOfEvent(festivalSeries, e)?.key === currentSeason.key)
+      : undefined) ??
+    upcomingEditions[0] ??
+    null
+
   const faqItems = buildEventFaqItems({
     lang,
     name: event.name,
@@ -688,6 +721,26 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
         </div>
       )}
 
+      {nextEdition && !cancelled && (
+        <Link
+          href={`/${lang}/events/${nextEdition.slug}`}
+          className="mb-6 block border-4 border-[var(--ink)] bg-[var(--yellow)] px-5 py-4 text-[var(--ink)] no-underline shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)]"
+        >
+          <div
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase' }}
+          >
+            {lang === 'es' ? 'Esta edición ya pasó · Nueva edición anunciada' : 'This edition is over · Next edition announced'}
+          </div>
+          <div
+            className="mt-1"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3.5vw, 24px)', textTransform: 'uppercase' }}
+          >
+            {nextEdition.name}
+            {nextEdition.date_start ? ` — ${formatDate(nextEdition.date_start, lang)}` : ''} →
+          </div>
+        </Link>
+      )}
+
       {/* ── HERO ── */}
       <header className="mb-8 md:mb-10 border-b-[3px] border-[var(--ink)] pb-8 md:pb-10">
         <div className="flex flex-col-reverse md:flex-row gap-6 md:gap-8 lg:gap-10 items-stretch md:items-start">
@@ -772,6 +825,14 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   className="cutout outline no-underline text-[var(--ink)]"
                 >
                   {lang === 'es' ? 'Promueve: ' : 'By: '}{event.promoter.name}
+                </Link>
+              )}
+              {festivalSeries && (
+                <Link
+                  href={`/${lang}/festivals/${festivalSeries.slug}`}
+                  className="cutout fill no-underline"
+                >
+                  {lang === 'es' ? 'Todas las ediciones de ' : 'All editions of '}{festivalSeries.name} →
                 </Link>
               )}
               {event.age_restriction && <span className="cutout red">{event.age_restriction}</span>}
@@ -1409,37 +1470,7 @@ type RelatedEventRow = {
   promoter_organization_id: string | null
 }
 
-/** Stem de serie: quita años y puntuación para emparejar ediciones (Raveart Retro Halloween 2026 ↔ 2025). */
-function eventSeriesStem(name: string): string {
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/\b(19|20)\d{2}\b/g, ' ')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function stemTokenOverlap(a: string, b: string): number {
-  const ta = a.split(' ').filter((t) => t.length > 2)
-  const tb = new Set(b.split(' ').filter((t) => t.length > 2))
-  if (ta.length === 0 || tb.size === 0) return 0
-  let hit = 0
-  for (const t of ta) if (tb.has(t)) hit++
-  return hit / Math.max(ta.length, tb.size)
-}
-
-function isSameSeries(stemA: string, stemB: string): boolean {
-  if (!stemA || !stemB) return false
-  if (stemA === stemB) return true
-  if (stemA.includes(stemB) || stemB.includes(stemA)) {
-    const shorter = stemA.length <= stemB.length ? stemA : stemB
-    // Evitar matches demasiado cortos ("raveart" solo)
-    return shorter.split(' ').filter((t) => t.length > 2).length >= 2
-  }
-  return stemTokenOverlap(stemA, stemB) >= 0.75
-}
+/** Heurística de series (stem + isSameSeries): vive en `@/lib/event-series`. */
 
 function pickRelatedEvents(
   current: {
@@ -1451,6 +1482,7 @@ function pickRelatedEvents(
   candidates: RelatedEventRow[],
 ): { editions: RelatedEventRow[]; related: RelatedEventRow[] } {
   const stem = eventSeriesStem(current.name)
+  const curatedSeries = festivalSeriesForEventName(current.name)
   const cityKey = (current.city || '').trim().toLowerCase()
   const currentTs = current.dateStart ? Date.parse(`${current.dateStart.slice(0, 10)}T12:00:00`) : NaN
 
@@ -1460,7 +1492,9 @@ function pickRelatedEvents(
 
   for (const row of candidates) {
     const otherStem = eventSeriesStem(row.name)
-    if (isSameSeries(stem, otherStem)) {
+    const sameCuratedSeries =
+      curatedSeries !== null && festivalSeriesForEventName(row.name)?.slug === curatedSeries.slug
+    if (sameCuratedSeries || isSameSeries(stem, otherStem)) {
       editions.push(row)
       editionSlugs.add(row.slug)
       continue

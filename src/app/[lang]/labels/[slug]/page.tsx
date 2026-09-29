@@ -23,6 +23,7 @@ import {
   SITE_URL,
   smartTruncate,
 } from '@/lib/seo'
+import { applyIndexPolicy, labelIndexability } from '@/lib/index-policy'
 import {
   parsePlayParam,
   findBeatportTopTrackById,
@@ -153,7 +154,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     }
   }
 
-  return detailPageMetadata(lang, `/labels/${slug}`, siteName, seoTitle, description, 'website', defaultOgImage, keywords)
+  return applyIndexPolicy(
+    detailPageMetadata(lang, `/labels/${slug}`, siteName, seoTitle, description, 'website', defaultOgImage, keywords),
+    lang,
+    `/labels/${slug}`,
+    labelIndexability(data),
+  )
 }
 
 export default async function LabelDetailPage({ params, searchParams }: Props) {

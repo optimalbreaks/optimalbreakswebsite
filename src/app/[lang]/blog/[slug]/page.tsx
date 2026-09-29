@@ -12,6 +12,7 @@ import {
   siteNameForLang,
   SITE_URL,
 } from '@/lib/seo'
+import { applyIndexPolicy, blogIndexability } from '@/lib/index-policy'
 import { sanitizeHtml, sanitizeSlug, validateLocale } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
 import type { BeatportTopTrack, BlogPost } from '@/types/database'
@@ -34,7 +35,15 @@ import { isBlogPosterCover } from '@/lib/blog-spotlight'
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<
   BlogPost,
-  'title_en' | 'title_es' | 'excerpt_en' | 'excerpt_es' | 'image_url' | 'og_image_url' | 'beatport_tracks'
+  | 'title_en'
+  | 'title_es'
+  | 'excerpt_en'
+  | 'excerpt_es'
+  | 'image_url'
+  | 'og_image_url'
+  | 'beatport_tracks'
+  | 'content_es'
+  | 'content_en'
 >
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: raw } = await supabase
     .from('blog_posts')
-    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks')
+    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en')
     .eq('slug', safeSlug)
     .eq('is_published', true)
     .single()
@@ -59,14 +68,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
     null
   // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
-  return detailPageMetadata(
+  // Política de indexación: la versión de un idioma sin traducir (vacía o copia del otro) → noindex.
+  return applyIndexPolicy(
+    detailPageMetadata(
+      safeLang,
+      `/blog/${safeSlug}`,
+      siteName,
+      title,
+      description,
+      'article',
+      publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
+    ),
     safeLang,
     `/blog/${safeSlug}`,
-    siteName,
-    title,
-    description,
-    'article',
-    publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
+    blogIndexability(data),
   )
 }
 

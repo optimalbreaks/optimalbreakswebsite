@@ -117,6 +117,9 @@
         { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
         { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
+        { "href": "/breakbeat", "label": "Qué es el breakbeat", "hint": "Guía del género" },
+        { "href": "/agenda", "label": "Agenda", "hint": "Por ciudad y por mes" },
+        { "href": "/festivals", "label": "Festivales", "hint": "Todas las ediciones" },
         { "href": "/about", "label": "Sobre", "hint": "Manifiesto y contacto" }
       ]
     },

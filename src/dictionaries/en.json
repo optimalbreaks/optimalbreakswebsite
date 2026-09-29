@@ -195,6 +195,21 @@
           "hint": "Essays and scene memory"
         },
         {
+          "href": "/breakbeat",
+          "label": "What is breakbeat",
+          "hint": "Genre guide"
+        },
+        {
+          "href": "/agenda",
+          "label": "Listings",
+          "hint": "By city and month"
+        },
+        {
+          "href": "/festivals",
+          "label": "Festivals",
+          "hint": "Every edition"
+        },
+        {
           "href": "/about",
           "label": "About",
           "hint": "Manifesto and contact"

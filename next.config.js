@@ -75,6 +75,17 @@ const nextConfig = {
         destination: '/:lang/events/olibass-music-festival-open-air',
         permanent: true,
       },
+      /**
+       * SEO fase 2: el post «qué es el breakbeat» competía con la home,
+       * /history y su propia versión /en. Ahora hay UNA página pilar:
+       * /:lang/breakbeat (src/content/breakbeat-guide.ts). Despublicar el post
+       * en el admin es opcional; esta redirección ya consolida la fuerza.
+       */
+      {
+        source: '/:lang(es|en)/blog/que-es-el-breakbeat-guia-clara-para-entender-el-genero-sus-raices-y-su-evolucion',
+        destination: '/:lang/breakbeat',
+        statusCode: 301,
+      },
     ]
   },
 
