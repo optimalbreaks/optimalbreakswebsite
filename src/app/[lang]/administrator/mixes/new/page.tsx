@@ -7,6 +7,7 @@ import AdminForm from '@/components/admin/AdminForm'
 import SlugField from '@/components/admin/SlugField'
 import BilingualTextarea from '@/components/admin/BilingualTextarea'
 import ImageUpload from '@/components/admin/ImageUpload'
+import MixEventSelect from '@/components/admin/MixEventSelect'
 import { datetimeLocalToIso, isoToDatetimeLocal } from '@/lib/mix-datetime-local'
 
 const MIX_TYPES = [
@@ -49,6 +50,7 @@ export default function MixNewPage() {
     image_url: null as string | null,
     is_featured: false,
     published_at: null as string | null,
+    event_id: null as string | null,
   })
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -64,6 +66,7 @@ export default function MixNewPage() {
         embed_url: form.embed_url || null,
         video_url: form.video_url || null,
         published_at: form.published_at,
+        event_id: form.event_id || null,
       })
       router.push(`/${lang}/administrator/mixes`)
     } catch (err) {
@@ -208,6 +211,8 @@ export default function MixNewPage() {
         />
         <p className="admin-muted text-xs mt-1 normal-case">Si se rellena, se mostrará el vídeo embebido en la tarjeta del mix</p>
       </div>
+
+      <MixEventSelect value={form.event_id} onChange={(v) => set('event_id', v)} />
 
       <div className="md:col-span-2">
         <BilingualTextarea

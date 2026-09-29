@@ -13,22 +13,9 @@ import {
   refreshNowPlaying,
   type NowPlayingInfo,
 } from '@/lib/now-playing-session'
+import { extractYouTubeId } from '@/lib/mix-sessions'
 
-export function extractYouTubeId(url: string | null | undefined): string | null {
-  if (!url) return null
-  const patterns = [
-    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-  ]
-  for (const re of patterns) {
-    const m = url.match(re)
-    if (m) return m[1]
-  }
-  return null
-}
+export { extractYouTubeId }
 
 /** Miniatura de YouTube servida desde nuestro dominio (proxy). Evita que adblockers
  * / proxies corporativos que bloquean `i.ytimg.com` dejen la portada en negro. */

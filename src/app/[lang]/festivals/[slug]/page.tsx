@@ -50,6 +50,8 @@ import { imageCacheVersion, versionedImageUrl } from '@/lib/image-url'
 import { isEventCancelled } from '@/types/database'
 import AgendaEventGrid from '@/components/AgendaEventGrid'
 import CardThumbnail from '@/components/CardThumbnail'
+import { MixSessionGrid } from '@/components/MixesExplorer'
+import { eventLabelWithYear, loadMixesForEvents } from '@/lib/mix-sessions'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 
@@ -240,6 +242,12 @@ export default async function FestivalSeriesPage({ params }: Props) {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([name, n]) => ({ name, n, slug: resolveArtistSlug(name, lookup) ?? null }))
 
+  // Sesiones grabadas en las ediciones, agrupadas por edición (más reciente primero).
+  const sessions = await loadMixesForEvents(supabase, editions.map((e) => e.id))
+  const sessionGroups = editions
+    .map((e) => ({ edition: e, mixes: sessions.filter((m) => m.event_id === e.id) }))
+    .filter((g) => g.mixes.length > 0)
+
   // Texto: editorial si existe; si no, generado solo con datos reales.
   const editorial = (es ? series.intro_es : series.intro_en)?.trim()
   const nEd = editions.length
@@ -305,6 +313,17 @@ export default async function FestivalSeriesPage({ params }: Props) {
     faq.push({
       question: es ? `¿Qué artistas han tocado en ${series.name}?` : `Which artists have played ${series.name}?`,
       answer: es ? `Entre otros: ${names}${artists.length > 12 ? '…' : '.'}` : `Among others: ${names}${artists.length > 12 ? '…' : '.'}`,
+    })
+  }
+  if (sessionGroups.length) {
+    const byEdition = sessionGroups
+      .map((g) => `${eventLabelWithYear(g.edition.name, g.edition.date_start)} (${g.mixes.length})`)
+      .join('; ')
+    faq.push({
+      question: es ? `¿Hay sesiones grabadas de ${series.name}?` : `Are there recorded sets from ${series.name}?`,
+      answer: es
+        ? `Sí: ${sessions.length} ${sessions.length === 1 ? 'sesión' : 'sesiones'} para escuchar en Optimal Breaks, por edición: ${byEdition}.`
+        : `Yes: ${sessions.length} ${sessions.length === 1 ? 'set' : 'sets'} to play on Optimal Breaks, by edition: ${byEdition}.`,
     })
   }
   faq.push({
@@ -410,6 +429,33 @@ export default async function FestivalSeriesPage({ params }: Props) {
             <section className="mt-12">
               <Heading>{es ? `Ediciones de ${series.name}` : `${series.name} editions`}</Heading>
               <AgendaEventGrid events={editions} lang={lang} />
+            </section>
+          )}
+
+          {/* Sesiones por edición */}
+          {sessionGroups.length > 0 && (
+            <section id="festival-sessions" className="mt-12 scroll-mt-24">
+              <Heading>{es ? `Sesiones de ${series.name}` : `${series.name} sets`}</Heading>
+              <div className="space-y-10">
+                {sessionGroups.map(({ edition, mixes }) => {
+                  const season = seasonLabel(seasonOfEvent(series, edition))
+                  return (
+                    <div key={edition.id}>
+                      <h3 style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '20px', margin: '0 0 12px' }}>
+                        <Link href={`/${lang}/events/${edition.slug}`} className="no-underline text-[var(--ink)] hover:text-[var(--red)] transition-colors">
+                          {eventLabelWithYear(edition.name, edition.date_start)}
+                          {season ? ` · ${season}` : ''}
+                        </Link>
+                        <span className="ml-2" style={{ fontFamily: MONO, fontSize: '13px', fontWeight: 700, color: 'var(--dim)' }}>
+                          {shortDateRange(edition.date_start, edition.date_end, lang)} · {mixes.length}{' '}
+                          {es ? (mixes.length === 1 ? 'sesión' : 'sesiones') : mixes.length === 1 ? 'set' : 'sets'}
+                        </span>
+                      </h3>
+                      <MixSessionGrid mixes={mixes} lang={lang} />
+                    </div>
+                  )
+                })}
+              </div>
             </section>
           )}
 

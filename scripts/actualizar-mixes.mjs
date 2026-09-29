@@ -8,6 +8,8 @@
  *
  * El JSON debe ser un array de objetos mix, o { "mixes": [ … ] }.
  * Opcional: published_at (ISO 8601) para ordenación / fecha en plataforma (p. ej. SoundCloud).
+ * Opcional: event_slug (slug de `events`) → guarda `event_id`: la sesión sale en la ficha del
+ *   evento, en /festivals/<serie> y su /mixes/<slug> enlaza al evento. Sin event_slug no se toca.
  * Credenciales: .env.local — NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SECRET).
  */
 
@@ -126,11 +128,45 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const { data, error } = await supabase.from('mixes').upsert(rows, { onConflict: 'slug' }).select('id, slug, title')
+  const eventSlugs = [
+    ...new Set(rowsRaw.map((m) => (typeof m.event_slug === 'string' ? m.event_slug.trim() : '')).filter(Boolean)),
+  ]
+  if (eventSlugs.length) {
+    const { data: evs, error: evErr } = await supabase.from('events').select('id, slug').in('slug', eventSlugs)
+    if (evErr) {
+      console.error(evErr.message)
+      process.exit(1)
+    }
+    const idBySlug = new Map((evs || []).map((e) => [e.slug, e.id]))
+    const missing = eventSlugs.filter((s) => !idBySlug.has(s))
+    if (missing.length) {
+      console.error('event_slug sin evento en BD:', missing.join(', '))
+      process.exit(1)
+    }
+    rowsRaw.forEach((m, i) => {
+      const s = typeof m.event_slug === 'string' ? m.event_slug.trim() : ''
+      if (s) rows[i].event_id = idBySlug.get(s)
+    })
+  }
 
-  if (error) {
-    console.error(error.message)
-    process.exit(1)
+  // Un upsert en bloque rellena con NULL las columnas que falten en alguna fila
+  // (borraría event_id / published_at ya guardados): un upsert por juego de columnas.
+  const groups = new Map()
+  for (const r of rows) {
+    const k = Object.keys(r).sort().join(',')
+    groups.set(k, [...(groups.get(k) || []), r])
+  }
+  const data = []
+  for (const group of groups.values()) {
+    const { data: part, error } = await supabase
+      .from('mixes')
+      .upsert(group, { onConflict: 'slug' })
+      .select('id, slug, title')
+    if (error) {
+      console.error(error.message)
+      process.exit(1)
+    }
+    data.push(...(part || []))
   }
 
   console.log('UPSERT mixes OK:', (data || []).length)

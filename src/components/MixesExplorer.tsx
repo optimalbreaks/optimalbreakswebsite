@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import Link from 'next/link'
 import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import type { Mix } from '@/types/database'
@@ -613,6 +614,41 @@ function PlayLink({ mix }: { mix: Mix }) {
   )
 }
 
+function MixTitleLink({ mix, lang }: { mix: Mix; lang: string }) {
+  if (!mix.slug) return <>{mix.title}</>
+  return (
+    <Link href={`/${lang}/mixes/${mix.slug}`} className="no-underline text-inherit hover:text-[var(--red)] transition-colors">
+      {mix.title}
+    </Link>
+  )
+}
+
+/** Tarjetas de sesiones de un evento o festival (mismas que /mixes, sin filtros). */
+export function MixSessionGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
+  return <LargeGrid mixes={mixes} lang={lang} isMixVisible={() => true} />
+}
+
+/** Reproductor principal de /mixes/<slug>: portada + play, iframe solo al pulsar. */
+export function MixSessionPlayer({ mix, lang }: { mix: Mix; lang: string }) {
+  const ytId = extractYouTubeId(mix.video_url)
+  const scTrackUrl = !ytId && isSoundCloudTrackEmbedUrl(mix.embed_url) ? mix.embed_url!.trim() : null
+  return (
+    <div className="relative border-4 border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)] overflow-hidden">
+      <FavoriteButton type="mix" entityId={mix.id} lang={lang} />
+      {ytId ? (
+        <LazyYouTubeEmbed videoId={ytId} title={mix.title} mixId={mix.id} artist={mix.artist_name} artworkUrl={mix.image_url} />
+      ) : scTrackUrl ? (
+        <LazySoundCloudEmbed trackUrl={scTrackUrl} title={mix.title} mixId={mix.id} artist={mix.artist_name} artworkUrl={mix.image_url} />
+      ) : (
+        <div className="relative">
+          <CardThumbnail src={mix.image_url} alt={mix.title} aspectClass="aspect-video" />
+          <PlayLink mix={mix} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LargeGrid({
   mixes,
   lang,
@@ -657,7 +693,7 @@ function LargeGrid({
                 </span>
               </div>
               <div className="mt-3" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-                {m.title}
+                <MixTitleLink mix={m} lang={lang} />
               </div>
               <div className="mt-2" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
                 {m.artist_name}
@@ -740,7 +776,7 @@ function CompactGrid({
                 {m.artist_name}
               </div>
               <div className="mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
-                {m.title}
+                <MixTitleLink mix={m} lang={lang} />
               </div>
               <div className="flex flex-wrap gap-1 mt-1 items-center">
                 <span className="cutout red" style={{ fontSize: '7px', padding: '0px 4px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
@@ -809,7 +845,7 @@ function ListView({
                     </span>
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
-                    {m.title}
+                    <MixTitleLink mix={m} lang={lang} />
                   </div>
                   <div className="mt-1" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
                     {m.artist_name}
@@ -852,7 +888,7 @@ function ListView({
                     </span>
                   </div>
                   <div className="mt-2" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.5vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.15 }}>
-                    {m.title}
+                    <MixTitleLink mix={m} lang={lang} />
                   </div>
                   <div className="mt-1" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', color: 'var(--red)' }}>
                     {m.artist_name}
@@ -890,7 +926,7 @@ function ListView({
             </div>
             <div className="flex-grow min-w-0">
               <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
-                {m.title}
+                <MixTitleLink mix={m} lang={lang} />
               </div>
               <div className="mt-[2px]" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '12px', color: 'var(--red)' }}>
                 {m.artist_name}

@@ -400,7 +400,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_upsert_mix',
-      description: 'Preparar upsert de mix (YouTube/SoundCloud). Requiere confirmación.',
+      description:
+        'Preparar upsert de mix (YouTube/SoundCloud). Si es una sesión grabada en un evento/festival concreto, busca el evento con search_catalog y pasa event_slug: sale en la ficha del evento y del festival. Requiere confirmación.',
       parameters: {
         type: 'object',
         properties: {
@@ -414,6 +415,7 @@ const TOOL_DEFINITIONS = [
           year: { type: 'number' },
           description_es: { type: 'string' },
           description_en: { type: 'string' },
+          event_slug: { type: 'string', description: 'Slug de events donde se grabó la sesión (opcional)' },
         },
         required: ['title'],
       },

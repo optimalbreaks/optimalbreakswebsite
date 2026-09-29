@@ -46,6 +46,8 @@ import {
   seasonOfEvent,
   todayYmdMadrid,
 } from '@/lib/event-series'
+import { eventLabelWithYear, loadMixesForEvents, mixMediaJsonLd } from '@/lib/mix-sessions'
+import { MixSessionGrid } from '@/components/MixesExplorer'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -529,6 +531,8 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     if (resolved) artistSlugs.set(name, resolved)
   }
 
+  const sessions = await loadMixesForEvents(supabase, [event.id])
+
   const { data: relatedRaw } = await supabase
     .from('events')
     .select('slug, name, date_start, city, venue, image_url, promoter_organization_id')
@@ -598,6 +602,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     refundsUrl: cancelled
       ? event.tickets_url || (isKnownTicketingSiteUrl(event.website) ? event.website : null)
       : null,
+    sessionArtists: sessions.map((m) => m.artist_name || m.title).filter(Boolean),
   })
 
   // ── JSON-LD: Event/MusicEvent/Festival + BreadcrumbList (+ FAQ si hay datos) ──
@@ -638,9 +643,24 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     { name: event.name, url: `${SITE_URL}/${lang}/events/${slug}` },
   ])
   const faqLd = faqPageJsonLd(faqItems)
+  const sessionsLd = sessions
+    .map((m) =>
+      mixMediaJsonLd(m, {
+        lang,
+        pageUrl: `${SITE_URL}/${lang}/mixes/${m.slug}`,
+        event: {
+          name: eventLabelWithYear(event.name, event.date_start),
+          url: `${SITE_URL}/${lang}/events/${slug}`,
+          dateStart: event.date_start,
+          city: event.city,
+          venue: event.venue,
+        },
+      }),
+    )
+    .filter((x): x is Record<string, unknown> => x !== null)
   const jsonLdGraph = {
     '@context': 'https://schema.org',
-    '@graph': [eventLd, breadcrumbLd, ...(faqLd ? [faqLd] : [])],
+    '@graph': [eventLd, breadcrumbLd, ...(faqLd ? [faqLd] : []), ...sessionsLd],
   }
 
   let festivalSections = splitFestivalDescriptionSections(rawDesc, lang === 'es' ? 'es' : 'en')
@@ -823,6 +843,11 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   {lang === 'es' ? 'Todas las ediciones de ' : 'All editions of '}{festivalSeries.name} →
                 </Link>
               )}
+              {sessions.length > 0 && (
+                <Link href="#event-sessions" className="cutout red no-underline">
+                  ▶ {sessions.length} {lang === 'es' ? (sessions.length === 1 ? 'sesión' : 'sesiones') : sessions.length === 1 ? 'set' : 'sets'}
+                </Link>
+              )}
               {event.age_restriction && <span className="cutout red">{event.age_restriction}</span>}
               {event.capacity && (
                 <span className="cutout outline">
@@ -993,6 +1018,18 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           </div>
         </section>
       ) : null}
+
+      {/* ── SESIONES grabadas en este evento (mixes.event_id) ── */}
+      {sessions.length > 0 && (
+        <section id="event-sessions" className="mb-10 scroll-mt-24">
+          <SectionHeading>
+            {lang === 'es'
+              ? `Sesiones de ${eventLabelWithYear(event.name, event.date_start)} (${sessions.length})`
+              : `Sets from ${eventLabelWithYear(event.name, event.date_start)} (${sessions.length})`}
+          </SectionHeading>
+          <MixSessionGrid mixes={sessions} lang={lang} />
+        </section>
+      )}
 
       {/* ── SCHEDULE / HORARIOS ── */}
       {(schedule.length > 0 || scheduleImageUrl) && (
@@ -1532,6 +1569,7 @@ function buildEventFaqItems(input: {
   cancelled?: boolean
   postponed?: boolean
   refundsUrl?: string | null
+  sessionArtists?: string[]
 }): { question: string; answer: string }[] {
   const es = input.lang === 'es'
   const items: { question: string; answer: string }[] = []
@@ -1626,6 +1664,19 @@ function buildEventFaqItems(input: {
       answer: es
         ? `Cartel confirmado en Optimal Breaks: ${preview}${more ? '…' : '.'}`
         : `Confirmed line-up on Optimal Breaks: ${preview}${more ? '…' : '.'}`,
+    })
+  }
+
+  const sessionArtists = input.sessionArtists ?? []
+  if (sessionArtists.length > 0) {
+    const n = sessionArtists.length
+    const names = sessionArtists.slice(0, 12).join(', ')
+    const more = n > 12 ? '…' : '.'
+    items.push({
+      question: es ? `¿Hay sesiones grabadas de ${input.name}?` : `Are there recorded sets from ${input.name}?`,
+      answer: es
+        ? `Sí: ${n} ${n === 1 ? 'sesión' : 'sesiones'} para escuchar en esta ficha: ${names}${more}`
+        : `Yes: ${n} ${n === 1 ? 'set' : 'sets'} to play on this page: ${names}${more}`,
     })
   }
 

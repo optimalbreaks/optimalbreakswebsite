@@ -108,7 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const client = createCachedSupabase()
 
   // Bios y artículos pesan: páginas cortas para no pasar el tope de 2 MB de la Data Cache.
-  const [artists, labels, blogPosts, eventRows, organizationsR, scenesR, agendaEvents] = await Promise.all([
+  const [artists, labels, blogPosts, eventRows, organizationsR, scenesR, agendaEvents, mixRows] = await Promise.all([
     fetchAllPages<{ slug: string; bio_es: string | null; bio_en: string | null }>(
       (from, to) =>
         client
@@ -153,6 +153,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     client.from('organizations').select('slug'),
     client.from('scenes').select('slug'),
     loadAgendaEvents(),
+    fetchAllPages<{ slug: string; event_id: string | null }>((from, to) =>
+      client
+        .from('mixes')
+        .select('slug, event_id')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ).catch(() => [] as { slug: string; event_id: string | null }[]),
   ])
 
   for (const row of artists) {
@@ -177,6 +184,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       eventIndexability(row),
       eventLastModified(row.updated_at),
     )
+  }
+
+  for (const row of mixRows) {
+    if (!row.slug) continue
+    pushPages(entries, `/mixes/${row.slug}`, row.event_id ? 0.7 : 0.6, 'monthly')
   }
 
   const openEvents = agendaEvents.filter((e) => !isEventCancelled(e))

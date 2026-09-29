@@ -61,6 +61,8 @@ export type ChatAction =
       description_en?: string
       image_url?: string | null
       is_featured?: boolean
+      /** Slug del evento donde se grabó la sesión → mixes.event_id */
+      event_slug?: string | null
     }
   | {
       type: 'new_release'
@@ -317,6 +319,7 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
         description_en: o.description_en != null ? String(o.description_en) : undefined,
         image_url: httpsOrNull(o.image_url),
         is_featured: Boolean(o.is_featured),
+        event_slug: o.event_slug != null && String(o.event_slug).trim() ? String(o.event_slug).trim() : null,
       })
       continue
     }
@@ -916,7 +919,16 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
   }
 
   const sb = createServiceSupabase()
-  const { data, error } = await sb.from('mixes').upsert(row, { onConflict: 'slug' }).select('id, slug, title')
+  let event_id: string | undefined
+  if (action.event_slug) {
+    const { data: ev } = await sb.from('events').select('id').eq('slug', action.event_slug).maybeSingle()
+    if (!ev) return { type: 'mix', ok: false, summary: `Mix ${slug}: no existe el evento «${action.event_slug}»` }
+    event_id = (ev as { id: string }).id
+  }
+  const { data, error } = await sb
+    .from('mixes')
+    .upsert({ ...row, ...(event_id ? { event_id } : {}) }, { onConflict: 'slug' })
+    .select('id, slug, title')
   if (error) {
     return { type: 'mix', ok: false, summary: `Mix ${slug}: ${error.message}` }
   }

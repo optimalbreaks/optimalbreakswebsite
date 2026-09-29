@@ -1058,6 +1058,8 @@ export interface Mix extends Record<string, unknown> {
   published_at?: string | null
   /** URL directa a un archivo de audio (MP3) para reproducción nativa */
   audio_url?: string | null
+  /** Evento donde se grabó la sesión (migración 083). Lo listan /events/<slug> y /festivals/<serie>. */
+  event_id?: string | null
 }
 
 export interface HistoryEntry extends Record<string, unknown> {
