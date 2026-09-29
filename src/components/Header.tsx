@@ -235,6 +235,7 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
     { key: 'events', href: `/${lang}/events` },
+    { key: 'festivals', href: `/${lang}/festivals` },
     { key: 'labels', href: `/${lang}/labels` },
     { key: 'mixes', href: `/${lang}/mixes` },
     { key: 'charts', href: `/${lang}/charts` },
@@ -250,14 +251,15 @@ export default function Header({ dict, lang }: HeaderProps) {
   const switchPath = pathname.replace(`/${lang}`, `/${otherLang}`)
   const FlagIcon = otherLang === 'es' ? FlagES : FlagGB
 
+  const navActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
   const navLinkStyle = (href: string) => ({
     fontFamily: "'Courier Prime', monospace",
     fontWeight: 700,
     fontSize: '11px',
     textTransform: 'uppercase' as const,
     letterSpacing: '2px',
-    color: pathname === href ? 'white' : 'var(--ink)',
-    background: pathname === href ? 'var(--red)' : 'transparent',
+    color: navActive(href) ? 'white' : 'var(--ink)',
+    background: navActive(href) ? 'var(--red)' : 'transparent',
   })
 
   const [isMacLike, setIsMacLike] = useState(false)
@@ -295,7 +297,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           <Link
             key={item.key}
             href={item.href}
-            className="flex items-center px-3 xl:px-4 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--red)] hover:text-white"
+            className="flex items-center px-2 xl:px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--red)] hover:text-white"
             style={navLinkStyle(item.href)}
           >
             {dict.nav[item.key]}
@@ -308,7 +310,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           data-open-command-palette
           aria-label={searchLabel}
           title={`${searchLabel} (${searchKbd})`}
-          className="flex items-center gap-2 px-3 xl:px-4 py-3 border-l-[3px] border-[var(--ink)] bg-transparent cursor-pointer hover:bg-[var(--yellow)] transition-colors"
+          className="flex items-center gap-2 px-2 xl:px-3 py-3 border-l-[3px] border-[var(--ink)] bg-transparent cursor-pointer hover:bg-[var(--yellow)] transition-colors"
           style={{
             fontFamily: "'Courier Prime', monospace",
             fontWeight: 700,
@@ -330,7 +332,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         {/* Language switch */}
         <Link
           href={switchPath}
-          className="flex items-center gap-1.5 px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--uv)] hover:text-white"
+          className="flex items-center gap-1.5 px-2 xl:px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--uv)] hover:text-white"
           style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--ink)' }}
           title={otherLang === 'es' ? 'Cambiar a Español' : 'Switch to English'}
         >
@@ -345,7 +347,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           ) : (
             <Link
               href={`/${lang}/login`}
-              className="flex items-center px-4 py-3 no-underline border-l-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-all duration-100"
+              className="flex items-center px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white transition-all duration-100"
               style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
             >
               LOGIN
@@ -400,7 +402,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           {navItems.map((item) => (
             <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)}
               className="block px-6 py-3 no-underline border-b-2 border-[var(--ink)]/10 hover:bg-[var(--red)] hover:text-white"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--ink)' }}>
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: navActive(item.href) ? 'white' : 'var(--ink)', background: navActive(item.href) ? 'var(--red)' : 'transparent' }}>
               {dict.nav[item.key]}
             </Link>
           ))}

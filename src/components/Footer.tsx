@@ -30,6 +30,7 @@ const SITE_KEYS = [
   'artists',
   'labels',
   'events',
+  'festivals',
   'scenes',
   'blog',
   'mixes',
