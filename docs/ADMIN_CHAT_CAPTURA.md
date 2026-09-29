@@ -110,6 +110,17 @@ Si el flyer dice solo día/mes («21 de agosto») **sin año**, el modelo a menu
 
 Mitigación: `normalizeUpcomingEventDate` en [`admin-chat.ts`](../src/lib/admin-chat.ts) — OCR, `normalizeChatActions` y UPSERT fuerzan la **próxima ocurrencia futura** (`YYYY-MM-DD`). Prompt + tool `stage_upsert_event` lo dejan explícito.
 
+### Ediciones de un festival: no pisar ni duplicar (29 sep 2026)
+
+Incidente Olibass: el cartel del Open Air **2025** llegó con el slug de la ficha del **19 sep 2026** y la sobrescribió; el de la Snow de **feb 2026** (sin año) se empujó al **27 feb 2027** y creó un duplicado. Reglas actuales de `findDuplicateEvent` (se llama con la fecha **ya normalizada**):
+
+1. **Mismo slug, otro año** → no es la misma ficha. Se inserta como `<slug>-<año>` (o `-<año>-2`…). Nunca se actualiza una edición de otro año.
+2. **Año adivinado** (el cartel no lo traía y `normalizeUpcomingEventDate` lo cambió) → si existe un evento de la **misma edición** (`festivalSeriesForEventName`, y misma temporada si la hay) con el **mismo día/mes**, es ese: se completa y **conserva su fecha** (no se mueve a +1 año).
+3. Misma edición + misma fecha exacta → el existente, aunque el nombre del cartel sea distinto («Olibass Snow Edition» vs «OLIBASS Music Festival | Snow Edition»).
+4. Si el cartel sí trae año, se respeta (edición pasada = ficha pasada nueva).
+
+Si algo sale mal: restaurar sobre el **mismo id** (conserva favoritos/asistencias) y mover los datos de la otra edición a una fila propia.
+
 ### Cartel oficial — visión / OCR
 
 **No** elegir flyer solo por títulos de Google Imágenes.
@@ -224,6 +235,8 @@ Mode chips are **hints**. Do not confuse **label** with **event** or **artist**.
 ### Event dates without a year on the flyer
 
 `normalizeUpcomingEventDate` (`admin-chat.ts`) forces the next future `YYYY-MM-DD` so the model cannot park events in a past year (they would vanish from the public upcoming list).
+
+**Festival editions (29 Sep 2026):** `findDuplicateEvent` never updates a row of another year with the same slug (inserts `<slug>-<year>`), and when the year was guessed it matches an event of the same edition series on the same day/month and keeps that event's date. Olibass incident details in the Spanish section above.
 
 ### Tools (summary)
 

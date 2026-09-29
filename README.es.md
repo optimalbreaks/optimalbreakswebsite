@@ -817,6 +817,26 @@ Inicio, historia, artistas, sellos, **organizaciones** (`/organizations/[slug]`)
 
 `events.country` es el **nombre en inglés** (`Spain`, `United Kingdom`, `United States`…). `normalizeEventCountry` (`src/lib/event-country.ts`) se aplica al escribir (chat admin, que metía `ES` por defecto, y los formularios `/administrator/events`) y al leer el filtro «País» de `/events`. Un valor desconocido pasa tal cual, solo recortado. En producción se unificaron 11 grafías a 5 países (Spain 75, United States 34, United Kingdom 15, Australia 5, Hungary 1) y los sufijos de `location` (`, ES` / `, España` / `, UK` / `, US`…) al mismo nombre.
 
+### Festival › Edición › Evento (29 sep 2026)
+
+Tres niveles, todos en `src/lib/event-series.ts`:
+
+| Nivel | Qué es | Config | URL |
+|---|---|---|---|
+| **Festival** | La marca | `FESTIVAL_BRANDS` (`raveart`, `olibass-music-festival`) | `/festivals/<slug>` |
+| **Edición** | El formato que se repite | `FESTIVAL_SERIES` (Raveart Summer / Winter / Retro Halloween, `olibass-open-air`, `olibass-snow-edition`…) | `/festivals/<slug>` |
+| **Evento** | El día con su cartel y sus sesiones | tabla `events` | `/events/<slug>` (sin cambios) |
+
+- Festival y edición se publican con ≥ `MIN_SERIES_EDITIONS` (2) eventos. Una edición por debajo aún no tiene página, pero sale dentro de la de su festival (ancla `#edition-<slug>`).
+- Marcas de un solo formato (Dreambeach, Oshun…) **no** van en `FESTIVAL_BRANDS`: su página de edición es la del festival. Un evento suelto (noches de club como HEAT Opening) no pertenece a ningún festival.
+- El slug de una marca nunca puede coincidir con el de una edición (comparten `/festivals/`). Olibass: la marca se quedó `/festivals/olibass-music-festival` (ya indexada); el Open Air pasó a `/festivals/olibass-open-air`.
+- `/festivals` lista las marcas con sus ediciones debajo y después los festivales de un solo formato. La ficha del evento, la de la sesión y el sitemap enlazan los dos niveles; migas: Festival › Edición › Evento.
+- Añadir un festival con varias ediciones = una entrada en `FESTIVAL_BRANDS` que apunte a slugs de `FESTIVAL_SERIES` ya existentes. `seasons` solo para temporadas sin nombre propio.
+
+**Sesiones por evento (29 sep 2026):** `mixes.event_id` (migración **`083_mixes_event_id.sql`**) ata cada sesión al evento donde se grabó. El evento muestra «Sesiones de …» (+ `VideoObject`/`AudioObject` con `recordedAt`); festival y edición agrupan las sesiones por evento; cada sesión tiene URL propia `/mixes/<slug>`. Se etiqueta con `event_slug` en el lote JSON (`run mixes-file`), el campo «Evento» del admin o `stage_upsert_mix` en el chat.
+
+**Chat de captura y ediciones (incidente 29 sep 2026).** Dos carteles rompieron Olibass: el del Open Air 2025 **pisó** la ficha del 19 sep 2026 (mismo slug, sin mirar el año) y el de la Snow de feb 2026 (sin año) acabó como duplicado el **27 feb 2027**. Arreglado en `findDuplicateEvent` / `upsertEventAction` (`src/lib/admin-chat.ts`): mismo slug con otro año = otra edición (se crea `<slug>-<año>`); si el año lo puso `normalizeUpcomingEventDate`, un evento de la misma edición (y temporada) el mismo día/mes se trata como el existente y conserva su fecha. Datos restaurados en el mismo id (favoritos intactos); 2025 en `olibass-music-festival-open-air-2025`; `/events/olibass-snow-edition` 301 → la de 2026.
+
 ### Migraciones SQL (resumen)
 
 Aplica `supabase/migrations/` en **orden alfabético**. El README en inglés incluye una tabla **parcial** (001–011); hay **muchas más** (charts, mixes, OG, escenas, engagement, lotes de contenido…): lista completa en la carpeta del repo.

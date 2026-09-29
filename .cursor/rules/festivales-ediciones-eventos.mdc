@@ -1,0 +1,32 @@
+---
+description: Festivales: tres niveles Festival › Edición › Evento (/festivals y /events), sesiones por evento.
+alwaysApply: true
+---
+
+# Festival › Edición › Evento
+
+Modelo de Narciso (29 sep 2026). Config en **`src/lib/event-series.ts`**.
+
+| Nivel | Qué es | Ejemplos | Dónde |
+|---|---|---|---|
+| **Festival** | La marca | Raveart, Olibass | `FESTIVAL_BRANDS` → `/festivals/<slug>` |
+| **Edición** | El formato que se repite | Raveart Summer / Winter / Retro Halloween, Olibass Open Air, Olibass Snow Edition | `FESTIVAL_SERIES` → `/festivals/<slug>` |
+| **Evento** | El día con su cartel | Olibass Open Air 19 sep 2026 | tabla `events` → `/events/<slug>` |
+
+## Invariantes (no negociables)
+
+1. **La ruta `/events/<slug>` no se toca.** Festival y edición son una capa encima que agrupa eventos.
+2. **Hay eventos que no son edición de nada** (noches de club, HEAT Opening…). No forzarlos a un festival.
+3. Marca con un solo formato (Dreambeach, Oshun…) → solo `FESTIVAL_SERIES`, no `FESTIVAL_BRANDS`.
+4. Un formato con nombre propio (Summer/Winter, Open Air/Snow) es **edición**, no `seasons`. `seasons` solo para temporadas sin nombre.
+5. El slug de una marca **nunca** igual al de una edición. URLs publicadas no se cambian (Olibass: marca = `olibass-music-festival`, Open Air = `olibass-open-air`).
+6. Páginas publicadas con ≥ `MIN_SERIES_EDITIONS` (2) eventos. No enlazar una edición sin página: sale dentro de su festival (`#edition-<slug>`).
+7. Sesiones: `mixes.event_id` → el **evento** (no la edición). Festival y edición las agrupan solas.
+
+## Al dar de alta un evento de un festival
+
+- El nombre debe encajar con los `aliases` de su edición (si no, no se agrupa). Comprobar `exclude` (Olibass Open Air excluye `snow`/`winter`).
+- Cartel sin año por el chat: verificar que no pisa ni duplica otra edición (regla `admin-chat-captura`).
+- Festival nuevo con varias ediciones = una línea en `FESTIVAL_BRANDS`.
+
+README (EN): *Festival › Edition › Event*. README (ES): *Festival › Edición › Evento*.

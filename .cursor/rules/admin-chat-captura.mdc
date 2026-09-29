@@ -29,6 +29,8 @@ Solo **admin**. UI: **widget flotante** (`AdminCaptureFab` → `AgentChat` mode 
 
 Cartel sin año («21 de agosto») → `normalizeUpcomingEventDate` (`admin-chat.ts`): próxima ocurrencia **futura** `YYYY-MM-DD`. Nunca dejar el evento en un año pasado (desaparece del listado `/events`).
 
+**Ediciones de festival (29 sep 2026, incidente Olibass):** `findDuplicateEvent` **no** actualiza una ficha del mismo slug de **otro año** (inserta `<slug>-<año>`). Si el año fue adivinado, un evento de la misma edición (`FESTIVAL_SERIES` + temporada) el mismo día/mes **es** ese evento y conserva su fecha (no duplicar a +1 año). Si algo se pisa: restaurar sobre el mismo id y mover la otra edición a su fila. Detalle: `docs/ADMIN_CHAT_CAPTURA.md`.
+
 ## Tools
 
 Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases` (remixer → `artists[]`, misma regla que `charts-new-releases-supabase`), `stage_vinyl_picks`, enrich/poster/foto/logo.
