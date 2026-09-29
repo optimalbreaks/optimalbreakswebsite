@@ -72,7 +72,18 @@ const FALLBACK_HOME_EVENTS: {
 
 type HomeEventRow = Pick<
   BreakEvent,
-  'id' | 'slug' | 'name' | 'date_start' | 'date_end' | 'venue' | 'city' | 'country' | 'event_type' | 'image_url' | 'tags'
+  | 'id'
+  | 'slug'
+  | 'name'
+  | 'date_start'
+  | 'date_end'
+  | 'venue'
+  | 'city'
+  | 'country'
+  | 'event_type'
+  | 'image_url'
+  | 'tags'
+  | 'is_featured'
 >
 
 /** «Hoy» calendario (sitio centrado en España; coherente en SSR). */
@@ -193,14 +204,14 @@ export default async function HomePage({
 
   const supabase = createCachedSupabase()
 
-  // Próximos + en curso (festival de varios días que ya empezó pero no ha
-  // terminado). Orden: fecha de inicio, y a igualdad de día, por nombre para
-  // que el orden sea estable entre renders (antes los empates salían al azar).
+  // Próximos + en curso. Destacados (`is_featured`) primero, luego fecha;
+  // a igualdad de día, por nombre (orden estable entre renders).
   const todayHome = todayYmdHome()
   const { data: upcomingEventsRaw } = await supabase
     .from('events')
-    .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
+    .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags, is_featured')
     .or(`date_start.gte.${todayHome},date_end.gte.${todayHome}`)
+    .order('is_featured', { ascending: false })
     .order('date_start', { ascending: true })
     .order('name', { ascending: true })
     .limit(16)
@@ -209,7 +220,7 @@ export default async function HomePage({
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
-      .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
+      .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags, is_featured')
       .order('date_start', { ascending: false })
       .limit(16)
     homeEvents = ((anyEvents || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, HOME_EVENTS_COUNT)
