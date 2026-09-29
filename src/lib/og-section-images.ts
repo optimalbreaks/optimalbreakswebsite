@@ -1,7 +1,8 @@
 // ============================================
 // OPTIMAL BREAKS — Open Graph estático por sección (listados)
 // Imágenes en public/images/opengraph/sections/*.png
-// Generación: npm run og:sections (arte IA) · npm run og:screenshot (mixes/charts captura)
+// Generación: npm run og:sections (arte IA) · npm run og:screenshot (mixes)
+// charts-catalog.png no sale de esos scripts: es la tarjeta «más de 16.000».
 // ============================================
 
 import type { Locale } from '@/lib/i18n-config'
@@ -26,7 +27,11 @@ export const SECTION_OG_KEYS = [
 
 export type SectionOgKey = (typeof SECTION_OG_KEYS)[number]
 
-/** Archivo por sección (about/events: arte manual `*-og-alternate.png`; mixes/charts: screenshot). */
+/**
+ * Archivo por sección (about/events: arte manual `*-og-alternate.png`; mixes: screenshot).
+ * charts: tarjeta de catálogo (`charts-catalog.png`). Suelo editorial medido el 29 sep 2026:
+ * 16.354 temas públicos (semanas + archivo). La tarjeta dice «más de 16.000»; subir el suelo al cruzar 17.000.
+ */
 const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   artists: 'artists.png',
   labels: 'labels.png',
@@ -34,7 +39,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   scenes: 'scenes.png',
   blog: 'blog.png',
   mixes: 'mixes-screenshot.png',
-  charts: 'charts-screenshot.png',
+  charts: 'charts-catalog.png',
   top100: 'top100.png',
   about: 'about-og-alternate.png',
 }
@@ -49,6 +54,7 @@ const SECTION_OG_FILE: Record<SectionOgKey, string> = {
  * cuando un asset se actualiza al nuevo flujo bilingüe.
  */
 const SECTION_OG_LANG_OVERRIDES: Partial<Record<SectionOgKey, true>> = {
+  charts: true,
   top100: true,
 }
 
@@ -91,8 +97,8 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
     en: 'Optimal Breaks — Your favorite breaks sessions page',
   },
   charts: {
-    es: 'Optimal Breaks — Tu radio de break favorita',
-    en: 'Optimal Breaks — Your favorite break radio',
+    es: 'Optimal Breaks — más de 16.000 canciones de breakbeat',
+    en: 'Optimal Breaks — more than 16,000 breakbeat tracks',
   },
   top100: {
     es: 'Optimal Breaks — Top 100: las mejores canciones de breakbeat de la historia',

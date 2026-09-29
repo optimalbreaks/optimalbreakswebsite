@@ -31,6 +31,8 @@ function chartsSupabase() {
 
 const CHARTS_KEYWORDS: Record<Locale, string[]> = {
   es: [
+    '16000 canciones breakbeat',
+    'archivo breakbeat',
     'radio de breakbeat online',
     'breakbeat radio',
     'chart breakbeat semanal',
@@ -39,6 +41,8 @@ const CHARTS_KEYWORDS: Record<Locale, string[]> = {
     'selecciones de archivo breakbeat',
   ],
   en: [
+    '16000 breakbeat tracks',
+    'breakbeat archive',
     'online breakbeat radio',
     'breakbeat radio',
     'weekly breakbeat chart',
