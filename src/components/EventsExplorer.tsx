@@ -418,7 +418,7 @@ function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: Br
 }
 
 /** Tarjetas por año en el primer pintado; el resto entra por tramos («Ver más»). */
-const EVENTS_PAGE = 40
+const EVENTS_PAGE = 100
 
 export default function EventsExplorer({ events, dict, lang }: Props) {
   const [view, setView] = useState<ViewMode>('compact')
