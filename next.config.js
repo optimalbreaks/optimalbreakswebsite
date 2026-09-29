@@ -75,6 +75,12 @@ const nextConfig = {
         destination: '/:lang/events/olibass-music-festival-open-air',
         permanent: true,
       },
+      /** Duplicado 2027 que creó el chat con el cartel de la Snow Edition de feb 2026 */
+      {
+        source: '/:lang/events/olibass-snow-edition',
+        destination: '/:lang/events/olibass-music-festival-snow-edition-2026',
+        permanent: true,
+      },
       /**
        * SEO fase 2: el post «qué es el breakbeat» competía con la home,
        * /history y su propia versión /en. Ahora hay UNA página pilar:

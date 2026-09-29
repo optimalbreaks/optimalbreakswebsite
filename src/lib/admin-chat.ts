@@ -1,6 +1,7 @@
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-country'
+import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
 import { pathToFileURL } from 'url'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
@@ -638,13 +639,32 @@ function findDuplicateEvent(
   slug: string,
   name: string,
   dateStart: string | null | undefined,
+  yearGuessed = false,
 ): ExistingEventRow | null {
+  const newYear = (dateStart || '').slice(0, 4)
   const bySlug = all.find((e) => e.slug === slug)
-  if (bySlug) return bySlug
+  // Mismo slug pero otro año = otra edición (Olibass Open Air 2025 pisó la de 2026, 29 sep 2026)
+  if (bySlug && (yearGuessed || !newYear || !bySlug.date_start || bySlug.date_start.startsWith(newYear))) {
+    return bySlug
+  }
+
+  // Cartel sin año: la fecha la puso normalizeUpcomingEventDate. Misma serie + temporada
+  // + mismo día/mes = la edición ya dada de alta, no una nueva un año después.
+  const series = festivalSeriesForEventName(name)
+  if (series && dateStart) {
+    const season = seasonOfEvent(series, { name, date_start: dateStart })
+    const monthDay = dateStart.slice(5, 10)
+    const sameEdition = all.find((e) => {
+      if (!e.date_start || festivalSeriesForEventName(e.name)?.slug !== series.slug) return false
+      if (season && seasonOfEvent(series, e)?.key !== season.key) return false
+      if (yearGuessed) return e.date_start.slice(5, 10) === monthDay
+      return e.date_start.slice(0, 10) === dateStart.slice(0, 10)
+    })
+    if (sameEdition) return sameEdition
+  }
 
   const normNew = normalizeEventName(name)
   if (!normNew || normNew.length < 5) return null
-  const newYear = (dateStart || '').slice(0, 4)
 
   for (const e of all) {
     const normOld = normalizeEventName(e.name)
@@ -735,13 +755,23 @@ async function upsertEventAction(
       .order('id', { ascending: true })
       .range(from, to),
   )
-  const existing = findDuplicateEvent(
-    (allEvents || []) as ExistingEventRow[],
-    slug,
-    name,
-    action.date_start,
+  const events = (allEvents || []) as ExistingEventRow[]
+  const yearGuessed = Boolean(
+    dateStart && action.date_start && String(action.date_start).slice(0, 4) !== dateStart.slice(0, 4),
   )
-  const targetSlug = existing?.slug || slug
+  const existing = findDuplicateEvent(events, slug, name, dateStart, yearGuessed)
+  if (existing && yearGuessed) {
+    // El cartel no traía año: se conserva la fecha de la edición ya dada de alta
+    row.date_start = null
+    row.date_end = null
+  }
+  if (!existing && events.some((e) => e.slug === slug)) {
+    const base = `${slug}-${(dateStart || '').slice(0, 4) || 'nuevo'}`
+    let free = base
+    for (let n = 2; events.some((e) => e.slug === free); n++) free = `${base}-${n}`
+    row.slug = free
+  }
+  const targetSlug = existing?.slug || String(row.slug)
   const isDuplicate = Boolean(existing && existing.slug !== slug)
 
   let writeErr: string | undefined

@@ -80,10 +80,10 @@ export type FestivalSeries = {
   /** Stems que, aunque encaje un alias, NO son edición de la serie (colaboraciones, fiestas satélite…). */
   exclude?: string[]
   /**
-   * Temporadas de una MISMA marca (p. ej. Olibass verano / invierno): una sola
-   * página, con próximas ediciones y archivo agrupados por temporada. Si una
-   * variante se busca como marca propia (Raveart Summer vs Retro Halloween),
-   * va como serie independiente, no como temporada.
+   * Temporadas de una MISMA marca sin nombre propio: una sola página, con
+   * próximas ediciones y archivo agrupados por temporada. Si una variante se
+   * busca como marca propia (Raveart Summer / Winter, Olibass Open Air / Snow
+   * Edition), va como serie independiente, no como temporada.
    */
   seasons?: SeriesSeason[]
   /** Texto editorial opcional (1–3 párrafos, separados por línea en blanco). */
@@ -99,15 +99,8 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'oshun-festival', name: 'Oshun Festival', aliases: ['oshun'] },
   { slug: 'floridance-festival', name: 'Floridance Festival', aliases: ['floridance'] },
   { slug: 'circus-nation', name: 'Circus Nation', aliases: ['circus nation'] },
-  {
-    slug: 'olibass-music-festival',
-    name: 'Olibass Music Festival',
-    aliases: ['olibass'],
-    seasons: [
-      { key: 'verano', label_es: 'Verano', label_en: 'Summer', aliases: ['open air', 'summer', 'verano'], months: [5, 6, 7, 8, 9] },
-      { key: 'invierno', label_es: 'Invierno', label_en: 'Winter', aliases: ['winter', 'invierno'], months: [10, 11, 12, 1, 2, 3, 4] },
-    ],
-  },
+  { slug: 'olibass-music-festival', name: 'Olibass Music Festival', aliases: ['olibass'], exclude: ['snow', 'winter', 'invierno'] },
+  { slug: 'olibass-snow-edition', name: 'Olibass Snow Edition', aliases: ['olibass snow', 'olibass music festival snow', 'olibass winter', 'olibass invierno'] },
   { slug: 'farewell-summer-festival', name: 'Farewell Summer Festival', aliases: ['farewell summer'] },
   { slug: 'dreambeach', name: 'Dreambeach', aliases: ['dreambeach'] },
   { slug: 'andalucia-breakbeat-festival', name: 'Andalucía Breakbeat Festival', aliases: ['andalucia breakbeat festival'] },
@@ -118,6 +111,7 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'breiki-electronic-festival', name: 'Breiki Electronic Festival', aliases: ['breiki'] },
   { slug: 'made-in-spain-festival', name: 'Made in Spain Festival', aliases: ['made in spain festival'] },
   { slug: 'breakfest', name: 'Breakfest', aliases: ['breakfest'] },
+  { slug: 'heat-closing-boiler-xl', name: 'Heat Closing Boiler XL', aliases: ['heat closing'] },
   { slug: 'zutopia-music-and-arts-festival', name: 'Zutopia Music and Arts Festival', aliases: ['zutopia'] },
 ]
 
