@@ -1,6 +1,8 @@
 // ============================================
 // OPTIMAL BREAKS — Imagen de Story de Instagram por canción
 // GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&lang=es|en → PNG 1080×1920
+// GET /api/og/story?play=mix:<slug> → story de una sesión (festival, edición,
+// fecha, lugar y retrato del artista). Botón IG de `ShareButtons` en /mixes/<slug>.
 //
 // La consume el botón "IG" de `TrackShareButton`: el cliente baja este PNG
 // y lo pasa a `navigator.share({ files })` para que el usuario lo suba a
@@ -11,13 +13,22 @@
 import { ImageResponse } from 'next/og'
 import { NextRequest, NextResponse } from 'next/server'
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { SITE_URL } from '@/lib/seo'
 import {
   findBeatportTopTrackById,
   parsePlayParam,
   upscaleTrackArtworkForOg,
   youtubeThumbnailFromUrl,
 } from '@/lib/share-track'
-import type { BeatportTopTrack } from '@/types/database'
+import { extractYouTubeId } from '@/lib/mix-sessions'
+import { festivalBrandOfSeries, festivalSeriesForEventName } from '@/lib/event-series'
+import {
+  buildArtistSlugLookup,
+  fetchAllArtistLinkRows,
+  flattenLineupArtistNames,
+  resolveArtistSlug,
+} from '@/lib/artist-entity-match'
+import type { BeatportTopTrack, Mix } from '@/types/database'
 
 export const runtime = 'nodejs'
 
@@ -157,10 +168,164 @@ async function fetchStoryRow(
   return (data as StoryRow | null) ?? null
 }
 
+function absoluteImageUrl(raw: string | null | undefined): string | null {
+  const url = (raw || '').trim()
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
+  if (url.startsWith('/')) return `${SITE_URL}${url}`
+  return null
+}
+
+function storyDateLabel(iso: string | null | undefined, es: boolean): string {
+  const day = (iso || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return ''
+  const d = new Date(`${day}T12:00:00Z`)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString(es ? 'es-ES' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/** Story de una sesión (/mixes/<slug>): festival, edición, fecha y retrato. */
+async function mixStoryResponse(slug: string, es: boolean): Promise<ImageResponse | NextResponse> {
+  const supabase = createCachedSupabase()
+  const { data: mixRaw } = await supabase.from('mixes').select('*').eq('slug', slug).maybeSingle()
+  const mix = mixRaw as Mix | null
+  if (!mix?.title) return NextResponse.json({ error: 'Mix not found' }, { status: 404 })
+
+  let eventName: string | null = null
+  let eventDate: string | null = null
+  let eventPlace: string | null = null
+  if (mix.event_id) {
+    const { data } = await supabase
+      .from('events')
+      .select('name, date_start, venue, city')
+      .eq('id', mix.event_id)
+      .maybeSingle()
+    const ev = data as { name?: string | null; date_start?: string | null; venue?: string | null; city?: string | null } | null
+    eventName = ev?.name?.trim() || null
+    eventDate = ev?.date_start || null
+    eventPlace = [ev?.venue, ev?.city].map((s) => s?.trim()).filter(Boolean).join(' · ') || null
+  }
+
+  const series = eventName ? festivalSeriesForEventName(eventName) : null
+  const brand = festivalBrandOfSeries(series?.slug)
+  const festivalName = brand?.name ?? series?.name ?? null
+  const editionName = brand && series ? series.name : null
+
+  const names = flattenLineupArtistNames(mix.artist_name ? [mix.artist_name] : [])
+  const lookup = buildArtistSlugLookup(await fetchAllArtistLinkRows(supabase))
+  let portrait: string | null = null
+  for (const name of names) {
+    const artistSlug = resolveArtistSlug(name, lookup)
+    if (!artistSlug) continue
+    const { data } = await supabase.from('artists').select('image_url').eq('slug', artistSlug).maybeSingle()
+    portrait = absoluteImageUrl((data as { image_url?: string | null } | null)?.image_url)
+    if (portrait) break
+  }
+  const yt = extractYouTubeId(mix.video_url)
+  const artworkDataUrl = await loadArtworkDataUrl(
+    portrait || absoluteImageUrl(mix.image_url) || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null),
+  )
+
+  const artist = (mix.artist_name || names[0] || '').trim().slice(0, 80)
+  const title = mix.title.trim().slice(0, 90)
+  const when = storyDateLabel(eventDate || mix.published_at, es)
+  const kicker = es ? 'SESIÓN' : 'DJ SET'
+  const footerWarning = es
+    ? 'La música del sticker no es esta sesión'
+    : 'The sticker music is not this set'
+  const footerDomain = es
+    ? 'Escúchala entera en el enlace · www.optimalbreaks.com'
+    : 'Hear the full set via the link · www.optimalbreaks.com'
+
+  const line = (text: string, size: number, color: string, weight: number, tracking = 1) => (
+    <div
+      style={{
+        display: 'flex',
+        marginTop: 16,
+        fontSize: size,
+        fontWeight: weight,
+        letterSpacing: tracking,
+        color,
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        fontFamily: FONT,
+      }}
+    >
+      {text}
+    </div>
+  )
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          backgroundColor: INK,
+          padding: '130px 70px 200px',
+          boxSizing: 'border-box',
+          border: `18px solid ${PAPER}`,
+        }}
+      >
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, backgroundColor: RED, display: 'flex' }} />
+        <div style={{ display: 'flex', flexDirection: 'row', fontSize: 52, fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', fontFamily: FONT }}>
+          <span style={{ color: PAPER }}>OPTIMAL&nbsp;</span>
+          <span style={{ color: RED }}>BREAKS</span>
+        </div>
+        <div style={{ display: 'flex', marginTop: 16, fontSize: 30, fontWeight: 800, letterSpacing: 8, color: YELLOW, textTransform: 'uppercase', fontFamily: MONO }}>
+          {kicker}
+        </div>
+        <div style={{ display: 'flex', marginTop: 48, width: 720, height: 720, border: `10px solid ${PAPER}`, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+          {artworkDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={artworkDataUrl} alt="" width={700} height={700} style={{ width: 700, height: 700, objectFit: 'cover' }} />
+          ) : (
+            <div style={{ display: 'flex', fontSize: 160, fontWeight: 900, color: PAPER, fontFamily: FONT }}>OB</div>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40, width: '100%' }}>
+          {artist ? line(artist, artist.length > 24 ? 44 : 56, YELLOW, 900, 1) : null}
+          {festivalName
+            ? line(festivalName, 38, PAPER, 900, 2)
+            : line(eventName || title, (eventName || title).length > 42 ? 30 : 38, PAPER, 800, 0)}
+          {editionName ? line(`${es ? 'Edición' : 'Edition'}: ${editionName}`, 30, YELLOW, 700, 2) : null}
+          {when ? line(when, 30, PAPER, 700, 2) : null}
+          {eventPlace ? line(eventPlace, 24, PAPER, 600, 2) : null}
+        </div>
+        <div style={{ position: 'absolute', bottom: 64, left: 70, right: 70, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', fontSize: 26, fontWeight: 800, letterSpacing: 1, color: YELLOW, textTransform: 'uppercase', fontFamily: MONO, textAlign: 'center' }}>
+            {footerWarning}
+          </div>
+          <div style={{ display: 'flex', fontSize: 20, fontWeight: 600, letterSpacing: 1, color: PAPER, opacity: 0.65, textTransform: 'uppercase', fontFamily: MONO, textAlign: 'center' }}>
+            {footerDomain}
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      width: WIDTH,
+      height: HEIGHT,
+      headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' },
+    },
+  )
+}
+
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
   const lang = sp.get('lang') === 'en' ? 'en' : 'es'
-  const parsed = parsePlayParam(sp.get('play'))
+  const playRaw = (sp.get('play') || '').trim()
+  const mixPlay = /^mix:([a-z0-9-]{2,})$/i.exec(playRaw)
+  if (mixPlay) return mixStoryResponse(mixPlay[1].toLowerCase(), lang === 'es')
+  const parsed = parsePlayParam(playRaw)
 
   let kind: 'chart' | 'featured' | 'vinyl' | 'beatport' | null = null
   let id = ''

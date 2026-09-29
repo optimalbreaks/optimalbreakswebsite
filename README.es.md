@@ -835,6 +835,8 @@ Tres niveles, todos en `src/lib/event-series.ts`:
 
 **Sesiones por evento (29 sep 2026):** `mixes.event_id` (migración **`083_mixes_event_id.sql`**) ata cada sesión al evento donde se grabó. El evento, el festival y la edición las pintan con `MixSessionGrid`: las mismas vistas grande / compacto / lista que `/mixes`, **compacto por defecto** (portada + play, iframe solo al pulsar). Cada sesión tiene URL propia `/mixes/<slug>`. Se etiqueta con `event_slug` en el lote JSON (`run mixes-file`), el campo «Evento» del admin o `stage_upsert_mix` en el chat.
 
+**Story IG de una sesión (admin):** en `/mixes/<slug>`, junto a LINK, el admin ve un botón **IG** (`ShareButtons` con `storyPlay="mix:<slug>"`). Copia el enlace y comparte (móvil) o descarga (escritorio) un PNG 1080×1920 de `/api/og/story?play=mix:<slug>`: retrato del artista (`artists.image_url`; si no hay, la miniatura del mix), artista, festival, edición (solo si es un formato con nombre), fecha del evento y sala · ciudad.
+
 **Chat de captura y ediciones (incidente 29 sep 2026).** Dos carteles rompieron Olibass: el del Open Air 2025 **pisó** la ficha del 19 sep 2026 (mismo slug, sin mirar el año) y el de la Snow de feb 2026 (sin año) acabó como duplicado el **27 feb 2027**. Arreglado en `findDuplicateEvent` / `upsertEventAction` (`src/lib/admin-chat.ts`): mismo slug con otro año = otra edición (se crea `<slug>-<año>`); si el año lo puso `normalizeUpcomingEventDate`, un evento de la misma edición (y temporada) el mismo día/mes se trata como el existente y conserva su fecha. Datos restaurados en el mismo id (favoritos intactos); 2025 en `olibass-music-festival-open-air-2025`; `/events/olibass-snow-edition` 301 → la de 2026.
 
 ### Migraciones SQL (resumen)

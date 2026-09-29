@@ -7,6 +7,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/components/AuthProvider'
 import {
   buildAbsoluteShareUrl,
   copyShareLink,
@@ -19,11 +20,15 @@ interface ShareButtonsProps {
   lang: string
   /** Path corto (p. ej. `/a/ctrl-z`) para redes que limitan la longitud del enlace (Instagram). */
   shortUrl?: string
+  /** Valor `play=` de `/api/og/story` (p. ej. `mix:<slug>`). Solo admins ven el botón IG. */
+  storyPlay?: string
 }
 
-export default function ShareButtons({ url, title, lang, shortUrl }: ShareButtonsProps) {
+export default function ShareButtons({ url, title, lang, shortUrl, storyPlay }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const [copiedShort, setCopiedShort] = useState(false)
+  const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
+  const { isAdmin } = useAuth()
   const es = lang === 'es'
   const fullUrl = buildAbsoluteShareUrl(url)
   const fullShortUrl = shortUrl ? buildAbsoluteShareUrl(shortUrl) : null
@@ -62,6 +67,37 @@ export default function ShareButtons({ url, title, lang, shortUrl }: ShareButton
     if (ok) {
       setCopiedShort(true)
       setTimeout(() => setCopiedShort(false), 2000)
+    }
+  }
+
+  const shareStory = async () => {
+    if (!storyPlay || storyState === 'busy') return
+    setStoryState('busy')
+    try {
+      await copyShareLink(fullUrl)
+      const params = new URLSearchParams({ play: storyPlay, lang })
+      const res = await fetch(`/api/og/story?${params.toString()}`)
+      if (!res.ok) throw new Error(`story ${res.status}`)
+      const blob = await res.blob()
+      const file = new File([blob], 'optimal-breaks-story.png', { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title })
+        } catch { /* user cancelled */ }
+      } else {
+        const href = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = href
+        a.download = 'optimal-breaks-story.png'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(href)
+      }
+      setStoryState('done')
+      setTimeout(() => setStoryState('idle'), 1800)
+    } catch {
+      setStoryState('idle')
     }
   }
 
@@ -128,6 +164,35 @@ export default function ShareButtons({ url, title, lang, shortUrl }: ShareButton
       >
         {copied ? (es ? '✓ COPIADO' : '✓ COPIED') : (es ? '🔗 LINK' : '🔗 LINK')}
       </button>
+
+      {isAdmin && storyPlay && (
+        <button
+          type="button"
+          onClick={shareStory}
+          disabled={storyState === 'busy'}
+          className={`inline-flex items-center justify-center h-9 px-3 border-2 transition-all duration-150 cursor-pointer ${
+            storyState === 'done'
+              ? 'bg-[var(--acid)] border-[var(--acid)] text-white'
+              : 'border-white/30 bg-[var(--ink)] text-white/80 hover:border-white hover:text-white'
+          }`}
+          style={{
+            fontFamily: "'Courier Prime', monospace",
+            fontWeight: 700,
+            fontSize: '11px',
+            letterSpacing: '1px',
+          }}
+          title={
+            storyState === 'done'
+              ? (es ? 'Imagen lista · enlace copiado' : 'Image ready · link copied')
+              : (es
+                  ? 'Story de Instagram: genera la imagen y copia el enlace'
+                  : 'Instagram Story: generate image and copy link')
+          }
+          aria-label={es ? 'Story de Instagram' : 'Instagram Story'}
+        >
+          {storyState === 'done' ? '✓ IG' : storyState === 'busy' ? '…' : 'IG'}
+        </button>
+      )}
 
       {fullShortUrl && (
         <button

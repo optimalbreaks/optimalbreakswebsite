@@ -226,7 +226,7 @@ export default async function MixDetailPage({ params }: Props) {
           </div>
 
           <div className="mt-5">
-            <ShareButtons url={`/${lang}/mixes/${slug}`} title={`${title} | Optimal Breaks`} lang={lang} />
+            <ShareButtons url={`/${lang}/mixes/${slug}`} title={`${title} | Optimal Breaks`} lang={lang} storyPlay={`mix:${slug}`} />
           </div>
 
           {description && (
