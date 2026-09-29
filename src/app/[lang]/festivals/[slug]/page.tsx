@@ -203,23 +203,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? `${series.name}${year ? ` ${year}` : ''}: fechas, cartel y entradas`
       : `${series.name}${year ? ` ${year}` : ''}: dates, line-up and tickets`
   const where = cities.length ? listJoin(cities.slice(0, 3), lang) : ''
+  const namedEdition = Boolean(data.brand && data.kind === 'series')
   const upcomingBit =
     upcoming.length > 1
       ? lang === 'es'
-        ? `Próximas ediciones: ${upcoming.slice(0, 3).map((e) => shortDateRange(e.date_start, e.date_end, lang)).join(' y ')}.`
-        : `Upcoming editions: ${upcoming.slice(0, 3).map((e) => shortDateRange(e.date_start, e.date_end, lang)).join(' and ')}.`
+        ? `Próximas fechas: ${upcoming.slice(0, 3).map((e) => shortDateRange(e.date_start, e.date_end, lang)).join(' y ')}.`
+        : `Upcoming dates: ${upcoming.slice(0, 3).map((e) => shortDateRange(e.date_start, e.date_end, lang)).join(' and ')}.`
       : next
         ? lang === 'es'
-          ? `Próxima edición: ${shortDateRange(next.date_start, next.date_end, lang)}${next.city ? ` en ${next.city}` : ''}.`
-          : `Next edition: ${shortDateRange(next.date_start, next.date_end, lang)}${next.city ? ` in ${next.city}` : ''}.`
+          ? `Próxima fecha: ${shortDateRange(next.date_start, next.date_end, lang)}${next.city ? ` en ${next.city}` : ''}.`
+          : `Next date: ${shortDateRange(next.date_start, next.date_end, lang)}${next.city ? ` in ${next.city}` : ''}.`
         : ''
+  const countBit = namedEdition
+    ? lang === 'es' ? `eventos de esta edición` : `events of this edition`
+    : lang === 'es' ? 'eventos' : 'events'
   const description = upcomingBit
     ? lang === 'es'
-      ? `${series.name}: ${upcomingBit} Cartel, horarios, entradas y los ${editions.length} ${data.kind === 'brand' ? 'eventos' : 'eventos de esta edición'} en Optimal Breaks.`
-      : `${series.name}: ${upcomingBit} Line-up, times, tickets and all ${editions.length} ${data.kind === 'brand' ? 'events' : 'events of this edition'} on Optimal Breaks.`
+      ? `${series.name}: ${upcomingBit} Cartel, horarios, entradas y los ${editions.length} ${countBit} en Optimal Breaks.`
+      : `${series.name}: ${upcomingBit} Line-up, times, tickets and all ${editions.length} ${countBit} on Optimal Breaks.`
     : lang === 'es'
-      ? `Todas las ediciones de ${series.name}${where ? ` (${where})` : ''}: carteles, artistas y fechas. La próxima edición aparecerá aquí en cuanto se anuncie.`
-      : `Every edition of ${series.name}${where ? ` (${where})` : ''}: posters, artists and dates. The next edition appears here as soon as it is announced.`
+      ? `${namedEdition ? 'Todas las fechas' : 'Todos los eventos'} de ${series.name}${where ? ` (${where})` : ''}: carteles, artistas y fechas. La próxima cita aparecerá aquí en cuanto se anuncie.`
+      : `${namedEdition ? 'Every date' : 'Every event'} of ${series.name}${where ? ` (${where})` : ''}: posters, artists and dates. The next one appears here as soon as it is announced.`
   const posterEvent = next ?? latest
   return detailPageMetadata(
     lang,
@@ -334,23 +338,21 @@ export default async function FestivalSeriesPage({ params }: Props) {
       : ` It is one of the editions of the ${parentBrand.name} festival.`
     : ''
   const unit = (n: number) =>
-    isBrand
-      ? es ? (n === 1 ? 'evento' : 'eventos') : n === 1 ? 'event' : 'events'
-      : es ? (n === 1 ? 'edición' : 'ediciones') : n === 1 ? 'edition' : 'editions'
+    es ? (n === 1 ? 'evento' : 'eventos') : n === 1 ? 'event' : 'events'
   const autoIntro = es
     ? `${series.name} es una de las citas que sigue la agenda de Optimal Breaks${cities.length ? `, con fechas en ${listJoin(cities, lang)}` : ''}. Tenemos registrados ${nEd} ${unit(nEd)}${firstYear ? ` desde ${firstYear}` : ''}${artists.length ? ` y ${artists.length} artistas han pasado por su cartel` : ''}${venues.length ? `, en recintos como ${listJoin(venues.slice(0, 3), lang)}` : ''}.${seasonBit}${parentBit}`
     : `${series.name} is one of the dates followed by the Optimal Breaks calendar${cities.length ? `, with dates in ${listJoin(cities, lang)}` : ''}. We have ${nEd} ${unit(nEd)} on record${firstYear ? ` since ${firstYear}` : ''}${artists.length ? ` and ${artists.length} artists have played it` : ''}${venues.length ? `, at venues such as ${listJoin(venues.slice(0, 3), lang)}` : ''}.${seasonBit}${parentBit}`
   const nextLine = upcoming.length > 1
     ? es
-      ? `Próximas ediciones anunciadas: ${upcoming.map((e) => editionLine(e, lang)).join('; ')}.`
-      : `Upcoming editions announced: ${upcoming.map((e) => editionLine(e, lang)).join('; ')}.`
+      ? `Próximas fechas anunciadas: ${upcoming.map((e) => editionLine(e, lang)).join('; ')}.`
+      : `Upcoming dates announced: ${upcoming.map((e) => editionLine(e, lang)).join('; ')}.`
     : upcoming.length === 1
       ? es
-        ? `La próxima edición es ${editionLine(upcoming[0], lang)}.`
-        : `The next edition is ${editionLine(upcoming[0], lang)}.`
+        ? `La próxima fecha es ${editionLine(upcoming[0], lang)}.`
+        : `The next date is ${editionLine(upcoming[0], lang)}.`
       : es
-        ? `Todavía no hay fecha anunciada para la próxima edición. La última fue ${editionLine(latest, lang)}.`
-        : `No date has been announced for the next edition yet. The latest was ${editionLine(latest, lang)}.`
+        ? `Todavía no hay fecha anunciada. La última fue ${editionLine(latest, lang)}.`
+        : `No date has been announced yet. The latest was ${editionLine(latest, lang)}.`
   const paragraphs = [...(editorial ? editorial.split(/\n\s*\n/) : [autoIntro]), nextLine]
 
   // FAQ
@@ -366,15 +368,15 @@ export default async function FestivalSeriesPage({ params }: Props) {
       question: g.faqQuestion,
       answer: nextOfGroup
         ? es
-          ? `La próxima edición de ${label} es ${editionLine(nextOfGroup, lang)}.`
-          : `The next ${label} edition is ${editionLine(nextOfGroup, lang)}.`
+          ? `La próxima fecha de ${label} es ${editionLine(nextOfGroup, lang)}.`
+          : `The next ${label} date is ${editionLine(nextOfGroup, lang)}.`
         : lastOfGroup
           ? es
-            ? `Aún no hay fecha para la próxima edición de ${label}. La última fue ${editionLine(lastOfGroup, lang)}.`
-            : `No date yet for the next ${label} edition. The latest was ${editionLine(lastOfGroup, lang)}.`
+            ? `Aún no hay fecha para ${label}. La última fue ${editionLine(lastOfGroup, lang)}.`
+            : `No date yet for ${label}. The latest was ${editionLine(lastOfGroup, lang)}.`
           : es
-            ? `Aún no hay fecha anunciada para la edición de ${label}.`
-            : `No date announced yet for the ${label} edition.`,
+            ? `Aún no hay fecha anunciada para ${label}.`
+            : `No date announced yet for ${label}.`,
     })
   }
   const placeList = cities.length ? cities : venues
@@ -400,14 +402,12 @@ export default async function FestivalSeriesPage({ params }: Props) {
     faq.push({
       question: es ? `¿Hay sesiones grabadas de ${series.name}?` : `Are there recorded sets from ${series.name}?`,
       answer: es
-        ? `Sí: ${sessions.length} ${sessions.length === 1 ? 'sesión' : 'sesiones'} para escuchar en Optimal Breaks, por edición: ${byEdition}.`
-        : `Yes: ${sessions.length} ${sessions.length === 1 ? 'set' : 'sets'} to play on Optimal Breaks, by edition: ${byEdition}.`,
+        ? `Sí: ${sessions.length} ${sessions.length === 1 ? 'sesión' : 'sesiones'} para escuchar en Optimal Breaks, por evento: ${byEdition}.`
+        : `Yes: ${sessions.length} ${sessions.length === 1 ? 'set' : 'sets'} to play on Optimal Breaks, by event: ${byEdition}.`,
     })
   }
   faq.push({
-    question: isBrand
-      ? es ? `¿Cuántos eventos de ${series.name} hay?` : `How many ${series.name} events have there been?`
-      : es ? `¿Cuántas ediciones de ${series.name} hay?` : `How many editions of ${series.name} have there been?`,
+    question: es ? `¿Cuántos eventos de ${series.name} hay?` : `How many ${series.name} events have there been?`,
     answer: es
       ? `Optimal Breaks tiene registrados ${nEd} ${unit(nEd)}${firstYear ? ` desde ${firstYear}` : ''}.`
       : `Optimal Breaks has ${nEd} ${unit(nEd)} on record${firstYear ? ` since ${firstYear}` : ''}.`,
@@ -475,7 +475,7 @@ export default async function FestivalSeriesPage({ params }: Props) {
           <div className="sec-tag">
             {parentBrand
               ? es ? `EDICIÓN · FESTIVAL ${parentBrand.name.toUpperCase()}` : `EDITION · ${parentBrand.name.toUpperCase()} FESTIVAL`
-              : es ? 'FESTIVAL · TODAS LAS EDICIONES' : 'FESTIVAL · ALL EDITIONS'}
+              : es ? 'FESTIVAL · TODAS LAS FECHAS' : 'FESTIVAL · ALL DATES'}
           </div>
           <h1 className="sec-title sec-title--compact">
             <span className="hl">{series.name}</span>
@@ -508,8 +508,8 @@ export default async function FestivalSeriesPage({ params }: Props) {
             <section className="mt-10">
               <Heading>
                 {upcoming.length > 1
-                  ? es ? 'Próximas ediciones' : 'Upcoming editions'
-                  : es ? 'Próxima edición' : 'Next edition'}
+                  ? es ? 'Próximas fechas' : 'Upcoming dates'
+                  : es ? 'Próxima fecha' : 'Next date'}
               </Heading>
               <div className={upcoming.length > 1 ? 'grid grid-cols-1 lg:grid-cols-2 gap-5' : ''}>
                 {upcoming.map((e) => (
@@ -537,7 +537,7 @@ export default async function FestivalSeriesPage({ params }: Props) {
             ))
           ) : (
             <section className="mt-12">
-              <Heading>{es ? `Ediciones de ${series.name}` : `${series.name} editions`}</Heading>
+              <Heading>{es ? `Eventos de ${series.name}` : `${series.name} events`}</Heading>
               <AgendaEventGrid events={editions} lang={lang} />
             </section>
           )}

@@ -130,8 +130,8 @@ export default async function FestivalsIndexPage({ params }: Props) {
           </h1>
           <p className="mt-4 max-w-[760px]" style={{ fontFamily: TYPE, fontSize: '16px', lineHeight: 1.8 }}>
             {es
-              ? 'Primero las próximas citas, por fecha. Cada festival tiene su página fija con todas las ediciones, carteles, sesiones y artistas. Las noches de club que no son festival están en la agenda.'
-              : 'Upcoming dates first, by date. Each festival has a permanent page with every edition, posters, sets and artists. Club nights that are not a festival live in the listings.'}
+              ? 'Primero las próximas citas, por fecha. Cada festival tiene su página fija con todas las fechas, carteles, sesiones y artistas. Las noches de club que no son festival están en la agenda.'
+              : 'Upcoming dates first, by date. Each festival has a permanent page with every date, posters, sets and artists. Club nights that are not a festival live in the listings.'}
           </p>
           <nav className="mt-5 flex flex-wrap gap-2" aria-label={es ? 'En esta página' : 'On this page'}>
             {monthGroups.map(([key, list]) => (

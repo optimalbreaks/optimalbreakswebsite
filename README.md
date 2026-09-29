@@ -168,7 +168,7 @@ DOM order follows **newest publication years first**.
 | **Event** | The dated night with its poster and sets | `events` table | `/events/<slug>` (unchanged) |
 
 - Festival and edition pages publish with ≥ `MIN_SERIES_EDITIONS` (2) events. An edition below the threshold has no page yet but still shows inside its festival page (anchor `#edition-<slug>`).
-- Single-format brands (Dreambeach, Oshun…) are **not** in `FESTIVAL_BRANDS`: their edition page is the festival page. One-off events (club nights such as HEAT Opening) belong to no festival.
+- Single-format brands (Híbrida Fest, Dreambeach, Oshun, Heat Closing…) are **not** in `FESTIVAL_BRANDS`: that `/festivals/<slug>` page **is** the festival. Each dated night is an **event**, even if the promoter calls it «edición». Copy on that page says events/dates, not editions. One-off club nights (HEAT Opening) belong to no festival.
 - A brand slug must never equal an edition slug (both share `/festivals/`). Olibass: the brand kept `/festivals/olibass-music-festival` (already indexed); Open Air moved to `/festivals/olibass-open-air`.
 - `/festivals` is **not alphabetical**: brands with an upcoming date first (soonest next), then the rest by most recent event. Above the cards, upcoming festival nights are grouped **by month** with the same posters as `/agenda` (club nights stay on `/agenda`). The event page, the set page and the sitemap link/emit both levels; breadcrumbs read Festival › Edition › Event.
 - Adding a multi-edition festival = one entry in `FESTIVAL_BRANDS` pointing at existing `FESTIVAL_SERIES` slugs. Use `seasons` only for seasons with no name of their own.

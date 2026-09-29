@@ -749,7 +749,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
           <div
             style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase' }}
           >
-            {lang === 'es' ? 'Esta edición ya pasó · Nueva edición anunciada' : 'This edition is over · Next edition announced'}
+            {lang === 'es' ? 'Este evento ya pasó · Nueva fecha anunciada' : 'This event is over · Next date announced'}
           </div>
           <div
             className="mt-1"
@@ -860,7 +860,13 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   href={`/${lang}/festivals/${festivalSeries.slug}`}
                   className="cutout fill no-underline"
                 >
-                  {lang === 'es' ? 'Todas las ediciones de ' : 'All editions of '}{festivalSeries.name} →
+                  {lang === 'es'
+                    ? festivalBrand && hasBrandPage
+                      ? `Edición: ${festivalSeries.name} →`
+                      : `Festival: ${festivalSeries.name} →`
+                    : festivalBrand && hasBrandPage
+                      ? `Edition: ${festivalSeries.name} →`
+                      : `Festival: ${festivalSeries.name} →`}
                 </Link>
               )}
               {sessions.length > 0 && (

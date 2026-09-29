@@ -214,7 +214,13 @@ export default async function MixDetailPage({ params }: Props) {
             )}
             {series && (
               <Link href={`/${lang}/festivals/${series.slug}`} className="cutout fill no-underline">
-                {es ? 'Todas las ediciones de ' : 'All editions of '}{series.name} →
+                {es
+                  ? brand
+                    ? `Edición: ${series.name} →`
+                    : `Festival: ${series.name} →`
+                  : brand
+                    ? `Edition: ${series.name} →`
+                    : `Festival: ${series.name} →`}
               </Link>
             )}
           </div>

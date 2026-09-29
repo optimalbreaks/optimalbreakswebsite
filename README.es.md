@@ -828,7 +828,7 @@ Tres niveles, todos en `src/lib/event-series.ts`:
 | **Evento** | El día con su cartel y sus sesiones | tabla `events` | `/events/<slug>` (sin cambios) |
 
 - Festival y edición se publican con ≥ `MIN_SERIES_EDITIONS` (2) eventos. Una edición por debajo aún no tiene página, pero sale dentro de la de su festival (ancla `#edition-<slug>`).
-- Marcas de un solo formato (Dreambeach, Oshun…) **no** van en `FESTIVAL_BRANDS`: su página de edición es la del festival. Un evento suelto (noches de club como HEAT Opening) no pertenece a ningún festival.
+- Marcas de un solo formato (Híbrida Fest, Dreambeach, Oshun, Heat Closing…) **no** van en `FESTIVAL_BRANDS`: esa `/festivals/<slug>` **es** el festival. Cada fecha es un **evento**, aunque el promotor la llame «edición». En esa página se dice eventos/fechas, no ediciones. Un evento suelto (noches de club como HEAT Opening) no pertenece a ningún festival.
 - El slug de una marca nunca puede coincidir con el de una edición (comparten `/festivals/`). Olibass: la marca se quedó `/festivals/olibass-music-festival` (ya indexada); el Open Air pasó a `/festivals/olibass-open-air`.
 - `/festivals` **no es alfabético**: primero las marcas con fecha próxima (la más cercana), luego el resto por la última fecha. Encima de las cards, las próximas noches de festival van **por mes** con los mismos carteles que `/agenda` (las noches de club se quedan en `/agenda`). La ficha del evento, la de la sesión y el sitemap enlazan los dos niveles; migas: Festival › Edición › Evento.
 - Añadir un festival con varias ediciones = una entrada en `FESTIVAL_BRANDS` que apunte a slugs de `FESTIVAL_SERIES` ya existentes. `seasons` solo para temporadas sin nombre propio.
