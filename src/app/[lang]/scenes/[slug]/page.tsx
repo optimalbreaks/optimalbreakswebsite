@@ -9,6 +9,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Scene } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import { descriptionLooksLikeHtml, splitBioParagraphs } from '@/lib/bio-format'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -93,6 +94,7 @@ export default async function SceneDetailPage({ params }: Props) {
   const supabase = createCachedSupabase()
   const { data: rawScene } = await supabase.from('scenes').select('*').eq('slug', slug).single()
   const scene = rawScene as Scene | null
+  if (!scene) notFound()
 
   const artistSlugs = new Map<string, string>()
   if (scene?.key_artists?.length) {
@@ -112,20 +114,6 @@ export default async function SceneDetailPage({ params }: Props) {
       .in('name', scene.key_labels)
     const labelRows = (matchedLabels ?? []) as Pick<Label, 'name' | 'slug'>[]
     for (const l of labelRows) labelSlugs.set(l.name, l.slug)
-  }
-
-  if (!scene) {
-    return (
-      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
-        <Link href={`/${lang}/scenes`} className="btn-back"><span className="arrow">←</span> {lang === 'es' ? 'Volver a Escenas' : 'Back to Scenes'}</Link>
-        <div className="sec-tag">SCENE</div>
-        <h1 className="sec-title"><span className="hl">{slug.replace(/-/g, ' ').toUpperCase()}</span></h1>
-        <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{lang === 'es' ? 'Contenido de la escena en preparación.' : 'Scene content in preparation.'}</p>
-        </div>
-      </div>
-    )
   }
 
   const sceneName = lang === 'es' ? scene.name_es : scene.name_en

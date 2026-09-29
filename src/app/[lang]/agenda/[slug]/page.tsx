@@ -31,7 +31,13 @@ import {
   type CityBucket,
   type MonthBucket,
 } from '@/lib/event-agenda'
-import { festivalSeriesForEventName, todayYmdMadrid, type FestivalSeries } from '@/lib/event-series'
+import {
+  eventsOfSeries,
+  festivalSeriesForEventName,
+  MIN_SERIES_EDITIONS,
+  todayYmdMadrid,
+  type FestivalSeries,
+} from '@/lib/event-series'
 import { loadAgendaEvents } from '@/lib/agenda-data'
 import { isEventCancelled } from '@/types/database'
 import AgendaEventGrid from '@/components/AgendaEventGrid'
@@ -187,7 +193,9 @@ export default async function AgendaPage({ params }: Props) {
     const festivals = city.events.filter((e) => e.event_type === 'festival').length
     const years = city.events.map((e) => (e.date_start ?? '').slice(0, 4)).filter(Boolean).sort()
     const venues = topVenues(city.events)
-    const series = seriesIn(city.events)
+    // Solo festivales con página publicada (≥ MIN_SERIES_EDITIONS ediciones).
+    const allAgenda = await loadAgendaEvents()
+    const series = seriesIn(city.events).filter((s) => eventsOfSeries(s, allAgenda).length >= MIN_SERIES_EDITIONS)
     const recentPast = city.past.slice(0, 18)
 
     const intro = es

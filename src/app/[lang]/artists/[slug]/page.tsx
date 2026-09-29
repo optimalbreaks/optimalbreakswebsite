@@ -33,7 +33,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Artist, ArtistKeyRelease, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
@@ -224,27 +224,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
     .single()
   const artist = rawArtist as Artist | null
 
-  if (!artist) {
-    return (
-      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
-        <Link href={`/${lang}/artists`} className="btn-back">
-          <span className="arrow">←</span> {lang === 'es' ? 'Volver a Artistas' : 'Back to Artists'}
-        </Link>
-        <div className="sec-tag">ARTIST</div>
-        <h1 className="sec-title">
-          <span className="hl">{rawSlug.replace(/-/g, ' ').toUpperCase()}</span>
-        </h1>
-        <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
-            {lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}
-          </div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>
-            {lang === 'es' ? 'La ficha de este artista se está preparando.' : 'This artist profile is being prepared.'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (!artist) notFound()
 
   // Rescate del enlace compartido (regla «el enlace nunca se queda mudo»):
   // si `?play=beatport:<id>` ya no está en el Top 10 vigente de la ficha,

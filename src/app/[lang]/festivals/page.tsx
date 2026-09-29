@@ -11,6 +11,7 @@ import {
   eventsOfSeries,
   FESTIVAL_SERIES,
   isUpcomingOrOngoing,
+  MIN_SERIES_EDITIONS,
   todayYmdMadrid,
 } from '@/lib/event-series'
 import { shortDateRange } from '@/lib/event-agenda'
@@ -43,7 +44,7 @@ export default async function FestivalsIndexPage({ params }: Props) {
 
   const rows = FESTIVAL_SERIES.map((series) => {
     const editions = eventsOfSeries(series, all)
-    if (editions.length === 0) return null
+    if (editions.length < MIN_SERIES_EDITIONS) return null
     const next =
       editions
         .filter((e) => !isEventCancelled(e) && isUpcomingOrOngoing(e, today))

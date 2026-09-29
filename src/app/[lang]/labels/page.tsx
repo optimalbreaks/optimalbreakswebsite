@@ -5,12 +5,11 @@
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
-import type { Label } from '@/types/database'
 import type { Metadata } from 'next'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail from '@/components/CardThumbnail'
-import LabelsExplorer from '@/components/LabelsExplorer'
+import LabelsExplorer, { type LabelCard } from '@/components/LabelsExplorer'
 
 type FallbackLabel = {
   founded: string
@@ -84,8 +83,11 @@ export default async function LabelsPage({ params }: { params: Promise<{ lang: L
   const { lang } = await params
   const dict = await getDictionary(lang)
   const supabase = createCachedSupabase()
-  const { data: labels } = await supabase.from('labels').select('*').order('name', { ascending: true })
-  const list = (labels || []) as Label[]
+  const { data: labels } = await supabase
+    .from('labels')
+    .select('id, slug, name, country, founded_year, image_url, is_active')
+    .order('name', { ascending: true })
+  const list = (labels || []) as LabelCard[]
 
   return (
     <div className="lined min-h-screen">

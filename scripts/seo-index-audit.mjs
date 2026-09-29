@@ -64,20 +64,23 @@ function loadBool(src, name) {
   return m[1] === 'true'
 }
 
+function loadStringArray(src, name) {
+  const m = src.match(new RegExp(`const ${name} = \\[([^\\]]*)\\]`))
+  if (!m) throw new Error(`No encuentro ${name} en el fuente`)
+  return Array.from(m[1].matchAll(/'([^']*)'/g), (x) => x[1])
+}
+
 function loadFestivalSeries(src) {
   const start = src.indexOf('export const FESTIVAL_SERIES')
-  const end = src.indexOf('export function festivalSeriesBySlug')
+  const end = src.indexOf('export const MIN_SERIES_EDITIONS')
   if (start < 0 || end < 0) throw new Error('No encuentro FESTIVAL_SERIES')
   const block = src.slice(start, end)
   const series = []
-  const re = /\{\s*slug:\s*'([^']+)',\s*name:\s*'([^']*)',\s*aliases:\s*\[([^\]]*)\]/g
+  const re = /\{\s*slug:\s*'([^']+)',\s*name:\s*'([^']*)',\s*aliases:\s*\[([^\]]*)\](?:,\s*exclude:\s*\[([^\]]*)\])?/g
+  const strings = (raw) => Array.from((raw ?? '').matchAll(/'([^']*)'/g), (x) => x[1])
   let m
   while ((m = re.exec(block))) {
-    const aliases = []
-    const ar = /'([^']*)'/g
-    let a
-    while ((a = ar.exec(m[3]))) aliases.push(a[1])
-    series.push({ slug: m[1], name: m[2], aliases })
+    series.push({ slug: m[1], name: m[2], aliases: strings(m[3]), exclude: strings(m[4]) })
   }
   if (!series.length) throw new Error('FESTIVAL_SERIES vacío')
   return series
@@ -163,10 +166,15 @@ function eventSeriesStem(name) {
     .trim()
 }
 
+let SERIES_GLOBAL_EXCLUDE = []
+
 function festivalSeriesForEventName(name, seriesList) {
   const stem = ` ${eventSeriesStem(name)} `
+  if (SERIES_GLOBAL_EXCLUDE.some((x) => stem.includes(` ${x} `))) return null
   for (const series of seriesList) {
-    if (series.aliases.some((alias) => stem.includes(` ${alias} `))) return series
+    if (!series.aliases.some((alias) => stem.includes(` ${alias} `))) continue
+    if (series.exclude.some((x) => stem.includes(` ${x} `))) continue
+    return series
   }
   return null
 }
@@ -388,6 +396,8 @@ async function main() {
   const monthMin = loadNumber(agendaSrc, 'MONTH_MIN_EVENTS')
   const monthsAhead = loadNumber(agendaSrc, 'MONTHS_AHEAD')
   const seriesList = loadFestivalSeries(seriesSrc)
+  const minSeriesEditions = loadNumber(seriesSrc, 'MIN_SERIES_EDITIONS')
+  SERIES_GLOBAL_EXCLUDE = loadStringArray(seriesSrc, 'SERIES_GLOBAL_EXCLUDE')
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
@@ -419,7 +429,9 @@ async function main() {
     `  INDEX_POLICY_ENABLED=${policy.enabled}  artistas≥${policy.artistMin}  sellos≥${policy.labelMin}  blog≥${policy.blogMin}  eventos: >${policy.eventStaleMonths} meses y desc≥${policy.eventMinDesc} (si no hay cartel)`,
   )
   console.log(`Agenda: CITY_MIN_EVENTS=${cityMin}  MONTH_MIN_EVENTS=${monthMin}  MONTHS_AHEAD=${monthsAhead} (src/lib/event-agenda.ts)`)
-  console.log(`Series leídas: ${seriesList.length} (src/lib/event-series.ts)`)
+  console.log(
+    `Series leídas: ${seriesList.length} · MIN_SERIES_EDITIONS=${minSeriesEditions} · SERIES_GLOBAL_EXCLUDE=[${SERIES_GLOBAL_EXCLUDE.join(' | ')}] (src/lib/event-series.ts)`,
+  )
 
   const blocks = [
     summarize(
@@ -456,13 +468,25 @@ async function main() {
   }
 
   console.log('\nSERIES DE FESTIVAL')
+  const published = []
   for (const series of seriesList) {
     const editions = eventsOfSeries(series, events, seriesList)
-    console.log(`\n  ${series.slug} (${series.name}) — ${editions.length} ediciones — aliases: ${series.aliases.join(' | ')}`)
+    const isPublished = editions.length >= minSeriesEditions
+    if (isPublished) published.push(series.slug)
+    console.log(
+      `\n  [${isPublished ? 'PUBLICADA' : 'no publicada'}] ${series.slug} (${series.name}) — ${editions.length} ediciones — aliases: ${series.aliases.join(' | ')}${series.exclude.length ? ` — exclude: ${series.exclude.join(' | ')}` : ''}`,
+    )
     for (const e of editions) {
       console.log(`    ${(e.date_start ?? '????-??-??').slice(0, 10)}  ${e.name}`)
     }
   }
+  const excluded = events.filter((e) => {
+    const stem = ` ${eventSeriesStem(e.name)} `
+    return SERIES_GLOBAL_EXCLUDE.some((x) => stem.includes(` ${x} `))
+  })
+  console.log(`\nSeries publicadas (≥ ${minSeriesEditions} ediciones): ${published.length} — ${published.join(', ') || '(ninguna)'}`)
+  console.log(`Eventos excluidos de toda serie por SERIES_GLOBAL_EXCLUDE: ${excluded.length}`)
+  for (const e of excluded) console.log(`  ${(e.date_start ?? '????-??-??').slice(0, 10)}  ${e.name}`)
   const unmatched = events
     .filter((e) => e.event_type === 'festival' && !festivalSeriesForEventName(e.name, seriesList))
     .sort((a, b) => String(a.name).localeCompare(String(b.name), 'es'))

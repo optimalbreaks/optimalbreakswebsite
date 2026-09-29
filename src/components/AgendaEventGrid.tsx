@@ -12,6 +12,7 @@ import {
   type AgendaEvent,
 } from '@/lib/event-agenda'
 import { eventNoticeKind } from '@/types/database'
+import { isUpcomingOrOngoing } from '@/lib/event-series'
 
 export default function AgendaEventGrid({
   events,
@@ -30,7 +31,14 @@ export default function AgendaEventGrid({
             date={shortDateRange(e.date_start, e.date_end, lang)}
             name={e.name}
             location={eventLocationLabel(e)}
-            type={eventTypeShortLabel(e.event_type, lang)}
+            type={
+              // `upcoming` en BD pero ya pasado (dato sin actualizar) → no decir «Próximo».
+              e.event_type === 'upcoming' && !isUpcomingOrOngoing(e)
+                ? lang === 'es'
+                  ? 'Evento'
+                  : 'Event'
+                : eventTypeShortLabel(e.event_type, lang)
+            }
             imageUrl={versionedImageUrl(e.image_url, imageCacheVersion(e.updated_at))}
             href={`/${lang}/events/${e.slug}`}
             entityId={e.id}

@@ -25,6 +25,7 @@ import {
   eventsOfSeries,
   festivalSeriesBySlug,
   isUpcomingOrOngoing,
+  MIN_SERIES_EDITIONS,
   seasonOfEvent,
   todayYmdMadrid,
   type FestivalSeries,
@@ -71,7 +72,8 @@ async function loadSeries(slug: string): Promise<SeriesData | null> {
   const series = festivalSeriesBySlug(slug)
   if (!series) return null
   const editions = eventsOfSeries(series, await loadAgendaEvents())
-  if (editions.length === 0) return null
+  // Con una sola edición la ficha del evento ya cubre la búsqueda: no publicar.
+  if (editions.length < MIN_SERIES_EDITIONS) return null
   const today = todayYmdMadrid()
   const upcoming = editions
     .filter((e) => !isEventCancelled(e) && isUpcomingOrOngoing(e, today))

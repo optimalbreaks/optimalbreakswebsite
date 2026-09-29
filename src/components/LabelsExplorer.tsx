@@ -12,6 +12,8 @@ import { YearRangeSlider } from '@/components/ArtistsExplorer'
 const LABEL_YEAR_MIN = 1940
 const LABEL_YEAR_MAX = 2026
 
+export type LabelCard = Pick<Label, 'id' | 'slug' | 'name' | 'country' | 'founded_year' | 'image_url' | 'is_active'>
+
 interface LabelDict {
   search_placeholder: string
   view_large: string
@@ -26,7 +28,7 @@ interface LabelDict {
 }
 
 interface Props {
-  labels: Label[]
+  labels: LabelCard[]
   dict: LabelDict
   lang: string
 }
@@ -174,7 +176,7 @@ function FilterSelect({
   )
 }
 
-function LargeGrid({ labels, lang }: { labels: Label[]; lang: string }) {
+function LargeGrid({ labels, lang }: { labels: LabelCard[]; lang: string }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-4 border-[var(--ink)]">
       {labels.map((l) => (
@@ -200,7 +202,7 @@ function LargeGrid({ labels, lang }: { labels: Label[]; lang: string }) {
   )
 }
 
-function CompactGrid({ labels, lang }: { labels: Label[]; lang: string }) {
+function CompactGrid({ labels, lang }: { labels: LabelCard[]; lang: string }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0 border-4 border-[var(--ink)]">
       {labels.map((l) => (
@@ -228,7 +230,7 @@ function CompactGrid({ labels, lang }: { labels: Label[]; lang: string }) {
   )
 }
 
-function ListView({ labels, lang }: { labels: Label[]; lang: string }) {
+function ListView({ labels, lang }: { labels: LabelCard[]; lang: string }) {
   return (
     <div className="border-4 border-[var(--ink)]">
       {labels.map((l) => (

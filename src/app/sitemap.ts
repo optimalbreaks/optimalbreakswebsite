@@ -7,7 +7,7 @@ import { createCachedSupabase } from '@/lib/supabase-server'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { loadAgendaEvents } from '@/lib/agenda-data'
 import { buildCityBuckets, buildMonthBuckets } from '@/lib/event-agenda'
-import { eventsOfSeries, FESTIVAL_SERIES } from '@/lib/event-series'
+import { eventsOfSeries, FESTIVAL_SERIES, MIN_SERIES_EDITIONS } from '@/lib/event-series'
 import {
   artistIndexability,
   blogIndexability,
@@ -181,7 +181,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const openEvents = agendaEvents.filter((e) => !isEventCancelled(e))
   for (const series of FESTIVAL_SERIES) {
-    if (eventsOfSeries(series, agendaEvents).length < 1) continue
+    if (eventsOfSeries(series, agendaEvents).length < MIN_SERIES_EDITIONS) continue
     pushPages(entries, `/festivals/${series.slug}`, 0.75, 'weekly')
   }
   for (const city of buildCityBuckets(openEvents)) {

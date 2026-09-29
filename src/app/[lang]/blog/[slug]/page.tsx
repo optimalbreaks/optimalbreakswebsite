@@ -18,6 +18,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { BeatportTopTrack, BlogPost } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -97,19 +98,7 @@ export default async function BlogPostPage({ params }: Props) {
   }
   const post = rawPost as BlogPost | null
 
-  if (!post) {
-    return (
-      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20 max-w-[800px] mx-auto">
-        <Link href={`/${safeLang}/blog`} className="btn-back"><span className="arrow">←</span> {safeLang === 'es' ? 'Volver al Blog' : 'Back to Blog'}</Link>
-        <div className="sec-tag">BLOG</div>
-        <h1 className="sec-title text-[clamp(24px,5vw,44px)]"><span className="hl">{safeSlug.replace(/-/g, ' ').toUpperCase()}</span></h1>
-        <div className="mt-6 p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{safeLang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{safeLang === 'es' ? 'Este artículo se está preparando.' : 'This article is being prepared.'}</p>
-        </div>
-      </div>
-    )
-  }
+  if (!post) notFound()
 
   const title = safeLang === 'es' ? post.title_es : post.title_en
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en

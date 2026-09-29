@@ -77,6 +77,8 @@ export type FestivalSeries = {
    * del nombre de cada edición. Palabras completas.
    */
   aliases: string[]
+  /** Stems que, aunque encaje un alias, NO son edición de la serie (colaboraciones, fiestas satélite…). */
+  exclude?: string[]
   /**
    * Temporadas de una MISMA marca (p. ej. Olibass verano / invierno): una sola
    * página, con próximas ediciones y archivo agrupados por temporada. Si una
@@ -93,7 +95,7 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'raveart-summer-festival', name: 'Raveart Summer Festival', aliases: ['raveart summer'] },
   { slug: 'raveart-winter-festival', name: 'Raveart Winter Festival', aliases: ['raveart winter'] },
   { slug: 'retro-halloween', name: 'Raveart Retro Halloween', aliases: ['retro halloween'] },
-  { slug: 'hibrida-fest', name: 'Híbrida Fest', aliases: ['hibrida'] },
+  { slug: 'hibrida-fest', name: 'Híbrida Fest', aliases: ['hibrida'], exclude: ['ritmika'] },
   { slug: 'oshun-festival', name: 'Oshun Festival', aliases: ['oshun'] },
   { slug: 'floridance-festival', name: 'Floridance Festival', aliases: ['floridance'] },
   { slug: 'circus-nation', name: 'Circus Nation', aliases: ['circus nation'] },
@@ -116,7 +118,23 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'breiki-electronic-festival', name: 'Breiki Electronic Festival', aliases: ['breiki'] },
   { slug: 'made-in-spain-festival', name: 'Made in Spain Festival', aliases: ['made in spain festival'] },
   { slug: 'breakfest', name: 'Breakfest', aliases: ['breakfest'] },
+  { slug: 'zutopia-music-and-arts-festival', name: 'Zutopia Music and Arts Festival', aliases: ['zutopia'] },
 ]
+
+/**
+ * Mínimo de ediciones para PUBLICAR la página de una serie (index + sitemap +
+ * enlaces desde fichas). Con una sola edición, la página del festival competiría
+ * con la propia ficha del evento por la misma búsqueda. Las series se publican
+ * solas en cuanto entra la segunda edición en la BD.
+ */
+export const MIN_SERIES_EDITIONS = 2
+
+/**
+ * Eventos de marca que NO son ediciones (presentaciones de cartel, fiestas de
+ * lanzamiento…). Siguen en la BD, en la agenda y en la página de la
+ * promotora; solo no cuentan como edición de ninguna serie.
+ */
+const SERIES_GLOBAL_EXCLUDE = ['presentacion oficial', 'presentacion del cartel', 'official presentation']
 
 export function festivalSeriesBySlug(slug: string): FestivalSeries | null {
   return FESTIVAL_SERIES.find((s) => s.slug === slug) ?? null
@@ -139,8 +157,11 @@ export function seasonOfEvent(
 /** Serie a la que pertenece un evento por su nombre (la primera que encaje). */
 export function festivalSeriesForEventName(name: string): FestivalSeries | null {
   const stem = ` ${eventSeriesStem(name)} `
+  if (SERIES_GLOBAL_EXCLUDE.some((x) => stem.includes(` ${x} `))) return null
   for (const series of FESTIVAL_SERIES) {
-    if (series.aliases.some((alias) => stem.includes(` ${alias} `))) return series
+    if (!series.aliases.some((alias) => stem.includes(` ${alias} `))) continue
+    if (series.exclude?.some((x) => stem.includes(` ${x} `))) continue
+    return series
   }
   return null
 }

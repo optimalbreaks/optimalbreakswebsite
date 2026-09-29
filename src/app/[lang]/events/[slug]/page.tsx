@@ -16,6 +16,7 @@ import type { BreakEvent, EventStage, EventScheduleSlot, Organization } from '@/
 import { eventNoticeKind, normalizeEventGalleryUrls } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
@@ -41,6 +42,7 @@ import {
   festivalSeriesForEventName,
   isSameSeries,
   isUpcomingOrOngoing,
+  MIN_SERIES_EDITIONS,
   seasonOfEvent,
   todayYmdMadrid,
 } from '@/lib/event-series'
@@ -425,27 +427,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
     .single()
   const event = rawEvent as EventPageRow | null
 
-  if (!event) {
-    return (
-      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
-        <Link href={`/${lang}/events`} className="btn-back">
-          <span className="arrow">←</span> {lang === 'es' ? 'Volver a Eventos' : 'Back to Events'}
-        </Link>
-        <div className="sec-tag">EVENT</div>
-        <h1 className="sec-title">
-          <span className="hl">{slug.replace(/-/g, ' ').toUpperCase()}</span>
-        </h1>
-        <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>
-            {lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}
-          </div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>
-            {lang === 'es' ? 'Detalle del evento en preparación.' : 'Event details in preparation.'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  if (!event) notFound()
 
   const dict = await getDictionary(lang)
   const ev = dict.events as {
@@ -570,6 +552,12 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   // edición ya pasó, la siguiente edición anunciada: así la ficha vieja
   // (que sigue recibiendo búsquedas) manda tráfico a la nueva.
   const festivalSeries = festivalSeriesForEventName(event.name)
+  // La página de la serie solo existe con ≥ MIN_SERIES_EDITIONS ediciones
+  // (esta + al menos otra de la misma serie).
+  const hasSeriesPage =
+    festivalSeries !== null &&
+    1 + seriesEditions.filter((e) => festivalSeriesForEventName(e.name)?.slug === festivalSeries.slug).length >=
+      MIN_SERIES_EDITIONS
   const todayYmd = todayYmdMadrid()
   const upcomingEditions = !isUpcomingOrOngoing(event, todayYmd)
     ? seriesEditions
@@ -827,7 +815,7 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
                   {lang === 'es' ? 'Promueve: ' : 'By: '}{event.promoter.name}
                 </Link>
               )}
-              {festivalSeries && (
+              {festivalSeries && hasSeriesPage && (
                 <Link
                   href={`/${lang}/festivals/${festivalSeries.slug}`}
                   className="cutout fill no-underline"

@@ -4,6 +4,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import {
   buildArtistSlugLookup,
@@ -35,6 +36,7 @@ import type { Locale } from '@/lib/i18n-config'
 import type { Artist, Label, Organization, BeatportTopTrack } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import ShareButtons from '@/components/ShareButtons'
 import { splitBioParagraphs } from '@/lib/bio-format'
 import FanCounter from '@/components/FanCounter'
@@ -104,7 +106,7 @@ function rosterBlurb(bio: string | null | undefined): string {
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug } = await params
-  const supabase = createCachedSupabase(0)
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: raw } = await supabase
     .from('labels')
     .select('name, description_en, description_es, image_url, og_image_url, country, founded_year')
@@ -164,14 +166,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function LabelDetailPage({ params, searchParams }: Props) {
   const { lang, slug } = await params
-  const supabase = createCachedSupabase(0)
-  const readSupabase = createCachedSupabase(0)
+  const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
+  const readSupabase = supabase
   const { data: rawLabel } = await supabase
     .from('labels')
     .select('*, organization:organizations!labels_organization_id_fkey(slug, name)')
     .eq('slug', slug)
     .single()
   const label = rawLabel as LabelPageRow | null
+  if (!label) notFound()
 
   // Rescate del enlace compartido (regla «el enlace nunca se queda mudo»):
   // si `?play=beatport:<id>` ya no está en el Top 10 vigente del sello,
@@ -278,20 +281,6 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
     trackLabelNames,
     { labelSuffixes: true },
   )
-  if (!label) {
-    return (
-      <div className="lined min-h-screen px-4 sm:px-6 pt-8 pb-14 sm:pt-12 sm:pb-20">
-        <Link href={`/${lang}/labels`} className="btn-back"><span className="arrow">←</span> {lang === 'es' ? 'Volver a Sellos' : 'Back to Labels'}</Link>
-        <div className="sec-tag">LABEL</div>
-        <h1 className="sec-title"><span className="hl">{slug.replace(/-/g, ' ').toUpperCase()}</span></h1>
-        <div className="mt-6 p-4 sm:p-8 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
-          <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '24px', color: 'var(--yellow)', marginBottom: '12px' }}>{lang === 'es' ? 'PRÓXIMAMENTE' : 'COMING SOON'}</div>
-          <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '15px', lineHeight: 1.8, color: 'rgba(232,220,200,0.6)' }}>{lang === 'es' ? 'Ficha del sello en preparación.' : 'Label profile in preparation.'}</p>
-        </div>
-      </div>
-    )
-  }
-
   // ── JSON-LD: MusicLabel + BreadcrumbList ──
   const labelLd = musicLabelJsonLd(
     {
