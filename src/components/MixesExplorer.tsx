@@ -623,9 +623,29 @@ function MixTitleLink({ mix, lang }: { mix: Mix; lang: string }) {
   )
 }
 
-/** Tarjetas de sesiones de un evento o festival (mismas que /mixes, sin filtros). */
+const SESSION_VIEW_LABELS = {
+  es: { view_large: 'Grande', view_compact: 'Compacto', view_list: 'Lista' },
+  en: { view_large: 'Large', view_compact: 'Compact', view_list: 'List' },
+}
+
+/** Sesiones de un evento, festival o ficha de mix: mismas tres vistas que /mixes. Compacto por defecto. */
 export function MixSessionGrid({ mixes, lang }: { mixes: Mix[]; lang: string }) {
-  return <LargeGrid mixes={mixes} lang={lang} isMixVisible={() => true} />
+  const [view, setView] = useState<ViewMode>('compact')
+  const show = () => true
+  return (
+    <div>
+      <div className="flex justify-end mb-3">
+        <ViewToggle view={view} setView={setView} labels={lang === 'es' ? SESSION_VIEW_LABELS.es : SESSION_VIEW_LABELS.en} />
+      </div>
+      {view === 'large' ? (
+        <LargeGrid mixes={mixes} lang={lang} isMixVisible={show} />
+      ) : view === 'compact' ? (
+        <CompactGrid mixes={mixes} lang={lang} isMixVisible={show} />
+      ) : (
+        <ListView mixes={mixes} lang={lang} isMixVisible={show} />
+      )}
+    </div>
+  )
 }
 
 /** Reproductor principal de /mixes/<slug>: portada + play, iframe solo al pulsar. */

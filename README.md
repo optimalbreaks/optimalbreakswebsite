@@ -153,7 +153,7 @@ Shared UI: `src/components/ViewToggle.tsx`. Per-section explorers: `ArtistsExplo
 DOM order follows **newest publication years first**.
 
 **Sessions per event + one URL per set (29 Sep 2026):** `mixes.event_id` (migration **`083_mixes_event_id.sql`**, FK to `events`, `ON DELETE SET NULL`) ties a set to the edition where it was recorded. Why: festivals pull searches like «sesión olibass 2026 verano godino vs paket», so each festival page, each edition page and each set must land them.
-- **Event page (`/events/<slug>`):** «Sesiones de …» block (same cards as `/mixes`, click-to-play), a «▶ N sesiones» pill in the hero, an FAQ entry, and one `VideoObject` / `AudioObject` per set in the JSON-LD with `recordedAt` → the event.
+- **Event page (`/events/<slug>`):** «Sesiones de …» block (`MixSessionGrid`: same large / compact / list toggle as `/mixes`, **compact by default**, click-to-play), a «▶ N sesiones» pill in the hero, an FAQ entry, and one `VideoObject` / `AudioObject` per set in the JSON-LD with `recordedAt` → the event. Festival and edition pages use the same grid.
 - **Festival and edition pages (`/festivals/<slug>`):** sets grouped by event + FAQ.
 - **Set page (`/mixes/<slug>`):** title = artist + «Sesión» + event + year (+ season label if the edition defines `seasons`), player, artist links, links to event, edition and festival (only pages that are published), other sets of the same event. In the sitemap. `/mixes` titles link here.
 - Shared logic in **`src/lib/mix-sessions.ts`** (`loadMixesForEvents`, `mixMediaJsonLd`, `extractYouTubeId`). Cards: `MixSessionGrid` / `MixSessionPlayer` exported from `MixesExplorer`.
