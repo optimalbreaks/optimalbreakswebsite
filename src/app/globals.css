@@ -278,7 +278,8 @@ body::before {
 .obx-title {
   font-family: 'Unbounded', system-ui, sans-serif;
   font-weight: 900;
-  font-size: clamp(28px, 3.4vw, 52px);
+  /* Tope bajo: la columna sticky mide 220–300px y «BREAKBEAT» no puede partirse */
+  font-size: clamp(24px, 2.1vw, 36px);
   line-height: 0.95;
   text-transform: uppercase;
   letter-spacing: -1px;
@@ -421,6 +422,22 @@ body::before {
   word-break: break-word;
   hyphens: auto;
   max-width: 100%;
+}
+
+/* Home: cabecera de sección de una línea (el único «grito» es el hero).
+   .sec-title se mantiene intacto para el resto de páginas. */
+.sec-title--compact {
+  font-size: clamp(24px, 4vw, 52px);
+  line-height: 1;
+  margin-bottom: 0;
+  letter-spacing: -1px;
+}
+
+/* Home: ancho de lectura para las secciones bajo el hero */
+.home-wrap {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
 }
 
 .hl {

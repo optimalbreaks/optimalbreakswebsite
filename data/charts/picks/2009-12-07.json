@@ -1,0 +1,30 @@
+{
+  "week_date": "2009-12-07",
+  "picks": [
+    {
+      "title": "Solo",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bill Vega"
+        },
+        {
+          "name": "New Decade"
+        }
+      ],
+      "label": "Bassrock Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/solo/1034962",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4ab7490-82b3-458a-861e-b899c5b1304e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5116c74b-0ba4-491b-91a1-a1ecf9d7a829.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "A Major",
+      "release_year": 2009,
+      "release_date": "2009-12-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

@@ -19,10 +19,12 @@ interface EventFlyerProps {
   lang?: string
   cancelled?: boolean
   postponed?: boolean
+  /** Home: rejilla de 6 columnas → pie de tarjeta más contenido. */
+  compact?: boolean
 }
 
 /** Misma envoltura y miniatura que `LargeGrid` en `EventsExplorer` (vista grande /events). */
-export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang, cancelled, postponed }: EventFlyerProps) {
+export default function EventFlyer({ date, name, location, type, imageUrl, href, entityId, lang, cancelled, postponed, compact }: EventFlyerProps) {
   const shell =
     'border-[3px] border-[var(--ink)] relative transition-all duration-150 bg-[var(--paper)] sm:hover:rotate-[-1deg] sm:hover:shadow-[6px_6px_0_var(--ink)] no-underline text-[var(--ink)] block overflow-hidden group'
 
@@ -53,7 +55,7 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href,
         ) : null}
       </div>
 
-      <div className="p-5 sm:p-7 relative">
+      <div className={`${compact ? 'p-3 pb-9 sm:p-4 sm:pb-10' : 'p-5 sm:p-7'} relative`}>
         {/* Tape */}
         <div
           className="absolute -top-[6px] right-[25px] w-[50px] sm:w-[60px] h-[16px] sm:h-[18px] z-[1]"
@@ -64,18 +66,19 @@ export default function EventFlyer({ date, name, location, type, imageUrl, href,
           {date}
         </div>
         <div
-          className="mt-2 leading-none"
+          className={`mt-2 leading-none ${compact ? 'line-clamp-3' : ''}`}
           style={{
             fontFamily: "'Unbounded', sans-serif",
             fontWeight: 900,
-            fontSize: 'clamp(18px, 3vw, 24px)',
+            fontSize: compact ? 'clamp(13px, 1.6vw, 16px)' : 'clamp(18px, 3vw, 24px)',
+            lineHeight: compact ? 1.1 : undefined,
             textTransform: 'uppercase',
             letterSpacing: '-0.5px',
           }}
         >
           {name}
         </div>
-        <div className="mt-2" style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
+        <div className={`mt-2 ${compact ? 'line-clamp-2' : ''}`} style={{ fontSize: compact ? '12px' : 'clamp(12px, 2vw, 14px)', color: 'var(--text-muted)' }}>
           {location}
         </div>
 

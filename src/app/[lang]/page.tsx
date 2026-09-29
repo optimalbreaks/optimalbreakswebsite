@@ -3,7 +3,6 @@
 // Full responsive: mobile-first
 // ============================================
 
-import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { getDictionary } from '@/lib/dictionaries'
 import type { Locale } from '@/lib/i18n-config'
 import {
@@ -13,8 +12,8 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
-import type { Artist, BeatportTopTrack, BreakEvent } from '@/types/database'
+import { fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
@@ -23,8 +22,8 @@ import CardThumbnail from '@/components/CardThumbnail'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
-import ArtistShowcase, { type ShowcaseArtist } from '@/components/ArtistShowcase'
 import EventFlyer from '@/components/EventFlyer'
+import HomeCommunityTop10, { type HomeTop10Dict } from '@/components/HomeCommunityTop10'
 
 const DjDeck = dynamic(() => import('@/components/DjDeck'), {
   loading: () => (
@@ -42,22 +41,6 @@ type HomeExplore = {
   intro: string
   items: { href: string; label: string; hint: string }[]
 }
-
-const FEATURED_ARTISTS: {
-  slug: string
-  name: string
-  genres: string[]
-  desc_en: string
-  desc_es: string
-  image_url?: string | null
-}[] = [
-  { slug: 'dj-kool-herc', name: 'DJ KOOL HERC', genres: ['Origins', 'Hip-Hop', 'Breaks'], desc_en: 'The DJ logic of stretching breaks begins here. Without Herc, the whole map looks different.', desc_es: 'Aquí empieza la lógica DJ de alargar breaks. Sin Herc, todo el mapa posterior cambia.' },
-  { slug: 'the-prodigy', name: 'THE PRODIGY', genres: ['Rave', 'Big Beat', 'Punk'], desc_en: 'They made British rave aggression legible to the world and turned broken rhythm into mass culture.', desc_es: 'Volvieron legible al mundo la agresión rave británica e hicieron del ritmo roto cultura de masas.' },
-  { slug: 'the-chemical-brothers', name: 'CHEMICAL BROTHERS', genres: ['Big Beat', 'Psychedelic'], desc_en: 'They pushed breaks into psychedelic scale and crossover visibility.', desc_es: 'Llevaron los breaks a una escala psicodélica y de gran cruce popular.' },
-  { slug: 'stanton-warriors', name: 'STANTON WARRIORS', genres: ['Nu Skool', 'Bass'], desc_en: 'One of the names that best define the international face of nu skool breaks.', desc_es: 'Uno de los nombres que mejor define la cara internacional del nu skool breaks.' },
-  { slug: 'krafty-kuts', name: 'KRAFTY KUTS', genres: ['Breaks', 'Hip-Hop', 'DJ'], desc_en: 'A key bridge between breakbeat, DJ culture and the years of digital continuity.', desc_es: 'Puente clave entre breakbeat, cultura DJ y los años de continuidad digital.' },
-  { slug: 'lady-waks', name: 'LADY WAKS', genres: ['Breaks', 'Radio', 'Community'], desc_en: 'Proof that the scene kept breathing through regular mixes, radio and online presence.', desc_es: 'Prueba de que la escena siguió respirando gracias a mixes regulares, radio y presencia online.' },
-]
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
@@ -94,6 +77,52 @@ type HomeEventRow = Pick<
 
 /** «Hoy» calendario (sitio centrado en España; coherente en SSR). */
 const HOME_EVENTS_TZ = 'Europe/Madrid'
+
+/** Carteles en la home: 6 = una fila en desktop (xl), 2×3 en tablet, 3×2 en móvil. */
+const HOME_EVENTS_COUNT = 6
+
+const HOME_BTN_CLASS =
+  'shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors'
+
+const HOME_BTN_STYLE = {
+  fontFamily: "'Courier Prime', monospace",
+  fontWeight: 700,
+  fontSize: '11px',
+  letterSpacing: '2px',
+  textTransform: 'uppercase' as const,
+}
+
+/**
+ * Cabecera de sección de la home: etiqueta + título de UNA línea + «ver todo»
+ * alineado a la derecha. El único título a pantalla completa es el del hero.
+ */
+function SectionHead({
+  tag,
+  title1,
+  title2,
+  action,
+}: {
+  tag: string
+  title1: string
+  title2: string
+  action?: { href: string; label: string } | null
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="min-w-0">
+        <div className="sec-tag">{tag}</div>
+        <h2 className="sec-title sec-title--compact">
+          {title1} <span className="hl">{title2}</span>
+        </h2>
+      </div>
+      {action ? (
+        <Link href={action.href} className={HOME_BTN_CLASS} style={HOME_BTN_STYLE}>
+          {action.label} →
+        </Link>
+      ) : null}
+    </div>
+  )
+}
 
 function todayYmdHome(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: HOME_EVENTS_TZ })
@@ -163,78 +192,27 @@ export default async function HomePage({
     'section_explore' in h ? (h as { section_explore: HomeExplore }).section_explore : null
 
   const supabase = createCachedSupabase()
-  const featuredSlugs = FEATURED_ARTISTS.map((a) => a.slug)
-  const { data: artistRows } = await supabase
-    .from('artists')
-    .select('id, slug, name_display, image_url, styles, country, beatport_top_tracks')
-    .in('slug', featuredSlugs)
 
-  const artistBySlug = new Map(
-    (
-      (artistRows || []) as Pick<
-        Artist,
-        'id' | 'slug' | 'name_display' | 'image_url' | 'styles' | 'country' | 'beatport_top_tracks'
-      >[]
-    ).map((r) => [r.slug, r]),
-  )
-
-  const resolvedArtists = FEATURED_ARTISTS.map((a) => {
-    const row = artistBySlug.get(a.slug)
-    const styles = row?.styles?.filter(Boolean) ?? []
-    const dbImg = row?.image_url ?? a.image_url ?? null
-    return {
-      ...a,
-      id: row?.id ?? null,
-      name: row?.name_display?.trim() || a.name,
-      image_url: displayArtistImageUrl(a.slug, dbImg) ?? null,
-      genres: styles.length > 0 ? styles.slice(0, 5) : a.genres,
-      country: row?.country ?? null,
-      topTracks: ((row?.beatport_top_tracks ?? []) as BeatportTopTrack[]).filter((t) => t?.sample_url),
-    }
-  })
-
-  // Fans por artista (favoritos públicos) — head counts en paralelo
-  const fanCounts = await Promise.all(
-    resolvedArtists.map(async (a) => {
-      if (!a.id) return 0
-      const { count } = await supabase
-        .from('favorite_artists')
-        .select('*', { count: 'exact', head: true })
-        .eq('artist_id', a.id)
-      return count ?? 0
-    }),
-  )
-
-  const showcaseArtists: ShowcaseArtist[] = resolvedArtists.map((a, i) => {
-    return {
-      slug: a.slug,
-      artistId: a.id,
-      name: a.name,
-      desc: lang === 'es' ? a.desc_es : a.desc_en,
-      genres: a.genres,
-      imageUrl: a.image_url,
-      country: a.country,
-      fans: fanCounts[i],
-      href: `/${lang}/artists/${a.slug}`,
-      tracks: a.topTracks.slice(0, 10),
-    }
-  })
-
+  // Próximos + en curso (festival de varios días que ya empezó pero no ha
+  // terminado). Orden: fecha de inicio, y a igualdad de día, por nombre para
+  // que el orden sea estable entre renders (antes los empates salían al azar).
+  const todayHome = todayYmdHome()
   const { data: upcomingEventsRaw } = await supabase
     .from('events')
     .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
-    .gte('date_start', todayYmdHome())
+    .or(`date_start.gte.${todayHome},date_end.gte.${todayHome}`)
     .order('date_start', { ascending: true })
+    .order('name', { ascending: true })
     .limit(16)
 
-  let homeEvents = ((upcomingEventsRaw || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, 4)
+  let homeEvents = ((upcomingEventsRaw || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, HOME_EVENTS_COUNT)
   if (homeEvents.length === 0) {
     const { data: anyEvents } = await supabase
       .from('events')
       .select('id, slug, name, date_start, date_end, venue, city, country, event_type, image_url, tags')
       .order('date_start', { ascending: false })
       .limit(16)
-    homeEvents = ((anyEvents || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, 4)
+    homeEvents = ((anyEvents || []) as HomeEventRow[]).filter((e) => !isEventCancelled(e)).slice(0, HOME_EVENTS_COUNT)
   }
 
   const displayEvents =
@@ -487,8 +465,49 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* ===== HISTORY TIMELINE ===== */}
+      {/* ===== EVENTS — lo vivo, justo después del «qué es» ===== */}
+      <section className="px-3 sm:px-6 py-10 sm:py-14 relative z-[1] border-t-[5px] border-[var(--ink)]">
+        <div className="home-wrap">
+          <SectionHead
+            tag={h.section_events.tag}
+            title1={h.section_events.title_1}
+            title2={h.section_events.title_2}
+            action={
+              'see_all' in h.section_events
+                ? { href: `/${lang}/events`, label: (h.section_events as { see_all: string }).see_all }
+                : null
+            }
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mt-6 sm:mt-8">
+            {displayEvents.map((e) => (
+              <EventFlyer
+                key={e.key}
+                date={e.date}
+                name={e.name}
+                location={e.location}
+                type={e.type}
+                imageUrl={e.imageUrl}
+                href={e.href}
+                entityId={e.id}
+                lang={lang}
+                cancelled={e.cancelled}
+                postponed={e.postponed}
+                compact
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== TOP 10 ARTISTAS DE LA COMUNIDAD — sustituye al antiguo
+          showcase de 6 artistas fijos ===== */}
+      {'section_top10' in h ? (
+        <HomeCommunityTop10 lang={lang} t={(h as { section_top10: HomeTop10Dict }).section_top10} />
+      ) : null}
+
+      {/* ===== HISTORY — rejilla cronológica compacta ===== */}
       <Timeline
+        variant="compact"
         tag={h.section_history.tag}
         title1={h.section_history.title_1}
         title2={h.section_history.title_2}
@@ -499,144 +518,17 @@ export default async function HomePage({
         }}
       />
 
-      {/* ===== EXPLORE HUB (SEO + retención) ===== */}
-      {explore ? (
-        <section className="lined px-3 sm:px-6 py-12 sm:py-20 relative z-[1] border-b-[5px] border-[var(--ink)]">
-          <div className="sec-tag">{explore.tag}</div>
-          <h2 className="sec-title">
-            {explore.title_1}
-            <br />
-            <span className="hl">{explore.title_2}</span>
-          </h2>
-          <p
-            className="mt-4 max-w-[720px] text-[15px] sm:text-[17px] leading-[1.8] text-[var(--dim)]"
-            style={{ fontFamily: "'Special Elite', monospace" }}
-          >
-            {explore.intro}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 mt-8 sm:mt-10 border-4 border-[var(--ink)]">
-            {explore.items.map((item) => (
-              <Link
-                key={item.href}
-                href={`/${lang}${item.href}`}
-                className="group p-4 sm:p-5 border-b-[3px] sm:border-r-[3px] border-[var(--ink)] no-underline text-[var(--ink)] transition-colors hover:bg-[var(--yellow)] min-h-[100px] flex flex-col"
-              >
-                <span
-                  className="group-hover:text-[var(--red)]"
-                  style={{
-                    fontFamily: "'Unbounded', sans-serif",
-                    fontWeight: 800,
-                    fontSize: 'clamp(13px, 2.5vw, 16px)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '-0.3px',
-                  }}
-                >
-                  {item.label} →
-                </span>
-                <span
-                  className="mt-2 flex-grow"
-                  style={{
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: '11px',
-                    lineHeight: 1.5,
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  {item.hint}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* ===== ARTISTS — showcase inmersivo ===== */}
-      <ArtistShowcase
-        lang={lang}
-        tag={h.section_artists.tag}
-        title1={h.section_artists.title_1}
-        title2={h.section_artists.title_2}
-        seeAll={'see_all' in h.section_artists ? (h.section_artists as { see_all: string }).see_all : undefined}
-        seeAllHref={`/${lang}/artists`}
-        artists={showcaseArtists}
-      />
-
-      {/* ===== EVENTS ===== */}
-      <section className="px-3 sm:px-6 py-12 sm:py-20 relative z-[1]">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-2">
-          <div>
-            <div className="sec-tag">{h.section_events.tag}</div>
-            <h2 className="sec-title mt-0">
-              {h.section_events.title_1}
-              <br />
-              <span className="hl">{h.section_events.title_2}</span>
-            </h2>
-          </div>
-          {'see_all' in h.section_events ? (
-            <Link
-              href={`/${lang}/events`}
-              className="shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontWeight: 700,
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                color: 'var(--ink)',
-              }}
-            >
-              {(h.section_events as { see_all: string }).see_all}
-            </Link>
-          ) : null}
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
-          {displayEvents.map((e) => (
-            <EventFlyer
-              key={e.key}
-              date={e.date}
-              name={e.name}
-              location={e.location}
-              type={e.type}
-              imageUrl={e.imageUrl}
-              href={e.href}
-              entityId={e.id}
-              lang={lang}
-              cancelled={e.cancelled}
-              postponed={e.postponed}
-            />
-          ))}
-        </div>
-      </section>
-
       {sectionBlog && featuredBlogPosts.length > 0 ? (
-        <section className="lined px-3 sm:px-6 py-12 sm:py-20 relative z-[1] border-t-[5px] border-[var(--ink)]">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-2">
-            <div>
-              <div className="sec-tag">{sectionBlog.tag}</div>
-              <h2 className="sec-title mt-0">
-                {sectionBlog.title_1}
-                <br />
-                <span className="hl">{sectionBlog.title_2}</span>
-              </h2>
-            </div>
-            <Link
-              href={`/${lang}/blog`}
-              className="shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontWeight: 700,
-                fontSize: '11px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                color: 'var(--ink)',
-              }}
-            >
-              {sectionBlog.see_all}
-            </Link>
-          </div>
+        <section className="lined px-3 sm:px-6 py-10 sm:py-14 relative z-[1]">
+          <div className="home-wrap">
+          <SectionHead
+            tag={sectionBlog.tag}
+            title1={sectionBlog.title_1}
+            title2={sectionBlog.title_2}
+            action={{ href: `/${lang}/blog`, label: sectionBlog.see_all }}
+          />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-[18px] mt-8 sm:mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-[18px] mt-6 sm:mt-8">
             {featuredBlogPosts.map((p) => {
               const title = lang === 'es' ? p.title_es : p.title_en
               const excerpt = lang === 'es' ? p.excerpt_es : p.excerpt_en
@@ -647,16 +539,14 @@ export default async function HomePage({
                   href={`/${lang}/blog/${p.slug}`}
                   className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
                 >
+                  {/* Mismo marco apaisado para todas: los carteles ya no alargan su tarjeta */}
                   <CardThumbnail
                     src={proxyCatalogArtworkForDisplay(p.image_url) || p.image_url}
                     alt={title}
-                    aspectClass={
-                      isBlogPosterCover(p.image_url, { slug: p.slug })
-                        ? 'aspect-square w-full'
-                        : 'aspect-[16/9] w-full'
-                    }
-                    fit={isBlogPosterCover(p.image_url, { slug: p.slug }) ? 'contain' : 'cover'}
+                    aspectClass="aspect-[16/10] w-full"
+                    fit="cover"
                     frameClass="border-b-[3px] border-[var(--ink)]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 460px"
                   />
                   <div className="flex flex-col flex-grow p-4 sm:p-5">
                     <div className="flex flex-wrap items-center gap-2">
@@ -695,17 +585,47 @@ export default async function HomePage({
               )
             })}
           </div>
+          </div>
         </section>
       ) : null}
 
+      {/* ===== EXPLORA — franja fina de accesos (SEO interno) en vez de un
+          bloque entero que repetía el menú ===== */}
+      {explore ? (
+        <nav
+          aria-label={explore.tag}
+          className="px-3 sm:px-6 py-6 sm:py-8 relative z-[1] border-t-[5px] border-[var(--ink)] bg-[var(--paper-dark)]"
+        >
+          <div className="home-wrap flex flex-wrap items-center gap-2">
+            <span
+              className="mr-2"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase' }}
+            >
+              {explore.tag.replace(/^\d+\s*—\s*/, '')} →
+            </span>
+            {explore.items.map((item) => (
+              <Link
+                key={item.href}
+                href={`/${lang}${item.href}`}
+                title={item.hint}
+                className={HOME_BTN_CLASS}
+                style={{ ...HOME_BTN_STYLE, padding: '6px 12px' }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      ) : null}
+
       {/* ===== CTA ===== */}
-      <div className="text-center px-3 sm:px-6 py-12 sm:py-[100px] bg-[var(--red)] text-white border-t-8 border-b-8 border-[var(--ink)]">
+      <div className="text-center px-3 sm:px-6 py-12 sm:py-16 bg-[var(--red)] text-white border-t-8 border-b-8 border-[var(--ink)]">
         <h2
           className="break-words max-w-full mx-auto px-1"
           style={{
             fontFamily: "'Unbounded', sans-serif",
             fontWeight: 900,
-            fontSize: 'clamp(26px, 10vw, 110px)',
+            fontSize: 'clamp(26px, 7vw, 76px)',
             textTransform: 'uppercase',
             lineHeight: 0.88,
             letterSpacing: 'clamp(-1.5px, -0.4vw, -2px)',

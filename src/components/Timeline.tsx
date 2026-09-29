@@ -18,9 +18,90 @@ interface TimelineProps {
   items: TimelineItem[]
   /** Enlace interno bajo la línea temporal (SEO / retención). */
   footerLink?: { href: string; label: string }
+  /**
+   * `compact` (home): cabecera de una línea, hitos ordenados por año de inicio
+   * en rejilla de tarjetas, texto legible. `full` = lista vertical original.
+   */
+  variant?: 'full' | 'compact'
 }
 
-export default function Timeline({ tag, title1, title2, items, footerLink }: TimelineProps) {
+/** Año de inicio de «1973—1986», «2015—HOY»… (para ordenar cronológicamente). */
+function startYear(year: string): number {
+  const n = parseInt(year, 10)
+  return Number.isNaN(n) ? 9999 : n
+}
+
+function CompactTimeline({ tag, title1, title2, items, footerLink }: Omit<TimelineProps, 'variant'>) {
+  const sorted = [...items].sort((a, b) => startYear(a.year) - startYear(b.year))
+  return (
+    <section className="bg-[var(--ink)] text-[var(--paper)] px-3 sm:px-6 py-10 sm:py-14 border-y-[5px] border-[var(--red)] relative z-[1]">
+      <div className="home-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="sec-tag" style={{ borderColor: 'var(--yellow)', color: 'var(--yellow)' }}>
+              {tag}
+            </div>
+            <h2 className="sec-title sec-title--compact text-[var(--paper)]">
+              {title1}{' '}
+              <span className="relative inline">
+                <span
+                  aria-hidden
+                  className="absolute -left-1 -right-1 bottom-[2px] h-[30%] -z-10 bg-[var(--red)]"
+                  style={{ transform: 'rotate(-0.3deg)' }}
+                />
+                {title2}
+              </span>
+            </h2>
+          </div>
+          {footerLink ? (
+            <Link
+              href={footerLink.href}
+              className="shrink-0 sm:max-w-[340px] inline-block no-underline border-[3px] border-[var(--yellow)] px-4 py-2 text-[var(--yellow)] hover:bg-[var(--yellow)] hover:text-[var(--ink)] transition-colors"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
+            >
+              {footerLink.label} →
+            </Link>
+          ) : null}
+        </div>
+
+        <ol className="list-none m-0 p-0 mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 border-t-[3px] border-l-[3px] border-[rgba(232,220,200,0.18)]">
+          {sorted.map((item) => (
+            <li
+              key={`${item.year}-${item.title}`}
+              className="p-4 sm:p-5 border-r-[3px] border-b-[3px] border-[rgba(232,220,200,0.18)] transition-colors hover:bg-[rgba(247,231,51,0.06)] min-w-0"
+            >
+              <div
+                className="leading-none"
+                style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '22px', color: 'var(--yellow)' }}
+              >
+                {item.year}
+              </div>
+              <h3
+                className="mt-2"
+                style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: '14px', lineHeight: 1.2, textTransform: 'uppercase' }}
+              >
+                {item.title}
+              </h3>
+              <p
+                className="mt-2 line-clamp-4"
+                style={{ fontSize: '13px', lineHeight: 1.6, color: 'rgba(232,220,200,0.78)' }}
+              >
+                {item.desc}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+export default function Timeline(props: TimelineProps) {
+  if (props.variant === 'compact') return <CompactTimeline {...props} />
+  return <FullTimeline {...props} />
+}
+
+function FullTimeline({ tag, title1, title2, items, footerLink }: TimelineProps) {
   return (
     <div
       className="bg-[var(--ink)] text-[var(--paper)] -mx-3 sm:-mx-6 px-3 sm:px-6 py-12 sm:py-20 border-t-8 border-b-8 border-[var(--red)]"

@@ -24,6 +24,31 @@
       "release_date": "2026-09-28",
       "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
       "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+    },
+    {
+      "title": "Talk To Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xana"
+        },
+        {
+          "name": "Brob (SP)"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/talk-to-me/30520883",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8cf45b01-00b3-47e7-bc90-14844f922ad1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/22e93f3b-c3d5-4800-b8b9-9177dab19957.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

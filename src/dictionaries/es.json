@@ -64,7 +64,7 @@
       "p3": "Optimal Breaks es un archivo vivo en español e inglés: cronología, artistas, escenas territoriales, sellos, eventos y blog editorial. Sigue los enlaces de abajo para no quedarte en la superficie — el breakbeat se entiende mejor en contexto."
     },
     "section_history": {
-      "tag": "02 — LÍNEA TEMPORAL",
+      "tag": "04 — LÍNEA TEMPORAL",
       "title_1": "HISTORIA DEL",
       "title_2": "BREAKBEAT",
       "items": [
@@ -81,19 +81,30 @@
       ]
     },
     "section_artists": {
-      "tag": "03 — REFERENTES",
+      "tag": "04 — REFERENTES",
       "title_1": "ARTISTAS DEL",
       "title_2": "BREAKBEAT",
       "see_all": "VER MAPA COMPLETO"
     },
     "section_events": {
-      "tag": "04 — CALENDARIO",
+      "tag": "02 — CALENDARIO",
       "title_1": "PRÓXIMOS",
       "title_2": "EVENTOS BREAKBEAT",
       "see_all": "TODA LA AGENDA"
     },
+    "section_top10": {
+      "tag": "03 — COMUNIDAD",
+      "title_1": "TOP 10",
+      "title_2": "ARTISTAS",
+      "subtitle": "Los artistas que más guarda la comunidad en Mis Tracks. Sin votos ni encuestas: solo saves reales, y se mueve cada semana.",
+      "see_all": "VER TOP 100",
+      "saves": "saves",
+      "fans": "fans",
+      "new_entry": "NUEVO",
+      "weeks_at_1": "{n} SEM. Nº 1"
+    },
     "section_explore": {
-      "tag": "05 — EXPLORA",
+      "tag": "06 — EXPLORA",
       "title_1": "MAPA DEL",
       "title_2": "BREAKBEAT",
       "intro": "Cada sección profundiza en una parte del mapa — desde el Bronx y la rave UK hasta Andalucía, Australia y la era Beatport. Navega, guarda y vuelve cuando quieras; el archivo crece.",
@@ -110,7 +121,7 @@
       ]
     },
     "section_blog": {
-      "tag": "06 — BLOG",
+      "tag": "05 — BLOG",
       "title_1": "LECTURAS",
       "title_2": "BREAKBEAT",
       "see_all": "VER TODO EL BLOG"

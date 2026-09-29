@@ -325,6 +325,15 @@ function beatportShareOriginFromSavedRow(s: SavedRow): BeatportShareOrigin | nul
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 40))
+  // `cached=1` (Top 10 de la home): respuesta cacheable en CDN. Este endpoint
+  // lee TODOS los saves; sin esto cada visita a la portada lo recalcularía.
+  // El Top 100 no lo pasa y sigue siendo en vivo.
+  const cdnCache = url.searchParams.get('cached') === '1'
+  const respond = (body: unknown) =>
+    NextResponse.json(
+      body,
+      cdnCache ? { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900' } } : undefined,
+    )
 
   let sb: ReturnType<typeof createServiceSupabase>
   try {
@@ -362,7 +371,7 @@ export async function GET(request: NextRequest) {
   const saved = savedRaw.filter((s) => !privateSet.has(s.user_id))
 
   if (saved.length === 0) {
-    return NextResponse.json({
+    return respond({
       scope: 'all_time',
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
@@ -933,7 +942,7 @@ export async function GET(request: NextRequest) {
     unique_users: usersVisible.size,
   }
 
-  return NextResponse.json({
+  return respond({
     scope: 'all_time',
     totals,
     top_tracks,

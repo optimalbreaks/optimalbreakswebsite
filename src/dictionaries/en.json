@@ -69,7 +69,7 @@
       "p3": "Optimal Breaks is a living archive in English and Spanish: timelines, artists, regional scenes, labels, events and an editorial blog. Follow the links below to go deeper — breakbeat makes more sense in context."
     },
     "section_history": {
-      "tag": "02 — TIMELINE",
+      "tag": "04 — TIMELINE",
       "title_1": "HISTORY OF",
       "title_2": "BREAKBEAT",
       "items": [
@@ -126,19 +126,30 @@
       ]
     },
     "section_artists": {
-      "tag": "03 — KEY FIGURES",
+      "tag": "04 — KEY FIGURES",
       "title_1": "BREAKBEAT",
       "title_2": "ARTISTS",
       "see_all": "FULL ARTIST MAP"
     },
     "section_events": {
-      "tag": "04 — CALENDAR",
+      "tag": "02 — CALENDAR",
       "title_1": "UPCOMING",
       "title_2": "BREAKBEAT EVENTS",
       "see_all": "FULL CALENDAR"
     },
+    "section_top10": {
+      "tag": "03 — COMMUNITY",
+      "title_1": "TOP 10",
+      "title_2": "ARTISTS",
+      "subtitle": "The artists the community saves most to My Tracks. No votes, no polls: just real saves, and it moves every week.",
+      "see_all": "SEE TOP 100",
+      "saves": "saves",
+      "fans": "fans",
+      "new_entry": "NEW",
+      "weeks_at_1": "{n} WKS AT #1"
+    },
     "section_explore": {
-      "tag": "05 — EXPLORE",
+      "tag": "06 — EXPLORE",
       "title_1": "EXPLORE",
       "title_2": "BREAKBEAT",
       "intro": "Each section goes deeper into the map — from the Bronx and UK rave to Andalusia, Australia and the Beatport era. Browse, bookmark and come back; the archive grows.",
@@ -191,7 +202,7 @@
       ]
     },
     "section_blog": {
-      "tag": "06 — BLOG",
+      "tag": "05 — BLOG",
       "title_1": "BREAKBEAT",
       "title_2": "READS",
       "see_all": "FULL BLOG"
