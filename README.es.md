@@ -838,10 +838,13 @@ Tres niveles, todos en `src/lib/event-series.ts`:
 
 **MP3 descargable (30 sep 2026):** con permiso de la promotora o del artista, el MP3 de la sesión se sube como asset de la release de GitHub **`sesiones-descarga`** (`optimalbreaks/optimalbreakswebsite`; hasta 2 GB por archivo, tráfico gratis, se sirve como descarga) y su URL va en **`mixes.download_url`** (migración `084`). El botón y la franja apuntan a nuestra URL **`/descargar/<slug>.mp3`** (`src/app/descargar/[file]/route.ts`, 302 al asset de GitHub; el archivo no pasa por Vercel; esa es la URL que se comparte, no la de GitHub). El campo está en el formulario de mixes del admin. No va en Git, `public/`, `private/music` ni Supabase Storage (el tope de subida del proyecto es menor que una sesión de una hora). No es `audio_url`, que pasa las tarjetas al reproductor nativo. Los originales se quedan en `music/dowload_mixes/` (gitignorado). Si llega un WAV, se codifica a MP3 320 kbps (`ffmpeg -b:a 320k`) y se sube ese; el WAV no se publica. Publicadas: Afghan Headspin y Neva vs Tilla Pink (Olibass Open Air 2026).
 
-Dónde se ve, en cuanto hay `download_url`:
-- **Ficha** `/mixes/<slug>`: botón amarillo «Descargar sesión en MP3» bajo el reproductor.
-- **Tarjetas** (`MixSessionGrid` y `/mixes`, vistas grande y compacto): franja amarilla «Descargar MP3» bajo el vídeo y sello rojo «⬇ MP3» en la portada. Sale en festival, edición, evento y en «Más sesiones».
-- **`/mixes`:** aviso amarillo arriba («N sesiones para descargar en MP3 gratis») y chip de filtro **«⬇ Descargables (N)»** junto a las plataformas. Los dos dejan solo las descargables; «Quitar filtros» y «Ver todas» vuelven al listado. El número sale solo del recuento: no hay lista fija.
+**El botón va en el vídeo, en estos tres sitios. Los tres, siempre** (componente `MixDownloadStrip`, pegado debajo del reproductor; sale solo si hay `download_url`):
+
+1. **El vídeo en el festival** — bloque «Sesiones» de `/festivals/<slug>`. La edición y la ficha del evento usan ese mismo vídeo, así que el botón sale ahí también.
+2. **El vídeo en `/mixes`** — en cada tarjeta del listado.
+3. **La URL de la sesión** — `/mixes/<slug>`, debajo del vídeo («Descargar sesión en MP3»).
+
+En `/mixes`, además, un sello «⬇ MP3» en la portada, un aviso amarillo arriba y el chip «Descargables». Eso ayuda a encontrarlas; no sustituye a los tres botones.
 
 **Story IG de una sesión (admin):** en `/mixes/<slug>`, junto a LINK, el admin ve un botón **IG** (`ShareButtons` con `storyPlay="mix:<slug>"`). Copia el enlace y comparte (móvil) o descarga (escritorio) un PNG 1080×1920 de `/api/og/story?play=mix:<slug>`: retrato del artista (`artists.image_url`; si no hay, la miniatura del mix), artista, festival, edición (solo si es un formato con nombre), fecha del evento y sala · ciudad. Con `download_url` añade un sello rojo «DISPONIBLE PARA DESCARGA · MP3 · GRATIS» sobre el retrato y el pie dice «Descárgala gratis en el enlace». La caché de esa story es de 5 min (la de los temas sigue en 1 día): al añadir el MP3, el sello sale en la siguiente story. Las exclusivas de canción (`full_audio_url`) se escuchan y no se descargan: su story no lleva sello.
 
