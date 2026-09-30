@@ -194,7 +194,7 @@ export default async function MixDetailPage({ params }: Props) {
 
           {mix.download_url?.startsWith('https://') && (
             <a
-              href={mix.download_url}
+              href={`/descargar/${mix.slug}.mp3`}
               download
               rel="noopener"
               className="mt-5 inline-flex max-w-full flex-col border-4 border-[var(--ink)] bg-[var(--yellow)] px-5 py-3 text-[var(--ink)] no-underline shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)]"
