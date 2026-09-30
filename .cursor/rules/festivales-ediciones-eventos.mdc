@@ -9,15 +9,16 @@ Modelo de Narciso (29 sep 2026). Config en **`src/lib/event-series.ts`**.
 
 | Nivel | Qué es | Ejemplos | Dónde |
 |---|---|---|---|
-| **Festival** | La marca | Raveart, Olibass | `FESTIVAL_BRANDS` → `/festivals/<slug>` |
-| **Edición** | El formato que se repite | Raveart Summer / Winter / Retro Halloween, Olibass Open Air, Olibass Snow Edition | `FESTIVAL_SERIES` → `/festivals/<slug>` |
+| **Festival** | La marca | Raveart, Olibass, HEAT | `FESTIVAL_BRANDS` → `/festivals/<slug>` |
+| **Edición** | El formato que se repite | Raveart Summer / Winter / Retro Halloween, Olibass Open Air, Olibass Snow Edition, Heat Opening / Temporada / Closing Boiler XL | `FESTIVAL_SERIES` → `/festivals/<slug>` |
 | **Evento** | El día con su cartel | Olibass Open Air 19 sep 2026 | tabla `events` → `/events/<slug>` |
 
 ## Invariantes (no negociables)
 
 1. **La ruta `/events/<slug>` no se toca.** Festival y edición son una capa encima que agrupa eventos.
-2. **Hay eventos que no son edición de nada** (noches de club, HEAT Opening…). No forzarlos a un festival.
-3. Marca con un solo formato (Híbrida Fest, Dreambeach, Oshun, Heat Closing…) → solo `FESTIVAL_SERIES`, no `FESTIVAL_BRANDS`. Ellos pueden llamar «edición» a cada año; **aquí esas filas son eventos**. La página `/festivals/<slug>` es el festival y el archivo dice «eventos» / «fechas», no «ediciones».
+2. **Hay eventos que no son edición de nada** (noches de club sueltas sin marca que se repita). No forzarlos a un festival.
+2bis. **HEAT** (Paris 15, Málaga) sí es festival (30 sep 2026): Opening, noches de temporada y Closing. `heat-temporada` (alias `heat`) va **detrás** de `heat-opening` / `heat-closing` en `FESTIVAL_SERIES` (gana el primero que encaja). Marca = `heat`; `heat-closing-boiler-xl` conserva su URL.
+3. Marca con un solo formato (Híbrida Fest, Dreambeach, Oshun…) → solo `FESTIVAL_SERIES`, no `FESTIVAL_BRANDS`. Ellos pueden llamar «edición» a cada año; **aquí esas filas son eventos**. La página `/festivals/<slug>` es el festival y el archivo dice «eventos» / «fechas», no «ediciones».
 4. Un formato con nombre propio (Summer/Winter, Open Air/Snow) es **edición**, no `seasons`. `seasons` solo para temporadas sin nombre.
 5. El slug de una marca **nunca** igual al de una edición. URLs publicadas no se cambian (Olibass: marca = `olibass-music-festival`, Open Air = `olibass-open-air`).
 6. Páginas publicadas con ≥ `MIN_SERIES_EDITIONS` (2) eventos. No enlazar una edición sin página: sale dentro de su festival (`#edition-<slug>`).

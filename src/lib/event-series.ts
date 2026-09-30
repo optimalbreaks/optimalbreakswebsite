@@ -112,6 +112,10 @@ export const FESTIVAL_SERIES: FestivalSeries[] = [
   { slug: 'made-in-spain-festival', name: 'Made in Spain Festival', aliases: ['made in spain festival'] },
   { slug: 'breakfest', name: 'Breakfest', aliases: ['breakfest'] },
   { slug: 'heat-closing-boiler-xl', name: 'Heat Closing Boiler XL', aliases: ['heat closing'] },
+  { slug: 'heat-opening', name: 'Heat Opening', aliases: ['heat opening'] },
+  // Noches de HEAT entre el Opening y el Closing: después de las dos anteriores
+  // para que «heat opening» / «heat closing» ganen primero.
+  { slug: 'heat-temporada', name: 'HEAT Temporada', aliases: ['heat'] },
   { slug: 'zutopia-music-and-arts-festival', name: 'Zutopia Music and Arts Festival', aliases: ['zutopia'] },
 ]
 
@@ -154,6 +158,7 @@ export type FestivalBrand = {
 export const FESTIVAL_BRANDS: FestivalBrand[] = [
   { slug: 'raveart', name: 'Raveart', editions: ['raveart-summer-festival', 'raveart-winter-festival', 'retro-halloween'] },
   { slug: 'olibass-music-festival', name: 'Olibass Music Festival', editions: ['olibass-open-air', 'olibass-snow-edition'] },
+  { slug: 'heat', name: 'HEAT', editions: ['heat-opening', 'heat-temporada', 'heat-closing-boiler-xl'] },
 ]
 
 export function festivalBrandBySlug(slug: string): FestivalBrand | null {
