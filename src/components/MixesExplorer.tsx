@@ -614,6 +614,29 @@ function PlayLink({ mix }: { mix: Mix }) {
   )
 }
 
+/** Franja «Descargar MP3» bajo el vídeo; solo si la sesión tiene `download_url`. */
+function MixDownloadStrip({ mix, lang, compact = false }: { mix: Mix; lang: string; compact?: boolean }) {
+  if (!mix.slug || !mix.download_url?.startsWith('https://')) return null
+  return (
+    <a
+      href={`/descargar/${mix.slug}.mp3`}
+      download
+      rel="noopener"
+      className="flex items-center justify-center gap-2 border-b-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] no-underline transition-colors hover:bg-[var(--red)] hover:text-white"
+      style={{
+        fontFamily: "'Courier Prime', monospace",
+        fontWeight: 700,
+        fontSize: compact ? '10px' : '12px',
+        letterSpacing: compact ? '1px' : '2px',
+        padding: compact ? '5px 6px' : '8px 12px',
+        textTransform: 'uppercase',
+      }}
+    >
+      ⬇ {lang === 'es' ? (compact ? 'Descargar MP3' : 'Descargar MP3 gratis') : compact ? 'Download MP3' : 'Free MP3 download'}
+    </a>
+  )
+}
+
 function MixTitleLink({ mix, lang }: { mix: Mix; lang: string }) {
   if (!mix.slug) return <>{mix.title}</>
   return (
@@ -704,6 +727,7 @@ function LargeGrid({
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
             )}
+            <MixDownloadStrip mix={m} lang={lang} />
             <div className="p-5 sm:p-7 relative">
               <div className="absolute -top-[6px] left-[20px] w-[60px] h-[18px] z-[1]" style={{ background: 'var(--tape)', transform: 'rotate(-2deg)' }} />
               <div className="flex flex-wrap items-center gap-2">
@@ -791,6 +815,7 @@ function CompactGrid({
             ) : (
               <CardThumbnail src={m.image_url} alt={m.title} aspectClass="aspect-video" />
             )}
+            <MixDownloadStrip mix={m} lang={lang} compact />
             <div className="p-3 flex flex-col flex-grow min-h-0">
               <div style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '11px', color: 'var(--red)' }}>
                 {m.artist_name}
@@ -882,6 +907,11 @@ function ListView({
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
                   <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
+                  {m.download_url ? (
+                    <div className="border-x-[3px] border-[var(--ink)]">
+                      <MixDownloadStrip mix={m} lang={lang} />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -925,6 +955,11 @@ function ListView({
                 </div>
                 <div className="w-full shrink-0 lg:max-w-md lg:w-[min(100%,420px)]">
                   <LazySoundCloudEmbed trackUrl={scTrackUrl} title={m.title} className="border-[3px] border-[var(--ink)]" mixId={m.id} artist={m.artist_name} artworkUrl={m.image_url} />
+                  {m.download_url ? (
+                    <div className="border-x-[3px] border-[var(--ink)]">
+                      <MixDownloadStrip mix={m} lang={lang} />
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
