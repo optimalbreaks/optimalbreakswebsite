@@ -86,7 +86,10 @@ function searchTokens(raw: string): string[] {
   return out
 }
 
-/** Palabra entera: «skin» no vale dentro de «Ruskin» ni de «Skint». Sin acentos. */
+/**
+ * Inicio de palabra, sin acentos. «ondamik» encuentra Ondamike.
+ * «skin» no entra en medio de Ruskin.
+ */
 function tokenWord(token: string): string {
   return normForKey(token).replace(/[^a-z0-9]+/g, '')
 }
@@ -94,13 +97,13 @@ function tokenWord(token: string): string {
 function normHasWord(hay: string, token: string): boolean {
   const t = tokenWord(token)
   if (!t) return false
-  return new RegExp(`(?:^|[^a-z0-9])${t}(?:$|[^a-z0-9])`).test(normForKey(hay))
+  return new RegExp(`(?:^|[^a-z0-9])${t}`).test(normForKey(hay))
 }
 
 function tokenOr(columns: readonly string[], token: string): string {
   const safe = tokenWord(token)
   if (!safe) return ''
-  const pattern = `\\m${safe}\\M`
+  const pattern = `\\m${safe}`
   return columns.map((col) => `${col}.imatch.${pattern}`).join(',')
 }
 
