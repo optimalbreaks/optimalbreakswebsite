@@ -74,11 +74,11 @@ function escIlike(raw: string): string {
 function searchTokens(raw: string): string[] {
   const seen = new Set<string>()
   const out: string[] = []
-  for (const part of raw.split(/\s+/)) {
-    const t = part.replace(/[%_,.()"'\\:*]/g, '').trim()
+  for (const part of raw.split(/[^\p{L}\p{N}]+/u)) {
+    const t = part.trim()
     if (t.length < 2 || t.length > 40) continue
-    const key = t.toLowerCase()
-    if (seen.has(key)) continue
+    const key = normForKey(t)
+    if (!key || seen.has(key)) continue
     seen.add(key)
     out.push(t)
     if (out.length >= 6) break
@@ -86,9 +86,22 @@ function searchTokens(raw: string): string[] {
   return out
 }
 
+/** Palabra entera: «skin» no vale dentro de «Ruskin» ni de «Skint». Sin acentos. */
+function tokenWord(token: string): string {
+  return normForKey(token).replace(/[^a-z0-9]+/g, '')
+}
+
+function normHasWord(hay: string, token: string): boolean {
+  const t = tokenWord(token)
+  if (!t) return false
+  return new RegExp(`(?:^|[^a-z0-9])${t}(?:$|[^a-z0-9])`).test(normForKey(hay))
+}
+
 function tokenOr(columns: readonly string[], token: string): string {
-  const pattern = `%${token}%`
-  return columns.map((col) => `${col}.ilike.${pattern}`).join(',')
+  const safe = tokenWord(token)
+  if (!safe) return ''
+  const pattern = `\\m${safe}\\M`
+  return columns.map((col) => `${col}.imatch.${pattern}`).join(',')
 }
 
 /** AND de palabras: cada una hace OR entre las columnas de la fila. */
@@ -98,7 +111,10 @@ function applyTokenAnd<Q extends { or: (filters: string) => Q }>(
   tokens: readonly string[],
 ): Q {
   let next = query
-  for (const token of tokens) next = next.or(tokenOr(columns, token))
+  for (const token of tokens) {
+    const filter = tokenOr(columns, token)
+    if (filter) next = next.or(filter)
+  }
   return next
 }
 
@@ -420,7 +436,7 @@ export async function GET(request: NextRequest) {
       const words = searchTokens(source).map((w) => normForKey(w)).filter((w) => w.length >= 2)
       if (words.length < 2 || !words.some((w) => w.length >= 4)) continue
       if (!words.every((w) => qset.has(w))) continue
-      if (!normForKey(source).includes(longestToken)) continue
+      if (!normHasWord(source, longestToken)) continue
       pushArtist(a)
     }
   }
@@ -496,12 +512,12 @@ export async function GET(request: NextRequest) {
     // viene del line-up: destacamos los nombres coincidentes en el subtítulo
     // para que el usuario entienda por qué aparece este evento.
     const nameBlob = normForKey([e.name, e.slug, e.city].filter(Boolean).join(' '))
-    const nameHit = tokenNorms.every((t) => nameBlob.includes(t))
+    const nameHit = tokenNorms.every((t) => normHasWord(nameBlob, t))
     let lineupHitText = ''
     if (!nameHit && tokenNorms.length) {
       const matches = collectLineupNames(e.lineup, e.stages).filter((n) => {
         const hay = normForKey(n)
-        return tokenNorms.some((t) => hay.includes(t))
+        return tokenNorms.some((t) => normHasWord(hay, t))
       })
       if (matches.length > 0) {
         const shown = matches.slice(0, 2).join(', ')
@@ -814,7 +830,7 @@ export async function GET(request: NextRequest) {
     let bpAdded = 0
     for (const e of beatportTopIndex as BeatportTopEntry[]) {
       if (bpAdded >= 12) break
-      if (!tokenNorms.every((t) => e.haystack.includes(t))) continue
+      if (!tokenNorms.every((t) => normHasWord(e.haystack, t))) continue
       const key = searchTrackDedupeKey(e.title, e.mix, [{ name: e.firstArtist }])
       if (seenTrackKeys.has(key)) continue
       seenTrackKeys.add(key)
