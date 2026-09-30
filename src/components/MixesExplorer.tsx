@@ -272,6 +272,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const [search, setSearch] = useState('')
   const [yearFilter, setYearFilter] = useState<YearFilterValue>('all')
   const [platform, setPlatform] = useState<'all' | Mix['platform']>('all')
+  const [onlyDownloads, setOnlyDownloads] = useState(false)
   // Cuántas tarjetas se pintan por año. Antes se pintaba TODO el catálogo
   // (las filtradas solo se ocultaban con CSS), con su portada y su botón de
   // favorito cada una: el coste crecía con cada mix nuevo.
@@ -307,6 +308,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
       setSearch('')
       setYearFilter('all')
       setPlatform('all')
+      setOnlyDownloads(false)
       // Y amplía el tramo de su año para que la tarjeta esté pintada aunque
       // quede más abajo de las primeras MIXES_PAGE.
       for (const g of groupMixesByPublicationYear(mixes)) {
@@ -394,10 +396,13 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
         if (gy !== yearFilter) return false
       }
       if (platform !== 'all' && m.platform !== platform) return false
+      if (onlyDownloads && !isDownloadable(m)) return false
       return true
     },
-    [search, yearFilter, platform],
+    [search, yearFilter, platform, onlyDownloads],
   )
+
+  const downloadCount = useMemo(() => mixes.filter(isDownloadable).length, [mixes])
 
   const filtered = useMemo(() => mixes.filter(isMixVisible), [mixes, isMixVisible])
 
@@ -405,7 +410,7 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
   const yearGroups = useMemo(() => groupMixesByPublicationYear(mixes), [mixes])
 
   const hasNonDefaultFilters =
-    search.trim() !== '' || yearFilter !== 'all' || platform !== 'all'
+    search.trim() !== '' || yearFilter !== 'all' || platform !== 'all' || onlyDownloads
 
   const chipBase =
     'cursor-pointer border-[3px] border-[var(--ink)] px-2.5 py-1 transition-colors text-[9px] sm:text-[10px] font-bold uppercase tracking-wider'
@@ -417,10 +422,32 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
     setSearch('')
     setYearFilter('all')
     setPlatform('all')
+    setOnlyDownloads(false)
   }
+
+  const es = lang === 'es'
 
   return (
     <div>
+      {downloadCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => setOnlyDownloads((v) => !v)}
+          aria-pressed={onlyDownloads}
+          className={`mb-6 flex w-full flex-wrap items-center justify-between gap-2 border-4 border-[var(--ink)] px-4 py-3 text-left shadow-[5px_5px_0_var(--ink)] transition-colors cursor-pointer ${
+            onlyDownloads ? 'bg-[var(--red)] text-white' : 'bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white'
+          }`}
+        >
+          <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.4vw, 17px)', textTransform: 'uppercase' }}>
+            ⬇ {es
+              ? `${downloadCount} ${downloadCount === 1 ? 'sesión para descargar' : 'sesiones para descargar'} en MP3 gratis`
+              : `${downloadCount} ${downloadCount === 1 ? 'set' : 'sets'} to download as free MP3`}
+          </span>
+          <span style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+            {onlyDownloads ? (es ? '✕ Ver todas' : '✕ Show all') : es ? 'Ver descargables →' : 'Show downloads →'}
+          </span>
+        </button>
+      ) : null}
       {mf ? (
         <div className="mb-6 space-y-4 border-b-[3px] border-[var(--ink)] pb-6">
           <div className="relative max-w-md">
@@ -503,6 +530,17 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
                   {platformChipLabel(mf, p)}
                 </button>
               ))}
+              {downloadCount > 0 ? (
+                <button
+                  type="button"
+                  style={chipFont}
+                  aria-pressed={onlyDownloads}
+                  className={`${chipBase} ${onlyDownloads ? 'bg-[var(--red)] text-white border-[var(--red)]' : 'bg-[var(--yellow)] hover:bg-[var(--red)] hover:text-white'}`}
+                  onClick={() => setOnlyDownloads((v) => !v)}
+                >
+                  ⬇ {es ? 'Descargables' : 'Downloadable'} ({downloadCount})
+                </button>
+              ) : null}
             </div>
           ) : null}
 
@@ -614,9 +652,27 @@ function PlayLink({ mix }: { mix: Mix }) {
   )
 }
 
+function isDownloadable(m: Mix): boolean {
+  return Boolean(m.slug && m.download_url?.startsWith('https://'))
+}
+
+/** Sello «MP3» sobre la portada de una sesión descargable. */
+function MixDownloadBadge({ mix }: { mix: Mix }) {
+  if (!isDownloadable(mix)) return null
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute left-2 top-2 z-[5] border-[3px] border-[var(--yellow)] bg-[var(--red)] text-white shadow-[3px_3px_0_var(--ink)]"
+      style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '2px', padding: '2px 8px', transform: 'rotate(-4deg)' }}
+    >
+      ⬇ MP3
+    </span>
+  )
+}
+
 /** Franja «Descargar MP3» bajo el vídeo; solo si la sesión tiene `download_url`. */
 function MixDownloadStrip({ mix, lang, compact = false }: { mix: Mix; lang: string; compact?: boolean }) {
-  if (!mix.slug || !mix.download_url?.startsWith('https://')) return null
+  if (!isDownloadable(mix)) return null
   return (
     <a
       href={`/descargar/${mix.slug}.mp3`}
@@ -720,6 +776,7 @@ function LargeGrid({
             }
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
+            <MixDownloadBadge mix={m} />
             {ytId ? (
               <LazyYouTubeEmbed videoId={ytId} title={m.title} mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
             ) : scTrackUrl ? (
@@ -801,6 +858,7 @@ function CompactGrid({
             }
           >
             <FavoriteButton type="mix" entityId={m.id} lang={lang} />
+            <MixDownloadBadge mix={m} />
             {ytId ? (
               <LazyYouTubeEmbed videoId={ytId} title={m.title} className="border-b-[3px] border-[var(--ink)]" mixId={m.id} autoplay={autoplayMixId === m.id} artist={m.artist_name} artworkUrl={m.image_url} />
             ) : scTrackUrl ? (
