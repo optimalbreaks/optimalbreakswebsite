@@ -102,3 +102,6 @@ supabase/.temp/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# MP3 de sesiones para descarga: se publican en la release «sesiones-descarga» de GitHub, nunca en el repo
+music/dowload_mixes/

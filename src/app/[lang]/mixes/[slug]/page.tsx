@@ -192,6 +192,22 @@ export default async function MixDetailPage({ params }: Props) {
             <MixSessionPlayer mix={mix} lang={lang} />
           </div>
 
+          {mix.download_url?.startsWith('https://') && (
+            <a
+              href={mix.download_url}
+              download
+              rel="noopener"
+              className="mt-5 inline-flex max-w-full flex-col border-4 border-[var(--ink)] bg-[var(--yellow)] px-5 py-3 text-[var(--ink)] no-underline shadow-[6px_6px_0_var(--ink)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[3px_3px_0_var(--ink)]"
+            >
+              <span style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(15px, 2.6vw, 19px)', textTransform: 'uppercase' }}>
+                ⬇ {es ? 'Descargar sesión en MP3' : 'Download set as MP3'}
+              </span>
+              <span className="mt-1" style={{ fontFamily: MONO, fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                {es ? 'Gratis · cedida para descarga' : 'Free · shared for download'}
+              </span>
+            </a>
+          )}
+
           <div className="mt-5 flex flex-wrap items-center gap-2">
             {artists.map((a) =>
               a.slug ? (

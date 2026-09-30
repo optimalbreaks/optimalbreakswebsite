@@ -34,7 +34,8 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 Una sesión de una hora en vídeo pesa cientos de MB o 1–2 GB. No entra en Git ni en la lambda, y `/api/audio` solo acepta `.mp3`. **No** alojar el vídeo en `private/music` ni en `public/`.
 
 - **Vídeo:** el artista pasa el archivo → se sube a un YouTube **no listado** del canal y `/mixes` lo embebe como el resto (`video_url`). El vídeo lo sirve YouTube.
-- **Solo audio de una sesión:** un MP3 de una hora a 192 kbps son ~80 MB. Unos pocos llenan el tope de la función de Vercel. **No** va a `private/music`. Haría falta un almacén aparte; no improvisarlo en el repo.
+- **MP3 de una sesión para descargar (30 sep 2026, Olibass):** un set de una hora son 80–150 MB. **No** va a `private/music`, ni a `public/`, ni a Git (GitHub corta en 100 MB), ni a Supabase Storage (tope global del proyecto por debajo). Se cuelga como asset de la release **`sesiones-descarga`** del repo `optimalbreaks/optimalbreakswebsite` (asset hasta 2 GB, tráfico gratis, sirve `Content-Disposition: attachment`). Nombre = slug del mix (`<slug>.mp3`). URL en **`mixes.download_url`** (migración 084) → botón «Descargar sesión en MP3» en `/mixes/<slug>`; también editable en el admin de mixes. Subida: `gh release upload sesiones-descarga <slug>.mp3 --repo optimalbreaks/optimalbreakswebsite` con el token de la cuenta optimalbreaks (`git credential fill`; el `gh` local está logueado en otras cuentas). El original que pasan se deja en `music/dowload_mixes/` (gitignorado). Solo con permiso expreso de la promotora o del artista. No usar `mixes.audio_url` para esto: activa el reproductor nativo en las tarjetas.
+  - Publicadas: Afghan Headspin — Olibass Open Air 2026 (320 kbps, 148 MB).
 - Una exclusiva es cesión del propio tema. Una sesión lleva discos de otra gente: incrustar YouTube no es lo mismo que alojar el archivo nosotros.
 
 ## UI (ya cableada — no duplicar)

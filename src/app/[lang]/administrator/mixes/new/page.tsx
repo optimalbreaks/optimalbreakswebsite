@@ -51,6 +51,7 @@ export default function MixNewPage() {
     is_featured: false,
     published_at: null as string | null,
     event_id: null as string | null,
+    download_url: null as string | null,
   })
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
@@ -67,6 +68,7 @@ export default function MixNewPage() {
         video_url: form.video_url || null,
         published_at: form.published_at,
         event_id: form.event_id || null,
+        download_url: form.download_url?.trim() || null,
       })
       router.push(`/${lang}/administrator/mixes`)
     } catch (err) {
@@ -213,6 +215,18 @@ export default function MixNewPage() {
       </div>
 
       <MixEventSelect value={form.event_id} onChange={(v) => set('event_id', v)} />
+
+      <div className="md:col-span-2">
+        <label className={labelClass}>MP3 para descargar</label>
+        <input
+          type="text"
+          value={form.download_url ?? ''}
+          onChange={(e) => set('download_url', e.target.value)}
+          className={inputClass}
+          placeholder="https://github.com/optimalbreaks/optimalbreakswebsite/releases/download/sesiones-descarga/....mp3"
+        />
+        <p className="admin-muted text-xs mt-1 normal-case">Solo con permiso del artista o la promotora. Saca el botón «Descargar MP3» en la ficha.</p>
+      </div>
 
       <div className="md:col-span-2">
         <BilingualTextarea
