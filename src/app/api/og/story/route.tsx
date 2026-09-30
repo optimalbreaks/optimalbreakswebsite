@@ -235,12 +235,17 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
   const title = mix.title.trim().slice(0, 90)
   const when = storyDateLabel(eventDate || mix.published_at, es)
   const kicker = es ? 'SESIÓN' : 'DJ SET'
+  const downloadable = Boolean(mix.download_url?.startsWith('https://'))
   const footerWarning = es
     ? 'La música del sticker no es esta sesión'
     : 'The sticker music is not this set'
-  const footerDomain = es
-    ? 'Escúchala entera en el enlace · www.optimalbreaks.com'
-    : 'Hear the full set via the link · www.optimalbreaks.com'
+  const footerDomain = downloadable
+    ? es
+      ? 'Descárgala gratis en el enlace · www.optimalbreaks.com'
+      : 'Free download via the link · www.optimalbreaks.com'
+    : es
+      ? 'Escúchala entera en el enlace · www.optimalbreaks.com'
+      : 'Hear the full set via the link · www.optimalbreaks.com'
 
   const line = (text: string, size: number, color: string, weight: number, tracking = 1) => (
     <div
@@ -292,6 +297,36 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
             <div style={{ display: 'flex', fontSize: 160, fontWeight: 900, color: PAPER, fontFamily: FONT }}>OB</div>
           )}
         </div>
+        {downloadable ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 700,
+              right: 40,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              backgroundColor: RED,
+              border: `8px solid ${YELLOW}`,
+              padding: '18px 34px',
+              transform: 'rotate(-8deg)',
+              boxShadow: `12px 12px 0 ${YELLOW}`,
+            }}
+          >
+            <div style={{ display: 'flex', fontSize: 30, fontWeight: 800, letterSpacing: 6, color: YELLOW, fontFamily: MONO }}>
+              MP3
+            </div>
+            <div style={{ display: 'flex', marginTop: 6, fontSize: 50, fontWeight: 900, lineHeight: 1, color: '#fff', textTransform: 'uppercase', fontFamily: FONT }}>
+              {es ? 'Disponible' : 'Available'}
+            </div>
+            <div style={{ display: 'flex', marginTop: 4, fontSize: 40, fontWeight: 900, lineHeight: 1, color: '#fff', textTransform: 'uppercase', fontFamily: FONT }}>
+              {es ? 'para descarga' : 'to download'}
+            </div>
+            <div style={{ display: 'flex', marginTop: 10, fontSize: 24, fontWeight: 800, letterSpacing: 4, color: YELLOW, textTransform: 'uppercase', fontFamily: MONO }}>
+              {es ? 'Gratis' : 'Free'}
+            </div>
+          </div>
+        ) : null}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 40, width: '100%' }}>
           {artist ? line(artist, artist.length > 24 ? 44 : 56, YELLOW, 900, 1) : null}
           {festivalName
@@ -314,7 +349,7 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
     {
       width: WIDTH,
       height: HEIGHT,
-      headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' },
+      headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300' },
     },
   )
 }
