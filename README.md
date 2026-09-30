@@ -753,6 +753,8 @@ The `CommandPalette` (magnifier icon in the header, keyboard shortcut **⌘K** /
 | `post` | `posts` | `title`, `slug` |
 | `organization` | `organizations` | `name`, `slug` |
 
+Several words are **AND**ed, and each word may hit a **different** column of the same row. `dj tortu skin` finds the track **Skin** by DJ Tortu (`skin` in `title`, `dj` and `tortu` in `artist_names_text`). The whole phrase does not have to sit in one field. If the artist’s name is fully contained in the query and includes the longest word, the profile is returned too.
+
 ### Presentation rules
 
 - **Group order in the UI** (music first): `artist → track → mix → event → label → scene → post → organization`.

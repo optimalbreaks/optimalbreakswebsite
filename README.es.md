@@ -673,6 +673,8 @@ El `CommandPalette` (icono de lupa en el header, atajo **⌘K** / **Ctrl+K**) co
 | `post` | `posts` | `title`, `slug` |
 | `organization` | `organizations` | `name`, `slug` |
 
+Varias palabras se cruzan con **AND**: cada una puede caer en un **campo distinto** de la misma fila. `dj tortu skin` encuentra el tema **Skin** de DJ Tortu (`skin` en `title`, `dj` y `tortu` en `artist_names_text`). La frase entera no tiene que estar junta en un solo campo. Si el nombre del artista cabe entero en lo escrito y contiene la palabra más larga, la ficha sale también.
+
 ### Reglas de presentación
 
 - **Orden de grupos en la UI** (favorece la música): `artist → track → mix → event → label → scene → post → organization`.

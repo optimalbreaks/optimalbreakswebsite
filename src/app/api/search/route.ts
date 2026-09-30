@@ -66,6 +66,42 @@ function escIlike(raw: string): string {
   return raw.replace(/[%_,]/g, ' ').trim()
 }
 
+/**
+ * Palabras de la búsqueda. Una frase («dj tortu skin») no cabe en una sola
+ * columna: el título es «Skin» y el artista es «Dj Tortu». Cada palabra tiene
+ * que aparecer en alguno de los campos de la misma fila.
+ */
+function searchTokens(raw: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const part of raw.split(/\s+/)) {
+    const t = part.replace(/[%_,.()"'\\:*]/g, '').trim()
+    if (t.length < 2 || t.length > 40) continue
+    const key = t.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(t)
+    if (out.length >= 6) break
+  }
+  return out
+}
+
+function tokenOr(columns: readonly string[], token: string): string {
+  const pattern = `%${token}%`
+  return columns.map((col) => `${col}.ilike.${pattern}`).join(',')
+}
+
+/** AND de palabras: cada una hace OR entre las columnas de la fila. */
+function applyTokenAnd<Q extends { or: (filters: string) => Q }>(
+  query: Q,
+  columns: readonly string[],
+  tokens: readonly string[],
+): Q {
+  let next = query
+  for (const token of tokens) next = next.or(tokenOr(columns, token))
+  return next
+}
+
 function isValidLang(v: string | null): v is Lang {
   return v === 'es' || v === 'en'
 }
@@ -221,11 +257,16 @@ export async function GET(request: NextRequest) {
   if (!qRaw || qRaw.length < 2) {
     return NextResponse.json({ results: [] as SearchResult[] })
   }
-  const q = escIlike(qRaw).slice(0, 80)
-  if (!q) {
+  const tokens = searchTokens(qRaw.slice(0, 80))
+  if (!tokens.length) {
     return NextResponse.json({ results: [] as SearchResult[] })
   }
-  const ilike = `%${q}%`
+  const tokenNorms = tokens.map((t) => normForKey(t)).filter(Boolean)
+  const looseNameTokens = [...tokens]
+    .sort((a, b) => normForKey(b).length - normForKey(a).length)
+    .filter((t) => normForKey(t).length >= 4)
+    .slice(0, 2)
+  const longestToken = tokenNorms.slice().sort((a, b) => b.length - a.length)[0] || ''
   const supabase = createCachedSupabase()
 
   const base = (path: string) => `/${lang}${path}`
@@ -235,6 +276,10 @@ export async function GET(request: NextRequest) {
   // claramente "de eventos" (no hay ningún otro tipo de resultado) —
   // la regla se aplica al final, antes de responder.
   const todayIso = new Date().toISOString().slice(0, 10)
+
+  const artistCols = ['name', 'name_display', 'slug'] as const
+  const artistSelect = 'id, slug, name, name_display, image_url, country, styles, category'
+  const trackCols = ['title', 'mix_name', 'label', 'artist_names_text'] as const
 
   const [
     artistsRes,
@@ -248,27 +293,29 @@ export async function GET(request: NextRequest) {
     chartFeaturedRes,
     chartVinylRes,
     beatportTopIndex,
+    artistsLooseRes,
   ] = await Promise.all([
-    supabase
-      .from('artists')
-      .select('id, slug, name, name_display, image_url, country, styles, category')
-      .or(`name.ilike.${ilike},name_display.ilike.${ilike},slug.ilike.${ilike}`)
-      .limit(12),
-    supabase
-      .from('labels')
-      .select('id, slug, name, image_url, country, founded_year')
-      .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
-      .limit(8),
+    applyTokenAnd(
+      supabase.from('artists').select(artistSelect),
+      artistCols,
+      tokens,
+    ).limit(12),
+    applyTokenAnd(
+      supabase.from('labels').select('id, slug, name, image_url, country, founded_year'),
+      ['name', 'slug'],
+      tokens,
+    ).limit(8),
     // EVENTOS FUTUROS: siempre se muestran. `lineup_text` es una columna
     // STORED GENERATED (migración 052) que aplana `lineup text[]` +
     // `stages[].lineup[]`, por eso buscar "plump djs" encuentra un evento
     // donde ese DJ figura en el cartel.
-    supabase
-      .from('events')
-      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
-      .or(
-        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
-      )
+    applyTokenAnd(
+      supabase
+        .from('events')
+        .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages'),
+      ['name', 'slug', 'city', 'lineup_text'],
+      tokens,
+    )
       .gte('date_start', todayIso)
       .order('date_start', { ascending: true })
       .limit(12),
@@ -276,61 +323,109 @@ export async function GET(request: NextRequest) {
     // búsqueda es claramente "de eventos" (p.ej. "winter festival"):
     // si hay cualquier otro tipo de resultado (artista, track, sello…)
     // los pasados se descartan para no pervertir la búsqueda de música.
-    supabase
-      .from('events')
-      .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages')
-      .or(
-        `name.ilike.${ilike},slug.ilike.${ilike},city.ilike.${ilike},lineup_text.ilike.${ilike}`,
-      )
+    applyTokenAnd(
+      supabase
+        .from('events')
+        .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages'),
+      ['name', 'slug', 'city', 'lineup_text'],
+      tokens,
+    )
       .lt('date_start', todayIso)
       .order('date_start', { ascending: false })
       .limit(10),
-    supabase
-      .from('mixes')
-      .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url')
-      .or(`title.ilike.${ilike},artist_name.ilike.${ilike},slug.ilike.${ilike}`)
-      .limit(8),
-    supabase
-      .from('scenes')
-      .select('id, slug, name_en, name_es, image_url, country, region, era')
-      .or(
-        `name_en.ilike.${ilike},name_es.ilike.${ilike},slug.ilike.${ilike},country.ilike.${ilike},region.ilike.${ilike}`,
-      )
-      .limit(6),
-    supabase
-      .from('blog_posts')
-      .select('id, slug, title_en, title_es, image_url, category, published_at, is_published')
-      .eq('is_published', true)
-      .or(`title_en.ilike.${ilike},title_es.ilike.${ilike},slug.ilike.${ilike}`)
+    applyTokenAnd(
+      supabase
+        .from('mixes')
+        .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url'),
+      ['title', 'artist_name', 'slug'],
+      tokens,
+    ).limit(8),
+    applyTokenAnd(
+      supabase.from('scenes').select('id, slug, name_en, name_es, image_url, country, region, era'),
+      ['name_en', 'name_es', 'slug', 'country', 'region'],
+      tokens,
+    ).limit(6),
+    applyTokenAnd(
+      supabase
+        .from('blog_posts')
+        .select('id, slug, title_en, title_es, image_url, category, published_at, is_published')
+        .eq('is_published', true),
+      ['title_en', 'title_es', 'slug'],
+      tokens,
+    )
       .order('published_at', { ascending: false })
       .limit(6),
-    supabase
-      .from('organizations')
-      .select('id, slug, name, image_url, country, base_city')
-      .or(`name.ilike.${ilike},slug.ilike.${ilike}`)
-      .limit(4),
+    applyTokenAnd(
+      supabase.from('organizations').select('id, slug, name, image_url, country, base_city'),
+      ['name', 'slug'],
+      tokens,
+    ).limit(4),
     // New Releases y archivo digital. Los 40 Breaks Vitales no se listan
     // en la web (sep 2026); sus temas viven aquí o en el Top 10 de la ficha.
     // `artist_names_text` es la denormalización STORED de `artists[].name`.
-    supabase
-      .from('chart_featured_tracks')
-      .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, chart_editions!inner(week_date)')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
+    // Cada palabra de la query puede caer en un campo distinto: «skin» en
+    // title y «dj» / «tortu» en artist_names_text.
+    applyTokenAnd(
+      supabase
+        .from('chart_featured_tracks')
+        .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, chart_editions!inner(week_date)'),
+      trackCols,
+      tokens,
+    )
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(40),
     // Retro Vinyl Picks (Discogs)
-    supabase
-      .from('chart_vinyl_tracks')
-      .select('id, title, mix_name, label, artwork_url, year, artists')
-      .or(`title.ilike.${ilike},mix_name.ilike.${ilike},label.ilike.${ilike},artist_names_text.ilike.${ilike}`)
-      .limit(20),
+    applyTokenAnd(
+      supabase.from('chart_vinyl_tracks').select('id, title, mix_name, label, artwork_url, year, artists'),
+      trackCols,
+      tokens,
+    ).limit(20),
     // TOP 10 BEATPORT de fichas (artists/labels): índice en memoria cacheado.
     getBeatportTopIndex(supabase),
+    // Ficha del artista cuando la búsqueda es «su nombre + un tema».
+    // El AND estricto no la devuelve (el título no está en la ficha).
+    looseNameTokens.length > 0 && tokens.length >= 2
+      ? supabase
+          .from('artists')
+          .select(artistSelect)
+          .or(looseNameTokens.map((t) => tokenOr(artistCols, t)).join(','))
+          .limit(20)
+      : Promise.resolve({ data: [] as { id: string }[] }),
   ])
 
   const results: SearchResult[] = []
 
-  for (const a of artistsRes.data || []) {
+  type ArtistHit = {
+    id: string
+    slug: string
+    name: string | null
+    name_display: string | null
+    image_url: string | null
+    country: string | null
+    styles: string[] | null
+    category: string | null
+  }
+  const seenArtist = new Set<string>()
+  const artistHits: ArtistHit[] = []
+  const pushArtist = (a: ArtistHit) => {
+    if (!a?.id || seenArtist.has(a.id)) return
+    seenArtist.add(a.id)
+    artistHits.push(a)
+  }
+  for (const a of (artistsRes.data || []) as ArtistHit[]) pushArtist(a)
+  if (tokens.length >= 2 && longestToken.length >= 4) {
+    const qset = new Set(tokenNorms)
+    for (const a of (artistsLooseRes.data || []) as ArtistHit[]) {
+      const source = (a.name || a.name_display || '').trim()
+      const words = searchTokens(source).map((w) => normForKey(w)).filter((w) => w.length >= 2)
+      if (words.length < 2 || !words.some((w) => w.length >= 4)) continue
+      if (!words.every((w) => qset.has(w))) continue
+      if (!normForKey(source).includes(longestToken)) continue
+      pushArtist(a)
+    }
+  }
+
+  for (const a of artistHits) {
     const styles = Array.isArray(a.styles) ? a.styles.filter(Boolean).slice(0, 2) : []
     const subtitleParts = [a.country, styles.join(' · ')].filter(Boolean)
     results.push({
@@ -357,9 +452,8 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // qLower: para hacer matching en el line-up del lado JS y poder mostrar
-  // los DJs que coinciden en el subtítulo del resultado (mejor contexto).
-  const qLower = qRaw.toLowerCase()
+  // Tokens normalizados: el subtítulo del evento destaca el cartel cuando
+  // el match no está en el nombre. Cada palabra puede caer en un campo distinto.
 
   // collectLineupNames aplana `lineup text[]` + `stages[].lineup[]` igual
   // que la función SQL events_lineup_to_text, pero en memoria para poder
@@ -401,15 +495,14 @@ export async function GET(request: NextRequest) {
     // Si la búsqueda no hizo match en name/slug/city, muy probablemente
     // viene del line-up: destacamos los nombres coincidentes en el subtítulo
     // para que el usuario entienda por qué aparece este evento.
-    const nameHit =
-      (e.name || '').toLowerCase().includes(qLower) ||
-      (e.slug || '').toLowerCase().includes(qLower) ||
-      (e.city || '').toLowerCase().includes(qLower)
+    const nameBlob = normForKey([e.name, e.slug, e.city].filter(Boolean).join(' '))
+    const nameHit = tokenNorms.every((t) => nameBlob.includes(t))
     let lineupHitText = ''
-    if (!nameHit && qLower) {
-      const matches = collectLineupNames(e.lineup, e.stages).filter((n) =>
-        n.toLowerCase().includes(qLower),
-      )
+    if (!nameHit && tokenNorms.length) {
+      const matches = collectLineupNames(e.lineup, e.stages).filter((n) => {
+        const hay = normForKey(n)
+        return tokenNorms.some((t) => hay.includes(t))
+      })
       if (matches.length > 0) {
         const shown = matches.slice(0, 2).join(', ')
         const rest = matches.length > 2 ? ` +${matches.length - 2}` : ''
@@ -717,12 +810,11 @@ export async function GET(request: NextRequest) {
   // Comparte `seenTrackKeys` con los charts: si un tema YA salió por
   // /charts (que se procesa antes), no se duplica aquí.
   // ----------------------------------------------------------------
-  const bpNeedle = normForKey(qRaw)
-  if (bpNeedle) {
+  if (tokenNorms.length) {
     let bpAdded = 0
     for (const e of beatportTopIndex as BeatportTopEntry[]) {
       if (bpAdded >= 12) break
-      if (!e.haystack.includes(bpNeedle)) continue
+      if (!tokenNorms.every((t) => e.haystack.includes(t))) continue
       const key = searchTrackDedupeKey(e.title, e.mix, [{ name: e.firstArtist }])
       if (seenTrackKeys.has(key)) continue
       seenTrackKeys.add(key)
