@@ -480,10 +480,14 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
       : {}),
   }
 
-  const performers = (input.performers ?? [])
+  const performerNames = (input.performers ?? [])
     .map((p) => p.name?.trim())
     .filter((n): n is string => Boolean(n))
-    .map((name) => ({ '@type': 'PerformingGroup' as const, name }))
+  const performers: Record<string, unknown>[] = performerNames.length
+    ? performerNames.map((name) => ({ '@type': 'PerformingGroup', name }))
+    : input.promoterName
+      ? [{ '@type': 'Organization', name: input.promoterName }]
+      : []
 
   const offers: Record<string, unknown>[] = []
   if (input.ticketsUrl) {
@@ -502,6 +506,8 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
       '@type': 'Offer',
       url: input.website,
     })
+  } else {
+    offers.push({ '@type': 'Offer', url })
   }
 
   const organizer = input.promoterName
@@ -514,13 +520,17 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
       }
     : null
 
-  const image = input.imageUrl ? absoluteOgImage(input.imageUrl, lang) : null
+  const image = absoluteOgImage(input.imageUrl, lang)
+  const description = input.description?.trim()
+    ? smartTruncate(input.description, 500)
+    : fallbackEventDescription(input, performerNames, lang)
 
   return {
     '@context': 'https://schema.org',
     '@type': ldType,
+    '@id': eventJsonLdId(input.slug, lang),
     name: input.name,
-    ...(input.description ? { description: smartTruncate(input.description, 500) } : {}),
+    description,
     ...(startDate ? { startDate } : {}),
     ...(endDate ? { endDate } : {}),
     eventStatus: input.cancelled
@@ -530,13 +540,87 @@ export function eventJsonLd(input: EventJsonLdInput, lang: Locale): Record<strin
         : 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location,
-    ...(image ? { image: [image] } : {}),
+    image: [image],
     ...(performers.length > 0 ? { performer: performers } : {}),
     ...(offers.length > 0 ? { offers } : {}),
     ...(organizer ? { organizer } : {}),
     ...(input.capacity ? { maximumAttendeeCapacity: input.capacity } : {}),
     url,
   }
+}
+
+/** `@id` del Event de una ficha: lo referencian las sesiones (`recordedAt`). */
+export function eventJsonLdId(slug: string, lang: Locale): string {
+  return `${SITE_URL}/${lang}/events/${slug}#event`
+}
+
+/** Google marca «Falta description» si el evento no tiene texto en BD. */
+function fallbackEventDescription(input: EventJsonLdInput, performers: string[], lang: Locale): string {
+  const es = lang === 'es'
+  const day = input.dateStart && /^\d{4}-\d{2}-\d{2}$/.test(input.dateStart)
+    ? new Date(`${input.dateStart}T12:00:00Z`).toLocaleDateString(es ? 'es-ES' : 'en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
+    : ''
+  const place = [input.venue, input.city].filter(Boolean).join(', ')
+  const when = [day, place].filter(Boolean).join(es ? ' en ' : ' at ')
+  const lineup = performers.slice(0, 10).join(', ')
+  const lead = es ? `${input.name}: evento de breakbeat` : `${input.name}: breakbeat event`
+  const parts = [
+    when ? `${lead}, ${when}.` : `${lead}.`,
+    lineup ? `${es ? 'Cartel' : 'Line-up'}: ${lineup}${performers.length > 10 ? '…' : '.'}` : '',
+  ]
+  return parts.filter(Boolean).join(' ')
+}
+
+/** Event completo desde una fila de agenda (listas de festival / promotora). */
+export function agendaEventJsonLd(
+  e: {
+    slug: string
+    name: string
+    date_start: string | null
+    date_end: string | null
+    venue: string | null
+    city: string
+    country: string
+    event_type: EventJsonLdInput['eventType']
+    image_url: string | null
+    updated_at?: string | null
+  },
+  lang: Locale,
+  opts: { performers?: string[]; promoterName?: string | null; promoterSlug?: string | null } = {},
+): Record<string, unknown> {
+  const performers = opts.performers ?? []
+  const ld = eventJsonLd(
+    {
+      slug: e.slug,
+      name: e.name,
+      description: null,
+      dateStart: e.date_start,
+      dateEnd: e.date_end,
+      doorsOpen: null,
+      doorsClose: null,
+      city: e.city,
+      country: e.country,
+      venue: e.venue,
+      address: null,
+      coords: null,
+      imageUrl: e.image_url,
+      ticketsUrl: null,
+      website: null,
+      capacity: null,
+      eventType: e.event_type,
+      promoterName: opts.promoterName ?? null,
+      promoterSlug: opts.promoterSlug ?? null,
+      performers: performers.map((name) => ({ name })),
+    },
+    lang,
+  )
+  delete ld['@context']
+  return ld
 }
 
 /** Construye un timestamp ISO local (sin Z) a partir de fecha YYYY-MM-DD y

@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Locale } from '@/lib/i18n-config'
 import {
+  agendaEventJsonLd,
   breadcrumbJsonLd,
   detailPageMetadata,
   faqPageJsonLd,
@@ -426,18 +427,9 @@ export default async function FestivalSeriesPage({ params }: Props) {
         ...(parentBrand
           ? { superEvent: { '@type': 'EventSeries', name: parentBrand.name, url: `${SITE_URL}/${lang}/festivals/${parentBrand.slug}` } }
           : {}),
-        subEvent: editions.slice(0, 25).map((e) => ({
-          '@type': 'Event',
-          name: e.name,
-          ...(e.date_start ? { startDate: e.date_start } : {}),
-          ...(e.date_end ? { endDate: e.date_end } : {}),
-          url: `${SITE_URL}/${lang}/events/${e.slug}`,
-          location: {
-            '@type': 'Place',
-            name: e.venue || e.city,
-            address: { '@type': 'PostalAddress', addressLocality: e.city, addressCountry: e.country },
-          },
-        })),
+        subEvent: editions
+          .slice(0, 25)
+          .map((e) => agendaEventJsonLd(e, lang, { performers: flattenLineupArtistNames(e.lineup ?? []) })),
       },
       breadcrumbJsonLd([
         { name: es ? 'Inicio' : 'Home', url: `${SITE_URL}/${lang}` },

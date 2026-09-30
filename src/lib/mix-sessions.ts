@@ -90,22 +90,10 @@ export function mixMediaJsonLd(
 ): Record<string, unknown> | null {
   const description = mixDescription(m, opts.lang) || m.title
   const thumb = mixThumbnailUrl(m)
+  // Referencia al Event completo de la ficha (`eventJsonLdId`), no un Event a
+  // medias: Search Console cuenta cada nodo Event y avisa de campos que faltan.
   const recordedAt = opts.event
-    ? {
-        '@type': 'Event',
-        name: opts.event.name,
-        url: opts.event.url,
-        ...(opts.event.dateStart ? { startDate: opts.event.dateStart } : {}),
-        ...(opts.event.city || opts.event.venue
-          ? {
-              location: {
-                '@type': 'Place',
-                name: opts.event.venue || opts.event.city,
-                ...(opts.event.city ? { address: { '@type': 'PostalAddress', addressLocality: opts.event.city } } : {}),
-              },
-            }
-          : {}),
-      }
+    ? { '@id': `${opts.event.url}#event`, name: opts.event.name, url: opts.event.url }
     : null
   const common = {
     name: m.title,

@@ -11,7 +11,7 @@
 // ============================================
 
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { breadcrumbJsonLd, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
+import { agendaEventJsonLd, breadcrumbJsonLd, detailPageMetadata, siteNameForLang, SITE_URL } from '@/lib/seo'
 import type { Locale } from '@/lib/i18n-config'
 import type { Label, Organization } from '@/types/database'
 import { isEventCancelled } from '@/types/database'
@@ -183,13 +183,7 @@ export default async function OrganizationDetailPage({ params }: Props) {
         ...(socials.length ? { sameAs: socials.map(([, v]) => v) } : {}),
         ...(upcomingEvents.length
           ? {
-              event: upcomingEvents.slice(0, 20).map((e) => ({
-                '@type': 'Event',
-                name: e.name,
-                ...(e.date_start ? { startDate: e.date_start } : {}),
-                url: `${SITE_URL}/${lang}/events/${e.slug}`,
-                location: { '@type': 'Place', name: e.venue || e.city, address: { '@type': 'PostalAddress', addressLocality: e.city, addressCountry: e.country } },
-              })),
+              event: upcomingEvents.slice(0, 20).map((e) => agendaEventJsonLd(e, lang, { promoterName: organization.name, promoterSlug: slug })),
             }
           : {}),
       },
