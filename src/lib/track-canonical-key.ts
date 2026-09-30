@@ -186,6 +186,69 @@ export function collectSaveRefsByBeatportUrl(
   return out
 }
 
+type OnSitePickForTopSave = {
+  id: string
+  title: string | null
+  mix_name: string | null
+  artists: unknown
+  link_url: string | null
+  chartKind?: string
+  relatedRefs?: Array<{ source: string; id: string }>
+}
+
+/**
+ * El «+» del Top 10 de una ficha debe encenderse si el mismo tema ya está
+ * guardado en «En Optimal Breaks». Muchos saves de New Releases no llevan
+ * `canonical_url` ni snapshot: la coincidencia por URL no llega. Aquí se
+ * devuelven los UUID del catálogo (y sus `relatedRefs`) para que el botón
+ * mire `featured:<id>` / `chart:<id>`, igual que el acordeón.
+ * YouTube no entra: es otra escucha.
+ */
+export function collectSaveRefsFromOnSitePicks(
+  topTracks: Array<{
+    beatport_url?: string | null
+    title: string
+    mix_name?: string | null
+    artists?: unknown
+  }>,
+  picks: OnSitePickForTopSave[],
+): Record<string, TrackSaveCatalogRef[]> {
+  const catalog = picks.filter((p) => p.chartKind !== 'vinyl')
+  const out: Record<string, TrackSaveCatalogRef[]> = {}
+  for (const t of topTracks) {
+    const url = (t.beatport_url || '').trim()
+    if (!url) continue
+    const bpId = beatportNumericId(url)
+    const display = trackDisplayIdentityKey(t.title, t.mix_name, t.artists)
+    const strict = trackSaveIdentityKey(t.title, t.mix_name, t.artists)
+    const refs: TrackSaveCatalogRef[] = []
+    const seen = new Set<string>()
+    const push = (source: string, id: string) => {
+      if (source !== 'chart' && source !== 'featured') return
+      const k = `${source}:${id}`
+      if (!id || seen.has(k)) return
+      seen.add(k)
+      refs.push({ source, id })
+    }
+    for (const p of catalog) {
+      const sameSong =
+        (!!bpId && beatportNumericId(p.link_url) === bpId) ||
+        (!!display && trackDisplayIdentityKey(p.title, p.mix_name, p.artists) === display) ||
+        (!!strict && trackSaveIdentityKey(p.title, p.mix_name, p.artists) === strict)
+      if (!sameSong) continue
+      push(p.chartKind === 'chart' ? 'chart' : 'featured', p.id)
+      for (const r of p.relatedRefs || []) push(r.source, r.id)
+    }
+    refs.sort((a, b) => {
+      const exact = (id: string) =>
+        catalog.some((p) => p.id === id && beatportNumericId(p.link_url) === bpId) ? 0 : 1
+      return exact(a.id) - exact(b.id)
+    })
+    if (refs.length) out[url] = refs
+  }
+  return out
+}
+
 function nameFallbackKey(
   title: string | null | undefined,
   mixName: string | null | undefined,

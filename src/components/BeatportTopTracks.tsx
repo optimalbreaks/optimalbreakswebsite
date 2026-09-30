@@ -90,7 +90,7 @@ function saveDataForTrack(
   saveRefsByUrl?: Record<string, TrackSaveCatalogRef[]>,
 ) {
   if (!t.beatport_url) return undefined
-  const refs = saveRefsByUrl?.[t.beatport_url]
+  const refs = saveRefsByUrl?.[(t.beatport_url || '').trim()]
   const snapshot = buildSnapshot(t, origin)
   const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
   if (refs && refs.length > 0) {

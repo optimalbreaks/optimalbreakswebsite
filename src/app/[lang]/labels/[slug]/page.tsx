@@ -14,6 +14,7 @@ import {
 } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import { fetchLabelOnSitePicks, fetchOnSiteSaveCounts, onSitePickTrackIds } from '@/lib/artist-related-content'
+import { collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
 import CountryBadge from '@/components/CountryBadge'
 import {
   breadcrumbJsonLd,
@@ -337,6 +338,11 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
     fontSize: '12px',
     color: 'rgba(232,220,200,0.6)',
   } as const
+  const beatportTopTracks = (label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+  const beatportSaveRefs = collectSaveRefsFromOnSitePicks(
+    beatportPlayFallback ? [...beatportTopTracks, beatportPlayFallback] : beatportTopTracks,
+    onSitePicks,
+  )
 
   return (
     <>
@@ -370,14 +376,15 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
               <FanCounter type="label" entityId={label.id} lang={lang} />
               <ShareButtons url={`/${lang}/labels/${slug}`} title={`${label.name} | Optimal Breaks`} lang={lang} />
             </div>
-            {((label.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length || beatportPlayFallback) ? (
+            {(beatportTopTracks.length || beatportPlayFallback) ? (
               <BeatportTopTracks
-                tracks={(label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []}
+                tracks={beatportTopTracks}
                 beatportUrl={label.beatport_url}
                 lang={lang}
                 entityName={label.name}
                 artistSlugMap={artistSlugMap}
                 labelSlugMap={labelSlugMap}
+                saveRefsByUrl={beatportSaveRefs}
                 origin={{ kind: 'label', id: label.id, slug: label.slug, name: label.name }}
                 fallbackTrack={beatportPlayFallback}
               />

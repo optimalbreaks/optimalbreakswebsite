@@ -50,6 +50,7 @@ import {
   onSitePickTrackIds,
   resolveRecommendedMixHref,
 } from '@/lib/artist-related-content'
+import { collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -328,6 +329,11 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const beatportInSocials = Object.keys(artist.socials || {}).some(
     (k) => k.toLowerCase() === 'beatport',
   )
+  const beatportTopTracks = (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+  const beatportSaveRefs = collectSaveRefsFromOnSitePicks(
+    beatportPlayFallback ? [...beatportTopTracks, beatportPlayFallback] : beatportTopTracks,
+    featuredPicks,
+  )
 
   const sidebarHeadingStyle = {
     fontFamily: "'Darker Grotesque', sans-serif",
@@ -412,14 +418,15 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   lang={lang}
                 />
               </div>
-              {((artist.beatport_top_tracks as BeatportTopTrack[] | undefined)?.length || beatportPlayFallback) ? (
+              {(beatportTopTracks.length || beatportPlayFallback) ? (
                 <BeatportTopTracks
-                  tracks={(artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []}
+                  tracks={beatportTopTracks}
                   beatportUrl={artist.beatport_url}
                   lang={lang}
                   entityName={artist.name_display || artist.name}
                   artistSlugMap={artistSlugMap}
                   labelSlugMap={labelSlugMap}
+                  saveRefsByUrl={beatportSaveRefs}
                   origin={{
                     kind: 'artist',
                     id: artist.id,
