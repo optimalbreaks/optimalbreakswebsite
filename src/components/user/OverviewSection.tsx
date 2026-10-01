@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
   useFavoriteArtists,
@@ -17,9 +17,13 @@ import {
   useBreakbeatProfile,
   useSavedChartTracks,
   useArtistBookingInbox,
+  type SavedChartTrackRef,
 } from '@/hooks/useUserData'
 import type { BreakbeatListeningCadence, BreakbeatProfileStats } from '@/types/database'
 import { decadeBucketToMidYearLabel } from '@/lib/breakbeat-profile-era'
+import { createBrowserSupabase } from '@/lib/supabase'
+import { countryNameFromCode } from '@/lib/seo'
+import type { Locale } from '@/lib/i18n-config'
 
 // =============================================
 // BREAKBEAT DNA — SVG charts + AI analysis
@@ -100,6 +104,222 @@ function RadarChart({ styles }: { styles: BreakbeatProfileStats['top_styles'] })
         )
       })}
     </svg>
+  )
+}
+
+const SKIP_CRATE_CREDITS = new Set([
+  'va', 'various', 'various artists', 'unknown', 'unknown artist', 'artista desconocido',
+])
+
+function normCrateCredit(value: string | null | undefined): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+}
+
+function snapshotArtistNames(raw: unknown): string[] {
+  if (typeof raw === 'string') {
+    return raw.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((a) => {
+      if (!a) return ''
+      if (typeof a === 'string') return a
+      if (typeof a === 'object' && a && 'name' in a) return String((a as { name?: unknown }).name || '')
+      return ''
+    })
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+function useArtistCountryIndex() {
+  const [map, setMap] = useState<Map<string, string>>(new Map())
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const sb = createBrowserSupabase()
+    const PAGE = 500
+    ;(async () => {
+      const next = new Map<string, string>()
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await sb
+          .from('artists')
+          .select('name, name_display, country')
+          .order('id', { ascending: true })
+          .range(from, from + PAGE - 1)
+        if (error || !data?.length) break
+        for (const row of data) {
+          const country = String(row.country || '').trim()
+          if (!country) continue
+          for (const raw of [row.name, row.name_display]) {
+            const key = normCrateCredit(raw)
+            if (key && !next.has(key)) next.set(key, country)
+          }
+        }
+        if (data.length < PAGE) break
+      }
+      if (cancelled) return
+      setMap(next)
+      setReady(true)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  return { map, ready }
+}
+
+function tallyCrateFromSaves(
+  saved: SavedChartTrackRef[],
+  countryByArtist: Map<string, string>,
+): { artists: { name: string; count: number }[]; labels: { name: string; count: number }[]; countries: { name: string; count: number }[] } {
+  const artistCounts = new Map<string, { name: string; count: number }>()
+  const labelCounts = new Map<string, { name: string; count: number }>()
+  const countryCounts = new Map<string, { name: string; count: number }>()
+
+  const bump = (bag: Map<string, { name: string; count: number }>, raw: string) => {
+    const key = normCrateCredit(raw)
+    if (!key || SKIP_CRATE_CREDITS.has(key)) return
+    const prev = bag.get(key)
+    if (prev) prev.count += 1
+    else bag.set(key, { name: raw.trim(), count: 1 })
+  }
+
+  for (const row of saved) {
+    const names = snapshotArtistNames(row.snapshot?.artists)
+    const seenCountry = new Set<string>()
+    for (const name of names) {
+      bump(artistCounts, name)
+      const country = countryByArtist.get(normCrateCredit(name))
+      if (country && !seenCountry.has(country)) {
+        seenCountry.add(country)
+        bump(countryCounts, country)
+      }
+    }
+    const label = String(row.snapshot?.label || '').trim()
+    if (label) bump(labelCounts, label)
+  }
+
+  const top = (bag: Map<string, { name: string; count: number }>, limit: number) =>
+    Array.from(bag.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, limit)
+
+  return {
+    artists: top(artistCounts, 8),
+    labels: top(labelCounts, 8),
+    countries: top(countryCounts, 8),
+  }
+}
+
+function CountBars({
+  data,
+  color,
+}: {
+  data: { name: string; count: number }[]
+  color: string
+}) {
+  if (data.length === 0) return null
+  const max = Math.max(...data.map((d) => d.count), 1)
+
+  return (
+    <div className="space-y-2">
+      {data.map((d) => (
+        <div key={d.name}>
+          <div className="flex justify-between items-center mb-[2px] gap-2">
+            <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {d.name}
+            </span>
+            <span className="shrink-0" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontSize: '13px', fontWeight: 900, color }}>
+              ×{d.count}
+            </span>
+          </div>
+          <div className="h-[10px] border-[2px] border-[var(--ink)] relative overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 transition-all duration-700"
+              style={{ width: `${(d.count / max) * 100}%`, background: color }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CrateFromSaves({ lang }: { lang: string }) {
+  const es = lang === 'es'
+  const locale: Locale = lang === 'en' ? 'en' : 'es'
+  const { saved, loading } = useSavedChartTracks()
+  const { map: countryByArtist, ready: countriesReady } = useArtistCountryIndex()
+  const tally = useMemo(() => tallyCrateFromSaves(saved, countryByArtist), [saved, countryByArtist])
+
+  if (loading || saved.length === 0) return null
+
+  const countries = tally.countries.map((c) => ({
+    name: countryNameFromCode(c.name, locale) || c.name,
+    count: c.count,
+  }))
+
+  return (
+    <div className="mb-8 border-4 border-[var(--ink)] overflow-hidden">
+      <div className="bg-[var(--ink)] text-[var(--paper)] px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(14px, 3vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.5px', color: 'var(--yellow)' }}>
+            {es ? 'TU CAJÓN' : 'YOUR CRATE'}
+          </div>
+          <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '1px', color: 'var(--red)', marginTop: '2px' }}>
+            {es
+              ? `${saved.length} temas guardados · esto es lo que te define`
+              : `${saved.length} saved tracks · this is what defines you`}
+          </div>
+        </div>
+        <Link
+          href={`/${lang}/mi-cuenta/tracks`}
+          className="no-underline"
+          style={{
+            fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px',
+            padding: '6px 16px', textTransform: 'uppercase',
+            background: 'var(--red)', color: 'white',
+          }}
+        >
+          {es ? 'VER MIS TRACKS' : 'OPEN MY TRACKS'}
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+        <div className="p-5 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+          <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--red)' }}>
+            {es ? 'Artistas más guardados' : 'Most saved artists'}
+          </div>
+          {tally.artists.length > 0
+            ? <CountBars data={tally.artists} color="var(--red)" />
+            : <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{es ? 'Sin créditos en el cajón.' : 'No credits in the crate.'}</p>}
+        </div>
+        <div className="p-5 border-b-[3px] md:border-b-0 md:border-r-[3px] border-[var(--ink)]">
+          <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--uv)' }}>
+            {es ? 'Sellos más guardados' : 'Most saved labels'}
+          </div>
+          {tally.labels.length > 0
+            ? <CountBars data={tally.labels} color="var(--uv)" />
+            : <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>{es ? 'Sin sello en los temas.' : 'No labels on the tracks.'}</p>}
+        </div>
+        <div className="p-5">
+          <div className="mb-3" style={{ fontFamily: "'Darker Grotesque', sans-serif", fontWeight: 900, fontSize: '14px', textTransform: 'uppercase', color: 'var(--acid)' }}>
+            {es ? 'Países más guardados' : 'Most saved countries'}
+          </div>
+          {countries.length > 0
+            ? <CountBars data={countries} color="var(--acid)" />
+            : (
+              <p style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', color: 'var(--dim)' }}>
+                {countriesReady
+                  ? (es ? 'Los créditos no cruzan con fichas del catálogo.' : 'Credits do not match catalogue fichas.')
+                  : (es ? 'Cruzando con el catálogo…' : 'Matching the catalogue…')}
+              </p>
+            )}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -723,6 +943,7 @@ export default function OverviewSection({ lang }: { lang: string }) {
   const { favorites: favArtists } = useFavoriteArtists()
   const { favorites: favLabels } = useFavoriteLabels()
   const { saved: savedMixes } = useSavedMixes()
+  const { saved: savedTracks } = useSavedChartTracks()
   const { sightings } = useArtistSightings()
   const { attendance } = useEventAttendance()
   const { newCount } = useArtistBookingInbox()
@@ -732,12 +953,13 @@ export default function OverviewSection({ lang }: { lang: string }) {
   const planning = Object.values(attendance).filter((s) => s === 'wishlist' || s === 'attending').length
 
   const stats = [
-    { num: favArtists.length, label: es ? 'ARTISTAS FAV' : 'FAV ARTISTS', color: 'var(--red)' },
-    { num: favLabels.length, label: es ? 'SELLOS FAV' : 'FAV LABELS', color: 'var(--uv)' },
-    { num: sightings.length, label: es ? 'VISTOS EN VIVO' : 'SEEN LIVE', color: 'var(--acid)' },
-    { num: planning, label: es ? 'QUIERO IR / VOY' : 'WISHLIST & GOING', color: 'var(--pink)' },
-    { num: attended, label: es ? 'EVENTOS ASISTIDOS' : 'EVENTS ATTENDED', color: 'var(--yellow)' },
-    { num: savedMixes.length, label: es ? 'MIXES GUARDADOS' : 'SAVED MIXES', color: 'var(--cyan)' },
+    { num: savedTracks.length, label: es ? 'TEMAS GUARDADOS' : 'SAVED TRACKS', color: 'var(--red)', href: `/${lang}/mi-cuenta/tracks` },
+    { num: favArtists.length, label: es ? 'ARTISTAS FAV' : 'FAV ARTISTS', color: 'var(--uv)' },
+    { num: favLabels.length, label: es ? 'SELLOS FAV' : 'FAV LABELS', color: 'var(--acid)' },
+    { num: sightings.length, label: es ? 'VISTOS EN VIVO' : 'SEEN LIVE', color: 'var(--pink)' },
+    { num: planning, label: es ? 'QUIERO IR / VOY' : 'WISHLIST & GOING', color: 'var(--yellow)' },
+    { num: attended, label: es ? 'EVENTOS ASISTIDOS' : 'EVENTS ATTENDED', color: 'var(--cyan)' },
+    { num: savedMixes.length, label: es ? 'MIXES GUARDADOS' : 'SAVED MIXES', color: 'var(--orange)' },
   ]
 
   return (
@@ -761,18 +983,30 @@ export default function OverviewSection({ lang }: { lang: string }) {
         </Link>
       )}
       <BreakbeatDNA lang={lang} />
+      <CrateFromSaves lang={lang} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border-4 border-[var(--ink)]">
-        {stats.map((s, i) => (
-          <div key={i} className="p-5 sm:p-6 border-r-[3px] border-b-[3px] border-[var(--ink)] text-center transition-all hover:bg-[var(--yellow)]">
-            <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1, color: s.color }}>
-              {s.num}
-            </div>
-            <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
-              {s.label}
-            </div>
-          </div>
-        ))}
+        {stats.map((s, i) => {
+          const inner = (
+            <>
+              <div style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(32px, 6vw, 48px)', lineHeight: 1, color: s.color }}>
+                {s.num}
+              </div>
+              <div className="mt-1" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
+                {s.label}
+              </div>
+            </>
+          )
+          const cls = 'p-5 sm:p-6 border-r-[3px] border-b-[3px] border-[var(--ink)] text-center transition-all hover:bg-[var(--yellow)]'
+          if (s.href) {
+            return (
+              <Link key={s.label} href={s.href} className={`${cls} no-underline text-inherit block`}>
+                {inner}
+              </Link>
+            )
+          }
+          return <div key={s.label} className={cls}>{inner}</div>
+        })}
       </div>
 
       <div className="mt-8 p-6 border-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
@@ -781,8 +1015,8 @@ export default function OverviewSection({ lang }: { lang: string }) {
         </div>
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '14px', color: 'rgba(232,220,200,0.6)', lineHeight: 1.7 }}>
           {es
-            ? 'Marca artistas como favoritos, registra a quién has visto en directo, y lleva la cuenta de todos los eventos del breakbeat.'
-            : 'Mark artists as favorites, log who you\'ve seen live, and keep track of all breakbeat events.'}
+            ? 'Guarda temas en Mis Tracks: eso es lo que te define. Marca artistas, registra a quién has visto en directo y lleva la cuenta de los eventos.'
+            : 'Save tracks in My Tracks: that is what defines you. Star artists, log who you have seen live, and keep track of events.'}
         </p>
       </div>
     </div>

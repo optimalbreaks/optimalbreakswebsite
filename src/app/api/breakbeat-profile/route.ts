@@ -498,6 +498,36 @@ function crateStylesFromTracks(
     .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) / 100 }))
 }
 
+function crateCountriesFromTracks(
+  tracks: ChartTrackProfileInput[],
+  catalog: CatalogTasteRow[],
+): { name: string; count: number; pct: number }[] {
+  const countryByCredit = new Map<string, string>()
+  for (const row of catalog) {
+    const country = (row.country || '').trim()
+    if (!country) continue
+    for (const raw of [row.name, row.name_display]) {
+      const key = normCredit(raw)
+      if (key && !countryByCredit.has(key)) countryByCredit.set(key, country)
+    }
+  }
+  const counts: Record<string, number> = {}
+  for (const track of tracks) {
+    const seen = new Set<string>()
+    for (const credit of track.artist_names) {
+      const country = countryByCredit.get(normCredit(credit))
+      if (!country || seen.has(country)) continue
+      seen.add(country)
+      counts[country] = (counts[country] || 0) + 1
+    }
+  }
+  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1
+  return Object.entries(counts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 8)
+    .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) / 100 }))
+}
+
 function listeningCadence(
   playTimes: number[],
   now: number,
@@ -567,6 +597,7 @@ function buildBehavior(args: {
   }
 
   const crateStyles = crateStylesFromTracks(args.tracks, args.catalog)
+  const crateCountries = crateCountriesFromTracks(args.tracks, args.catalog)
   const trackTimes = args.trackPlayStamps.map((s) => Date.parse(s)).filter((t) => Number.isFinite(t))
   const mixTimes = args.mixPlayStamps.map((s) => Date.parse(s)).filter((t) => Number.isFinite(t))
   const playTimes = [...trackTimes, ...mixTimes].sort((a, b) => a - b)
@@ -630,8 +661,11 @@ function buildBehavior(args: {
     }
     const weighEs = crateStyles.length > 1 ? ` En el cajón pesan ${topStyleLine(crateStyles)}.` : ''
     const weighEn = crateStyles.length > 1 ? ` In the crate the weight sits on ${topStyleLine(crateStyles)}.` : ''
-    crateEs = `Tienes ${saved} temas guardados: ${depthEs}.${rhythmEs}${alignEs}${weighEs}`
-    crateEn = `You have ${saved} saved tracks: ${depthEn}.${rhythmEn}${alignEn}${weighEn}`
+    const countryLine = crateCountries.slice(0, 3).map((c) => c.name).join(', ')
+    const geoEs = countryLine ? ` Los países que más salen en esos temas son ${countryLine}.` : ''
+    const geoEn = countryLine ? ` The countries that come up most in those tracks are ${countryLine}.` : ''
+    crateEs = `Tienes ${saved} temas guardados: ${depthEs}.${rhythmEs}${alignEs}${weighEs}${geoEs}`
+    crateEn = `You have ${saved} saved tracks: ${depthEn}.${rhythmEn}${alignEn}${weighEn}${geoEn}`
   }
 
   const noLive = bucket.festivals_attended.length + bucket.festivals_going.length + bucket.festivals_wishlist.length
@@ -722,6 +756,7 @@ function buildBehavior(args: {
     last_play_at: lastPlay,
     listening_cadence: cadence,
     crate_styles: crateStyles,
+    crate_countries: crateCountries,
     favorites_reading_es: favEs,
     favorites_reading_en: favEn,
     crate_reading_es: crateEs,
@@ -893,8 +928,8 @@ function computeStats(
       .map(([k, n]) => ({ name: display[k] || k, count: n }))
   }
 
-  const savedTrackLabels = toTopCounts(trackLabelCounts, trackLabelDisplay, 8)
-  const savedTrackArtists = toTopCounts(trackArtistCounts, trackArtistDisplay, 8)
+  const savedTrackLabels = toTopCounts(trackLabelCounts, trackLabelDisplay, 12)
+  const savedTrackArtists = toTopCounts(trackArtistCounts, trackArtistDisplay, 12)
 
   const totalEras = Object.values(eraCounts).reduce((a, b) => a + b, 0) || 1
   const eraDistribution: Record<string, number> = {}

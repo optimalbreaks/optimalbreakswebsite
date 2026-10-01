@@ -813,6 +813,7 @@ export interface BreakbeatProfileBehavior {
   last_play_at: string | null
   listening_cadence: BreakbeatListeningCadence
   crate_styles: { name: string; count: number; pct: number }[]
+  crate_countries: { name: string; count: number; pct: number }[]
   favorites_reading_es: string
   favorites_reading_en: string
   crate_reading_es: string
