@@ -773,6 +773,54 @@ export interface BreakbeatProfileStats {
   dominant_eras?: { name: string; pct: number }[]
   dominant_years?: { year: string; pct: number }[]
   scene_hints?: string[]
+  /**
+   * Conducta de la cuenta, aparte del canon de las fichas favoritas.
+   * Favoritos, tamaño del cajón, asistencia real a festivales/clubes
+   * y ritmo de escucha en la web. Las lecturas ya vienen en prosa
+   * para que el modelo no contradiga los ceros.
+   */
+  behavior?: BreakbeatProfileBehavior
+}
+
+export type BreakbeatListeningCadence =
+  | 'none'
+  | 'dormant'
+  | 'occasional'
+  | 'regular'
+  | 'habitual'
+  | 'unknown'
+
+export interface BreakbeatProfileBehavior {
+  favorite_artists: number
+  favorite_labels: number
+  favorite_events: number
+  saved_mixes: number
+  saved_tracks: number
+  saves_last_30d: number
+  saves_last_90d: number
+  festivals_attended: number
+  festivals_going: number
+  festivals_wishlist: number
+  club_attended: number
+  club_going: number
+  club_wishlist: number
+  sightings: number
+  track_plays: number
+  mix_plays: number
+  plays_last_30d: number
+  plays_last_90d: number
+  active_days_90d: number
+  last_play_at: string | null
+  listening_cadence: BreakbeatListeningCadence
+  crate_styles: { name: string; count: number; pct: number }[]
+  favorites_reading_es: string
+  favorites_reading_en: string
+  crate_reading_es: string
+  crate_reading_en: string
+  live_reading_es: string
+  live_reading_en: string
+  listening_reading_es: string
+  listening_reading_en: string
 }
 
 export interface ArtistKeyRelease {

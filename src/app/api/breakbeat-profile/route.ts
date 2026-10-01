@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database, SavedChartTrackSnapshot, BreakbeatProfileStats } from '@/types/database'
+import type { Database, SavedChartTrackSnapshot, BreakbeatProfileStats, BreakbeatProfileBehavior, BreakbeatListeningCadence } from '@/types/database'
 import { artistEraToReferenceYear, normalizeArtistEraToDecade } from '@/lib/breakbeat-profile-era'
-import { fetchAllRows, selectByIds } from '@/lib/supabase-admin'
+import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
 
 // =============================================
 // POST /api/breakbeat-profile
@@ -48,6 +48,7 @@ type LabelProfileInput = {
 }
 
 type EventProfileInput = {
+  id: string
   name: string
   event_type: string
   country: string
@@ -422,6 +423,354 @@ function pctLabel(pct: number): string {
   return `${Math.round(pct * 100)}%`
 }
 
+const DAY_MS = 86_400_000
+
+function normCredit(value: string | null | undefined): string {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+}
+
+function countSince(stamps: Array<string | null | undefined>, days: number, now: number): number {
+  const cut = now - days * DAY_MS
+  let n = 0
+  for (const stamp of stamps) {
+    const t = stamp ? Date.parse(stamp) : NaN
+    if (Number.isFinite(t) && t >= cut) n++
+  }
+  return n
+}
+
+function activeDays(stamps: number[], since: number): number {
+  const days = new Set<string>()
+  for (const t of stamps) {
+    if (t >= since) days.add(new Date(t).toISOString().slice(0, 10))
+  }
+  return days.size
+}
+
+function styleLabel(name: string): string {
+  return name.replace(/_/g, ' ')
+}
+
+function topStyleLine(styles: { name: string; pct?: number }[], limit = 3): string {
+  return styles.slice(0, limit).map((s) => styleLabel(s.name)).join(', ')
+}
+
+type CatalogTasteRow = {
+  name: string
+  name_display: string | null
+  styles: string[] | null
+  country: string | null
+}
+
+function crateStylesFromTracks(
+  tracks: ChartTrackProfileInput[],
+  catalog: CatalogTasteRow[],
+): { name: string; count: number; pct: number }[] {
+  const byCredit = new Map<string, { styles: string[] }>()
+  for (const row of catalog) {
+    const taste = { styles: row.styles || [] }
+    for (const raw of [row.name, row.name_display]) {
+      const key = normCredit(raw)
+      if (key && !byCredit.has(key)) byCredit.set(key, taste)
+    }
+  }
+  const counts: Record<string, number> = {}
+  for (const track of tracks) {
+    const seen = new Set<string>()
+    for (const credit of track.artist_names) {
+      const taste = byCredit.get(normCredit(credit))
+      if (!taste) continue
+      for (const style of taste.styles) {
+        if (!style || seen.has(style)) continue
+        seen.add(style)
+        counts[style] = (counts[style] || 0) + 1
+      }
+    }
+  }
+  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1
+  return Object.entries(counts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 6)
+    .map(([name, count]) => ({ name, count, pct: Math.round((count / total) * 100) / 100 }))
+}
+
+function listeningCadence(
+  playTimes: number[],
+  now: number,
+): BreakbeatListeningCadence {
+  if (playTimes.length === 0) return 'none'
+  const last = playTimes[playTimes.length - 1]
+  if (now - last > 60 * DAY_MS) return 'dormant'
+  const days90 = activeDays(playTimes, now - 90 * DAY_MS)
+  const days30 = activeDays(playTimes, now - 30 * DAY_MS)
+  const plays30 = playTimes.filter((t) => t >= now - 30 * DAY_MS).length
+  if (days90 >= 12 || (plays30 >= 8 && days30 >= 4)) return 'habitual'
+  if (days90 >= 4) return 'regular'
+  return 'occasional'
+}
+
+type AttendanceStatus = 'wishlist' | 'attending' | 'attended'
+
+function buildBehavior(args: {
+  favoriteArtists: number
+  favoriteLabels: number
+  favoriteEvents: number
+  savedMixes: number
+  tracks: ChartTrackProfileInput[]
+  events: EventProfileInput[]
+  attendance: { event_id: string; status: AttendanceStatus }[]
+  sightings: { name: string; event_name: string; city: string }[]
+  catalog: CatalogTasteRow[]
+  trackPlayStamps: string[]
+  mixPlayStamps: string[]
+  playsReadable: boolean
+  favoriteStyles: { name: string }[]
+  now?: number
+}): BreakbeatProfileBehavior {
+  const now = args.now ?? Date.now()
+  const saveStamps = args.tracks.map((t) => t.created_at)
+  const saveTimes = saveStamps
+    .map((s) => (s ? Date.parse(s) : NaN))
+    .filter((t) => Number.isFinite(t))
+    .sort((a, b) => a - b)
+  const saves30 = countSince(saveStamps, 30, now)
+  const saves90 = countSince(saveStamps, 90, now)
+
+  const byEvent = new Map(args.events.map((e) => [e.id, e]))
+  const bucket = {
+    festivals_attended: [] as string[],
+    festivals_going: [] as string[],
+    festivals_wishlist: [] as string[],
+    club_attended: [] as string[],
+    club_going: [] as string[],
+    club_wishlist: [] as string[],
+  }
+  for (const row of args.attendance) {
+    const ev = byEvent.get(row.event_id)
+    const name = ev?.name || ''
+    const fest = ev?.event_type === 'festival'
+    const club = ev?.event_type === 'club_night'
+    if (row.status === 'attended') {
+      if (fest) bucket.festivals_attended.push(name)
+      else if (club) bucket.club_attended.push(name)
+    } else if (row.status === 'attending') {
+      if (fest) bucket.festivals_going.push(name)
+      else if (club) bucket.club_going.push(name)
+    } else if (row.status === 'wishlist') {
+      if (fest) bucket.festivals_wishlist.push(name)
+      else if (club) bucket.club_wishlist.push(name)
+    }
+  }
+
+  const crateStyles = crateStylesFromTracks(args.tracks, args.catalog)
+  const trackTimes = args.trackPlayStamps.map((s) => Date.parse(s)).filter((t) => Number.isFinite(t))
+  const mixTimes = args.mixPlayStamps.map((s) => Date.parse(s)).filter((t) => Number.isFinite(t))
+  const playTimes = [...trackTimes, ...mixTimes].sort((a, b) => a - b)
+  const cadence: BreakbeatListeningCadence = args.playsReadable ? listeningCadence(playTimes, now) : 'unknown'
+  const lastPlay = playTimes.length ? new Date(playTimes[playTimes.length - 1]).toISOString() : null
+  const plays30 = playTimes.filter((t) => t >= now - 30 * DAY_MS).length
+  const plays90 = playTimes.filter((t) => t >= now - 90 * DAY_MS).length
+  const days90 = activeDays(playTimes, now - 90 * DAY_MS)
+
+  const named = (names: string[]) => {
+    const line = takeUniqueNonEmpty(names, 4).join(', ')
+    return line ? ` (${line})` : ''
+  }
+  const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`
+
+  const favEs = args.favoriteArtists + args.favoriteLabels + args.savedMixes + args.favoriteEvents === 0
+    ? 'No tienes favoritos declarados. El canon no sale de fichas marcadas.'
+    : `Has marcado ${n(args.favoriteArtists, 'artista', 'artistas')}, ${n(args.favoriteLabels, 'sello', 'sellos')} y ${n(args.savedMixes, 'mix', 'mixes')} como favoritos${args.favoriteEvents ? `, más ${n(args.favoriteEvents, 'evento', 'eventos')} en favoritos` : ''}. Eso es el canon que declaras.`
+  const favEn = args.favoriteArtists + args.favoriteLabels + args.savedMixes + args.favoriteEvents === 0
+    ? 'You have no declared favourites. The canon does not come from starred fichas.'
+    : `You have starred ${n(args.favoriteArtists, 'artist', 'artists')}, ${n(args.favoriteLabels, 'label', 'labels')} and ${n(args.savedMixes, 'mix', 'mixes')}${args.favoriteEvents ? `, plus ${n(args.favoriteEvents, 'event', 'events')} saved as favourites` : ''}. That is the canon you declare.`
+
+  const saved = args.tracks.length
+  const favTop = args.favoriteStyles[0]?.name || ''
+  const crateTop = crateStyles[0]?.name || ''
+  let crateEs: string
+  let crateEn: string
+  if (saved === 0) {
+    crateEs = 'No tienes temas en Mis Tracks. El gusto musical declarado sale de los favoritos, no de un cajón.'
+    crateEn = 'You have no tracks in My Tracks. Declared taste comes from favourites, not from a crate.'
+  } else {
+    const depthEs = saved <= 8 ? 'cajón corto' : saved <= 40 ? 'cajón ya formado' : 'cajón profundo'
+    const depthEn = saved <= 8 ? 'a short crate' : saved <= 40 ? 'a formed crate' : 'a deep crate'
+    const lastSave = saveTimes.length ? saveTimes[saveTimes.length - 1] : null
+    const quiet = lastSave != null && now - lastSave > 90 * DAY_MS
+    const rhythmEs = quiet
+      ? ' La última vez que guardaste fue hace más de tres meses: el cajón está quieto.'
+      : saves30 >= 5
+        ? ` En los últimos 30 días has guardado ${saves30}: el cajón sigue creciendo.`
+        : saves90 > 0
+          ? ` En 90 días has guardado ${saves90}.`
+          : ''
+    const rhythmEn = quiet
+      ? ' The last save was more than three months ago: the crate is quiet.'
+      : saves30 >= 5
+        ? ` In the last 30 days you saved ${saves30}: the crate is still growing.`
+        : saves90 > 0
+          ? ` In 90 days you saved ${saves90}.`
+          : ''
+    let alignEs = ''
+    let alignEn = ''
+    if (crateTop && favTop && crateTop !== favTop) {
+      alignEs = ` Los favoritos abren por ${styleLabel(favTop)} y el cajón por ${styleLabel(crateTop)}: no es el mismo centro.`
+      alignEn = ` Favourites open on ${styleLabel(favTop)} and the crate on ${styleLabel(crateTop)}: not the same centre.`
+    } else if (crateTop && favTop) {
+      alignEs = ` Favoritos y cajón coinciden en ${styleLabel(crateTop)}.`
+      alignEn = ` Favourites and the crate meet on ${styleLabel(crateTop)}.`
+    } else if (!crateTop) {
+      alignEs = ' Los créditos del cajón no cruzan con fichas del catálogo, así que el subgénero sigue saliendo de los artistas favoritos.'
+      alignEn = ' Crate credits do not match catalogue fichas, so subgenre still comes from favourite artists.'
+    }
+    const weighEs = crateStyles.length > 1 ? ` En el cajón pesan ${topStyleLine(crateStyles)}.` : ''
+    const weighEn = crateStyles.length > 1 ? ` In the crate the weight sits on ${topStyleLine(crateStyles)}.` : ''
+    crateEs = `Tienes ${saved} temas guardados: ${depthEs}.${rhythmEs}${alignEs}${weighEs}`
+    crateEn = `You have ${saved} saved tracks: ${depthEn}.${rhythmEn}${alignEn}${weighEn}`
+  }
+
+  const noLive = bucket.festivals_attended.length + bucket.festivals_going.length + bucket.festivals_wishlist.length
+    + bucket.club_attended.length + bucket.club_going.length + args.sightings.length === 0
+  let liveEs: string
+  let liveEn: string
+  if (noLive) {
+    liveEs = 'No marcas asistencia a festivales ni a clubes, y no tienes vistos en vivo. El perfil es de escucha en casa. Guardar un evento en favoritos no cuenta como haber ido.'
+    liveEn = 'You mark no festival or club attendance, and no seen-live artists. The profile is a home listener. Saving an event as a favourite is not the same as having been there.'
+  } else {
+    const bitsEs: string[] = []
+    const bitsEn: string[] = []
+    if (bucket.festivals_attended.length) {
+      bitsEs.push(`Has asistido a ${n(bucket.festivals_attended.length, 'festival', 'festivales')}${named(bucket.festivals_attended)}.`)
+      bitsEn.push(`You have attended ${n(bucket.festivals_attended.length, 'festival', 'festivals')}${named(bucket.festivals_attended)}.`)
+    } else {
+      bitsEs.push('No has marcado ningún festival como asistido.')
+      bitsEn.push('You have not marked any festival as attended.')
+    }
+    if (bucket.festivals_going.length) {
+      bitsEs.push(`Tienes ${n(bucket.festivals_going.length, 'festival', 'festivales')} en «voy a ir»${named(bucket.festivals_going)}: intención, todavía no asistencia.`)
+      bitsEn.push(`You have ${n(bucket.festivals_going.length, 'festival', 'festivals')} set to going${named(bucket.festivals_going)}: intent, not attendance yet.`)
+    } else if (bucket.festivals_wishlist.length && !bucket.festivals_attended.length) {
+      bitsEs.push(`Hay ${n(bucket.festivals_wishlist.length, 'festival', 'festivales')} en «quiero ir»${named(bucket.festivals_wishlist)}, sin asistencia marcada.`)
+      bitsEn.push(`${n(bucket.festivals_wishlist.length, 'festival is', 'festivals are')} on the wishlist${named(bucket.festivals_wishlist)}, with no attendance marked.`)
+    }
+    if (bucket.club_attended.length) {
+      bitsEs.push(`En clubes sí consta asistencia: ${n(bucket.club_attended.length, 'noche', 'noches')}${named(bucket.club_attended)}.`)
+      bitsEn.push(`Club attendance is on record: ${n(bucket.club_attended.length, 'night', 'nights')}${named(bucket.club_attended)}.`)
+    }
+    if (args.sightings.length) {
+      const seen = takeUniqueNonEmpty(args.sightings.map((s) => {
+        const where = [s.event_name, s.city].filter(Boolean).join(', ')
+        return where ? `${s.name} (${where})` : s.name
+      }), 4).join(', ')
+      bitsEs.push(`Vistos en vivo: ${args.sightings.length}${seen ? ` (${seen})` : ''}.`)
+      bitsEn.push(`Seen live: ${args.sightings.length}${seen ? ` (${seen})` : ''}.`)
+    }
+    liveEs = bitsEs.join(' ')
+    liveEn = bitsEn.join(' ')
+  }
+
+  const splitEs = `${args.trackPlayStamps.length} de temas y ${args.mixPlayStamps.length} de mixes`
+  const splitEn = `${args.trackPlayStamps.length} track plays and ${args.mixPlayStamps.length} mix plays`
+  const lastDay = lastPlay ? lastPlay.slice(0, 10) : ''
+  let listenEs: string
+  let listenEn: string
+  if (!args.playsReadable) {
+    listenEs = 'No se ha podido leer el historial de reproducciones de esta cuenta. No inventes cada cuánto oye.'
+    listenEn = 'This account’s play history could not be read. Do not invent how often they listen.'
+  } else if (cadence === 'none') {
+    listenEs = 'Con la sesión iniciada no hay ninguna reproducción de tema ni de mix. En la web no consta hábito de escucha; guardar temas no es lo mismo que oírlos aquí.'
+    listenEn = 'With the session signed in there is no track or mix play. The site has no listening habit on record; saving tracks is not the same as hearing them here.'
+  } else if (cadence === 'dormant') {
+    listenEs = `Llegaste a oír en la web (${splitEs}), pero la última reproducción fue el ${lastDay}: ahora mismo esa escucha está parada.`
+    listenEn = `You did listen on the site (${splitEn}), but the last play was ${lastDay}: that listening is paused.`
+  } else if (cadence === 'habitual') {
+    listenEs = `Oyes a menudo en la web: ${plays30} reproducciones en 30 días y ${days90} días distintos en 90 (${splitEs}). La última fue el ${lastDay}.`
+    listenEn = `You listen often on the site: ${plays30} plays in 30 days and ${days90} distinct days in 90 (${splitEn}). The last was ${lastDay}.`
+  } else if (cadence === 'regular') {
+    listenEs = `Oyes con ritmo, no a diario: ${days90} días con música en los últimos 90 (${splitEs}). La última fue el ${lastDay}.`
+    listenEn = `You listen with a rhythm, not daily: ${days90} days with music in the last 90 (${splitEn}). The last was ${lastDay}.`
+  } else {
+    listenEs = `Oyes de vez en cuando: ${plays90} reproducciones en 90 días, en ${days90} días (${splitEs}). La última fue el ${lastDay}.`
+    listenEn = `You listen now and then: ${plays90} plays in 90 days, across ${days90} days (${splitEn}). The last was ${lastDay}.`
+  }
+
+  return {
+    favorite_artists: args.favoriteArtists,
+    favorite_labels: args.favoriteLabels,
+    favorite_events: args.favoriteEvents,
+    saved_mixes: args.savedMixes,
+    saved_tracks: saved,
+    saves_last_30d: saves30,
+    saves_last_90d: saves90,
+    festivals_attended: bucket.festivals_attended.length,
+    festivals_going: bucket.festivals_going.length,
+    festivals_wishlist: bucket.festivals_wishlist.length,
+    club_attended: bucket.club_attended.length,
+    club_going: bucket.club_going.length,
+    club_wishlist: bucket.club_wishlist.length,
+    sightings: args.sightings.length,
+    track_plays: args.trackPlayStamps.length,
+    mix_plays: args.mixPlayStamps.length,
+    plays_last_30d: plays30,
+    plays_last_90d: plays90,
+    active_days_90d: days90,
+    last_play_at: lastPlay,
+    listening_cadence: cadence,
+    crate_styles: crateStyles,
+    favorites_reading_es: favEs,
+    favorites_reading_en: favEn,
+    crate_reading_es: crateEs,
+    crate_reading_en: crateEn,
+    live_reading_es: liveEs,
+    live_reading_en: liveEn,
+    listening_reading_es: listenEs,
+    listening_reading_en: listenEn,
+  }
+}
+
+async function loadOwnPlayStamps(userId: string): Promise<{ tracks: string[]; mixes: string[]; ok: boolean }> {
+  try {
+    const admin = createServiceSupabase()
+    const [tracks, mixes] = await Promise.all([
+      fetchAllRows<{ created_at: string }>((from, to) =>
+        admin
+          .from('track_play_events')
+          .select('created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+      ),
+      fetchAllRows<{ created_at: string }>((from, to) =>
+        admin
+          .from('mix_play_events')
+          .select('created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to),
+      ),
+    ])
+    if (tracks.error || mixes.error) {
+      console.error('[breakbeat-profile] play events:', tracks.error || mixes.error)
+      return { tracks: [], mixes: [], ok: false }
+    }
+    return {
+      tracks: tracks.data.map((r) => r.created_at),
+      mixes: mixes.data.map((r) => r.created_at),
+      ok: true,
+    }
+  } catch (err) {
+    console.error('[breakbeat-profile] play events unavailable:', err)
+    return { tracks: [], mixes: [], ok: false }
+  }
+}
+
 function computeStats(
   artists: ArtistProfileInput[],
   labels: LabelProfileInput[],
@@ -694,8 +1043,13 @@ async function generateAIText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): 
     .map((d) => `${d.year} (${pctLabel(d.pct)})`)
     .join(', ')
   const sceneHintsStr = stats.scene_hints?.join(' | ') || ''
-
   const isEs = lang === 'es'
+  const behavior = stats.behavior
+  const favReading = (isEs ? behavior?.favorites_reading_es : behavior?.favorites_reading_en) || (isEs ? 'sin datos' : 'no data')
+  const crateReading = (isEs ? behavior?.crate_reading_es : behavior?.crate_reading_en) || (isEs ? 'sin datos' : 'no data')
+  const liveReading = (isEs ? behavior?.live_reading_es : behavior?.live_reading_en) || (isEs ? 'sin datos' : 'no data')
+  const listenReading = (isEs ? behavior?.listening_reading_es : behavior?.listening_reading_en) || (isEs ? 'sin datos' : 'no data')
+
   const systemPrompt = isEs
     ? `Eres crítico musical y analista de cultura breakbeat para Optimal Breaks. Escribes para un lector que ya sabe de la música y detecta al instante el copy comercial y la plantilla autogenerada. Tu voz: cercana, culta, analítica, seca cuando hace falta; nunca promocional ni grandilocuente. Hablas al usuario de tú. Cada lectura que haces debe estar sostenida por evidencia real del bloque de datos: subgéneros, décadas, años, artistas, tracks, releases, sellos, eventos, lineups o mixes. Si un área está vacía, lo dices con naturalidad y pasas a otra; no rellenas con abstracciones.
 
@@ -703,7 +1057,7 @@ Cosas que NUNCA haces:
 - Muletillas vacías tipo "no es un dato administrativo", "no es decorativo", "no es casualidad", "cuando aterrizas en nombres", "se puede hablar de canon", "se deja leer en…".
 - Frases tipo "hay raíces", "hay evolución", "hay mutaciones" sin aterrizarlas acto seguido en un año, un nombre o una escena.
 - Inventarte artistas, tracks, sellos o escenas que no estén en los datos.
-- Contar cuántos favoritos tiene el usuario ("con 59 datos", "con X ítems").
+- Soltar un inventario de contadores ("con 59 datos", "tienes 12 artistas, 4 sellos y 200 tracks" en lista). La escala sí entra en la prosa cuando define el perfil: cajón corto o profundo, oyente habitual o en silencio, va a festivales o los sigue desde casa.
 - Sacar claves técnicas internas: youtube_session, essential_mix, classic_set, radio_show, snake_case, marcadores tipo [top semanal], [new release], [vinilo retro], [weekly top], [retro vinyl]. Si aparecen en los datos los traduces a lenguaje natural (sesión larga en vídeo, programa de radio, set de pista, podcast; o, para tracks, referente a si es top semanal, novedad o rescate en vinilo retro, pero siempre en prosa, nunca con corchetes ni etiquetas).`
     : `You are a music critic and breakbeat culture analyst for Optimal Breaks. You write for a reader who already knows the music and instantly spots promotional copy or autogenerated templates. Your voice: close, cultured, analytical, dry when it needs to be; never promotional or overblown. You speak to the user directly as "you". Every interpretive claim you make must be grounded in real evidence from the data block: subgenres, decades, years, artists, tracks, releases, labels, events, lineups or mixes. If an area is thin, say so naturally and move on; do not fill with abstractions.
 
@@ -711,7 +1065,7 @@ Things you NEVER do:
 - Empty formulas such as "it is not a decorative figure", "it is no accident", "once you land on names", "you can talk about a canon".
 - Phrases like "there are roots", "there is evolution", "there are mutations" without immediately anchoring them in a year, a name or a scene.
 - Invent artists, tracks, labels or scenes not present in the data.
-- Count how many favourites the user has ("with 59 data points", "with X items").
+- Dump a counter inventory ("with 59 data points", "you have 12 artists, 4 labels and 200 tracks" as a list). Scale does belong in the prose when it defines the profile: a short or deep crate, a habitual listener or silence, goes to festivals or follows them from home.
 - Surface internal taxonomy keys: youtube_session, essential_mix, classic_set, radio_show, snake_case, markers like [top semanal], [new release], [vinilo retro], [weekly top], [retro vinyl]. If they appear in the data, translate them to natural prose (long video session, radio show, club set, podcast; for tracks, rephrase the source context in prose, never in brackets or tags).`
 
   const userPrompt = isEs
@@ -734,15 +1088,16 @@ QUÉ DEBES CUBRIR (repártelo por los párrafos como quieras, no hace falta segu
 - Releases/álbumes/compilaciones cuando los datos los aportan.
 - Sellos: combina los sellos guardados con los sellos que más se repiten en las tracks guardadas (eso es evidencia fuerte de apuesta editorial).
 - Mixes: habla de formatos de escucha (sesión larga en vídeo, programa de radio, set de pista, podcast…) y menciona algún título concreto si existe.
-- Eventos, lineups y el contexto de sala/festival si hay.
-- Al final, síntesis breve del perfil: más digger o más selector, más de club o festival, más purista o ecléctico — pero apoyado en los datos.
+- Eventos, lineups y el contexto de sala/festival si hay. Un evento en favoritos no es haber asistido: la asistencia la manda el bloque CONDUCTA.
+- Conducta en la web, en un párrafo propio y también en la síntesis final. Cuatro capas, las cuatro: favoritos declarados, tamaño y ritmo del cajón de Mis Tracks, si va a festivales (o solo los quiere, o no marca ninguno) y cada cuánto suena música con su cuenta. Si no dicen lo mismo, dilo. El bloque CONDUCTA ya está redactado: intégralo, no lo contradigas y no lo copies como ficha.
+- Al final, síntesis breve del perfil: más digger o más selector, más de casa o de festival, más purista o ecléctico — cruzando las cuatro capas, no solo los favoritos.
 
 REGLAS DURAS:
 - Voz siempre en segunda persona ("tú"), nunca "este usuario" ni "el perfil".
 - Nada de copy promocional, chistes fáciles ni clickbait.
 - No inventes. Si falta evidencia en un área, omítela o dilo con naturalidad.
 - Prohibido usar las muletillas listadas en el system prompt. Prohibido escribir corchetes con marcadores técnicos.
-- No digas cuántos ítems tiene el usuario en total.
+- No hagas inventario de contadores. Una cifra concreta (temas guardados, festivales a los que ha ido, ritmo de escucha) sí, dentro de una frase.
 - No uses listas ni bullets.
 
 DATOS DEL PERFIL:
@@ -763,7 +1118,7 @@ DATOS DEL PERFIL:
 - Sellos guardados o favoritos (muestra): ${sampleLabelsStr || 'sin datos'}
 - Key artists de sellos: ${labelArtistsStr || 'sin datos'}
 - Key releases de sellos: ${labelReleasesStr || 'sin datos'}
-- Eventos guardados/asistencias (muestra): ${sampleEventsStr || 'sin datos'}
+- Eventos en favoritos (muestra; no implica asistencia): ${sampleEventsStr || 'sin datos'}
 - Contexto de eventos: ${eventContextsStr || 'sin datos'}
 - Lineups vistos en eventos: ${eventLineupStr || 'sin datos'}
 - Mixes guardados (muestra): ${sampleMixesStr || 'sin datos'}
@@ -772,7 +1127,11 @@ DATOS DEL PERFIL:
 - Tracks guardadas por el usuario en "Mis Tracks" (total ${savedTracksCount}; fuentes entre corchetes = top semanal / new release / vinilo retro / top beatport de ficha): ${savedChartTracksStr || 'sin datos'}
 - Artistas que más se repiten en esas tracks guardadas: ${savedTrackArtistsStr || 'sin datos'}
 - Sellos que más se repiten en esas tracks guardadas: ${savedTrackLabelsStr || 'sin datos'}
-- Pistas de escena inferibles desde los datos: ${sceneHintsStr || 'sin datos suficientes'}
+- Pistas de escena inferibles desde los favoritos: ${sceneHintsStr || 'sin datos suficientes'}
+- CONDUCTA — favoritos: ${favReading}
+- CONDUCTA — cajón (Mis Tracks): ${crateReading}
+- CONDUCTA — en vivo (esto manda para saber si va a festivales; un favorito no es haber ido): ${liveReading}
+- CONDUCTA — escucha en la web: ${listenReading}
 
 Responde EXACTAMENTE en este formato JSON:
 {"archetype": "...", "text": "..."}`
@@ -795,15 +1154,16 @@ WHAT YOU MUST COVER (distribute freely across paragraphs):
 - Releases/albums/compilations when the data supports it.
 - Labels: combine saved labels with labels that recur in the saved tracks (strong editorial evidence).
 - Mixes: listening formats (long video session, radio show, club set, podcast…) and mention a concrete title if present.
-- Events, lineups and club/festival context if present.
-- End with a short synthesis: more digger or selector, more club or festival, more purist or eclectic — always grounded in the data.
+- Events, lineups and club/festival context if present. A favourited event is not attendance: attendance is governed by the CONDUCT block.
+- Behaviour on the site, in its own paragraph and again in the closing synthesis. All four layers: declared favourites, size and pace of the My Tracks crate, whether they go to festivals (or only want to, or mark none) and how often music plays on their account. If the layers disagree, say so. The CONDUCT block is already written: weave it in, do not contradict it and do not paste it as a fact sheet.
+- End with a short synthesis: more digger or selector, more home or festival, more purist or eclectic — crossing all four layers, not favourites alone.
 
 HARD RULES:
 - Speak to the user in the second person ("you"), never "this user" or "the profile".
 - No promotional copy, no cheap jokes, no clickbait.
 - Do not invent. If evidence is thin, omit or say so naturally.
 - Forbidden to use the filler phrases listed in the system prompt. Forbidden to write bracketed technical markers.
-- Do not say how many items the user has in total.
+- Do not dump a counter inventory. One concrete figure (saved tracks, festivals attended, listening rhythm) is fine inside a sentence.
 - No bullet lists.
 
 PROFILE DATA:
@@ -824,7 +1184,7 @@ PROFILE DATA:
 - Saved/favorite labels (sample): ${sampleLabelsStr || 'no data'}
 - Label key artists: ${labelArtistsStr || 'no data'}
 - Label key releases: ${labelReleasesStr || 'no data'}
-- Saved/attended events (sample): ${sampleEventsStr || 'no data'}
+- Saved/favourite events (sample; not attendance): ${sampleEventsStr || 'no data'}
 - Event contexts: ${eventContextsStr || 'no data'}
 - Event lineups: ${eventLineupStr || 'no data'}
 - Saved mixes (sample): ${sampleMixesStr || 'no data'}
@@ -833,7 +1193,11 @@ PROFILE DATA:
 - User-saved tracks in "My Tracks" (total ${savedTracksCount}; bracketed label = weekly top / new release / retro vinyl / profile Beatport top): ${savedChartTracksStr || 'no data'}
 - Artists that recur most across those saved tracks: ${savedTrackArtistsStr || 'no data'}
 - Labels that recur most across those saved tracks: ${savedTrackLabelsStr || 'no data'}
-- Scene hints inferred from the data: ${sceneHintsStr || 'not enough data'}
+- Scene hints inferred from favourites: ${sceneHintsStr || 'not enough data'}
+- CONDUCT — favourites: ${favReading}
+- CONDUCT — crate (My Tracks): ${crateReading}
+- CONDUCT — live (this governs whether they go to festivals; a favourite is not attendance): ${liveReading}
+- CONDUCT — listening on the site: ${listenReading}
 
 Reply EXACTLY in this JSON format:
 {"archetype": "...", "text": "..."}`
@@ -1014,6 +1378,7 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
     .map((a) => formatCount(a.name, a.count))
     .join(', ')
   const sceneHints = stats.scene_hints?.slice(0, 2).join('; ') || ''
+  const behavior = stats.behavior
   const mixTasteSummary = Object.entries(stats.mix_taste)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 4)
@@ -1121,19 +1486,41 @@ function generateRulesText(stats: BreakbeatProfileStats, lang: 'es' | 'en'): {
     recommendedMixes ? `From your artists, recommendations include ${recommendedMixes}.` : '',
   )
 
-  const p7Es = joinSentences(
-    sampleEvents ? `En eventos aparecen ${sampleEvents}.` : '',
-    eventContexts ? `Contextos: ${eventContexts}.` : '',
-    eventLineup ? `Lineups con nombres como ${eventLineup}.` : '',
-  )
-  const p7En = joinSentences(
-    sampleEvents ? `Events include ${sampleEvents}.` : '',
-    eventContexts ? `Contexts: ${eventContexts}.` : '',
-    eventLineup ? `Lineups with names such as ${eventLineup}.` : '',
-  )
+  const p7Es = behavior
+    ? joinSentences(behavior.live_reading_es, behavior.listening_reading_es)
+    : joinSentences(
+      sampleEvents ? `En eventos aparecen ${sampleEvents}.` : '',
+      eventContexts ? `Contextos: ${eventContexts}.` : '',
+      eventLineup ? `Lineups con nombres como ${eventLineup}.` : '',
+    )
+  const p7En = behavior
+    ? joinSentences(behavior.live_reading_en, behavior.listening_reading_en)
+    : joinSentences(
+      sampleEvents ? `Events include ${sampleEvents}.` : '',
+      eventContexts ? `Contexts: ${eventContexts}.` : '',
+      eventLineup ? `Lineups with names such as ${eventLineup}.` : '',
+    )
 
-  const p8Es = `En conjunto, te acercas a un perfil ${eventBias}, probablemente entre selector y digger, con un gusto que se lee en fechas, nombres y sellos concretos más que en una etiqueta genérica.`
-  const p8En = `Overall you lean toward a ${eventBias} profile, probably between selector and digger, with a taste that reads through concrete dates, names and labels rather than a broad tag.`
+  const homeEs = behavior && behavior.festivals_attended === 0 && behavior.club_attended === 0
+    ? 'de casa'
+    : eventBias
+  const homeEn = behavior && behavior.festivals_attended === 0 && behavior.club_attended === 0
+    ? 'home'
+    : eventBias
+  const p8Es = behavior
+    ? joinSentences(
+      behavior.favorites_reading_es,
+      behavior.crate_reading_es,
+      `En conjunto te lees como un perfil ${homeEs}: el canon declarado, el cajón, la asistencia y la escucha en la web pesan los cuatro.`,
+    )
+    : `En conjunto, te acercas a un perfil ${eventBias}, probablemente entre selector y digger, con un gusto que se lee en fechas, nombres y sellos concretos más que en una etiqueta genérica.`
+  const p8En = behavior
+    ? joinSentences(
+      behavior.favorites_reading_en,
+      behavior.crate_reading_en,
+      `Overall you read as a ${homeEn} profile: declared canon, crate, attendance and listening on the site all four carry weight.`,
+    )
+    : `Overall you lean toward a ${eventBias} profile, probably between selector and digger, with a taste that reads through concrete dates, names and labels rather than a broad tag.`
 
   const paragraphsEs = [p1Es, p2Es, p3Es, p4Es, p5Es, p6Es, p7Es, p8Es].filter(Boolean)
   const paragraphsEn = [p1En, p2En, p3En, p4En, p5En, p6En, p7En, p8En].filter(Boolean)
@@ -1155,7 +1542,7 @@ export async function POST(request: NextRequest) {
 
     // Favoritos y asistencia (páginas cortas). Mis Tracks se pagina: el default
     // de PostgREST (1000) se queda corto en cuentas editoriales.
-    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes, savedTracksPage] = await Promise.all([
+    const [favArtistsRes, favLabelsRes, attendanceRes, favEventsRes, savedMixesRes, savedTracksPage, sightingsPage] = await Promise.all([
       supabase.from('favorite_artists').select('artist_id').eq('user_id', user.id),
       supabase.from('favorite_labels').select('label_id').eq('user_id', user.id),
       supabase.from('event_attendance').select('event_id, status').eq('user_id', user.id),
@@ -1167,12 +1554,25 @@ export async function POST(request: NextRequest) {
           .select('track_source, track_id, canonical_url, snapshot, created_at')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to),
+      ),
+      fetchAllRows<{ artist_id: string; event_name: string | null; city: string | null }>((from, to) =>
+        supabase
+          .from('artist_sightings')
+          .select('artist_id, event_name, city')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           .range(from, to),
       ),
     ])
 
     if (savedTracksPage.error) {
       console.error('[breakbeat-profile] saved_chart_tracks:', savedTracksPage.error)
+    }
+    if (sightingsPage.error) {
+      console.error('[breakbeat-profile] artist_sightings:', sightingsPage.error)
     }
 
     const artistIds = favArtistsRes.data?.map((d: { artist_id: string }) => d.artist_id) || []
@@ -1193,6 +1593,8 @@ export async function POST(request: NextRequest) {
     const featuredTrackIds = savedTrackRows.filter((r) => r.track_source === 'featured').map((r) => r.track_id)
     const vinylTrackIds = savedTrackRows.filter((r) => r.track_source === 'vinyl').map((r) => r.track_id)
     const savedTrackIds = savedTrackRows.map((r) => `track:${r.track_source}:${r.track_id}`)
+    const sightingRows = sightingsPage.data || []
+    const sightingArtistIds = Array.from(new Set(sightingRows.map((s) => s.artist_id).filter(Boolean)))
 
     const allIds = [...artistIds, ...labelIds, ...eventIds, ...mixIds, ...savedTrackIds]
     if (allIds.length < 3) {
@@ -1203,15 +1605,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const currentHash = hashInputs(allIds)
-
     // Fetch entity details in parallel. `.in('id', 700 UUIDs)` tumba PostgREST;
     // el Top 100 ya trocea — aquí igual, o las New Releases no entran al ADN.
     type ChartLive = { id: string; title: string | null; mix_name: string | null; artists: unknown; label: string | null; bpm: number | null; release_year: number | null; release_date?: string | null }
     type FeatLive = { id: string; title: string | null; mix_name?: string | null; artists: unknown; label: string | null; release_year: number | null; release_date?: string | null }
     type VinylLive = { id: string; title: string | null; mix_name: string | null; artists: unknown; label: string | null; year: number | null }
+    type SightingArtist = { id: string; name: string }
 
-    const [artistsRes, labelsRes, eventsRes, mixesRes, chartTracksRes, featuredTracksRes, vinylTracksRes] = await Promise.all([
+    const [artistsRes, labelsRes, eventsRes, mixesRes, chartTracksRes, featuredTracksRes, vinylTracksRes, sightingArtistsRes, catalogRes, playStamps] = await Promise.all([
       artistIds.length > 0
         ? selectByIds<ArtistProfileInput>(artistIds, (chunk) =>
           supabase.from('artists').select('name, styles, country, era, category, essential_tracks, recommended_mixes, key_releases').in('id', chunk),
@@ -1224,7 +1625,7 @@ export async function POST(request: NextRequest) {
         : { data: [] as LabelProfileInput[] },
       eventIds.length > 0
         ? selectByIds<EventProfileInput>(eventIds, (chunk) =>
-          supabase.from('events').select('name, event_type, country, city, venue, lineup, date_start, tags').in('id', chunk),
+          supabase.from('events').select('id, name, event_type, country, city, venue, lineup, date_start, tags').in('id', chunk),
         )
         : { data: [] as EventProfileInput[] },
       mixIds.length > 0
@@ -1247,6 +1648,21 @@ export async function POST(request: NextRequest) {
           supabase.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year').in('id', chunk),
         )
         : { data: [] as VinylLive[] },
+      sightingArtistIds.length > 0
+        ? selectByIds<SightingArtist>(sightingArtistIds, (chunk) =>
+          supabase.from('artists').select('id, name').in('id', chunk),
+        )
+        : { data: [] as SightingArtist[] },
+      savedTrackRows.length > 0
+        ? fetchAllRows<CatalogTasteRow>((from, to) =>
+          supabase
+            .from('artists')
+            .select('name, name_display, styles, country')
+            .order('id', { ascending: true })
+            .range(from, to),
+        )
+        : Promise.resolve({ data: [] as CatalogTasteRow[], error: null }),
+      loadOwnPlayStamps(user.id),
     ])
 
     const chartById = new Map((chartTracksRes.data || []).map((t) => [t.id, t]))
@@ -1311,13 +1727,58 @@ export async function POST(request: NextRequest) {
       if (fromSnap) chartTracksInput.push(fromSnap)
     }
 
+    const eventsInput = (eventsRes.data || []) as EventProfileInput[]
+    const favoriteEventIds = new Set((favEventsRes.data || []).map((d: { event_id: string }) => d.event_id))
     const stats = computeStats(
-      (artistsRes.data as any[]) || [],
-      (labelsRes.data as any[]) || [],
-      (eventsRes.data as any[]) || [],
-      (mixesRes.data as any[]) || [],
+      (artistsRes.data as ArtistProfileInput[]) || [],
+      (labelsRes.data as LabelProfileInput[]) || [],
+      eventsInput,
+      (mixesRes.data as MixProfileInput[]) || [],
       chartTracksInput,
     )
+    stats.sample_events = takeUniqueNonEmpty(
+      eventsInput.filter((e) => favoriteEventIds.has(e.id)).map((e) => e.name),
+      4,
+    )
+
+    const sightingNameById = new Map((sightingArtistsRes.data || []).map((a) => [a.id, a.name]))
+    const attendanceRows: { event_id: string; status: AttendanceStatus }[] = []
+    for (const row of attendanceRes.data || []) {
+      const status = row.status
+      if (status === 'wishlist' || status === 'attending' || status === 'attended') {
+        attendanceRows.push({ event_id: row.event_id, status })
+      }
+    }
+    if (catalogRes.error) {
+      console.error('[breakbeat-profile] artist catalog for crate styles:', catalogRes.error)
+    }
+
+    stats.behavior = buildBehavior({
+      favoriteArtists: artistIds.length,
+      favoriteLabels: labelIds.length,
+      favoriteEvents: favoriteEventIds.size,
+      savedMixes: mixIds.length,
+      tracks: chartTracksInput,
+      events: eventsInput,
+      attendance: attendanceRows,
+      sightings: sightingRows.map((s) => ({
+        name: sightingNameById.get(s.artist_id) || '',
+        event_name: s.event_name || '',
+        city: s.city || '',
+      })).filter((s) => s.name),
+      catalog: catalogRes.data || [],
+      trackPlayStamps: playStamps.tracks,
+      mixPlayStamps: playStamps.mixes,
+      playsReadable: playStamps.ok,
+      favoriteStyles: stats.top_styles,
+    })
+
+    const currentHash = hashInputs([
+      ...allIds,
+      `saves:${stats.behavior.saved_tracks}:${stats.behavior.saves_last_30d}`,
+      `live:${stats.behavior.festivals_attended}:${stats.behavior.festivals_going}:${stats.behavior.festivals_wishlist}:${stats.behavior.club_attended}:${stats.behavior.sightings}`,
+      `plays:${stats.behavior.listening_cadence}:${stats.behavior.track_plays}:${stats.behavior.mix_plays}:${stats.behavior.last_play_at || ''}`,
+    ])
 
     // Generate text in both languages
     const [resultEs, resultEn] = await Promise.all([

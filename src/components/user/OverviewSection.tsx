@@ -18,12 +18,24 @@ import {
   useSavedChartTracks,
   useArtistBookingInbox,
 } from '@/hooks/useUserData'
-import type { BreakbeatProfileStats } from '@/types/database'
+import type { BreakbeatListeningCadence, BreakbeatProfileStats } from '@/types/database'
 import { decadeBucketToMidYearLabel } from '@/lib/breakbeat-profile-era'
 
 // =============================================
 // BREAKBEAT DNA — SVG charts + AI analysis
 // =============================================
+
+function listeningCadenceLabel(cadence: BreakbeatListeningCadence, es: boolean): string {
+  const labels: Record<BreakbeatListeningCadence, { es: string; en: string }> = {
+    none: { es: 'sin escuchas', en: 'no plays' },
+    dormant: { es: 'en pausa', en: 'paused' },
+    occasional: { es: 'de vez en cuando', en: 'now and then' },
+    regular: { es: 'con ritmo', en: 'steady' },
+    habitual: { es: 'a menudo', en: 'often' },
+    unknown: { es: 'sin dato', en: 'unknown' },
+  }
+  return es ? labels[cadence].es : labels[cadence].en
+}
 
 function RadarChart({ styles }: { styles: BreakbeatProfileStats['top_styles'] }) {
   const items = styles.slice(0, 6)
@@ -682,9 +694,14 @@ function BreakbeatDNA({ lang }: { lang: string }) {
             <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
               {es ? 'DATOS ANALIZADOS' : 'DATA ANALYZED'}: {stats.total_data_points}
             </span>
-            {stats.event_profile.festivals + stats.event_profile.club_nights > 0 && (
+            {stats.behavior && (
               <span style={{ fontFamily: "'Courier Prime', monospace", fontSize: '9px', letterSpacing: '1px', color: 'var(--dim)' }}>
-                {es ? 'EVENTOS' : 'EVENTS'}: {stats.event_profile.festivals}F / {stats.event_profile.club_nights}CN
+                {es ? 'TEMAS' : 'TRACKS'}: {stats.behavior.saved_tracks}
+                {' · '}
+                {es ? 'FESTIVALES' : 'FESTIVALS'}: {stats.behavior.festivals_attended}
+                {stats.behavior.festivals_going > 0 ? `+${stats.behavior.festivals_going}` : ''}
+                {' · '}
+                {es ? 'ESCUCHA' : 'LISTENING'}: {listeningCadenceLabel(stats.behavior.listening_cadence, es)}
               </span>
             )}
             {Object.keys(stats.mix_taste).length > 0 && (
