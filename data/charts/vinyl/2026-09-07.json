@@ -410,6 +410,28 @@
       "artwork_url": "https://i.ytimg.com/vi/avUbiMypdEs/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 23,
+      "title": "Romantika",
+      "mix_name": "",
+      "artists": [
+        {
+          "name": "Stanton Warriors"
+        },
+        {
+          "name": "DJ Deller"
+        }
+      ],
+      "label": "Kick It Recordings",
+      "catalog_number": "",
+      "year": 2014,
+      "format": "Digital",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=NuhkcvH4ltc",
+      "artwork_url": "https://i.ytimg.com/vi/NuhkcvH4ltc/hqdefault.jpg",
+      "note_en": "Free Valentine's Day vault track (2014); also spelled Romantica on some uploads.",
+      "note_es": "Tema regalado de San Valentín (2014), rescatado del archivo; en algunos uploads aparece como Romantica."
     }
   ]
 }

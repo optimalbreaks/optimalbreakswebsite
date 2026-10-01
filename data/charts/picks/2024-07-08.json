@@ -1,0 +1,650 @@
+{
+  "week_date": "2024-07-08",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Violeta",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tomy/479402",
+          "name": "Tomy"
+        },
+        {
+          "url": "https://www.beatport.com/artist/yo-speed/526398",
+          "name": "Yo Speed"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/violeta/19120517",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e7f992b-bd36-4580-be65-b0dd14b81d58.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3d87a814-3fd3-4cef-bb5e-a5ce004a8dc4.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "title": "Jaime",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Pray For Bass"
+        }
+      ],
+      "label": "Need Money",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jaime/19195179",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/61c3fba6-4ed5-45bf-bab8-d908fe26ee44.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/72574727-9234-4904-8e3a-8bfb0c30388e.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "sort_order": 3,
+      "title": "Froot",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        },
+        {
+          "url": "https://www.beatport.com/artist/burgos/626321",
+          "name": "BURGOS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/shade-k-burgos/1221869",
+          "name": "Shade k, Burgos"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/froot/19218186",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f5540588-7220-49f5-ac22-904b317f0765.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8dbda380-1a50-4525-ae2b-fc46471cae9e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Db Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-14",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 4,
+      "title": "Jumping",
+      "mix_name": "Shade K Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ak-47/54302",
+          "name": "AK 47"
+        },
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jumping/19112363",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a5931a0-c8fc-4ffb-a725-012069ab40de.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1b66ecfd-ea41-48cd-ad51-3aa95705f00e.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 5,
+      "title": "Arabian Bounce",
+      "mix_name": "Original Essential Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-volume/445",
+          "name": "DJ Volume"
+        },
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/arabian-bounce/19087040",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/54d316ef-e6e1-4cd2-8968-280ff16c3651.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4f0fc58d-8954-4e8e-9478-befbc5a48ac1.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "A Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 6,
+      "title": "NXT2U",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/menges/964545",
+          "name": "Menges"
+        },
+        {
+          "url": "https://www.beatport.com/artist/gruv42/1048007",
+          "name": "Gruv42"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nxt2u/19175225",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9105689d-083e-43ac-bdb6-3518bf8b09bb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/15686dae-c788-49d9-a7b2-bc077e74621c.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 7,
+      "title": "Dangerous",
+      "mix_name": "DnB Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dangerous/19170078",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bfd3c136-31ff-418c-8f13-a4ecd94f5c4e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b8d22827-07c5-42bf-8ac3-fd2432d38667.LOFI.mp3",
+      "bpm": 86,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-08",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 8,
+      "title": "Hot Like Fire",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hot-like-fire/19190950",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1dc8ea7e-5695-4023-9b10-802809ccf6e8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2bf869f3-cf90-4c03-bf44-323796a1c7e0.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-07-08",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 9,
+      "title": "What!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/what/19143472",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77f14296-b4b4-4add-affb-06b62670e25d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d3cfb7af-3dae-4353-b461-bd00b783b3fd.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-09",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 10,
+      "title": "Jonny 5",
+      "mix_name": "Paket Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ivory/11641",
+          "name": "IVORY"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wizard/15539",
+          "name": "Wizard"
+        },
+        {
+          "url": "https://www.beatport.com/artist/paket/386044",
+          "name": "Paket"
+        }
+      ],
+      "label": "Break Beat Connection",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jonny-5/19076407",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2cfa336d-9ada-49e5-aa1d-dd582cdc46bf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4f29e06a-f5d2-4c7e-8c58-7b97d7134187.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2024,
+      "release_date": "2024-07-10",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 11,
+      "title": "Jonny 5",
+      "mix_name": "The Brainkiller & Dj Tortu Remixes",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ivory/11641",
+          "name": "IVORY"
+        },
+        {
+          "url": "https://www.beatport.com/artist/wizard/15539",
+          "name": "Wizard"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Break Beat Connection",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jonny-5/19076403",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2cfa336d-9ada-49e5-aa1d-dd582cdc46bf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d9421e17-ac1b-4257-aecc-d0370718d2fd.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Major",
+      "release_year": 2024,
+      "release_date": "2024-07-10",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 12,
+      "title": "Fragments",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/fm-3/402033",
+          "name": "FM-3"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fragments/19115656",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e4e1410-027f-408e-b60e-96c84be2660b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/67e83e77-0081-4d31-a7c3-ec03a72cb412.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Bb Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-10",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 13,
+      "title": "This Is Time",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/gruv42/1048007",
+          "name": "Gruv42"
+        },
+        {
+          "url": "https://www.beatport.com/artist/periko/1130710",
+          "name": "Periko"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/this-is-time/19159175",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cf22f0a7-8886-49f5-a72e-0a89b9ab9e62.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4e315b99-2d70-4975-8428-17e08023d780.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "E Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 14,
+      "title": "Feel Your Pressure",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-wavs/921459",
+          "name": "DJ WAVS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/prodigal-kids/1184569",
+          "name": "Prodigal Kids"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-your-pressure/19127469",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fb69fc3b-5db3-4032-a359-cc5221d4eb73.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2b539ce4-5c98-472a-99b5-c49d50f674ba.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 15,
+      "title": "The Bass Goes 40 Miles",
+      "mix_name": "GreenFlamez & Dr Black Sheep Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/joel-h/1008045",
+          "name": "Joel H"
+        },
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        },
+        {
+          "name": "Dr Black Sheep"
+        }
+      ],
+      "label": "Cleveland City",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-bass-goes-40-miles/19214028",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/29fb866e-950d-4b8c-b824-4598ba1188e3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7438c07c-ad39-478f-bdfb-6f6778cb3bd1.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": "",
+      "spotify_url": "https://open.spotify.com/track/3MVjsnPBLeB5XDtQdNLfDp",
+      "tidal_url": "https://tidal.com/browse/track/371921688"
+    },
+    {
+      "sort_order": 16,
+      "title": "Pump It Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pump-it-up/19254154",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/517e7438-a404-4b5b-9b11-02cb72b1ea62.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1ce88e8e-47dd-4d94-8985-0f76aca6fb7d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 17,
+      "title": "Bringin' 88 Back",
+      "mix_name": "Brothers Of Funk 24k Gangsta Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/brothers-of-funk/16697",
+          "name": "Brothers Of Funk"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mizzo/605037",
+          "name": "Mizzo"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bringin-88-back/19114739",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/50315b45-cfec-4183-8e3a-b7daeb8caf15.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/65547f01-b9c3-491a-b496-67cdb6950204.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 18,
+      "title": "Let me down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dr-beats/227118",
+          "name": "Dr Beats"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/let-me-down/19190976",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2741569a-c9ae-445b-8a98-8d511337ff66.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3da3b309-5956-4736-b5a3-ae4f84b7d67d.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/370538719"
+    },
+    {
+      "sort_order": 19,
+      "title": "Miss You",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ro73/1113665",
+          "name": "Ro73"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mushlime/1129870",
+          "name": "Mushlime"
+        }
+      ],
+      "label": "Warriors Beat Return",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/miss-you/19080008",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b6e86234-6c07-4d14-9f02-4959efdbe298.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/34db3dd0-ccfe-48a9-8e03-cd20dc8c680c.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 20,
+      "title": "Break It Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/woter/310684",
+          "name": "Woter"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/break-it-down/19096420",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/65f347c5-a213-443e-8238-a26cd8200c5d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/55058be0-36eb-410b-a281-256e5047c305.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 21,
+      "title": "Deadja Vu",
+      "mix_name": "Phattom & Macho Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-darrow-chem-syndicate/106178",
+          "name": "The Darrow Chem Syndicate"
+        },
+        {
+          "url": "https://www.beatport.com/artist/macho/112381",
+          "name": "Macho"
+        },
+        {
+          "url": "https://www.beatport.com/artist/phattom/1163631",
+          "name": "Phattom"
+        }
+      ],
+      "label": "Nipponeer Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/deadja-vu/19066560",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0a075827-a42b-42ea-a222-f74c291cc270.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef26afc9-db4e-474f-a963-b05e0a91cd41.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 22,
+      "title": "Trip The Bass",
+      "mix_name": "Danny Phrentic Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        },
+        {
+          "url": "https://www.beatport.com/artist/danny-phrentic/1211927",
+          "name": "Danny Phrentic"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trip-the-bass/19148635",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04cf2b98-82c2-484c-b441-c96c8be392ba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5512985e-d0cb-41ef-b6ec-6a1d3c52725a.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "B Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 23,
+      "title": "Trip The Bass",
+      "mix_name": "BUSSPASS Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        },
+        {
+          "url": "https://www.beatport.com/artist/busspass/1067252",
+          "name": "BUSSPASS"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trip-the-bass/19148639",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04cf2b98-82c2-484c-b441-c96c8be392ba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b1b0830d-90d5-4cdd-a3c2-06a436b598f2.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 24,
+      "title": "Trip The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trip-the-bass/19148630",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04cf2b98-82c2-484c-b441-c96c8be392ba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/791def06-68d1-4eff-9999-874a2bcf0466.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Major",
+      "release_year": 2024,
+      "release_date": "2024-07-11",
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}

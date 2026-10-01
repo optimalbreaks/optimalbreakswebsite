@@ -3089,6 +3089,28 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 134
+    },
+    {
+      "title": "Give You Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Megatron"
+        }
+      ],
+      "label": "Combat Wax Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/give-you-up/30736287",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/febc447b-a4d0-4141-a0bd-caf7dd68648c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4561fb3a-7029-44f6-83bb-8526525f391c.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 135
     }
   ]
 }
