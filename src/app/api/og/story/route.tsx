@@ -2,7 +2,8 @@
 // OPTIMAL BREAKS — Imagen de Story de Instagram por canción
 // GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&lang=es|en → PNG 1080×1920
 // GET /api/og/story?play=mix:<slug> → story de una sesión (festival, edición,
-// fecha, lugar y retrato del artista). Botón IG de `ShareButtons` en /mixes/<slug>.
+// fecha y lugar). SoundCloud usa la portada del tema; YouTube, el retrato
+// del artista. Botón IG de `ShareButtons` en /mixes/<slug>.
 //
 // La consume el botón "IG" de `TrackShareButton`: el cliente baja este PNG
 // y lo pasa a `navigator.share({ files })` para que el usuario lo suba a
@@ -189,7 +190,7 @@ function storyDateLabel(iso: string | null | undefined, es: boolean): string {
   })
 }
 
-/** Story de una sesión (/mixes/<slug>): festival, edición, fecha y retrato. */
+/** Story de una sesión (/mixes/<slug>): festival, edición, fecha e imagen. */
 async function mixStoryResponse(slug: string, es: boolean): Promise<ImageResponse | NextResponse> {
   const supabase = createCachedSupabase()
   const { data: mixRaw } = await supabase.from('mixes').select('*').eq('slug', slug).maybeSingle()
@@ -216,20 +217,27 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
   const festivalName = brand?.name ?? series?.name ?? null
   const editionName = brand && series ? series.name : null
 
-  const names = flattenLineupArtistNames(mix.artist_name ? [mix.artist_name] : [])
-  const lookup = buildArtistSlugLookup(await fetchAllArtistLinkRows(supabase))
-  let portrait: string | null = null
-  for (const name of names) {
-    const artistSlug = resolveArtistSlug(name, lookup)
-    if (!artistSlug) continue
-    const { data } = await supabase.from('artists').select('image_url').eq('slug', artistSlug).maybeSingle()
-    portrait = absoluteImageUrl((data as { image_url?: string | null } | null)?.image_url)
-    if (portrait) break
-  }
+  const cover = absoluteImageUrl(mix.image_url)
   const yt = extractYouTubeId(mix.video_url)
-  const artworkDataUrl = await loadArtworkDataUrl(
-    portrait || absoluteImageUrl(mix.image_url) || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null),
-  )
+  const names = flattenLineupArtistNames(mix.artist_name ? [mix.artist_name] : [])
+  // SoundCloud: la portada del tema (en un B2B salen los dos, no el retrato
+  // del primero que tenga ficha). YouTube sigue con el retrato.
+  let artworkDataUrl =
+    mix.platform === 'soundcloud' && cover ? await loadArtworkDataUrl(cover) : null
+  if (!artworkDataUrl) {
+    const lookup = buildArtistSlugLookup(await fetchAllArtistLinkRows(supabase))
+    let portrait: string | null = null
+    for (const name of names) {
+      const artistSlug = resolveArtistSlug(name, lookup)
+      if (!artistSlug) continue
+      const { data } = await supabase.from('artists').select('image_url').eq('slug', artistSlug).maybeSingle()
+      portrait = absoluteImageUrl((data as { image_url?: string | null } | null)?.image_url)
+      if (portrait) break
+    }
+    artworkDataUrl = await loadArtworkDataUrl(
+      portrait || cover || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : null),
+    )
+  }
 
   const artist = (mix.artist_name || names[0] || '').trim().slice(0, 80)
   const title = mix.title.trim().slice(0, 90)
