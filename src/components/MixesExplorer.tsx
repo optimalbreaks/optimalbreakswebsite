@@ -11,6 +11,7 @@ import type { MixTrack } from '@/components/DeckAudioProvider'
 import {
   buildSoundCloudVisualPlayerSrc,
   isSoundCloudTrackEmbedUrl,
+  soundCloudOpenHref,
   useSoundCloudExclusivePlayback,
 } from '@/components/SoundCloudVisualEmbed'
 import { logMixPlayOncePerBrowserSession } from '@/lib/mix-play-session-log'
@@ -811,7 +812,7 @@ function LargeGrid({
                 </a>
               ) : scTrackUrl ? (
                 <a
-                  href={scTrackUrl}
+                  href={soundCloudOpenHref(scTrackUrl, m.video_url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"
@@ -892,7 +893,7 @@ function CompactGrid({
                   YouTube ↗
                 </a>
               ) : scTrackUrl ? (
-                <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
+                <a href={soundCloudOpenHref(scTrackUrl, m.video_url)} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>
                   SoundCloud ↗
                 </a>
               ) : getMixTrack(m) ? (
@@ -1002,7 +1003,7 @@ function ListView({
                     {m.artist_name}
                   </div>
                   <a
-                    href={scTrackUrl}
+                    href={soundCloudOpenHref(scTrackUrl, m.video_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors"

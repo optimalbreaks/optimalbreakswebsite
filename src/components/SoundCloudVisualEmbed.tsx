@@ -112,8 +112,28 @@ export function isSoundCloudTrackEmbedUrl(url: string | null | undefined): boole
   return true
 }
 
+/**
+ * Enlace «SoundCloud ↗». Un tema secreto guarda en `embed_url` la URL de API
+ * (`api.soundcloud.com/tracks/ID?secret_token=…`) porque el widget hace 404
+ * con el permalink `/s-TOKEN`. La ficha humana va en `video_url`.
+ */
+export function soundCloudOpenHref(embedUrl: string, videoUrl?: string | null): string {
+  const page = videoUrl?.trim() ?? ''
+  if (
+    /^https:\/\/(on\.|m\.)?soundcloud\.com\//i.test(page) &&
+    !/api\.soundcloud\.com/i.test(page) &&
+    !/w\.soundcloud\.com/i.test(page)
+  ) {
+    return page
+  }
+  return embedUrl
+}
+
 export function buildSoundCloudVisualPlayerSrc(trackUrl: string): string {
   const q = new URLSearchParams()
+  // El secreto tiene que ir DENTRO del parámetro `url`
+  // (`https://api.soundcloud.com/tracks/ID?secret_token=s-…`).
+  // Un permalink `…/s-TOKEN` (o `secret_token` hermano) responde 404.
   q.set('url', trackUrl.trim())
   q.set('visual', 'true')
   q.set('auto_play', 'false')

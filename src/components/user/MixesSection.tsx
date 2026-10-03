@@ -11,7 +11,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import FavoriteButton from '@/components/FavoriteButton'
 import type { ViewMode } from '@/components/ViewToggle'
-import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
+import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl, soundCloudOpenHref } from '@/components/SoundCloudVisualEmbed'
 import { getMixTrack } from '@/components/MixesExplorer'
 import {
   DashboardMixPlayButton,
@@ -83,7 +83,7 @@ export default function MixesSection({ lang }: { lang: string }) {
                   {ytId ? (
                     <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>YouTube ↗</a>
                   ) : scTrackUrl ? (
-                    <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>SoundCloud ↗</a>
+                    <a href={soundCloudOpenHref(scTrackUrl, m.video_url)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>SoundCloud ↗</a>
                   ) : getMixTrack(m) ? (
                     <DashboardMixPlayButton m={m} />
                   ) : m.embed_url ? (
@@ -121,7 +121,7 @@ export default function MixesSection({ lang }: { lang: string }) {
                   {ytId ? (
                     <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>YouTube ↗</a>
                   ) : scTrackUrl ? (
-                    <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>SoundCloud ↗</a>
+                    <a href={soundCloudOpenHref(scTrackUrl, m.video_url)} target="_blank" rel="noopener noreferrer" className="mt-2 bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors text-center" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 6px' }}>SoundCloud ↗</a>
                   ) : null}
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function MixesSection({ lang }: { lang: string }) {
                     <span className="cutout red" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{m.mix_type?.replace('_', ' ')}</span>
                     <span className="cutout outline" style={{ fontSize: '8px', padding: '1px 6px', margin: 0 }}>{formatMixDateLine(m, lang)}</span>
                     {scTrackUrl ? (
-                      <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 8px' }}>SC ↗</a>
+                      <a href={soundCloudOpenHref(scTrackUrl, m.video_url)} target="_blank" rel="noopener noreferrer" className="bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', padding: '2px 8px' }}>SC ↗</a>
                     ) : null}
                   </div>
                 </div>

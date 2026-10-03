@@ -10,8 +10,8 @@
     "published_at": "2026-10-02T16:02:44.000Z",
     "duration_minutes": 58,
     "platform": "soundcloud",
-    "video_url": null,
-    "embed_url": "https://soundcloud.com/dj-godino-1/godino-vs-paket-olibass-music/s-J41hWJSGWNA",
+    "video_url": "https://soundcloud.com/dj-godino-1/godino-vs-paket-olibass-music/s-J41hWJSGWNA",
+    "embed_url": "https://api.soundcloud.com/tracks/2411955846?secret_token=s-J41hWJSGWNA",
     "image_url": "https://i1.sndcdn.com/artworks-xeX4WKCWKpzt0ZBt-BaHJhg-t500x500.jpg",
     "event_slug": "olibass-music-festival-open-air",
     "is_featured": false

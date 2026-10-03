@@ -14,6 +14,7 @@ Cuando el usuario pase un enlace de SoundCloud, **en especial acortados** (`http
   - Petición `HEAD` o `GET` con redirecciones seguidas y usar la **URL final**; o leer cabecera `Location` si `redirect: 'manual'`.
   - Si no hay red: abrir el enlace en navegador y copiar la URL larga del track.
 - **No** guardar solo el acortado si puedes obtener la canónica; el widget suele aceptar `on.soundcloud.com`, pero la canónica evita sorpresas en scripts y enlaces externos.
+- **Tema secreto** (`…/s-TOKEN` o `on.soundcloud.com` que acaba ahí): el permalink en el parámetro `url` del widget responde **404**. `embed_url` = `https://api.soundcloud.com/tracks/<id>?secret_token=s-TOKEN` (el secreto va **dentro** de `url`, no como parámetro hermano). El enlace humano («SoundCloud ↗») va en **`video_url`** con el permalink `/s-TOKEN`. El id sale del oEmbed (`api.soundcloud.com/tracks/<id>`).
 
 ## 2. Fila `mixes` (Supabase)
 

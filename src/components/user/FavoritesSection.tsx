@@ -18,7 +18,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import FavoriteButton from '@/components/FavoriteButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
 import type { ViewMode } from '@/components/ViewToggle'
-import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
+import SoundCloudVisualEmbed, { isSoundCloudTrackEmbedUrl, soundCloudOpenHref } from '@/components/SoundCloudVisualEmbed'
 import {
   DashboardMixPlayButton,
   SectionHeader,
@@ -318,7 +318,7 @@ export default function FavoritesSection({ lang }: { lang: string }) {
                     {ytId ? (
                       <a href={m.video_url!} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>YouTube ↗</a>
                     ) : scTrackUrl ? (
-                      <a href={scTrackUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>SoundCloud ↗</a>
+                      <a href={soundCloudOpenHref(scTrackUrl, m.video_url)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block bg-[var(--ink)] text-[var(--yellow)] no-underline hover:bg-[var(--red)] hover:text-white transition-colors" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '10px', letterSpacing: '1px', padding: '4px 12px' }}>SoundCloud ↗</a>
                     ) : (
                       <DashboardMixPlayButton m={m} />
                     )}
