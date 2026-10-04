@@ -19,6 +19,7 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 | 9 | Dashboard mixes/favoritos | `shared.DashboardMixPlayButton` | mix global |
 | 10 | Embeds YouTube | `LazyYouTubeEmbed` | iframe (coordinador) |
 | 11 | Embeds SoundCloud visual | `SoundCloudVisualEmbed` | iframe (coordinador) |
+| 12 | Admin Awards (`/administrator/awards`) | página Awards | preview global, o un `LazyYouTubeEmbed` bajo la fila pulsada |
 
 ## Invariantes (definición de "igual de bien")
 
@@ -38,7 +39,7 @@ El reproductor es una de las piezas más críticas de la web: debe funcionar **i
 
 ## Matriz por superficie (marcar en cada navegador/plataforma)
 
-Para cada fila 1–11: `Play(I1)` · `Pausa/Stop(I2)` · `Reanudar(I3)` · `⏭/⏮(I6)` · `Auto-avance(I6)` · `Seek(I7)` · `Exclusión(I4)` · `Persiste al navegar(I5)` · `Icono/estado(I8)`.
+Para cada fila 1–12: `Play(I1)` · `Pausa/Stop(I2)` · `Reanudar(I3)` · `⏭/⏮(I6)` · `Auto-avance(I6)` · `Seek(I7)` · `Exclusión(I4)` · `Persiste al navegar(I5)` · `Icono/estado(I8)`.
 
 - [ ] 1 · Breaks Vitales
 - [ ] 2 · New Releases (/charts)
@@ -51,6 +52,7 @@ Para cada fila 1–11: `Play(I1)` · `Pausa/Stop(I2)` · `Reanudar(I3)` · `⏭/
 - [ ] 9 · Dashboard mixes
 - [ ] 10 · Embeds YouTube (2º clic para)
 - [ ] 11 · Embeds SoundCloud (control del widget)
+- [ ] 12 · Admin Awards (preview o YouTube bajo la fila; hace falta sesión admin)
 
 ## Exclusión cruzada (I4) — obligatorio
 

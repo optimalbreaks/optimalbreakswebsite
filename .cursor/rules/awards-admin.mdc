@@ -1,0 +1,37 @@
+---
+description: Awards admin — el voto es el «+»; el KPI no es el total de Saved Tracks
+globs: src/lib/awards-board.ts,src/app/**/awards/**,src/app/api/admin/awards/**
+alwaysApply: false
+---
+
+# Awards admin (BreaksPoll interno)
+
+Spec: `docs/USER_ENGAGEMENT.md` (*Admin Awards*). Panel: `/administrator/awards`. API: `GET /api/admin/awards`. Solo `requireAdmin`.
+
+## El número (no negociable)
+
+Un «+» de `saved_chart_tracks` **es** un voto. No hay otra urna.
+
+La tarjeta **Saved Tracks** de la home admin es el `count(*)` de **todas** las filas (4 oct 2026: 4418). El KPI **Votos** es el **corte abierto**. Por defecto: año UTC en curso, eje `release`, modo `public` (listas públicas, año de lanzamiento del tema). Por eso puede leerse ~2700 con 4418 en la home.
+
+- **Todos los años** = «+» públicos identificables, cualquier año.
+- **Crudo** = ese corte más listas privadas. Auditoría, no nominación.
+- Sin año de lanzamiento no entra en la edición por eje `release`.
+- Sin clave canónica no vota (`orphan_saves`).
+
+Prohibido igualar el KPI al `count(*)`, crear una tabla de votos, o una página pública de awards.
+
+## Dos universos
+
+Igual que el Top 100 (`top100-auto-voto-artistas`):
+
+- **Temas** (tema del año, remix, tema español, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
+- **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores (DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group) no compiten como sello.
+
+Revelación solo con un año concreto: ≥2 créditos ese año y 0 el anterior. España = ficha cuyo país contiene ES. Sin ficha o sin país → cobertura, no premio.
+
+Fase 1 nada más. No añadir DJ, álbum, radio, club night, gran evento, mix ni tema gratis.
+
+## Reproductor
+
+Tap explícito. Prioridad: `/api/audio/` completo, luego sample (Beatport por `/api/audio-proxy`), luego Bandcamp, luego un solo YouTube bajo la fila pulsada. `playSlotId` = slot de la fila (`cat:…` o `year:…`), no la clave canónica. Estos plays no llevan `save` y no se registran como reproducción de tema.

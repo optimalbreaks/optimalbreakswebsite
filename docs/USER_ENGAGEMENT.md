@@ -500,6 +500,89 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 
 ---
 
+## Admin Awards (BreaksPoll interno)
+
+Admin-only back office for a future BreaksPoll. **A vote is a «+»** already stored in `saved_chart_tracks`. There is no second ballot, no nominee table and no public awards page. The public face of those votes stays **`/[lang]/top100`**.
+
+**Where:** `/[lang]/administrator/awards` (sidebar «Awards», card on the admin home). **API:** `GET /api/admin/awards?year=2026|all&axis=release|save&mode=public|raw`. `requireAdmin` only — a collaborator does not enter `/administrator`. `dynamic = force-dynamic`, `maxDuration = 60`, uncached (service role). Engine: `src/lib/awards-board.ts` (`loadAwardsBoard`). It reuses the Top 100 helpers (`artist-self-credit.ts`, `remixer-credits.ts`, slug maps, `countryIsoCodesFromCode`). It does **not** call or refactor `community-monthly`.
+
+### Why «Votos» is not the home card «Saved Tracks»
+
+The admin home card **Saved Tracks** (`/api/admin/stats`) is `count(*)` of **every** row in `saved_chart_tracks` — all years, public and private lists, hydratable or not. On 4 Oct 2026 that card showed **4418**.
+
+Awards opens on the **current UTC year**, axis **Lanzamiento** (`release`), mode **Como en público** (`public`). The KPI **Votos** (`edition.saves`) is only the «+» inside that cut. The caption under the number says «+ de este corte». A figure around **2700** on that default is the 2026 public edition, not a missing third of the archive.
+
+| What you are looking at | What it counts |
+| --- | --- |
+| Home **Saved Tracks** | Every `saved_chart_tracks` row |
+| Awards **Votos**, default | Public lists, tracks whose **release year** is the selected year |
+| Awards, **Edición → Todos los años** | Every hydratable public «+», all release years |
+| Awards, mode **Crudo** | Same cut, plus private lists (`is_tracks_public = false`) |
+
+Also outside a given edition: «+» whose track has **no release year** (they sit in the year histogram as **Sin año**, and they enter the edition only with **Todos los años** or when the axis is **Año del voto** and `created_at` falls in that year). A save whose live row and snapshot have **no canonical key** never becomes a fact (`coverage.orphan_saves`). Do **not** “fix” the KPI so it matches 4418, and do **not** add a new vote table.
+
+### Two universes (same rules as the Top 100)
+
+1. **Tracks** (Tema del año, Remix, Tema español, and the per-year “most voted” line): public lists in `public` mode. Sort **unique users, then «+»**. **Self-votes count.** A label mark does **not** remove the song from this count.
+2. **Artists, labels, countries, Revelación:** the artist board. In `public` mode, skip editorial mark, approved claim, family mark (`loadSelfCreditSkipMap`) and label-mark dumps (`shouldSkipLabelSave`). Aggregators do not compete as labels: DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group (`AGGREGATOR_KEYS`; a name that starts with the aggregator key counts too).
+
+`raw` drops those skips and includes private lists. It is an audit view. Do not nominate from it. Do not infer identity from `display_name`, username or email. Do not cap credits at 1. Do not sort the artist side by unique fans.
+
+### Filters
+
+- **Edición.** Default: current UTC year. `all` / **Todos los años** → `year = null` (no Revelación category). API rejects a year outside 1950–2100.
+- **Eje.** `release` (default): the track’s release year (`release_date` year, else `release_year`). `save`: UTC year of `saved_chart_tracks.created_at`.
+- **Modo.** `public` (default) or `raw`.
+
+**Revelación** exists only for a concrete year: at least **2** artist-board credits in that year and **0** in the previous year, same axis and same skips.
+
+**Por año de lanzamiento** is a histogram of the **mode**, not of the edition. With axis `release` it does **not** change when you pick another edition year (the hint on the panel says so). With axis `save` and a year selected, the bars are only the «+» made that year, split by the track’s release year. Each row’s play button is that year’s most-voted track (same track sort: unique users, then saves).
+
+**Por país** uses the artist-board credits of the edition. A compound country (AU/UK) credits **both** codes. Spanish prizes require a catalog country that contains `ES`. No ficha, or a ficha with no country, is coverage — not a prize. Label strings merge through `buildFullLabelSlugMap` (suffix keys).
+
+### Categories (phase 1 only)
+
+Top **5** nominees each. Order:
+
+1. **Tema del año** / **Tema más votado** (all years)
+2. **Remix del año** — same cut, only if `mix_name` names a remixer. Generic *Original Mix* / *Breakbeat Remix* do not invent one.
+3. **Mejor productor** — artist-board credits, remixer included.
+4. **Mejor sello** — one «+» credits the track’s label, unless it is an aggregator or a label-mark skip.
+5. **Revelación** — only when a year is selected.
+6. **Artista español** / **Sello español** / **Tema español** — Spain via ficha country, as above.
+
+BreaksPoll categories that do **not** come from saves stay **out**: Best DJ, Album, Radio, Club Night, Large Event, Mix, Free Track. Do not grey them in and do not invent a vote for them.
+
+### Coverage
+
+Chips and lists describe the **mode** (all years of that mode), not the edition year:
+
+- **Sin año** — distinct tracks with no release year.
+- **Sin ficha** — `orphan_saves`: rows in the mode that never became a fact (no canonical key).
+- **Agregador** — «+» whose label is an aggregator (those saves still count as track votes; they do not win Mejor sello).
+- **Artistas sin país** — top 8 credit names with no ficha or a ficha without a country.
+- **Sellos sin ficha** — top 8 label strings that do not resolve to `labels`.
+
+**Con país** on the KPI row is the share of artist-board credit events in the **edition** that resolve to a ficha with at least one ISO country. That percentage is not “votes with a country”.
+
+### Playback
+
+Explicit tap only (this is not a shared-link landing). Priority: hosted full audio (`/api/audio/…`) over a store sample, over Bandcamp (`/api/bandcamp-preview`), over YouTube. Beatport sample hosts go through `/api/audio-proxy`. The preview queue is every unique `play.src` in the current board (`usePreviewAudioGated`, `primePreviewInGesture` inside the click). YouTube mounts **one** `LazyYouTubeEmbed` under the row that was tapped. `playSlotId` is the row slot (`cat:<id>:<rank>` or `year:<label>`), not the canonical key, so moving the iframe does not look like a stop. A second tap on the same slot pauses or closes it. Awards preview items do not carry a `save` payload, so these plays are not written as track plays.
+
+### Layout
+
+The page does not add its own horizontal padding: `.admin-content` already pads (`1.25rem 1.5rem`; under 768px, `1rem 0.75rem`, so the 4px ink shadow does not force a horizontal scroll). Country rows are a list until `sm`, then a table. Year bars and the year table start at `xl`; below that, a list. Category cards are one column until `lg`. Play targets are 44px. Long titles wrap.
+
+### Do not
+
+- Treat the home **Saved Tracks** count as the awards ballot, or change **Votos** to match it.
+- Add a votes table, a public awards route, or the BreaksPoll categories that saves cannot fill.
+- Apply the artist/label skip to the **track** totals, or drop self-votes from Tema del año.
+- Point Awards at `/api/admin/tracks` (that route is the raw all-users dashboard, different rules).
+- Refactor `community-monthly` to “share” this aggregator. Awards copies the helpers; the public Top 100 stays as it is.
+
+---
+
 ## Favorites vs ratings vs saves
 
 - **Favorite** = bookmark / "I like this" — no stars (artists, labels, events, mixes).
@@ -541,6 +624,9 @@ User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's
 - `src/components/BackToTop.tsx` — same `useViewportBottomOffset` compensation as the player so the up-arrow doesn't float mid-screen in PWA after sleep/wake or share-and-return.
 - `src/hooks/useViewportBottomOffset.ts` — shared hook for the iOS PWA viewport drift fix. Listens to `visualViewport.resize/scroll`, `pageshow`, `focus`, `orientationchange`, `visibilitychange` and re-measures at 80/250/600 ms after each wake event.
 - `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
+- `src/lib/awards-board.ts` — admin Awards engine (same «+», edition cut ≠ home Saved Tracks count). Spec: *Admin Awards* above.
+- `src/app/api/admin/awards/route.ts` — `GET` admin-only, `year` / `axis` / `mode`.
+- `src/app/[lang]/administrator/awards/page.tsx` — Awards dashboard (playback + layout).
 - `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`; **remixer names** from `mix_name` via `remixer-credits.ts`).
 - `src/lib/remixer-credits.ts` — parse remixer names from `mix_name`; merge Beatport `remixers[]` into `artists[]` (scripts copy: `scripts/lib/remixer-credits.mjs`).
 - `src/lib/artist-related-content.ts` — artist/label chart links + New Releases accordion (`fetchArtistFeaturedPicks` matches `artist_names_text` **or** remixer in `mix_name`).
