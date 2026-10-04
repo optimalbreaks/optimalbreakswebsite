@@ -2563,6 +2563,11 @@ export function DeckAudioProvider({
     const PREVIEW_FLUSH_MS = 120
     const tick = (time: number) => {
       if (cancelled) return
+      // SoundCloud no usa el <audio>: si lo leemos, pisamos el progreso del widget a 0:00.
+      if (previewSoundCloudRef.current) {
+        previewRafRef.current = requestAnimationFrame(tick)
+        return
+      }
       const a = previewAudioRef.current
       if (a && a.duration && Number.isFinite(a.duration) && time - lastFlush >= PREVIEW_FLUSH_MS) {
         lastFlush = time
@@ -2714,11 +2719,9 @@ export function DeckAudioProvider({
   }, [])
 
   const handleScError = useCallback(() => {
-    if (previewSoundCloudRef.current) {
-      setPreviewPlaying(false)
-      setPreviewBlocked(true)
-      return
-    }
+    // En preview el widget dispara ERROR al montar el iframe aunque el audio
+    // siga. Ese error abría «Toca para escuchar» y congelaba la barra.
+    if (previewSoundCloudRef.current) return
     setMixPlaying(false)
     setMixError(true)
   }, [])

@@ -132,6 +132,7 @@ export default function SoundCloudWidget({
     if (!iframeRef.current || !trackUrl) return
 
     let cancelled = false
+    let cleanupPoll: (() => void) | null = null
     const iframe = iframeRef.current
 
     iframe.src = buildHiddenPlayerSrc(trackUrl)
@@ -160,8 +161,6 @@ export default function SoundCloudWidget({
         window.clearTimeout(readyTimeout)
         widget.getDuration((d) => { durationMs = d || 0 })
         onReady?.()
-        // auto_play en la URL a veces no arranca (el iframe se monta tras el click).
-        try { widget.play() } catch { /* onError si la pista no carga */ }
 
         const handle: SoundCloudWidgetHandle = {
           play: () => widget.play(),
@@ -190,6 +189,31 @@ export default function SoundCloudWidget({
           if (!cancelled) onProgress?.(posMs, durationMs)
         })
       })
+
+      // El iframe oculto a veces no emite PLAY_PROGRESS (sí suena). Sin este
+      // sondeo la barra de abajo se queda en 0:00.
+      let lastPaused: boolean | null = null
+      const poll = window.setInterval(() => {
+        if (cancelled) return
+        widget.isPaused((paused) => {
+          if (cancelled || paused === lastPaused) return
+          lastPaused = paused
+          if (paused) onPause?.()
+          else onPlay?.()
+        })
+        widget.getDuration((dur) => {
+          if (cancelled || !dur) return
+          durationMs = dur
+          widget.getPosition((pos) => {
+            if (!cancelled) onProgress?.(pos || 0, dur)
+          })
+        })
+      }, 400)
+      const prevCleanup = cleanupPoll
+      cleanupPoll = () => {
+        window.clearInterval(poll)
+        prevCleanup?.()
+      }
     }).catch(() => {
       window.clearTimeout(readyTimeout)
       if (!cancelled) onError?.()
@@ -197,6 +221,7 @@ export default function SoundCloudWidget({
 
     return () => {
       cancelled = true
+      cleanupPoll?.()
       window.clearTimeout(readyTimeout)
       widgetRef.current = null
       handleRef?.(null)
@@ -208,7 +233,7 @@ export default function SoundCloudWidget({
     <iframe
       ref={iframeRef}
       className="sr-only"
-      style={{ position: 'absolute', width: 0, height: 0, border: 0, overflow: 'hidden' }}
+      style={{ position: 'fixed', width: 300, height: 166, left: -4000, top: 0, border: 0, opacity: 0, pointerEvents: 'none' }}
       allow="autoplay"
       tabIndex={-1}
       aria-hidden="true"
