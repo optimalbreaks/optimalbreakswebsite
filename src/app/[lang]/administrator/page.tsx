@@ -104,6 +104,12 @@ export default function AdminDashboard() {
           >
             Estadísticas
           </Link>
+          <Link
+            href={`${base}/awards`}
+            className="admin-btn no-underline"
+          >
+            Awards
+          </Link>
           <Link href={`${base}/artists/new`} className="admin-btn no-underline">
             + Artista
           </Link>
@@ -266,6 +272,32 @@ export default function AdminDashboard() {
                 style={{ fontFamily: "'Courier Prime', monospace" }}
               >
                 Engagement, plays, favoritos, valoraciones.
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href={`${base}/awards`}
+            className="flex items-center gap-4 p-4 mt-2 no-underline border-2 border-[var(--ink)]/30
+              bg-[#fffef6] hover:bg-[var(--yellow)]/40 hover:border-[var(--ink)] transition-all"
+          >
+            <span
+              className="flex items-center justify-center w-12 h-12 text-xl border-[3px] border-[var(--ink)] bg-[var(--yellow)]"
+            >
+              ★
+            </span>
+            <div>
+              <div
+                className="font-black uppercase text-[var(--ink)] text-sm"
+                style={{ fontFamily: "'Unbounded', sans-serif" }}
+              >
+                Awards
+              </div>
+              <p
+                className="text-xs text-[var(--ink)]/50 !mt-1 !mb-0"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                Nominados a partir de los «+». Solo admin.
               </p>
             </div>
           </Link>

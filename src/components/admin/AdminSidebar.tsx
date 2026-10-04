@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { key: 'chat', label: 'Chat', icon: '💬', path: '/chat', openWidget: true },
   { key: 'dashboard', label: 'Dashboard', icon: '◉', path: '' },
   { key: 'stats', label: 'Estadísticas', icon: '▤', path: '/stats' },
+  { key: 'awards', label: 'Awards', icon: '★', path: '/awards' },
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
   { key: 'claims', label: 'Verificaciones', icon: '✔', path: '/claims' },
   { key: 'bookings', label: 'Bookings', icon: '✉', path: '/bookings' },
