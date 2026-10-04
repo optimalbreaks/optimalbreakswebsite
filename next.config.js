@@ -146,12 +146,13 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
+              // w.soundcloud.com: el reproductor oculto carga player/api.js para mover la barra.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://w.soundcloud.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: https://www.googletagmanager.com",
               "media-src 'self' https:",
-              "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+              "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://w.soundcloud.com https://api.soundcloud.com",
               "frame-src 'self' https://www.youtube.com https://w.soundcloud.com https://www.mixcloud.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
