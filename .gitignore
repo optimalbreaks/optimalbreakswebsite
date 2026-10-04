@@ -67,6 +67,12 @@ artists_docs/**/email*
 private/music/*
 !private/music/*.mp3
 
+# Restos locales: rar, copias, notas de lote, scripts de un solo uso. No los sirve la web.
+private/local/
+
+# Capturas de la auditoría tablet (el README apunta aquí).
+tmp-responsive/
+
 # Subcarpetas antiguas de originales bajo public/ (no servir ni versionar).
 public/music/*/
 
