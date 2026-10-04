@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { EmptyState, HorizontalRankBars } from '@/components/admin/AdminEngagementCharts'
-import type { AwardCategory, AwardEntry, AwardsAxis, AwardsBoard, AwardsMode } from '@/lib/awards-board'
+import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import { releaseYouTubePlay, requestYouTubePlay, subscribeYouTubePlay } from '@/lib/youtube-play-coordinator'
+import type { AwardCategory, AwardEntry, AwardPlayback, AwardsAxis, AwardsBoard, AwardsMode } from '@/lib/awards-board'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const display = { fontFamily: "'Unbounded', sans-serif" } as const
@@ -21,6 +25,9 @@ export default function AdminAwardsPage() {
   const [board, setBoard] = useState<AwardsBoard | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [openYt, setOpenYt] = useState<string | null>(null)
+  const preview = usePreviewAudioGated()
+  const groupKey = `awards-${year}-${axis}-${mode}`
 
   useEffect(() => {
     const ac = new AbortController()
@@ -45,6 +52,54 @@ export default function AdminAwardsPage() {
       })
     return () => ac.abort()
   }, [year, axis, mode])
+
+  useEffect(() => {
+    setOpenYt(null)
+  }, [year, axis, mode])
+
+  useEffect(() => {
+    return subscribeYouTubePlay((activeId) => {
+      setOpenYt((prev) => (prev && activeId !== prev ? null : prev))
+    })
+  }, [])
+
+  const audioQueue = useMemo(() => collectAudioQueue(board, lang), [board, lang])
+  const openVideo = useMemo(() => (openYt ? findPlayback(board, openYt) : null), [board, openYt])
+
+  const playingKey = useMemo(() => {
+    if (preview.previewGroupKey !== groupKey || !preview.previewPlaying) return null
+    const rowKey = preview.previewQueue[preview.previewIndex]?.rowKey || ''
+    return rowKey.startsWith('awards:') ? rowKey.slice('awards:'.length) : null
+  }, [preview.previewGroupKey, preview.previewPlaying, preview.previewQueue, preview.previewIndex, groupKey])
+
+  const onPlay = useCallback((play: AwardPlayback) => {
+    if (play.src) {
+      setOpenYt((prev) => {
+        if (prev) releaseYouTubePlay(prev)
+        return null
+      })
+      const rowKey = `awards:${play.key}`
+      if (
+        preview.previewGroupKey === groupKey &&
+        preview.previewQueue[preview.previewIndex]?.rowKey === rowKey
+      ) {
+        preview.togglePreview()
+        return
+      }
+      const idx = audioQueue.findIndex((t) => t.rowKey === rowKey)
+      preview.playPreviewQueue(audioQueue, idx >= 0 ? idx : 0, groupKey)
+      return
+    }
+    if (!play.youtube_id) return
+    setOpenYt((prev) => {
+      if (prev === play.key) {
+        releaseYouTubePlay(play.key)
+        return null
+      }
+      requestYouTubePlay(play.key)
+      return play.key
+    })
+  }, [audioQueue, groupKey, preview])
 
   const years = board?.years?.length ? board.years : [Number(year) || new Date().getFullYear()]
   const edition = board?.edition
@@ -134,9 +189,36 @@ export default function AdminAwardsPage() {
             <Kpi label="Créditos con país" value={`${countryPct}%`} sub="Sin país no hay premio español" accent="var(--cyan)" />
           </div>
 
+          {openVideo?.youtube_id && (
+            <div className="mt-4 max-w-md">
+              <LazyYouTubeEmbed
+                key={openVideo.key}
+                videoId={openVideo.youtube_id}
+                title={`${openVideo.title} — ${openVideo.artist}`}
+                className="border-[3px] border-[var(--ink)]"
+                autoplay
+                playSlotId={openVideo.key}
+                nowPlaying={{
+                  title: openVideo.title,
+                  artist: openVideo.artist,
+                  mixName: openVideo.mix_name,
+                  album: openVideo.label,
+                  artworkUrl: openVideo.artwork_url,
+                }}
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             {edition.categories.map((cat) => (
-              <CategoryCard key={cat.id} cat={cat} lang={lang} />
+              <CategoryCard
+                key={cat.id}
+                cat={cat}
+                lang={lang}
+                playingKey={playingKey}
+                openYt={openYt}
+                onPlay={onPlay}
+              />
             ))}
           </div>
 
@@ -196,7 +278,12 @@ export default function AdminAwardsPage() {
                         <td className="px-3 py-2 text-[12px] font-black">{r.label}</td>
                         <td className="px-3 py-2 text-[12px] font-bold text-right tabular-nums">{num(r.save_count)}</td>
                         <td className="px-3 py-2 text-[12px] font-bold text-right tabular-nums">{num(r.unique_tracks)}</td>
-                        <td className="px-3 py-2 text-[11px] font-bold">{r.top_title || '—'}</td>
+                        <td className="px-3 py-2 text-[11px] font-bold">
+                          <span className="inline-flex items-center gap-2">
+                            {r.play && <PlayButton play={r.play} on={playingKey === r.play.key || openYt === r.play.key} onPlay={onPlay} />}
+                            <span>{r.top_title || '—'}</span>
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -278,7 +365,19 @@ function Head({ title, hint }: { title: string; hint: string }) {
   )
 }
 
-function CategoryCard({ cat, lang }: { cat: AwardCategory; lang: string }) {
+function CategoryCard({
+  cat,
+  lang,
+  playingKey,
+  openYt,
+  onPlay,
+}: {
+  cat: AwardCategory
+  lang: string
+  playingKey: string | null
+  openYt: string | null
+  onPlay: (play: AwardPlayback) => void
+}) {
   const winner = cat.entries[0]
   const rest = cat.entries.slice(1)
   return (
@@ -296,12 +395,12 @@ function CategoryCard({ cat, lang }: { cat: AwardCategory; lang: string }) {
           <EmptyState message="Nadie entra en este corte" />
         ) : (
           <>
-            <NomineeRow entry={winner} lang={lang} lead />
+            <NomineeRow entry={winner} lang={lang} lead playingKey={playingKey} openYt={openYt} onPlay={onPlay} />
             {rest.length > 0 && (
               <ol className="mt-3 space-y-2 border-t-2 border-[var(--ink)]/10 pt-3">
                 {rest.map((e) => (
                   <li key={`${cat.id}-${e.rank}`}>
-                    <NomineeRow entry={e} lang={lang} />
+                    <NomineeRow entry={e} lang={lang} playingKey={playingKey} openYt={openYt} onPlay={onPlay} />
                   </li>
                 ))}
               </ol>
@@ -313,7 +412,21 @@ function CategoryCard({ cat, lang }: { cat: AwardCategory; lang: string }) {
   )
 }
 
-function NomineeRow({ entry, lang, lead = false }: { entry: AwardEntry; lang: string; lead?: boolean }) {
+function NomineeRow({
+  entry,
+  lang,
+  lead = false,
+  playingKey,
+  openYt,
+  onPlay,
+}: {
+  entry: AwardEntry
+  lang: string
+  lead?: boolean
+  playingKey: string | null
+  openYt: string | null
+  onPlay: (play: AwardPlayback) => void
+}) {
   const href =
     entry.slug && entry.kind === 'artist'
       ? `/${lang}/artists/${entry.slug}`
@@ -327,8 +440,10 @@ function NomineeRow({ entry, lang, lead = false }: { entry: AwardEntry; lang: st
   ) : (
     entry.title
   )
+  const on = !!entry.play && (playingKey === entry.play.key || openYt === entry.play.key)
   return (
     <div className="flex items-start gap-3">
+      {entry.play && <PlayButton play={entry.play} on={on} onPlay={onPlay} lead={lead} />}
       {entry.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={entry.image_url} alt="" className={`shrink-0 border-[3px] border-[var(--ink)] object-cover ${lead ? 'w-16 h-16' : 'w-10 h-10'}`} />
@@ -358,6 +473,71 @@ function NomineeRow({ entry, lang, lead = false }: { entry: AwardEntry; lang: st
       </div>
     </div>
   )
+}
+
+function PlayButton({
+  play,
+  on,
+  onPlay,
+  lead = false,
+}: {
+  play: AwardPlayback
+  on: boolean
+  onPlay: (play: AwardPlayback) => void
+  lead?: boolean
+}) {
+  if (!play.src && !play.youtube_id) return null
+  return (
+    <button
+      type="button"
+      onClick={() => onPlay(play)}
+      className={`shrink-0 border-[3px] border-[var(--ink)] font-black leading-none ${
+        on ? 'bg-[var(--red)] text-white' : 'bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--red)]'
+      } ${lead ? 'w-12 h-12 text-sm' : 'w-9 h-9 text-[11px]'}`}
+      style={mono}
+      aria-label={on ? `Pausar ${play.title}` : `Reproducir ${play.title}`}
+    >
+      {on ? '❚❚' : '▶'}
+    </button>
+  )
+}
+
+function collectAudioQueue(board: AwardsBoard | null, lang: string): PreviewTrack[] {
+  if (!board) return []
+  const seen = new Set<string>()
+  const out: PreviewTrack[] = []
+  const push = (play: AwardPlayback | null) => {
+    if (!play?.src || seen.has(play.key)) return
+    seen.add(play.key)
+    out.push({
+      rowKey: `awards:${play.key}`,
+      src: play.src,
+      title: play.title,
+      artist: play.artist,
+      artworkUrl: play.artwork_url,
+      mixName: play.mix_name,
+      album: play.label,
+      originPath: `/${lang}/administrator/awards`,
+    })
+  }
+  for (const cat of board.edition.categories) {
+    for (const entry of cat.entries) push(entry.play)
+  }
+  for (const row of board.release_years) push(row.play)
+  return out
+}
+
+function findPlayback(board: AwardsBoard | null, key: string): AwardPlayback | null {
+  if (!board) return null
+  for (const cat of board.edition.categories) {
+    for (const entry of cat.entries) {
+      if (entry.play?.key === key) return entry.play
+    }
+  }
+  for (const row of board.release_years) {
+    if (row.play?.key === key) return row.play
+  }
+  return null
 }
 
 function GapList({ title, rows, empty }: { title: string; rows: { name: string; save_count: number; note: string }[]; empty: string }) {

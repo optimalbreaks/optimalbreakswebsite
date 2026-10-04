@@ -29,6 +29,19 @@ import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase
 export type AwardsAxis = 'release' | 'save'
 export type AwardsMode = 'public' | 'raw'
 
+/** Lo justo para sonar en el reproductor global o en un embed de YouTube. */
+export type AwardPlayback = {
+  key: string
+  title: string
+  artist: string
+  mix_name: string | null
+  label: string | null
+  artwork_url: string | null
+  /** Src del <audio> (preview de tienda, Bandcamp o exclusiva). Null si solo hay vídeo. */
+  src: string | null
+  youtube_id: string | null
+}
+
 export type AwardEntry = {
   rank: number
   title: string
@@ -40,6 +53,7 @@ export type AwardEntry = {
   kind: 'track' | 'artist' | 'label' | 'country'
   country: string | null
   image_url: string | null
+  play: AwardPlayback | null
 }
 
 export type AwardCategory = {
@@ -63,6 +77,7 @@ export type AwardReleaseYear = {
   save_count: number
   unique_tracks: number
   top_title: string | null
+  play: AwardPlayback | null
 }
 
 export type AwardGap = {
@@ -127,6 +142,17 @@ type SavedRow = {
   created_at: string | null
 }
 
+type PlayKind = 'beatport' | 'bandcamp' | 'youtube'
+
+type PlayBits = {
+  artwork_url: string | null
+  sample_url: string | null
+  full_audio_url: string | null
+  external_url: string | null
+  youtube_url: string | null
+  kind: PlayKind
+}
+
 type SourceMeta = {
   title: string
   mix_name: string | null
@@ -134,6 +160,7 @@ type SourceMeta = {
   label: string | null
   release_year: number | null
   canonical_key: string
+  play: PlayBits
 }
 
 type CatalogHit = {
@@ -158,6 +185,7 @@ type SaveFact = {
   credits: { key: string; name: string }[]
   labelCredit: { key: string; raw: string } | null
   aggregator: boolean
+  play: PlayBits
 }
 
 type TrackAgg = {
@@ -172,6 +200,7 @@ type TrackAgg = {
   save_count: number
   users: Set<string>
   last: string
+  play: PlayBits
 }
 
 type PersonAgg = {
@@ -201,6 +230,79 @@ function normalizeUrl(u: string | null | undefined): string {
     return `${url.host}${url.pathname.replace(/\/$/, '')}`
   } catch {
     return s.replace(/[?#].*$/, '').replace(/\/$/, '')
+  }
+}
+
+function strOrNull(v: unknown): string | null {
+  return typeof v === 'string' && v.trim() ? v.trim() : null
+}
+
+function youtubeIdOf(url: string | null | undefined): string | null {
+  const s = (url || '').trim()
+  if (!s) return null
+  const m = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([a-zA-Z0-9_-]{11})/i)
+  if (m) return m[1]
+  return /^[a-zA-Z0-9_-]{11}$/.test(s) ? s : null
+}
+
+function playRank(p: PlayBits): number {
+  if (p.full_audio_url) return 4
+  if (p.sample_url || (p.kind === 'bandcamp' && p.external_url)) return 3
+  if (p.youtube_url || p.kind === 'youtube') return 1
+  return 0
+}
+
+function fillPlay(primary: PlayBits, extra: PlayBits | null | undefined): PlayBits {
+  if (!extra) return primary
+  const winner = playRank(extra) > playRank(primary) ? extra : primary
+  const loser = winner === extra ? primary : extra
+  return {
+    artwork_url: winner.artwork_url || loser.artwork_url,
+    sample_url: winner.sample_url || loser.sample_url,
+    full_audio_url: winner.full_audio_url || loser.full_audio_url,
+    external_url: winner.external_url || loser.external_url,
+    youtube_url: winner.youtube_url || loser.youtube_url,
+    kind: winner.kind,
+  }
+}
+
+function previewSrc(play: PlayBits): string | null {
+  const full = (play.full_audio_url || '').trim()
+  if (full.startsWith('/api/audio/')) return full
+  if (play.kind === 'bandcamp' && play.external_url) {
+    return `/api/bandcamp-preview?track=${encodeURIComponent(play.external_url)}`
+  }
+  const sample = (play.sample_url || '').trim()
+  if (!sample) return null
+  try {
+    const host = new URL(sample).hostname.toLowerCase()
+    if (host === 'geo-samples.beatport.com' || host === 'geo-media.beatport.com') {
+      return `/api/audio-proxy?url=${encodeURIComponent(sample)}`
+    }
+  } catch { /* url cruda */ }
+  return sample
+}
+
+function toPlayback(
+  key: string,
+  title: string,
+  artist: string,
+  mix: string | null,
+  label: string | null,
+  play: PlayBits,
+): AwardPlayback | null {
+  const src = previewSrc(play)
+  const yt = youtubeIdOf(play.youtube_url) || (key.startsWith('yt:') ? key.slice(3) : null)
+  if (!src && !yt) return null
+  return {
+    key,
+    title: title || 'Sin título',
+    artist,
+    mix_name: mix,
+    label,
+    artwork_url: play.artwork_url,
+    src,
+    youtube_id: src ? null : yt,
   }
 }
 
@@ -253,19 +355,36 @@ function snapshotMeta(s: SavedRow): SourceMeta | null {
   const snap = (s.snapshot || {}) as Record<string, unknown>
   const title = String(snap.title || '').trim()
   if (!title) return null
-  const snapYoutube = typeof snap.youtube_url === 'string' ? snap.youtube_url.trim() : ''
-  const beatport = (typeof snap.beatport_url === 'string' ? snap.beatport_url : null) || s.canonical_url
+  const snapYoutube = strOrNull(snap.youtube_url) || ''
+  const beatport = strOrNull(snap.beatport_url) || s.canonical_url
+  const external = s.track_source === 'vinyl' ? snapYoutube || s.canonical_url : beatport
   const canonical_key =
     s.track_source === 'vinyl'
       ? normalizeUrl(snapYoutube || s.canonical_url) || `t:vinyl:${s.track_id}`
       : normalizeUrl(beatport) || `t:${s.track_source}:${s.track_id}`
+  const sample = strOrNull(snap.sample_url)
+  const full = strOrNull(snap.full_audio_url)
+  const kind: PlayKind =
+    s.track_source === 'vinyl' || (!sample && !full && (snapYoutube || canonical_key.startsWith('yt:')))
+      ? 'youtube'
+      : /bandcamp\.com/i.test(external || '')
+        ? 'bandcamp'
+        : 'beatport'
   return {
     title,
-    mix_name: typeof snap.mix_name === 'string' ? snap.mix_name : null,
+    mix_name: strOrNull(snap.mix_name),
     artists: artistsLine(snap.artists),
-    label: typeof snap.label === 'string' ? snap.label : null,
+    label: strOrNull(snap.label),
     release_year: releaseYearOf(snap.year, snap.release_date),
     canonical_key,
+    play: {
+      artwork_url: strOrNull(snap.artwork_url),
+      sample_url: sample,
+      full_audio_url: full,
+      external_url: external,
+      youtube_url: snapYoutube || null,
+      kind,
+    },
   }
 }
 
@@ -325,6 +444,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
         save_count: 0,
         users: new Set(),
         last: f.savedAt || '',
+        play: f.play,
       }
       map.set(f.canonicalKey, row)
     }
@@ -337,6 +457,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
     if (!row.artists && f.artists) row.artists = f.artists
     if (f.isRemix) row.isRemix = true
     if (f.isSpanish) row.isSpanish = true
+    row.play = fillPlay(row.play, f.play)
   }
   return sortTracks(Array.from(map.values()))
 }
@@ -375,6 +496,7 @@ function trackEntries(rows: TrackAgg[], n = NOMINEES): AwardEntry[] {
       kind: 'track' as const,
       country: null,
       image_url: null,
+      play: toPlayback(t.key, t.title, t.artists, t.mixName, t.label, t.play),
     }
   })
 }
@@ -406,6 +528,7 @@ function personEntries(
           : hit?.image_url && /^https?:\/\//.test(hit.image_url)
             ? hit.image_url
             : null,
+      play: null,
     }
   })
 }
@@ -661,7 +784,17 @@ function countriesOf(artists: PersonAgg[], artistBySlug: Map<string, CatalogHit>
 }
 
 function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
-  type Bucket = { saves: number; tracks: Map<string, { title: string; users: Set<string>; saves: number }> }
+  type YearTrack = {
+    key: string
+    title: string
+    artist: string
+    mix: string | null
+    label: string | null
+    users: Set<string>
+    saves: number
+    play: PlayBits
+  }
+  type Bucket = { saves: number; tracks: Map<string, YearTrack> }
   const map = new Map<number | null, Bucket>()
   for (const f of facts) {
     const y = f.releaseYear
@@ -673,22 +806,33 @@ function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
     row.saves += 1
     let track = row.tracks.get(f.canonicalKey)
     if (!track) {
-      track = { title: f.title || 'Sin título', users: new Set(), saves: 0 }
+      track = {
+        key: f.canonicalKey,
+        title: f.title || 'Sin título',
+        artist: f.artists,
+        mix: f.mixName,
+        label: f.label,
+        users: new Set(),
+        saves: 0,
+        play: f.play,
+      }
       row.tracks.set(f.canonicalKey, track)
     }
     track.saves += 1
     track.users.add(f.userId)
+    track.play = fillPlay(track.play, f.play)
+    if (!track.artist && f.artists) track.artist = f.artists
   }
   return Array.from(map.entries())
     .map(([year, b]) => {
-      let top: { title: string; users: number; saves: number } | null = null
+      let top: YearTrack | null = null
       for (const t of b.tracks.values()) {
         if (
           !top ||
-          t.users.size > top.users ||
-          (t.users.size === top.users && t.saves > top.saves)
+          t.users.size > top.users.size ||
+          (t.users.size === top.users.size && t.saves > top.saves)
         ) {
-          top = { title: t.title, users: t.users.size, saves: t.saves }
+          top = t
         }
       }
       return {
@@ -697,6 +841,7 @@ function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
         save_count: b.saves,
         unique_tracks: b.tracks.size,
         top_title: top?.title || null,
+        play: top ? toPlayback(top.key, top.title, top.artist, top.mix, top.label, top.play) : null,
       }
     })
     .sort((a, b) => {
@@ -805,32 +950,32 @@ async function hydrateFacts(
 
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; beatport_url: string | null }>(
+      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; beatport_url: string | null; artwork_url: string | null; sample_url: string | null }>(
           chartIds,
           (chunk) =>
             sb
               .from('chart_tracks')
-              .select('id, title, mix_name, artists, label, release_year, release_date, beatport_url')
+              .select('id, title, mix_name, artists, label, release_year, release_date, beatport_url, artwork_url, sample_url')
               .in('id', chunk),
         )
       : Promise.resolve({ data: [], error: null }),
     featIds.length
-      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; link_url: string | null }>(
+      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; release_year: number | null; release_date: string | null; link_url: string | null; platform: string | null; artwork_url: string | null; sample_url: string | null; full_audio_url: string | null }>(
           featIds,
           (chunk) =>
             sb
               .from('chart_featured_tracks')
-              .select('id, title, mix_name, artists, label, release_year, release_date, link_url')
+              .select('id, title, mix_name, artists, label, release_year, release_date, link_url, platform, artwork_url, sample_url, full_audio_url')
               .in('id', chunk),
         )
       : Promise.resolve({ data: [], error: null }),
     vinylIds.length
-      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; year: number | null; youtube_url: string | null }>(
+      ? selectByIds<{ id: string; title: string; mix_name: string | null; artists: unknown; label: string | null; year: number | null; youtube_url: string | null; artwork_url: string | null }>(
           vinylIds,
           (chunk) =>
             sb
               .from('chart_vinyl_tracks')
-              .select('id, title, mix_name, artists, label, year, youtube_url')
+              .select('id, title, mix_name, artists, label, year, youtube_url, artwork_url')
               .in('id', chunk),
         )
       : Promise.resolve({ data: [], error: null }),
@@ -847,9 +992,18 @@ async function hydrateFacts(
       label: c.label,
       release_year: releaseYearOf(c.release_year, c.release_date),
       canonical_key: normalizeUrl(c.beatport_url) || `t:chart:${c.id}`,
+      play: {
+        artwork_url: c.artwork_url,
+        sample_url: c.sample_url,
+        full_audio_url: null,
+        external_url: c.beatport_url,
+        youtube_url: null,
+        kind: 'beatport',
+      },
     })
   }
   for (const f of featRes.data || []) {
+    const bandcamp = f.platform === 'bandcamp' || /bandcamp\.com/i.test(f.link_url || '')
     byRef.set(`featured:${f.id}`, {
       title: f.title,
       mix_name: f.mix_name,
@@ -857,6 +1011,14 @@ async function hydrateFacts(
       label: f.label,
       release_year: releaseYearOf(f.release_year, f.release_date),
       canonical_key: normalizeUrl(f.link_url) || `t:featured:${f.id}`,
+      play: {
+        artwork_url: f.artwork_url,
+        sample_url: f.sample_url,
+        full_audio_url: f.full_audio_url,
+        external_url: f.link_url,
+        youtube_url: null,
+        kind: bandcamp ? 'bandcamp' : 'beatport',
+      },
     })
   }
   for (const v of vinylRes.data || []) {
@@ -867,6 +1029,14 @@ async function hydrateFacts(
       label: v.label,
       release_year: releaseYearOf(v.year, null),
       canonical_key: normalizeUrl(v.youtube_url) || `t:vinyl:${v.id}`,
+      play: {
+        artwork_url: v.artwork_url,
+        sample_url: null,
+        full_audio_url: null,
+        external_url: v.youtube_url,
+        youtube_url: v.youtube_url,
+        kind: 'youtube',
+      },
     })
   }
 
@@ -882,6 +1052,7 @@ async function hydrateFacts(
           artists: live.artists || snap?.artists || '',
           label: live.label || snap?.label || null,
           release_year: live.release_year ?? snap?.release_year ?? null,
+          play: fillPlay(live.play, snap?.play),
         }
     if (!meta || !meta.canonical_key) continue
 
@@ -920,6 +1091,7 @@ async function hydrateFacts(
       credits,
       labelCredit,
       aggregator,
+      play: meta.play,
     })
   }
   return facts
