@@ -9,9 +9,12 @@
 // estilo `beatport_top` con metadatos en snapshot) se agreguen como la
 // misma canción si comparten URL canónica.
 //
-// Uso: GET /api/public/charts/community-monthly[?limit=N]
+// Uso: GET /api/public/charts/community-monthly[?limit=N][&view=artists][&cached=1]
 //
 //   - limit: opcional, 5–100 (default 40) — solo afecta top_tracks.
+//   - view=artists: solo el top 10 de artistas (home). Mismas reglas de crédito,
+//     pero no arma la lista de temas, ni plays, ni países, y pide columnas
+//     finas. Con cached=1 la CDN lo guarda 5 min.
 //   - top_artists: top 50 por créditos de save (la UI enseña 10 y «Cargar más»).
 //     Cada fila lleva movimiento semanal reconstruido desde `created_at`
 //     (lunes ISO UTC): previous_rank = puesto en el snapshot del LUNES
@@ -40,6 +43,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/supabase-admin'
+import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import {
   buildFullArtistSlugMap,
   normalizeArtistKey,
@@ -177,15 +181,69 @@ function consecutiveWeeks(
 
 async function selectByIds<T>(
   ids: string[],
-  run: (chunk: string[]) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  run: (chunk: string[]) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+  parallel = false,
 ): Promise<{ data: T[]; error: { message: string } | null }> {
+  const chunks: string[][] = []
+  for (let i = 0; i < ids.length; i += IN_CHUNK) chunks.push(ids.slice(i, i + IN_CHUNK))
   const out: T[] = []
-  for (let i = 0; i < ids.length; i += IN_CHUNK) {
-    const { data, error } = await run(ids.slice(i, i + IN_CHUNK))
-    if (error) return { data: out, error }
-    if (data?.length) out.push(...data)
+  const take = async (chunk: string[]) => {
+    const { data, error } = await run(chunk)
+    return { data: (Array.isArray(data) ? data : null) as T[] | null, error }
+  }
+  if (!parallel || chunks.length <= 1) {
+    for (const chunk of chunks) {
+      const { data, error } = await take(chunk)
+      if (error) return { data: out, error }
+      if (data?.length) out.push(...data)
+    }
+    return { data: out, error: null }
+  }
+  const CONCURRENCY = 4
+  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+    const batch = await Promise.all(chunks.slice(i, i + CONCURRENCY).map((chunk) => take(chunk)))
+    for (const { data, error } of batch) {
+      if (error) return { data: out, error }
+      if (data?.length) out.push(...data)
+    }
   }
   return { data: out, error: null }
+}
+
+/** La home solo necesita créditos (nombre, remix, sello, URL). El snapshot entero no. */
+const ARTISTS_SAVE_SELECT =
+  'user_id, track_source, track_id, canonical_url, created_at, snap_artists:snapshot->artists, snap_mix:snapshot->mix_name, snap_label:snapshot->label, snap_title:snapshot->title, snap_beatport:snapshot->beatport_url, snap_youtube:snapshot->youtube_url'
+
+type ArtistsViewRow = {
+  user_id: string
+  track_source: ChartTrackSource
+  track_id: string
+  canonical_url: string | null
+  created_at: string | null
+  snap_artists: unknown
+  snap_mix: unknown
+  snap_label: unknown
+  snap_title: unknown
+  snap_beatport: unknown
+  snap_youtube: unknown
+}
+
+function savedFromArtistsView(row: ArtistsViewRow): SavedRow {
+  return {
+    user_id: row.user_id,
+    track_source: row.track_source,
+    track_id: row.track_id,
+    canonical_url: row.canonical_url,
+    created_at: row.created_at,
+    snapshot: {
+      artists: row.snap_artists ?? '',
+      mix_name: row.snap_mix ?? null,
+      label: row.snap_label ?? null,
+      title: row.snap_title ?? null,
+      beatport_url: row.snap_beatport ?? null,
+      youtube_url: row.snap_youtube ?? null,
+    },
+  }
 }
 
 type ChartTrackSource = 'chart' | 'featured' | 'vinyl' | 'beatport_top'
@@ -325,14 +383,16 @@ function beatportShareOriginFromSavedRow(s: SavedRow): BeatportShareOrigin | nul
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const limit = Math.min(100, Math.max(5, Number(url.searchParams.get('limit')) || 40))
-  // `cached=1` (Top 10 de la home): respuesta cacheable en CDN. Este endpoint
-  // lee TODOS los saves; sin esto cada visita a la portada lo recalcularía.
-  // El Top 100 no lo pasa y sigue siendo en vivo.
+  // `view=artists` (Top 10 de la home): mismo ranking de créditos, sin la lista
+  // de temas. `cached=1` lo guarda en CDN. El Top 100 no pasa ninguno de los dos.
+  const artistsOnly = url.searchParams.get('view') === 'artists'
   const cdnCache = url.searchParams.get('cached') === '1'
   const respond = (body: unknown) =>
     NextResponse.json(
       body,
-      cdnCache ? { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900' } } : undefined,
+      cdnCache
+        ? { headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=900' } }
+        : undefined,
     )
 
   let sb: ReturnType<typeof createServiceSupabase>
@@ -344,30 +404,53 @@ export async function GET(request: NextRequest) {
 
   // Lista global de perfiles "privados" (is_tracks_public = false): se
   // excluyen del cómputo del top, igual que en el cálculo de afinidad.
-  const { data: privateProfiles } = await sb
+  // Arranca a la vez que los saves: no depende de ellos.
+  const privatePromise = sb
     .from('profiles')
     .select('id')
     .eq('is_tracks_public', false)
-  const privateSet = new Set(
-    ((privateProfiles as { id: string }[] | null) ?? []).map((p) => p.id),
-  )
 
   // Saves de toda la historia. Paginamos a mano para no toparnos con el
   // límite por defecto del cliente Supabase (1000) cuando la tabla crezca.
+  // La home pide las páginas a la vez y solo los campos del crédito.
   const PAGE = 1000
-  const savedRaw: SavedRow[] = []
-  for (let offset = 0; ; offset += PAGE) {
-    const { data, error } = await sb
-      .from('saved_chart_tracks')
-      .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
-      .order('created_at', { ascending: true })
-      .range(offset, offset + PAGE - 1)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    const rows = ((data as unknown) as SavedRow[]) || []
-    savedRaw.push(...rows)
-    if (rows.length < PAGE) break
+  let savedRaw: SavedRow[]
+  if (artistsOnly) {
+    try {
+      const rows = await fetchAllPagesParallel<ArtistsViewRow>(
+        () => sb.from('saved_chart_tracks').select('id', { count: 'exact', head: true }),
+        (from, to) =>
+          sb
+            .from('saved_chart_tracks')
+            .select(ARTISTS_SAVE_SELECT)
+            .order('created_at', { ascending: true })
+            .range(from, to),
+        PAGE,
+      )
+      savedRaw = rows.map(savedFromArtistsView)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      return NextResponse.json({ error: message }, { status: 500 })
+    }
+  } else {
+    savedRaw = []
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await sb
+        .from('saved_chart_tracks')
+        .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+        .order('created_at', { ascending: true })
+        .range(offset, offset + PAGE - 1)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      const rows = ((data as unknown) as SavedRow[]) || []
+      savedRaw.push(...rows)
+      if (rows.length < PAGE) break
+    }
   }
 
+  const { data: privateProfiles } = await privatePromise
+  const privateSet = new Set(
+    ((privateProfiles as { id: string }[] | null) ?? []).map((p) => p.id),
+  )
   const saved = savedRaw.filter((s) => !privateSet.has(s.user_id))
 
   if (saved.length === 0) {
@@ -389,29 +472,35 @@ export async function GET(request: NextRequest) {
   const featIds = Array.from(new Set(saved.filter((s) => s.track_source === 'featured').map((s) => s.track_id)))
   const vinylIds = Array.from(new Set(saved.filter((s) => s.track_source === 'vinyl').map((s) => s.track_id)))
 
+  const chartCols = artistsOnly
+    ? 'id, mix_name, artists, label, beatport_url'
+    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url'
+  const featCols = artistsOnly
+    ? 'id, mix_name, artists, label, link_url'
+    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url'
+  const vinylCols = artistsOnly
+    ? 'id, mix_name, artists, label, discogs_url, youtube_url'
+    : 'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url'
   const [chartRes, featRes, vinylRes] = await Promise.all([
     chartIds.length
-      ? selectByIds<ChartRow>(chartIds, (chunk) =>
-          sb
-            .from('chart_tracks')
-            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url')
-            .in('id', chunk),
+      ? selectByIds<ChartRow>(
+          chartIds,
+          (chunk) => sb.from('chart_tracks').select(chartCols).in('id', chunk),
+          artistsOnly,
         )
       : Promise.resolve({ data: [] as ChartRow[], error: null }),
     featIds.length
-      ? selectByIds<FeatRow>(featIds, (chunk) =>
-          sb
-            .from('chart_featured_tracks')
-            .select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url')
-            .in('id', chunk),
+      ? selectByIds<FeatRow>(
+          featIds,
+          (chunk) => sb.from('chart_featured_tracks').select(featCols).in('id', chunk),
+          artistsOnly,
         )
       : Promise.resolve({ data: [] as FeatRow[], error: null }),
     vinylIds.length
-      ? selectByIds<VinylRow>(vinylIds, (chunk) =>
-          sb
-            .from('chart_vinyl_tracks')
-            .select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url')
-            .in('id', chunk),
+      ? selectByIds<VinylRow>(
+          vinylIds,
+          (chunk) => sb.from('chart_vinyl_tracks').select(vinylCols).in('id', chunk),
+          artistsOnly,
         )
       : Promise.resolve({ data: [] as VinylRow[], error: null }),
   ])
@@ -430,18 +519,24 @@ export async function GET(request: NextRequest) {
   if (orphChart.length || orphFeat.length || orphVinyl.length) {
     const [extraChart, extraFeat, extraVinyl] = await Promise.all([
       orphChart.length
-        ? selectByIds<ChartRow>(orphChart.map((o) => o.canonical_url as string), (chunk) =>
-            sb.from('chart_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url').in('beatport_url', chunk),
+        ? selectByIds<ChartRow>(
+            orphChart.map((o) => o.canonical_url as string),
+            (chunk) => sb.from('chart_tracks').select(chartCols).in('beatport_url', chunk),
+            artistsOnly,
           )
         : Promise.resolve({ data: [] as ChartRow[], error: null }),
       orphFeat.length
-        ? selectByIds<FeatRow>(orphFeat.map((o) => o.canonical_url as string), (chunk) =>
-            sb.from('chart_featured_tracks').select('id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url').in('link_url', chunk),
+        ? selectByIds<FeatRow>(
+            orphFeat.map((o) => o.canonical_url as string),
+            (chunk) => sb.from('chart_featured_tracks').select(featCols).in('link_url', chunk),
+            artistsOnly,
           )
         : Promise.resolve({ data: [] as FeatRow[], error: null }),
       orphVinyl.length
-        ? selectByIds<VinylRow>(orphVinyl.map((o) => o.canonical_url as string), (chunk) =>
-            sb.from('chart_vinyl_tracks').select('id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url').in('discogs_url', chunk),
+        ? selectByIds<VinylRow>(
+            orphVinyl.map((o) => o.canonical_url as string),
+            (chunk) => sb.from('chart_vinyl_tracks').select(vinylCols).in('discogs_url', chunk),
+            artistsOnly,
           )
         : Promise.resolve({ data: [] as VinylRow[], error: null }),
     ])
@@ -761,7 +856,7 @@ export async function GET(request: NextRequest) {
   aggregates.forEach((a) => { a.unique_users = a._users.size })
 
   const playByKey = new Map<string, number>()
-  const allKeys = aggregates.map((a) => a.canonical_key)
+  const allKeys = artistsOnly ? [] : aggregates.map((a) => a.canonical_key)
   if (allKeys.length) {
     const { data: playRows } = await sb.rpc('track_play_counts_for_keys', { p_keys: allKeys })
     for (const row of (playRows || []) as { canonical_key: string; play_count: number }[]) {
@@ -887,6 +982,16 @@ export async function GET(request: NextRequest) {
       weeks_at_1: rank === 1 ? extraAt1 + 1 : 0,
     }
   })
+
+  if (artistsOnly) {
+    return respond({
+      scope: 'all_time',
+      totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
+      top_tracks: [],
+      top_artists: top_artists.slice(0, 10),
+      top_countries: [],
+    })
+  }
 
   // Podio de países: nacionalidad (artists.country) de TODOS los artistas
   // con créditos de save (no solo el top 50 del tablero). Un país compuesto

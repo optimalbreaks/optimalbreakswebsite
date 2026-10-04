@@ -9,14 +9,14 @@
 // Diseño: rejilla de fichas-retrato 5×2 (desktop), número de puesto grande,
 // bandera, saves y movimiento semanal (▲/▼/═/NUEVO).
 //
-// Datos: `/api/public/charts/community-monthly?limit=5&cached=1`. El endpoint
-// lee TODOS los saves: solo se pide al acercarse la sección y `cached=1` lo
-// cachea 5 min en CDN (ver cabecera del endpoint). Con menos de MIN_ARTISTS
-// artistas en el ranking la sección no se pinta.
+// Datos: `/api/public/charts/community-monthly?view=artists&cached=1`.
+// `view=artists` devuelve solo el top 10 (mismas reglas de crédito, sin la
+// lista de temas). Se pide al montar la home, no al hacer scroll, y `cached=1`
+// lo guarda 5 min en CDN. Con menos de MIN_ARTISTS la sección no se pinta.
 // ============================================
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
 import CountryBadge from '@/components/CountryBadge'
 
@@ -142,30 +142,19 @@ function ArtistCard({ a, lang, t }: { a: TopArtist; lang: string; t: HomeTop10Di
 }
 
 export default function HomeCommunityTop10({ lang, t }: Props) {
-  const sectionRef = useRef<HTMLElement>(null)
   const [artists, setArtists] = useState<TopArtist[] | null>(null)
   const [failed, setFailed] = useState(false)
 
-  // Pide los datos solo cuando la sección se acerca al viewport.
+  // Arranca con la página: al llegar a la sección los retratos ya están.
   useEffect(() => {
-    const el = sectionRef.current
-    if (!el) return
     let cancelled = false
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return
-        io.disconnect()
-        fetch('/api/public/charts/community-monthly?limit=5&cached=1')
-          .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-          .then((j: { top_artists?: TopArtist[] }) => {
-            if (!cancelled) setArtists((j.top_artists ?? []).slice(0, TOP_N))
-          })
-          .catch(() => { if (!cancelled) setFailed(true) })
-      },
-      { rootMargin: '600px' },
-    )
-    io.observe(el)
-    return () => { cancelled = true; io.disconnect() }
+    fetch('/api/public/charts/community-monthly?view=artists&cached=1')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((j: { top_artists?: TopArtist[] }) => {
+        if (!cancelled) setArtists((j.top_artists ?? []).slice(0, TOP_N))
+      })
+      .catch(() => { if (!cancelled) setFailed(true) })
+    return () => { cancelled = true }
   }, [])
 
   // Comunidad aún pequeña o error: no ocupamos sitio en la home.
@@ -173,7 +162,6 @@ export default function HomeCommunityTop10({ lang, t }: Props) {
 
   return (
     <section
-      ref={sectionRef}
       id="home-top10"
       className="px-3 sm:px-6 py-10 sm:py-14 relative z-[1] border-t-[5px] border-[var(--ink)] bg-[var(--paper-dark)]"
     >
