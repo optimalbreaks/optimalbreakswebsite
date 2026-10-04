@@ -571,7 +571,7 @@ Explicit tap only (this is not a shared-link landing). Priority: hosted full aud
 
 ### Layout
 
-The page does not add its own horizontal padding: `.admin-content` already pads (`1.25rem 1.5rem`; under 768px, `1rem 0.75rem`, so the 4px ink shadow does not force a horizontal scroll). Country rows are a list until `sm`, then a table. Year bars and the year table start at `xl`; below that, a list. Category cards are one column until `lg`. Play targets are 44px. Long titles wrap.
+The page does not add its own horizontal padding: `.admin-content` already pads (`1.25rem 1.5rem`; under 768px, `1rem 0.75rem`, so the 4px ink shadow does not force a horizontal scroll). Country rows are a list until `sm`, then a table. Year bars and the year table start at `xl`; below that, a list. Category cards are one column until `lg`. Play targets are 44px. Long titles wrap. Track nominees and the per-year top track show the **cover** (`artwork_url`; YouTube falls back to `i.ytimg.com`). Beatport, Discogs and YouTube covers go through `/api/og/image-proxy` so the thumb does not 403. A broken image falls back to the rank square. The rank stays as a small number on the corner of the cover.
 
 ### Do not
 

@@ -280,6 +280,7 @@ export default function AdminAwardsPage() {
                         </div>
                         <div className="mt-2 flex min-w-0 items-center gap-2">
                           {r.play && <PlayButton play={r.play} slot={slot} on={on} onPlay={onPlay} />}
+                          {r.image_url && <CoverThumb src={r.image_url} />}
                           <p className="min-w-0 break-words text-[12px] font-bold leading-snug" style={mono}>
                             {r.top_title || '—'}
                           </p>
@@ -312,6 +313,7 @@ export default function AdminAwardsPage() {
                             <td className="max-w-[18rem] px-3 py-2 text-[11px] font-bold">
                               <span className="flex min-w-0 items-center gap-2">
                                 {r.play && <PlayButton play={r.play} slot={slot} on={on} onPlay={onPlay} />}
+                                {r.image_url && <CoverThumb src={r.image_url} />}
                                 <span className="min-w-0 break-words">{r.top_title || '—'}</span>
                               </span>
                               {embedSlot === slot && r.play && <VideoFrame play={r.play} slot={slot} />}
@@ -507,15 +509,9 @@ function NomineeRow({
       <div className="flex min-w-0 items-start gap-2.5">
         {entry.play && <PlayButton play={entry.play} slot={slot} on={on} onPlay={onPlay} />}
         {entry.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={entry.image_url} alt="" className={`shrink-0 border-[3px] border-[var(--ink)] object-cover ${lead ? 'h-12 w-12 sm:h-14 sm:w-14' : 'h-10 w-10'}`} />
+          <CoverThumb src={entry.image_url} rank={entry.rank} lead={lead} />
         ) : (
-          <span
-            className={`flex shrink-0 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--yellow)] font-black ${lead ? 'h-12 w-12 text-base sm:h-14 sm:w-14' : 'h-10 w-10 text-xs'}`}
-            style={display}
-          >
-            {entry.rank}
-          </span>
+          <RankBox rank={entry.rank} lead={lead} />
         )}
         <div className="min-w-0 flex-1">
           <div className={`break-words font-black leading-tight ${lead ? 'text-lg sm:text-xl' : 'text-[13px]'}`} style={display}>
@@ -536,6 +532,34 @@ function NomineeRow({
       </div>
       {showVideo && entry.play && <VideoFrame play={entry.play} slot={slot} />}
     </div>
+  )
+}
+
+function RankBox({ rank, lead = false }: { rank: number; lead?: boolean }) {
+  return (
+    <span
+      className={`flex shrink-0 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--yellow)] font-black ${lead ? 'h-12 w-12 text-base sm:h-14 sm:w-14' : 'h-10 w-10 text-xs'}`}
+      style={display}
+    >
+      {rank}
+    </span>
+  )
+}
+
+function CoverThumb({ src, rank, lead = false }: { src: string; rank?: number; lead?: boolean }) {
+  const [broken, setBroken] = useState(false)
+  if (broken) return rank != null ? <RankBox rank={rank} lead={lead} /> : null
+  const box = lead ? 'h-12 w-12 sm:h-14 sm:w-14' : 'h-10 w-10'
+  return (
+    <span className={`relative shrink-0 overflow-hidden border-[3px] border-[var(--ink)] bg-[var(--paper-dark)] ${box}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" className="h-full w-full object-cover" onError={() => setBroken(true)} />
+      {rank != null && (
+        <span className="absolute bottom-0 left-0 bg-[var(--ink)] px-1 text-[9px] font-black leading-4 text-[var(--paper)]" style={mono}>
+          {rank}
+        </span>
+      )}
+    </span>
   )
 }
 

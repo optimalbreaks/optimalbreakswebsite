@@ -541,7 +541,7 @@ Dos universos, los mismos que el Top 100. **Temas** (tema del año, remix, tema 
 
 Categorías de esta fase (5 nominados): tema del año, remix, mejor productor, mejor sello, revelación (solo con un año concreto: ≥2 créditos este año y 0 el anterior), artista español, sello español, tema español. España sale de la ficha con país ES. Sin ficha o sin país no hay premio: sale en cobertura. No están, y no se inventan, las categorías de BreaksPoll que un «+» no puede llenar (mejor DJ, álbum, radio, club night, gran evento, mix, tema gratis).
 
-El ▶ de un nominado suena en el sitio: audio completo si lo hay, si no el preview de tienda, si no YouTube debajo de esa fila. Spec: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)** (*Admin Awards*). API: `GET /api/admin/awards`.
+El ▶ de un nominado suena en el sitio: audio completo si lo hay, si no el preview de tienda, si no YouTube debajo de esa fila. El tema lleva su **carátula** (la misma que artistas y sellos llevan su foto); Beatport, Discogs y YouTube pasan por el proxy de imágenes. Si no hay carátula, se queda el número del puesto. Spec: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)** (*Admin Awards*). API: `GET /api/admin/awards`.
 
 **Admin Usuarios.** `/[lang]/administrator/users` lista cuentas (Auth + perfil). Los números de Favoritos / Mixes / Tracks abren un drawer. Un tema guardado desde el **Top 10 de Beatport** enlaza a la ficha (`?play=beatport:<id>`), **no** a Beatport. El buscador filtra por **email, nombre y usuario**; vaciar el campo recarga la lista completa al instante (debounce + se ignoran respuestas viejas). Detalle: **[`docs/USER_ENGAGEMENT.md`](./docs/USER_ENGAGEMENT.md)** (*Admin users*).
 

@@ -77,6 +77,7 @@ export type AwardReleaseYear = {
   save_count: number
   unique_tracks: number
   top_title: string | null
+  image_url: string | null
   play: AwardPlayback | null
 }
 
@@ -245,6 +246,33 @@ function youtubeIdOf(url: string | null | undefined): string | null {
   return /^[a-zA-Z0-9_-]{11}$/.test(s) ? s : null
 }
 
+const COVER_PROXY_HOSTS = new Set([
+  'geo-media.beatport.com',
+  'i.discogs.com',
+  'i.ytimg.com',
+  'img.youtube.com',
+])
+
+/** Carátula usable en un `<img>`: Beatport, Discogs y YouTube pasan por el proxy (si no, 403). */
+function coverUrl(play: PlayBits): string | null {
+  const art = (play.artwork_url || '').trim()
+  if (art) return proxiedCover(art)
+  const yt = youtubeIdOf(play.youtube_url)
+  if (!yt) return null
+  return proxiedCover(`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`)
+}
+
+function proxiedCover(url: string): string {
+  if (url.startsWith('/')) return url
+  try {
+    const host = new URL(url).hostname.toLowerCase()
+    if (COVER_PROXY_HOSTS.has(host)) {
+      return `/api/og/image-proxy?src=${encodeURIComponent(url)}`
+    }
+  } catch { /* se deja la URL tal cual */ }
+  return url
+}
+
 function playRank(p: PlayBits): number {
   if (p.full_audio_url) return 4
   if (p.sample_url || (p.kind === 'bandcamp' && p.external_url)) return 3
@@ -300,7 +328,7 @@ function toPlayback(
     artist,
     mix_name: mix,
     label,
-    artwork_url: play.artwork_url,
+    artwork_url: coverUrl(play),
     src,
     youtube_id: src ? null : yt,
   }
@@ -495,7 +523,7 @@ function trackEntries(rows: TrackAgg[], n = NOMINEES): AwardEntry[] {
       slug: null,
       kind: 'track' as const,
       country: null,
-      image_url: null,
+      image_url: coverUrl(t.play),
       play: toPlayback(t.key, t.title, t.artists, t.mixName, t.label, t.play),
     }
   })
@@ -841,6 +869,7 @@ function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
         save_count: b.saves,
         unique_tracks: b.tracks.size,
         top_title: top?.title || null,
+        image_url: top ? coverUrl(top.play) : null,
         play: top ? toPlayback(top.key, top.title, top.artist, top.mix, top.label, top.play) : null,
       }
     })
