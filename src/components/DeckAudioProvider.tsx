@@ -2714,6 +2714,11 @@ export function DeckAudioProvider({
   }, [])
 
   const handleScError = useCallback(() => {
+    if (previewSoundCloudRef.current) {
+      setPreviewPlaying(false)
+      setPreviewBlocked(true)
+      return
+    }
     setMixPlaying(false)
     setMixError(true)
   }, [])

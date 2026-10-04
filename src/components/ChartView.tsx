@@ -279,6 +279,16 @@ function sortArchiveRows(rows: ArchiveRow[], lang: Locale): ArchiveRow[] {
 // la cola con `PreviewTrack[]` y delegamos en `playPreviewQueue` /
 // `stopPreview`. Ver `src/components/DeckAudioProvider.tsx`.
 
+/** URL que entiende el widget. Un permalink secreto (`/s-TOKEN`) responde 404; la API con el token dentro sí suena. */
+function soundCloudPlaybackUrl(pick: ChartFeaturedTrack): string | null {
+  if ((pick.platform || '').toLowerCase() !== 'soundcloud') return null
+  const sample = (pick.sample_url || '').trim()
+  if (/api\.soundcloud\.com\/tracks\//i.test(sample)) return sample
+  const link = (pick.link_url || '').trim()
+  if (link && isSoundCloudTrackEmbedUrl(link)) return link
+  return null
+}
+
 function previewAudioSrc(sampleUrl: string, pick?: ChartFeaturedTrack): string {
   if (pick?.platform === 'bandcamp' && pick.link_url) {
     return `/api/bandcamp-preview?track=${encodeURIComponent(pick.link_url)}`
@@ -338,10 +348,7 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
   const hasFullAudio = !!(pick.full_audio_url ?? null)
-  const scPlayable =
-    pick.platform === 'soundcloud' &&
-    !!(pick.link_url || '').trim() &&
-    isSoundCloudTrackEmbedUrl(pick.link_url)
+  const scPlayable = !!soundCloudPlaybackUrl(pick)
   const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url) || scPlayable)
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
@@ -1100,12 +1107,9 @@ export default function ChartView({
     for (const p of featured) {
       let src = ''
       let soundCloudUrl: string | null = null
-      if (
-        p.platform === 'soundcloud' &&
-        (p.link_url || '').trim() &&
-        isSoundCloudTrackEmbedUrl(p.link_url)
-      ) {
-        soundCloudUrl = p.link_url!.trim()
+      const scUrl = soundCloudPlaybackUrl(p)
+      if (scUrl) {
+        soundCloudUrl = scUrl
       } else if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
       else if (p.full_audio_url ?? null) src = p.full_audio_url!  // audio completo alojado: ruta directa sin proxy
       else if (p.sample_url) src = previewAudioSrc(p.sample_url)

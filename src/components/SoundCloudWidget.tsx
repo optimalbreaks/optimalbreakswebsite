@@ -82,6 +82,37 @@ function loadScWidgetApi(): Promise<void> {
   return scApiPromise
 }
 
+/**
+ * El oEmbed de un tema secreto usa
+ * `url=https://api.soundcloud.com/tracks/ID&secret_token=s-…`.
+ * Meter el permalink `/s-TOKEN` en `url` responde 404.
+ */
+function buildHiddenPlayerSrc(trackUrl: string): string {
+  let url = trackUrl.trim()
+  let secret = ''
+  try {
+    const parsed = new URL(url)
+    const token = parsed.searchParams.get('secret_token') || ''
+    if (token && /api\.soundcloud\.com$/i.test(parsed.hostname)) {
+      secret = token
+      parsed.searchParams.delete('secret_token')
+      url = parsed.toString()
+    }
+  } catch { /* permalink normal */ }
+  const q = new URLSearchParams()
+  q.set('url', url)
+  if (secret) q.set('secret_token', secret)
+  q.set('auto_play', 'true')
+  q.set('buying', 'false')
+  q.set('sharing', 'false')
+  q.set('download', 'false')
+  q.set('show_artwork', 'false')
+  q.set('show_playcount', 'false')
+  q.set('show_user', 'false')
+  q.set('visual', 'false')
+  return `https://w.soundcloud.com/player/?${q.toString()}`
+}
+
 export default function SoundCloudWidget({
   trackUrl,
   onReady,
@@ -103,8 +134,7 @@ export default function SoundCloudWidget({
     let cancelled = false
     const iframe = iframeRef.current
 
-    const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(trackUrl)}&auto_play=true&buying=false&sharing=false&download=false&show_artwork=false&show_playcount=false&show_user=false&visual=false`
-    iframe.src = embedUrl
+    iframe.src = buildHiddenPlayerSrc(trackUrl)
 
     // Si en 15 s el widget no llega a READY (pista privada/borrada, red
     // caída, iframe bloqueado), se avisa como error: la barra no se queda
@@ -130,6 +160,8 @@ export default function SoundCloudWidget({
         window.clearTimeout(readyTimeout)
         widget.getDuration((d) => { durationMs = d || 0 })
         onReady?.()
+        // auto_play en la URL a veces no arranca (el iframe se monta tras el click).
+        try { widget.play() } catch { /* onError si la pista no carga */ }
 
         const handle: SoundCloudWidgetHandle = {
           play: () => widget.play(),
