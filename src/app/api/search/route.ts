@@ -67,21 +67,42 @@ function escIlike(raw: string): string {
 }
 
 /**
+ * Vocales y la «y» suelta no son iniciales («dj y tortu», «a skillz»).
+ * Una consonante sí: «b» en «Ricky B» distingue de Ricky Tuff.
+ */
+const SINGLE_LETTER_STOP = new Set(['a', 'e', 'i', 'o', 'u', 'y'])
+
+/**
  * Palabras de la búsqueda. Una frase («dj tortu skin») no cabe en una sola
  * columna: el título es «Skin» y el artista es «Dj Tortu». Cada palabra tiene
  * que aparecer en alguno de los campos de la misma fila.
+ * Una letra suelta solo cuenta si va con otra palabra («ricky b»).
+ * Sola, «b» no busca: saldría en Blind, Boogs y Br8kn.
  */
 function searchTokens(raw: string): string[] {
   const seen = new Set<string>()
-  const out: string[] = []
+  const words: string[] = []
+  const initials: string[] = []
   for (const part of raw.split(/[^\p{L}\p{N}]+/u)) {
     const t = part.trim()
-    if (t.length < 2 || t.length > 40) continue
+    if (!t || t.length > 40) continue
     const key = normForKey(t)
     if (!key || seen.has(key)) continue
+    if (t.length === 1) {
+      if (!/^\p{L}$/u.test(t) || SINGLE_LETTER_STOP.has(key)) continue
+      seen.add(key)
+      initials.push(t)
+      continue
+    }
     seen.add(key)
-    out.push(t)
+    words.push(t)
+    if (words.length >= 6) break
+  }
+  if (words.length === 0) return []
+  const out = words.slice(0, 6)
+  for (const ini of initials) {
     if (out.length >= 6) break
+    out.push(ini)
   }
   return out
 }
@@ -89,21 +110,30 @@ function searchTokens(raw: string): string[] {
 /**
  * Inicio de palabra, sin acentos. «ondamik» encuentra Ondamike.
  * «skin» no entra en medio de Ruskin.
+ * Una sola letra es la palabra entera: «b» no es prefijo de Blind.
  */
 function tokenWord(token: string): string {
   return normForKey(token).replace(/[^a-z0-9]+/g, '')
 }
 
+function tokenPattern(token: string): string {
+  const safe = tokenWord(token)
+  if (!safe) return ''
+  return safe.length === 1 ? `\\m${safe}\\M` : `\\m${safe}`
+}
+
 function normHasWord(hay: string, token: string): boolean {
   const t = tokenWord(token)
   if (!t) return false
-  return new RegExp(`(?:^|[^a-z0-9])${t}`).test(normForKey(hay))
+  const body = t.length === 1
+    ? `(?:^|[^a-z0-9])${t}(?:[^a-z0-9]|$)`
+    : `(?:^|[^a-z0-9])${t}`
+  return new RegExp(body).test(normForKey(hay))
 }
 
 function tokenOr(columns: readonly string[], token: string): string {
-  const safe = tokenWord(token)
-  if (!safe) return ''
-  const pattern = `\\m${safe}`
+  const pattern = tokenPattern(token)
+  if (!pattern) return ''
   return columns.map((col) => `${col}.imatch.${pattern}`).join(',')
 }
 

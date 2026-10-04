@@ -19,6 +19,7 @@ import type {
   ChartVinylTrack,
 } from '@/types/database'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
+import { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
@@ -337,7 +338,11 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const cta = pickCtaLabel(c, pick)
   const mixName = (pick.mix_name || '').trim()
   const hasFullAudio = !!(pick.full_audio_url ?? null)
-  const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
+  const scPlayable =
+    pick.platform === 'soundcloud' &&
+    !!(pick.link_url || '').trim() &&
+    isSoundCloudTrackEmbedUrl(pick.link_url)
+  const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url) || scPlayable)
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
 
   // Fila «exclusive full track» (mockups/full-audio-row.html, variante C+A):
@@ -1094,14 +1099,22 @@ export default function ChartView({
     const out: PreviewTrack[] = []
     for (const p of featured) {
       let src = ''
-      if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
+      let soundCloudUrl: string | null = null
+      if (
+        p.platform === 'soundcloud' &&
+        (p.link_url || '').trim() &&
+        isSoundCloudTrackEmbedUrl(p.link_url)
+      ) {
+        soundCloudUrl = p.link_url!.trim()
+      } else if (p.platform === 'bandcamp' && p.link_url) src = previewAudioSrc('', p)
       else if (p.full_audio_url ?? null) src = p.full_audio_url!  // audio completo alojado: ruta directa sin proxy
       else if (p.sample_url) src = previewAudioSrc(p.sample_url)
-      if (!src) continue
+      if (!src && !soundCloudUrl) continue
       const artists = Array.isArray(p.artists) ? p.artists.map((a: ChartFeaturedArtist) => a.name).join(', ') : ''
       out.push({
         rowKey: `chart-row-${p.id}`,
-        src,
+        src: src || '',
+        soundCloudUrl,
         title: p.title,
         artist: artists,
         artworkUrl: p.artwork_url || null,

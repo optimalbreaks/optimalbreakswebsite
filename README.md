@@ -753,7 +753,7 @@ The `CommandPalette` (magnifier icon in the header, keyboard shortcut **⌘K** /
 | `post` | `posts` | `title`, `slug` |
 | `organization` | `organizations` | `name`, `slug` |
 
-Several words are **AND**ed, and each word may hit a **different** column of the same row. A fragment counts when a word **starts** with it (`ondamik` finds Ondamike). It does not match in the middle of another word (`skin` does not match Ruskin). `dj tortu skin` finds the track **Skin** by DJ Tortu (`skin` in `title`, `dj` and `tortu` in `artist_names_text`). The whole phrase does not have to sit in one field. If the artist’s name is fully contained in the query and includes the longest word, the profile is returned too.
+Several words are **AND**ed, and each word may hit a **different** column of the same row. A fragment counts when a word **starts** with it (`ondamik` finds Ondamike). It does not match in the middle of another word (`skin` does not match Ruskin). A single letter is kept only next to a longer word, and it must be the **whole** word (`ricky b` matches Ricky B Mixin, not Ricky Tuff, Ricky Ricardo or Ricky Ranking; `b` does not match Blind, Boogs or Br8kn). Vowels and a lone `y` are ignored (`a`, `e`, `i`, `o`, `u`, `y`). `dj tortu skin` finds the track **Skin** by DJ Tortu (`skin` in `title`, `dj` and `tortu` in `artist_names_text`). The whole phrase does not have to sit in one field. If the artist’s name is fully contained in the query and includes the longest word, the profile is returned too.
 
 ### Presentation rules
 

@@ -93,7 +93,14 @@ function previewAudioSrc(pick: ArtistFeaturedPick): string | null {
 }
 
 function pickHasPreview(pick: ArtistFeaturedPick): boolean {
-  return !!(pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url))
+  return !!(
+    pick.sample_url ||
+    (pick.platform === 'bandcamp' && pick.link_url) ||
+    (pick.platform === 'soundcloud' &&
+      (pick.link_url || '').trim() &&
+      /soundcloud\.com\//i.test(pick.link_url!) &&
+      !/w\.soundcloud\.com/i.test(pick.link_url!))
+  )
 }
 
 function pickYoutubeUrl(pick: ArtistFeaturedPick): string | null {
@@ -273,13 +280,20 @@ export default function ArtistFeaturedTracks({
 
   const buildQueue = useCallback((): PreviewTrack[] => {
     return playablePicks.map((pick) => {
-      const src = previewAudioSrc(pick)
+      const link = (pick.link_url || '').trim()
+      const scPlay =
+        pick.platform === 'soundcloud' &&
+        link &&
+        /soundcloud\.com\//i.test(link) &&
+        !/w\.soundcloud\.com/i.test(link)
+      const src = scPlay ? '' : previewAudioSrc(pick)
       const artists = Array.isArray(pick.artists)
         ? pick.artists.map((a) => a.name).filter(Boolean).join(', ')
         : ''
       return {
         rowKey: `nr-${pick.id}`,
-        src: src!,
+        src: src || '',
+        soundCloudUrl: scPlay ? link : null,
         title: pick.title,
         artist: artists,
         artworkUrl: pick.artwork_url || null,

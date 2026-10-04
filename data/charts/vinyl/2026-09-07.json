@@ -432,6 +432,173 @@
       "artwork_url": "https://i.ytimg.com/vi/NuhkcvH4ltc/hqdefault.jpg",
       "note_en": "Free Valentine's Day vault track (2014); also spelled Romantica on some uploads.",
       "note_es": "Tema regalado de San Valentín (2014), rescatado del archivo; en algunos uploads aparece como Romantica."
+    },
+    {
+      "sort_order": 24,
+      "title": "Feel",
+      "mix_name": "General Midi Remix",
+      "artists": [
+        {
+          "name": "Expansion"
+        },
+        {
+          "name": "General Midi"
+        }
+      ],
+      "label": "Funked Up Recordings",
+      "catalog_number": "FUR003A",
+      "year": 1999,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/14217-Expansion-Feel",
+      "youtube_url": "https://www.youtube.com/watch?v=2QmSrbAlCpA",
+      "artwork_url": "https://i.ytimg.com/vi/2QmSrbAlCpA/hqdefault.jpg",
+      "note_en": "B1 of the Funked Up 12\" (FUR003A, US, 1999) — progressive house / breaks cut with General Midi on the remix.",
+      "note_es": "Cara B1 del 12\" en Funked Up (FUR003A, EE. UU., 1999) — corte progressive house / breaks con remix de General Midi."
+    },
+    {
+      "sort_order": 25,
+      "title": "The Flow",
+      "mix_name": "Factor E + Hostage Remix",
+      "artists": [
+        {
+          "name": "Rick West"
+        },
+        {
+          "name": "Factor E"
+        },
+        {
+          "name": "Hostage"
+        }
+      ],
+      "label": "Painted Puppy Productions",
+      "catalog_number": "PP 011",
+      "year": 2004,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/287404-Rick-West-On-On-The-Flow-Remixes",
+      "youtube_url": "https://www.youtube.com/watch?v=B1ty7ScMhL0",
+      "artwork_url": "https://i.ytimg.com/vi/B1ty7ScMhL0/hqdefault.jpg",
+      "note_en": "B-side remixes 12\" (PP 011, US, 2004) — Florida breaks; Factor E and Hostage rework of The Flow.",
+      "note_es": "Remixes en la cara B del 12\" (PP 011, EE. UU., 2004) — breaks de Florida; Factor E y Hostage en The Flow."
+    },
+    {
+      "sort_order": 26,
+      "title": "The Drop",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Phantom Beats"
+        }
+      ],
+      "label": "Plastic Raygun",
+      "catalog_number": "PRPR07",
+      "year": 2000,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=5R0IKMkROdg",
+      "artwork_url": "https://i.ytimg.com/vi/5R0IKMkROdg/hqdefault.jpg",
+      "note_en": "A-side of the UK 12\" (PRPR07, 2000); B-side is Charged.",
+      "note_es": "Cara A del 12\" UK (PRPR07, 2000); en la B va Charged."
+    },
+    {
+      "sort_order": 27,
+      "title": "What U Wanna",
+      "mix_name": "Koma & Bones Remix",
+      "artists": [
+        {
+          "name": "La Liga"
+        },
+        {
+          "name": "Koma & Bones"
+        }
+      ],
+      "label": "Lot49",
+      "catalog_number": "LOT49006",
+      "year": 2005,
+      "format": "12\"",
+      "discogs_url": "https://www.discogs.com/release/457760-La-Liga-What-U-Wanna",
+      "youtube_url": "https://www.youtube.com/watch?v=NvSzSH6Q8BQ",
+      "artwork_url": "https://i.ytimg.com/vi/NvSzSH6Q8BQ/hqdefault.jpg",
+      "note_en": "B-side remix on the UK 12\" (LOT49006, 2005); original mix on the A.",
+      "note_es": "Remix en la cara B del 12\" UK (LOT49006, 2005); el original va en la A."
+    },
+    {
+      "sort_order": 28,
+      "title": "Presents Y4K",
+      "mix_name": "DJ Mix",
+      "artists": [
+        {
+          "name": "Future Funk Squad"
+        }
+      ],
+      "label": "Future Funk Squad",
+      "catalog_number": "",
+      "year": 2002,
+      "format": "Mix",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=11oIBz0uZL4",
+      "artwork_url": "https://i.ytimg.com/vi/11oIBz0uZL4/hqdefault.jpg",
+      "note_en": "Unreleased Y4K-series mix recorded in 2002 (Koma & Bones, Phantom Beats, Crystal Method cuts, etc.); later issued as a name-your-price download (~2017). Full session — not a single track.",
+      "note_es": "Mix de la serie Y4K grabado en 2002 y sin publicar hasta ~2017 (descarga en Bandcamp); incluye cortes de Koma & Bones, Phantom Beats, The Crystal Method, etc. Sesión completa, no un tema suelto."
+    },
+    {
+      "sort_order": 29,
+      "title": "Like This",
+      "mix_name": "Electro Mix",
+      "artists": [
+        {
+          "name": "Kay Cee"
+        }
+      ],
+      "label": "Orbit Records",
+      "catalog_number": "8947192",
+      "year": 1997,
+      "format": "CD",
+      "discogs_url": "https://www.discogs.com/master/78848-Like-This",
+      "youtube_url": "https://www.youtube.com/watch?v=2ojZrn1KtBA",
+      "artwork_url": "https://i.ytimg.com/vi/2ojZrn1KtBA/hqdefault.jpg",
+      "note_en": "Track 4 on the 1997 maxi (Orbit / 8947192) — trance/electro cut often shared in breaks sets.",
+      "note_es": "Corte 4 del maxi de 1997 (Orbit / 8947192) — tema trance/electro que circula mucho en sesiones de breaks."
+    },
+    {
+      "sort_order": 30,
+      "title": "Taurus II Gemini",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "C83"
+        }
+      ],
+      "label": "En:Vision Recordings",
+      "catalog_number": "envDP1",
+      "year": 2003,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=GTiK6K0yGYc",
+      "artwork_url": "https://i.ytimg.com/vi/GTiK6K0yGYc/hqdefault.jpg",
+      "note_en": "Cut on the New:BPM Vol. 2 promo sampler (envDP1, ~2003) — follow-up to the 2002 \"Taurus\" single (en:vision002); not on Beatport as a separate listing.",
+      "note_es": "Corte del sampler promo New:BPM Vol. 2 (envDP1, ~2003) — continuación del single \"Taurus\" de 2002 (en:vision002); no hay listing suelto en Beatport."
+    },
+    {
+      "sort_order": 31,
+      "title": "Look Like a Girl",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Galvani"
+        },
+        {
+          "name": "Circuit Breaker"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2001,
+      "format": "CD",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=KwUtvoN9ZiY",
+      "artwork_url": "https://i.ytimg.com/vi/KwUtvoN9ZiY/hqdefault.jpg",
+      "note_en": "Track 12 on the DJ Tosh mix CD \"Nu Steppin 2\" (~2001) — 2-step / breakbeat garage comp; no Beatport listing for this cut.",
+      "note_es": "Corte 12 del mix CD de DJ Tosh \"Nu Steppin 2\" (~2001) — recopilatorio 2-step / breakbeat garage; sin listing en Beatport."
     }
   ]
 }

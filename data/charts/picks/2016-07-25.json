@@ -1,0 +1,27 @@
+{
+  "week_date": "2016-07-25",
+  "picks": [
+    {
+      "title": "Sub Zero",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Injustice"
+        }
+      ],
+      "label": "Saucy Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sub-zero/8160384",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c8928464-948d-4298-88c9-ba729427754f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8875ec18-ef87-4a89-9bdf-5e6d6051638e.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2016,
+      "release_date": "2016-07-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

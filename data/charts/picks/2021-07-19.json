@@ -1,0 +1,573 @@
+{
+  "week_date": "2021-07-19",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Dystopia",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dystopia/15427732",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0a19d940-ee8c-4208-bc59-af1de794db14.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c4fe6c09-990a-42b8-b3e5-68abd8337d51.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Bb Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "title": "The Dark Knight Rider",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Rasco"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-dark-knight-rider/15446869",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0580d056-b33a-4890-be75-de847e0311db.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dc88082b-6b76-4b1d-9765-7788c6c0a5b3.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "sort_order": 3,
+      "title": "BHO",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bho/15507582",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e4f1e633-7c12-4c0f-b841-08f45a7ea698.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/332e08d3-4be5-435e-9848-7a55c6db38cd.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 4,
+      "title": "BHO",
+      "mix_name": "Jonny Memonic Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bho/15507584",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e4f1e633-7c12-4c0f-b841-08f45a7ea698.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ce1a7a40-582c-4392-83b0-bd0c0300a4ba.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 5,
+      "title": "Bass Face",
+      "mix_name": "DJ Mondo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-fixx/443",
+          "name": "DJ Fixx"
+        },
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-mondo/3313",
+          "name": "DJ Mondo"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-face/15457623",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9b303828-6a48-402e-844f-f33f0c3d5231.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/47fbf1a6-78c3-4afb-a1be-a2b3dd4988da.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Eb Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 6,
+      "title": "OMG",
+      "mix_name": "OnDaMiKe Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/face-book/592996",
+          "name": "Face & Book"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/omg/15420887",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a9e38193-e9ce-446e-a7e5-006d62d2e276.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/03b1555a-d103-40d0-90fd-cf75200b261a.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 7,
+      "title": "House Work",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/rob-analyze/19669",
+          "name": "Rob Analyze"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/house-work/15468183",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1d05b06e-0be2-4470-857e-9b8b7810fb73.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/78ae0eae-8ca3-4cec-bde3-03134d7f04b6.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "F Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 8,
+      "title": "Mobile Phone",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mobile-phone/15468184",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1d05b06e-0be2-4470-857e-9b8b7810fb73.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bdcb8ee3-0f6b-4e6e-ae2c-634e29777a3b.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "F Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 9,
+      "title": "Planetary Bass",
+      "mix_name": "VIP Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/planetary-bass/15387502",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/889e07ca-1fe8-4259-8c90-075534ae666e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/918869f3-cc95-4917-8891-5b1ec9df4acb.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "B Major",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 10,
+      "title": "Smoke",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dmoney/458105",
+          "name": "Dmoney"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/smoke/15387505",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f6221480-a35b-48bc-977c-2b3b0d1dc722.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dea23474-44b1-4e95-a476-36a0da38e568.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Major",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 11,
+      "title": "My Sound",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freestylers/711",
+          "name": "Freestylers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mc-spyda/79593",
+          "name": "MC Spyda"
+        }
+      ],
+      "label": "Mama's Pie",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-sound/15549462",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b4d9dd63-9cb6-423f-98d3-6c9d57c8e4a3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef1cfb1d-339b-44bf-8fe3-7a72fca49a09.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "G Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 12,
+      "title": "Fat Duck",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bad-legs/668750",
+          "name": "Bad Legs"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fat-duck/15443116",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/61867a55-9884-45d7-bb6c-0dc4521b8d63.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d1c8e35b-65d7-443d-abdb-819a52512056.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 13,
+      "title": "Flash",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/basstyler/456175",
+          "name": "Basstyler"
+        },
+        {
+          "url": "https://www.beatport.com/artist/bad-legs/668750",
+          "name": "Bad Legs"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flash/15480197",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cd719e65-4383-41a5-92af-6755de02b911.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5076819b-e35c-4b61-8c32-1af6a97713e0.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 14,
+      "title": "Ready, Set",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/wizard/15539",
+          "name": "Wizard"
+        },
+        {
+          "url": "https://www.beatport.com/artist/alive-muzik/614948",
+          "name": "Alive Muzik"
+        }
+      ],
+      "label": "Tribal Trap Back Catalog",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ready-set/18257962",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b6503d4f-767b-40b8-8c47-ae54bb0b0dd7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1f344956-9a6c-4309-b473-3b56b3df2a41.LOFI.mp3",
+      "bpm": 129,
+      "music_key": "B Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 15,
+      "title": "Back once again",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-wavs/921459",
+          "name": "DJ WAVS"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-once-again/15425862",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/97289a31-b1c1-4a72-a15e-d60d2e45c710.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b5c29c3a-f0ce-4f30-bd63-3093ed120331.LOFI.mp3",
+      "bpm": 129,
+      "music_key": "D Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 16,
+      "title": "Moon",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/moon/15482088",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f96abb6b-a525-4d84-8b47-ed6b878cb15e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7edb5e74-4706-4abb-bf89-d9b8d169b996.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 17,
+      "title": "Rise",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rise/15482089",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f96abb6b-a525-4d84-8b47-ed6b878cb15e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cc715ea3-4c6c-42b7-bbae-c605aa00f7c7.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 18,
+      "title": "Midnight",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/midnight/15482086",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f96abb6b-a525-4d84-8b47-ed6b878cb15e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/41368281-881c-4f4a-9dbc-9568991ca900.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "E Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 19,
+      "title": "Swear You Love Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "Beat By Brain",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/swear-you-love-me/15403246",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f5fc6311-9e86-48ea-9af8-be88bdb469c5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/258d8e29-5d99-4bae-812b-df8e3413416f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "B Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-21",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 20,
+      "title": "Go Again",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/go-again/15396371",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6f64c3ac-ce43-497e-b57d-899c3badc8f9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4f690725-d87d-49c6-8c1c-a73fbc4a7d19.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "B Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 21,
+      "title": "Curb Dogs",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/united-states-beat-squad/440381",
+          "name": "United States Beat Squad"
+        },
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/curb-dogs/15490155",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1dc26f5d-4098-4dae-a958-22ed5e0c6d17.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/38edbdc9-1944-4c5a-b8c0-11924816eb9e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 22,
+      "title": "Taste Of You",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/taste-of-you/15375306",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e6a40c48-ee7a-4efa-bef8-36993dcec1e7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b19a51ea-9ee5-4d6b-bf6d-477f41301ffe.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "D Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-19",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 23,
+      "title": "OMG",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/face-book/592996",
+          "name": "Face & Book"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/omg/15420886",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a9e38193-e9ce-446e-a7e5-006d62d2e276.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/28fdffa7-714c-424e-91ed-4a0c27390acd.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}

@@ -162,6 +162,8 @@ export type PreviewShareData =
 export interface PreviewTrack {
   rowKey: string
   src: string
+  /** Tema completo en SoundCloud (sin preview de tienda). El widget oculto suena en modo preview. */
+  soundCloudUrl?: string | null
   title: string
   artist: string
   artworkUrl?: string | null
@@ -400,6 +402,10 @@ function previewSrcEquals(audio: HTMLAudioElement, targetSrc: string): boolean {
   } catch {
     return false
   }
+}
+
+function previewItemSoundCloudUrl(m: PreviewTrack | undefined): string {
+  return (m?.soundCloudUrl || '').trim()
 }
 
 /** El provider emite esto al mostrar/ocultar la barra fija de preview
@@ -1267,6 +1273,9 @@ export function DeckAudioProvider({
   const [scTrackUrl, setScTrackUrl] = useState<string | null>(null)
   // Fuerza a remontar el widget al reintentar la MISMA pista de SoundCloud.
   const [scNonce, setScNonce] = useState(0)
+  /** Preview de charts con SoundCloud (no confundir con mode === 'mix'). */
+  const previewSoundCloudRef = useRef(false)
+  const previewScUrlRef = useRef<string | null>(null)
 
   // === Preview player state (persiste entre rutas) ===
   const [previewQueue, setPreviewQueue] = useState<PreviewTrack[]>([])
@@ -1274,6 +1283,7 @@ export function DeckAudioProvider({
   const [previewPlaying, setPreviewPlaying] = useState(false)
   const [previewProgress, setPreviewProgress] = useState(0)
   const [previewDuration, setPreviewDuration] = useState(0)
+  const previewDurationRef = useRef(0)
   const [previewGroupKey, setPreviewGroupKey] = useState<string | null>(null)
   // true cuando `audio.play()` fue rechazado por NotAllowedError (autoplay
   // bloqueado al aterrizar vía link compartido en pestaña nueva, sin gesto).
@@ -1902,6 +1912,11 @@ export function DeckAudioProvider({
     previewUserPausedRef.current = false
     previewSystemPausedRef.current = false
     previewInterruptedRef.current = false
+    previewSoundCloudRef.current = false
+    previewScUrlRef.current = null
+    if (scHandleRef.current) scHandleRef.current.pause()
+    setScTrackUrl(null)
+    scHandleRef.current = null
     if (previewStartWatchdogRef.current) {
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
@@ -2068,6 +2083,46 @@ export function DeckAudioProvider({
       clearTimeout(previewStartWatchdogRef.current)
       previewStartWatchdogRef.current = null
     }
+
+    const scUrl = previewItemSoundCloudUrl(queue[idx])
+    if (scUrl) {
+      previewSoundCloudRef.current = true
+      if (!previewAudioRef.current) previewAudioRef.current = getSharedPreviewAudio()
+      const audio = previewAudioRef.current
+      try { audio.pause() } catch { /* no-op */ }
+      audio.removeAttribute('src')
+      try { audio.load() } catch { /* no-op */ }
+      setPreviewProgress(0)
+      setPreviewDuration(0)
+      setPreviewPlaying(false)
+      setPreviewBlocked(false)
+      if (previewScUrlRef.current !== scUrl) {
+        previewScUrlRef.current = scUrl
+        setScNonce((n) => n + 1)
+        setScTrackUrl(scUrl)
+      } else {
+        scHandleRef.current?.play()
+      }
+      const m = queue[idx]
+      applyNowPlaying({
+        title: m.title || '',
+        artist: m.artist,
+        mixName: m.mixName,
+        album: m.album || 'SoundCloud',
+        artworkUrl: m.artworkUrl,
+      })
+      if ('mediaSession' in navigator) {
+        try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+      }
+      preloadNextPreview(queue, idx)
+      return
+    }
+
+    previewSoundCloudRef.current = false
+    previewScUrlRef.current = null
+    if (scHandleRef.current) scHandleRef.current.pause()
+    setScTrackUrl(null)
+    scHandleRef.current = null
 
     // <audio> compartido (lib/audio-unlock): si el usuario pulsó ▶ antes de
     // que cargara el motor, este elemento YA arrancó dentro de su gesto, así
@@ -2270,6 +2325,7 @@ export function DeckAudioProvider({
   // para que `advanceFromCurrentTrack` siempre lea valores frescos.
   useEffect(() => { previewQueueRef.current = previewQueue }, [previewQueue])
   useEffect(() => { previewIndexRef.current = previewIndex }, [previewIndex])
+  useEffect(() => { previewDurationRef.current = previewDuration }, [previewDuration])
 
   // Mantén la lockscreen alineada con la pista actual (navegación Next.js
   // pisa `document.title`; iOS usa ese título si Media Session flaquea).
@@ -2305,13 +2361,21 @@ export function DeckAudioProvider({
     // Aterrizaje de un enlace compartido: la cola pasa de 1 tema a la semana
     // entera. Mismo tema y misma URL → no recargar el <audio> (no corta ni
     // vuelve a 0:00) y no poner el progreso a cero.
-    const sameTrack =
+    const sameSc =
       !!next &&
       !!current &&
-      !!audio &&
       current.rowKey === next.rowKey &&
-      current.src === next.src &&
-      previewSrcEquals(audio, next.src)
+      !!previewItemSoundCloudUrl(current) &&
+      previewItemSoundCloudUrl(current) === previewItemSoundCloudUrl(next)
+    const sameTrack =
+      sameSc ||
+      (!!next &&
+        !!current &&
+        !!audio &&
+        current.rowKey === next.rowKey &&
+        !previewItemSoundCloudUrl(current) &&
+        current.src === next.src &&
+        previewSrcEquals(audio, next.src))
 
     // Preview excluye deck y mix: claim → el handler global para las
     // otras fuentes, y aquí mismo paramos deck/mix por si acaso.
@@ -2349,7 +2413,11 @@ export function DeckAudioProvider({
     const next = items[idx]
     if (!current || !next || current.rowKey !== next.rowKey) return
     let queue = items
-    if (next.src !== current.src) {
+    const curSc = previewItemSoundCloudUrl(current)
+    const nextSc = previewItemSoundCloudUrl(next)
+    if (curSc && curSc === nextSc) {
+      /* misma pista SC */
+    } else if (next.src !== current.src) {
       queue = items.slice()
       queue[idx] = { ...next, src: current.src }
     }
@@ -2386,6 +2454,27 @@ export function DeckAudioProvider({
   const togglePreview = useCallback(() => {
     if (previewQueue.length === 0) return
 
+    const m = previewQueueRef.current[previewIndexRef.current]
+    const scUrl = previewItemSoundCloudUrl(m)
+    if (scUrl && previewSoundCloudRef.current) {
+      if (previewPlaying) {
+        previewUserPausedRef.current = true
+        scHandleRef.current?.pause()
+        setPreviewPlaying(false)
+        if ('mediaSession' in navigator) {
+          try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
+        }
+      } else {
+        stopAllYouTube()
+        broadcastPlaybackClaim()
+        previewUserPausedRef.current = false
+        previewInterruptedRef.current = false
+        previewSystemPausedRef.current = false
+        scHandleRef.current?.play()
+      }
+      return
+    }
+
     const a = previewAudioRef.current
     if (!a) return
     if (a.paused) {
@@ -2415,7 +2504,7 @@ export function DeckAudioProvider({
         try { navigator.mediaSession.playbackState = 'paused' } catch { /* no-op */ }
       }
     }
-  }, [previewQueue.length])
+  }, [previewQueue.length, previewPlaying])
 
   useEffect(() => { togglePreviewRef.current = togglePreview }, [togglePreview])
 
@@ -2448,6 +2537,12 @@ export function DeckAudioProvider({
 
   const seekPreviewToRatio = useCallback((ratio: number) => {
     const clamped = Math.max(0, Math.min(1, ratio))
+    if (previewSoundCloudRef.current && scHandleRef.current) {
+      const d = previewDurationRef.current || 1
+      scHandleRef.current.seekTo(clamped * d * 1000)
+      setPreviewProgress(clamped * d)
+      return
+    }
     const a = previewAudioRef.current
     if (!a || !a.duration) return
     a.currentTime = clamped * a.duration
@@ -2624,23 +2719,50 @@ export function DeckAudioProvider({
   }, [])
 
   const handleScProgress = useCallback((posMs: number, durMs: number) => {
+    if (previewSoundCloudRef.current) {
+      setPreviewProgress(posMs / 1000)
+      setPreviewDuration(durMs / 1000)
+      return
+    }
     setMixProgress(posMs / 1000)
     setMixDuration(durMs / 1000)
   }, [])
 
   const handleScFinish = useCallback(() => {
+    if (previewSoundCloudRef.current && previewQueueRef.current.length > 0) {
+      previewAdvancedRef.current = false
+      setPreviewPlaying(false)
+      advanceFromCurrentTrack()
+      return
+    }
     setMixPlaying(false)
     setMode((m) => (m === 'mix' ? 'idle' : m))
     setCurrentMix(null)
     setScTrackUrl(null)
     clearNowPlaying()
-  }, [])
+  }, [advanceFromCurrentTrack])
 
   const handleScPause = useCallback(() => {
+    if (previewSoundCloudRef.current) {
+      setPreviewPlaying(false)
+      return
+    }
     setMixPlaying(false)
   }, [])
 
   const handleScPlay = useCallback(() => {
+    if (previewSoundCloudRef.current) {
+      setPreviewPlaying(true)
+      setPreviewBlocked(false)
+      const m = previewQueueRef.current[previewIndexRef.current]
+      const playKey = m?.save ? canonicalKeyFromTrackPlaySave(m.save) : null
+      if (playKey) logTrackPlay(playKey)
+      refreshNowPlaying()
+      if ('mediaSession' in navigator) {
+        try { navigator.mediaSession.playbackState = 'playing' } catch { /* no-op */ }
+      }
+      return
+    }
     setMixPlaying(true)
     setMixError(false)
     logMixPlayOnce()

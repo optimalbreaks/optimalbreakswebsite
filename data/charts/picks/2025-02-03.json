@@ -1,0 +1,493 @@
+{
+  "week_date": "2025-02-03",
+  "picks": [
+    {
+      "sort_order": 1,
+      "title": "Tickle",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tickle/19965827",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e7b07997-6c1b-4958-b145-7e1969fb393d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/99841620-8bef-4fb4-84ed-3328a43b2bf8.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/413990409"
+    },
+    {
+      "title": "Hardcore Freak",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Basstyler"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hardcore-freak/19838562",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0673326-d02c-4d5e-bc52-665f0df45785.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/897b53cd-afe0-4e4b-887b-c5f8b78dbc38.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "sort_order": 3,
+      "title": "One Two Stan",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/one-two-stan/19952350",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1de32ad7-96fe-479e-9fdf-03aa6990270d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/54df3638-4cc4-41d2-9a92-9f037c53a54b.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-06",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/428953049"
+    },
+    {
+      "sort_order": 4,
+      "title": "Una Voz",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/una-voz/19939848",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64ccc9d3-dce4-4d4a-980e-66b50ab25480.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/489b2f2b-9639-4bc1-af03-660280c33afa.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/416979249"
+    },
+    {
+      "sort_order": 5,
+      "title": "Demons",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/specimen-a/36682",
+          "name": "Specimen A"
+        },
+        {
+          "url": "https://www.beatport.com/artist/neoh/198316",
+          "name": "Neoh"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/demons/19962799",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9194ae80-a937-42a7-bd3f-06ccc2d57654.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dad5122b-9c56-4fbd-b2b2-5857270e13d0.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/410080258"
+    },
+    {
+      "sort_order": 6,
+      "title": "Rebel",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-brownie/355093",
+          "name": "DJ Brownie"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rebel/19843984",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7510b928-f1d2-4c50-b22e-62e4ed97700c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9318d1df-bfbb-4d8b-83ed-24638dca364e.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/403409837"
+    },
+    {
+      "sort_order": 7,
+      "title": "Time of Our Lives",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/phoenixrising/1182286",
+          "name": "PhoenixRising"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/time-of-our-lives/20047548",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7bdb4565-f6c2-41e1-8e44-ee4bedd96b00.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ed68d818-fd3e-4ae8-afcf-703c52402f0d.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/478921340"
+    },
+    {
+      "sort_order": 8,
+      "title": "The Game",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/paket/386044",
+          "name": "Paket"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-game/19939845",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cb7521ad-c2ce-4c51-9024-35458d8734ff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b944f8f6-5992-4526-952a-8cd7f3e35621.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/416979233"
+    },
+    {
+      "sort_order": 9,
+      "title": "Devotion",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ale-darknoise/1057223",
+          "name": "Ale DarkNoise"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/devotion/19915390",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76db5966-4ba9-433e-9ed9-656fa3edfe72.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/29c5933d-00cd-4723-bccb-47a0b8c8abba.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-06",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/406702422"
+    },
+    {
+      "sort_order": 10,
+      "title": "Rave Instinct",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bzrnt/1075789",
+          "name": "Bzrnt"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rave-instinct/19975912",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e3fd54f2-d52c-44ad-9ee7-c79d434fc931.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/591272a8-baa3-4712-8e3a-3da6288b1e4b.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/410397754"
+    },
+    {
+      "sort_order": 11,
+      "title": "Get Loud",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/seekflow/672775",
+          "name": "SeekFlow"
+        },
+        {
+          "url": "https://www.beatport.com/artist/coofu/1268834",
+          "name": "Coofu"
+        }
+      ],
+      "label": "Pata Negra Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-loud/19946387",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cb190d67-0f1c-4cf0-8dbb-ceb9930bd5ef.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39ef119a-7db4-441d-9024-8fd55b713f21.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/414466988"
+    },
+    {
+      "sort_order": 12,
+      "title": "Bad Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/andrewfx/1176911",
+          "name": "AndrewFx"
+        },
+        {
+          "url": "https://www.beatport.com/artist/djguanxe/1281962",
+          "name": "DjGuanxe"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-night/19975638",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0d31b118-3e3f-4c8a-a156-c7c23ce677dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/40e544c4-9c46-4da0-ae24-3c13d5465965.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Bb Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/461059133"
+    },
+    {
+      "sort_order": 13,
+      "title": "Amplified",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/brothers-of-funk/16697",
+          "name": "Brothers Of Funk"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/amplified/19969180",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3da2367a-9a7b-4d54-855a-681172444b21.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b8a73c32-84d5-4926-b7e8-24c60df15507.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-02-06",
+      "note_en": "",
+      "note_es": "",
+      "tidal_url": "https://tidal.com/browse/track/410397745"
+    },
+    {
+      "sort_order": 14,
+      "title": "Groove Teacher",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/woter/310684",
+          "name": "Woter"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/groove-teacher/19987502",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82d30e2e-7bb4-44e6-96b6-288931ae5d57.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0171fbc6-471e-4a99-9341-0fabfea2ae54.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 15,
+      "title": "Teaching Hardcore",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/paul-bassrock/105853",
+          "name": "Paul Bassrock"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vazteria-x/227121",
+          "name": "Vazteria X"
+        }
+      ],
+      "label": "SOUNDSYSTEM BASSROCK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/teaching-hardcore/19967452",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/258f24cb-6a76-4dd2-8cc2-913f5abf2351.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/690fbf3d-3db2-4e10-9c3f-90f68c300a9e.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 16,
+      "title": "Fragment",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hankook/395511",
+          "name": "Hankook"
+        },
+        {
+          "url": "https://www.beatport.com/artist/murix/586178",
+          "name": "MURIX"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fragment/20000310",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/83a8d3ac-74c3-4c9a-83e6-45b6dc2acbaf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/32ba8834-6f64-4a21-941c-8a88f0a2b8aa.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-06",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 17,
+      "title": "Stars",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brotherbreakz/227123",
+          "name": "The Brotherbreakz"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/stars/20000853",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/55d55785-a340-4432-b242-59941a157205.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7eaa19bc-80d9-4de2-9060-6286ac7e6d74.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-05",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 18,
+      "title": "Feed Your Soul",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-hero/34439",
+          "name": "DJ Hero"
+        }
+      ],
+      "label": "Solitude Studios",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feed-your-soul/19816836",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/954a1ade-7658-45ca-a0e0-78d41c1f81c8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/aab33d17-e4c2-41ee-9b4a-a9a30788d58f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-03",
+      "note_en": "",
+      "note_es": ""
+    },
+    {
+      "sort_order": 19,
+      "title": "I Need It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tomy/479402",
+          "name": "Tomy"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-need-it/19953040",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1ba48f04-9109-401b-9198-4d93e82c5f51.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1fe9fcae-c627-4be0-a3c1-48b75a52b044.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-07",
+      "note_en": "",
+      "note_es": ""
+    }
+  ]
+}
