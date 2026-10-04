@@ -712,6 +712,18 @@ main {
 .admin-content {
   flex: 1;
   padding: 1.25rem 1.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .admin-topbar {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .admin-content {
+    padding: 1rem 0.75rem;
+  }
 }
 
 /* Chat editorial: panel estilo chatbot (FAB → expand) */
