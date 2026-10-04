@@ -27,7 +27,7 @@ type ProfileLite = {
   id: string
   display_name: string | null
   username: string | null
-  role: 'user' | 'admin'
+  role: 'user' | 'admin' | 'collaborator'
   created_at: string
 }
 type BaseRow = {
@@ -35,7 +35,7 @@ type BaseRow = {
   email: string
   display_name: string | null
   username: string | null
-  role: 'user' | 'admin'
+  role: 'user' | 'admin' | 'collaborator'
   created_at: string
   last_sign_in_at: string | null
 }

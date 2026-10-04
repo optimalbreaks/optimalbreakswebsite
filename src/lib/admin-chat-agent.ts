@@ -49,6 +49,54 @@ const SEARCH_COL: Record<AllowedTable, string> = {
   history_entries: 'title_en',
 }
 
+/** Altas de catálogo. Sin SQL, sin CRUD genérico y sin tablas de usuarios. */
+const COLLABORATOR_TOOLS = new Set([
+  'search_catalog',
+  'get_record',
+  'web_search',
+  'read_image_facts',
+  'stage_upsert_artist',
+  'stage_upsert_label',
+  'stage_upsert_event',
+  'stage_upsert_mix',
+  'stage_new_releases',
+  'stage_vinyl_picks',
+  'stage_enrich_event',
+  'stage_event_poster',
+  'stage_artist_photo',
+  'stage_label_logo',
+])
+
+const COLLABORATOR_CHAT_ACTIONS = new Set([
+  'artist',
+  'label',
+  'event',
+  'mix',
+  'new_release',
+  'vinyl',
+])
+
+const COLLABORATOR_API_PATHS = new Set([
+  '/api/admin/agent',
+  '/api/admin/agent/event',
+  '/api/admin/agent/event-poster',
+  '/api/admin/agent/artist-photo',
+  '/api/admin/agent/label',
+  '/api/admin/agent/label-logo',
+  '/api/admin/featured-import',
+])
+
+export type EditorScope = 'admin' | 'collaborator'
+
+function collaboratorOpAllowed(op: PendingOp): boolean {
+  if (op.kind === 'chat_action') {
+    const t = op.action && typeof op.action === 'object' ? String((op.action as { type?: string }).type || '') : ''
+    return COLLABORATOR_CHAT_ACTIONS.has(t)
+  }
+  if (op.kind === 'agent_api') return COLLABORATOR_API_PATHS.has(op.path)
+  return false
+}
+
 const MAX_TOOL_ROUNDS = 10
 const SQL_MAX_CHARS = 8_000
 const SQL_ROW_LIMIT = 50
@@ -621,6 +669,7 @@ type ToolCtx = {
   imageDataUrls: { mime: string; dataUrl: string; publicUrl?: string }[]
   attachedPublicUrls: string[]
   userMessage: string
+  scope: EditorScope
 }
 
 async function runTool(
@@ -629,6 +678,10 @@ async function runTool(
   ctx: ToolCtx,
 ): Promise<{ ok: boolean; detail: unknown }> {
   const sb = sbLoose()
+
+  if (ctx.scope === 'collaborator' && !COLLABORATOR_TOOLS.has(name)) {
+    return { ok: false, detail: { error: 'El rol colaborador no puede usar esta herramienta' } }
+  }
 
   if (name === 'search_catalog') {
     const table = String(args.table || '')
@@ -998,12 +1051,21 @@ async function runTool(
 export async function executePendingOps(
   ops: PendingOp[],
   originRequest: Request,
+  scope: EditorScope = 'admin',
 ): Promise<ActionResult[]> {
   const results: ActionResult[] = []
   const sb = sbLoose()
 
   for (const op of ops) {
     try {
+      if (scope === 'collaborator' && !collaboratorOpAllowed(op)) {
+        results.push({
+          type: op.kind,
+          ok: false,
+          summary: 'Operación no permitida para el rol colaborador',
+        })
+        continue
+      }
       if (op.kind === 'chat_action') {
         const action = op.action
         if (!action || typeof action !== 'object' || !('type' in action)) {
@@ -1158,6 +1220,7 @@ export async function runAdminChatAgent(opts: {
   imageDataUrls: { mime: string; dataUrl: string; publicUrl?: string }[]
   attachedPublicUrls: string[]
   originRequest: Request
+  scope?: EditorScope
 }): Promise<AgentTurnResult> {
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
@@ -1170,12 +1233,19 @@ export async function runAdminChatAgent(opts: {
 
   const pendingOps: PendingOp[] = []
   const toolTrace: ToolTraceItem[] = []
+  const scope: EditorScope = opts.scope === 'collaborator' ? 'collaborator' : 'admin'
+  const tools =
+    scope === 'collaborator'
+      ? TOOL_DEFINITIONS.filter((t) => COLLABORATOR_TOOLS.has(t.function.name))
+      : TOOL_DEFINITIONS
+
   const ctx: ToolCtx = {
     originRequest: opts.originRequest,
     pendingOps,
     imageDataUrls: opts.imageDataUrls,
     attachedPublicUrls: opts.attachedPublicUrls,
     userMessage: opts.message,
+    scope,
   }
 
   let system = loadAgentSystemPrompt()
@@ -1190,6 +1260,14 @@ export async function runAdminChatAgent(opts: {
 - Distingue entidades: sello (label) ≠ evento ≠ artista ≠ mix ≠ new_release ≠ vinyl.
 - Conteos («¿cuántos artistas?»): usa db_list y lee el campo count; no dependas de SQL Postgres.
 `
+
+  if (scope === 'collaborator') {
+    system += `
+## Rol colaborador
+- Puedes buscar el catálogo y preparar altas de artistas, sellos, eventos, mixes, New Releases y vinilo, más foto, logo y cartel.
+- No tienes SQL, CRUD genérico, borrados ni acceso a usuarios. Si lo piden, dilo y no inventes una tool.
+`
+  }
 
   if (opts.intent) {
     system += `\nHINT UI del editor (prioridad alta): intent=${opts.intent}. Prefiere tools de ese tipo.\n`
@@ -1237,7 +1315,7 @@ export async function runAdminChatAgent(opts: {
         openAiChatCompletionsPayload({
           model,
           messages,
-          tools: TOOL_DEFINITIONS,
+          tools,
           tool_choice: 'auto',
           temperature: 0.2,
         }),

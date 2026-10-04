@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdmin, requireCatalogEditor } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { EVENT_WEB_SEARCH_PROMPT, fetchWebResearchContext } from '@/lib/admin-chat'
 import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
  * Enrich an event via OpenAI + SerpAPI and update in Supabase.
  */
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
 
   const body = await request.json()

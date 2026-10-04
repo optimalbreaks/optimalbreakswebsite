@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireCatalogEditor } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 
 /**
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     'es'
   const locale = lang === 'en' ? 'en' : 'es'
 
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   const imageUrls: string[] = []
 
   if (auth.ok) {
@@ -57,7 +57,9 @@ export async function POST(request: NextRequest) {
   if (imageUrls.length) params.set('images', imageUrls.join('|'))
   if (!auth.ok) params.set('need_login', '1')
 
-  const dest = new URL(`/${locale}/administrator/chat?${params.toString()}`, request.url)
+  const landing =
+    auth.ok && auth.role === 'collaborator' ? `/${locale}` : `/${locale}/administrator/chat`
+  const dest = new URL(`${landing}?${params.toString()}`, request.url)
   return NextResponse.redirect(dest, 303)
 }
 
@@ -69,6 +71,11 @@ export async function GET(request: NextRequest) {
     .filter(Boolean)
     .join('\n')
   if (text) params.set('text', text.slice(0, 4000))
-  const dest = new URL(`/es/administrator/chat?${params.toString()}`, request.url)
+  const auth = await requireCatalogEditor(request)
+  const lang =
+    request.cookies.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'es'
+  const landing =
+    auth.ok && auth.role === 'collaborator' ? `/${lang}` : `/${lang}/administrator/chat`
+  const dest = new URL(`${landing}?${params.toString()}`, request.url)
   return NextResponse.redirect(dest, 302)
 }

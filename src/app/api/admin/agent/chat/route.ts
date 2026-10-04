@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireCatalogEditor } from '@/lib/admin-auth'
 import {
   inferChatIntent,
   normalizeChatIntent,
@@ -29,7 +29,7 @@ export const maxDuration = 300
  * ?thread_id=uuid → mensajes del hilo
  */
 export async function GET(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
 
   try {
@@ -61,8 +61,9 @@ export async function GET(request: NextRequest) {
  * Agente conversacional con tools. Escrituras solo tras confirm_ops / «sí».
  */
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
+  const editorScope = auth.role === 'collaborator' ? 'collaborator' : 'admin'
 
   try {
     const contentType = request.headers.get('content-type') || ''
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
 
     // Confirmar (botón, «sí» con ops en cliente, o «sí» recuperado del hilo)
     if (Array.isArray(confirmOps) && confirmOps.length > 0) {
-      const results = await executePendingOps(confirmOps, request)
+      const results = await executePendingOps(confirmOps, request, editorScope)
       const savedOk = results.some((r) => r.ok)
       const lines = results.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
       const reply = savedOk
@@ -269,6 +270,7 @@ export async function POST(request: NextRequest) {
       imageDataUrls,
       attachedPublicUrls,
       originRequest: request,
+      scope: editorScope,
     })
 
     // «sí»/«ok» sin ops previas: si el agente acaba de hacer stage_* en este turno,
@@ -278,7 +280,7 @@ export async function POST(request: NextRequest) {
     let execResults: Awaited<ReturnType<typeof executePendingOps>> = []
     let savedOk = false
     if (looksLikeConfirm(message) && agent.pending_ops.length > 0) {
-      execResults = await executePendingOps(agent.pending_ops, request)
+      execResults = await executePendingOps(agent.pending_ops, request, editorScope)
       savedOk = execResults.some((r) => r.ok)
       const lines = execResults.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
       reply = savedOk

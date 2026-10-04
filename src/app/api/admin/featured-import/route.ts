@@ -5,7 +5,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdmin, requireCatalogEditor } from '@/lib/admin-auth'
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import {
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
 
   let sb: ReturnType<typeof createServiceSupabase>

@@ -8,7 +8,7 @@
 
 ### Qué es
 
-Canal **solo admin** (`profiles.role = admin`) con un **agente conversacional** de OpenAI (**tool-calling**): texto, capturas, links.
+Canal de **admin** y **colaborador** (`profiles.role`) con un **agente conversacional** de OpenAI (**tool-calling**): texto, capturas, links. El colaborador usa el mismo chat de altas y **no** entra en `/administrator`.
 
 El agente puede **leer** la BD y la web, **preparar** altas/cambios (eventos, sellos, artistas, mixes, New Releases, vinyl, CRUD admin, SQL) y **solo escribe en Supabase tras Confirmar** (botón o «sí» / «adelante»).
 
@@ -20,7 +20,7 @@ El chat es un **widget flotante** (estilo chatbot), no una página a pantalla co
 
 | Entrada | Qué hace |
 |---------|----------|
-| Botón 💬 abajo-izquierda (solo admin) | Abre / minimiza el panel (`AdminCaptureFab`) |
+| Botón 💬 abajo-izquierda (admin y colaborador) | Abre / minimiza el panel (`AdminCaptureFab`) |
 | Sidebar admin → «Chat» | Abre el mismo widget |
 | `/[lang]/administrator/chat` | Abre el widget (ruta Share Target / atajo) |
 | Centro de agentes → «Chat editorial» | Botón que abre el widget |
@@ -202,7 +202,7 @@ El chat **no sustituye** a Cursor para lotes o fichas muy largas. Para retoques:
 
 ### What it is
 
-**Admin-only conversational agent** (OpenAI **tool-calling**): text, screenshots, links. It **reads** the DB/web, **stages** writes (events, labels, artists, mixes, New Releases, vinyl, admin CRUD, SQL), and **persists only after Confirm**. Also used as a mobile PWA capture channel (Share Target → confirm).
+**Admin and collaborator conversational agent** (OpenAI **tool-calling**): text, screenshots, links. It **reads** the DB/web, **stages** writes (events, labels, artists, mixes, New Releases, vinyl; admin also gets CRUD and SQL), and **persists only after Confirm**. A collaborator uses that capture chat and does not enter `/administrator`. Also used as a mobile PWA capture channel (Share Target → confirm).
 
 ### Entry points
 
@@ -210,7 +210,7 @@ Floating **chatbot widget** (not a full-page chat):
 
 | Entry | What it does |
 |-------|----------------|
-| 💬 FAB (bottom-left, admin only) | Opens / minimizes the panel (`AdminCaptureFab`) |
+| 💬 FAB (bottom-left, admin and collaborator) | Opens / minimizes the panel (`AdminCaptureFab`) |
 | Admin sidebar → Chat | Same widget |
 | `/[lang]/administrator/chat` | Opens the widget (Share Target / shortcut) |
 | Agents hub → Chat editorial | Button opens the widget |

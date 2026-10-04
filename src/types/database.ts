@@ -713,7 +713,7 @@ export interface ProfileRow extends Record<string, unknown> {
   total_favorites: number
   total_events_attended: number
   total_events_wishlist: number
-  role: 'user' | 'admin'
+  role: 'user' | 'admin' | 'collaborator'
   /**
    * Si TRUE, los saves del usuario en `saved_chart_tracks` se utilizan al
    * calcular Almas Gemelas y aparecen en el Top de la Comunidad.

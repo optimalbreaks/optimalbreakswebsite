@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
-import { createBrowserSupabase } from '@/lib/supabase'
 import { OB_CHART_PLAYALL_BAR_EVENT, useOptionalDeckAudio } from '@/components/DeckAudioProvider'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import { i18n } from '@/lib/i18n-config'
@@ -33,12 +32,11 @@ type VvBox = { top: number; height: number; offsetLeft: number; width: number }
  * Portal a body para no pelear con z-index del layout.
  */
 function AdminChatWidgetInner() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isAdmin, isCatalogEditor } = useAuth()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { sessionActive, mode: deckMode } = useOptionalDeckAudio()
   const vvOffset = useViewportBottomOffset()
-  const [isAdmin, setIsAdmin] = useState(false)
   const [chartPlayAllBar, setChartPlayAllBar] = useState(false)
   const [isSm, setIsSm] = useState(false)
   const [open, setOpen] = useState(false)
@@ -60,22 +58,6 @@ function AdminChatWidgetInner() {
   useEffect(() => {
     setDomReady(true)
   }, [])
-
-  useEffect(() => {
-    if (!user?.id) {
-      setIsAdmin(false)
-      return
-    }
-    let cancelled = false
-    ;(async () => {
-      const sb = createBrowserSupabase()
-      const { data } = await sb.from('profiles').select('role').eq('id', user.id).single()
-      if (!cancelled) setIsAdmin((data as { role?: string } | null)?.role === 'admin')
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [user?.id])
 
   useEffect(() => {
     if (!isAdmin || !user?.id) return
@@ -128,13 +110,13 @@ function AdminChatWidgetInner() {
 
   // Share Target / ruta Captura → abrir el widget
   useEffect(() => {
-    if (!isAdmin) return
+    if (!isCatalogEditor) return
     if (onCapturePage || shareHint) {
       setMountedChat(true)
       setChatMode('editorial')
       setOpen(true)
     }
-  }, [isAdmin, onCapturePage, shareHint])
+  }, [isCatalogEditor, onCapturePage, shareHint])
 
   useEffect(() => {
     if (!open) return
@@ -216,7 +198,7 @@ function AdminChatWidgetInner() {
 
   const bottomBarVisible = sessionActive || deckMode !== 'idle' || chartPlayAllBar
 
-  if (!domReady || authLoading || !user || !isAdmin) return null
+  if (!domReady || authLoading || !user || !isCatalogEditor) return null
 
   // Ver BackToTop: `--ob-bottom-bar-h` = altura real del mini reproductor.
   const baseBottom = isSm
@@ -325,6 +307,7 @@ function AdminChatWidgetInner() {
         hidden={!open}
       >
         <header className={`ob-admin-chat-panel__bar shrink-0 flex items-center gap-2 px-3 border-b-4 border-[var(--ink)] ${headerBg}`}>
+          {isAdmin ? (
           <div
             className={`min-w-0 flex-1 grid grid-cols-2 border-2 ${
               chatMode === 'network' ? 'border-[var(--ink)]' : 'border-white/80'
@@ -365,6 +348,14 @@ function AdminChatWidgetInner() {
               ) : null}
             </button>
           </div>
+          ) : (
+            <div
+              className="min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-white"
+              style={{ fontFamily: "'Courier Prime', monospace" }}
+            >
+              {editorialLabel}
+            </div>
+          )}
           <button
             type="button"
             className={`flex h-11 w-11 shrink-0 items-center justify-center border-[2px] bg-transparent touch-manipulation ${
@@ -385,7 +376,7 @@ function AdminChatWidgetInner() {
               <AgentChat lang={lang} mode="widget" shareQuery={searchParams} />
             </div>
           ) : null}
-          {networkMounted ? (
+          {isAdmin && networkMounted ? (
             <div className={`flex-1 min-h-0 flex flex-col ${chatMode === 'network' ? '' : 'hidden'}`}>
               <ArtistNetworkPanel active={open && chatMode === 'network'} />
             </div>

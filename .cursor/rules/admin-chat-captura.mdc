@@ -9,7 +9,7 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 
 ## Alcance
 
-Solo **admin**. UI: **widget flotante** (`AdminCaptureFab` → `AgentChat` mode `widget`). Atajos: FAB 💬, sidebar «Chat», `/administrator/chat` (Share Target), botón en `/administrator/agent`. Móvil/PWA: sheet a `visualViewport`, portal a `body`, scroll lock.
+**Admin** y **colaborador** (`profiles.role`). UI: **widget flotante** (`AdminCaptureFab` → `AgentChat` mode `widget`). Atajos admin: FAB 💬, sidebar «Chat», `/administrator/chat` (Share Target), botón en `/administrator/agent`. El colaborador ve el mismo FAB en la web pública y **no** entra en `/administrator` (ni SQL, ni CRUD genérico, ni usuarios). Móvil/PWA: sheet a `visualViewport`, portal a `body`, scroll lock.
 
 - API: `POST|GET /api/admin/agent/chat`
 - Agente: `src/lib/admin-chat-agent.ts` (OpenAI **tool-calling**, loop)

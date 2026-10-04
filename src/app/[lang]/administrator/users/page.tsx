@@ -192,8 +192,8 @@ export default function AdminUsersPage() {
       label: 'Rol',
       sortDefault: 'asc' as const,
       render: (v: string) => (
-        <span className={v === 'admin' ? 'font-bold text-[var(--red)]' : ''}>
-          {v === 'admin' ? 'Admin' : 'Usuario'}
+        <span className={v === 'admin' ? 'font-bold text-[var(--red)]' : v === 'collaborator' ? 'font-bold' : ''}>
+          {v === 'admin' ? 'Admin' : v === 'collaborator' ? 'Colaborador' : 'Usuario'}
         </span>
       ),
     },

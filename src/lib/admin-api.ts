@@ -136,7 +136,7 @@ export type AdminUserRow = {
   email: string
   display_name: string | null
   username: string | null
-  role: 'user' | 'admin'
+  role: 'user' | 'admin' | 'collaborator'
   created_at: string
   last_sign_in_at: string | null
   /** Máximo entre último login, perfil y engagement (favoritos, saves, valoraciones…). */
@@ -227,7 +227,10 @@ export async function adminGetUserDetail(id: string): Promise<{
   return res.json()
 }
 
-export async function adminUpdateUserRole(id: string, role: 'user' | 'admin'): Promise<Record<string, unknown>> {
+export async function adminUpdateUserRole(
+  id: string,
+  role: 'user' | 'admin' | 'collaborator',
+): Promise<Record<string, unknown>> {
   const res = await fetch(`${BASE}/users/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

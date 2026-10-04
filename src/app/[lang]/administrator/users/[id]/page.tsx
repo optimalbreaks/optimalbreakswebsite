@@ -38,7 +38,7 @@ export default function AdminUserDetailPage() {
   const [createdAt, setCreatedAt] = useState('')
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
-  const [role, setRole] = useState<'user' | 'admin'>('user')
+  const [role, setRole] = useState<'user' | 'admin' | 'collaborator'>('user')
   const [artistLevel, setArtistLevel] = useState<AdminArtistLevel>('user')
   const [editorialMarks, setEditorialMarks] = useState<AdminEditorialMark[]>([])
   const [labelMarks, setLabelMarks] = useState<AdminEditorialLabelMark[]>([])
@@ -63,7 +63,7 @@ export default function AdminUserDetailPage() {
         setDisplayName(p?.display_name ?? null)
         setUsername(p?.username ?? null)
         const r = p?.role
-        setRole(r === 'admin' ? 'admin' : 'user')
+        setRole(r === 'admin' || r === 'collaborator' ? r : 'user')
         setArtistLevel(d.artist_level ?? 'user')
         setEditorialMarks(d.editorial_marks ?? [])
         setLabelMarks(d.editorial_label_marks ?? [])
@@ -259,15 +259,17 @@ export default function AdminUserDetailPage() {
           <select
             id="admin-user-role"
             value={role}
-            onChange={(e) => setRole(e.target.value as 'user' | 'admin')}
+            onChange={(e) => setRole(e.target.value as 'user' | 'admin' | 'collaborator')}
             className="admin-input max-w-xs"
           >
             <option value="user">Usuario</option>
+            <option value="collaborator">Colaborador</option>
             <option value="admin">Administrador</option>
           </select>
           <p className="admin-muted text-xs mt-2 !mb-0">
-            Los administradores acceden a este panel. El email y la contraseña solo los cambia el propio usuario en su
-            cuenta o desde el panel de Supabase Auth.
+            El administrador entra en este panel. El colaborador usa el chat para altas (canciones, eventos, artistas,
+            sellos, mixes) y no entra aquí. El email y la contraseña solo los cambia el propio usuario en su cuenta o
+            desde el panel de Supabase Auth.
           </p>
         </div>
 

@@ -17,6 +17,8 @@ interface AuthContextType {
   loading: boolean
   /** `profiles.role === 'admin'` del usuario logueado (una consulta por sesión). */
   isAdmin: boolean
+  /** Admin o colaborador: chat editorial. El colaborador no entra en /administrator. */
+  isCatalogEditor: boolean
   signInWithGoogle: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isAdmin: false,
+  isCatalogEditor: false,
   signInWithGoogle: async () => {},
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isCatalogEditor, setIsCatalogEditor] = useState(false)
   const supabase = createBrowserSupabase()
   const pathname = usePathname()
   const lang = getLangFromPath(pathname)
@@ -75,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user?.id) {
       setIsAdmin(false)
+      setIsCatalogEditor(false)
       return
     }
     let cancelled = false
@@ -84,7 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('role')
         .eq('id', user.id)
         .single()
-      if (!cancelled) setIsAdmin((data as { role?: string } | null)?.role === 'admin')
+      const role = (data as { role?: string } | null)?.role
+      if (!cancelled) {
+        setIsAdmin(role === 'admin')
+        setIsCatalogEditor(role === 'admin' || role === 'collaborator')
+      }
     })()
     return () => {
       cancelled = true
@@ -171,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         loading,
         isAdmin,
+        isCatalogEditor,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,

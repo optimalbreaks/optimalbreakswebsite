@@ -3,11 +3,13 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { Database } from '@/types/database'
 
+export type SiteRole = 'user' | 'admin' | 'collaborator'
+
 export type AdminCheckResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; role: SiteRole }
   | { ok: false; response: NextResponse }
 
-export async function requireAdmin(request: Request): Promise<AdminCheckResult> {
+async function requireRoles(allowed: readonly SiteRole[]): Promise<AdminCheckResult> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const key = (
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
@@ -40,11 +42,28 @@ export async function requireAdmin(request: Request): Promise<AdminCheckResult> 
     .eq('id', user.id)
     .single() as { data: { role: string } | null }
 
-  if (profile?.role !== 'admin') {
+  const role = profile?.role
+  const siteRole: SiteRole =
+    role === 'admin' || role === 'collaborator' || role === 'user' ? role : 'user'
+
+  if (!allowed.includes(siteRole)) {
     return { ok: false, response: NextResponse.json({ error: 'Sin permisos de administrador' }, { status: 403 }) }
   }
 
-  return { ok: true, userId: user.id }
+  return { ok: true, userId: user.id, role: siteRole }
+}
+
+/** Panel, usuarios, estadísticas, SQL y CRUD genérico. */
+export function requireAdmin(request: Request): Promise<AdminCheckResult> {
+  return requireRoles(['admin'])
+}
+
+/**
+ * Chat editorial y las APIs que ese chat llama al confirmar
+ * (artistas, sellos, eventos, mixes, New Releases, vinilo, fotos y carteles).
+ */
+export function requireCatalogEditor(request: Request): Promise<AdminCheckResult> {
+  return requireRoles(['admin', 'collaborator'])
 }
 
 export type RouteUserResult =

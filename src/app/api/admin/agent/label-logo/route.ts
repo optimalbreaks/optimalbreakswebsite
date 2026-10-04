@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdmin, requireCatalogEditor } from '@/lib/admin-auth'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
  * Si falta labelName, se lee de BD por slug.
  */
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireCatalogEditor(request)
   if (!auth.ok) return auth.response
 
   const body = await request.json()

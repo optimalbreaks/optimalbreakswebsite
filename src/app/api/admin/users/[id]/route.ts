@@ -146,8 +146,9 @@ export async function PATCH(
     Object.prototype.hasOwnProperty.call(body, 'editorial_family_name') ||
     typeof body.remove_editorial_family_key === 'string'
   const role = body.role
-  if (role !== undefined && role !== 'user' && role !== 'admin') {
-    return NextResponse.json({ error: 'role debe ser user o admin' }, { status: 400 })
+  const roleOk = role === 'user' || role === 'admin' || role === 'collaborator'
+  if (role !== undefined && !roleOk) {
+    return NextResponse.json({ error: 'role debe ser user, collaborator o admin' }, { status: 400 })
   }
   if (!wantsMark && role === undefined) {
     return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 })
@@ -155,7 +156,7 @@ export async function PATCH(
 
   const sb = createServiceSupabase()
 
-  if (role === 'user' && auth.userId === id) {
+  if (roleOk && role !== 'admin' && auth.userId === id) {
     const { count, error: cErr } = await sb
       .from('profiles')
       .select('*', { count: 'exact', head: true })
@@ -171,7 +172,7 @@ export async function PATCH(
     }
   }
 
-  if (role === 'user' || role === 'admin') {
+  if (roleOk) {
     const { error } = await sb.from('profiles').update({ role }).eq('id', id).select('id').single()
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
