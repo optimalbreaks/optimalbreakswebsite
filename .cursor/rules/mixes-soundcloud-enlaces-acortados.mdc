@@ -5,7 +5,9 @@ alwaysApply: true
 
 # Mixes: SoundCloud (enlaces acortados y tarjeta visual)
 
-Cuando el usuario pase un enlace de SoundCloud, **en especial acortados** (`https://on.soundcloud.com/...`):
+Cuando el usuario pase un enlace de SoundCloud **de una sesión o un mix**, **en especial acortados** (`https://on.soundcloud.com/...`):
+
+Un **tema suelto** (el artista solo lo comparte por SoundCloud, no es un set) **no** va a `mixes`. Va a New Releases. Regla **`charts-youtube-vs-beatport`** (*SoundCloud: un tema no es una sesión*).
 
 ## 1. Resolver URL para BD y widget
 

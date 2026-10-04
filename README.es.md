@@ -207,13 +207,14 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 Hay dos vías. No entra ninguna otra en el catálogo público.
 
 1. **Top 10 de la ficha.** Al dar de alta o refrescar un artista o un sello se guarda el Top 10 de ventas de Beatport (`artists.beatport_top_tracks` / `labels.beatport_top_tracks`). Solo se ve en esa ficha. Si alguien pulsa «+», Mis Tracks lo guarda con origen `beatport_top`: la URL y un snapshot van en el propio save. No se crea una fila de chart.
-2. **Enlaces que pasa el equipo.** Beatport o Bandcamp van a `chart_featured_tracks`. Si el enlace es de YouTube, primero se busca el mismo tema en Beatport o Bandcamp. YouTube (`chart_vinyl_tracks`) solo cuando no hay ficha usable en tienda (histórico, white label, bootleg o rip).
+2. **Enlaces que pasa el equipo.** Beatport o Bandcamp van a `chart_featured_tracks`. Si el enlace es de YouTube, primero se busca el mismo tema en Beatport o Bandcamp. YouTube (`chart_vinyl_tracks`) solo cuando no hay ficha usable en tienda (histórico, white label, bootleg o rip). Un **tema suelto** que el artista solo comparte por SoundCloud también va a `chart_featured_tracks`: no es sesión y no entra en `/mixes`.
 
 La fecha de lanzamiento decide dónde se ve en `/charts`. No manda el día en que se pega el enlace.
 
 - Tienda, lanzamiento **desde el 1 de enero de 2026**: **New Releases**, en el lunes ISO de la semana del release.
 - Tienda, lanzamiento **anterior a 2026**: **Selecciones de archivo**, cada año en su grupo (2004, 2022, 2025…), misma tabla `chart_featured_tracks`.
 - YouTube sin tienda: **siempre** Selecciones de archivo, por el año del tema, aunque el lanzamiento sea de 2026. No entra en la lista semanal.
+- **Tema de SoundCloud** (sin Beatport ni Bandcamp): misma regla de semana que una tienda (`platform: "soundcloud"`). `link_url` es el permalink humano. Si el tema es privado (`/s-TOKEN`), `sample_url` es la URL de API del oEmbed (`https://api.soundcloud.com/tracks/<id>?secret_token=s-…`); el permalink responde 404 dentro del widget. El ▶ usa la **misma barra de abajo** que Beatport (`MiniPreviewBar`, `PreviewTrack.soundCloudUrl`, widget oculto `SoundCloudWidget`). No debe abrir «Toca para escuchar»: el clic de la fila ya es el gesto. En `next.config.js`, `script-src` y `connect-src` tienen que permitir `https://w.soundcloud.com` (y `api.soundcloud.com` en `connect-src`); si no, `player/api.js` no carga, el iframe puede sonar y la barra se queda en 0:00. Ejemplo: WeZ WhaTevR — *I Need You* (Zero Dark, lanzamiento 2026-10-02, semana `2026-09-28`). Estuvo un momento dado de alta como mix y se quitó.
 
 Una misma canción puede estar a la vez en un Top 10 y en New Releases. El «+» se reconoce por la URL de Beatport y no duplica el voto.
 
@@ -714,7 +715,7 @@ La app tiene **tres modos de audio** que nunca suenan a la vez, gestionados por 
 |------|--------|--------------------|
 | `deck` | DJ deck de la home (4 pads) | `DJDeck` + mini-barra del provider |
 | `mix` | SoundCloud / YouTube de un mix | mini-barra del provider |
-| `preview` | Previews de canciones: New Releases y archivo en `/charts`, Top 10 Beatport en ficha de artista/sello, **Mis Tracks** (propia o compartida) | `MiniPreviewBar` del provider (persistente entre rutas) |
+| `preview` | Previews de canciones: New Releases y archivo en `/charts`, Top 10 Beatport en ficha de artista/sello, **Mis Tracks** (propia o compartida). Un **tema** de SoundCloud en `/charts` usa esta misma barra (widget oculto), no el modo `mix`. | `MiniPreviewBar` del provider (persistente entre rutas) |
 
 ### Persistencia entre rutas
 

@@ -100,7 +100,7 @@ Implementation:
 - **`src/components/GoogleAnalytics.tsx`** — loads **`GoogleAnalytics`** from **`@next/third-parties/google`** (official Next.js integration: gtag.js + automatic **page_view** tracking on App Router navigations). A small inline **`Script`** runs first to set **Consent Mode v2** defaults (`analytics_storage` and ad-related flags **denied** until the user accepts analytics cookies).
 - **`src/components/CookieBanner.tsx`** — persists choices and dispatches **`ob-cookie-consent`**; `GoogleAnalytics` listens and calls **`gtag('consent', 'update', …)`** when analytics is granted or revoked. Loaded with **`next/dynamic` (`ssr: false`)**; mounts as a **bottom bar** after LCP (waits for `largest-contentful-paint` via `PerformanceObserver`, max ~4.5 s) so it does not compete for LCP on first paint.
 
-CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-analytics.com` in `connect-src` / `script-src` as needed.
+CSP in **`next.config.js`** already allows `googletagmanager.com` and `google-analytics.com` in `connect-src` / `script-src` as needed. SoundCloud’s hidden player also needs `https://w.soundcloud.com` on both, and `https://api.soundcloud.com` on `connect-src` — see [How songs enter the catalogue](#how-songs-enter-the-catalogue).
 
 ---
 
@@ -843,7 +843,7 @@ All audio in the app is owned by a single provider — **`DeckAudioProvider`**, 
 |------|--------|-------------------|
 | `deck` | Home DJ deck (4 pads) | `DJDeck` + provider's `MiniDeckBar` |
 | `mix` | SoundCloud / YouTube mix | provider's `MiniDeckBar` |
-| `preview` | Chart song previews (New Releases and archive on `/charts`), Beatport Top 10 on artist/label pages, **My Tracks** page (own or shared) | provider's **`MiniPreviewBar`** (persists across route changes) |
+| `preview` | Chart song previews (New Releases and archive on `/charts`), Beatport Top 10 on artist/label pages, **My Tracks** page (own or shared). A SoundCloud **single** on `/charts` uses this same bar (hidden widget), not `mix`. | provider's **`MiniPreviewBar`** (persists across route changes) |
 
 ### Persistence across navigation
 
@@ -1089,13 +1089,14 @@ All track-listing surfaces (New Releases, Archive Picks, Beatport Top 10 on arti
 Two doors. Nothing else enters the public catalogue.
 
 1. **Profile Top 10.** Refreshing an artist or a label stores Beatport’s sales Top 10 (`artists.beatport_top_tracks` / `labels.beatport_top_tracks`). It is visible only on that profile. A “+” lands in My Tracks as `beatport_top`: the save stores the URL and a snapshot. It does not create a chart row.
-2. **Links the team passes in.** Beatport or Bandcamp go to `chart_featured_tracks`. A YouTube link is checked against Beatport or Bandcamp first. YouTube (`chart_vinyl_tracks`) is used only when there is no usable store listing (archive rip, white label, bootleg).
+2. **Links the team passes in.** Beatport or Bandcamp go to `chart_featured_tracks`. A YouTube link is checked against Beatport or Bandcamp first. YouTube (`chart_vinyl_tracks`) is used only when there is no usable store listing (archive rip, white label, bootleg). A **single track** the artist shares only on SoundCloud is also `chart_featured_tracks` — it is not a DJ set and does not go to `/mixes`.
 
 The release date decides where `/charts` shows the song. The day the link was pasted does not.
 
 - Store release **on or after 1 January 2026**: **New Releases**, on the ISO Monday of the release week.
 - Store release **before 2026**: **Archive Picks**, one group per release year, same `chart_featured_tracks` table.
 - YouTube with no store listing: **always** Archive Picks, grouped by the track’s year, including 2026. It does not enter the weekly list.
+- SoundCloud **single** (no Beatport/Bandcamp): same week rule as a store release (`platform: "soundcloud"`). `link_url` is the human permalink. If the track is private (`/s-TOKEN`), `sample_url` is the API URL from oEmbed (`https://api.soundcloud.com/tracks/<id>?secret_token=s-…`); the permalink 404s inside the widget. ▶ uses the same bottom **`MiniPreviewBar`** as Beatport (`PreviewTrack.soundCloudUrl`, hidden `SoundCloudWidget`). Do not open the «Tap to play» modal: the row click is already the gesture. CSP in `next.config.js` must allow `https://w.soundcloud.com` on `script-src` and `connect-src` (plus `api.soundcloud.com` on `connect-src`), or `player/api.js` never loads and the bar stays at 0:00 while the iframe plays. Example: WeZ WhaTevR — *I Need You* (Zero Dark, release 2026-10-02, week `2026-09-28`). It was briefly filed as a mix and removed.
 
 The same song can sit in a Top 10 and in New Releases. The “+” matches on the Beatport URL, so the vote is not counted twice.
 
