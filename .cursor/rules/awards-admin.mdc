@@ -25,10 +25,10 @@ Prohibido igualar el KPI al `count(*)`, crear una tabla de votos, o una página 
 
 Igual que el Top 100 (`top100-auto-voto-artistas`):
 
-- **Temas** (tema del año, remix, tema español, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
+- **Temas** (tema del año, remix, tema español, tema inglés, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
 - **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores (DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group) no compiten como sello.
 
-Revelación solo con un año concreto: ≥2 créditos ese año y 0 el anterior. España = ficha cuyo país contiene ES. Sin ficha o sin país → cobertura, no premio.
+Revelación solo con un año concreto: ≥2 créditos ese año y 0 el anterior. España = ficha cuyo país contiene ES. Reino Unido = ficha cuyo país contiene GB (`UK` se normaliza a GB; `AU/UK` cuenta). Premios UK: artista inglés y tema inglés. No hay sello inglés. Sin ficha o sin país → cobertura, no premio.
 
 Fase 1 nada más. No añadir DJ, álbum, radio, club night, gran evento, mix ni tema gratis.
 

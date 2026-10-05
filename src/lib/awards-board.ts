@@ -183,6 +183,7 @@ type SaveFact = {
   savedAt: string | null
   isRemix: boolean
   isSpanish: boolean
+  isUk: boolean
   credits: { key: string; name: string }[]
   labelCredit: { key: string; raw: string } | null
   aggregator: boolean
@@ -198,6 +199,7 @@ type TrackAgg = {
   year: number | null
   isRemix: boolean
   isSpanish: boolean
+  isUk: boolean
   save_count: number
   users: Set<string>
   last: string
@@ -371,6 +373,11 @@ function isSpain(country: string | null | undefined): boolean {
   return countryIsoCodesFromCode(country).includes('es')
 }
 
+/** Reino Unido en la ficha: `UK` se normaliza a `GB`. Un compuesto (`AU/UK`) cuenta. */
+function isUk(country: string | null | undefined): boolean {
+  return countryIsoCodesFromCode(country).includes('gb')
+}
+
 function resolveSlug(raw: string, map: Record<string, string>, label = false): string | null {
   for (const key of slugLookupKeys(raw, label ? { labelSuffixes: true } : undefined)) {
     const slug = map[key]
@@ -469,6 +476,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
         year: f.releaseYear,
         isRemix: f.isRemix,
         isSpanish: f.isSpanish,
+        isUk: f.isUk,
         save_count: 0,
         users: new Set(),
         last: f.savedAt || '',
@@ -485,6 +493,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
     if (!row.artists && f.artists) row.artists = f.artists
     if (f.isRemix) row.isRemix = true
     if (f.isSpanish) row.isSpanish = true
+    if (f.isUk) row.isUk = true
     row.play = fillPlay(row.play, f.play)
   }
   return sortTracks(Array.from(map.values()))
@@ -687,6 +696,10 @@ export async function loadAwardsBoard(
     const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
     return isSpain(labelBySlug.get(slug)?.country)
   })
+  const britishArtists = editionArtists.filter((a) => {
+    const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
+    return isUk(artistBySlug.get(slug)?.country)
+  })
 
   const breakthrough = year == null
     ? []
@@ -737,6 +750,18 @@ export async function loadAwardsBoard(
       title: 'Tema español',
       hint: 'Algún crédito (o el sello) resuelve a una ficha con país España.',
       entries: trackEntries(editionTracks.filter((t) => t.isSpanish)),
+    },
+    {
+      id: 'artist_uk',
+      title: 'Artista inglés',
+      hint: 'Mismo tablero, solo fichas cuyo país incluye Reino Unido (UK o GB; un compuesto como AU/UK también). Sin ficha o sin país no entra: sale abajo, en cobertura.',
+      entries: personEntries(britishArtists, artistBySlug, 'artist'),
+    },
+    {
+      id: 'track_uk',
+      title: 'Tema inglés',
+      hint: 'Algún crédito (o el sello) resuelve a una ficha con país Reino Unido.',
+      entries: trackEntries(editionTracks.filter((t) => t.isUk)),
     },
   ]
 
@@ -1097,6 +1122,11 @@ async function hydrateFacts(
     })
     const labelSlug = meta.label ? resolveSlug(meta.label, ctx.labelSlugMap, true) : null
     const spanishLabel = isSpain(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+    const britishArtist = names.some((n) => {
+      const slug = resolveSlug(n.name, ctx.artistSlugMap)
+      return isUk(slug ? ctx.artistBySlug.get(slug)?.country : null)
+    })
+    const britishLabel = isUk(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
     const aggregator = !!(meta.label && isAggregator(meta.label))
 
     let labelCredit: SaveFact['labelCredit'] = null
@@ -1117,6 +1147,7 @@ async function hydrateFacts(
       savedAt: s.created_at,
       isRemix: extractRemixerNames(meta.mix_name).length > 0,
       isSpanish: spanishArtist || spanishLabel,
+      isUk: britishArtist || britishLabel,
       credits,
       labelCredit,
       aggregator,
