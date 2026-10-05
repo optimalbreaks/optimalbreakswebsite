@@ -184,6 +184,8 @@ type SaveFact = {
   isRemix: boolean
   isSpanish: boolean
   isUk: boolean
+  isAmericas: boolean
+  isRest: boolean
   credits: { key: string; name: string }[]
   labelCredit: { key: string; raw: string } | null
   aggregator: boolean
@@ -200,6 +202,8 @@ type TrackAgg = {
   isRemix: boolean
   isSpanish: boolean
   isUk: boolean
+  isAmericas: boolean
+  isRest: boolean
   save_count: number
   users: Set<string>
   last: string
@@ -378,6 +382,25 @@ function isUk(country: string | null | undefined): boolean {
   return countryIsoCodesFromCode(country).includes('gb')
 }
 
+/** América = el continente, no solo EE. UU. `USA` ya llega como `us`. */
+const AMERICAS = new Set([
+  'us', 'ca', 'mx',
+  'gt', 'bz', 'hn', 'sv', 'ni', 'cr', 'pa',
+  'cu', 'do', 'ht', 'jm', 'tt', 'bs', 'bb', 'pr',
+  'br', 'ar', 'cl', 'co', 'pe', 'uy', 'py', 've', 'ec', 'bo', 'gy', 'sr',
+])
+
+function isAmericas(country: string | null | undefined): boolean {
+  return countryIsoCodesFromCode(country).some((c) => AMERICAS.has(c))
+}
+
+/** Tiene país, y ninguno de sus códigos es España, Reino Unido ni América. */
+function isRestOfWorld(country: string | null | undefined): boolean {
+  const codes = countryIsoCodesFromCode(country)
+  if (!codes.length) return false
+  return codes.every((c) => c !== 'es' && c !== 'gb' && !AMERICAS.has(c))
+}
+
 function resolveSlug(raw: string, map: Record<string, string>, label = false): string | null {
   for (const key of slugLookupKeys(raw, label ? { labelSuffixes: true } : undefined)) {
     const slug = map[key]
@@ -477,6 +500,8 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
         isRemix: f.isRemix,
         isSpanish: f.isSpanish,
         isUk: f.isUk,
+        isAmericas: f.isAmericas,
+        isRest: f.isRest,
         save_count: 0,
         users: new Set(),
         last: f.savedAt || '',
@@ -494,6 +519,8 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
     if (f.isRemix) row.isRemix = true
     if (f.isSpanish) row.isSpanish = true
     if (f.isUk) row.isUk = true
+    if (f.isAmericas) row.isAmericas = true
+    if (f.isRest) row.isRest = true
     row.play = fillPlay(row.play, f.play)
   }
   return sortTracks(Array.from(map.values()))
@@ -700,6 +727,14 @@ export async function loadAwardsBoard(
     const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
     return isUk(artistBySlug.get(slug)?.country)
   })
+  const americanArtists = editionArtists.filter((a) => {
+    const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
+    return isAmericas(artistBySlug.get(slug)?.country)
+  })
+  const restArtists = editionArtists.filter((a) => {
+    const slug = a.key.startsWith('slug:') ? a.key.slice(5) : ''
+    return isRestOfWorld(artistBySlug.get(slug)?.country)
+  })
 
   const breakthrough = year == null
     ? []
@@ -762,6 +797,30 @@ export async function loadAwardsBoard(
       title: 'Tema inglés',
       hint: 'Algún crédito (o el sello) resuelve a una ficha con país Reino Unido.',
       entries: trackEntries(editionTracks.filter((t) => t.isUk)),
+    },
+    {
+      id: 'artist_americas',
+      title: 'Artista de América',
+      hint: 'Mismo tablero. América es el continente: EE. UU., Canadá, México, Brasil, Argentina, Chile y el resto de fichas de allí. Sin ficha o sin país no entra.',
+      entries: personEntries(americanArtists, artistBySlug, 'artist'),
+    },
+    {
+      id: 'track_americas',
+      title: 'Tema de América',
+      hint: 'Algún crédito (o el sello) resuelve a una ficha de América.',
+      entries: trackEntries(editionTracks.filter((t) => t.isAmericas)),
+    },
+    {
+      id: 'artist_rest',
+      title: 'Artista del resto del mundo',
+      hint: 'Ficha con país que no es España, ni Reino Unido, ni América. Australia, el resto de Europa, Japón y los demás van aquí. Sin país no entra.',
+      entries: personEntries(restArtists, artistBySlug, 'artist'),
+    },
+    {
+      id: 'track_rest',
+      title: 'Tema del resto del mundo',
+      hint: 'Ni España, ni Reino Unido, ni América. Algún crédito (o el sello) sí resuelve a una ficha de otro país.',
+      entries: trackEntries(editionTracks.filter((t) => t.isRest)),
     },
   ]
 
@@ -1127,6 +1186,19 @@ async function hydrateFacts(
       return isUk(slug ? ctx.artistBySlug.get(slug)?.country : null)
     })
     const britishLabel = isUk(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+    const americasArtist = names.some((n) => {
+      const slug = resolveSlug(n.name, ctx.artistSlugMap)
+      return isAmericas(slug ? ctx.artistBySlug.get(slug)?.country : null)
+    })
+    const americasLabel = isAmericas(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+    const restArtist = names.some((n) => {
+      const slug = resolveSlug(n.name, ctx.artistSlugMap)
+      return isRestOfWorld(slug ? ctx.artistBySlug.get(slug)?.country : null)
+    })
+    const restLabel = isRestOfWorld(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+    const spanish = spanishArtist || spanishLabel
+    const british = britishArtist || britishLabel
+    const americas = americasArtist || americasLabel
     const aggregator = !!(meta.label && isAggregator(meta.label))
 
     let labelCredit: SaveFact['labelCredit'] = null
@@ -1146,8 +1218,10 @@ async function hydrateFacts(
       saveYear: saveYearOf(s.created_at),
       savedAt: s.created_at,
       isRemix: extractRemixerNames(meta.mix_name).length > 0,
-      isSpanish: spanishArtist || spanishLabel,
-      isUk: britishArtist || britishLabel,
+      isSpanish: spanish,
+      isUk: british,
+      isAmericas: americas,
+      isRest: !spanish && !british && !americas && (restArtist || restLabel),
       credits,
       labelCredit,
       aggregator,

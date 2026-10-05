@@ -523,7 +523,7 @@ Also outside a given edition: «+» whose track has **no release year** (they si
 
 ### Two universes (same rules as the Top 100)
 
-1. **Tracks** (Tema del año, Remix, Tema español, Tema inglés, and the per-year “most voted” line): public lists in `public` mode. Sort **unique users, then «+»**. **Self-votes count.** A label mark does **not** remove the song from this count.
+1. **Tracks** (Tema del año, Remix, Tema español, Tema inglés, Tema de América, Tema del resto del mundo, and the per-year “most voted” line): public lists in `public` mode. Sort **unique users, then «+»**. **Self-votes count.** A label mark does **not** remove the song from this count.
 2. **Artists, labels, countries, Revelación:** the artist board. In `public` mode, skip editorial mark, approved claim, family mark (`loadSelfCreditSkipMap`) and label-mark dumps (`shouldSkipLabelSave`). Aggregators do not compete as labels: DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group (`AGGREGATOR_KEYS`; a name that starts with the aggregator key counts too).
 
 `raw` drops those skips and includes private lists. It is an audit view. Do not nominate from it. Do not infer identity from `display_name`, username or email. Do not cap credits at 1. Do not sort the artist side by unique fans.
@@ -538,7 +538,7 @@ Also outside a given edition: «+» whose track has **no release year** (they si
 
 **Por año de lanzamiento** is a histogram of the **mode**, not of the edition. With axis `release` it does **not** change when you pick another edition year (the hint on the panel says so). With axis `save` and a year selected, the bars are only the «+» made that year, split by the track’s release year. Each row’s play button is that year’s most-voted track (same track sort: unique users, then saves).
 
-**Por país** uses the artist-board credits of the edition. A compound country (AU/UK) credits **both** codes. Spanish prizes require a catalog country that contains `ES`. UK prizes require `GB` (`UK` on the ficha normalizes to `GB`; `AU/UK` counts). No ficha, or a ficha with no country, is coverage — not a prize. Label strings merge through `buildFullLabelSlugMap` (suffix keys).
+**Por país** uses the artist-board credits of the edition. A compound country (AU/UK) credits **both** codes. Spanish prizes require a catalog country that contains `ES`. UK prizes require `GB` (`UK` on the ficha normalizes to `GB`; `AU/UK` counts). **América** is the continent (`US`, `CA`, `MX`, `BR`, `AR`, `CL`, and the other Americas ISO codes in `AMERICAS`), not the US alone. **Resto del mundo** is a ficha that has a country and none of its codes are Spain, the UK or the Americas (Australia, the rest of Europe, Japan, and so on). A track is “resto” only when it is not already Spanish, British or American. No ficha, or a ficha with no country, is coverage — not a prize, and not “resto”. Label strings merge through `buildFullLabelSlugMap` (suffix keys).
 
 ### Categories (phase 1 only)
 
@@ -551,6 +551,8 @@ Top **5** nominees each. Order:
 5. **Revelación** — only when a year is selected.
 6. **Artista español** / **Sello español** / **Tema español** — Spain via ficha country, as above.
 7. **Artista inglés** / **Tema inglés** — same rules, ficha country `GB` (stored `UK` counts; a compound such as `AU/UK` counts). No UK label prize.
+8. **Artista de América** / **Tema de América** — the continent, as above. No Americas label prize.
+9. **Artista del resto del mundo** / **Tema del resto del mundo** — country set, and not Spain, the UK or the Americas. No “resto” label prize.
 
 BreaksPoll categories that do **not** come from saves stay **out**: Best DJ, Album, Radio, Club Night, Large Event, Mix, Free Track. Do not grey them in and do not invent a vote for them.
 
