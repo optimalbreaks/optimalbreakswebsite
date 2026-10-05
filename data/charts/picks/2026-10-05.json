@@ -1,0 +1,74 @@
+{
+  "week_date": "2026-10-05",
+  "picks": [
+    {
+      "title": "Musa",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Anuschka"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/musa/30896157",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c55a48f4-6fb4-4719-aa22-5f4c60b4d657.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8546e3cb-a1c6-48c8-8ccd-a22dab9a0852.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-10-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Voltage Kiss",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SulivanZ"
+        }
+      ],
+      "label": "Shadow Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/voltage-kiss/30885856",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3568fb3c-1ef3-4a36-9b37-4f1e55ee1a4b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/47745a86-100d-4685-9f43-4fa2dc58212d.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Doggy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Terrie Kynd"
+        },
+        {
+          "name": "SeekFlow"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/doggy/30626647",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/714486a6-6ba4-4789-8e2c-fd3081871495.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5b72bc30-5c18-4381-86b0-ab77048297ef.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    }
+  ]
+}
