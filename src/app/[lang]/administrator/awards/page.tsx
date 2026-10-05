@@ -8,10 +8,18 @@ import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { releaseYouTubePlay, requestYouTubePlay, subscribeYouTubePlay } from '@/lib/youtube-play-coordinator'
-import type { AwardCategory, AwardEntry, AwardPlayback, AwardsAxis, AwardsBoard, AwardsMode } from '@/lib/awards-board'
+import type { AwardCategory, AwardEntry, AwardPlayback, AwardSection, AwardsAxis, AwardsBoard, AwardsMode } from '@/lib/awards-board'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const display = { fontFamily: "'Unbounded', sans-serif" } as const
+
+const SECTIONS: { id: AwardSection; title: string; line: string; accent: string }[] = [
+  { id: 'international', title: 'Internacional', line: 'Los del año. No miran el país.', accent: 'var(--red)' },
+  { id: 'es', title: 'España', line: 'Ficha con país España.', accent: 'var(--yellow)' },
+  { id: 'uk', title: 'Reino Unido', line: 'Ficha con país Reino Unido.', accent: 'var(--uv)' },
+  { id: 'us', title: 'Estados Unidos', line: 'Solo Estados Unidos. Canadá, México y Brasil van al resto.', accent: 'var(--cyan)' },
+  { id: 'rest', title: 'Resto del mundo', line: 'Tiene país, y no es España, Reino Unido ni Estados Unidos.', accent: 'var(--ink)' },
+]
 
 function num(n: number): string {
   return n.toLocaleString('es-ES')
@@ -127,8 +135,8 @@ export default function AdminAwardsPage() {
             Awards
           </h1>
           <p className="mt-2 max-w-xl text-[11px] font-bold leading-relaxed text-[var(--ink)]/55" style={mono}>
-            Cada «+» de Mis Tracks es un voto. Las canciones siguen el Top 100. Artistas, sellos y países
-            usan el tablero: sin auto-voto y sin el volcado de un sello fichado.
+            Cada «+» de Mis Tracks es un voto. Primero los del año (internacional), luego España, Reino Unido,
+            Estados Unidos y el resto del mundo.
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-2 xl:w-auto xl:flex-row xl:flex-wrap xl:items-center xl:justify-end">
@@ -191,21 +199,56 @@ export default function AdminAwardsPage() {
             <Kpi label="Votos" value={num(edition.saves)} sub="«+» de este corte" accent="var(--red)" />
             <Kpi label="Temas" value={num(edition.tracks)} sub="Una canción, una vez" accent="var(--yellow)" />
             <Kpi label="Quién vota" value={num(edition.users)} sub="Cuentas con un «+»" accent="var(--uv)" />
-            <Kpi label="Con país" value={`${countryPct}%`} sub="Sin país no hay premio ES" accent="var(--cyan)" />
+            <Kpi label="Con país" value={`${countryPct}%`} sub="Sin país no entra en una escena" accent="var(--cyan)" />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {edition.categories.map((cat) => (
-              <CategoryCard
-                key={cat.id}
-                cat={cat}
-                lang={lang}
-                playingKey={playingKey}
-                openYt={openYt}
-                embedSlot={embedSlot}
-                onPlay={onPlay}
-              />
+          <nav aria-label="Orígenes" className="flex gap-2 overflow-x-auto pb-1">
+            {SECTIONS.map((sec) => (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => document.getElementById(`awards-${sec.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="inline-flex min-h-11 shrink-0 items-center border-[3px] border-[var(--ink)] bg-[#fffef6] px-3 text-[11px] font-black uppercase"
+                style={{ ...mono, borderLeftWidth: 8, borderLeftColor: sec.accent }}
+              >
+                {sec.title}
+              </button>
             ))}
+          </nav>
+
+          <div className="space-y-8">
+            {SECTIONS.map((sec) => {
+              const cats = edition.categories.filter((c) => c.section === sec.id)
+              if (!cats.length) return null
+              return (
+                <section key={sec.id} id={`awards-${sec.id}`} className="min-w-0 scroll-mt-4">
+                  <div
+                    className="mb-3 border-[3px] border-[var(--ink)] bg-[#fffef6] px-3 py-3 sm:px-4"
+                    style={{ borderLeftWidth: 8, borderLeftColor: sec.accent, boxShadow: '4px 4px 0 var(--ink)' }}
+                  >
+                    <h2 className="text-xl font-black leading-none sm:text-2xl" style={display}>
+                      {sec.title}
+                    </h2>
+                    <p className="mt-1 text-[11px] font-bold leading-snug text-[var(--ink)]/60" style={mono}>
+                      {sec.line}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {cats.map((cat) => (
+                      <CategoryCard
+                        key={cat.id}
+                        cat={cat}
+                        lang={lang}
+                        playingKey={playingKey}
+                        openYt={openYt}
+                        embedSlot={embedSlot}
+                        onPlay={onPlay}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
           </div>
 
           <section className="min-w-0 border-[3px] border-[var(--ink)] bg-[#fffef6]" style={{ boxShadow: '4px 4px 0 var(--ink)' }}>

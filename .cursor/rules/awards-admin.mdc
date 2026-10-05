@@ -25,10 +25,12 @@ Prohibido igualar el KPI al `count(*)`, crear una tabla de votos, o una página 
 
 Igual que el Top 100 (`top100-auto-voto-artistas`):
 
-- **Temas** (tema del año, remix, tema español, tema inglés, tema de América, tema del resto del mundo, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
+- **Temas** (tema del año, remix, tema español, tema inglés, tema estadounidense, tema del resto del mundo, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
 - **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores (DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group) no compiten como sello.
 
-Revelación solo con un año concreto: ≥2 créditos ese año y 0 el anterior. España = ficha cuyo país contiene ES. Reino Unido = ficha cuyo país contiene GB (`UK` se normaliza a GB; `AU/UK` cuenta). América = el continente (`AMERICAS` en `awards-board.ts`: US, CA, MX, BR, AR, CL y el resto de ISO de América), no solo EE. UU. Resto del mundo = ficha con país que no es ninguna de esas tres. El tema del resto solo entra si no es ya español, inglés o de América. Sin ficha o sin país → cobertura, no premio y no «resto». Premios de UK, América y resto: artista y tema. No hay sello de esas tres.
+Revelación solo con un año concreto: ≥2 créditos ese año y 0 el anterior. España = ficha cuyo país contiene ES. Reino Unido = ficha cuyo país contiene GB (`UK` se normaliza a GB; `AU/UK` cuenta). Estados Unidos = ficha cuyo país contiene US (`USA` se normaliza a US). Canadá, México, Brasil y el resto del continente no son ese premio: van al resto del mundo. Resto del mundo = ficha con país que no es España, Reino Unido ni Estados Unidos. El tema del resto solo entra si no es ya español, inglés o estadounidense. Sin ficha o sin país → cobertura, no premio y no «resto». Premios de UK, EE. UU. y resto: artista y tema. No hay sello de esas tres.
+
+El tablero va en cinco bloques, en este orden: **Internacional** (los del año), **España**, **Reino Unido**, **Estados Unidos**, **Resto del mundo**.
 
 Fase 1 nada más. No añadir DJ, álbum, radio, club night, gran evento, mix ni tema gratis.
 
