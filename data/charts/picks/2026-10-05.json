@@ -311,6 +311,50 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 14
+    },
+    {
+      "title": "Stacky",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bosketta"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/stacky/30657260",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/320cb92b-f5c1-4f68-bbaa-153909776637.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3bef71cd-5e21-4eb0-ac77-71818bd330aa.LOFI.mp3",
+      "bpm": 150,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Ball Brain",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Bosketta"
+        }
+      ],
+      "label": "DIRTY KITCHEN RAVE",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ball-brain/30657259",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/320cb92b-f5c1-4f68-bbaa-153909776637.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c2cb5db5-4695-4b39-8b5e-e73dcc3ff6dd.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
     }
   ]
 }
