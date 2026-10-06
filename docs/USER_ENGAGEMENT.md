@@ -324,7 +324,8 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 **Implementation**
 
 - Skip map: `src/lib/artist-self-credit.ts` (`loadSelfCreditSkipMap` = editorial rows + every `artists.claimed_by` name / `name_display` / slug). `isArtistSelfCreditSave` = that user is credited on the track (artists + remixer).
-- Artist board: bump skip in `src/app/api/public/charts/community-monthly/route.ts` (live **and** Monday snapshots). Track aggregates unchanged. Label skip: if `shouldSkipLabelSave`, **no** artist credits from that save.
+- Artist board: bump skip in `src/app/api/public/charts/community-monthly/route.ts` (live **and** Monday snapshots). Label skip: if `shouldSkipLabelSave`, **no** artist credits from that save.
+- Song chart (6 Oct 2026): the same `isArtistSelfCreditSave` row is **left out** of the track aggregate. A save of someone else's track still counts. Label marks do **not** remove the song. The public response is CDN-cached (`s-maxage=300`, `stale-while-revalidate=900`). Admin Awards song categories still include the fichado «+».
 - Soulmates (26 Aug 2026): same self-credit tracks omitted from **that user’s** Jaccard set in `src/app/api/breakbeat/soulmates/route.ts`. Not from everyone else’s sets. Recommendations use the same filtered sets. Label marks do **not** change Soulmates.
 - Schema: `supabase/migrations/070_editorial_artist_marks.sql` + `071_editorial_label_marks.sql` + `081_editorial_family_marks.sql` — service-role only (no policies for `anon` / `authenticated`), same idea as `booking_sender_bans`.
 - Bookings product stays in [`docs/GUIA_IMPLEMENTACION_BOOKINGS.md`](./GUIA_IMPLEMENTACION_BOOKINGS.md). Cursor rule: `.cursor/rules/top100-auto-voto-artistas.mdc`.
@@ -436,17 +437,62 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | MestasDeejay | `mestasdeejay@gmail.com` | admin | **1** (Nine) |
 | jennie | `jenniev52@outlook.com` | user | **1** (Nine) |
 
-15 + 1 + 1 = 17. Monday `previous_rank` was already **11** — he had not saved yet at the ISO Monday cutoff — so the #3 spike was only this week’s live board. My Tracks and the song Top 100 still include his 9 saves. No label mark.
+15 + 1 + 1 = 17. Monday `previous_rank` was already **11** — he had not saved yet at the ISO Monday cutoff — so the #3 spike was only this week’s live board. My Tracks keeps his 9 saves. From 6 Oct 2026 those 9 also leave the public song chart. No label mark.
 
 **Audit — D-Fast Beats (4 Sep 2026).** `dfastbeats@gmail.com` signed up 2 Sep. On 3 Sep he saved **49** tracks; **13** credit D-Fast Beats (his Beatport Top 10 + Reply, Slap It, Two Caps). Those 13 no longer bump *his* name on the artist board. Collabs still credit the other names (Danny Phr3ntic on No Focus; Dual Drop on Dark Lady). The rest of the list (Ed Solo, Afghan Headspin, Huda Hudia, Danny Phr3ntic, etc.) still counts in full. My Tracks keeps the 13. From 6 Oct 2026 those 13 also leave the public song chart. No label mark (only two DFBEATS RECORDS saves, both his own titles — not a roster dump). Pending `artist_claims` `request_new` left untouched: this is fase 2, not a claim.
 
 **Audit — Samuel, familiar de D-Fast Beats (6 Oct 2026).** `perezpedrosasamuel@gmail.com` (display Samuel) signed up 2 Sep 13:04 UTC, about 90 minutes before the artist’s own account. On 3 Sep 19:16–19:20 UTC he saved **10/10** tracks that credit D-Fast Beats; all 10 are also in the artist’s library. Family mark only: those 10 no longer bump D-Fast Beats on the artist board. From 6 Oct 2026 the same saves also leave the public song Top 100. Collabs still count on the artist board (Danny Phr3ntic on *No Focus*, Dual Drop on *Dark Lady*). My Tracks keeps the 10. No `claimed_by`, no bookings, no label mark. Krognok (`tehlizuh@gmail.com`, 17 of 28 on D-Fast plus other artists) was reviewed the same day and **left unmarked**.
 
-**Audit — Kaos Beat (12 Sep 2026).** `kaosbeatproducer2@gmail.com` signed up 12 Sep (`display_name` Kaos Beat). Catalog ficha `/artists/kaos-beat` already existed (`claimed_by` left null). One public save at mark time, snapshot empty — not a catalogue dump. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit Kaos Beat will skip *his* name on the artist board; My Tracks and the song Top 100 stay as-is.
+**Audit — Kaos Beat (12 Sep 2026).** `kaosbeatproducer2@gmail.com` signed up 12 Sep (`display_name` Kaos Beat). Catalog ficha `/artists/kaos-beat` already existed (`claimed_by` left null). One public save at mark time, snapshot empty — not a catalogue dump. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit Kaos Beat skip *his* name on the artist board and do not raise that song (6 Oct 2026). My Tracks stays.
 
-**Audit — Ruler (6 Oct 2026).** `djruler@gmail.com` signed up 6 Oct 12:13 UTC (`display_name` Ruler). Catalog ficha `/artists/ruler` already existed (`name` RULER; credit on tracks is **Ruler**, e.g. *I Feel U* / Banana Club with 936). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time — not a catalogue dump. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit Ruler will skip *his* name on the artist board; My Tracks and the song Top 100 stay as-is.
+**Audit — Ruler (6 Oct 2026).** `djruler@gmail.com` signed up 6 Oct 12:13 UTC (`display_name` Ruler). Catalog ficha `/artists/ruler` already existed (`name` RULER; credit on tracks is **Ruler**, e.g. *I Feel U* / Banana Club with 936). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time — not a catalogue dump. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit Ruler skip *his* name on the artist board and do not raise that song (6 Oct 2026). My Tracks stays.
 
-**Audit — The Legends (6 Oct 2026).** `filisoporte@gmail.com` signed up 5 Oct 18:36 UTC (`display_name` sergio — do not match by that name). Catalog ficha `/artists/the-legends` already existed. Credit on tracks is **The Legends** (e.g. *M.D.A* / 83, with Guau). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit The Legends will skip *that* name on the artist board; collabs (Guau, etc.) still count. My Tracks and the song Top 100 stay as-is.
+**Audit — The Legends (6 Oct 2026).** `filisoporte@gmail.com` signed up 5 Oct 18:36 UTC (`display_name` sergio — do not match by that name). Catalog ficha `/artists/the-legends` already existed. Credit on tracks is **The Legends** (e.g. *M.D.A* / 83, with Guau). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit The Legends skip *that* name on the artist board and do not raise that song (6 Oct 2026); collabs (Guau, etc.) still count on the artist board. My Tracks stays.
+
+### Periodic cheat-vote audit
+
+Run this when the editor asks for a pass, or when a song sits at the top of `/top100` on a cluster of new accounts. **Report. Do not ficha** until the editor says so. Identity is never inferred from `display_name`, username or email for the ranking. A name match is a hint in the report, not a mark.
+
+After each pass, add a row here: marked (and in the tables above) or **left unmarked**, with the reason. The next pass should not reopen a left-unmarked row unless the library changed.
+
+**Who counts.** Public saves only (`profiles.is_tracks_public`). Artists and label come from `saved_chart_tracks.snapshot`, and if that is empty from `chart_featured_tracks` / `chart_tracks` / `chart_vinyl_tracks`. Split credits the same way as the board (`splitArtistCreditsForRanking`: comma, then `&` / `and` / `x` / `vs`). Keys via `normalizeArtistKey`. One Beatport URL is one song even when one source lists a single name and another lists the collab (see *Trappin* below).
+
+**Noise — do not flag.**
+
+- **Karmic Waves** (`karmicwaves727@gmail.com`, ~2,000 saves). They are a large share of many artists because the base is small. Their own library is not concentrated on one name.
+- Editorial logins: `contacto@eskaladigital.com` (Optimal Breaks) and `mestasdeejay@gmail.com`.
+- Pairs already skipped: `editorial_artist_marks`, `editorial_family_marks`, `artists.claimed_by`.
+
+**Signals.**
+
+| Signal | Threshold used on 6 Oct 2026 | Reading |
+| --- | --- | --- |
+| Library concentration | Role `user`, library under ~150. Top artist ≥ 40% of saves and ≥ 5 credits, pair not already skipped. 100% of a small list is the loud case. | Samuel 10/10. Paqui/Suprime 20/21. |
+| Burst | Many saves in under ~2 minutes, or the whole library the day they signed up. | Paqui 21 s, Suprime 28 s, same 21 tracks. |
+| Clone | Two accounts share most track ids, signups hours or days apart, both piled on one already-marked name. | Samuel's 10 ⊂ Krognok ⊂ D-Fast's own list. |
+| Label pile | One label ≥ ~45% of a small library and ≥ 8 saves, account not label-marked. | Afghan / DKR was 95/107. A fan of one label is not proof. |
+| Name hint | `display_name` or the email local-part equals the credit. | Hint only. Never auto-ficha. |
+
+A list that is ~60% one artist **and** has a real rest (other names, not a copy of the marked account's list) stays a maybe. Krognok (17/28 D-Fast, 11 others) and Mario (15/22 Devis, 7 others) were left unmarked for that reason.
+
+**What a mark does, from 6 Oct 2026.** Artist, claim or family: that «+» does not raise the song and does not credit that name. Other names on the track still credit on the artist board. My Tracks stays. A label mark still does not remove the song. Admin Awards song categories still count the fichado «+».
+
+**Songs checked the same day.**
+
+- ***Load it up*** (DJ Brownie, Devis Hard, Sound Perfect Breakz) was public **#1** with 10 fans. Devis Hard, Paqui and Suprime drop. **7** remain: Optimal Breaks, Karmic Waves, PabloCP, Mario, Antonio, Mestas, Pedro. *Bunker Buster* had 9, so *Load it up* leaves #1.
+- ***Trappin*** (`https://www.beatport.com/track/trappin/28688529`, release **2026-05-13**, Br8kn). The chart row's artists are only **Paket**; six saves are **Paket, Devis Hard**. The Top can show Paket alone. 8 fans. The same three drop. **5** remain: Optimal Breaks, Karmic Waves, `jrabadanrutete@gmail.com`, Deiv, Pedro.
+
+**Reviewed 6 Oct 2026 and left unmarked.**
+
+| Account | Shape | Decision |
+| --- | --- | --- |
+| `tehlizuh@gmail.com` (Krognok) | Signed up 2 Sep 10:46 UTC, four hours before D-Fast's account. 17/28 credit D-Fast; 16 of those 17 are also in D-Fast's library. The other 11 are other artists (Ed Solo, Anuschka, Bad Legs…). | Leave. Not a cloned list. |
+| `mariopisote@hotmail.com` (Mario) | Signed up 26 Sep, four days after Paqui. 15/22 credit Devis Hard; 9 of them in the first two minutes. Only 7 tracks overlap Paqui's list. The other 7 are other artists. Store composer credit on Br8kn releases (Qobuz) is **David Carrillo Osuna**, not Mario. Ficha `real_name` is null. The marked account is `davisoto@hotmail.com`. | Leave. Less blatant than Samuel or Paqui. |
+| `alkimista1974@gmail.com` (MacGroove) | Display name is the credit. 4/4 own tracks, all Br8kn, in two minutes (26 Aug): *FM Chaos*, *Fracture*, *Kali Rage*, *Void*. | Not marked. Small. Fase 2 only if the editor confirms. |
+| `jrabadanrutete@gmail.com` | No display name. Signed up 6 Sep and saved 19 tracks in six minutes. Email contains `rutete` and 3 tracks credit **Rutek**. 10 credit **Paket**. 13/19 are Br8kn (roster, not one artist). | Not marked. An artist mark on Rutek drops 3. A label mark on Br8kn drops 13. |
+| `man_medina@hotmail.es` (Manu) | Signed up 30 Sep. 9/16 credit Yo Speed and 10/16 are label **83**, spread over a day. No name match. | Not marked. Open the user row before deciding artist vs label. |
+| `antonioosuna32@hotmail.com` | 4/12 credit Devis Hard inside a three-minute mixed binge (29 Sep). Surname Osuna matches the composer credit above. | Not marked. |
+| `pablocp82@gmail.com`, `deiv80@gmail.com`, `pedromilono@hotmail.com` | PabloCP has a long mixed list. Deiv and Pedro each saved one Devis/Paket track inside a varied list. | Organic. |
 
 ### Artist board — weekly movement (not daily)
 
@@ -530,7 +576,9 @@ Awards opens on the **current UTC year**, axis **Lanzamiento** (`release`), mode
 
 Also outside a given edition: «+» whose track has **no release year** (they sit in the year histogram as **Sin año**, and they enter the edition only with **Todos los años** or when the axis is **Año del voto** and `created_at` falls in that year). A save whose live row and snapshot have **no canonical key** never becomes a fact (`coverage.orphan_saves`). Do **not** “fix” the KPI so it matches 4418, and do **not** add a new vote table.
 
-### Two universes (same rules as the Top 100)
+### Two universes (artists match the public Top; song awards do not)
+
+The public song chart, from 6 Oct 2026, drops a fichado / claim / family «+». **This awards cut still counts that «+» on tracks.** Do not “align” the two.
 
 1. **Tracks** (Tema del año, Remix, Tema español, Tema inglés, Tema estadounidense, Tema del resto del mundo, and the per-year “most voted” line): public lists in `public` mode. Sort **unique users, then «+»**. **Self-votes count.** A label mark does **not** remove the song from this count.
 2. **Artists, labels, countries, Revelación:** the artist board. In `public` mode, skip editorial mark, approved claim, family mark (`loadSelfCreditSkipMap`) and label-mark dumps (`shouldSkipLabelSave`). Aggregators do not compete as labels: DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group (`AGGREGATOR_KEYS`; a name that starts with the aggregator key counts too).
