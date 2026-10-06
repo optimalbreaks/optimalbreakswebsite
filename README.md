@@ -264,7 +264,7 @@ Until then, consumers use **gated hooks** that enqueue the first action without 
 ### Other layout / route optimisations
 
 - **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads).
-- **`ChartsPromoModal`:** `ssr: false`; opens only after **2nd page view** in the session or **40 s** on site — not on first paint.
+- **`ChartsPromoModal`:** opens only after **2nd page view** in the session or **40 s** on site — not on first paint. Guests can see it again after **24 h**; logged-in accounts after **3.5 days**. Never on `/charts`. The poster asks people to hit **+** (those saves build the community track and artist charts).
 - **`BackToTop`**, **`GoogleAnalytics`**, **`ServiceWorkerRegistration`:** dynamic client imports in `[lang]/layout.tsx`.
 - **`/[lang]/history`:** `export const revalidate = 300` (ISR) where applicable.
 - **Removed** `export const dynamic = 'force-dynamic'` from `[lang]/layout.tsx` so static/ISR pages can cache HTML when data allows.

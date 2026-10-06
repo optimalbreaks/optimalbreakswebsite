@@ -4,7 +4,7 @@
 // no en la primera pantalla — evita LCP/CLS en PageSpeed y no
 // interrumpe la home.
 // - No logueados: reapertura como mucho cada 24 h.
-// - Logueados: una sola vez (localStorage) y no se vuelve a mostrar.
+// - Logueados: reapertura cada 3,5 días (ventana 3–4).
 // Nunca en /[lang]/charts.
 // ============================================
 
@@ -18,6 +18,8 @@ import { useAuth } from '@/components/AuthProvider'
 
 /** Invitados: ms desde la última vez hasta volver a mostrar. */
 const PROMO_REOPEN_GUEST_MS = 24 * 60 * 60 * 1000
+/** Logueados: cada 3,5 días (punto medio de la ventana 3–4). */
+const PROMO_REOPEN_LOGGED_MS = 3.5 * 24 * 60 * 60 * 1000
 /** Pequeño respiro tras cumplir engagement antes de abrir. */
 const SHOW_DELAY_MS = 800
 /** Segundos acumulados en el sitio antes de poder mostrar (1ª visita). */
@@ -25,9 +27,8 @@ const MIN_SESSION_MS = 40 * 1000
 /** Cada cuánto comprobamos si ya toca abrir. */
 const POLL_INTERVAL_MS = 5 * 1000
 
-const LS_LAST_SHOWN = 'ob_charts_promo_last_shown_at'
-/** Logueados: si existe, el promo ya se mostró alguna vez y no se repite. */
-const LS_SEEN_LOGGED = 'ob_charts_promo_seen_logged'
+/** Clave nueva (oct 2026): el cartel ya no es «40 Breaks». Quien cerró el anterior lo vuelve a ver. */
+const LS_LAST_SHOWN = 'ob_charts_promo_saves_at'
 const SS_SESSION_START = 'ob_charts_promo_session_start'
 const SS_PAGE_VIEWS = 'ob_charts_promo_page_views'
 
@@ -63,24 +64,6 @@ function writeLastShown(ts: number) {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(LS_LAST_SHOWN, String(ts))
-  } catch {
-    /* localStorage puede estar bloqueado */
-  }
-}
-
-function hasSeenLoggedIn(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    return window.localStorage.getItem(LS_SEEN_LOGGED) === '1'
-  } catch {
-    return false
-  }
-}
-
-function markSeenLoggedIn() {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(LS_SEEN_LOGGED, '1')
   } catch {
     /* localStorage puede estar bloqueado */
   }
@@ -131,10 +114,11 @@ function hasEngaged(): boolean {
   return views >= 2 || elapsed >= MIN_SESSION_MS
 }
 
-function guestCooldownElapsed(): boolean {
+function cooldownElapsed(isLoggedIn: boolean): boolean {
   const last = readLastShown()
   if (last == null) return true
-  return Date.now() - last >= PROMO_REOPEN_GUEST_MS
+  const wait = isLoggedIn ? PROMO_REOPEN_LOGGED_MS : PROMO_REOPEN_GUEST_MS
+  return Date.now() - last >= wait
 }
 
 /**
@@ -152,8 +136,7 @@ function otherModalOpen(): boolean {
 function canShowNow(isLoggedIn: boolean): boolean {
   if (otherModalOpen()) return false
   if (!hasEngaged()) return false
-  if (isLoggedIn) return !hasSeenLoggedIn()
-  return guestCooldownElapsed()
+  return cooldownElapsed(isLoggedIn)
 }
 
 export default function ChartsPromoModal({ lang, dict }: Props) {
@@ -166,22 +149,20 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null)
   const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const markShown = useCallback((loggedIn: boolean) => {
-    const now = Date.now()
-    writeLastShown(now)
-    if (loggedIn) markSeenLoggedIn()
+  const markShown = useCallback(() => {
+    writeLastShown(Date.now())
   }, [])
 
   const showNow = useCallback(() => {
     if (authLoading || !canShowNow(isLoggedIn)) return
     setOpen(true)
-    markShown(isLoggedIn)
+    markShown()
   }, [authLoading, isLoggedIn, markShown])
 
   const close = useCallback(() => {
     setOpen(false)
-    markShown(isLoggedIn)
-  }, [isLoggedIn, markShown])
+    markShown()
+  }, [markShown])
 
   const scheduleShowIfReady = useCallback(() => {
     if (authLoading || onChartsPage || open) return

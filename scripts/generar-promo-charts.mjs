@@ -60,36 +60,34 @@ function env(key) {
 // (paper crema, ink negro, rojo, amarillo, halftone, cinta
 // adhesiva, sello de goma, hazard stripes). Diseño VERTICAL
 // pensado para un modal emergente.
-// "40 Breaks Vitales" se mantiene en español en ambas versiones
-// (es nombre propio del producto, igual que el `charts.title` en
-// `src/dictionaries/en.json`). Solo cambian los rótulos
-// secundarios y el plaque inferior.
+// El cartel pide el «+» de guardar tema (Mis Tracks → Top de
+// canciones y de artistas). «40 Breaks Vitales» ya no se lista.
 // ============================================================
 
-function buildPrompt({ kicker, sub, plaqueTop, plaqueBottom, language }) {
+function buildPrompt({ kicker, headline, sub, plaqueTop, plaqueBottom, language }) {
   return `
-PROMOTIONAL POSTER — vertical 1024×1536 (2:3) for an in-site promo modal that pushes the CHARTS section of "Optimal Breaks" (online breakbeat encyclopedia & radio).
+PROMOTIONAL POSTER — vertical 1024×1536 (2:3) for an in-site promo modal of "Optimal Breaks" (online breakbeat encyclopedia).
 
-GOAL: stop-the-scroll fanzine artwork inviting visitors to discover the weekly chart and pick lists. The brand name "40 BREAKS VITALES" stays in Spanish in BOTH language versions (it is the product name).
+GOAL: stop-the-scroll fanzine artwork whose ONLY job is to make the visitor press the plus button that saves a track. Saving builds the community ranking of tracks and artists. Do NOT mention "40 Breaks", "Vitales", charts-as-a-product-name, or any numbered list of 40.
 
 LAYOUT (top → bottom, all centered on the vertical axis, generous margins):
   1. Top kicker strip: thin hazard-stripe band (yellow + ink) about 3% tall.
   2. Small uppercase tag in a stamped rectangle: "${kicker}".
-  3. MAIN HEADLINE in three to five stacked stencil lines, dominant: "40 BREAKS VITALES". Letters heavy block / stencil, slightly misregistered, ink black with a red shadow offset 4–6px to the right.
-  4. Sub-headline in smaller block type: "${sub}".
-  5. Center collage cluster (denser, slightly overloaded but legible at thumbnail): one big abstract vinyl record with deep groove rings, a halftone-dotted speaker silhouette, a tape-deck cassette hub as a circle, a torn paper strip, a rubber stamp shape labelled "TOP" and another labelled "PLAY", a bold play triangle ▶ icon, a hand-drawn tally mark "//// /". Keep this cluster bunched in the middle ⅓; do NOT crowd the edges.
-  6. Bottom plaque (a brutal black rectangle with a 4px ink border) containing two short white block-type lines: top line "${plaqueTop}" and beneath it a smaller line "${plaqueBottom}".
+  3. MAIN HEADLINE in three stacked stencil lines, dominant, spelling EXACTLY: "${headline}". Letters heavy block / stencil, slightly misregistered, ink black with a red shadow offset 4–6px to the right.
+  4. Sub-headline in smaller block type, spelling EXACTLY: "${sub}".
+  5. Center collage, bunched in the middle third: a huge heavy plus sign "+" (equal arms, the save button — not a Christian cross, not the word PLUS, not a medical cross) in ink with a red offset; one abstract vinyl record with a yellow label; a halftone speaker; a rubber stamp reading "TOP"; a rubber stamp reading "PLAY"; a bold play triangle. Do NOT crowd the edges.
+  6. Bottom plaque (a brutal black rectangle with a 4px ink border) with two short white block-type lines, spelling EXACTLY: top line "${plaqueTop}" and beneath it a smaller line "${plaqueBottom}". The plus sign in the top line is the character +, not the word "plus".
   7. Bottom hazard-stripe band, mirroring the top.
 
 PALETTE (strict): cream paper #e8dcc8 background, ink #1a1a1a for type and rules, red #d62828 as accent / shadow / stamp, industrial yellow #f7e733 for the hazard stripes and a couple of highlights. Optional desaturated cyan #0891b2 only as a tiny halftone dot accent. NO other hues, no neon gradients, no photographic skies.
 
-STYLE — PUNK BRUTALIST FANZINE: photocopy grain, paper grain, slightly torn paper edges, rubber-stamp marks, halftone dots, misregistered ink layers, scotch-tape pieces in the corners (semi-transparent yellow with darker edges), a faint repeating-line "lined paper" texture in the background, occasional ink splatters. Slightly OVERLOADED collage energy — but the typography stays crisp and instantly readable.
+STYLE — PUNK BRUTALIST FANZINE: photocopy grain, paper grain, slightly torn paper edges, rubber-stamp marks, halftone dots, misregistered ink layers, scotch-tape pieces in the corners (semi-transparent yellow with darker edges), a faint lined-paper texture, occasional ink splatters. Typography stays crisp and instantly readable.
 
-TYPOGRAPHY: bold block / stencil sans (think Unbounded Black + military stencil); ALL caps; tight tracking; no script, no thin fonts, no italic flourishes. Spelling MUST be exact for every visible word listed above (target language: ${language}). No other text on the canvas.
+TYPOGRAPHY: bold block / stencil sans; ALL caps; tight tracking; no script, no thin fonts. Spelling MUST be exact for every visible word listed above (target language: ${language}). No other text on the canvas.
 
-DO NOT include: any human face, any real brand logo, real DJ name, country flag, year, web URL, neon glow, AI-3D plastic look, drop-shadow blur. No photograph backgrounds — this is a flat printed poster.
+DO NOT include: the words "40", "BREAKS VITALES", "VITALES", any human face, any real brand logo, real DJ name, country flag, year, web URL, neon glow, AI-3D plastic look. No photograph backgrounds — this is a flat printed poster.
 
-SAFE REGION: keep glyphs and key icons within 8%–92% W and 8%–92% H. The outermost ~6% should remain quiet cream paper so the modal can frame the image cleanly.
+SAFE REGION: keep glyphs and key icons within 8%–92% W and 8%–92% H.
 `.trim()
 }
 
@@ -97,16 +95,18 @@ const PROMPTS = {
   es: buildPrompt({
     language: 'Spanish',
     kicker: 'RADIO DE BREAKS · ONLINE',
-    sub: 'CHART SEMANAL · NEW RELEASES · VINYL PICKS',
-    plaqueTop: 'ESCUCHA · DESCUBRE · GUARDA',
-    plaqueBottom: 'AÑADE TUS TEMAS A LA LISTA DE LA COMUNIDAD',
+    headline: 'GUARDA TUS TEMAS',
+    sub: 'NEW RELEASES · ARCHIVO · TOP 100',
+    plaqueTop: 'DALE AL +',
+    plaqueBottom: 'TUS SAVES HACEN EL RANKING',
   }),
   en: buildPrompt({
     language: 'English',
     kicker: 'BREAKS RADIO · ONLINE',
-    sub: 'WEEKLY CHART · NEW RELEASES · VINYL PICKS',
-    plaqueTop: 'LISTEN · DISCOVER · SAVE',
-    plaqueBottom: 'ADD YOUR TRACKS TO THE COMMUNITY LIST',
+    headline: 'SAVE YOUR TRACKS',
+    sub: 'NEW RELEASES · ARCHIVE · TOP 100',
+    plaqueTop: 'HIT THE +',
+    plaqueBottom: 'YOUR SAVES BUILD THE RANKING',
   }),
 }
 

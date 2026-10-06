@@ -600,19 +600,18 @@
     }
   },
   "charts_promo": {
-    "kicker": "BREAKS RADIO · ONLINE",
-    "title": "Have you heard our lists yet?",
-    "subtitle": "The Optimal Breaks Charts are your open booth: hit play, dig new gems, save your favourite tracks and help shape the rhythm of the breakbeat scene.",
+    "kicker": "COMMUNITY TOP",
+    "title": "Your «+» builds the Top",
+    "subtitle": "Every track has a +. Save it and it stays in My Tracks, and it counts on the track chart and the artist chart.",
     "bullets": [
-      "<strong>New Releases</strong> — weekly pick of fresh breakbeat drops.",
-      "<strong>Archive Picks</strong> — pre-2026 catalogue (vinyl, Beatport and Bandcamp) by year.",
-      "<strong>Community Top 100</strong> — the ranking that comes from your saves.",
-      "<strong>Challenge:</strong> save your 10 essentials to «My Tracks»."
+      "Hit <strong>+</strong> on the tracks you rate.",
+      "They stay in <strong>My Tracks</strong>.",
+      "The ranking comes from those saves. No polls."
     ],
-    "cta_primary": "Listen now",
+    "cta_primary": "Go save tracks",
     "cta_secondary": "Maybe later",
     "close": "Close",
-    "image_alt": "Punk brutalist fanzine poster promoting Optimal Breaks' breakbeat charts: 40 Breaks Vitales, weekly chart, new releases, retro vinyl picks and community top 100."
+    "image_alt": "Punk brutalist fanzine poster inviting you to save breakbeat tracks on Optimal Breaks: the plus button counts toward the track chart and the artist chart."
   },
   "mixes": {
     "title": "Mixes & Sets",

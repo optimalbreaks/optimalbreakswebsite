@@ -93,7 +93,7 @@ async function captureSection({ sectionKey, lang, baseUrl, viewportHeight }) {
     ])
     await context.addInitScript(() => {
       try {
-        localStorage.setItem('ob_charts_promo_last_shown_at', String(Date.now()))
+        localStorage.setItem('ob_charts_promo_saves_at', String(Date.now()))
       } catch {
         /* ignore */
       }
