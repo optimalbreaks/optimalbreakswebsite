@@ -17,6 +17,7 @@ import {
 import { logMixPlayOncePerBrowserSession } from '@/lib/mix-play-session-log'
 import { extractYouTubeId, LazyYouTubeEmbed as BaseLazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import { requestYouTubePlay } from '@/lib/youtube-play-coordinator'
+import { SEARCH_NAV_EVENT } from '@/lib/share-track'
 import { formatMixDateLine, mixSortTimestamp } from '@/lib/mix-datetime-local'
 
 /** Wrapper fino: registra reproducción de mix al dar play en el embed. */
@@ -355,7 +356,11 @@ export default function MixesExplorer({ mixes, dict, lang }: Props) {
 
     applyHash()
     window.addEventListener('hashchange', applyHash)
-    return () => window.removeEventListener('hashchange', applyHash)
+    window.addEventListener(SEARCH_NAV_EVENT, applyHash)
+    return () => {
+      window.removeEventListener('hashchange', applyHash)
+      window.removeEventListener(SEARCH_NAV_EVENT, applyHash)
+    }
   }, [mixes, playMix])
 
   const distinctPlatforms = useMemo(() => {

@@ -23,7 +23,7 @@ import { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
 import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -733,6 +733,9 @@ export default function ChartView({
   }, [])
   /** Fila a la que hay que hacer scroll cuando exista en el DOM (deep-link). */
   const scrollTargetRef = useRef<string | null>(null)
+  // Cada deep-link nuevo (también el segundo tema de una semana ya abierta,
+  // cuyos datos no cambian) pide scroll. Sin esto el efecto no se entera.
+  const [scrollTick, setScrollTick] = useState(0)
   /** Vinilo pedido por deep-link cuyo año aún se está descargando. */
   const vinylIntentRef = useRef<{ trackId: string; yearKey: string } | null>(null)
 
@@ -841,6 +844,9 @@ export default function ChartView({
   //   a) Hash del buscador global (⌘K): /charts#chart-row-<id> (40 Breaks,
   //      New Releases o archivo digital) o /charts#chart-vinyl-row-<id>
   //      (vinilo del archivo). Si además lleva `?play=1`, arrancamos preview.
+  //      Si la página ya está montada, el palette no navega con el router:
+  //      reescribe la URL y dispara `SEARCH_NAV_EVENT` (Next no emite
+  //      `hashchange` y dos `?play=1` le parecen la misma ruta).
   //
   //   b) Link compartido de una canción: /charts?play=chart:<id>,
   //      `?play=featured:<id>` o `?play=vinyl:<id>` (sin hash). Viene de
@@ -894,7 +900,11 @@ export default function ChartView({
 
       if (!kind || !trackId) return
 
-      if (parsed) {
+      // Quitar `?play` DESPUÉS de pedir el tema. Si se hace antes del fetch,
+      // un segundo pase del efecto (Strict Mode, o el restore de Next al
+      // hacer replaceState) ya no ve el parámetro y el play no arranca.
+      const stripPlay = () => {
+        if (!parsed || my !== seq) return
         try {
           const u = new URL(window.location.href)
           u.searchParams.delete('play')
@@ -908,17 +918,26 @@ export default function ChartView({
       let target: { kind: 'picks'; week: string } | { kind: 'archive'; year: string } | null = null
       try {
         const res = await fetch(`/api/public/charts/section?kind=locate&id=${encodeURIComponent(trackId)}`)
-        if (!res.ok) return
+        if (!res.ok) {
+          stripPlay()
+          return
+        }
         const body = await res.json() as {
           target?: { kind: 'picks'; week: string } | { kind: 'archive'; year: string } | null
         }
         target = body.target ?? null
       } catch {
+        stripPlay()
         return
       }
-      if (my !== seq || !target) return
+      if (my !== seq) return
+      if (!target) {
+        stripPlay()
+        return
+      }
 
       scrollTargetRef.current = domId
+      setScrollTick((n) => n + 1)
       if (target.kind === 'picks') {
         const idx = pickWeeks.findIndex((w) => w.weekDate === target.week)
         if (idx >= INITIAL_WEEKS_VISIBLE) setShowAllPicksWeeks(true)
@@ -944,13 +963,16 @@ export default function ChartView({
         }
         loadArchive(target.year)
       }
+      stripPlay()
     }
 
     applyDeepLink()
     window.addEventListener('hashchange', applyDeepLink)
+    window.addEventListener(SEARCH_NAV_EVENT, applyDeepLink)
     return () => {
       seq += 1
       window.removeEventListener('hashchange', applyDeepLink)
+      window.removeEventListener(SEARCH_NAV_EVENT, applyDeepLink)
     }
   }, [pickWeeks, ensureOpenPicks, ensureOpenVinyl, loadPicks, loadArchive, revealArchiveRow, sharedLandingHandled])
 
@@ -966,7 +988,7 @@ export default function ChartView({
     el.classList.add('!bg-[var(--yellow)]/25')
     const timer = window.setTimeout(() => el.classList.remove('!bg-[var(--yellow)]/25'), 1800)
     return () => window.clearTimeout(timer)
-  }, [pickByWeek, archiveByYearLoaded, archiveVisible, showAllPicksWeeks, openPicks, openVinyl])
+  }, [pickByWeek, archiveByYearLoaded, archiveVisible, showAllPicksWeeks, openPicks, openVinyl, scrollTick])
 
   // ---- Play-all state (delegado al provider global) ----
   const {

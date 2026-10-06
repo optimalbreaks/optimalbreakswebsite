@@ -219,6 +219,32 @@ export function beatportTrackOpenGraphCopy(
 }
 
 /**
+ * El buscador (⌘K) reescribe la URL cuando el resultado cae en la página
+ * que ya está abierta. Next no dispara `hashchange` (`pushState`) y trata
+ * dos `/charts?play=1#…` como la misma ruta: el deep-link solo corría al
+ * montar, así que el segundo tema —sobre todo en la misma semana— no abría
+ * el play. Quien escucha el deep-link se suscribe a este evento.
+ */
+export const SEARCH_NAV_EVENT = 'ob-search-nav'
+
+/** `true` si el destino es esta misma página y ya se avisó a los listeners. */
+export function publishSearchNavigation(href: string): boolean {
+  if (typeof window === 'undefined') return false
+  let url: URL
+  try {
+    url = new URL(href, window.location.href)
+  } catch {
+    return false
+  }
+  if (url.origin !== window.location.origin) return false
+  if (url.pathname !== window.location.pathname) return false
+  const next = `${url.pathname}${url.search}${url.hash}`
+  window.history.pushState(window.history.state, '', next)
+  window.dispatchEvent(new Event(SEARCH_NAV_EVENT))
+  return true
+}
+
+/**
  * Parseo defensivo de `?play=`:
  * - `"1"` → play legacy del buscador global (⌘K) en ChartView.
  * - `"chart:<uuid>"` / `"featured:<uuid>"` → aterriza en una fila de un chart.

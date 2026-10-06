@@ -13,6 +13,7 @@ import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { displayImageUrl } from '@/lib/image-url'
 import type { Locale } from '@/lib/i18n-config'
+import { publishSearchNavigation } from '@/lib/share-track'
 
 type ResultType = 'artist' | 'label' | 'event' | 'mix' | 'scene' | 'post' | 'organization' | 'track'
 
@@ -158,6 +159,15 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
     if (abortRef.current) abortRef.current.abort()
   }, [])
 
+  // Misma página (segundo tema de /charts, otro mix, otro corte del mismo
+  // Top 10): Next no remonta y no hay `hashchange`. Avisamos nosotros.
+  // Otra página: navegación normal, el destino arranca el deep-link al montar.
+  const openResult = useCallback((href: string) => {
+    close()
+    if (publishSearchNavigation(href)) return
+    router.push(href)
+  }, [close, router])
+
   const openPalette = useCallback(() => {
     setOpen(true)
     requestAnimationFrame(() => inputRef.current?.focus())
@@ -282,10 +292,7 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
     } else if (e.key === 'Enter') {
       e.preventDefault()
       const item = flat[active]
-      if (item) {
-        router.push(item.href)
-        close()
-      }
+      if (item) openResult(item.href)
     }
   }
 
@@ -442,7 +449,11 @@ export default function CommandPalette({ lang, dict }: CommandPaletteProps) {
                             aria-selected={isActive}
                             href={r.href}
                             onMouseEnter={() => setActive(idx)}
-                            onClick={close}
+                            onClick={(e) => {
+                              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                              e.preventDefault()
+                              openResult(r.href)
+                            }}
                             className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b-[2px] border-[var(--ink)]/10 no-underline ${
                               isActive ? 'bg-[var(--yellow)]' : 'hover:bg-[var(--paper-dark)]/60'
                             }`}

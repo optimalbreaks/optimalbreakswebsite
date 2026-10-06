@@ -15,6 +15,7 @@ import {
   extractBeatportTrackId,
   proxyCatalogArtworkForDisplay,
   trackStoryMeta,
+  SEARCH_NAV_EVENT,
 } from '@/lib/share-track'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import type { BeatportTopTrack, SavedChartTrackSnapshot } from '@/types/database'
@@ -294,109 +295,110 @@ export default function BeatportTopTracks({
   }, [])
 
   // Deep-link: ?play=beatport:<id>
-  // Cuando alguien abre un link compartido de una canción de este Top 10,
-  // expandimos el panel, hacemos scroll a la fila y arrancamos la cola global
-  // desde esa canción. Solo se ejecuta una vez por montaje.
-  const didAutoPlayRef = useRef(false)
+  // Enlace compartido o segundo resultado del buscador en la misma ficha.
+  // El id aplicado se recuerda para no rearmar el modal en cada render; un
+  // id distinto (otra búsqueda) sí lo abre otra vez.
+  const appliedBeatportPlayRef = useRef<string | null>(null)
   useEffect(() => {
-    if (didAutoPlayRef.current) return
-    if (typeof window === 'undefined') return
-    if (!tracks.length && !fallbackTrack) return
-    const params = new URLSearchParams(window.location.search)
-    const parsed = parsePlayParam(params.get('play'))
-    if (!parsed || parsed.kind !== 'beatport') return
-    const target = tracks.find((t) => extractBeatportTrackId(t.beatport_url) === parsed.id)
-    if (!target) {
-      // Rescate «el enlace nunca se queda mudo»: el corte ya no está en el
-      // Top 10 vigente de esta ficha (rota con cada re-scrape), pero el
-      // servidor lo recuperó de charts/NR o del snapshot de un save. Se arma
-      // el mismo modal «Toca para escuchar» con una cola de UN solo tema —
-      // sin fila en la lista, sin scroll — y el tap del receptor reproduce.
-      const fb =
-        fallbackTrack && extractBeatportTrackId(fallbackTrack.beatport_url) === parsed.id
-          ? fallbackTrack
+    let timer = 0
+    const apply = (fromSearch: boolean) => {
+      window.clearTimeout(timer)
+      if (!tracks.length && !fallbackTrack) return
+      const params = new URLSearchParams(window.location.search)
+      const parsed = parsePlayParam(params.get('play'))
+      if (!parsed || parsed.kind !== 'beatport') return
+      if (!fromSearch && appliedBeatportPlayRef.current === parsed.id) return
+      const target = tracks.find((t) => extractBeatportTrackId(t.beatport_url) === parsed.id)
+      if (!target) {
+        const fb =
+          fallbackTrack && extractBeatportTrackId(fallbackTrack.beatport_url) === parsed.id
+            ? fallbackTrack
+            : null
+        if (!fb || !fb.sample_url) return
+        appliedBeatportPlayRef.current = parsed.id
+        const sharePath = pathname ? buildBeatportSharePath(pathname, parsed.id) : null
+        const fbStoryMeta = storyMetaFromTop(fb)
+        const fbRowKey = `bp-fallback-${parsed.id}`
+        const fbQueue: PreviewTrack[] = [{
+          rowKey: fbRowKey,
+          src: proxyUrl(fb.sample_url),
+          title: fb.title,
+          artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
+          artworkUrl: fb.artwork_url || null,
+          ...catalogLockScreenFields(fb.mix_name, fb.label),
+          originPath: pathname || undefined,
+          save: saveDataForTrack(fb, origin, saveRefsByUrl),
+          share: sharePath
+            ? { mode: 'path', path: sharePath, storyMeta: fbStoryMeta }
+            : fb.beatport_url
+              ? { mode: 'url', externalUrl: fb.beatport_url, storyMeta: fbStoryMeta }
+              : undefined,
+        }]
+        setPendingTapPlay({
+          queue: fbQueue,
+          idx: 0,
+          rowKey: fbRowKey,
+          title: fb.title,
+          mixName: fb.mix_name || null,
+          artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
+          artworkUrl: fb.artwork_url || null,
+        })
+        return
+      }
+      const queue = playableTracks.map<PreviewTrack>((t) => {
+        const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
+        const sharePath = bpId && pathname
+          ? buildBeatportSharePath(pathname, bpId)
           : null
-      if (!fb || !fb.sample_url) return
-      didAutoPlayRef.current = true
-      const sharePath = pathname ? buildBeatportSharePath(pathname, parsed.id) : null
-      const fbStoryMeta = storyMetaFromTop(fb)
-      const fbRowKey = `bp-fallback-${parsed.id}`
-      const fbQueue: PreviewTrack[] = [{
-        rowKey: fbRowKey,
-        src: proxyUrl(fb.sample_url),
-        title: fb.title,
-        artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
-        artworkUrl: fb.artwork_url || null,
-        ...catalogLockScreenFields(fb.mix_name, fb.label),
-        originPath: pathname || undefined,
-        save: saveDataForTrack(fb, origin, saveRefsByUrl),
-        share: sharePath
-          ? { mode: 'path', path: sharePath, storyMeta: fbStoryMeta }
-          : fb.beatport_url
-            ? { mode: 'url', externalUrl: fb.beatport_url, storyMeta: fbStoryMeta }
-            : undefined,
-      }]
-      setPendingTapPlay({
-        queue: fbQueue,
-        idx: 0,
-        rowKey: fbRowKey,
-        title: fb.title,
-        mixName: fb.mix_name || null,
-        artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
-        artworkUrl: fb.artwork_url || null,
+        const storyMeta = storyMetaFromTop(t)
+        return {
+          rowKey: `bp-${t.position}`,
+          src: proxyUrl(t.sample_url!),
+          title: t.title,
+          artist: t.artists.map((a) => a.name).join(', '),
+          artworkUrl: t.artwork_url || null,
+          ...catalogLockScreenFields(t.mix_name, t.label),
+          domId: `bp-row-${t.position}`,
+          originPath: pathname || undefined,
+          save: saveDataForTrack(t, origin, saveRefsByUrl),
+          share: sharePath
+            ? { mode: 'path', path: sharePath, storyMeta }
+            : t.beatport_url
+              ? { mode: 'url', externalUrl: t.beatport_url, storyMeta }
+              : undefined,
+        }
       })
-      return
-    }
-    const queue = playableTracks.map<PreviewTrack>((t) => {
-      const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
-      const sharePath = bpId && pathname
-        ? buildBeatportSharePath(pathname, bpId)
-        : null
-      const storyMeta = storyMetaFromTop(t)
-      return {
-        rowKey: `bp-${t.position}`,
-        src: proxyUrl(t.sample_url!),
-        title: t.title,
-        artist: t.artists.map((a) => a.name).join(', '),
-        artworkUrl: t.artwork_url || null,
-        ...catalogLockScreenFields(t.mix_name, t.label),
-        domId: `bp-row-${t.position}`,
-        originPath: pathname || undefined,
-        save: saveDataForTrack(t, origin, saveRefsByUrl),
-        share: sharePath
-          ? { mode: 'path', path: sharePath, storyMeta }
-          : t.beatport_url
-            ? { mode: 'url', externalUrl: t.beatport_url, storyMeta }
-            : undefined,
+      const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
+      appliedBeatportPlayRef.current = parsed.id
+      setExpanded(true)
+      // Enlace compartido y buscador en la misma ficha: modal, sin autoplay.
+      if (idx >= 0 && target.sample_url) {
+        setPendingTapPlay({
+          queue,
+          idx,
+          rowKey: `bp-${target.position}`,
+          title: target.title,
+          mixName: target.mix_name || null,
+          artist: target.artists.map((a) => a.name).filter(Boolean).join(', '),
+          artworkUrl: target.artwork_url || null,
+        })
       }
-    })
-    const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
-    didAutoPlayRef.current = true
-    setExpanded(true)
-    // Regla de producto (sep 2026): el enlace compartido NO hace autoplay.
-    // Se arma el modal «Toca para escuchar» (carátula + título + ▶) y el tap
-    // del receptor reproduce — igual que los links compartidos de /charts.
-    if (idx >= 0 && target.sample_url) {
-      setPendingTapPlay({
-        queue,
-        idx,
-        rowKey: `bp-${target.position}`,
-        title: target.title,
-        mixName: target.mix_name || null,
-        artist: target.artists.map((a) => a.name).filter(Boolean).join(', '),
-        artworkUrl: target.artwork_url || null,
-      })
+      timer = window.setTimeout(() => {
+        const el = document.getElementById(`bp-row-${target.position}`)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.classList.add('ring-4', 'ring-[var(--red)]')
+          window.setTimeout(() => el.classList.remove('ring-4', 'ring-[var(--red)]'), 2200)
+        }
+      }, 120)
     }
-    // Pequeño delay para esperar a que el panel expanda antes de hacer scroll.
-    const t = window.setTimeout(() => {
-      const el = document.getElementById(`bp-row-${target.position}`)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        el.classList.add('ring-4', 'ring-[var(--red)]')
-        window.setTimeout(() => el.classList.remove('ring-4', 'ring-[var(--red)]'), 2200)
-      }
-    }, 120)
-    return () => window.clearTimeout(t)
+    apply(false)
+    const onSearch = () => apply(true)
+    window.addEventListener(SEARCH_NAV_EVENT, onSearch)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener(SEARCH_NAV_EVENT, onSearch)
+    }
   }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl, fallbackTrack])
 
   // Modal del enlace compartido: se renderiza también cuando la ficha no

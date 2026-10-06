@@ -778,7 +778,7 @@ The `href` values returned by the API carry both a **hash** and **`?play=1`** so
 - `/{lang}/charts#chart-vinyl-row-<id>?play=1` — YouTube archive picks (the iframe starts on play).
 - `/{lang}/mixes#mix-<id>?play=1` — `MixesExplorer` (direct MP3/SoundCloud, YouTube via autoplay).
 
-The `useEffect` in `ChartView.tsx` listens for hash + `play`, expands the matching year/week accordion, scrolls, highlights the row and triggers play. When done it strips `?play=1` via `history.replaceState` so a refresh doesn’t fire playback again.
+The `useEffect` in `ChartView.tsx` listens for hash + `play`, expands the matching year/week accordion, scrolls, highlights the row and triggers play. When done it strips `?play=1` via `history.replaceState` so a refresh doesn’t fire playback again. A second hit that stays on the same page (another track, including one in the week already open) does not go through the Next router — that navigation neither remounts the view nor fires `hashchange`. The palette rewrites the URL and emits `SEARCH_NAV_EVENT` (`publishSearchNavigation` in `share-track.ts`). The same signal covers `/mixes` and a second Top 10 track on the artist or label page already open.
 
 ### Per-track sharing (open + tap-to-play on Optimal Breaks)
 

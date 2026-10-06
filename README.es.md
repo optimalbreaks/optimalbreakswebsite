@@ -711,7 +711,7 @@ Los `href` que devuelve la API llevan **hash + `?play=1`** para que la vista des
 - `/{lang}/charts#chart-vinyl-row-<id>?play=1` — Selecciones de archivo por YouTube (el iframe arranca al pulsar play).
 - `/{lang}/mixes#mix-<id>?play=1` — `MixesExplorer` (MP3/SoundCloud directos, YouTube vía autoplay).
 
-El `useEffect` de `ChartView.tsx` escucha el hash y el parámetro `play`, expande el acordeón de año/semana correspondiente, hace scroll, destaca la fila y lanza play. Al terminar, limpia `?play=1` con `history.replaceState` para que un refresh no vuelva a dispararlo.
+El `useEffect` de `ChartView.tsx` escucha el hash y el parámetro `play`, expande el acordeón de año/semana correspondiente, hace scroll, destaca la fila y lanza play. Al terminar, limpia `?play=1` con `history.replaceState` para que un refresh no vuelva a dispararlo. Si el resultado cae en la página que ya está abierta (el segundo tema, también dentro de la misma semana), el palette no depende del router de Next —que no remonta la vista ni dispara `hashchange`—: reescribe la URL y emite `SEARCH_NAV_EVENT` (`publishSearchNavigation` en `share-track.ts`). Lo mismo en `/mixes` y en el Top 10 de una ficha.
 
 ### Ficheros clave
 
