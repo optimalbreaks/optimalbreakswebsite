@@ -222,7 +222,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[210] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[210] flex items-center justify-center p-2 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="charts-promo-title"
@@ -234,11 +234,11 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
         className="absolute inset-0 bg-black/65 backdrop-blur-[2px] cursor-default"
       />
 
-      <div className="relative z-10 w-full max-w-4xl border-[5px] sm:border-[6px] border-[var(--ink)] bg-[var(--paper)] shadow-[10px_10px_0_rgba(0,0,0,0.35)] max-h-[92vh] overflow-y-auto motion-safe:animate-[stamp_0.45s_ease-out]">
-        <div className="danger-bar" />
+      <div className="relative z-10 flex w-full max-w-md flex-col border-[4px] border-[var(--ink)] bg-[var(--paper)] shadow-[8px_8px_0_rgba(0,0,0,0.35)] max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain sm:max-w-lg md:max-w-3xl md:border-[5px] motion-safe:animate-[stamp_0.45s_ease-out]">
+        <div className="danger-bar shrink-0" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="relative bg-[var(--paper-dark)] border-b-[5px] md:border-b-0 md:border-r-[5px] border-[var(--ink)] aspect-[4/5] md:aspect-auto md:min-h-[520px]">
+        <div className="grid grid-cols-1 [@media(min-width:768px)_and_(min-height:640px)]:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+            <div className="relative h-[min(28dvh,200px)] w-full overflow-hidden border-b-[4px] border-[var(--ink)] bg-[var(--paper-dark)] [@media(max-height:520px)]:h-[76px] [@media(min-width:768px)_and_(min-height:640px)]:h-auto [@media(min-width:768px)_and_(min-height:640px)]:min-h-[320px] [@media(min-width:768px)_and_(min-height:640px)]:self-stretch [@media(min-width:768px)_and_(min-height:640px)]:border-b-0 [@media(min-width:768px)_and_(min-height:640px)]:border-r-[4px]">
             <Image
               src={
                 lang === 'en'
@@ -247,16 +247,16 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               }
               alt={dict.image_alt}
               fill
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover md:object-contain"
+              sizes="(min-width: 768px) 340px, 100vw"
+              className="object-cover object-[center_30%] [@media(min-width:768px)_and_(min-height:640px)]:object-contain [@media(min-width:768px)_and_(min-height:640px)]:object-center"
             />
             <div
-              className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-[var(--yellow)] border-[3px] border-[var(--ink)] px-3 py-1 rotate-[-6deg] shadow-[3px_3px_0_var(--ink)]"
+              className="absolute top-2 right-2 [@media(min-width:768px)_and_(min-height:640px)]:bottom-3 [@media(min-width:768px)_and_(min-height:640px)]:top-auto bg-[var(--yellow)] border-[3px] border-[var(--ink)] px-2 py-0.5 rotate-[-6deg] shadow-[3px_3px_0_var(--ink)]"
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: '11px',
+                fontSize: '10px',
                 fontWeight: 700,
-                letterSpacing: '2px',
+                letterSpacing: '1px',
                 textTransform: 'uppercase',
               }}
             >
@@ -264,7 +264,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
             </div>
           </div>
 
-          <div className="p-5 sm:p-7 flex flex-col gap-4 relative">
+          <div className="p-4 [@media(max-height:520px)]:p-3 [@media(min-width:768px)_and_(min-height:640px)]:p-6 flex flex-col gap-2 [@media(min-width:768px)_and_(min-height:640px)]:gap-3 relative">
             <button
               ref={closeBtnRef}
               type="button"
@@ -290,10 +290,9 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
 
             <h2
               id="charts-promo-title"
-              className="font-black uppercase leading-[0.95] tracking-tight"
+              className="font-black uppercase leading-[0.95] tracking-tight text-[22px] [@media(min-width:768px)_and_(min-height:640px)]:text-[32px]"
               style={{
                 fontFamily: "'Unbounded', sans-serif",
-                fontSize: 'clamp(26px, 5.2vw, 40px)',
                 letterSpacing: '-0.02em',
               }}
             >
@@ -301,7 +300,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
             </h2>
 
             <p
-              className="text-[13px] sm:text-[14px] leading-relaxed text-[var(--text-muted)]"
+              className="text-[13px] sm:text-[14px] leading-relaxed text-[var(--text-muted)] [@media(max-height:520px)]:hidden"
               style={{ fontFamily: "'Courier Prime', monospace" }}
             >
               {dict.subtitle}
@@ -326,14 +325,14 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               ))}
             </ul>
 
-            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+            <div className="flex flex-row gap-2 mt-1">
               <Link
                 href={`/${lang}/charts`}
                 onClick={close}
-                className="flex-1 text-center px-5 py-3 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white shadow-[4px_4px_0_var(--ink)] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--ink)] transition-transform"
+                className="flex-1 text-center px-3 py-2.5 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white shadow-[4px_4px_0_var(--ink)] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--ink)] transition-transform"
                 style={{
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: 700,
                   letterSpacing: '2px',
                   textTransform: 'uppercase',
@@ -344,7 +343,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
               <button
                 type="button"
                 onClick={close}
-                className="flex-1 px-5 py-3 border-[3px] border-[var(--ink)] bg-transparent hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors"
+                className="flex-1 px-3 py-2.5 border-[3px] border-[var(--ink)] bg-transparent hover:bg-[var(--ink)] hover:text-[var(--paper)] transition-colors"
                 style={{
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: '12px',
@@ -359,7 +358,7 @@ export default function ChartsPromoModal({ lang, dict }: Props) {
           </div>
         </div>
 
-        <div className="danger-bar" />
+        <div className="danger-bar shrink-0" />
       </div>
     </div>
   )
