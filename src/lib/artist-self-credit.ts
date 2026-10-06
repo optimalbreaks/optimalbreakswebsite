@@ -1,14 +1,15 @@
-// Exclusión de auto-voto: Top de artistas + Almas Gemelas.
+// Exclusión de auto-voto: Top de artistas, Top 100 de canciones y Almas Gemelas.
 // Fase 2: fichaje editorial (`editorial_artist_marks`) o claim aprobado
-// (`artists.claimed_by`). El save sigue en Mis Tracks y en el Top 100 de
-// canciones. En el tablero de artistas no suma a *su* nombre (colabs sí).
+// (`artists.claimed_by`). El save sigue en Mis Tracks. En el Top 100 de
+// canciones ese «+» no cuenta si el tema le acredita (o acredita al familiar).
+// En el tablero de artistas no suma a *su* nombre (colabs sí).
 // En Almas Gemelas ese mismo tema no entra en el set Jaccard del fichado.
 // Fase 3 (bookings) no vive aquí: solo `claimed_by` + `accepts_bookings`.
 //
 // Familiar (`editorial_family_marks`): la cuenta no es el artista. El editor
 // la ficha contra el nombre de crédito de un fichado o reclamado. Esos «+»
-// no suman a ESE nombre en el tablero (mismo skip que el auto-voto). Colabs
-// de otros nombres sí. Mis Tracks y el Top de canciones no cambian.
+// no suman a ESE nombre en el tablero ni suben esa canción en el Top 100.
+// Colabs de otros nombres sí en el tablero. Mis Tracks no cambia.
 //
 // Sello editorial (`editorial_label_marks`): independiente del nombre propio.
 // Si el editor marca cuenta + sello, un save cuyo `label` coincide no acredita

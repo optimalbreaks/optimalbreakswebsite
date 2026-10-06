@@ -22,11 +22,12 @@
 //     de fin de semana mantiene su ▲/▼ toda la semana siguiente —,
 //     weeks_in_top10 (semanas seguidas en este tablero),
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
-//     Un save de un usuario fichado editorialmente, con claim aprobado o
-//     marcado como familiar de ese nombre no acredita ESE nombre (sí el de
-//     colaboradores; el Top 100 de temas no se toca). Si además hay
-//     `editorial_label_marks`, un save de ese sello no acredita a nadie en
-//     el tablero. Ver `artist-self-credit.ts`.
+//     Un save de un usuario fichado, con claim aprobado o marcado como
+//     familiar no acredita ESE nombre en el tablero (sí el de colaboradores)
+//     y tampoco sube el Top 100 de temas. Sus «+» en temas de otros artistas
+//     sí cuentan. Si además hay `editorial_label_marks`, un save de ese
+//     sello no acredita a nadie en el tablero de artistas; el Top de temas
+//     no lo quita. Ver `artist-self-credit.ts`.
 //   - top_countries: podio (3) de países por nacionalidad de TODOS los
 //     artistas con créditos de save — artistas con ≥1 save y suma de saves.
 //
@@ -51,6 +52,7 @@ import {
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { countryIsoCodesFromCode } from '@/lib/seo'
 import {
+  isArtistSelfCreditSave,
   loadLabelCreditSkipMap,
   loadSelfCreditSkipMap,
   shouldSkipArtistSelfCredit,
@@ -766,8 +768,18 @@ export async function GET(request: NextRequest) {
     if (!meta) continue
     const key = meta.canonical_key
     const created = s.created_at || null
-    const existing = aggByKey.get(key)
-    if (!existing) {
+    // Fichado, claim o familiar: ese «+» no sube la canción. El crédito de
+    // los demás nombres del tema sigue en el tablero de artistas (más abajo).
+    const countOnSongChart = !isArtistSelfCreditSave(
+      selfCreditSkip,
+      s.user_id,
+      meta.artists,
+      meta.mix_name,
+    )
+    const existing = countOnSongChart ? aggByKey.get(key) : undefined
+    if (!countOnSongChart) {
+      // El save no entra en el Top de temas. El bucle de artistas sigue.
+    } else if (!existing) {
       aggByKey.set(key, {
         canonical_key: key,
         title: meta.title,

@@ -23,7 +23,7 @@ Prohibido igualar el KPI al `count(*)`, crear una tabla de votos, o una página 
 
 ## Dos universos
 
-Igual que el Top 100 (`top100-auto-voto-artistas`):
+Igual que el Top 100 en artistas, sellos, países y Revelación (`top100-auto-voto-artistas`). El Top **público** de canciones, desde el 6 oct 2026, no cuenta el «+» del fichado, el claim ni el familiar. Este corte de premios **sí** lo cuenta en temas.
 
 - **Temas** (tema del año, remix, tema español, tema inglés, tema estadounidense, tema del resto del mundo, tema más votado del año): el auto-voto cuenta. Una marca de sello no quita la canción.
 - **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores (DistroKid, TuneCore, CD Baby, Amuse, RouteNote, UnitedMasters, Artistfy, Create Music Group) no compiten como sello.

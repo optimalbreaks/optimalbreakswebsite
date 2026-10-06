@@ -281,16 +281,16 @@ export default function AdminUsersPage() {
         encabezado de una columna para ordenar (el segundo clic invierte el
         sentido).{' '}
         <strong>Artista</strong> = <em>Marcado</em> (fichaje editorial) o <em>Reclamado</em> (claim
-        aprobado). En ambos casos sus «+» en temas donde sale <em>él</em> no suman al Top de
-        artistas; esos mismos saves <strong>sí cuentan</strong> en el Top 100 de canciones y en Mis
-        Tracks, y los créditos de colaboradores u otros artistas también. Editar la fila para
-        marcar o quitar.{' '}
+        aprobado). Un «+» en un tema donde sale <em>él</em> no sube esa canción ni suma a su
+        nombre en el Top de artistas; sigue en Mis Tracks. Los otros nombres del tema sí
+        cobran en el tablero. Un «+» en un tema de otra gente sí sube esa canción. Editar la
+        fila para marcar o quitar.{' '}
         <strong>Sello</strong> = fichaje de conducta sobre un catálogo (dueño, roster o dumping
         errático): esos «+» en temas de ese sello no suman a <em>nadie</em> en el Top de artistas.
         El Top 100 de canciones y Mis Tracks no cambian.{' '}
         <strong>Familiar</strong> = cuenta del círculo de un artista ya fichado o reclamado
-        (primo, pareja). Sus «+» no suman a <em>ese</em> nombre en el Top de artistas; los
-        créditos de otros en el mismo tema sí. El Top 100 de canciones y Mis Tracks no cambian.{' '}
+        (primo, pareja). Sus «+» no suman a <em>ese</em> nombre en el Top de artistas ni suben
+        esa canción en el Top 100; los créditos de otros en el mismo tema sí. Mis Tracks no cambia.{' '}
         <strong>Última actividad</strong> = la fecha más reciente entre inicio de sesión, edición de
         perfil y acciones en el sitio (favoritos, tracks guardados, mixes, valoraciones, etc.).
       </p>

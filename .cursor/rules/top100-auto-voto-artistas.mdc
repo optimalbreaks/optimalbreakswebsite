@@ -8,9 +8,9 @@ alwaysApply: true
 ## Tres niveles (no negociable)
 
 1. **Usuario normal** — sus «+» cuentan en Mis Tracks, Top 100 de **canciones** y Top de **artistas**.
-2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **Sí cuentan** para ordenar el Top 100 de **canciones**. **No** suman crédito a *su* nombre en el Top de **artistas**. En **Almas Gemelas**, un tema donde él está acreditado **no** entra en *su* set Jaccard (el resto de su lista sí). En un colab o en temas de otros, **el resto de créditos sí cuentan enteros** en el tablero (incluido el **remixer**). **No** escribe `claimed_by` ni abre bookings.
+2. **Marcado editorial** (`editorial_artist_marks`) — el editor ficha la cuenta. Esos «+» **siguen** en Mis Tracks. **No** cuentan en el Top 100 de **canciones** cuando el tema le acredita. **No** suman crédito a *su* nombre en el Top de **artistas**. En **Almas Gemelas**, un tema donde él está acreditado **no** entra en *su* set Jaccard (el resto de su lista sí). En un colab o en temas de otros, **el resto de créditos sí cuentan enteros** en el tablero (incluido el **remixer**). **No** escribe `claimed_by` ni abre bookings.
 3. **Claim aprobado** (`artists.claimed_by`) — misma exclusión que el 2 **y** puede recibir bookings si enciende `accepts_bookings` (nace en `false`).
-4. **Familiar** (`editorial_family_marks`) — la cuenta no es el artista. El editor la ficha contra el nombre de crédito de un fichado o reclamado (primo, pareja). Esos «+» no suman a *ese* nombre en el Top de artistas. Colabs de otros nombres sí. Mis Tracks y el Top de canciones no cambian. No escribe `claimed_by` ni abre bookings. La columna Artista sigue en «—»; la columna Familiar pasa a **Marcado**.
+4. **Familiar** (`editorial_family_marks`) — la cuenta no es el artista. El editor la ficha contra el nombre de crédito de un fichado o reclamado (primo, pareja). Esos «+» no suman a *ese* nombre en el Top de artistas **ni** suben esa canción en el Top 100. Colabs de otros nombres sí en el tablero. Mis Tracks no cambia. No escribe `claimed_by` ni abre bookings. La columna Artista sigue en «—»; la columna Familiar pasa a **Marcado**.
 
 Marcar primero y reclamar después = ya tenía 2, se añade 3. Reclamar sin marca previa = 2+3 al aprobar. Revocar el claim quita bookings/`claimed_by`; **no** borra un fichaje editorial.
 
@@ -22,7 +22,7 @@ El tablero de artistas se ordena por **canciones guardadas** (créditos), no por
 - Usar `claimed_by` solo para «arreglar el Top» (eso es verificación + RLS de bookings).
 - Poner `is_tracks_public = false` o borrar saves como parche de auto-voto.
 - Auto-activar `accepts_bookings` al aprobar un claim.
-- Aplicar el skip al agregado de **temas** del Top 100 (solo al bump de artistas en `community-monthly`, y al set Jaccard del fichado en `soulmates` — no al recuento de canciones). El skip de sello tampoco toca el Top de canciones.
+- Aplicar el skip de **sello** al Top de canciones (solo al bump de artistas). El skip de artista, claim y familiar **sí** quita ese «+» del Top de canciones (6 oct 2026): el tema no sube con el voto del fichado. Un «+» suyo en un tema de **otro** nombre sigue contando.
 - Cambiar el sort del tablero a unique fans o poner un tope de 1 crédito por `(usuario, artista)`.
 - Anular *todos* los votos de un fichado hacia otros nombres (colabs en **otros** sellos / remixers fuera del sello marcado). El skip de sello es **solo** el catálogo fichado.
 
@@ -32,7 +32,7 @@ Panel: `/administrator/users/[id]` → «Marcar artista (fase 2)» con el **nomb
 
 Sello: misma ficha → «Marcar sello» con el **nombre tal como sale en el track** (p. ej. `DIRTY KITCHEN RAVE`). No hace falta que sea el dueño: vale un artista del roster o una cuenta con dumping errático. Independiente del fichaje de artista.
 
-Trampas de email (agosto 2026): `afghanheadspin@gmail.com` (no `afgan…`); `gruv42@me.com` (no `gruv42ruv42@…`); `aranniadj@gmail.com` (no `ranniadj@…`). Devis Hard = `davisoto@hotmail.com`. Maxuka = `jsrcortegana@hotmail.com`. D-Fast Beats = `dfastbeats@gmail.com` (sep 2026). Kritycal System = `kritycalsystem@gmail.com` (sep 2026). Kaos Beat = `kaosbeatproducer2@gmail.com` (sep 2026). Ro73 = `djro73@gmail.com` (sep 2026). Tabla viva + IDs: `docs/USER_ENGAGEMENT.md` (*Editorial marks in production*).
+Trampas de email (agosto 2026): `afghanheadspin@gmail.com` (no `afgan…`); `gruv42@me.com` (no `gruv42ruv42@…`); `aranniadj@gmail.com` (no `ranniadj@…`). Devis Hard = `davisoto@hotmail.com`. Maxuka = `jsrcortegana@hotmail.com`. D-Fast Beats = `dfastbeats@gmail.com` (sep 2026). Kritycal System = `kritycalsystem@gmail.com` (sep 2026). Kaos Beat = `kaosbeatproducer2@gmail.com` (sep 2026). Ro73 = `djro73@gmail.com` (sep 2026). Ruler = `djruler@gmail.com` (oct 2026). The Legends = `filisoporte@gmail.com` (oct 2026; `display_name` sergio, no inferir). Tabla viva + IDs: `docs/USER_ENGAGEMENT.md` (*Editorial marks in production*).
 
 ## Cómo leer el tablero después del fichaje
 
@@ -46,7 +46,7 @@ Quién los sostiene **después** de las dos marcas (26 ago): no hay un cuarto fa
 
 ## Dónde vive
 
-- Skip artista y familiar: `src/lib/artist-self-credit.ts` → tablero en `community-monthly/route.ts` **y** set del fichado (o del familiar) en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El Top de canciones no cambia.
+- Skip artista, claim y familiar: `src/lib/artist-self-credit.ts` → tablero **y** Top de canciones en `community-monthly/route.ts`, y set del fichado (o del familiar) en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El «+» no sube la canción si el crédito fichado está en el tema; un tema de otro nombre sí. Mis Tracks no cambia.
 - Awards admin (`src/lib/awards-board.ts`): los mismos skips en artistas, sellos, países y Revelación. El recuento de **temas** del corte sí incluye el auto-voto. El KPI «Votos» es el corte abierto (por defecto año en curso + lanzamiento + listas públicas), no el `count(*)` de la tarjeta Saved Tracks. Spec: `docs/USER_ENGAGEMENT.md` (*Admin Awards*).
 - Skip sello: misma lib (`loadLabelCreditSkipMap` / `shouldSkipLabelSave`) → **solo** el bump de artistas en `community-monthly` (no Soulmates, no Top de canciones).
 - Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)», «Marcar sello» y «Marcar familiar».

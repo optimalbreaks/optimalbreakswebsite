@@ -17,8 +17,8 @@
 //   - Se exigen mínimos: self_count >= MIN_SELF, other_count >= MIN_OTHER,
 //     common >= MIN_COMMON.
 //   - Auto-voto (fichaje / claim): un tema donde el usuario está acreditado
-//     no entra en SU set Jaccard (misma identidad que el Top de artistas).
-//     Mis Tracks y el Top 100 de canciones no se tocan. El resto de sus
+//     no entra en SU set Jaccard (la misma identidad que el Top de artistas
+//     y el Top 100 de canciones). Mis Tracks no se toca. El resto de sus
 //     «+» (otros artistas) sí cuentan.
 //
 // Además devuelve `recommended_tracks`: temas que las almas gemelas tienen

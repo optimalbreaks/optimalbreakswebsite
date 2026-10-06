@@ -279,9 +279,9 @@ export default function AdminUserDetailPage() {
           </div>
           <p className="admin-muted text-xs !mb-0">
             {artistLevel === 'claimed'
-              ? 'Fase 3 — reclamó su ficha. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas; sí cuentan en el Top 100 de canciones y en Mis Tracks. Puede abrir bookings.'
+              ? 'Fase 3 — reclamó su ficha. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas ni suben esa canción en el Top 100; siguen en Mis Tracks. Puede abrir bookings.'
               : artistLevel === 'marked'
-                ? 'Fase 2 — fichaje editorial. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas; sí cuentan en el Top 100 de canciones y en Mis Tracks. Bookings solo si él reclama.'
+                ? 'Fase 2 — fichaje editorial. Sus «+» en temas donde sale él no suman a su nombre en el Top de artistas ni suben esa canción en el Top 100; siguen en Mis Tracks. Bookings solo si él reclama.'
                 : 'Fase 1 — usuario normal. Sus saves cuentan en el Top de artistas y en el Top 100 de canciones.'}
           </p>
           {claimedArtists.length > 0 ? (
@@ -382,8 +382,8 @@ export default function AdminUserDetailPage() {
           </div>
           <p className="admin-muted text-xs !mb-0">
             Cuenta del círculo de un artista ya fichado o reclamado (primo, pareja). No es él.
-            Sus «+» no suman a ese nombre en el Top de artistas; los créditos de otros en el
-            mismo tema sí. Siguen en Mis Tracks y en el Top 100 de canciones. No abre bookings.
+            Sus «+» no suman a ese nombre en el Top de artistas ni suben esa canción en el Top 100;
+            los créditos de otros en el mismo tema sí. Siguen en Mis Tracks. No abre bookings.
           </p>
           {familyMarks.length > 0 ? (
             <ul className="m-0 p-0 list-none space-y-2">
