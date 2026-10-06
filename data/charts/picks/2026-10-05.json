@@ -355,6 +355,50 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 16
+    },
+    {
+      "title": "Bonecrusher",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bonecrusher/30612152",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1e7c8803-ad03-4437-94ac-d0472da87062.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/41703271-c6ef-47c0-9062-3ab6e90e61d3.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-10-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Identity",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "KMK"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/identity/30312049",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/690e7314-8967-4ada-93d2-216106aed2ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/57175941-c133-41f8-aaa3-c9476d28b6d6.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
     }
   ]
 }
