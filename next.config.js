@@ -1,10 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Chromium del pase diario de Beatport: el binario no va dentro del bundle.
+  serverExternalPackages: ['playwright-core', '@sparticuz/chromium'],
   // Audio completo alojado (exclusivas): los MP3 viven fuera de public/ y los
   // sirve /api/audio/[file] con URL firmada + Referer. Hay que incluirlos en el
   // trace de esa lambda o en Vercel el fs.stat devuelve ENOENT.
+  // El Chromium de @sparticuz se lee por fs; si no se traza, el cron no arranca.
   outputFileTracingIncludes: {
     '/api/audio/*': ['./private/music/*.mp3'],
+    '/api/cron/beatport-releases': ['./node_modules/@sparticuz/chromium/**/*'],
+    '/api/admin/imports': ['./node_modules/@sparticuz/chromium/**/*'],
   },
 
   images: {

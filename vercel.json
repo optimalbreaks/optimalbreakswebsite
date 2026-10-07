@@ -1,0 +1,22 @@
+{
+  "functions": {
+    "src/app/api/cron/beatport-releases/route.ts": {
+      "memory": 2048,
+      "maxDuration": 300
+    },
+    "src/app/api/admin/imports/route.ts": {
+      "memory": 2048,
+      "maxDuration": 300
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/beatport-releases",
+      "schedule": "1 10 * * *"
+    },
+    {
+      "path": "/api/cron/beatport-releases",
+      "schedule": "1 11 * * *"
+    }
+  ]
+}

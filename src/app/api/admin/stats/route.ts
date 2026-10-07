@@ -21,6 +21,11 @@ export async function GET(request: NextRequest) {
       .from('chart_featured_tracks')
       .select('*', { count: 'exact', head: true })
       .then(({ count }) => ['new_releases', count ?? 0] as const),
+    sb
+      .from('chart_import_queue')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .then(({ count }) => ['import_pending', count ?? 0] as const),
   ])
 
   const stats = Object.fromEntries(counts)

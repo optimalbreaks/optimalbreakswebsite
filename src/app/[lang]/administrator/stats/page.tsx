@@ -299,7 +299,7 @@ function SavedTracksPanel({ payload, tracksHref }: { payload: SavedPayload; trac
         className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[2px] text-[var(--ink)] hover:text-[var(--red)] no-underline"
         style={mono}
       >
-        Listado completo, búsqueda e importar New Releases →
+        Listado completo y búsqueda →
       </Link>
     </>
   )

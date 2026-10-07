@@ -68,6 +68,44 @@ export type ChartFeaturedTrack = {
   note_es: string
 }
 
+/** Cola admin: tema de Beatport aún no publicado ni descartado. */
+export type ChartImportStatus = 'pending' | 'approved' | 'discarded'
+export type ChartImportVia = 'auto_top100' | 'admin'
+
+export type ChartImportQueueRow = {
+  id: string
+  beatport_track_id: string
+  link_url: string
+  title: string
+  mix_name: string
+  artists: ChartFeaturedArtist[]
+  label: string
+  artwork_url: string | null
+  sample_url: string | null
+  bpm: number | null
+  music_key: string
+  release_date: string | null
+  release_year: number | null
+  status: ChartImportStatus
+  via: ChartImportVia | null
+  decided_at: string | null
+  decided_by: string | null
+  created_at: string
+}
+
+export type ChartImportRunRow = {
+  id: string
+  started_at: string
+  finished_at: string | null
+  trigger: string
+  ok: boolean
+  seen: number
+  queued: number
+  auto_approved: number
+  skipped_known: number
+  error: string | null
+}
+
 /** Columna en BD: `music_key` (antes `key`; la palabra `key` rompía los genéricos de @supabase/supabase-js). */
 export type ChartTrack = {
   id: string
@@ -316,6 +354,18 @@ export interface Database {
         Row: ChartFeaturedTrack
         Insert: Omit<ChartFeaturedTrack, 'id'>
         Update: Partial<Omit<ChartFeaturedTrack, 'id'>>
+        Relationships: DbRelationship[]
+      }
+      chart_import_queue: {
+        Row: ChartImportQueueRow
+        Insert: Omit<ChartImportQueueRow, 'id' | 'created_at'> & { id?: string; created_at?: string }
+        Update: Partial<Omit<ChartImportQueueRow, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
+      chart_import_runs: {
+        Row: ChartImportRunRow
+        Insert: Pick<ChartImportRunRow, 'trigger'> & Partial<Omit<ChartImportRunRow, 'id' | 'trigger'>>
+        Update: Partial<Omit<ChartImportRunRow, 'id'>>
         Relationships: DbRelationship[]
       }
       chart_vinyl_tracks: {

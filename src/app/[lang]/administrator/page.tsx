@@ -16,6 +16,7 @@ interface Stats {
   saved_tracks: number
   /** Filas en `chart_featured_tracks` (New Releases de /charts). */
   new_releases: number
+  import_pending: number
 }
 
 const CARDS = [
@@ -25,7 +26,8 @@ const CARDS = [
   { key: 'blog_posts', label: 'Blog', icon: '✎', href: '/blog', accent: 'var(--acid)' },
   { key: 'scenes', label: 'Escenas', icon: '☰', href: '/scenes', accent: 'var(--cyan)' },
   { key: 'mixes', label: 'Mixes', icon: '▶', href: '/mixes', accent: 'var(--pink)' },
-  { key: 'new_releases', label: 'New Releases', icon: '✚', href: '/tracks', accent: 'var(--cyan)' },
+  { key: 'new_releases', label: 'New Releases', icon: '✚', href: '/imports', accent: 'var(--cyan)' },
+  { key: 'import_pending', label: 'Por aprobar', icon: '👂', href: '/imports', accent: 'var(--yellow)' },
   { key: 'saved_tracks', label: 'Saved Tracks', icon: '♪', href: '/tracks', accent: 'var(--red)' },
   { key: 'history_entries', label: 'Historia', icon: '↻', href: '/history', accent: 'var(--yellow)' },
   { key: 'users', label: 'Usuarios', icon: '☻', href: '/users', accent: 'var(--paper-dark)' },
