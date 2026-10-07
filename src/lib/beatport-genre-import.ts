@@ -1,7 +1,8 @@
 /**
- * Pase diario: temas nuevos del género Breaks en Beatport.
- * Desde el 8 oct 2026. Top 100 del tablero → chart_featured_tracks.
- * El resto queda en chart_import_queue (pending) para el admin.
+ * Pase diario, desde el 8 oct 2026.
+ * 1. Fichas del Top 100 en Beatport, cualquier género → se publican.
+ * 2. Listado de Breaks → lo que no esté ya, a la cola (o publicado si es del Top 100).
+ * Un id de Beatport que ya está en el catálogo o en la cola no se vuelve a meter.
  */
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
 import { splitArtistCreditsForRanking } from '@/lib/artist-self-credit'
@@ -18,6 +19,7 @@ import { loadTopArtistKeys } from '@/lib/community-top-artists'
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
+import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import type { ChartFeaturedArtist, ChartImportVia } from '@/types/database'
 
 /** Primer día que entra en la cola. Hasta el 7 oct 2026 el catálogo ya está al día. */
@@ -27,6 +29,8 @@ const GENRE_TRACKS =
   'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/tracks'
 const PER_PAGE = 150
 const MAX_PAGES = 6
+/** Página de Beatport de otra persona. No bajar su catálogo. */
+const SKIP_BEATPORT_IDS = new Set(['186585'])
 
 export type GenreImportResult = {
   ok: boolean
@@ -72,7 +76,16 @@ function genreTracksUrl(page: number): string {
   return `${GENRE_TRACKS}?${q.toString()}`
 }
 
-function tracksFromNext(nd: unknown, pageUrl: string): { count: number; tracks: BeatportPickInput[] } {
+function artistTracksUrl(slug: string, id: string, fromDate: string, page: number): string {
+  const q = new URLSearchParams({
+    page: String(page),
+    per_page: String(PER_PAGE),
+    publish_date: `${fromDate}:`,
+  })
+  return `https://www.beatport.com/artist/${slug}/${id}/tracks?${q.toString()}`
+}
+
+function tracksFromNext(nd: unknown, pageUrl: string, fromDate: string): { count: number; tracks: BeatportPickInput[] } {
   const queries =
     (nd as { props?: { pageProps?: { dehydratedState?: { queries?: { queryKey?: unknown[]; state?: { data?: { count?: number; results?: Record<string, unknown>[] } } }[] } } } })
       ?.props?.pageProps?.dehydratedState?.queries || []
@@ -90,13 +103,13 @@ function tracksFromNext(nd: unknown, pageUrl: string): { count: number; tracks: 
       release: { ...release, ...(label ? { label } : {}) },
     }
     const pick = pickFromTrackBlob(normalized)
-    if (pick?.title && pick.release_date && pick.release_date >= BEATPORT_IMPORT_FROM) tracks.push(pick)
+    if (pick?.title && pick.release_date && pick.release_date >= fromDate) tracks.push(pick)
   }
   if (!tracks.length) {
     const parsed = findAllTracksFromNextData(
       nd as Parameters<typeof findAllTracksFromNextData>[0],
       pageUrl,
-    ).filter((p) => p.release_date && p.release_date >= BEATPORT_IMPORT_FROM)
+    ).filter((p) => p.release_date && p.release_date >= fromDate)
     return { count: Number(data?.count) || parsed.length, tracks: parsed }
   }
   return { count: Number(data?.count) || tracks.length, tracks }
@@ -108,14 +121,14 @@ async function readGenrePageFetch(url: string): Promise<{ count: number; tracks:
     if (!html.includes('__NEXT_DATA__')) return null
     const nd = extractNextData(html)
     if (!nd) return null
-    return tracksFromNext(nd, url)
+    return tracksFromNext(nd, url, BEATPORT_IMPORT_FROM)
   } catch {
     return null
   }
 }
 
 async function openBrowserReader(): Promise<{
-  read: (url: string) => Promise<{ count: number; tracks: BeatportPickInput[] }>
+  read: (url: string, fromDate: string) => Promise<{ count: number; tracks: BeatportPickInput[] }>
   close: () => Promise<void>
 }> {
   const { chromium } = await import('playwright-core')
@@ -136,7 +149,7 @@ async function openBrowserReader(): Promise<{
         args: ['--disable-blink-features=AutomationControlled', '--disable-dev-shm-usage', '--no-sandbox'],
       })
   return {
-    read: async (url) => {
+    read: async (url, fromDate) => {
       const ctx = await browser.newContext({
         userAgent:
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -158,7 +171,7 @@ async function openBrowserReader(): Promise<{
           return JSON.parse(el.textContent) as unknown
         })
         if (!nd) throw new Error('Beatport no devolvió la lista (challenge o página vacía)')
-        return tracksFromNext(nd, url)
+        return tracksFromNext(nd, url, fromDate)
       } finally {
         await ctx.close()
       }
@@ -331,14 +344,56 @@ async function rememberQueue(
   if (error && !/duplicate|unique/i.test(error.message)) throw new Error(error.message)
 }
 
+/** Fichas de Beatport del Top 100. Un id, una página. Sin DJ Tokyo (id mezclado). */
+async function followedBeatportArtists(
+  sb: ReturnType<typeof createServiceSupabase>,
+  topKeys: Set<string>,
+): Promise<{ slug: string; id: string }[]> {
+  const rows = await fetchAllPagesParallel<{
+    slug: string
+    name: string | null
+    name_display: string | null
+    beatport_id: number | null
+  }>(
+    () => sb.from('artists').select('id', { count: 'exact', head: true }).not('beatport_id', 'is', null),
+    (from, to) =>
+      sb
+        .from('artists')
+        .select('slug, name, name_display, beatport_id')
+        .not('beatport_id', 'is', null)
+        .order('slug', { ascending: true })
+        .range(from, to),
+  )
+  const out = new Map<string, { slug: string; id: string }>()
+  const want = (name: string | null | undefined) => {
+    if (!name) return false
+    const key = normalizeArtistKey(name)
+    if (key && topKeys.has(key)) return true
+    return splitArtistCreditsForRanking(name).some((part) => topKeys.has(normalizeArtistKey(part)))
+  }
+  for (const row of rows) {
+    if (!row.beatport_id || !row.slug) continue
+    const id = String(row.beatport_id)
+    if (SKIP_BEATPORT_IDS.has(id)) continue
+    if (!want(row.name) && !want(row.name_display) && !want(row.slug.replace(/-/g, ' '))) continue
+    out.set(id, { slug: row.slug, id })
+  }
+  if (topKeys.has('vazteria x')) out.set('227121', { slug: 'vazteria-x', id: '227121' })
+  return [...out.values()]
+}
+
 export async function runBeatportGenreImport(opts: {
   trigger: 'cron' | 'manual'
   userId?: string | null
+  /** Fichas del Top 100 desde esta fecha, cualquier género. El cron usa el 8 oct. */
+  artistSince?: string
 }): Promise<GenreImportResult> {
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
+  const doGenre = madridToday() >= BEATPORT_IMPORT_FROM
+  const artistFrom = opts.artistSince || (doGenre ? BEATPORT_IMPORT_FROM : '')
 
-  if (madridToday() < BEATPORT_IMPORT_FROM) {
+  if (!doGenre && !artistFrom) {
     return { ok: true, skipped: 'before-start', ...empty }
   }
 
@@ -367,32 +422,59 @@ export async function runBeatportGenreImport(opts: {
   try {
     const known = await loadKnownIds(sb)
     const fresh: BeatportPickInput[] = []
-    let total = Infinity
+    const fromArtist = new Set<string>()
+    const take = (pick: BeatportPickInput, auto: boolean) => {
+      const id = beatportIdFromLink(pick.link_url)
+      if (!id) return
+      if (known.has(id)) {
+        result.skipped_known += 1
+        return
+      }
+      known.add(id)
+      fresh.push(pick)
+      if (auto) fromArtist.add(id)
+    }
     let browser: Awaited<ReturnType<typeof openBrowserReader>> | null = null
     try {
-      for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
-        const url = genreTracksUrl(page)
-        let payload = await readGenrePageFetch(url)
-        if (!payload) {
-          if (!browser) browser = await openBrowserReader()
-          payload = await browser.read(url)
-        }
-        total = payload.count
-        result.seen += payload.tracks.length
-        let pageFresh = 0
-        for (const pick of payload.tracks) {
-          const id = beatportIdFromLink(pick.link_url)
-          if (!id) continue
-          if (known.has(id)) {
-            result.skipped_known += 1
-            continue
+      if (artistFrom) {
+        const topKeys = await loadTopArtistKeys(sb, 100)
+        const followed = await followedBeatportArtists(sb, topKeys)
+        for (const artist of followed) {
+          let total = Infinity
+          for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
+            const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
+            if (!browser) browser = await openBrowserReader()
+            let payload: { count: number; tracks: BeatportPickInput[] }
+            try {
+              payload = await browser.read(url, artistFrom)
+            } catch {
+              break
+            }
+            total = payload.count
+            result.seen += payload.tracks.length
+            const before = fresh.length
+            for (const pick of payload.tracks) take(pick, true)
+            if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
+            if (fresh.length === before) break
           }
-          known.add(id)
-          fresh.push(pick)
-          pageFresh += 1
         }
-        if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
-        if (pageFresh === 0) break
+      }
+      if (doGenre) {
+        let total = Infinity
+        for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
+          const url = genreTracksUrl(page)
+          let payload = await readGenrePageFetch(url)
+          if (!payload) {
+            if (!browser) browser = await openBrowserReader()
+            payload = await browser.read(url, BEATPORT_IMPORT_FROM)
+          }
+          total = payload.count
+          result.seen += payload.tracks.length
+          const before = fresh.length
+          for (const pick of payload.tracks) take(pick, false)
+          if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
+          if (fresh.length === before) break
+        }
       }
     } finally {
       await browser?.close()
@@ -402,7 +484,8 @@ export async function runBeatportGenreImport(opts: {
       const topKeys = await loadTopArtistKeys(sb, 100)
       const cache = new Map<string, EditionState>()
       for (const pick of fresh) {
-        if (matchesTop100(pick, topKeys)) {
+        const id = beatportIdFromLink(pick.link_url)
+        if (fromArtist.has(id) || matchesTop100(pick, topKeys)) {
           const pub = await publishFeaturedPick(sb, cache, pick)
           await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId ?? null)
           if (pub === 'inserted') {

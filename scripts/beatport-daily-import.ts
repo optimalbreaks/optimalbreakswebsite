@@ -29,11 +29,16 @@ for (const file of ['.env', '.env.local']) {
 async function main() {
   const { madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
   const force = process.argv.includes('--force')
+  const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
+  const artistSince = sinceArg?.split('=')[1]
   if (!force && madridHour() !== 12) {
     console.log('Fuera de las 12:00–12:59 en Madrid. Usa --force para lanzarlo igual.')
     return
   }
-  const result = await runBeatportGenreImport({ trigger: 'cron' })
+  const result = await runBeatportGenreImport({
+    trigger: force ? 'manual' : 'cron',
+    ...(artistSince ? { artistSince } : {}),
+  })
   console.log(JSON.stringify(result, null, 2))
   if (!result.ok) process.exit(1)
 }
