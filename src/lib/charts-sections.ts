@@ -11,7 +11,7 @@ import {
   featuredArchiveYearKey,
   isArchiveFeaturedTrack,
 } from '@/lib/charts-archive'
-import { vinylRowDisplayScore, vinylTrackDedupKey } from '@/lib/share-track'
+import { madridCalendarDate, vinylRowDisplayScore, vinylTrackDedupKey } from '@/lib/share-track'
 import { SUPABASE_PAGE_SIZE, fetchAllPagesParallel } from '@/lib/supabase-paginate'
 
 // 500 (antes 1000): cada página es una entrada de la Data Cache y Next no
@@ -171,15 +171,21 @@ export async function loadChartsOutline(supabase: Sb): Promise<{
 
   const editions = (editionsRes.data ?? []) as { id: string; week_date: string }[]
   const pickWeeks: ChartPickWeekSummary[] = []
+  // Las ediciones llegan de más nueva a más vieja. Con adelantos, la más nueva
+  // puede ser una semana que aún no ha empezado: ACTUAL es la que contiene hoy.
+  const today = madridCalendarDate()
+  let currentMarked = false
   for (const edition of editions) {
     const count = nrCount.get(edition.id) || 0
     if (count <= 0) continue
+    const isCurrent = !currentMarked && edition.week_date <= today
+    if (isCurrent) currentMarked = true
     pickWeeks.push({
       id: edition.id,
       weekDate: edition.week_date,
       count,
       editionNumber: pickWeeks.length + 1,
-      isLatest: pickWeeks.length === 0,
+      isLatest: isCurrent,
     })
   }
 

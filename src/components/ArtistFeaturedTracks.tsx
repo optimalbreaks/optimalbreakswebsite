@@ -9,7 +9,7 @@ import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
-import { formatTrackReleaseDisplay, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
+import { formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, buildVinylSharePath, vinylArtworkCandidates, vinylArtworkUseNativeImg, effectiveReleaseYear, releaseSortTimestampMs } from '@/lib/share-track'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
 import type { ArtistFeaturedPick } from '@/lib/artist-related-content'
 import type { ChartFeaturedTrack, ChartTrackSource, SavedChartTrackSnapshot } from '@/types/database'
@@ -492,13 +492,28 @@ export default function ArtistFeaturedTracks({
               const artworkSrc = pickArtworkSrc(pick)
               const discogsUrl = (pick.discogs_url || '').trim()
               const rowHighlighted = isActive || showYt
+              const isAdvance = !(pick.full_audio_url ?? null) && isAdvanceRelease(pick.release_date)
 
               return (
                 <div
                   key={`${kind}-${pick.id}`}
                   id={rowId}
-                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isAdvance ? `bg-[#f7e733]/30 ${rowHighlighted ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}` : rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
+                  {isAdvance ? (
+                    <div
+                      className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--yellow)] text-[var(--ink)] px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
+                      style={{ fontFamily: "'Courier Prime', monospace" }}
+                    >
+                      <span className="animate-pulse shrink-0">●</span>
+                      <span className="truncate">
+                        {lang === 'es'
+                          ? `ADELANTO — SALE EL ${formatAdvanceReleaseDay(pick.release_date || '', lang)}`
+                          : `ADVANCE — OUT ON ${formatAdvanceReleaseDay(pick.release_date || '', lang)}`}
+                      </span>
+                      <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">PREVIEW</span>
+                    </div>
+                  ) : null}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <Link

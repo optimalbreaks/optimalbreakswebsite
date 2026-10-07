@@ -67,11 +67,11 @@ function beatportIdFromLink(url: string): string {
   return m ? m[1] : ''
 }
 
-function genreTracksUrl(page: number): string {
+function genreTracksUrl(page: number, fromDate: string): string {
   const q = new URLSearchParams({
     page: String(page),
     per_page: String(PER_PAGE),
-    publish_date: `${BEATPORT_IMPORT_FROM}:`,
+    publish_date: `${fromDate}:`,
   })
   return `${GENRE_TRACKS}?${q.toString()}`
 }
@@ -115,13 +115,13 @@ function tracksFromNext(nd: unknown, pageUrl: string, fromDate: string): { count
   return { count: Number(data?.count) || tracks.length, tracks }
 }
 
-async function readGenrePageFetch(url: string): Promise<{ count: number; tracks: BeatportPickInput[] } | null> {
+async function readGenrePageFetch(url: string, fromDate: string): Promise<{ count: number; tracks: BeatportPickInput[] } | null> {
   try {
     const html = await fetchBeatportPageHtml(url)
     if (!html.includes('__NEXT_DATA__')) return null
     const nd = extractNextData(html)
     if (!nd) return null
-    return tracksFromNext(nd, url, BEATPORT_IMPORT_FROM)
+    return tracksFromNext(nd, url, fromDate)
   } catch {
     return null
   }
@@ -390,7 +390,8 @@ export async function runBeatportGenreImport(opts: {
 }): Promise<GenreImportResult> {
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
-  const doGenre = madridToday() >= BEATPORT_IMPORT_FROM
+  const genreFrom = opts.artistSince || BEATPORT_IMPORT_FROM
+  const doGenre = Boolean(opts.artistSince) || madridToday() >= BEATPORT_IMPORT_FROM
   const artistFrom = opts.artistSince || (doGenre ? BEATPORT_IMPORT_FROM : '')
 
   if (!doGenre && !artistFrom) {
@@ -439,6 +440,7 @@ export async function runBeatportGenreImport(opts: {
       if (artistFrom) {
         const topKeys = await loadTopArtistKeys(sb, 100)
         const followed = await followedBeatportArtists(sb, topKeys)
+        console.log(`Top 100 con ficha Beatport: ${followed.length}`)
         for (const artist of followed) {
           let total = Infinity
           for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
@@ -460,13 +462,14 @@ export async function runBeatportGenreImport(opts: {
         }
       }
       if (doGenre) {
+        console.log('Listado de Breaks')
         let total = Infinity
         for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
-          const url = genreTracksUrl(page)
-          let payload = await readGenrePageFetch(url)
+          const url = genreTracksUrl(page, genreFrom)
+          let payload = await readGenrePageFetch(url, genreFrom)
           if (!payload) {
             if (!browser) browser = await openBrowserReader()
-            payload = await browser.read(url, BEATPORT_IMPORT_FROM)
+            payload = await browser.read(url, genreFrom)
           }
           total = payload.count
           result.seen += payload.tracks.length
@@ -517,7 +520,20 @@ export async function runBeatportGenreImport(opts: {
     })
     .eq('id', run.id)
 
-  if (published > 0) revalidatePublicCharts()
+  if (published > 0) {
+    try {
+      revalidatePublicCharts()
+    } catch {
+      const secret = (process.env.REVALIDATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+      if (secret) {
+        await fetch('https://www.optimalbreaks.com/api/revalidate', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ secret, catalog: true }),
+        }).catch(() => undefined)
+      }
+    }
+  }
   return result
 }
 

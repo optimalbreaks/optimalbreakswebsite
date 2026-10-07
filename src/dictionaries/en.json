@@ -515,6 +515,7 @@
     "key_label": "KEY",
     "release_year_title": "Release year on Beatport (store release date, not necessarily studio production year)",
     "week_current_badge": "CURRENT",
+    "week_advance_badge": "ADVANCE",
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} tracks",
     "week_toggle_show": "Expand this week’s chart",

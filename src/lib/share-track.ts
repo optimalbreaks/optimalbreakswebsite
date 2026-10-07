@@ -447,6 +447,37 @@ export function vinylOgArtworkUrl(
   return publicOgArtworkUrl(youtubeThumbnailFromUrl(youtubeUrl))
 }
 
+/** Hoy en el calendario de Madrid, `YYYY-MM-DD`. */
+export function madridCalendarDate(now = new Date()): string {
+  return now.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+}
+
+/**
+ * El tema ya está en la lista pero Beatport aún no lo ha publicado.
+ * Se deriva de la fecha: el día del release el destaque desaparece solo.
+ */
+export function isAdvanceRelease(
+  releaseDate: string | null | undefined,
+  today = madridCalendarDate(),
+): boolean {
+  const d = (releaseDate || '').trim().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false
+  return d > today
+}
+
+/** Día del adelanto para el banner, p. ej. «12 oct 2026». */
+export function formatAdvanceReleaseDay(releaseDate: string, lang: 'en' | 'es'): string {
+  const d = releaseDate.trim().slice(0, 10)
+  const [y, m, day] = d.split('-').map((n) => parseInt(n, 10))
+  if (!y || !m || !day) return d
+  return new Intl.DateTimeFormat(lang === 'es' ? 'es-ES' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(y, m - 1, day)))
+}
+
 /** Preferencia: fecha completa YYYY-MM-DD; si no, año solo como string. */
 export function formatTrackReleaseDisplay(
   releaseDate: string | null | undefined,

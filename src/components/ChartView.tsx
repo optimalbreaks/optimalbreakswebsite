@@ -23,7 +23,7 @@ import { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { parsePlayParam, formatTrackReleaseDisplay, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
+import { parsePlayParam, formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, madridCalendarDate, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
 import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -351,11 +351,16 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
   const scPlayable = !!soundCloudPlaybackUrl(pick)
   const hasSample = !!(hasFullAudio || pick.sample_url || (pick.platform === 'bandcamp' && pick.link_url) || scPlayable)
   const releaseDisp = formatTrackReleaseDisplay(pick.release_date, pick.release_year)
+  // Adelanto: la fecha de Beatport es posterior a hoy (Madrid). El día del
+  // release el fondo amarillo y el banner se quitan solos.
+  const isAdvance = !hasFullAudio && isAdvanceRelease(pick.release_date)
 
   // Fila «exclusive full track» (mockups/full-audio-row.html, variante C+A):
   // fondo amarillo suave en toda la fila + banner rojo a todo el ancho arriba.
+  // El adelanto usa el mismo fondo, con banner amarillo, para no confundirlo
+  // con la exclusiva.
   // Tailwind 3: el modificador de opacidad no funciona sobre var(--…) → hex directo.
-  const rowStateClasses = hasFullAudio
+  const rowStateClasses = hasFullAudio || isAdvance
     ? `bg-[#f7e733]/30 ${isPlaying ? 'border-[#d62828]/40' : 'border-[var(--ink)]/10'}`
     : isPlaying
       ? 'bg-[var(--red)]/15 border-[var(--red)]/30'
@@ -371,6 +376,19 @@ function FeaturedPickRow({ pick, dict, lang, weekDate, isPlaying, isPaused, onPl
           <span className="animate-pulse shrink-0">●</span>
           <span className="truncate">{lang === 'es' ? 'EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS' : 'EXCLUSIVE FULL TRACK — LISTEN IN FULL, FREE'}</span>
           <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">FULL STREAMING · NO PREVIEW</span>
+        </div>
+      ) : isAdvance ? (
+        <div
+          className="-mx-3 sm:-mx-5 -mt-3 sm:-mt-4 flex items-center gap-2.5 bg-[var(--yellow)] text-[var(--ink)] px-3 sm:px-5 py-1.5 text-[10px] sm:text-[11px] font-bold tracking-[0.12em] whitespace-nowrap overflow-hidden"
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+        >
+          <span className="animate-pulse shrink-0">●</span>
+          <span className="truncate">
+            {lang === 'es'
+              ? `ADELANTO — SALE EL ${formatAdvanceReleaseDay(pick.release_date || '', lang)}`
+              : `ADVANCE — OUT ON ${formatAdvanceReleaseDay(pick.release_date || '', lang)}`}
+          </span>
+          <span className="ml-auto hidden md:inline font-normal opacity-75 text-[10px] tracking-[0.05em] shrink-0">PREVIEW</span>
         </div>
       ) : null}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
@@ -637,13 +655,17 @@ function WeekAccordion({
   const badgeNum = c.week_number_badge.replace('{n}', String(editionNumber))
   const panelId = `${label}-panel-${weekDate}`
   const triggerId = `${label}-trigger-${weekDate}`
+  const isAdvanceWeek = weekDate > madridCalendarDate()
+  const showCurrent = isLatest && !isAdvanceWeek
 
   return (
     <section
       className={
-        isLatest
+        showCurrent
           ? 'border-[4px] border-[var(--red)] bg-[var(--paper)] overflow-hidden shadow-[4px_4px_0_0_rgba(214,40,40,0.25)]'
-          : 'border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden'
+          : isAdvanceWeek
+            ? 'border-[4px] border-[var(--ink)] bg-[#f7e733]/25 overflow-hidden'
+            : 'border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden'
       }
     >
       <div className="flex items-center">
@@ -664,9 +686,14 @@ function WeekAccordion({
             {c.week_label} {formatWeekDate(weekDate, lang)}
           </span>
           <span className="flex flex-wrap items-center gap-1.5 justify-end shrink-0">
-            {isLatest && (
+            {showCurrent && (
               <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)]">
                 {c.week_current_badge}
+              </span>
+            )}
+            {isAdvanceWeek && (
+              <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--yellow)] text-[var(--ink)] border-2 border-[var(--ink)]">
+                {c.week_advance_badge || (lang === 'es' ? 'ADELANTO' : 'ADVANCE')}
               </span>
             )}
             <span className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-wider bg-[var(--paper-dark)] text-[var(--ink)] border-2 border-[var(--ink)]">

@@ -405,6 +405,7 @@
     "key_label": "KEY",
     "release_year_title": "Año de publicación en Beatport (fecha del lanzamiento, no necesariamente grabación en estudio)",
     "week_current_badge": "ACTUAL",
+    "week_advance_badge": "ADELANTO",
     "week_number_badge": "#{n}",
     "week_tracks_count": "{n} temas",
     "week_toggle_show": "Desplegar lista de esta semana",

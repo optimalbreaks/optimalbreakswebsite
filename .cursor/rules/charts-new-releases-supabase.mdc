@@ -17,6 +17,7 @@ alwaysApply: true
 
 - Cada tema va en el **`chart_editions.week_date`** = **lunes ISO** de la **semana del release en Beatport** (`publish_date` / día de lanzamiento en `__NEXT_DATA__`), igual que `chartEditionWeekMondayFromPublish` en app y **`/api/admin/featured-import`**.
 - **Prohibido** inferir semana porque el usuario pegó tres tandas seguidas, porque «hoy» es viernes o porque «el último JSON era Monday X y sumo +7**.
+- **Adelantos (7 oct 2026):** Beatport lista temas con `publish_date` futuro. Se publican en la semana ISO de esa fecha y **se quedan**. En `/charts` (y en la ficha del artista) la fila con `release_date` posterior a hoy en Madrid lleva fondo amarillo y banner «ADELANTO — SALE EL …». El día del release el destaque se quita solo: no hay columna ni flag. La chapa **ACTUAL** es la semana que contiene hoy, no la edición más lejana. **Prohibido** borrar esas filas o filtrar `release_date > hoy` en el import.
 - Opcional línea **`YYYY-MM-DD URL`** fuerza ese lunes; sin fecha en Beatport: **`NR_BATCH_FALLBACK_WEEK`** (alias `PICKS_FALLBACK_WEEK`).
 - **`scripts/_append-batch-nr-from-releases.mjs`** puede crear o tocar **varios** ficheros **`data/charts/picks/<lunes>.json`** en un solo pegado si los Beatport-release caen en semanas distintas.
 
