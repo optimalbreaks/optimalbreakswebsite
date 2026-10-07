@@ -346,6 +346,26 @@ Some artists asked **not** to have a catalogue profile on Optimal Breaks. This i
 
 **Admin Mis Tracks audits (Sep 2026):** crossing editorial saves (`contacto@eskaladigital.com`) against artist names **without** a slug often ranks **Vazteria X** at the top (many «+» on their own releases). That is **expected** — it is **not** a signal to create a ficha. Exclude opt-out names from “missing profile” shortlists and bootstrap batches. Expand this table **only** after explicit editor confirmation.
 
+**Snapshot 7 Oct 2026 — saves of Optimal Breaks only.** Account `contacto@eskaladigital.com` (`68c6457d-3141-4e13-a2be-73fdd76631de`, display **Optimal Breaks**). **1,465** «+». **641** distinct credit names (artists on the row plus remixer parsed from `mix_name`). **292** already resolve to an `artists` slug. **349** do not. Those 349 add up to **459** credits: one save that names two people without a ficha counts twice. This is his library, not the public board and not the «≥ 3 chart credits → bootstrap a ficha» rule.
+
+Match the credit **as stored** before splitting. `Face & Book` is the ficha `face-book`; `Koma & Bones` is `koma-bones`. Splitting on `&` first turns both into four «missing» names. Only split a credit (`&` / `and` / `x` / `vs`) when `findArtistSlug` (`src/lib/artist-slug-map.ts`, `buildFullArtistSlugMap`) finds nothing for the whole comma-separated part. A credit that is only **Masterblaster** (2 «+») is the published ficha **Aquasky Vs Masterblaster** (`aquasky-vs-masterblaster`); the strings do not match, so it still shows up below.
+
+**3 or more of his «+», no ficha** (do not create Vazteria X):
+
+| Name | His «+» |
+| --- | --- |
+| Vazteria X | 12 (opt-out; songs stay, no profile) |
+| Pumbass | 6 |
+| Timonk | 6 |
+| Bronka | 4 |
+| Mouse D | 4 |
+| Paul Bassrock | 4 |
+| ANON808, Bass Invaderz, Blade (ESP), DA FISH, Dr Black Sheep, Drill Rocks, Entit-E, Flo Rida, MC Shureshock, Orelem, PERCYBASS, Psybreak, Solrac, Sporty-O, Sunsha, SVD KID, The Broken Rhythm | 3 each |
+
+**Exactly 2:** -Urbano-, Alex Physalis, Aphex, Basstyler, Baymont Bross, Benny Page, Black Eyes (Esp), Blackdryft, Chopsoe, Country Culture, Darrison, DJ Deekline, DJ Goku, dj zuko, Dual Drop, Fiscal, Fruity Loops, Grizzloud, HornBeat, IOWLA, JFB, Kwerk, Lex Banger, LOOKATME!, MASER, Masterblaster, Miss Mants, Mr.Rabbeat, No Eat, PABLO LAZERS, PINGÜINO, Pok3r, Quest, RE-AB Productions, Ryxov, S&S, Si-Dog, StatiX (USA), STICK2BREAKS, Tom in Trouble, V.Aparicio, Vadim Shantor, Wallmaster, Xpyro, Yolanda Quartey, Zzeta.
+
+**Exactly 1:** 280 names. Do not propose fichas from a single «+». Recompute against live saves before the next shortlist; do not treat this table as a queue.
+
 ### Editorial marks in production (ops)
 
 How to mark: `/[lang]/administrator/users` → open the row → **Marcar artista (fase 2)** with the **credit name** as it appears on tracks (`Devis Hard`, not the email). That upserts `editorial_artist_marks` (`user_id` + `normalizeArtistKey`). Optional `artist_id` if `/artists/<slug>` exists. **Do not** write `claimed_by` or flip `accepts_bookings`.
