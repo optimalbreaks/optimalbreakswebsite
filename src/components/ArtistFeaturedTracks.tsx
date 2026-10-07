@@ -621,7 +621,7 @@ export default function ArtistFeaturedTracks({
                           shareTitle={`${pick.title} — ${artists.map((a) => a.name).filter(Boolean).join(', ')}`}
                         />
                       )}
-                      {kind !== 'vinyl' ? (
+                      {kind !== 'vinyl' && !isAdvance ? (
                         <>
                           <SpotifyLinkButton url={pick.spotify_url} title={pick.title} artists={artists} lang={lang} />
                           <TidalLinkButton url={pick.tidal_url} lang={lang} />

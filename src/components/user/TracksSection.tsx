@@ -32,6 +32,7 @@ import type { SavedChartTrackSnapshot } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
 import {
   formatTrackReleaseDisplay,
+  isAdvanceRelease,
   effectiveReleaseYear,
   buildAbsoluteShareUrl,
   copyShareLink,
@@ -1743,7 +1744,7 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                         />
                       )
                     })()}
-                    {t.source !== 'vinyl' ? (
+                    {t.source !== 'vinyl' && !isAdvanceRelease(t.release_date) ? (
                       <SpotifyLinkButton
                         url={t.spotify_url}
                         title={t.title}
@@ -1751,7 +1752,9 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                         lang={lang as Locale}
                       />
                     ) : null}
-                    <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
+                    {isAdvanceRelease(t.release_date) ? null : (
+                      <TidalLinkButton url={t.tidal_url} lang={lang as Locale} />
+                    )}
                     {t.external_url ? (
                       (t.external_label || '') === 'BEATPORT' ? (
                         <BeatportLinkButton url={t.external_url} lang={lang as Locale} />

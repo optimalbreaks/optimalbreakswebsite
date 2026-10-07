@@ -37,6 +37,7 @@ import {
 import { createBrowserSupabase } from '@/lib/supabase'
 import {
   formatTrackReleaseDisplay,
+  isAdvanceRelease,
   buildTrackSharePath,
   buildVinylSharePath,
   buildBeatportSharePath,
@@ -1172,10 +1173,12 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                         }
                         return null
                       })()}
-                      {t.primary.source !== 'vinyl' ? (
+                      {t.primary.source !== 'vinyl' && !isAdvanceRelease(t.release_date) ? (
                         <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists || '')} lang={lang} />
                       ) : null}
-                      <TidalLinkButton url={t.tidal_url} lang={lang} />
+                      {isAdvanceRelease(t.release_date) ? null : (
+                        <TidalLinkButton url={t.tidal_url} lang={lang} />
+                      )}
                       {externalLink && (
                         ctaLabel === 'BEATPORT' ? (
                           <BeatportLinkButton url={externalLink} lang={lang} />
