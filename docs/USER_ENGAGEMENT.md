@@ -520,24 +520,24 @@ Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`):
 
 - **Two clocks (do not mix them):**
   - **The list is live.** Rank #1 / #4 / #12 updates as soon as someone saves (or unsaves). The page does **not** wait until next Monday to move a name.
-  - **The variation compares against the PREVIOUS ISO Monday.** Arrows compare **live rank now** vs **rank at the previous ISO Monday 00:00 UTC** (saves with `created_at` before that cutoff). ═ means “same as the start of last week”, not “same as yesterday”. Changed Sep 2026: it used to compare vs *this* Monday, which erased weekend overtakes as soon as the ISO week reset (Huda Hudia passed Ed Solo on Sunday ~21:00 UTC and 3 h later both showed ═).
-- **Cadence:** **weekly**, not daily. Same week boundary as the editorial charts. Next Monday the baseline advances one week.
-- **Live inside the week:** because “now” keeps moving, arrows can change mid-week (e.g. previous Monday #4 → Thursday #3 → **▲ 1**). The baseline snapshot stays fixed until the following Monday.
-- **No snapshot table / no cron.** Rebuilt on each request from `saved_chart_tracks.created_at` (`artistMondaySnapshots` in `community-monthly/route.ts`). `idx_sct_created` (migration **056**) helps the recency tie-break and this reconstruction.
+  - **The variation compares against exactly 7 days ago.** Arrows compare **live rank now** vs **rank at this same time one week earlier** (saves with `created_at` before `now − 7 d`). ═ means “same rank as 7 days ago”, not “same as yesterday” and not “same as Monday”. The window is always 7 days long whatever the weekday, and nothing resets on Monday: a weekend overtake shows ▲ for a full week and then fades instead of being wiped at a boundary.
+  - **History (8 Oct 2026).** Until Sep 2026 the baseline was *this* ISO Monday, which erased weekend overtakes as soon as the week reset (Huda Hudia passed Ed Solo on Sunday ~21:00 UTC and 3 h later both showed ═). From Sep to 8 Oct 2026 the baseline was the *previous* ISO Monday: that fixed the wipe but made the window stretch from 7 days (Monday morning) to 14 days (Sunday night), and the page could not tell the reader which period an arrow covered — Devis Hard showed **▲ 11** on Thursday 8 Oct for a move that spanned 11 days (15th on Mon 28 Sep → 4th). Rolling 7 days replaces both.
+- **Cadence of the arrows:** continuous. There is no weekly baseline advance any more. **Weeks on the board / weeks at #1** still use ISO Mondays (`artistMondaySnapshots`); the two clocks are independent.
+- **No snapshot table / no cron.** Rebuilt on each request from `saved_chart_tracks.created_at` (`artistRankMapAt` for the 7-day baseline, `artistMondaySnapshots` for tenure, both in `community-monthly/route.ts`). `idx_sct_created` (migration **056**) helps the recency tie-break and this reconstruction.
 - **Caveat:** an unsave **deletes** the row, so last week’s reconstructed board is “current remaining saves before Monday”, not a photographic archive of what was on screen then.
 
 **API fields on each `top_artists` row**
 
 | Field | Meaning |
 | --- | --- |
-| `previous_rank` | Rank on this board (top 50) at the **previous** ISO Monday 00:00 UTC (fallback: this Monday if history starts this week). `null` = was **not** in the top 50 then → UI **NUEVO**. |
+| `previous_rank` | Rank on this board (top 50) **exactly 7 days before the request** (rolling, same time of day). `null` = was **not** in the top 50 then → UI **NUEVO**. |
 | `weeks_in_top10` | Consecutive ISO weeks **on the board** (the 50), **not** weeks at the current rank. Field name is historical (the board used to be 10). UI label `X sem.` on ranks 2–50 when `> 1`. |
 | `weeks_at_1` | Consecutive ISO weeks at **#1** only. UI label `X sem. nº 1` when the leader has `> 1`. |
 
 **UI**
 
-- On-page copy: `charts.community_monthly.artists_subtitle` (ES/EN) states live list + Monday-to-Monday arrows.
-- Arrows = **position change** vs the previous Monday. Weeks = **tenure** (board vs throne).
+- On-page copy: `charts.community_monthly.artists_subtitle` (ES/EN) states live list + arrows vs 7 days ago. The arrow `title` (`charts.position_up/down/same`) repeats the window.
+- Arrows = **position change** vs 7 days ago. Weeks = **tenure** (board vs throne), ISO Mondays.
 - Rank **#1** box is always red. One editorial line under the subtitle, #1 only: new leader / climbs to #1 / holds / streak (≥ 4 weeks at #1). Copy in `charts.community_monthly` (`leader_new`, `leader_climbs`, `leader_holds`, `leader_streak`).
 - Movement is **not** shown on the Top 100 **tracks** list.
 

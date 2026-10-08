@@ -16,11 +16,11 @@
 //     pero no arma la lista de temas, ni plays, ni países, y pide columnas
 //     finas. Con cached=1 la CDN lo guarda 5 min.
 //   - top_artists: top 50 por créditos de save (la UI enseña 10 y «Cargar más»).
-//     Cada fila lleva movimiento semanal reconstruido desde `created_at`
-//     (lunes ISO UTC): previous_rank = puesto en el snapshot del LUNES
-//     ANTERIOR (null = no estaba en el top 50 entonces) — así un sorpasso
-//     de fin de semana mantiene su ▲/▼ toda la semana siguiente —,
-//     weeks_in_top10 (semanas seguidas en este tablero),
+//     Cada fila lleva movimiento reconstruido desde `created_at`:
+//     previous_rank = puesto que tenía hace 7 días exactos, a esta misma
+//     hora (null = no estaba en el top 50 entonces). Ventana móvil: mide
+//     siempre lo mismo y no se reinicia el lunes (8 oct 2026).
+//     weeks_in_top10 (semanas ISO seguidas en este tablero),
 //     weeks_at_1, image_url (retrato resuelto) y country. No hay tabla de snapshots.
 //     Un save de un usuario fichado, con claim aprobado o marcado como
 //     familiar no acredita ESE nombre en el tablero (sí el de colaboradores)
@@ -62,6 +62,8 @@ import {
 import { extractRemixerNames } from '@/lib/remixer-credits'
 
 const TOP_ARTISTS_LIMIT = 50
+/** Ventana de las flechas del tablero de artistas: 7 días exactos. */
+const MOVEMENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 /** PostgREST corta en 1000 filas; `.in('id', …)` largo tumba o recorta el GET. */
 const IN_CHUNK = 200
 
@@ -137,6 +139,20 @@ function artistRankMap(agg: Map<string, ArtistAgg>, limit = TOP_ARTISTS_LIMIT): 
     out.set(ranked[i][0], i + 1)
   }
   return out
+}
+
+/**
+ * Ranking del tablero (top 50) tal como estaba en un instante dado:
+ * solo cuentan los créditos con `createdAt` anterior a `cutoffMs`.
+ * Un crédito sin fecha fiable se trata como anterior al corte (ya estaba).
+ */
+function artistRankMapAt(credits: ArtistCredit[], cutoffMs: number): Map<string, number> {
+  const agg = new Map<string, ArtistAgg>()
+  for (const c of credits) {
+    if (c.createdMs > 0 && c.createdMs >= cutoffMs) continue
+    bumpArtistInto(agg, c.name, c.userId, c.trackKey)
+  }
+  return artistRankMap(agg)
 }
 
 /**
@@ -935,16 +951,17 @@ export async function GET(request: NextRequest) {
     )
     .slice(0, TOP_ARTISTS_LIMIT)
 
-  const thisMonday = isoMondayUtc(new Date())
+  const now = new Date()
+  const thisMonday = isoMondayUtc(now)
+  // Los lunes ISO solo sirven para «X sem.» (semanas seguidas en el tablero /
+  // en el nº 1). Las flechas ya no se apoyan en ellos.
   const mondaySnapshots = artistMondaySnapshots(artistCredits, thisMonday)
-  // Movimiento estilo chart clásico: comparamos el puesto actual contra el
-  // snapshot del LUNES ANTERIOR (no el de esta semana). Así un sorpasso de
-  // fin de semana no se «borra» al reiniciar la semana ISO: la flecha luce
-  // durante toda la semana siguiente (decisión editorial, sep 2026).
-  const previousRanks =
-    mondaySnapshots.get(addDaysYmdUtc(thisMonday, -7)) ||
-    mondaySnapshots.get(thisMonday) ||
-    new Map<string, number>()
+  // Movimiento = ventana móvil de 7 días exactos (8 oct 2026): puesto ahora
+  // frente al puesto que tenía a esta misma hora hace una semana. La ventana
+  // mide siempre lo mismo, a cualquier hora, y no hay salto el lunes. Antes
+  // (sep 2026) se comparaba con el lunes ISO anterior: la ventana iba de 7 a
+  // 14 días según el día de la semana y nadie podía leer el periodo en la UI.
+  const previousRanks = artistRankMapAt(artistCredits, now.getTime() - MOVEMENT_WINDOW_MS)
 
   let artistSlugMap: Record<string, string> = {}
   const catalogBySlug = new Map<string, { image_url: string | null; country: string | null }>()
