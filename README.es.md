@@ -221,6 +221,32 @@ Una misma canción puede estar a la vez en un Top 10 y en New Releases. El «+»
 
 **40 Breaks Vitales** (`chart_tracks`) no es una vía de entrada. Desde el 27 sep 2026 no se lista en la web. Las filas siguen en la base por los saves antiguos y los enlaces `?play=chart:`. Los temas que solo estaban ahí se copiaron a New Releases o al archivo según su fecha de lanzamiento.
 
+### Pase diario de Beatport — 12:05 Madrid (desde el 8 oct 2026)
+
+Un solo trabajo, dos vías, en este orden. Código: `src/lib/beatport-genre-import.ts` (`runBeatportGenreImport`). Cron: `src/app/api/cron/beatport-releases/route.ts` (`Bearer CRON_SECRET`). Admin: `/administrator/imports` + `src/app/api/admin/imports/route.ts`. Tablas: `chart_import_queue` (cada decisión), `chart_import_runs` (una fila por pase). Migración `089`.
+
+1. **Artistas del Top 100 → publicados.** Por cada artista del tablero Top 100 (`loadTopArtistKeys`, 100 nombres) con `artists.beatport_id`, el pase lee `beatport.com/artist/<slug>/<id>/tracks?publish_date=2026-10-08:` — **cualquier género**, fechas futuras incluidas. Todo lo nuevo se inserta en `chart_featured_tracks` en la semana ISO de su release y queda apuntado como `approved / auto_top100`. Nunca aparece en Imports.
+2. **Lista de Breaks → pendientes.** Después, `genre/breaks-breakbeat-uk-bass/9/tracks?publish_date=2026-10-08:`. Cada tema se identifica por su **id de Beatport**. Si ya está en el catálogo, ya está en la cola o **ya lo trajo la vía 1 → se descarta** (`skipped_known`). Lo que sobrevive entra en `chart_import_queue` como `pending`: el editor lo incluye o lo descarta en `/administrator/imports`. Si en los créditos (artista, crédito partido o remixer en `mix_name`) va alguien del Top 100 — un artista sin ficha de Beatport, p. ej. Hatstandy — se publica directo.
+
+La página pública de Breaks con la que se compara es la de **releases**; el pase lee **tracks**. Un release con siete remezclas sale una vez allí y aquí una fila por cada corte etiquetado Breaks (Budakid — *Dreams Stretched Beyond Remixes*: solo *Is No Ova (Fort Romeau Remix)* es Breaks, así que solo ese entra en la cola).
+
+**Por qué a las 12:05.** Beatport publica la tienda del día sobre las 09:00 GMT (11:00 en España en verano). A las 00:10 la lista pública de Breaks del día aún no existe; las fichas de artista ya enseñan las fechas programadas, así que la vía 1 correría y la vía 2 no encontraría nada. `vercel.json` lleva dos horas UTC (`5 10` verano, `5 11` invierno) y el handler solo sigue si `madridHour() === 12`; la otra responde `skipped: 'not-1205-madrid'` y no escribe pase. Un salto por hora **no deja fila** en `chart_import_runs`; un fallo deja `ok = false` con la primera línea del error.
+
+**Navegador en Vercel.** `playwright-core` 1.49 + `@sparticuz/chromium` 131 (`serverExternalPackages` + `outputFileTracingIncludes` en `next.config.js`, 2048 MB / 300 s en `vercel.json`). Dos trampas, las dos sufridas el 8 oct 2026:
+- Fluid Compute no pone `AWS_LAMBDA_JS_RUNTIME`, así que Sparticuz no descomprime `al2023.tar.br` y el binario muere por `libnss3.so`. `openBrowserReader` fija `AWS_LAMBDA_JS_RUNTIME=nodejs22.x` antes de importarlo y borra un `/tmp/chromium` a medias si no existe `/tmp/al2023/lib/libnss3.so`.
+- Los `args` de Sparticuz son para Puppeteer: `--single-process` y un `--headless='shell'` con comillas. Con Playwright el proceso arranca y muere en el primer `newContext` (*Target page, context or browser has been closed* — el cron de las 10:10 UTC). El lanzador ahora quita las dos y pasa `--headless=shell` con `headless: false`, para que Playwright no añada el flag del headless nuevo que el binario shell no sabe correr.
+En local el pase usa el Chrome instalado (`channel: 'chrome'`), no Sparticuz. Beatport responde 403 (Cloudflare) al `fetch` plano; la vía que funciona es el navegador.
+
+**Pases del 8 oct 2026.** 06:35 UTC recuperación local: 193 vistos / 15 publicados (Ravesta, 9 oct) / 0 en cola. 06:43 UTC «Traer ahora» en Vercel: libnss3. 10:10 UTC cron: navegador cerrado. 11:44 UTC local `--force`: **267 vistos / 3 publicados / 51 pendientes / 213 conocidos**. Comprobado ese mismo día con el matching del propio importador: **0 de los 51 pendientes acreditan a un artista del Top 100.** El primer pase limpio en el propio Vercel está por ver; hasta que exista una fila cron con `ok = true`, un día fallido se lanza desde un PC:
+
+```powershell
+$env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npx tsx scripts/beatport-daily-import.ts --force
+```
+
+`--force` salta la puerta de la hora y apunta `trigger = manual`. Se puede repetir: los ids conocidos se saltan. Plan B si el navegador de Vercel sigue fallando o Cloudflare bloquea sus IPs: el mismo script en un cron de GitHub Actions (runner Linux con Chrome, secretos del `.env.local`). No cambia nada más.
+
+**No:** filtrar `release_date > hoy` (los adelantos son una función), borrar filas de la cola «para limpiar», devolver el cron a medianoche, volver a meter `--single-process`, inferir la semana por la fecha del pegado, ni esperar temas del Top 100 en Imports: ya están en `/charts`.
+
 ## `/charts` — carga progresiva (sep 2026)
 
 **Por qué.** A finales de septiembre de 2026 el catálogo de `/charts` eran ~36 semanas de New Releases más **989 ediciones de archivo** (~11.200 filas, ~10 MB de JSON de PostgREST). La página lo bajaba y lo pintaba todo en cada visita: Vercel devolvía **5xx** en `/es/charts` y, cuando sobrevivía, abrir un año de ~1.900 filas dejaba la pestaña bloqueada. Arreglado el 28 sep 2026 (`5b13320f`, `e2ac4a89`).
