@@ -12,11 +12,11 @@
   "crons": [
     {
       "path": "/api/cron/beatport-releases",
-      "schedule": "10 22 * * *"
+      "schedule": "10 10 * * *"
     },
     {
       "path": "/api/cron/beatport-releases",
-      "schedule": "10 23 * * *"
+      "schedule": "10 11 * * *"
     }
   ]
 }
