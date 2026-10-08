@@ -172,7 +172,7 @@ export default function AdminImportsPage() {
     <div>
       <h1 className="admin-page-title">Imports</h1>
       <p className="text-sm text-[var(--ink)]/60 -mt-4 mb-6 max-w-2xl" style={mono}>
-        Cada día a las 12:01, desde el 8 de octubre de 2026: primero los temas nuevos de cada artista del Top 100, en cualquier género.
+        Cada día a las 00:10, desde el 8 de octubre de 2026: primero los temas nuevos de cada artista del Top 100, en cualquier género.
         Luego el listado de Breaks. Lo que ya está no se vuelve a meter. El resto de Breaks se queda aquí: incluir o descartar.
       </p>
 

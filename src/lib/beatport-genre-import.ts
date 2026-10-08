@@ -1,5 +1,5 @@
 /**
- * Pase diario, desde el 8 oct 2026.
+ * Pase diario a las 00:10 (Madrid), desde el 8 oct 2026.
  * 1. Fichas del Top 100 en Beatport, cualquier género → se publican.
  * 2. Listado de Breaks → lo que no esté ya, a la cola (o publicado si es del Top 100).
  * Un id de Beatport que ya está en el catálogo o en la cola no se vuelve a meter.
