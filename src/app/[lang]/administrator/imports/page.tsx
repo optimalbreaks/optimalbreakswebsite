@@ -1,6 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
 
 type Artist = { name: string }
 
@@ -37,6 +40,11 @@ type Payload = {
 }
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
+const PREVIEW_GROUP = 'admin-imports'
+
+function sampleSrc(url: string) {
+  return `/api/audio-proxy?url=${encodeURIComponent(url)}`
+}
 
 function names(artists: Artist[] | null | undefined) {
   return (artists || []).map((a) => a.name).filter(Boolean).join(', ') || '—'
@@ -50,8 +58,11 @@ export default function AdminImportsPage() {
   const [running, setRunning] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null)
-  const [playing, setPlaying] = useState<string | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const pathname = usePathname()
+  const {
+    previewQueue, previewIndex, previewGroupKey, previewPlaying,
+    playPreviewQueue, togglePreview,
+  } = usePreviewAudioGated()
 
   const load = useCallback(() => {
     setLoading(true)
@@ -129,20 +140,33 @@ export default function AdminImportsPage() {
     }
   }
 
+  const pending = payload?.pending ?? []
+  const activeRowKey = previewGroupKey === PREVIEW_GROUP
+    ? previewQueue[previewIndex]?.rowKey ?? null
+    : null
+
   function togglePlay(track: PendingTrack) {
-    const audio = audioRef.current
-    if (!audio || !track.sample_url) return
-    if (playing === track.id) {
-      audio.pause()
-      setPlaying(null)
+    if (!track.sample_url) return
+    if (activeRowKey === track.id) {
+      togglePreview()
       return
     }
-    audio.src = `/api/audio-proxy?url=${encodeURIComponent(track.sample_url)}`
-    void audio.play()
-    setPlaying(track.id)
+    const playable = pending.filter((row) => row.sample_url)
+    const index = playable.findIndex((row) => row.id === track.id)
+    if (index < 0) return
+    const queue: PreviewTrack[] = playable.map((row) => ({
+      rowKey: row.id,
+      src: sampleSrc(row.sample_url as string),
+      title: row.title,
+      artist: names(row.artists),
+      artworkUrl: row.artwork_url,
+      mixName: row.mix_name || null,
+      album: row.label || null,
+      domId: `import-row-${row.id}`,
+      originPath: pathname || undefined,
+    }))
+    playPreviewQueue(queue, index, PREVIEW_GROUP)
   }
-
-  const pending = payload?.pending ?? []
 
   return (
     <div>
@@ -188,12 +212,6 @@ export default function AdminImportsPage() {
         </p>
       )}
 
-      <audio
-        ref={audioRef}
-        onEnded={() => setPlaying(null)}
-        className="hidden"
-      />
-
       {loading && (
         <div className="admin-panel !p-8 text-center">
           <span style={mono}>Cargando la cola…</span>
@@ -219,7 +237,7 @@ export default function AdminImportsPage() {
       {!loading && pending.length > 0 && (
         <ul className="flex flex-col gap-3">
           {pending.map((t) => (
-            <li key={t.id} className="admin-panel !p-4 flex flex-col sm:flex-row gap-4">
+            <li id={`import-row-${t.id}`} key={t.id} className="admin-panel !p-4 flex flex-col sm:flex-row gap-4">
               {t.artwork_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={t.artwork_url} alt="" className="w-16 h-16 object-cover border-[3px] border-[var(--ink)] shrink-0" />
@@ -251,7 +269,7 @@ export default function AdminImportsPage() {
                   className="h-10 px-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] font-black text-[10px] tracking-wider uppercase disabled:opacity-30"
                   style={mono}
                 >
-                  {playing === t.id ? 'Pausa' : 'Oír'}
+                  {activeRowKey === t.id && previewPlaying ? 'Pausa' : 'Oír'}
                 </button>
                 <button
                   type="button"
