@@ -191,6 +191,12 @@ export default function AdminImportsPage() {
     ? previewQueue[previewIndex]?.rowKey ?? null
     : null
 
+  // Al pasar al siguiente tema, la fila que suena entra en pantalla si no estaba.
+  useEffect(() => {
+    if (!activeRowKey) return
+    document.getElementById(`import-row-${activeRowKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [activeRowKey])
+
   function togglePlay(track: PendingTrack) {
     if (!track.sample_url) return
     if (activeRowKey === track.id) {
@@ -282,8 +288,17 @@ export default function AdminImportsPage() {
 
       {!loading && pending.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {pending.map((t) => (
-            <li id={`import-row-${t.id}`} key={t.id} className="admin-panel !p-4 flex flex-col sm:flex-row gap-4">
+          {pending.map((t) => {
+            const isActive = activeRowKey === t.id
+            const isSounding = isActive && previewPlaying
+            return (
+            <li
+              id={`import-row-${t.id}`}
+              key={t.id}
+              className={`admin-panel !p-4 flex flex-col sm:flex-row gap-4 transition-colors ${
+                isActive ? '!bg-[var(--red)]/15 !border-[var(--red)]' : ''
+              }`}
+            >
               {t.artwork_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={t.artwork_url} alt="" className="w-16 h-16 object-cover border-[3px] border-[var(--ink)] shrink-0" />
@@ -291,7 +306,8 @@ export default function AdminImportsPage() {
                 <div className="w-16 h-16 border-[3px] border-[var(--ink)] bg-[var(--yellow)] shrink-0" />
               )}
               <div className="min-w-0 flex-1">
-                <div className="font-black leading-tight" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                <div className="font-black leading-tight flex items-center gap-2" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+                  {isSounding ? <span className="text-[var(--red)] animate-pulse shrink-0 text-xs">●</span> : null}
                   <a href={t.link_url} target="_blank" rel="noopener noreferrer" className="no-underline hover:underline text-[var(--ink)]">
                     {t.title}
                   </a>
@@ -312,10 +328,14 @@ export default function AdminImportsPage() {
                   type="button"
                   disabled={!t.sample_url}
                   onClick={() => togglePlay(t)}
-                  className="h-10 px-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] font-black text-[10px] tracking-wider uppercase disabled:opacity-30"
+                  className={`h-10 px-3 border-[3px] border-[var(--ink)] font-black text-[10px] tracking-wider uppercase disabled:opacity-30 transition-colors ${
+                    isActive ? 'bg-[var(--red)] text-white' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]'
+                  }`}
                   style={mono}
+                  title={isSounding ? 'Pausa' : 'Oír'}
+                  aria-label={isSounding ? 'Pausa' : 'Oír'}
                 >
-                  {activeRowKey === t.id && previewPlaying ? 'Pausa' : 'Oír'}
+                  {isSounding ? '❚❚' : '▶'}
                 </button>
                 <button
                   type="button"
@@ -337,7 +357,8 @@ export default function AdminImportsPage() {
                 </button>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
     </div>
