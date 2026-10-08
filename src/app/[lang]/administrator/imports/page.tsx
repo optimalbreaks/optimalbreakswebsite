@@ -61,7 +61,7 @@ export default function AdminImportsPage() {
   const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
-    playPreviewQueue, togglePreview,
+    playPreviewQueue, togglePreview, stopPreview, extendPreviewQueue,
   } = usePreviewAudioGated()
 
   const load = useCallback(() => {
@@ -82,6 +82,17 @@ export default function AdminImportsPage() {
   async function act(id: string, action: 'approve' | 'discard' | 'restore') {
     setBusyId(id)
     setNote(null)
+    if (action === 'discard' && previewGroupKey === PREVIEW_GROUP) {
+      const current = previewQueue[previewIndex]
+      if (current?.rowKey === id) {
+        stopPreview()
+      } else if (previewQueue.some((row) => row.rowKey === id)) {
+        const next = previewQueue.filter((row) => row.rowKey !== id)
+        const idx = next.findIndex((row) => row.rowKey === current?.rowKey)
+        if (next.length && idx >= 0) extendPreviewQueue(next, idx, PREVIEW_GROUP)
+        else stopPreview()
+      }
+    }
     try {
       const r = await fetch('/api/admin/imports', {
         method: 'POST',
