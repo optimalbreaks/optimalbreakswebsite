@@ -1,5 +1,5 @@
 /**
- * Mismo pase que el cron de las 12:10 (Madrid).
+ * Mismo pase que el cron de las 12:05 (Madrid).
  *   npx tsx scripts/beatport-daily-import.ts
  *   npx tsx scripts/beatport-daily-import.ts --force
  */
@@ -32,7 +32,7 @@ async function main() {
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]
   if (!force && madridHour() !== 12) {
-    console.log('Fuera de las 12:00–12:59 en Madrid. El pase es a las 12:10. Usa --force para lanzarlo igual.')
+    console.log('Fuera de las 12:00–12:59 en Madrid. El pase es a las 12:05. Usa --force para lanzarlo igual.')
     return
   }
   const result = await runBeatportGenreImport({

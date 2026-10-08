@@ -1,8 +1,9 @@
 /**
- * Pase diario a las 12:10 (Madrid), desde el 8 oct 2026.
+ * Pase diario a las 12:05 (Madrid), desde el 8 oct 2026.
  * 1. Fichas del Top 100 en Beatport, cualquier género → se publican.
- * 2. Listado de Breaks → lo que no esté ya, a la cola (o publicado si es del Top 100).
- * Un id de Beatport que ya está en el catálogo o en la cola no se vuelve a meter.
+ * 2. Listado de Breaks → lo que no entró por 1 ni estaba ya, a la cola pendiente
+ *    (o publicado si en los créditos va un artista del Top 100).
+ * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 1 no se vuelve a meter.
  */
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
 import { splitArtistCreditsForRanking } from '@/lib/artist-self-credit'
