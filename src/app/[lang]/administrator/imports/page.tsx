@@ -63,15 +63,16 @@ export default function AdminImportsPage() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [note, setNote] = useState<string | null>(null)
-  const [undo, setUndo] = useState<{ id: string; title: string } | null>(null)
+  const [undo, setUndo] = useState<{ row: PendingTrack; index: number } | null>(null)
   const pathname = usePathname()
   const {
     previewQueue, previewIndex, previewGroupKey, previewPlaying,
     playPreviewQueue, togglePreview, stopPreview, extendPreviewQueue,
   } = usePreviewAudioGated()
 
-  const load = useCallback(() => {
-    setLoading(true)
+  // `silent`: refresca los datos sin tapar la lista con «Cargando la cola…».
+  // `loading` nace en true, así que la primera carga no tiene que ponerlo.
+  const load = useCallback((silent = false) => {
     fetch('/api/admin/imports', { credentials: 'same-origin' })
       .then(async (r) => {
         const j = (await r.json()) as Payload
@@ -79,15 +80,42 @@ export default function AdminImportsPage() {
         setPayload(j)
         setErr(null)
       })
-      .catch((e: Error) => setErr(e.message))
-      .finally(() => setLoading(false))
+      .catch((e: Error) => { if (!silent) setErr(e.message) })
+      .finally(() => { if (!silent) setLoading(false) })
   }, [])
 
   useEffect(() => { load() }, [load])
 
+  // La fila se quita (o se repone) en el acto; la red va detrás.
+  function removeRow(id: string) {
+    setPayload((p) => p ? {
+      ...p,
+      pending: p.pending.filter((t) => t.id !== id),
+      pending_count: Math.max(0, p.pending_count - 1),
+    } : p)
+  }
+  function insertRow(row: PendingTrack, index: number) {
+    setPayload((p) => {
+      if (!p) return p
+      if (p.pending.some((t) => t.id === row.id)) return p
+      const next = [...p.pending]
+      next.splice(Math.min(index, next.length), 0, row)
+      return { ...p, pending: next, pending_count: p.pending_count + 1 }
+    })
+  }
+
   async function act(id: string, action: 'approve' | 'discard' | 'restore') {
     setBusyId(id)
     setNote(null)
+    const index = payload?.pending.findIndex((t) => t.id === id) ?? -1
+    const row = index >= 0 ? payload?.pending[index] : undefined
+    if (action === 'restore') {
+      if (undo?.row.id === id) insertRow(undo.row, undo.index)
+      setUndo(null)
+    } else if (row) {
+      removeRow(id)
+      setUndo(action === 'discard' ? { row, index } : null)
+    }
     if (action === 'discard' && previewGroupKey === PREVIEW_GROUP) {
       const current = previewQueue[previewIndex]
       if (current?.rowKey === id) {
@@ -108,14 +136,15 @@ export default function AdminImportsPage() {
       })
       const j = (await r.json()) as { error?: string }
       if (!r.ok) throw new Error(j.error || r.statusText)
-      if (action === 'discard') {
-        const row = payload?.pending.find((t) => t.id === id)
-        if (row) setUndo({ id, title: row.title })
-      } else {
+    } catch (e) {
+      // Si la red falla, se deshace lo que ya se había pintado.
+      if (action === 'restore') {
+        removeRow(id)
+        if (row) setUndo({ row, index })
+      } else if (row) {
+        insertRow(row, index)
         setUndo(null)
       }
-      load()
-    } catch (e) {
       setNote(e instanceof Error ? e.message : String(e))
     } finally {
       setBusyId(null)
@@ -149,7 +178,7 @@ export default function AdminImportsPage() {
           `Vistos ${j.seen ?? 0} · publicados del Top 100: ${j.auto_approved ?? 0} · pendientes de oír: ${j.queued ?? 0}`,
         )
       }
-      load()
+      load(true)
     } catch (e) {
       setNote(e instanceof Error ? e.message : String(e))
     } finally {
@@ -213,8 +242,8 @@ export default function AdminImportsPage() {
       )}
       {undo && (
         <p className="text-xs mb-4" style={mono}>
-          Descartado «{undo.title}».{' '}
-          <button type="button" className="underline font-black" onClick={() => act(undo.id, 'restore')}>
+          Descartado «{undo.row.title}».{' '}
+          <button type="button" className="underline font-black" onClick={() => act(undo.row.id, 'restore')}>
             Deshacer
           </button>
         </p>
