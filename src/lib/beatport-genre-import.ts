@@ -4,6 +4,7 @@
  * 2. Listado de Breaks → lo que no entró por 1 ni estaba ya, a la cola pendiente
  *    (o publicado si en los créditos va un artista del Top 100).
  * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 1 no se vuelve a meter.
+ * Tampoco la misma canción (título + versión + artistas) resubida con otro id.
  */
 import { normalizeArtistKey } from '@/lib/artist-slug-map'
 import { splitArtistCreditsForRanking } from '@/lib/artist-self-credit'
@@ -21,6 +22,7 @@ import { extractRemixerNames } from '@/lib/remixer-credits'
 import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
+import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 import type { ChartFeaturedArtist, ChartImportVia } from '@/types/database'
 
 /** Primer día que entra en la cola. Hasta el 7 oct 2026 el catálogo ya está al día. */
@@ -225,15 +227,31 @@ function matchesTop100(pick: BeatportPickInput, keys: Set<string>): boolean {
   return false
 }
 
-async function loadKnownIds(sb: ReturnType<typeof createServiceSupabase>): Promise<Set<string>> {
+type KnownTracks = {
+  /** Ids de Beatport ya en catálogo o en la cola. */
+  ids: Set<string>
+  /**
+   * Misma canción con otro id: título + versión + artistas (`trackDisplayIdentityKey`).
+   * Thierry D volvió a subir en octubre 14 cortes que ya estaban desde abril–agosto;
+   * el id era nuevo y la cola los dio por nuevos (8 oct 2026).
+   */
+  identities: Set<string>
+}
+
+async function loadKnownTracks(sb: ReturnType<typeof createServiceSupabase>): Promise<KnownTracks> {
+  type Credit = { title: string | null; mix_name: string | null; artists: unknown }
   const [featured, queued] = await Promise.all([
-    fetchAllRows<{ link_url: string | null }>((from, to) =>
-      sb.from('chart_featured_tracks').select('link_url').order('id', { ascending: true }).range(from, to),
+    fetchAllRows<Credit & { link_url: string | null }>((from, to) =>
+      sb
+        .from('chart_featured_tracks')
+        .select('link_url, title, mix_name, artists')
+        .order('id', { ascending: true })
+        .range(from, to),
     ),
-    fetchAllRows<{ beatport_track_id: string }>((from, to) =>
+    fetchAllRows<Credit & { beatport_track_id: string }>((from, to) =>
       sb
         .from('chart_import_queue')
-        .select('beatport_track_id')
+        .select('beatport_track_id, title, mix_name, artists')
         .order('created_at', { ascending: true })
         .range(from, to),
     ),
@@ -241,14 +259,21 @@ async function loadKnownIds(sb: ReturnType<typeof createServiceSupabase>): Promi
   if (featured.error) throw new Error(featured.error.message)
   if (queued.error) throw new Error(queued.error.message)
   const ids = new Set<string>()
+  const identities = new Set<string>()
+  const remember = (row: Credit) => {
+    const key = trackDisplayIdentityKey(row.title, row.mix_name, row.artists)
+    if (key) identities.add(key)
+  }
   for (const row of featured.data) {
     const id = beatportIdFromLink(row.link_url || '')
     if (id) ids.add(id)
+    remember(row)
   }
   for (const row of queued.data) {
     if (row.beatport_track_id) ids.add(row.beatport_track_id)
+    remember(row)
   }
-  return ids
+  return { ids, identities }
 }
 
 async function editionFor(
@@ -446,17 +471,20 @@ export async function runBeatportGenreImport(opts: {
   const result: GenreImportResult = { ok: false, ...empty }
   let published = 0
   try {
-    const known = await loadKnownIds(sb)
+    const known = await loadKnownTracks(sb)
     const fresh: BeatportPickInput[] = []
     const fromArtist = new Set<string>()
     const take = (pick: BeatportPickInput, auto: boolean) => {
       const id = beatportIdFromLink(pick.link_url)
       if (!id) return
-      if (known.has(id)) {
+      const identity = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
+      if (known.ids.has(id) || (identity && known.identities.has(identity))) {
         result.skipped_known += 1
+        known.ids.add(id)
         return
       }
-      known.add(id)
+      known.ids.add(id)
+      if (identity) known.identities.add(identity)
       fresh.push(pick)
       if (auto) fromArtist.add(id)
     }
