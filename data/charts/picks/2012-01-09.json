@@ -1,0 +1,93 @@
+{
+  "week_date": "2012-01-09",
+  "picks": [
+    {
+      "title": "Lola",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lola/3208967",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3595ecd9-5ddd-419b-af54-d61ca1d13dd0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/82c20e6d-b5b6-4636-9a6c-6fb254d32fdb.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "Shake",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shake/3208968",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3595ecd9-5ddd-419b-af54-d61ca1d13dd0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0ec535ba-2265-4aed-ba40-ca8cd71cacbb.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "A Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "On And Off",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/on-and-off/3208969",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3595ecd9-5ddd-419b-af54-d61ca1d13dd0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e36b42d5-1f03-4428-8ea5-d536e08cc4b6.LOFI.mp3",
+      "bpm": 101,
+      "music_key": "Ab Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Sweet Song",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sweet-song/3208970",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3595ecd9-5ddd-419b-af54-d61ca1d13dd0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/17d91eac-db01-4c2c-9db0-907aa18b8750.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Major",
+      "release_year": 2012,
+      "release_date": "2012-01-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    }
+  ]
+}
