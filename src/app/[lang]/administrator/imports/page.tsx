@@ -46,6 +46,12 @@ function sampleSrc(url: string) {
   return `/api/audio-proxy?url=${encodeURIComponent(url)}`
 }
 
+function shortRunError(raw: string): string {
+  if (raw.includes('libnss3')) return 'El navegador del servidor no ha arrancado. Beatport no se ha leído.'
+  const line = raw.split('\n').map((s) => s.trim()).find(Boolean) || raw
+  return line.length > 220 ? `${line.slice(0, 217)}…` : line
+}
+
 function names(artists: Artist[] | null | undefined) {
   return (artists || []).map((a) => a.name).filter(Boolean).join(', ') || '—'
 }
@@ -219,7 +225,7 @@ export default function AdminImportsPage() {
           {payload.last_run.finished_at ? ` · ${new Date(payload.last_run.finished_at).toLocaleString('es-ES')}` : ''})
           {payload.last_run.ok
             ? ` · Top 100 publicados ${payload.last_run.auto_approved} · a la cola ${payload.last_run.queued}`
-            : ` · ${payload.last_run.error || 'falló'}`}
+            : ` · ${shortRunError(payload.last_run.error || 'falló')}`}
         </p>
       )}
 

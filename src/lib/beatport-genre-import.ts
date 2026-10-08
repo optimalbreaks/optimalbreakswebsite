@@ -62,6 +62,14 @@ export function madridHour(): number {
   return Number(h)
 }
 
+function shortImportError(raw: string): string {
+  if (/libnss3\.so/.test(raw)) {
+    return 'El navegador del servidor no ha arrancado (falta libnss3). Beatport no se ha leído.'
+  }
+  const line = raw.split('\n').map((s) => s.trim()).find(Boolean) || raw
+  return line.length > 240 ? `${line.slice(0, 237)}…` : line
+}
+
 function beatportIdFromLink(url: string): string {
   const m = String(url || '').match(/\/track\/[^/]+\/(\d+)/i)
   return m ? m[1] : ''
@@ -134,6 +142,16 @@ async function openBrowserReader(): Promise<{
   const { chromium } = await import('playwright-core')
   const browser = process.env.VERCEL
     ? await (async () => {
+        // Fluid Compute no pone AWS_LAMBDA_JS_RUNTIME. Sin eso, Chromium 131
+        // no descomprime al2023.tar.br y el binario muere por libnss3.so.
+        const runtime = process.env.AWS_LAMBDA_JS_RUNTIME || ''
+        if (!runtime.includes('20.x') && !runtime.includes('22.x')) {
+          process.env.AWS_LAMBDA_JS_RUNTIME = 'nodejs22.x'
+        }
+        const { existsSync, rmSync } = await import('node:fs')
+        if (existsSync('/tmp/chromium') && !existsSync('/tmp/al2023/lib/libnss3.so')) {
+          rmSync('/tmp/chromium', { force: true })
+        }
         const mod = await import('@sparticuz/chromium')
         const bin = mod.default ?? mod
         bin.setGraphicsMode = false
@@ -504,7 +522,7 @@ export async function runBeatportGenreImport(opts: {
     result.ok = true
   } catch (e) {
     result.ok = false
-    result.error = e instanceof Error ? e.message : String(e)
+    result.error = shortImportError(e instanceof Error ? e.message : String(e))
   }
 
   await sb
