@@ -155,10 +155,16 @@ async function openBrowserReader(): Promise<{
         const mod = await import('@sparticuz/chromium')
         const bin = mod.default ?? mod
         bin.setGraphicsMode = false
+        // Sparticuz mete `--single-process` (vale para Puppeteer) y
+        // `--headless='shell'` con comillas. Playwright con eso arranca el
+        // proceso y lo cierra antes del primer contexto.
+        const args = (bin.args as string[]).filter(
+          (arg) => arg !== '--single-process' && !arg.startsWith('--headless'),
+        )
         return chromium.launch({
-          args: bin.args,
+          args: [...args, '--headless=shell'],
           executablePath: await bin.executablePath(),
-          headless: true,
+          headless: false,
         })
       })()
     : await chromium.launch({
