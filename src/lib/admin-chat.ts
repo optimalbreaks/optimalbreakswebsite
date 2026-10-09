@@ -2,6 +2,7 @@ import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-country'
 import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
+import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
 import { pathToFileURL } from 'url'
 import { join } from 'path'
 import { readFileSync, existsSync } from 'fs'
@@ -429,20 +430,181 @@ async function soundcloudOembed(trackUrl: string): Promise<{
 function youtubeIdFromUrl(url: string): string | null {
   try {
     const u = new URL(url)
-    if (u.hostname.includes('youtu.be')) {
-      const id = u.pathname.replace(/^\//, '').slice(0, 11)
-      return id.length === 11 ? id : null
+    const host = u.hostname.replace(/^www\./, '')
+    if (host === 'youtu.be') {
+      const id = u.pathname.split('/').filter(Boolean)[0] || ''
+      return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null
     }
-    if (u.hostname.includes('youtube.com')) {
+    if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com') {
       const v = u.searchParams.get('v')
-      if (v && v.length === 11) return v
-      const m = u.pathname.match(/\/(?:embed|shorts)\/([a-zA-Z0-9_-]{11})/)
+      if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return v
+      const m = u.pathname.match(/\/(?:embed|shorts|live|v)\/([a-zA-Z0-9_-]{11})/)
       return m?.[1] || null
     }
   } catch {
     /* ignore */
   }
   return null
+}
+
+export type YouTubeLinkFact = {
+  videoId: string
+  url: string
+  rawTitle: string
+  title: string
+  mixName: string
+  artist: string
+  channel: string
+  artworkUrl: string
+  year: number | null
+  /** Tema suelto (archivo / vinilo) o sesión de DJ. */
+  kind: 'track' | 'session'
+}
+
+const YT_SESSION_RE =
+  /\b(essential mix|dj set|live set|full set|b2b|boiler room|podcast|radio show|sesi[oó]n|club set|liveset)\b/i
+const YT_MIX_PAREN_RE =
+  /\b(mix|remix|vip|dub|edit|version|instrumental|original|rework|bootleg|flip|re-edit)\b/i
+
+/** Lunes ISO de hoy en Madrid: contenedor de `chart_editions` para un vinilo de YouTube. */
+export function madridIsoWeekMonday(now = new Date()): string {
+  const today = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+  return chartEditionWeekMondayFromPublish(today) || today
+}
+
+function youtubeIdsInText(text: string): string[] {
+  const ids: string[] = []
+  const seen = new Set<string>()
+  for (const raw of text.match(/https?:\/\/[^\s<>"']+/gi) || []) {
+    const id = youtubeIdFromUrl(raw.replace(/[),.;]+$/, ''))
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    ids.push(id)
+  }
+  return ids
+}
+
+function splitYouTubeTitle(raw: string): { title: string; mixName: string } {
+  const trimmed = raw.trim()
+  const m = trimmed.match(/^(.*?)\s*\(([^)]+)\)\s*$/)
+  if (!m) return { title: trimmed, mixName: '' }
+  const inner = m[2].trim()
+  if (YT_MIX_PAREN_RE.test(inner) && !YT_SESSION_RE.test(inner)) {
+    return { title: m[1].trim() || trimmed, mixName: inner }
+  }
+  return { title: trimmed, mixName: '' }
+}
+
+function artistFromYouTubeChannel(channel: string): { artist: string; topic: boolean } {
+  const t = channel.trim()
+  const m = t.match(/^(.*?)\s+-\s+Topic$/i)
+  if (m?.[1]?.trim()) return { artist: m[1].trim(), topic: true }
+  return { artist: t, topic: false }
+}
+
+async function youtubeOembed(videoId: string): Promise<{
+  title?: string
+  author_name?: string
+  thumbnail_url?: string
+}> {
+  try {
+    const u = new URL('https://www.youtube.com/oembed')
+    u.searchParams.set('format', 'json')
+    u.searchParams.set('url', `https://www.youtube.com/watch?v=${videoId}`)
+    const res = await fetch(u.toString(), {
+      headers: { Accept: 'application/json', 'User-Agent': 'OptimalBreaksAdminChat/1.0' },
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return {}
+    return (await res.json()) as { title?: string; author_name?: string; thumbnail_url?: string }
+  } catch {
+    return {}
+  }
+}
+
+async function youtubePublishYear(videoId: string): Promise<number | null> {
+  try {
+    const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+      headers: {
+        'User-Agent': 'OptimalBreaksAdminChat/1.0',
+        'Accept-Language': 'en',
+      },
+      signal: AbortSignal.timeout(8000),
+      redirect: 'follow',
+    })
+    if (!res.ok) return null
+    const html = await res.text()
+    const m = html.match(/"publishDate":"(\d{4})-\d{2}-\d{2}"/)
+    if (!m) return null
+    const year = Number(m[1])
+    return year >= 1900 && year <= 2100 ? year : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Título y artista de cada enlace de YouTube del mensaje, vía oEmbed
+ * (el mismo dato que ve un reproductor). El canal «Artist - Topic» es el artista.
+ */
+export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact[]> {
+  const ids = youtubeIdsInText(text).slice(0, 4)
+  if (!ids.length) return []
+  const asksSession = YT_SESSION_RE.test(text.replace(/https?:\/\/\S+/g, ' '))
+  const facts = await Promise.all(
+    ids.map(async (videoId): Promise<YouTubeLinkFact | null> => {
+      const [meta, year] = await Promise.all([youtubeOembed(videoId), youtubePublishYear(videoId)])
+      const rawTitle = String(meta.title || '').trim()
+      const channel = String(meta.author_name || '').trim()
+      if (!rawTitle && !channel) return null
+      const { title, mixName } = splitYouTubeTitle(rawTitle || channel)
+      const { artist, topic } = artistFromYouTubeChannel(channel)
+      const sessionByTitle = YT_SESSION_RE.test(`${rawTitle} ${channel}`)
+      const kind: YouTubeLinkFact['kind'] =
+        topic ? 'track' : asksSession || sessionByTitle ? 'session' : 'track'
+      return {
+        videoId,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+        rawTitle: rawTitle || title,
+        title,
+        mixName,
+        artist: artist || channel,
+        channel,
+        artworkUrl: String(meta.thumbnail_url || '').trim() || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        year,
+        kind,
+      }
+    }),
+  )
+  return facts.filter((f): f is YouTubeLinkFact => f != null)
+}
+
+export function youtubeFactsPrompt(facts: YouTubeLinkFact[], weekDate: string): string {
+  if (!facts.length) return ''
+  const lines = facts.map((f, i) => {
+    const mix = f.mixName ? ` (${f.mixName})` : ''
+    const year = f.year != null ? String(f.year) : 'desconocido'
+    return [
+      `${i + 1}. url: ${f.url}`,
+      `   título: ${f.title}${mix}`,
+      `   mix_name: ${f.mixName || '(vacío)'}`,
+      `   artista: ${f.artist}`,
+      `   canal: ${f.channel || '(sin canal)'}`,
+      `   año: ${year}`,
+      `   miniatura: ${f.artworkUrl}`,
+      `   tipo: ${f.kind === 'session' ? 'sesión de DJ → stage_upsert_mix' : 'tema → stage_vinyl_picks'}`,
+    ].join('\n')
+  })
+  return `
+## YouTube de este mensaje (oEmbed, ya leído)
+Estos datos son del enlace. PROHIBIDO decir que no puedes leer YouTube, que no puedes extraer el título o el artista, o pedirlos si ya están aquí.
+Un canal que acaba en « - Topic» es el artista (YouTube Music), no un DJ: es un tema, no una sesión.
+- tipo=tema: stage_vinyl_picks EN ESTE TURNO. week_date=${weekDate} (contenedor; el año público es el campo year). items con title, mix_name, artists:[{name}], youtube_url, artwork_url y year si no es desconocido.
+- tipo=sesión: stage_upsert_mix EN ESTE TURNO con title, artist_name y video_url de aquí.
+No conviertas un tema en mix.
+
+${lines.join('\n')}
+`
 }
 
 async function adminInternalPost(
@@ -1491,8 +1653,13 @@ export function inferChatIntent(message: string): ChatIntent | null {
   if (/\b(vinyl pick|vinilo|vinilos|discogs\.com)\b/.test(m) && !/\b(evento|festival|cartel)\b/.test(m)) {
     return 'vinyl'
   }
+  if (/\b(youtu\.be|youtube\.com)\b/.test(m)) {
+    const withoutUrl = m.replace(/https?:\/\/\S+/g, ' ')
+    if (YT_SESSION_RE.test(withoutUrl)) return 'mix'
+    return 'vinyl'
+  }
   if (
-    /\b(essential mix|soundcloud\.com|on\.soundcloud|youtu\.be|youtube\.com)\b/.test(m) &&
+    /\b(essential mix|soundcloud\.com|on\.soundcloud)\b/.test(m) &&
     !/\b(evento|festival|cartel|vinyl|vinilo|discogs)\b/.test(m)
   ) {
     return 'mix'

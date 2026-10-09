@@ -83,6 +83,8 @@ Evento · Sello · Artista · New Release · Vinyl pick · Mix = **hint** (`inte
 | `stage_upsert_mix` | `mixes` |
 | `stage_new_releases` | `featured-import` / `chart_featured_tracks` |
 | `stage_vinyl_picks` | `chart_vinyl_tracks` (UPDATE por ID de YouTube; no regenerar UUID — ver `.cursor/rules/charts-ids-inmutables-saves.mdc`) |
+
+Un enlace de YouTube se lee en el servidor con oEmbed **antes** del modelo (`resolveYouTubeLinks` en `admin-chat.ts`): título, artista (el canal «Nombre - Topic» es el artista), mix entre paréntesis y miniatura. Un tema se prepara como vinilo; una sesión (essential mix, set, b2b, podcast) como mix. El modelo no puede decir que no ve el enlace. Si no llama a `stage_*`, el servidor deja la operación preparada igual. Un YouTube suelto ya no se clasifica como mix.
 | `stage_enrich_event` / `stage_event_poster` | APIs event / event-poster |
 | `stage_artist_photo` / `stage_label_logo` | APIs foto / logo (`artistName`/`labelName` o resolución por slug en BD) |
 
@@ -231,6 +233,8 @@ UI waiting state is a typing indicator (not a fake %-progress bar). Threads: mig
 - Prefer DB thread history for the model context.
 
 Mode chips are **hints**. Do not confuse **label** with **event** or **artist**.
+
+A YouTube link is read server-side via oEmbed before the model runs (`resolveYouTubeLinks`): title, artist (a «Name - Topic» channel is the artist), mix name in parentheses, and thumbnail. A song is staged as vinyl; a DJ set (essential mix, set, b2b, podcast) as a mix. The model must not claim it cannot read the link. If it skips `stage_*`, the server still queues the op. A bare YouTube URL is no longer classified as a mix.
 
 ### Event dates without a year on the flyer
 

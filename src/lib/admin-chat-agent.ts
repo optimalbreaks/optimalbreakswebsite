@@ -8,12 +8,16 @@ import {
   executeChatActions,
   extractScreenshotFacts,
   fetchWebResearchContext,
+  madridIsoWeekMonday,
   normalizeChatActions,
+  resolveYouTubeLinks,
   toSlug,
+  youtubeFactsPrompt,
   type ActionResult,
   type ChatAction,
   type ChatHistoryItem,
   type ChatIntent,
+  type YouTubeLinkFact,
 } from '@/lib/admin-chat'
 
 /** Cliente tipado laxo: tablas nuevas (062) + from(table dinámica) rompen el genérico Database. */
@@ -1213,6 +1217,79 @@ function openAiChatCompletionsPayload(opts: {
   return body
 }
 
+function youtubeOpCovers(op: PendingOp, fact: YouTubeLinkFact): boolean {
+  if (op.kind !== 'chat_action') return false
+  const action = op.action
+  if (fact.kind === 'track' && action.type === 'vinyl') {
+    return action.items.some((item) => String(item.youtube_url || '').includes(fact.videoId))
+  }
+  if (fact.kind === 'session' && action.type === 'mix') {
+    return String(action.video_url || '').includes(fact.videoId)
+  }
+  return false
+}
+
+/** Si el modelo no preparó el YouTube ya leído, lo deja en pending_ops igual. */
+function stageUnresolvedYouTube(
+  facts: YouTubeLinkFact[],
+  pendingOps: PendingOp[],
+  weekDate: string,
+): YouTubeLinkFact[] {
+  for (let i = pendingOps.length - 1; i >= 0; i--) {
+    const op = pendingOps[i]
+    if (!op || op.kind !== 'chat_action' || op.action.type !== 'mix') continue
+    const url = String(op.action.video_url || '')
+    if (facts.some((f) => f.kind === 'track' && url.includes(f.videoId))) pendingOps.splice(i, 1)
+  }
+
+  const missing = facts.filter((f) => !pendingOps.some((op) => youtubeOpCovers(op, f)))
+  if (!missing.length) return []
+
+  const tracks = missing.filter((f) => f.kind === 'track')
+  const sessions = missing.filter((f) => f.kind === 'session')
+
+  if (tracks.length) {
+    pendingOps.push({
+      kind: 'chat_action',
+      summary: `Vinyl: ${tracks.map((f) => `${f.title} — ${f.artist}`).join('; ')}`,
+      action: {
+        type: 'vinyl',
+        week_date: weekDate,
+        create_edition_if_missing: true,
+        items: tracks.map((f) => ({
+          title: f.title,
+          mix_name: f.mixName,
+          artists: f.artist ? [{ name: f.artist }] : [],
+          year: f.year,
+          youtube_url: f.url,
+          artwork_url: f.artworkUrl,
+        })),
+      },
+    })
+  }
+
+  for (const f of sessions) {
+    const title = f.rawTitle || f.title
+    pendingOps.push({
+      kind: 'chat_action',
+      summary: `Mix «${title}» (${f.artist})`,
+      action: {
+        type: 'mix',
+        slug: toSlug(`${f.artist} ${title}`).slice(0, 80),
+        title,
+        artist_name: f.artist,
+        platform: 'youtube',
+        mix_type: 'youtube_session',
+        video_url: f.url,
+        image_url: f.artworkUrl,
+        year: f.year,
+      },
+    })
+  }
+
+  return missing
+}
+
 export async function runAdminChatAgent(opts: {
   message: string
   history: ChatHistoryItem[]
@@ -1274,6 +1351,14 @@ export async function runAdminChatAgent(opts: {
   }
   if (opts.attachedPublicUrls.length) {
     system += `\nImágenes de este turno (Storage):\n${opts.attachedPublicUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
+  }
+  const youtubeFacts = await resolveYouTubeLinks(opts.message)
+  const vinylWeek = madridIsoWeekMonday()
+  if (youtubeFacts.length) {
+    system += youtubeFactsPrompt(youtubeFacts, vinylWeek)
+    if (opts.intent === 'mix' && youtubeFacts.every((f) => f.kind === 'track')) {
+      system += `\nEl HINT intent=mix no aplica a estos enlaces: oEmbed los marca como temas. Usa stage_vinyl_picks.\n`
+    }
   }
   if (looksLikeConfirm(opts.message)) {
     system += `\nEl editor acaba de afirmar («${opts.message.trim()}»). OBLIGATORIO en este turno: llama a stage_* con la entidad del historial (sello/artista/evento/…). No digas que no hay operaciones pendientes ni vuelvas a preguntar si lo añade.\n`
@@ -1366,6 +1451,16 @@ export async function runAdminChatAgent(opts: {
         content: JSON.stringify(result.detail).slice(0, 12_000),
       })
     }
+  }
+
+  const injectedYouTube = stageUnresolvedYouTube(youtubeFacts, pendingOps, vinylWeek)
+  if (injectedYouTube.length) {
+    const lines = injectedYouTube.map((f) => {
+      const mix = f.mixName ? ` (${f.mixName})` : ''
+      const asWhat = f.kind === 'session' ? 'sesión' : 'archivo'
+      return `• ${f.title}${mix} — ${f.artist} (${asWhat})`
+    })
+    finalReply = `He leído el YouTube:\n${lines.join('\n')}`
   }
 
   if (!finalReply) {

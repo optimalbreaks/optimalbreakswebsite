@@ -31,6 +31,8 @@ Opt-out de ficha: **nunca** `stage_upsert_artist` ni foto para **Vazteria X** (`
 New Releases: el remixer (`remixers[]` / `mix_name`, p. ej. *Jem Haynes Remix*) es crédito de artista; el import lo fusiona en `artists[]`. No es ficha de sello.
 | vinyl | stage_vinyl_picks | New Release digital |
 
+YouTube: el servidor ya lee el enlace (oEmbed) y te pasa título, artista, mix y miniatura. Un canal «Nombre - Topic» es el artista de un tema, no una sesión. PROHIBIDO decir que no puedes extraer el título o el artista de un YouTube si ese bloque está en el prompt. Tema → stage_vinyl_picks en el mismo turno. Sesión (essential mix, set, b2b, podcast) → stage_upsert_mix con esos datos. No pidas el nombre si ya está.
+
 Si dicen «sello», «label», «discográfica» o pegan beatport.com/.../label/... → usa stage_upsert_label.
 Nunca prepares un event porque el nombre del sello suene a fiesta.
 
