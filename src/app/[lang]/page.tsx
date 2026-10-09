@@ -103,6 +103,70 @@ const HOME_BTN_STYLE = {
   textTransform: 'uppercase' as const,
 }
 
+const DOOR_BTN =
+  'flex-1 sm:flex-none min-h-12 inline-flex items-center justify-center no-underline border-[3px] border-[var(--ink)] px-4 sm:px-8 shadow-[4px_4px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--ink)] transition-all'
+
+const DOOR_BTN_STYLE = {
+  fontFamily: "'Unbounded', sans-serif",
+  fontWeight: 900,
+  fontSize: 'clamp(13px, 3.4vw, 16px)',
+  letterSpacing: '1px',
+  textTransform: 'uppercase' as const,
+}
+
+/** Tracks (/charts) y Top 100, el mismo par del hero y de los banners. */
+function DoorButtons({ lang, tracks, top }: { lang: Locale; tracks: string; top: string }) {
+  return (
+    <div className="flex flex-row items-stretch gap-3 w-full sm:w-auto">
+      <Link href={`/${lang}/charts`} className={`${DOOR_BTN} bg-[var(--yellow)] text-[var(--ink)]`} style={DOOR_BTN_STYLE}>
+        {tracks}
+      </Link>
+      <Link href={`/${lang}/top100`} className={`${DOOR_BTN} bg-[var(--red)] text-white`} style={DOOR_BTN_STYLE}>
+        {top}
+      </Link>
+    </div>
+  )
+}
+
+function HomeDoorBanner({
+  lang,
+  tracks,
+  top,
+  kicker,
+  line,
+  tone,
+}: {
+  lang: Locale
+  tracks: string
+  top: string
+  kicker: string
+  line: string
+  tone: 'paper' | 'ink'
+}) {
+  const dark = tone === 'ink'
+  return (
+    <aside className={`relative z-[1] border-y-[5px] border-[var(--ink)] ${dark ? 'bg-[var(--ink)] text-[var(--paper)]' : 'bg-[var(--paper)] text-[var(--ink)]'}`}>
+      <div className="home-wrap px-3 sm:px-6 py-6 sm:py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-8">
+        <div className="min-w-0">
+          <p
+            className="m-0"
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: dark ? 'var(--yellow)' : 'var(--red)' }}
+          >
+            {kicker}
+          </p>
+          <p
+            className="m-0 mt-1"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3.2vw, 28px)', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '-0.4px' }}
+          >
+            {line}
+          </p>
+        </div>
+        <DoorButtons lang={lang} tracks={tracks} top={top} />
+      </div>
+    </aside>
+  )
+}
+
 /**
  * Cabecera de sección de la home: etiqueta + título de UNA línea + «ver todo»
  * alineado a la derecha. El único título a pantalla completa es el del hero.
@@ -392,21 +456,8 @@ export default async function HomePage({
           <DjDeck dict={h} />
         </div>
 
-        <div className="mt-6 sm:mt-8 flex flex-row items-stretch justify-center gap-3 max-w-[960px] mx-auto">
-          <Link
-            href={`/${lang}/charts`}
-            className="flex-1 sm:flex-none min-h-12 inline-flex items-center justify-center no-underline border-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] px-4 sm:px-8 shadow-[4px_4px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--ink)] transition-all"
-            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 3.4vw, 16px)', letterSpacing: '1px', textTransform: 'uppercase' }}
-          >
-            {h.hero_charts}
-          </Link>
-          <Link
-            href={`/${lang}/top100`}
-            className="flex-1 sm:flex-none min-h-12 inline-flex items-center justify-center no-underline border-[3px] border-[var(--ink)] bg-[var(--red)] text-white px-4 sm:px-8 shadow-[4px_4px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--ink)] transition-all"
-            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 3.4vw, 16px)', letterSpacing: '1px', textTransform: 'uppercase' }}
-          >
-            {h.hero_top100}
-          </Link>
+        <div className="mt-6 sm:mt-8 flex justify-center max-w-[960px] mx-auto">
+          <DoorButtons lang={lang} tracks={dict.nav.charts} top={dict.nav.top100} />
         </div>
 
         {/* Genre tags */}
@@ -503,6 +554,15 @@ export default async function HomePage({
         </div>
       </section>
 
+      <HomeDoorBanner
+        lang={lang}
+        tracks={dict.nav.charts}
+        top={dict.nav.top100}
+        kicker={h.door_listen_kicker}
+        line={h.door_listen_line}
+        tone="paper"
+      />
+
       {/* ===== EVENTS — lo vivo, justo después del «qué es» ===== */}
       <section className="px-3 sm:px-6 py-10 sm:py-14 relative z-[1] border-t-[5px] border-[var(--ink)]">
         <div className="home-wrap">
@@ -554,6 +614,15 @@ export default async function HomePage({
           href: `/${lang}/history`,
           label: (h as { timeline_footer?: string }).timeline_footer ?? 'History',
         }}
+      />
+
+      <HomeDoorBanner
+        lang={lang}
+        tracks={dict.nav.charts}
+        top={dict.nav.top100}
+        kicker={h.door_rank_kicker}
+        line={h.door_rank_line}
+        tone="ink"
       />
 
       {sectionBlog && featuredBlogPosts.length > 0 ? (

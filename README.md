@@ -263,7 +263,7 @@ Until then, consumers use **gated hooks** that enqueue the first action without 
 
 ### Other layout / route optimisations
 
-- **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads). Directly under the decks, two buttons link to **`/charts`** and **`/top100`** — the two doors of the hero; do not remove them.
+- **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads). Directly under the decks, two buttons: **Tracks** (same label as the menu; the URL stays `/charts`) and **Top 100**. The same pair repeats on two banners, after “what is breakbeat” and after the timeline. Do not remove them.
 - **`ChartsPromoModal`:** opens only after **2nd page view** in the session or **40 s** on site — not on first paint. Guests can see it again after **24 h**; logged-in accounts after **3.5 days**. Never on `/charts`. The poster asks people to hit **+** (those saves build the community track and artist charts).
 - **`BackToTop`**, **`GoogleAnalytics`**, **`ServiceWorkerRegistration`:** dynamic client imports in `[lang]/layout.tsx`.
 - **`/[lang]/history`:** `export const revalidate = 300` (ISR) where applicable.
