@@ -1134,6 +1134,8 @@ If a day fails anyway (red run in Actions, or no row dated today in `chart_impor
 $env:NODE_TLS_REJECT_UNAUTHORIZED='0'; npx tsx scripts/beatport-daily-import.ts --force
 ```
 
+**Where a published track shows up.** A track that enters through the pass or «Incluir» is a regular `chart_featured_tracks` row: it appears on `/charts` (its week) **and** in the «On Optimal Breaks» accordion of the artist and label profiles (`fetchArtistFeaturedPicks`, by `artist_names_text` and remixer). The two reads go through the Data Cache under different tags (`public-charts` and `public-catalog`); the import and `decideImport` invalidate **both**. Until 9 Oct 2026 only the charts tag was invalidated, so the profile lagged up to 5 min behind `/charts` (Dub Elements — *Poisioned By Bass*). The GitHub script goes through `/api/revalidate` with `catalog: true`, which already covered both.
+
 `--force` skips the hour gate and logs `trigger = manual`. Safe to repeat: known ids and identities skip. If a run row is stuck open (no `finished_at`, more than 15 minutes old) the next pass ignores it; younger than that, close it by hand before retrying.
 
 **Do not:** filter `release_date > today` (advances are a feature), delete queue rows to "clean up", move the cron back to midnight, put the schedule back on Vercel (300 s), re-add `--single-process`, infer the week from the paste date, or expect Top 100 tracks in Imports — they are already on `/charts`.

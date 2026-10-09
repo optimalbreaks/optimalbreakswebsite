@@ -19,7 +19,7 @@ import {
 } from '@/lib/beatport-next-data-tracks'
 import { loadTopArtistKeys } from '@/lib/community-top-artists'
 import { extractRemixerNames } from '@/lib/remixer-credits'
-import { revalidatePublicCharts } from '@/lib/revalidate-public'
+import { revalidatePublicCatalog, revalidatePublicCharts } from '@/lib/revalidate-public'
 import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { fetchAllPagesParallel } from '@/lib/supabase-paginate'
 import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
@@ -595,9 +595,12 @@ export async function runBeatportGenreImport(opts: {
     })
     .eq('id', run.id)
 
+  // Un tema publicado se ve en /charts (tag public-charts) y en «En Optimal
+  // Breaks» de la ficha del artista y del sello (tag public-catalog). Las dos.
   if (published > 0) {
     try {
       revalidatePublicCharts()
+      revalidatePublicCatalog()
     } catch {
       const secret = (process.env.REVALIDATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
       if (secret) {
@@ -680,6 +683,9 @@ export async function decideImport(
     })
     .eq('id', id)
   if (upErr) return { ok: false, error: upErr.message }
+  // Sin el tag del catálogo, la ficha del artista tardaba hasta 5 min en
+  // enseñar el tema que /charts ya mostraba (Dub Elements, 9 oct 2026).
   revalidatePublicCharts()
+  revalidatePublicCatalog()
   return { ok: true }
 }
