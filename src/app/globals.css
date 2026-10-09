@@ -42,19 +42,36 @@
 }
 
 /* Barra de acciones de una fila de track: 100% ancho, una sola línea.
-   En móvil (admin + IG + 3 plataformas) encoge el grupo; en escritorio
-   vuelve al wrap natural alineado a la derecha. */
+   Por debajo de 640 px no usar zoom: el 0.86 desplazaba el área de clic
+   (el + que se ve abría compartir) y la caja se salía del padre. Si no
+   caben play + BPM + tonalidad + guardar + compartir + Spotify + TIDAL
+   + Beatport, la fila se desplaza dentro (scrollbar oculta). */
 .track-action-bar {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   gap: 0.25rem;
   touch-action: manipulation;
 }
 @media (max-width: 639px) {
   .track-action-bar {
-    zoom: 0.86;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .track-action-bar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  .track-action-bar > * {
+    flex-shrink: 0;
   }
 }
 @media (min-width: 640px) {
