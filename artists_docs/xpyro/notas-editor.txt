@@ -1,0 +1,76 @@
+Alta editorial — Xpyro (9 oct 2026)
+====================================
+
+Fuente: Narciso + ficha Beatport https://www.beatport.com/artist/xpyro/2375967
+(también /es/artist/xpyro/2375967). beatport_id = 2375967.
+
+NO hay ficha previa. Crear slug `xpyro`, name `Xpyro`, name_display `XPYRO`.
+real_name: null (no confirmado públicamente).
+country: ES
+category: andalusian
+era: 2026-present
+is_featured: false
+styles: Breakbeat · Breaks · UK Bass · Electro
+beatport_id: 2375967
+beatport_url: https://www.beatport.com/artist/xpyro/2375967
+socials.beatport: misma URL.
+
+Identidad (Beatport, literal)
+-----------------------------
+DJ y productor de Breakbeat originario de Jamilena (Jaén). Propuesta centrada en el
+sonido andaluz, bajos sólidos, grooves enérgicos y producción orientada a club.
+Origin: Jamilena, Jaén, Andalucía, Spain. CONFIRMAR sin miedo: lo dice Beatport.
+Roles: DJ · Producer.
+Estado: Active / Emerging. Discografía corta pero ya clara. NO inflar.
+
+Actividad comercial
+-------------------
+Empieza en 2026. No hay releases comerciales anteriores fiables.
+NO inventar carrera previa, ni «escena de Jaén desde los 90» atribuida a él
+(eso es de Godino, también de Jamilena: no mezclar).
+
+Sello principal: Br8kn Records (ficha en catálogo: br8kn-records).
+Otros sellos: ElectroBreakz (electrobreakz) · SPACE PIZZA Records (space-pizza-records).
+Colaborador principal: DOPE-M (ficha dope-m).
+Remixer destacado: FunkyBitz (ficha funkybitz) — remix de Retro Memory.
+
+Discografía documentada (no inventar más)
+-----------------------------------------
+- Retro Memory — Br8kn Records — 26 jun 2026 — 140 BPM — Breaks / Breakbeat / UK Bass.
+  Primer release claro. Acompañado de Retro Memory — FunkyBitz Remix (138 BPM).
+- Got The Power — Br8kn Records — 7 ago 2026 — 137 BPM.
+  En Beatport (oct 2026) es su #1 del Top Ten.
+- Breaks Down — DOPE-M & Xpyro — ElectroBreakz — 20 ago 2026 — 135 BPM — Breaks.
+- Arabian Storm — Br8kn Records — 28 ago 2026 — 137 BPM.
+- Geminela City — DOPE-M & Xpyro — ElectroBreakz — 15 sep 2026 — 137 BPM —
+  Electro (Classic / Detroit / Modern). Muestra que no está encerrado en breakbeat puro.
+- Rumble Frequency — SPACE PIZZA Records — 25 sep 2026 — 140 BPM — Breaks / Breakbeat.
+  Conecta con otro sello central de la escena actual.
+
+essential_tracks (no inflar)
+----------------------------
+- Retro Memory
+- Got The Power
+- Breaks Down
+- Arabian Storm
+- Geminela City
+- Rumble Frequency
+
+related_artists: DOPE-M, FunkyBitz
+labels_founded: []
+recommended_mixes: [] salvo que exista un mix documentado (no inventar).
+
+key_releases (notas en inglés, tono enciclopédico)
+--------------------------------------------------
+- Retro Memory, 2026 — Br8kn; primer release claro; remix de FunkyBitz.
+- Got The Power, 2026 — Br8kn; #1 de su Top Ten Beatport (oct 2026).
+- Breaks Down, 2026 — with DOPE-M; ElectroBreakz.
+- Arabian Storm, 2026 — Br8kn.
+- Geminela City, 2026 — with DOPE-M; ElectroBreakz; vertiente Electro.
+- Rumble Frequency, 2026 — SPACE PIZZA Records.
+
+Bio: tono enciclopédico del sitio, ES + EN. Emergente, Jamilena, casa Br8kn,
+salida a ElectroBreakz con DOPE-M (breaks y electro) y a Space Pizza.
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+NO copiar la bio de Beatport palabra por palabra; sí los hechos.
+NO atribuirle OLIBASS, Break Sound Radio ni Godino.
