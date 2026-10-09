@@ -5,10 +5,10 @@ const nextConfig = {
   // Audio completo alojado (exclusivas): los MP3 viven fuera de public/ y los
   // sirve /api/audio/[file] con URL firmada + Referer. Hay que incluirlos en el
   // trace de esa lambda o en Vercel el fs.stat devuelve ENOENT.
-  // El Chromium de @sparticuz se lee por fs; si no se traza, el cron no arranca.
+  // El Chromium de @sparticuz se lee por fs; si no se traza, «Traer ahora» no
+  // arranca. El pase diario de las 12:05 corre en GitHub Actions, no en Vercel.
   outputFileTracingIncludes: {
     '/api/audio/*': ['./private/music/*.mp3'],
-    '/api/cron/beatport-releases': ['./node_modules/@sparticuz/chromium/**/*'],
     '/api/admin/imports': ['./node_modules/@sparticuz/chromium/**/*'],
   },
 
