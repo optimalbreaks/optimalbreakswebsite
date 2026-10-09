@@ -94,7 +94,7 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
 
   const pathname = usePathname()
   const resolvedLang = lang || getLang(pathname)
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const {
     isSaved: isSavedFn,
     isSavedByIdentity,
@@ -147,11 +147,10 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
 
   const es = resolvedLang === 'es'
   const isLoggedIn = !!user
+  const queuedSave = useRef(false)
+  const runSaveRef = useRef<() => void>(() => {})
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!isLoggedIn) { setShowGuest(true); return }
+  runSaveRef.current = () => {
     if (isUrlMode) {
       toggleByUrl(externalUrl as string, {
         trackId: externalTrackId,
@@ -177,6 +176,30 @@ export default function SaveTrackButton(props: SaveTrackButtonProps) {
     } else {
       toggleGroup(source as ChartTrackSource, trackId as string, groupIds)
     }
+  }
+
+  useEffect(() => {
+    if (authLoading || !queuedSave.current) return
+    queuedSave.current = false
+    if (!user) {
+      setShowGuest(true)
+      return
+    }
+    runSaveRef.current()
+  }, [authLoading, user])
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isLoggedIn) {
+      if (authLoading) {
+        queuedSave.current = true
+        return
+      }
+      setShowGuest(true)
+      return
+    }
+    runSaveRef.current()
   }
 
   const iconSvg = (w: number) => (

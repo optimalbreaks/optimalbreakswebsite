@@ -557,6 +557,83 @@ function deriveSaved(rows: SavedChartTrackRef[]): SavedDerived {
   return savedDerivedCache
 }
 
+// Una sola lectura de la biblioteca, compartida por todos los botones +.
+// Si cada fila de la semana lanzara la suya, al llegar el tema de un enlace
+// compartido se pisaban entre sí y el clic del + parpadeaba varias veces.
+let savedEpoch = 0
+let savedSession = 0
+let savedLoadFlight: { userId: string; promise: Promise<void> } | null = null
+let savedLoadRetry = false
+const saveLocks = new Set<string>()
+
+function cacheHasSaved(source: ChartTrackSource, id: string) {
+  return savedChartTracksCache.some((r) => r.track_source === source && r.track_id === id)
+}
+
+async function readSavedPages(userId: string): Promise<SavedChartTrackRef[]> {
+  const PAGE = 1000
+  const all: SavedChartTrackRef[] = []
+  for (let offset = 0; ; offset += PAGE) {
+    const { data, error } = await supabase
+      .from('saved_chart_tracks')
+      .select('track_source, track_id, canonical_url, snapshot, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + PAGE - 1)
+    if (error) break
+    const rows = (data as SavedChartTrackRef[] | null) || []
+    all.push(...rows)
+    if (rows.length < PAGE) break
+  }
+  return all
+}
+
+function scheduleSavedReload(userId: string, session: number) {
+  if (savedLoadRetry) return
+  savedLoadRetry = true
+  setTimeout(() => {
+    savedLoadRetry = false
+    if (session !== savedSession || saveLocks.size > 0) return
+    void loadSavedChartTracks(userId, true)
+  }, 0)
+}
+
+async function loadSavedChartTracks(userId: string, force = false): Promise<void> {
+  if (!force && savedChartTracksUserId === userId && !savedLoadFlight) return
+  if (savedLoadFlight?.userId === userId) return savedLoadFlight.promise
+  const epochAtStart = savedEpoch
+  const sessionAtStart = savedSession
+  const promise = (async () => {
+    const all = await readSavedPages(userId)
+    if (sessionAtStart !== savedSession) return
+    if (savedEpoch !== epochAtStart || saveLocks.size > 0) {
+      if (savedChartTracksUserId !== userId) scheduleSavedReload(userId, sessionAtStart)
+      return
+    }
+    savedChartTracksUserId = userId
+    setSavedChartTracksCache(all)
+  })()
+  const flight = { userId, promise }
+  savedLoadFlight = flight
+  try {
+    await promise
+  } finally {
+    if (savedLoadFlight === flight) savedLoadFlight = null
+  }
+}
+
+function lockSaveKeys(keys: string[]): boolean {
+  if (keys.some((k) => saveLocks.has(k))) return false
+  for (const k of keys) saveLocks.add(k)
+  savedEpoch += 1
+  return true
+}
+
+function unlockSaveKeys(keys: string[], userId: string) {
+  for (const k of keys) saveLocks.delete(k)
+  if (savedChartTracksUserId !== userId) scheduleSavedReload(userId, savedSession)
+}
+
 export function useSavedChartTracks() {
   const { user } = useAuth()
   const [saved, setSaved] = useState<SavedChartTrackRef[]>(savedChartTracksCache)
@@ -569,45 +646,32 @@ export function useSavedChartTracks() {
     return () => { savedChartTracksListeners.delete(listener) }
   }, [])
 
-  const fetch = useCallback(async () => {
+  useEffect(() => {
     if (!user) {
+      savedSession += 1
       savedChartTracksUserId = null
+      savedEpoch += 1
       setSavedChartTracksCache([])
+      /* eslint-disable react-hooks/set-state-in-effect -- cerrar sesión vacía la biblioteca */
       setLoading(false)
+      /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
-    // PostgREST corta en 1000 filas por defecto: paginamos para listas largas.
-    const PAGE = 1000
-    const all: SavedChartTrackRef[] = []
-    for (let offset = 0; ; offset += PAGE) {
-      const { data, error } = await supabase
-        .from('saved_chart_tracks')
-        .select('track_source, track_id, canonical_url, snapshot, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + PAGE - 1)
-      if (error) break
-      const rows = (data as SavedChartTrackRef[] | null) || []
-      all.push(...rows)
-      if (rows.length < PAGE) break
-    }
-    savedChartTracksUserId = user.id
-    setSavedChartTracksCache(all)
-    setLoading(false)
-  }, [user])
-
-  useEffect(() => {
-    // Solo refetch de red si cambia el usuario; si ya tenemos cache válida,
-    // nos basta con suscribirnos. Evita "loading…" y parpadeos entre rutas.
-    if (user && user.id === savedChartTracksUserId) {
+    // Solo una lectura de red por usuario. Si ya está en cache, adoptarla.
+    if (user.id === savedChartTracksUserId) {
       /* eslint-disable react-hooks/set-state-in-effect -- adoptar la cache ya cargada */
       setSaved(savedChartTracksCache)
       setLoading(false)
       /* eslint-enable react-hooks/set-state-in-effect */
       return
     }
-    fetch()
-  }, [fetch, user])
+    let alive = true
+    setLoading(true)
+    loadSavedChartTracks(user.id).finally(() => {
+      if (alive) setLoading(false)
+    })
+    return () => { alive = false }
+  }, [user])
 
   const derived = deriveSaved(saved)
   const savedSet = derived.keySet
@@ -658,29 +722,51 @@ export function useSavedChartTracks() {
     snapshot?: SavedChartTrackSnapshot | null,
   ) => {
     if (!user || !id) return
-    if (isSaved(source, id)) {
-      await supabase
-        .from('saved_chart_tracks')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('track_source', source)
-        .eq('track_id', id)
+    const key = makeKey(source, id)
+    if (!lockSaveKeys([key])) return
+    const had = cacheHasSaved(source, id)
+    const previous = savedChartTracksCache.find((r) => r.track_source === source && r.track_id === id) ?? null
+    if (had) {
       setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
     } else {
-      const insert: Record<string, unknown> = { user_id: user.id, track_source: source, track_id: id }
-      if (canonicalUrl) insert.canonical_url = canonicalUrl
-      if (snapshot) insert.snapshot = snapshot
-      const { data } = await supabase
-        .from('saved_chart_tracks')
-        .insert(insert)
-        .select('track_source, track_id, canonical_url, snapshot, created_at')
-        .single()
-      const row = (data as SavedChartTrackRef | null) || {
-        track_source: source,
-        track_id: id,
-        canonical_url: canonicalUrl ?? null,
+      setSavedChartTracksCache((s) => [
+        { track_source: source, track_id: id, canonical_url: canonicalUrl ?? null, snapshot: snapshot ?? null },
+        ...s.filter((r) => !(r.track_source === source && r.track_id === id)),
+      ])
+    }
+    try {
+      if (had) {
+        const { error } = await supabase
+          .from('saved_chart_tracks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('track_source', source)
+          .eq('track_id', id)
+        if (error) throw error
+      } else {
+        const insert: Record<string, unknown> = { user_id: user.id, track_source: source, track_id: id }
+        if (canonicalUrl) insert.canonical_url = canonicalUrl
+        if (snapshot) insert.snapshot = snapshot
+        const { data, error } = await supabase
+          .from('saved_chart_tracks')
+          .insert(insert)
+          .select('track_source, track_id, canonical_url, snapshot, created_at')
+          .single()
+        if (error && error.code !== '23505') throw error
+        if (data) {
+          const row = data as SavedChartTrackRef
+          setSavedChartTracksCache((s) => s.map((r) => (r.track_source === source && r.track_id === id ? row : r)))
+        }
       }
-      setSavedChartTracksCache((s) => [row, ...s])
+    } catch {
+      savedEpoch += 1
+      if (had && previous) {
+        setSavedChartTracksCache((s) => [previous, ...s.filter((r) => !(r.track_source === source && r.track_id === id))])
+      } else {
+        setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && r.track_id === id)))
+      }
+    } finally {
+      unlockSaveKeys([key], user.id)
     }
   }
 
@@ -699,14 +785,25 @@ export function useSavedChartTracks() {
   ) => {
     if (!user || !primaryId) return
     const ids = groupIds.length ? groupIds : [primaryId]
-    if (isAnySaved(source, ids)) {
-      await supabase
-        .from('saved_chart_tracks')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('track_source', source)
-        .in('track_id', ids)
+    const keys = ids.map((id) => makeKey(source, id))
+    if (ids.some((id) => cacheHasSaved(source, id))) {
+      if (!lockSaveKeys(keys)) return
+      const previous = savedChartTracksCache.filter((r) => r.track_source === source && ids.includes(r.track_id))
       setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === source && ids.includes(r.track_id))))
+      try {
+        const { error } = await supabase
+          .from('saved_chart_tracks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('track_source', source)
+          .in('track_id', ids)
+        if (error) throw error
+      } catch {
+        savedEpoch += 1
+        setSavedChartTracksCache((s) => [...previous, ...s])
+      } finally {
+        unlockSaveKeys(keys, user.id)
+      }
     } else {
       await toggle(source, primaryId)
     }
@@ -731,31 +828,44 @@ export function useSavedChartTracks() {
   ) => {
     if (!user || !primary.id) return
     const group = refs.length ? refs : [primary]
-    if (isAnySavedRefs(group)) {
-      // Borrar por fuente: agrupamos por source y hacemos una sentencia por
-      // cada una (habitualmente 1-2 fuentes, nunca más de 3).
+    const keys = group.map((r) => makeKey(r.source, r.id))
+    const savedNow = group.some((r) => cacheHasSaved(r.source, r.id))
+    if (savedNow) {
+      if (!lockSaveKeys(keys)) return
       const bySource = new Map<ChartTrackSource, string[]>()
       for (const r of group) {
         const arr = bySource.get(r.source) || []
         arr.push(r.id)
         bySource.set(r.source, arr)
       }
-      await Promise.all(
-        Array.from(bySource.entries()).map(([src, ids]) =>
-          supabase
-            .from('saved_chart_tracks')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('track_source', src)
-            .in('track_id', ids)
-        )
-      )
+      const previous = savedChartTracksCache.filter((row) => {
+        const ids = bySource.get(row.track_source)
+        return !!(ids && ids.includes(row.track_id))
+      })
       setSavedChartTracksCache((s) =>
         s.filter((row) => {
-          const ids = bySource.get(row.track_source as ChartTrackSource)
+          const ids = bySource.get(row.track_source)
           return !(ids && ids.includes(row.track_id))
-        })
+        }),
       )
+      try {
+        const results = await Promise.all(
+          Array.from(bySource.entries()).map(([src, ids]) =>
+            supabase
+              .from('saved_chart_tracks')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('track_source', src)
+              .in('track_id', ids),
+          ),
+        )
+        if (results.some((r) => r.error)) throw new Error('delete')
+      } catch {
+        savedEpoch += 1
+        setSavedChartTracksCache((s) => [...previous, ...s])
+      } finally {
+        unlockSaveKeys(keys, user.id)
+      }
     } else {
       await toggle(primary.source, primary.id, canonicalUrl ?? null, snapshot ?? null)
     }
@@ -776,14 +886,12 @@ export function useSavedChartTracks() {
     const normalized = normalizeCanonicalUrl(url)
     if (!normalized) return
 
-    // Buscar TODAS las filas cuya URL canónica normalizada coincide, sin
-    // importar la fuente. Un insert por URL coincidente es un borrado total.
     const wantIdentity = trackSaveIdentityKey(
       opts.snapshot?.title,
       opts.snapshot?.mix_name,
       opts.snapshot?.artists,
     )
-    const matching = saved.filter((r) => {
+    const matching = savedChartTracksCache.filter((r) => {
       if (r.track_source === 'vinyl') {
         return !!r.canonical_url && normalizeCanonicalUrl(r.canonical_url) === normalized
       }
@@ -792,59 +900,79 @@ export function useSavedChartTracks() {
       if (wantIdentity && identityOfSaved(r) === wantIdentity) return true
       return false
     })
+    const urlKey = `url:${normalized}`
 
     if (matching.length > 0) {
-      // Desmarca cross-source: borramos por pares (source, track_id) de todo
-      // lo que comparte la misma URL canónica.
       const bySource = new Map<ChartTrackSource, string[]>()
       for (const r of matching) {
         const arr = bySource.get(r.track_source) || []
         arr.push(r.track_id)
         bySource.set(r.track_source, arr)
       }
-      await Promise.all(
-        Array.from(bySource.entries()).map(([src, ids]) =>
-          supabase
-            .from('saved_chart_tracks')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('track_source', src)
-            .in('track_id', ids),
-        ),
-      )
+      const keys = [urlKey, ...matching.map((r) => makeKey(r.track_source, r.track_id))]
+      if (!lockSaveKeys(keys)) return
+      const previous = matching.slice()
       setSavedChartTracksCache((s) =>
         s.filter((row) => {
           const ids = bySource.get(row.track_source)
           return !(ids && ids.includes(row.track_id))
         }),
       )
+      try {
+        const results = await Promise.all(
+          Array.from(bySource.entries()).map(([src, ids]) =>
+            supabase
+              .from('saved_chart_tracks')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('track_source', src)
+              .in('track_id', ids),
+          ),
+        )
+        if (results.some((r) => r.error)) throw new Error('delete')
+      } catch {
+        savedEpoch += 1
+        setSavedChartTracksCache((s) => [...previous, ...s])
+      } finally {
+        unlockSaveKeys(keys, user.id)
+      }
       return
     }
 
-    // Insertar como beatport_top con snapshot. track_id = beatport numeric id
-    // o fallback a la URL normalizada (sirve de clave única).
     const track_id = opts.trackId || normalized
-    const insert = {
-      user_id: user.id,
-      track_source: 'beatport_top' as const,
+    const keys = [urlKey, makeKey('beatport_top', track_id)]
+    if (!lockSaveKeys(keys)) return
+    const optimistic: SavedChartTrackRef = {
+      track_source: 'beatport_top',
       track_id,
       canonical_url: url,
       snapshot: opts.snapshot ?? null,
     }
-    const { data } = await supabase
-      .from('saved_chart_tracks')
-      .insert(insert)
-      .select('track_source, track_id, canonical_url, snapshot, created_at')
-      .single()
-    const row =
-      (data as SavedChartTrackRef | null) ||
-      {
-        track_source: 'beatport_top' as ChartTrackSource,
+    setSavedChartTracksCache((s) => [optimistic, ...s.filter((r) => !(r.track_source === 'beatport_top' && r.track_id === track_id))])
+    try {
+      const insert = {
+        user_id: user.id,
+        track_source: 'beatport_top' as const,
         track_id,
         canonical_url: url,
         snapshot: opts.snapshot ?? null,
       }
-    setSavedChartTracksCache((s) => [row, ...s])
+      const { data, error } = await supabase
+        .from('saved_chart_tracks')
+        .insert(insert)
+        .select('track_source, track_id, canonical_url, snapshot, created_at')
+        .single()
+      if (error && error.code !== '23505') throw error
+      if (data) {
+        const row = data as SavedChartTrackRef
+        setSavedChartTracksCache((s) => s.map((r) => (r.track_source === 'beatport_top' && r.track_id === track_id ? row : r)))
+      }
+    } catch {
+      savedEpoch += 1
+      setSavedChartTracksCache((s) => s.filter((r) => !(r.track_source === 'beatport_top' && r.track_id === track_id)))
+    } finally {
+      unlockSaveKeys(keys, user.id)
+    }
   }
 
   return {
