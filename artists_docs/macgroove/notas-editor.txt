@@ -1,0 +1,45 @@
+Revisión editorial — MacGroove (9 oct 2026)
+=============================================
+
+La ficha anterior era de productor anónimo, sin país, congelada en septiembre
+(Eclipse como «más reciente»). REESCRIBIR. Conservar slug macgroove, name MacGroove,
+name_display MACGROOVE, image_url de Storage, beatport_id 2286106, sort_order 165.
+
+Identidad
+---------
+- real_name: Juan Macías Mateo.
+  City Pulse (Syncopated Soul, 6 mar 2026) lo acredita como compositor;
+  MacGroove figura como productor (Shazam).
+- Origen: Sevilla · Andalucía · España. Dato de Narciso (9 oct 2026). country ES,
+  category andalusian. Insertarlo en la nueva generación del breakbeat sevillano.
+- NO inventar colaboraciones con el roster de Br8kn ni con otros de Sevilla.
+  Relacionado documentado: PhoenixRising (remix de Fracture).
+
+Cronología 2026
+---------------
+- era: 2026-present. El comienzo discográfico está bien.
+- Principios de 2026 → Syncopated Soul: Ivory Rave, Desert Of Steel, City Pulse,
+  Dark Frequency, Off My Feet, Obsidian (10 mar, 138 BPM).
+- Primavera–otoño → Br8kn Records, casa principal. El roster oficial lo incluye.
+  Fracture (8 may: original 143 BPM + PhoenixRising Remix 136), Funk From Below,
+  FM Chaos, Kali Rage, She Breaks The Beat (26 jun), Void (10 jul), Stay Around,
+  Eclipse (4 sep), 1974 (9 oct, 137 BPM, G minor).
+- Verano → Flotic: Illusion (31 jul). NO decir «primera salida fuera de Br8kn»:
+  Syncopated Soul es anterior. Si se menciona: primera salida fuera de Br8kn
+  después de arrancar la fase principal en ese sello. Mejor no destacarlo.
+- Octubre → Samay (IMΔN, 5 oct, 138 BPM, D minor) + Br8kn (1974, 9 oct).
+  Eclipse ya NO es el más reciente.
+
+Sellos
+------
+- Principal: Br8kn Records (ficha br8kn-records).
+- Clave: Br8kn Records · Syncopated Soul · Samay Records (ficha samay-records).
+- Otro: Flotic Records.
+- Syncopated Soul y Flotic NO tienen ficha de sello (oct 2026).
+
+Essential tracks
+----------------
+City Pulse, Obsidian, Fracture, Fracture (PhoenixRising Remix), Funk From Below,
+She Breaks The Beat, Void, Eclipse, IMΔN, 1974.
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
