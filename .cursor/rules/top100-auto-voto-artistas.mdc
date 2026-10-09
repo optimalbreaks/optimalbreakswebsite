@@ -49,6 +49,7 @@ Quién los sostiene **después** de las dos marcas (26 ago): no hay un cuarto fa
 - Skip artista, claim y familiar: `src/lib/artist-self-credit.ts` → tablero **y** Top de canciones en `community-monthly/route.ts`, y set del fichado (o del familiar) en `soulmates/route.ts`. Remixers: `src/lib/remixer-credits.ts`. El «+» no sube la canción si el crédito fichado está en el tema; un tema de otro nombre sí. Mis Tracks no cambia.
 - Awards admin (`src/lib/awards-board.ts`): los mismos skips en artistas, sellos, países y Revelación. El recuento de **temas** del corte sí incluye el auto-voto. El KPI «Votos» es el corte abierto (por defecto año en curso + lanzamiento + listas públicas), no el `count(*)` de la tarjeta Saved Tracks. Spec: `docs/USER_ENGAGEMENT.md` (*Admin Awards*).
 - Skip sello: misma lib (`loadLabelCreditSkipMap` / `shouldSkipLabelSave`) → **solo** el bump de artistas en `community-monthly` (no Soulmates, no Top de canciones).
+- La ficha `/artists/[slug]` enseña los mismos tres números bajo el nombre (`N saves · M fans · K temas`). Los calcula `getCommunityArtistBoard` en `src/lib/community-top-artists.ts` (mismos saltos, caché 5 min). No es el contador de la estrella (favoritos).
 - Admin: `/administrator/users/[id]` → «Marcar artista (fase 2)», «Marcar sello» y «Marcar familiar».
 - Spec: `docs/USER_ENGAGEMENT.md` (*Three account levels* + *Editorial marks in production* + *Periodic cheat-vote audit*). Bookings: `docs/GUIA_IMPLEMENTACION_BOOKINGS.md` (§2.25).
 

@@ -51,6 +51,7 @@ import {
   resolveRecommendedMixHref,
 } from '@/lib/artist-related-content'
 import { collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
+import { communityCountsForArtist, getCommunityArtistBoard } from '@/lib/community-top-artists'
 
 type Props = {
   params: Promise<{ lang: Locale; slug: string }>
@@ -243,11 +244,13 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const allArtistLinkRows = await fetchAllArtistLinkRows(supabase)
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
 
-  const [{ data: labelRows }, relatedContent, featuredPicks] = await Promise.all([
+  const [{ data: labelRows }, relatedContent, featuredPicks, communityBoard] = await Promise.all([
     supabase.from('labels').select('name, slug'),
     fetchArtistRelatedContent(supabase, artist, lang, artistSlugByName),
     fetchArtistFeaturedPicks(supabase, artist, artistSlugByName),
+    getCommunityArtistBoard(),
   ])
+  const communityStats = communityCountsForArtist(communityBoard, artist)
   const onSiteSaveCounts = await fetchOnSiteSaveCounts(onSitePickTrackIds(featuredPicks))
 
   const labelSlugByName = new Map<string, string>()
@@ -394,6 +397,32 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                   {artist.real_name}
                 </p>
               )}
+              {communityStats ? (
+                <p
+                  className="mt-2 text-[11px] sm:text-xs font-bold tabular-nums text-[var(--ink)]/55"
+                  style={{ fontFamily: "'Courier Prime', monospace" }}
+                  title={
+                    lang === 'es'
+                      ? 'Los mismos números del Top de artistas: temas guardados en Mis Tracks'
+                      : 'Same numbers as the artist board: tracks saved to My Tracks'
+                  }
+                >
+                  <Link href={`/${lang}/top100`} className="hover:text-[var(--ink)]">
+                    {communityStats.saves} saves
+                    {' · '}
+                    {communityStats.fans} {communityStats.fans === 1 ? 'fan' : 'fans'}
+                    {' · '}
+                    {communityStats.tracks}{' '}
+                    {lang === 'es'
+                      ? communityStats.tracks === 1
+                        ? 'tema'
+                        : 'temas'
+                      : communityStats.tracks === 1
+                        ? 'track'
+                        : 'tracks'}
+                  </Link>
+                </p>
+              ) : null}
               <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-6">
                 <FavoriteButton type="artist" entityId={artist.id} size="md" lang={lang} />
                 <SeenLiveButton
