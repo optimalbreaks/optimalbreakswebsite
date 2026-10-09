@@ -263,7 +263,7 @@ Until then, consumers use **gated hooks** that enqueue the first action without 
 
 ### Other layout / route optimisations
 
-- **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads). **Tracks** (URL `/charts`, same label as the menu) and **Top 100** are the two doors: first in the nav (yellow and red), a strip under the header on other public pages (not on the home, not on those two routes, not in admin), two home banners, the red closer, and a black band in the footer. Do not remove them.
+- **`DjDeck`:** `next/dynamic` on the home page with a fixed-height placeholder (deck JS not in home first chunk until visible chunk loads). **Tracks** (URL `/charts`, same label as the menu) and **Top 100** are the two doors: first in the desktop nav (yellow and red). In the mobile menu they are two large hard-shadow buttons on a black block; the other sections sit in a grid. Also a strip under the header on other public pages (not on the home, not on those two routes, not in admin), two home banners, the red closer, and a black band in the footer. Do not remove them.
 - **`ChartsPromoModal`:** opens only after **2nd page view** in the session or **40 s** on site — not on first paint. Guests can see it again after **24 h**; logged-in accounts after **3.5 days**. Never on `/charts`. The poster asks people to hit **+** (those saves build the community track and artist charts).
 - **`BackToTop`**, **`GoogleAnalytics`**, **`ServiceWorkerRegistration`:** dynamic client imports in `[lang]/layout.tsx`.
 - **`/[lang]/history`:** `export const revalidate = 300` (ISR) where applicable.

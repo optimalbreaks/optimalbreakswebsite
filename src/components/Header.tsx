@@ -280,11 +280,32 @@ export default function Header({ dict, lang }: HeaderProps) {
       setIsMacLike(/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent))
     }
   }, [])
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
   const searchKbd = isMacLike ? '⌘K' : 'Ctrl K'
   const searchLabel = paletteDict.button_full || (lang === 'es' ? 'Buscar' : 'Search')
 
   return (
     <>
+    {menuOpen && (
+      <button
+        type="button"
+        className="fixed inset-0 z-[90] cursor-pointer border-0 bg-black/60 lg:hidden"
+        aria-label={lang === 'es' ? 'Cerrar menú' : 'Close menu'}
+        onClick={() => setMenuOpen(false)}
+      />
+    )}
     <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
       {/* Sin overflow-x en el header: con overflow-x:hidden el panel absolute del menú (y menús de cuenta) queda recortado. El ancho móvil lo contienen html/body/main. */}
       {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
@@ -409,17 +430,14 @@ export default function Header({ dict, lang }: HeaderProps) {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
-        <div className="absolute top-full left-0 right-0 bg-[var(--paper)] border-b-4 border-[var(--ink)] lg:hidden z-50">
-          {navItems.map((item) => (
-            <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)}
-              className="block px-6 py-3 no-underline border-b-2 border-[var(--ink)]/10 hover:bg-[var(--red)] hover:text-white"
-              style={{ ...navLinkStyle(item.key, item.href), fontSize: '12px' }}>
-              {dict.nav[item.key]}
-            </Link>
-          ))}
-        </div>
+        <MobileNavPanel
+          lang={lang}
+          dict={dict}
+          pathname={pathname}
+          items={navItems}
+          onClose={() => setMenuOpen(false)}
+        />
       )}
 
       {paletteDict && Object.keys(paletteDict).length > 0 ? (
@@ -428,6 +446,95 @@ export default function Header({ dict, lang }: HeaderProps) {
     </header>
     <ListenStrip lang={lang} dict={dict} pathname={pathname} />
     </>
+  )
+}
+
+const MENU_FACE = { fontFamily: "'Unbounded', sans-serif", fontWeight: 900, textTransform: 'uppercase' as const }
+const MENU_META = { fontFamily: "'Courier Prime', monospace", fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' as const }
+
+function MobileNavPanel({
+  lang,
+  dict,
+  pathname,
+  items,
+  onClose,
+}: {
+  lang: Locale
+  dict: any
+  pathname: string
+  items: { key: string; href: string }[]
+  onClose: () => void
+}) {
+  const doors = dict?.doors as { kicker?: string; line?: string } | undefined
+  const here = lang === 'es' ? 'Estás aquí' : "You're here"
+  const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const doorsItems = items.filter((item) => item.key === 'charts' || item.key === 'top100')
+  const rest = items.filter((item) => item.key !== 'charts' && item.key !== 'top100')
+
+  return (
+    <div className="absolute top-full left-0 right-0 z-50 max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b-4 border-[var(--ink)] bg-[var(--paper)] lg:hidden">
+      <div
+        className="h-3 border-b-[3px] border-[var(--ink)]"
+        style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #1a1a1a 0 10px, #f7e733 10px 20px)' }}
+        aria-hidden
+      />
+      <div className="bg-[var(--ink)] px-4 pb-5 pt-3 text-[var(--paper)]">
+        {doors?.kicker ? (
+          <p className="m-0 text-[var(--yellow)]" style={{ ...MENU_META, fontSize: '11px' }}>
+            {doors.kicker}
+          </p>
+        ) : null}
+        {doors?.line ? (
+          <p className="m-0 mt-1 max-w-[22rem]" style={{ ...MENU_FACE, fontSize: '15px', lineHeight: 1.15, letterSpacing: '-0.3px' }}>
+            {doors.line}
+          </p>
+        ) : null}
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {doorsItems.map((item) => {
+            const on = active(item.href)
+            const yellow = item.key === 'charts'
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                onClick={onClose}
+                className={`flex min-h-[4.75rem] flex-col justify-between border-[3px] border-[var(--ink)] px-3 py-2 no-underline active:translate-x-[2px] active:translate-y-[2px] ${
+                  yellow
+                    ? 'bg-[var(--yellow)] text-[var(--ink)] shadow-[6px_6px_0_var(--yellow)] active:shadow-[3px_3px_0_var(--yellow)]'
+                    : 'bg-[var(--red)] text-white shadow-[6px_6px_0_var(--red)] active:shadow-[3px_3px_0_var(--red)]'
+                }`}
+                style={MENU_FACE}
+              >
+                <span style={{ ...MENU_META, fontSize: '9px', opacity: 0.8 }}>
+                  {on ? here : yellow ? '01' : '02'}
+                </span>
+                <span style={{ fontSize: '15px', letterSpacing: '0.4px', lineHeight: 1 }}>{dict.nav[item.key]}</span>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 p-3">
+        {rest.map((item) => {
+          const on = active(item.href)
+          const wide = item.key === 'about'
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              onClick={onClose}
+              className={`flex min-h-12 items-center justify-between gap-2 border-[3px] border-[var(--ink)] px-3 no-underline ${
+                wide ? 'col-span-2' : ''
+              } ${on ? 'bg-[var(--ink)] text-[var(--yellow)]' : 'bg-white text-[var(--ink)]'}`}
+              style={{ ...MENU_FACE, fontSize: '12px', letterSpacing: '0.3px' }}
+            >
+              <span>{dict.nav[item.key]}</span>
+              <span aria-hidden style={{ ...MENU_META, fontSize: '12px' }}>{on ? '●' : '→'}</span>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
