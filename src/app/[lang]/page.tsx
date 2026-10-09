@@ -392,6 +392,23 @@ export default async function HomePage({
           <DjDeck dict={h} />
         </div>
 
+        <div className="mt-6 sm:mt-8 flex flex-row items-stretch justify-center gap-3 max-w-[960px] mx-auto">
+          <Link
+            href={`/${lang}/charts`}
+            className="flex-1 sm:flex-none min-h-12 inline-flex items-center justify-center no-underline border-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)] px-4 sm:px-8 shadow-[4px_4px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--ink)] transition-all"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 3.4vw, 16px)', letterSpacing: '1px', textTransform: 'uppercase' }}
+          >
+            {h.hero_charts}
+          </Link>
+          <Link
+            href={`/${lang}/top100`}
+            className="flex-1 sm:flex-none min-h-12 inline-flex items-center justify-center no-underline border-[3px] border-[var(--ink)] bg-[var(--red)] text-white px-4 sm:px-8 shadow-[4px_4px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--ink)] transition-all"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 3.4vw, 16px)', letterSpacing: '1px', textTransform: 'uppercase' }}
+          >
+            {h.hero_top100}
+          </Link>
+        </div>
+
         {/* Genre tags */}
         <div className="mt-4 sm:mt-5 text-center">
           {(h.genres as string[]).map((g: string, i: number) => {
