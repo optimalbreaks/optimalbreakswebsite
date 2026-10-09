@@ -13,6 +13,10 @@
     "charts": "Tracks",
     "top100": "Top 100"
   },
+  "doors": {
+    "kicker": "The good stuff",
+    "line": "Tracks and Top 100. That's the music."
+  },
   "search": {
     "button_short": "Search",
     "button_full": "Search Optimal Breaks",
@@ -190,6 +194,11 @@
           "hint": "New Releases and archive"
         },
         {
+          "href": "/top100",
+          "label": "Top 100",
+          "hint": "What the scene saves the most"
+        },
+        {
           "href": "/scenes",
           "label": "Scenes",
           "hint": "Territories and local context"
@@ -231,7 +240,7 @@
     "cta": {
       "title_1": "BREAK THE",
       "title_2": "BREAKBEAT",
-      "sub": "Living breakbeat documentation: open the timeline or the blog and stay a while.",
+      "sub": "Open Tracks or the Top 100. That's the music.",
       "button": "FULL HISTORY",
       "secondary": "Editorial blog"
     },

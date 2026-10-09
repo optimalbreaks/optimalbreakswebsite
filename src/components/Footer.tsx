@@ -9,6 +9,7 @@ import ManageConsentButton from './ManageConsentButton'
 
 type FooterDict = {
   nav: Record<string, string>
+  doors?: { kicker?: string; line?: string }
   footer: {
     copy?: string
     funding?: string
@@ -25,6 +26,8 @@ interface FooterProps {
 }
 
 const SITE_KEYS = [
+  'charts',
+  'top100',
   'home',
   'history',
   'artists',
@@ -116,8 +119,44 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
   const headingClass =
     'mb-4 text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]'
 
+  const doors = dict.doors
+  const tracksLabel = dict.nav.charts || 'Tracks'
+  const topLabel = dict.nav.top100 || 'Top 100'
+
   return (
     <footer className="relative z-[1] border-t-4 border-[var(--ink)] bg-[var(--paper)]">
+      {doors?.line ? (
+        <div className="border-b-4 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]">
+          <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-7">
+            <div className="min-w-0">
+              {doors.kicker ? (
+                <p className="m-0 text-[var(--yellow)]" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase' }}>
+                  {doors.kicker}
+                </p>
+              ) : null}
+              <p className="m-0 mt-1" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(18px, 3vw, 26px)', lineHeight: 1.1, textTransform: 'uppercase', letterSpacing: '-0.4px' }}>
+                {doors.line}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-3">
+              <Link
+                href={`/${lang}/charts`}
+                className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-[var(--yellow)] bg-[var(--yellow)] px-4 text-[var(--ink)] no-underline shadow-[4px_4px_0_var(--red)] hover:bg-[var(--paper)] sm:flex-none sm:px-6"
+                style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                {tracksLabel}
+              </Link>
+              <Link
+                href={`/${lang}/top100`}
+                className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-white bg-[var(--red)] px-4 text-white no-underline shadow-[4px_4px_0_var(--yellow)] hover:bg-white hover:text-[var(--red)] sm:flex-none sm:px-6"
+                style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                {topLabel}
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="mx-auto w-full max-w-[1400px] px-5 py-10 sm:px-8">
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">
           

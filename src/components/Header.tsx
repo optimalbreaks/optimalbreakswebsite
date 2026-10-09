@@ -232,14 +232,14 @@ export default function Header({ dict, lang }: HeaderProps) {
   const { user, loading } = useAuth()
 
   const navItems = [
+    { key: 'charts', href: `/${lang}/charts` },
+    { key: 'top100', href: `/${lang}/top100` },
     { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
     { key: 'events', href: `/${lang}/events` },
     { key: 'festivals', href: `/${lang}/festivals` },
     { key: 'labels', href: `/${lang}/labels` },
     { key: 'mixes', href: `/${lang}/mixes` },
-    { key: 'charts', href: `/${lang}/charts` },
-    { key: 'top100', href: `/${lang}/top100` },
     { key: 'scenes', href: `/${lang}/scenes` },
     { key: 'blog', href: `/${lang}/blog` },
     { key: 'about', href: `/${lang}/about` },
@@ -252,15 +252,27 @@ export default function Header({ dict, lang }: HeaderProps) {
   const FlagIcon = otherLang === 'es' ? FlagES : FlagGB
 
   const navActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
-  const navLinkStyle = (href: string) => ({
-    fontFamily: "'Courier Prime', monospace",
-    fontWeight: 700,
-    fontSize: '11px',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '2px',
-    color: navActive(href) ? 'white' : 'var(--ink)',
-    background: navActive(href) ? 'var(--red)' : 'transparent',
-  })
+  const navLinkStyle = (key: string, href: string) => {
+    const on = navActive(href)
+    let color = on ? 'white' : 'var(--ink)'
+    let background = on ? 'var(--red)' : 'transparent'
+    if (key === 'charts') {
+      color = on ? 'white' : 'var(--ink)'
+      background = on ? 'var(--red)' : 'var(--yellow)'
+    } else if (key === 'top100') {
+      color = on ? 'var(--ink)' : 'white'
+      background = on ? 'var(--yellow)' : 'var(--red)'
+    }
+    return {
+      fontFamily: "'Courier Prime', monospace",
+      fontWeight: 700,
+      fontSize: '11px',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '2px',
+      color,
+      background,
+    }
+  }
 
   const [isMacLike, setIsMacLike] = useState(false)
   useEffect(() => {
@@ -272,6 +284,7 @@ export default function Header({ dict, lang }: HeaderProps) {
   const searchLabel = paletteDict.button_full || (lang === 'es' ? 'Buscar' : 'Search')
 
   return (
+    <>
     <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
       {/* Sin overflow-x en el header: con overflow-x:hidden el panel absolute del menú (y menús de cuenta) queda recortado. El ancho móvil lo contienen html/body/main. */}
       {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
@@ -298,7 +311,7 @@ export default function Header({ dict, lang }: HeaderProps) {
             key={item.key}
             href={item.href}
             className="flex items-center px-2 xl:px-3 py-3 no-underline border-l-[3px] border-[var(--ink)] transition-all duration-100 hover:bg-[var(--red)] hover:text-white"
-            style={navLinkStyle(item.href)}
+            style={navLinkStyle(item.key, item.href)}
           >
             {dict.nav[item.key]}
           </Link>
@@ -402,7 +415,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           {navItems.map((item) => (
             <Link key={item.key} href={item.href} onClick={() => setMenuOpen(false)}
               className="block px-6 py-3 no-underline border-b-2 border-[var(--ink)]/10 hover:bg-[var(--red)] hover:text-white"
-              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', color: navActive(item.href) ? 'white' : 'var(--ink)', background: navActive(item.href) ? 'var(--red)' : 'transparent' }}>
+              style={{ ...navLinkStyle(item.key, item.href), fontSize: '12px' }}>
               {dict.nav[item.key]}
             </Link>
           ))}
@@ -413,6 +426,48 @@ export default function Header({ dict, lang }: HeaderProps) {
         <CommandPalette lang={lang} dict={paletteDict} />
       ) : null}
     </header>
+    <ListenStrip lang={lang} dict={dict} pathname={pathname} />
+    </>
+  )
+}
+
+function ListenStrip({ lang, dict, pathname }: { lang: Locale; dict: any; pathname: string }) {
+  const onHome = pathname === `/${lang}` || pathname === `/${lang}/`
+  const onMusic =
+    pathname === `/${lang}/charts` ||
+    pathname.startsWith(`/${lang}/charts/`) ||
+    pathname === `/${lang}/top100` ||
+    pathname.startsWith(`/${lang}/top100/`)
+  const onAdmin = pathname.includes('/administrator')
+  const doors = dict?.doors as { kicker?: string; line?: string } | undefined
+  if (onHome || onMusic || onAdmin || !doors?.line) return null
+  const tracks = dict?.nav?.charts || 'Tracks'
+  const top = dict?.nav?.top100 || 'Top 100'
+  return (
+    <div className="border-b-4 border-[var(--ink)] bg-[var(--yellow)]">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="m-0 min-w-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(13px, 2.4vw, 16px)', lineHeight: 1.15, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+          <span className="mr-2 text-[var(--red)]" style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '2px' }}>{doors.kicker}</span>
+          {doors.line}
+        </p>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href={`/${lang}/charts`}
+            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--ink)] px-3 text-[var(--yellow)] no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+          >
+            {tracks}
+          </Link>
+          <Link
+            href={`/${lang}/top100`}
+            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--red)] px-3 text-white no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+          >
+            {top}
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }
 

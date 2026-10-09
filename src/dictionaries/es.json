@@ -13,6 +13,10 @@
     "charts": "Tracks",
     "top100": "Top 100"
   },
+  "doors": {
+    "kicker": "La chicha",
+    "line": "Tracks y Top 100. Ahí está la música."
+  },
   "search": {
     "button_short": "Buscar",
     "button_full": "Buscar en Optimal Breaks",
@@ -120,6 +124,7 @@
         { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
         { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
+        { "href": "/top100", "label": "Top 100", "hint": "Lo que más guarda la escena" },
         { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/breakbeat", "label": "Qué es el breakbeat", "hint": "Guía del género" },
@@ -138,7 +143,7 @@
     "cta": {
       "title_1": "ROMPE EL",
       "title_2": "BREAKBEAT",
-      "sub": "Documentación viva del breakbeat: entra en la cronología o en el blog para quedarte.",
+      "sub": "Entra en Tracks o en el Top 100. Ahí está la música.",
       "button": "HISTORIA COMPLETA",
       "secondary": "Blog editorial"
     },

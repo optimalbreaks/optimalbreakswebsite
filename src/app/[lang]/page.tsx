@@ -115,13 +115,17 @@ const DOOR_BTN_STYLE = {
 }
 
 /** Tracks (/charts) y Top 100, el mismo par del hero y de los banners. */
-function DoorButtons({ lang, tracks, top }: { lang: Locale; tracks: string; top: string }) {
+function DoorButtons({ lang, tracks, top, onRed = false }: { lang: Locale; tracks: string; top: string; onRed?: boolean }) {
   return (
     <div className="flex flex-row items-stretch gap-3 w-full sm:w-auto">
       <Link href={`/${lang}/charts`} className={`${DOOR_BTN} bg-[var(--yellow)] text-[var(--ink)]`} style={DOOR_BTN_STYLE}>
         {tracks}
       </Link>
-      <Link href={`/${lang}/top100`} className={`${DOOR_BTN} bg-[var(--red)] text-white`} style={DOOR_BTN_STYLE}>
+      <Link
+        href={`/${lang}/top100`}
+        className={`${DOOR_BTN} ${onRed ? 'bg-white text-[var(--red)]' : 'bg-[var(--red)] text-white'}`}
+        style={DOOR_BTN_STYLE}
+      >
         {top}
       </Link>
     </div>
@@ -752,31 +756,22 @@ export default async function HomePage({
             {(h.cta as { sub: string }).sub}
           </p>
         ) : null}
-        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+        <div className="mt-6 sm:mt-8 flex justify-center px-2">
+          <DoorButtons lang={lang} tracks={dict.nav.charts} top={dict.nav.top100} onRed />
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
           <Link
             href={`/${lang}/history`}
-            className="inline-block px-8 sm:px-[50px] py-3 sm:py-[14px] bg-white text-[var(--red)] border-4 border-white hover:bg-transparent hover:text-white transition-all duration-100 no-underline"
-            style={{
-              fontFamily: "'Unbounded', sans-serif",
-              fontWeight: 900,
-              fontSize: 'clamp(12px, 2vw, 16px)',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-            }}
+            className="text-white/90 no-underline hover:text-[var(--yellow)]"
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}
           >
             {h.cta.button} →
           </Link>
           {'secondary' in h.cta && (h.cta as { secondary?: string }).secondary ? (
             <Link
               href={`/${lang}/blog`}
-              className="inline-block px-6 py-3 border-4 border-white text-white no-underline hover:bg-white hover:text-[var(--red)] transition-all duration-100"
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontWeight: 700,
-                fontSize: '12px',
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-              }}
+              className="text-white/90 no-underline hover:text-[var(--yellow)]"
+              style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}
             >
               {(h.cta as { secondary: string }).secondary} →
             </Link>
