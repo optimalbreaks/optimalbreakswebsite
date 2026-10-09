@@ -7,7 +7,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { useArtistBookingInbox } from '@/hooks/useUserData'
 import { createBrowserSupabase } from '@/lib/supabase'
@@ -229,6 +229,8 @@ function HeaderUserMenu({ lang, user, variant }: { lang: Locale; user: User; var
 export default function Header({ dict, lang }: HeaderProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+  const [barH, setBarH] = useState(52)
   const { user, loading } = useAuth()
 
   const navItems = [
@@ -280,16 +282,42 @@ export default function Header({ dict, lang }: HeaderProps) {
       setIsMacLike(/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent))
     }
   }, [])
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const measure = () => setBarH(el.offsetHeight)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   useEffect(() => {
     if (!menuOpen) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const y = window.scrollY
+    const body = document.body
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+    }
+    body.style.position = 'fixed'
+    body.style.top = `-${y}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMenuOpen(false)
     }
     document.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = prev
+      body.style.position = prev.position
+      body.style.top = prev.top
+      body.style.left = prev.left
+      body.style.right = prev.right
+      body.style.width = prev.width
+      window.scrollTo(0, y)
       document.removeEventListener('keydown', onKey)
     }
   }, [menuOpen])
@@ -306,8 +334,8 @@ export default function Header({ dict, lang }: HeaderProps) {
         onClick={() => setMenuOpen(false)}
       />
     )}
-    <header className="sticky top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch bg-[var(--paper)] border-b-4 border-[var(--ink)]">
-      {/* Sin overflow-x en el header: con overflow-x:hidden el panel absolute del menú (y menús de cuenta) queda recortado. El ancho móvil lo contienen html/body/main. */}
+    <header ref={headerRef} className="fixed inset-x-0 top-0 z-[100] flex w-full min-w-0 max-w-full items-stretch border-b-4 border-[var(--ink)] bg-[var(--paper)] lg:sticky">
+      {/* En móvil es fixed: el panel absolute sale debajo de la barra, en la ventana, no al principio del documento. Sin overflow-x en el header: recortaría el menú. */}
       {/* Marca cuadrada — mismo asset que favicon (public/images/favicon_punk_brutalism.png) */}
       <Link
         href={`/${lang}`}
@@ -436,6 +464,7 @@ export default function Header({ dict, lang }: HeaderProps) {
           dict={dict}
           pathname={pathname}
           items={navItems}
+          barH={barH}
           onClose={() => setMenuOpen(false)}
         />
       )}
@@ -444,6 +473,7 @@ export default function Header({ dict, lang }: HeaderProps) {
         <CommandPalette lang={lang} dict={paletteDict} />
       ) : null}
     </header>
+    <div className="lg:hidden" style={{ height: barH }} aria-hidden />
     <ListenStrip lang={lang} dict={dict} pathname={pathname} />
     </>
   )
@@ -457,12 +487,14 @@ function MobileNavPanel({
   dict,
   pathname,
   items,
+  barH,
   onClose,
 }: {
   lang: Locale
   dict: any
   pathname: string
   items: { key: string; href: string }[]
+  barH: number
   onClose: () => void
 }) {
   const doors = dict?.doors as { kicker?: string; line?: string } | undefined
@@ -472,7 +504,10 @@ function MobileNavPanel({
   const rest = items.filter((item) => item.key !== 'charts' && item.key !== 'top100')
 
   return (
-    <div className="absolute top-full left-0 right-0 z-50 max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b-4 border-[var(--ink)] bg-[var(--paper)] lg:hidden">
+    <div
+      className="absolute top-full left-0 right-0 z-50 overflow-y-auto overscroll-contain border-b-4 border-[var(--ink)] bg-[var(--paper)] lg:hidden"
+      style={{ maxHeight: `calc(100dvh - ${barH}px)` }}
+    >
       <div
         className="h-3 border-b-[3px] border-[var(--ink)]"
         style={{ backgroundImage: 'repeating-linear-gradient(-45deg, #1a1a1a 0 10px, #f7e733 10px 20px)' }}
