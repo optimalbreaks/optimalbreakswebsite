@@ -92,7 +92,8 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.action === 'run') {
-    const result = await runBeatportGenreImport({ trigger: 'manual', userId: auth.userId })
+    // «Traer ahora» en Vercel: 300 s de tope. El pase completo es el de GitHub Actions.
+    const result = await runBeatportGenreImport({ trigger: 'manual', userId: auth.userId, budgetMs: 230_000 })
     return NextResponse.json(result)
   }
 

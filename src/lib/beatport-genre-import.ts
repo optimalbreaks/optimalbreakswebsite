@@ -437,7 +437,16 @@ export async function runBeatportGenreImport(opts: {
   userId?: string | null
   /** Fichas del Top 100 desde esta fecha, cualquier género. El cron usa el 8 oct. */
   artistSince?: string
+  /**
+   * Tiempo máximo leyendo Beatport. En Vercel la función muere a los 300 s y,
+   * si la matan, el pase queda abierto y sin nada escrito (9 oct 2026). Con
+   * presupuesto se para antes, guarda lo leído y deja constancia de que fue parcial.
+   * El pase completo corre en GitHub Actions, sin este límite.
+   */
+  budgetMs?: number
 }): Promise<GenreImportResult> {
+  const startedAt = Date.now()
+  const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
   const genreFrom = opts.artistSince || BEATPORT_IMPORT_FROM
@@ -470,6 +479,7 @@ export async function runBeatportGenreImport(opts: {
 
   const result: GenreImportResult = { ok: false, ...empty }
   let published = 0
+  let partial: string | null = null
   try {
     const known = await loadKnownTracks(sb)
     const fresh: BeatportPickInput[] = []
@@ -494,7 +504,13 @@ export async function runBeatportGenreImport(opts: {
         const topKeys = await loadTopArtistKeys(sb, 100)
         const followed = await followedBeatportArtists(sb, topKeys)
         console.log(`Top 100 con ficha Beatport: ${followed.length}`)
+        let readArtists = 0
         for (const artist of followed) {
+          if (outOfTime()) {
+            partial = `Tiempo agotado: leídas ${readArtists} de ${followed.length} fichas del Top 100. El pase de GitHub lo completa.`
+            break
+          }
+          readArtists += 1
           let total = Infinity
           for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
@@ -518,6 +534,10 @@ export async function runBeatportGenreImport(opts: {
         console.log('Listado de Breaks')
         let total = Infinity
         for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
+          if (outOfTime()) {
+            partial = partial || `Tiempo agotado en la página ${page} del listado de Breaks. El pase de GitHub lo completa.`
+            break
+          }
           const url = genreTracksUrl(page, genreFrom)
           let payload = await readGenrePageFetch(url, genreFrom)
           if (!payload) {
@@ -554,7 +574,9 @@ export async function runBeatportGenreImport(opts: {
         }
       }
     }
-    result.ok = true
+    // Parcial = lo leído se guarda, pero el pase no cuenta como completo.
+    result.ok = !partial
+    if (partial) result.error = partial
   } catch (e) {
     result.ok = false
     result.error = shortImportError(e instanceof Error ? e.message : String(e))

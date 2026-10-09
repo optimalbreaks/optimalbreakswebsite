@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   if (madridHour() !== 12) {
     return NextResponse.json({ ok: true, skipped: 'not-1205-madrid' })
   }
-  const result = await runBeatportGenreImport({ trigger: 'cron' })
+  // La función muere a los 300 s: se para antes y se guarda lo leído.
+  const result = await runBeatportGenreImport({ trigger: 'cron', budgetMs: 230_000 })
   return NextResponse.json(result)
 }

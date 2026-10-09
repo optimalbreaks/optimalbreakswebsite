@@ -1,0 +1,52 @@
+# Pase diario de Beatport — 12:05 hora de Madrid.
+#
+# Corre aquí y no en el cron de Vercel: el pase lee ~100 fichas del Top 100
+# en Beatport con un navegador y en Vercel la función muere a los 300 s
+# (9 oct 2026: arrancó a las 12:05 y Vercel la cortó sin terminar; cero temas).
+# Aquí hay Chrome de verdad, sin límite de 5 minutos.
+#
+# Mismo script que en local: `npx tsx scripts/beatport-daily-import.ts`.
+# Dos vías (README «Daily Beatport pass»): fichas del Top 100 → publicados;
+# listado de Breaks del día → pendientes en /administrator/imports.
+name: Pase diario de Beatport
+
+on:
+  schedule:
+    # GitHub va en UTC. 12:05 Madrid = 10:05 UTC en verano, 11:05 UTC en invierno.
+    # El script solo sigue si en Madrid son las 12; la otra línea sale sin hacer nada.
+    - cron: '5 10 * * *'
+    - cron: '5 11 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Lanzarlo aunque no sean las 12 en Madrid'
+        type: boolean
+        default: true
+
+concurrency:
+  group: beatport-daily
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dependencias
+        run: npm ci --ignore-scripts
+
+      - name: Pase (Top 100 → publicados · Breaks → pendientes)
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          FORCE=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then FORCE="--force"; fi
+          npx tsx scripts/beatport-daily-import.ts $FORCE
