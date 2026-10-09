@@ -395,6 +395,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `djro73@gmail.com` | Ro73 | `ro73` | `ro73` | `b15202cd-547d-4abe-8523-7de09459c9ef` |
 | `djruler@gmail.com` | Ruler | `ruler` | `ruler` | `86c3c29e-2c0a-42c7-9efe-db8003454719` |
 | `filisoporte@gmail.com` | The Legends | `the legends` | `the-legends` | `75a6ca14-c30e-4269-8c4a-6619c10ed9ff` |
+| `alkimista1974@gmail.com` | MacGroove | `macgroove` | `macgroove` | `2940e39a-bfea-4db1-966d-a46f68d938eb` |
 
 **Family marks** (25 Sep 2026; song chart 6 Oct 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board and do not raise that song on the track Top 100. Other credits on the same track still count on the artist board. My Tracks stays. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
@@ -469,6 +470,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
 **Audit — The Legends (6 Oct 2026).** `filisoporte@gmail.com` signed up 5 Oct 18:36 UTC (`display_name` sergio — do not match by that name). Catalog ficha `/artists/the-legends` already existed. Credit on tracks is **The Legends** (e.g. *M.D.A* / 83, with Guau). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit The Legends skip *that* name on the artist board and do not raise that song (6 Oct 2026); collabs (Guau, etc.) still count on the artist board. My Tracks stays.
 
+**Audit — MacGroove (9 Oct 2026).** `alkimista1974@gmail.com` (display MacGroove; do not guess the email from the name). Catalog ficha `/artists/macgroove` already existed (`claimed_by` left null, `accepts_bookings` left false). On 26 Aug he saved **4/4** of his own titles in two minutes, all on Br8kn: *FM Chaos*, *Fracture (PhoenixRising Remix)*, *Kali Rage*, *Void*. Fase 2 only: no claim, no bookings, no label mark. Those 4 no longer bump MacGroove on the artist board and do not raise those songs. My Tracks keeps them. Collabs on a future save still count on the artist board.
+
 ### Periodic cheat-vote audit
 
 Run this when the editor asks for a pass, or when a song sits at the top of `/top100` on a cluster of new accounts. **Report. Do not ficha** until the editor says so. Identity is never inferred from `display_name`, username or email for the ranking. A name match is a hint in the report, not a mark.
@@ -508,7 +511,7 @@ A list that is ~60% one artist **and** has a real rest (other names, not a copy 
 | --- | --- | --- |
 | `tehlizuh@gmail.com` (Krognok) | Signed up 2 Sep 10:46 UTC, four hours before D-Fast's account. 17/28 credit D-Fast; 16 of those 17 are also in D-Fast's library. The other 11 are other artists (Ed Solo, Anuschka, Bad Legs…). | Leave. Not a cloned list. |
 | `mariopisote@hotmail.com` (Mario) | Signed up 26 Sep, four days after Paqui. 15/22 credit Devis Hard; 9 of them in the first two minutes. Only 7 tracks overlap Paqui's list. The other 7 are other artists. Store composer credit on Br8kn releases (Qobuz) is **David Carrillo Osuna**, not Mario. Ficha `real_name` is null. The marked account is `davisoto@hotmail.com`. | Leave. Less blatant than Samuel or Paqui. |
-| `alkimista1974@gmail.com` (MacGroove) | Display name is the credit. 4/4 own tracks, all Br8kn, in two minutes (26 Aug): *FM Chaos*, *Fracture*, *Kali Rage*, *Void*. | Not marked. Small. Fase 2 only if the editor confirms. |
+| `alkimista1974@gmail.com` (MacGroove) | Display name is the credit. 4/4 own tracks, all Br8kn, in two minutes (26 Aug): *FM Chaos*, *Fracture*, *Kali Rage*, *Void*. | **Marked 9 Oct 2026** as artist (`macgroove`). Not a claim. |
 | `jrabadanrutete@gmail.com` | No display name. Signed up 6 Sep and saved 19 tracks in six minutes. Email contains `rutete` and 3 tracks credit **Rutek**. 10 credit **Paket**. 13/19 are Br8kn (roster, not one artist). | Not marked. An artist mark on Rutek drops 3. A label mark on Br8kn drops 13. |
 | `man_medina@hotmail.es` (Manu) | Signed up 30 Sep. 9/16 credit Yo Speed and 10/16 are label **83**, spread over a day. No name match. | Not marked. Open the user row before deciding artist vs label. |
 | `antonioosuna32@hotmail.com` | 4/12 credit Devis Hard inside a three-minute mixed binge (29 Sep). Surname Osuna matches the composer credit above. | Not marked. |
