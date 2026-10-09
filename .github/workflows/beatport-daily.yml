@@ -50,3 +50,32 @@ jobs:
           FORCE=""
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then FORCE="--force"; fi
           npx tsx scripts/beatport-daily-import.ts $FORCE
+
+      # Lo que antes hacía Narciso a mano tras publicar una semana
+      # (`npm run db:chart:spotify` / `db:chart:tidal`). Solo temas ya a la venta
+      # (release_date hasta hoy, dos semanas atrás para reintentar los que la
+      # tienda aún no tenía): un adelanto no está en Spotify ni TIDAL.
+      # Si Spotify corta por cuota (429) el paso queda amarillo, no rojo.
+      - name: Enlaces Spotify (temas publicados)
+        if: always()
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        run: |
+          FROM=$(date -u -d '14 days ago' +%F); UNTIL=$(date -u -d 'tomorrow' +%F)
+          node scripts/spotify-match-charts.mjs --service=spotify --table=featured --from=$FROM --until=$UNTIL
+
+      - name: Enlaces TIDAL (temas publicados)
+        if: always()
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TIDAL_CLIENT_ID: ${{ secrets.TIDAL_CLIENT_ID }}
+          TIDAL_CLIENT_SECRET: ${{ secrets.TIDAL_CLIENT_SECRET }}
+        run: |
+          FROM=$(date -u -d '14 days ago' +%F); UNTIL=$(date -u -d 'tomorrow' +%F)
+          node scripts/spotify-match-charts.mjs --service=tidal --table=featured --from=$FROM --until=$UNTIL
