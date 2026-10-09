@@ -51,7 +51,7 @@
     "live": "LIVE",
     "press_play": "↓ PRESS PLAY TO LISTEN ↓",
     "door_listen_kicker": "Listen",
-    "door_listen_line": "16,000+ tracks. New ones every week.",
+    "door_listen_line": "18,000+ tracks. New ones every week.",
     "door_rank_kicker": "The scene",
     "door_rank_line": "The ranking of what the community actually saves.",
     "deck_brand": "OB-2026",
@@ -704,8 +704,8 @@
       "description": "All-time ranking of the 100 breakbeat tracks most-saved to My Tracks by the Optimal Breaks community. No polls, no votes — just real saves."
     },
     "charts": {
-      "title": "16,000+ breakbeat tracks — your favorite break radio",
-      "description": "More than 16,000 breakbeat tracks, one click away: weekly charts, new releases and an archive back to the 1970s. Listen, explore and save."
+      "title": "18,000+ breakbeat tracks — your favorite break radio",
+      "description": "More than 18,000 breakbeat tracks, one click away: weekly charts, new releases and an archive back to the 1970s. Listen, explore and save."
     },
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",

@@ -51,7 +51,7 @@
     "live": "LIVE",
     "press_play": "↓ DALE AL PLAY PARA ESCUCHAR ↓",
     "door_listen_kicker": "Escucha",
-    "door_listen_line": "Más de 16.000 temas. Nuevos cada semana.",
+    "door_listen_line": "Más de 18.000 temas. Nuevos cada semana.",
     "door_rank_kicker": "La escena",
     "door_rank_line": "El ranking de lo que la comunidad guarda de verdad.",
     "deck_brand": "OB-2026",
@@ -586,8 +586,8 @@
       "description": "Textos sobre breakbeat, rankings, entrevistas y memoria de escena. Contenido editorial Optimal Breaks."
     },
     "charts": {
-      "title": "Más de 16.000 canciones de breakbeat — tu radio de break favorita",
-      "description": "Más de 16.000 canciones de breakbeat a un clic: charts semanales, nuevos lanzamientos y archivo desde los años 70. Escucha, explora y guarda."
+      "title": "Más de 18.000 canciones de breakbeat — tu radio de break favorita",
+      "description": "Más de 18.000 canciones de breakbeat a un clic: charts semanales, nuevos lanzamientos y archivo desde los años 70. Escucha, explora y guarda."
     },
     "top100": {
       "title": "Top 100 de la Comunidad — los breaks más guardados por la escena",

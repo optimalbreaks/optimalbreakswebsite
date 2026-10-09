@@ -2,7 +2,7 @@
 // OPTIMAL BREAKS — Open Graph estático por sección (listados)
 // Imágenes en public/images/opengraph/sections/*.png
 // Generación: npm run og:sections (arte IA) · npm run og:screenshot (mixes)
-// charts-catalog.png no sale de esos scripts: es la tarjeta «más de 16.000».
+// charts-catalog.png no sale de esos scripts: es la tarjeta «más de 18.000».
 // ============================================
 
 import type { Locale } from '@/lib/i18n-config'
@@ -29,8 +29,8 @@ export type SectionOgKey = (typeof SECTION_OG_KEYS)[number]
 
 /**
  * Archivo por sección (about/events: arte manual `*-og-alternate.png`; mixes: screenshot).
- * charts: tarjeta de catálogo (`charts-catalog.png`). Suelo editorial medido el 29 sep 2026:
- * 16.354 temas públicos (semanas + archivo). La tarjeta dice «más de 16.000»; subir el suelo al cruzar 17.000.
+ * charts: tarjeta de catálogo (`charts-catalog.png`). Suelo editorial el 9 oct 2026:
+ * más de 18.000 temas públicos (semanas + archivo). Subir el suelo al cruzar 19.000.
  */
 const SECTION_OG_FILE: Record<SectionOgKey, string> = {
   artists: 'artists.png',
@@ -97,8 +97,8 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
     en: 'Optimal Breaks — Your favorite breaks sessions page',
   },
   charts: {
-    es: 'Optimal Breaks — más de 16.000 canciones de breakbeat',
-    en: 'Optimal Breaks — more than 16,000 breakbeat tracks',
+    es: 'Optimal Breaks — más de 18.000 canciones de breakbeat',
+    en: 'Optimal Breaks — more than 18,000 breakbeat tracks',
   },
   top100: {
     es: 'Optimal Breaks — Top 100: las mejores canciones de breakbeat de la historia',

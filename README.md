@@ -294,7 +294,7 @@ All OG images are declared **1200 × 630 PNG** (Meta's recommended size, `1.91:1
 |-------|-----------|-------|
 | `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Branded fanzine card for the home + fallback for every page that doesn't override. Satori JSX — every container with multiple children sets `display: flex` (required by Satori; missing it causes a 500 on the route). |
 | `/:lang/events/[slug]` (`generateMetadata`) | `events.og_image_url` or `image_url` | Same as artist pages: Facebook/WhatsApp fetch the JPEG from Storage. No per-event `opengraph-image.tsx` (that route was serving the «OB» fallback). Olibass uses a 1200×630 contain of the full flyer (logo + date, no crop). |
-| `/:lang/charts` (static) | `public/images/opengraph/sections/charts-catalog.png` (`-en` on `/en`) | Catalog card: “more than 16,000” breakbeat tracks (public total measured 29 Sep 2026: 16,354). Floor bumps at 17,000. Copy: `seo.charts`. Shared-track `?play=` still uses the track artwork. |
+| `/:lang/charts` (static) | `public/images/opengraph/sections/charts-catalog.png` (`-en` on `/en`) | Catalog card: “more than 18,000” breakbeat tracks (public floor 9 Oct 2026: more than 18,000). Floor bumps at 19,000. Copy: `seo.charts`. Shared-track `?play=` still uses the track artwork. |
 | `/:lang/mixes` (static) | `public/images/opengraph/sections/mixes-screenshot.png` | Section screenshot. Copy key `seo.mixes`. |
 | `/:lang/<charts\|artists\|labels>?play=…` | `generateMetadata` overrides (see **Per-track sharing**) | Rewrites `og:title` / `og:description` / `og:image` to the shared track (Beatport `artwork_url`) when the query carries `?play=<source>:<id>`. |
 

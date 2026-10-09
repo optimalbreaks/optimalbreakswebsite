@@ -630,7 +630,7 @@ Todas las imágenes OG son **PNG 1200 × 630** (tamaño recomendado por Meta, `1
 |------|---------------------|-------|
 | `/:lang/opengraph-image` | `DefaultOgImage` (`src/lib/DefaultOgImage.tsx`) | Tarjeta fanzine de marca — home + fallback cuando una página no sobreescribe OG. Es JSX de Satori: **todo `<div>` con varios hijos necesita `display: flex`** (sin eso la ruta devuelve 500). |
 | `/:lang/events/[slug]` (`generateMetadata`) | `events.og_image_url` o `image_url` | Igual que las fichas de artista: Facebook/WhatsApp bajan el JPEG de Storage. No hay `opengraph-image.tsx` por evento (esa ruta servía el placeholder «OB»). Olibass usa un 1200×630 con el flyer entero (logo y fecha, sin recorte). |
-| `/:lang/charts` (estática) | `public/images/opengraph/sections/charts-catalog.png` (`-en` en `/en`) | Tarjeta de catálogo: «más de 16.000» canciones de breakbeat (total público medido el 29 sep 2026: 16.354). El suelo se sube al cruzar 17.000. Textos en `seo.charts`. Un `?play=` de tema compartido sigue usando la carátula del tema. |
+| `/:lang/charts` (estática) | `public/images/opengraph/sections/charts-catalog.png` (`-en` en `/en`) | Tarjeta de catálogo: «más de 18.000» canciones de breakbeat (suelo público el 9 oct 2026: más de 18.000). El suelo se sube al cruzar 19.000. Textos en `seo.charts`. Un `?play=` de tema compartido sigue usando la carátula del tema. |
 | `/:lang/mixes` (estática) | `public/images/opengraph/sections/mixes-screenshot.png` | Captura de sección. Textos en `seo.mixes`. |
 | `/:lang/<charts\|artists\|labels>?play=…` | Sobreescritura dinámica en `generateMetadata` (ver **Compartir canción**) | Reescribe `og:title` / `og:description` / `og:image` al track compartido (artwork de Beatport). |
 
