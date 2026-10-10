@@ -150,6 +150,14 @@ type Assets = {
 }
 
 // ---------- layout fijo ----------
+/**
+ * Zona segura: Instagram amplía el 9:16 en móviles más alargados (iPhone
+ * 19,5:9 → recorta ~100 px por lado) y tapa abajo/derecha con su interfaz.
+ * Todo el diseño se dibuja a escala SAFE_SCALE hacia el centro (algo subido);
+ * solo el fondo va a sangre.
+ */
+const SAFE_SCALE = 0.8
+const SAFE_SHIFT_Y = -30
 const SLEEVE = 660
 const SLEEVE_X = 110
 const SLEEVE_Y = 330
@@ -374,10 +382,18 @@ export function drawReelFrame(
 
   // ----- Golpe de cámara en cada beat (todo menos el marco) -----
   ctx.save()
-  const camZ = 1 + 0.01 * kick
-  ctx.translate(W / 2, H / 2)
+  const camZ = (1 + 0.01 * kick) * SAFE_SCALE
+  ctx.translate(W / 2, H / 2 + SAFE_SHIFT_Y)
   ctx.scale(camZ, camZ)
   ctx.translate(-W / 2, -H / 2)
+
+  // Marco papel del «póster» (dentro de la zona segura) + barra roja
+  ctx.strokeStyle = PAPER
+  ctx.lineWidth = 14
+  // Dentro del recorte de un iPhone (x≈97–983 px) y por encima del pie de IG.
+  ctx.strokeRect(24, 30, W - 48, 1715)
+  ctx.fillStyle = RED
+  ctx.fillRect(17, 23, (W - 34) * easeOut(prog(t, 0, 0.45)), 16)
 
   // Cabecera OPTIMAL BREAKS (sello)
   {
@@ -853,12 +869,6 @@ export function drawReelFrame(
   ctx.fillRect(-256, -256, W + 512, H + 512)
   ctx.restore()
 
-  // Marco papel (como la Story) + barra roja
-  ctx.strokeStyle = PAPER
-  ctx.lineWidth = 36
-  ctx.strokeRect(0, 0, W, H)
-  ctx.fillStyle = RED
-  ctx.fillRect(0, 0, W * easeOut(prog(t, 0, 0.45)), 14)
 }
 
 /**
