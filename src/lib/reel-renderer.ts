@@ -153,11 +153,12 @@ type Assets = {
 /**
  * Zona segura: Instagram amplía el 9:16 en móviles más alargados (iPhone
  * 19,5:9 → recorta ~100 px por lado) y tapa abajo/derecha con su interfaz.
- * Todo el diseño se dibuja a escala SAFE_SCALE hacia el centro (algo subido);
+ * Todo el diseño se dibuja a escala SAFE_SCALE, centrado en el vídeo;
  * solo el fondo va a sangre.
  */
 const SAFE_SCALE = 0.8
-const SAFE_SHIFT_Y = -30
+// El marco (y≈30–1745 en coordenadas de diseño) queda centrado en vertical.
+const SAFE_SHIFT_Y = 58
 const SLEEVE = 660
 const SLEEVE_X = 110
 const SLEEVE_Y = 330
