@@ -47,13 +47,38 @@ export type GenreImportResult = {
 
 type EditionState = { id: string; nextSort: number; keys: Set<string> }
 
-function madridToday(): string {
+export function madridToday(): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Madrid',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
+}
+
+/** Hay un pase terminado y correcto con fecha de Madrid de hoy. */
+export async function hasOkImportRunToday(): Promise<boolean> {
+  const sb = createServiceSupabase()
+  const today = madridToday()
+  const { data, error } = await sb
+    .from('chart_import_runs')
+    .select('started_at')
+    .eq('ok', true)
+    .not('finished_at', 'is', null)
+    .order('started_at', { ascending: false })
+    .limit(8)
+  if (error) throw new Error(error.message)
+  return (data ?? []).some((row) => {
+    const started = row.started_at ? new Date(row.started_at) : null
+    if (!started || Number.isNaN(started.getTime())) return false
+    const day = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Madrid',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(started)
+    return day === today
+  })
 }
 
 export function madridHour(): number {

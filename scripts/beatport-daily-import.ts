@@ -27,13 +27,20 @@ for (const file of ['.env', '.env.local']) {
 }
 
 async function main() {
-  const { madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
+  const { hasOkImportRunToday, madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
   const force = process.argv.includes('--force')
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]
+  // GitHub retrasa el cron (el 9 oct el de las 11:05 UTC arrancó a las 19:25).
+  // Si ya no son las 12 y hoy no hay pase correcto, se lanza igual: si no, el día se pierde.
+  // La otra hora UTC (verano/invierno) no repite el pase cuando el de las 12 ya terminó.
   if (!force && madridHour() !== 12) {
-    console.log('Fuera de las 12:00–12:59 en Madrid. El pase es a las 12:05. Usa --force para lanzarlo igual.')
-    return
+    const done = await hasOkImportRunToday()
+    if (done) {
+      console.log('Fuera de las 12 en Madrid y el pase de hoy ya está hecho. No se repite.')
+      return
+    }
+    console.log('El horario de GitHub ha llegado fuera de las 12 en Madrid y hoy no hay pase. Se lanza ahora.')
   }
   const result = await runBeatportGenreImport({
     trigger: force ? 'manual' : 'cron',
