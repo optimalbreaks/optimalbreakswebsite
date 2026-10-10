@@ -162,10 +162,11 @@ const TICKER_TOP_Y = 262
 const TICKER_BOTTOM_Y = 1668
 const EQ_BASE = 1626
 /**
- * Hueco reservado (vacío todo el reel) para el sticker de enlace que el admin
- * coloca en Instagram, igual que el espacio libre de la imagen de Story.
+ * Franja del aviso «LINK IN BIO». Los reels no admiten sticker de enlace
+ * (solo las historias): el enlace real va en la bio o en el sticker al
+ * compartir el reel en la historia.
  */
-export const LINK_STICKER_ZONE = { top: 1430, bottom: 1580 }
+export const LINK_HINT_ZONE = { top: 1430, bottom: 1580 }
 
 // ---------- piezas de fanzine ----------
 
@@ -695,6 +696,73 @@ export function drawReelFrame(
         ctx.fillRect(x, EQ_BASE - peak - 10, bw, 3)
       }
       ctx.globalAlpha = 1
+    }
+  }
+
+  // ----- Aviso «LINK IN BIO» (en la franja reservada) -----
+  {
+    const t0 = titleStart + (lines.length + 3) * beat + 0.2
+    const p = prog(t, t0, t0 + 0.25)
+    if (p > 0) {
+      const cy = (LINK_HINT_ZONE.top + LINK_HINT_ZONE.bottom) / 2
+      const s = (1 + 0.6 * (1 - easeOut(p))) * (1 + 0.02 * kick)
+      ctx.save()
+      ctx.globalAlpha = p
+      ctx.translate(W / 2, cy)
+      ctx.rotate((2 * Math.PI) / 180)
+      ctx.scale(s, s)
+      const big = 'LINK IN BIO'
+      const small = 'OPTIMALBREAKS.COM'
+      ctx.font = font(HEAD, 44)
+      const bw = ctx.measureText(big).width
+      const iconW = 70
+      const boxW = bw + iconW + 70
+      const boxH = 116
+      ctx.fillStyle = RED
+      ctx.fillRect(-boxW / 2 + 10, -boxH / 2 + 10, boxW, boxH)
+      ctx.fillStyle = INK
+      ctx.fillRect(-boxW / 2, -boxH / 2, boxW, boxH)
+      ctx.strokeStyle = YELLOW
+      ctx.lineWidth = 5
+      ctx.strokeRect(-boxW / 2 + 8, -boxH / 2 + 8, boxW - 16, boxH - 16)
+      // icono de eslabón (cadena)
+      const ix = -boxW / 2 + 32 + iconW / 2
+      ctx.save()
+      ctx.translate(ix, -2)
+      ctx.rotate(-Math.PI / 4)
+      ctx.strokeStyle = YELLOW
+      ctx.lineWidth = 7
+      const link = (ox: number) => {
+        ctx.beginPath()
+        const rw = 34
+        const rh = 20
+        const r = 10
+        const x = ox - rw / 2
+        const y = -rh / 2
+        ctx.moveTo(x + r, y)
+        ctx.arcTo(x + rw, y, x + rw, y + rh, r)
+        ctx.arcTo(x + rw, y + rh, x, y + rh, r)
+        ctx.arcTo(x, y + rh, x, y, r)
+        ctx.arcTo(x, y, x + rw, y, r)
+        ctx.stroke()
+      }
+      link(-12)
+      link(12)
+      ctx.restore()
+      ctx.textBaseline = 'middle'
+      ctx.textAlign = 'left'
+      const tx = -boxW / 2 + 32 + iconW + 8
+      ctx.fillStyle = PAPER
+      ctx.fillText(big, tx, -14)
+      ctx.font = font(MONO, 22, 700)
+      ctx.fillStyle = YELLOW
+      let x = tx + 2
+      for (const ch of small) {
+        ctx.fillText(ch, x, 28)
+        x += ctx.measureText(ch).width + 3
+      }
+      ctx.textAlign = 'start'
+      ctx.restore()
     }
   }
 
