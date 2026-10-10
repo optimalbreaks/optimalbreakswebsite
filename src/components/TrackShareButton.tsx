@@ -12,6 +12,10 @@
 //  3) URL absoluta externa (beatport_top sin contexto OB interno): `externalUrl`.
 //     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
 //     Beatport Top también genera story IG (`play=beatport:<id>` + snapshot).
+//
+// Admins ven además «IG» (imagen de Story) y «R» (reel MP4 sin audio, se
+// renderiza en el navegador con `src/lib/reel-renderer.ts`; el audio oficial
+// del tema se añade luego en Instagram para mencionar al artista).
 // ============================================
 
 'use client'
@@ -108,11 +112,46 @@ function resolveStoryPlayParam(props: Props): string | null {
 export default function TrackShareButton(props: Props) {
   const [copied, setCopied] = useState(false)
   const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
+  const [reelState, setReelState] = useState<'idle' | 'busy' | 'ready' | 'done' | 'error'>('idle')
+  const [reelPct, setReelPct] = useState(0)
+  // Render de ~10 s: al terminar, el gesto del clic ya caducó y el navegador
+  // rechaza `navigator.share`. Guardamos el vídeo y pedimos un 2.º toque.
+  const [reelFile, setReelFile] = useState<File | null>(null)
   const { isAdmin } = useAuth()
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
   // Botón IG (Story) solo para admins: herramienta de promo del equipo.
   const storyPlay = isAdmin ? resolveStoryPlayParam(props) : null
+
+  /** Query común de `/api/og/story` (Story PNG y datos del reel). */
+  function storyParams(play: string): URLSearchParams {
+    const params = new URLSearchParams({ play, lang: props.lang })
+    const from = 'path' in props ? storyFromSharePath(props.path) : null
+    if (from) params.set('from', from)
+    appendTrackStoryMeta(params, props.storyMeta)
+    return params
+  }
+
+  /** Comparte un archivo (móvil → Instagram) o lo descarga (escritorio). */
+  async function shareOrDownload(file: File) {
+    const nav = typeof navigator !== 'undefined' ? navigator : null
+    if (nav?.canShare?.({ files: [file] })) {
+      try {
+        await nav.share({ files: [file], title: props.shareTitle })
+      } catch {
+        // Cancelación del usuario: no es un error.
+      }
+      return
+    }
+    const url = URL.createObjectURL(file)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = file.name
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 4000)
+  }
 
   /**
    * Botón "IG": baja el PNG 1080×1920 de `/api/og/story` y lo comparte como
@@ -126,36 +165,64 @@ export default function TrackShareButton(props: Props) {
     setStoryState('busy')
     try {
       await copyShareLink(fullUrl)
-      const params = new URLSearchParams({ play: storyPlay, lang: props.lang })
-      const from = 'path' in props ? storyFromSharePath(props.path) : null
-      if (from) params.set('from', from)
-      appendTrackStoryMeta(params, props.storyMeta)
+      const params = storyParams(storyPlay)
       const res = await fetch(`/api/og/story?${params.toString()}`)
       if (!res.ok) throw new Error(`story ${res.status}`)
       const blob = await res.blob()
       const file = new File([blob], 'optimal-breaks-story.png', { type: 'image/png' })
-
-      const nav = typeof navigator !== 'undefined' ? navigator : null
-      if (nav?.canShare?.({ files: [file] })) {
-        try {
-          await nav.share({ files: [file], title: props.shareTitle })
-        } catch {
-          // Cancelación del usuario: no es un error.
-        }
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'optimal-breaks-story.png'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(url)
-      }
+      await shareOrDownload(file)
       setStoryState('done')
       setTimeout(() => setStoryState('idle'), 1800)
     } catch {
       setStoryState('idle')
+    }
+  }
+
+  /**
+   * Botón "R": reel 1080×1920 sin audio (~15 s). Pide los datos del tema a
+   * `/api/og/story?format=json`, dibuja y codifica el MP4 en el navegador
+   * (WebCodecs; el módulo se carga solo al pulsar) y lo comparte/descarga.
+   * También copia el enlace del tema para el sticker de enlace.
+   */
+  async function onReelClick() {
+    if (!storyPlay || reelState === 'busy') return
+    if (reelState === 'ready' && reelFile) {
+      await shareOrDownload(reelFile)
+      setReelFile(null)
+      setReelState('done')
+      setTimeout(() => setReelState('idle'), 2200)
+      return
+    }
+    setReelState('busy')
+    setReelPct(0)
+    try {
+      await copyShareLink(fullUrl)
+      const params = storyParams(storyPlay)
+      params.set('format', 'json')
+      // El reel siempre en inglés: llega a público internacional en Instagram.
+      params.set('lang', 'en')
+      const res = await fetch(`/api/og/story?${params.toString()}`)
+      if (!res.ok) throw new Error(`reel data ${res.status}`)
+      const data = await res.json()
+      const { renderReel } = await import('@/lib/reel-renderer')
+      const reel = await renderReel(
+        { ...data, lang: 'en' },
+        { onProgress: (r) => setReelPct(Math.round(r * 100)) },
+      )
+      const file = new File([reel.blob], `optimal-breaks-reel.${reel.ext}`, { type: reel.mime })
+      const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
+      if (nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive) {
+        setReelFile(file)
+        setReelState('ready')
+        return
+      }
+      await shareOrDownload(file)
+      setReelState('done')
+      setTimeout(() => setReelState('idle'), 2200)
+    } catch (err) {
+      console.error('[reel]', err)
+      setReelState('error')
+      setTimeout(() => setReelState('idle'), 2500)
     }
   }
 
@@ -200,6 +267,30 @@ export default function TrackShareButton(props: Props) {
         ? 'Story de Instagram: genera la imagen y copia el enlace'
         : 'Instagram Story: generate image and copy link')
 
+  const reelStateCls = reelState === 'done' || reelState === 'ready'
+    ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
+    : reelState === 'error'
+      ? 'border-[var(--ink)] bg-[var(--red)] text-white'
+      : 'border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'
+  const reelLabel = reelState === 'done'
+    ? '✓'
+    : reelState === 'ready'
+      ? '↗'
+    : reelState === 'error'
+      ? '✕'
+      : reelState === 'busy'
+        ? `${reelPct}%`
+        : 'R'
+  const reelTitle = reelState === 'done'
+    ? (es ? 'Reel listo · enlace copiado' : 'Reel ready · link copied')
+    : reelState === 'ready'
+      ? (es ? 'Reel listo: toca para compartir' : 'Reel ready: tap to share')
+    : reelState === 'error'
+      ? (es ? 'No se pudo generar el reel' : 'Could not generate the reel')
+      : (es
+          ? 'Reel de Instagram (sin audio): genera el vídeo y copia el enlace'
+          : 'Instagram Reel (no audio): generate video and copy link')
+
   return (
     <>
       <button
@@ -223,6 +314,19 @@ export default function TrackShareButton(props: Props) {
           disabled={storyState === 'busy'}
         >
           {storyLabel}
+        </button>
+      ) : null}
+      {storyPlay ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onReelClick() }}
+          className={`${base} ${reelStateCls}`}
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+          title={reelTitle}
+          aria-label={reelTitle}
+          disabled={reelState === 'busy'}
+        >
+          {reelLabel}
         </button>
       ) : null}
     </>

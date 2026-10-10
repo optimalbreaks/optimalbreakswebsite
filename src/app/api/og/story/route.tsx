@@ -1,6 +1,10 @@
 // ============================================
 // OPTIMAL BREAKS — Imagen de Story de Instagram por canción
 // GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&lang=es|en → PNG 1080×1920
+// GET /api/og/story?play=<chart|featured|vinyl|beatport>:<id>&format=json → datos
+// del tema (título, artistas, sello·año·BPM, kicker, carátula como data URL) para
+// el reel de Instagram que el botón «R» de `TrackShareButton` renderiza en el
+// navegador (`src/lib/reel-renderer.ts`).
 // GET /api/og/story?play=mix:<slug> → story de una sesión (festival, edición,
 // fecha y lugar). SoundCloud usa la portada del tema; YouTube, el retrato
 // del artista. Botón IG de `ShareButtons` en /mixes/<slug>.
@@ -56,6 +60,7 @@ type StoryRow = {
   youtube_url?: string | null
   release_year?: number | null
   year?: number | null
+  bpm?: number | null
 }
 
 /** Descarga la carátula y la devuelve como data URL PNG/JPEG apto para Satori
@@ -133,6 +138,7 @@ async function fetchBeatportStoryRow(
     label: track.label || null,
     artwork_url: track.artwork_url,
     release_year: track.release_year,
+    bpm: track.bpm,
   }
 }
 
@@ -164,7 +170,7 @@ async function fetchStoryRow(
   const cols =
     kind === 'vinyl'
       ? 'title, mix_name, artists, label, artwork_url, youtube_url, year'
-      : 'title, mix_name, artists, label, artwork_url, release_year'
+      : 'title, mix_name, artists, label, artwork_url, release_year, bpm'
   const { data } = await supabase.from(table).select(cols).eq('id', id).maybeSingle()
   return (data as StoryRow | null) ?? null
 }
@@ -429,6 +435,25 @@ export async function GET(request: NextRequest) {
         : kind === 'beatport'
           ? 'BEATPORT TOP 10'
           : '40 BREAKS VITALES'
+  // Reel (botón «R»): mismos datos en JSON; el vídeo se dibuja en el cliente.
+  if (sp.get('format') === 'json') {
+    // «Original Mix» no aporta en el reel: ocupa una línea y no dice nada.
+    const reelMix = /^original( mix)?$/i.test(mix) ? '' : mix
+    const bpm = row.bpm && row.bpm > 60 && row.bpm < 200 ? Math.round(row.bpm) : null
+    return NextResponse.json(
+      {
+        title: `${row.title}${reelMix ? ` (${reelMix})` : ''}`.slice(0, 90),
+        artists,
+        meta: [metaBits, bpm ? `${bpm} BPM` : null].filter(Boolean).join(' · '),
+        kicker,
+        artwork: artworkDataUrl,
+        bpm,
+        lang,
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    )
+  }
+
   // El admin suele añadir un sticker de música de Instagram a la story
   // (catálogo de Meta): avisamos de que ese audio NO es el tema compartido.
   const footerWarning = es
