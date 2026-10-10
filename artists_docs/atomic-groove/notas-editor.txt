@@ -1,0 +1,35 @@
+Revisión editorial — Atomic Groove (10 oct 2026)
+=================================================
+
+La ficha anterior lo trataba como un productor individual, ponía los temas en 2020
+y enlazaba soundcloud.com/d-groove-3, que no es este proyecto. REESCRIBIR.
+Conservar slug atomic-groove, image_url de Storage y sort_order 132.
+
+Qué es
+------
+Proyecto conjunto de productores, no un alias individual. real_name: null.
+country: ES. category: andalusian. era: 2025-present.
+styles: Breakbeat · Breaks · UK Bass · Electro.
+Instagram: https://www.instagram.com/atomicgroove.2025/
+El handle sugiere actividad desde 2025. NO usarlo solo como fecha de fundación exacta.
+beatport_id: 2298675
+beatport_url: https://www.beatport.com/artist/atomic-groove/2298675
+
+Miembros (probable, NO confirmado)
+----------------------------------
+La conversación de la escena en 2026 identifica el grupo con RO73, Jordaz (ESP) y Fortuny.
+Encaja con su red (Super Plastic, Warriors Beat Return, Br8kn, ElectroBreakz).
+Tratarlo como muy probable, pendiente de confirmación del Instagram o de los miembros.
+NO escribirlo como hecho cerrado. related_artists: Ro73, Jordaz ESP, Fortuny
+(fichas ro73, jordaz-esp, fortuny). NO inventar más colaboraciones.
+
+Catálogo documentado (mayo 2026, tres sellos)
+---------------------------------------------
+- You Gonna Party — Warriors Beat Return — 8 may 2026 — 136 BPM. En el Top del sello.
+- So Far VIP — Super Plastic Records — 15 may 2026 — 135 BPM. Breaks / Breakbeat / UK Bass.
+  Corte de referencia. Essential.
+- Transporting — Br8kn Records — 22 may 2026 — 130 BPM.
+
+Super Plastic NO tiene ficha de sello (oct 2026). Br8kn y Warriors Beat Return sí.
+NO meter más temas. NO mencionar Optimal Breaks ni 40 Breaks.
+Quitar el SoundCloud d-groove-3.
