@@ -13,9 +13,10 @@
 //     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
 //     Beatport Top también genera story IG (`play=beatport:<id>` + snapshot).
 //
-// Admins ven además «IG» (imagen de Story) y «R» (reel MP4 sin audio, se
-// renderiza en el navegador con `src/lib/reel-renderer.ts`; el audio oficial
-// del tema se añade luego en Instagram para mencionar al artista).
+// Admins ven además «IG» (imagen de Story), «R» (reel vertical MP4 sin audio
+// para Instagram) y «F» (vídeo horizontal 16:9 sin audio para Facebook, solo
+// descarga). Ambos vídeos se renderizan en el navegador con
+// `src/lib/reel-renderer.ts`; el audio oficial se añade luego en la red social.
 // ============================================
 
 'use client'
@@ -117,6 +118,10 @@ export default function TrackShareButton(props: Props) {
   // Render de ~10 s: al terminar, el gesto del clic ya caducó y el navegador
   // rechaza `navigator.share`. Guardamos el vídeo y pedimos un 2.º toque.
   const [reelFile, setReelFile] = useState<File | null>(null)
+  const [fbState, setFbState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
+  const [fbPct, setFbPct] = useState(0)
+  // Un solo render a la vez (el renderer usa un lienzo por formato).
+  const videoBusy = reelState === 'busy' || fbState === 'busy'
   const { isAdmin } = useAuth()
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
@@ -184,8 +189,18 @@ export default function TrackShareButton(props: Props) {
    * (WebCodecs; el módulo se carga solo al pulsar) y lo comparte/descarga.
    * También copia el enlace del tema para el sticker de enlace.
    */
+  /** Datos del tema para los vídeos (siempre en inglés: público internacional). */
+  async function fetchVideoData(play: string) {
+    const params = storyParams(play)
+    params.set('format', 'json')
+    params.set('lang', 'en')
+    const res = await fetch(`/api/og/story?${params.toString()}`)
+    if (!res.ok) throw new Error(`reel data ${res.status}`)
+    return { ...(await res.json()), lang: 'en' as const }
+  }
+
   async function onReelClick() {
-    if (!storyPlay || reelState === 'busy') return
+    if (!storyPlay || (videoBusy && reelState !== 'ready')) return
     if (reelState === 'ready' && reelFile) {
       await shareOrDownload(reelFile)
       setReelFile(null)
@@ -197,18 +212,12 @@ export default function TrackShareButton(props: Props) {
     setReelPct(0)
     try {
       await copyShareLink(fullUrl)
-      const params = storyParams(storyPlay)
-      params.set('format', 'json')
-      // El reel siempre en inglés: llega a público internacional en Instagram.
-      params.set('lang', 'en')
-      const res = await fetch(`/api/og/story?${params.toString()}`)
-      if (!res.ok) throw new Error(`reel data ${res.status}`)
-      const data = await res.json()
+      const data = await fetchVideoData(storyPlay)
       const { renderReel } = await import('@/lib/reel-renderer')
-      const reel = await renderReel(
-        { ...data, lang: 'en' },
-        { onProgress: (r) => setReelPct(Math.round(r * 100)) },
-      )
+      const reel = await renderReel(data, {
+        format: 'vertical',
+        onProgress: (r) => setReelPct(Math.round(r * 100)),
+      })
       const file = new File([reel.blob], `optimal-breaks-reel.${reel.ext}`, { type: reel.mime })
       const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
       if (nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive) {
@@ -223,6 +232,40 @@ export default function TrackShareButton(props: Props) {
       console.error('[reel]', err)
       setReelState('error')
       setTimeout(() => setReelState('idle'), 2500)
+    }
+  }
+
+  /**
+   * Botón "F": vídeo horizontal 1920×1080 sin audio para Facebook. Mismo
+   * diseño que el reel, reorganizado en 16:9. Siempre se descarga (también en
+   * móvil, sin menú de compartir) y copia el enlace del tema para el post.
+   */
+  async function onFacebookClick() {
+    if (!storyPlay || videoBusy) return
+    setFbState('busy')
+    setFbPct(0)
+    try {
+      await copyShareLink(fullUrl)
+      const data = await fetchVideoData(storyPlay)
+      const { renderReel } = await import('@/lib/reel-renderer')
+      const video = await renderReel(data, {
+        format: 'horizontal',
+        onProgress: (r) => setFbPct(Math.round(r * 100)),
+      })
+      const url = URL.createObjectURL(video.blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `optimal-breaks-facebook.${video.ext}`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 4000)
+      setFbState('done')
+      setTimeout(() => setFbState('idle'), 2200)
+    } catch (err) {
+      console.error('[facebook video]', err)
+      setFbState('error')
+      setTimeout(() => setFbState('idle'), 2500)
     }
   }
 
@@ -291,6 +334,26 @@ export default function TrackShareButton(props: Props) {
           ? 'Reel de Instagram (sin audio): genera el vídeo y copia el enlace'
           : 'Instagram Reel (no audio): generate video and copy link')
 
+  const fbStateCls = fbState === 'done'
+    ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
+    : fbState === 'error'
+      ? 'border-[var(--ink)] bg-[var(--red)] text-white'
+      : 'border-[var(--ink)] bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'
+  const fbLabel = fbState === 'done'
+    ? '✓'
+    : fbState === 'error'
+      ? '✕'
+      : fbState === 'busy'
+        ? `${fbPct}%`
+        : 'F'
+  const fbTitle = fbState === 'done'
+    ? (es ? 'Vídeo descargado · enlace copiado' : 'Video downloaded · link copied')
+    : fbState === 'error'
+      ? (es ? 'No se pudo generar el vídeo' : 'Could not generate the video')
+      : (es
+          ? 'Vídeo horizontal para Facebook (sin audio): descarga el MP4 y copia el enlace'
+          : 'Horizontal video for Facebook (no audio): download MP4 and copy link')
+
   return (
     <>
       <button
@@ -324,9 +387,22 @@ export default function TrackShareButton(props: Props) {
           style={{ fontFamily: "'Courier Prime', monospace" }}
           title={reelTitle}
           aria-label={reelTitle}
-          disabled={reelState === 'busy'}
+          disabled={reelState === 'busy' || fbState === 'busy'}
         >
           {reelLabel}
+        </button>
+      ) : null}
+      {storyPlay ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onFacebookClick() }}
+          className={`${base} ${fbStateCls}`}
+          style={{ fontFamily: "'Courier Prime', monospace" }}
+          title={fbTitle}
+          aria-label={fbTitle}
+          disabled={videoBusy}
+        >
+          {fbLabel}
         </button>
       ) : null}
     </>

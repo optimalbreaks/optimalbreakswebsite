@@ -1,9 +1,10 @@
 // ============================================
 // OPTIMAL BREAKS — Reel de Instagram por canción (render en el navegador)
 //
-// Genera un MP4 1080×1920 SIN AUDIO (~15 s) para el botón «R» de
-// `TrackShareButton` (solo admins). El audio lo pone el admin en Instagram
-// con el sticker/música oficial del tema → menciona al artista.
+// Genera un MP4 SIN AUDIO (~15 s) para los botones de `TrackShareButton`
+// (solo admins): «R» → reel vertical 1080×1920 para Instagram; «F» → vídeo
+// horizontal 1920×1080 para Facebook. El audio lo pone el admin en la red
+// social con la música oficial del tema → menciona al artista.
 //
 // Todo ocurre en el cliente: Canvas 2D dibuja cada fotograma y WebCodecs
 // (VideoEncoder H.264) + `mp4-muxer` lo empaquetan, más rápido que tiempo
@@ -27,7 +28,11 @@ export type ReelData = {
   bpm?: number
 }
 
+export type ReelFormat = 'vertical' | 'horizontal'
+
 export type ReelOptions = {
+  /** `vertical` 1080×1920 (Instagram, por defecto) u `horizontal` 1920×1080 (Facebook). */
+  format?: ReelFormat
   durationSec?: number
   fps?: number
   onProgress?: (ratio: number) => void
@@ -35,8 +40,10 @@ export type ReelOptions = {
 
 export type ReelResult = { blob: Blob; mime: string; ext: 'mp4' | 'webm' }
 
-const W = 1080
-const H = 1920
+// Tamaño del lienzo del render en curso (lo fija `renderReel` según el formato).
+// Un render cada vez: los botones R y F no se lanzan en paralelo.
+let W = 1080
+let H = 1920
 const PAPER = '#e8dcc8'
 const INK = '#1a1a1a'
 const RED = '#d62828'
@@ -149,33 +156,125 @@ type Assets = {
   bg: HTMLCanvasElement
 }
 
-// ---------- layout fijo ----------
+// ---------- layouts ----------
+type Layout = {
+  /** Zona segura: escala de todo el diseño hacia el centro (el fondo va a sangre). */
+  SAFE_SCALE: number
+  SAFE_SHIFT_Y: number
+  /** Marco papel del «póster» [x, y, w, h] en coordenadas de diseño. */
+  FRAME: [number, number, number, number]
+  SLEEVE: number
+  SLEEVE_X: number
+  SLEEVE_Y: number
+  VINYL_R: number
+  VINYL_SLIDE: number
+  /** Pivote del brazo relativo al centro de la funda. */
+  ARM_DX: number
+  ARM_DY: number
+  /** Centro horizontal de la columna de textos. */
+  CX: number
+  HEADER_Y: number
+  KICKER_Y: number
+  TEXT_Y: number
+  TITLE_MAX_W: number
+  TITLE_SIZES: number[]
+  TICKER_TOP_Y: number
+  TICKER_TOP_ROT: number
+  TICKER_BOTTOM_Y: number
+  TICKER_BOTTOM_ROT: number
+  /** Ecualizador: x inicial, ancho total y línea base. */
+  EQ_X: number
+  EQ_W: number
+  EQ_BASE: number
+  /** Etiqueta «NOW PLAYING»: borde derecho y y (relativa al centro de la funda). */
+  NOW_RIGHT: number
+  NOW_DY: number
+  /** Aviso de enlace (centro y textos). */
+  LINK_Y: number
+  LINK_BIG: string
+  /** Sello final «LISTEN NOW» y la URL debajo. */
+  STAMP_Y: number
+  URL_Y: number
+}
+
 /**
- * Zona segura: Instagram amplía el 9:16 en móviles más alargados (iPhone
- * 19,5:9 → recorta ~100 px por lado) y tapa abajo/derecha con su interfaz.
- * Todo el diseño se dibuja a escala SAFE_SCALE, centrado en el vídeo;
- * solo el fondo va a sangre.
+ * Vertical (Instagram): Instagram amplía el 9:16 en móviles más alargados
+ * (iPhone 19,5:9 → recorta ~100 px por lado) y tapa abajo/derecha con su
+ * interfaz, así que todo va a escala 0,8 y centrado; el marco
+ * (y≈30–1745 de diseño) queda centrado en vertical.
  */
-const SAFE_SCALE = 0.8
-// El marco (y≈30–1745 en coordenadas de diseño) queda centrado en vertical.
-const SAFE_SHIFT_Y = 58
-const SLEEVE = 660
-const SLEEVE_X = 110
-const SLEEVE_Y = 330
-const SCX = SLEEVE_X + SLEEVE / 2
-const SCY = SLEEVE_Y + SLEEVE / 2
-const VINYL_R = 312
-const VINYL_SLIDE = 236
-const TEXT_Y = 1072
-const TICKER_TOP_Y = 262
-const TICKER_BOTTOM_Y = 1668
-const EQ_BASE = 1626
+const VERTICAL: Layout = {
+  SAFE_SCALE: 0.8,
+  SAFE_SHIFT_Y: 58,
+  FRAME: [24, 30, 1080 - 48, 1715],
+  SLEEVE: 660,
+  SLEEVE_X: 110,
+  SLEEVE_Y: 330,
+  VINYL_R: 312,
+  VINYL_SLIDE: 236,
+  ARM_DX: 236 + 250,
+  ARM_DY: -330,
+  CX: 540,
+  HEADER_Y: 128,
+  KICKER_Y: 194,
+  TEXT_Y: 1072,
+  TITLE_MAX_W: 820,
+  TITLE_SIZES: [64, 58, 52, 46, 40],
+  TICKER_TOP_Y: 262,
+  TICKER_TOP_ROT: -0.035,
+  TICKER_BOTTOM_Y: 1668,
+  TICKER_BOTTOM_ROT: 0.03,
+  EQ_X: 100,
+  EQ_W: 880,
+  EQ_BASE: 1626,
+  NOW_RIGHT: 1080 - 42,
+  NOW_DY: 312 - 40,
+  // Los reels no admiten sticker de enlace (solo las historias): el enlace
+  // real va en la bio o en el sticker al compartir el reel en la historia.
+  LINK_Y: 1505,
+  LINK_BIG: 'LINK IN BIO',
+  STAMP_Y: 1215,
+  URL_Y: 1335,
+}
+
 /**
- * Franja del aviso «LINK IN BIO». Los reels no admiten sticker de enlace
- * (solo las historias): el enlace real va en la bio o en el sticker al
- * compartir el reel en la historia.
+ * Horizontal (Facebook, 16:9): funda y vinilo a la izquierda, textos en la
+ * columna derecha. Facebook no recorta el 16:9, basta un margen pequeño.
+ * En Facebook el enlace sí es clicable en el texto del post → «LINK IN POST».
  */
-export const LINK_HINT_ZONE = { top: 1430, bottom: 1580 }
+const HORIZONTAL: Layout = {
+  SAFE_SCALE: 0.94,
+  SAFE_SHIFT_Y: 0,
+  FRAME: [28, 28, 1920 - 56, 1080 - 56],
+  SLEEVE: 560,
+  SLEEVE_X: 150,
+  SLEEVE_Y: 262,
+  VINYL_R: 266,
+  VINYL_SLIDE: 214,
+  ARM_DX: 214 + 214,
+  ARM_DY: -286,
+  CX: 1430,
+  HEADER_Y: 228,
+  KICKER_Y: 292,
+  TEXT_Y: 388,
+  TITLE_MAX_W: 760,
+  TITLE_SIZES: [60, 54, 48, 42, 38],
+  TICKER_TOP_Y: 128,
+  TICKER_TOP_ROT: -0.018,
+  TICKER_BOTTOM_Y: 990,
+  TICKER_BOTTOM_ROT: 0.016,
+  EQ_X: 1060,
+  EQ_W: 740,
+  EQ_BASE: 948,
+  NOW_RIGHT: 1010,
+  NOW_DY: 266 - 30,
+  LINK_Y: 812,
+  LINK_BIG: 'LINK IN POST',
+  STAMP_Y: 540,
+  URL_Y: 650,
+}
+
+let L: Layout = VERTICAL
 
 // ---------- piezas de fanzine ----------
 
@@ -347,6 +446,22 @@ export function drawReelFrame(
   const kick = pulsing ? Math.exp(-beatPhase / 0.09) : 0
   const bar = Math.floor(beatsIn / 4)
   const endT = durationSec - 3.6
+  const {
+    SAFE_SCALE,
+    SAFE_SHIFT_Y,
+    SLEEVE,
+    SLEEVE_X,
+    SLEEVE_Y,
+    VINYL_R,
+    VINYL_SLIDE,
+    CX,
+    TEXT_Y,
+    TICKER_TOP_Y,
+    TICKER_BOTTOM_Y,
+    EQ_BASE,
+  } = L
+  const SCX = SLEEVE_X + SLEEVE / 2
+  const SCY = SLEEVE_Y + SLEEVE / 2
 
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.globalAlpha = 1
@@ -374,9 +489,10 @@ export function drawReelFrame(
   ctx.strokeStyle = PAPER
   ctx.lineWidth = 4
   ctx.translate(W / 2, 0)
-  for (let i = 0; i < 4; i++) {
-    const yy = ((i * 520 - t * 40) % 2080 + 2080) % 2080
-    ctx.strokeText('BREAKS', 0, yy)
+  const span = H + 160
+  for (let i = 0; i < Math.ceil(span / 520); i++) {
+    const yy = ((i * 520 - t * 40) % span + span) % span
+    ctx.strokeText(W > H ? 'BREAKS BREAKS' : 'BREAKS', 0, yy)
   }
   ctx.textAlign = 'start'
   ctx.restore()
@@ -391,10 +507,11 @@ export function drawReelFrame(
   // Marco papel del «póster» (dentro de la zona segura) + barra roja
   ctx.strokeStyle = PAPER
   ctx.lineWidth = 14
-  // Dentro del recorte de un iPhone (x≈97–983 px) y por encima del pie de IG.
-  ctx.strokeRect(24, 30, W - 48, 1715)
+  // Vertical: dentro del recorte de un iPhone (x≈97–983 px) y sobre el pie de IG.
+  const [fx, fy, fw, fh] = L.FRAME
+  ctx.strokeRect(fx, fy, fw, fh)
   ctx.fillStyle = RED
-  ctx.fillRect(17, 23, (W - 34) * easeOut(prog(t, 0, 0.45)), 16)
+  ctx.fillRect(fx - 7, fy - 7, (fw + 14) * easeOut(prog(t, 0, 0.45)), 16)
 
   // Cabecera OPTIMAL BREAKS (sello)
   {
@@ -403,7 +520,7 @@ export function drawReelFrame(
       const s = 1 + 0.6 * (1 - easeOut(p))
       ctx.save()
       ctx.globalAlpha = p
-      ctx.translate(W / 2, 128)
+      ctx.translate(CX, L.HEADER_Y)
       ctx.scale(s, s)
       ctx.font = font(HEAD, 54)
       ctx.textBaseline = 'middle'
@@ -433,7 +550,7 @@ export function drawReelFrame(
       const n = Math.max(1, Math.floor(data.kicker.length * prog(t, 0.6, 1.2)))
       const label = data.kicker.slice(0, n)
       const full = ctx.measureText(data.kicker).width + data.kicker.length * 7
-      ctx.translate(W / 2 - (1 - easeOut(p)) * W, 194)
+      ctx.translate(CX - (1 - easeOut(p)) * W, L.KICKER_Y)
       ctx.rotate(-0.02)
       ctx.fillStyle = INK
       ctx.fillRect(-full / 2 - 28 + 6, -26 + 6, full + 56, 52)
@@ -450,7 +567,7 @@ export function drawReelFrame(
   drawTicker(
     ctx,
     TICKER_TOP_Y,
-    -0.035,
+    L.TICKER_TOP_ROT,
     `OPTIMAL BREAKS  •  ${data.kicker}  •  BREAKBEAT`,
     YELLOW,
     INK,
@@ -561,7 +678,7 @@ export function drawReelFrame(
     const armP = prog(t, 2.5, 3.0)
     if (armP > 0) {
       const ang = 0.9 - 0.62 * easeOut(armP) + (pulsing ? Math.sin(t * 2.4) * 0.008 : 0)
-      drawTonearm(ctx, SCX + VINYL_SLIDE + 250, SCY - 330 + dropY, ang)
+      drawTonearm(ctx, SCX + L.ARM_DX, SCY + L.ARM_DY + dropY, ang)
     }
   }
 
@@ -574,8 +691,8 @@ export function drawReelFrame(
     ctx.textBaseline = 'middle'
     const label = es ? 'SONANDO' : 'NOW PLAYING'
     const lw = ctx.measureText(label).width + label.length * 4 + 56
-    const lx = W - 42 - lw
-    const ly = SCY + VINYL_R - 40
+    const lx = L.NOW_RIGHT - lw
+    const ly = SCY + L.NOW_DY
     ctx.fillStyle = INK
     ctx.fillRect(lx, ly - 24, lw, 48)
     ctx.strokeStyle = PAPER
@@ -601,7 +718,7 @@ export function drawReelFrame(
   ctx.globalAlpha = textFade
   ctx.textBaseline = 'middle'
   ctx.textAlign = 'center'
-  const { lines, size } = fitLines(ctx, data.title.toUpperCase(), HEAD, 820, [64, 58, 52, 46, 40], 3)
+  const { lines, size } = fitLines(ctx, data.title.toUpperCase(), HEAD, L.TITLE_MAX_W, L.TITLE_SIZES, 3)
   const lineH = size * 1.42
   const titleStart = 3.0
   lines.forEach((line, i) => {
@@ -610,7 +727,7 @@ export function drawReelFrame(
     if (p <= 0) return
     const s = 1 + 0.4 * (1 - easeOut(p))
     ctx.save()
-    ctx.translate(W / 2, TEXT_Y + i * lineH + size * 0.6)
+    ctx.translate(CX, TEXT_Y + i * lineH + size * 0.6)
     ctx.rotate((i % 2 ? 1.3 : -1.1) * (Math.PI / 180))
     ctx.scale(s, s)
     ctx.font = font(HEAD, size)
@@ -632,7 +749,7 @@ export function drawReelFrame(
   // Artistas (máquina de escribir, con cursor)
   if (data.artists) {
     const t0 = titleStart + lines.length * beat + 0.1
-    const fit = fitLines(ctx, data.artists, MONO.replace('{w}', '700'), 860, [42, 38, 34, 30], 2)
+    const fit = fitLines(ctx, data.artists, MONO.replace('{w}', '700'), L.TITLE_MAX_W + 40, [42, 38, 34, 30], 2)
     const total = fit.lines.join(' ').length
     const p = prog(t, t0, t0 + Math.min(1.2, total * 0.035))
     const shown = Math.floor(total * p)
@@ -645,14 +762,14 @@ export function drawReelFrame(
       const yy = y + 62 + i * fit.size * 1.2
       if (part) {
         ctx.fillStyle = YELLOW
-        ctx.fillText(part, W / 2, yy)
+        ctx.fillText(part, CX, yy)
       }
       const isCursorLine = p > 0 && (left < 0 || i === fit.lines.length - 1) && left + ln.length + 1 >= 0
       if (isCursorLine && Math.floor(t * 3) % 2 === 0 && p > 0) {
         const fullW = ctx.measureText(ln).width
         const partW = ctx.measureText(part).width
         ctx.fillStyle = YELLOW
-        ctx.fillRect(W / 2 - fullW / 2 + partW + 6, yy - fit.size * 0.8, fit.size * 0.5, fit.size * 0.9)
+        ctx.fillRect(CX - fullW / 2 + partW + 6, yy - fit.size * 0.8, fit.size * 0.5, fit.size * 0.9)
       }
     })
     y += 62 + (fit.lines.length - 1) * fit.size * 1.2
@@ -666,7 +783,7 @@ export function drawReelFrame(
       ctx.font = font(MONO, 28, 400)
       ctx.fillStyle = PAPER
       ctx.textBaseline = 'alphabetic'
-      spacedText(ctx, data.meta.toUpperCase(), W / 2, y + 54, 3)
+      spacedText(ctx, data.meta.toUpperCase(), CX, y + 54, 3)
     }
   }
   ctx.globalAlpha = 1
@@ -695,7 +812,7 @@ export function drawReelFrame(
     if (a > 0) {
       const bars = 30
       const bw = 22
-      const gap = (880 - bars * bw) / (bars - 1)
+      const gap = (L.EQ_W - bars * bw) / (bars - 1)
       const bi = Math.floor(beatsIn)
       const env = Math.exp(-beatPhase / (beat * 0.55))
       ctx.globalAlpha = a
@@ -703,7 +820,7 @@ export function drawReelFrame(
         const center = 1 - Math.abs(i - (bars - 1) / 2) / (bars / 2)
         const hgt = 6 + 30 * (0.25 + 0.75 * hash(i, bi)) * (0.35 + 0.65 * env) * (0.45 + 0.55 * center)
         const peak = 6 + 30 * (0.25 + 0.75 * hash(i, bi)) * (0.45 + 0.55 * center)
-        const x = 100 + i * (bw + gap)
+        const x = L.EQ_X + i * (bw + gap)
         // segmentos tipo LED
         for (let yy = 0; yy < hgt; yy += 8) {
           ctx.fillStyle = yy > 24 ? RED : i % 4 === 0 ? RED : YELLOW
@@ -716,19 +833,19 @@ export function drawReelFrame(
     }
   }
 
-  // ----- Aviso «LINK IN BIO» (en la franja reservada) -----
+  // ----- Aviso «LINK IN BIO» / «LINK IN POST» -----
   {
     const t0 = titleStart + (lines.length + 3) * beat + 0.2
     const p = prog(t, t0, t0 + 0.25)
     if (p > 0) {
-      const cy = (LINK_HINT_ZONE.top + LINK_HINT_ZONE.bottom) / 2
+      const cy = L.LINK_Y
       const s = (1 + 0.6 * (1 - easeOut(p))) * (1 + 0.02 * kick)
       ctx.save()
       ctx.globalAlpha = p
-      ctx.translate(W / 2, cy)
+      ctx.translate(CX, cy)
       ctx.rotate((2 * Math.PI) / 180)
       ctx.scale(s, s)
-      const big = 'LINK IN BIO'
+      const big = L.LINK_BIG
       const small = 'OPTIMALBREAKS.COM'
       ctx.font = font(HEAD, 44)
       const bw = ctx.measureText(big).width
@@ -787,7 +904,7 @@ export function drawReelFrame(
   drawTicker(
     ctx,
     TICKER_BOTTOM_Y,
-    0.03,
+    L.TICKER_BOTTOM_ROT,
     `${data.artists ? data.artists.toUpperCase() : 'OPTIMAL BREAKS'}  •  ${data.title.toUpperCase()}`,
     RED,
     PAPER,
@@ -801,7 +918,7 @@ export function drawReelFrame(
     if (p > 0) {
       const s = 1 + 0.9 * (1 - easeOut(p))
       ctx.save()
-      ctx.translate(W / 2, 1215)
+      ctx.translate(CX, L.STAMP_Y)
       drawSplatter(ctx, 0, 30, 500, 9, 'rgba(214,40,40,0.9)', prog(t, endT + 0.15, endT + 0.4))
       ctx.globalAlpha = p
       ctx.rotate((-5 * Math.PI) / 180)
@@ -830,7 +947,7 @@ export function drawReelFrame(
         ctx.textBaseline = 'middle'
         ctx.font = font(MONO, 32, 700)
         ctx.fillStyle = PAPER
-        spacedText(ctx, 'OPTIMALBREAKS.COM', W / 2, 1335 - (1 - easeOut(p2)) * 20, 6)
+        spacedText(ctx, 'OPTIMALBREAKS.COM', CX, L.URL_Y - (1 - easeOut(p2)) * 20, 6)
         ctx.restore()
       }
     }
@@ -898,18 +1015,20 @@ function makeBackground(art: HTMLImageElement | null, dots: HTMLCanvasElement): 
 
 function paintBlurredArt(o: CanvasRenderingContext2D, art: HTMLImageElement) {
   // Desenfoque barato y compatible con Safari: reducir mucho y volver a escalar.
+  const tw = Math.round(W / 40)
+  const th = Math.round(H / 40)
   const tiny = document.createElement('canvas')
-  tiny.width = 27
-  tiny.height = 48
+  tiny.width = tw
+  tiny.height = th
   const g = tiny.getContext('2d')!
-  const s = Math.max(27 / art.width, 48 / art.height)
-  g.drawImage(art, (27 - art.width * s) / 2, (48 - art.height * s) / 2, art.width * s, art.height * s)
+  const s = Math.max(tw / art.width, th / art.height)
+  g.drawImage(art, (tw - art.width * s) / 2, (th - art.height * s) / 2, art.width * s, art.height * s)
   const mid = document.createElement('canvas')
-  mid.width = 135
-  mid.height = 240
+  mid.width = tw * 5
+  mid.height = th * 5
   const m = mid.getContext('2d')!
   m.imageSmoothingQuality = 'high'
-  m.drawImage(tiny, 0, 0, 135, 240)
+  m.drawImage(tiny, 0, 0, tw * 5, th * 5)
   o.imageSmoothingQuality = 'high'
   o.drawImage(mid, 0, 0, W, H)
   o.fillStyle = 'rgba(16,16,16,0.58)'
@@ -974,6 +1093,10 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
   const fps = opts.fps ?? 30
   const durationSec = opts.durationSec ?? 15
   const total = Math.round(durationSec * fps)
+  const horizontal = opts.format === 'horizontal'
+  W = horizontal ? 1920 : 1080
+  H = horizontal ? 1080 : 1920
+  L = horizontal ? HORIZONTAL : VERTICAL
   const assets = await prepare(data)
 
   const canvas = document.createElement('canvas')
