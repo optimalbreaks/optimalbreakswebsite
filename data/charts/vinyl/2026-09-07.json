@@ -599,6 +599,66 @@
       "artwork_url": "https://i.ytimg.com/vi/KwUtvoN9ZiY/hqdefault.jpg",
       "note_en": "Track 12 on the DJ Tosh mix CD \"Nu Steppin 2\" (~2001) — 2-step / breakbeat garage comp; no Beatport listing for this cut.",
       "note_es": "Corte 12 del mix CD de DJ Tosh \"Nu Steppin 2\" (~2001) — recopilatorio 2-step / breakbeat garage; sin listing en Beatport."
+    },
+    {
+      "sort_order": 32,
+      "title": "Bloc Comeblovk",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Original Waki"
+        }
+      ],
+      "label": "Original Waki",
+      "catalog_number": "",
+      "year": 2023,
+      "format": "Single",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=eTqgbqznKR4",
+      "artwork_url": "https://i.ytimg.com/vi/eTqgbqznKR4/hqdefault.jpg",
+      "note_en": "Self-released breakbeat single (~Nov 2023); Topic upload — no Beatport listing under this title.",
+      "note_es": "Single breakbeat autoeditado (~nov 2023); subida Topic — sin listing en Beatport con este título."
+    },
+    {
+      "sort_order": 33,
+      "title": "Hold My Hand",
+      "mix_name": "Incessant Remix",
+      "artists": [
+        {
+          "name": "Alex Guerrero"
+        },
+        {
+          "name": "Incessant"
+        }
+      ],
+      "label": "Reflex Musik",
+      "catalog_number": "",
+      "year": 2005,
+      "format": "CD",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=-TX1WoQoiHg",
+      "artwork_url": "https://i.ytimg.com/vi/-TX1WoQoiHg/hqdefault.jpg",
+      "note_en": "On the Spanish breaks comp \"Beat Dis Salvation\" mixed by Kultür (~2005); no Beatport listing for this cut (Guerrero breaks on Beatport are other titles, e.g. \"In Love\").",
+      "note_es": "En el recopilatorio español \"Beat Dis Salvation\" mezclado por Kultür (~2005); sin listing en Beatport de este corte (sus breaks en tienda son otros temas, p. ej. \"In Love\")."
+    },
+    {
+      "sort_order": 34,
+      "title": "Electronic Love",
+      "mix_name": "Extended Mix",
+      "artists": [
+        {
+          "name": "Envelope"
+        }
+      ],
+      "label": "Manifold Records",
+      "catalog_number": "ELECTRO 0001-12",
+      "year": 1998,
+      "format": "12\"",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=_aa7AnxK4Es",
+      "artwork_url": "https://i.ytimg.com/vi/_aa7AnxK4Es/hqdefault.jpg",
+      "note_en": "B-side length cut on the 1998 German 12\" (Manifold / ZYX); another archive row covers the track on Totem Tanz LOVE1 (1999). Beatport only lists the 2007 Original Mix re-release.",
+      "note_es": "Versión larga del 12\" alemán de 1998 (Manifold / ZYX); otra fila de archivo es el corte en el LOVE1 de Totem Tanz (1999). En Beatport solo está el Original Mix reedición 2007."
     }
   ]
 }

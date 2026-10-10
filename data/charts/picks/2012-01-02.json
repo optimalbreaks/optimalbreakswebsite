@@ -1,0 +1,27 @@
+{
+  "week_date": "2012-01-02",
+  "picks": [
+    {
+      "title": "Cervix",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ephedra"
+        }
+      ],
+      "label": "Eternal Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/samba-tune/3201234",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f3023fd2-04b0-4ea1-85d0-75efa4c05309.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b67790f5-2d9a-4234-a3b5-df341b1fdf56.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "E Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

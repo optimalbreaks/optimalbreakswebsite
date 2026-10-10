@@ -1,0 +1,27 @@
+{
+  "week_date": "2015-11-16",
+  "picks": [
+    {
+      "title": "Soundbwoy Killa",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Ragga Twins"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/soundbwoy-killa/7358388",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/19d47ba4-dbf4-4f14-bf0e-e0e950db890a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5d6c9729-aa78-45cc-9187-915dc3b188b3.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2015,
+      "release_date": "2015-11-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    }
+  ]
+}

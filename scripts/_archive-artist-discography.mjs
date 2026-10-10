@@ -12,10 +12,16 @@
  *   node scripts/_archive-artist-discography.mjs --nr-2026
  *   node scripts/_archive-artist-discography.mjs --outside
  *   node scripts/_archive-artist-discography.mjs --outside --nr-2026
+ *   node scripts/_archive-artist-discography.mjs --full vazteria-x
+ *   node scripts/_archive-artist-discography.mjs --nr-2026 --all-weeks evil-crew
  *
- * --nr-2026 mete solo releases del 1 ene al 22 mar 2026 (semanas flojas de
- * New Releases) del Top 50 entero, Shade K / Guau / Yo Speed incluidos.
- * Lo que ya está por id de Beatport se salta. Progreso aparte.
+ * --full mete todo el catálogo hasta hoy (archivo + 2026 en su semana real).
+ * --all-weeks con --nr-2026 mete el 2026 aunque la semana ya tenga 20 temas.
+ *
+ * --nr-2026 mete releases de 2026 (1 ene → hoy) solo en las semanas de New
+ * Releases que tienen menos de 20 temas. El corte del 22 mar dejó flojas
+ * el 23 y el 30 de marzo; la semana en curso también entra si está corta.
+ * Lo que ya está por id de Beatport se salta. Progreso aparte del lote viejo.
  *
  * --outside es el lote de fuera del Top 50 con 6+ «+» editoriales (sep 2026).
  * SANS y Kritycal System ya estaban importados: SANS solo entra en --nr-2026.
@@ -36,9 +42,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DRY = process.argv.includes('--dry-run')
 const NR2026 = process.argv.includes('--nr-2026')
 const OUTSIDE = process.argv.includes('--outside')
+const FULL = process.argv.includes('--full')
+const ALL_WEEKS = FULL || process.argv.includes('--all-weeks')
 const CUTOFF = '2026-01-01'
 const NR_FROM = '2026-01-01'
-const NR_UNTIL = '2026-03-22'
+const NR_UNTIL = '2026-10-07'
+const THIN_UNDER = 20
 const PER_PAGE = 150
 const PAUSE_MS = 1800
 const UA =
@@ -147,35 +156,105 @@ const OUTSIDE_PRE = [
   { slug: 'tomy', id: 479402, name: 'TOMY' },
 ]
 const OUTSIDE_NR = [{ slug: 'sans', id: 254398, name: 'SANS' }, ...OUTSIDE_PRE]
+// Fichas nuevas con página de Beatport de una sola persona. En --nr-2026
+// entran con el resto. DJ Tokyo (186585) mezcla a otro artista; The Legends
+// no tiene página limpia.
+const ON_REQUEST = [
+  { slug: 'pray-for-bass', id: 550087, name: 'Pray For Bass' },
+  { slug: 'kid-kenobi', id: 24390, name: 'Kid Kenobi' },
+  { slug: 'kenny-beeper', id: 403456, name: 'Kenny Beeper' },
+]
+// Puestos 51–100 del tablero (7 oct 2026). Vazteria X: solo temas, sin ficha.
+// Koma y Bones en el tablero son el dúo Koma & Bones (un solo scrape).
+const RANK_51_100 = [
+  { slug: 'evil-crew', id: 1162066, name: 'Evil Crew' },
+  { slug: 'brothers-of-funk', id: 16697, name: 'Brothers Of Funk' },
+  { slug: 'orebeat', id: 1105377, name: 'Orebeat' },
+  { slug: 'hankook', id: 395511, name: 'Hankook' },
+  { slug: 'bryan', id: 191653, name: 'Bryan' },
+  { slug: 'dj-guanxe', id: 1256028, name: 'Dj Guanxe' },
+  { slug: 'nosk', id: 435512, name: 'NOSK' },
+  { slug: 'fm-3', id: 402033, name: 'FM-3' },
+  { slug: 'destroyers', id: 80323, name: 'Destroyers' },
+  { slug: 'keith-mackenzie', id: 3315, name: 'Keith MacKenzie' },
+  { slug: 'mixedup-mike', id: 1384671, name: 'Mixedup-Mike' },
+  { slug: 'mutant-breakz', id: 135018, name: 'Mutantbreakz' },
+  { slug: 'vital-drums', id: 1305200, name: 'Vital Drums' },
+  { slug: 'stanton-warriors', id: 2181, name: 'Stanton Warriors' },
+  { slug: 'macho', id: 112381, name: 'Macho' },
+  { slug: 'killerblitz', id: 1258735, name: 'Killerblitz' },
+  { slug: 'godino', id: 1280587, name: 'Godino' },
+  { slug: 'k5', id: 36761, name: 'K5' },
+  { slug: 'sir1', id: 1394149, name: 'Sir1' },
+  { slug: 'aggresivnes', id: 110518, name: 'Aggresivnes' },
+  { slug: 'woter', id: 310684, name: 'Woter' },
+  { slug: 'the-breakfastaz', id: 3710, name: 'The Breakfastaz' },
+  { slug: 'dj-fixx', id: 443, name: 'DJ Fixx' },
+  { slug: 'manxito', id: 1283708, name: 'Manxito' },
+  { slug: 'hatstandy', id: 613048, name: 'HatStandy' },
+  { slug: 'dj-icey', id: 11440, name: 'DJ Icey' },
+  { slug: 'wez-whatevr', id: 674005, name: 'WeZ WhaTevR' },
+  { slug: 'vazteria-x', id: 227121, name: 'Vazteria X' },
+  { slug: 'urso-sp', id: 1449335, name: 'URSO (SP)' },
+  { slug: 'jem-haynes', id: 88378, name: 'Jem Haynes' },
+  { slug: 'shenanigoons', id: 1394148, name: 'ShenaniGoons' },
+  { slug: 'godfader', id: 1285179, name: 'Godfader' },
+  { slug: 'blow-sp', id: 1258568, name: 'BLOW (SP)' },
+  { slug: 'deep-impact', id: 3174, name: 'Deep Impact' },
+  { slug: 'citybox', id: 503314, name: 'Citybox' },
+  { slug: 'macgroove', id: 2286106, name: 'MacGroove' },
+  { slug: 'queen-of-breakbeat-dirty-d', id: 2330158, name: 'Queen of Breakbeat (Dirty D)' },
+  { slug: 'jormek', id: 956125, name: 'Jormek' },
+  { slug: '936', id: 2383913, name: '936' },
+  { slug: 'datafunk', id: 1298577, name: 'DataFunk' },
+  { slug: 'koma-bones', id: 2176, name: 'Koma & Bones' },
+  { slug: 'fortuny', id: 785047, name: 'Fortuny' },
+  { slug: 'wutam', id: 3233, name: 'Wutam' },
+  { slug: 'jiro', id: 20535, name: 'Jiro' },
+  { slug: 'fran-break', id: 871993, name: 'Fran Break' },
+  { slug: 'neva', id: 482658, name: 'Neva' },
+  { slug: 'brothers-bud', id: 2958, name: 'Brothers Bud' },
+  { slug: 'loopcrashing', id: 854454, name: 'Loopcrashing' },
+  { slug: 'prato', id: 72360, name: 'Prato' },
+]
 const ROSTER = OUTSIDE
   ? NR2026
     ? OUTSIDE_NR
     : OUTSIDE_PRE
   : NR2026
-    ? [...ALREADY_DONE_PRE2026, ...ARTISTS]
+    ? [...ALREADY_DONE_PRE2026, ...ARTISTS, ...ON_REQUEST]
     : ARTISTS
-const PROGRESS = join(
-  ROOT,
-  OUTSIDE
-    ? NR2026
-      ? 'scripts/_archive-outside-2026-progress.txt'
-      : 'scripts/_archive-outside-progress.txt'
-    : NR2026
-      ? 'scripts/_archive-top50-2026-progress.txt'
-      : 'scripts/_archive-top50-progress.txt',
-)
-const PUBLISH_FILTER = NR2026 ? `${NR_FROM}:${NR_UNTIL}` : ':2025-12-31'
 const wanted = new Set(
   process.argv.slice(2).filter((a) => !a.startsWith('--')).map((a) => a.toLowerCase()),
 )
+const PROGRESS = join(
+  ROOT,
+  wanted.size
+    ? FULL
+      ? 'scripts/_archive-rank51-full-progress.txt'
+      : NR2026
+        ? 'scripts/_archive-rank51-2026-progress.txt'
+        : 'scripts/_archive-rank51-progress.txt'
+    : OUTSIDE
+      ? NR2026
+        ? 'scripts/_archive-outside-2026-oct-progress.txt'
+        : 'scripts/_archive-outside-progress.txt'
+      : NR2026
+        ? 'scripts/_archive-top50-2026-oct-progress.txt'
+        : 'scripts/_archive-top50-progress.txt',
+)
+const PUBLISH_FILTER = FULL ? `:${NR_UNTIL}` : NR2026 ? `${NR_FROM}:${NR_UNTIL}` : ':2025-12-31'
 const already = new Set()
-if (!wanted.size && existsSync(PROGRESS)) {
+if (existsSync(PROGRESS)) {
   for (const line of readFileSync(PROGRESS, 'utf8').split('\n')) {
     const s = line.trim()
     if (s) already.add(s)
   }
 }
-const TODO = (wanted.size ? ROSTER.filter((a) => wanted.has(a.slug)) : ROSTER).filter(
+const POOL = wanted.size
+  ? [...new Map([...ROSTER, ...ON_REQUEST, ...RANK_51_100].map((a) => [a.slug, a])).values()]
+  : ROSTER
+const TODO = (wanted.size ? POOL.filter((a) => wanted.has(a.slug)) : ROSTER).filter(
   (a) => !already.has(a.slug),
 )
 if (wanted.size && TODO.length === 0) {
@@ -338,7 +417,9 @@ async function scrapeArtist(browser, artist) {
 function toPick(raw) {
   const day = String(raw.publish_date || '').trim().slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null
-  if (NR2026) {
+  if (FULL) {
+    if (day > NR_UNTIL) return null
+  } else if (NR2026) {
     if (day < NR_FROM || day > NR_UNTIL) return null
   } else if (day >= CUTOFF) return null
   if (!raw.id || !raw.slug || !raw.name) return null
@@ -401,7 +482,7 @@ if (TODO.length === 0) {
   console.log(already.size ? 'Top 50 ya importado (progreso completo).' : 'Nada que importar.')
   process.exit(0)
 }
-console.log(`Cola: ${TODO.length} artistas${already.size ? ` (${already.size} ya cerrados)` : ''}${NR2026 ? ` · New Releases ${NR_FROM} → ${NR_UNTIL}` : ''}`)
+console.log(`Cola: ${TODO.length} artistas${already.size ? ` (${already.size} ya cerrados)` : ''}${FULL ? ` · catálogo completo hasta ${NR_UNTIL}` : NR2026 ? ` · New Releases ${NR_FROM} → ${NR_UNTIL}${ALL_WEEKS ? ' · todas las semanas' : ''}` : ''}`)
 
 const existingLinks = await loadAll(supabase, 'chart_featured_tracks', 'link_url, title, mix_name, artist_names_text')
 const existingIds = new Set(existingLinks.map((r) => beatportIdFromLink(r.link_url)).filter(Boolean))
@@ -414,9 +495,24 @@ const editions = await loadAll(supabase, 'chart_editions', 'id, week_date')
 const editionByWeek = new Map(editions.map((e) => [e.week_date, e.id]))
 const sortRows = await loadAll(supabase, 'chart_featured_tracks', 'chart_edition_id, sort_order')
 const maxSort = new Map()
+const editionCount = new Map()
 for (const r of sortRows) {
   const n = Number(r.sort_order) || 0
   maxSort.set(r.chart_edition_id, Math.max(maxSort.get(r.chart_edition_id) || 0, n))
+  editionCount.set(r.chart_edition_id, (editionCount.get(r.chart_edition_id) || 0) + 1)
+}
+const thinWeeks = new Set()
+if (NR2026) {
+  for (const e of editions) {
+    if (e.week_date < NR_FROM || e.week_date > NR_UNTIL) continue
+    const n = editionCount.get(e.id) || 0
+    if (n < THIN_UNDER) thinWeeks.add(e.week_date)
+  }
+  console.log(
+    thinWeeks.size
+      ? `Semanas con menos de ${THIN_UNDER}: ${[...thinWeeks].sort().join(', ')}`
+      : `Ninguna semana de 2026 por debajo de ${THIN_UNDER}.`,
+  )
 }
 
 let createdEditions = 0
@@ -570,6 +666,7 @@ try {
     const chosen = new Map()
     const fresh = []
     for (const p of unique) {
+      if (NR2026 && !ALL_WEEKS && !thinWeeks.has(p.week)) continue
       if (existingIds.has(p.beatportId)) continue
       const key = sameMixIdentity(p.title, p.mix_name, (p.artists || []).map((a) => a.name))
       if (key && existingIdentities.has(key)) continue

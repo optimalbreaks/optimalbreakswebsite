@@ -1,0 +1,638 @@
+{
+  "week_date": "2020-10-12",
+  "picks": [
+    {
+      "title": "Dune",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nosk/435512",
+          "name": "Nosk"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dune/14236099",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cd297464-cb80-4e04-9dd5-631ff07e089c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c60e1efb-9575-4a50-80fd-0520058b2e91.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "4U",
+      "mix_name": "Guau Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/yo-speed/526398",
+          "name": "Yo Speed"
+        },
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/4u/14248965",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e4da9060-1a16-4854-a072-b1faa5564d6e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/75a01714-4dcf-4ff8-9430-7f53f473ca8f.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Major",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Check It Man",
+      "mix_name": "Dub Edit",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        },
+        {
+          "url": "https://www.beatport.com/artist/lady-shade/789021",
+          "name": "Lady Shade"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/check-it-man/14259903",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03996a49-3354-407e-91ee-e72502ced8c1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a5563635-9ff4-4127-be89-576477492f94.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "Bad Boozing",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-boozing/14285466",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8a473903-4cf6-4a43-92ff-20e29aa32930.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f0f8af3f-2237-412b-ab54-fcddc9d92338.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "From The Back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj30a/665097",
+          "name": "DJ30A"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/from-the-back/14220699",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/203975ad-4f10-4c62-b091-e005beeda238.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0610457a-5cdf-4488-a070-8cd04b0abdd1.LOFI.mp3",
+      "bpm": 150,
+      "music_key": "B Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Nothing U Can Do About It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        },
+        {
+          "url": "https://www.beatport.com/artist/anna-styles/868813",
+          "name": "Anna Styles"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nothing-u-can-do-about-it/14430570",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0739a341-025a-4a9e-928d-2a2184a64519.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6b73dead-ded7-414b-a20f-25bcbf078ce2.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "In Me",
+      "mix_name": "OnDaMiKe Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-bass-droppers/697495",
+          "name": "The Bass Droppers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/in-me/13990110",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/83491008-6259-47d6-a26b-327c846dadb8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0cd09418-8edd-4914-9fc6-b2ec41b0424e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Bounce That",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/hernank/923061",
+          "name": "Hernank"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bounce-that/14285935",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/62926a4f-8df0-4a0b-9c17-2f8a4e4d0542.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/97234051-cd9f-49cc-bf20-26b551603633.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "Axion Jaxon Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/axion-jaxon/801049",
+          "name": "Axion Jaxon"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339034",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8a033cdf-167c-4051-a137-5d62c87f4589.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Major",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "The Harem King Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-harem-king/652137",
+          "name": "The Harem King"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339031",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6cbd2db3-732e-4c13-964e-1d8f42faebfe.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "Odylic Force Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/odylic-force/926009",
+          "name": "Odylic Force"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339033",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1a723c86-5c47-42f7-8688-adcf16f9a12d.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "Kazoiem Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kazoiem/919129",
+          "name": "Kazoiem"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339035",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/03af1c29-fd49-4e91-b39f-d1fa63ef0caf.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 12
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "Odeed Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/odeed/30817",
+          "name": "Odeed"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339032",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3339dc4-8899-418e-bcdf-0b691c456f01.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 13
+    },
+    {
+      "title": "Serious Music",
+      "mix_name": "P.V.O Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/pvo/901407",
+          "name": "P.V.O"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-music/14339036",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f75ddbd-91f6-4db6-b522-f00f8439c73c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a2acaec8-b744-4e66-ac18-c19d69fe4cd5.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Hashtag",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hashtag/14301485",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32212972-50a8-4f7e-b4dc-35dfce3802c1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/db5c753f-4d1d-42ca-869b-7d8f22def2c9.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Union",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/paket/386044",
+          "name": "Paket"
+        },
+        {
+          "url": "https://www.beatport.com/artist/neva/482658",
+          "name": "Neva"
+        }
+      ],
+      "label": "Empire Of Music Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/union/14284836",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e1b37e08-cc76-4bf1-8a23-15224be43662.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3bb44cc3-3f88-4a81-ad05-bde28e2bef6e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "Breaking",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/breaking/14316253",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e952665-cfbf-4d62-ad58-c874fceff1cb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/84e485dd-bb96-44ea-9ce3-2e9d975a3edb.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "G# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Stranger",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "Xclubsive Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/stranger/14269562",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3666ebf0-f063-4b2b-8d26-f3e9fbfc839d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/646b3e03-8abd-402d-bd62-76ab60d5bb05.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Alone",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "Xclubsive Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/alone/14269561",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3666ebf0-f063-4b2b-8d26-f3e9fbfc839d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b0e17336-a1b0-41a3-bc07-1fe09e00ee70.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19
+    },
+    {
+      "title": "Funky Pop",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/miau/633679",
+          "name": "MIAU"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funky-pop/14236662",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1833f1a5-cbcc-4524-8114-030c9fe76ed1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0312ef50-f844-4e0f-8804-86ac2d84bc27.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Major",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
+    },
+    {
+      "title": "Funky Dj",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hankook/395511",
+          "name": "Hankook"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funky-dj/14055663",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cee01d18-8120-44ce-8784-cc4ee9483800.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1c0951a3-de52-491c-8979-cab9ba22c49e.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
+    },
+    {
+      "title": "The Weathergirl",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hatstandy/613048",
+          "name": "HatStandy"
+        }
+      ],
+      "label": "Ghost Fat Productions",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-weathergirl/18523789",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/411d8723-9694-44d4-9710-1823459ad571.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2b5ba3b4-d114-49ea-9fde-cacdc919ac6f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Ab Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 22
+    },
+    {
+      "title": "The Ranch",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-fixx/443",
+          "name": "DJ Fixx"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-ranch/14472260",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c757ce81-01e2-4008-a0cc-113927b0f203.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f16188ef-4d16-4613-aa7b-565650b0050a.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "D# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 23
+    },
+    {
+      "title": "Club Deep",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-icey/11440",
+          "name": "DJ Icey"
+        }
+      ],
+      "label": "Zone Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/club-deep/14345405",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9ac80cf7-cddc-402b-904e-043f0aa4d4a4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c71e7a1d-07a4-4d9e-8417-a1a3e9e33b15.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "A# Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 24
+    },
+    {
+      "title": "Samba Tune",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "T-Break"
+        },
+        {
+          "name": "Baithead"
+        }
+      ],
+      "label": "Kiwis + Coconuts",
+      "platform": "bandcamp",
+      "link_url": "https://kiwisandcoconuts.bandcamp.com/track/t-break-baithead-samba-tune",
+      "link_label": "",
+      "artwork_url": "https://f4.bcbits.com/img/a2831905967_10.jpg",
+      "sample_url": "",
+      "bpm": 115,
+      "music_key": "B Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    }
+  ]
+}
