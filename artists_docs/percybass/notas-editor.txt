@@ -1,0 +1,55 @@
+Ficha nueva — PercyBass (11 oct 2026)
+=======================================
+
+No había perfil. Alta editorial. Slug percybass. Beatport id 1092455.
+https://www.beatport.com/artist/percybass/1092455
+
+Identidad
+---------
+- real_name: null. No hay bio oficial que lo cierre. NO inventar.
+- Origen: null. NO poner Sevilla, Cádiz, Jaén ni Andalucía.
+  country "" (la columna no admite null; el vacío no pinta país).
+  category current (no andalusian).
+- Rol: productor y remixer. No hay carrera de DJ documentada: no añadirla.
+- era: 2023-present. Mikami, 17 mar 2023 (Apple Music), es el primer corte
+  comercial cerrado. NO fechar el proyecto en 2025 ni en 2026.
+
+Sellos
+------
+- Casa actual: DIRTY KITCHEN RAVE (ficha dirty-kitchen-rave).
+  Zalacca y Sleepy Sam (20 nov 2025), N20 (11 mar 2026), Loiras (31 mar 2026),
+  Burning Ice (22 may 2026, 135 BPM), Egypt Mess (18 jun 2026, 145 BPM),
+  Never Ends.
+- Br8kn Records: Scarlet, 8 may 2026, 134 BPM. Está en el roster oficial.
+- SPACE PIZZA: To The Party. En alguna recopilación reaparece vía LW Recordings.
+- Sound Perfect Breakz Records: Bloap, 2 jul 2026, 135 BPM.
+- Etiqueta Negra: Europadub, 7 nov 2025, 140 BPM.
+- LW Recordings: Iron Fist, con Evil Crew, 1 ago 2025, 135 BPM.
+- HIGRND: Hydra, 7 ago 2026, 140 BPM, Breaks, catálogo HIG018.
+  BeatStats: mejor recorrido reciente (92 puntos). No elevar HIGRND a casa.
+- Zalacca está en Electro (Classic / Detroit / Modern), 137 BPM, y llegó al
+  top 100 Breaks de Beatport con pico #98 (BeatStats). El electro entra en styles.
+
+Colaboraciones
+--------------
+- Evil Crew: Iron Fist (2025). También Goth Fairy (PercyBass Remix),
+  de Wallmaster & Evil Crew, en DKR.
+- Afghan Headspin: Let It Be (Amazon). Wildcat (PercyBass Remix),
+  DKR, 11 sep 2026, DKR0331 (Volumo).
+- related_artists: Evil Crew, Afghan Headspin. Wallmaster solo en el remix.
+
+Essential tracks
+----------------
+Mikami, Draft Extinction, Iron Fist, Europadub, Zalacca, N20, Scarlet,
+Burning Ice, Egypt Mess, Hydra.
+
+2024 también: Hatake y Las Superfuriosas. Van en la bio, no en essential.
+
+Retrato
+-------
+Beatport no trae hero. SerpAPI eligió un DJ genérico en cabina («la coincidencia
+más plausible»): no es una foto identificada. image_url vacío. No reponer esa
+imagen.
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+NO usar la ficha de DKR de esta web como fuente de la bio.
