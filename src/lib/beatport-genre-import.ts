@@ -15,6 +15,7 @@ import {
   fetchBeatportPageHtml,
   findAllTracksFromNextData,
   pickFromTrackBlob,
+  resolveTracksFromBeatportHtml,
   type BeatportPickInput,
 } from '@/lib/beatport-next-data-tracks'
 import { loadTopArtistKeys } from '@/lib/community-top-artists'
@@ -165,6 +166,7 @@ async function readGenrePageFetch(url: string, fromDate: string): Promise<{ coun
 
 async function openBrowserReader(): Promise<{
   read: (url: string, fromDate: string) => Promise<{ count: number; tracks: BeatportPickInput[] }>
+  readTracks: (url: string) => Promise<BeatportPickInput[]>
   close: () => Promise<void>
 }> {
   const { chromium } = await import('playwright-core')
@@ -200,35 +202,75 @@ async function openBrowserReader(): Promise<{
         headless: true,
         args: ['--disable-blink-features=AutomationControlled', '--disable-dev-shm-usage', '--no-sandbox'],
       })
+  async function readNextData(url: string, gotoMs: number, waitMs: number): Promise<unknown> {
+    const ctx = await browser.newContext({
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      locale: 'en-US',
+      viewport: { width: 1366, height: 800 },
+    })
+    try {
+      const page = await ctx.newPage()
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: gotoMs })
+      const deadline = Date.now() + waitMs
+      while (Date.now() < deadline) {
+        const has = await page.evaluate(() => !!document.querySelector('script#__NEXT_DATA__')).catch(() => false)
+        if (has) break
+        await page.waitForTimeout(1200)
+      }
+      const nd = await page.evaluate(() => {
+        const el = document.querySelector('script#__NEXT_DATA__')
+        if (!el?.textContent) return null
+        return JSON.parse(el.textContent) as unknown
+      })
+      if (!nd) throw new Error('Beatport no devolvió la ficha (challenge o página vacía)')
+      return nd
+    } finally {
+      await ctx.close()
+    }
+  }
   return {
     read: async (url, fromDate) => {
-      const ctx = await browser.newContext({
-        userAgent:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        locale: 'en-US',
-        viewport: { width: 1366, height: 800 },
-      })
-      try {
-        const page = await ctx.newPage()
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 90000 })
-        const deadline = Date.now() + 35000
-        while (Date.now() < deadline) {
-          const has = await page.evaluate(() => !!document.querySelector('script#__NEXT_DATA__')).catch(() => false)
-          if (has) break
-          await page.waitForTimeout(1200)
-        }
-        const nd = await page.evaluate(() => {
-          const el = document.querySelector('script#__NEXT_DATA__')
-          if (!el?.textContent) return null
-          return JSON.parse(el.textContent) as unknown
-        })
-        if (!nd) throw new Error('Beatport no devolvió la lista (challenge o página vacía)')
-        return tracksFromNext(nd, url, fromDate)
-      } finally {
-        await ctx.close()
-      }
+      const nd = await readNextData(url, 90000, 35000)
+      return tracksFromNext(nd, url, fromDate)
+    },
+    readTracks: async (url: string) => {
+      const nd = await readNextData(url, 45000, 20000)
+      return findAllTracksFromNextData(
+        nd as Parameters<typeof findAllTracksFromNextData>[0],
+        url,
+      )
     },
     close: () => browser.close(),
+  }
+}
+
+/**
+ * Lee pistas de una URL de Beatport. Primero el HTML (rápido). Si Cloudflare
+ * responde 403, abre Chrome una sola vez y reutiliza el navegador.
+ * El chat y el import de New Releases lo necesitan: el fetch pelado no pasa.
+ */
+export function createBeatportPageLoader(): {
+  load: (url: string) => Promise<BeatportPickInput[]>
+  close: () => Promise<void>
+} {
+  let session: Awaited<ReturnType<typeof openBrowserReader>> | null = null
+  return {
+    async load(url: string) {
+      try {
+        const html = await fetchBeatportPageHtml(url)
+        const tracks = resolveTracksFromBeatportHtml(html, url)
+        if (tracks.length) return tracks
+      } catch {
+        /* 403 u otro bloqueo: sigue el navegador */
+      }
+      if (!session) session = await openBrowserReader()
+      return session.readTracks(url)
+    },
+    async close() {
+      if (session) await session.close()
+      session = null
+    },
   }
 }
 

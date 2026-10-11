@@ -10,6 +10,9 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/audio/*': ['./private/music/*.mp3'],
     '/api/admin/imports': ['./node_modules/@sparticuz/chromium/**/*'],
+    // El chat editorial busca la ficha de Beatport antes de archivar un YouTube.
+    '/api/admin/agent/chat': ['./node_modules/@sparticuz/chromium/**/*'],
+    '/api/admin/featured-import': ['./node_modules/@sparticuz/chromium/**/*'],
   },
 
   images: {

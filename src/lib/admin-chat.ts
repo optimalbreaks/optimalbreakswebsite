@@ -4,6 +4,7 @@ import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-countr
 import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
 import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
 import { vinylIdentityKey } from '@/lib/share-track'
+import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 import { waitUntil } from '@vercel/functions'
@@ -606,6 +607,268 @@ ${lines.join('\n')}
 `
 }
 
+export type YouTubeTrackRoute =
+  | { fact: YouTubeLinkFact; kind: 'session' }
+  | {
+      fact: YouTubeLinkFact
+      kind: 'already'
+      where: 'new_releases' | 'archive_store' | 'archive_youtube'
+      label: string
+    }
+  | {
+      fact: YouTubeLinkFact
+      kind: 'beatport'
+      linkUrl: string
+      label: string
+      place: string
+    }
+  | { fact: YouTubeLinkFact; kind: 'vinyl'; beatport: 'miss' | 'unreachable' }
+
+function ilikeContains(value: string): string {
+  const escaped = value.replace(/[\\%_]/g, (ch) => `\\${ch}`)
+  return `%${escaped}%`
+}
+
+function creditNames(artists: unknown): string {
+  if (!Array.isArray(artists)) return ''
+  return artists
+    .map((a) => (typeof a === 'string' ? a : String((a as { name?: string })?.name || '')))
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .join(', ')
+}
+
+function songLabel(title: string, artists: unknown): string {
+  const names = creditNames(artists)
+  const t = title.trim()
+  return names ? `${names} — ${t}` : t
+}
+
+/** Título y créditos con los que comparar catálogo y Beatport. */
+function youtubeIdentityKeys(fact: YouTubeLinkFact): string[] {
+  const keys = new Set<string>()
+  const add = (title: string, mix: string, artists: string[]) => {
+    const names = artists.map((n) => n.trim()).filter((n) => n.length >= 2)
+    if (!title.trim() || !names.length) return
+    const key = trackDisplayIdentityKey(
+      title,
+      mix,
+      names.map((name) => ({ name })),
+    )
+    if (key) keys.add(key)
+  }
+  add(fact.title, fact.mixName, [fact.artist])
+  const dash = fact.rawTitle.match(/^(.+?)\s+[-–—|]\s+(.+)$/)
+  if (dash) {
+    const { title, mixName } = splitYouTubeTitle(dash[2])
+    add(title, mixName || fact.mixName, [dash[1]])
+    add(title, mixName || fact.mixName, [fact.artist])
+  }
+  return [...keys]
+}
+
+function youtubeSearchQueries(fact: YouTubeLinkFact): string[] {
+  const out: string[] = []
+  const dash = fact.rawTitle.match(/^(.+?)\s+[-–—|]\s+(.+)$/)
+  if (dash) out.push(`${dash[1]} ${splitYouTubeTitle(dash[2]).title}`.replace(/\s+/g, ' ').trim())
+  const main = `${fact.artist} ${fact.title}`.replace(/\s+/g, ' ').trim()
+  if (main && !out.some((q) => q.toLowerCase() === main.toLowerCase())) out.push(main)
+  return out.filter((q) => q.length >= 3).slice(0, 2)
+}
+
+function beatportPlace(releaseDate: string | null): string {
+  if (releaseDate && releaseDate >= '2026-01-01') {
+    const week = chartEditionWeekMondayFromPublish(releaseDate)
+    return week ? `New Releases, semana del ${week}` : 'New Releases'
+  }
+  if (releaseDate) return `archivo de tienda, año ${releaseDate.slice(0, 4)}`
+  return 'New Releases'
+}
+
+type CatalogHit = { where: 'new_releases' | 'archive_store' | 'archive_youtube'; label: string }
+
+async function findCatalogTrack(
+  fact: YouTubeLinkFact,
+): Promise<CatalogHit | null> {
+  const sb = createServiceSupabase()
+  const keys = new Set(youtubeIdentityKeys(fact))
+  const { data: byVideo } = await sb
+    .from('chart_vinyl_tracks')
+    .select('title, artists, year')
+    .ilike('youtube_url', ilikeContains(fact.videoId))
+    .limit(3)
+  const videoRow = byVideo?.[0]
+  if (videoRow) {
+    const year = videoRow.year ? `, ${videoRow.year}` : ''
+    return {
+      where: 'archive_youtube',
+      label: `${songLabel(videoRow.title, videoRow.artists)}${year}`,
+    }
+  }
+  if (!keys.size) return null
+
+  const titleNeedle = (fact.title || fact.rawTitle).replace(/\s*\([^)]*\)\s*$/, '').trim()
+  const needle = titleNeedle.length >= 2 ? titleNeedle : fact.title
+  if (needle.trim().length < 2) return null
+
+  const [featuredRes, vinylRes] = await Promise.all([
+    sb
+      .from('chart_featured_tracks')
+      .select('title, mix_name, artists, release_date, release_year')
+      .ilike('title', ilikeContains(needle))
+      .limit(40),
+    sb
+      .from('chart_vinyl_tracks')
+      .select('title, mix_name, artists, year')
+      .ilike('title', ilikeContains(needle))
+      .limit(40),
+  ])
+
+  for (const row of featuredRes.data || []) {
+    const key = trackDisplayIdentityKey(row.title, row.mix_name, row.artists)
+    if (!key || !keys.has(key)) continue
+    const release = row.release_date || ''
+    const where = release >= '2026-01-01' ? 'new_releases' : 'archive_store'
+    const year = release ? release.slice(0, 4) : row.release_year ? String(row.release_year) : ''
+    return {
+      where,
+      label: `${songLabel(row.title, row.artists)}${year ? `, ${year}` : ''}`,
+    }
+  }
+  for (const row of vinylRes.data || []) {
+    const key = trackDisplayIdentityKey(row.title, row.mix_name, row.artists)
+    if (!key || !keys.has(key)) continue
+    return {
+      where: 'archive_youtube',
+      label: `${songLabel(row.title, row.artists)}${row.year ? `, ${row.year}` : ''}`,
+    }
+  }
+  return null
+}
+
+/**
+ * Un YouTube de tema no se archiva a ciegas.
+ * 1. ¿Ya está en New Releases o en el archivo?
+ * 2. Si no, ¿está en Beatport (mismo título, versión y artista)?
+ * 3. Solo entonces se prepara como vinilo de YouTube.
+ * Una sesión de DJ no entra en esta cadena.
+ */
+export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouTubeTrackRoute[]> {
+  const routes: YouTubeTrackRoute[] = []
+  const needsStore: YouTubeLinkFact[] = []
+  for (const fact of facts) {
+    if (fact.kind === 'session') {
+      routes.push({ fact, kind: 'session' })
+      continue
+    }
+    try {
+      const hit = await findCatalogTrack(fact)
+      if (hit) {
+        routes.push({ fact, kind: 'already', where: hit.where, label: hit.label })
+        continue
+      }
+    } catch {
+      /* si el catálogo no responde, se intenta Beatport igual */
+    }
+    needsStore.push(fact)
+  }
+  if (!needsStore.length) return routes
+
+  let storeDown = false
+  const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
+  const pages = createBeatportPageLoader()
+  try {
+    for (const fact of needsStore) {
+      if (storeDown) {
+        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
+        continue
+      }
+      const queries = youtubeSearchQueries(fact)
+      let matched: { link_url: string; title: string; artists: { name: string }[]; release_date: string | null } | null =
+        null
+      try {
+        const keys = new Set(youtubeIdentityKeys(fact))
+        for (const query of queries) {
+          const url = `https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`
+          const tracks = await pages.load(url)
+          const hit = tracks.find((t) => {
+            const key = trackDisplayIdentityKey(t.title, t.mix_name, t.artists)
+            return Boolean(key && keys.has(key) && t.link_url)
+          })
+          if (hit) {
+            matched = hit
+            break
+          }
+          if (tracks.length) break
+        }
+      } catch {
+        storeDown = true
+        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
+        continue
+      }
+      if (matched) {
+        routes.push({
+          fact,
+          kind: 'beatport',
+          linkUrl: matched.link_url,
+          label: songLabel(matched.title, matched.artists),
+          place: beatportPlace(matched.release_date),
+        })
+      } else {
+        routes.push({ fact, kind: 'vinyl', beatport: 'miss' })
+      }
+    }
+  } finally {
+    await pages.close()
+  }
+  const byId = new Map(routes.map((r) => [r.fact.videoId, r]))
+  return facts.map((f) => byId.get(f.videoId)).filter((r): r is YouTubeTrackRoute => Boolean(r))
+}
+
+export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
+  if (!routes.length) return ''
+  const lines = routes.map((route) => {
+    const fact = route.fact
+    const mix = fact.mixName ? ` (${fact.mixName})` : ''
+    const who = `${fact.artist} — ${fact.title}${mix}`.replace(/^ — /, '')
+    if (route.kind === 'session') return `• ${who}: sesión de DJ. La preparo como mix.`
+    if (route.kind === 'already') {
+      const where =
+        route.where === 'new_releases'
+          ? 'New Releases'
+          : route.where === 'archive_store'
+            ? 'el archivo de tienda'
+            : 'el archivo de YouTube'
+      return `• ${route.label}: ya figura en ${where}. No lo vuelvo a añadir.`
+    }
+    if (route.kind === 'beatport') {
+      return `• ${route.label}: está en Beatport. Lo preparo en ${route.place}.`
+    }
+    if (route.beatport === 'unreachable') {
+      return `• ${who}: no he podido abrir Beatport. Lo preparo como archivo de YouTube.`
+    }
+    return `• ${who}: no está en el catálogo ni en Beatport. Lo preparo como archivo de YouTube.`
+  })
+  return `He mirado el catálogo y Beatport:\n${lines.join('\n')}`
+}
+
+export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
+  if (!routes.length) return ''
+  const lines = routes.map((route) => {
+    const id = route.fact.videoId
+    if (route.kind === 'session') return `- ${id}: sesión → stage_upsert_mix`
+    if (route.kind === 'already') return `- ${id}: YA ESTÁ en el catálogo. No llames a stage_vinyl_picks ni a stage_new_releases.`
+    if (route.kind === 'beatport') return `- ${id}: Beatport ${route.linkUrl}. No lo archives en YouTube. El servidor prepara New Releases.`
+    return `- ${id}: sin ficha en Beatport → stage_vinyl_picks`
+  })
+  return `
+## Decisión de cada YouTube (el servidor ya miró catálogo y Beatport)
+Sigue esta decisión. No archives en YouTube un tema que ya está o que tiene ficha en Beatport.
+
+${lines.join('\n')}
+`
+}
+
 async function adminInternalPost(
   originRequest: Request,
   pathName: string,
@@ -1156,10 +1419,12 @@ async function importNewReleasesAction(
   const summary = json.summary as
     | { insertadas?: number; fallidas?: number; saltadas_duplicado?: number; saltadas_multi?: number }
     | undefined
+  const failed = Array.isArray(json.failed) ? (json.failed as { reason?: string }[]) : []
+  const why = failed.find((f) => f?.reason)?.reason
   return {
     type: 'new_release',
     ok: true,
-    summary: `New Releases: ${summary?.insertadas ?? 0} insertadas, ${summary?.saltadas_duplicado ?? 0} dupes, ${summary?.saltadas_multi ?? 0} multi, ${summary?.fallidas ?? 0} fallidas`,
+    summary: `New Releases: ${summary?.insertadas ?? 0} insertadas, ${summary?.saltadas_duplicado ?? 0} dupes, ${summary?.saltadas_multi ?? 0} multi, ${summary?.fallidas ?? 0} fallidas${why ? ` (${why})` : ''}`,
     detail: json,
   }
 }

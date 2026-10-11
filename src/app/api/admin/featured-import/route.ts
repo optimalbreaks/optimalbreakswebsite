@@ -11,11 +11,10 @@ import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
-  fetchBeatportPageHtml,
   isBeatportTrackOrReleaseUrl,
   parseBeatportImportLines,
-  resolveTracksFromBeatportHtml,
 } from '@/lib/beatport-next-data-tracks'
+import { createBeatportPageLoader } from '@/lib/beatport-genre-import'
 
 export const maxDuration = 300
 
@@ -172,6 +171,7 @@ export async function POST(request: NextRequest) {
   }
 
   const editionCache = new Map<string, EditionState>()
+  const pages = createBeatportPageLoader()
   const getEditionState = async (weekDate: string) => {
     if (!isoWeekDate(weekDate)) {
       throw new Error(`week_date inválido: ${weekDate}`)
@@ -200,18 +200,21 @@ export async function POST(request: NextRequest) {
         .replace(/^http:\/\//i, 'https://')
         .replace(/^https:\/\/beatport\.com/i, 'https://www.beatport.com')
 
-      const html = await fetchBeatportPageHtml(normalized)
-      const tracks = resolveTracksFromBeatportHtml(html, normalized)
-      if (!tracks.length) {
+      const tracks = await pages.load(normalized)
+      const wantedId = normalized.match(/\/track\/[^/]+\/(\d+)/i)?.[1] || ''
+      const picked = wantedId
+        ? tracks.filter((t) => /\/(\d+)$/.test(t.link_url) && t.link_url.endsWith(`/${wantedId}`))
+        : tracks
+      if (!picked.length) {
         failed.push({ url, reason: 'Sin pistas (__NEXT_DATA__ vacío o no parseable)' })
-      } else if (tracks.length > 1) {
+      } else if (picked.length > 1) {
         skipped_multi.push({
           url,
-          count: tracks.length,
-          titles: tracks.map((t) => t.title),
+          count: picked.length,
+          titles: picked.map((t) => t.title),
         })
       } else {
-        const pick = tracks[0]
+        const pick = picked[0]
         const key = dedupeKeyForFeaturedLink(pick.link_url)
 
         let targetWeek: string | null = week_date_override
@@ -291,6 +294,8 @@ export async function POST(request: NextRequest) {
       await sleep(pauseMs)
     }
   }
+
+  await pages.close()
 
   if (added.length > 0) {
     revalidatePublicCharts()

@@ -37,6 +37,8 @@ Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix
 
 La identidad del vinilo al confirmar es `vinylIdentityKey` (`src/lib/share-track.ts`), import estático. **Prohibido** `import()` con ruta calculada a `scripts/*.mjs`: en Vercel el guardado falla con «expression is too dynamic» (11 oct 2026).
 
+Un YouTube de **tema** no se archiva a ciegas (11 oct 2026): el servidor mira catálogo y Beatport (`routeYouTubeTracks`). Ya está → no se añade. Hay ficha → New Releases / archivo de tienda. Sin tienda → vinilo. Una sesión sigue siendo mix.
+
 CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
 SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).

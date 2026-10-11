@@ -177,6 +177,27 @@ export function findAllTracksFromNextData(
       if (p?.title) return [p]
     }
   }
+  // La búsqueda (`/search/tracks`) no usa la query `tracks`. Cualquier lista
+  // con id + slug + nombre de tema vale; la ficha y el género ya salieron arriba.
+  for (const q of qs) {
+    const qrec = q as { state?: { data?: unknown } }
+    const data = qrec.state?.data as Record<string, unknown> | undefined
+    if (!data || typeof data !== 'object') continue
+    const results = (Array.isArray(data.results) ? data.results : Array.isArray(data.tracks) ? data.tracks : null) as
+      | Record<string, unknown>[]
+      | null
+    if (!results?.length) continue
+    const out: BeatportPickInput[] = []
+    for (const t of results) {
+      if (!t?.id || !t?.slug) continue
+      if (!t.name && !t.track_name) continue
+      if (!('mix_name' in t) && !('bpm' in t) && !t.sample_url && !t.track_name) continue
+      const blob = t.name && t.slug ? t : normalizeBeatportTrackBlob(t, pageUrl)
+      const p = blob ? pickFromTrackBlob(blob) : null
+      if (p?.title) out.push(p)
+    }
+    if (out.length) return out
+  }
   return []
 }
 

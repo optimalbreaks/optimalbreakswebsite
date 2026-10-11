@@ -11,9 +11,13 @@ import {
   madridIsoWeekMonday,
   normalizeChatActions,
   resolveYouTubeLinks,
+  routeYouTubeTracks,
+  describeYouTubeRoutes,
+  youtubeRoutePrompt,
   toSlug,
   youtubeFactsPrompt,
   type ActionResult,
+  type YouTubeTrackRoute,
   type ChatAction,
   type ChatHistoryItem,
   type ChatIntent,
@@ -492,7 +496,8 @@ const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'stage_vinyl_picks',
-      description: 'Preparar vinyl picks de una semana. Requiere confirmación.',
+          description:
+            'Preparar vinyl picks de una semana. Solo si el servidor dijo que no hay ficha en Beatport ni el tema está ya en el catálogo. Requiere confirmación.',
       parameters: {
         type: 'object',
         properties: {
@@ -1229,7 +1234,69 @@ function youtubeOpCovers(op: PendingOp, fact: YouTubeLinkFact): boolean {
   return false
 }
 
-/** Si el modelo no preparó el YouTube ya leído, lo deja en pending_ops igual. */
+/** La decisión del servidor manda: catálogo, Beatport o archivo de YouTube. */
+function applyYouTubeRoutes(
+  routes: YouTubeTrackRoute[],
+  pendingOps: PendingOp[],
+  weekDate: string,
+): void {
+  if (!routes.length) return
+  const blocked = new Set(
+    routes
+      .filter((r) => r.kind === 'already' || r.kind === 'beatport' || r.kind === 'session')
+      .map((r) => r.fact.videoId),
+  )
+
+  for (let i = pendingOps.length - 1; i >= 0; i--) {
+    const op = pendingOps[i]
+    if (!op || op.kind !== 'chat_action') continue
+    if (op.action.type === 'vinyl') {
+      op.action.items = op.action.items.filter((item) => {
+        const url = String(item.youtube_url || '')
+        return ![...blocked].some((id) => url.includes(id))
+      })
+      if (!op.action.items.length) pendingOps.splice(i, 1)
+      continue
+    }
+    if (op.action.type === 'mix') {
+      const url = String(op.action.video_url || '')
+      const track = routes.find((r) => r.kind !== 'session' && url.includes(r.fact.videoId))
+      if (track) pendingOps.splice(i, 1)
+    }
+  }
+
+  const beatportUrls = routes.flatMap((r) => (r.kind === 'beatport' ? [r.linkUrl] : []))
+  if (beatportUrls.length) {
+    const existing = pendingOps.find(
+      (op) => op.kind === 'chat_action' && op.action.type === 'new_release',
+    )
+    if (existing && existing.kind === 'chat_action' && existing.action.type === 'new_release') {
+      const have = existing.action.urls_text
+      const missing = beatportUrls.filter((u) => !have.includes(u))
+      if (missing.length) {
+        existing.action.urls_text = `${have}\n${missing.join('\n')}`.trim()
+      }
+      const n = existing.action.urls_text.split(/\n/).filter(Boolean).length
+      existing.summary = `Import New Releases (${n} URL(s))`
+    } else {
+      pendingOps.push({
+        kind: 'chat_action',
+        summary: `Import New Releases (${beatportUrls.length} URL(s))`,
+        action: {
+          type: 'new_release',
+          urls_text: beatportUrls.join('\n'),
+          default_week_date: null,
+          create_edition_if_missing: true,
+        },
+      })
+    }
+  }
+
+  const rest = routes
+    .filter((r) => r.kind === 'vinyl' || r.kind === 'session')
+    .map((r) => r.fact)
+  stageUnresolvedYouTube(rest, pendingOps, weekDate)
+}
 function stageUnresolvedYouTube(
   facts: YouTubeLinkFact[],
   pendingOps: PendingOp[],
@@ -1353,11 +1420,13 @@ export async function runAdminChatAgent(opts: {
     system += `\nImágenes de este turno (Storage):\n${opts.attachedPublicUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
   }
   const youtubeFacts = await resolveYouTubeLinks(opts.message)
+  const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
   const vinylWeek = madridIsoWeekMonday()
   if (youtubeFacts.length) {
     system += youtubeFactsPrompt(youtubeFacts, vinylWeek)
+    system += youtubeRoutePrompt(youtubeRoutes)
     if (opts.intent === 'mix' && youtubeFacts.every((f) => f.kind === 'track')) {
-      system += `\nEl HINT intent=mix no aplica a estos enlaces: oEmbed los marca como temas. Usa stage_vinyl_picks.\n`
+      system += `\nEl HINT intent=mix no aplica a estos enlaces: oEmbed los marca como temas. Sigue la decisión del servidor (Beatport, catálogo o archivo).\n`
     }
   }
   if (looksLikeConfirm(opts.message)) {
@@ -1453,14 +1522,9 @@ export async function runAdminChatAgent(opts: {
     }
   }
 
-  const injectedYouTube = stageUnresolvedYouTube(youtubeFacts, pendingOps, vinylWeek)
-  if (injectedYouTube.length) {
-    const lines = injectedYouTube.map((f) => {
-      const mix = f.mixName ? ` (${f.mixName})` : ''
-      const asWhat = f.kind === 'session' ? 'sesión' : 'archivo'
-      return `• ${f.title}${mix} — ${f.artist} (${asWhat})`
-    })
-    finalReply = `He leído el YouTube:\n${lines.join('\n')}`
+  applyYouTubeRoutes(youtubeRoutes, pendingOps, vinylWeek)
+  if (youtubeRoutes.length) {
+    finalReply = describeYouTubeRoutes(youtubeRoutes)
   }
 
   if (!finalReply) {
