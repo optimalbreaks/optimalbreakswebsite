@@ -1,0 +1,617 @@
+{
+  "week_date": "2023-06-19",
+  "picks": [
+    {
+      "title": "Ghetto Blaster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ghetto-blaster/17801955",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/88f2517d-acb3-49b5-be2b-f1fa3216ebbb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c31c6781-372e-4297-b8ed-f1029af62bc9.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Gb Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 1
+    },
+    {
+      "title": "LOSE MY MIND",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lose-my-mind/17769568",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/466f9a76-6d47-4c3c-8db8-7b5f8ada07b6.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "Can You Find ME",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/can-you-find-me/17769566",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7882d8dc-c73c-4063-b6a5-e780f23e094f.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
+    },
+    {
+      "title": "ON AND ON",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/on-and-on/17769571",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/125bb09a-a5f3-462d-b5c7-8563d2155223.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
+    },
+    {
+      "title": "ALL DAY & ALL NIGHT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/all-day-all-night/17769574",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/be698611-1b16-48f3-b2c8-025fd2114284.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
+    },
+    {
+      "title": "Im Paralyzed",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/im-paralyzed/17769578",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a2a1f935-17bd-433f-ab8e-58ba0f8e4cfe.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "Db Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
+    },
+    {
+      "title": "Back To The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Bass-A-holix Anonymous Dark Label",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-the-bass/17769564",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06496807-71aa-4e95-8fd3-6a7fdd1881f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/751d708a-c874-4f44-8428-3214033bb9a9.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Definition Vibes",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        },
+        {
+          "url": "https://www.beatport.com/artist/alliance-of-funk/1077321",
+          "name": "Alliance Of Funk"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/definition-vibes/17860913",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/995e4d58-2f24-4262-a337-bdc51c81ccaf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dcb2dfa4-920f-4b92-ba2c-23b4c04a7f5e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Ab Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 8
+    },
+    {
+      "title": "Distorsion",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/afghan-headspin/30700",
+          "name": "Afghan Headspin"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/distorsion/17691859",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/682bdfff-204c-4620-be09-f09e445dba39.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e6e13d5a-f1da-4dd6-aaca-b0adbca2dbee.LOFI.mp3",
+      "bpm": 98,
+      "music_key": "C Major",
+      "release_year": 2023,
+      "release_date": "2023-06-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 9
+    },
+    {
+      "title": "Honey",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-brownie/355093",
+          "name": "DJ Brownie"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/honey/17469236",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/370b79fa-b8fd-42d6-82d4-731e473f664b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/94ba8e54-7e0b-4b8d-80b0-839be198a623.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10,
+      "tidal_url": "https://tidal.com/browse/track/279537075"
+    },
+    {
+      "title": "Dope Shit",
+      "mix_name": "Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dual-drop/683736",
+          "name": "Dual Drop"
+        },
+        {
+          "url": "https://www.beatport.com/artist/d-fast-beats/681171",
+          "name": "D-Fast Beats"
+        }
+      ],
+      "label": "DFBEATS RECORDS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dope-shit/17812801",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/287a3930-7dbd-4e10-9023-59e774b432ee.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e5843f4b-8a2c-4c66-9a47-0325d93c5ec8.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11
+    },
+    {
+      "title": "Strings of Heaven",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jose-rodriguez/25634",
+          "name": "Jose Rodriguez"
+        },
+        {
+          "url": "https://www.beatport.com/artist/paket/386044",
+          "name": "Paket"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/strings-of-heaven/17766015",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ee949e02-c8da-4b89-8d02-1af002b07d99.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/26d36eba-29e2-4806-a373-3461521a0522.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14
+    },
+    {
+      "title": "Reargard",
+      "mix_name": "JottaFrank & Perfect Kombo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-darrow-chem-syndicate/106178",
+          "name": "The Darrow Chem Syndicate"
+        },
+        {
+          "url": "https://www.beatport.com/artist/perfect-kombo/131092",
+          "name": "Perfect Kombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Nipponeer Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/reargard/17604380",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/71585d6a-7f1c-4481-a071-ebe2a9d48c81.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d0854bdb-e2aa-4fd1-83d7-1b0b9343db30.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "C Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15,
+      "tidal_url": "https://tidal.com/browse/track/438649562"
+    },
+    {
+      "title": "My Life",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "Spektra Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-life/17696412",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0769f202-3906-42d9-982e-07fb434f3dea.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fcabf473-2058-4b6e-830a-d759d0408387.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
+    },
+    {
+      "title": "After The Sun",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/loopcrashing/854454",
+          "name": "Loopcrashing"
+        },
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        },
+        {
+          "url": "https://www.beatport.com/artist/glx/1025827",
+          "name": "GLØX"
+        }
+      ],
+      "label": "Solid Breaks Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/after-the-sun/17760971",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c102a75e-9eab-48d3-8e12-cf3c65900f36.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/35717f9e-1282-40a4-9944-258c2087aabd.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 17
+    },
+    {
+      "title": "Rave & Roll",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/greenflamez/918834",
+          "name": "GreenFlamez"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rave-roll/17701299",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/42a702d6-3b19-4c31-b4df-1bec3d01501e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/172c7926-cb7f-48f6-bf8e-fefdd32ee7e9.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Like A Taco",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sporty-o/82039",
+          "name": "Sporty-O"
+        },
+        {
+          "url": "https://www.beatport.com/artist/miau/633679",
+          "name": "MIAU"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/like-a-taco/17727653",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3b3ffea8-8283-48be-9013-4cb89eb85971.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9e986f2-5b81-43e9-aa87-232aaa8c4f21.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19
+    },
+    {
+      "title": "Future 2000",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/woter/310684",
+          "name": "Woter"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/future-2000/17847820",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5f33de8e-8da9-4f72-a754-97328a6b212b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/99e1f242-bb2e-4d56-8af0-d1cf1e357383.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Bb Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
+    },
+    {
+      "title": "Cash",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dany-bs/1061300",
+          "name": "Dany BS"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cash/17787400",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/47bf26c3-df0f-49dd-ad65-303f60acba05.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bce17119-ddf7-44c2-99e4-0715ac54b3f7.LOFI.mp3",
+      "bpm": 66,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
+    },
+    {
+      "title": "Shaman",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nosk/435512",
+          "name": "Nosk"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shaman/17727651",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69614a91-fceb-4dfd-89cd-67374a4e4df4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5cc823e4-55ec-4d6c-b162-a2026610d8e4.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Gb Major",
+      "release_year": 2023,
+      "release_date": "2023-06-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 23
+    },
+    {
+      "title": "Neon Stardust Symphony",
+      "mix_name": "Club Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-icey/11440",
+          "name": "DJ Icey"
+        }
+      ],
+      "label": "Zone Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/neon-stardust-symphony/17798251",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d363b19d-ad2b-4fec-98c3-a554c4c25b31.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/47e95f6d-9cb2-4958-816d-f349c4f4e1b7.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 24
+    },
+    {
+      "title": "Keep Me Up All Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jormek/956125",
+          "name": "Jormek"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-me-up-all-night/17738100",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/71644f90-9fd1-4a92-b5a0-f8dabd8d19ca.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f2fa34d1-03ec-4913-a123-9a409a806217.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    },
+    {
+      "title": "Good Time Tonight",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/loopcrashing/854454",
+          "name": "Loopcrashing"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/good-time-tonight/17830472",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/33a1aaba-4dff-4646-aaa0-764e63bb89b7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4a57318f-e527-41f8-8f15-f54a9fb9121b.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Db Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Emerald",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/prato/72360",
+          "name": "Prato"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/emerald/17772331",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e4a94a72-7e27-4d64-aa86-a55d56f7f634.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/87dda7bf-0371-41a9-9e41-ec149641f8c8.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Bb Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
+    },
+    {
+      "title": "Non Stop",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "NVTHEC"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/non-stop/17738077",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/764d7c36-4188-4512-8f09-bcf4169b54bb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ecb4b764-feea-4d92-9877-1e920e29f642.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    }
+  ]
+}
