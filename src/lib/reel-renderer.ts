@@ -26,6 +26,8 @@ export type ReelData = {
   lang: 'es' | 'en'
   /** Pulso visual. Sin audio, solo marca el ritmo de la animación. */
   bpm?: number
+  /** Fecha de release (YYYY-MM-DD): sello de tinta sobre la funda + cinta superior. */
+  releaseDate?: string | null
 }
 
 export type ReelFormat = 'vertical' | 'horizontal'
@@ -276,6 +278,68 @@ const HORIZONTAL: Layout = {
 
 let L: Layout = VERTICAL
 
+const MONTHS_EN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+/** «12 SEP 2026» + «RELEASED» (pasada) u «OUT ON» (próxima). Null si la fecha no es válida. */
+export function releaseStamp(iso: string | null | undefined): { label: string; date: string } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((iso || '').trim())
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  const d = Number(m[3])
+  if (y < 1950 || mo < 1 || mo > 12 || d < 1 || d > 31) return null
+  const today = new Date().toISOString().slice(0, 10)
+  return {
+    label: m[0] > today ? 'OUT ON' : 'RELEASED',
+    date: `${d} ${MONTHS_EN[mo - 1]} ${y}`,
+  }
+}
+
+/** Sello de tinta roja (fecha de release) con bordes dobles y tinta irregular. */
+function drawDateStamp(
+  ctx: CanvasRenderingContext2D,
+  stamp: { label: string; date: string },
+  p: number,
+) {
+  ctx.save()
+  ctx.font = font(HEAD, 40)
+  const dw = ctx.measureText(stamp.date).width
+  ctx.font = font(MONO, 22, 700)
+  const lw = ctx.measureText(stamp.label).width + stamp.label.length * 6
+  const w = Math.max(dw, lw) + 56
+  const h = 112
+  const s = 1 + 0.9 * (1 - easeOut(p))
+  ctx.globalAlpha = Math.min(1, p * 1.6)
+  ctx.scale(s, s)
+  // Papel debajo: legible sobre cualquier carátula
+  ctx.fillStyle = 'rgba(232,220,200,0.9)'
+  ctx.fillRect(-w / 2, -h / 2, w, h)
+  ctx.strokeStyle = RED
+  ctx.lineWidth = 6
+  ctx.strokeRect(-w / 2 + 6, -h / 2 + 6, w - 12, h - 12)
+  ctx.lineWidth = 2
+  ctx.strokeRect(-w / 2 + 15, -h / 2 + 15, w - 30, h - 30)
+  ctx.fillStyle = RED
+  ctx.textBaseline = 'middle'
+  ctx.textAlign = 'left' // spacedText coloca cada letra desde su borde izquierdo
+  ctx.font = font(MONO, 22, 700)
+  spacedText(ctx, stamp.label, 0, -h / 2 + 34, 6)
+  ctx.textAlign = 'center'
+  ctx.font = font(HEAD, 40)
+  ctx.fillText(stamp.date, 0, 14)
+  // Tinta irregular: motas de papel que «comen» el sello
+  ctx.fillStyle = 'rgba(232,220,200,0.55)'
+  for (let i = 0; i < 70; i++) {
+    const x = (hash(i, 7) - 0.5) * w
+    const y = (hash(i, 13) - 0.5) * h
+    const r = 1 + hash(i, 21) * 3
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
 // ---------- piezas de fanzine ----------
 
 /** Cinta adhesiva semitransparente con extremos dentados. */
@@ -446,6 +510,7 @@ export function drawReelFrame(
   const kick = pulsing ? Math.exp(-beatPhase / 0.09) : 0
   const bar = Math.floor(beatsIn / 4)
   const endT = durationSec - 3.6
+  const stamp = releaseStamp(data.releaseDate)
   const {
     SAFE_SCALE,
     SAFE_SHIFT_Y,
@@ -568,7 +633,9 @@ export function drawReelFrame(
     ctx,
     TICKER_TOP_Y,
     L.TICKER_TOP_ROT,
-    `OPTIMAL BREAKS  •  ${data.kicker}  •  BREAKBEAT`,
+    stamp
+      ? `OPTIMAL BREAKS  •  ${data.kicker}  •  ${stamp.label} ${stamp.date}  •  BREAKBEAT`
+      : `OPTIMAL BREAKS  •  ${data.kicker}  •  BREAKBEAT`,
     YELLOW,
     INK,
     t * 160,
@@ -671,6 +738,18 @@ export function drawReelFrame(
       ctx.scale(s, s)
       drawTape(ctx, 0, 0, 200, 54, -0.72, 2)
       ctx.restore()
+    }
+
+    // Sello de fecha de release: golpe sobre la esquina superior derecha de la funda
+    if (stamp) {
+      const sp = prog(t, 2.2, 2.42)
+      if (sp > 0) {
+        ctx.save()
+        ctx.translate(half - 170, -half + 92)
+        ctx.rotate(-0.12)
+        drawDateStamp(ctx, stamp, sp)
+        ctx.restore()
+      }
     }
     ctx.restore()
 

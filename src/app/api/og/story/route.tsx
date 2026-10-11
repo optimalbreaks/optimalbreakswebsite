@@ -59,6 +59,8 @@ type StoryRow = {
   artwork_url: string | null
   youtube_url?: string | null
   release_year?: number | null
+  /** YYYY-MM-DD (charts y Beatport); el vinilo solo tiene año. */
+  release_date?: string | null
   year?: number | null
   bpm?: number | null
 }
@@ -138,6 +140,7 @@ async function fetchBeatportStoryRow(
     label: track.label || null,
     artwork_url: track.artwork_url,
     release_year: track.release_year,
+    release_date: track.release_date ?? null,
     bpm: track.bpm,
   }
 }
@@ -170,7 +173,7 @@ async function fetchStoryRow(
   const cols =
     kind === 'vinyl'
       ? 'title, mix_name, artists, label, artwork_url, youtube_url, year'
-      : 'title, mix_name, artists, label, artwork_url, release_year, bpm'
+      : 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm'
   const { data } = await supabase.from(table).select(cols).eq('id', id).maybeSingle()
   return (data as StoryRow | null) ?? null
 }
@@ -440,11 +443,17 @@ export async function GET(request: NextRequest) {
     // «Original Mix» no aporta en el reel: ocupa una línea y no dice nada.
     const reelMix = /^original( mix)?$/i.test(mix) ? '' : mix
     const bpm = row.bpm && row.bpm > 60 && row.bpm < 200 ? Math.round(row.bpm) : null
+    // Con fecha completa, el vídeo la muestra en un sello; el año sobra en la línea de datos.
+    const releaseDate = /^\d{4}-\d{2}-\d{2}/.test(row.release_date || '')
+      ? (row.release_date as string).slice(0, 10)
+      : null
+    const reelMeta = releaseDate ? row.label || '' : metaBits
     return NextResponse.json(
       {
         title: `${row.title}${reelMix ? ` (${reelMix})` : ''}`.slice(0, 90),
         artists,
-        meta: [metaBits, bpm ? `${bpm} BPM` : null].filter(Boolean).join(' · '),
+        meta: [reelMeta, bpm ? `${bpm} BPM` : null].filter(Boolean).join(' · '),
+        releaseDate,
         kicker,
         artwork: artworkDataUrl,
         bpm,
