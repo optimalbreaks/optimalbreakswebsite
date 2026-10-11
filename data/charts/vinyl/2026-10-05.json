@@ -19,6 +19,31 @@
       "artwork_url": "https://i.ytimg.com/vi/msNK_FHcVPs/hqdefault.jpg",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "sort_order": 2,
+      "title": "Calypso",
+      "mix_name": "DREWWAVE & Donawave Remix",
+      "artists": [
+        {
+          "name": "Bowser"
+        },
+        {
+          "name": "DREWWAVE"
+        },
+        {
+          "name": "Donawave"
+        }
+      ],
+      "label": "",
+      "catalog_number": "",
+      "year": 2026,
+      "format": "",
+      "discogs_url": "",
+      "youtube_url": "https://www.youtube.com/watch?v=SMdx4gD2q3Q",
+      "artwork_url": "https://i.ytimg.com/vi/SMdx4gD2q3Q/hqdefault.jpg",
+      "note_en": "Free remix uploaded 7 Oct 2026. Bowser's original is on Beatport (83, 2 Jan 2026); this is not that cut.",
+      "note_es": "Remix libre subido el 7 oct 2026. El original de Bowser está en Beatport (83, 2 ene 2026); no es este corte."
     }
   ]
 }
