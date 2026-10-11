@@ -422,6 +422,32 @@ export function vinylTrackDedupKey(
   return `${a}::${normTitle(title || '')}::${normMix(mixName || '')}`
 }
 
+/**
+ * Identidad de fila de vinilo. Misma regla que `vinylIdentityKey` en
+ * `scripts/lib/chart-vinyl-track-key.mjs`: primero el id de YouTube, y si no
+ * hay vídeo, título + mix + artistas.
+ *
+ * Vive aquí (import estático) porque el chat editorial corre en Vercel: un
+ * `import()` con ruta calculada hacia el `.mjs` de scripts revienta con
+ * «Cannot find module as expression is too dynamic» y el Confirmar no guarda.
+ */
+export function vinylIdentityKey(row: {
+  youtube_url?: string | null
+  title?: string | null
+  mix_name?: string | null
+  artists?: { name?: string }[] | string[] | null
+}): string {
+  const s = String(row?.youtube_url || '').trim()
+  const m = s.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([A-Za-z0-9_-]{11})/i,
+  )
+  if (m?.[1]) return `yt:${m[1].toLowerCase()}`
+  const artists = (row?.artists || []).map((x) =>
+    typeof x === 'string' ? { name: x } : { name: x?.name || '' },
+  )
+  return vinylTrackDedupKey(row?.title, row?.mix_name, artists)
+}
+
 export function vinylRowDisplayScore(track: {
   artwork_url?: string | null
   youtube_url?: string | null

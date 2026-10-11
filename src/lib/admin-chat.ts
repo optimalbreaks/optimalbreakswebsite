@@ -3,8 +3,7 @@ import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-country'
 import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
 import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
-import { pathToFileURL } from 'url'
-import { join } from 'path'
+import { vinylIdentityKey } from '@/lib/share-track'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
 import { waitUntil } from '@vercel/functions'
@@ -1174,16 +1173,6 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
   if (!items.length) {
     return { type: 'vinyl', ok: false, summary: 'Sin items de vinilo' }
   }
-
-  const keyMod = await import(
-    pathToFileURL(join(process.cwd(), 'scripts', 'lib', 'chart-vinyl-track-key.mjs')).href
-  )
-  const vinylIdentityKey = keyMod.vinylIdentityKey as (row: {
-    youtube_url?: string | null
-    title?: string
-    mix_name?: string
-    artists?: unknown
-  }) => string
 
   const sb = createServiceSupabase()
   const { data: editionRow, error: edErr } = await sb

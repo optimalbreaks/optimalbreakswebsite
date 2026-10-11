@@ -35,6 +35,8 @@ Cartel sin año («21 de agosto») → `normalizeUpcomingEventDate` (`admin-chat
 
 Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix}`, `stage_new_releases` (remixer → `artists[]`, misma regla que `charts-new-releases-supabase`), `stage_vinyl_picks`, enrich/poster/foto/logo.
 
+La identidad del vinilo al confirmar es `vinylIdentityKey` (`src/lib/share-track.ts`), import estático. **Prohibido** `import()` con ruta calculada a `scripts/*.mjs`: en Vercel el guardado falla con «expression is too dynamic» (11 oct 2026).
+
 CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
 SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Postgres).
