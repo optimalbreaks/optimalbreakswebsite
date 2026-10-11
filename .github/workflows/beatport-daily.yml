@@ -12,8 +12,9 @@ name: Pase diario de Beatport
 
 on:
   schedule:
-    # GitHub va en UTC. 12:05 Madrid = 10:05 UTC en verano, 11:05 UTC en invierno.
-    # El script solo sigue si en Madrid son las 12; la otra línea sale sin hacer nada.
+    # GitHub va en UTC y este schedule llega horas tarde (9–11 oct 2026).
+    # El aviso de las 12:05 lo da pg_cron (migración 090): workflow_dispatch.
+    # Estas dos líneas se quedan de repuesto. 12:05 Madrid = 10:05 UTC en verano, 11:05 UTC en invierno.
     - cron: '5 10 * * *'
     - cron: '5 11 * * *'
   workflow_dispatch:
