@@ -728,7 +728,9 @@ El `CommandPalette` (icono de lupa en el header, atajo **⌘K** / **Ctrl+K**) co
 | `post` | `posts` | `title`, `slug` |
 | `organization` | `organizations` | `name`, `slug` |
 
-Varias palabras se cruzan con **AND**: cada una puede caer en un **campo distinto** de la misma fila. Un trozo cuenta si una palabra **empieza** por él (`ondamik` encuentra a Ondamike). No cuenta en medio de otra (`skin` no entra en Ruskin). `dj tortu skin` encuentra el tema **Skin** de DJ Tortu (`skin` en `title`, `dj` y `tortu` en `artist_names_text`). La frase entera no tiene que estar junta en un solo campo. Si el nombre del artista cabe entero en lo escrito y contiene la palabra más larga, la ficha sale también.
+Varias palabras se cruzan con **AND**: cada una puede caer en un **campo distinto** de la misma fila. Un trozo cuenta si una palabra **empieza** por él (`ondamik` encuentra a Ondamike). No cuenta en medio de otra (`skin` no entra en Ruskin). `dj tortu skin` encuentra el tema **Skin** de DJ Tortu (`skin` en `title`, `dj` y `tortu` en `artist_names_text`). La frase entera no tiene que estar junta en un solo campo.
+
+Un artículo o un nexo (`the`, `el`, `la`, `vs`, `feat`…) no es obligatorio si hay otra palabra: `the rockafeller skank` encuentra **Rockafeller Skank** aunque el título no lleve «The», y `sharp shooter zinc` encuentra **Super Sharp Shooter** aunque falte la primera palabra. El apóstrofe, el guion y el acento no cambian la búsqueda (`dont dream` = Don't Dream, `dfast` = D-Fast, `herve` = Hervé). Si el nombre del artista, sin artículo y sin el prefijo DJ/MC, cabe en lo escrito, la ficha sale también aunque al lado vaya el tema (`prodigy breathe` → The Prodigy y el tema Breathe). Los temas se ordenan por cercanía: el título que coincide entero queda delante de uno que solo comparte una palabra.
 
 ### Reglas de presentación
 

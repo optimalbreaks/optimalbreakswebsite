@@ -73,6 +73,20 @@ function escIlike(raw: string): string {
 const SINGLE_LETTER_STOP = new Set(['a', 'e', 'i', 'o', 'u', 'y'])
 
 /**
+ * Artículos y nexos. Si hay otra palabra, no son obligatorios: quien busca
+ * «the rockafeller skank» habla de Rockafeller Skank (el título no lleva The),
+ * y «skank the fatboy» no puede quedarse solo con el tema que tiene un «The»
+ * en otro crédito. Igual «vs» / «feat» entre el artista y el tema.
+ */
+const OPTIONAL_TOKEN = new Set([
+  'the', 'an', 'el', 'la', 'los', 'las', 'un', 'una',
+  'vs', 'feat', 'ft', 'aka',
+])
+
+/** «DJ Tortu» se busca como «tortu» cuando al lado va el tema. */
+const ROLE_TOKEN = new Set(['dj', 'mc'])
+
+/**
  * Palabras de la búsqueda. Una frase («dj tortu skin») no cabe en una sola
  * columna: el título es «Skin» y el artista es «Dj Tortu». Cada palabra tiene
  * que aparecer en alguno de los campos de la misma fila.
@@ -83,7 +97,10 @@ function searchTokens(raw: string): string[] {
   const seen = new Set<string>()
   const words: string[] = []
   const initials: string[] = []
-  for (const part of raw.split(/[^\p{L}\p{N}]+/u)) {
+  // «don't» y «dont» son la misma palabra. El guion se queda: «d-fast» sigue
+  // siendo la inicial D más «fast» (como «ricky b»).
+  const folded = raw.replace(/[''`´]/g, '')
+  for (const part of folded.split(/[^\p{L}\p{N}]+/u)) {
     const t = part.trim()
     if (!t || t.length > 40) continue
     const key = normForKey(t)
@@ -116,10 +133,34 @@ function tokenWord(token: string): string {
   return normForKey(token).replace(/[^a-z0-9]+/g, '')
 }
 
+const ACCENT_CLASS: Record<string, string> = {
+  a: 'aáàâäã',
+  e: 'eéèêë',
+  i: 'iíìîï',
+  o: 'oóòôöõ',
+  u: 'uúùûü',
+  n: 'nñ',
+  c: 'cç',
+}
+
 function tokenPattern(token: string): string {
   const safe = tokenWord(token)
   if (!safe) return ''
-  return safe.length === 1 ? `\\m${safe}\\M` : `\\m${safe}`
+  // Apóstrofe o guion opcionales entre letras: «dont» entra en Don't,
+  // «dfast» entra en D-Fast. La vocal cubre el acento: «herve» entra en Hervé.
+  // Sigue siendo prefijo («ondamik» → Ondamike) y no entra en medio («skin» ≠ Ruskin).
+  const pieces = [...safe].map((ch) => {
+    const fold = ACCENT_CLASS[ch]
+    return fold ? `[${fold}]` : ch
+  })
+  const body = pieces.join("[-']?")
+  return safe.length === 1 ? `\\m${body}\\M` : `\\m${body}`
+}
+
+/** Artículos y nexos fuera. Si no queda nada («the»), se busca tal cual. */
+function coreTokens(list: readonly string[]): string[] {
+  const core = list.filter((t) => !OPTIONAL_TOKEN.has(tokenWord(t)))
+  return core.length > 0 ? [...core] : [...list]
 }
 
 function normHasWord(hay: string, token: string): boolean {
@@ -128,7 +169,103 @@ function normHasWord(hay: string, token: string): boolean {
   const body = t.length === 1
     ? `(?:^|[^a-z0-9])${t}(?:[^a-z0-9]|$)`
     : `(?:^|[^a-z0-9])${t}`
-  return new RegExp(body).test(normForKey(hay))
+  return new RegExp(body).test(searchHay(hay))
+}
+
+/** Minúsculas, sin acentos, sin apóstrofe y sin guion, para comparar. */
+function searchHay(raw: string): string {
+  return normForKey(raw).replace(/[-‐‑–—]/g, '')
+}
+
+function wordList(raw: string, drop: ReadonlySet<string>): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const folded = raw.replace(/[''`´]/g, '').replace(/[-‐‑–—]/g, '')
+  for (const part of folded.split(/[^\p{L}\p{N}]+/u)) {
+    const w = normForKey(part).replace(/[^a-z0-9]+/g, '')
+    if (w.length < 2 || drop.has(w) || seen.has(w)) continue
+    seen.add(w)
+    out.push(w)
+  }
+  return out
+}
+
+/** Nombre sin artículo. «DJ» / «MC» caen si queda otra palabra de verdad. */
+function nameWords(raw: string): string[] {
+  const all = wordList(raw, OPTIONAL_TOKEN)
+  const noRole = all.filter((w) => !ROLE_TOKEN.has(w))
+  return noRole.some((w) => w.length >= 4) ? noRole : all
+}
+
+function hitsWord(words: readonly string[], token: string): boolean {
+  const t = tokenWord(token)
+  if (!t) return false
+  if (t.length === 1) return words.includes(t)
+  return words.some((w) => w.startsWith(t))
+}
+
+/**
+ * El tema correcto arriba: título entero > título + artista > un prefijo
+ * suelto. «breathe» pone Breathe delante de Just Breathe. «prodigy breathe»
+ * pone el Breathe de The Prodigy delante de otro tema del mismo artista.
+ */
+function scoreTrack(
+  title: string,
+  mix: string,
+  artistsText: string,
+  label: string,
+  cores: readonly string[],
+): number {
+  const titleWords = wordList(title, OPTIONAL_TOKEN)
+  const artistWords = nameWords(artistsText)
+  const mixWords = wordList(mix, OPTIONAL_TOKEN)
+  const labelWords = wordList(label, OPTIONAL_TOKEN)
+  let score = 0
+  let titleHits = 0
+  let artistHits = 0
+  for (const c of cores) {
+    const t = tokenWord(c)
+    const inTitle = hitsWord(titleWords, c)
+    const inArtist = hitsWord(artistWords, c)
+    if (inTitle) {
+      titleHits++
+      score += 10
+      if (titleWords.includes(t)) score += 4
+    } else if (hitsWord(mixWords, c)) {
+      score += 3
+    }
+    if (inArtist) {
+      artistHits++
+      score += 8
+      if (artistWords.includes(t)) score += 3
+    } else if (!inTitle && hitsWord(labelWords, c)) {
+      score += 1
+    }
+  }
+  if (titleHits > 0 && artistHits > 0) score += 14
+  if (cores.length > 0 && titleHits === cores.length) {
+    score += 8
+    const extras = titleWords.filter((w) => !cores.some((c) => hitsWord([w], c)))
+    if (extras.length === 0) score += 18
+    else score -= extras.length
+  }
+  return score
+}
+
+/** La ficha cuyo nombre cabe en la búsqueda (el resto puede ser el tema). */
+function scoreArtist(name: string, cores: readonly string[]): number {
+  const words = nameWords(name)
+  if (!words.length || !cores.length) return 0
+  let hits = 0
+  for (const w of words) {
+    if (cores.some((c) => hitsWord([w], c))) hits++
+  }
+  let score = hits * 10
+  if (hits === words.length) {
+    score += 16
+    if (hits === cores.length) score += 10
+  }
+  return score
 }
 
 function tokenOr(columns: readonly string[], token: string): string {
@@ -177,6 +314,7 @@ function normForKey(s: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[''`´]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -310,12 +448,14 @@ export async function GET(request: NextRequest) {
   if (!tokens.length) {
     return NextResponse.json({ results: [] as SearchResult[] })
   }
-  const tokenNorms = tokens.map((t) => normForKey(t)).filter(Boolean)
-  const looseNameTokens = [...tokens]
-    .sort((a, b) => normForKey(b).length - normForKey(a).length)
-    .filter((t) => normForKey(t).length >= 4)
-    .slice(0, 2)
-  const longestToken = tokenNorms.slice().sort((a, b) => b.length - a.length)[0] || ''
+  // «the rockafeller» busca rockafeller. El artículo no es obligatorio
+  // si al lado hay un título o un artista.
+  const activeTokens = coreTokens(tokens)
+  const tokenNorms = activeTokens.map((t) => tokenWord(t)).filter(Boolean)
+  const looseNameTokens = [...activeTokens]
+    .sort((a, b) => tokenWord(b).length - tokenWord(a).length)
+    .filter((t) => tokenWord(t).length >= 4)
+    .slice(0, 3)
   const supabase = createCachedSupabase()
 
   const base = (path: string) => `/${lang}${path}`
@@ -347,12 +487,12 @@ export async function GET(request: NextRequest) {
     applyTokenAnd(
       supabase.from('artists').select(artistSelect),
       artistCols,
-      tokens,
+      activeTokens,
     ).limit(12),
     applyTokenAnd(
       supabase.from('labels').select('id, slug, name, image_url, country, founded_year'),
       ['name', 'slug'],
-      tokens,
+      activeTokens,
     ).limit(8),
     // EVENTOS FUTUROS: siempre se muestran. `lineup_text` es una columna
     // STORED GENERATED (migración 052) que aplana `lineup text[]` +
@@ -363,7 +503,7 @@ export async function GET(request: NextRequest) {
         .from('events')
         .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages'),
       ['name', 'slug', 'city', 'lineup_text'],
-      tokens,
+      activeTokens,
     )
       .gte('date_start', todayIso)
       .order('date_start', { ascending: true })
@@ -377,7 +517,7 @@ export async function GET(request: NextRequest) {
         .from('events')
         .select('id, slug, name, image_url, city, country, date_start, event_type, lineup, stages'),
       ['name', 'slug', 'city', 'lineup_text'],
-      tokens,
+      activeTokens,
     )
       .lt('date_start', todayIso)
       .order('date_start', { ascending: false })
@@ -387,12 +527,12 @@ export async function GET(request: NextRequest) {
         .from('mixes')
         .select('id, slug, title, artist_name, artist_id, image_url, year, platform, mix_type, video_url, embed_url'),
       ['title', 'artist_name', 'slug'],
-      tokens,
+      activeTokens,
     ).limit(8),
     applyTokenAnd(
       supabase.from('scenes').select('id, slug, name_en, name_es, image_url, country, region, era'),
       ['name_en', 'name_es', 'slug', 'country', 'region'],
-      tokens,
+      activeTokens,
     ).limit(6),
     applyTokenAnd(
       supabase
@@ -400,14 +540,14 @@ export async function GET(request: NextRequest) {
         .select('id, slug, title_en, title_es, image_url, category, published_at, is_published')
         .eq('is_published', true),
       ['title_en', 'title_es', 'slug'],
-      tokens,
+      activeTokens,
     )
       .order('published_at', { ascending: false })
       .limit(6),
     applyTokenAnd(
       supabase.from('organizations').select('id, slug, name, image_url, country, base_city'),
       ['name', 'slug'],
-      tokens,
+      activeTokens,
     ).limit(4),
     // New Releases y archivo digital. Los 40 Breaks Vitales no se listan
     // en la web (sep 2026); sus temas viven aquí o en el Top 10 de la ficha.
@@ -419,7 +559,7 @@ export async function GET(request: NextRequest) {
         .from('chart_featured_tracks')
         .select('id, title, mix_name, label, artwork_url, release_year, release_date, artists, chart_editions!inner(week_date)'),
       trackCols,
-      tokens,
+      activeTokens,
     )
       .order('week_date', { referencedTable: 'chart_editions', ascending: false })
       .limit(40),
@@ -427,18 +567,20 @@ export async function GET(request: NextRequest) {
     applyTokenAnd(
       supabase.from('chart_vinyl_tracks').select('id, title, mix_name, label, artwork_url, year, artists'),
       trackCols,
-      tokens,
+      activeTokens,
     ).limit(20),
     // TOP 10 BEATPORT de fichas (artists/labels): índice en memoria cacheado.
     getBeatportTopIndex(supabase),
     // Ficha del artista cuando la búsqueda es «su nombre + un tema».
     // El AND estricto no la devuelve (el título no está en la ficha).
+    // Una consulta por palabra larga. Si se mezclan en un solo OR con límite,
+    // el tema («breathe», «skin») llena el cupo y la ficha («Prodigy», «Tortu») no entra.
     looseNameTokens.length > 0 && tokens.length >= 2
-      ? supabase
-          .from('artists')
-          .select(artistSelect)
-          .or(looseNameTokens.map((t) => tokenOr(artistCols, t)).join(','))
-          .limit(20)
+      ? Promise.all(
+          looseNameTokens.map((t) =>
+            supabase.from('artists').select(artistSelect).or(tokenOr(artistCols, t)).limit(8),
+          ),
+        ).then((parts) => ({ data: parts.flatMap((p) => p.data || []) }))
       : Promise.resolve({ data: [] as { id: string }[] }),
   ])
 
@@ -462,17 +604,26 @@ export async function GET(request: NextRequest) {
     artistHits.push(a)
   }
   for (const a of (artistsRes.data || []) as ArtistHit[]) pushArtist(a)
-  if (tokens.length >= 2 && longestToken.length >= 4) {
-    const qset = new Set(tokenNorms)
+  // «prodigy breathe»: la ficha es The Prodigy (sin The, y breathe es el tema).
+  // Hace falta que el nombre entero, sin artículo ni DJ/MC, quepa en lo escrito.
+  if (tokens.length >= 2) {
+    const qNorms = tokens.map((t) => tokenWord(t)).filter((w) => w.length >= 2)
     for (const a of (artistsLooseRes.data || []) as ArtistHit[]) {
       const source = (a.name || a.name_display || '').trim()
-      const words = searchTokens(source).map((w) => normForKey(w)).filter((w) => w.length >= 2)
-      if (words.length < 2 || !words.some((w) => w.length >= 4)) continue
-      if (!words.every((w) => qset.has(w))) continue
-      if (!normHasWord(source, longestToken)) continue
+      const words = nameWords(source)
+      if (!words.some((w) => w.length >= 4)) continue
+      const covered = words.every((w) =>
+        qNorms.some((q) => q === w || (q.length >= 3 && w.startsWith(q))),
+      )
+      if (!covered) continue
       pushArtist(a)
     }
   }
+  artistHits.sort((a, b) => {
+    const an = (a.name_display || a.name || '').trim()
+    const bn = (b.name_display || b.name || '').trim()
+    return scoreArtist(bn, activeTokens) - scoreArtist(an, activeTokens)
+  })
 
   for (const a of artistHits) {
     const styles = Array.isArray(a.styles) ? a.styles.filter(Boolean).slice(0, 2) : []
@@ -789,9 +940,11 @@ export async function GET(request: NextRequest) {
     artists: unknown
   }
 
-  // Una misma canción puede aparecer en New Releases y en el archivo.
-  // Deduplicamos por firma `titulo|mix|artistas`. Primero featured, luego vinilo.
-  const seenTrackKeys = new Set<string>()
+  // Una misma canción puede aparecer en New Releases, en el archivo y en un
+  // Top 10. Se puntúa primero (el título que coincide entero arriba) y, a
+  // igualdad, se queda la fila de /charts.
+  type TrackCandidate = { score: number; source: number; key: string; result: SearchResult }
+  const trackCandidates: TrackCandidate[] = []
 
   function searchTrackDedupeKey(title: string, mix: string, artists: unknown): string {
     let t = title
@@ -820,8 +973,7 @@ export async function GET(request: NextRequest) {
     // del mismo tema cuentan una vez; un remix con nombre no. Feats variables
     // ("Guau" vs "Guau, Lutolsky") siguen yendo por el primer artista.
     const key = searchTrackDedupeKey(title, mix, row.artists)
-    if (seenTrackKeys.has(key)) return
-    seenTrackKeys.add(key)
+    const score = scoreTrack(title, mix, artistsText, row.label || '', activeTokens)
     const yr = kind === 'vinyl' ? row.year : row.release_year
     const rd = kind !== 'vinyl' && row.release_date && /^\d{4}-\d{2}-\d{2}$/.test(row.release_date.slice(0, 10))
       ? row.release_date.slice(0, 10)
@@ -834,17 +986,22 @@ export async function GET(request: NextRequest) {
       dateLabel,
     ].filter(Boolean)
     const anchor = kind === 'vinyl' ? `chart-vinyl-row-${row.id}` : `chart-row-${row.id}`
-    results.push({
-      type: 'track',
-      id: row.id,
-      slug: row.id,
-      title: fullTitle,
-      subtitle: parts.join(' — '),
-      image_url: (row.artwork_url as string | null) ?? null,
-      // `?play=1` dispara autoplay en ChartView: para chart/featured arranca
-      // `playFromIndex(...)` y para vinyl inyecta `autoplay=1` en el iframe
-      // de YouTube de esa fila.
-      href: `${base('/charts')}?play=1#${anchor}`,
+    trackCandidates.push({
+      score,
+      source: kind === 'featured' ? 0 : 1,
+      key,
+      result: {
+        type: 'track',
+        id: row.id,
+        slug: row.id,
+        title: fullTitle,
+        subtitle: parts.join(' — '),
+        image_url: (row.artwork_url as string | null) ?? null,
+        // `?play=1` dispara autoplay en ChartView: para chart/featured arranca
+        // `playFromIndex(...)` y para vinyl inyecta `autoplay=1` en el iframe
+        // de YouTube de esa fila.
+        href: `${base('/charts')}?play=1#${anchor}`,
+      },
     })
   }
 
@@ -856,17 +1013,16 @@ export async function GET(request: NextRequest) {
   // cacheado por la query normalizada y emite resultados `track` que
   // enlazan a la ficha con `?play=beatport:<id>` (BeatportTopTracks lo
   // recoge: expande el panel, hace scroll a la fila y arranca el preview).
-  // Comparte `seenTrackKeys` con los charts: si un tema YA salió por
-  // /charts (que se procesa antes), no se duplica aquí.
+  // Se puntúan todos los que encajan y se guardan los 20 mejores. Antes
+  // se cortaba a los 12 primeros del índice, y un tema viejo perdía contra
+  // otro que solo compartía una palabra.
   // ----------------------------------------------------------------
   if (tokenNorms.length) {
-    let bpAdded = 0
+    const bpHits: TrackCandidate[] = []
     for (const e of beatportTopIndex as BeatportTopEntry[]) {
-      if (bpAdded >= 12) break
       if (!tokenNorms.every((t) => normHasWord(e.haystack, t))) continue
       const key = searchTrackDedupeKey(e.title, e.mix, [{ name: e.firstArtist }])
-      if (seenTrackKeys.has(key)) continue
-      seenTrackKeys.add(key)
+      const score = scoreTrack(e.title, e.mix, e.artistsText, e.label || '', activeTokens)
       const fullTitle = e.mix ? `${e.title} (${e.mix})` : e.title
       const rd =
         e.release_date && /^\d{4}-\d{2}-\d{2}$/.test(e.release_date.slice(0, 10))
@@ -876,17 +1032,32 @@ export async function GET(request: NextRequest) {
       const parts = ['TOP BEATPORT', e.artistsText, e.label, dateLabel].filter(Boolean)
       const folder = e.kind === 'artist' ? 'artists' : 'labels'
       const playQuery = e.beatportId ? `?play=beatport:${e.beatportId}` : ''
-      results.push({
-        type: 'track',
-        id: e.beatportId ? `bp-${e.beatportId}` : `bp-${e.kind}-${e.slug}-${normForKey(e.title)}`,
-        slug: e.beatportId ? `bp:${e.beatportId}` : `bp:${e.kind}:${e.slug}:${normForKey(e.title)}`,
-        title: fullTitle,
-        subtitle: parts.join(' — '),
-        image_url: e.artwork_url,
-        href: `${base(`/${folder}/${e.slug}`)}${playQuery}`,
+      bpHits.push({
+        score,
+        source: 2,
+        key,
+        result: {
+          type: 'track',
+          id: e.beatportId ? `bp-${e.beatportId}` : `bp-${e.kind}-${e.slug}-${normForKey(e.title)}`,
+          slug: e.beatportId ? `bp:${e.beatportId}` : `bp:${e.kind}:${e.slug}:${normForKey(e.title)}`,
+          title: fullTitle,
+          subtitle: parts.join(' — '),
+          image_url: e.artwork_url,
+          href: `${base(`/${folder}/${e.slug}`)}${playQuery}`,
+        },
       })
-      bpAdded++
     }
+    bpHits.sort((a, b) => b.score - a.score)
+    for (const hit of bpHits.slice(0, 20)) trackCandidates.push(hit)
+  }
+
+  trackCandidates.sort((a, b) => b.score - a.score || a.source - b.source)
+  const seenTrackKeys = new Set<string>()
+  for (const c of trackCandidates) {
+    if (seenTrackKeys.has(c.key)) continue
+    seenTrackKeys.add(c.key)
+    results.push(c.result)
+    if (seenTrackKeys.size >= 40) break
   }
 
   // Regla: los eventos pasados sólo aparecen cuando la búsqueda es
