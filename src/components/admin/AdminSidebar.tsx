@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { key: 'stats', label: 'Estadísticas', icon: '▤', path: '/stats' },
   { key: 'awards', label: 'Awards', icon: '★', path: '/awards' },
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
+  { key: 'collaborators', label: 'Colaboradores', icon: '☺', path: '/colaboradores' },
   { key: 'claims', label: 'Verificaciones', icon: '✔', path: '/claims' },
   { key: 'bookings', label: 'Bookings', icon: '✉', path: '/bookings' },
   { key: 'mails', label: 'Mails', icon: '@', path: '/mails' },

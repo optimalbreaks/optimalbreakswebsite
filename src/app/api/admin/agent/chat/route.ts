@@ -20,6 +20,7 @@ import {
   runAdminChatAgent,
   type PendingOp,
 } from '@/lib/admin-chat-agent'
+import { executedOpsTrace } from '@/lib/collaborator-contributions'
 
 export const maxDuration = 300
 
@@ -180,7 +181,12 @@ export async function POST(request: NextRequest) {
           threadId: tid,
           messages: [
             { role: 'user', content: message || 'Confirmar' },
-            { role: 'assistant', content: reply, pending_ops: [] },
+            {
+              role: 'assistant',
+              content: reply,
+              pending_ops: [],
+              tool_trace: executedOpsTrace(confirmOps, results),
+            },
           ],
         })
       } catch {
@@ -278,9 +284,11 @@ export async function POST(request: NextRequest) {
     let reply = agent.reply
     let pendingOut = agent.pending_ops
     let execResults: Awaited<ReturnType<typeof executePendingOps>> = []
+    let executedOps: PendingOp[] = []
     let savedOk = false
     if (looksLikeConfirm(message) && agent.pending_ops.length > 0) {
-      execResults = await executePendingOps(agent.pending_ops, request, editorScope)
+      executedOps = agent.pending_ops
+      execResults = await executePendingOps(executedOps, request, editorScope)
       savedOk = execResults.some((r) => r.ok)
       const lines = execResults.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
       reply = savedOk
@@ -290,6 +298,10 @@ export async function POST(request: NextRequest) {
     }
 
     let tid = threadId
+    const toolTrace = [
+      ...agent.tool_trace,
+      ...(execResults.length ? executedOpsTrace(executedOps, execResults) : []),
+    ]
     try {
       tid = await ensureChatThread({
         userId: auth.userId,
@@ -309,7 +321,7 @@ export async function POST(request: NextRequest) {
             role: 'assistant',
             content: reply,
             pending_ops: pendingOut.length ? pendingOut : null,
-            tool_trace: agent.tool_trace.length ? agent.tool_trace : null,
+            tool_trace: toolTrace.length ? toolTrace : null,
           },
         ],
       })

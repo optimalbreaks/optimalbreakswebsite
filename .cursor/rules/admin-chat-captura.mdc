@@ -16,6 +16,7 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 - Escrituras: `executePendingOps` → `src/lib/admin-chat.ts` + APIs `/api/admin/agent/*`
 - Prompt: `scripts/prompts/admin-chat-system.txt`
 - Hilos: `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`)
+- Aportación: `/administrator/colaboradores` (`src/lib/collaborator-contributions.ts`). Solo admin. Cuenta lo que el colaborador confirmó y **sigue** en el catálogo (tema, mix, evento creado, ficha). Lo que ya estaba, lo que falló o lo que luego se borró no suma. Cada confirmación deja un trazo `executed` en el mensaje.
 
 ## Modelo conversacional (obligatorio)
 

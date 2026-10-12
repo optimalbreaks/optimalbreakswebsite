@@ -48,6 +48,14 @@ Mensaje / captura
 
 `GET /api/admin/agent/chat?threads=1` lista hilos; `?thread_id=` carga mensajes.
 
+### Aportación de los colaboradores
+
+`/[lang]/administrator/colaboradores` (solo admin, sidebar «Colaboradores»). Lee los hilos de las cuentas con `profiles.role = collaborator` y cruza cada «Hecho» con el catálogo.
+
+Cuenta como aportación lo que **sigue publicado**: tema nuevo, mix nuevo, evento creado, ficha de artista o sello nueva. Un evento que ya existía y se reescribió va aparte («ya estaba»). Un confirmado que falló, o un tema que luego se borró, no suma. La misma ficha tocada varias veces cuenta una.
+
+Cada confirmación guarda en el mensaje un trazo `executed` (`ops` + resultado) para que el recuento no dependa solo del texto. Los hilos anteriores se reconstruyen con el último `pending_ops` y las líneas `✓/✗`.
+
 ### Confirmación y memoria conversacional
 
 | Acción | ¿Escribe en BD? |
