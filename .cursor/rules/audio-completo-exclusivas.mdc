@@ -11,6 +11,7 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 |---|---|---|---|
 | **Take My Home** | `2026-09-14` | `private/music/kritycal-system-take-my-home.mp3` | Primer caso. |
 | **Bandido & Maleante** | `2026-09-28` | `private/music/kritycal-system-bandido-maleante.mp3` | El primer WAV era una demo de **1:25**. El máster (28 sep) dura **3:58**, igual que Spotify. Se reencodó el **mismo** MP3; `full_audio_url` no cambió. Beatport `/track/bandido-maleante/29540534`. TIDAL sin match fiable. |
+| **Caught Up** | `2026-10-12` | `private/music/kritycal-system-caught-up.mp3` | Máster **4:23** (FL Studio), 192 kbps. Ya estaba en Beatport (`/track/caught-up/29550498`); se rellenó `full_audio_url` en la misma fila. |
 
 ## Arquitectura (no negociable)
 

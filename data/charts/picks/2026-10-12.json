@@ -2,6 +2,30 @@
   "week_date": "2026-10-12",
   "picks": [
     {
+      "sort_order": 1,
+      "title": "Caught Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kritycal System"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/caught-up/29550498",
+      "link_label": "",
+      "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-caught-up.webp",
+      "sample_url": "https://geo-samples.beatport.com/track/5af5cec2-8f2e-4094-a873-16f3c3dd0a71.LOFI.mp3",
+      "full_audio_url": "/api/audio/kritycal-system-caught-up.mp3",
+      "spotify_url": "https://open.spotify.com/track/3rRPKMZUMMXqyje2mmMqmO",
+      "bpm": 135,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+    },
+    {
       "title": "How Could I",
       "mix_name": "Original Mix",
       "artists": [
@@ -21,7 +45,7 @@
       "release_date": "2026-10-15",
       "note_en": "",
       "note_es": "",
-      "sort_order": 1
+      "sort_order": 2
     },
     {
       "title": "My Apocolypse",
@@ -46,7 +70,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 2
+      "sort_order": 3
     },
     {
       "title": "My Apocolypse",
@@ -68,7 +92,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 3
+      "sort_order": 4
     },
     {
       "title": "My Apocolypse",
@@ -93,7 +117,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 4
+      "sort_order": 5
     },
     {
       "title": "Stay With Me",
@@ -115,7 +139,7 @@
       "release_date": "2026-10-14",
       "note_en": "",
       "note_es": "",
-      "sort_order": 5
+      "sort_order": 6
     },
     {
       "title": "Passion",
@@ -143,7 +167,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 6
+      "sort_order": 7
     },
     {
       "title": "Rumble",
@@ -165,7 +189,7 @@
       "release_date": "2026-10-15",
       "note_en": "",
       "note_es": "",
-      "sort_order": 7
+      "sort_order": 8
     },
     {
       "title": "Move Ya Body",
@@ -187,7 +211,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 8
+      "sort_order": 9
     },
     {
       "title": "Redline",
@@ -209,7 +233,7 @@
       "release_date": "2026-10-14",
       "note_en": "",
       "note_es": "",
-      "sort_order": 9
+      "sort_order": 10
     },
     {
       "title": "Passion",
@@ -234,7 +258,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 10
+      "sort_order": 11
     },
     {
       "title": "La Favela",
@@ -256,7 +280,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 11
+      "sort_order": 12
     },
     {
       "title": "Bad Boy",
@@ -281,7 +305,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 12
+      "sort_order": 13
     },
     {
       "title": "Coliseum",
@@ -303,7 +327,7 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 13
+      "sort_order": 14
     },
     {
       "title": "Rampage",
@@ -325,7 +349,7 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 14
+      "sort_order": 15
     },
     {
       "title": "Passion",
@@ -350,7 +374,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 15
+      "sort_order": 16
     },
     {
       "title": "Passion",
@@ -378,7 +402,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 16
+      "sort_order": 17
     },
     {
       "title": "Live It Up",
@@ -403,7 +427,7 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 17
+      "sort_order": 18
     },
     {
       "title": "Lights in the sky",
@@ -425,7 +449,7 @@
       "release_date": "2026-10-17",
       "note_en": "",
       "note_es": "",
-      "sort_order": 18
+      "sort_order": 19
     },
     {
       "title": "Passion",
@@ -450,7 +474,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 19
+      "sort_order": 20
     },
     {
       "title": "Passion",
@@ -475,7 +499,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 20
+      "sort_order": 21
     },
     {
       "title": "Passion",
@@ -500,7 +524,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 21
+      "sort_order": 22
     },
     {
       "title": "Passion",
@@ -528,7 +552,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 22
+      "sort_order": 23
     },
     {
       "title": "Passion",
@@ -553,7 +577,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 23
+      "sort_order": 24
     },
     {
       "title": "Passion",
@@ -578,7 +602,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 24
+      "sort_order": 25
     },
     {
       "title": "Passion",
@@ -603,7 +627,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 25
+      "sort_order": 26
     },
     {
       "title": "Passion",
@@ -628,7 +652,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 26
+      "sort_order": 27
     },
     {
       "title": "Passion",
@@ -653,7 +677,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 27
+      "sort_order": 28
     },
     {
       "title": "Passion",
@@ -678,7 +702,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 28
+      "sort_order": 29
     },
     {
       "title": "Passion",
@@ -703,7 +727,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 29
+      "sort_order": 30
     },
     {
       "title": "Passion",
@@ -728,7 +752,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 30
+      "sort_order": 31
     },
     {
       "title": "Tripolitan",
@@ -750,7 +774,7 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 31
+      "sort_order": 32
     },
     {
       "title": "Money Low",
@@ -775,7 +799,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 32
+      "sort_order": 33
     },
     {
       "title": "Outside",
@@ -797,7 +821,7 @@
       "release_date": "2026-10-15",
       "note_en": "",
       "note_es": "",
-      "sort_order": 33
+      "sort_order": 34
     },
     {
       "title": "Take Your Body",
@@ -819,7 +843,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 34
+      "sort_order": 35
     },
     {
       "title": "Feels Good",
@@ -841,7 +865,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 35
+      "sort_order": 36
     },
     {
       "title": "Back To Minimal",
@@ -866,7 +890,7 @@
       "release_date": "2026-10-15",
       "note_en": "",
       "note_es": "",
-      "sort_order": 36
+      "sort_order": 37
     },
     {
       "title": "Style Of Rockin'",
@@ -888,7 +912,7 @@
       "release_date": "2026-10-15",
       "note_en": "",
       "note_es": "",
-      "sort_order": 37
+      "sort_order": 38
     },
     {
       "title": "SubWoofer",
@@ -910,7 +934,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 38
+      "sort_order": 39
     },
     {
       "title": "2101",
@@ -932,7 +956,7 @@
       "release_date": "2026-10-14",
       "note_en": "",
       "note_es": "",
-      "sort_order": 39
+      "sort_order": 40
     },
     {
       "title": "Bota",
@@ -954,7 +978,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 40
+      "sort_order": 41
     },
     {
       "title": "Destructions",
@@ -976,7 +1000,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 41
+      "sort_order": 42
     },
     {
       "title": "Hardtechazo",
@@ -998,7 +1022,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 42
+      "sort_order": 43
     },
     {
       "title": "Finish Him",
@@ -1020,7 +1044,7 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 43
+      "sort_order": 44
     },
     {
       "title": "I DON'T KNOW WHY",
@@ -1042,7 +1066,7 @@
       "release_date": "2026-10-13",
       "note_en": "",
       "note_es": "",
-      "sort_order": 44
+      "sort_order": 45
     },
     {
       "title": "I DON'T KNOW WHY",
@@ -1064,7 +1088,7 @@
       "release_date": "2026-10-13",
       "note_en": "",
       "note_es": "",
-      "sort_order": 45
+      "sort_order": 46
     },
     {
       "title": "ILLUSIONS",
@@ -1086,7 +1110,7 @@
       "release_date": "2026-10-13",
       "note_en": "",
       "note_es": "",
-      "sort_order": 46
+      "sort_order": 47
     },
     {
       "title": "Muffled Mayhem",
@@ -1106,7 +1130,7 @@
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
-      "sort_order": 47
+      "sort_order": 48
     },
     {
       "title": "Back To The Old School",
@@ -1125,7 +1149,7 @@
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
-      "sort_order": 48
+      "sort_order": 49
     },
     {
       "title": "Back To The Old School",
@@ -1144,7 +1168,7 @@
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
-      "sort_order": 49
+      "sort_order": 50
     }
   ]
 }
