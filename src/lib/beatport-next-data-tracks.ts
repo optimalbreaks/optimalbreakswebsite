@@ -76,32 +76,55 @@ function normalizeBeatportTrackBlob(
   }
   const release = (data.release as Record<string, unknown> | undefined) || {}
   const label = (data.label as { name?: string } | undefined) || {}
-  const releaseDate = (release.release_date || release.publish_date || data.publish_date) as
-    | string
-    | undefined
+  const people = Array.isArray(data.artists) ? data.artists : []
+  const artists: { name: string }[] = []
+  const remixersFromPeople: { name: string }[] = []
+  for (const person of people) {
+    if (!person || typeof person !== 'object') continue
+    const o = person as { name?: string; artist_name?: string; artist_type_name?: string }
+    const name = String(o.name || o.artist_name || '').trim()
+    if (!name) continue
+    if (/remixer/i.test(String(o.artist_type_name || ''))) remixersFromPeople.push({ name })
+    else artists.push({ name })
+  }
+  const labelRaw = data.label
+  const labelName =
+    typeof labelRaw === 'string'
+      ? labelRaw
+      : labelRaw && typeof labelRaw === 'object'
+        ? String((labelRaw as { name?: string; label_name?: string }).name || (labelRaw as { label_name?: string }).label_name || '')
+        : ''
   const keyRaw = data.key
   const keyObj =
     keyRaw && typeof keyRaw === 'object'
       ? keyRaw
       : keyRaw
         ? { name: String(keyRaw), name_short: String(keyRaw) }
-        : {}
+        : null
+  const keyFromName = data.key_name ? { name: String(data.key_name), name_short: String(data.key_name) } : null
+  const releaseDate = (release.release_date || release.publish_date || data.release_date || data.publish_date) as
+    | string
+    | undefined
+  const image =
+    (typeof data.track_image_dynamic_uri === 'string' && data.track_image_dynamic_uri) ||
+    (typeof data.track_image_uri === 'string' && data.track_image_uri) ||
+    ''
   return {
     id: trackId,
     slug,
     name: trackName,
     mix_name: data.mix_name || '',
-    artists: data.artists || [],
-    remixers: data.remixers || [],
+    artists: artists.length ? artists : data.artists || [],
+    remixers: Array.isArray(data.remixers) && data.remixers.length ? data.remixers : remixersFromPeople,
     bpm: data.bpm,
-    key: keyObj,
+    key: keyObj && Object.keys(keyObj).length ? keyObj : keyFromName || {},
     sample_url: data.sample_url || '',
     publish_date: releaseDate,
     new_release_date: releaseDate,
     release: {
       ...release,
-      label: (release.label as { name?: string } | undefined) || label,
-      image_url: release.image_url,
+      label: (release.label as { name?: string } | undefined) || (labelName ? { name: labelName } : label),
+      image_url: release.image_url || image || undefined,
     },
   }
 }
@@ -177,22 +200,25 @@ export function findAllTracksFromNextData(
       if (p?.title) return [p]
     }
   }
-  // La búsqueda (`/search/tracks`) no usa la query `tracks`. Cualquier lista
-  // con id + slug + nombre de tema vale; la ficha y el género ya salieron arriba.
+  // La búsqueda (`/search/tracks`) deja los temas en `data.data`, con
+  // `track_id` y sin `id`/`slug`. La ficha y el género ya salieron arriba.
   for (const q of qs) {
     const qrec = q as { state?: { data?: unknown } }
     const data = qrec.state?.data as Record<string, unknown> | undefined
     if (!data || typeof data !== 'object') continue
-    const results = (Array.isArray(data.results) ? data.results : Array.isArray(data.tracks) ? data.tracks : null) as
-      | Record<string, unknown>[]
-      | null
+    const results = [data.results, data.tracks, data.data].find(
+      (c): c is Record<string, unknown>[] => {
+        if (!Array.isArray(c) || !c.length || !c[0] || typeof c[0] !== 'object') return false
+        const first = c[0] as Record<string, unknown>
+        return Boolean(first.track_id || (first.id && (first.slug || first.name || first.track_name)))
+      },
+    )
     if (!results?.length) continue
     const out: BeatportPickInput[] = []
     for (const t of results) {
-      if (!t?.id || !t?.slug) continue
-      if (!t.name && !t.track_name) continue
-      if (!('mix_name' in t) && !('bpm' in t) && !t.sample_url && !t.track_name) continue
-      const blob = t.name && t.slug ? t : normalizeBeatportTrackBlob(t, pageUrl)
+      if (!t || typeof t !== 'object') continue
+      const blob =
+        t.id && t.slug && (t.name || t.track_name) ? t : normalizeBeatportTrackBlob(t, pageUrl)
       const p = blob ? pickFromTrackBlob(blob) : null
       if (p?.title) out.push(p)
     }

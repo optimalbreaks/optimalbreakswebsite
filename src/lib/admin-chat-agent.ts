@@ -17,8 +17,9 @@ import {
   toSlug,
   youtubeFactsPrompt,
   resolveSoundCloudLinks,
+  routeSoundCloudTracks,
   soundCloudFactsPrompt,
-  describeSoundCloudFacts,
+  describeSoundCloudRoutes,
   soundCloudTrackAction,
   soundCloudUrlMatches,
   type ActionResult,
@@ -27,7 +28,7 @@ import {
   type ChatHistoryItem,
   type ChatIntent,
   type YouTubeLinkFact,
-  type SoundCloudLinkFact,
+  type SoundCloudTrackRoute,
 } from '@/lib/admin-chat'
 
 /** Cliente tipado laxo: tablas nuevas (062) + from(table dinámica) rompen el genérico Database. */
@@ -1250,7 +1251,13 @@ function applyYouTubeRoutes(
   if (!routes.length) return
   const blocked = new Set(
     routes
-      .filter((r) => r.kind === 'already' || r.kind === 'beatport' || r.kind === 'session')
+      .filter(
+        (r) =>
+          r.kind === 'already' ||
+          r.kind === 'beatport' ||
+          r.kind === 'session' ||
+          (r.kind === 'vinyl' && r.beatport === 'unreachable'),
+      )
       .map((r) => r.fact.videoId),
   )
 
@@ -1300,7 +1307,7 @@ function applyYouTubeRoutes(
   }
 
   const rest = routes
-    .filter((r) => r.kind === 'vinyl' || r.kind === 'session')
+    .filter((r) => (r.kind === 'vinyl' && r.beatport !== 'unreachable') || r.kind === 'session')
     .map((r) => r.fact)
   stageUnresolvedYouTube(rest, pendingOps, weekDate)
 }
@@ -1364,16 +1371,41 @@ function stageUnresolvedYouTube(
   return missing
 }
 
-function applySoundCloudRoutes(facts: SoundCloudLinkFact[], pendingOps: PendingOp[]): void {
-  const tracks = facts.filter((f) => f.kind === 'track')
+function applySoundCloudRoutes(routes: SoundCloudTrackRoute[], pendingOps: PendingOp[]): void {
+  const notSessions = routes.filter((r) => r.kind !== 'session')
   for (let i = pendingOps.length - 1; i >= 0; i--) {
     const op = pendingOps[i]
     if (!op || op.kind !== 'chat_action' || op.action.type !== 'mix') continue
     const blob = `${op.action.embed_url || ''} ${op.action.video_url || ''}`
-    if (tracks.some((f) => soundCloudUrlMatches(blob, f))) pendingOps.splice(i, 1)
+    if (notSessions.some((r) => soundCloudUrlMatches(blob, r.fact))) pendingOps.splice(i, 1)
   }
 
-  for (const fact of tracks) {
+  const beatportUrls = routes.flatMap((r) => (r.kind === 'beatport' ? [r.linkUrl] : []))
+  if (beatportUrls.length) {
+    const existing = pendingOps.find((op) => op.kind === 'chat_action' && op.action.type === 'new_release')
+    if (existing && existing.kind === 'chat_action' && existing.action.type === 'new_release') {
+      const have = existing.action.urls_text
+      const missing = beatportUrls.filter((u) => !have.includes(u))
+      if (missing.length) existing.action.urls_text = `${have}\n${missing.join('\n')}`.trim()
+      const n = existing.action.urls_text.split(/\n/).filter(Boolean).length
+      existing.summary = `Import New Releases (${n} URL(s))`
+    } else {
+      pendingOps.push({
+        kind: 'chat_action',
+        summary: `Import New Releases (${beatportUrls.length} URL(s))`,
+        action: {
+          type: 'new_release',
+          urls_text: beatportUrls.join('\n'),
+          default_week_date: null,
+          create_edition_if_missing: true,
+        },
+      })
+    }
+  }
+
+  for (const route of routes) {
+    if (route.kind !== 'soundcloud') continue
+    const fact = route.fact
     const already = pendingOps.some(
       (op) =>
         op.kind === 'chat_action' &&
@@ -1389,7 +1421,8 @@ function applySoundCloudRoutes(facts: SoundCloudLinkFact[], pendingOps: PendingO
     })
   }
 
-  for (const fact of facts.filter((f) => f.kind === 'session')) {
+  for (const route of routes.filter((r) => r.kind === 'session')) {
+    const fact = route.fact
     const covered = pendingOps.some(
       (op) =>
         op.kind === 'chat_action' &&
@@ -1398,8 +1431,7 @@ function applySoundCloudRoutes(facts: SoundCloudLinkFact[], pendingOps: PendingO
     )
     if (covered) continue
     const title = fact.rawTitle || fact.title
-    const mins =
-      fact.durationSeconds != null ? Math.max(1, Math.round(fact.durationSeconds / 60)) : null
+    const mins = fact.durationSeconds != null ? Math.max(1, Math.round(fact.durationSeconds / 60)) : null
     pendingOps.push({
       kind: 'chat_action',
       summary: `Mix «${title}» (${fact.artist})`,
@@ -1485,6 +1517,7 @@ export async function runAdminChatAgent(opts: {
   const youtubeFacts = await resolveYouTubeLinks(opts.message)
   const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
   const soundCloudFacts = await resolveSoundCloudLinks(opts.message)
+  const soundCloudRoutes = soundCloudFacts.length ? await routeSoundCloudTracks(soundCloudFacts) : []
   const vinylWeek = madridIsoWeekMonday()
   if (youtubeFacts.length) {
     system += youtubeFactsPrompt(youtubeFacts, vinylWeek)
@@ -1593,8 +1626,8 @@ export async function runAdminChatAgent(opts: {
   }
 
   applyYouTubeRoutes(youtubeRoutes, pendingOps, vinylWeek)
-  applySoundCloudRoutes(soundCloudFacts, pendingOps)
-  const routeReply = [describeYouTubeRoutes(youtubeRoutes), describeSoundCloudFacts(soundCloudFacts)]
+  applySoundCloudRoutes(soundCloudRoutes, pendingOps)
+  const routeReply = [describeYouTubeRoutes(youtubeRoutes), describeSoundCloudRoutes(soundCloudRoutes)]
     .filter(Boolean)
     .join('\n\n')
   if (routeReply) finalReply = routeReply

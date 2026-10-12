@@ -47,7 +47,7 @@ Un YouTube de 2026 sin Beatport **no** entra en la lista semanal. La semana la m
 
 Si el artista pasa **una canción** solo por SoundCloud, va a **`/charts`**, no a `/mixes`. Caso: WeZ WhaTevR — *I Need You* (Zero Dark, release **2026-10-02**, semana **`2026-09-28`**). Se había dado de alta como mix `wez-whatevr-i-need-you-2026`; esa fila se borró.
 
-En el chat editorial la duración manda (12 oct 2026): **15 minutos o menos nunca es un mix**, ni en SoundCloud ni en YouTube, aunque el título diga set. SoundCloud corto → `chart_featured_tracks`. Más de 15 minutos → `/mixes`.
+En el chat editorial la duración manda (12 oct 2026): **15 minutos o menos nunca es un mix**, ni en SoundCloud ni en YouTube, aunque el título diga set. Antes de archivarlo, se busca en **Beatport**. Si está en la tienda, la ficha es de Beatport (New Releases o archivo por año, según el release). SoundCloud o YouTube solo si Beatport no lo tiene.
 
 - `platform: "soundcloud"` en el pick de `data/charts/picks/<lunes>.json`.
 - `link_url`: permalink humano (botón SOUNDCLOUD), aunque lleve `/s-TOKEN`.

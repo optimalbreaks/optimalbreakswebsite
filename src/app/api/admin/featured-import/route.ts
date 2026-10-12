@@ -15,6 +15,7 @@ import {
   isBeatportTrackOrReleaseUrl,
   parseBeatportImportLines,
 } from '@/lib/beatport-next-data-tracks'
+import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 import { createBeatportPageLoader } from '@/lib/beatport-genre-import'
 
 export const maxDuration = 300
@@ -97,6 +98,69 @@ async function loadEditionState(
       ? Math.max(...rows.map((r) => Number((r as { sort_order?: number }).sort_order || 0)))
       : 0
   return { editionId, keys, nextSort: maxSo + 1 }
+}
+
+/** Si el mismo tema ya está archivado como SoundCloud, se actualiza esa fila. */
+async function upgradeSoundCloudFiling(
+  sb: ReturnType<typeof createServiceSupabase>,
+  pick: {
+    title: string
+    mix_name: string
+    artists: { name: string }[]
+    label: string
+    platform: string
+    link_url: string
+    link_label: string
+    artwork_url: string
+    sample_url: string
+    bpm: number | null
+    music_key: string
+    release_year: number | null
+    release_date: string | null
+    note_en: string
+    note_es: string
+  },
+  state: EditionState,
+): Promise<boolean> {
+  const want = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
+  if (!want) return false
+  const { data: rows, error } = await sb
+    .from('chart_featured_tracks')
+    .select('id, title, mix_name, artists, chart_edition_id, sort_order')
+    .eq('platform', 'soundcloud')
+    .ilike('title', pick.title)
+    .limit(20)
+  if (error || !rows?.length) return false
+  const row = rows.find((r) => trackDisplayIdentityKey(r.title, r.mix_name, r.artists) === want)
+  if (!row?.id) return false
+  const sameEdition = row.chart_edition_id === state.editionId
+  if (!sameEdition && state.nextSort > FEAT_MAX_SORT) return false
+  const sortOrder = sameEdition ? row.sort_order : state.nextSort
+  const { error: upErr } = await sb
+    .from('chart_featured_tracks')
+    .update({
+      chart_edition_id: state.editionId,
+      sort_order: sortOrder,
+      title: pick.title,
+      mix_name: pick.mix_name || '',
+      artists: pick.artists as unknown as never,
+      label: pick.label || '',
+      platform: pick.platform,
+      link_url: pick.link_url,
+      link_label: pick.link_label,
+      artwork_url: pick.artwork_url || null,
+      sample_url: pick.sample_url || null,
+      bpm: pick.bpm,
+      music_key: pick.music_key || '',
+      release_year: pick.release_year,
+      release_date: pick.release_date,
+      note_en: pick.note_en,
+      note_es: pick.note_es,
+    })
+    .eq('id', row.id)
+  if (upErr) return false
+  if (!sameEdition) state.nextSort++
+  return true
 }
 
 export async function GET(request: NextRequest) {
@@ -235,6 +299,18 @@ export async function POST(request: NextRequest) {
           const state = await getEditionState(targetWeek)
           if (state.keys.has(key)) {
             skipped_dupe.push({ url: pick.link_url, title: pick.title })
+            continue
+          }
+          const upgraded = await upgradeSoundCloudFiling(sb, pick, state)
+          if (upgraded) {
+            state.keys.add(key)
+            added.push({
+              url,
+              week_date: targetWeek,
+              week_source: weekSource,
+              title: pick.title,
+              link_url: pick.link_url,
+            })
             continue
           }
           if (state.nextSort > FEAT_MAX_SORT) {

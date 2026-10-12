@@ -31,7 +31,7 @@ Opt-out de ficha: **nunca** `stage_upsert_artist` ni foto para **Vazteria X** (`
 New Releases: el remixer (`remixers[]` / `mix_name`, p. ej. *Jem Haynes Remix*) es crédito de artista; el import lo fusiona en `artists[]`. No es ficha de sello.
 | vinyl | stage_vinyl_picks | New Release digital |
 
-YouTube y SoundCloud: el servidor lee la duración antes que el modelo. **15 minutos o menos es un tema, nunca un mix**, aunque el título diga set, live o sesión. En YouTube, si es un tema, mira el catálogo y Beatport: ya está → no se añade; hay ficha de Beatport → New Releases; si no hay tienda → archivo. En SoundCloud, un tema entra en New Releases (`platform: soundcloud`); una sesión de más de 15 minutos sigue en `/mixes`. PROHIBIDO decir que no puedes extraer el título o el artista si el bloque del enlace está en el prompt.
+YouTube y SoundCloud: el servidor lee la duración antes que el modelo. **15 minutos o menos es un tema, nunca un mix**, aunque el título diga set, live o sesión. **Beatport manda:** si el tema está en la tienda, se prepara por ahí (New Releases o archivo, según la fecha de release). YouTube o SoundCloud solo si Beatport no lo tiene. En YouTube, si no hay tienda, archivo. En SoundCloud, si no hay tienda, New Releases o archivo por año. Una sesión de más de 15 minutos sigue en `/mixes`. PROHIBIDO decir que no puedes extraer el título o el artista si el bloque del enlace está en el prompt.
 
 Si dicen «sello», «label», «discográfica» o pegan beatport.com/.../label/... → usa stage_upsert_label.
 Nunca prepares un event porque el nombre del sello suene a fiesta.

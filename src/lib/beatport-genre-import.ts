@@ -219,6 +219,19 @@ async function openBrowserReader(): Promise<{
         if (has) break
         await page.waitForTimeout(1200)
       }
+      if (url.includes('/search')) {
+        const searchDeadline = Date.now() + 12000
+        while (Date.now() < searchDeadline) {
+          const ready = await page
+            .evaluate(() => {
+              const el = document.querySelector('script#__NEXT_DATA__')
+              return !!el?.textContent?.includes('"track_id"')
+            })
+            .catch(() => false)
+          if (ready) break
+          await page.waitForTimeout(400)
+        }
+      }
       const nd = await page.evaluate(() => {
         const el = document.querySelector('script#__NEXT_DATA__')
         if (!el?.textContent) return null

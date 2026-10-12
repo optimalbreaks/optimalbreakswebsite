@@ -895,13 +895,14 @@ export function soundCloudFactsPrompt(facts: SoundCloudLinkFact[]): string {
       `   artistas: ${f.artists.map((a) => a.name).join(', ')}`,
       `   sello: ${f.label || '(vacío)'}`,
       `   duración: ${mins}`,
-      `   tipo: ${f.kind === 'session' ? 'sesión → stage_upsert_mix' : 'tema → el servidor lo prepara como New Release. NO uses stage_upsert_mix'}`,
+      `   tipo: ${f.kind === 'session' ? 'sesión → stage_upsert_mix' : 'tema. El servidor mira Beatport antes: si está en la tienda, no es SoundCloud. NO uses stage_upsert_mix'}`,
     ].join('\n')
   })
   return `
 ## SoundCloud de este mensaje (duración ya leída)
 Un audio de 15 minutos o menos es un tema, nunca un mix, aunque el título diga set o sesión.
-- tipo=tema: no llames a stage_upsert_mix. El servidor deja la operación de New Releases.
+Beatport manda: si el tema está en la tienda, el servidor lo prepara por ahí (New Releases o archivo, según la fecha). SoundCloud solo si Beatport no lo tiene.
+- tipo=tema: no llames a stage_upsert_mix.
 - tipo=sesión: stage_upsert_mix con embed_url de aquí, platform soundcloud.
 
 ${lines.join('\n')}
@@ -1074,20 +1075,41 @@ function songLabel(title: string, artists: unknown): string {
   return names ? `${names} — ${t}` : t
 }
 
+function storeIdentityKeys(
+  title: string,
+  mix: string,
+  artists: Array<{ name?: string }>,
+): string[] {
+  const named = artists.map((a) => ({ name: String(a?.name || '').trim() })).filter((a) => a.name)
+  const withRemixer = collectBeatportArtistCredits({ artists: named, mix_name: mix })
+  const namedLower = new Set(named.map((a) => a.name.toLowerCase()))
+  const originals = withRemixer.filter((a) => namedLower.has(a.name.toLowerCase()))
+  const lists = [named, withRemixer, originals.length ? originals : named]
+  const keys = new Set<string>()
+  for (const list of lists) {
+    const key = trackDisplayIdentityKey(title, mix, list)
+    if (key) keys.add(key)
+  }
+  return [...keys]
+}
+
 /** Título y créditos con los que comparar catálogo y Beatport. */
-function youtubeIdentityKeys(fact: YouTubeLinkFact): string[] {
+function youtubeIdentityKeys(fact: {
+  title: string
+  mixName: string
+  artist: string
+  artists?: Array<{ name: string }>
+  rawTitle: string
+}): string[] {
   const keys = new Set<string>()
   const add = (title: string, mix: string, artists: string[]) => {
     const names = artists.map((n) => n.trim()).filter((n) => n.length >= 2)
     if (!title.trim() || !names.length) return
-    const key = trackDisplayIdentityKey(
-      title,
-      mix,
-      names.map((name) => ({ name })),
-    )
-    if (key) keys.add(key)
+    for (const key of storeIdentityKeys(title, mix, names.map((name) => ({ name })))) keys.add(key)
   }
-  add(fact.title, fact.mixName, [fact.artist])
+  const all = (fact.artists || []).map((a) => a.name).filter(Boolean)
+  add(fact.title, fact.mixName, all.length ? all : [fact.artist])
+  if (fact.artist) add(fact.title, fact.mixName, [fact.artist])
   const dash = fact.rawTitle.match(/^(.+?)\s+[-–—|]\s+(.+)$/)
   if (dash) {
     const { title, mixName } = splitYouTubeTitle(dash[2])
@@ -1097,7 +1119,7 @@ function youtubeIdentityKeys(fact: YouTubeLinkFact): string[] {
   return [...keys]
 }
 
-function youtubeSearchQueries(fact: YouTubeLinkFact): string[] {
+function youtubeSearchQueries(fact: { title: string; mixName: string; artist: string; rawTitle: string }): string[] {
   const out: string[] = []
   const dash = fact.rawTitle.match(/^(.+?)\s+[-–—|]\s+(.+)$/)
   if (dash) out.push(`${dash[1]} ${splitYouTubeTitle(dash[2]).title}`.replace(/\s+/g, ' ').trim())
@@ -1117,22 +1139,29 @@ function beatportPlace(releaseDate: string | null): string {
 
 type CatalogHit = { where: 'new_releases' | 'archive_store' | 'archive_youtube'; label: string }
 
-async function findCatalogTrack(
-  fact: YouTubeLinkFact,
-): Promise<CatalogHit | null> {
+async function findCatalogTrack(fact: {
+  title: string
+  mixName: string
+  artist: string
+  artists?: Array<{ name: string }>
+  rawTitle: string
+  videoId?: string
+}): Promise<CatalogHit | null> {
   const sb = createServiceSupabase()
   const keys = new Set(youtubeIdentityKeys(fact))
-  const { data: byVideo } = await sb
-    .from('chart_vinyl_tracks')
-    .select('title, artists, year')
-    .ilike('youtube_url', ilikeContains(fact.videoId))
-    .limit(3)
-  const videoRow = byVideo?.[0]
-  if (videoRow) {
-    const year = videoRow.year ? `, ${videoRow.year}` : ''
-    return {
-      where: 'archive_youtube',
-      label: `${songLabel(videoRow.title, videoRow.artists)}${year}`,
+  if (fact.videoId) {
+    const { data: byVideo } = await sb
+      .from('chart_vinyl_tracks')
+      .select('title, artists, year')
+      .ilike('youtube_url', ilikeContains(fact.videoId))
+      .limit(3)
+    const videoRow = byVideo?.[0]
+    if (videoRow) {
+      const year = videoRow.year ? `, ${videoRow.year}` : ''
+      return {
+        where: 'archive_youtube',
+        label: `${songLabel(videoRow.title, videoRow.artists)}${year}`,
+      }
     }
   }
   if (!keys.size) return null
@@ -1144,7 +1173,7 @@ async function findCatalogTrack(
   const [featuredRes, vinylRes] = await Promise.all([
     sb
       .from('chart_featured_tracks')
-      .select('title, mix_name, artists, release_date, release_year')
+      .select('title, mix_name, artists, release_date, release_year, platform')
       .ilike('title', ilikeContains(needle))
       .limit(40),
     sb
@@ -1155,8 +1184,9 @@ async function findCatalogTrack(
   ])
 
   for (const row of featuredRes.data || []) {
-    const key = trackDisplayIdentityKey(row.title, row.mix_name, row.artists)
-    if (!key || !keys.has(key)) continue
+    if ((row.platform || '').toLowerCase() === 'soundcloud') continue
+    const hitKeys = storeIdentityKeys(row.title, row.mix_name || '', Array.isArray(row.artists) ? row.artists : [])
+    if (!hitKeys.some((k) => keys.has(k))) continue
     const release = row.release_date || ''
     const where = release >= '2026-01-01' ? 'new_releases' : 'archive_store'
     const year = release ? release.slice(0, 4) : row.release_year ? String(row.release_year) : ''
@@ -1216,14 +1246,16 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
       const queries = youtubeSearchQueries(fact)
       let matched: { link_url: string; title: string; artists: { name: string }[]; release_date: string | null } | null =
         null
+      let sawResults = false
       try {
         const keys = new Set(youtubeIdentityKeys(fact))
         for (const query of queries) {
           const url = `https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`
           const tracks = await pages.load(url)
+          if (tracks.length) sawResults = true
           const hit = tracks.find((t) => {
-            const key = trackDisplayIdentityKey(t.title, t.mix_name, t.artists)
-            return Boolean(key && keys.has(key) && t.link_url)
+            const hitKeys = storeIdentityKeys(t.title, t.mix_name, t.artists)
+            return Boolean(t.link_url && hitKeys.some((k) => keys.has(k)))
           })
           if (hit) {
             matched = hit
@@ -1244,6 +1276,8 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
           label: songLabel(matched.title, matched.artists),
           place: beatportPlace(matched.release_date),
         })
+      } else if (!sawResults) {
+        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
       } else {
         routes.push({ fact, kind: 'vinyl', beatport: 'miss' })
       }
@@ -1253,6 +1287,127 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
   }
   const byId = new Map(routes.map((r) => [r.fact.videoId, r]))
   return facts.map((f) => byId.get(f.videoId)).filter((r): r is YouTubeTrackRoute => Boolean(r))
+}
+
+export type SoundCloudTrackRoute =
+  | { fact: SoundCloudLinkFact; kind: 'session' }
+  | { fact: SoundCloudLinkFact; kind: 'already'; where: CatalogHit['where']; label: string }
+  | { fact: SoundCloudLinkFact; kind: 'beatport'; linkUrl: string; label: string; place: string }
+  | { fact: SoundCloudLinkFact; kind: 'soundcloud' }
+  | { fact: SoundCloudLinkFact; kind: 'blocked' }
+
+/**
+ * Un tema de SoundCloud solo se archiva si no está en el catálogo ni en Beatport.
+ * Una sesión (más de 15 min) no entra en esta cadena.
+ */
+export async function routeSoundCloudTracks(facts: SoundCloudLinkFact[]): Promise<SoundCloudTrackRoute[]> {
+  const routes: SoundCloudTrackRoute[] = []
+  const needsStore: SoundCloudLinkFact[] = []
+  for (const fact of facts) {
+    if (fact.kind === 'session') {
+      routes.push({ fact, kind: 'session' })
+      continue
+    }
+    try {
+      const hit = await findCatalogTrack(fact)
+      if (hit) {
+        routes.push({ fact, kind: 'already', where: hit.where, label: hit.label })
+        continue
+      }
+    } catch {
+      /* el catálogo no respondió: se intenta Beatport */
+    }
+    needsStore.push(fact)
+  }
+  if (!needsStore.length) {
+    const byUrl = new Map(routes.map((r) => [r.fact.url, r]))
+    return facts.map((f) => byUrl.get(f.url)).filter((r): r is SoundCloudTrackRoute => Boolean(r))
+  }
+
+  let storeDown = false
+  const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
+  const pages = createBeatportPageLoader()
+  try {
+    for (const fact of needsStore) {
+      if (storeDown) {
+        routes.push({ fact, kind: 'blocked' })
+        continue
+      }
+      const queries = youtubeSearchQueries(fact)
+      let matched: { link_url: string; title: string; artists: { name: string }[]; release_date: string | null } | null =
+        null
+      let sawResults = false
+      try {
+        const keys = new Set(youtubeIdentityKeys(fact))
+        for (const query of queries) {
+          const url = `https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`
+          const tracks = await pages.load(url)
+          if (tracks.length) sawResults = true
+          const hit = tracks.find((t) => {
+            const hitKeys = storeIdentityKeys(t.title, t.mix_name, t.artists)
+            return Boolean(t.link_url && hitKeys.some((k) => keys.has(k)))
+          })
+          if (hit) {
+            matched = hit
+            break
+          }
+          if (tracks.length) break
+        }
+      } catch {
+        storeDown = true
+        routes.push({ fact, kind: 'blocked' })
+        continue
+      }
+      if (matched) {
+        routes.push({
+          fact,
+          kind: 'beatport',
+          linkUrl: matched.link_url,
+          label: songLabel(matched.title, matched.artists),
+          place: beatportPlace(matched.release_date),
+        })
+      } else if (!sawResults) {
+        routes.push({ fact, kind: 'blocked' })
+      } else {
+        routes.push({ fact, kind: 'soundcloud' })
+      }
+    }
+  } finally {
+    await pages.close()
+  }
+  const byUrl = new Map(routes.map((r) => [r.fact.url, r]))
+  return facts.map((f) => byUrl.get(f.url)).filter((r): r is SoundCloudTrackRoute => Boolean(r))
+}
+
+export function describeSoundCloudRoutes(routes: SoundCloudTrackRoute[]): string {
+  if (!routes.length) return ''
+  const lines = routes.map((route) => {
+    const fact = route.fact
+    const mix = fact.mixName ? ` (${fact.mixName})` : ''
+    const who = `${fact.artists.map((a) => a.name).join(', ') || fact.artist} — ${fact.title}${mix}`
+    const mins = fact.durationSeconds != null ? Math.max(1, Math.round(fact.durationSeconds / 60)) : null
+    if (route.kind === 'session') {
+      return `• ${who}.${mins != null ? ` Dura ${mins} min.` : ''} Es una sesión. La preparo como mix.`
+    }
+    if (route.kind === 'already') {
+      const where =
+        route.where === 'new_releases'
+          ? 'New Releases'
+          : route.where === 'archive_store'
+            ? 'el archivo de tienda'
+            : 'el archivo de YouTube'
+      return `• ${route.label}: ya figura en ${where}. No lo vuelvo a añadir.`
+    }
+    if (route.kind === 'beatport') {
+      return `• ${route.label}: está en Beatport. Lo preparo en ${route.place}.`
+    }
+    if (route.kind === 'blocked') {
+      return `• ${who}: no he podido abrir Beatport. No lo archivo en SoundCloud hasta poder mirar la tienda.`
+    }
+    const dur = mins != null ? ` Dura ${mins} min.` : ''
+    return `• ${who}.${dur} No está en Beatport. Lo preparo como tema de SoundCloud.`
+  })
+  return lines.join('\n')
 }
 
 export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
@@ -1275,7 +1430,7 @@ export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
       return `• ${route.label}: está en Beatport. Lo preparo en ${route.place}.`
     }
     if (route.beatport === 'unreachable') {
-      return `• ${who}: no he podido abrir Beatport. Lo preparo como archivo de YouTube.`
+      return `• ${who}: no he podido abrir Beatport. No lo archivo en YouTube hasta poder mirar la tienda.`
     }
     return `• ${who}: no está en el catálogo ni en Beatport. Lo preparo como archivo de YouTube.`
   })
@@ -1289,6 +1444,9 @@ export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'session') return `- ${id}: sesión → stage_upsert_mix`
     if (route.kind === 'already') return `- ${id}: YA ESTÁ en el catálogo. No llames a stage_vinyl_picks ni a stage_new_releases.`
     if (route.kind === 'beatport') return `- ${id}: Beatport ${route.linkUrl}. No lo archives en YouTube. El servidor prepara New Releases.`
+    if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
+      return `- ${id}: Beatport no respondió. No llames a stage_vinyl_picks ni a stage_new_releases.`
+    }
     return `- ${id}: sin ficha en Beatport → stage_vinyl_picks`
   })
   return `
