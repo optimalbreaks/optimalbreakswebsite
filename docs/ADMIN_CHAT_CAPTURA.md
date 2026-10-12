@@ -56,6 +56,8 @@ Cuenta como aportación lo que **sigue publicado**: tema nuevo, mix nuevo, event
 
 Cada confirmación guarda en el mensaje un trazo `executed` (`ops` + resultado) para que el recuento no dependa solo del texto. Los hilos anteriores se reconstruyen con el último `pending_ops` y las líneas `✓/✗`.
 
+Un enlace Beatport de **release** mete todos los temas de ese disco; un enlace de **track**, solo ese. Si Beatport no devuelve la ficha, o no se inserta ninguna fila, el chat responde «No se completó el guardado» y no «Hecho».
+
 ### Confirmación y memoria conversacional
 
 | Acción | ¿Escribe en BD? |

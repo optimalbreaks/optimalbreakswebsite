@@ -12,6 +12,7 @@ import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
   extractNextData,
+  canonicalBeatportCatalogUrl,
   fetchBeatportPageHtml,
   findAllTracksFromNextData,
   pickFromTrackBlob,
@@ -192,7 +193,7 @@ async function openBrowserReader(): Promise<{
           (arg) => arg !== '--single-process' && !arg.startsWith('--headless'),
         )
         return chromium.launch({
-          args: [...args, '--headless=shell'],
+          args: [...args, '--headless=new', '--disable-blink-features=AutomationControlled'],
           executablePath: await bin.executablePath(),
           headless: false,
         })
@@ -235,7 +236,12 @@ async function openBrowserReader(): Promise<{
       return tracksFromNext(nd, url, fromDate)
     },
     readTracks: async (url: string) => {
-      const nd = await readNextData(url, 45000, 20000)
+      let nd: unknown
+      try {
+        nd = await readNextData(url, 45000, 35000)
+      } catch {
+        nd = await readNextData(url, 45000, 20000)
+      }
       return findAllTracksFromNextData(
         nd as Parameters<typeof findAllTracksFromNextData>[0],
         url,
@@ -257,15 +263,16 @@ export function createBeatportPageLoader(): {
   let session: Awaited<ReturnType<typeof openBrowserReader>> | null = null
   return {
     async load(url: string) {
+      const target = canonicalBeatportCatalogUrl(url)
       try {
-        const html = await fetchBeatportPageHtml(url)
-        const tracks = resolveTracksFromBeatportHtml(html, url)
+        const html = await fetchBeatportPageHtml(target)
+        const tracks = resolveTracksFromBeatportHtml(html, target)
         if (tracks.length) return tracks
       } catch {
         /* 403 u otro bloqueo: sigue el navegador */
       }
       if (!session) session = await openBrowserReader()
-      return session.readTracks(url)
+      return session.readTracks(target)
     },
     async close() {
       if (session) await session.close()

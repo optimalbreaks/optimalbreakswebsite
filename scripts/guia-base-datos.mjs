@@ -710,7 +710,7 @@ const ACTIONS = [
     npm: '—',
     creds: 'Cookie admin + vars servidor (Supabase service)',
     description:
-      'Importa singles desde URLs Beatport a chart_featured_tracks. Fusiona remixers[] + mix_name en artists[] (mismo criterio que chart-featured-upsert). Multi-semana: prefijo YYYY-MM-DD en cada línea. Sin Playwright en servidor (403 → script local).',
+      'Importa temas desde URLs Beatport a chart_featured_tracks. Un /release/ mete todos sus cortes; un /track/ solo ese. Fusiona remixers[] + mix_name en artists[]. Si no se inserta nada, el chat no dice «Hecho».',
   },
   {
     id: 'chart-vinyl-file',

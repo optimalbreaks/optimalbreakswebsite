@@ -233,6 +233,21 @@ export function isBeatportTrackOrReleaseUrl(url: string): boolean {
   return /^https:\/\/(www\.)?beatport\.com\/(?:[a-z]{2}\/)?(?:release|track)\//i.test(u)
 }
 
+/**
+ * Ficha de track o release sin idioma ni parámetros de campaña (`fbclid`, `utm_*`).
+ * Una URL de búsqueda se deja igual: el `q` es la consulta.
+ */
+export function canonicalBeatportCatalogUrl(url: string): string {
+  if (!isBeatportTrackOrReleaseUrl(url)) return url.trim()
+  let u = url.trim().replace(/^http:\/\//i, 'https://')
+  u = u.replace(/^https:\/\/(?:www\.)?beatport\.com/i, 'https://www.beatport.com')
+  u = u.replace(/^(https:\/\/www\.beatport\.com)\/[a-z]{2}(?=\/(?:release|track)\/)/i, '$1')
+  const parsed = new URL(u)
+  parsed.search = ''
+  parsed.hash = ''
+  return parsed.toString().replace(/\/$/, '')
+}
+
 export async function fetchBeatportPageHtml(url: string): Promise<string> {
   const acceptLang = url.includes('/es/') ? 'es,en-US;q=0.9,en;q=0.8' : 'en-US,en;q=0.9'
   const res = await fetch(url.replace(/^http:\/\//i, 'https://'), {

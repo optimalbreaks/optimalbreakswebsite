@@ -1421,12 +1421,19 @@ async function importNewReleasesAction(
     | undefined
   const failed = Array.isArray(json.failed) ? (json.failed as { reason?: string }[]) : []
   const why = failed.find((f) => f?.reason)?.reason
-  return {
-    type: 'new_release',
-    ok: true,
-    summary: `New Releases: ${summary?.insertadas ?? 0} insertadas, ${summary?.saltadas_duplicado ?? 0} dupes, ${summary?.saltadas_multi ?? 0} multi, ${summary?.fallidas ?? 0} fallidas${why ? ` (${why})` : ''}`,
-    detail: json,
+  const inserted = summary?.insertadas ?? 0
+  const dupes = summary?.saltadas_duplicado ?? 0
+  const multi = summary?.saltadas_multi ?? 0
+  const failedCount = summary?.fallidas ?? 0
+  const line = `New Releases: ${inserted} insertadas, ${dupes} dupes, ${multi} multi, ${failedCount} fallidas${why ? ` (${why})` : ''}`
+  if (inserted > 0) {
+    return { type: 'new_release', ok: true, summary: line, detail: json }
   }
+  const already =
+    dupes > 0 && failedCount === 0
+      ? `New Releases: ya estaban en el catálogo (${dupes}).`
+      : line
+  return { type: 'new_release', ok: false, summary: already, detail: json }
 }
 
 async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>): Promise<ActionResult> {

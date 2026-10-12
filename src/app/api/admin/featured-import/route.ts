@@ -1,7 +1,7 @@
 // ============================================
-// Admin: importación masiva New Releases desde URLs Beatport (/release/ o /track/).
-// Proceso en serie con pausa configurable. No usa Playwright (si CF devuelve 403,
-// usar script local o más tarde desde red que pase el fetch).
+// Admin: importación de New Releases desde URLs Beatport (/release/ o /track/).
+// Un /release/ mete todos sus temas. Un /track/ mete solo ese. Si Cloudflare
+// tapa la ficha, la respuesta lista el fallo y el chat no lo da por guardado.
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -10,6 +10,7 @@ import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { revalidatePublicCharts } from '@/lib/revalidate-public'
 import {
   chartEditionWeekMondayFromPublish,
+  canonicalBeatportCatalogUrl,
   dedupeKeyForFeaturedLink,
   isBeatportTrackOrReleaseUrl,
   parseBeatportImportLines,
@@ -196,57 +197,53 @@ export async function POST(request: NextRequest) {
   for (let i = 0; i < beatportUrls.length; i++) {
     const { week_date_override, url } = beatportUrls[i]
     try {
-      const normalized = url
-        .replace(/^http:\/\//i, 'https://')
-        .replace(/^https:\/\/beatport\.com/i, 'https://www.beatport.com')
-
+      const normalized = canonicalBeatportCatalogUrl(url)
       const tracks = await pages.load(normalized)
       const wantedId = normalized.match(/\/track\/[^/]+\/(\d+)/i)?.[1] || ''
       const picked = wantedId
         ? tracks.filter((t) => /\/(\d+)$/.test(t.link_url) && t.link_url.endsWith(`/${wantedId}`))
         : tracks
       if (!picked.length) {
-        failed.push({ url, reason: 'Sin pistas (__NEXT_DATA__ vacío o no parseable)' })
-      } else if (picked.length > 1) {
-        skipped_multi.push({
+        failed.push({
           url,
-          count: picked.length,
-          titles: picked.map((t) => t.title),
+          reason: wantedId
+            ? 'Ese tema no salió en la ficha de Beatport'
+            : 'Sin pistas (__NEXT_DATA__ vacío o no parseable)',
         })
       } else {
-        const pick = picked[0]
-        const key = dedupeKeyForFeaturedLink(pick.link_url)
+        for (const pick of picked) {
+          const key = dedupeKeyForFeaturedLink(pick.link_url)
+          let targetWeek: string | null = week_date_override ? isoWeekDate(week_date_override) : null
+          let weekSource: 'linea' | 'beatport' | 'respaldo' = 'linea'
 
-        let targetWeek: string | null = week_date_override
-          ? isoWeekDate(week_date_override)
-          : null
-        let weekSource: 'linea' | 'beatport' | 'respaldo' = 'linea'
-
-        if (!targetWeek) {
-          targetWeek = chartEditionWeekMondayFromPublish(pick.release_date)
-          weekSource = 'beatport'
-        }
-        if (!targetWeek && fallback_week_date) {
-          targetWeek = fallback_week_date
-          weekSource = 'respaldo'
-        }
-        if (!targetWeek) {
-          failed.push({
-            url,
-            reason:
-              'Beatport no devolvió fecha de publicación; rellena «Semana de respaldo» o usa «YYYY-MM-DD URL» en la línea.',
-          })
-        } else {
-        const state = await getEditionState(targetWeek)
-
-        if (state.keys.has(key)) {
-          skipped_dupe.push({ url, title: pick.title })
-        } else if (state.nextSort > FEAT_MAX_SORT) {
-          failed.push({
-            url,
-            reason: `La semana ${targetWeek} ya tiene sort_order máximo (${FEAT_MAX_SORT})`,
-          })
-        } else {
+          if (!targetWeek) {
+            targetWeek = chartEditionWeekMondayFromPublish(pick.release_date)
+            weekSource = 'beatport'
+          }
+          if (!targetWeek && fallback_week_date) {
+            targetWeek = fallback_week_date
+            weekSource = 'respaldo'
+          }
+          if (!targetWeek) {
+            failed.push({
+              url: pick.link_url,
+              reason:
+                'Beatport no devolvió fecha de publicación; rellena «Semana de respaldo» o usa «YYYY-MM-DD URL» en la línea.',
+            })
+            continue
+          }
+          const state = await getEditionState(targetWeek)
+          if (state.keys.has(key)) {
+            skipped_dupe.push({ url: pick.link_url, title: pick.title })
+            continue
+          }
+          if (state.nextSort > FEAT_MAX_SORT) {
+            failed.push({
+              url: pick.link_url,
+              reason: `La semana ${targetWeek} ya tiene sort_order máximo (${FEAT_MAX_SORT})`,
+            })
+            continue
+          }
           const { error: insErr } = await sb.from('chart_featured_tracks').insert({
             chart_edition_id: state.editionId,
             sort_order: state.nextSort,
@@ -263,14 +260,13 @@ export async function POST(request: NextRequest) {
             music_key: pick.music_key || '',
             release_year: pick.release_year,
             release_date: pick.release_date,
-            // Se rellenan después con scripts/spotify-match-charts.mjs (npm run db:chart:spotify / db:chart:tidal).
             spotify_url: null,
             tidal_url: null,
             note_en: pick.note_en,
             note_es: pick.note_es,
           })
           if (insErr) {
-            failed.push({ url, reason: insErr.message })
+            failed.push({ url: pick.link_url, reason: insErr.message })
           } else {
             state.keys.add(key)
             state.nextSort++
@@ -282,7 +278,6 @@ export async function POST(request: NextRequest) {
               link_url: pick.link_url,
             })
           }
-        }
         }
       }
     } catch (e) {
