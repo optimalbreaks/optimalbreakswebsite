@@ -1087,6 +1087,64 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 46
+    },
+    {
+      "title": "Muffled Mayhem",
+      "mix_name": "Paket Remix",
+      "artists": [
+        { "name": "Dj Quest" },
+        { "name": "Yoof" },
+        { "name": "Paket" }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "soundcloud",
+      "link_url": "https://soundcloud.com/cyberfunkrecordings/dj-quest-back-to-the-old-2",
+      "link_label": "",
+      "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
+      "sample_url": "https://api.soundcloud.com/tracks/2417413509",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "Single shared on SoundCloud — not a DJ set.",
+      "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
+      "sort_order": 47
+    },
+    {
+      "title": "Back To The Old School",
+      "mix_name": "Code Breakerz Remix",
+      "artists": [
+        { "name": "Dj Quest" },
+        { "name": "Code Breakerz" }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "soundcloud",
+      "link_url": "https://soundcloud.com/cyberfunkrecordings/dj-quest-back-to-the-old-1",
+      "link_label": "",
+      "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
+      "sample_url": "https://api.soundcloud.com/tracks/2417412510",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "Single shared on SoundCloud — not a DJ set.",
+      "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
+      "sort_order": 48
+    },
+    {
+      "title": "Back To The Old School",
+      "mix_name": "Groovebox Remix",
+      "artists": [
+        { "name": "Dj Quest" },
+        { "name": "Groovebox" }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "soundcloud",
+      "link_url": "https://soundcloud.com/cyberfunkrecordings/dj-quest-back-to-the-old",
+      "link_label": "",
+      "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
+      "sample_url": "https://api.soundcloud.com/tracks/2417409870",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "Single shared on SoundCloud — not a DJ set.",
+      "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
+      "sort_order": 49
     }
   ]
 }

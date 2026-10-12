@@ -16,12 +16,18 @@ import {
   youtubeRoutePrompt,
   toSlug,
   youtubeFactsPrompt,
+  resolveSoundCloudLinks,
+  soundCloudFactsPrompt,
+  describeSoundCloudFacts,
+  soundCloudTrackAction,
+  soundCloudUrlMatches,
   type ActionResult,
   type YouTubeTrackRoute,
   type ChatAction,
   type ChatHistoryItem,
   type ChatIntent,
   type YouTubeLinkFact,
+  type SoundCloudLinkFact,
 } from '@/lib/admin-chat'
 
 /** Cliente tipado laxo: tablas nuevas (062) + from(table dinámica) rompen el genérico Database. */
@@ -82,6 +88,7 @@ const COLLABORATOR_CHAT_ACTIONS = new Set([
   'mix',
   'new_release',
   'vinyl',
+  'soundcloud_track',
 ])
 
 const COLLABORATOR_API_PATHS = new Set([
@@ -1357,6 +1364,62 @@ function stageUnresolvedYouTube(
   return missing
 }
 
+function applySoundCloudRoutes(facts: SoundCloudLinkFact[], pendingOps: PendingOp[]): void {
+  const tracks = facts.filter((f) => f.kind === 'track')
+  for (let i = pendingOps.length - 1; i >= 0; i--) {
+    const op = pendingOps[i]
+    if (!op || op.kind !== 'chat_action' || op.action.type !== 'mix') continue
+    const blob = `${op.action.embed_url || ''} ${op.action.video_url || ''}`
+    if (tracks.some((f) => soundCloudUrlMatches(blob, f))) pendingOps.splice(i, 1)
+  }
+
+  for (const fact of tracks) {
+    const already = pendingOps.some(
+      (op) =>
+        op.kind === 'chat_action' &&
+        op.action.type === 'soundcloud_track' &&
+        soundCloudUrlMatches(op.action.url, fact),
+    )
+    if (already) continue
+    const who = fact.artists.map((a) => a.name).join(', ')
+    pendingOps.push({
+      kind: 'chat_action',
+      summary: `Tema SoundCloud «${fact.title}» (${who})`,
+      action: soundCloudTrackAction(fact),
+    })
+  }
+
+  for (const fact of facts.filter((f) => f.kind === 'session')) {
+    const covered = pendingOps.some(
+      (op) =>
+        op.kind === 'chat_action' &&
+        op.action.type === 'mix' &&
+        soundCloudUrlMatches(`${op.action.embed_url || ''} ${op.action.video_url || ''}`, fact),
+    )
+    if (covered) continue
+    const title = fact.rawTitle || fact.title
+    const mins =
+      fact.durationSeconds != null ? Math.max(1, Math.round(fact.durationSeconds / 60)) : null
+    pendingOps.push({
+      kind: 'chat_action',
+      summary: `Mix «${title}» (${fact.artist})`,
+      action: {
+        type: 'mix',
+        slug: toSlug(`${fact.artist} ${title}`).slice(0, 80),
+        title,
+        artist_name: fact.artist,
+        platform: 'soundcloud',
+        mix_type: 'classic_set',
+        embed_url: fact.url,
+        image_url: fact.artworkUrl || null,
+        duration_minutes: mins,
+        published_at: fact.createdAt,
+        year: fact.releaseDate ? Number(fact.releaseDate.slice(0, 4)) : null,
+      },
+    })
+  }
+}
+
 export async function runAdminChatAgent(opts: {
   message: string
   history: ChatHistoryItem[]
@@ -1421,12 +1484,19 @@ export async function runAdminChatAgent(opts: {
   }
   const youtubeFacts = await resolveYouTubeLinks(opts.message)
   const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
+  const soundCloudFacts = await resolveSoundCloudLinks(opts.message)
   const vinylWeek = madridIsoWeekMonday()
   if (youtubeFacts.length) {
     system += youtubeFactsPrompt(youtubeFacts, vinylWeek)
     system += youtubeRoutePrompt(youtubeRoutes)
     if (opts.intent === 'mix' && youtubeFacts.every((f) => f.kind === 'track')) {
       system += `\nEl HINT intent=mix no aplica a estos enlaces: oEmbed los marca como temas. Sigue la decisión del servidor (Beatport, catálogo o archivo).\n`
+    }
+  }
+  if (soundCloudFacts.length) {
+    system += soundCloudFactsPrompt(soundCloudFacts)
+    if (opts.intent === 'mix' && soundCloudFacts.every((f) => f.kind === 'track')) {
+      system += `\nEl HINT intent=mix no aplica: la duración es de tema (15 min o menos). No uses stage_upsert_mix.\n`
     }
   }
   if (looksLikeConfirm(opts.message)) {
@@ -1523,9 +1593,11 @@ export async function runAdminChatAgent(opts: {
   }
 
   applyYouTubeRoutes(youtubeRoutes, pendingOps, vinylWeek)
-  if (youtubeRoutes.length) {
-    finalReply = describeYouTubeRoutes(youtubeRoutes)
-  }
+  applySoundCloudRoutes(soundCloudFacts, pendingOps)
+  const routeReply = [describeYouTubeRoutes(youtubeRoutes), describeSoundCloudFacts(soundCloudFacts)]
+    .filter(Boolean)
+    .join('\n\n')
+  if (routeReply) finalReply = routeReply
 
   if (!finalReply) {
     finalReply = pendingOps.length

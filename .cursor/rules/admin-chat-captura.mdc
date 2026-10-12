@@ -39,7 +39,9 @@ Catálogo: `search_catalog`, `get_record`, `stage_upsert_{artist,label,event,mix
 
 La identidad del vinilo al confirmar es `vinylIdentityKey` (`src/lib/share-track.ts`), import estático. **Prohibido** `import()` con ruta calculada a `scripts/*.mjs`: en Vercel el guardado falla con «expression is too dynamic» (11 oct 2026).
 
-Un YouTube de **tema** no se archiva a ciegas (11 oct 2026): el servidor mira catálogo y Beatport (`routeYouTubeTracks`). Ya está → no se añade. Hay ficha → New Releases / archivo de tienda. Sin tienda → vinilo. Una sesión sigue siendo mix.
+Un YouTube de **tema** no se archiva a ciegas (11 oct 2026): el servidor mira catálogo y Beatport (`routeYouTubeTracks`). Ya está → no se añade. Hay ficha → New Releases / archivo de tienda. Sin tienda → vinilo. Una sesión de más de 15 minutos sigue siendo mix.
+
+**Duración (12 oct 2026):** un enlace de SoundCloud o YouTube de **15 minutos o menos nunca es un mix**, aunque el título diga set o sesión. SoundCloud corto → New Releases (`resolveSoundCloudLinks`). YouTube corto → catálogo / Beatport / vinilo. Por encima de 15 minutos, SoundCloud es sesión; YouTube solo si el texto dice set, b2b, podcast o sesión.
 
 CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 

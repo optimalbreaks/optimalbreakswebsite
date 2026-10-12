@@ -2,7 +2,11 @@ import { createServiceSupabase, fetchAllRows } from '@/lib/supabase-admin'
 import { openAiChatCompletionsBody } from '@/lib/openai-editorial'
 import { DEFAULT_EVENT_COUNTRY, normalizeEventCountry } from '@/lib/event-country'
 import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
-import { chartEditionWeekMondayFromPublish } from '@/lib/beatport-next-data-tracks'
+import {
+  chartEditionWeekMondayFromPublish,
+  dedupeKeyForFeaturedLink,
+} from '@/lib/beatport-next-data-tracks'
+import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
 import { vinylIdentityKey } from '@/lib/share-track'
 import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 import { readFileSync, existsSync } from 'fs'
@@ -88,9 +92,20 @@ export type ChatAction =
         youtube_url?: string | null
         artwork_url?: string | null
         note_en?: string
-        note_es?: string
-        sort_order?: number
-      }>
+      note_es?: string
+      sort_order?: number
+    }>
+  }
+  | {
+      type: 'soundcloud_track'
+      url: string
+      title: string
+      mix_name?: string
+      artists: Array<{ name: string }>
+      label?: string
+      artwork_url?: string | null
+      release_date?: string | null
+      sample_url?: string | null
     }
 
 export type ChatPlan = {
@@ -245,6 +260,7 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
       type = 'new_release'
     }
     if (type === 'vinilo' || type === 'vinyl_pick' || type === 'vinyls') type = 'vinyl'
+    if (type === 'soundcloud' || type === 'soundcloud_track') type = 'soundcloud_track'
 
     if (type === 'event') {
       const name = String(o.name || o.title || '').trim()
@@ -345,6 +361,30 @@ export function normalizeChatActions(raw: unknown): ChatAction[] {
         week_date,
         create_edition_if_missing: o.create_edition_if_missing !== false,
         items: items as Extract<ChatAction, { type: 'vinyl' }>['items'],
+      })
+      continue
+    }
+    if (type === 'soundcloud_track') {
+      const url = httpsOrNull(o.url)
+      const title = String(o.title || '').trim()
+      if (!url || !title) continue
+      const artists = Array.isArray(o.artists)
+        ? o.artists
+            .map((a) =>
+              typeof a === 'string' ? { name: a.trim() } : { name: String((a as { name?: string }).name || '').trim() },
+            )
+            .filter((a) => a.name)
+        : []
+      out.push({
+        type: 'soundcloud_track',
+        url,
+        title,
+        mix_name: o.mix_name != null ? String(o.mix_name) : '',
+        artists,
+        label: o.label != null ? String(o.label) : '',
+        artwork_url: httpsOrNull(o.artwork_url),
+        release_date: o.release_date != null ? String(o.release_date) : null,
+        sample_url: httpsOrNull(o.sample_url),
       })
     }
   }
@@ -457,8 +497,17 @@ export type YouTubeLinkFact = {
   channel: string
   artworkUrl: string
   year: number | null
+  /** Segundos del vídeo, si la ficha de YouTube los trae. */
+  durationSeconds: number | null
   /** Tema suelto (archivo / vinilo) o sesión de DJ. */
   kind: 'track' | 'session'
+}
+
+/** Por debajo de esto no es una sesión. Un tema de breaks cabe en unos minutos; un set pasa de un cuarto de hora. */
+export const SONG_NOT_MIX_MAX_SECONDS = 15 * 60
+
+export function isSongLength(seconds: number | null | undefined): boolean {
+  return seconds != null && seconds > 0 && seconds <= SONG_NOT_MIX_MAX_SECONDS
 }
 
 const YT_SESSION_RE =
@@ -522,7 +571,7 @@ async function youtubeOembed(videoId: string): Promise<{
   }
 }
 
-async function youtubePublishYear(videoId: string): Promise<number | null> {
+async function youtubeWatchMeta(videoId: string): Promise<{ year: number | null; durationSeconds: number | null }> {
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
@@ -532,14 +581,21 @@ async function youtubePublishYear(videoId: string): Promise<number | null> {
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
     })
-    if (!res.ok) return null
+    if (!res.ok) return { year: null, durationSeconds: null }
     const html = await res.text()
-    const m = html.match(/"publishDate":"(\d{4})-\d{2}-\d{2}"/)
-    if (!m) return null
-    const year = Number(m[1])
-    return year >= 1900 && year <= 2100 ? year : null
+    const yearM = html.match(/"publishDate":"(\d{4})-\d{2}-\d{2}"/)
+    const year = yearM ? Number(yearM[1]) : null
+    const durM = html.match(/"lengthSeconds":"(\d+)"/)
+    const durationSeconds = durM ? Number(durM[1]) : null
+    return {
+      year: year != null && year >= 1900 && year <= 2100 ? year : null,
+      durationSeconds:
+        durationSeconds != null && durationSeconds > 0 && durationSeconds < 12 * 60 * 60
+          ? durationSeconds
+          : null,
+    }
   } catch {
-    return null
+    return { year: null, durationSeconds: null }
   }
 }
 
@@ -553,7 +609,7 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
   const asksSession = YT_SESSION_RE.test(text.replace(/https?:\/\/\S+/g, ' '))
   const facts = await Promise.all(
     ids.map(async (videoId): Promise<YouTubeLinkFact | null> => {
-      const [meta, year] = await Promise.all([youtubeOembed(videoId), youtubePublishYear(videoId)])
+      const [meta, watch] = await Promise.all([youtubeOembed(videoId), youtubeWatchMeta(videoId)])
       const rawTitle = String(meta.title || '').trim()
       const channel = String(meta.author_name || '').trim()
       if (!rawTitle && !channel) return null
@@ -561,7 +617,11 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
       const { artist, topic } = artistFromYouTubeChannel(channel)
       const sessionByTitle = YT_SESSION_RE.test(`${rawTitle} ${channel}`)
       const kind: YouTubeLinkFact['kind'] =
-        topic ? 'track' : asksSession || sessionByTitle ? 'session' : 'track'
+        topic || isSongLength(watch.durationSeconds)
+          ? 'track'
+          : asksSession || sessionByTitle
+            ? 'session'
+            : 'track'
       return {
         videoId,
         url: `https://www.youtube.com/watch?v=${videoId}`,
@@ -571,7 +631,8 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
         artist: artist || channel,
         channel,
         artworkUrl: String(meta.thumbnail_url || '').trim() || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-        year,
+        year: watch.year,
+        durationSeconds: watch.durationSeconds,
         kind,
       }
     }),
@@ -584,6 +645,8 @@ export function youtubeFactsPrompt(facts: YouTubeLinkFact[], weekDate: string): 
   const lines = facts.map((f, i) => {
     const mix = f.mixName ? ` (${f.mixName})` : ''
     const year = f.year != null ? String(f.year) : 'desconocido'
+    const mins =
+      f.durationSeconds != null ? `${Math.max(1, Math.round(f.durationSeconds / 60))} min` : 'desconocida'
     return [
       `${i + 1}. url: ${f.url}`,
       `   título: ${f.title}${mix}`,
@@ -591,6 +654,7 @@ export function youtubeFactsPrompt(facts: YouTubeLinkFact[], weekDate: string): 
       `   artista: ${f.artist}`,
       `   canal: ${f.channel || '(sin canal)'}`,
       `   año: ${year}`,
+      `   duración: ${mins}`,
       `   miniatura: ${f.artworkUrl}`,
       `   tipo: ${f.kind === 'session' ? 'sesión de DJ → stage_upsert_mix' : 'tema → stage_vinyl_picks'}`,
     ].join('\n')
@@ -599,12 +663,378 @@ export function youtubeFactsPrompt(facts: YouTubeLinkFact[], weekDate: string): 
 ## YouTube de este mensaje (oEmbed, ya leído)
 Estos datos son del enlace. PROHIBIDO decir que no puedes leer YouTube, que no puedes extraer el título o el artista, o pedirlos si ya están aquí.
 Un canal que acaba en « - Topic» es el artista (YouTube Music), no un DJ: es un tema, no una sesión.
+Si la duración es de 15 minutos o menos, es un tema aunque el título diga set, live o sesión. PROHIBIDO stage_upsert_mix.
 - tipo=tema: stage_vinyl_picks EN ESTE TURNO. week_date=${weekDate} (contenedor; el año público es el campo year). items con title, mix_name, artists:[{name}], youtube_url, artwork_url y year si no es desconocido.
 - tipo=sesión: stage_upsert_mix EN ESTE TURNO con title, artist_name y video_url de aquí.
 No conviertas un tema en mix.
 
 ${lines.join('\n')}
 `
+}
+
+export type SoundCloudLinkFact = {
+  rawUrl: string
+  url: string
+  rawTitle: string
+  title: string
+  mixName: string
+  artist: string
+  artists: Array<{ name: string }>
+  label: string
+  artworkUrl: string
+  durationSeconds: number | null
+  releaseDate: string | null
+  createdAt: string | null
+  sampleUrl: string | null
+  kind: 'track' | 'session'
+}
+
+function soundCloudUrlsInText(text: string): string[] {
+  const urls: string[] = []
+  const seen = new Set<string>()
+  for (const raw of text.match(/https?:\/\/[^\s<>"']+/gi) || []) {
+    const clean = raw.replace(/[),.;]+$/, '')
+    let host = ''
+    try {
+      host = new URL(clean).hostname.toLowerCase()
+    } catch {
+      continue
+    }
+    if (host !== 'soundcloud.com' && host !== 'www.soundcloud.com' && host !== 'on.soundcloud.com') continue
+    if (seen.has(clean)) continue
+    seen.add(clean)
+    urls.push(clean)
+  }
+  return urls
+}
+
+function canonicalSoundCloudUrl(url: string): string {
+  const u = new URL(url)
+  u.protocol = 'https:'
+  u.hostname = 'soundcloud.com'
+  u.search = ''
+  u.hash = ''
+  const path = u.pathname.replace(/\/+$/, '')
+  return `https://soundcloud.com${path}`
+}
+
+function soundCloudSeconds(raw: number | null): number | null {
+  if (raw == null || !Number.isFinite(raw) || raw <= 0) return null
+  // La ficha guarda milisegundos (un set de una hora ≈ 3_600_000).
+  return raw >= 1000 ? Math.round(raw / 1000) : Math.round(raw)
+}
+
+function madridDateFromIso(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+}
+
+function stripSoundCloudByline(rawTitle: string, author: string): string {
+  let cleaned = rawTitle.replace(/\s*-\s*BUY NOW IN BANDCAMP!*/i, '').trim()
+  const byAuthor = author.trim()
+  if (!byAuthor) return cleaned
+  const escaped = byAuthor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  cleaned = cleaned.replace(new RegExp(`\\s+by\\s+${escaped}\\s*$`, 'i'), '').trim()
+  return cleaned
+}
+
+function splitSoundCloudHeading(
+  rawTitle: string,
+  author: string,
+): { title: string; mixName: string; artists: Array<{ name: string }>; label: string; fullTitle: string } {
+  const cleaned = stripSoundCloudByline(rawTitle, author)
+  const dash = cleaned.match(/^(.*?)\s*-\s+(.+)$/)
+  const authorDash = author.trim().match(/^(.*?)\s+-\s+(.+)$/)
+  let artistLine = author.trim()
+  let song = cleaned
+  let label = ''
+  if (dash?.[1] && dash[2] && dash[1].length <= 80) {
+    artistLine = dash[1].trim()
+    song = dash[2].trim()
+    if (authorDash?.[2]) label = authorDash[2].trim()
+  } else if (authorDash?.[1] && authorDash[2]) {
+    artistLine = authorDash[1].trim()
+    label = authorDash[2].trim()
+  }
+  const { title, mixName } = splitYouTubeTitle(song || cleaned)
+  const artistNames = artistLine
+    .split(/\s+(?:feat\.?|ft\.?|featuring)\s+/i)
+    .flatMap((part) => part.split(/\s+(?:&|x|vs\.?)\s+/i))
+    .map((s) => s.trim())
+    .filter((s) => s.length > 1)
+  const artists = collectBeatportArtistCredits({
+    artists: artistNames.map((name) => ({ name })),
+    mix_name: mixName,
+  })
+  const sameAsArtist = (name: string) => artistNames.some((n) => n.toLowerCase() === name.toLowerCase())
+  if (!label && author.trim() && !sameAsArtist(author.trim())) label = author.trim()
+  if (label && sameAsArtist(label)) label = ''
+  return { title: title || cleaned || author, mixName, artists, label, fullTitle: cleaned || rawTitle }
+}
+
+async function soundCloudPage(url: string): Promise<{
+  finalUrl: string
+  durationSeconds: number | null
+  createdAt: string | null
+  trackId: string | null
+}> {
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: { 'User-Agent': 'OptimalBreaksAdminChat/1.0', 'Accept-Language': 'en' },
+    signal: AbortSignal.timeout(12000),
+  })
+  const html = res.ok ? await res.text() : ''
+  const dur = html.match(/"duration":(\d+)/)
+  const created = html.match(/"created_at":"([^"]+)"/)
+  const urn = html.match(/soundcloud:tracks:(\d+)/)
+  return {
+    finalUrl: res.url || url,
+    durationSeconds: soundCloudSeconds(dur ? Number(dur[1]) : null),
+    createdAt: created?.[1] || null,
+    trackId: urn?.[1] || null,
+  }
+}
+
+/**
+ * Cada enlace de SoundCloud del mensaje, con duración.
+ * 15 minutos o menos → tema. Más → sesión. Sin duración, solo es sesión si el texto lo dice.
+ */
+export async function resolveSoundCloudLinks(text: string): Promise<SoundCloudLinkFact[]> {
+  const urls = soundCloudUrlsInText(text).slice(0, 4)
+  if (!urls.length) return []
+  const asksSession = YT_SESSION_RE.test(text.replace(/https?:\/\/\S+/g, ' '))
+  const facts = await Promise.all(
+    urls.map(async (rawUrl): Promise<SoundCloudLinkFact | null> => {
+      try {
+        const page = await soundCloudPage(rawUrl)
+        const canonical = canonicalSoundCloudUrl(page.finalUrl || rawUrl)
+        const oe = await soundcloudOembed(canonical)
+        const rawTitle = String(oe.title || '').trim()
+        const author = String(oe.author_name || '').trim()
+        if (!rawTitle && !author) return null
+        const parsed = splitSoundCloudHeading(rawTitle || author, author)
+        const sessionByTitle = YT_SESSION_RE.test(`${rawTitle} ${author}`)
+        const kind: SoundCloudLinkFact['kind'] = isSongLength(page.durationSeconds)
+          ? 'track'
+          : page.durationSeconds != null
+            ? 'session'
+            : asksSession || sessionByTitle
+              ? 'session'
+              : 'track'
+        const secret = canonical.match(/\/(s-[A-Za-z0-9]+)\/?$/)
+        const sampleUrl = page.trackId
+          ? secret
+            ? `https://api.soundcloud.com/tracks/${page.trackId}?secret_token=${secret[1]}`
+            : `https://api.soundcloud.com/tracks/${page.trackId}`
+          : null
+        return {
+          rawUrl,
+          url: canonical,
+          rawTitle: parsed.fullTitle || rawTitle || parsed.title,
+          title: parsed.title,
+          mixName: parsed.mixName,
+          artist:
+            kind === 'session'
+              ? author || parsed.artists[0]?.name || 'Unknown'
+              : parsed.artists[0]?.name || author || 'Unknown',
+          artists: parsed.artists,
+          label: parsed.label,
+          artworkUrl: String(oe.thumbnail_url || '').trim(),
+          durationSeconds: page.durationSeconds,
+          releaseDate: madridDateFromIso(page.createdAt),
+          createdAt: page.createdAt,
+          sampleUrl,
+          kind,
+        }
+      } catch {
+        return null
+      }
+    }),
+  )
+  return facts.filter((f): f is SoundCloudLinkFact => f != null)
+}
+
+export function soundCloudUrlMatches(blob: string, fact: Pick<SoundCloudLinkFact, 'rawUrl' | 'url'>): boolean {
+  const paths = [fact.rawUrl, fact.url]
+    .map((u) => {
+      try {
+        return new URL(u).pathname.replace(/\/+$/, '').toLowerCase()
+      } catch {
+        return ''
+      }
+    })
+    .filter((p) => p.length > 1)
+  const hay = blob.toLowerCase()
+  return paths.some((p) => hay.includes(p))
+}
+
+export function soundCloudTrackAction(fact: SoundCloudLinkFact): Extract<ChatAction, { type: 'soundcloud_track' }> {
+  return {
+    type: 'soundcloud_track',
+    url: fact.url,
+    title: fact.title,
+    mix_name: fact.mixName,
+    artists: fact.artists,
+    label: fact.label,
+    artwork_url: fact.artworkUrl || null,
+    release_date: fact.releaseDate,
+    sample_url: fact.sampleUrl,
+  }
+}
+
+export function soundCloudFactsPrompt(facts: SoundCloudLinkFact[]): string {
+  if (!facts.length) return ''
+  const lines = facts.map((f, i) => {
+    const mins =
+      f.durationSeconds != null ? `${Math.max(1, Math.round(f.durationSeconds / 60))} min` : 'desconocida'
+    return [
+      `${i + 1}. url: ${f.url}`,
+      `   título: ${f.title}${f.mixName ? ` (${f.mixName})` : ''}`,
+      `   artistas: ${f.artists.map((a) => a.name).join(', ')}`,
+      `   sello: ${f.label || '(vacío)'}`,
+      `   duración: ${mins}`,
+      `   tipo: ${f.kind === 'session' ? 'sesión → stage_upsert_mix' : 'tema → el servidor lo prepara como New Release. NO uses stage_upsert_mix'}`,
+    ].join('\n')
+  })
+  return `
+## SoundCloud de este mensaje (duración ya leída)
+Un audio de 15 minutos o menos es un tema, nunca un mix, aunque el título diga set o sesión.
+- tipo=tema: no llames a stage_upsert_mix. El servidor deja la operación de New Releases.
+- tipo=sesión: stage_upsert_mix con embed_url de aquí, platform soundcloud.
+
+${lines.join('\n')}
+`
+}
+
+export function describeSoundCloudFacts(facts: SoundCloudLinkFact[]): string {
+  if (!facts.length) return ''
+  const lines = facts.map((f) => {
+    const who = `${f.artists.map((a) => a.name).join(', ')} — ${f.title}${f.mixName ? ` (${f.mixName})` : ''}`
+    const mins = f.durationSeconds != null ? Math.max(1, Math.round(f.durationSeconds / 60)) : null
+    if (f.kind === 'track') {
+      const dur = mins != null ? ` Dura ${mins} min: es un tema, no un mix.` : ' Es un tema, no un mix.'
+      return `• ${who}.${dur} Lo preparo en New Releases.`
+    }
+    const dur = mins != null ? ` Dura ${mins} min.` : ''
+    return `• ${who}.${dur} Es una sesión. La preparo como mix.`
+  })
+  return lines.join('\n')
+}
+
+const FEAT_MAX_SORT = 200
+
+export async function insertSoundCloudFeaturedTrack(
+  action: Extract<ChatAction, { type: 'soundcloud_track' }>,
+): Promise<ActionResult> {
+  const link = canonicalSoundCloudUrl(action.url)
+  const releaseDate = (action.release_date || '').slice(0, 10)
+  const week = chartEditionWeekMondayFromPublish(releaseDate) || madridIsoWeekMonday()
+  const title = action.title.trim()
+  const artists = collectBeatportArtistCredits({
+    artists: action.artists,
+    mix_name: action.mix_name,
+  })
+  const sb = createServiceSupabase()
+  const { data: existing, error: existErr } = await sb
+    .from('chart_featured_tracks')
+    .select('id, title')
+    .eq('link_url', link)
+    .limit(1)
+  if (existErr) return { type: 'soundcloud_track', ok: false, summary: existErr.message }
+  if (existing?.length) {
+    return {
+      type: 'soundcloud_track',
+      ok: false,
+      summary: `New Releases: «${title}» ya estaba en el catálogo.`,
+    }
+  }
+  const { data: edition, error: edErr } = await sb
+    .from('chart_editions')
+    .select('id')
+    .eq('week_date', week)
+    .maybeSingle()
+  if (edErr) return { type: 'soundcloud_track', ok: false, summary: edErr.message }
+  let editionId = edition?.id as string | undefined
+  if (!editionId) {
+    const { data: inserted, error: insEd } = await sb
+      .from('chart_editions')
+      .insert({
+        week_date: week,
+        title: `40 Breaks Vitales — ${week}`,
+        description_en: `The 40 breakbeat tracks defining the week of ${week}.`,
+        description_es: `Los 40 temas de breakbeat que definen la semana del ${week}.`,
+        sources: [],
+        is_published: true,
+        published_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+    if (insEd || !inserted?.id) {
+      return { type: 'soundcloud_track', ok: false, summary: insEd?.message || 'No se pudo crear la semana' }
+    }
+    editionId = inserted.id as string
+  }
+  const { data: rows, error: listErr } = await fetchAllRows<{ link_url?: string; sort_order?: number }>((from, to) =>
+    sb
+      .from('chart_featured_tracks')
+      .select('link_url, sort_order')
+      .eq('chart_edition_id', editionId!)
+      .order('id', { ascending: true })
+      .range(from, to),
+  )
+  if (listErr) return { type: 'soundcloud_track', ok: false, summary: listErr.message }
+  const key = dedupeKeyForFeaturedLink(link)
+  const keys = new Set(
+    (rows || []).map((r) => dedupeKeyForFeaturedLink(String(r.link_url || ''))).filter(Boolean),
+  )
+  if (keys.has(key)) {
+    return {
+      type: 'soundcloud_track',
+      ok: false,
+      summary: `New Releases: «${title}» ya estaba en el catálogo.`,
+    }
+  }
+  const nextSort =
+    (rows && rows.length ? Math.max(...rows.map((r) => Number(r.sort_order || 0))) : 0) + 1
+  if (nextSort > FEAT_MAX_SORT) {
+    return {
+      type: 'soundcloud_track',
+      ok: false,
+      summary: `La semana ${week} ya tiene el máximo de temas (${FEAT_MAX_SORT}).`,
+    }
+  }
+  const year = releaseDate ? Number(releaseDate.slice(0, 4)) : null
+  const { error: insErr } = await sb.from('chart_featured_tracks').insert({
+    chart_edition_id: editionId,
+    sort_order: nextSort,
+    title,
+    mix_name: action.mix_name || '',
+    artists: artists as unknown as never,
+    label: action.label || '',
+    platform: 'soundcloud',
+    link_url: link,
+    link_label: '',
+    artwork_url: action.artwork_url || null,
+    sample_url: action.sample_url || null,
+    bpm: null,
+    music_key: '',
+    release_year: year && year >= 1900 ? year : null,
+    release_date: releaseDate || null,
+    spotify_url: null,
+    tidal_url: null,
+    note_en: 'Single shared on SoundCloud — not a DJ set.',
+    note_es: 'Tema compartido en SoundCloud — no es una sesión de DJ.',
+  })
+  if (insErr) return { type: 'soundcloud_track', ok: false, summary: insErr.message }
+  const who = artists.map((a) => a.name).join(', ')
+  return {
+    type: 'soundcloud_track',
+    ok: true,
+    summary: `New Releases: ${who} — ${title}${action.mix_name ? ` (${action.mix_name})` : ''} (semana ${week})`,
+    detail: { link_url: link, week_date: week },
+  }
 }
 
 export type YouTubeTrackRoute =
@@ -1321,6 +1751,12 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
   let embed_url = httpsOrNull(action.embed_url)
   let image_url = httpsOrNull(action.image_url)
   let mix_type = String(action.mix_type || 'youtube_session')
+  let durationMinutes =
+    action.duration_minutes != null && Number.isFinite(Number(action.duration_minutes))
+      ? Number(action.duration_minutes)
+      : null
+  let publishedAt =
+    typeof action.published_at === 'string' && action.published_at.trim() ? action.published_at.trim() : null
 
   if (video_url && (video_url.includes('youtube.com') || video_url.includes('youtu.be'))) {
     platform = 'youtube'
@@ -1329,22 +1765,58 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     if (yid && !image_url) {
       image_url = `https://i.ytimg.com/vi/${yid}/hqdefault.jpg`
     }
+    if (yid) {
+      const watch = await youtubeWatchMeta(yid)
+      if (isSongLength(watch.durationSeconds)) {
+        const mins = Math.max(1, Math.round((watch.durationSeconds || 0) / 60))
+        const vinyl = await upsertVinylAction({
+          type: 'vinyl',
+          week_date: madridIsoWeekMonday(),
+          create_edition_if_missing: true,
+          items: [
+            {
+              title,
+              artists: artist_name ? [{ name: artist_name }] : [],
+              year: watch.year,
+              youtube_url: video_url,
+              artwork_url: image_url,
+            },
+          ],
+        })
+        return {
+          ...vinyl,
+          summary: `«${title}» dura ${mins} min: es un tema, no un mix. ${vinyl.summary}`,
+        }
+      }
+      if (watch.durationSeconds != null && durationMinutes == null) {
+        durationMinutes = Math.max(1, Math.round(watch.durationSeconds / 60))
+      }
+    }
   }
 
   if (embed_url && embed_url.includes('soundcloud.com')) {
     platform = 'soundcloud'
     if (!MIX_TYPES.has(mix_type)) mix_type = 'classic_set'
-    if (embed_url.includes('on.soundcloud.com')) {
-      embed_url = await resolveFinalUrl(embed_url)
+    const facts = await resolveSoundCloudLinks(embed_url)
+    const fact = facts[0]
+    if (fact?.kind === 'track') {
+      const saved = await insertSoundCloudFeaturedTrack(soundCloudTrackAction(fact))
+      const mins =
+        fact.durationSeconds != null ? Math.max(1, Math.round(fact.durationSeconds / 60)) : null
+      return {
+        ...saved,
+        summary:
+          mins != null
+            ? `«${fact.title}» dura ${mins} min: es un tema, no un mix. ${saved.summary}`
+            : `«${fact.title}» es un tema, no un mix. ${saved.summary}`,
+      }
     }
-    const oe = await soundcloudOembed(embed_url)
-    if (!image_url && oe.thumbnail_url?.startsWith('https://')) image_url = oe.thumbnail_url
-    if (!title && oe.title) {
-      /* title already required */
+    if (fact?.url) embed_url = fact.url
+    if (!image_url && fact?.artworkUrl?.startsWith('https://')) image_url = fact.artworkUrl
+    if (fact?.durationSeconds != null && durationMinutes == null) {
+      durationMinutes = Math.max(1, Math.round(fact.durationSeconds / 60))
     }
-    if (!artist_name && oe.author_name) {
-      /* keep artist_name as provided */
-    }
+    if (fact?.createdAt && !publishedAt) publishedAt = fact.createdAt
   }
 
   if (!PLATFORMS.has(platform)) platform = 'other'
@@ -1359,17 +1831,12 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     mix_type,
     platform,
     year: action.year != null && Number.isFinite(Number(action.year)) ? Number(action.year) : null,
-    duration_minutes:
-      action.duration_minutes != null && Number.isFinite(Number(action.duration_minutes))
-        ? Number(action.duration_minutes)
-        : null,
+    duration_minutes: durationMinutes,
     video_url,
     embed_url,
     image_url,
     is_featured: Boolean(action.is_featured),
-    ...(typeof action.published_at === 'string' && action.published_at.trim()
-      ? { published_at: action.published_at.trim() }
-      : {}),
+    ...(publishedAt ? { published_at: publishedAt } : {}),
   }
 
   const sb = createServiceSupabase()
@@ -1604,6 +2071,9 @@ export async function executeChatActions(
           break
         case 'vinyl':
           results.push(await upsertVinylAction(action))
+          break
+        case 'soundcloud_track':
+          results.push(await insertSoundCloudFeaturedTrack(action))
           break
         default:
           results.push({
@@ -1919,11 +2389,13 @@ export function inferChatIntent(message: string): ChatIntent | null {
     if (YT_SESSION_RE.test(withoutUrl)) return 'mix'
     return 'vinyl'
   }
-  if (
-    /\b(essential mix|soundcloud\.com|on\.soundcloud)\b/.test(m) &&
-    !/\b(evento|festival|cartel|vinyl|vinilo|discogs)\b/.test(m)
-  ) {
+  if (/\b(essential mix)\b/.test(m) && !/\b(evento|festival|cartel|vinyl|vinilo|discogs)\b/.test(m)) {
     return 'mix'
+  }
+  if (/\b(soundcloud\.com|on\.soundcloud)\b/.test(m) && !/\b(evento|festival|cartel|vinyl|vinilo|discogs)\b/.test(m)) {
+    const withoutUrl = m.replace(/https?:\/\/\S+/g, ' ')
+    if (YT_SESSION_RE.test(withoutUrl)) return 'mix'
+    return null
   }
   if (
     /\b(artista|artistas|ficha de|bio de|\bdj\b)\b/.test(m) &&
