@@ -32,7 +32,7 @@ Instagram y Facebook **no aceptan texto precargado** al compartir un vídeo (ign
 > 🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 9 de octubre de 2026.
 > 🎛️ 135 BPM · C Major
 >
-> 🎧 Escúchalo entero en Optimal Breaks: enlace en la bio.   *(F: la URL del tema)*
+> 🎧 Busca el tema en Optimal Breaks: enlace en la bio.   *(F: la URL del tema)*
 >
 > #breakbeat #breaks #artista #sello #optimalbreaks
 

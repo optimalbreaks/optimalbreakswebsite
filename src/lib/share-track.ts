@@ -673,7 +673,7 @@ function captionDate(iso: string, lang: Locale): { text: string; future: boolean
 
 /**
  * «🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 12 de
- * septiembre de 2026.» + BPM/tonalidad + dónde escucharlo + hashtags.
+ * septiembre de 2026.» + BPM/tonalidad + dónde buscarlo + hashtags.
  * `platform` decide el enlace: Instagram (no clicable en reels) → «enlace en la bio»;
  * Facebook → la URL del tema.
  */
@@ -699,11 +699,11 @@ export function buildVideoCaption(
   const listen =
     opts.platform === 'instagram'
       ? es
-        ? '🎧 Escúchalo entero en Optimal Breaks: enlace en la bio.'
-        : '🎧 Listen to the full track on Optimal Breaks: link in bio.'
+        ? '🎧 Busca el tema en Optimal Breaks: enlace en la bio.'
+        : '🎧 Search the track on Optimal Breaks: link in bio.'
       : es
-        ? `🎧 Escúchalo entero en Optimal Breaks: ${opts.url}`
-        : `🎧 Listen to the full track on Optimal Breaks: ${opts.url}`
+        ? `🎧 Busca el tema en Optimal Breaks: ${opts.url}`
+        : `🎧 Search the track on Optimal Breaks: ${opts.url}`
 
   const tags = new Set<string>(['#breakbeat', '#breaks'])
   artists
