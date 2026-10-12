@@ -1,6 +1,8 @@
 -- El cron de GitHub Actions llega horas tarde (9–11 oct 2026).
--- Este aviso, a las 12:05 de Madrid, arranca el mismo workflow.
+-- Este aviso, a las 12:05 de Madrid, arranca el mismo workflow (sin --force).
 -- 5 10 UTC = 12:05 en verano; 5 11 UTC = 12:05 en invierno.
+-- El otro horario ve el pase del día ya hecho y no escribe fila.
+-- Cerrado el 12 oct 2026: 10:05 UTC, trigger cron, 527 vistos / 5 publicados / 32 pendientes.
 -- El secreto github_actions_dispatch vive en vault y no va en este archivo.
 
 create extension if not exists pg_net with schema extensions;

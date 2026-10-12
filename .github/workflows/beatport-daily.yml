@@ -13,8 +13,10 @@ name: Pase diario de Beatport
 on:
   schedule:
     # GitHub va en UTC y este schedule llega horas tarde (9–11 oct 2026).
-    # El aviso de las 12:05 lo da pg_cron (migración 090): workflow_dispatch.
-    # Estas dos líneas se quedan de repuesto. 12:05 Madrid = 10:05 UTC en verano, 11:05 UTC en invierno.
+# El aviso de las 12:05 lo da pg_cron (migración 090): workflow_dispatch, sin --force.
+# Estas dos líneas se quedan de repuesto. 12:05 Madrid = 10:05 UTC en verano, 11:05 UTC en invierno.
+# Cerrado el 12 oct 2026: el de las 10:05 UTC entró solo (527 / 5 publicados / 32 pendientes);
+# el de las 11:05 UTC vio el pase del día hecho y no lo repitió.
     - cron: '5 10 * * *'
     - cron: '5 11 * * *'
   workflow_dispatch:

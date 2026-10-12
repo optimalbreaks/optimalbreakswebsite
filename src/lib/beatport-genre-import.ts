@@ -1,5 +1,7 @@
 /**
  * Pase diario a las 12:05 (Madrid), desde el 8 oct 2026.
+ * El aviso lo da pg_cron (migración 090); este módulo es el trabajo, en GitHub Actions.
+ * No recorre todos los artistas de la web.
  * 1. Fichas del Top 100 en Beatport, cualquier género → se publican.
  * 2. Listado de Breaks → lo que no entró por 1 ni estaba ya, a la cola pendiente
  *    (o publicado si en los créditos va un artista del Top 100).

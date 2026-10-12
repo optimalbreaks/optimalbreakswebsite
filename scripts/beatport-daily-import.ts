@@ -1,5 +1,7 @@
 /**
- * Mismo pase que el cron de las 12:05 (Madrid).
+ * Mismo pase que el de las 12:05 (Madrid).
+ * Lo arranca pg_cron con workflow_dispatch (migración 090). El schedule de este
+ * archivo en GitHub es el repuesto: si llega tarde y hoy no hay pase, entra igual.
  *   npx tsx scripts/beatport-daily-import.ts
  *   npx tsx scripts/beatport-daily-import.ts --force
  */
