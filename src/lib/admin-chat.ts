@@ -1746,8 +1746,8 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     return { type: 'mix', ok: false, summary: 'Faltan slug o title' }
   }
 
-  let platform = String(action.platform || 'other')
-  const video_url = httpsOrNull(action.video_url)
+  let platform = String(action.platform || 'other').toLowerCase()
+  let video_url = httpsOrNull(action.video_url)
   let embed_url = httpsOrNull(action.embed_url)
   let image_url = httpsOrNull(action.image_url)
   let mix_type = String(action.mix_type || 'youtube_session')
@@ -1757,6 +1757,11 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
       : null
   let publishedAt =
     typeof action.published_at === 'string' && action.published_at.trim() ? action.published_at.trim() : null
+
+  if (video_url && /soundcloud\.com/i.test(video_url)) {
+    embed_url = embed_url || video_url
+    video_url = null
+  }
 
   if (video_url && (video_url.includes('youtube.com') || video_url.includes('youtu.be'))) {
     platform = 'youtube'
