@@ -63,6 +63,7 @@ type StoryRow = {
   release_date?: string | null
   year?: number | null
   bpm?: number | null
+  music_key?: string | null
 }
 
 /** Descarga la carátula y la devuelve como data URL PNG/JPEG apto para Satori
@@ -142,6 +143,7 @@ async function fetchBeatportStoryRow(
     release_year: track.release_year,
     release_date: track.release_date ?? null,
     bpm: track.bpm,
+    music_key: track.key || null,
   }
 }
 
@@ -173,7 +175,7 @@ async function fetchStoryRow(
   const cols =
     kind === 'vinyl'
       ? 'title, mix_name, artists, label, artwork_url, youtube_url, year'
-      : 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm'
+      : 'title, mix_name, artists, label, artwork_url, release_year, release_date, bpm, music_key'
   const { data } = await supabase.from(table).select(cols).eq('id', id).maybeSingle()
   return (data as StoryRow | null) ?? null
 }
@@ -454,6 +456,10 @@ export async function GET(request: NextRequest) {
         artists,
         meta: [reelMeta, bpm ? `${bpm} BPM` : null].filter(Boolean).join(' · '),
         releaseDate,
+        // Para el texto del post que se copia al compartir el vídeo
+        label: row.label || null,
+        musicKey: row.music_key || null,
+        year: year && year > 0 ? year : null,
         kicker,
         artwork: artworkDataUrl,
         bpm,

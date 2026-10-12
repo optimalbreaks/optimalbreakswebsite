@@ -629,3 +629,96 @@ export function openFacebookShareDialog(
     // Navegó a facebook.com (cross-origin): popup OK.
   }
 }
+
+// ---------------------------------------------------------------------------
+// Texto del post para los vídeos R (reel) y F (Facebook)
+// ---------------------------------------------------------------------------
+// Instagram y Facebook ignoran el texto que llega con un vídeo compartido, así
+// que este texto se COPIA al portapapeles al compartir/descargar: el admin solo
+// tiene que pegarlo en el pie del post. En apps que sí lo aceptan (WhatsApp,
+// Telegram…) va también en `navigator.share({ text })`.
+
+export type VideoCaptionData = {
+  title: string
+  artists: string
+  label?: string | null
+  releaseDate?: string | null
+  year?: number | null
+  bpm?: number | null
+  musicKey?: string | null
+}
+
+function hashtag(s: string): string {
+  const t = s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/gi, '')
+    .toLowerCase()
+  return t.length >= 3 && t.length <= 30 ? `#${t}` : ''
+}
+
+function captionDate(iso: string, lang: Locale): { text: string; future: boolean } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '')
+  if (!m) return null
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12))
+  if (Number.isNaN(d.getTime())) return null
+  const text = d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+  return { text, future: m[0] > new Date().toISOString().slice(0, 10) }
+}
+
+/**
+ * «🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 12 de
+ * septiembre de 2026.» + BPM/tonalidad + dónde escucharlo + hashtags.
+ * `platform` decide el enlace: Instagram (no clicable en reels) → «enlace en la bio»;
+ * Facebook → la URL del tema.
+ */
+export function buildVideoCaption(
+  d: VideoCaptionData,
+  opts: { lang: Locale; url: string; platform: 'instagram' | 'facebook' },
+): string {
+  const es = opts.lang === 'es'
+  const title = d.title.trim()
+  const artists = d.artists.trim()
+  const label = (d.label || '').trim()
+  const date = d.releaseDate ? captionDate(d.releaseDate, opts.lang) : null
+
+  let first = es
+    ? `🔥 Compartimos este temazo: «${title}»${artists ? ` de ${artists}` : ''}`
+    : `🔥 Sharing this banger: “${title}”${artists ? ` by ${artists}` : ''}`
+  if (label) first += es ? `, del sello ${label}` : `, on ${label}`
+  if (date) first += es ? `, ${date.future ? 'sale el' : 'lanzado el'} ${date.text}` : `, ${date.future ? 'out on' : 'released'} ${date.text}`
+  else if (d.year) first += es ? ` (${d.year})` : ` (${d.year})`
+  first += '.'
+
+  const tech = [d.bpm ? `${Math.round(d.bpm)} BPM` : '', (d.musicKey || '').trim()].filter(Boolean).join(' · ')
+  const listen =
+    opts.platform === 'instagram'
+      ? es
+        ? '🎧 Escúchalo entero en Optimal Breaks: enlace en la bio.'
+        : '🎧 Listen to the full track on Optimal Breaks: link in bio.'
+      : es
+        ? `🎧 Escúchalo entero en Optimal Breaks: ${opts.url}`
+        : `🎧 Listen to the full track on Optimal Breaks: ${opts.url}`
+
+  const tags = new Set<string>(['#breakbeat', '#breaks'])
+  artists
+    .split(/,|&| x | feat\.? | ft\.? /i)
+    .slice(0, 3)
+    .forEach((a) => {
+      const h = hashtag(a)
+      if (h) tags.add(h)
+    })
+  const lt = hashtag(label)
+  if (lt) tags.add(lt)
+  tags.add('#optimalbreaks')
+
+  return [first, tech ? `🎛️ ${tech}` : '', '', listen, '', [...tags].join(' ')]
+    .filter((l, i, arr) => !(l === '' && arr[i - 1] === ''))
+    .join('\n')
+    .trim()
+}

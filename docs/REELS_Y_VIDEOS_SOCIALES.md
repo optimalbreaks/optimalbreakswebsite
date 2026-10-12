@@ -7,7 +7,7 @@ Herramienta de promo **solo para admins**: junto al botón de compartir (🔗) y
 | **R** | Reel para **Instagram** | MP4 vertical **1080×1920**, 15 s, 30 fps, **sin audio** | Móvil: el botón pasa a **↗**; un segundo toque abre el menú de compartir (Instagram, Guardar vídeo…). Escritorio: descarga el MP4. |
 | **F** | Vídeo para **Facebook** | MP4 horizontal **1920×1080**, 15 s, 30 fps, **sin audio** | Siempre **descarga** el MP4 (también en móvil; sin menú de compartir). |
 
-Los dos **copian el enlace del tema** al portapapeles (igual que IG), para pegarlo en el sticker de enlace (historia) o en el texto del post (Facebook).
+Los dos **copian el texto del post** al portapapeles (tema, artistas, sello, fecha, BPM). El de Facebook incluye el enlace del tema; el del reel dice «enlace en la bio».
 
 > Contexto: octubre 2026. Probado en iPhone con Instagram (reel publicado con la música del tema y el artista invitado como colaborador).
 
@@ -22,8 +22,21 @@ El admin añade la **música oficial del tema desde la biblioteca de Instagram/F
 3. **R en móvil:** cuando sale **↗**, tocarlo otra vez → menú de compartir → **Instagram** (elegir Reel o Historia) o **Guardar vídeo**. El segundo toque es obligatorio: el navegador caduca el «gesto del usuario» durante el render y bloquea `navigator.share` sin un toque reciente.
 4. En Instagram/Facebook: añadir **Audio** (el tema), texto, colaborador, etc.
 5. **Enlace:**
-   - En un **reel** de Instagram no se puede poner sticker de enlace (solo en historias; los enlaces clicables en reels son de pago — Meta Verified empresa Plus+ — o con promoción). Por eso el reel lleva el aviso **«LINK IN BIO · OPTIMALBREAKS.COM»**. Para enlace directo: **compartir el reel en la historia** y añadir ahí el sticker de enlace (el enlace ya está copiado).
+   - En un **reel** de Instagram no se puede poner sticker de enlace (solo en historias; los enlaces clicables en reels son de pago — Meta Verified empresa Plus+ — o con promoción). Por eso el reel lleva el aviso **«LINK IN BIO · OPTIMALBREAKS.COM»**. Para enlace directo: **compartir el reel en la historia** y pegar en el sticker la URL del botón 🔗. Al pulsar R, el portapapeles lleva el texto del post.
    - En **Facebook** el enlace del texto del post sí es clicable → el vídeo horizontal lleva **«LINK IN POST»**.
+
+## Texto del post (se copia solo)
+
+Instagram y Facebook **no aceptan texto precargado** al compartir un vídeo (ignoran el `text` de `navigator.share`). Por eso, al compartir el reel (R) o al descargar el vídeo de Facebook (F), la web **copia al portapapeles el texto del post** y el admin solo tiene que pegarlo en el pie. Lo arma `buildVideoCaption()` (`src/lib/share-track.ts`) en el idioma de la página:
+
+> 🔥 Compartimos este temazo: «Título» de Artista, del sello X, lanzado el 9 de octubre de 2026.
+> 🎛️ 135 BPM · C Major
+>
+> 🎧 Escúchalo entero en Optimal Breaks: enlace en la bio.   *(F: la URL del tema)*
+>
+> #breakbeat #breaks #artista #sello #optimalbreaks
+
+Fecha futura → «sale el…». Sin fecha completa → año. Los datos (`label`, `musicKey`, `year`) vienen de `/api/og/story?format=json`. En el móvil se copia en el segundo toque (gesto del usuario, necesario en iOS); también va como `text` en el menú de compartir para apps que sí lo usan (WhatsApp, Telegram).
 
 ## Diseño (estética fanzine)
 
@@ -58,7 +71,7 @@ Funda + vinilo + sello BPM a la izquierda; cabecera, título, artistas, metadato
 
 | Pieza | Archivo | Qué hace |
 |---|---|---|
-| Datos del tema | `src/app/api/og/story/route.tsx` | Con **`format=json`** devuelve `{ title, artists, meta, kicker, artwork, bpm, releaseDate, lang }` usando la misma lógica que la imagen de Story (incluido `from=artists|labels/<slug>` y el snapshot `storyMeta` para Beatport Top 10). `artwork` es un **data URL** (sharp, 900 px, ya recortado) → sin problemas de CORS en el canvas. Añade `bpm` y `release_date` a las consultas de `chart_tracks` / `chart_featured_tracks` y al Top 10 de Beatport (los vinilos no tienen BPM). `Cache-Control: private, no-store`. Sin `format=json` la PNG de la Story sigue igual. |
+| Datos del tema | `src/app/api/og/story/route.tsx` | Con **`format=json`** devuelve `{ title, artists, meta, kicker, artwork, bpm, releaseDate, label, musicKey, year, lang }` usando la misma lógica que la imagen de Story (incluido `from=artists|labels/<slug>` y el snapshot `storyMeta` para Beatport Top 10). `artwork` es un **data URL** (sharp, 900 px, ya recortado) → sin problemas de CORS en el canvas. Añade `bpm` y `release_date` a las consultas de `chart_tracks` / `chart_featured_tracks` y al Top 10 de Beatport (los vinilos no tienen BPM). `Cache-Control: private, no-store`. Sin `format=json` la PNG de la Story sigue igual. |
 | Render | `src/lib/reel-renderer.ts` | `renderReel(data, { format: 'vertical' \| 'horizontal' })`. Canvas 2D dibuja cada fotograma (`drawReelFrame`) y **WebCodecs `VideoEncoder` (H.264)** + **`mp4-muxer`** lo empaquetan más rápido que tiempo real. Si no hay H.264 prueba VP9 en MP4; si no hay WebCodecs, cae a **`MediaRecorder`** (tiempo real, 15 s; puede salir WebM). El fondo se **pre-hornea** una vez (carátula desenfocada + semitono + viñeta) para que cada fotograma sea barato en móvil. Dos layouts (`VERTICAL`, `HORIZONTAL`) con todas las posiciones; el lienzo `W/H` lo fija `renderReel`. |
 | Botones | `src/components/TrackShareButton.tsx` | **R** (`onReelClick`) y **F** (`onFacebookClick`), solo si `isAdmin` y hay `play=` resoluble (`chart:` / `featured:` / `vinyl:` / `beatport:`). El renderer se importa **dinámicamente** al pulsar (no pesa en la carga de la página). **Un render cada vez**: mientras R o F trabajan, el otro queda desactivado (el renderer usa estado de módulo para el lienzo). |
 | Dependencia | `package.json` | **`mp4-muxer` 5.2.1** (exacta). Su autor la marca como sustituida por **Mediabunny**; funciona, pero conviene migrar algún día. |

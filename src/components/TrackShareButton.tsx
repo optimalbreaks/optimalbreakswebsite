@@ -27,6 +27,7 @@ import type { Locale } from '@/lib/i18n-config'
 import {
   appendTrackStoryMeta,
   buildAbsoluteShareUrl,
+  buildVideoCaption,
   buildTrackSharePath,
   copyShareLink,
   extractBeatportTrackId,
@@ -118,6 +119,8 @@ export default function TrackShareButton(props: Props) {
   // Render de ~10 s: al terminar, el gesto del clic ya caducó y el navegador
   // rechaza `navigator.share`. Guardamos el vídeo y pedimos un 2.º toque.
   const [reelFile, setReelFile] = useState<File | null>(null)
+  /** Texto del post del reel (se copia al compartir; ver `buildVideoCaption`). */
+  const [reelCaption, setReelCaption] = useState<string | null>(null)
   const [fbState, setFbState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle')
   const [fbPct, setFbPct] = useState(0)
   // Un solo render a la vez (el renderer usa un lienzo por formato).
@@ -138,11 +141,11 @@ export default function TrackShareButton(props: Props) {
   }
 
   /** Comparte un archivo (móvil → Instagram) o lo descarga (escritorio). */
-  async function shareOrDownload(file: File) {
+  async function shareOrDownload(file: File, text?: string | null) {
     const nav = typeof navigator !== 'undefined' ? navigator : null
     if (nav?.canShare?.({ files: [file] })) {
       try {
-        await nav.share({ files: [file], title: props.shareTitle })
+        await nav.share({ files: [file], title: props.shareTitle, ...(text ? { text } : {}) })
       } catch {
         // Cancelación del usuario: no es un error.
       }
@@ -187,7 +190,7 @@ export default function TrackShareButton(props: Props) {
    * Botón "R": reel 1080×1920 sin audio (~15 s). Pide los datos del tema a
    * `/api/og/story?format=json`, dibuja y codifica el MP4 en el navegador
    * (WebCodecs; el módulo se carga solo al pulsar) y lo comparte/descarga.
-   * También copia el enlace del tema para el sticker de enlace.
+   * Copia el texto del post (tema, artistas, sello, fecha) para pegarlo en Instagram.
    */
   /** Datos del tema para los vídeos (siempre en inglés: público internacional). */
   async function fetchVideoData(play: string) {
@@ -202,7 +205,9 @@ export default function TrackShareButton(props: Props) {
   async function onReelClick() {
     if (!storyPlay || (videoBusy && reelState !== 'ready')) return
     if (reelState === 'ready' && reelFile) {
-      await shareOrDownload(reelFile)
+      // Toque nuevo = gesto del usuario: copiar el texto aquí funciona también en iOS.
+      if (reelCaption) await copyShareLink(reelCaption)
+      await shareOrDownload(reelFile, reelCaption)
       setReelFile(null)
       setReelState('done')
       setTimeout(() => setReelState('idle'), 2200)
@@ -213,6 +218,8 @@ export default function TrackShareButton(props: Props) {
     try {
       await copyShareLink(fullUrl)
       const data = await fetchVideoData(storyPlay)
+      const caption = buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform: 'instagram' })
+      setReelCaption(caption)
       const { renderReel } = await import('@/lib/reel-renderer')
       const reel = await renderReel(data, {
         format: 'vertical',
@@ -225,7 +232,8 @@ export default function TrackShareButton(props: Props) {
         setReelState('ready')
         return
       }
-      await shareOrDownload(file)
+      await copyShareLink(caption)
+      await shareOrDownload(file, caption)
       setReelState('done')
       setTimeout(() => setReelState('idle'), 2200)
     } catch (err) {
@@ -238,7 +246,7 @@ export default function TrackShareButton(props: Props) {
   /**
    * Botón "F": vídeo horizontal 1920×1080 sin audio para Facebook. Mismo
    * diseño que el reel, reorganizado en 16:9. Siempre se descarga (también en
-   * móvil, sin menú de compartir) y copia el enlace del tema para el post.
+   * móvil, sin menú de compartir) y copia el texto del post con el enlace del tema.
    */
   async function onFacebookClick() {
     if (!storyPlay || videoBusy) return
@@ -247,6 +255,7 @@ export default function TrackShareButton(props: Props) {
     try {
       await copyShareLink(fullUrl)
       const data = await fetchVideoData(storyPlay)
+      const caption = buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform: 'facebook' })
       const { renderReel } = await import('@/lib/reel-renderer')
       const video = await renderReel(data, {
         format: 'horizontal',
@@ -260,6 +269,7 @@ export default function TrackShareButton(props: Props) {
       a.click()
       a.remove()
       setTimeout(() => URL.revokeObjectURL(url), 4000)
+      await copyShareLink(caption)
       setFbState('done')
       setTimeout(() => setFbState('idle'), 2200)
     } catch (err) {
@@ -325,14 +335,14 @@ export default function TrackShareButton(props: Props) {
         ? `${reelPct}%`
         : 'R'
   const reelTitle = reelState === 'done'
-    ? (es ? 'Reel listo · enlace copiado' : 'Reel ready · link copied')
+    ? (es ? 'Reel listo · texto del post copiado: pégalo en Instagram' : 'Reel ready · post text copied: paste it in Instagram')
     : reelState === 'ready'
-      ? (es ? 'Reel listo: toca para compartir' : 'Reel ready: tap to share')
+      ? (es ? 'Reel listo: toca para compartir (se copia el texto del post)' : 'Reel ready: tap to share (post text gets copied)')
     : reelState === 'error'
       ? (es ? 'No se pudo generar el reel' : 'Could not generate the reel')
       : (es
-          ? 'Reel de Instagram (sin audio): genera el vídeo y copia el enlace'
-          : 'Instagram Reel (no audio): generate video and copy link')
+          ? 'Reel de Instagram (sin audio): genera el vídeo y copia el texto del post'
+          : 'Instagram Reel (no audio): generate video and copy the post text')
 
   const fbStateCls = fbState === 'done'
     ? 'border-[var(--ink)] bg-[var(--acid)] text-white'
@@ -347,12 +357,12 @@ export default function TrackShareButton(props: Props) {
         ? `${fbPct}%`
         : 'F'
   const fbTitle = fbState === 'done'
-    ? (es ? 'Vídeo descargado · enlace copiado' : 'Video downloaded · link copied')
+    ? (es ? 'Vídeo descargado · texto del post copiado: pégalo en Facebook' : 'Video downloaded · post text copied: paste it in Facebook')
     : fbState === 'error'
       ? (es ? 'No se pudo generar el vídeo' : 'Could not generate the video')
       : (es
-          ? 'Vídeo horizontal para Facebook (sin audio): descarga el MP4 y copia el enlace'
-          : 'Horizontal video for Facebook (no audio): download MP4 and copy link')
+          ? 'Vídeo horizontal para Facebook (sin audio): descarga el MP4 y copia el texto del post'
+          : 'Horizontal video for Facebook (no audio): download MP4 and copy the post text')
 
   return (
     <>

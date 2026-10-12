@@ -70,6 +70,9 @@ private/music/*
 # Restos locales: rar, copias, notas de lote, scripts de un solo uso. No los sirve la web.
 private/local/
 
+# Renders locales de reels (pruebas). El vídeo se genera en el navegador; no se versiona.
+private/videos_reels/
+
 # Capturas de la auditoría tablet (el README apunta aquí).
 tmp-responsive/
 
