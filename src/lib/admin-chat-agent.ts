@@ -1647,7 +1647,7 @@ export async function runAdminChatAgent(opts: {
       .replace(/\bcreado el evento\b/gi, 'preparado el evento')
     const block = pendingOpsSummary(pendingOps)
     if (!/pendiente de confirmar/i.test(finalReply)) {
-      finalReply = `${finalReply}\n\n———\nPendiente de confirmar (aún NO está en la BD):\n${block}\n\nPulsa «Confirmar y guardar» o responde «sí» para escribir en Supabase.`
+      finalReply = `${finalReply}\n\n———\nPendiente de confirmar (esta operación todavía no se ha guardado):\n${block}\n\nPulsa «Confirmar y guardar» o responde «sí» para escribir en Supabase.`
     }
   }
 
