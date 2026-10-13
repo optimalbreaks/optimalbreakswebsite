@@ -207,7 +207,7 @@ Los slugs con retrato en **`public/images/artists`** según **`data/artist-publi
 Hay dos vías. No entra ninguna otra en el catálogo público.
 
 1. **Top 10 de la ficha.** Al dar de alta o refrescar un artista o un sello se guarda el Top 10 de ventas de Beatport (`artists.beatport_top_tracks` / `labels.beatport_top_tracks`). Solo se ve en esa ficha. Si alguien pulsa «+», Mis Tracks lo guarda con origen `beatport_top`: la URL y un snapshot van en el propio save. No se crea una fila de chart.
-2. **Enlaces que pasa el equipo.** Beatport o Bandcamp van a `chart_featured_tracks`. Un enlace de YouTube o de SoundCloud de un **tema** se busca antes en Beatport. Si está en la tienda, esa es la ficha. YouTube (`chart_vinyl_tracks`) o SoundCloud (`platform: soundcloud`) solo cuando Beatport no lo tiene. Una sesión de DJ sigue en `/mixes`.
+2. **Enlaces que pasa el equipo.** Beatport o Bandcamp van a `chart_featured_tracks`. Un enlace de YouTube o de SoundCloud de un **tema** se busca antes en el catálogo y en la cola de lanzamientos del día (`chart_import_queue`). Si está pendiente en Imports, el chat lo incluye desde esa fila. Si no está, se busca en Beatport. Si está en la tienda, esa es la ficha. YouTube (`chart_vinyl_tracks`) o SoundCloud (`platform: soundcloud`) solo cuando Beatport no lo tiene. Una sesión de DJ sigue en `/mixes`.
 
 La fecha de lanzamiento decide dónde se ve en `/charts`. No manda el día en que se pega el enlace.
 

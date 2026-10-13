@@ -1108,6 +1108,8 @@ export type YouTubeTrackRoute =
       label: string
       place: string
     }
+  | { fact: YouTubeLinkFact; kind: 'included'; label: string; place: string }
+  | { fact: YouTubeLinkFact; kind: 'held'; label: string }
   | { fact: YouTubeLinkFact; kind: 'vinyl'; beatport: 'miss' | 'unreachable' }
 
 function ilikeContains(value: string): string {
@@ -1279,11 +1281,7 @@ async function findCatalogTrack(fact: {
   }
   if (!keys.size && !fact.title.trim()) return null
 
-  const titleNeedle = withoutLabelParen(fact.title || fact.rawTitle)
-  const dash = (fact.rawTitle || '').match(/^(.{2,60}?)\s+[-–—|]\s+(.+)$/)
-  const side = dash ? withoutLabelParen(splitYouTubeTitle(dash[2]).title) : ''
-  const needle =
-    side.length >= 3 && side.length < titleNeedle.length ? side : titleNeedle.length >= 2 ? titleNeedle : fact.title
+  const needle = catalogNeedle(fact)
   if (needle.trim().length < 2) return null
   const credits = labelCredits(fact)
   const incomingCore = songCore(fact.title, fact.mixName)
@@ -1326,14 +1324,115 @@ async function findCatalogTrack(fact: {
   return null
 }
 
+/** Título corto para buscar: el lado derecho de «Artista – Título [CAT]», sin el código de catálogo. */
+function catalogNeedle(fact: { title: string; rawTitle: string }): string {
+  const titleNeedle = withoutLabelParen(fact.title || fact.rawTitle)
+  const dash = (fact.rawTitle || '').match(/^(.{2,60}?)\s+[-–—|]\s+(.+)$/)
+  const side = dash ? withoutLabelParen(splitYouTubeTitle(dash[2]).title) : ''
+  if (side.length >= 3 && side.length < titleNeedle.length) return side
+  if (titleNeedle.length >= 2) return titleNeedle
+  return fact.title
+}
+
+type QueueRow = {
+  id: string
+  status: string
+  title: string
+  mix_name: string | null
+  artists: Array<{ name?: string }> | null
+  label: string | null
+  link_url: string
+  release_date: string | null
+}
+
+/**
+ * El pase de las 12:05 deja en `chart_import_queue` los lanzamientos del día que
+ * aún no están en New Releases. El chat tiene que ver esa fila antes de abrir Beatport.
+ */
+async function findQueuedRelease(fact: {
+  title: string
+  mixName: string
+  artist: string
+  artists?: Array<{ name: string }>
+  rawTitle: string
+  label?: string
+}): Promise<QueueRow | null> {
+  const needle = catalogNeedle(fact).trim()
+  if (needle.length < 2) return null
+  const sb = createServiceSupabase()
+  const { data } = await sb
+    .from('chart_import_queue')
+    .select('id, status, title, mix_name, artists, label, link_url, release_date')
+    .ilike('title', ilikeContains(needle))
+    .in('status', ['pending', 'approved'])
+    .order('created_at', { ascending: false })
+    .limit(40)
+  const rows = (data || []) as QueueRow[]
+  const matches = (row: QueueRow) =>
+    beatportListingMatches(fact, {
+      link_url: row.link_url,
+      title: row.title,
+      mix_name: row.mix_name || '',
+      artists: (row.artists || [])
+        .map((artist) => ({ name: String(artist?.name || '') }))
+        .filter((artist) => artist.name),
+      label: row.label || '',
+    })
+  return rows.find((row) => row.status === 'pending' && matches(row)) || rows.find((row) => matches(row)) || null
+}
+
+function queueCatalogHit(row: QueueRow): { where: CatalogHit['where']; label: string } {
+  const release = row.release_date || ''
+  const where = release >= '2026-01-01' ? 'new_releases' : 'archive_store'
+  const year = release ? release.slice(0, 4) : ''
+  return {
+    where,
+    label: `${songLabel(row.title, row.artists)}${year ? `, ${year}` : ''}`,
+  }
+}
+
+async function resolveImportQueue(
+  fact: {
+    title: string
+    mixName: string
+    artist: string
+    artists?: Array<{ name: string }>
+    rawTitle: string
+    label?: string
+  },
+  userId?: string,
+): Promise<
+  | { kind: 'already'; where: CatalogHit['where']; label: string }
+  | { kind: 'included'; label: string; place: string }
+  | { kind: 'held'; label: string }
+  | null
+> {
+  const row = await findQueuedRelease(fact)
+  if (!row) return null
+  const known = queueCatalogHit(row)
+  if (row.status !== 'pending') return { kind: 'already', where: known.where, label: known.label }
+  if (!userId) return { kind: 'held', label: known.label }
+  const { decideImport } = await import('@/lib/beatport-genre-import')
+  const decided = await decideImport(row.id, 'approve', userId)
+  if (!decided.ok) {
+    if (/ya está decidido/i.test(decided.error)) return { kind: 'already', where: known.where, label: known.label }
+    return { kind: 'held', label: known.label }
+  }
+  return { kind: 'included', label: known.label, place: beatportPlace(row.release_date) }
+}
+
 /**
  * Un YouTube de tema no se archiva a ciegas.
  * 1. ¿Ya está en New Releases o en el archivo?
- * 2. Si no, ¿está en Beatport (mismo título, versión y artista)?
- * 3. Solo entonces se prepara como vinilo de YouTube.
+ * 2. ¿Está en la cola de lanzamientos del día? Si está pendiente, se incluye desde esa fila.
+ * 3. Si no, ¿está en Beatport (mismo título, versión y artista)?
+ * 4. Solo entonces se prepara como vinilo de YouTube.
  * Una sesión de DJ no entra en esta cadena.
  */
-export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouTubeTrackRoute[]> {
+export async function routeYouTubeTracks(
+  facts: YouTubeLinkFact[],
+  userId?: string,
+): Promise<YouTubeTrackRoute[]> {
   const routes: YouTubeTrackRoute[] = []
   const needsStore: YouTubeLinkFact[] = []
   for (const fact of facts) {
@@ -1348,7 +1447,24 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
         continue
       }
     } catch {
-      /* si el catálogo no responde, se intenta Beatport igual */
+      /* si el catálogo no responde, se mira la cola y luego Beatport */
+    }
+    try {
+      const queued = await resolveImportQueue(fact, userId)
+      if (queued?.kind === 'already') {
+        routes.push({ fact, kind: 'already', where: queued.where, label: queued.label })
+        continue
+      }
+      if (queued?.kind === 'included') {
+        routes.push({ fact, kind: 'included', label: queued.label, place: queued.place })
+        continue
+      }
+      if (queued?.kind === 'held') {
+        routes.push({ fact, kind: 'held', label: queued.label })
+        continue
+      }
+    } catch {
+      /* la cola no respondió: se intenta Beatport */
     }
     needsStore.push(fact)
   }
@@ -1409,14 +1525,19 @@ export type SoundCloudTrackRoute =
   | { fact: SoundCloudLinkFact; kind: 'session' }
   | { fact: SoundCloudLinkFact; kind: 'already'; where: CatalogHit['where']; label: string }
   | { fact: SoundCloudLinkFact; kind: 'beatport'; linkUrl: string; label: string; place: string }
+  | { fact: SoundCloudLinkFact; kind: 'included'; label: string; place: string }
+  | { fact: SoundCloudLinkFact; kind: 'held'; label: string }
   | { fact: SoundCloudLinkFact; kind: 'soundcloud' }
   | { fact: SoundCloudLinkFact; kind: 'blocked' }
 
 /**
- * Un tema de SoundCloud solo se archiva si no está en el catálogo ni en Beatport.
+ * Un tema de SoundCloud solo se archiva si no está en el catálogo, ni en la cola del día, ni en Beatport.
  * Una sesión (más de 15 min) no entra en esta cadena.
  */
-export async function routeSoundCloudTracks(facts: SoundCloudLinkFact[]): Promise<SoundCloudTrackRoute[]> {
+export async function routeSoundCloudTracks(
+  facts: SoundCloudLinkFact[],
+  userId?: string,
+): Promise<SoundCloudTrackRoute[]> {
   const routes: SoundCloudTrackRoute[] = []
   const needsStore: SoundCloudLinkFact[] = []
   for (const fact of facts) {
@@ -1431,7 +1552,24 @@ export async function routeSoundCloudTracks(facts: SoundCloudLinkFact[]): Promis
         continue
       }
     } catch {
-      /* el catálogo no respondió: se intenta Beatport */
+      /* el catálogo no respondió: se mira la cola y luego Beatport */
+    }
+    try {
+      const queued = await resolveImportQueue(fact, userId)
+      if (queued?.kind === 'already') {
+        routes.push({ fact, kind: 'already', where: queued.where, label: queued.label })
+        continue
+      }
+      if (queued?.kind === 'included') {
+        routes.push({ fact, kind: 'included', label: queued.label, place: queued.place })
+        continue
+      }
+      if (queued?.kind === 'held') {
+        routes.push({ fact, kind: 'held', label: queued.label })
+        continue
+      }
+    } catch {
+      /* la cola no respondió: se intenta Beatport */
     }
     needsStore.push(fact)
   }
@@ -1513,6 +1651,12 @@ export function describeSoundCloudRoutes(routes: SoundCloudTrackRoute[]): string
     if (route.kind === 'beatport') {
       return `• ${route.label}: está en Beatport. Lo preparo en ${route.place}.`
     }
+    if (route.kind === 'included') {
+      return `• ${route.label}: ya estaba en los lanzamientos de hoy. Lo he incluido en ${route.place}.`
+    }
+    if (route.kind === 'held') {
+      return `• ${route.label}: está en los lanzamientos de hoy, pendiente de incluir. No lo archivo en SoundCloud.`
+    }
     if (route.kind === 'blocked') {
       return `• ${who}: no he podido abrir Beatport. No lo archivo en SoundCloud hasta poder mirar la tienda.`
     }
@@ -1541,12 +1685,18 @@ export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'beatport') {
       return `• ${route.label}: está en Beatport. Lo preparo en ${route.place}.`
     }
-    if (route.beatport === 'unreachable') {
+    if (route.kind === 'included') {
+      return `• ${route.label}: ya estaba en los lanzamientos de hoy. Lo he incluido en ${route.place}.`
+    }
+    if (route.kind === 'held') {
+      return `• ${route.label}: está en los lanzamientos de hoy, pendiente de incluir. No lo archivo en YouTube.`
+    }
+    if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
       return `• ${who}: no he podido abrir Beatport. No lo archivo en YouTube hasta poder mirar la tienda.`
     }
     return `• ${who}: no está en el catálogo ni en Beatport. Lo preparo como archivo de YouTube.`
   })
-  return `He mirado el catálogo y Beatport:\n${lines.join('\n')}`
+  return `He mirado el catálogo y los lanzamientos de hoy:\n${lines.join('\n')}`
 }
 
 export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
@@ -1556,6 +1706,8 @@ export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'session') return `- ${id}: sesión → stage_upsert_mix`
     if (route.kind === 'already') return `- ${id}: YA ESTÁ en el catálogo. No llames a stage_vinyl_picks ni a stage_new_releases.`
     if (route.kind === 'beatport') return `- ${id}: Beatport ${route.linkUrl}. No lo archives en YouTube. El servidor prepara New Releases.`
+    if (route.kind === 'included') return `- ${id}: incluido desde la cola de hoy. No llames a stage_vinyl_picks ni a stage_new_releases.`
+    if (route.kind === 'held') return `- ${id}: está en la cola de hoy. No llames a stage_vinyl_picks ni a stage_new_releases.`
     if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
       return `- ${id}: Beatport no respondió. No llames a stage_vinyl_picks ni a stage_new_releases.`
     }

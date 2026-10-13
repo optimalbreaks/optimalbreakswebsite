@@ -277,6 +277,7 @@ export async function POST(request: NextRequest) {
       attachedPublicUrls,
       originRequest: request,
       scope: editorScope,
+      userId: auth.userId,
     })
 
     // «sí»/«ok» sin ops previas: si el agente acaba de hacer stage_* en este turno,
