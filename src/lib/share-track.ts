@@ -722,3 +722,64 @@ export function buildVideoCaption(
     .join('\n')
     .trim()
 }
+
+export type MixCaptionData = {
+  title: string
+  artists: string
+  festival?: string | null
+  edition?: string | null
+  eventName?: string | null
+  place?: string | null
+  releaseDate?: string | null
+  downloadable?: boolean
+}
+
+/**
+ * Texto del post para los vídeos R/F de una sesión (/mixes/<slug>):
+ * «🔥 Compartimos la sesión de X en Olibass Open Air 2026 (Jaén), grabada el 30 de
+ * agosto de 2026.» Si hay MP3, invita a descargarla; si no, a buscarla en la web.
+ */
+export function buildMixVideoCaption(
+  d: MixCaptionData,
+  opts: { lang: Locale; url: string; platform: 'instagram' | 'facebook' },
+): string {
+  const es = opts.lang === 'es'
+  const artists = (d.artists || '').trim()
+  const where = (d.edition || d.eventName || d.festival || '').trim()
+  const place = (d.place || '').split('·').pop()?.trim() || ''
+  const date = d.releaseDate ? captionDate(d.releaseDate, opts.lang) : null
+
+  let first = es
+    ? `🔥 Compartimos la sesión${artists ? ` de ${artists}` : ''}`
+    : `🔥 Sharing the set${artists ? ` by ${artists}` : ''}`
+  if (where) first += es ? ` en ${where}` : ` at ${where}`
+  if (place) first += ` (${place})`
+  if (date) first += es ? `, grabada en directo el ${date.text}` : `, recorded live on ${date.text}`
+  first += '.'
+
+  const action = d.downloadable
+    ? es
+      ? '⬇️ Descárgala gratis y completa en Optimal Breaks'
+      : '⬇️ Free full download on Optimal Breaks'
+    : es
+      ? '🎧 Busca la sesión en Optimal Breaks'
+      : '🎧 Search the set on Optimal Breaks'
+  const listen =
+    opts.platform === 'instagram'
+      ? `${action}${es ? ': enlace en la bio.' : ': link in bio.'}`
+      : `${action}: ${opts.url}`
+
+  const tags = new Set<string>(['#breakbeat', '#breaks', '#djset'])
+  artists
+    .split(/,|&| vs\.? | b2b | x | feat\.? | ft\.? /i)
+    .slice(0, 3)
+    .forEach((a) => {
+      const h = hashtag(a.replace(/\bmc\b/i, '').trim())
+      if (h) tags.add(h)
+    })
+  const ft = hashtag(d.festival || '')
+  if (ft) tags.add(ft)
+  tags.add('#optimalbreaks')
+
+  return [first, '', listen, '', [...tags].join(' ')].join('\n').trim()
+}

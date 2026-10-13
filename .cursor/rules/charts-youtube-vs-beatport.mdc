@@ -23,13 +23,15 @@ alwaysApply: true
 
 Un YouTube de 2026 sin Beatport **no** entra en la lista semanal. La semana la manda la fecha de lanzamiento en la tienda, no el día en que se pega el enlace.
 
-**Prioridad:** si el tema está en Beatport o Bandcamp, la vía editorial es **`chart_featured_tracks`**, no YouTube. Preview de tienda + Spotify + TIDAL + Beatport dependen de `link_url` en featured.
+**Prioridad desde 2012:** si el tema está en Beatport o Bandcamp, la vía editorial es **`chart_featured_tracks`**, no YouTube. Preview de tienda + Spotify + TIDAL + Beatport dependen de `link_url` en featured.
+
+**Antes de 2012 (13 oct 2026):** si Narciso pasa un YouTube de un tema salido antes del 1 de enero de 2012, la fila es **`chart_vinyl_tracks`** (el tema entero). Aunque Beatport o Bandcamp tengan listing, no se da de alta en featured. Si ese mismo corte ya está en featured, se quita la fila de tienda y se queda el YouTube: el archivo de ese año no puede enseñar las dos. A partir de 2012, y en New Releases, sigue mandando la tienda.
 
 ## Invariante (no negociable)
 
-1. **Prohibido** meter en `chart_vinyl_tracks` un enlace de YouTube del **mismo tema** que ya está en `chart_featured_tracks` (misma canción: título + mix + artistas, criterio `trackDisplayIdentityKey` en `src/lib/track-canonical-key.ts` o equivalente en scripts).
-2. **Antes de cada alta YouTube**, el agente **comprueba** Beatport (búsqueda / URL conocida) y **`chart_featured_tracks`** (+ ediciones publicadas). Si coincide → **no** hacer `chart-vinyl-file`; alta en featured (`featured-import` o `db:chart:featured`, semana del release; antes de 2026 se ve en el archivo por año) y, si falta, `db:chart:spotify` / `db:chart:tidal`.
-3. **YouTube solo** cuando no hay listing usable en tienda: histórico, white label, bootleg, rip sin `link_url`, o material que **no** está en Beatport/Bandcamp.
+1. **Prohibido** dejar en `chart_vinyl_tracks` y en `chart_featured_tracks` el **mismo corte** (título + mix + artistas, criterio `trackDisplayIdentityKey` en `src/lib/track-canonical-key.ts`). Desde 2012 se queda la tienda. Antes de 2012, si el enlace es un YouTube, se queda el vídeo y se quita la fila de tienda.
+2. **Antes de cada alta YouTube**, el agente **comprueba** Beatport (búsqueda / URL conocida) y **`chart_featured_tracks`** (+ ediciones publicadas). Si el release es **anterior a 2012-01-01**, el YouTube entra en vinilo y, si el mismo corte ya está en featured, se borra esa fila de tienda. Si el release es de 2012 en adelante y coincide con la tienda → **no** hacer `chart-vinyl-file`; alta en featured (`featured-import` o `db:chart:featured`, semana del release; antes de 2026 se ve en el archivo por año) y, si falta, `db:chart:spotify` / `db:chart:tidal`.
+3. **YouTube solo** cuando no hay listing usable en tienda, **o cuando el tema salió antes de 2012** y el enlace que llega es un YouTube: histórico, white label, bootleg, rip sin `link_url`, o material que **no** está en Beatport/Bandcamp.
 4. La UI **no deduplica** vinilo ↔ featured en el acordeón de archivo: dos filas = dos UUID, dos saves posibles, una sin Spotify/TIDAL. Evitarlo en origen, no “arreglarlo” después en UI.
 
 ## Flujo operativo (equipo + agente)
@@ -37,9 +39,10 @@ Un YouTube de 2026 sin Beatport **no** entra en la lista semanal. La semana la m
 **Enlaces YouTube del equipo:**
 
 1. Identificar título / artista / mix (oEmbed + metadatos).
-2. ¿Existe en Beatport o Bandcamp? → **`chart_featured_tracks`**. Semana = lunes ISO del release (`charts-new-releases-supabase`). Release ≥ 2026-01-01 → New Releases de esa semana. Release anterior → Selecciones de archivo, agrupadas por año.
-3. ¿Ya en BD como featured (misma identidad)? → **Saltar** YouTube; opcional rellenar streaming si faltan matches.
-4. Si no hay tienda → `data/charts/vinyl/<contenedor>.json` + `run chart-vinyl-file` (identidad fila = **ID YouTube**, regla `charts-ids-inmutables-saves`). En la web sale en el **año** del tema, también si ese año es 2026.
+2. ¿El tema salió antes de 2012? → **`chart_vinyl_tracks`**, aunque exista Beatport o Bandcamp. Si ese corte ya está en featured, quitar la fila de tienda.
+3. ¿Existe en Beatport o Bandcamp y el release es de 2012 en adelante? → **`chart_featured_tracks`**. Semana = lunes ISO del release (`charts-new-releases-supabase`). Release ≥ 2026-01-01 → New Releases de esa semana. Release anterior a 2026 (y desde 2012) → Selecciones de archivo, agrupadas por año.
+4. ¿Ya en BD como featured (misma identidad) y el release es de 2012 en adelante? → **Saltar** YouTube; opcional rellenar streaming si faltan matches.
+5. Si no hay tienda → `data/charts/vinyl/<contenedor>.json` + `run chart-vinyl-file` (identidad fila = **ID YouTube**, regla `charts-ids-inmutables-saves`). En la web sale en el **año** del tema, también si ese año es 2026. Lo mismo si el tema es anterior a 2012 y el enlace es un YouTube.
 
 **New Releases** = tienda, por semana, desde 2026. **Selecciones de archivo** = por año (tienda anterior a 2026, o YouTube de cualquier año). No confundir `week_date` del JSON de vinilo con el año que ve el usuario.
 
@@ -47,7 +50,7 @@ Un YouTube de 2026 sin Beatport **no** entra en la lista semanal. La semana la m
 
 Si el artista pasa **una canción** solo por SoundCloud, va a **`/charts`**, no a `/mixes`. Caso: WeZ WhaTevR — *I Need You* (Zero Dark, release **2026-10-02**, semana **`2026-09-28`**). Se había dado de alta como mix `wez-whatevr-i-need-you-2026`; esa fila se borró.
 
-En el chat editorial la duración manda (12 oct 2026): **15 minutos o menos nunca es un mix**, ni en SoundCloud ni en YouTube, aunque el título diga set. Primero se mira si ya está en la web: si está, no se añade. Si no está, se mira la cola de lanzamientos del día (`chart_import_queue`): un pendiente de validación se contesta con «No te preocupes, que este tema ya está». No entra en la línea del colaborador: lo cura el editor. Si no está en la cola, se busca en **Beatport**. Si está en la tienda, la ficha es de Beatport (New Releases o archivo por año, según el release). SoundCloud o YouTube solo si Beatport no lo tiene.
+En el chat editorial la duración manda (12 oct 2026): **15 minutos o menos nunca es un mix**, ni en SoundCloud ni en YouTube, aunque el título diga set. Primero se mira si ya está en la web: si está, no se añade. Si no está, se mira la cola de lanzamientos del día (`chart_import_queue`): un pendiente de validación se contesta con «No te preocupes, que este tema ya está». No entra en la línea del colaborador: lo cura el editor. Si no está en la cola, se busca en **Beatport**. Si está en la tienda y salió en 2012 o después, la ficha es de Beatport (New Releases o archivo por año, según el release). SoundCloud solo si Beatport no lo tiene. Un YouTube anterior a 2012 entra en vinilo aunque la tienda lo tenga.
 
 - `platform: "soundcloud"` en el pick de `data/charts/picks/<lunes>.json`.
 - `link_url`: permalink humano (botón SOUNDCLOUD), aunque lleve `/s-TOKEN`.

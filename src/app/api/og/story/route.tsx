@@ -101,6 +101,30 @@ async function loadArtworkDataUrl(rawUrl: string | null | undefined): Promise<st
   }
 }
 
+/** Cartel del evento (vertical) como data URL JPEG ~900 px de ancho, SIN recortar. */
+async function loadPosterDataUrl(rawUrl: string | null | undefined): Promise<string | null> {
+  const url = rawUrl?.trim()
+  if (!url || !/^https?:\/\//.test(url)) return null
+  try {
+    const res = await fetch(url, { cache: 'force-cache', headers: { Accept: 'image/jpeg,image/png,image/webp,*/*' } })
+    if (!res.ok) return null
+    const mime = res.headers.get('content-type')?.split(';')[0]?.trim() || ''
+    if (!/^image\//i.test(mime)) return null
+    const buf = Buffer.from(await res.arrayBuffer())
+    const sharpMod = await import('sharp')
+    const sharp =
+      (sharpMod as { default?: typeof import('sharp') }).default ??
+      (sharpMod as unknown as typeof import('sharp'))
+    const jpg = await sharp(buf)
+      .resize({ width: 900, height: 1400, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer()
+    return `data:image/jpeg;base64,${jpg.toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
 const QUERY_ARTWORK_HOSTS = new Set([
   'geo-media.beatport.com',
   'i.discogs.com',
@@ -202,7 +226,7 @@ function storyDateLabel(iso: string | null | undefined, es: boolean): string {
 }
 
 /** Story de una sesión (/mixes/<slug>): festival, edición, fecha e imagen. */
-async function mixStoryResponse(slug: string, es: boolean): Promise<ImageResponse | NextResponse> {
+async function mixStoryResponse(slug: string, es: boolean, json = false): Promise<ImageResponse | NextResponse> {
   const supabase = createCachedSupabase()
   const { data: mixRaw } = await supabase.from('mixes').select('*').eq('slug', slug).maybeSingle()
   const mix = mixRaw as Mix | null
@@ -211,13 +235,17 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
   let eventName: string | null = null
   let eventDate: string | null = null
   let eventPlace: string | null = null
+  let eventCity: string | null = null
+  let eventPoster: string | null = null
   if (mix.event_id) {
     const { data } = await supabase
       .from('events')
-      .select('name, date_start, venue, city')
+      .select('name, date_start, venue, city, image_url')
       .eq('id', mix.event_id)
       .maybeSingle()
-    const ev = data as { name?: string | null; date_start?: string | null; venue?: string | null; city?: string | null } | null
+    const ev = data as { name?: string | null; date_start?: string | null; venue?: string | null; city?: string | null; image_url?: string | null } | null
+    eventCity = ev?.city?.trim() || null
+    eventPoster = absoluteImageUrl(ev?.image_url)
     eventName = ev?.name?.trim() || null
     eventDate = ev?.date_start || null
     eventPlace = [ev?.venue, ev?.city].map((s) => s?.trim()).filter(Boolean).join(' · ') || null
@@ -231,10 +259,10 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
   const cover = absoluteImageUrl(mix.image_url)
   const yt = extractYouTubeId(mix.video_url)
   const names = flattenLineupArtistNames(mix.artist_name ? [mix.artist_name] : [])
-  // SoundCloud: la portada del tema (en un B2B salen los dos, no el retrato
-  // del primero que tenga ficha). YouTube sigue con el retrato.
+  // SoundCloud y una sesión que solo es MP3: la imagen del mix (portada o
+  // cartel). YouTube sigue con el retrato del artista.
   let artworkDataUrl =
-    mix.platform === 'soundcloud' && cover ? await loadArtworkDataUrl(cover) : null
+    mix.platform !== 'youtube' && cover ? await loadArtworkDataUrl(cover) : null
   if (!artworkDataUrl) {
     const lookup = buildArtistSlugLookup(await fetchAllArtistLinkRows(supabase))
     let portrait: string | null = null
@@ -255,6 +283,45 @@ async function mixStoryResponse(slug: string, es: boolean): Promise<ImageRespons
   const when = storyDateLabel(eventDate || mix.published_at, es)
   const kicker = es ? 'SESIÓN' : 'DJ SET'
   const downloadable = Boolean(mix.download_url?.startsWith('https://'))
+  // Vídeos «R» (reel) y «F» (Facebook) de la sesión: mismos datos en JSON; el
+  // vídeo se dibuja en el cliente con `reel-renderer` (igual que los temas).
+  if (json) {
+    const place = eventPlace || ''
+    // Si el título repite los DJs, el título del vídeo pasa a ser el evento.
+    const djPart = title.split(/\s+[—–]\s+/)[0].trim() || title
+    const sameAsArtist = djPart.toLowerCase().replace(/\W+/g, '') === artist.toLowerCase().replace(/\W+/g, '')
+    const city = (eventCity || place.split('·').pop() || '').split(',')[0].trim()
+    // Cartel del evento (diseño «pase de festival»); si no hay, solo la foto de la sesión.
+    const posterDataUrl = await loadPosterDataUrl(eventPoster)
+    const videoTitle = (sameAsArtist ? editionName || eventName || festivalName || djPart : djPart).slice(0, 90)
+    return NextResponse.json(
+      {
+        // «Godino vs Paket — Sesión OLIBASS…» → en el vídeo solo la parte de los DJs;
+        // el festival ya va en la cinta y en la línea de datos.
+        title: videoTitle,
+        artists: artist,
+        // Línea de datos corta: (evento, si no es ya el título) · ciudad
+        meta: [sameAsArtist ? null : editionName || festivalName, city].filter(Boolean).join(' · ').toUpperCase().slice(0, 48),
+        kicker: (festivalName || 'DJ SET').toUpperCase().slice(0, 28),
+        artwork: artworkDataUrl,
+        bpm: null,
+        releaseDate: (eventDate || mix.published_at || '').slice(0, 10) || null,
+        stampLabel: 'LIVE ON',
+        variant: 'set',
+        poster: posterDataUrl,
+        city: city || null,
+        lang: 'en',
+        // Para el texto del post que se copia al compartir
+        festival: festivalName,
+        edition: editionName,
+        eventName,
+        place: place || null,
+        downloadable,
+      },
+      { headers: { 'Cache-Control': 'private, no-store' } },
+    )
+  }
+
   const footerWarning = es
     ? 'La música del sticker no es esta sesión'
     : 'The sticker music is not this set'
@@ -378,7 +445,7 @@ export async function GET(request: NextRequest) {
   const lang = sp.get('lang') === 'en' ? 'en' : 'es'
   const playRaw = (sp.get('play') || '').trim()
   const mixPlay = /^mix:([a-z0-9-]{2,})$/i.exec(playRaw)
-  if (mixPlay) return mixStoryResponse(mixPlay[1].toLowerCase(), lang === 'es')
+  if (mixPlay) return mixStoryResponse(mixPlay[1].toLowerCase(), lang === 'es', sp.get('format') === 'json')
   const parsed = parsePlayParam(playRaw)
 
   let kind: 'chart' | 'featured' | 'vinyl' | 'beatport' | null = null

@@ -16,6 +16,8 @@
 // Estética fanzine: papel, tinta, rojo, amarillo — igual que la Story IG.
 // ============================================
 
+import { bakeSetBackground, dominantColor, drawSetFrame, type SetAssets } from './set-reel-design'
+
 export type ReelData = {
   title: string
   artists: string
@@ -28,6 +30,19 @@ export type ReelData = {
   bpm?: number
   /** Fecha de release (YYYY-MM-DD): sello de tinta sobre la funda + cinta superior. */
   releaseDate?: string | null
+  /** Etiqueta del sello de fecha en lugar de RELEASED / OUT ON (sesiones: «LIVE ON»). */
+  stampLabel?: string | null
+  /**
+   * `set` = sesión de festival (/mixes/<slug>): diseño propio «pase de festival»
+   * (`set-reel-design.ts`) con cartel del evento, color del festival y entrada.
+   */
+  variant?: 'track' | 'set'
+  /** Cartel del evento (data URL, vertical) para las sesiones. */
+  poster?: string | null
+  festival?: string | null
+  edition?: string | null
+  city?: string | null
+  downloadable?: boolean
 }
 
 export type ReelFormat = 'vertical' | 'horizontal'
@@ -510,7 +525,8 @@ export function drawReelFrame(
   const kick = pulsing ? Math.exp(-beatPhase / 0.09) : 0
   const bar = Math.floor(beatsIn / 4)
   const endT = durationSec - 3.6
-  const stamp = releaseStamp(data.releaseDate)
+  const baseStamp = releaseStamp(data.releaseDate)
+  const stamp = baseStamp && data.stampLabel ? { ...baseStamp, label: data.stampLabel } : baseStamp
   const {
     SAFE_SCALE,
     SAFE_SHIFT_Y,
@@ -1167,6 +1183,28 @@ async function pickEncoderConfig(fps: number): Promise<VideoEncoderConfig | null
   return null
 }
 
+/** Prepara el fondo, color e imágenes del diseño «pase de festival». */
+async function prepareSet(data: ReelData, w: number, h: number): Promise<SetAssets> {
+  if (typeof document !== 'undefined' && document.fonts) {
+    await Promise.all([document.fonts.load(font(HEAD, 60)), document.fonts.load(font(MONO, 30, 700))]).catch(() => undefined)
+  }
+  const cover = data.artwork ? await loadImage(data.artwork).catch(() => null) : null
+  const poster = data.poster ? await loadImage(data.poster).catch(() => null) : null
+  const src = poster || cover
+  const col = src ? dominantColor(src, src.naturalWidth, src.naturalHeight) : { accent: RED, light: '#ff8a7a' }
+  return {
+    cover,
+    coverW: cover?.naturalWidth || 1,
+    coverH: cover?.naturalHeight || 1,
+    poster,
+    posterW: poster?.naturalWidth || 1,
+    posterH: poster?.naturalHeight || 1,
+    bg: bakeSetBackground(src, src?.naturalWidth || 1, src?.naturalHeight || 1, w, h, col.accent),
+    accent: col.accent,
+    accentLight: col.light,
+  }
+}
+
 /** Renderiza el reel completo y devuelve el vídeo. */
 export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promise<ReelResult> {
   const fps = opts.fps ?? 30
@@ -1177,6 +1215,23 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
   H = horizontal ? 1080 : 1920
   L = horizontal ? HORIZONTAL : VERTICAL
   const assets = await prepare(data)
+  // Sesiones de festival: diseño «pase de festival» en vez del de temas.
+  const setAssets = data.variant === 'set' ? await prepareSet(data, W, H) : null
+  const setData = setAssets
+    ? {
+        title: data.title,
+        artists: data.artists,
+        festival: data.festival,
+        edition: data.edition,
+        city: data.city,
+        date: data.releaseDate,
+        downloadable: data.downloadable,
+      }
+    : null
+  const draw = (c: CanvasRenderingContext2D, t: number) =>
+    setAssets && setData
+      ? drawSetFrame(c, t, setData, setAssets, W, H, durationSec)
+      : drawReelFrame(c, t, data, assets, durationSec)
 
   const canvas = document.createElement('canvas')
   canvas.width = W
@@ -1201,7 +1256,7 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
     encoder.configure(cfg)
     for (let i = 0; i < total; i++) {
       if (failure) throw failure
-      drawReelFrame(ctx, i / fps, data, assets, durationSec)
+      draw(ctx, i / fps)
       const frame = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / fps), duration: Math.round(1e6 / fps) })
       encoder.encode(frame, { keyFrame: i % (fps * 2) === 0 })
       frame.close()
@@ -1235,7 +1290,7 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
     const tick = () => {
       const t = (performance.now() - t0) / 1000
       if (t >= durationSec) return resolve()
-      drawReelFrame(ctx, t, data, assets, durationSec)
+      draw(ctx, t)
       opts.onProgress?.(t / durationSec)
       requestAnimationFrame(tick)
     }

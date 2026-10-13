@@ -38,6 +38,18 @@ Instagram y Facebook **no aceptan texto precargado** al compartir un vídeo (ign
 
 Fecha futura → «sale el…». Sin fecha completa → año. Los datos (`label`, `musicKey`, `year`) vienen de `/api/og/story?format=json`. En el móvil se copia en el segundo toque (gesto del usuario, necesario en iOS); también va como `text` en el menú de compartir para apps que sí lo usan (WhatsApp, Telegram).
 
+## Sesiones de festival (/mixes/<slug>)
+
+En la página de cada sesión, junto a «IG» (Story), el admin tiene también **R** (reel vertical) y **F** (vídeo horizontal para Facebook), con el mismo flujo que los temas (`ShareButtons.tsx`) pero **diseño propio «pase de festival»** (`src/lib/set-reel-design.ts`, `variant: 'set'`), para que en el muro no se confundan con los reels de temas: fondo = cartel del evento difuminado y **teñido con el color del festival** (sacado del cartel con `dominantColor`, cada festival tiene su tono), «LIVE SET» gigante, foto de la sesión delante del **cartel del evento** ladeado (si falta uno, sale el otro), sello «LIVE ON <fecha>», **entrada troquelada** (festival, edición, fecha, ciudad, DJs, código de barras, FREE DOWNLOAD) y onda de audio con cabezal. El cartel llega sin recortar (`loadPosterDataUrl`, `events.image_url`). Datos: `/api/og/story?play=mix:<slug>&format=json` (`mixStoryResponse`): carátula de SoundCloud o retrato del DJ, título = parte de los DJs (o el evento si el título solo repite los DJs), DJs en la línea de artistas, festival en la cinta, ciudad en la línea de datos y **sello «LIVE ON» con la fecha del evento** (`stampLabel`). Sin BPM → el sello circular muestra «OB».
+
+Texto del post (`buildMixVideoCaption`, se copia solo):
+
+> 🔥 Compartimos la sesión de Godino vs Paket ft. Dohiser MC en Olibass Open Air (Torredonjimeno), grabada en directo el 19 de septiembre de 2026.
+>
+> ⬇️ Descárgala gratis y completa en Optimal Breaks: enlace en la bio.   *(F: la URL de la sesión; sin descarga: «Busca la sesión…»)*
+>
+> #breakbeat #breaks #djset #godino #paket #dohiser #olibassmusicfestival #optimalbreaks
+
 ## Diseño (estética fanzine)
 
 Mismos colores que la Story IG (`#e8dcc8` papel, `#1a1a1a` tinta, `#d62828` rojo, `#f4c430` amarillo) y fuentes del sitio (**Unbounded 900** y **Courier Prime**). Todo el texto del vídeo está **siempre en inglés** (público internacional), sea cual sea el idioma de la web.

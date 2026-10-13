@@ -2,7 +2,6 @@
   "week_date": "2026-10-12",
   "picks": [
     {
-      "sort_order": 1,
       "title": "Caught Up",
       "mix_name": "Original Mix",
       "artists": [
@@ -16,14 +15,15 @@
       "link_label": "",
       "artwork_url": "https://wfekymvossnjdncbvtua.supabase.co/storage/v1/object/public/media/music/kritycal-system-caught-up.webp",
       "sample_url": "https://geo-samples.beatport.com/track/5af5cec2-8f2e-4094-a873-16f3c3dd0a71.LOFI.mp3",
-      "full_audio_url": "/api/audio/kritycal-system-caught-up.mp3",
-      "spotify_url": "https://open.spotify.com/track/3rRPKMZUMMXqyje2mmMqmO",
       "bpm": 135,
       "music_key": "D Major",
       "release_year": 2026,
       "release_date": "2026-10-12",
       "note_en": "Exclusive full track — Kritycal System shares this premiere with Optimal Breaks. Hit play and enjoy the full audio, right here.",
-      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo."
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede este estreno en primera escucha completa. Dale al play y disfruta el tema entero, aquí mismo.",
+      "sort_order": 1,
+      "full_audio_url": "/api/audio/kritycal-system-caught-up.mp3",
+      "spotify_url": "https://open.spotify.com/track/3rRPKMZUMMXqyje2mmMqmO"
     },
     {
       "title": "How Could I",
@@ -167,7 +167,9 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 7
+      "sort_order": 7,
+      "spotify_url": "https://open.spotify.com/track/72Ed08YXBbopsiPnWsZF05",
+      "tidal_url": "https://tidal.com/browse/track/545715363"
     },
     {
       "title": "Rumble",
@@ -258,7 +260,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 11
+      "sort_order": 11,
+      "spotify_url": "https://open.spotify.com/track/05PqOfPP5oLtzWh2b4PZUJ"
     },
     {
       "title": "La Favela",
@@ -305,7 +308,9 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 13
+      "sort_order": 13,
+      "spotify_url": "https://open.spotify.com/track/4bsOtmAjW1RDGo6sU1PZ83",
+      "tidal_url": "https://tidal.com/browse/track/266955655"
     },
     {
       "title": "Coliseum",
@@ -327,7 +332,9 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 14
+      "sort_order": 14,
+      "spotify_url": "https://open.spotify.com/track/62mo6nG3eWBu5VglsCmU0z",
+      "tidal_url": "https://tidal.com/browse/track/567304562"
     },
     {
       "title": "Rampage",
@@ -349,7 +356,9 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 15
+      "sort_order": 15,
+      "spotify_url": "https://open.spotify.com/track/3OPMevHga9tO96nlbmcpbp",
+      "tidal_url": "https://tidal.com/browse/track/567304561"
     },
     {
       "title": "Passion",
@@ -374,7 +383,9 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 16
+      "sort_order": 16,
+      "spotify_url": "https://open.spotify.com/track/3kQCytaL9ebTJRfuPxRdLT",
+      "tidal_url": "https://tidal.com/browse/track/543388092"
     },
     {
       "title": "Passion",
@@ -402,7 +413,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 17
+      "sort_order": 17,
+      "tidal_url": "https://tidal.com/browse/track/527954139"
     },
     {
       "title": "Live It Up",
@@ -427,7 +439,9 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 18
+      "sort_order": 18,
+      "spotify_url": "https://open.spotify.com/track/1ogFSIQWDV2ppAQVKCxgFB",
+      "tidal_url": "https://tidal.com/browse/track/497593691"
     },
     {
       "title": "Lights in the sky",
@@ -499,7 +513,9 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 21
+      "sort_order": 21,
+      "spotify_url": "https://open.spotify.com/track/1HFzu2RQGqNXkhbYLc2N4L",
+      "tidal_url": "https://tidal.com/browse/track/557101639"
     },
     {
       "title": "Passion",
@@ -524,7 +540,9 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 22
+      "sort_order": 22,
+      "spotify_url": "https://open.spotify.com/track/1r7ecpFVydHNy1xtr8bwOr",
+      "tidal_url": "https://tidal.com/browse/track/527954137"
     },
     {
       "title": "Passion",
@@ -602,7 +620,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 25
+      "sort_order": 25,
+      "tidal_url": "https://tidal.com/browse/track/529358974"
     },
     {
       "title": "Passion",
@@ -627,7 +646,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 26
+      "sort_order": 26,
+      "tidal_url": "https://tidal.com/browse/track/535956641"
     },
     {
       "title": "Passion",
@@ -677,7 +697,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 28
+      "sort_order": 28,
+      "tidal_url": "https://tidal.com/browse/track/543390748"
     },
     {
       "title": "Passion",
@@ -702,7 +723,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 29
+      "sort_order": 29,
+      "tidal_url": "https://tidal.com/browse/track/548268027"
     },
     {
       "title": "Passion",
@@ -727,7 +749,8 @@
       "release_date": "2026-10-16",
       "note_en": "",
       "note_es": "",
-      "sort_order": 30
+      "sort_order": 30,
+      "spotify_url": "https://open.spotify.com/track/5cudKkKoZbeIqPih2u7oih"
     },
     {
       "title": "Passion",
@@ -774,7 +797,9 @@
       "release_date": "2026-10-12",
       "note_en": "",
       "note_es": "",
-      "sort_order": 32
+      "sort_order": 32,
+      "spotify_url": "https://open.spotify.com/track/0S0oN1ipqyFPYLx5Ep9nur",
+      "tidal_url": "https://tidal.com/browse/track/566835714"
     },
     {
       "title": "Money Low",
@@ -1116,9 +1141,15 @@
       "title": "Muffled Mayhem",
       "mix_name": "Paket Remix",
       "artists": [
-        { "name": "Dj Quest" },
-        { "name": "Yoof" },
-        { "name": "Paket" }
+        {
+          "name": "Dj Quest"
+        },
+        {
+          "name": "Yoof"
+        },
+        {
+          "name": "Paket"
+        }
       ],
       "label": "Cyberfunk Recordings",
       "platform": "soundcloud",
@@ -1126,18 +1157,26 @@
       "link_label": "",
       "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
       "sample_url": "https://api.soundcloud.com/tracks/2417413509",
+      "bpm": null,
+      "music_key": "",
       "release_year": 2026,
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
-      "sort_order": 48
+      "sort_order": 48,
+      "spotify_url": "https://open.spotify.com/track/3wMjs8p0dmQZosInUSpruJ",
+      "tidal_url": "https://tidal.com/browse/track/13299155"
     },
     {
       "title": "Back To The Old School",
       "mix_name": "Code Breakerz Remix",
       "artists": [
-        { "name": "Dj Quest" },
-        { "name": "Code Breakerz" }
+        {
+          "name": "Dj Quest"
+        },
+        {
+          "name": "Code Breakerz"
+        }
       ],
       "label": "Cyberfunk Recordings",
       "platform": "soundcloud",
@@ -1145,6 +1184,8 @@
       "link_label": "",
       "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
       "sample_url": "https://api.soundcloud.com/tracks/2417412510",
+      "bpm": null,
+      "music_key": "",
       "release_year": 2026,
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
@@ -1155,8 +1196,12 @@
       "title": "Back To The Old School",
       "mix_name": "Groovebox Remix",
       "artists": [
-        { "name": "Dj Quest" },
-        { "name": "Groovebox" }
+        {
+          "name": "Dj Quest"
+        },
+        {
+          "name": "Groovebox"
+        }
       ],
       "label": "Cyberfunk Recordings",
       "platform": "soundcloud",
@@ -1164,11 +1209,179 @@
       "link_label": "",
       "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
       "sample_url": "https://api.soundcloud.com/tracks/2417409870",
+      "bpm": null,
+      "music_key": "",
       "release_year": 2026,
       "release_date": "2026-10-12",
       "note_en": "Single shared on SoundCloud — not a DJ set.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ.",
       "sort_order": 50
+    },
+    {
+      "title": "Braindead",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Basstyler"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/braindead/30954939",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/691b7a20-d51a-485b-9b72-b2397650383c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/be692b97-930d-4a24-a770-55f2f3f82c7f.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "We Found Refuge",
+      "mix_name": "Breaks Mix",
+      "artists": [
+        {
+          "name": "DiCristino"
+        }
+      ],
+      "label": "Bklyn Sessions Trax",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/we-found-refuge/29865389",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/96066a4c-4eba-48ac-91d9-510b32bc0108.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/107d4035-65fb-4911-a661-972a12f40ebb.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52,
+      "spotify_url": "https://open.spotify.com/track/6y6DQReBGNrXTKw7OANaqG",
+      "tidal_url": "https://tidal.com/browse/track/545199071"
+    },
+    {
+      "title": "Lord of Lords",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "SulivanZ"
+        }
+      ],
+      "label": "Shadow Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lord-of-lords/30922687",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6eb6334e-92bb-4fdd-9c41-ea7656fc59ad.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b60b3d6c-4fb1-4ca4-8fc7-9f0b27396631.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "FIYAH",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fiyah/30966721",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f6cc3148-df5d-438f-a340-f396cbfa439a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4797c8fc-9c47-4072-b1ab-6d967ca9a69d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54,
+      "spotify_url": "https://open.spotify.com/track/7lWtyOTehN7I9YcmqpZcKD",
+      "tidal_url": "https://tidal.com/browse/track/505640821"
+    },
+    {
+      "title": "FIYAH",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fiyah/30966720",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f6cc3148-df5d-438f-a340-f396cbfa439a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5277239a-7d7b-4448-880a-41fb561704e1.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55,
+      "spotify_url": "https://open.spotify.com/track/1kpJuIT2dusZVfC0zsnWVa",
+      "tidal_url": "https://tidal.com/browse/track/505640821"
+    },
+    {
+      "title": "Gangsters",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Johnny Pluse"
+        }
+      ],
+      "label": "Bulabeats Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gangsters/30492810",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/adeeafaf-00c6-4675-b7bd-323747af7b47.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/66e47255-613d-4054-9418-137f2cf8946a.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 56,
+      "spotify_url": "https://open.spotify.com/track/6Y9uBWCbBV4bC5ZcWu7IwW",
+      "tidal_url": "https://tidal.com/browse/track/566835297"
+    },
+    {
+      "title": "Cybanet",
+      "mix_name": "Destroyers Remix",
+      "artists": [
+        {
+          "name": "Dj Quest"
+        },
+        {
+          "name": "Ben Coupland"
+        },
+        {
+          "name": "Destroyers"
+        }
+      ],
+      "label": "Cyberfunk Recordings",
+      "platform": "soundcloud",
+      "link_url": "https://soundcloud.com/cyberfunkrecordings/dj-quest-and-ben-coupland",
+      "link_label": "",
+      "artwork_url": "https://i1.sndcdn.com/artworks-L8ieYhw3tT382gak-FCzUow-t500x500.jpg",
+      "sample_url": "https://api.soundcloud.com/tracks/2417413191",
+      "release_year": 2026,
+      "release_date": "2026-10-12",
+      "note_en": "Single shared on SoundCloud — not a DJ set. From CYBERFUNK 050.",
+      "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ. Del CYBERFUNK 050.",
+      "sort_order": 57
     }
   ]
 }

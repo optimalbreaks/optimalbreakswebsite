@@ -1109,7 +1109,7 @@ export type YouTubeTrackRoute =
       place: string
     }
   | { fact: YouTubeLinkFact; kind: 'queued'; label: string }
-  | { fact: YouTubeLinkFact; kind: 'vinyl'; beatport: 'miss' | 'unreachable' }
+  | { fact: YouTubeLinkFact; kind: 'vinyl'; beatport: 'miss' | 'unreachable' | 'pre2012' }
 
 function ilikeContains(value: string): string {
   const escaped = value.replace(/[\\%_]/g, (ch) => `\\${ch}`)
@@ -1241,6 +1241,13 @@ function youtubeSearchQueries(fact: { title: string; mixName: string; artist: st
   return out.filter((q) => q.length >= 3).slice(0, 2)
 }
 
+/** Antes de 2012 el archivo es el YouTube entero, aunque Beatport tenga sample. */
+function youtubeWinsOverStore(releaseDate: string | null | undefined, year?: number | null): boolean {
+  if (releaseDate && releaseDate < '2012-01-01') return true
+  if (year != null && Number.isFinite(year) && year < 2012) return true
+  return false
+}
+
 function beatportPlace(releaseDate: string | null): string {
   if (releaseDate && releaseDate >= '2026-01-01') {
     const week = chartEditionWeekMondayFromPublish(releaseDate)
@@ -1250,7 +1257,11 @@ function beatportPlace(releaseDate: string | null): string {
   return 'New Releases'
 }
 
-type CatalogHit = { where: 'new_releases' | 'archive_store' | 'archive_youtube'; label: string }
+type CatalogHit = {
+  where: 'new_releases' | 'archive_store' | 'archive_youtube'
+  label: string
+  releaseDate?: string | null
+}
 
 async function findCatalogTrack(fact: {
   title: string
@@ -1310,6 +1321,7 @@ async function findCatalogTrack(fact: {
     return {
       where,
       label: `${songLabel(row.title, row.artists)}${year ? `, ${year}` : ''}`,
+      releaseDate: release || (row.release_year ? `${row.release_year}-01-01` : null),
     }
   }
   for (const row of vinylRes.data || []) {
@@ -1411,10 +1423,10 @@ async function resolveImportQueue(fact: {
 
 /**
  * Un YouTube de tema no se archiva a ciegas.
- * 1. ¿Ya está en New Releases o en el archivo?
+ * 1. ¿Ya está en New Releases o en el archivo? Si la ficha de tienda es anterior a 2012, YouTube gana.
  * 2. ¿Está pendiente en la cola de lanzamientos del día? Se le dice que ya está. Lo cura el editor, no el colaborador.
- * 3. Si no, ¿está en Beatport (mismo título, versión y artista)?
- * 4. Solo entonces se prepara como vinilo de YouTube.
+ * 3. Si no, ¿está en Beatport (mismo título, versión y artista)? Desde 2012, esa es la ficha.
+ * 4. Antes de 2012, o si no hay tienda, se prepara como vinilo de YouTube.
  * Una sesión de DJ no entra en esta cadena.
  */
 export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouTubeTrackRoute[]> {
@@ -1427,6 +1439,10 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
     }
     try {
       const hit = await findCatalogTrack(fact)
+      if (hit?.where === 'archive_store' && youtubeWinsOverStore(hit.releaseDate)) {
+        routes.push({ fact, kind: 'vinyl', beatport: 'pre2012' })
+        continue
+      }
       if (hit) {
         routes.push({ fact, kind: 'already', where: hit.where, label: hit.label })
         continue
@@ -1481,7 +1497,9 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
         routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
         continue
       }
-      if (matched) {
+      if (matched && youtubeWinsOverStore(matched.release_date)) {
+        routes.push({ fact, kind: 'vinyl', beatport: 'pre2012' })
+      } else if (matched) {
         routes.push({
           fact,
           kind: 'beatport',
@@ -1661,6 +1679,9 @@ export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
       return `• ${who}: no he podido abrir Beatport. No lo archivo en YouTube hasta poder mirar la tienda.`
     }
+    if (route.kind === 'vinyl' && route.beatport === 'pre2012') {
+      return `• ${who}: salió antes de 2012. Lo preparo en YouTube, aunque Beatport tenga sample.`
+    }
     return `• ${who}: no está en el catálogo ni en Beatport. Lo preparo como archivo de YouTube.`
   })
   return `He mirado el catálogo y los lanzamientos de hoy:\n${lines.join('\n')}`
@@ -1677,11 +1698,14 @@ export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
       return `- ${id}: Beatport no respondió. No llames a stage_vinyl_picks ni a stage_new_releases.`
     }
+    if (route.kind === 'vinyl' && route.beatport === 'pre2012') {
+      return `- ${id}: anterior a 2012 → stage_vinyl_picks. No llames a stage_new_releases.`
+    }
     return `- ${id}: sin ficha en Beatport → stage_vinyl_picks`
   })
   return `
 ## Decisión de cada YouTube (el servidor ya miró catálogo y Beatport)
-Sigue esta decisión. No archives en YouTube un tema que ya está o que tiene ficha en Beatport.
+Sigue esta decisión. No archives en YouTube un tema que ya está o que tiene ficha en Beatport, salvo que haya salido antes de 2012: ahí YouTube gana.
 
 ${lines.join('\n')}
 `
@@ -2296,6 +2320,39 @@ async function importNewReleasesAction(
   return { type: 'new_release', ok: false, summary: already, detail: json }
 }
 
+/** El YouTube anterior a 2012 sustituye a la fila de tienda del mismo corte. */
+async function dropPre2012StoreDuplicate(
+  sb: ReturnType<typeof createServiceSupabase>,
+  title: string,
+  mixName: string,
+  artists: { name: string }[],
+): Promise<number> {
+  const keys = new Set(storeIdentityKeys(title, mixName, artists))
+  if (!keys.size || title.trim().length < 2) return 0
+  const { data, error } = await sb
+    .from('chart_featured_tracks')
+    .select('id, title, mix_name, artists, release_date, release_year')
+    .ilike('title', ilikeContains(title.trim()))
+    .limit(40)
+  if (error || !data?.length) return 0
+  const ids = data
+    .filter((row) => {
+      const release = row.release_date || (row.release_year ? `${row.release_year}-01-01` : null)
+      if (!youtubeWinsOverStore(release)) return false
+      const hitKeys = storeIdentityKeys(
+        row.title,
+        row.mix_name || '',
+        Array.isArray(row.artists) ? row.artists : [],
+      )
+      return hitKeys.some((key) => keys.has(key))
+    })
+    .map((row) => row.id as string)
+  if (!ids.length) return 0
+  const { error: delErr } = await sb.from('chart_featured_tracks').delete().in('id', ids)
+  if (delErr) return 0
+  return ids.length
+}
+
 async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>): Promise<ActionResult> {
   const weekDate = String(action.week_date || '').trim()
   if (!/^\d{4}-\d{2}-\d{2}$/.test(weekDate)) {
@@ -2355,6 +2412,7 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
 
   let inserted = 0
   let updated = 0
+  let droppedStore = 0
   const errors: string[] = []
 
   for (const raw of items) {
@@ -2410,25 +2468,33 @@ async function upsertVinylAction(action: Extract<ChatAction, { type: 'vinyl' }>)
       note_es: String(raw.note_es || '').trim(),
     }
 
+    let wrote = false
     if (liveId) {
       const { error } = await sb.from('chart_vinyl_tracks').update(row).eq('id', liveId)
       if (error) errors.push(`update ${title}: ${error.message}`)
-      else updated++
+      else {
+        updated++
+        wrote = true
+      }
     } else {
       const { error } = await sb.from('chart_vinyl_tracks').insert(row)
       if (error) errors.push(`insert ${title}: ${error.message}`)
       else {
         inserted++
+        wrote = true
         existingByKey.set(k, 'new')
       }
+    }
+    if (wrote && youtubeWinsOverStore(null, row.year)) {
+      droppedStore += await dropPre2012StoreDuplicate(sb, title, mix_name, artists)
     }
   }
 
   return {
     type: 'vinyl',
     ok: errors.length === 0,
-    summary: `Vinyl ${weekDate}: ${inserted} nuevos, ${updated} actualizados${errors.length ? ` · errores: ${errors.join('; ')}` : ''}`,
-    detail: { week_date: weekDate, inserted, updated, errors },
+    summary: `Vinyl ${weekDate}: ${inserted} nuevos, ${updated} actualizados${droppedStore ? `, ${droppedStore} de tienda quitados` : ''}${errors.length ? ` · errores: ${errors.join('; ')}` : ''}`,
+    detail: { week_date: weekDate, inserted, updated, droppedStore, errors },
   }
 }
 
