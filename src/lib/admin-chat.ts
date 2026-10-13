@@ -495,6 +495,8 @@ export type YouTubeLinkFact = {
   mixName: string
   artist: string
   channel: string
+  /** Sello, cuando el canal de YouTube no es el artista del título. */
+  label?: string
   artworkUrl: string
   year: number | null
   /** Segundos del vídeo, si la ficha de YouTube los trae. */
@@ -515,12 +517,17 @@ const YT_SESSION_RE =
 const YT_MIX_PAREN_RE =
   /\b(mix|remix|vip|dub|edit|version|instrumental|original|rework|bootleg|flip|re-edit)\b/i
 
+/** Código de catálogo al final del título de YouTube: «NOIRSPACE [RAR483]». */
+function stripCatalogCode(title: string): string {
+  return title.replace(/\s*\[[A-Za-z]*\d+[A-Za-z0-9]*\]\s*$/i, '').trim()
+}
+
 /** Un paréntesis que no es versión («Samay Records») no forma parte del título. */
 function withoutLabelParen(title: string): string {
-  const m = title.trim().match(/^(.*?)\s*\(([^)]+)\)\s*$/)
-  if (!m?.[1]) return title.trim()
+  const m = stripCatalogCode(title).match(/^(.*?)\s*\(([^)]+)\)\s*$/)
+  if (!m?.[1]) return stripCatalogCode(title)
   const inner = m[2].trim()
-  if (YT_MIX_PAREN_RE.test(inner) && !YT_SESSION_RE.test(inner)) return title.trim()
+  if (YT_MIX_PAREN_RE.test(inner) && !YT_SESSION_RE.test(inner)) return stripCatalogCode(title)
   return m[1].trim()
 }
 
@@ -622,8 +629,23 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
       const rawTitle = String(meta.title || '').trim()
       const channel = String(meta.author_name || '').trim()
       if (!rawTitle && !channel) return null
-      const { title, mixName } = splitYouTubeTitle(rawTitle || channel)
-      const { artist, topic } = artistFromYouTubeChannel(channel)
+      const { artist: channelArtist, topic } = artistFromYouTubeChannel(channel)
+      const headed = rawTitle.match(/^(.{2,60}?)\s+[-–—]\s+(.+)$/)
+      let title = ''
+      let mixName = ''
+      let artist = channelArtist || channel
+      let label = ''
+      if (headed && !topic) {
+        artist = headed[1].trim()
+        const song = splitYouTubeTitle(stripCatalogCode(headed[2]))
+        title = song.title
+        mixName = song.mixName
+        if (channel && channel.toLowerCase() !== artist.toLowerCase()) label = channel
+      } else {
+        const song = splitYouTubeTitle(stripCatalogCode(rawTitle || channel))
+        title = song.title
+        mixName = song.mixName
+      }
       const sessionByTitle = YT_SESSION_RE.test(`${rawTitle} ${channel}`)
       const kind: YouTubeLinkFact['kind'] =
         topic || isSongLength(watch.durationSeconds)
@@ -639,6 +661,7 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
         mixName,
         artist: artist || channel,
         channel,
+        label,
         artworkUrl: String(meta.thumbnail_url || '').trim() || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
         year: watch.year,
         durationSeconds: watch.durationSeconds,
@@ -1208,8 +1231,11 @@ function youtubeIdentityKeys(fact: {
 function youtubeSearchQueries(fact: { title: string; mixName: string; artist: string; rawTitle: string }): string[] {
   const out: string[] = []
   const dash = fact.rawTitle.match(/^(.+?)\s+[-–—|]\s+(.+)$/)
-  if (dash) out.push(`${dash[1]} ${splitYouTubeTitle(dash[2]).title}`.replace(/\s+/g, ' ').trim())
-  const main = `${fact.artist} ${fact.title}`.replace(/\s+/g, ' ').trim()
+  if (dash) {
+    const song = stripCatalogCode(splitYouTubeTitle(dash[2]).title)
+    out.push(`${dash[1]} ${song}`.replace(/\s+/g, ' ').trim())
+  }
+  const main = `${fact.artist} ${stripCatalogCode(fact.title)}`.replace(/\s+/g, ' ').trim()
   if (main && !out.some((q) => q.toLowerCase() === main.toLowerCase())) out.push(main)
   return out.filter((q) => q.length >= 3).slice(0, 2)
 }
@@ -1254,7 +1280,10 @@ async function findCatalogTrack(fact: {
   if (!keys.size && !fact.title.trim()) return null
 
   const titleNeedle = withoutLabelParen(fact.title || fact.rawTitle)
-  const needle = titleNeedle.length >= 2 ? titleNeedle : fact.title
+  const dash = (fact.rawTitle || '').match(/^(.{2,60}?)\s+[-–—|]\s+(.+)$/)
+  const side = dash ? withoutLabelParen(splitYouTubeTitle(dash[2]).title) : ''
+  const needle =
+    side.length >= 3 && side.length < titleNeedle.length ? side : titleNeedle.length >= 2 ? titleNeedle : fact.title
   if (needle.trim().length < 2) return null
   const credits = labelCredits(fact)
   const incomingCore = songCore(fact.title, fact.mixName)
