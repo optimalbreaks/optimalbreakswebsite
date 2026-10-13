@@ -72,6 +72,9 @@ function normalizeMix(m) {
     image_url:
       typeof m.image_url === 'string' && m.image_url.startsWith('https://') ? m.image_url.trim() : null,
   }
+  if (typeof m.download_url === 'string' && m.download_url.startsWith('https://')) {
+    row.download_url = m.download_url.trim()
+  }
   if (typeof m.published_at === 'string' && m.published_at.trim()) {
     row.published_at = m.published_at.trim()
   }

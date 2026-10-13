@@ -24,8 +24,8 @@ export function formatMixDateLine(
       ? 'SoundCloud'
       : m.platform === 'youtube'
         ? 'YouTube'
-        : m.platform
-          ? m.platform.charAt(0).toUpperCase() + m.platform.slice(1)
+        : m.platform === 'mixcloud'
+          ? 'Mixcloud'
           : null
   const published = m.published_at
   const datePart = published

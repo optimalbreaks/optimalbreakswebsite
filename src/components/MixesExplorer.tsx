@@ -747,7 +747,7 @@ export function MixSessionPlayer({ mix, lang }: { mix: Mix; lang: string }) {
       ) : (
         <div className="relative">
           <CardThumbnail src={mix.image_url} alt={mix.title} aspectClass="aspect-video" />
-          <PlayLink mix={mix} />
+          {getMixTrack(mix) || mix.embed_url ? <PlayLink mix={mix} /> : null}
         </div>
       )}
     </div>
