@@ -1255,8 +1255,7 @@ function applyYouTubeRoutes(
         (r) =>
           r.kind === 'already' ||
           r.kind === 'beatport' ||
-          r.kind === 'included' ||
-          r.kind === 'held' ||
+          r.kind === 'queued' ||
           r.kind === 'session' ||
           (r.kind === 'vinyl' && r.beatport === 'unreachable'),
       )
@@ -1462,7 +1461,6 @@ export async function runAdminChatAgent(opts: {
   attachedPublicUrls: string[]
   originRequest: Request
   scope?: EditorScope
-  userId?: string
 }): Promise<AgentTurnResult> {
   const openaiKey = process.env.OPENAI_API_KEY?.trim()
   if (!openaiKey) throw new Error('OPENAI_API_KEY no configurada')
@@ -1518,9 +1516,9 @@ export async function runAdminChatAgent(opts: {
     system += `\nImágenes de este turno (Storage):\n${opts.attachedPublicUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
   }
   const youtubeFacts = await resolveYouTubeLinks(opts.message)
-  const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts, opts.userId) : []
+  const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
   const soundCloudFacts = await resolveSoundCloudLinks(opts.message)
-  const soundCloudRoutes = soundCloudFacts.length ? await routeSoundCloudTracks(soundCloudFacts, opts.userId) : []
+  const soundCloudRoutes = soundCloudFacts.length ? await routeSoundCloudTracks(soundCloudFacts) : []
   const vinylWeek = madridIsoWeekMonday()
   if (youtubeFacts.length) {
     system += youtubeFactsPrompt(youtubeFacts, vinylWeek)

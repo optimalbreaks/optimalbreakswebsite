@@ -1099,7 +1099,7 @@ All track-listing surfaces (New Releases, Archive Picks, Beatport Top 10 on arti
 Two doors. Nothing else enters the public catalogue.
 
 1. **Profile Top 10.** Refreshing an artist or a label stores Beatport’s sales Top 10 (`artists.beatport_top_tracks` / `labels.beatport_top_tracks`). It is visible only on that profile. A “+” lands in My Tracks as `beatport_top`: the save stores the URL and a snapshot. It does not create a chart row.
-2. **Links the team passes in.** Beatport or Bandcamp go to `chart_featured_tracks`. A YouTube or SoundCloud link of a **song** is checked against the catalogue and the day’s release queue (`chart_import_queue`) first. A pending Imports row is included from that row. Otherwise it is searched on Beatport. If the store has it, that listing is the row. YouTube (`chart_vinyl_tracks`) or SoundCloud (`platform: soundcloud`) is used only when Beatport does not have it. A DJ set still goes to `/mixes`.
+2. **Links the team passes in.** Beatport or Bandcamp go to `chart_featured_tracks`. A YouTube or SoundCloud link of a **song** is checked against the catalogue and the day’s release queue (`chart_import_queue`) first. A row still pending the editor’s validation gets «No te preocupes, que este tema ya está» and is not filed by the collaborator. Otherwise it is searched on Beatport. If the store has it, that listing is the row. YouTube (`chart_vinyl_tracks`) or SoundCloud (`platform: soundcloud`) is used only when Beatport does not have it. A DJ set still goes to `/mixes`.
 
 The release date decides where `/charts` shows the song. The day the link was pasted does not.
 
