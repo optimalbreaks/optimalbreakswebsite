@@ -91,8 +91,8 @@ export function madridWeekday(): number {
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(name)
 }
 
-/** Las fichas del Top 100 se leen los viernes (día fuerte de lanzamientos). */
-export const TOP100_ARTISTS_WEEKDAY = 5
+/** Las fichas del Top 100 se leen los sábados: el viernes Cloudflare bloquea más y el sábado ya recoge los lanzamientos del viernes. */
+export const TOP100_ARTISTS_WEEKDAY = 6
 
 export function madridHour(): number {
   const h = new Intl.DateTimeFormat('en-GB', {
@@ -554,7 +554,7 @@ export async function runBeatportGenreImport(opts: {
    */
   budgetMs?: number
   /**
-   * Leer las ~100 fichas del Top 100. Por defecto solo los viernes: cada ficha
+   * Leer las ~100 fichas del Top 100. Por defecto solo los sábados: cada ficha
    * es una página más para Cloudflare y el 14 oct 2026 nos cerró la puerta.
    * El listado de Breaks se lee todos los días.
    */
@@ -704,7 +704,7 @@ export async function runBeatportGenreImport(opts: {
         }
         await persistFresh('Breaks')
       }
-      if (artistFrom && !readArtists) console.log('Fichas del Top 100: hoy no toca (solo los viernes).')
+      if (artistFrom && !readArtists) console.log('Fichas del Top 100: hoy no toca (solo los sábados).')
       if (artistFrom && readArtists && !outOfTime()) {
         const followed = await followedBeatportArtists(sb, rankKeys)
         console.log(`Top 100 con ficha Beatport: ${followed.length}`)

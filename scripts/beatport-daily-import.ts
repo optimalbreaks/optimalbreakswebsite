@@ -31,7 +31,7 @@ for (const file of ['.env', '.env.local']) {
 async function main() {
   const { hasOkImportRunToday, madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
   const force = process.argv.includes('--force')
-  // Las fichas del Top 100 van los viernes. `--artists` las lee hoy igual.
+  // Las fichas del Top 100 van los sábados. `--artists` las lee hoy igual.
   const artists = process.argv.includes('--artists') ? true : undefined
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]

@@ -26,7 +26,7 @@ on:
         type: boolean
         default: true
       artists:
-        description: 'Leer también las fichas del Top 100 (si no, solo los viernes)'
+        description: 'Leer también las fichas del Top 100 (si no, solo los sábados)'
         type: boolean
         default: false
 
