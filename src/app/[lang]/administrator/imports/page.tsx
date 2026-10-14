@@ -67,6 +67,18 @@ function names(artists: Artist[] | null | undefined) {
 
 const BEATPORT_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?beatport\.com$/i
 const LISTING_PER_PAGE = 150
+const ARTIST_MAX_PAGES = 3
+
+function artistSlugFromUrl(url: string): string {
+  const match = url.match(/\/artist\/([^/]+)\/\d+/i)
+  return match?.[1] || 'artista'
+}
+
+function withListingPage(url: string, page: number): string {
+  const next = new URL(url)
+  next.searchParams.set('page', String(page))
+  return next.toString()
+}
 
 function pageOfListing(url: string): number {
   try {
@@ -86,6 +98,7 @@ type JobResult = {
   auto_approved?: number
   skipped_known?: number
   listing_total?: number
+  empty?: boolean
 }
 type Job = {
   resumeUrl?: string
@@ -111,14 +124,14 @@ function clock(at: string) {
 
 /**
  * Botón de favoritos. Corre en la pestaña de Beatport del editor (que ya pasó
- * la verificación de Cloudflare), coge la lista de temas que la página trae
- * cargada y la manda a esta pantalla: por mensaje a la pestaña que abre y,
- * por si el navegador corta ese hilo, también al portapapeles.
+ * la verificación de Cloudflare). Primero manda el listado de Breaks. Luego,
+ * cuando esta pantalla se lo pide, baja cada ficha del Top 100 con la misma sesión.
+ * También copia la primera página al portapapeles por si el navegador corta el hilo.
  */
 function beatportBookmarklet(origin: string, lang: string): string {
-  // Las páginas 2, 3… las pide esta misma pestaña (la sesión del editor), una a una,
-  // con pausa, y solo cuando Optimal Breaks dice que la anterior trajo algo nuevo.
-  const body = String.raw`(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var slim=function(nd,url){var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&x.queryKey[0]==='tracks'});return q.length?JSON.stringify({v:1,url:url,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}}):null};var data;try{data=slim(JSON.parse(el.textContent),location.href)}catch(e){alert('No se ha podido leer la página.');return}if(!data){alert('En esta página no hay lista de temas.');return}var page=Number(new URL(location.href).searchParams.get('page'))||1;var pageUrl=function(n){var u=new URL(location.href);u.searchParams.set('page',String(n));return u.toString()};var send=function(w,m){try{w.postMessage(m,O)}catch(e){}};if(window.__obListen)window.removeEventListener('message',window.__obListen);window.__obListen=function(e){if(e.origin!==O||!e.data)return;var t=e.data.type,w=e.source;if(t==='ob-beatport-ready'){send(w,{type:'ob-beatport-data',payload:data,page:page})}else if(t==='ob-beatport-next'){var n=Number(e.data.page)||0;if(!n)return;setTimeout(function(){var u=pageUrl(n);fetch(u,{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),u):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:n})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:n,url:u})})},2000)}};window.addEventListener('message',window.__obListen);var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w)alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.')};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
+  // Listado: páginas siguientes con 2 s. Fichas del Top 100: la URL que manda
+  // esta pantalla, con 4 s, hasta 3 páginas por artista.
+  const body = String.raw`(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var slim=function(nd,url){var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&typeof x.queryKey[0]==='string'&&x.queryKey[0].indexOf('tracks')>=0});return q.length?JSON.stringify({v:1,url:url,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}}):null};var data;try{data=slim(JSON.parse(el.textContent),location.href)}catch(e){alert('No se ha podido leer la página.');return}if(!data){alert('En esta página no hay lista de temas.');return}var page=Number(new URL(location.href).searchParams.get('page'))||1;var pageUrl=function(n){var u=new URL(location.href);u.searchParams.set('page',String(n));return u.toString()};var send=function(w,m){try{w.postMessage(m,O)}catch(e){}};if(window.__obListen)window.removeEventListener('message',window.__obListen);window.__obListen=function(e){if(e.origin!==O||!e.data)return;var t=e.data.type,w=e.source;if(t==='ob-beatport-ready'){send(w,{type:'ob-beatport-data',payload:data,page:page})}else if(t==='ob-beatport-next'){var n=Number(e.data.page)||0;if(!n)return;setTimeout(function(){var u=pageUrl(n);fetch(u,{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),u):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:n})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:n,url:u})})},2000)}else if(t==='ob-beatport-url'){var raw=String(e.data.url||'');var nu;try{nu=new URL(raw)}catch(err){return}if(nu.hostname.indexOf('beatport.com')<0)return;var pg=Number(e.data.page)||1;setTimeout(function(){fetch(nu.toString(),{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),nu.toString()):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:pg})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:pg,url:nu.toString()})})},4000)}};window.addEventListener('message',window.__obListen);var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w)alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.')};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
   return `javascript:${encodeURIComponent(body)}`
 }
 
@@ -137,6 +150,8 @@ export default function AdminImportsPage() {
   const stopRef = useRef(false)
   const nextTimerRef = useRef<number | null>(null)
   const pagesRef = useRef<JobResult | null>(null)
+  const artistUrlsRef = useRef<string[]>([])
+  const artistWalkRef = useRef<{ index: number; page: number } | null>(null)
   const pathname = usePathname()
   const params = useParams<{ lang?: string }>()
   const lang: Locale = params?.lang === 'en' ? 'en' : 'es'
@@ -174,6 +189,11 @@ export default function AdminImportsPage() {
   }, [])
 
   const finishJob = useCallback((result: JobResult) => {
+    artistWalkRef.current = null
+    if (nextTimerRef.current) {
+      window.clearTimeout(nextTimerRef.current)
+      nextTimerRef.current = null
+    }
     setJob((j) => (j ? { ...j, running: false, stopping: false, result } : j))
     load(true)
   }, [load])
@@ -253,9 +273,10 @@ export default function AdminImportsPage() {
   }
 
   /**
-   * Una página del listado de Beatport. Si trae algo nuevo y hay más, se pide
-   * la siguiente a la pestaña de Beatport (`source`); en cuanto una página
-   * viene entera repetida, se acaba: lo de detrás ya estaba visto.
+   * Una página que manda el favorito. Primero el listado de Breaks: si trae
+   * algo nuevo se pide la siguiente (pausa de 2 s en la pestaña). Cuando una
+   * página no trae nada nuevo, la misma pestaña recorre las fichas del Top 100
+   * (pausa de 4 s, hasta 3 páginas). Esos temas se publican enteros.
    */
   const ingestPage = useCallback(async (
     raw: string,
@@ -277,13 +298,14 @@ export default function AdminImportsPage() {
       window.clearTimeout(nextTimerRef.current)
       nextTimerRef.current = null
     }
-    if (page === 1 || !pagesRef.current) {
+    if (stopRef.current) return
+    const walking = artistWalkRef.current
+    if (!walking && (page === 1 || !pagesRef.current)) {
       startJob('Desde tu Chrome', 'ingest')
       pagesRef.current = { ok: true, seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
     }
-    if (stopRef.current) return
     setIngesting(true)
-    pushLine(`Página ${page} de Beatport…`)
+    if (!walking) pushLine(`Página ${page} del listado de Breaks…`)
     const r = await runStream({ action: 'ingest', url: parsed.url, nextData: parsed.nextData })
     setIngesting(false)
     const sum = pagesRef.current
@@ -296,21 +318,116 @@ export default function AdminImportsPage() {
       pagesRef.current = null
       finishJob(res)
     }
-    if (!r.ok || stopRef.current) {
+    const askArtist = (tab: NonNullable<typeof source>, url: string) => {
+      const walk = artistWalkRef.current
+      const totalArtists = artistUrlsRef.current.length
+      if (!walk) return
+      pushLine(`Ficha ${walk.index + 1}/${totalArtists} ${artistSlugFromUrl(url)}, página ${walk.page}…`)
+      tab.postMessage({ type: 'ob-beatport-url', url, page: walk.page }, tab.origin)
+      nextTimerRef.current = window.setTimeout(() => {
+        nextTimerRef.current = null
+        const soFar = pagesRef.current
+        pagesRef.current = null
+        setJob((j) => (j ? { ...j, resumeUrl: url } : j))
+        pushLine(
+          `Beatport no ha contestado. Si el favorito es de antes de esta noche, arrástralo otra vez a la barra. Si no, abre esta ficha, pasa la verificación y pulsa el favorito: ${url}`,
+        )
+        finishJob({ ...(soFar ?? {}), ok: false, error: 'Sin respuesta de Beatport.' })
+      }, 60_000)
+    }
+    const advanceArtist = (tab: NonNullable<typeof source> | null, res: JobResult) => {
+      const walk = artistWalkRef.current
+      const urls = artistUrlsRef.current
+      if (!walk || !tab) {
+        pushLine(tab ? 'Fichas del Top 100 terminadas.' : 'Las fichas del Top 100 salen al pulsar el favorito en Beatport, no al pegar.')
+        done(sum)
+        return
+      }
+      const fresh = (res.queued ?? 0) + (res.auto_approved ?? 0)
+      const total = res.listing_total ?? 0
+      const base = urls[walk.index]
+      const more = Boolean(base) && !res.empty && fresh > 0 && walk.page < ARTIST_MAX_PAGES && (!total || walk.page * LISTING_PER_PAGE < total)
+      if (more && base) {
+        walk.page += 1
+        askArtist(tab, withListingPage(base, walk.page))
+        return
+      }
+      walk.index += 1
+      walk.page = 1
+      if (walk.index >= urls.length) {
+        pushLine('Fichas del Top 100 terminadas.')
+        done(sum)
+        return
+      }
+      askArtist(tab, urls[walk.index] || '')
+    }
+    const beginArtists = async (tab: NonNullable<typeof source> | null) => {
+      if (!artistUrlsRef.current.length) {
+        try {
+          const res = await fetch('/api/admin/imports', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'artist-urls' }),
+          })
+          const body = (await res.json()) as { artist_track_urls?: string[] }
+          if (Array.isArray(body.artist_track_urls)) artistUrlsRef.current = body.artist_track_urls
+        } catch {
+          /* sin fichas se cierra el pase con lo ya leído */
+        }
+      }
+      if (stopRef.current) {
+        done({ ...sum, ok: false, error: 'Parado por el editor.' })
+        return
+      }
+      const urls = artistUrlsRef.current
+      if (!tab || !urls.length) {
+        if (tab) pushLine('No hay fichas de Beatport en el Top 100.')
+        else pushLine('Las fichas del Top 100 salen al pulsar el favorito en Beatport, no al pegar.')
+        done(sum)
+        return
+      }
+      artistWalkRef.current = { index: 0, page: 1 }
+      pushLine(`Listado de Breaks listo. Sigo con ${urls.length} fichas del Top 100.`)
+      askArtist(tab, urls[0] || '')
+    }
+    const stopped = stopRef.current || r.error === 'Parado por el editor.'
+    if (stopped) {
       done({ ...sum, ok: false, error: r.error || 'Parado por el editor.' })
       return
     }
+    if (!r.ok) {
+      if (walking && source) {
+        pushLine(r.error || 'Esta ficha no se ha leído. Sigo con la siguiente.')
+        advanceArtist(source, { ok: true, empty: true, queued: 0, auto_approved: 0 })
+        return
+      }
+      if (source) {
+        pushLine(r.error || 'El listado no se ha leído.')
+        await beginArtists(source)
+        return
+      }
+      done({ ...sum, ok: false, error: r.error })
+      return
+    }
     const fresh = (r.queued ?? 0) + (r.auto_approved ?? 0)
+    if (walking) {
+      pushLine(`${artistSlugFromUrl(parsed.url)}: ${fresh} nuevos, ${r.skipped_known ?? 0} ya estaban.`)
+      advanceArtist(source, r)
+      return
+    }
     pushLine(`Página ${page}: ${fresh} nuevos, ${r.skipped_known ?? 0} ya estaban.`)
     const total = r.listing_total ?? 0
-    if (!fresh) {
-      pushLine('Página sin nada nuevo: lo que viene detrás ya estaba visto. Termino.')
-      done(sum)
+    if (!fresh || r.empty) {
+      pushLine(r.empty
+        ? 'Esta página no trae temas desde el 8 oct.'
+        : 'Página sin nada nuevo: lo que viene detrás ya estaba visto.')
+      await beginArtists(source)
       return
     }
     if (!total || page * LISTING_PER_PAGE >= total) {
       pushLine('Era la última página del listado.')
-      done(sum)
+      await beginArtists(source)
       return
     }
     if (!source) {
@@ -324,7 +441,7 @@ export default function AdminImportsPage() {
     nextTimerRef.current = window.setTimeout(() => {
       nextTimerRef.current = null
       pushLine(
-        `Beatport no ha contestado a la página ${next}. Si tu favorito es de antes del 14 oct por la tarde, arrastra el botón negro otra vez a la barra. Si no, abre la página ${next}, pasa la verificación y pulsa el favorito ahí.`,
+        `Beatport no ha contestado a la página ${next}. Si tu favorito es de antes de esta noche, arrástralo otra vez a la barra. Si no, abre la página ${next}, pasa la verificación y pulsa el favorito ahí.`,
       )
       done({ ...sum, ok: false, error: `Sin respuesta de Beatport en la página ${next}.` })
     }, 45_000)
@@ -367,11 +484,13 @@ export default function AdminImportsPage() {
         }
         const sum = pagesRef.current
         pagesRef.current = null
+        artistWalkRef.current = null
+        const where = data.url?.includes('/artist/') ? data.url : `la página ${data.page}`
         setJob((j) => (j ? {
           ...j,
           lines: [...j.lines, {
             at: new Date().toISOString(),
-            line: `Beatport ha pedido la verificación en la página ${data.page}. Ábrela, pásala y pulsa el favorito ahí: sigo desde esa página.`,
+            line: `Beatport ha pedido la verificación en ${where}. Ábrela, pásala y pulsa el favorito ahí.`,
           }],
           running: false,
           stopping: false,
@@ -528,9 +647,10 @@ export default function AdminImportsPage() {
           Desde tu Chrome
         </p>
         <p className="text-xs text-[var(--ink)]/70 mb-3" style={mono}>
-          Si Beatport no deja pasar al pase automático, lo traes tú. Arrastra el botón negro a la barra de favoritos (una vez).
-          Luego abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito en la página 1: va pasando páginas solo
-          hasta que una no trae nada nuevo.
+          Si Beatport no deja pasar al pase automático, lo traes tú. Arrastra el botón negro a la barra de favoritos.
+          Abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito en la página 1.
+          Primero pasa el listado de Breaks. Después, en la misma pestaña, recorre las fichas del Top 100 y publica esos temas.
+          Si el favorito es de antes de esta noche, arrástralo otra vez: el anterior solo lee el listado.
         </p>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <a

@@ -6,6 +6,7 @@ import {
   decideImport,
   ingestBeatportPage,
   runBeatportGenreImport,
+  top100ArtistTrackPageUrls,
   stopOpenImportRuns,
   type GenreImportResult,
 } from '@/lib/beatport-genre-import'
@@ -135,6 +136,15 @@ export async function POST(request: NextRequest) {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+
+  if (body.action === 'artist-urls') {
+    // Una vez por favorito, al acabar el listado. No en cada visita de la pantalla.
+    try {
+      return NextResponse.json({ artist_track_urls: await top100ArtistTrackPageUrls() })
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 })
+    }
   }
 
   if (body.action === 'ingest') {

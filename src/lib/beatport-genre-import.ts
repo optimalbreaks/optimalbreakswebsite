@@ -61,6 +61,8 @@ export type GenreImportResult = {
   auto_approved: number
   skipped_known: number
   error?: string
+  /** La página no trae temas desde el 8 oct. No es un fallo: se sigue. */
+  empty?: boolean
   /** Temas que tiene el listado entero (página que manda el favorito). */
   listing_total?: number
 }
@@ -557,6 +559,46 @@ async function followedBeatportArtists(
   return [...out.values()]
 }
 
+/** Página 1 de temas de cada artista del Top 100. El favorito pide la 2 y la 3 si hace falta. */
+export async function top100ArtistTrackPageUrls(): Promise<string[]> {
+  const sb = createServiceSupabase()
+  const keys = await loadTopArtistKeys(sb, 100)
+  const artists = await followedBeatportArtists(sb, keys)
+  return artists.map((artist) => artistTracksUrl(artist.slug, artist.id, BEATPORT_IMPORT_FROM, 1))
+}
+
+/** Una ficha /artist/…/tracks del Top 100 publica todos los temas nuevos, como la vía 1 del pase. */
+async function publishesWholeArtistPage(
+  sb: ReturnType<typeof createServiceSupabase>,
+  url: string,
+  keys: Set<string>,
+): Promise<boolean> {
+  let id = ''
+  try {
+    const match = new URL(url).pathname.match(/\/artist\/[^/]+\/(\d+)\/tracks\/?$/i)
+    if (!match?.[1]) return false
+    id = match[1]
+  } catch {
+    return false
+  }
+  if (SKIP_BEATPORT_IDS.has(id)) return false
+  if (id === '227121') return keys.has('vazteria x')
+  const { data } = await sb
+    .from('artists')
+    .select('slug, name, name_display')
+    .eq('beatport_id', Number(id))
+    .limit(1)
+  const row = data?.[0]
+  if (!row) return false
+  const want = (name: string | null | undefined) => {
+    if (!name) return false
+    const key = normalizeArtistKey(name)
+    if (key && keys.has(key)) return true
+    return splitArtistCreditsForRanking(name).some((part) => keys.has(normalizeArtistKey(part)))
+  }
+  return want(row.name) || want(row.name_display) || want(row.slug?.replace(/-/g, ' '))
+}
+
 const STOPPED_BY_EDITOR = 'Parado por el editor.'
 
 function pickLabel(pick: BeatportPickInput): string {
@@ -886,8 +928,9 @@ export async function breaksListingUrlForEditor(): Promise<string> {
 /**
  * Página de Beatport que el editor manda desde su propio Chrome con el botón
  * de favoritos (14 oct 2026: Cloudflare cerró la puerta al pase automático).
- * La lee él, que pasa la verificación; aquí solo se reparte como en el pase:
+ * La lee él, que pasa la verificación. El listado de Breaks se reparte como el pase:
  * Top 100 en los créditos → publicado; el resto → «Por aprobar».
+ * Una ficha de temas de un artista del Top 100 publica todos los temas nuevos.
  */
 export async function ingestBeatportPage(opts: {
   url: string
@@ -908,7 +951,13 @@ export async function ingestBeatportPage(opts: {
   }
   const { tracks, count } = tracksFromNext(opts.nextData, opts.url, BEATPORT_IMPORT_FROM)
   if (!tracks.length) {
-    return { ok: false, error: 'En esa página no hay temas publicados desde el 8 oct 2026.', ...empty }
+    return {
+      ok: true,
+      empty: true,
+      error: 'En esa página no hay temas publicados desde el 8 oct 2026.',
+      listing_total: count,
+      ...empty,
+    }
   }
 
   const sb = createServiceSupabase()
@@ -928,6 +977,7 @@ export async function ingestBeatportPage(opts: {
     say(`Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
     const known = await loadKnownTracks(sb)
     const rankKeys = await loadTopArtistKeys(sb, 100)
+    const publishAll = await publishesWholeArtistPage(sb, opts.url, rankKeys)
     const cache = new Map<string, EditionState>()
     for (const [i, pick] of tracks.entries()) {
       if (i > 0 && i % 25 === 0 && (await importRunStopped(sb, run.id))) {
@@ -944,13 +994,13 @@ export async function ingestBeatportPage(opts: {
       }
       known.ids.add(id)
       if (identity) known.identities.add(identity)
-      if (matchesTop100(pick, rankKeys)) {
+      if (publishAll || matchesTop100(pick, rankKeys)) {
         const pub = await publishFeaturedPick(sb, cache, pick)
         await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId)
         if (pub === 'inserted') {
           result.auto_approved += 1
           published += 1
-          say(`  Publicado (Top 100): ${pickLabel(pick)}`)
+          say(`  Publicado: ${pickLabel(pick)}`)
         }
       } else {
         await rememberQueue(sb, pick, 'pending', null, null)
