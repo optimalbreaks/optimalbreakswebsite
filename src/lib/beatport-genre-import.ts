@@ -760,23 +760,119 @@ export async function runBeatportGenreImport(opts: {
     })
     .eq('id', run.id)
 
-  // Un tema publicado se ve en /charts (tag public-charts) y en «En Optimal
-  // Breaks» de la ficha del artista y del sello (tag public-catalog). Las dos.
-  if (published > 0) {
-    try {
-      revalidatePublicCharts()
-      revalidatePublicCatalog()
-    } catch {
-      const secret = (process.env.REVALIDATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
-      if (secret) {
-        await fetch('https://www.optimalbreaks.com/api/revalidate', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ secret, catalog: true }),
-        }).catch(() => undefined)
-      }
+  if (published > 0) await revalidateAfterPublish()
+  return result
+}
+
+// Un tema publicado se ve en /charts (tag public-charts) y en «En Optimal
+// Breaks» de la ficha del artista y del sello (tag public-catalog). Las dos.
+async function revalidateAfterPublish() {
+  try {
+    revalidatePublicCharts()
+    revalidatePublicCatalog()
+  } catch {
+    const secret = (process.env.REVALIDATE_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+    if (secret) {
+      await fetch('https://www.optimalbreaks.com/api/revalidate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ secret, catalog: true }),
+      }).catch(() => undefined)
     }
   }
+}
+
+/** Listado de Breaks de la última semana, 150 por página: lo que abre el editor en su Chrome. */
+export function breaksListingUrlForEditor(): string {
+  const weekAgo = new Date(`${madridToday()}T12:00:00Z`)
+  weekAgo.setUTCDate(weekAgo.getUTCDate() - 7)
+  const from = weekAgo.toISOString().slice(0, 10)
+  return genreTracksUrl(1, from > BEATPORT_IMPORT_FROM ? from : BEATPORT_IMPORT_FROM)
+}
+
+/**
+ * Página de Beatport que el editor manda desde su propio Chrome con el botón
+ * de favoritos (14 oct 2026: Cloudflare cerró la puerta al pase automático).
+ * La lee él, que pasa la verificación; aquí solo se reparte como en el pase:
+ * Top 100 en los créditos → publicado; el resto → «Por aprobar».
+ */
+export async function ingestBeatportPage(opts: {
+  url: string
+  nextData: unknown
+  userId: string | null
+}): Promise<GenreImportResult> {
+  const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
+  let host = ''
+  try {
+    host = new URL(opts.url).hostname
+  } catch {
+    /* url mala */
+  }
+  if (!/(^|\.)beatport\.com$/i.test(host)) {
+    return { ok: false, error: 'Esa página no es de Beatport.', ...empty }
+  }
+  const { tracks } = tracksFromNext(opts.nextData, opts.url, BEATPORT_IMPORT_FROM)
+  if (!tracks.length) {
+    return { ok: false, error: 'En esa página no hay temas publicados desde el 8 oct 2026.', ...empty }
+  }
+
+  const sb = createServiceSupabase()
+  const { data: run, error: runErr } = await sb
+    .from('chart_import_runs')
+    .insert({ trigger: 'manual', ok: false })
+    .select('id')
+    .single()
+  if (runErr || !run?.id) {
+    return { ok: false, error: runErr?.message || 'No se pudo abrir el pase', ...empty }
+  }
+
+  const result: GenreImportResult = { ok: false, ...empty, seen: tracks.length }
+  let published = 0
+  try {
+    const known = await loadKnownTracks(sb)
+    const rankKeys = await loadTopArtistKeys(sb, 100)
+    const cache = new Map<string, EditionState>()
+    for (const pick of tracks) {
+      const id = beatportIdFromLink(pick.link_url)
+      if (!id) continue
+      const identity = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
+      if (known.ids.has(id) || (identity && known.identities.has(identity))) {
+        result.skipped_known += 1
+        continue
+      }
+      known.ids.add(id)
+      if (identity) known.identities.add(identity)
+      if (matchesTop100(pick, rankKeys)) {
+        const pub = await publishFeaturedPick(sb, cache, pick)
+        await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId)
+        if (pub === 'inserted') {
+          result.auto_approved += 1
+          published += 1
+        }
+      } else {
+        await rememberQueue(sb, pick, 'pending', null, null)
+        result.queued += 1
+      }
+    }
+    result.ok = true
+  } catch (e) {
+    result.error = shortImportError(e instanceof Error ? e.message : String(e))
+  }
+
+  await sb
+    .from('chart_import_runs')
+    .update({
+      finished_at: new Date().toISOString(),
+      ok: result.ok,
+      seen: result.seen,
+      queued: result.queued,
+      auto_approved: result.auto_approved,
+      skipped_known: result.skipped_known,
+      error: result.error ?? null,
+    })
+    .eq('id', run.id)
+
+  if (published > 0) await revalidateAfterPublish()
   return result
 }
 

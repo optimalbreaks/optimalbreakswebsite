@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
-import { BEATPORT_IMPORT_FROM, decideImport, runBeatportGenreImport } from '@/lib/beatport-genre-import'
+import {
+  BEATPORT_IMPORT_FROM,
+  breaksListingUrlForEditor,
+  decideImport,
+  ingestBeatportPage,
+  runBeatportGenreImport,
+} from '@/lib/beatport-genre-import'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import { extractRemixerNames } from '@/lib/remixer-credits'
@@ -72,6 +78,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     import_from: BEATPORT_IMPORT_FROM,
+    breaks_listing_url: breaksListingUrlForEditor(),
     pending_count: countRes.count ?? 0,
     pending: pendingRes.data ?? [],
     artist_slug_map: slugMaps.artists,
@@ -84,11 +91,18 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
 
-  let body: { action?: string; id?: string }
+  let body: { action?: string; id?: string; url?: string; nextData?: unknown }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+
+  if (body.action === 'ingest') {
+    // La página que el editor manda desde su Chrome con el botón de favoritos.
+    if (!body.url || !body.nextData) return NextResponse.json({ error: 'Falta la página de Beatport' }, { status: 400 })
+    const result = await ingestBeatportPage({ url: body.url, nextData: body.nextData, userId: auth.userId })
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 })
   }
 
   if (body.action === 'run') {

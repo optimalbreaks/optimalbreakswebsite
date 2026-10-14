@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
@@ -38,6 +38,7 @@ type LastRun = {
 
 type Payload = {
   import_from: string
+  breaks_listing_url?: string
   pending_count: number
   pending: PendingTrack[]
   artist_slug_map?: Record<string, string>
@@ -63,6 +64,19 @@ function names(artists: Artist[] | null | undefined) {
   return (artists || []).map((a) => a.name).filter(Boolean).join(', ') || '—'
 }
 
+const BEATPORT_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?beatport\.com$/i
+
+/**
+ * Botón de favoritos. Corre en la pestaña de Beatport del editor (que ya pasó
+ * la verificación de Cloudflare), coge la lista de temas que la página trae
+ * cargada y la manda a esta pantalla: por mensaje a la pestaña que abre y,
+ * por si el navegador corta ese hilo, también al portapapeles.
+ */
+function beatportBookmarklet(origin: string, lang: string): string {
+  const body = `(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var nd;try{nd=JSON.parse(el.textContent)}catch(e){alert('No se ha podido leer la página.');return}var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&x.queryKey[0]==='tracks'});if(!q.length){alert('En esta página no hay lista de temas.');return}var data=JSON.stringify({v:1,url:location.href,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}});var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w){alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.');return}window.addEventListener('message',function h(e){if(e.origin!==O||!e.data||e.data.type!=='ob-beatport-ready')return;e.source.postMessage({type:'ob-beatport-data',payload:data},O);window.removeEventListener('message',h)})};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
+  return `javascript:${encodeURIComponent(body)}`
+}
+
 export default function AdminImportsPage() {
   const [payload, setPayload] = useState<Payload | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -71,6 +85,8 @@ export default function AdminImportsPage() {
   const [running, setRunning] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ row: PendingTrack; index: number } | null>(null)
+  const [ingesting, setIngesting] = useState(false)
+  const bookmarkletRef = useRef<HTMLAnchorElement>(null)
   const pathname = usePathname()
   const params = useParams<{ lang?: string }>()
   const lang: Locale = params?.lang === 'en' ? 'en' : 'es'
@@ -94,6 +110,83 @@ export default function AdminImportsPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  const ingest = useCallback(async (raw: string) => {
+    let parsed: { url?: string; nextData?: unknown }
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      setNote('Eso no es una página de Beatport. Pulsa el botón en la pestaña del listado y vuelve a pegar.')
+      return
+    }
+    if (!parsed?.url || !parsed?.nextData) {
+      setNote('Eso no es una página de Beatport. Pulsa el botón en la pestaña del listado y vuelve a pegar.')
+      return
+    }
+    setIngesting(true)
+    setNote('Leyendo la página de Beatport…')
+    try {
+      const r = await fetch('/api/admin/imports', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'ingest', url: parsed.url, nextData: parsed.nextData }),
+      })
+      const j = (await r.json()) as {
+        error?: string
+        seen?: number
+        queued?: number
+        auto_approved?: number
+        skipped_known?: number
+      }
+      if (!r.ok || j.error) throw new Error(j.error || r.statusText)
+      setNote(
+        `De Beatport: ${j.seen ?? 0} temas · por aprobar ${j.queued ?? 0} · publicados del Top 100 ${j.auto_approved ?? 0} · ya estaban ${j.skipped_known ?? 0}`,
+      )
+      load(true)
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : String(e))
+    } finally {
+      setIngesting(false)
+    }
+  }, [load])
+
+  // React no deja pintar un href `javascript:`; se pone a mano tras montar.
+  useEffect(() => {
+    bookmarkletRef.current?.setAttribute('href', beatportBookmarklet(window.location.origin, lang))
+  }, [lang])
+
+  const ingestRef = useRef(ingest)
+  useEffect(() => { ingestRef.current = ingest }, [ingest])
+
+  // Pestaña abierta por el botón de favoritos: avisa a Beatport y recibe la lista.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('beatport') !== '1') return
+    url.searchParams.delete('beatport')
+    window.history.replaceState(null, '', url.pathname + url.search)
+    const onMessage = (e: MessageEvent) => {
+      if (!BEATPORT_ORIGIN.test(e.origin)) return
+      const data = e.data as { type?: string; payload?: string } | null
+      if (data?.type !== 'ob-beatport-data' || typeof data.payload !== 'string') return
+      window.removeEventListener('message', onMessage)
+      void ingestRef.current(data.payload)
+    }
+    window.addEventListener('message', onMessage)
+    if (window.opener) {
+      window.opener.postMessage({ type: 'ob-beatport-ready' }, '*')
+    }
+    const noOpener = window.opener
+      ? null
+      : window.setTimeout(
+          () => setNote('Beatport no ha podido pasarlo solo. Ya está copiado: pégalo en el recuadro (Ctrl+V).'),
+          0,
+        )
+    return () => {
+      window.removeEventListener('message', onMessage)
+      if (noOpener) window.clearTimeout(noOpener)
+    }
+  }, [])
 
   // La fila se quita (o se repone) en el acto; la red va detrás.
   function removeRow(id: string) {
@@ -252,6 +345,55 @@ export default function AdminImportsPage() {
         <span className="text-xs text-[var(--ink)]/60" style={mono}>
           {payload ? `${payload.pending_count} pendientes` : ''}
         </span>
+      </div>
+
+      <div className="admin-panel !p-4 mb-6 max-w-2xl">
+        <p className="font-black text-sm mb-2" style={{ fontFamily: "'Unbounded', sans-serif" }}>
+          Desde tu Chrome
+        </p>
+        <p className="text-xs text-[var(--ink)]/70 mb-3" style={mono}>
+          Si Beatport no deja pasar al pase automático, lo traes tú. Arrastra el botón negro a la barra de favoritos (una vez).
+          Luego abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito: los temas llegan aquí.
+        </p>
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <a
+            ref={bookmarkletRef}
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              setNote('No se pulsa aquí: arrástralo a la barra de favoritos y úsalo en la pestaña de Beatport.')
+            }}
+            className="h-9 px-4 inline-flex items-center border-[3px] border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] font-black text-[10px] tracking-wider uppercase cursor-grab"
+            style={mono}
+            title="Arrástralo a la barra de favoritos"
+          >
+            Mandar a Optimal Breaks
+          </a>
+          {payload?.breaks_listing_url && (
+            <a
+              href={payload.breaks_listing_url}
+              target="_blank"
+              rel="noopener"
+              className="h-9 px-4 inline-flex items-center border-[3px] border-[var(--ink)] bg-[var(--paper)] font-black text-[10px] tracking-wider uppercase"
+              style={mono}
+            >
+              Abrir listado de Breaks ↗
+            </a>
+          )}
+        </div>
+        <textarea
+          rows={2}
+          disabled={ingesting}
+          placeholder="Si no llegan solos, pega aquí (Ctrl+V) lo que ha copiado el botón."
+          onPaste={(e) => {
+            const text = e.clipboardData.getData('text')
+            if (!text) return
+            e.preventDefault()
+            void ingest(text)
+          }}
+          className="w-full border-[2px] border-[var(--ink)] p-2 text-xs bg-[var(--paper)] disabled:opacity-40"
+          style={mono}
+        />
       </div>
 
       {note && (
