@@ -1,0 +1,65 @@
+Revisión editorial — DataFunk (14 oct 2026)
+=============================================
+
+La ficha era genérica: «breaks progresivos», era 2010s-present, relacionados
+Bicep / Framewerk / Ranj Kaler. REESCRIBIR. Conservar slug datafunk,
+name DataFunk, name_display DATAFUNK, image_url de Storage, beatport_id 1298577,
+sort_order 154.
+
+Identidad
+---------
+- real_name: null. No hay fuente pública. NO inventar.
+- Origen: no cerrado. Actividad en la escena andaluza NO es origen andaluz.
+  country "" . category current. NO pasar a andalusian.
+- Rol: DJ, productor y remixer.
+- era: 2025-present. NO 2010s salvo identidad anterior inequívoca.
+
+Estilo
+------
+Quitar Progressive Breaks y Nu Skool Breaks.
+styles: Breakbeat, Breaks, UK Bass, Neurobreaks.
+Drum & bass (17 en Beatport), electro (4) y UK garage (3) van en la bio,
+no en los chips. Pata Negra = variantes oscuras y duras; Mixmag España
+reseña el remix de Porcelain (Alex Physalis) como neurobreaks.
+
+Sellos
+------
+- Casa principal: Pata Negra Records (ficha pata-negra-records). 15 en Beatport.
+  Wild Contact (2025), No Surrender con Manxito y Mouse-D, Hide The Truth Away,
+  Golpe Frigideira E Faca con Vazteria X, Porcelain (DataFunk Remix),
+  varias Pata Negra Gold.
+- Segundo eje: DIRTY KITCHEN RAVE. Riot, 23 dic 2025, 134 BPM,
+  Best New Breaks / UK Bass de diciembre 2025. También Pray.
+- Elektroshok Records: mejor rendimiento reciente del sello en su catálogo
+  (BeatStats). Shatter and Spin, 22 abr 2026, 138 BPM. También Electrobite.
+- 83: Breakin' Bones. La fecha en el Top 10 ya guardado es 2025-10-10
+  (el brief decía 2026). Se usa el 10 oct 2025. Mejor recorrido del último año
+  en BeatStats (576 puntos).
+- Otras salidas, sin convertirlas en casa: Distorsion, Rough Division,
+  Raveart, Samay.
+
+Colaboraciones (crédito, no «círculo moderno»)
+-----------------------------------------------
+- Manxito y Mouse-D: No Surrender (Pata Negra).
+- Vazteria X: Golpe Frigideira E Faca (Pata Negra). El nombre va en la bio.
+  NO en related_artists: opt-out de ficha, no enlazar /artists/vazteria-x.
+- Sunsha y Playbass: Killa Baby, Distorsion, 9 jun 2026.
+- Evil Crew: Acid Moove, Distorsion, 27 may 2025.
+- Wiguez: Memories (2026).
+- Shade K y Playbass: Edge, Rough Division (reciente / próximo; sin fecha cerrada).
+- related_artists: Playbass, Evil Crew, Manxito, Mouse-D, Wiguez, Shade K.
+  Mouse-D no tiene ficha (oct 2026): el nombre se queda en texto.
+
+DJ (cartel, no citar esta web en la bio)
+-----------------------------------------
+- Raveart Summer Festival 2026, cierre 05:00, área 24th Anniversary.
+- RVT by Raveart, Sala El Tren, Granada.
+- Málaga Is Break 2026.
+
+Essential tracks
+----------------
+Wild Contact, Riot, Breakin' Bones, Shatter and Spin, No Surrender,
+Porcelain (DataFunk Remix), Killa Baby, Hide The Truth Away, Memories.
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+NO reponer Bicep, Framewerk ni Ranj Kaler.
