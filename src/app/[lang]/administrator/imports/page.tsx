@@ -647,7 +647,7 @@ export default function AdminImportsPage() {
           Desde tu Chrome
         </p>
         <p className="text-xs text-[var(--ink)]/70 mb-3" style={mono}>
-          Si Beatport no deja pasar al pase automático, lo traes tú. Arrastra el botón negro a la barra de favoritos.
+          Hasta que Beatport nos dé la API, el catálogo entra por aquí. Arrastra el botón negro a la barra de favoritos.
           Abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito en la página 1.
           Primero pasa el listado de Breaks. Después, en la misma pestaña, recorre las fichas del Top 100 y publica esos temas.
           Si el favorito es de antes de esta noche, arrástralo otra vez: el anterior solo lee el listado.
