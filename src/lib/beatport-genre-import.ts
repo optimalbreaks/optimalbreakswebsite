@@ -36,6 +36,20 @@ const GENRE_TRACKS =
   'https://www.beatport.com/genre/breaks-breakbeat-uk-bass/9/tracks'
 const PER_PAGE = 150
 const MAX_PAGES = 6
+/**
+ * Misma pausa que al pegar enlaces (`BEATPORT_BATCH_PAUSE_MS` en
+ * `scripts/_append-batch-nr-from-releases.mjs`). Sin ella el Chrome del pase
+ * encadena páginas y Cloudflare contesta 403.
+ */
+const BEATPORT_PAGE_PAUSE_MS = Math.max(
+  0,
+  Number.parseInt(String(process.env.BEATPORT_BATCH_PAUSE_MS || '4000').trim(), 10) || 4000,
+)
+
+function pauseBetweenBeatportPages(): Promise<void> {
+  if (BEATPORT_PAGE_PAUSE_MS <= 0) return Promise.resolve()
+  return new Promise((resolve) => setTimeout(resolve, BEATPORT_PAGE_PAUSE_MS))
+}
 /** Página de Beatport de otra persona. No bajar su catálogo. */
 const SKIP_BEATPORT_IDS = new Set(['186585'])
 
@@ -639,6 +653,9 @@ export async function runBeatportGenreImport(opts: {
   }
   try {
     say(readArtists ? 'Pase con listado de Breaks y fichas del Top 100.' : 'Pase con el listado de Breaks (las fichas del Top 100, los sábados).')
+    if (BEATPORT_PAGE_PAUSE_MS > 0) {
+      say(`Pausa de ${BEATPORT_PAGE_PAUSE_MS / 1000} s entre páginas de Beatport.`)
+    }
     const known = await loadKnownTracks(sb)
     const fresh: BeatportPickInput[] = []
     const fromArtist = new Set<string>()
@@ -710,6 +727,12 @@ export async function runBeatportGenreImport(opts: {
         throw err
       }
     }
+    let beatportReads = 0
+    const paceBeatport = async () => {
+      beatportReads += 1
+      if (beatportReads === 1) return
+      await pauseBetweenBeatportPages()
+    }
     try {
       // El listado de Breaks es lo que llena «por aprobar». Se lee y se guarda
       // antes del Top 100: el 14 oct 2026 el pase se quedó en las fichas, GitHub
@@ -725,13 +748,16 @@ export async function runBeatportGenreImport(opts: {
           if (await stopped()) break
           const url = genreTracksUrl(page, genreFrom)
           say(`Breaks página ${page}: leyendo…`)
+          await paceBeatport()
           let payload = await withTimeout(readGenrePageFetch(url, genreFrom), 12_000, 'Fetch de Breaks').catch(() => null)
           if (!payload) {
             say(`Breaks página ${page}: Beatport no contesta a la lectura directa; pruebo con Chrome (hasta 40 s)…`)
+            await paceBeatport()
             try {
               payload = await readLimited(url, genreFrom)
             } catch (err) {
               say(`Breaks página ${page}: ${err instanceof Error ? err.message : err}`)
+              await paceBeatport()
               try {
                 payload = await readLimited(url, genreFrom)
               } catch (err2) {
@@ -768,6 +794,7 @@ export async function runBeatportGenreImport(opts: {
           for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
             let payload: { count: number; tracks: BeatportPickInput[] }
+            await paceBeatport()
             try {
               payload = await readLimited(url, artistFrom)
             } catch (err) {

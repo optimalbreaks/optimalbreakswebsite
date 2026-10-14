@@ -23,7 +23,7 @@
  *
  * Ritmo ante Cloudflare / rate-limit: proceso **serie** y pausa configurable
  * entre URLs (evita el patrón "30 requests en paralelo" que dispara protección).
- *   BEATPORT_BATCH_PAUSE_MS — pausa después de cada URL (default 2200).
+ *   BEATPORT_BATCH_PAUSE_MS — pausa después de cada URL (default 4000). La misma que el pase diario.
  *   NR_APPEND_FORCE_PLAYWRIGHT=1 — usar solo Playwright (omitir Patchright) si headless cierra al instante con CF.
  *
  * Operativa — **viernes (día de lanzamientos):** Beatport suele ir más cargado; `403`/fallos intermitentes
@@ -697,14 +697,14 @@ function tryAddPick(pick, weekOverride, idx, total, releaseNote = '') {
 
 const BATCH_PAUSE_MS = Math.max(
   0,
-  Number.parseInt(String(process.env.BEATPORT_BATCH_PAUSE_MS || '2200').trim(), 10) || 2200,
+  Number.parseInt(String(process.env.BEATPORT_BATCH_PAUSE_MS || '4000').trim(), 10) || 4000,
 )
 const total = uniqQueue.length
 
 if (total > 0) {
   console.log(
     `  ↳ Ritmo: 1 URL a la vez, pausa ${BATCH_PAUSE_MS} ms entre cada una ` +
-      `(override: BEATPORT_BATCH_PAUSE_MS=3000 …)`,
+      `(override: BEATPORT_BATCH_PAUSE_MS=6000 …)`,
   )
 }
 
