@@ -589,7 +589,12 @@ async function youtubeOembed(videoId: string): Promise<{
   }
 }
 
-async function youtubeWatchMeta(videoId: string): Promise<{ year: number | null; durationSeconds: number | null }> {
+async function youtubeWatchMeta(videoId: string): Promise<{
+  year: number | null
+  publishDate: string | null
+  durationSeconds: number | null
+}> {
+  const empty = { year: null, publishDate: null, durationSeconds: null }
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
@@ -599,21 +604,24 @@ async function youtubeWatchMeta(videoId: string): Promise<{ year: number | null;
       signal: AbortSignal.timeout(8000),
       redirect: 'follow',
     })
-    if (!res.ok) return { year: null, durationSeconds: null }
+    if (!res.ok) return empty
     const html = await res.text()
-    const yearM = html.match(/"publishDate":"(\d{4})-\d{2}-\d{2}"/)
-    const year = yearM ? Number(yearM[1]) : null
+    const dateM = html.match(/"publishDate":"(\d{4}-\d{2}-\d{2}T[^"]+)"/)
+    const parsed = dateM ? new Date(dateM[1]) : null
+    const publishDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null
+    const year = publishDate ? Number(publishDate.slice(0, 4)) : null
     const durM = html.match(/"lengthSeconds":"(\d+)"/)
     const durationSeconds = durM ? Number(durM[1]) : null
     return {
       year: year != null && year >= 1900 && year <= 2100 ? year : null,
+      publishDate,
       durationSeconds:
         durationSeconds != null && durationSeconds > 0 && durationSeconds < 12 * 60 * 60
           ? durationSeconds
           : null,
     }
   } catch {
-    return { year: null, durationSeconds: null }
+    return empty
   }
 }
 
@@ -2254,6 +2262,8 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
       : null
   let publishedAt =
     typeof action.published_at === 'string' && action.published_at.trim() ? action.published_at.trim() : null
+  let year =
+    action.year != null && Number.isFinite(Number(action.year)) ? Number(action.year) : null
 
   if (video_url && /soundcloud\.com/i.test(video_url)) {
     embed_url = embed_url || video_url
@@ -2293,6 +2303,8 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
       if (watch.durationSeconds != null && durationMinutes == null) {
         durationMinutes = Math.max(1, Math.round(watch.durationSeconds / 60))
       }
+      if (!publishedAt && watch.publishDate) publishedAt = watch.publishDate
+      if (year == null && watch.year != null) year = watch.year
     }
   }
 
@@ -2332,7 +2344,7 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     description_es: typeof action.description_es === 'string' ? action.description_es : title,
     mix_type,
     platform,
-    year: action.year != null && Number.isFinite(Number(action.year)) ? Number(action.year) : null,
+    ...(year != null ? { year } : {}),
     duration_minutes: durationMinutes,
     video_url,
     embed_url,
