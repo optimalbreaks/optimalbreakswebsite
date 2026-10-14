@@ -25,6 +25,10 @@ on:
         description: 'Lanzarlo aunque no sean las 12 en Madrid'
         type: boolean
         default: true
+      artists:
+        description: 'Leer también las fichas del Top 100 (si no, solo los viernes)'
+        type: boolean
+        default: false
 
 concurrency:
   group: beatport-daily
@@ -33,7 +37,7 @@ concurrency:
 jobs:
   import:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
 
@@ -52,7 +56,9 @@ jobs:
         run: |
           FORCE=""
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then FORCE="--force"; fi
-          npx tsx scripts/beatport-daily-import.ts $FORCE
+          ARTISTS=""
+          if [ "${{ inputs.artists }}" = "true" ]; then ARTISTS="--artists"; fi
+          npx tsx scripts/beatport-daily-import.ts $FORCE $ARTISTS
 
       # Lo que antes hacía Narciso a mano tras publicar una semana
       # (`npm run db:chart:spotify` / `db:chart:tidal`). Solo temas ya a la venta

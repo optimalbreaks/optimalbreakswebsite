@@ -31,6 +31,8 @@ for (const file of ['.env', '.env.local']) {
 async function main() {
   const { hasOkImportRunToday, madridHour, runBeatportGenreImport } = await import('../src/lib/beatport-genre-import')
   const force = process.argv.includes('--force')
+  // Las fichas del Top 100 van los viernes. `--artists` las lee hoy igual.
+  const artists = process.argv.includes('--artists') ? true : undefined
   const sinceArg = process.argv.find((a) => a.startsWith('--artist-since='))
   const artistSince = sinceArg?.split('=')[1]
   // GitHub retrasa el cron (el 9 oct el de las 11:05 UTC arrancó a las 19:25).
@@ -47,6 +49,7 @@ async function main() {
   const result = await runBeatportGenreImport({
     trigger: force ? 'manual' : 'cron',
     ...(artistSince ? { artistSince } : {}),
+    ...(artists ? { artists } : {}),
   })
   console.log(JSON.stringify(result, null, 2))
   if (!result.ok) process.exit(1)

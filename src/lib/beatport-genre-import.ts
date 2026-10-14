@@ -85,6 +85,15 @@ export async function hasOkImportRunToday(): Promise<boolean> {
   })
 }
 
+/** Día de la semana en Madrid: 0 domingo … 5 viernes … 6 sábado. */
+export function madridWeekday(): number {
+  const name = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', weekday: 'short' }).format(new Date())
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(name)
+}
+
+/** Las fichas del Top 100 se leen los viernes (día fuerte de lanzamientos). */
+export const TOP100_ARTISTS_WEEKDAY = 5
+
 export function madridHour(): number {
   const h = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Madrid',
@@ -155,6 +164,16 @@ function tracksFromNext(nd: unknown, pageUrl: string, fromDate: string): { count
   return { count: Number(data?.count) || tracks.length, tracks }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} no respondió en ${Math.round(ms / 1000)} s`)), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
+}
+
 async function readGenrePageFetch(url: string, fromDate: string): Promise<{ count: number; tracks: BeatportPickInput[] } | null> {
   try {
     const html = await fetchBeatportPageHtml(url)
@@ -212,8 +231,8 @@ async function openBrowserReader(): Promise<{
       locale: 'en-US',
       viewport: { width: 1366, height: 800 },
     })
+    const page = await ctx.newPage()
     try {
-      const page = await ctx.newPage()
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: gotoMs })
       const deadline = Date.now() + waitMs
       while (Date.now() < deadline) {
@@ -242,7 +261,8 @@ async function openBrowserReader(): Promise<{
       if (!nd) throw new Error('Beatport no devolvió la ficha (challenge o página vacía)')
       return nd
     } finally {
-      await ctx.close()
+      await page.close().catch(() => undefined)
+      await ctx.close().catch(() => undefined)
     }
   }
   return {
@@ -533,8 +553,15 @@ export async function runBeatportGenreImport(opts: {
    * El pase completo corre en GitHub Actions, sin este límite.
    */
   budgetMs?: number
+  /**
+   * Leer las ~100 fichas del Top 100. Por defecto solo los viernes: cada ficha
+   * es una página más para Cloudflare y el 14 oct 2026 nos cerró la puerta.
+   * El listado de Breaks se lee todos los días.
+   */
+  artists?: boolean
 }): Promise<GenreImportResult> {
   const startedAt = Date.now()
+  const readArtists = opts.artists ?? (Boolean(opts.artistSince) || madridWeekday() === TOP100_ARTISTS_WEEKDAY)
   const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
   const sb = createServiceSupabase()
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
@@ -587,70 +614,25 @@ export async function runBeatportGenreImport(opts: {
       fresh.push(pick)
       if (auto) fromArtist.add(id)
     }
-    let browser: Awaited<ReturnType<typeof openBrowserReader>> | null = null
-    try {
-      if (artistFrom) {
-        const topKeys = await loadTopArtistKeys(sb, 100)
-        const followed = await followedBeatportArtists(sb, topKeys)
-        console.log(`Top 100 con ficha Beatport: ${followed.length}`)
-        let readArtists = 0
-        for (const artist of followed) {
-          if (outOfTime()) {
-            partial = `Tiempo agotado: leídas ${readArtists} de ${followed.length} fichas del Top 100. El pase de GitHub lo completa.`
-            break
-          }
-          readArtists += 1
-          let total = Infinity
-          for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
-            const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
-            if (!browser) browser = await openBrowserReader()
-            let payload: { count: number; tracks: BeatportPickInput[] }
-            try {
-              payload = await browser.read(url, artistFrom)
-            } catch {
-              break
-            }
-            total = payload.count
-            result.seen += payload.tracks.length
-            const before = fresh.length
-            for (const pick of payload.tracks) take(pick, true)
-            if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
-            if (fresh.length === before) break
-          }
-        }
-      }
-      if (doGenre) {
-        console.log('Listado de Breaks')
-        let total = Infinity
-        for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
-          if (outOfTime()) {
-            partial = partial || `Tiempo agotado en la página ${page} del listado de Breaks. El pase de GitHub lo completa.`
-            break
-          }
-          const url = genreTracksUrl(page, genreFrom)
-          let payload = await readGenrePageFetch(url, genreFrom)
-          if (!payload) {
-            if (!browser) browser = await openBrowserReader()
-            payload = await browser.read(url, genreFrom)
-          }
-          total = payload.count
-          result.seen += payload.tracks.length
-          const before = fresh.length
-          for (const pick of payload.tracks) take(pick, false)
-          if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
-          if (fresh.length === before) break
-        }
-      }
-    } finally {
-      await browser?.close()
+    const rankKeys = await loadTopArtistKeys(sb, 100)
+    const cache = new Map<string, EditionState>()
+    const noteProgress = async () => {
+      await sb
+        .from('chart_import_runs')
+        .update({
+          seen: result.seen,
+          queued: result.queued,
+          auto_approved: result.auto_approved,
+          skipped_known: result.skipped_known,
+        })
+        .eq('id', run.id)
     }
-
-    if (fresh.length) {
-      const topKeys = await loadTopArtistKeys(sb, 100)
-      const cache = new Map<string, EditionState>()
-      for (const pick of fresh) {
+    const persistFresh = async (label: string) => {
+      if (!fresh.length) return
+      const batch = fresh.splice(0)
+      for (const pick of batch) {
         const id = beatportIdFromLink(pick.link_url)
-        if (fromArtist.has(id) || matchesTop100(pick, topKeys)) {
+        if (fromArtist.has(id) || matchesTop100(pick, rankKeys)) {
           const pub = await publishFeaturedPick(sb, cache, pick)
           await rememberQueue(sb, pick, 'approved', 'auto_top100', opts.userId ?? null)
           if (pub === 'inserted') {
@@ -662,6 +644,100 @@ export async function runBeatportGenreImport(opts: {
           result.queued += 1
         }
       }
+      console.log(`${label}: en cola ${result.queued}, publicados ${result.auto_approved}, ya conocidos ${result.skipped_known}`)
+      await noteProgress()
+    }
+    let browser: Awaited<ReturnType<typeof openBrowserReader>> | null = null
+    const dropBrowser = async () => {
+      const dying = browser
+      browser = null
+      if (!dying) return
+      await Promise.race([
+        dying.close().catch(() => undefined),
+        new Promise((resolve) => setTimeout(resolve, 5000)),
+      ])
+    }
+    const readLimited = async (url: string, fromDate: string) => {
+      if (!browser) browser = await withTimeout(openBrowserReader(), 30_000, 'Chrome')
+      try {
+        return await withTimeout(browser.read(url, fromDate), 40_000, 'Beatport')
+      } catch (err) {
+        await dropBrowser()
+        throw err
+      }
+    }
+    try {
+      // El listado de Breaks es lo que llena «por aprobar». Se lee y se guarda
+      // antes del Top 100: el 14 oct 2026 el pase se quedó en las fichas, GitHub
+      // lo cortó a los 40 min y la cola salió vacía porque el guardado era al final.
+      if (doGenre) {
+        console.log('Listado de Breaks')
+        let total = Infinity
+        for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
+          if (outOfTime()) {
+            partial = partial || `Tiempo agotado en la página ${page} del listado de Breaks. El pase de GitHub lo completa.`
+            break
+          }
+          const url = genreTracksUrl(page, genreFrom)
+          let payload = await withTimeout(readGenrePageFetch(url, genreFrom), 12_000, 'Fetch de Breaks').catch(() => null)
+          if (!payload) {
+            try {
+              payload = await readLimited(url, genreFrom)
+            } catch (err) {
+              console.log(`Breaks página ${page}: ${err instanceof Error ? err.message : err}`)
+              try {
+                payload = await readLimited(url, genreFrom)
+              } catch (err2) {
+                console.log(`Breaks página ${page} (2º intento): ${err2 instanceof Error ? err2.message : err2}`)
+                partial = partial || 'El listado de Breaks no respondió.'
+                break
+              }
+            }
+          }
+          console.log(`Breaks página ${page}: ${payload.tracks.length} temas`)
+          total = payload.count
+          result.seen += payload.tracks.length
+          const before = fresh.length
+          for (const pick of payload.tracks) take(pick, false)
+          if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
+          if (fresh.length === before) break
+        }
+        await persistFresh('Breaks')
+      }
+      if (artistFrom && !readArtists) console.log('Fichas del Top 100: hoy no toca (solo los viernes).')
+      if (artistFrom && readArtists && !outOfTime()) {
+        const followed = await followedBeatportArtists(sb, rankKeys)
+        console.log(`Top 100 con ficha Beatport: ${followed.length}`)
+        let artistsRead = 0
+        for (const artist of followed) {
+          if (outOfTime()) {
+            partial = `Tiempo agotado: leídas ${artistsRead} de ${followed.length} fichas del Top 100. El pase de GitHub lo completa.`
+            break
+          }
+          artistsRead += 1
+          console.log(`Top 100 ${artistsRead}/${followed.length} ${artist.slug}`)
+          let total = Infinity
+          for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
+            const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
+            let payload: { count: number; tracks: BeatportPickInput[] }
+            try {
+              payload = await readLimited(url, artistFrom)
+            } catch (err) {
+              console.log(`  salto ${artist.slug}: ${err instanceof Error ? err.message : err}`)
+              break
+            }
+            total = payload.count
+            result.seen += payload.tracks.length
+            const before = fresh.length
+            for (const pick of payload.tracks) take(pick, true)
+            if (!payload.tracks.length || payload.tracks.length < PER_PAGE) break
+            if (fresh.length === before) break
+          }
+          if (fresh.length) await persistFresh(artist.slug)
+        }
+      }
+    } finally {
+      await dropBrowser()
     }
     // Parcial = lo leído se guarda, pero el pase no cuenta como completo.
     result.ok = !partial
