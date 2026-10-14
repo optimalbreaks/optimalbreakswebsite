@@ -648,15 +648,6 @@ export type VideoCaptionData = {
   musicKey?: string | null
 }
 
-function hashtag(s: string): string {
-  const t = s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/gi, '')
-    .toLowerCase()
-  return t.length >= 3 && t.length <= 30 ? `#${t}` : ''
-}
-
 function captionDate(iso: string, lang: Locale): { text: string; future: boolean } | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '')
   if (!m) return null
@@ -705,19 +696,10 @@ export function buildVideoCaption(
         ? `🎧 Busca el tema en Optimal Breaks: ${opts.url}`
         : `🎧 Search the track on Optimal Breaks: ${opts.url}`
 
-  const tags = new Set<string>(['#breakbeat', '#breaks'])
-  artists
-    .split(/,|&| x | feat\.? | ft\.? /i)
-    .slice(0, 3)
-    .forEach((a) => {
-      const h = hashtag(a)
-      if (h) tags.add(h)
-    })
-  const lt = hashtag(label)
-  if (lt) tags.add(lt)
-  tags.add('#optimalbreaks')
+  // Instagram: máx. 5 hashtags y nunca de artistas ni sellos (los etiqueta el admin).
+  const tags = ['#breakbeat', '#breaks', '#newmusic', '#electronicmusic', '#dj']
 
-  return [first, tech ? `🎛️ ${tech}` : '', '', listen, '', [...tags].join(' ')]
+  return [first, tech ? `🎛️ ${tech}` : '', '', listen, '', tags.join(' ')]
     .filter((l, i, arr) => !(l === '' && arr[i - 1] === ''))
     .join('\n')
     .trim()
@@ -769,17 +751,8 @@ export function buildMixVideoCaption(
       ? `${action}${es ? ': enlace en la bio.' : ': link in bio.'}`
       : `${action}: ${opts.url}`
 
-  const tags = new Set<string>(['#breakbeat', '#breaks', '#djset'])
-  artists
-    .split(/,|&| vs\.? | b2b | x | feat\.? | ft\.? /i)
-    .slice(0, 3)
-    .forEach((a) => {
-      const h = hashtag(a.replace(/\bmc\b/i, '').trim())
-      if (h) tags.add(h)
-    })
-  const ft = hashtag(d.festival || '')
-  if (ft) tags.add(ft)
-  tags.add('#optimalbreaks')
+  // Máx. 5 hashtags genéricos: ni artistas ni festival (los etiqueta el admin).
+  const tags = ['#breakbeat', '#djset', '#breaks', '#livemusic', '#electronicmusic']
 
-  return [first, '', listen, '', [...tags].join(' ')].join('\n').trim()
+  return [first, '', listen, '', tags.join(' ')].join('\n').trim()
 }

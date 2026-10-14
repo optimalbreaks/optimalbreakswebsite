@@ -23,7 +23,7 @@ import { isSoundCloudTrackEmbedUrl } from '@/components/SoundCloudVisualEmbed'
 import TapToPlayOverlay from '@/components/TapToPlayOverlay'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
-import { parsePlayParam, formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, madridCalendarDate, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
+import { buildAbsoluteShareUrl, parsePlayParam, formatTrackReleaseDisplay, formatAdvanceReleaseDay, isAdvanceRelease, madridCalendarDate, buildVinylSharePath, proxyCatalogArtworkForDisplay, vinylArtworkCandidates, vinylArtworkUseNativeImg, SEARCH_NAV_EVENT } from '@/lib/share-track'
 import { registerSharedBundle } from '@/lib/shared-track-bus'
 import { normalizeTrackCanonicalUrl, trackSaveIdentityKey } from '@/lib/track-canonical-key'
 import { logTrackPlay } from '@/lib/track-play-log'
@@ -36,6 +36,10 @@ import {
 import type { ChartTrackSource } from '@/hooks/useUserData'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { isArchiveFeaturedTrack } from '@/lib/charts-archive'
+import VideoShareButtons from '@/components/VideoShareButtons'
+import { useAuth } from '@/components/AuthProvider'
+import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
+import type { ReelFormat } from '@/lib/reel-renderer'
 import type { ArchiveSectionRow, ArchiveYearSummary, ChartPickWeekSummary } from '@/lib/charts-sections'
 
 /** Ref polimórfica a un track de cualquiera de las tres tablas de charts. */
@@ -738,6 +742,7 @@ export default function ChartView({
   sharedLandingHandled = false,
 }: ChartViewProps) {
   const c = dict.charts
+  const { isAdmin } = useAuth()
 
   const [openPicks, togglePicks, ensureOpenPicks] = useToggleSet(new Set<string>())
   const [openVinyl, toggleVinyl, ensureOpenVinyl] = useToggleSet(new Set<string>())
@@ -1389,6 +1394,54 @@ export default function ChartView({
    *   pedirla. Si se pasa y el bundle está vacío, el botón sale igualmente y
    *   dispara carga + reproducción.
    */
+  // ---- Vídeos R/F de una semana de New Releases (solo admins; ver page-reel.ts) ----
+  async function weekReelPicks(weekDate: string): Promise<ChartFeaturedTrack[]> {
+    let picks = pickByWeek[weekDate]
+    if (!picks) {
+      const r = await fetch(`/api/public/charts/section?kind=picks&week=${encodeURIComponent(weekDate)}`)
+      if (!r.ok) throw new Error(`picks ${r.status}`)
+      picks = ((await r.json()) as { tracks?: ChartFeaturedTrack[] }).tracks ?? []
+    }
+    return sortFeaturedByArtist(picks.filter((p) => !isArchiveFeaturedTrack(p)), lang)
+  }
+  const pickReelTitle = (p: ChartFeaturedTrack) =>
+    p.mix_name && !/^original/i.test(p.mix_name) ? `${p.title} (${p.mix_name})` : p.title
+  const pickReelArtists = (p: ChartFeaturedTrack) =>
+    (Array.isArray(p.artists) ? p.artists : []).map((a) => (a as ChartFeaturedArtist)?.name).filter(Boolean).join(', ')
+
+  async function weekVideo(weekDate: string, format: ReelFormat, onProgress: (r: number) => void) {
+    const picks = await weekReelPicks(weekDate)
+    if (!picks.length) throw new Error('Semana sin temas')
+    const { renderPageReel } = await import('@/lib/page-reel')
+    return renderPageReel(
+      {
+        kind: 'week',
+        weekDate,
+        count: picks.length,
+        tracks: picks.map((p) => ({ title: pickReelTitle(p), artists: pickReelArtists(p), label: p.label || '', artwork: p.artwork_url })),
+      },
+      format,
+      onProgress,
+    )
+  }
+
+  async function weekCaption(weekDate: string, platform: SharePlatform) {
+    const picks = await weekReelPicks(weekDate)
+    const url = buildAbsoluteShareUrl(`/${lang}/charts`)
+    return aiShareCaption({
+      kind: 'week',
+      platform,
+      lang,
+      url,
+      fallback: buildPageVideoCaption('week', { count: picks.length, weekLabel: formatWeekDate(weekDate, lang) }, { lang, url, platform }),
+      context: {
+        weekOf: weekDate,
+        newReleases: picks.length,
+        tracks: picks.slice(0, 25).map((p) => ({ title: pickReelTitle(p), artists: pickReelArtists(p), label: p.label, bpm: p.bpm })),
+      },
+    })
+  }
+
   function renderPlayAllBtn(sectionKey: string, bundle: PlayAllBundle, loadable?: { load: () => void }) {
     const deferred = bundle.length === 0
     if (deferred && !loadable) return undefined
@@ -1582,11 +1635,26 @@ export default function ChartView({
                   }}
                   label="picks"
                   dict={dict}
-                  playAllSlot={renderPlayAllBtn(
-                    picksKey,
-                    picksBundle,
-                    !(week.weekDate in pickByWeek) && week.count > 0 ? { load: () => loadPicks(week.weekDate) } : undefined,
-                  )}
+                  playAllSlot={
+                    <span className="inline-flex items-center gap-2">
+                      {renderPlayAllBtn(
+                        picksKey,
+                        picksBundle,
+                        !(week.weekDate in pickByWeek) && week.count > 0 ? { load: () => loadPicks(week.weekDate) } : undefined,
+                      )}
+                      {isAdmin && week.count > 0 && (
+                        <VideoShareButtons
+                          lang={lang}
+                          title={`New Releases · ${formatWeekDate(week.weekDate, lang)} | Optimal Breaks`}
+                          fileBase={`new-releases-${week.weekDate}`}
+                          what={{ es: 'de esta semana de New Releases', en: 'of this New Releases week' }}
+                          tone="light"
+                          makeVideo={(format, onProgress) => weekVideo(week.weekDate, format, onProgress)}
+                          makeCaption={(platform) => weekCaption(week.weekDate, platform)}
+                        />
+                      )}
+                    </span>
+                  }
                 >
                   {expanded && phase === 'loading' ? (
                     <p className="px-4 py-4 text-xs font-bold tracking-wider text-[var(--ink)]/55" style={{ fontFamily: "'Courier Prime', monospace" }}>

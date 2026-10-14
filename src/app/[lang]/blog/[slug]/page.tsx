@@ -225,6 +225,25 @@ export default async function BlogPostPage({ params }: Props) {
       })
     : ''
 
+  // Vídeos R/F del artículo (solo admins; ver src/lib/page-reel.ts).
+  const firstTrack = albumTracks[0]
+  const trackArtists = (t: BeatportTopTrack) => (t.artists || []).map((a) => a.name).filter(Boolean).join(', ')
+  const blogReel = {
+    kind: 'blog' as const,
+    title,
+    date: post.published_at ?? null,
+    tags: ((post.tags ?? []) as string[]).slice(0, 6),
+    artwork: coverRaw,
+    tracks: albumTracks.map((t) => ({
+      title: t.mix_name && !/^original/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title,
+      meta: [t.bpm ? `${Math.round(t.bpm)} BPM` : '', t.key || ''].filter(Boolean).join(' · '),
+      artists: trackArtists(t),
+    })),
+    artist: firstTrack ? trackArtists(firstTrack) : '',
+    label: firstTrack?.label || '',
+    excerpt: excerpt || '',
+  }
+
   // alt enriquecido para la portada del artículo.
   const coverAlt = safeLang === 'es'
     ? `Imagen de portada del artículo: ${title}`
@@ -261,7 +280,12 @@ export default async function BlogPostPage({ params }: Props) {
             <span itemProp="author">{post.author.toUpperCase()}</span>
           </address>
         )}
-        <ShareButtons url={`/${safeLang}/blog/${safeSlug}`} title={`${title} | Optimal Breaks`} lang={safeLang} />
+        <ShareButtons
+          url={`/${safeLang}/blog/${safeSlug}`}
+          title={`${title} | Optimal Breaks`}
+          lang={safeLang}
+          pageReel={blogReel}
+        />
       </div>
 
       <div

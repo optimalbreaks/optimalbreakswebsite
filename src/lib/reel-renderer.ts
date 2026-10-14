@@ -1158,7 +1158,7 @@ async function prepare(data: ReelData): Promise<Assets> {
 
 const AVC_CODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42e028']
 
-async function pickEncoderConfig(fps: number): Promise<VideoEncoderConfig | null> {
+async function pickEncoderConfig(fps: number, W: number, H: number): Promise<VideoEncoderConfig | null> {
   if (typeof VideoEncoder === 'undefined') return null
   const candidates: VideoEncoderConfig[] = [
     ...AVC_CODECS.map((codec) => ({
@@ -1209,7 +1209,6 @@ async function prepareSet(data: ReelData, w: number, h: number): Promise<SetAsse
 export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promise<ReelResult> {
   const fps = opts.fps ?? 30
   const durationSec = opts.durationSec ?? 15
-  const total = Math.round(durationSec * fps)
   const horizontal = opts.format === 'horizontal'
   W = horizontal ? 1920 : 1080
   H = horizontal ? 1080 : 1920
@@ -1233,12 +1232,29 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
       ? drawSetFrame(c, t, setData, setAssets, W, H, durationSec)
       : drawReelFrame(c, t, data, assets, durationSec)
 
+  return encodeCanvasVideo(W, H, durationSec, fps, draw, opts.onProgress)
+}
+
+/**
+ * Dibuja `draw(ctx, t)` fotograma a fotograma y lo codifica en MP4 (WebCodecs +
+ * mp4-muxer; si no hay WebCodecs, MediaRecorder en tiempo real). Lo usan los
+ * reels de temas/sesiones y los vídeos de página (`page-reel.ts`).
+ */
+export async function encodeCanvasVideo(
+  W: number,
+  H: number,
+  durationSec: number,
+  fps: number,
+  draw: (c: CanvasRenderingContext2D, t: number) => void,
+  onProgress?: (ratio: number) => void,
+): Promise<ReelResult> {
+  const total = Math.round(durationSec * fps)
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d', { alpha: false })!
 
-  const cfg = await pickEncoderConfig(fps)
+  const cfg = await pickEncoderConfig(fps, W, H)
   if (cfg) {
     const { Muxer, ArrayBufferTarget } = await import('mp4-muxer')
     const muxer = new Muxer({
@@ -1262,7 +1278,7 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
       frame.close()
       while (encoder.encodeQueueSize > 8) await new Promise((r) => setTimeout(r, 4))
       if (i % 10 === 0) {
-        opts.onProgress?.(i / total)
+        onProgress?.(i / total)
         await new Promise((r) => setTimeout(r, 0)) // deja respirar a la UI
       }
     }
@@ -1270,7 +1286,7 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
     encoder.close()
     if (failure) throw failure
     muxer.finalize()
-    opts.onProgress?.(1)
+    onProgress?.(1)
     return { blob: new Blob([muxer.target.buffer], { type: 'video/mp4' }), mime: 'video/mp4', ext: 'mp4' }
   }
 
@@ -1291,7 +1307,7 @@ export async function renderReel(data: ReelData, opts: ReelOptions = {}): Promis
       const t = (performance.now() - t0) / 1000
       if (t >= durationSec) return resolve()
       draw(ctx, t)
-      opts.onProgress?.(t / durationSec)
+      onProgress?.(t / durationSec)
       requestAnimationFrame(tick)
     }
     tick()

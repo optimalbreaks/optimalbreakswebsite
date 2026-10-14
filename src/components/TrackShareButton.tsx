@@ -21,6 +21,7 @@
 
 'use client'
 
+import { aiShareCaption } from '@/lib/share-caption'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import type { Locale } from '@/lib/i18n-config'
@@ -202,6 +203,26 @@ export default function TrackShareButton(props: Props) {
     return { ...(await res.json()), lang: 'en' as const }
   }
 
+  /** Texto del post: GPT‑5.6 (`/api/admin/share-caption`) con la plantilla de respaldo. */
+  function videoCaption(data: Awaited<ReturnType<typeof fetchVideoData>>, platform: 'instagram' | 'facebook') {
+    return aiShareCaption({
+      kind: 'track',
+      platform,
+      lang: props.lang,
+      url: fullUrl,
+      fallback: buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform }),
+      context: {
+        title: data.title,
+        artists: data.artists,
+        label: data.label,
+        releaseDate: data.releaseDate,
+        year: data.year,
+        bpm: data.bpm,
+        key: data.musicKey,
+      },
+    })
+  }
+
   async function onReelClick() {
     if (!storyPlay || (videoBusy && reelState !== 'ready')) return
     if (reelState === 'ready' && reelFile) {
@@ -218,13 +239,15 @@ export default function TrackShareButton(props: Props) {
     try {
       await copyShareLink(fullUrl)
       const data = await fetchVideoData(storyPlay)
-      const caption = buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform: 'instagram' })
-      setReelCaption(caption)
+      // Texto con GPT‑5.6 en paralelo al render (plantilla si falla).
+      const captionP = videoCaption(data, 'instagram')
       const { renderReel } = await import('@/lib/reel-renderer')
       const reel = await renderReel(data, {
         format: 'vertical',
-        onProgress: (r) => setReelPct(Math.round(r * 100)),
+        onProgress: (r) => setReelPct(Math.min(99, Math.round(r * 100))),
       })
+      const caption = await captionP
+      setReelCaption(caption)
       const file = new File([reel.blob], `optimal-breaks-reel.${reel.ext}`, { type: reel.mime })
       const nav = navigator as Navigator & { userActivation?: { isActive: boolean } }
       if (nav.canShare?.({ files: [file] }) && !nav.userActivation?.isActive) {
@@ -255,12 +278,13 @@ export default function TrackShareButton(props: Props) {
     try {
       await copyShareLink(fullUrl)
       const data = await fetchVideoData(storyPlay)
-      const caption = buildVideoCaption(data, { lang: props.lang, url: fullUrl, platform: 'facebook' })
+      const captionP = videoCaption(data, 'facebook')
       const { renderReel } = await import('@/lib/reel-renderer')
       const video = await renderReel(data, {
         format: 'horizontal',
-        onProgress: (r) => setFbPct(Math.round(r * 100)),
+        onProgress: (r) => setFbPct(Math.min(99, Math.round(r * 100))),
       })
+      const caption = await captionP
       const url = URL.createObjectURL(video.blob)
       const a = document.createElement('a')
       a.href = url

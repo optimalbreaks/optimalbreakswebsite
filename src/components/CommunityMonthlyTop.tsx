@@ -26,6 +26,10 @@ import { CountryFlagSvg } from '@/components/country-flag-svgs'
 import { countryDisplayFromCode } from '@/lib/seo'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import LoadingBreaks from '@/components/LoadingBreaks'
+import VideoShareButtons from '@/components/VideoShareButtons'
+import { useAuth } from '@/components/AuthProvider'
+import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
+import type { ReelFormat } from '@/lib/reel-renderer'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import {
   buildFullArtistSlugMap,
@@ -43,6 +47,7 @@ import {
   buildBeatportSharePath,
   extractBeatportTrackId,
   trackStoryMeta,
+  buildAbsoluteShareUrl,
 } from '@/lib/share-track'
 import { extractYouTubeId, LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import {
@@ -261,6 +266,7 @@ function SaveCountBadge({ count, label }: { count: number; label: string }) {
 export default function CommunityMonthlyTop({ lang, dict }: Props) {
   const c = dict.charts
   const cm = c.community_monthly || {}
+  const { isAdmin } = useAuth()
 
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -948,6 +954,19 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               </>
             )
           )}
+          {isAdmin && data && data.top_tracks.length > 0 && (
+            <span className="inline-flex items-center gap-2">
+              <VideoShareButtons
+                lang={lang}
+                title={lang === 'es' ? 'Top 100 de la comunidad | Optimal Breaks' : 'Community Top 100 | Optimal Breaks'}
+                fileBase="top100"
+                what={{ es: 'del Top 100 (cuenta atrás del 10 al 1)', en: 'of the Top 100 (countdown 10 to 1)' }}
+                tone="light"
+                makeVideo={(format: ReelFormat, onProgress: (r: number) => void) => top100Video(data.top_tracks, format, onProgress)}
+                makeCaption={(platform: SharePlatform) => top100Caption(data.top_tracks, lang, platform)}
+              />
+            </span>
+          )}
         </div>
 
         {loading && (
@@ -1225,3 +1244,49 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     </>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Vídeos R/F del Top 100 (solo admins): cuenta atrás del 10 al 1.
+// ---------------------------------------------------------------------------
+
+function topReelTitle(t: CommunityTopTrack): string {
+  const mix = (t.mix_name || '').trim()
+  return mix && !/^original/i.test(mix) ? `${t.title} (${mix})` : t.title
+}
+
+async function top100Video(tracks: CommunityTopTrack[], format: ReelFormat, onProgress: (r: number) => void) {
+  const { renderPageReel } = await import('@/lib/page-reel')
+  return renderPageReel(
+    {
+      kind: 'top100',
+      // Puesto = orden de la lista (la animación necesita 1…10 sin repetidos).
+      rows: tracks.slice(0, 10).map((t, i) => ({
+        pos: i + 1,
+        title: topReelTitle(t),
+        artists: t.artists,
+        label: t.label || '',
+        saves: t.save_count,
+        artwork: t.artwork_url,
+      })),
+    },
+    format,
+    onProgress,
+  )
+}
+
+function top100Caption(tracks: CommunityTopTrack[], lang: Locale, platform: SharePlatform) {
+  const url = buildAbsoluteShareUrl(`/${lang}/top100`)
+  const top = tracks.slice(0, 10)
+  const first = top[0] ? `${topReelTitle(top[0])} — ${top[0].artists}` : ''
+  return aiShareCaption({
+    kind: 'top100',
+    platform,
+    lang,
+    url,
+    fallback: buildPageVideoCaption('top100', { first }, { lang, url, platform }),
+    context: {
+      rows: top.map((t, i) => ({ pos: i + 1, title: topReelTitle(t), artists: t.artists, label: t.label, saves: t.save_count })),
+    },
+  })
+}
+

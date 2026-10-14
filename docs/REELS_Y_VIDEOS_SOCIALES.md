@@ -116,3 +116,24 @@ Para revisar cambios sin desplegar se puede montar una página que importe `rend
 ## Runway (IA) — no se usa aquí
 
 Runway (vía MCP en el escritorio) se probó para generar imagen + vídeo con IA. **Coste API: 0,01 $ por crédito** (oct 2026): Nano Banana Pro 20 créditos/imagen (0,20 $); Seedance 2 a 720p 36 créditos/s (≈ 1,80 $ por 5 s); Gen-4.5 12 créditos/s; Gen-4 Turbo 5 créditos/s. Descartado para estos vídeos porque **deforma el texto** (los carteles y títulos son lo principal), tarda minutos y cuesta créditos. Si algún día se quiere «dar vida» a la carátula, la idea sería un modo opcional que anime solo la carátula con Runway y meta ese clip dentro de este mismo diseño. Precios: <https://docs.dev.runwayml.com/guides/pricing>.
+
+## Vídeos de página: Top 100, New Releases y blog (oct 2026)
+
+Botones **R** (vertical 1080×1920) y **F** (horizontal 1920×1080), solo admins, en:
+
+- `/top100`: barra superior de la lista. Cuenta atrás del 10 al 2 con reproductor y el #1 al final.
+- `/charts`: cabecera de cada semana de New Releases. Estantería de portadas 3×3 que se van «reproduciendo», sello con el nº de temas.
+- `/blog/<slug>`: fila de compartir de arriba. Título con subrayado, funda con vinilo girando y reproductor que recorre los temas del álbum (sin álbum: extracto).
+
+Piezas:
+
+- `src/lib/page-reel-design.ts`: diseño y animación (14 s, pulso a 135 BPM). Cada página tiene su color dominante para que no parezcan el mismo reel en el muro.
+- `src/lib/page-reel.ts`: `renderPageReel(input, format)`. Codifica con `encodeCanvasVideo` (extraído de `reel-renderer.ts`, común a todos los vídeos).
+- `src/app/api/admin/share-reel-images`: carátulas como data URL cuadradas (500 px) para el canvas (evita CORS).
+- `src/components/VideoShareButtons.tsx`: botones R/F genéricos (estado, %, compartir/descargar, portapapeles). También los usan las sesiones.
+
+## Texto del post con GPT‑5.6 (todos los R/F)
+
+`/api/admin/share-caption` escribe el pie con GPT‑5.6 (`OPENAI_SHARE_CAPTION_MODEL` u `OPENAI_MODEL`) con un tono por tipo (`track`, `set`, `top100`, `week`, `blog`): gancho en la primera línea, datos reales, llamada a comentar/guardar, «enlace en la bio» (IG) o la URL (FB) y **máx. 5 hashtags genéricos de gran difusión**. Nunca hashtags de artistas, sellos, festivales ni de Optimal Breaks (se filtran también en el servidor): esos los etiqueta el admin a mano.
+
+Se pide en paralelo al render; si falla o tarda más de 55 s se copia la plantilla (`share-track.ts` / `share-caption.ts`), que ya sigue la misma regla de hashtags.
