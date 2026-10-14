@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     import_from: BEATPORT_IMPORT_FROM,
-    breaks_listing_url: breaksListingUrlForEditor(),
+    breaks_listing_url: await breaksListingUrlForEditor().catch(() => null),
     pending_count: countRes.count ?? 0,
     pending: pendingRes.data ?? [],
     artist_slug_map: slugMaps.artists,

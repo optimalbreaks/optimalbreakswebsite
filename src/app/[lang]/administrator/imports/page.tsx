@@ -39,7 +39,7 @@ type LastRun = {
 
 type Payload = {
   import_from: string
-  breaks_listing_url?: string
+  breaks_listing_url?: string | null
   pending_count: number
   pending: PendingTrack[]
   artist_slug_map?: Record<string, string>
@@ -66,6 +66,15 @@ function names(artists: Artist[] | null | undefined) {
 }
 
 const BEATPORT_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?beatport\.com$/i
+const LISTING_PER_PAGE = 150
+
+function pageOfListing(url: string): number {
+  try {
+    return Math.max(1, Number(new URL(url).searchParams.get('page')) || 1)
+  } catch {
+    return 1
+  }
+}
 
 type JobLine = { at: string; line: string }
 type JobResult = {
@@ -76,8 +85,10 @@ type JobResult = {
   queued?: number
   auto_approved?: number
   skipped_known?: number
+  listing_total?: number
 }
 type Job = {
+  resumeUrl?: string
   title: string
   kind: 'run' | 'ingest'
   lines: JobLine[]
@@ -105,7 +116,9 @@ function clock(at: string) {
  * por si el navegador corta ese hilo, también al portapapeles.
  */
 function beatportBookmarklet(origin: string, lang: string): string {
-  const body = `(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var nd;try{nd=JSON.parse(el.textContent)}catch(e){alert('No se ha podido leer la página.');return}var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&x.queryKey[0]==='tracks'});if(!q.length){alert('En esta página no hay lista de temas.');return}var data=JSON.stringify({v:1,url:location.href,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}});var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w){alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.');return}window.addEventListener('message',function h(e){if(e.origin!==O||!e.data||e.data.type!=='ob-beatport-ready')return;e.source.postMessage({type:'ob-beatport-data',payload:data},O);window.removeEventListener('message',h)})};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
+  // Las páginas 2, 3… las pide esta misma pestaña (la sesión del editor), una a una,
+  // con pausa, y solo cuando Optimal Breaks dice que la anterior trajo algo nuevo.
+  const body = String.raw`(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var slim=function(nd,url){var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&x.queryKey[0]==='tracks'});return q.length?JSON.stringify({v:1,url:url,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}}):null};var data;try{data=slim(JSON.parse(el.textContent),location.href)}catch(e){alert('No se ha podido leer la página.');return}if(!data){alert('En esta página no hay lista de temas.');return}var page=Number(new URL(location.href).searchParams.get('page'))||1;var pageUrl=function(n){var u=new URL(location.href);u.searchParams.set('page',String(n));return u.toString()};var send=function(w,m){try{w.postMessage(m,O)}catch(e){}};if(window.__obListen)window.removeEventListener('message',window.__obListen);window.__obListen=function(e){if(e.origin!==O||!e.data)return;var t=e.data.type,w=e.source;if(t==='ob-beatport-ready'){send(w,{type:'ob-beatport-data',payload:data,page:page})}else if(t==='ob-beatport-next'){var n=Number(e.data.page)||0;if(!n)return;setTimeout(function(){var u=pageUrl(n);fetch(u,{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),u):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:n})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:n,url:u})})},2000)}};window.addEventListener('message',window.__obListen);var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w)alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.')};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
   return `javascript:${encodeURIComponent(body)}`
 }
 
@@ -121,6 +134,9 @@ export default function AdminImportsPage() {
   const [jobOpen, setJobOpen] = useState(false)
   const bookmarkletRef = useRef<HTMLAnchorElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
+  const stopRef = useRef(false)
+  const nextTimerRef = useRef<number | null>(null)
+  const pagesRef = useRef<JobResult | null>(null)
   const pathname = usePathname()
   const params = useParams<{ lang?: string }>()
   const lang: Locale = params?.lang === 'en' ? 'en' : 'es'
@@ -146,11 +162,23 @@ export default function AdminImportsPage() {
   useEffect(() => { load() }, [load])
 
   // Ventana de «Traer ahora» y del favorito: el servidor manda una línea por paso.
-  const streamJob = useCallback(async (title: string, kind: Job['kind'], body: Record<string, unknown>) => {
+  const pushLine = useCallback((line: string, at = new Date().toISOString()) => {
+    setJob((j) => (j ? { ...j, lines: [...j.lines, { at, line }] } : j))
+  }, [])
+
+  const startJob = useCallback((title: string, kind: Job['kind']) => {
     setNote(null)
+    stopRef.current = false
     setJob({ title, kind, lines: [], running: true, stopping: false, result: null })
     setJobOpen(true)
-    const push = (line: JobLine) => setJob((j) => (j ? { ...j, lines: [...j.lines, line] } : j))
+  }, [])
+
+  const finishJob = useCallback((result: JobResult) => {
+    setJob((j) => (j ? { ...j, running: false, stopping: false, result } : j))
+    load(true)
+  }, [load])
+
+  const runStream = useCallback(async (body: Record<string, unknown>): Promise<JobResult> => {
     let result: JobResult = { ok: false, error: 'El pase terminó sin resultado.' }
     try {
       const r = await fetch('/api/admin/imports', {
@@ -177,7 +205,7 @@ export default function AdminImportsPage() {
           if (!raw) continue
           try {
             const msg = JSON.parse(raw) as { type: 'log'; line: string; at: string } | { type: 'done'; result: JobResult }
-            if (msg.type === 'log') push({ at: msg.at, line: msg.line })
+            if (msg.type === 'log') pushLine(msg.line, msg.at)
             else result = msg.result
           } catch {
             /* línea rota */
@@ -187,15 +215,20 @@ export default function AdminImportsPage() {
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      push({ at: new Date().toISOString(), line: `Error: ${message}` })
+      pushLine(`Error: ${message}`)
       result = { ok: false, error: message }
     }
-    setJob((j) => (j ? { ...j, running: false, stopping: false, result } : j))
-    load(true)
-  }, [load])
+    return result
+  }, [pushLine])
 
   async function stopJob() {
-    setJob((j) => (j ? { ...j, stopping: true, lines: [...j.lines, { at: new Date().toISOString(), line: 'Pidiendo que pare… acaba la página que está leyendo.' }] } : j))
+    stopRef.current = true
+    if (nextTimerRef.current) {
+      window.clearTimeout(nextTimerRef.current)
+      nextTimerRef.current = null
+    }
+    setJob((j) => (j ? { ...j, stopping: true } : j))
+    pushLine('Pidiendo que pare… acaba la página que está leyendo.')
     try {
       const r = await fetch('/api/admin/imports', {
         method: 'POST',
@@ -205,34 +238,102 @@ export default function AdminImportsPage() {
       })
       const j = (await r.json()) as { error?: string; stopped?: number }
       if (!r.ok) throw new Error(j.error || r.statusText)
-      if (!j.stopped) {
-        setJob((s) => (s ? { ...s, stopping: false, lines: [...s.lines, { at: new Date().toISOString(), line: 'No había ningún pase abierto.' }] } : s))
+      if (!j.stopped) setJob((s) => (s ? { ...s, stopping: false } : s))
+      if (!j.stopped && pagesRef.current) {
+        finishJob({ ...pagesRef.current, ok: false, error: 'Parado por el editor.' })
+        pagesRef.current = null
+      } else if (!j.stopped) {
+        pushLine('No había ningún pase abierto.')
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)
-      setJob((s) => (s ? { ...s, stopping: false, lines: [...s.lines, { at: new Date().toISOString(), line: `No se pudo parar: ${message}` }] } : s))
+      setJob((s) => (s ? { ...s, stopping: false } : s))
+      pushLine(`No se pudo parar: ${message}`)
     }
   }
 
-  const ingest = useCallback(async (raw: string) => {
+  /**
+   * Una página del listado de Beatport. Si trae algo nuevo y hay más, se pide
+   * la siguiente a la pestaña de Beatport (`source`); en cuanto una página
+   * viene entera repetida, se acaba: lo de detrás ya estaba visto.
+   */
+  const ingestPage = useCallback(async (
+    raw: string,
+    page: number | null,
+    source: { postMessage: (m: unknown, origin: string) => void; origin: string } | null,
+  ) => {
     let parsed: { url?: string; nextData?: unknown }
     try {
       parsed = JSON.parse(raw)
     } catch {
-      setNote('Eso no es una página de Beatport. Pulsa el botón en la pestaña del listado y vuelve a pegar.')
-      return
+      parsed = {}
     }
     if (!parsed?.url || !parsed?.nextData) {
       setNote('Eso no es una página de Beatport. Pulsa el botón en la pestaña del listado y vuelve a pegar.')
       return
     }
-    setIngesting(true)
-    try {
-      await streamJob('Desde tu Chrome', 'ingest', { action: 'ingest', url: parsed.url, nextData: parsed.nextData })
-    } finally {
-      setIngesting(false)
+    if (page == null) page = pageOfListing(parsed.url)
+    if (nextTimerRef.current) {
+      window.clearTimeout(nextTimerRef.current)
+      nextTimerRef.current = null
     }
-  }, [streamJob])
+    if (page === 1 || !pagesRef.current) {
+      startJob('Desde tu Chrome', 'ingest')
+      pagesRef.current = { ok: true, seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
+    }
+    if (stopRef.current) return
+    setIngesting(true)
+    pushLine(`Página ${page} de Beatport…`)
+    const r = await runStream({ action: 'ingest', url: parsed.url, nextData: parsed.nextData })
+    setIngesting(false)
+    const sum = pagesRef.current
+    if (!sum) return
+    sum.seen = (sum.seen ?? 0) + (r.seen ?? 0)
+    sum.queued = (sum.queued ?? 0) + (r.queued ?? 0)
+    sum.auto_approved = (sum.auto_approved ?? 0) + (r.auto_approved ?? 0)
+    sum.skipped_known = (sum.skipped_known ?? 0) + (r.skipped_known ?? 0)
+    const done = (res: JobResult) => {
+      pagesRef.current = null
+      finishJob(res)
+    }
+    if (!r.ok || stopRef.current) {
+      done({ ...sum, ok: false, error: r.error || 'Parado por el editor.' })
+      return
+    }
+    const fresh = (r.queued ?? 0) + (r.auto_approved ?? 0)
+    pushLine(`Página ${page}: ${fresh} nuevos, ${r.skipped_known ?? 0} ya estaban.`)
+    const total = r.listing_total ?? 0
+    if (!fresh) {
+      pushLine('Página sin nada nuevo: lo que viene detrás ya estaba visto. Termino.')
+      done(sum)
+      return
+    }
+    if (!total || page * LISTING_PER_PAGE >= total) {
+      pushLine('Era la última página del listado.')
+      done(sum)
+      return
+    }
+    if (!source) {
+      pushLine(`Para seguir, abre la página ${page + 1} en Beatport y pulsa el favorito ahí.`)
+      done(sum)
+      return
+    }
+    const next = page + 1
+    pushLine(`Pido la página ${next} de ${Math.ceil(total / LISTING_PER_PAGE)} a tu pestaña de Beatport…`)
+    source.postMessage({ type: 'ob-beatport-next', page: next }, source.origin)
+    nextTimerRef.current = window.setTimeout(() => {
+      nextTimerRef.current = null
+      pushLine(
+        `Beatport no ha contestado a la página ${next}. Si tu favorito es de antes del 14 oct por la tarde, arrastra el botón negro otra vez a la barra. Si no, abre la página ${next}, pasa la verificación y pulsa el favorito ahí.`,
+      )
+      done({ ...sum, ok: false, error: `Sin respuesta de Beatport en la página ${next}.` })
+    }, 45_000)
+  }, [finishJob, pushLine, runStream, startJob])
+
+  function runNow() {
+    startJob('Traer ahora', 'run')
+    void runStream({ action: 'run' }).then(finishJob)
+  }
 
   const jobLines = job?.lines.length ?? 0
   useEffect(() => {
@@ -245,10 +346,10 @@ export default function AdminImportsPage() {
     bookmarkletRef.current?.setAttribute('href', beatportBookmarklet(window.location.origin, lang))
   }, [lang])
 
-  const ingestRef = useRef(ingest)
-  useEffect(() => { ingestRef.current = ingest }, [ingest])
+  const ingestRef = useRef(ingestPage)
+  useEffect(() => { ingestRef.current = ingestPage }, [ingestPage])
 
-  // Pestaña abierta por el botón de favoritos: avisa a Beatport y recibe la lista.
+  // Pestaña abierta por el botón de favoritos: avisa a Beatport y recibe las páginas.
   useEffect(() => {
     const url = new URL(window.location.href)
     if (url.searchParams.get('beatport') !== '1') return
@@ -256,10 +357,32 @@ export default function AdminImportsPage() {
     window.history.replaceState(null, '', url.pathname + url.search)
     const onMessage = (e: MessageEvent) => {
       if (!BEATPORT_ORIGIN.test(e.origin)) return
-      const data = e.data as { type?: string; payload?: string } | null
+      const data = e.data as { type?: string; payload?: string; page?: number; url?: string } | null
+      const src = e.source as Window | null
+      const source = src ? { postMessage: (m: unknown, o: string) => src.postMessage(m, o), origin: e.origin } : null
+      if (data?.type === 'ob-beatport-blocked') {
+        if (nextTimerRef.current) {
+          window.clearTimeout(nextTimerRef.current)
+          nextTimerRef.current = null
+        }
+        const sum = pagesRef.current
+        pagesRef.current = null
+        setJob((j) => (j ? {
+          ...j,
+          lines: [...j.lines, {
+            at: new Date().toISOString(),
+            line: `Beatport ha pedido la verificación en la página ${data.page}. Ábrela, pásala y pulsa el favorito ahí: sigo desde esa página.`,
+          }],
+          running: false,
+          stopping: false,
+          result: { ...(sum ?? { seen: 0 }), ok: false, error: `Verificación de Beatport en la página ${data.page}.` },
+          resumeUrl: data.url,
+        } : j))
+        load(true)
+        return
+      }
       if (data?.type !== 'ob-beatport-data' || typeof data.payload !== 'string') return
-      window.removeEventListener('message', onMessage)
-      void ingestRef.current(data.payload)
+      void ingestRef.current(data.payload, Number(data.page) || null, source)
     }
     window.addEventListener('message', onMessage)
     if (window.opener) {
@@ -275,7 +398,7 @@ export default function AdminImportsPage() {
       window.removeEventListener('message', onMessage)
       if (noOpener) window.clearTimeout(noOpener)
     }
-  }, [])
+  }, [load])
 
   // La fila se quita (o se repone) en el acto; la red va detrás.
   function removeRow(id: string) {
@@ -342,10 +465,6 @@ export default function AdminImportsPage() {
     }
   }
 
-  function runNow() {
-    void streamJob('Traer ahora', 'run', { action: 'run' })
-  }
-
   const pending = payload?.pending ?? []
   const artistSlugMap = payload?.artist_slug_map
   const labelSlugMap = payload?.label_slug_map
@@ -410,7 +529,8 @@ export default function AdminImportsPage() {
         </p>
         <p className="text-xs text-[var(--ink)]/70 mb-3" style={mono}>
           Si Beatport no deja pasar al pase automático, lo traes tú. Arrastra el botón negro a la barra de favoritos (una vez).
-          Luego abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito: los temas llegan aquí.
+          Luego abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito en la página 1: va pasando páginas solo
+          hasta que una no trae nada nuevo.
         </p>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <a
@@ -446,7 +566,7 @@ export default function AdminImportsPage() {
             const text = e.clipboardData.getData('text')
             if (!text) return
             e.preventDefault()
-            void ingest(text)
+            void ingestPage(text, null, null)
           }}
           className="w-full border-[2px] border-[var(--ink)] p-2 text-xs bg-[var(--paper)] disabled:opacity-40"
           style={mono}
@@ -627,6 +747,13 @@ export default function AdminImportsPage() {
             </div>
             {job.result && (
               <p className="px-4 pt-3 text-xs" style={mono}>{jobSummary(job.result)}</p>
+            )}
+            {!job.running && job.resumeUrl && (
+              <p className="px-4 pt-2 text-xs" style={mono}>
+                <a href={job.resumeUrl} target="_blank" rel="noopener" className="underline font-bold">
+                  Abrir la página donde se quedó ↗
+                </a>
+              </p>
             )}
             <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3">
               {(job.running || job.result?.skipped === 'already-running') && (

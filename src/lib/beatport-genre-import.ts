@@ -47,6 +47,8 @@ export type GenreImportResult = {
   auto_approved: number
   skipped_known: number
   error?: string
+  /** Temas que tiene el listado entero (página que manda el favorito). */
+  listing_total?: number
 }
 
 type EditionState = { id: string; nextSort: number; keys: Set<string> }
@@ -828,12 +830,30 @@ async function revalidateAfterPublish() {
   }
 }
 
-/** Listado de Breaks de la última semana, 150 por página: lo que abre el editor en su Chrome. */
-export function breaksListingUrlForEditor(): string {
-  const weekAgo = new Date(`${madridToday()}T12:00:00Z`)
-  weekAgo.setUTCDate(weekAgo.getUTCDate() - 7)
-  const from = weekAgo.toISOString().slice(0, 10)
-  return genreTracksUrl(1, from > BEATPORT_IMPORT_FROM ? from : BEATPORT_IMPORT_FROM)
+/**
+ * Listado de Breaks que abre el editor en su Chrome, 150 por página. Empieza
+ * dos días antes del último pase que sí leyó temas (margen para lo que Beatport
+ * sube con fecha atrasada), nunca antes del 8 oct 2026: si pasan dos semanas
+ * sin importar, no se pierde ningún día.
+ */
+export async function breaksListingUrlForEditor(): Promise<string> {
+  const sb = createServiceSupabase()
+  const { data } = await sb
+    .from('chart_import_runs')
+    .select('started_at')
+    .eq('ok', true)
+    .gt('seen', 0)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  let from = BEATPORT_IMPORT_FROM
+  if (data?.started_at) {
+    const day = new Date(Date.parse(data.started_at))
+    day.setUTCDate(day.getUTCDate() - 2)
+    const iso = day.toISOString().slice(0, 10)
+    if (iso > from) from = iso
+  }
+  return genreTracksUrl(1, from)
 }
 
 /**
@@ -859,7 +879,7 @@ export async function ingestBeatportPage(opts: {
   if (!/(^|\.)beatport\.com$/i.test(host)) {
     return { ok: false, error: 'Esa página no es de Beatport.', ...empty }
   }
-  const { tracks } = tracksFromNext(opts.nextData, opts.url, BEATPORT_IMPORT_FROM)
+  const { tracks, count } = tracksFromNext(opts.nextData, opts.url, BEATPORT_IMPORT_FROM)
   if (!tracks.length) {
     return { ok: false, error: 'En esa página no hay temas publicados desde el 8 oct 2026.', ...empty }
   }
@@ -874,7 +894,7 @@ export async function ingestBeatportPage(opts: {
     return { ok: false, error: runErr?.message || 'No se pudo abrir el pase', ...empty }
   }
 
-  const result: GenreImportResult = { ok: false, ...empty, seen: tracks.length }
+  const result: GenreImportResult = { ok: false, ...empty, seen: tracks.length, listing_total: count }
   let published = 0
   let wasStopped = false
   try {
