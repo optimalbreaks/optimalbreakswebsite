@@ -541,6 +541,32 @@ async function followedBeatportArtists(
   return [...out.values()]
 }
 
+const STOPPED_BY_EDITOR = 'Parado por el editor.'
+
+function pickLabel(pick: BeatportPickInput): string {
+  const who = (pick.artists || []).map((a) => a?.name).filter(Boolean).join(', ')
+  const mix = pick.mix_name ? ` (${pick.mix_name})` : ''
+  return `${who || '—'} — ${pick.title}${mix}`
+}
+
+/** «Parar» de la ventana cierra la fila del pase; el pase lo ve entre página y página. */
+async function importRunStopped(sb: ReturnType<typeof createServiceSupabase>, runId: string): Promise<boolean> {
+  const { data } = await sb.from('chart_import_runs').select('finished_at').eq('id', runId).maybeSingle()
+  return Boolean(data?.finished_at)
+}
+
+/** Para cualquier pase abierto (el de este botón o el de GitHub). Lo ya guardado se queda. */
+export async function stopOpenImportRuns(): Promise<number> {
+  const sb = createServiceSupabase()
+  const { data, error } = await sb
+    .from('chart_import_runs')
+    .update({ finished_at: new Date().toISOString(), ok: false, error: STOPPED_BY_EDITOR })
+    .is('finished_at', null)
+    .select('id')
+  if (error) throw new Error(error.message)
+  return data?.length ?? 0
+}
+
 export async function runBeatportGenreImport(opts: {
   trigger: 'cron' | 'manual'
   userId?: string | null
@@ -559,7 +585,13 @@ export async function runBeatportGenreImport(opts: {
    * El listado de Breaks se lee todos los días.
    */
   artists?: boolean
+  /** Cada paso del pase, para la ventana de «Traer ahora». */
+  log?: (line: string) => void
 }): Promise<GenreImportResult> {
+  const say = (line: string) => {
+    console.log(line)
+    opts.log?.(line)
+  }
   const startedAt = Date.now()
   const readArtists = opts.artists ?? (Boolean(opts.artistSince) || madridWeekday() === TOP100_ARTISTS_WEEKDAY)
   const outOfTime = () => opts.budgetMs != null && Date.now() - startedAt > opts.budgetMs
@@ -581,6 +613,7 @@ export async function runBeatportGenreImport(opts: {
     .limit(1)
     .maybeSingle()
   if (openRun?.started_at && Date.now() - Date.parse(openRun.started_at) < 15 * 60 * 1000) {
+    say('Ya hay un pase en marcha (GitHub o este botón). Páralo o espera a que acabe.')
     return { ok: true, skipped: 'already-running', ...empty }
   }
 
@@ -596,7 +629,14 @@ export async function runBeatportGenreImport(opts: {
   const result: GenreImportResult = { ok: false, ...empty }
   let published = 0
   let partial: string | null = null
+  const stopped = async () => {
+    if (!(await importRunStopped(sb, run.id))) return false
+    partial = STOPPED_BY_EDITOR
+    say('Parado por el editor. Lo leído hasta aquí queda guardado.')
+    return true
+  }
   try {
+    say(readArtists ? 'Pase con listado de Breaks y fichas del Top 100.' : 'Pase con el listado de Breaks (las fichas del Top 100, los sábados).')
     const known = await loadKnownTracks(sb)
     const fresh: BeatportPickInput[] = []
     const fromArtist = new Set<string>()
@@ -638,13 +678,15 @@ export async function runBeatportGenreImport(opts: {
           if (pub === 'inserted') {
             result.auto_approved += 1
             published += 1
+            say(`  Publicado (Top 100): ${pickLabel(pick)}`)
           }
         } else {
           await rememberQueue(sb, pick, 'pending', null, null)
           result.queued += 1
+          say(`  Por aprobar: ${pickLabel(pick)}`)
         }
       }
-      console.log(`${label}: en cola ${result.queued}, publicados ${result.auto_approved}, ya conocidos ${result.skipped_known}`)
+      say(`${label}: en cola ${result.queued}, publicados ${result.auto_approved}, ya conocidos ${result.skipped_known}`)
       await noteProgress()
     }
     let browser: Awaited<ReturnType<typeof openBrowserReader>> | null = null
@@ -671,30 +713,33 @@ export async function runBeatportGenreImport(opts: {
       // antes del Top 100: el 14 oct 2026 el pase se quedó en las fichas, GitHub
       // lo cortó a los 40 min y la cola salió vacía porque el guardado era al final.
       if (doGenre) {
-        console.log('Listado de Breaks')
+        say('Listado de Breaks')
         let total = Infinity
         for (let page = 1; page <= MAX_PAGES && (page - 1) * PER_PAGE < total; page++) {
           if (outOfTime()) {
             partial = partial || `Tiempo agotado en la página ${page} del listado de Breaks. El pase de GitHub lo completa.`
             break
           }
+          if (await stopped()) break
           const url = genreTracksUrl(page, genreFrom)
+          say(`Breaks página ${page}: leyendo…`)
           let payload = await withTimeout(readGenrePageFetch(url, genreFrom), 12_000, 'Fetch de Breaks').catch(() => null)
           if (!payload) {
+            say(`Breaks página ${page}: Beatport no contesta a la lectura directa; pruebo con Chrome (hasta 40 s)…`)
             try {
               payload = await readLimited(url, genreFrom)
             } catch (err) {
-              console.log(`Breaks página ${page}: ${err instanceof Error ? err.message : err}`)
+              say(`Breaks página ${page}: ${err instanceof Error ? err.message : err}`)
               try {
                 payload = await readLimited(url, genreFrom)
               } catch (err2) {
-                console.log(`Breaks página ${page} (2º intento): ${err2 instanceof Error ? err2.message : err2}`)
+                say(`Breaks página ${page} (2º intento): ${err2 instanceof Error ? err2.message : err2}`)
                 partial = partial || 'El listado de Breaks no respondió.'
                 break
               }
             }
           }
-          console.log(`Breaks página ${page}: ${payload.tracks.length} temas`)
+          say(`Breaks página ${page}: ${payload.tracks.length} temas`)
           total = payload.count
           result.seen += payload.tracks.length
           const before = fresh.length
@@ -704,18 +749,19 @@ export async function runBeatportGenreImport(opts: {
         }
         await persistFresh('Breaks')
       }
-      if (artistFrom && !readArtists) console.log('Fichas del Top 100: hoy no toca (solo los sábados).')
-      if (artistFrom && readArtists && !outOfTime()) {
+      if (artistFrom && !readArtists) say('Fichas del Top 100: hoy no toca (solo los sábados).')
+      if (artistFrom && readArtists && !outOfTime() && partial !== STOPPED_BY_EDITOR) {
         const followed = await followedBeatportArtists(sb, rankKeys)
-        console.log(`Top 100 con ficha Beatport: ${followed.length}`)
+        say(`Top 100 con ficha Beatport: ${followed.length}`)
         let artistsRead = 0
         for (const artist of followed) {
           if (outOfTime()) {
             partial = `Tiempo agotado: leídas ${artistsRead} de ${followed.length} fichas del Top 100. El pase de GitHub lo completa.`
             break
           }
+          if (await stopped()) break
           artistsRead += 1
-          console.log(`Top 100 ${artistsRead}/${followed.length} ${artist.slug}`)
+          say(`Top 100 ${artistsRead}/${followed.length} ${artist.slug}`)
           let total = Infinity
           for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
@@ -723,7 +769,7 @@ export async function runBeatportGenreImport(opts: {
             try {
               payload = await readLimited(url, artistFrom)
             } catch (err) {
-              console.log(`  salto ${artist.slug}: ${err instanceof Error ? err.message : err}`)
+              say(`  salto ${artist.slug}: ${err instanceof Error ? err.message : err}`)
               break
             }
             total = payload.count
@@ -800,7 +846,9 @@ export async function ingestBeatportPage(opts: {
   url: string
   nextData: unknown
   userId: string | null
+  log?: (line: string) => void
 }): Promise<GenreImportResult> {
+  const say = (line: string) => opts.log?.(line)
   const empty = { seen: 0, queued: 0, auto_approved: 0, skipped_known: 0 }
   let host = ''
   try {
@@ -828,11 +876,18 @@ export async function ingestBeatportPage(opts: {
 
   const result: GenreImportResult = { ok: false, ...empty, seen: tracks.length }
   let published = 0
+  let wasStopped = false
   try {
+    say(`Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
     const known = await loadKnownTracks(sb)
     const rankKeys = await loadTopArtistKeys(sb, 100)
     const cache = new Map<string, EditionState>()
-    for (const pick of tracks) {
+    for (const [i, pick] of tracks.entries()) {
+      if (i > 0 && i % 25 === 0 && (await importRunStopped(sb, run.id))) {
+        wasStopped = true
+        say('Parado por el editor. Lo leído hasta aquí queda guardado.')
+        break
+      }
       const id = beatportIdFromLink(pick.link_url)
       if (!id) continue
       const identity = trackDisplayIdentityKey(pick.title, pick.mix_name, pick.artists)
@@ -848,13 +903,17 @@ export async function ingestBeatportPage(opts: {
         if (pub === 'inserted') {
           result.auto_approved += 1
           published += 1
+          say(`  Publicado (Top 100): ${pickLabel(pick)}`)
         }
       } else {
         await rememberQueue(sb, pick, 'pending', null, null)
         result.queued += 1
+        say(`  Por aprobar: ${pickLabel(pick)}`)
       }
     }
-    result.ok = true
+    if (result.skipped_known) say(`Ya estaban en la web o en la cola: ${result.skipped_known}.`)
+    result.ok = !wasStopped
+    if (wasStopped) result.error = STOPPED_BY_EDITOR
   } catch (e) {
     result.error = shortImportError(e instanceof Error ? e.message : String(e))
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, usePathname } from 'next/navigation'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
@@ -66,6 +67,37 @@ function names(artists: Artist[] | null | undefined) {
 
 const BEATPORT_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?beatport\.com$/i
 
+type JobLine = { at: string; line: string }
+type JobResult = {
+  ok: boolean
+  skipped?: string
+  error?: string
+  seen?: number
+  queued?: number
+  auto_approved?: number
+  skipped_known?: number
+}
+type Job = {
+  title: string
+  kind: 'run' | 'ingest'
+  lines: JobLine[]
+  running: boolean
+  stopping: boolean
+  result: JobResult | null
+}
+
+function jobSummary(r: JobResult): string {
+  if (r.skipped === 'before-start') return 'El pase empieza el 8 de octubre de 2026. Hasta hoy el catálogo está al día.'
+  if (r.skipped === 'already-running') return 'Ya hay un pase en marcha. Puedes pararlo aquí y volver a lanzar.'
+  const counts = `Vistos ${r.seen ?? 0} · por aprobar ${r.queued ?? 0} · publicados del Top 100 ${r.auto_approved ?? 0} · ya estaban ${r.skipped_known ?? 0}`
+  return r.error ? `${r.error} ${counts}` : counts
+}
+
+function clock(at: string) {
+  const d = new Date(at)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('es-ES', { hour12: false })
+}
+
 /**
  * Botón de favoritos. Corre en la pestaña de Beatport del editor (que ya pasó
  * la verificación de Cloudflare), coge la lista de temas que la página trae
@@ -82,11 +114,13 @@ export default function AdminImportsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [running, setRunning] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ row: PendingTrack; index: number } | null>(null)
   const [ingesting, setIngesting] = useState(false)
+  const [job, setJob] = useState<Job | null>(null)
+  const [jobOpen, setJobOpen] = useState(false)
   const bookmarkletRef = useRef<HTMLAnchorElement>(null)
+  const logRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const params = useParams<{ lang?: string }>()
   const lang: Locale = params?.lang === 'en' ? 'en' : 'es'
@@ -111,6 +145,75 @@ export default function AdminImportsPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Ventana de «Traer ahora» y del favorito: el servidor manda una línea por paso.
+  const streamJob = useCallback(async (title: string, kind: Job['kind'], body: Record<string, unknown>) => {
+    setNote(null)
+    setJob({ title, kind, lines: [], running: true, stopping: false, result: null })
+    setJobOpen(true)
+    const push = (line: JobLine) => setJob((j) => (j ? { ...j, lines: [...j.lines, line] } : j))
+    let result: JobResult = { ok: false, error: 'El pase terminó sin resultado.' }
+    try {
+      const r = await fetch('/api/admin/imports', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!r.ok || !r.body) {
+        const j = (await r.json().catch(() => ({}))) as { error?: string }
+        throw new Error(j.error || r.statusText)
+      }
+      const reader = r.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (value) buf += decoder.decode(value, { stream: true })
+        let nl = buf.indexOf('\n')
+        while (nl >= 0) {
+          const raw = buf.slice(0, nl).trim()
+          buf = buf.slice(nl + 1)
+          nl = buf.indexOf('\n')
+          if (!raw) continue
+          try {
+            const msg = JSON.parse(raw) as { type: 'log'; line: string; at: string } | { type: 'done'; result: JobResult }
+            if (msg.type === 'log') push({ at: msg.at, line: msg.line })
+            else result = msg.result
+          } catch {
+            /* línea rota */
+          }
+        }
+        if (done) break
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      push({ at: new Date().toISOString(), line: `Error: ${message}` })
+      result = { ok: false, error: message }
+    }
+    setJob((j) => (j ? { ...j, running: false, stopping: false, result } : j))
+    load(true)
+  }, [load])
+
+  async function stopJob() {
+    setJob((j) => (j ? { ...j, stopping: true, lines: [...j.lines, { at: new Date().toISOString(), line: 'Pidiendo que pare… acaba la página que está leyendo.' }] } : j))
+    try {
+      const r = await fetch('/api/admin/imports', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'stop' }),
+      })
+      const j = (await r.json()) as { error?: string; stopped?: number }
+      if (!r.ok) throw new Error(j.error || r.statusText)
+      if (!j.stopped) {
+        setJob((s) => (s ? { ...s, stopping: false, lines: [...s.lines, { at: new Date().toISOString(), line: 'No había ningún pase abierto.' }] } : s))
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      setJob((s) => (s ? { ...s, stopping: false, lines: [...s.lines, { at: new Date().toISOString(), line: `No se pudo parar: ${message}` }] } : s))
+    }
+  }
+
   const ingest = useCallback(async (raw: string) => {
     let parsed: { url?: string; nextData?: unknown }
     try {
@@ -124,32 +227,18 @@ export default function AdminImportsPage() {
       return
     }
     setIngesting(true)
-    setNote('Leyendo la página de Beatport…')
     try {
-      const r = await fetch('/api/admin/imports', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'ingest', url: parsed.url, nextData: parsed.nextData }),
-      })
-      const j = (await r.json()) as {
-        error?: string
-        seen?: number
-        queued?: number
-        auto_approved?: number
-        skipped_known?: number
-      }
-      if (!r.ok || j.error) throw new Error(j.error || r.statusText)
-      setNote(
-        `De Beatport: ${j.seen ?? 0} temas · por aprobar ${j.queued ?? 0} · publicados del Top 100 ${j.auto_approved ?? 0} · ya estaban ${j.skipped_known ?? 0}`,
-      )
-      load(true)
-    } catch (e) {
-      setNote(e instanceof Error ? e.message : String(e))
+      await streamJob('Desde tu Chrome', 'ingest', { action: 'ingest', url: parsed.url, nextData: parsed.nextData })
     } finally {
       setIngesting(false)
     }
-  }, [load])
+  }, [streamJob])
+
+  const jobLines = job?.lines.length ?? 0
+  useEffect(() => {
+    const box = logRef.current
+    if (box) box.scrollTop = box.scrollHeight
+  }, [jobLines])
 
   // React no deja pintar un href `javascript:`; se pone a mano tras montar.
   useEffect(() => {
@@ -253,39 +342,8 @@ export default function AdminImportsPage() {
     }
   }
 
-  async function runNow() {
-    setRunning(true)
-    setNote(null)
-    try {
-      const r = await fetch('/api/admin/imports', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'run' }),
-      })
-      const j = (await r.json()) as {
-        error?: string
-        skipped?: string
-        queued?: number
-        auto_approved?: number
-        seen?: number
-      }
-      if (!r.ok) throw new Error(j.error || r.statusText)
-      if (j.skipped === 'before-start') {
-        setNote('El pase empieza el 8 de octubre de 2026. Hasta hoy el catálogo está al día.')
-      } else if (j.error) {
-        setNote(j.error)
-      } else {
-        setNote(
-          `Vistos ${j.seen ?? 0} · publicados del Top 100: ${j.auto_approved ?? 0} · pendientes de oír: ${j.queued ?? 0}`,
-        )
-      }
-      load(true)
-    } catch (e) {
-      setNote(e instanceof Error ? e.message : String(e))
-    } finally {
-      setRunning(false)
-    }
+  function runNow() {
+    void streamJob('Traer ahora', 'run', { action: 'run' })
   }
 
   const pending = payload?.pending ?? []
@@ -335,12 +393,11 @@ export default function AdminImportsPage() {
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button
           type="button"
-          onClick={runNow}
-          disabled={running}
+          onClick={job?.running ? () => setJobOpen(true) : runNow}
           className="h-10 px-5 border-[3px] border-[var(--ink)] bg-[var(--yellow)] font-black text-[10px] tracking-wider uppercase disabled:opacity-40"
           style={mono}
         >
-          {running ? 'Trayendo…' : 'Traer ahora'}
+          {job?.running ? 'Ver lo que pasa' : 'Traer ahora'}
         </button>
         <span className="text-xs text-[var(--ink)]/60" style={mono}>
           {payload ? `${payload.pending_count} pendientes` : ''}
@@ -544,6 +601,69 @@ export default function AdminImportsPage() {
             )
           })}
         </section>
+      )}
+
+      {job && jobOpen && createPortal(
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/50 p-3" role="dialog" aria-modal="true" aria-label={job.title}>
+          <div className="w-full max-w-2xl border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)]">
+            <div className="flex items-center justify-between gap-3 border-b-[3px] border-[var(--ink)] px-4 py-3">
+              <p className="font-black text-sm" style={{ fontFamily: "'Unbounded', sans-serif" }}>{job.title}</p>
+              <span
+                className={`text-[10px] font-black tracking-wider uppercase px-2 py-1 border-2 border-[var(--ink)] ${
+                  job.running ? 'bg-[var(--yellow)]' : job.result?.ok ? 'bg-[var(--cyan)] text-white' : 'bg-[var(--red)] text-white'
+                }`}
+                style={mono}
+              >
+                {job.running ? (job.stopping ? 'Parando…' : 'En marcha') : job.result?.ok ? 'Terminado' : 'Con fallos'}
+              </span>
+            </div>
+            <div ref={logRef} className="h-80 overflow-y-auto bg-[var(--ink)] text-[var(--paper)] p-3 text-[11px] leading-relaxed" style={mono}>
+              {job.lines.length === 0 && job.running && <p className="opacity-60">Arrancando…</p>}
+              {job.lines.map((l, i) => (
+                <p key={i} className="whitespace-pre-wrap break-words">
+                  <span className="opacity-50">{clock(l.at)} </span>{l.line}
+                </p>
+              ))}
+            </div>
+            {job.result && (
+              <p className="px-4 pt-3 text-xs" style={mono}>{jobSummary(job.result)}</p>
+            )}
+            <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3">
+              {(job.running || job.result?.skipped === 'already-running') && (
+                <button
+                  type="button"
+                  onClick={stopJob}
+                  disabled={job.stopping}
+                  className="h-9 px-4 border-[3px] border-[var(--ink)] bg-[var(--red)] text-white font-black text-[10px] tracking-wider uppercase disabled:opacity-40"
+                  style={mono}
+                >
+                  Parar
+                </button>
+              )}
+              {!job.running && job.kind === 'run' && (
+                <button
+                  type="button"
+                  onClick={runNow}
+                  className="h-9 px-4 border-[3px] border-[var(--ink)] bg-[var(--paper)] font-black text-[10px] tracking-wider uppercase"
+                  style={mono}
+                  title="Sigue donde lo dejó: lo ya guardado se salta"
+                >
+                  Volver a lanzar
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => (job.running ? setJobOpen(false) : setJob(null))}
+                className="h-9 px-4 border-[3px] border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] font-black text-[10px] tracking-wider uppercase"
+                style={mono}
+                title={job.running ? 'El pase sigue aunque cierres la ventana' : undefined}
+              >
+                {job.running ? 'Ocultar' : 'Cerrar'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

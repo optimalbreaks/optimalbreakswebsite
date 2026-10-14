@@ -6,6 +6,8 @@ import {
   decideImport,
   ingestBeatportPage,
   runBeatportGenreImport,
+  stopOpenImportRuns,
+  type GenreImportResult,
 } from '@/lib/beatport-genre-import'
 import { createServiceSupabase } from '@/lib/supabase-admin'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
@@ -46,6 +48,43 @@ async function slugMapsFor(sb: ReturnType<typeof createServiceSupabase>, rows: P
       { labelSuffixes: true },
     ),
   }
+}
+
+/**
+ * La ventana de la pantalla lee el pase mientras corre: una línea JSON por
+ * paso (`{ type: 'log' }`) y una última con el resultado (`{ type: 'done' }`).
+ */
+function streamJob(work: (log: (line: string) => void) => Promise<GenreImportResult>) {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (obj: unknown) => {
+        try {
+          controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`))
+        } catch {
+          /* la ventana se cerró; el pase sigue y guarda */
+        }
+      }
+      try {
+        const result = await work((line) => send({ type: 'log', line, at: new Date().toISOString() }))
+        send({ type: 'done', result })
+      } catch (e) {
+        send({ type: 'done', result: { ok: false, error: e instanceof Error ? e.message : String(e) } })
+      }
+      try {
+        controller.close()
+      } catch {
+        /* ya cerrado */
+      }
+    },
+  })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
+    },
+  })
 }
 
 export async function GET(request: NextRequest) {
@@ -101,14 +140,23 @@ export async function POST(request: NextRequest) {
   if (body.action === 'ingest') {
     // La página que el editor manda desde su Chrome con el botón de favoritos.
     if (!body.url || !body.nextData) return NextResponse.json({ error: 'Falta la página de Beatport' }, { status: 400 })
-    const result = await ingestBeatportPage({ url: body.url, nextData: body.nextData, userId: auth.userId })
-    return NextResponse.json(result, { status: result.ok ? 200 : 400 })
+    const { url, nextData } = body
+    return streamJob((log) => ingestBeatportPage({ url, nextData, userId: auth.userId, log }))
   }
 
   if (body.action === 'run') {
     // «Traer ahora» en Vercel: 300 s de tope. El pase completo es el de GitHub Actions.
-    const result = await runBeatportGenreImport({ trigger: 'manual', userId: auth.userId, budgetMs: 230_000 })
-    return NextResponse.json(result)
+    return streamJob((log) =>
+      runBeatportGenreImport({ trigger: 'manual', userId: auth.userId, budgetMs: 230_000, log }),
+    )
+  }
+
+  if (body.action === 'stop') {
+    try {
+      return NextResponse.json({ ok: true, stopped: await stopOpenImportRuns() })
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 })
+    }
   }
 
   if (body.action !== 'approve' && body.action !== 'discard' && body.action !== 'restore') {
