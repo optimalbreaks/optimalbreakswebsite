@@ -5,6 +5,8 @@ import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
 import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
+  fetchBeatportPageHtml,
+  resolveTracksFromBeatportHtml,
 } from '@/lib/beatport-next-data-tracks'
 import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
 import { vinylIdentityKey } from '@/lib/share-track'
@@ -1421,6 +1423,135 @@ async function resolveImportQueue(fact: {
   return { kind: 'queued', label: known.label }
 }
 
+type StoreHit = {
+  link_url: string
+  title: string
+  mix_name: string
+  artists: { name: string }[]
+  label?: string
+  release_date: string | null
+}
+
+type StoreLookup = { status: 'hit'; hit: StoreHit; viaWeb: boolean } | { status: 'miss' | 'unreachable' }
+
+type StorePages = { load: (url: string) => Promise<StoreHit[]>; close: () => Promise<void> }
+
+/**
+ * Desde Vercel, Beatport contesta con el challenge de Cloudflare (búsqueda y fichas, 11–14 oct 2026).
+ * Allí no se abre Chromium: un fetch rápido y, si no hay temas, la búsqueda web de OpenAI.
+ */
+async function openStorePages(): Promise<StorePages> {
+  if (!process.env.VERCEL) {
+    const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
+    return createBeatportPageLoader()
+  }
+  return {
+    async load(url: string) {
+      return resolveTracksFromBeatportHtml(await fetchBeatportPageHtml(url), url)
+    },
+    async close() {},
+  }
+}
+
+async function lookupStore(
+  fact: { title: string; mixName: string; artist: string; artists?: Array<{ name: string }>; rawTitle: string; label?: string },
+  pages: StorePages,
+): Promise<StoreLookup> {
+  let sawResults = false
+  try {
+    for (const query of youtubeSearchQueries(fact)) {
+      const tracks = await pages.load(`https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`)
+      if (tracks.length) sawResults = true
+      const hit = tracks.find((t) => beatportListingMatches(fact, t))
+      if (hit) return { status: 'hit', hit, viaWeb: false }
+      if (tracks.length) break
+    }
+  } catch {
+    /* challenge o red: se pregunta a la búsqueda web */
+  }
+  if (sawResults) return { status: 'miss' }
+  return findBeatportViaWeb(fact)
+}
+
+const BEATPORT_TRACK_URL_RE = /^https?:\/\/(?:www\.)?beatport\.com\/(?:[a-z]{2}\/)?track\/([^/?#\s]+)\/(\d+)/i
+
+async function findBeatportViaWeb(fact: {
+  title: string
+  mixName: string
+  artist: string
+  artists?: Array<{ name: string }>
+  rawTitle: string
+  label?: string
+}): Promise<StoreLookup> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim()
+  if (!apiKey) return { status: 'unreachable' }
+  const names = (fact.artists?.length ? fact.artists.map((a) => a.name) : [fact.artist]).filter(Boolean).join(', ')
+  const song = `${names} — ${stripCatalogCode(fact.title)}${fact.mixName ? ` (${fact.mixName})` : ''}`
+  const prompt = `Busca en beatport.com la ficha de este tema: ${song}.
+Solo vale una página https://www.beatport.com/track/<slug>/<id> con el mismo título, la misma versión y el mismo artista. Otro remix, VIP o edit no vale.
+Responde SOLO con un JSON, sin texto alrededor:
+{"found": true, "url": "https://www.beatport.com/track/<slug>/<id>", "title": "", "mix_name": "", "artists": [""], "label": "", "release_date": "YYYY-MM-DD"}
+Si Beatport no tiene ese tema: {"found": false}. No inventes URLs.`
+  const text = await fetchOpenAIWebSearchContext(song, apiKey, prompt)
+  const json = text.match(/\{[\s\S]*\}/)?.[0]
+  if (!json) return { status: 'unreachable' }
+  let data: Record<string, unknown>
+  try {
+    data = JSON.parse(json) as Record<string, unknown>
+  } catch {
+    return { status: 'unreachable' }
+  }
+  if (data.found !== true) return { status: 'miss' }
+  const url = BEATPORT_TRACK_URL_RE.exec(String(data.url || ''))
+  if (!url) return { status: 'miss' }
+  const artists = (Array.isArray(data.artists) ? data.artists : [])
+    .map((a) => ({ name: String(a || '').trim() }))
+    .filter((a) => a.name)
+  const release = String(data.release_date || '')
+  const hit: StoreHit = {
+    link_url: `https://www.beatport.com/track/${url[1]}/${url[2]}`,
+    title: String(data.title || fact.title).trim(),
+    mix_name: String(data.mix_name || '').trim(),
+    artists: artists.length ? artists : names.split(', ').map((name) => ({ name })),
+    label: String(data.label || '').trim(),
+    release_date: /^\d{4}-\d{2}-\d{2}$/.test(release) ? release : null,
+  }
+  if (!beatportListingMatches(fact, hit)) return { status: 'miss' }
+  return { status: 'hit', hit, viaWeb: true }
+}
+
+/**
+ * Lo que la búsqueda web encuentra en Beatport no se puede importar desde Vercel.
+ * Entra en la cola de Imports como pendiente: lo cura el editor, no el colaborador.
+ */
+async function queueStoreHit(hit: StoreHit): Promise<boolean> {
+  const id = BEATPORT_TRACK_URL_RE.exec(hit.link_url)?.[2]
+  if (!id) return false
+  const sb = createServiceSupabase()
+  const { error } = await sb.from('chart_import_queue').upsert(
+    {
+      beatport_track_id: id,
+      link_url: hit.link_url,
+      title: hit.title,
+      mix_name: hit.mix_name,
+      artists: hit.artists,
+      label: hit.label || '',
+      artwork_url: null,
+      sample_url: null,
+      bpm: null,
+      music_key: '',
+      release_date: hit.release_date,
+      release_year: hit.release_date ? Number(hit.release_date.slice(0, 4)) : null,
+      status: 'pending',
+      via: null,
+      decided_at: null,
+      decided_by: null,
+    },
+    { onConflict: 'beatport_track_id', ignoreDuplicates: true },
+  )
+  return !error
+}
+
 /**
  * Un YouTube de tema no se archiva a ciegas.
  * 1. ¿Ya está en New Releases o en el archivo? Si la ficha de tienda es anterior a 2012, YouTube gana.
@@ -1467,50 +1598,27 @@ export async function routeYouTubeTracks(facts: YouTubeLinkFact[]): Promise<YouT
   }
   if (!needsStore.length) return routes
 
-  let storeDown = false
-  const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
-  const pages = createBeatportPageLoader()
+  const pages = await openStorePages()
   try {
     for (const fact of needsStore) {
-      if (storeDown) {
-        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
-        continue
-      }
-      const queries = youtubeSearchQueries(fact)
-      let matched: { link_url: string; title: string; artists: { name: string }[]; release_date: string | null } | null =
-        null
-      let sawResults = false
-      try {
-        for (const query of queries) {
-          const url = `https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`
-          const tracks = await pages.load(url)
-          if (tracks.length) sawResults = true
-          const hit = tracks.find((t) => beatportListingMatches(fact, t))
-          if (hit) {
-            matched = hit
-            break
-          }
-          if (tracks.length) break
+      const found = await lookupStore(fact, pages)
+      if (found.status === 'hit') {
+        const { hit } = found
+        if (youtubeWinsOverStore(hit.release_date)) {
+          routes.push({ fact, kind: 'vinyl', beatport: 'pre2012' })
+        } else if (found.viaWeb && (await queueStoreHit(hit))) {
+          routes.push({ fact, kind: 'queued', label: songLabel(hit.title, hit.artists) })
+        } else {
+          routes.push({
+            fact,
+            kind: 'beatport',
+            linkUrl: hit.link_url,
+            label: songLabel(hit.title, hit.artists),
+            place: beatportPlace(hit.release_date),
+          })
         }
-      } catch {
-        storeDown = true
-        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
-        continue
-      }
-      if (matched && youtubeWinsOverStore(matched.release_date)) {
-        routes.push({ fact, kind: 'vinyl', beatport: 'pre2012' })
-      } else if (matched) {
-        routes.push({
-          fact,
-          kind: 'beatport',
-          linkUrl: matched.link_url,
-          label: songLabel(matched.title, matched.artists),
-          place: beatportPlace(matched.release_date),
-        })
-      } else if (!sawResults) {
-        routes.push({ fact, kind: 'vinyl', beatport: 'unreachable' })
       } else {
-        routes.push({ fact, kind: 'vinyl', beatport: 'miss' })
+        routes.push({ fact, kind: 'vinyl', beatport: found.status })
       }
     }
   } finally {
@@ -1569,48 +1677,25 @@ export async function routeSoundCloudTracks(facts: SoundCloudLinkFact[]): Promis
     return facts.map((f) => byUrl.get(f.url)).filter((r): r is SoundCloudTrackRoute => Boolean(r))
   }
 
-  let storeDown = false
-  const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
-  const pages = createBeatportPageLoader()
+  const pages = await openStorePages()
   try {
     for (const fact of needsStore) {
-      if (storeDown) {
-        routes.push({ fact, kind: 'blocked' })
-        continue
-      }
-      const queries = youtubeSearchQueries(fact)
-      let matched: { link_url: string; title: string; artists: { name: string }[]; release_date: string | null } | null =
-        null
-      let sawResults = false
-      try {
-        for (const query of queries) {
-          const url = `https://www.beatport.com/search/tracks?q=${encodeURIComponent(query)}`
-          const tracks = await pages.load(url)
-          if (tracks.length) sawResults = true
-          const hit = tracks.find((t) => beatportListingMatches(fact, t))
-          if (hit) {
-            matched = hit
-            break
-          }
-          if (tracks.length) break
+      const found = await lookupStore(fact, pages)
+      if (found.status === 'hit') {
+        const { hit } = found
+        if (found.viaWeb && (await queueStoreHit(hit))) {
+          routes.push({ fact, kind: 'queued', label: songLabel(hit.title, hit.artists) })
+        } else {
+          routes.push({
+            fact,
+            kind: 'beatport',
+            linkUrl: hit.link_url,
+            label: songLabel(hit.title, hit.artists),
+            place: beatportPlace(hit.release_date),
+          })
         }
-      } catch {
-        storeDown = true
-        routes.push({ fact, kind: 'blocked' })
-        continue
-      }
-      if (matched) {
-        routes.push({
-          fact,
-          kind: 'beatport',
-          linkUrl: matched.link_url,
-          label: songLabel(matched.title, matched.artists),
-          place: beatportPlace(matched.release_date),
-        })
-      } else if (!sawResults) {
-        routes.push({ fact, kind: 'blocked' })
       } else {
-        routes.push({ fact, kind: 'soundcloud' })
+        routes.push({ fact, kind: found.status === 'miss' ? 'soundcloud' : 'blocked' })
       }
     }
   } finally {
@@ -1646,7 +1731,7 @@ export function describeSoundCloudRoutes(routes: SoundCloudTrackRoute[]): string
       return `• ${route.label}. No te preocupes, que este tema ya está.`
     }
     if (route.kind === 'blocked') {
-      return `• ${who}: no he podido abrir Beatport. No lo archivo en SoundCloud hasta poder mirar la tienda.`
+      return `• ${who}: no he podido comprobar Beatport. Lo preparo como tema de SoundCloud.`
     }
     const dur = mins != null ? ` Dura ${mins} min.` : ''
     return `• ${who}.${dur} No está en Beatport. Lo preparo como tema de SoundCloud.`
@@ -1677,7 +1762,7 @@ export function describeYouTubeRoutes(routes: YouTubeTrackRoute[]): string {
       return `• ${route.label}. No te preocupes, que este tema ya está.`
     }
     if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
-      return `• ${who}: no he podido abrir Beatport. No lo archivo en YouTube hasta poder mirar la tienda.`
+      return `• ${who}: no he podido comprobar Beatport. Lo preparo como archivo de YouTube.`
     }
     if (route.kind === 'vinyl' && route.beatport === 'pre2012') {
       return `• ${who}: salió antes de 2012. Lo preparo en YouTube, aunque Beatport tenga sample.`
@@ -1696,7 +1781,7 @@ export function youtubeRoutePrompt(routes: YouTubeTrackRoute[]): string {
     if (route.kind === 'beatport') return `- ${id}: Beatport ${route.linkUrl}. No lo archives en YouTube. El servidor prepara New Releases.`
     if (route.kind === 'queued') return `- ${id}: ya está en la cola del editor. No llames a stage_vinyl_picks ni a stage_new_releases.`
     if (route.kind === 'vinyl' && route.beatport === 'unreachable') {
-      return `- ${id}: Beatport no respondió. No llames a stage_vinyl_picks ni a stage_new_releases.`
+      return `- ${id}: Beatport no se pudo comprobar → stage_vinyl_picks`
     }
     if (route.kind === 'vinyl' && route.beatport === 'pre2012') {
       return `- ${id}: anterior a 2012 → stage_vinyl_picks. No llames a stage_new_releases.`

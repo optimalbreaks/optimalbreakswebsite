@@ -1256,8 +1256,7 @@ function applyYouTubeRoutes(
           r.kind === 'already' ||
           r.kind === 'beatport' ||
           r.kind === 'queued' ||
-          r.kind === 'session' ||
-          (r.kind === 'vinyl' && r.beatport === 'unreachable'),
+          r.kind === 'session',
       )
       .map((r) => r.fact.videoId),
   )
@@ -1308,7 +1307,7 @@ function applyYouTubeRoutes(
   }
 
   const rest = routes
-    .filter((r) => (r.kind === 'vinyl' && r.beatport !== 'unreachable') || r.kind === 'session')
+    .filter((r) => r.kind === 'vinyl' || r.kind === 'session')
     .map((r) => r.fact)
   stageUnresolvedYouTube(rest, pendingOps, weekDate)
 }
@@ -1405,7 +1404,7 @@ function applySoundCloudRoutes(routes: SoundCloudTrackRoute[], pendingOps: Pendi
   }
 
   for (const route of routes) {
-    if (route.kind !== 'soundcloud') continue
+    if (route.kind !== 'soundcloud' && route.kind !== 'blocked') continue
     const fact = route.fact
     const already = pendingOps.some(
       (op) =>
