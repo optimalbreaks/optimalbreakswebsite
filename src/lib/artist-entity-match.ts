@@ -98,11 +98,12 @@ export function resolveArtistSlug(
  * Slot de cartel "A vs B" / "A b2b B" → nombres sueltos.
  * No parte "Cut & Run" ni otros dúos con `&`.
  */
+/** Un "vs" / "b2b" / "ft." son varios nombres. "Cut & Run" se queda entero. */
 export function splitLineupSlotNames(slot: string): string[] {
   const t = slot.trim()
   if (!t) return []
   return t
-    .split(/\s+(?:vs\.?|versus|b2b|x)\s+/i)
+    .split(/\s+(?:vs\.?|versus|b2b|x|featuring|feat\.?|ft\.?)\s+/i)
     .map((s) => s.trim())
     .filter(Boolean)
 }
