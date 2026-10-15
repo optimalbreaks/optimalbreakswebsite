@@ -1569,8 +1569,12 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                 id={`mytracks-row-${t.key}`}
                 className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                {/* La barra no encoge (flex-shrink: 0). En fila desde 640 px se queda
+                    con ~460 px y el título cae a una columna de ~46 px: en inglés
+                    se lee en vertical («Aggre / sivne / s»). Hasta lg, el título
+                    ocupa el ancho y los botones van debajo. */}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
+                  <div className="flex items-start gap-3 min-w-0 flex-1 lg:min-w-[16rem]">
                     {rowBadges && rowBadges[t.key] != null ? (
                       <span
                         className="inline-flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 shrink-0 border-[3px] border-[var(--ink)] bg-[var(--acid)] text-[var(--ink)] tabular-nums"
