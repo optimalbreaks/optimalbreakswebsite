@@ -488,6 +488,52 @@
       "release_date": "2025-02-07",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "title": "DREAD",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Fantazia Music Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dread/20036622",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf40fd2f-e7e4-4a32-89c1-4b814509672f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a544d0f3-5649-45cd-96bc-2088d836048d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Major",
+      "release_year": 2025,
+      "release_date": "2025-02-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 24
+    },
+    {
+      "title": "Lift Me Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lift-me-up/20006052",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0d4ff317-275e-49ae-a023-07d6b49b1e66.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/acb3c68a-630f-4e87-bf1d-1efa2d3de78e.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-02-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
     }
   ]
 }

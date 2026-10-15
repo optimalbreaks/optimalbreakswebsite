@@ -613,6 +613,29 @@
       "release_date": "2024-11-14",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "title": "Xeki Xeki",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/xeki-xeki/19621938",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3158ece9-6e57-48ed-94d3-95879ea5abb8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/81bc457b-2aef-4195-9148-4d9a275b82a5.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2024,
+      "release_date": "2024-11-14",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

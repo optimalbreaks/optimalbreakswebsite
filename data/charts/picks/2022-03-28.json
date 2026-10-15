@@ -45,6 +45,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 28
+    },
+    {
+      "title": "Unknown Future",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Music For Change Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/unknown-future/18986383",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8ffdcd2b-3fdd-4e34-9cc9-3afa5d15344a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ffe3c80e-2a13-4825-81ea-083565620efe.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2022,
+      "release_date": "2022-04-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
     }
   ]
 }

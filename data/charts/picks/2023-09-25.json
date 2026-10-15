@@ -53,6 +53,61 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 62
+    },
+    {
+      "title": "Moog On Rock Off",
+      "mix_name": "JottaFrank & Perfect Kombo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-darrow-chem-syndicate/106178",
+          "name": "The Darrow Chem Syndicate"
+        },
+        {
+          "url": "https://www.beatport.com/artist/perfect-kombo/131092",
+          "name": "Perfect Kombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Nipponeer Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/moog-on-rock-off/17946983",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c850f7b2-335f-48bc-93f6-b10b2da6c77e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7e531215-3809-43c7-bf80-71273d185931.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Minor",
+      "release_year": 2023,
+      "release_date": "2023-09-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 34,
+      "tidal_url": "https://tidal.com/browse/track/438650245"
+    },
+    {
+      "title": "Acid People",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-people/18117381",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06fa09fa-2a8f-4485-9d1a-28c0206e0768.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eb68eda6-cc1c-4288-90d4-7d1670b39362.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "E Major",
+      "release_year": 2023,
+      "release_date": "2023-09-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
     }
   ]
 }

@@ -1355,6 +1355,767 @@
       "sort_order": 59,
       "spotify_url": "https://open.spotify.com/track/6zCJzA8UAEaGy2gNDuwOzh",
       "tidal_url": "https://tidal.com/browse/track/511548938"
+    },
+    {
+      "title": "Drive By",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ben-coupland/931",
+          "name": "Ben Coupland"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drive-by/26917533",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cee20f88-3338-4165-8a09-deac1d262e7c.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "Bass Live",
+      "mix_name": "Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mc-ade/662565",
+          "name": "Mc ADE"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-live/28295128",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7ab05ebd-8335-4249-98c2-366e39ee05ce.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "Cybanet",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ben-coupland/931",
+          "name": "Ben Coupland"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cybanet/26917531",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1c544430-3f7d-410f-9448-b18edba52b44.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
+    },
+    {
+      "title": "Sedated",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sedated/26917548",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b9ae6688-60f6-4094-bf84-5fa028d2243e.LOFI.mp3",
+      "bpm": 139,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
+    },
+    {
+      "title": "Trunk Full Of Woofers",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trunk-full-of-woofers/28295129",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fc0a832d-961d-480f-ab34-b1f3fd8e03f6.LOFI.mp3",
+      "bpm": 96,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "Quiet Storm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/quiet-storm/28295135",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c1a24898-3c6e-4a6f-937b-301303e78c9a.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 79
+    },
+    {
+      "title": "Falling For Ages",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/falling-for-ages/28443599",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b4df93ae-2330-4b43-84a2-9852f9197ce4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7b5de7f2-66e4-4caa-96fd-bb6c11a84476.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "Muffled Mayhem",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/yoof/455465",
+          "name": "Yoof"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/muffled-mayhem/26917543",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cb11a620-a1a1-4471-bf06-6c7a7ccc0e64.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92
+    },
+    {
+      "title": "Jam The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jam-the-bass/28295130",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2e58acf7-a274-4470-9e95-5b4651ba6006.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Db Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
+    },
+    {
+      "title": "Get The Party Started",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kooley-c/662564",
+          "name": "Kooley C"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-the-party-started/28295127",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2fd8b5f4-78fd-42eb-b68a-0a730bb2f355.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Drop That",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-that/28295126",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1c0b446b-7bf8-44ac-94a7-9e64b5ad0772.LOFI.mp3",
+      "bpm": 103,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "Da Bleepz",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-autobots/66218",
+          "name": "The Autobots"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/da-bleepz/26917532",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b661fbfc-e7dd-4edd-96a2-5bd0805dc455.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90
+    },
+    {
+      "title": "F**k Knows",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fk-knows/26917544",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5d6be21b-9d0a-4020-99ff-abce121f1b1d.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86
+    },
+    {
+      "title": "System Overload",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-breakfastaz/3710",
+          "name": "The Breakfastaz"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/system-overload/26917538",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/07afc01e-ceb0-41d0-a884-9e6bb85b72bf.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
+    },
+    {
+      "title": "Are You Ready",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/are-you-ready/28295134",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cfc1e002-dfe8-4b72-99b0-d3894b817603.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "Tripod",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ben-coupland/931",
+          "name": "Ben Coupland"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tripod/26917530",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/23082703-5665-4e37-b981-e72daa969a98.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "Acid Crawler",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-crawler/26977541",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b9d6cb8b-1b7d-4ca0-ab84-bf6545ea3696.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0725fa26-46a8-4b4e-ac92-2a5827c26421.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Db Major",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "Fuct Beat",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-autobots/66218",
+          "name": "The Autobots"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fuct-beat/26917534",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2f7be2ee-4524-49e3-93e2-834c70485d97.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 91
+    },
+    {
+      "title": "The Bounce",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-bounce/26917545",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/16cefae5-020f-47d6-8f6f-c113363f9417.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "BONKERS",
+      "mix_name": "OG VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bonkers/28443929",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fd01d95a-62d2-4688-b7df-e793e14db7c3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/141c0f55-f75d-4a8a-abad-3d27cd830dd9.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "Keep Rockin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-rockin/28295133",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a732bc41-8657-4bf0-aec6-3837dd1f50fd.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "Beer Guzzla",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-breakfastaz/3710",
+          "name": "The Breakfastaz"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/beer-guzzla/26917536",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cf8bb282-5930-41c0-a645-53ac4f15d525.LOFI.mp3",
+      "bpm": 104,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "Intro Acid Crawler",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/intro-acid-crawler/26977540",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b9d6cb8b-1b7d-4ca0-ab84-bf6545ea3696.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ab32564a-4793-41c8-8a4a-c1eb090a6df3.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "Bad Debt",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ben-coupland/931",
+          "name": "Ben Coupland"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-debt/26917529",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f0e8b96e-bfca-43ae-ad88-75778efd7044.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
+    },
+    {
+      "title": "Robot Dance",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/robot-dance/26917550",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5bec348a-b9c9-4025-bfe0-6e55694d8266.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "System Error",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ben-coupland/931",
+          "name": "Ben Coupland"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/system-error/26917528",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cf9c0a3b-1d01-448c-b5ed-c4c26731bfb6.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "Back To The Old Skool",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-the-old-skool/26917549",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bfc651ba-6d2d-4173-af92-bd7738df67a7.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
+    },
+    {
+      "title": "FRIDAY DREAMING",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-dreaming/28443930",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fd01d95a-62d2-4688-b7df-e793e14db7c3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bfaede0b-9839-4610-8218-aebb38af6097.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Make It Real",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-it-real/26917547",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/06ef5580-0b10-4c68-a36e-5cbba1013169.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/37b43997-a7ac-4c0b-9139-faac8a97d6c1.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Get a Little Lower",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-a-little-lower/28295131",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/86784fdd-4727-4a2a-b218-f7eb371bea49.LOFI.mp3",
+      "bpm": 90,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 80
+    },
+    {
+      "title": "Boomin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/boomin/28295132",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8932b758-22f3-4a29-bdc6-e40776bfe3dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c5eb9669-e68f-43bf-b000-0b5a5be88cf6.LOFI.mp3",
+      "bpm": 120,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
     }
   ]
 }

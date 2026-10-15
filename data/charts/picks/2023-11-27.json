@@ -795,6 +795,110 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 36
+    },
+    {
+      "title": "Confident",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Vinyl Crazy Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/confident/18278389",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ca208a90-d7c0-4e57-aa41-78c4f3ee7730.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/811a40cb-d9a9-4ad8-a410-e63011eba68d.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2023,
+      "release_date": "2023-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
+    },
+    {
+      "title": "Lose Control",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/pavane/334115",
+          "name": "Pavane"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lose-control/18286397",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/44e85052-1978-4f4c-92a2-8a52a701a9d9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/021ea450-cef0-4349-a44e-08a144c5ac20.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-12-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "The Rush",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/future-funk-squad/463",
+          "name": "Future Funk Squad"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "En:Vision Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-rush/18408828",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b71805cc-017f-44a5-92ab-e33f4edb0404.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/aca4d1b3-f866-4a2b-a209-2d7eee5e799a.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-12-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59
+    },
+    {
+      "title": "ACIDGROUND",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/miau/633679",
+          "name": "MIAU"
+        },
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acidground/18297964",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8ca85e82-e59d-40ba-8968-90bb6c1866a7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/788e0296-5036-4e50-a27b-01c16e71835a.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "E Minor",
+      "release_year": 2023,
+      "release_date": "2023-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
     }
   ]
 }

@@ -1825,6 +1825,355 @@
       "sort_order": 78,
       "spotify_url": "https://open.spotify.com/track/36PFbvaPPqsLQMo9mC5xS0",
       "tidal_url": "https://tidal.com/browse/track/516777484"
+    },
+    {
+      "title": "Back to the Beat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-the-beat/28295120",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0bb9e9f9-0513-4cee-a587-2905194b8ca3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9a8dc7fc-6132-40e3-8cc2-21a561de802e.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "Keep On Rockin'",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28405356",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ba695b8-b5c4-4dbe-be87-528586c6c091.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e4f25540-a708-4422-ba37-e5f11f8c4aa0.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 91
+    },
+    {
+      "title": "Keep On Rockin'",
+      "mix_name": "Bonus Synths",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28405359",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ba695b8-b5c4-4dbe-be87-528586c6c091.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ac604250-7fff-45ac-9415-46cb4c54d2c9.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
+    },
+    {
+      "title": "Keep On Rockin'",
+      "mix_name": "Acapella",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28405360",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ba695b8-b5c4-4dbe-be87-528586c6c091.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fc045a41-cf75-48ae-b4b6-09600b06a35c.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92
+    },
+    {
+      "title": "Keep On Rockin'",
+      "mix_name": "Bonus Beats",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28405358",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ba695b8-b5c4-4dbe-be87-528586c6c091.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eb869304-4577-4b5f-8960-f5b64691df0b.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "You Can Do It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/you-can-do-it/28295162",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6cb0ec21-945b-43f6-ae6a-9bc2492b4f17.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
+    },
+    {
+      "title": "Keep On Rockin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28295169",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5b6a9e0c-a2bf-4f40-9c49-524cb4800ca4.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/1026/1196600",
+          "name": "1026"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28295165",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7304f474-4f9d-41ab-b7ca-6bbd00b8c1b7.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "Ready Player One",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ready-player-one/28295167",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/02c0effe-fc26-4611-ad0a-77c52638441d.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "Juno Funk",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/juno-funk/28295170",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1605bc20-93d4-4dc9-9f9a-9e9572862db6.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Across The Skies",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/across-the-skies/28295166",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6eff37c8-d8a9-4517-8b6d-aeb8fae2fdc0.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
+    },
+    {
+      "title": "SELEKTAAAA",
+      "mix_name": "140 DEEP DUBSTEP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selektaaaa/28678796",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7e529541-6ceb-47f1-a169-51e1b5ddfc9d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/34b63942-247c-40ff-8364-20b15131db51.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102
+    },
+    {
+      "title": "SELEKTAAAA",
+      "mix_name": "SPEED GARAGE VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selektaaaa/28678795",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7e529541-6ceb-47f1-a169-51e1b5ddfc9d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af108f1e-eb1e-474d-94e2-91aa98704a1c.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103
+    },
+    {
+      "title": "Make You Dance",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-you-dance/28295168",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0812665-80ff-4b9e-95b6-aee10c6b415e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/69c7af31-b6ad-4fef-b11a-ce053cb63551.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "Keep On Rockin'",
+      "mix_name": "Instrumental",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-on-rockin/28405357",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ba695b8-b5c4-4dbe-be87-528586c6c091.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/93168780-3abe-479a-882a-251c7d0bda19.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90
     }
   ]
 }

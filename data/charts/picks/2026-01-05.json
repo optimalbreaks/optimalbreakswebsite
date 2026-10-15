@@ -22,6 +22,300 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Koupe",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/koupe/23114559",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c9539326-7dc0-4903-8428-d04204b4d402.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bac33403-e124-4494-9771-6a077874f342.LOFI.mp3",
+      "bpm": 102,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 38
+    },
+    {
+      "title": "WEIRD",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird/23331610",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ec925a30-bfaa-4b0b-883e-ff4c39a5baf4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5fe873ff-578a-45df-a90f-c64b25557ae7.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
+    },
+    {
+      "title": "WEIRD",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird/23331609",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ec925a30-bfaa-4b0b-883e-ff4c39a5baf4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/29dd3251-b8d0-4a01-9153-abe8f647a1ab.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 48
+    },
+    {
+      "title": "Rock The 904",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        },
+        {
+          "url": "https://www.beatport.com/artist/stacy-mcclure/1369918",
+          "name": "Stacy McClure"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rock-the-904/22776691",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0c133656-9627-409a-904d-85abdd5d86cc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e2abbbc0-00ae-4067-92e1-4d31fe9c6a2d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-01-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18,
+      "tidal_url": "https://tidal.com/browse/track/477313188"
+    },
+    {
+      "title": "Rock The 904",
+      "mix_name": "SiR1 Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        },
+        {
+          "url": "https://www.beatport.com/artist/stacy-mcclure/1369918",
+          "name": "Stacy McClure"
+        },
+        {
+          "url": "https://www.beatport.com/artist/sir1/1394149",
+          "name": "Sir1"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rock-the-904/22776690",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0c133656-9627-409a-904d-85abdd5d86cc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/58a95af9-162b-4221-9bd0-1ad425080d61.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-01-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 19,
+      "tidal_url": "https://tidal.com/browse/track/477313188"
+    },
+    {
+      "title": "Intro Koupe",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/intro-koupe/23114558",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c9539326-7dc0-4903-8428-d04204b4d402.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4516708a-0844-4f41-8e06-d39b9d955f54.LOFI.mp3",
+      "bpm": 82,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 37
+    },
+    {
+      "title": "Dance To The Floor",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dance-to-the-floor/22863387",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8e92a98a-ac91-4ebf-b493-33411afea6fc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e55d9a0-994d-4dc2-8145-dc6e9ab76f5b.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 43
+    },
+    {
+      "title": "Kylo Ren",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/trs/132999",
+          "name": "TRS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/four-motion/138396",
+          "name": "Four Motion"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kylo-ren/23020422",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f36e32ea-fece-493d-840b-403482b49fa0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9596912f-b0c5-42c3-bf9d-dfc851df9880.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42
+    },
+    {
+      "title": "Snap",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/snap/23009293",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/855a49b1-378d-47dc-be0b-7d569e802b02.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8fc8e9a7-36d3-494d-8568-c645520e231d.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "TECHNO TWIST",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/techno-twist/23331611",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ec925a30-bfaa-4b0b-883e-ff4c39a5baf4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/862ee8f7-618e-4546-93d4-2aa61fde0766.LOFI.mp3",
+      "bpm": 114,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 49
+    },
+    {
+      "title": "IN SYDNEY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/in-sydney/23341918",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/683198ea-8d5a-4b89-b926-746598984108.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cb21eb44-91cb-4332-8692-b0898098e31d.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "Hyped Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hyped-up/23019438",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2fad27c8-9c77-40df-80d3-cc0682991bce.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ac20237b-9ad5-4ebb-9bf0-fff9eb420e19.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
     }
   ]
 }

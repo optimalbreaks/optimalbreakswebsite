@@ -22,6 +22,256 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Mankind",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mankind/20473819",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9fa80d79-3a84-4385-9b76-464aa504893c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4721c5ed-026e-44ec-9515-998986777e16.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Minor",
+      "release_year": 2025,
+      "release_date": "2025-05-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
+    },
+    {
+      "title": "The Future",
+      "mix_name": "Mike Presley remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jiro/20535",
+          "name": "Jiro"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tone-abstract/503677",
+          "name": "Tone Abstract"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mike-presley/975919",
+          "name": "Mike Presley"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-future/20544924",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/05bb9b29-d21d-453c-9be6-5b57377c92e0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6325ecb6-f5cc-4cf2-8ff6-14815b994cec.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "BIG STORM",
+      "mix_name": "2025",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-storm/20558505",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/50c26ff9-1315-4fa5-8cab-dc8c6d1b1a1f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cd376480-4fdb-49ef-9e7c-b1eb62334003.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "Low FLow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dr-beats/227118",
+          "name": "Dr Beats"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/low-flow/19953192",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/27518db2-770a-487e-8788-3587e86028c3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/08f81f1d-7ff5-4309-af45-b787de10d5d0.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 39,
+      "tidal_url": "https://tidal.com/browse/track/452636040"
+    },
+    {
+      "title": "Let's Race",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/miau/633679",
+          "name": "MIAU"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vizzen/757823",
+          "name": "Vizzen"
+        },
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "CHOMPO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lets-race/21327595",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eb701e74-7300-4ca2-a257-5dd308201ad5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/66b08f08-4ee1-4b43-8b43-06aca942490e.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-05-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42,
+      "tidal_url": "https://tidal.com/browse/track/456283270"
+    },
+    {
+      "title": "Mantra",
+      "mix_name": "Ro73 remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jiro/20535",
+          "name": "Jiro"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tone-abstract/503677",
+          "name": "Tone Abstract"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ro73/1113665",
+          "name": "Ro73"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mantra/20544925",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/05bb9b29-d21d-453c-9be6-5b57377c92e0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/83c83955-d3cf-43e5-929b-a996d024c4a7.LOFI.mp3",
+      "bpm": 66,
+      "music_key": "Eb Major",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41,
+      "tidal_url": "https://tidal.com/browse/track/456972282"
+    },
+    {
+      "title": "WAR ZONE",
+      "mix_name": "VIP 2025",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/war-zone/20558507",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/50c26ff9-1315-4fa5-8cab-dc8c6d1b1a1f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9c1fea48-6554-4ab6-a78f-f506fc26fe2b.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
+    },
+    {
+      "title": "SELECT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/select/20414736",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b80a6f9c-9d87-4bea-83b1-bb18118ebd99.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0a386b7b-708c-445b-bf7f-76e822c07fa9.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-05-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "BIG STORM",
+      "mix_name": "VIP 2025",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-storm/20558506",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/50c26ff9-1315-4fa5-8cab-dc8c6d1b1a1f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cec9ebd3-c7d0-4b3a-8559-1411ad7ebba1.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-05-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59
     }
   ]
 }

@@ -66,6 +66,160 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 3
+    },
+    {
+      "title": "Talk to Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-green-man-tgm/182251",
+          "name": "The Green Man (TGM)"
+        }
+      ],
+      "label": "Basswerk",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/talk-to-me/17753559",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a32c5447-5b1e-4cc0-b859-af0b8913b794.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0b45d1b3-fe4e-40f4-8211-46e7e67d68ca.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "D Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 45
+    },
+    {
+      "title": "Swing Dog",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/swing-dog/17730700",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2a6be4b5-aa76-440d-a299-6ebf90dbbf34.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5e551962-de71-4493-93c6-2c8c6769c2d1.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Ab Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 44
+    },
+    {
+      "title": "Reload",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/reload/17692763",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/231a7109-6a79-4b1b-ad69-c9a46ca91f4a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/afe0c872-5819-4a30-8579-646d8a7c9641.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Gb Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
+    },
+    {
+      "title": "Oasis",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/oasis/17700296",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dd9632e6-eb5f-4f9a-8fa0-72c1ed90b4e7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2bb4bf9b-8c81-4085-a135-3dda0211f790.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 46
+    },
+    {
+      "title": "Gelatina",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Vinyl Crazy Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gelatina/17657214",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a1fb77e5-808a-4d66-8a89-6aff6c232f87.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/729e1707-3181-4ae0-a517-4ee3dbbc2e73.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 36
+    },
+    {
+      "title": "Fish Nail",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vaparicio/308048",
+          "name": "V.Aparicio"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jose-rodriguez-spain/870705",
+          "name": "Jose Rodríguez (Spain)"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fish-nail/17701072",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5b85e12c-a3a4-45c1-a2d6-674dab890f35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/14003df6-f9d8-4bf1-b239-ada6b2a66647.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Major",
+      "release_year": 2023,
+      "release_date": "2023-05-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 43
     }
   ]
 }

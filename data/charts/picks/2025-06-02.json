@@ -22,6 +22,176 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "The Pattern Ghost",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Fantazia Music Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-pattern-ghost/20117173",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/155c097d-6e68-428e-b0be-c2756c6041f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2c3500bd-ec4b-413f-92ef-502f2cb73d37.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-06-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "Move",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/blidzer/1313503",
+          "name": "BlidZer"
+        }
+      ],
+      "label": "ARTEMA RECORDINGS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/move/20484797",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5141e79c-d4f3-4de7-925b-858999559d04.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/05479358-8eb9-4766-90f0-999192665026.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-06-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 57
+    },
+    {
+      "title": "Solitary",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "21Floor Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/solitary/20535762",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dd65859e-8083-481b-a6e6-7f0ec19824d3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ae9c3934-9236-4d61-9231-7fb15cfa3ec8.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Major",
+      "release_year": 2025,
+      "release_date": "2025-06-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "Cronic (2021)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/beatloud/827594",
+          "name": "Beatloud"
+        }
+      ],
+      "label": "LW Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cronic-2021/20533193",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0d163429-87b1-4c8b-8097-5cd263bacf5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a618a7e1-473a-47b0-81fe-534bdc296452.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-06-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
+    },
+    {
+      "title": "Laser",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/laser/20479540",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/be44ee1f-2e44-4f46-ab2c-8084164ccc62.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/24aea9df-f219-4da0-8642-312091fa715f.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Db Major",
+      "release_year": 2025,
+      "release_date": "2025-06-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "tidal_url": "https://tidal.com/browse/track/438643962"
+    },
+    {
+      "title": "Whatcha Come Out Here For?",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/deejay-shaolin/262767",
+          "name": "Deejay Shaolin"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whatcha-come-out-here-for/20568274",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2ead48f7-0420-470c-ad5a-2f7108dd4412.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/293b60fe-4bd4-492d-ab7f-29f517c45661.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-06-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59
+    },
+    {
+      "title": "Wrath of Wotan",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "LW Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wrath-of-wotan/20533184",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0d163429-87b1-4c8b-8097-5cd263bacf5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c9242a3e-ac27-4f78-ae2c-0a5e668c763c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-06-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
     }
   ]
 }

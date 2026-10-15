@@ -88,6 +88,128 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 4
+    },
+    {
+      "title": "Cobra",
+      "mix_name": "Remastered D&B VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/masterblaster/15859",
+          "name": "Masterblaster"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cobra/16503541",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/923769e3-165e-49f5-b589-c08dad9111e1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dc542451-bfac-442c-adee-70df196ae412.LOFI.mp3",
+      "bpm": 89,
+      "music_key": "Db Minor",
+      "release_year": 2022,
+      "release_date": "2022-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
+    },
+    {
+      "title": "All In Check (feat. Ragga Twins)",
+      "mix_name": "Remastered Atomic Hooligan Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/masterblaster/15859",
+          "name": "Masterblaster"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ragga-twins/158512",
+          "name": "Ragga Twins"
+        },
+        {
+          "url": "https://www.beatport.com/artist/atomic-hooligan/682",
+          "name": "Atomic Hooligan"
+        },
+        {
+          "name": "Remastered Atomic Hooligan"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/all-in-check-feat-ragga-twins/16441972",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7fc4748c-960e-4a3b-8708-011fa84cc56c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/861be5d5-ee6d-427c-8d90-1352db5b18c2.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "C Minor",
+      "release_year": 2022,
+      "release_date": "2022-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
+    },
+    {
+      "title": "Strobelight",
+      "mix_name": "Remastered",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/strobelight/16503544",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/923769e3-165e-49f5-b589-c08dad9111e1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5c6c8400-bb53-4bb5-b008-fec24bb6f753.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Db Minor",
+      "release_year": 2022,
+      "release_date": "2022-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 34
+    },
+    {
+      "title": "Thru the Fire",
+      "mix_name": "Remastered Backdraft Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/masterblaster/15859",
+          "name": "Masterblaster"
+        },
+        {
+          "url": "https://www.beatport.com/artist/backdraft/683",
+          "name": "Backdraft"
+        },
+        {
+          "name": "Remastered Backdraft"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/thru-the-fire/16441973",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7fc4748c-960e-4a3b-8708-011fa84cc56c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4da96e7a-bdda-426e-a6d6-a4e25709cf28.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2022,
+      "release_date": "2022-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
     }
   ]
 }

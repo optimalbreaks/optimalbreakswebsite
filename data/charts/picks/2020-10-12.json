@@ -633,6 +633,114 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 25
+    },
+    {
+      "title": "Modow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/alexic-rod/98928",
+          "name": "Alexic Rod"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Low Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/modow/14377055",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26fccf0d-0604-4be3-86b8-918034afa341.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bb5efc47-2842-4095-b5fe-9d2bffe6cc93.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "G Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
+    },
+    {
+      "title": "Let's Dance",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/alexic-rod/98928",
+          "name": "Alexic Rod"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Low Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lets-dance/14377056",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26fccf0d-0604-4be3-86b8-918034afa341.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/be9d2c7c-cf9f-4c10-a5c0-3834547c8304.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "D Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Vogart",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/alexic-rod/98928",
+          "name": "Alexic Rod"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Low Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/vogart/14377054",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26fccf0d-0604-4be3-86b8-918034afa341.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/177b2d9c-ef5d-4fdb-a83e-6ad0e238ab91.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "B Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
+    },
+    {
+      "title": "Pown",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/alexic-rod/98928",
+          "name": "Alexic Rod"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Low Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pown/14377053",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26fccf0d-0604-4be3-86b8-918034afa341.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98f1c804-88dc-4a83-943a-cbebc5dca0fa.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "C Minor",
+      "release_year": 2020,
+      "release_date": "2020-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

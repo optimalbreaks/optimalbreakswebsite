@@ -2,9 +2,9 @@
  * Pase diario a las 12:05 (Madrid), desde el 8 oct 2026.
  * El aviso lo da pg_cron (migración 090); este módulo es el trabajo, en GitHub Actions.
  * No recorre todos los artistas de la web.
- * 1. Fichas del Top 100 en Beatport, cualquier género → se publican.
+ * 1. Fichas de los 140 primeros del tablero en Beatport, cualquier género → se publican.
  * 2. Listado de Breaks → lo que no entró por 1 ni estaba ya, a la cola pendiente
- *    (o publicado si en los créditos va un artista del Top 100).
+ *    (o publicado si en los créditos va uno de esos 140).
  * Un id de Beatport que ya está en el catálogo, en la cola o en el paso 1 no se vuelve a meter.
  * Tampoco la misma canción (título + versión + artistas) resubida con otro id.
  */
@@ -109,7 +109,14 @@ export function madridWeekday(): number {
   return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(name)
 }
 
-/** Las fichas del Top 100 se leen los sábados: el viernes Cloudflare bloquea más y el sábado ya recoge los lanzamientos del viernes. */
+/**
+ * Cuántos primeros del tablero de artistas lee el pase (ficha Beatport, cualquier género).
+ * El tablero público sigue siendo el Top 100. El 15 oct 2026 se subió de 100 a 140:
+ * hasta ahí los créditos siguen en la misma franja que el puesto 100.
+ */
+export const FOLLOW_BOARD_LIMIT = 140
+
+/** Las fichas de esos artistas se leen los sábados: el viernes Cloudflare bloquea más y el sábado ya recoge los lanzamientos del viernes. */
 export const TOP100_ARTISTS_WEEKDAY = 6
 
 export function madridHour(): number {
@@ -521,7 +528,7 @@ async function rememberQueue(
   if (error && !/duplicate|unique/i.test(error.message)) throw new Error(error.message)
 }
 
-/** Fichas de Beatport del Top 100. Un id, una página. Sin DJ Tokyo (id mezclado). */
+/** Fichas de Beatport de los 140 primeros. Un id, una página. Sin DJ Tokyo (id mezclado). */
 async function followedBeatportArtists(
   sb: ReturnType<typeof createServiceSupabase>,
   topKeys: Set<string>,
@@ -559,15 +566,15 @@ async function followedBeatportArtists(
   return [...out.values()]
 }
 
-/** Página 1 de temas de cada artista del Top 100. El favorito pide la 2 y la 3 si hace falta. */
+/** Página 1 de temas de cada artista de los 140 primeros. El favorito pide la 2 y la 3 si hace falta. */
 export async function top100ArtistTrackPageUrls(): Promise<string[]> {
   const sb = createServiceSupabase()
-  const keys = await loadTopArtistKeys(sb, 100)
+  const keys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
   const artists = await followedBeatportArtists(sb, keys)
   return artists.map((artist) => artistTracksUrl(artist.slug, artist.id, BEATPORT_IMPORT_FROM, 1))
 }
 
-/** Una ficha /artist/…/tracks del Top 100 publica todos los temas nuevos, como la vía 1 del pase. */
+/** Una ficha /artist/…/tracks de los 140 primeros publica todos los temas nuevos, como la vía 1 del pase. */
 async function publishesWholeArtistPage(
   sb: ReturnType<typeof createServiceSupabase>,
   url: string,
@@ -628,7 +635,7 @@ export async function stopOpenImportRuns(): Promise<number> {
 export async function runBeatportGenreImport(opts: {
   trigger: 'cron' | 'manual'
   userId?: string | null
-  /** Fichas del Top 100 desde esta fecha, cualquier género. El cron usa el 8 oct. */
+  /** Fichas de los 140 primeros desde esta fecha, cualquier género. El cron usa el 8 oct. */
   artistSince?: string
   /**
    * Tiempo máximo leyendo Beatport. En Vercel la función muere a los 300 s y,
@@ -638,7 +645,7 @@ export async function runBeatportGenreImport(opts: {
    */
   budgetMs?: number
   /**
-   * Leer las ~100 fichas del Top 100. Por defecto solo los sábados: cada ficha
+   * Leer las fichas de los 140 primeros. Por defecto solo los sábados: cada ficha
    * es una página más para Cloudflare y el 14 oct 2026 nos cerró la puerta.
    * El listado de Breaks se lee todos los días.
    */
@@ -694,7 +701,7 @@ export async function runBeatportGenreImport(opts: {
     return true
   }
   try {
-    say(readArtists ? 'Pase con listado de Breaks y fichas del Top 100.' : 'Pase con el listado de Breaks (las fichas del Top 100, los sábados).')
+    say(readArtists ? `Pase con listado de Breaks y fichas de los ${FOLLOW_BOARD_LIMIT} primeros.` : `Pase con el listado de Breaks (las fichas de los ${FOLLOW_BOARD_LIMIT} primeros, los sábados).`)
     if (BEATPORT_PAGE_PAUSE_MS > 0) {
       say(`Pausa de ${BEATPORT_PAGE_PAUSE_MS / 1000} s entre páginas de Beatport.`)
     }
@@ -715,7 +722,7 @@ export async function runBeatportGenreImport(opts: {
       fresh.push(pick)
       if (auto) fromArtist.add(id)
     }
-    const rankKeys = await loadTopArtistKeys(sb, 100)
+    const rankKeys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
     const cache = new Map<string, EditionState>()
     const noteProgress = async () => {
       await sb
@@ -739,7 +746,7 @@ export async function runBeatportGenreImport(opts: {
           if (pub === 'inserted') {
             result.auto_approved += 1
             published += 1
-            say(`  Publicado (Top 100): ${pickLabel(pick)}`)
+            say(`  Publicado: ${pickLabel(pick)}`)
           }
         } else {
           await rememberQueue(sb, pick, 'pending', null, null)
@@ -819,19 +826,19 @@ export async function runBeatportGenreImport(opts: {
         }
         await persistFresh('Breaks')
       }
-      if (artistFrom && !readArtists) say('Fichas del Top 100: hoy no toca (solo los sábados).')
+      if (artistFrom && !readArtists) say(`Fichas de los ${FOLLOW_BOARD_LIMIT} primeros: hoy no toca (solo los sábados).`)
       if (artistFrom && readArtists && !outOfTime() && partial !== STOPPED_BY_EDITOR) {
         const followed = await followedBeatportArtists(sb, rankKeys)
-        say(`Top 100 con ficha Beatport: ${followed.length}`)
+        say(`Los ${FOLLOW_BOARD_LIMIT} primeros con ficha Beatport: ${followed.length}`)
         let artistsRead = 0
         for (const artist of followed) {
           if (outOfTime()) {
-            partial = `Tiempo agotado: leídas ${artistsRead} de ${followed.length} fichas del Top 100. El pase de GitHub lo completa.`
+            partial = `Tiempo agotado: leídas ${artistsRead} de ${followed.length} fichas. El pase de GitHub lo completa.`
             break
           }
           if (await stopped()) break
           artistsRead += 1
-          say(`Top 100 ${artistsRead}/${followed.length} ${artist.slug}`)
+          say(`Ficha ${artistsRead}/${followed.length} ${artist.slug}`)
           let total = Infinity
           for (let page = 1; page <= 3 && (page - 1) * PER_PAGE < total; page++) {
             const url = artistTracksUrl(artist.slug, artist.id, artistFrom, page)
@@ -929,8 +936,8 @@ export async function breaksListingUrlForEditor(): Promise<string> {
  * Página de Beatport que el editor manda desde su propio Chrome con el botón
  * de favoritos (14 oct 2026: Cloudflare cerró la puerta al pase automático).
  * La lee él, que pasa la verificación. El listado de Breaks se reparte como el pase:
- * Top 100 en los créditos → publicado; el resto → «Por aprobar».
- * Una ficha de temas de un artista del Top 100 publica todos los temas nuevos.
+ * Uno de los 140 primeros en los créditos → publicado; el resto → «Por aprobar».
+ * Una ficha de temas de uno de esos artistas publica todos los temas nuevos.
  */
 export async function ingestBeatportPage(opts: {
   url: string
@@ -976,7 +983,7 @@ export async function ingestBeatportPage(opts: {
   try {
     say(`Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
     const known = await loadKnownTracks(sb)
-    const rankKeys = await loadTopArtistKeys(sb, 100)
+    const rankKeys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
     const publishAll = await publishesWholeArtistPage(sb, opts.url, rankKeys)
     const cache = new Map<string, EditionState>()
     for (const [i, pick] of tracks.entries()) {

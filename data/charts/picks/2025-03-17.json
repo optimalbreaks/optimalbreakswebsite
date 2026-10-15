@@ -22,6 +22,331 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Acid Pattern",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-pattern/20181576",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f899a4aa-4976-4fa7-9fad-a3b6c7182870.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef335cf6-8c71-40fa-a53b-3842995e86e2.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
+    },
+    {
+      "title": "Shockwave",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shockwave/20121658",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64e961c9-9690-4ca1-867b-0876ce237886.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4d1946e8-8ffc-4106-8439-fd02c29a5ca2.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 44
+    },
+    {
+      "title": "Mechanoca",
+      "mix_name": "Vkyng Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/perfect-kombo/131092",
+          "name": "Perfect Kombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mechanoca/20116917",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cd438312-058c-48fd-ace8-d621cc408b04.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/709b1cab-bcc7-4800-81cf-d401539fa23a.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30,
+      "tidal_url": "https://tidal.com/browse/track/417610209"
+    },
+    {
+      "title": "Cowboy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cowboy/20121659",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64e961c9-9690-4ca1-867b-0876ce237886.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8d322c63-3618-4640-a88b-50d1f2c3d679.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 45
+    },
+    {
+      "title": "Make The Sound",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/drew-saw/1190799",
+          "name": "Drew & Saw"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-the-sound/20257204",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/79c3a4f8-94ae-4985-ae8c-964d999f63cd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eade9206-8ea4-44c2-9d22-7d2fc902cdf0.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
+    },
+    {
+      "title": "Moving Forward",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/moving-forward/20227867",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/84868eca-0b3b-4c03-b3db-0488e973fe9f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fda9b11f-6926-4f76-a769-3f37338cd43a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "The Wicked Pattern",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-wicked-pattern/20036822",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9303596c-f3ad-46ec-8e61-f71b799993b6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3f290ec7-00e3-4d65-a7ec-bd995e475947.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64
+    },
+    {
+      "title": "Days Are Numbered",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/deep-impact/3174",
+          "name": "Deep Impact"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/days-are-numbered/20116371",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf15639d-a3ee-4a9f-969d-734de8de60dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4ed791e9-23fc-48b9-9ca8-9bf77bae07e5.LOFI.mp3",
+      "bpm": 101,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
+    },
+    {
+      "title": "Looped Out",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/looped-out/20227865",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/84868eca-0b3b-4c03-b3db-0488e973fe9f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cb1c966f-88f0-4739-b53f-ff2ee6f2545f.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "The Future",
+      "mix_name": "(Stephen Cole remix)",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tone-abstract/503677",
+          "name": "Tone Abstract"
+        },
+        {
+          "url": "https://www.beatport.com/artist/stephen-cole/33339",
+          "name": "Stephen Cole"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-future/20271252",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4fa7da04-a4e2-42b7-a8ed-dc8baf1be126.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/260ba0a2-2e91-4b99-a4af-e7c384fe3e10.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "Sunday Vibez",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sunday-vibez/20227866",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/84868eca-0b3b-4c03-b3db-0488e973fe9f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/42742d7d-6f85-436e-abd5-4fd615627b1b.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65
+    },
+    {
+      "title": "Ping Pong",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ping-pong/20106808",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7160d7d3-b1ed-4089-b3f0-5f1a5451b77f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af48608b-2641-43c2-a559-4fc0a35385ad.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20,
+      "tidal_url": "https://tidal.com/browse/track/423226893"
+    },
+    {
+      "title": "Facesun",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/facesun/20228031",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4d7a461-a74f-4541-b5bb-974b8731cd5d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/497a6120-1102-4692-b2e5-6894078809bf.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41
     }
   ]
 }

@@ -1646,6 +1646,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 71
+    },
+    {
+      "title": "DARK WINTERS DAY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-winters-day/29880641",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4bef6328-628a-4a01-ba2e-fc683d2b2167.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f613e14d-d63a-427c-8096-e1ef69464986.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-07-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
     }
   ]
 }

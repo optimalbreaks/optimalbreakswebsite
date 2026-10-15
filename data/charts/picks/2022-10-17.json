@@ -24,6 +24,29 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/4ydxZRfTECxg00uklfhxgq",
       "tidal_url": "https://tidal.com/browse/track/253747816"
+    },
+    {
+      "title": "Instant Funk",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/instant-funk/16979294",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ceb180fe-13fb-4367-a212-11f2864d0088.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f4fa45b7-b479-442f-8c8b-f216d410833d.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Major",
+      "release_year": 2022,
+      "release_date": "2022-10-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 39
     }
   ]
 }

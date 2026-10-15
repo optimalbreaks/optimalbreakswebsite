@@ -2107,6 +2107,340 @@
       "note_es": "",
       "sort_order": 92,
       "spotify_url": "https://open.spotify.com/track/1UxQsESd8BTQtVcWRaWerz"
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "EXTENDED VIP 2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476273",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a03df45e-0dc9-4e1a-94d2-2cd19638a810.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476282",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e740918-8701-4440-bd76-9ba4c8a04c57.LOFI.mp3",
+      "bpm": 129,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104
+    },
+    {
+      "title": "Say Hello",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/say-hello/29025651",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/81d302d4-5446-48ee-82b3-0dc7d616257f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/20fba865-0eea-4930-81ed-dc41b13e1e59.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107
+    },
+    {
+      "title": "Lost & Found",
+      "mix_name": "DJ Genesis Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/rob-cokeless/1001348",
+          "name": "ROB COKELESS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        }
+      ],
+      "label": "77DEUCE RECORDS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lost-found/28942329",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ae2a6cad-1d39-4e63-a466-7c7fc135420f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/120a7627-677b-453c-9a5e-c517217959ec.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "LOON",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29476378",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/348b51ac-ecae-4edc-b4b4-2b862f82c39c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/04025d29-0599-43fd-8d3e-799ee380b189.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-06-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476272",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/40be205e-279c-4d9d-89ab-76d01c86467e.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "VIP VIP 2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476283",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/def4ea86-59ac-4595-8300-ab4e75c4af59.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102
+    },
+    {
+      "title": "Passion",
+      "mix_name": "DJ Richie Rich & Huda Hudia Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/k5/36761",
+          "name": "K5"
+        },
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/passion/29074260",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/99037ec5-1413-4128-8664-2b25404b1cf5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9a8f019f-9ae7-4cb4-baa0-1d3f66b934b0.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "OG OG",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476275",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5664e59c-9bdd-48ef-ae2a-6e63c3833405.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "2026 EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476285",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ef70f46f-b340-46a4-a4d3-342a91eca69a.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105
+    },
+    {
+      "title": "LOON",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29476379",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/348b51ac-ecae-4edc-b4b4-2b862f82c39c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5150bd7c-8deb-4042-baae-3e53ff9ccaec.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-06-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "LOON",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29476377",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/348b51ac-ecae-4edc-b4b4-2b862f82c39c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/763e8550-9483-4fe7-92ff-07c5522db5f1.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-06-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "OG",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476274",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/842c0fb1-9875-4d8a-b720-0c7f16ac5d69.LOFI.mp3",
+      "bpm": 129,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106
+    },
+    {
+      "title": "HUMBLE DON",
+      "mix_name": "2026 EXTENDED",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/humble-don/29476284",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ace63e5a-ac74-445d-bef9-e40c16a979b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/75db57e4-a963-45b3-800d-82922b6ca887.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103
     }
   ]
 }

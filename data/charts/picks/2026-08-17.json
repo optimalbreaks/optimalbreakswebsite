@@ -2513,6 +2513,305 @@
       "note_es": "",
       "sort_order": 109,
       "spotify_url": "https://open.spotify.com/track/6xM3PfTXyF3B2F5sXrBAhC"
+    },
+    {
+      "title": "Doble Mitad",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/belforg/118487",
+          "name": "Belforg"
+        }
+      ],
+      "label": "Erokixen Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/doble-mitad/30201830",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8890aadd-296f-475c-ace4-31784dda3c3f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f9caac42-4ab0-4ef3-9fe6-e425bdf1018a.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 113
+    },
+    {
+      "title": "CHAMPION",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/champion/30273236",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82ce80b3-b465-4791-a5b6-23d2cb127f5e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7408c060-0b84-4977-a471-91290b020808.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-08-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 118
+    },
+    {
+      "title": "Make Ya Hot",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-ya-hot/30052884",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c680229-5dbb-487d-85fd-2e507a093502.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b02115be-7178-44da-8af6-3279d7e814aa.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 116
+    },
+    {
+      "title": "SELEKTA DUB",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-dub/30300659",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dc0f8798-3118-438c-84f7-2559f0b44da3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/54d1a0f9-e2d8-4bb1-b5ac-a945aca59d86.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 123
+    },
+    {
+      "title": "SELEKTA DUB",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-dub/30300661",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dc0f8798-3118-438c-84f7-2559f0b44da3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/723a29b3-fbd7-49cc-97e2-0b70db59428f.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 121
+    },
+    {
+      "title": "Hot Beats",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hot-beats/30052885",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c680229-5dbb-487d-85fd-2e507a093502.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46f9d50b-fd8b-45ca-b97d-42233f8b37a4.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 115
+    },
+    {
+      "title": "SELEKTA DUB",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-dub/30300660",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dc0f8798-3118-438c-84f7-2559f0b44da3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4ce78c77-e85c-40ac-b0e5-61e3c0dc08b4.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-08-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 122
+    },
+    {
+      "title": "CHAMPION",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/champion/30273238",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82ce80b3-b465-4791-a5b6-23d2cb127f5e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7c53d21b-8e66-4e48-8fc1-f4d9614c5ee8.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-08-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 119
+    },
+    {
+      "title": "Make Ya Hot",
+      "mix_name": "Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-ya-hot/30052886",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c680229-5dbb-487d-85fd-2e507a093502.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46bd4057-9e3f-44b8-9365-c8fdb64624c2.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 114
+    },
+    {
+      "title": "SELEKTA DUB",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-dub/30300658",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dc0f8798-3118-438c-84f7-2559f0b44da3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/118f36da-7c5c-4616-949a-0115a762b3c6.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-08-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 124
+    },
+    {
+      "title": "LUCKY",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lucky/30260915",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/37bc085c-6fd7-4507-be18-377f643932c4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3cc09bd6-7fff-43dc-8348-466863f9a69a.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 125
+    },
+    {
+      "title": "CHAMPION",
+      "mix_name": "EXTENDED OG",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/champion/30273237",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82ce80b3-b465-4791-a5b6-23d2cb127f5e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a290916c-2170-471e-9af5-20b259c7d7a8.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-08-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 120
+    },
+    {
+      "title": "Wake Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "Etiqueta Negra",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wake-up/29727540",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dc588f60-ee77-4433-8b4a-bb491f13e75c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/443aa9d0-87d2-4cab-8fb8-b79435be87bf.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
     }
   ]
 }

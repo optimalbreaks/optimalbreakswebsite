@@ -94,6 +94,213 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 4
+    },
+    {
+      "title": "`OOH YEAH",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ooh-yeah/22363169",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2453c9c9-1bb7-442e-8b1c-6214e7f10537.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af932c03-fe18-4127-908c-be650366d51d.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "`OOH YEAH",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ooh-yeah/22363172",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2453c9c9-1bb7-442e-8b1c-6214e7f10537.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5854daa7-7aaf-4b81-9498-0f317012dca5.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Stalker",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/stalker/22195219",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8830b044-cd22-4e38-b9d4-7725ab081378.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7c269c72-efb8-44ba-b847-0d81e23968cc.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "FIREEE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fireee/22318525",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6e313189-ce07-4204-b059-7740dec7863c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/47da578e-bd8e-4d88-8e2f-bbf88f69c1ce.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
+    },
+    {
+      "title": "MONDAZED VIBES",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mondazed-vibes/22363171",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2453c9c9-1bb7-442e-8b1c-6214e7f10537.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ed092dda-69b3-42d8-ac80-30b29232cdc7.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "C Major",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "BADD MAN",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/badd-man/22318524",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6e313189-ce07-4204-b059-7740dec7863c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/788449e0-7862-4f68-bc54-b744b0ab7e2b.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "Losing Control",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/deejay-shaolin/262767",
+          "name": "Deejay Shaolin"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-control/21197342",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/907e7091-e327-4e13-a0b2-c8b5d90f871b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b34f0427-0f82-45dc-a9ac-c01a6621d3ac.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "DodShow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records : New School",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dodshow/21676419",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/209a9d4c-108c-4210-889f-01e092555046.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5ea46f53-8a51-450b-b732-f1b9290fc65c.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "Power Steering",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Top Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/power-steering/28159039",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/49d03ead-8107-4ebc-94ed-d0c4a367016e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b1151b8b-11a2-4334-a8fe-145610192a0a.LOFI.mp3",
+      "bpm": 90,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92
     }
   ]
 }

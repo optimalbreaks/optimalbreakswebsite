@@ -3910,6 +3910,99 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 172
+    },
+    {
+      "title": "Speakers Corner",
+      "mix_name": "Dilemn Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/eskmo/33155",
+          "name": "Eskmo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dilemn/48806",
+          "name": "Dilemn"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/speakers-corner/29650802",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/10e8b3e4-0f25-4ed5-a866-16fad6a47343.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7a2ff133-e72f-4a3c-9c51-8d322ae98452.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 175
+    },
+    {
+      "title": "Speakers Corner",
+      "mix_name": "Eskmo and Antiserum Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/eskmo/33155",
+          "name": "Eskmo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/antiserum/74765",
+          "name": "AntiSerum"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/speakers-corner/29650801",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/10e8b3e4-0f25-4ed5-a866-16fad6a47343.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/76e980db-2809-4e38-a9a9-02d14a440b4d.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 176
+    },
+    {
+      "title": "Luv with U",
+      "mix_name": "Monster Radio Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kromozone-project/521791",
+          "name": "Kromozone Project"
+        },
+        {
+          "url": "https://www.beatport.com/artist/randy-lance/529200",
+          "name": "Randy Lance"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        }
+      ],
+      "label": "TBC Productions",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/luv-with-u/29202371",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/010e771b-b068-4a83-9253-71cc93a67846.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/399b93e6-635b-44e9-abb1-3e2e3d8def5e.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 177
     }
   ]
 }

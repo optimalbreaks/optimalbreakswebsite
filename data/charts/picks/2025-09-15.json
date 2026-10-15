@@ -24,6 +24,244 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/7JClWYi1C90K4OmS9TyJ6V",
       "tidal_url": "https://tidal.com/browse/track/458549718"
+    },
+    {
+      "title": "Keep the flow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-the-flow/20495315",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/64089b89-c7b9-4981-b45f-69571f30bc84.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9171e602-97ad-4728-8b16-f22d3cb54f13.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64
+    },
+    {
+      "title": "EXPERIMENT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/experiment/21631467",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f747c062-7a51-4e7e-b19a-2afad744370f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/74f079f5-6702-4fec-8694-96edf558de97.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "WOLF - VIP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wolf-vip/21598349",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c3082dad-f0ae-4d67-a860-a6e3ca72e425.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4d5a8929-68be-4322-be55-698d5a6211fe.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "LAZY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lazy/21678287",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/dcb6ecf4-b475-4894-9e24-7970d34020e4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4f1d8c9b-9794-419a-9de8-48182254c427.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Electronauta",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/belforg/118487",
+          "name": "Belforg"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/electronauta/21072232",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e2000c0e-ed0a-4dfa-b014-42eb26283b76.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/80f6550d-e59a-47bf-a7f5-b90aaf247ae5.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Gb Major",
+      "release_year": 2025,
+      "release_date": "2025-09-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
+    },
+    {
+      "title": "Joint",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/joint/21077179",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a339e974-40d8-428a-bcc8-2e566ab4b9c2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2e6ca398-69bc-45f9-9bb0-3a6d517cdf53.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "WOLF",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wolf/21598347",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c3082dad-f0ae-4d67-a860-a6e3ca72e425.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39c561d3-0478-4f26-8ffd-d1c7fb32916e.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "DISTORTED",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/distorted/21598348",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c3082dad-f0ae-4d67-a860-a6e3ca72e425.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1f715a89-6915-493b-9a5b-3ac6a2133cdf.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65
+    },
+    {
+      "title": "EXPERIMENT - VIP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/experiment-vip/21631468",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f747c062-7a51-4e7e-b19a-2afad744370f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/629c777b-cf88-455e-85c8-98914a6aa440.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-09-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
+    },
+    {
+      "title": "Mesmerized",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brotherbreakz/227123",
+          "name": "The Brotherbreakz"
+        },
+        {
+          "url": "https://www.beatport.com/artist/javo-scratch/676516",
+          "name": "Javo Scratch"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mesmerized/20625816",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f3bef981-b753-4711-8215-872074e399df.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3a246d8c-4716-46f0-98b9-1c7bd7ebc8c2.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
     }
   ]
 }

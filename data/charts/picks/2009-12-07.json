@@ -25,6 +25,33 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Badbwoy",
+      "mix_name": "Backdraft Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/darkus/55853",
+          "name": "Darkus"
+        },
+        {
+          "url": "https://www.beatport.com/artist/backdraft/683",
+          "name": "Backdraft"
+        }
+      ],
+      "label": "Bassrock Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/badbwoy/1034987",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6f051eef-1a98-4fe3-98fa-04659ea8261a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2d0ea0d5-b6d2-4d0e-bdd4-34ee394add52.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Db Major",
+      "release_year": 2009,
+      "release_date": "2009-12-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

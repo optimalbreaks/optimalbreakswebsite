@@ -22,6 +22,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "2001",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/atomic-hooligan/682",
+          "name": "Atomic Hooligan"
+        }
+      ],
+      "label": "Botchit & Scarper",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/2001/5258739",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a1340bc7-9ea2-45f8-8a4f-9a2ecd77de0b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/40fd94f9-b8a7-4d39-a95e-46fffc15abfb.LOFI.mp3",
+      "bpm": 116,
+      "music_key": "Bb Minor",
+      "release_year": 2001,
+      "release_date": "2001-09-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
     }
   ]
 }

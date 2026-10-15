@@ -22,6 +22,83 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Tonight",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tonight/18461160",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0d5c4e5-7213-49af-aad0-2e04cb130630.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8cea5ee8-af65-469b-85e7-24645cd97a50.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-01-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 18
+    },
+    {
+      "title": "Cyborg",
+      "mix_name": "JottaFrank Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sans/254398",
+          "name": "Sans"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cyborg/18471536",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f1b13996-e8be-4360-bee7-d1a5ff1630b3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e8f189e-b9e3-4ca1-8cd8-b925c62f2b81.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-01-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2
+    },
+    {
+      "title": "I'll Be Back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mutantbreakz/135018",
+          "name": "Mutantbreakz"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ill-be-back/18494817",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f4a6ea18-b3cd-498e-9144-dc242ec050e1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a4687e38-757a-4024-973d-037be48cefa1.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2024,
+      "release_date": "2024-01-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
     }
   ]
 }

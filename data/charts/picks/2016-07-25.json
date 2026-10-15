@@ -22,6 +22,41 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Funk Soul",
+      "mix_name": "Colombo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bbk/192999",
+          "name": "BBK"
+        },
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dmoney/458105",
+          "name": "Dmoney"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funk-soul/8163218",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/86d4fdbc-ff52-483c-a720-98aec6e58df4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4500d8ff-ff69-4e00-96cf-67c2d3d8a522.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "C Major",
+      "release_year": 2016,
+      "release_date": "2016-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
     }
   ]
 }

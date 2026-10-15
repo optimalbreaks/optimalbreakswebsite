@@ -22,6 +22,125 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Nossa",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nossa/19882097",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/89d1e3ef-38dd-4662-a9e4-264ebe96d36e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/18c6d7ed-4dc4-4189-8f6b-be37d8ce348a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30
+    },
+    {
+      "title": "Araña",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/arana/19882165",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/37db32a3-5a16-4d1b-bf06-ed0b107d6521.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f33a96c0-ff8f-4d27-ad9b-9f0636b03b16.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 23
+    },
+    {
+      "title": "The key to your heart",
+      "mix_name": "Vkyng Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/eskila/1223621",
+          "name": "Eskila"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-key-to-your-heart/19874925",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a190ef9f-31da-4149-9dbf-ea683ca115fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/917a7c56-1837-418e-bf47-6b309a10bb45.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Look at Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/look-at-me/19867073",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03fdd3f5-44eb-4ebe-a46b-866b0db32f82.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ab70e529-0ab8-478f-b615-a8e237c71a06.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
+    },
+    {
+      "title": "Look at Me",
+      "mix_name": "Radio Edit",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "ONE7AUDIO",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/look-at-me/19867072",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03fdd3f5-44eb-4ebe-a46b-866b0db32f82.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e89566c1-6041-413a-846c-0126004b78fd.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Major",
+      "release_year": 2025,
+      "release_date": "2025-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
     }
   ]
 }

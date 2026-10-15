@@ -645,6 +645,29 @@
       "release_date": "2024-07-11",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "title": "Old Time",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/old-time/19200300",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/31ed48cb-f66d-4e01-9362-f59991e4d236.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/271e2851-fc8b-42b9-a5b7-c2e862b30289.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2024,
+      "release_date": "2024-07-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
     }
   ]
 }

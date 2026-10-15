@@ -1354,6 +1354,411 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 58
+    },
+    {
+      "title": "IS IT US",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/is-it-us/30913596",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4930107-3478-4c22-a1d3-78804107d83b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1aff93c3-4296-469d-8f41-8401418e67d0.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 145
+    },
+    {
+      "title": "FIREE",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        },
+        {
+          "url": "https://www.beatport.com/artist/terracotta/2190573",
+          "name": "Terracotta"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/firee/30941091",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/627875cc-2066-414b-be4c-157e495115ff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/74b9a5c8-e986-4676-bb9d-fc148526fc3c.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 139
+    },
+    {
+      "title": "DROP IT",
+      "mix_name": "VIP 2026",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it/30943776",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/af3109b6-5707-44c2-9526-c5dcbe68ae35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0f1cd3d3-ac45-4705-931d-2b4cb52399c3.LOFI.mp3",
+      "bpm": 70,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87,
+      "spotify_url": "https://open.spotify.com/track/3GPfe8ozwRRmg3SknRgSOc",
+      "tidal_url": "https://tidal.com/browse/track/397800984"
+    },
+    {
+      "title": "IS IT US",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/is-it-us/30913597",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4930107-3478-4c22-a1d3-78804107d83b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5e15decd-c723-4ab8-97f4-50c0e6dd12e5.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 144
+    },
+    {
+      "title": "BREAKS BELLS",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/breaks-bells/30943772",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/af3109b6-5707-44c2-9526-c5dcbe68ae35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a7253117-634b-4fed-b7fe-916775387c3c.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90,
+      "spotify_url": "https://open.spotify.com/track/6toiofh7do8L1gGno0ZuJV",
+      "tidal_url": "https://tidal.com/browse/track/483079112"
+    },
+    {
+      "title": "BREAK DANCE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/break-dance/30943773",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/af3109b6-5707-44c2-9526-c5dcbe68ae35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cb0075d8-58c5-46e5-bc6d-8e40342660e8.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89,
+      "spotify_url": "https://open.spotify.com/track/72pffdzHIeGR7DzOjVs3gw",
+      "tidal_url": "https://tidal.com/browse/track/488514521"
+    },
+    {
+      "title": "Serious Oscillator",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/serious-oscillator/30630989",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8d487abe-1117-4be6-9d46-2f8fe14722c7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af3b874f-6f7d-4eca-911e-a38c8eae5dbd.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 138
+    },
+    {
+      "title": "FIREE",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/firee/30941090",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/627875cc-2066-414b-be4c-157e495115ff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/53c0b39e-a247-4a62-bba8-7edface9ac43.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 140
+    },
+    {
+      "title": "FIYAH",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fiyah/30966711",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/618e116e-c8c0-4405-8f5c-332709a1ff8f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3ae1970-6166-4bb9-bbc6-f1ecfc32e9a6.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 131,
+      "spotify_url": "https://open.spotify.com/track/3dU9dypkIGCtXN5WWMhYLa",
+      "tidal_url": "https://tidal.com/browse/track/435038151"
+    },
+    {
+      "title": "IS IT US",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/is-it-us/30913595",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4930107-3478-4c22-a1d3-78804107d83b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c64579b0-4c7b-4cf3-bbb8-04d8a3293a00.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 143
+    },
+    {
+      "title": "HO HO HOOO",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ho-ho-hooo/30943774",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/af3109b6-5707-44c2-9526-c5dcbe68ae35.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0ba472b8-31fc-4832-aa3d-07458e0be9ba.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88,
+      "spotify_url": "https://open.spotify.com/track/4txiUtnOASSVCHxMvCOxba"
+    },
+    {
+      "title": "Look",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "TT Beats"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/look/30701280",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c39d3962-a2cd-462a-8039-53cfc4a2f268.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eaa53336-63aa-4292-a762-b13483eb9976.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-10-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105,
+      "spotify_url": "https://open.spotify.com/track/2Pf3WtaAgWi4BoEMWzSl6f",
+      "tidal_url": "https://tidal.com/browse/track/562262403"
+    },
+    {
+      "title": "Louder",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Belforg"
+        }
+      ],
+      "label": "Erokixen Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/louder/30708749",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6071d19f-87bc-40da-9a99-b3df54052408.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e07f47da-f70b-4627-9734-f4584450ec11.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 130,
+      "spotify_url": "https://open.spotify.com/track/7sMVPdA29RvOMd70VDocm1",
+      "tidal_url": "https://tidal.com/browse/track/562441210"
+    },
+    {
+      "title": "FIREE",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        },
+        {
+          "url": "https://www.beatport.com/artist/terracotta/2190573",
+          "name": "Terracotta"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/firee/30941092",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/627875cc-2066-414b-be4c-157e495115ff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2379e723-3a7b-475d-a4a7-acfc63a8d235.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 142
+    },
+    {
+      "title": "Smot",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/smot/29597831",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/437297da-a9a8-4623-957f-fea6dbb305c7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46bef577-29ba-4426-b06f-ed99b4cfb18d.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-10-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 121
+    },
+    {
+      "title": "FIREE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/firee/30941089",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/627875cc-2066-414b-be4c-157e495115ff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e01203e-8cd6-4dc0-9d32-29ef20f56378.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 141
+    },
+    {
+      "title": "SANTA BREAK DANCE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/santa-break-dance/30943747",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2e7fc225-50cd-4a62-af8e-3d2eec42cdd4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5afd52b2-e455-4004-947e-7be110f60642.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86,
+      "spotify_url": "https://open.spotify.com/track/0Wpom3NMt3jYFEYyB7bjOh",
+      "tidal_url": "https://tidal.com/browse/track/483079110"
     }
   ]
 }

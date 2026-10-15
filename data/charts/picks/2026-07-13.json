@@ -2038,6 +2038,98 @@
       "note_es": "",
       "sort_order": 90,
       "spotify_url": "https://open.spotify.com/track/1Wk4BY089NfVWafK4rr1uG"
+    },
+    {
+      "title": "CHILLED DUB",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/chilled-dub/29787917",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7eacce85-abf9-4914-a8ca-de221196b203.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/decc66a1-9db0-4fd6-a317-989821486b65.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-07-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "CHILLED DUB",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/chilled-dub/29787918",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7eacce85-abf9-4914-a8ca-de221196b203.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4885868a-75f7-445d-9056-3ee1c9969491.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-07-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "DARK WINTERS DAY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-winters-day/29760885",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b1f6ffc2-70c8-46cd-9c1b-1bd93472ecad.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5ff97b92-a622-4a4a-8219-fb131bd02fdd.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "DARK WINTERS DAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-winters-day/29739762",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8e99d495-7cce-4721-8a71-8afbfaf546f2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f0907854-446a-42b9-a6b0-af60beac8e2c.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
     }
   ]
 }

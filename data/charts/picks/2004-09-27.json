@@ -25,6 +25,33 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/2P79o8njc5X9NbgiGbRwpx",
       "tidal_url": "https://tidal.com/browse/track/2210043"
+    },
+    {
+      "title": "Addiction",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/masterblaster/15859",
+          "name": "Masterblaster"
+        }
+      ],
+      "label": "777",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/addiction/22235",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d4f0a8c-f99a-4d0b-a41a-8c18a07c0511.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2aa6d384-5c42-4d71-8c79-58234830922e.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Minor",
+      "release_year": 2004,
+      "release_date": "2004-10-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3
     }
   ]
 }

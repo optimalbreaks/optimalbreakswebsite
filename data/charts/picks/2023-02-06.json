@@ -47,6 +47,60 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 2
+    },
+    {
+      "title": "Hated",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hated/17281647",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7fc565b6-27dd-43e8-b4e7-fa8592da8c45.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1d701e07-66d1-4860-9328-4a9d69512317.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "Ab Minor",
+      "release_year": 2023,
+      "release_date": "2023-02-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
+    },
+    {
+      "title": "Antipode",
+      "mix_name": "JottaFrank & Perfect Kombo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-darrow-chem-syndicate/106178",
+          "name": "The Darrow Chem Syndicate"
+        },
+        {
+          "url": "https://www.beatport.com/artist/perfect-kombo/131092",
+          "name": "Perfect Kombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Nipponeer Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/antipode/17255818",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5bef7a1e-9aaf-4d39-a4fe-f84de03f6610.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f5837981-6701-4cc4-83dc-3452e50f4a06.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Bb Minor",
+      "release_year": 2023,
+      "release_date": "2023-02-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16
     }
   ]
 }

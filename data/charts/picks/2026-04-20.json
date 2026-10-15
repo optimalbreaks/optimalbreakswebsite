@@ -1666,6 +1666,478 @@
       "sort_order": 72,
       "spotify_url": "https://open.spotify.com/track/20PUfdaXDjgM8yLpag0SKL",
       "tidal_url": "https://tidal.com/browse/track/511718787"
+    },
+    {
+      "title": "The Trap",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-trap/27084842",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1d0ce077-67ae-496b-855a-b1d19a745277.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/48b71757-27a6-4c79-8c1a-34e83ed528bb.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
+    },
+    {
+      "title": "DROP IT AGAIN",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it-again/28528243",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fa3a772b-aad1-4bad-8614-5cf260d6cd5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/02b0c545-5c4e-4311-b4ca-b0cc065c0f9b.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 91
+    },
+    {
+      "title": "Bass Operator",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-operator/28295178",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dd3d893a-7f2d-4771-a519-9af57106558a.LOFI.mp3",
+      "bpm": 66,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 79
+    },
+    {
+      "title": "Bass in The Shade",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-in-the-shade/28295177",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4972eea4-9980-411c-af6a-56a29ebdcb60.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 80
+    },
+    {
+      "title": "Running Back to Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/running-back-to-bass/28295176",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4dca5c64-ec26-4738-9bfb-f204333ec10b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Hey We Got Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hey-we-got-bass/28295175",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/329a5b1b-05c1-4db1-9c36-0c45f2994a3c.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "Funk Machine",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funk-machine/28295179",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9d5043b2-ad01-4e77-8b74-37336ce7a140.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "DROP IT",
+      "mix_name": "2026 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it/28528278",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2da90233-0ceb-459e-9f41-db44984e9997.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f0fa6dba-249f-4a35-89ec-6adf19661ab7.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "DROP IT AGAIN",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it-again/28528244",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fa3a772b-aad1-4bad-8614-5cf260d6cd5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7158d2f2-672a-4b4a-9334-37fb554764d1.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "Damn That DJ",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/damn-that-dj/28295172",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5cd80e9a-903f-41d3-b133-759a11d5573d.LOFI.mp3",
+      "bpm": 100,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "Ghetto Style Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/smooth-j/2247491",
+          "name": "Smooth J"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ghetto-style-bass/28295171",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/92b4751f-ee6c-4090-b480-29604f85df3c.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
+    },
+    {
+      "title": "Bass Station One",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-station-one/28295174",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/928ae5f6-c2a7-483f-98c7-e9ac23a4682c.LOFI.mp3",
+      "bpm": 122,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86
+    },
+    {
+      "title": "DROP IT AGAIN",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it-again/28528246",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fa3a772b-aad1-4bad-8614-5cf260d6cd5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/426c8e5e-f031-4471-8dd9-0cb995e22059.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "DROP IT AGAIN",
+      "mix_name": "2026 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it-again/28528245",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fa3a772b-aad1-4bad-8614-5cf260d6cd5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0cb21d00-cbe2-4c7e-b4a4-0491ba8df430.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "It's Time",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/its-time/24395868",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c0b991d4-45c9-449c-b165-fcef9d93d8f8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b5fff366-fe04-4da0-b850-ce80988eaea7.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-04-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "Booty Shaker",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/booty-shaker/28295173",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9e9a1566-a02a-45f7-8048-bdc69319f3b5.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "CRAZY WORLD",
+      "mix_name": "VIP 2026 Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/crazy-world/28541898",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5a3dcd62-5473-4087-acff-fbb266c121a0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cdb24c7d-3985-4afa-8dbe-d39b10ade330.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90
+    },
+    {
+      "title": "Leave This Club",
+      "mix_name": "Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/splack-pack/15923",
+          "name": "Splack Pack"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/leave-this-club/28295180",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bf8b23ee-a52c-4b39-a361-15b7bd127dd6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8dc67dde-6e63-4969-9200-5adb1de9279f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
+    },
+    {
+      "title": "DROP IT AGAIN",
+      "mix_name": "2026 EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it-again/28528247",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fa3a772b-aad1-4bad-8614-5cf260d6cd5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/38fac054-8faf-45b3-bde3-95ec3a3b6eb9.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
+    },
+    {
+      "title": "DROP IT",
+      "mix_name": "2026 EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it/28528277",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2da90233-0ceb-459e-9f41-db44984e9997.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dfc947f3-6c6b-4fc5-809c-fde1d8eff090.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92
     }
   ]
 }

@@ -3111,6 +3111,152 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 135
+    },
+    {
+      "title": "Live Fast",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/odissi/14173",
+          "name": "Odissi"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/live-fast/30798194",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/52f3cb21-6d4b-453f-be64-46741a98c3db.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8919e2f8-341e-4d3d-ba92-2aec74288364.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 139
+    },
+    {
+      "title": "Whatever",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/odissi/14173",
+          "name": "Odissi"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whatever/30798217",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/95e1144a-332c-4578-b216-239e9e657302.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2d9b9fc7-dea7-4bd9-a3c2-9feaf81fa575.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 140
+    },
+    {
+      "title": "Miami",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/miami/30734578",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77dbbc74-4588-4cbc-ae5c-76687c3c51be.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d5e74c92-ca1e-4f26-93c3-270a1627b69a.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 143
+    },
+    {
+      "title": "Go Slow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/go-slow/30734580",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77dbbc74-4588-4cbc-ae5c-76687c3c51be.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/66964b80-6cde-4a6c-892a-0feea93fa67d.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 142
+    },
+    {
+      "title": "Wtf",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wtf/30734579",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77dbbc74-4588-4cbc-ae5c-76687c3c51be.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9d8a167-1143-4700-a40a-b6d4c3396084.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 144
+    },
+    {
+      "title": "Feel The Beat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feel-the-beat/30734577",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77dbbc74-4588-4cbc-ae5c-76687c3c51be.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9bb3fc1a-ed60-4794-b200-959aa58ca371.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 141
     }
   ]
 }

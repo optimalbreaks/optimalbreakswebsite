@@ -88,6 +88,164 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 4
+    },
+    {
+      "title": "Your Second Lesson",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "333Frequency",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/your-second-lesson/17070537",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/925df951-0915-4db5-967c-5c8697a575a1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e8c84b51-7ab9-441c-a1ca-8df64c27a7b3.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
+    },
+    {
+      "title": "Your First Lesson",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "333Frequency",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/your-first-lesson/17070538",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/925df951-0915-4db5-967c-5c8697a575a1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2386e04f-b421-4cee-b3de-84c2f298347f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2022,
+      "release_date": "2022-10-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
+    },
+    {
+      "title": "The Get Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-get-down/16920253",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff6608b0-17da-41c2-98f7-280f04a0bf43.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/67e030d3-2588-4b8d-b353-6c8bbcc72a30.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2022,
+      "release_date": "2022-11-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 34
+    },
+    {
+      "title": "Dance Sucka",
+      "mix_name": "Deejay Shaolin 2022 Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/doc-roc/33424",
+          "name": "Doc Roc"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj30a/665097",
+          "name": "DJ30A"
+        },
+        {
+          "url": "https://www.beatport.com/artist/deejay-shaolin/262767",
+          "name": "Deejay Shaolin"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dance-sucka/17039065",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7946b34a-f801-465c-ba03-f911627f9892.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bb3d0591-2d92-4274-ba61-2bd1956143c5.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Ab Major",
+      "release_year": 2022,
+      "release_date": "2022-11-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Flux",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flux/16986800",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9fede1a1-0a2b-484b-9256-df943513ec0d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8f4d9828-0621-4406-b4bc-5c968478528d.LOFI.mp3",
+      "bpm": 101,
+      "music_key": "Gb Major",
+      "release_year": 2022,
+      "release_date": "2022-11-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    },
+    {
+      "title": "Laud",
+      "mix_name": "Guau Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/guau/117449",
+          "name": "Guau"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/laud/16971886",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7bfbcd39-09a2-43a1-ba4a-713078e7d2d3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8c870623-dd46-4fa0-9c56-ef5d468ce7c7.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2022,
+      "release_date": "2022-11-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 5
     }
   ]
 }

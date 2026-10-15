@@ -1798,6 +1798,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 72
+    },
+    {
+      "title": "Selektaa",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Sweep Da Scene Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selektaa/28911799",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8f3ea04c-4493-4618-8e96-b35e42e5b3b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e83e83fa-78ce-43af-bd35-4fe156367d2c.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "Straight Out Of Sydney",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Sweep Da Scene Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/straight-out-of-sydney/28911800",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8f3ea04c-4493-4618-8e96-b35e42e5b3b4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/12f9e054-b220-4faf-b28f-db8692f6044a.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-07-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
     }
   ]
 }

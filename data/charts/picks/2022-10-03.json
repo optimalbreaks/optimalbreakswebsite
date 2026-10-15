@@ -25,6 +25,56 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/1tOEEEM8DFyZq3CxSHeq5f",
       "tidal_url": "https://tidal.com/browse/track/248376165"
+    },
+    {
+      "title": "Shiva",
+      "mix_name": "Kid Panel  Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/urbano/170971",
+          "name": "URBANO"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/shiva/16881659",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/09d24bf4-ec13-422e-b6e8-9471178e9ba8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dcbf58bd-538b-4850-aa66-7ca9a06df9ef.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Bb Major",
+      "release_year": 2022,
+      "release_date": "2022-10-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41
+    },
+    {
+      "title": "Chango",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/chango/16884947",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/96a92dd7-ce05-42cb-9253-83736d6c8a34.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7434a865-4a09-47d6-bc30-17ff8871a0e4.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Gb Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 40
     }
   ]
 }

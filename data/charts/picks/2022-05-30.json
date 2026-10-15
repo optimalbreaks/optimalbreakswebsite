@@ -66,6 +66,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 3
+    },
+    {
+      "title": "Always On My Mind",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/deejay-shaolin/262767",
+          "name": "Deejay Shaolin"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/always-on-my-mind/16583158",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b8b260fa-dd2f-4522-89dc-43dd1c5ecfec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/64c9deee-df9a-435c-bd16-c046c0a0097a.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Eb Minor",
+      "release_year": 2022,
+      "release_date": "2022-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
     }
   ]
 }

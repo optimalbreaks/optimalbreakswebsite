@@ -24,6 +24,83 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/7bGPBupGapPGzqGJAsQ7UG",
       "tidal_url": "https://tidal.com/browse/track/363296741"
+    },
+    {
+      "title": "If You Were Mine",
+      "mix_name": "Rob Cokeless & DJ Genesis Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/rob-cokeless/1001348",
+          "name": "ROB COKELESS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/meags/1139874",
+          "name": "Meags"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        }
+      ],
+      "label": "77DEUCE RECORDS",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/if-you-were-mine/18985266",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f192d835-dd6e-4641-8475-7fef0ef19a32.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bf642702-1e1d-4178-81fa-ab2e447b7e5b.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "A Minor",
+      "release_year": 2024,
+      "release_date": "2024-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
+    },
+    {
+      "title": "Breezy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/breezy/18935812",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cb01686c-0787-4f6f-9a69-3891f440488f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c6378e62-b804-4588-bed7-0bc73a38468b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2024,
+      "release_date": "2024-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    },
+    {
+      "title": "Nineveh",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/belforg/118487",
+          "name": "Belforg"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nineveh/18932770",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1dad0dc8-4dfd-4041-8915-929e8c9179f0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8939d26c-e514-43b2-9d61-8eb0e796af57.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Major",
+      "release_year": 2024,
+      "release_date": "2024-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

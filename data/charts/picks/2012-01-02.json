@@ -22,6 +22,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Do This",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        }
+      ],
+      "label": "Houserecordings (Plasmapool)",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/do-this/3133550",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d0b57e6d-3fc8-4664-8b91-6f144326d335.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/268a9bdd-b2a1-4ab4-aaa2-47700eff35bc.LOFI.mp3",
+      "bpm": 66,
+      "music_key": "G Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 7
+    },
+    {
+      "title": "Drifting",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        }
+      ],
+      "label": "Houserecordings (Plasmapool)",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drifting/3133549",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d0b57e6d-3fc8-4664-8b91-6f144326d335.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/131e0c61-d29d-4671-81e6-0dd283ba3703.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Minor",
+      "release_year": 2012,
+      "release_date": "2012-01-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6
     }
   ]
 }

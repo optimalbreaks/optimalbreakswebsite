@@ -22,6 +22,573 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Mind Echoes",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nvthec/1035553",
+          "name": "NVTHEC"
+        },
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mind-echoes/22304836",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/27742987-c921-44dd-859d-f02cbcba534d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/97e19862-4cf9-4e8c-b602-8d69b1336606.LOFI.mp3",
+      "bpm": 118,
+      "music_key": "Gb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "175 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22599024",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/562a0246-1a9e-413e-ae05-313e9e72de25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b371e77b-ad70-4709-a58f-5960fd00485a.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "INTRO EXTENDED",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774896",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b0dbad39-a9d5-491f-8b75-ac52c0654a83.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Major",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774902",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/01add851-6778-41bc-a25d-a4bbbcfffe6a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 48
+    },
+    {
+      "title": "Gear Grind",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gear-grind/22374447",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7670752a-1666-4a4a-9efa-83b9859acfaa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/49b31b72-0168-4fb8-9947-932fa719144d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774903",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d4b735d8-3377-467a-9b58-748dc501374c.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Major",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 46
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "175 EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774900",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6b59bce3-2809-47e2-88e7-555d559cc470.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22599026",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/562a0246-1a9e-413e-ae05-313e9e72de25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b31ce94d-55c5-4aec-8d99-be111eb11469.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "INTRO VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774895",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e2b056ef-451b-4925-8177-5e29b300f30b.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 56
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "INTRO EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774897",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ba965258-f8a7-403c-ba56-1d1c1eab3b97.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 57
+    },
+    {
+      "title": "Non Stop",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "21Floor Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/non-stop/22358268",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d937f24f-c660-4fe5-accc-4512c25c2923.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/62bcc3dd-45fa-47f9-a5f1-60ed7905859c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65
+    },
+    {
+      "title": "Here We Go",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/sergei-orange/347391",
+          "name": "Sergei Orange"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Pata Negra Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/here-we-go/22459780",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ed929bdd-a0cd-4a03-b24d-56562cc47051.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c8d16561-28a6-4cb7-b329-152074b763c6.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-11-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41,
+      "spotify_url": "https://open.spotify.com/track/1wEbCOdOVel8X9tiVQxH2r",
+      "tidal_url": "https://tidal.com/browse/track/475195638"
+    },
+    {
+      "title": "JUNGLE BELLS",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jungle-bells/22690641",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3ff6fe1c-c59f-413d-8438-dae7881913d7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/71e56872-bbb5-4557-a543-4d417b641488.LOFI.mp3",
+      "bpm": 93,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "INTRO VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22776882",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04979446-f3d4-4092-a022-4b837e6d7e13.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/87d1af42-2d06-4ddf-8497-765cc2ee0aec.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 49
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "INTRO EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22776883",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04979446-f3d4-4092-a022-4b837e6d7e13.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b533b0d5-96bd-4586-bac8-bb34dd8faae9.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 47
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "175 EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22776885",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04979446-f3d4-4092-a022-4b837e6d7e13.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3616cfc0-8bc0-47ca-82f2-7704d9a8b2dc.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22599025",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/562a0246-1a9e-413e-ae05-313e9e72de25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3297d8a1-291c-40e4-860b-64d3da343bf4.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Gb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22599023",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/562a0246-1a9e-413e-ae05-313e9e72de25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a46d81b3-a1f6-492c-b113-5e0917eba286.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "SUNDAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sunday/22706878",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6b803cc9-f93f-48a6-a5d2-be7b9fe3d33c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af877428-cbb6-4121-8d90-f17974d8b267.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
+    },
+    {
+      "title": "Helektra",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/helektra/20785653",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/02142b18-7234-436e-8fbe-5bb1a0e0e0be.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6a439da5-153a-41b6-a2f7-62d392e81233.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42
+    },
+    {
+      "title": "Keep It Rockin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/keep-it-rockin/22688518",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/75f0b05b-483e-4e77-b533-e5905c029440.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ca8a4537-601d-4ddc-9ba2-503e843515a9.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4,
+      "tidal_url": "https://tidal.com/browse/track/475073913"
+    },
+    {
+      "title": "FUNDAY",
+      "mix_name": "INTRO EXTENDED",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funday/22776884",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04979446-f3d4-4092-a022-4b837e6d7e13.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bb2e46ca-2734-477a-a9a8-17a13f992785.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774904",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/11c87e85-bc27-4ff2-8027-b19001711932.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
+    },
+    {
+      "title": "AWESOME 4SOME",
+      "mix_name": "175 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/awesome-4some/22774905",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1f7f9e44-a680-4148-a076-0100bec434a9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dd6d9672-64ad-4ab9-8740-29b922304e77.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "C Minor",
+      "release_year": 2025,
+      "release_date": "2025-11-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59
     }
   ]
 }

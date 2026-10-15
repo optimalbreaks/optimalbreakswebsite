@@ -2547,6 +2547,98 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 112
+    },
+    {
+      "title": "Fire In The Booth",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Sweep Da Scene Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fire-in-the-booth/29222863",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4bda4384-f05e-403d-b1a2-5f43a5028905.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2d1705ac-2fd5-470d-b41a-58298df4164e.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-09-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 116
+    },
+    {
+      "title": "SYDNEY SELEKTA",
+      "mix_name": "EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sydney-selekta/30459336",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/75a86fbf-aeb3-441d-88cd-f0529bd22e85.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3c1dd842-5bc7-49a1-a0ed-46a8528caac9.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-09-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
+    },
+    {
+      "title": "Straight Out Of Sydney VIP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Sweep Da Scene Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/straight-out-of-sydney-vip/29222864",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4bda4384-f05e-403d-b1a2-5f43a5028905.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/24e5daba-ba05-4648-9d07-f7f3d62cb6f0.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-09-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 115
+    },
+    {
+      "title": "SYDNEY SELEKTA",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sydney-selekta/30459335",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/75a86fbf-aeb3-441d-88cd-f0529bd22e85.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4a10514a-5ffe-40c3-91fd-a1ce82f93417.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-09-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 118
     }
   ]
 }

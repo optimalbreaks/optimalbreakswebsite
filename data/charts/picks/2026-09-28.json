@@ -1927,6 +1927,52 @@
       "note_en": "Single shared by the artist on SoundCloud (Zero Dark) — not a DJ set.",
       "note_es": "Tema compartido por el artista en SoundCloud (Zero Dark) — no es sesión de DJ.",
       "sort_order": 84
+    },
+    {
+      "title": "Invaders",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/belforg/118487",
+          "name": "Belforg"
+        }
+      ],
+      "label": "Erokixen Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/invaders/30490774",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2db4b7c1-2d8f-40e5-8df2-1139c6c3349f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/edd918be-2922-442d-b9ee-5260a9e5dd52.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Basement Beats",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/basement-beats/30510855",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3a101f2a-e93e-415f-8b2c-aece973b8fd9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/87719e43-8f58-467b-88c3-dd785f096e4f.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
     }
   ]
 }

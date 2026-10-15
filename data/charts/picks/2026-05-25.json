@@ -3544,6 +3544,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 154
+    },
+    {
+      "title": "Something About This Beat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/something-about-this-beat/28417776",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d03e0b0b-f189-48ca-94dd-62336df0b136.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/42ec2adc-d4d6-426c-b420-740862d6ebbc.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 157
     }
   ]
 }

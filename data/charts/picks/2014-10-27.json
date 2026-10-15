@@ -640,6 +640,60 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 24
+    },
+    {
+      "title": "Why feat. Spoonface",
+      "mix_name": "The OriGinALz Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-originalz/347399",
+          "name": "The OriGinALz"
+        }
+      ],
+      "label": "Straight Up!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/why-feat-spoonface/5977346",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/07757a22-fb87-4145-bbc9-3dccb36c935f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/18e3243e-e5d9-485f-bcf0-73b105b76c0d.LOFI.mp3",
+      "bpm": 85,
+      "music_key": "E Minor",
+      "release_year": 2014,
+      "release_date": "2014-10-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Sunset",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/chevy-one/55097",
+          "name": "Chevy One"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dukes/424917",
+          "name": "Dukes"
+        }
+      ],
+      "label": "Darlalata Dance",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sunset/5922247",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/05eef04a-b26c-48ec-9c94-47f4377b4eba.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/196b1b9d-45b4-4c97-bc0f-f1854b080abb.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "C Minor",
+      "release_year": 2014,
+      "release_date": "2014-10-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
     }
   ]
 }

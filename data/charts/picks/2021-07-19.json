@@ -568,6 +568,83 @@
       "release_date": "2021-07-23",
       "note_en": "",
       "note_es": ""
+    },
+    {
+      "title": "Dreaming Of Summer",
+      "mix_name": "Tezza Dee Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tezza-dee/952294",
+          "name": "Tezza Dee"
+        }
+      ],
+      "label": "DivisionBass Digital",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dreaming-of-summer/15458575",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/053c6396-8d8a-43f2-9caf-9371b1a2eaa3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/026288fe-295f-401d-a05b-44d67c1e051a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Major",
+      "release_year": 2021,
+      "release_date": "2021-07-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Here And Now",
+      "mix_name": "Kid Panel Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-darrow-chem-syndicate/106178",
+          "name": "The Darrow Chem Syndicate"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        }
+      ],
+      "label": "Nipponeer Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/here-and-now/15414249",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8f3b07c9-63c9-4b47-a289-a4629ce86951.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0f510b6e-1d6c-4944-925f-7343c579992c.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "A Major",
+      "release_year": 2021,
+      "release_date": "2021-07-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
+    },
+    {
+      "title": "Dreaming Of Summer",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "DivisionBass Digital",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dreaming-of-summer/15458573",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/053c6396-8d8a-43f2-9caf-9371b1a2eaa3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d41e518e-9fbf-4f53-af28-91433797e8f3.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Gb Minor",
+      "release_year": 2021,
+      "release_date": "2021-07-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

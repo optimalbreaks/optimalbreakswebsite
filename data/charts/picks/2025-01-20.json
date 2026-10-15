@@ -52,6 +52,102 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 37
+    },
+    {
+      "title": "Blaze",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/blaze/20036618",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/30e5451a-3d5c-4551-b803-5a4a6c6e7501.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8e0825df-b4e0-42c7-9f74-8a76e9cde6de.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 38
+    },
+    {
+      "title": "Back to the classics",
+      "mix_name": "Vkyng Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/woter/310684",
+          "name": "Woter"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-the-classics/19924046",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e848f53d-ce08-460f-ba61-16f74f2176a2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ec50d818-992f-4c67-9a41-22f82a0bc441.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    },
+    {
+      "title": "If I Had You",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/if-i-had-you/19897993",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9c157e4b-e42b-4532-a849-8a562cc463a2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/85e7c39e-1e81-4310-b574-26317f3f21fc.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-01-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
+    },
+    {
+      "title": "Power Full",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/power-full/20077275",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c979bde6-1e99-4fc8-9f72-d8b9483c412e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2ab4a1ce-89d0-4672-bcdb-d9c6bd7ee5c1.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Major",
+      "release_year": 2025,
+      "release_date": "2025-01-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
     }
   ]
 }

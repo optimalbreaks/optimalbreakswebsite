@@ -51,6 +51,134 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 40
+    },
+    {
+      "title": "Pump it",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pump-it/19968211",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e99e0e77-7cd1-45a7-b965-27570fe27f66.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fc783f09-5ab7-43d8-9bc4-f7d9f8f0ede4.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 43
+    },
+    {
+      "title": "Take Me Home Tonight",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        },
+        {
+          "url": "https://www.beatport.com/artist/menges/964545",
+          "name": "Menges"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/take-me-home-tonight/20026311",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db7aa7d2-fc7b-4313-9742-1ffd4613f12b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bd84e2be-cc8f-4952-bf2f-ed303f587597.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Db Major",
+      "release_year": 2025,
+      "release_date": "2025-03-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41
+    },
+    {
+      "title": "Feeling Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feeling-love/20043475",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/afa89afb-634b-4da1-959e-a73f5f93e19b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5fae2c68-1a6f-46c5-84d1-70519d76538a.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30
+    },
+    {
+      "title": "All Night",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        },
+        {
+          "url": "https://www.beatport.com/artist/bzrnt/1075789",
+          "name": "Bzrnt"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/all-night/20091844",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e69a5491-bed8-4afd-a63a-24766b881b1f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b6b18688-b9b9-445d-9f2b-0c021717c363.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-03-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 22,
+      "tidal_url": "https://tidal.com/browse/track/476745784"
+    },
+    {
+      "title": "DREAD BEAT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Fantazia Music Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dread-beat/20036642",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a2054e6a-306e-4d0d-b5a1-b9e027f6cec4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3aa65aaf-f200-44b3-81e1-c81631617255.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Db Major",
+      "release_year": 2025,
+      "release_date": "2025-03-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42
     }
   ]
 }

@@ -746,6 +746,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 30
+    },
+    {
+      "title": "Nightmare",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nightmare/17508478",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b500237-88f4-4cd5-b6c1-46cc94fdc305.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f4cffe5f-733c-402c-9508-29a4526ed744.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Minor",
+      "release_year": 2023,
+      "release_date": "2023-04-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
+    },
+    {
+      "title": "Rough",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "Audio Overload Jungle Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rough/17536126",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a7f49f6c-3afd-497f-85bd-d804a495ae5a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a75a86c0-b22d-47be-b8fc-3ab242794701.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2023,
+      "release_date": "2023-04-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
     }
   ]
 }

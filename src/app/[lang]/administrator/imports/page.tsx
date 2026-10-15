@@ -125,11 +125,11 @@ function clock(at: string) {
 /**
  * Botón de favoritos. Corre en la pestaña de Beatport del editor (que ya pasó
  * la verificación de Cloudflare). Primero manda el listado de Breaks. Luego,
- * cuando esta pantalla se lo pide, baja cada ficha del Top 100 con la misma sesión.
+ * cuando esta pantalla se lo pide, baja cada ficha de los 140 primeros con la misma sesión.
  * También copia la primera página al portapapeles por si el navegador corta el hilo.
  */
 function beatportBookmarklet(origin: string, lang: string): string {
-  // Listado: páginas siguientes con 2 s. Fichas del Top 100: la URL que manda
+  // Listado: páginas siguientes con 2 s. Fichas de los 140 primeros: la URL que manda
   // esta pantalla, con 4 s, hasta 3 páginas por artista.
   const body = String.raw`(function(){var O=${JSON.stringify(origin)},L=${JSON.stringify(lang)};var el=document.getElementById('__NEXT_DATA__');if(!el||location.hostname.indexOf('beatport.com')<0){alert('Abre el listado de Breaks en Beatport y vuelve a pulsar.');return}var slim=function(nd,url){var qs=(((nd.props||{}).pageProps||{}).dehydratedState||{}).queries||[];var q=qs.filter(function(x){return x&&x.queryKey&&typeof x.queryKey[0]==='string'&&x.queryKey[0].indexOf('tracks')>=0});return q.length?JSON.stringify({v:1,url:url,nextData:{props:{pageProps:{dehydratedState:{queries:q}}}}}):null};var data;try{data=slim(JSON.parse(el.textContent),location.href)}catch(e){alert('No se ha podido leer la página.');return}if(!data){alert('En esta página no hay lista de temas.');return}var page=Number(new URL(location.href).searchParams.get('page'))||1;var pageUrl=function(n){var u=new URL(location.href);u.searchParams.set('page',String(n));return u.toString()};var send=function(w,m){try{w.postMessage(m,O)}catch(e){}};if(window.__obListen)window.removeEventListener('message',window.__obListen);window.__obListen=function(e){if(e.origin!==O||!e.data)return;var t=e.data.type,w=e.source;if(t==='ob-beatport-ready'){send(w,{type:'ob-beatport-data',payload:data,page:page})}else if(t==='ob-beatport-next'){var n=Number(e.data.page)||0;if(!n)return;setTimeout(function(){var u=pageUrl(n);fetch(u,{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),u):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:n})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:n,url:u})})},2000)}else if(t==='ob-beatport-url'){var raw=String(e.data.url||'');var nu;try{nu=new URL(raw)}catch(err){return}if(nu.hostname.indexOf('beatport.com')<0)return;var pg=Number(e.data.page)||1;setTimeout(function(){fetch(nu.toString(),{credentials:'include'}).then(function(r){return r.text()}).then(function(h){var m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);var p=m?slim(JSON.parse(m[1]),nu.toString()):null;if(!p)throw new Error('challenge');send(w,{type:'ob-beatport-data',payload:p,page:pg})}).catch(function(){send(w,{type:'ob-beatport-blocked',page:pg,url:nu.toString()})})},4000)}};window.addEventListener('message',window.__obListen);var go=function(){var w=window.open(O+'/'+L+'/administrator/imports?beatport=1','ob-imports');if(!w)alert('Copiado. Abre Por aprobar en Optimal Breaks y pégalo en el recuadro.')};try{navigator.clipboard.writeText(data).then(go,go)}catch(e){go()}})()`
   return `javascript:${encodeURIComponent(body)}`
@@ -275,7 +275,7 @@ export default function AdminImportsPage() {
   /**
    * Una página que manda el favorito. Primero el listado de Breaks: si trae
    * algo nuevo se pide la siguiente (pausa de 2 s en la pestaña). Cuando una
-   * página no trae nada nuevo, la misma pestaña recorre las fichas del Top 100
+   * página no trae nada nuevo, la misma pestaña recorre las fichas de los 140 primeros del tablero
    * (pausa de 4 s, hasta 3 páginas). Esos temas se publican enteros.
    */
   const ingestPage = useCallback(async (
@@ -339,7 +339,7 @@ export default function AdminImportsPage() {
       const walk = artistWalkRef.current
       const urls = artistUrlsRef.current
       if (!walk || !tab) {
-        pushLine(tab ? 'Fichas del Top 100 terminadas.' : 'Las fichas del Top 100 salen al pulsar el favorito en Beatport, no al pegar.')
+        pushLine(tab ? 'Fichas de los 140 primeros terminadas.' : 'Las fichas de los 140 primeros salen al pulsar el favorito en Beatport, no al pegar.')
         done(sum)
         return
       }
@@ -355,7 +355,7 @@ export default function AdminImportsPage() {
       walk.index += 1
       walk.page = 1
       if (walk.index >= urls.length) {
-        pushLine('Fichas del Top 100 terminadas.')
+        pushLine('Fichas de los 140 primeros terminadas.')
         done(sum)
         return
       }
@@ -382,13 +382,13 @@ export default function AdminImportsPage() {
       }
       const urls = artistUrlsRef.current
       if (!tab || !urls.length) {
-        if (tab) pushLine('No hay fichas de Beatport en el Top 100.')
-        else pushLine('Las fichas del Top 100 salen al pulsar el favorito en Beatport, no al pegar.')
+        if (tab) pushLine('No hay fichas de Beatport en los 140 primeros.')
+        else pushLine('Las fichas de los 140 primeros salen al pulsar el favorito en Beatport, no al pegar.')
         done(sum)
         return
       }
       artistWalkRef.current = { index: 0, page: 1 }
-      pushLine(`Listado de Breaks listo. Sigo con ${urls.length} fichas del Top 100.`)
+      pushLine(`Listado de Breaks listo. Sigo con ${urls.length} fichas de los 140 primeros.`)
       askArtist(tab, urls[0] || '')
     }
     const stopped = stopRef.current || r.error === 'Parado por el editor.'
@@ -624,7 +624,7 @@ export default function AdminImportsPage() {
     <div>
       <h1 className="admin-page-title">Imports</h1>
       <p className="text-sm text-[var(--ink)]/60 -mt-4 mb-6 max-w-2xl" style={mono}>
-        Cada día a las 12:05, desde el 8 de octubre de 2026: primero los temas nuevos de cada artista del Top 100, en cualquier género, que se publican directamente.
+        Cada día a las 12:05, desde el 8 de octubre de 2026: primero los temas nuevos de los 140 primeros del tablero, en cualquier género, que se publican directamente.
         Luego el listado de Breaks del día, descartando lo que ya entró por la primera vía. El resto de Breaks se queda aquí: incluir o descartar.
       </p>
 
@@ -649,7 +649,7 @@ export default function AdminImportsPage() {
         <p className="text-xs text-[var(--ink)]/70 mb-3" style={mono}>
           Hasta que Beatport nos dé la API, el catálogo entra por aquí. Arrastra el botón negro a la barra de favoritos.
           Abre el listado de Breaks, pasa la verificación si sale y pulsa el favorito en la página 1.
-          Primero pasa el listado de Breaks. Después, en la misma pestaña, recorre las fichas del Top 100 y publica esos temas.
+          Primero pasa el listado de Breaks. Después, en la misma pestaña, recorre las fichas de los 140 primeros del tablero y publica esos temas.
           Si el favorito es de antes de esta noche, arrástralo otra vez: el anterior solo lee el listado.
         </p>
         <div className="flex flex-wrap items-center gap-3 mb-3">

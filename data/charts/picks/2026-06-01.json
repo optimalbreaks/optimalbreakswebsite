@@ -2418,6 +2418,244 @@
       "sort_order": 104,
       "spotify_url": "https://open.spotify.com/track/2BCVKorIm9QjX7ipO9IWMv",
       "tidal_url": "https://tidal.com/browse/track/522190226"
+    },
+    {
+      "title": "FRIDAY VIBES",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-vibes/29145950",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e0b4aa0-9c6a-41d4-8417-2fa245920336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7138c76b-e493-4cbf-9109-e031ec2f81f4.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 115
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Electro Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28427241",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d5a902d2-c260-45db-909a-a4914da2ffe9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dc32fab9-f7ad-4e29-ac26-069a72edb0bd.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 112
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Acapella",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28427245",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d5a902d2-c260-45db-909a-a4914da2ffe9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c2bc7257-de6b-40de-8e71-9490fbc8241b.LOFI.mp3",
+      "bpm": 103,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 113
+    },
+    {
+      "title": "FRIDAY VIBES",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-vibes/29145951",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e0b4aa0-9c6a-41d4-8417-2fa245920336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e834a10d-a8cc-47db-8f1f-afb4ab3d7385.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 118
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Electro Instrumental",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28427242",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d5a902d2-c260-45db-909a-a4914da2ffe9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6b80c70f-ce8d-4408-a8df-c2a18ac24b94.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 109
+    },
+    {
+      "title": "Move On",
+      "mix_name": "22 Weeks Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        },
+        {
+          "url": "https://www.beatport.com/artist/22-weeks/658921",
+          "name": "22 Weeks"
+        }
+      ],
+      "label": "20K Freaks",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/move-on/28914161",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/709c555f-3bf6-4cb4-ae42-694502095e61.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8414a901-2f33-4acb-8e17-b95932b3d260.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 114
+    },
+    {
+      "title": "FRIDAY VIBES",
+      "mix_name": "VIP 2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-vibes/29145953",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e0b4aa0-9c6a-41d4-8417-2fa245920336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/93b6ac31-f5ca-4e41-9f83-6e3d9a911c62.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Cosmic Dawn Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/cosmic-dawn/79674",
+          "name": "Cosmic Dawn"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28427243",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d5a902d2-c260-45db-909a-a4914da2ffe9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fdb2c214-6852-41ab-856c-a450f65728cb.LOFI.mp3",
+      "bpm": 94,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 111
+    },
+    {
+      "title": "FRIDAY VIBES",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-vibes/29145952",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3e0b4aa0-9c6a-41d4-8417-2fa245920336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0d22eb98-55b0-48ae-a42d-5cb3ad339949.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 116
+    },
+    {
+      "title": "Don't Go",
+      "mix_name": "Cosmic Dawn Instrumental",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dont-go/28427244",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d5a902d2-c260-45db-909a-a4914da2ffe9.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/de6284ae-8d05-40bb-ac53-577662727e41.LOFI.mp3",
+      "bpm": 94,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-06-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 110
     }
   ]
 }

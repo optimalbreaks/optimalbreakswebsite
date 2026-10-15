@@ -2112,6 +2112,443 @@
       "sort_order": 93,
       "spotify_url": "https://open.spotify.com/track/1NfqYnAHobty5NbrUlYH6U",
       "tidal_url": "https://tidal.com/browse/track/516514136"
+    },
+    {
+      "title": "WEIRD DAY",
+      "mix_name": "JUNGLE VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird-day/29003400",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32f1f4ad-88c5-4f22-b85b-97fcaa9a86fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/888d07ff-20ee-47b6-b0b2-a1ab2b051716.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 113
+    },
+    {
+      "title": "The Raid",
+      "mix_name": "From 2003",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-raid/29070061",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9547260b-d46b-42b8-a9b2-5021975bd847.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104
+    },
+    {
+      "title": "CHAMPION",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/champion/28930666",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a5ca4783-8388-4483-88d6-89659409619a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3b0c0fee-e5fe-4da1-8223-3d4040ebec3d.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-05-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 110
+    },
+    {
+      "title": "Excellent",
+      "mix_name": "From 2001",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/excellent/29070057",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e29847be-f242-46d0-b3f1-6041a82f784b.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102
+    },
+    {
+      "title": "DAY DREAM",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/day-dream/28930655",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a5ca4783-8388-4483-88d6-89659409619a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3e52fd95-d006-4734-b0c2-23696fc27a71.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 116
+    },
+    {
+      "title": "Kauna",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        }
+      ],
+      "label": "K7 Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kauna/28254046",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8f7d0cdf-a96f-4de7-b54e-b9ee5f79c980.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c4d6ed74-03be-496b-b73c-587c25ae0852.LOFI.mp3",
+      "bpm": 157,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 108
+    },
+    {
+      "title": "WEIRD DAY",
+      "mix_name": "JUNGLE EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird-day/29003401",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32f1f4ad-88c5-4f22-b85b-97fcaa9a86fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f8120fb5-4198-4890-a22f-54c8c77bbd3c.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 112
+    },
+    {
+      "title": "Jam Hot",
+      "mix_name": "From 2002",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jam-hot/29070060",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39b466de-03c8-4d4e-ab92-277c034f6e83.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106
+    },
+    {
+      "title": "LOSING MY MIND",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-my-mind/28929781",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/545a4a52-5dc4-4077-974d-a5bf05c3234a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/542701d2-5a59-404c-a543-36977b7ecf55.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 115
+    },
+    {
+      "title": "Bass International",
+      "mix_name": "From 2002",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-international/29070056",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/10f66958-9940-4c78-b3d7-778a4f642550.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
+    },
+    {
+      "title": "CHAMPION",
+      "mix_name": "SPEED GARAGE VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/champion/28930660",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a5ca4783-8388-4483-88d6-89659409619a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/51ab48b5-6713-43a7-bc3e-3650475c9c26.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-05-21",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 111
+    },
+    {
+      "title": "Warship Unreleased Remix",
+      "mix_name": "From 2001",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/warship-unreleased-remix/29070059",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3816a428-741a-46d5-9c09-576dce77ba79.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103
+    },
+    {
+      "title": "Remember",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        }
+      ],
+      "label": "Gigabeat Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/remember/28729068",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/31b883e2-6259-4d18-b5aa-9efdc0196100.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/632b9544-de86-47e8-9ff2-723afbafe5ba.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107
+    },
+    {
+      "title": "The Storm",
+      "mix_name": "From 2003",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-storm/29070055",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4d37c588-36de-4539-baf7-94635f9d8c88.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Db Major",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "Get Up!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-up/28417735",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/99992653-3dc5-40e5-b1a4-3c3c0abced0d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1d11171a-02f4-4ac8-9bba-d121fc18e05b.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "F**t Beat",
+      "mix_name": "From 2002",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ft-beat/29070058",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d2f2efb3-3550-4675-92bd-ae8c8d79bf7a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bd0444ab-3c14-4a0d-8890-66be004b6e0e.LOFI.mp3",
+      "bpm": 102,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105
+    },
+    {
+      "title": "LOSING MY MIND",
+      "mix_name": "JUNGLE EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-my-mind/29003399",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32f1f4ad-88c5-4f22-b85b-97fcaa9a86fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7d30b04c-371b-4a29-9950-d4d6d2bba88e.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 109
+    },
+    {
+      "title": "LOSING MY MIND",
+      "mix_name": "VIP 2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-my-mind/28929782",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/545a4a52-5dc4-4077-974d-a5bf05c3234a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dba63ad1-0915-4eaf-9b6a-c953bc34830d.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
+    },
+    {
+      "title": "LOSING MY MIND",
+      "mix_name": "JUNGLE VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-my-mind/29003398",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32f1f4ad-88c5-4f22-b85b-97fcaa9a86fd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a2d7170b-f761-4b6a-8ab0-f598e7e16a95.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-22",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 114
     }
   ]
 }

@@ -25,6 +25,378 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249644",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f179c5fc-80d3-441d-a240-06caaa9a2fdb.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "PATTERN CTRL",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pattern-ctrl/23874715",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a850315f-1869-40db-b7fb-e73980e00173.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1a493359-3cf6-4b1c-beb0-bf8ccc44f739.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-02-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "EXPERIMENT",
+      "mix_name": "2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/experiment/24308739",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a0b9a784-ade1-4279-b0f4-f044b135af9e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bb3e06cb-a6bb-4f12-acbb-1d830b8b54ee.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-02-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 59
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "SPEED GARAGE VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249647",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/32554f0c-2a44-4591-8293-8ecc633738f3.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "Scathing Zap",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/scathing-zap/24214459",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/209b813d-7e10-46a2-ba5f-00b3e13d3329.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/44decbf9-08ac-42c6-9001-30a01211a189.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249645",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/65e24dbe-a090-4503-af38-975ba2507652.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "SPEED GARAGE EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249648",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/90b8532a-0479-4bbf-a21b-8a942be6d47f.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 57
+    },
+    {
+      "title": "Atlas",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/atlas/23115629",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/af287942-02b9-4bab-9de1-9a30e50ff217.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5ae57b67-2718-4d5b-bcec-06bde51f121a.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-02-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 45
+    },
+    {
+      "title": "MBAPPE",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mbappe/23640488",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2b3d857a-393a-4064-bc45-7c2cef9f22a8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a66f3d6c-43b6-4c8d-884a-56abbb4314de.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 46
+    },
+    {
+      "title": "SAD DAY",
+      "mix_name": "2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sad-day/24308738",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a0b9a784-ade1-4279-b0f4-f044b135af9e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/25f0e1a1-283c-42da-82ea-9480b10351e1.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249643",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bf756759-150f-42ed-9045-c22d1919f265.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "Drop The Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tt-beats/1255395",
+          "name": "TT Beats"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-the-bass/23743569",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2c6944f5-bb4e-4b3b-b36e-db02a5dc3f92.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/08ff32bb-2183-47cd-95de-430dc93afc85.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-02-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
+    },
+    {
+      "title": "FRIDAY NIGHT CHILL",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/friday-night-chill/24254529",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1684c8ea-ec20-4175-b140-cbee3728bacb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9c25acfe-62a0-4bac-ab98-6f2773f47aa6.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
+    },
+    {
+      "title": "Turn Me On, Turn Me Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        },
+        {
+          "url": "https://www.beatport.com/artist/erol-flint/1490775",
+          "name": "Erol Flint"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/turn-me-on-turn-me-up/23874564",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9d970539-8c96-4a45-af7b-6550d0201315.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8c3ff382-53e9-48d9-8509-674c25b5262f.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "SPEED GARAGE",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249646",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/24a83b47-d1b5-43d3-816f-5253547b5401.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 60
+    },
+    {
+      "title": "BAD MAN SOUND",
+      "mix_name": "138 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bad-man-sound/24249649",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d15a5eac-80ce-49b3-89b7-f0d2d9c0e901.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/16acf524-85e2-4cfb-85bc-a964a104008e.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 56
     }
   ]
 }

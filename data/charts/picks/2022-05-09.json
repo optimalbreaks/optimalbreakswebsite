@@ -67,6 +67,194 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 27
+    },
+    {
+      "title": "Hubble Bubble Ft. Chris Munky & MARF",
+      "mix_name": "FreQ & Munk House Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/marf/339051",
+          "name": "Marf"
+        },
+        {
+          "url": "https://www.beatport.com/artist/chris-munky/540598",
+          "name": "Chris Munky"
+        },
+        {
+          "name": "FreQ"
+        },
+        {
+          "name": "Munk House"
+        }
+      ],
+      "label": "Between The Silence",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hubble-bubble-ft-chris-munky-marf/16497884",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/103a5085-89f3-443a-9647-e4983ff1f71a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/02cca2e2-2ad3-4871-810e-586dc1fd8505.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "G Minor",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
+    },
+    {
+      "title": "Hubble Bubble Ft. Chris Munky & MARF",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/marf/339051",
+          "name": "Marf"
+        },
+        {
+          "url": "https://www.beatport.com/artist/chris-munky/540598",
+          "name": "Chris Munky"
+        }
+      ],
+      "label": "Between The Silence",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hubble-bubble-ft-chris-munky-marf/16497878",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/103a5085-89f3-443a-9647-e4983ff1f71a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6c0391e9-36ac-431b-9a2a-ee981ca0a9dd.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "G Minor",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
+    },
+    {
+      "title": "Hubble Bubble Ft. Chris Munky & MARF",
+      "mix_name": "FreQ & Munk Halftime Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/marf/339051",
+          "name": "Marf"
+        },
+        {
+          "url": "https://www.beatport.com/artist/chris-munky/540598",
+          "name": "Chris Munky"
+        },
+        {
+          "name": "FreQ"
+        },
+        {
+          "name": "Munk Halftime"
+        }
+      ],
+      "label": "Between The Silence",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hubble-bubble-ft-chris-munky-marf/16497886",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/103a5085-89f3-443a-9647-e4983ff1f71a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/24571445-325c-4425-83f4-b43f1fe169a6.LOFI.mp3",
+      "bpm": 124,
+      "music_key": "G Minor",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
+    },
+    {
+      "title": "Trust No One",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "DivisionBass Digital",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trust-no-one/16477348",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aee9d5ff-a7fb-4927-8ad1-a33c0e96372e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/39bf7cff-782a-4f54-8407-f2881fdd7d09.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
+    },
+    {
+      "title": "Hubble Bubble Ft. Chris Munky & MARF",
+      "mix_name": "FreQ & Munk Jungle Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/marf/339051",
+          "name": "Marf"
+        },
+        {
+          "url": "https://www.beatport.com/artist/chris-munky/540598",
+          "name": "Chris Munky"
+        },
+        {
+          "name": "FreQ"
+        },
+        {
+          "name": "Munk Jungle"
+        }
+      ],
+      "label": "Between The Silence",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hubble-bubble-ft-chris-munky-marf/16497881",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/103a5085-89f3-443a-9647-e4983ff1f71a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/660e5974-272c-46b4-aa16-c7d1231fa57d.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "G Major",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30
+    },
+    {
+      "title": "Trust No One",
+      "mix_name": "VIP MIX",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "DivisionBass Digital",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trust-no-one/16477349",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aee9d5ff-a7fb-4927-8ad1-a33c0e96372e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46be202f-4276-4409-915c-78b664799099.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2022,
+      "release_date": "2022-05-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
     }
   ]
 }

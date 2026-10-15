@@ -66,6 +66,83 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 3
+    },
+    {
+      "title": "Dream Of a Sax",
+      "mix_name": "Sekret Chadow Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        },
+        {
+          "url": "https://www.beatport.com/artist/sekret-chadow/866339",
+          "name": "Sekret Chadow"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dream-of-a-sax/17449166",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ffc3357b-1f34-486d-b32e-41a111b3d8f8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c81a3d74-5044-499c-9b1b-32a0761203c1.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Minor",
+      "release_year": 2023,
+      "release_date": "2023-03-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42
+    },
+    {
+      "title": "Anthemic Rooster",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/chevy-one/55097",
+          "name": "Chevy One"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/anthemic-rooster/17395385",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/de4006ba-effe-4e22-a46f-6d30ab58ce5c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d6883868-d1b7-409f-95c6-98f027b1bf7f.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Major",
+      "release_year": 2023,
+      "release_date": "2023-03-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 41
+    },
+    {
+      "title": "Acid Flash",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-flash/17424759",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f0590ad2-ee27-4a64-a256-574cf4e79de5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b21f0286-d8e0-4186-b559-27f08d1a706c.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-03-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
     }
   ]
 }

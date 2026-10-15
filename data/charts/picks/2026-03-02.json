@@ -75,6 +75,144 @@
       "sort_order": 3,
       "spotify_url": "https://open.spotify.com/track/7ipsAnCHtpj7yzhZQAyKHS",
       "tidal_url": "https://tidal.com/browse/track/505151622"
+    },
+    {
+      "title": "Mozart",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mozart/23926607",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a3b42a82-123e-4661-9239-3f0065f03673.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4b6246a1-c037-4342-a373-97f7006a732c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Db Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "Whisper",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Ook Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whisper/24208395",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aff7c0ae-14c5-481f-bf0e-3ce13f411258.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/13d154e5-a00c-40df-b9dc-19e972bb24e5.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "BACK TO 174",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-174/24463520",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3d486dba-f995-460f-8e53-482e37b80679.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/843b342c-b9bc-4703-9db0-15330a2b7c2c.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Radar",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/radar/23871425",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/77e70973-d7f7-45e3-a0f7-1be618b77046.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bad64d4b-8e3b-4f3c-8572-63db84f153bd.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-03-06",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "Pattern Vitamine",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pattern-vitamine/24022780",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/43ecf6aa-a6b3-469d-85be-3e9066bfeb76.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/563fedd2-bba4-4e61-954d-c1056ab2dc60.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "BACK TO 174",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-174/24463518",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3d486dba-f995-460f-8e53-482e37b80679.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0ca05437-ce09-4f8b-a129-45fef7901c46.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
     }
   ]
 }

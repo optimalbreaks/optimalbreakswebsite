@@ -25,6 +25,102 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/4j3EJMATYxJ4ftJbVeAFWu",
       "tidal_url": "https://tidal.com/browse/track/391205216"
+    },
+    {
+      "title": "What About",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/four-motion/138396",
+          "name": "Four Motion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/welder-b/1212957",
+          "name": "Welder B"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/what-about/19561911",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8f965e9c-4381-4719-9962-26acb01310fe.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dec2e00f-c4ab-4cb3-8adb-c556702a5b24.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-10-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 44
+    },
+    {
+      "title": "Energy",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tt-beats/1255395",
+          "name": "TT Beats"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/energy/19591014",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0aaac481-fe2c-40a1-9768-91ac02d3b122.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e0a15188-0cdd-4cf6-9b9f-6e276d54e4b5.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "C Major",
+      "release_year": 2024,
+      "release_date": "2024-10-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "No Turning Back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/no-turning-back/19666354",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a8b05d08-10cf-47b0-85f1-1512c1824d24.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b3882ac1-e042-481b-b891-e562a466ed47.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Minor",
+      "release_year": 2024,
+      "release_date": "2024-10-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 49
+    },
+    {
+      "title": "Evil Soul",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/evil-soul/19689550",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/57b40283-100c-4747-bbe2-342163cd2671.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b422ae53-0412-48ae-a356-104402c72aca.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "G Minor",
+      "release_year": 2024,
+      "release_date": "2024-10-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
     }
   ]
 }

@@ -22,6 +22,75 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Acid Rave",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acid-rave/17407924",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2fc7fef3-1985-4714-9f23-7450da529106.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/53cdb724-6e78-4e20-b47f-3a30eaf4409c.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2023,
+      "release_date": "2023-03-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 26
+    },
+    {
+      "title": "Still Rockin'",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/still-rockin/17416691",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4c84df8d-214c-4f4e-896d-b041e2198f9d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d0472d99-b8c3-425d-9d34-9182e0de8903.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2023,
+      "release_date": "2023-03-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
+    },
+    {
+      "title": "Flex",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/twook/1114645",
+          "name": "Twook"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flex/17485313",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/32ce807a-1512-446a-b79a-3fbdb125f1c2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bdb793ee-7937-46dc-b082-ee2081c369bf.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2023,
+      "release_date": "2023-03-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
     }
   ]
 }

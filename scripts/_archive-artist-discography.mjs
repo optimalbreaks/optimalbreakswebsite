@@ -159,6 +159,45 @@ const OUTSIDE_NR = [{ slug: 'sans', id: 254398, name: 'SANS' }, ...OUTSIDE_PRE]
 // Fichas nuevas con página de Beatport de una sola persona. En --nr-2026
 // entran con el resto. DJ Tokyo (186585) mezcla a otro artista; The Legends
 // no tiene página limpia.
+// Puestos 101–140 del tablero (15 oct 2026). Neva, Loopcrashing, Wutam y
+// Koma & Bones ya están en el progreso de --full. Pumbass y Timonk no tienen
+// ficha: el id es el de Beatport. CODE BREAKERZ tiene ficha sin beatport_id.
+const RANK_101_140 = [
+  { slug: 'pumbass', id: 373029, name: 'Pumbass' },
+  { slug: 'timonk', id: 373028, name: 'Timonk' },
+  { slug: 'belforg', id: 118487, name: 'Belforg' },
+  { slug: 'dj-richie-rich', id: 39363, name: 'DJ Richie Rich' },
+  { slug: 'jn-cruz', id: 1219887, name: 'JN CRUZ' },
+  { slug: 'dj-tortu', id: 848218, name: 'DJ Tortu' },
+  { slug: 'dj-quest', id: 5447, name: 'DJ Quest' },
+  { slug: 'dj-genesis', id: 29434, name: 'DJ Genesis' },
+  { slug: 'backdraft', id: 683, name: 'Backdraft' },
+  { slug: 'chevy-one', id: 55097, name: 'Chevy One' },
+  { slug: 'bamer-29', id: 1031450, name: 'Bamer 29' },
+  { slug: 'nitro-esp', id: 1035102, name: 'Nitro (ESP)' },
+  { slug: 'code-breakerz', id: 1077289, name: 'CODE BREAKERZ' },
+  { slug: 'four-motion', id: 138396, name: 'Four Motion' },
+  { slug: 'air-baxx', id: 1402596, name: 'Air Baxx' },
+  { slug: 'colombo', id: 98929, name: 'Colombo' },
+  { slug: 'aquasky', id: 749, name: 'Aquasky' },
+  { slug: 'lady-waks', id: 37583, name: 'Lady Waks' },
+  { slug: 'vkyng', id: 1237777, name: 'Vkyng' },
+  { slug: 'blidzer', id: 1313503, name: 'BlidZer' },
+  { slug: 'the-pattern-sound', id: 1166464, name: 'The Pattern Sound' },
+  { slug: 'freq-nasty', id: 735, name: 'Freq Nasty' },
+  { slug: 'thierry-d', id: 221555, name: 'Thierry D' },
+  { slug: 'deejay-shaolin', id: 262767, name: 'Deejay Shaolin' },
+  { slug: 'inner-realms', id: 729197, name: 'Inner Realms' },
+  { slug: 'twook', id: 1114645, name: 'Twook' },
+  { slug: 'jdouble', id: 226050, name: 'JDOUBLE' },
+  { slug: 'atomic-hooligan', id: 682, name: 'Atomic Hooligan' },
+  { slug: 'xwile', id: 1304569, name: 'Xwile' },
+  { slug: 'the-push', id: 57581, name: 'The Push' },
+  { slug: 'jottafrank', id: 739636, name: 'JottaFrank' },
+  { slug: 'tt-beats', id: 1255395, name: 'TT Beats' },
+  { slug: 'fl-2', id: 1316308, name: 'FL-2' },
+  { slug: 'kid-panel', id: 224632, name: 'Kid Panel' },
+]
 const ON_REQUEST = [
   { slug: 'pray-for-bass', id: 550087, name: 'Pray For Bass' },
   { slug: 'kid-kenobi', id: 24390, name: 'Kid Kenobi' },
@@ -253,7 +292,7 @@ if (existsSync(PROGRESS)) {
   }
 }
 const POOL = wanted.size
-  ? [...new Map([...ROSTER, ...ON_REQUEST, ...RANK_51_100].map((a) => [a.slug, a])).values()]
+  ? [...new Map([...ROSTER, ...ON_REQUEST, ...RANK_51_100, ...RANK_101_140].map((a) => [a.slug, a])).values()]
   : ROSTER
 const TODO = (wanted.size ? POOL.filter((a) => wanted.has(a.slug)) : ROSTER).filter(
   (a) => !already.has(a.slug),

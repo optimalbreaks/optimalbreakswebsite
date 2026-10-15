@@ -50,6 +50,79 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 2
+    },
+    {
+      "title": "Broken",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/four-motion/138396",
+          "name": "Four Motion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/killerblitz/1258735",
+          "name": "Killerblitz"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/broken/19588099",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c2382189-3af6-4258-a6c6-64b6e4009824.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/86d952bb-e5d4-4766-9e48-ce726d718ec7.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-10-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "Trippin Out",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trippin-out/19431813",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/31e45972-4ab7-42b0-ba84-39140885fb05.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/77be3d91-2330-4fcc-a2f4-2594e971c5a1.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-10-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "Papapapa",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tt-beats/1255395",
+          "name": "TT Beats"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/papapapa/19536093",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c293b2ed-dd3a-480d-998c-051023c9f8df.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7700123b-cec3-49ac-8a58-c51b922b4d05.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "F Major",
+      "release_year": 2024,
+      "release_date": "2024-10-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
     }
   ]
 }

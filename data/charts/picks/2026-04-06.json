@@ -1270,6 +1270,513 @@
       "sort_order": 55,
       "spotify_url": "https://open.spotify.com/track/5KE1K5bySLphwaTaRp4isS",
       "tidal_url": "https://tidal.com/browse/track/530767403"
+    },
+    {
+      "title": "US",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/us/28418989",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/276c196b-19e8-460a-97bb-b8ea76627100.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98b69e9b-f11e-45ab-9058-2f0f6821570e.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 80
+    },
+    {
+      "title": "Just Break It Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/just-break-it-down/28295112",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7b884222-81cc-4754-9d98-0a829cf6288a.LOFI.mp3",
+      "bpm": 119,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "US",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/us/28418987",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/276c196b-19e8-460a-97bb-b8ea76627100.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/22932edc-25ff-46fc-a6cc-b9c174aed04d.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "What Next?",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/what-next/26789807",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4f46b11a-55f1-4232-b6e2-f47c343c2a79.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/127a8ff5-a910-4449-971c-bbfabcf8290a.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
+    },
+    {
+      "title": "Get It Jumpin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-it-jumpin/28295109",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1c850eea-50e1-422c-9434-b37e66ba0df3.LOFI.mp3",
+      "bpm": 125,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "Pump That Bass",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pump-that-bass/28295107",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b28bafac-1202-405a-8f79-c6b670b4ccd6.LOFI.mp3",
+      "bpm": 142,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "US",
+      "mix_name": "VIP 2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/us/28418988",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/276c196b-19e8-460a-97bb-b8ea76627100.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9d2196eb-12e7-4d30-be49-945467ff1474.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "Quadzilla",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/quadzilla/28295106",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e283d9d4-cf08-4964-b231-512ba2aba493.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "Drop That Bottom",
+      "mix_name": "Pt. 2",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-that-bottom/28295108",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/26013e20-614f-4a5e-9600-4c4a8bd86874.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "Blitz",
+      "mix_name": "Danny Phr3ntic Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/backdraft/683",
+          "name": "Backdraft"
+        },
+        {
+          "url": "https://www.beatport.com/artist/country-culture/375271",
+          "name": "Country Culture"
+        },
+        {
+          "url": "https://www.beatport.com/artist/danny-phr3ntic/1233230",
+          "name": "Danny Phr3ntic"
+        }
+      ],
+      "label": "SOUNDSYSTEM BASSROCK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/blitz/28415392",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c17f2a6f-c81d-42cc-9abb-ef16ec5566ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8bca6f92-e50b-4eee-8726-be4633d50461.LOFI.mp3",
+      "bpm": 68,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 79
+    },
+    {
+      "title": "The Rhythm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-rhythm/28295110",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f213ab4f-7824-4b04-8194-8f059eae4276.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
+    },
+    {
+      "title": "I'm Your DJ",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/im-your-dj/28295105",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6973a9eb-e5f6-4ef8-96fe-9a395a66dba9.LOFI.mp3",
+      "bpm": 65,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "I Am Your Master",
+      "mix_name": "OnDaMike Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        },
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-am-your-master/24384091",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/072cf20a-e4dc-4320-a1b3-87e7d77450cc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fe3ba63a-4598-40b8-b574-4e981000c7ef.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "US",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/us/28418986",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/276c196b-19e8-460a-97bb-b8ea76627100.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e2625fdd-b8a3-4d07-b87d-b4dff987c45f.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "Bedroom Boom",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bedroom-boom/28295111",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/97adaded-fecb-442f-9b26-b1bc9937df25.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "Abstract",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Delicious Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/abstract/23953327",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f5831b4e-c5b5-4cca-a397-04aa00f0b9e6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/546bcf2f-9370-4556-9fd3-5df1a2bab384.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "B Major",
+      "release_year": 2026,
+      "release_date": "2026-04-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Hear Me Bumpin",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hear-me-bumpin/28295113",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/349c0841-e5df-41b3-b59b-ffc3b5569002.LOFI.mp3",
+      "bpm": 150,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
+    },
+    {
+      "title": "Levels",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/levels/26905414",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7a9ffe8f-d594-4cba-a2a2-eea33c0c5908.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0c41cc12-5fe1-4c69-9200-d4dc6304d9f7.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Elegance",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nvthec/1035553",
+          "name": "NVTHEC"
+        },
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/elegance/26803495",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/796c488b-cddb-4e43-a32f-3b01fe5d2ffe.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8303d98a-8c46-4245-a836-c0b117e21b4f.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86
+    },
+    {
+      "title": "Blitz",
+      "mix_name": "Afghan Headspin Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/backdraft/683",
+          "name": "Backdraft"
+        },
+        {
+          "url": "https://www.beatport.com/artist/country-culture/375271",
+          "name": "Country Culture"
+        },
+        {
+          "url": "https://www.beatport.com/artist/afghan-headspin/30700",
+          "name": "Afghan Headspin"
+        }
+      ],
+      "label": "SOUNDSYSTEM BASSROCK",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/blitz/28415391",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c17f2a6f-c81d-42cc-9abb-ef16ec5566ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/41a6a0d0-4bbd-4160-8c54-409bd056ab7c.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-10",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
+    },
+    {
+      "title": "Bass Megamix",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-megamix/28295114",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/76a3ab78-7654-425b-8675-f82c16b65861.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bf596a58-9aea-4e4d-875b-3ac79101af37.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
     }
   ]
 }

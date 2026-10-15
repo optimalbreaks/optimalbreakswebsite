@@ -25,6 +25,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Sugar B",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/four-motion/138396",
+          "name": "Four Motion"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sugar-b/18474118",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d67662b3-bdfd-4a3e-988e-3f271afb7208.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c751414e-0954-4bcf-9a71-875ab79f8612.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Db Major",
+      "release_year": 2024,
+      "release_date": "2024-01-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 20
+    },
+    {
+      "title": "Tanger",
+      "mix_name": "Edit",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Vinyl Crazy Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tanger/18431527",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/67c0b5d2-1e8d-4623-9720-5537c325a850.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/13be4921-ebb3-4cff-b776-0d4351271259.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2024,
+      "release_date": "2024-01-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 21
     }
   ]
 }

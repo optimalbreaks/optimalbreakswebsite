@@ -2843,6 +2843,148 @@
       "sort_order": 125,
       "spotify_url": "https://open.spotify.com/track/5Fn0HFhZ5Ey1jxrGNTZmHO",
       "tidal_url": "https://tidal.com/browse/track/534701539"
+    },
+    {
+      "title": "HELLO MY FRIEND",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hello-my-friend/29549167",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/290cd5f9-51b3-443b-ba2c-b6a866d75336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/06ce68a0-9f87-49f8-bbac-1ce79c07b0db.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 131
+    },
+    {
+      "title": "SAFARI DUBSTEP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/safari-dubstep/29498512",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f146df31-3589-4f74-b2c4-7194e6e2cb17.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9fe855a9-fa1f-4eee-b68f-84b8a02fcd22.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-07-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 133
+    },
+    {
+      "title": "HELLO MY FRIEND",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hello-my-friend/29549168",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/290cd5f9-51b3-443b-ba2c-b6a866d75336.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/78ab81b9-d430-44cd-9496-52420c669aa5.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 132
+    },
+    {
+      "title": "Games",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/shebloom/2406246",
+          "name": "Shebloom"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/games/29397737",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26fff34b-6080-4bfe-bfe9-569986e76cef.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3aeaa18c-88cf-427b-bf5f-49608ccec3f6.LOFI.mp3",
+      "bpm": 120,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-07-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 129
+    },
+    {
+      "title": "HELLO MY FRIEND",
+      "mix_name": "DUB",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hello-my-friend/29568287",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6f626dfa-0e3c-4816-a645-867d8561ee41.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/64e280b9-0554-4977-9ead-576c745512fb.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 134
+    },
+    {
+      "title": "SAFARI DUBSTEP",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/safari-dubstep/29551061",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ffb456af-37b9-4958-8651-4a30b371b4ef.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1b7fbb57-d340-4ac7-8934-48fd65a6fdc9.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-07-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 130
     }
   ]
 }

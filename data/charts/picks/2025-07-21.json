@@ -54,6 +54,372 @@
       "note_es": "",
       "sort_order": 43,
       "tidal_url": "https://tidal.com/browse/track/451135992"
+    },
+    {
+      "title": "Drop It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ondamike/201484",
+          "name": "Ondamike"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drop-it/20595333",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b5573432-eb73-44af-9044-03399da27de4.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 16,
+      "tidal_url": "https://tidal.com/browse/track/440359508"
+    },
+    {
+      "title": "Celular",
+      "mix_name": "Rhades & Shade K Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/shade-k/221354",
+          "name": "Shade K"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rhades/767534",
+          "name": "Rhades"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/celular/20649538",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a935a85-5f1b-475c-a86a-9ef56113846a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bf0e7cbb-b6e2-40e7-bdcb-f5d5fb47f7f4.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 2,
+      "tidal_url": "https://tidal.com/browse/track/451135991"
+    },
+    {
+      "title": "It's Time",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/its-time/20595331",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/41d75f7e-3a48-4c77-8761-c5d4257181e9.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "Energy Machine",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/energy-machine/20595326",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4c75f89f-6978-4236-845b-935db49a0b8d.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "Celular",
+      "mix_name": "Bad Legs & Bass Master Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/bad-legs/668750",
+          "name": "Bad Legs"
+        },
+        {
+          "url": "https://www.beatport.com/artist/bass-master/1215323",
+          "name": "Bass Master"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/celular/20649537",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a935a85-5f1b-475c-a86a-9ef56113846a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f580e6f0-d477-4198-842b-af340a9dba6b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 39,
+      "tidal_url": "https://tidal.com/browse/track/451135990"
+    },
+    {
+      "title": "From The Void",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/from-the-void/20595328",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98d30e42-a1af-4f9f-8620-cfa972c14a78.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "Bass Dr",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bass-dr/20595327",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/079f7d5b-2efa-487a-a401-b1b7041e36ff.LOFI.mp3",
+      "bpm": 84,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Push The Button",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/push-the-button/20595332",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9501b2eb-bf8a-4c89-b4d9-60b6205b3208.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
+    },
+    {
+      "title": "Glitch In The Code",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/glitch-in-the-code/20595329",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b95f6cea-8333-4242-b723-3e384cba5994.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "I Am Your Master",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-am-your-master/20595330",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/03d4d197-d841-4f03-aaf7-68592c8ec5c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c55359e2-6ffa-46a5-b4f7-ade8e2d8eccf.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "Conga",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/conga/20649518",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4b02655e-0d5c-4a2b-9062-fa38ce5fbf81.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2780301f-e3a3-4d91-9b16-9c4cc7e85a6a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Kill It",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hypeman-sage/167384",
+          "name": "Hypeman Sage"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/kill-it/20636614",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/e03c449e-3f38-4d9e-904b-2446260aa46b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6e64452d-362a-4b96-9421-e36a83fba539.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65
+    },
+    {
+      "title": "Nihilism",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nihilism/20161607",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/671cdd75-4f15-4733-938a-ffe6f5fa9249.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/defea110-4d00-4b44-8095-c0a5c2aac895.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "Celular",
+      "mix_name": "Terrie Kynd Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/celular/20649540",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a935a85-5f1b-475c-a86a-9ef56113846a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3cb1b111-7fc7-491f-82a3-4762af0ce63b.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 3,
+      "tidal_url": "https://tidal.com/browse/track/451135993"
     }
   ]
 }

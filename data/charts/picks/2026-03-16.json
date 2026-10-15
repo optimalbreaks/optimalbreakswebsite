@@ -50,6 +50,482 @@
       "sort_order": 2,
       "spotify_url": "https://open.spotify.com/track/1VBEJMd6H7jCFvYqwubrrP",
       "tidal_url": "https://tidal.com/browse/track/504538384"
+    },
+    {
+      "title": "Get Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-down/24335173",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/72c7c651-dae5-4dad-92f0-75cba58940f1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d0a7a9e5-0a40-4a0b-9b55-9a2d9d31b50a.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "Feeling Funky",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/feeling-funky/22802294",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ceccee53-9e5b-45ed-b7ae-529057dd0642.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46205e63-f030-4dd3-865d-feb25db8ee6d.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "DARK SUNDAY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-sunday/26914003",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a089dbbb-a631-46a0-82bc-1de648cebc0b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8e7afe67-7902-4ac9-97dc-49140168a968.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "BACK TO 174",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-174/26933569",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/acc8b7f9-2ccd-4e4b-9dab-be8e97f9220e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/846d4ba6-0c61-4bb1-b9c3-52f0c32039a8.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
+    },
+    {
+      "title": "DARK SUNDAY",
+      "mix_name": "OG VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-sunday/26914005",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a089dbbb-a631-46a0-82bc-1de648cebc0b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9916071-52c8-431e-a12f-8e2cede477d6.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
+    },
+    {
+      "title": "DARK SUNDAY",
+      "mix_name": "2026 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-sunday/26921441",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/30b4a059-e192-41b0-a2c2-3549e89c6327.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a15dbb5c-2110-4459-a7e8-298a825e568f.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "Live Life",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/live-life/23912292",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/82b2fa00-32f6-4d1b-9967-c929c4d9fd41.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1f509f14-e87b-40aa-85fd-abb250005ed6.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "Inner Pattern",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/inner-pattern/23916522",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0b4dceab-3352-46b9-ae52-6dc8a027e34c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3a76f8ab-2ac2-4f57-bd83-f571f5933064.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-03-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64
+    },
+    {
+      "title": "LONELY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lonely/27182176",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5a2a391d-4be5-4ad5-b78e-dcdb32892564.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c302063d-5081-4bc3-91ad-d72bb147b567.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 65
+    },
+    {
+      "title": "BACK TO 174",
+      "mix_name": "BIG VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/back-to-174/26933568",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/acc8b7f9-2ccd-4e4b-9dab-be8e97f9220e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ac7d1651-5d55-4b37-bf64-8e50dd6ea6b1.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "LONELY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        },
+        {
+          "url": "https://www.beatport.com/artist/terracotta/2190573",
+          "name": "Terracotta"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lonely/27182177",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5a2a391d-4be5-4ad5-b78e-dcdb32892564.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dfc47cf4-367e-4e87-9b0f-25b09674586c.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Paradise",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/lady-waks/37583",
+          "name": "Lady Waks"
+        },
+        {
+          "url": "https://www.beatport.com/artist/mutantbreakz/135018",
+          "name": "Mutantbreakz"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/paradise/24223286",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6e373a61-acd9-4626-b9d9-6e4da2db4ff7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/08c82e55-6065-49ef-9902-f0d29c68fc33.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 43
+    },
+    {
+      "title": "DARK SUNDAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-sunday/26914002",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a089dbbb-a631-46a0-82bc-1de648cebc0b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4b78751a-bc7b-43bc-9e0c-60a447797721.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "THUNDER",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tesseracts/1062640",
+          "name": "TESSERACTS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Monstercat",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/thunder/24545696",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/19020666-28e2-46fe-8b3e-f97e81ada37f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/528b9fbe-ad6b-4c98-9a57-38070aac33b9.LOFI.mp3",
+      "bpm": 70,
+      "music_key": "Gb Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
+    },
+    {
+      "title": "BIG DANCE",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/big-dance/26942013",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c7c48fcd-3f71-4974-89f2-8cbbb7ae37c2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8823f38e-7420-437c-bdb7-04eb76ba38d6.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-03-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "DARK SUNDAY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dark-sunday/26914004",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a089dbbb-a631-46a0-82bc-1de648cebc0b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b0038fb4-9962-47c7-8944-1fc5135f22ac.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "U Can See Me",
+      "mix_name": "Original mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/u-can-see-me/26975735",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2d046d22-9fe7-4519-b89a-742467d91f8b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8930e5f7-fdf0-4d38-9749-640730b03fc7.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Takuma",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/takuma/24004724",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/226e6ab9-8288-4717-8fbd-944755ba927b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/67edbfbc-3ec1-4242-b186-8e212d843b1d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
+    },
+    {
+      "title": "Hold Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        },
+        {
+          "url": "https://www.beatport.com/artist/whatshisface/1442273",
+          "name": "WhatsHisFace"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hold-up/28295085",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d18a2d4f-ec51-4a30-bc1d-025666b05554.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/afba8899-efa3-43f9-bbce-92e8fb62c12e.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 63
+    },
+    {
+      "title": "Cicuta",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cicuta/24133506",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/894bdd01-3ff8-46b4-b80d-fbcf2a630c2d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b4c02a53-ed96-4999-a349-21c70b476bd3.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
     }
   ]
 }

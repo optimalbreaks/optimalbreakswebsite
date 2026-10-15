@@ -22,6 +22,129 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Futurebound",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/j-break/3234",
+          "name": "J-Break"
+        },
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/futurebound/18502383",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3fb59a3b-937f-47cd-a4c1-13c06207ad62.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/82bcd2d9-5256-421e-9c52-712554a1a7ec.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2024,
+      "release_date": "2024-02-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 10
+    },
+    {
+      "title": "POISON",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/poison/18522749",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/91cfd195-b2d9-4ddb-96bd-db26eb716d6b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/68c7a2e8-20d6-4ae5-8350-c5b11913b7d3.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-02-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
+    },
+    {
+      "title": "Telephone",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "83",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/telephone/18521889",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ceaa6f11-7b87-430d-80bf-45021373fc7c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c854bc99-d32b-4443-b0a6-39033f99a813.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Major",
+      "release_year": 2024,
+      "release_date": "2024-02-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 37
+    },
+    {
+      "title": "Dead Silence",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dead-silence/18607402",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7c8f52a3-b445-47ad-9e8d-83e9e8760e70.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/69259f7a-9ab3-4644-bf67-569e67e9b599.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2024,
+      "release_date": "2024-02-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 36
+    },
+    {
+      "title": "Up Is Down with DJ Genesis",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-genesis/29434",
+          "name": "DJ Genesis"
+        },
+        {
+          "url": "https://www.beatport.com/artist/paranoid-london/517350",
+          "name": "Paranoid London"
+        }
+      ],
+      "label": "Paranoid London Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/up-is-down-with-dj-genesis/18321748",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b1fd5396-37e0-425e-9e5b-b9ffe086d3dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3a82d959-3df3-423a-8168-be891119bed9.LOFI.mp3",
+      "bpm": 123,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-02-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 35
     }
   ]
 }

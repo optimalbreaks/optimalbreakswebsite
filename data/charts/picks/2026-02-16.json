@@ -47,6 +47,217 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 2
+    },
+    {
+      "title": "Adictivo",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/adictivo/23734956",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c782364f-80e7-4007-92ab-15411553a08c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e2aacb2e-e35b-497f-9d92-fb322d91131c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 73
+    },
+    {
+      "title": "Dirty",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/air-baxx/1402596",
+          "name": "Air Baxx"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dirty/23744880",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/26feb03f-885a-4fe6-a11b-6b8a71a97e4c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/65e7a6c3-8a8f-469e-a5b2-457a9b4c02a6.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "JUNGLE DUB",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jungle-dub/24204854",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2f2f436b-2543-4bd0-8e9c-d1ff1d1d7178.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7dcf4141-2d62-4cd2-adac-dc90e59bbdd3.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "JUNGLE BELLS",
+      "mix_name": "2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/jungle-bells/24204855",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2f2f436b-2543-4bd0-8e9c-d1ff1d1d7178.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b7c8340c-9c2b-4313-88b5-874084e0d904.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
+    },
+    {
+      "title": "Burning down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brotherbreakz/227123",
+          "name": "The Brotherbreakz"
+        },
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/burning-down/21676068",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/aa2a7f17-9063-428e-b96f-847d070ce8eb.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/89dff60f-9b39-45b9-a07e-ebc5756850f9.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-02-19",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 58
+    },
+    {
+      "title": "FIYAH",
+      "mix_name": "2026",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fiyah/24204857",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2f2f436b-2543-4bd0-8e9c-d1ff1d1d7178.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a5fd337d-7aa7-41d6-80ce-f0c04e0b4929.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
+    },
+    {
+      "title": "BEA",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/fl-2/1316308",
+          "name": "FL-2"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bea/23734957",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c782364f-80e7-4007-92ab-15411553a08c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d0ace922-60c9-4cf1-985d-078529d668b2.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 72
+    },
+    {
+      "title": "Hyper Acid",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/tt-beats/1255395",
+          "name": "TT Beats"
+        }
+      ],
+      "label": "Frequency Fusion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hyper-acid/23861504",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/49c66ea3-7094-4f1d-bd7a-51d5428cd55b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/75f177b6-f59c-416c-b41c-8e2937d0af85.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-02-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 71
+    },
+    {
+      "title": "Pluton",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pluton/23408854",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1980b871-2989-46bb-8dea-0e30b1119317.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9a7c2d81-11f5-4c75-beaf-4fde50d69e37.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-02-18",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 57
     }
   ]
 }

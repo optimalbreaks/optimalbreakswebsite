@@ -1405,6 +1405,202 @@
       "note_es": "",
       "sort_order": 75,
       "spotify_url": "https://open.spotify.com/track/4FD5M3AoP7bRDqxGXgQ7ds"
+    },
+    {
+      "title": "G BASS",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/g-bass/30510854",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cab0aea3-f62e-4551-8f60-33795c340086.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/efec2dfd-82c9-4550-adca-129b507a1ce5.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "I DON'T KNOW WHY",
+      "mix_name": "THIERRY D EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-le-dj/160478",
+          "name": "Thierry Le DJ"
+        },
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-dont-know-why/30997252",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b65e449-f05d-4048-b625-8a6fc4086430.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cb9307d6-1804-49fd-b534-020dc76f0403.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "Squeaks",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/squeaks/30906566",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8156367e-cc80-4e92-92da-fa3d7e939ec8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/095c99f6-b83d-49d2-8a6e-79ed2ea84b6b.LOFI.mp3",
+      "bpm": 137,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "Infinity",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/infinity/30683063",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b7e1a58e-63d8-4407-87db-97ef5d8859ea.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/82833b16-4d53-4023-a12a-99d8dc930349.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
+    },
+    {
+      "title": "ILLUSIONS",
+      "mix_name": "THIERRY D EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-le-dj/160478",
+          "name": "Thierry Le DJ"
+        },
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/illusions/30997253",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b65e449-f05d-4048-b625-8a6fc4086430.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8d1ba00b-f261-4b2b-bf3c-6a474bc7a3b1.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "I DON'T KNOW WHY",
+      "mix_name": "THIERRY D EXTENDED VIP VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-le-dj/160478",
+          "name": "Thierry Le DJ"
+        },
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/i-dont-know-why/30997254",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b65e449-f05d-4048-b625-8a6fc4086430.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e9149078-c904-4a5e-97be-aebe576add1f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86
+    },
+    {
+      "title": "Snake Style",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/snake-style/30906567",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8156367e-cc80-4e92-92da-fa3d7e939ec8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4c522729-1967-475e-ad8e-bbde3a43e713.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-16",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "Step Back",
+      "mix_name": "Extended",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/code-breakerz/1077289",
+          "name": "CODE BREAKERZ"
+        }
+      ],
+      "label": "HIGRND",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/step-back/30518779",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d4deec8d-6634-4555-abfe-2471a83adf07.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9bb013a4-d88f-467e-85ca-6e9900b3200b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
     }
   ]
 }

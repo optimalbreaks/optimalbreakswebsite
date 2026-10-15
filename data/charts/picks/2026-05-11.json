@@ -2528,6 +2528,167 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 110
+    },
+    {
+      "title": "Sequel",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sequel/26803446",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b3cf9d3a-3c97-45ce-89ec-bf938fe309b6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/48f4be43-d8df-4164-aa95-07647f437446.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 123
+    },
+    {
+      "title": "WEIRD DAY",
+      "mix_name": "EXTENDED 2026 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird-day/28885689",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/27671002-5f64-4eab-8614-79f21747533e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/87a560c5-e26d-4f1b-85b8-5e11887a24b6.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 122
+    },
+    {
+      "title": "My Beats",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-beats/28427371",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c8b40f10-f49a-4d23-adb0-6a9fef18e8bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8c1b3275-dd16-42e6-bffe-99632b45b45c.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 119
+    },
+    {
+      "title": "My Beats",
+      "mix_name": "Edit",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-beats/28427372",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c8b40f10-f49a-4d23-adb0-6a9fef18e8bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e192473d-be28-4612-b0be-de33d88139e8.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
+    },
+    {
+      "title": "My Beats",
+      "mix_name": "Instrumental",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-beats/28427373",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c8b40f10-f49a-4d23-adb0-6a9fef18e8bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ca725ce6-8571-4d8f-9cf0-1f4ab32f358e.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 118
+    },
+    {
+      "title": "My Beats",
+      "mix_name": "Bonus Beats",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-richie-rich/39363",
+          "name": "DJ Richie Rich"
+        }
+      ],
+      "label": "Raw Underground Music!",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-beats/28427374",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c8b40f10-f49a-4d23-adb0-6a9fef18e8bd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6707af0c-de71-49c5-afae-91baecda5fd7.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 120
+    },
+    {
+      "title": "WEIRD DAY",
+      "mix_name": "2026 VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird-day/28885688",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/27671002-5f64-4eab-8614-79f21747533e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/90c48e81-4d9c-4da7-8f8d-ab47ad0785b0.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-05-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 121
     }
   ]
 }

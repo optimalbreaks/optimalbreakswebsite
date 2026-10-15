@@ -75,6 +75,171 @@
       "sort_order": 3,
       "spotify_url": "https://open.spotify.com/track/36CR1ccUVsVdeklVNGa6ag",
       "tidal_url": "https://tidal.com/browse/track/483165930"
+    },
+    {
+      "title": "YOGI",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/yogi/23731469",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eaabc3a3-a4e1-4e2e-b7f6-e6590b89935f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/128707bf-aa25-407e-8601-5bd6dce46c7d.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
+    },
+    {
+      "title": "YOGI",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/yogi/23731470",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eaabc3a3-a4e1-4e2e-b7f6-e6590b89935f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/77dc9244-6ca3-4e48-a75e-abfa4ef182e0.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
+    },
+    {
+      "title": "TUESDAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tuesday/23721300",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6ef23c7d-53f6-4886-a2e8-e951ed90c43f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b2de7738-7f93-41d5-b0bf-6a79a004ad98.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Major",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
+    },
+    {
+      "title": "DEJA VU",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/deja-vu/23721299",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6ef23c7d-53f6-4886-a2e8-e951ed90c43f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fb2a525d-10c8-47f8-a9e1-542b4b07005e.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
+    },
+    {
+      "title": "Bassline",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        },
+        {
+          "url": "https://www.beatport.com/artist/erol-flint/1490775",
+          "name": "Erol Flint"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bassline/23103549",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7d46c32b-46d2-4326-8be7-9c2b96f5431d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8dbed167-c37d-49f5-8dc1-2b99a7f9d458.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 34
+    },
+    {
+      "title": "WEDNESDAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/wednesday/23721301",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6ef23c7d-53f6-4886-a2e8-e951ed90c43f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50f8de71-962f-426e-abf0-77a74459a222.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
+    },
+    {
+      "title": "SILENT",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/silent/23711917",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fe2a35b0-51d7-48bb-a5cf-bc0187f38e52.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1aa6724c-7bf9-4d45-8ec0-dbb17e142147.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-23",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30
     }
   ]
 }

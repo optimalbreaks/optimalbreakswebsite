@@ -25,6 +25,1245 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/3QrcVUaPX6v9eIsz2SyVWV",
       "tidal_url": "https://tidal.com/browse/track/492096237"
+    },
+    {
+      "title": "Sil Num Tao",
+      "mix_name": "Plastic Perverts Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/plastic-pervert/2162",
+          "name": "Plastic Pervert"
+        },
+        {
+          "name": "Plastic Perverts"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sil-num-tao/23063963",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4796f13e-ea34-4999-bd30-ab0613d57b9d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 93
+    },
+    {
+      "title": "Boomba Clat",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/roots-manuva/15628",
+          "name": "Roots Manuva"
+        },
+        {
+          "url": "https://www.beatport.com/artist/yolanda/35150",
+          "name": "Yolanda"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/boomba-clat/23855954",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2276f1e9-c8b0-47ec-a37e-d1b26ed7debc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8e06cb53-34cf-449c-9339-f19cbde5f33a.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 103
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Dvine1 Remix Dub",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dvine1/309238",
+          "name": "Dvine1"
+        },
+        {
+          "name": "Dvine1 Remix Dub"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980892",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/38ea95fd-0900-4fbc-9e11-f94552dfe4f5.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "Radio Edit",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066897",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6ef290ff-172c-4539-8de1-faa12790d9a8.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 91
+    },
+    {
+      "title": "Rougher Than Them",
+      "mix_name": "ATKIINS Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ragga-twins/158512",
+          "name": "Ragga Twins"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        },
+        {
+          "url": "https://www.beatport.com/artist/atkiins/1142659",
+          "name": "ATKIINS"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rougher-than-them/23211295",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/559c0508-a490-4ff9-b485-4da4cc1943bc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2241d7e9-5485-4bfe-aed9-2ef02cccb987.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-01-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 61
+    },
+    {
+      "title": "Brooklyn to Brixton",
+      "mix_name": "Lizzie's Children Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        },
+        {
+          "url": "https://www.beatport.com/artist/lizzies-children/2190353",
+          "name": "Lizzie's Children"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-to-brixton/23873409",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eedeffc6-1509-408c-ba47-27e6cf64fe97.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3ec4c4e4-5e1e-44c1-848b-8fd20dd43506.LOFI.mp3",
+      "bpm": 105,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 108
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "Sonny Wharton Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/sonny-wharton/12620",
+          "name": "Sonny Wharton"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066893",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ae807c8a-bc9d-4142-aece-f78a3f8e1121.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 87
+    },
+    {
+      "title": "Come Let Me Know",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rodney-p/26913",
+          "name": "Rodney P"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/come-let-me-know/23637878",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4dde35f5-6a27-4479-a6c5-96a46b031b76.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/681ff93e-3411-42ba-b08d-6edd0c811c98.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 111
+    },
+    {
+      "title": "That's My Style",
+      "mix_name": "Vox Re-Take",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/thats-my-style/23063964",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b32961dc-60e6-4dca-9e47-7566f3c1f841.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 96
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Instrumental",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066896",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/70f85350-bf19-4f14-880e-8102c9552c16.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 86
+    },
+    {
+      "title": "Coming Back",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/coming-back/23583081",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0970b4a8-3094-4d19-874f-ec24ed3ff95b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1140430c-93e2-4614-be7b-1e3c42ffa9f8.LOFI.mp3",
+      "bpm": 131,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 76
+    },
+    {
+      "title": "Brooklyn 2 Brixton",
+      "mix_name": "Lizzie Children Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        },
+        {
+          "name": "Lizzie Children"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-2-brixton/23063968",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5e35c557-71de-4198-b8b5-66a83d8edaa1.LOFI.mp3",
+      "bpm": 105,
+      "music_key": "Bb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 100
+    },
+    {
+      "title": "That's My Style",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/thats-my-style/23873818",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d106adb7-4bbf-4048-8992-92f573b2ad7f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c453ff85-0a74-4328-aed7-eb7c5563315d.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Greg Reve Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/greg-reve/192930",
+          "name": "Greg Reve"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066895",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b531b0c8-1c7a-4598-ba2b-1b3125d79718.LOFI.mp3",
+      "bpm": 121,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 90
+    },
+    {
+      "title": "Mad Situation",
+      "mix_name": "Rob Mello Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/junior-delgado/54978",
+          "name": "Junior Delgado"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mad-situation/23063979",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8385a970-8546-49e2-8cff-6497a0c113d4.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 99
+    },
+    {
+      "title": "Control The Flow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        },
+        {
+          "url": "https://www.beatport.com/artist/olivobreaks/1431987",
+          "name": "Olivobreaks"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/control-the-flow/22273501",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/da8d1601-2be9-4551-9eee-123950ce9db3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8ab6f8e5-eeed-4b2f-968c-6e2ce5169d7f.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 77
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Fed Conti Dirty Electro RemixCompetition Runner Up",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/fed-conti/77719",
+          "name": "Fed Conti"
+        },
+        {
+          "name": "Fed Conti Dirty Electro RemixCompetition Runner Up"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980885",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ddb96c05-39f7-428e-86e4-38e32ab14760.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Flore Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/flore/22054",
+          "name": "Flore"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066892",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/83729836-4c4d-4136-9e4e-0d8f9149deb3.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 85
+    },
+    {
+      "title": "Come Let Me Know",
+      "mix_name": "Freq Nasty & Blim Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rodney-p/26913",
+          "name": "Rodney P"
+        },
+        {
+          "url": "https://www.beatport.com/artist/blim/699",
+          "name": "B.L.I.M."
+        },
+        {
+          "name": "Blim"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/come-let-me-know/23063965",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/639c7c71-8760-43ec-abea-f9b3ed580574.LOFI.mp3",
+      "bpm": 120,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 95
+    },
+    {
+      "title": "Mad Situation",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/junior-delgado/54978",
+          "name": "Junior Delgado"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/mad-situation/22971283",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5a94c542-62f1-410f-8d95-19f856ac23c0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1ecfa23e-4a84-41f7-8960-0a66601f1c6d.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "E Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 107
+    },
+    {
+      "title": "Come Let Me Know",
+      "mix_name": "Delinquent Dub Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rodney-p/26913",
+          "name": "Rodney P"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/come-let-me-know/23063974",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/82d7633a-b56f-432e-8a87-d395ff5fe01c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 97
+    },
+    {
+      "title": "Rougher Than Them",
+      "mix_name": "ATKIINS Extended Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/ragga-twins/158512",
+          "name": "Ragga Twins"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        },
+        {
+          "url": "https://www.beatport.com/artist/atkiins/1142659",
+          "name": "ATKIINS"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/rougher-than-them/23211296",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/559c0508-a490-4ff9-b485-4da4cc1943bc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4a34f546-3832-4e23-abfa-f6c1b8da64f2.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-01-29",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
+    },
+    {
+      "title": "Brooklyn 2 Brixton",
+      "mix_name": "Freestylers Raw As F**k Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-2-brixton/23889595",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b9345087-6928-4993-80bb-54e84adae623.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c67f3eb4-c383-4b1f-af11-f3976632c7ff.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 92
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "David Starfire Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/david-starfire/66164",
+          "name": "David Starfire"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980889",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ee8e51d3-8cf9-4e1b-bb7e-9e7704501fa4.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 80
+    },
+    {
+      "title": "Punkadelic",
+      "mix_name": "Radioactive Man Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/radioactive-man/3902",
+          "name": "Radioactive Man"
+        },
+        {
+          "url": "https://www.beatport.com/artist/keith-tenniswood/93422",
+          "name": "Keith Tenniswood"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/punkadelic/23063978",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/237309fb-b664-47da-8de9-909b58243a45.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 98
+    },
+    {
+      "title": "Let's GO!",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/lets-go/23227283",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/5844b2b0-da65-4979-88b4-00790ae44295.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8e412380-d866-4880-abf2-2bf5584dfc67.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2026,
+      "release_date": "2026-01-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 112
+    },
+    {
+      "title": "Acherontia",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/vkyng/1237777",
+          "name": "Vkyng"
+        }
+      ],
+      "label": "Samay Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/acherontia/23056397",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7206cd2b-f9d8-48e6-b0e0-4c83e9e5a7dd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/06d118f4-987b-4734-b037-b503aef44005.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 64
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "Rido Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rido/16379",
+          "name": "Rido"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066891",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/10405aca-74d6-4725-bc98-94136774890f.LOFI.mp3",
+      "bpm": 86,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
+    },
+    {
+      "title": "Goose",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/goose/23873819",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d106adb7-4bbf-4048-8992-92f573b2ad7f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a2952966-d952-413e-87ad-9f031c4a6b4b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 105
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Fed Conti Dirty Electro InstrumentalRemix Runner Up",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/fed-conti/77719",
+          "name": "Fed Conti"
+        },
+        {
+          "name": "Fed Conti Dirty Electro InstrumentalRemix Runner Up"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980890",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6a546aba-e409-41ea-9c8b-66fc04e50dd8.LOFI.mp3",
+      "bpm": 127,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
+    },
+    {
+      "title": "Punkadelic",
+      "mix_name": "Krikor Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/krikor/10483",
+          "name": "Krikor"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/punkadelic/23063976",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3bf230f-9477-4d2d-a44c-68b8858f873a.LOFI.mp3",
+      "bpm": 126,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "Benasis Remix Competition Winner",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/benasis/309237",
+          "name": "Benasis"
+        },
+        {
+          "name": "Benasis Remix Competition Winner"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980884",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3d19e0d7-1364-40a2-8b1a-c816410c4336.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 79
+    },
+    {
+      "title": "Brooklyn to Brixton",
+      "mix_name": "Freestylers Raw as Fuck Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        },
+        {
+          "url": "https://www.beatport.com/artist/freestylers/711",
+          "name": "Freestylers"
+        },
+        {
+          "name": "Freestylers Raw as Fuck"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-to-brixton/23873410",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eedeffc6-1509-408c-ba47-27e6cf64fe97.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7b03680f-7207-4732-993e-4e655cd9d5a4.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "B Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 11,
+      "tidal_url": "https://tidal.com/browse/track/491271686"
+    },
+    {
+      "title": "Brooklyn to Brixton",
+      "mix_name": "Lizzie's Children Accapella",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        },
+        {
+          "url": "https://www.beatport.com/artist/lizzies-children/2190353",
+          "name": "Lizzie's Children"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-to-brixton/23873411",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eedeffc6-1509-408c-ba47-27e6cf64fe97.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7052ea9c-0fdb-4d1d-9585-8c95a5c7a36a.LOFI.mp3",
+      "bpm": 105,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 109
+    },
+    {
+      "title": "Not Givin' In",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980893",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/053f2588-4812-4ca9-ab93-9ec1cd9a2370.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
+    },
+    {
+      "title": "Brooklyn to Brixton",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kovas/146839",
+          "name": "Kovas"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/brooklyn-to-brixton/23873408",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eedeffc6-1509-408c-ba47-27e6cf64fe97.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c05d0a52-ac38-4d96-bd0c-3e65ac642c0a.LOFI.mp3",
+      "bpm": 105,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 110
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Tenkai Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tenkai/280515",
+          "name": "Tenkai"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/23066894",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/69474291-cbbe-4010-a26f-ada54e6967af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3c471be2-0a49-483c-bc7c-e932f3a8a6f1.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 88
+    },
+    {
+      "title": "Not Givin' in",
+      "mix_name": "Dvine1 Remix Vox Dub",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/tippa-irie/29586",
+          "name": "Tippa Irie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/solar-lion/269860",
+          "name": "Solar Lion"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dvine1/309238",
+          "name": "Dvine1"
+        },
+        {
+          "name": "Dvine1 Remix Vox Dub"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/not-givin-in/22980887",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b00a30f4-4eda-4a2e-82ed-0154f15de463.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/69affd07-2420-40e1-a287-00232644d56a.LOFI.mp3",
+      "bpm": 110,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 83
+    },
+    {
+      "title": "Come Let Me Know",
+      "mix_name": "Skitz Vocal",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/rodney-p/26913",
+          "name": "Rodney P"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/come-let-me-know/23063970",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4657e119-629d-4cab-a06f-5905dd7f3abe.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
+    },
+    {
+      "title": "Sil Num Tao",
+      "mix_name": "Phil Kieran Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        },
+        {
+          "url": "https://www.beatport.com/artist/phil-kieran/4095",
+          "name": "Phil Kieran"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sil-num-tao/23063966",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/9939d99c-91b8-4ede-8f47-ef6841eda422.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/42a118c4-72d4-4ae6-be63-5c0db2172628.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "C Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 94
+    },
+    {
+      "title": "Transforma",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/freq-nasty/735",
+          "name": "Freq Nasty"
+        }
+      ],
+      "label": "Skint Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/transforma/23873821",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d106adb7-4bbf-4048-8992-92f573b2ad7f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/75f56712-1ac1-4233-9e91-b13327097912.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 106
     }
   ]
 }

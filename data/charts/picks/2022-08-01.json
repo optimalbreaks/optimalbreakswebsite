@@ -132,6 +132,125 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 6
+    },
+    {
+      "title": "Out Of The Shadows",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/out-of-the-shadows/16814271",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/370ce8dc-00ad-4455-a72c-fc918180e6ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2c9468b9-c537-418d-9fee-89ffbe6d420c.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "Db Minor",
+      "release_year": 2022,
+      "release_date": "2022-08-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
+    },
+    {
+      "title": "Right on",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Guachinche Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/right-on/16736963",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bbd287e5-d109-4f8d-a63f-bd1cc9c14e78.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/bcb610b0-3dc0-477a-a441-6e508854c230.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Major",
+      "release_year": 2022,
+      "release_date": "2022-08-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 25
+    },
+    {
+      "title": "Helicopter",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hankook/395511",
+          "name": "Hankook"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/helicopter/16700561",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0cb341f0-d1e2-47c5-9ead-8c45cab870a6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/247a46bb-9605-46a7-b6e6-dc9a859c1b5c.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "F Minor",
+      "release_year": 2022,
+      "release_date": "2022-08-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 24
+    },
+    {
+      "title": "POMP",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-tortu/848218",
+          "name": "Dj Tortu"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pomp/16700560",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0cb341f0-d1e2-47c5-9ead-8c45cab870a6.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4522a624-b28b-46b6-bcce-eb4c2588b427.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "C Major",
+      "release_year": 2022,
+      "release_date": "2022-08-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 30
+    },
+    {
+      "title": "The Saga Continues",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/inner-realms/729197",
+          "name": "Inner Realms"
+        }
+      ],
+      "label": "Raveart Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-saga-continues/16814272",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/370ce8dc-00ad-4455-a72c-fc918180e6ec.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/94fe2cf2-1580-4290-91f8-52fde311b662.LOFI.mp3",
+      "bpm": 66,
+      "music_key": "Ab Minor",
+      "release_year": 2022,
+      "release_date": "2022-08-04",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 31
     }
   ]
 }

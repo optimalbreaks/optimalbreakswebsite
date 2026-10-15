@@ -25,6 +25,431 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/017erFbOyCrdz0yburnVGZ",
       "tidal_url": "https://tidal.com/browse/track/463151055"
+    },
+    {
+      "title": "Nigeria",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/sellrude/753458",
+          "name": "SellRude"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nigeria/21479069",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ce902ca2-5c6d-4621-8d1f-51d5d5609591.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2f8fd83a-ecac-40ab-879a-e13b6ef6be70.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33,
+      "tidal_url": "https://tidal.com/browse/track/465386956"
+    },
+    {
+      "title": "Work it Up",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/work-it-up/21539857",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/960d347c-18f8-4a71-9418-b1b98ab6dbf0.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Gb Major",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 48
+    },
+    {
+      "title": "Sweet Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sweet-love/21539863",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f841e5e0-a9d5-4ab5-a42c-78be64fc7ad0.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Eb Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
+    },
+    {
+      "title": "Over",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        },
+        {
+          "url": "https://www.beatport.com/artist/glow-sp/1409943",
+          "name": "GLOW (SP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/over/21776489",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/95696450-fb71-4deb-ba92-70b4e70bd1f7.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7d5885c1-8282-4157-abba-8bf63c0dbaae.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 66
+    },
+    {
+      "title": "Fresh",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/fresh/21539856",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/544745d3-b1e9-4732-98f5-df05a4c7a070.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 53
+    },
+    {
+      "title": "Bershka",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/destroyers/80323",
+          "name": "Destroyers"
+        },
+        {
+          "url": "https://www.beatport.com/artist/trs/132999",
+          "name": "TRS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/four-motion/138396",
+          "name": "Four Motion"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bershka/21320943",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/ff11814e-4b85-4afc-9b9b-fd06151d91fa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fcb6add7-9b66-41bd-8a30-8379da1146d2.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Major",
+      "release_year": 2025,
+      "release_date": "2025-10-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 44
+    },
+    {
+      "title": "Funkstar",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/funkstar/21539855",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2b42214e-0333-4eb6-ab05-064c8d1d0734.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
+    },
+    {
+      "title": "WEIRD DAY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/weird-day/21877273",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0ccd20da-08d7-4d14-898f-971480d1bdff.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8ed02f9f-8973-4b44-a49e-3399ad14d40b.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "D Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 69
+    },
+    {
+      "title": "Cassanova",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/cassanova/21539860",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3333c1a2-7f33-483b-82ff-bb78c6832e4d.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 54
+    },
+    {
+      "title": "Dirty",
+      "mix_name": "SluG (FL) remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/kid-panel/224632",
+          "name": "Kid Panel"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dj-brownie/355093",
+          "name": "DJ Brownie"
+        },
+        {
+          "url": "https://www.beatport.com/artist/slug-fl/998525",
+          "name": "SluG (FL)"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/dirty/21852107",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4741c815-c929-4c48-8186-b8d73d480a4a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/0bed0190-86bb-4ca0-b75d-159d1c7a8fcf.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-10-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 14,
+      "tidal_url": "https://tidal.com/browse/track/471709416"
+    },
+    {
+      "title": "Sax On Fire",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sax-on-fire/21539861",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/46797b26-62b8-4863-b37b-68e948933ed5.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51
+    },
+    {
+      "title": "Soul Pusher",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/hankook/395511",
+          "name": "Hankook"
+        },
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/soul-pusher/21539859",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/974173f4-7cc9-42c8-a1a6-07f7c322d9ec.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "A Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 46
+    },
+    {
+      "title": "Make Me Feel Good",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-me-feel-good/21539862",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/35001d1f-2365-418a-a5d0-563603840cde.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Bb Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 49
+    },
+    {
+      "title": "Get Down",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/nitro-esp/1035102",
+          "name": "Nitro (ESP)"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/get-down/21539858",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f634d06b-67f9-441d-b924-64b8894adfbd.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/50f24aa7-621d-4559-91f5-111176c46386.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Minor",
+      "release_year": 2025,
+      "release_date": "2025-09-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 52
+    },
+    {
+      "title": "Out Of Love",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "ElectroBreakz",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/out-of-love/21535042",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b93d071d-4c00-44b1-813c-8d056e798d68.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/cc53f401-f7f5-48d1-a516-83c234cf8e6c.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Minor",
+      "release_year": 2025,
+      "release_date": "2025-10-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Revelation",
+      "mix_name": "Colombo Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/pianoman/100012",
+          "name": "Pianoman"
+        },
+        {
+          "url": "https://www.beatport.com/artist/colombo/98929",
+          "name": "Colombo"
+        }
+      ],
+      "label": "13monkeys Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/revelation/21875717",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3c79c2c1-c270-45f3-9dde-f6e5f62b80c2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/01ebc1b5-f014-470c-ad97-dc9566201549.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-10-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 67
+    },
+    {
+      "title": "Drastic Pattern",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-pattern-sound/1166464",
+          "name": "The Pattern Sound"
+        }
+      ],
+      "label": "Triple Seven Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/drastic-pattern/21589226",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7dbb8940-117a-40be-95db-03e73fde0acf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/21be95e4-d971-4736-941f-e3c268e87783.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-10-03",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 68
     }
   ]
 }

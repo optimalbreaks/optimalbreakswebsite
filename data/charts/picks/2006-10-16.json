@@ -22,6 +22,87 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Addiction (Chris Carter VIP remix)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/masterblaster/15859",
+          "name": "Masterblaster"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/addiction-chris-carter-vip-remix/198371",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4177ce0c-08f4-4d82-aa9d-b73534e8076d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d2adf295-19be-41ea-929f-3b63d12f4701.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Ab Minor",
+      "release_year": 2006,
+      "release_date": "2006-10-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 33
+    },
+    {
+      "title": "Girls and Boys (Dylan Rhymes Remix)",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/elhornet/12654",
+          "name": "Elhornet"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/girls-and-boys-dylan-rhymes-remix/198377",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4177ce0c-08f4-4d82-aa9d-b73534e8076d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4bd2483b-c5d8-476a-a22c-1ed8ca80053c.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "E Major",
+      "release_year": 2006,
+      "release_date": "2006-10-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 34
+    },
+    {
+      "title": "Bring It On Down VIP mix",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/aquasky/749",
+          "name": "Aquasky"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-drumattic-twins/265126",
+          "name": "The Drumattic Twins"
+        }
+      ],
+      "label": "Passenger",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/bring-it-on-down-vip-mix/198375",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4177ce0c-08f4-4d82-aa9d-b73534e8076d.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/25d0ae85-43cc-47d3-808c-90f4674907c8.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "A Minor",
+      "release_year": 2006,
+      "release_date": "2006-10-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 32
     }
   ]
 }

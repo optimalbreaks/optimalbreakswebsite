@@ -71,6 +71,204 @@
       "note_es": "",
       "sort_order": 3,
       "spotify_url": "https://open.spotify.com/track/4I3nS9EAQvjo5NmLVS9uB0"
+    },
+    {
+      "title": "Hate Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/orebeat/1105377",
+          "name": "Orebeat"
+        },
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hate-me/23952171",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2022e393-75fb-448b-80da-645dd486c78e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/af814801-8ee5-4587-9e73-e358163746f1.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "Ab Major",
+      "release_year": 2026,
+      "release_date": "2026-03-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75
+    },
+    {
+      "title": "The Spice Must Flow",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/huda-hudia/446",
+          "name": "Huda Hudia"
+        },
+        {
+          "url": "https://www.beatport.com/artist/deejay-shaolin/262767",
+          "name": "Deejay Shaolin"
+        }
+      ],
+      "label": "Kaleidoscope Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-spice-must-flow/24589239",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1dd4419a-5724-416d-b0d6-8dc9a7e50bac.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a12397e4-22b6-4b83-af2d-d5b55a6ee5b8.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Major",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 6,
+      "spotify_url": "https://open.spotify.com/track/03pdIuFNe0aecuk97vtaWr",
+      "tidal_url": "https://tidal.com/browse/track/503574961"
+    },
+    {
+      "title": "We Run",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/air-baxx/1402596",
+          "name": "Air Baxx"
+        }
+      ],
+      "label": "Etiqueta Negra",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/we-run/23959360",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c0ad7e00-7b61-442a-9ca9-bf9cfd9aa606.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2e1a4c7b-5bc8-410d-9a84-0034d476ccec.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 80
+    },
+    {
+      "title": "Move To The Rhythm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/move-to-the-rhythm/23959531",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/73b0bc62-0c37-4d20-8a18-15694119598e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/895d7d3a-14c6-46e6-8b68-dd4e9ca6a663.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 82
+    },
+    {
+      "title": "Gravel Muncha",
+      "mix_name": "Datafunk Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        },
+        {
+          "url": "https://www.beatport.com/artist/datafunk/1298577",
+          "name": "DataFunk"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gravel-muncha/24291395",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/40d946bd-e31a-4461-9d67-0ad3e0543db2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/8433ddb3-eb21-4586-bfb5-d87ac6346979.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 70
+    },
+    {
+      "title": "Queen",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/queen/24223873",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fba707c8-3abb-4bc9-bf70-4a9e740960f8.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e5a5721c-ccf7-401a-b762-8d5fefa7f9c8.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 79
+    },
+    {
+      "title": "Pun Pun",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/jdouble/226050",
+          "name": "JDOUBLE"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/pun-pun/24378919",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d630d7b6-9170-442e-9f6f-a026e84ffed4.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/06a3b8fb-0cf5-44f5-8f1b-a32b030ce8de.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-03-13",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 81
+    },
+    {
+      "title": "Gravel Muncha",
+      "mix_name": "2026 Remastered Version",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dj-quest/5447",
+          "name": "DJ Quest"
+        }
+      ],
+      "label": "Cyberfunk Music",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/gravel-muncha/24291394",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/40d946bd-e31a-4461-9d67-0ad3e0543db2.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a72e4c1a-13a7-4ee3-8b4d-9d5fe015e531.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "C Major",
+      "release_year": 2026,
+      "release_date": "2026-03-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
     }
   ]
 }

@@ -2515,6 +2515,328 @@
       "sort_order": 110,
       "spotify_url": "https://open.spotify.com/track/6yX28ayf9PWliviMatwZf1",
       "tidal_url": "https://tidal.com/browse/track/538568744"
+    },
+    {
+      "title": "LOON",
+      "mix_name": "DNB",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29586747",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2e454615-f43f-4a4e-89cc-a9b6e5e66d18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b77e9b18-b079-4a7a-9508-d3a01346f889.LOFI.mp3",
+      "bpm": 109,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-07-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 115
+    },
+    {
+      "title": "SUPER BAD DAY",
+      "mix_name": "UKG EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/super-bad-day/29636982",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0ca3cf8-3c0f-41a4-ba89-35392665700b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a438391a-ef63-4a8a-ba40-85dd33d6c3b1.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 123
+    },
+    {
+      "title": "SUPER BAD DAY",
+      "mix_name": "EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/super-bad-day/29636981",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0ca3cf8-3c0f-41a4-ba89-35392665700b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3f21f1a9-1258-4cde-8902-8687cf352678.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 122
+    },
+    {
+      "title": "SELEKTA FROM SYDNEY",
+      "mix_name": "DNB EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-from-sydney/29637547",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cc755a1c-31c3-4133-961a-8653999e7fe0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dd947efa-74e8-448f-bff8-7848333fb8a8.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 117
+    },
+    {
+      "title": "LOON",
+      "mix_name": "DNB VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29586748",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2e454615-f43f-4a4e-89cc-a9b6e5e66d18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/799f8590-8d9f-4824-891b-23161ea1d244.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 114
+    },
+    {
+      "title": "SELEKTA FROM SYDNEY",
+      "mix_name": "DNB",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-from-sydney/29637545",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cc755a1c-31c3-4133-961a-8653999e7fe0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/24f02f48-7348-4bc2-ba7a-f6607acd882a.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 116
+    },
+    {
+      "title": "LOSING MY MIND",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/losing-my-mind/29637108",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/73dfc04d-ec90-4443-95f7-ce5910dcda95.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1a4b6c12-0799-45de-8236-64c2be79b78a.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Eb Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 124
+    },
+    {
+      "title": "SUPER BAD DAY",
+      "mix_name": "BREAKS VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/super-bad-day/29636980",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0ca3cf8-3c0f-41a4-ba89-35392665700b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d04f649a-1a81-486c-8f52-76aef31817a9.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 119
+    },
+    {
+      "title": "Hakari Moon",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/belforg/118487",
+          "name": "Belforg"
+        }
+      ],
+      "label": "Erokixen Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/hakari-moon/30041799",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d49c4300-b1eb-4ae8-8368-6de039b116af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/59385617-498f-4601-b28d-0847e8913a32.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Major",
+      "release_year": 2026,
+      "release_date": "2026-07-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 112
+    },
+    {
+      "title": "SUPER BAD DAY",
+      "mix_name": "VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/super-bad-day/29636979",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0ca3cf8-3c0f-41a4-ba89-35392665700b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/574ec0dd-447a-4f8c-bc76-8efb89ad257a.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 121
+    },
+    {
+      "title": "SELEKTA FROM SYDNEY",
+      "mix_name": "DNB VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/selekta-from-sydney/29637546",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/cc755a1c-31c3-4133-961a-8653999e7fe0.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/7e676fb6-7ab1-46b8-b764-14889cfbfcf1.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "Ab Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 113
+    },
+    {
+      "title": "LOON",
+      "mix_name": "DNB EXTENDED VIP",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/loon/29586749",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/2e454615-f43f-4a4e-89cc-a9b6e5e66d18.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ebcbe75a-d444-4dfc-b3de-b121f2aa7a20.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "G Major",
+      "release_year": 2026,
+      "release_date": "2026-07-08",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 118
+    },
+    {
+      "title": "My Dreams",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/xwile/1304569",
+          "name": "Xwile"
+        }
+      ],
+      "label": "Delicious Groove Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/my-dreams/29056570",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6f574076-7001-4a13-9c5d-49e740cd56d3.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d38d0f69-4d2f-4b42-a40e-cb2adb65f642.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "A Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 125
+    },
+    {
+      "title": "SUPER BAD DAY",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/thierry-d/221555",
+          "name": "Thierry D"
+        }
+      ],
+      "label": "The Elements Of Tech & Bass Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/super-bad-day/29636978",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b0ca3cf8-3c0f-41a4-ba89-35392665700b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/769421ac-4b43-4f6d-8816-291e2beb594f.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-07-09",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 120
     }
   ]
 }

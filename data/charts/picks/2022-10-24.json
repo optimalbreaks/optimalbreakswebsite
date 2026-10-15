@@ -22,6 +22,87 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Whip It Up",
+      "mix_name": "Andy Faze Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/chevy-one/55097",
+          "name": "Chevy One"
+        },
+        {
+          "url": "https://www.beatport.com/artist/andy-faze/148843",
+          "name": "Andy Faze"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whip-it-up/16955015",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/099eb338-1bfc-4b07-a0ae-a2f7e0247f1e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/663e8fb0-7910-459d-b64d-5a21baf8b8ec.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "G Major",
+      "release_year": 2022,
+      "release_date": "2022-10-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 49
+    },
+    {
+      "title": "Whip It Up",
+      "mix_name": "Specimen A Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/chevy-one/55097",
+          "name": "Chevy One"
+        },
+        {
+          "url": "https://www.beatport.com/artist/specimen-a/36682",
+          "name": "Specimen A"
+        }
+      ],
+      "label": "Toast & Jam Recordings",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whip-it-up/16955012",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/099eb338-1bfc-4b07-a0ae-a2f7e0247f1e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fade381b-d6c8-4fa9-bdb8-4c2ed6900105.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "G Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-28",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 15
+    },
+    {
+      "title": "Nefarious",
+      "mix_name": "Bamer 29 Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/terrie-kynd/527766",
+          "name": "Terrie Kynd"
+        },
+        {
+          "url": "https://www.beatport.com/artist/bamer-29/1031450",
+          "name": "Bamer 29"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/nefarious/17010134",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/c839dfdb-6724-44ba-9333-b1f80e388324.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ac8acbb7-3668-44b0-b96c-5fec79855739.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "D Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 4
     }
   ]
 }
