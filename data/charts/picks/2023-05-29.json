@@ -220,6 +220,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 43
+    },
+    {
+      "title": "Yeah",
+      "mix_name": "original mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/yeah/17760603",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0fa8d1fb-2a69-4253-9451-c07f0930537b.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9ed8f967-8645-4645-8223-1ce899146801.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "C Minor",
+      "release_year": 2023,
+      "release_date": "2023-06-02",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 47
     }
   ]
 }

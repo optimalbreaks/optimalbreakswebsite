@@ -283,6 +283,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 87
+    },
+    {
+      "title": "The More I Do",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/the-more-i-do/22207415",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/d87a7ef4-58b8-4e4c-b9f0-06445973a8cc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e3093656-5e57-46f4-a2ad-7b21558febba.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-10-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 89
     }
   ]
 }

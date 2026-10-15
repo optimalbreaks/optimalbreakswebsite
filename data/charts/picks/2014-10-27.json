@@ -694,6 +694,37 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 25
+    },
+    {
+      "title": "Make Ya Move Ft BBK",
+      "mix_name": "Kwerk Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bbk/192999",
+          "name": "BBK"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        },
+        {
+          "url": "https://www.beatport.com/artist/kwerk/181687",
+          "name": "Kwerk"
+        }
+      ],
+      "label": "Ravesta Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-ya-move-ft-bbk/5968898",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/bb6b3022-ef40-4c28-886e-5e1ddaee5686.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/3b04d2b7-b15a-4c97-b65c-df4f3a8e9a7b.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Gb Minor",
+      "release_year": 2014,
+      "release_date": "2014-10-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

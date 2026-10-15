@@ -1264,6 +1264,34 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 106
+    },
+    {
+      "title": "Right Now",
+      "mix_name": "AndrewFx Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        },
+        {
+          "url": "https://www.beatport.com/artist/andrewfx/1176911",
+          "name": "AndrewFx"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/right-now/23748712",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f60b893d-4ff5-4cdb-9d57-5107f088df21.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/74d50670-b27b-419c-8631-796e5f5e001b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-01-30",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 51,
+      "spotify_url": "https://open.spotify.com/track/1PNZgXMDhaOgiFjKXlgHBW"
     }
   ]
 }

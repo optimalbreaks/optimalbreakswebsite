@@ -116,6 +116,18 @@ export function madridWeekday(): number {
  */
 export const FOLLOW_BOARD_LIMIT = 140
 
+/** Fuera del corte, pero el pase lee su ficha y publica sus créditos. 15 oct 2026: Dubaxface. */
+const EXTRA_FOLLOW_NAMES = ['Dubaxface']
+
+async function loadFollowKeys(sb: ReturnType<typeof createServiceSupabase>): Promise<Set<string>> {
+  const keys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
+  for (const name of EXTRA_FOLLOW_NAMES) {
+    const key = normalizeArtistKey(name)
+    if (key) keys.add(key)
+  }
+  return keys
+}
+
 /** Las fichas de esos artistas se leen los sábados: el viernes Cloudflare bloquea más y el sábado ya recoge los lanzamientos del viernes. */
 export const TOP100_ARTISTS_WEEKDAY = 6
 
@@ -566,10 +578,10 @@ async function followedBeatportArtists(
   return [...out.values()]
 }
 
-/** Página 1 de temas de cada artista de los 140 primeros. El favorito pide la 2 y la 3 si hace falta. */
+/** Página 1 de temas de los 140 primeros, más los fichados aparte (Dubaxface). El favorito pide la 2 y la 3 si hace falta. */
 export async function top100ArtistTrackPageUrls(): Promise<string[]> {
   const sb = createServiceSupabase()
-  const keys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
+  const keys = await loadFollowKeys(sb)
   const artists = await followedBeatportArtists(sb, keys)
   return artists.map((artist) => artistTracksUrl(artist.slug, artist.id, BEATPORT_IMPORT_FROM, 1))
 }
@@ -722,7 +734,7 @@ export async function runBeatportGenreImport(opts: {
       fresh.push(pick)
       if (auto) fromArtist.add(id)
     }
-    const rankKeys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
+    const rankKeys = await loadFollowKeys(sb)
     const cache = new Map<string, EditionState>()
     const noteProgress = async () => {
       await sb
@@ -983,7 +995,7 @@ export async function ingestBeatportPage(opts: {
   try {
     say(`Página de Beatport recibida: ${tracks.length} temas desde el 8 oct.`)
     const known = await loadKnownTracks(sb)
-    const rankKeys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
+    const rankKeys = await loadFollowKeys(sb)
     const publishAll = await publishesWholeArtistPage(sb, opts.url, rankKeys)
     const cache = new Map<string, EditionState>()
     for (const [i, pick] of tracks.entries()) {

@@ -1317,6 +1317,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 52
+    },
+    {
+      "title": "Flames",
+      "mix_name": "Original mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flames/22376666",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b50289e-e152-433a-898d-ef14d5372cc1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/2a6f2810-6409-4bee-bb08-6d0e4f3419d6.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-11-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 56
+    },
+    {
+      "title": "Flames",
+      "mix_name": "Dub mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/flames/22376667",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7b50289e-e152-433a-898d-ef14d5372cc1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/16709b05-6dfc-4469-bbe0-ec5d03393d6c.LOFI.mp3",
+      "bpm": 67,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-11-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 55
     }
   ]
 }

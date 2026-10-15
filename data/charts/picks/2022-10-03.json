@@ -75,6 +75,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 40
+    },
+    {
+      "title": "Heaven Styla",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Diablo Loco",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/heaven-styla/16970840",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/3efd81be-8448-46b6-98ff-c5881b4d4ddc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fe8dc14a-24ae-42be-a4aa-635e51b5420c.LOFI.mp3",
+      "bpm": 128,
+      "music_key": "Gb Minor",
+      "release_year": 2022,
+      "release_date": "2022-10-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 42
     }
   ]
 }

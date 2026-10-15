@@ -258,6 +258,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 57
+    },
+    {
+      "title": "33Rpm",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/33rpm/23038324",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/44016f5e-db52-41d5-8299-cae3f929881c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/fe5de302-4787-4123-a72b-c6dc03d4b65c.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-02-20",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 74
     }
   ]
 }

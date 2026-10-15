@@ -179,6 +179,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 42
+    },
+    {
+      "title": "Talk to me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Sound Perfect Breakz Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/talk-to-me/19740688",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/229ba024-3270-4e0c-831b-698553b7ca97.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f4d567e0-ef91-460c-b30e-660f6b5f8e42.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-03-07",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 44
     }
   ]
 }

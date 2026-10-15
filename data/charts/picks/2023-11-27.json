@@ -899,6 +899,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 61
+    },
+    {
+      "title": "Sunshine",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sunshine/18373108",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/7f126917-37a6-419a-bfec-42d087779849.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/a5307675-1c10-49ed-9a2d-4d251a4a587c.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "D Major",
+      "release_year": 2023,
+      "release_date": "2023-12-01",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 84
     }
   ]
 }

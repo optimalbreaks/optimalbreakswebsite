@@ -2116,6 +2116,52 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 76
+    },
+    {
+      "title": "Ready",
+      "mix_name": "Original mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Architektur Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/ready/28418979",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/70e63c44-ea10-4fcf-b480-22f2720abe8c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/db117dac-74df-4534-838e-87ec04f3df15.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 102
+    },
+    {
+      "title": "Falling",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/dubaxface/227124",
+          "name": "Dubaxface"
+        }
+      ],
+      "label": "Br8kn Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/falling/27981742",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b41141b7-eab1-455d-9a8b-3854e226c517.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ec7d8240-7899-43b9-9c7f-011223133f8d.LOFI.mp3",
+      "bpm": 69,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 101
     }
   ]
 }
