@@ -1,0 +1,54 @@
+Revisión editorial — Cude (15 oct 2026)
+=========================================
+
+La ficha era genérica (productor de breakbeat, era 2020s, essential solo Orion)
+y citaba los 40 Breaks Vitales. REESCRIBIR. Conservar slug cude, name CUDE,
+name_display CUDE, image_url de Storage, sort_order 146.
+
+Identidad
+---------
+- real_name: Julio López Cuder. Bio oficial de Beatport (id 838579).
+- Origen: Sevilla · Andalucía · España. country ES, category andalusian.
+- Más de 10 años en la música. Lanzamientos documentados desde 2020.
+  El salto en directo (clubes y salas de Andalucía) es de 2024.
+  NO escribir «activo desde 2024». era: 2020-present.
+- Rol: DJ, productor y remixer.
+- Booking de la etapa Funktasty: Funktasty Crew (SoundCloud oficial).
+  URL: https://soundcloud.com/cude_music
+
+Estilo
+------
+Quitar «Bass» a secas.
+styles: Breakbeat, Breaks, UK Bass, UK Garage.
+Beatport: 58 tracks de Breaks; UK garage / bassline es vertiente real
+(No Conversation, remix, está clasificado ahí).
+
+Sellos
+------
+- Casa actual (2026): Elektroshok Records. Serie de signos: Capricornio,
+  Acuario, Piscis, Aries, Tauro, Géminis, Cáncer, Leo, Virgo, Libra
+  (Libra, 15 oct 2026). BeatStats lo pone nº 1 por rendimiento, por delante
+  de 83, Banana Club y Raveart.
+- Etapa temprana: Funktasty Crew Records. Hammelin, 10 jun 2022, 134 BPM,
+  más Paket Remix a 137.
+- Banana Club: Textura (15 may 2025), Hands Up, Se Pone Loca, Trio Calavera
+  con DILOS y Dagan, remix de Celular (Bowser & JottaFrank).
+- 2025 también: High Energy (83, 136 BPM; mejor recorrido, BeatStats),
+  Brain Acid (Sound Perfect Breakz), Kali con Dagan (Raveart),
+  No Conversation (Cude Remix) de The Push & Delzie (DIRTY KITCHEN RAVE),
+  Not With You con Eskila.
+- Connection, con JN CRUZ, Elektroshok, 26 mar 2026, 140 BPM; reaparece
+  en LW Recordings.
+- Otras salidas, sin convertirlas en casa: Creative Sound, Musication,
+  Rough Division, SPACE PIZZA, Empire Of Music, Fantazia.
+
+Essential tracks
+----------------
+Hammelin, Textura, High Energy, Brain Acid, Kali, Trio Calavera,
+Acuario, Connection, Cancer, Leo, Libra.
+Orion sale de essential.
+
+related_artists: JN CRUZ, DILOS, Dagan, Paket.
+Dagan no tiene ficha (oct 2026).
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
