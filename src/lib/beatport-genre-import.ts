@@ -116,8 +116,8 @@ export function madridWeekday(): number {
  */
 export const FOLLOW_BOARD_LIMIT = 140
 
-/** Fuera del corte, pero el pase lee su ficha y publica sus créditos. 15 oct 2026: Dubaxface. */
-const EXTRA_FOLLOW_NAMES = ['Dubaxface']
+/** Fuera del corte, pero el pase lee su ficha y publica sus créditos. 15 oct 2026: Dubaxface y AceNoise. */
+const EXTRA_FOLLOW_NAMES = ['Dubaxface', 'AceNoise']
 
 async function loadFollowKeys(sb: ReturnType<typeof createServiceSupabase>): Promise<Set<string>> {
   const keys = await loadTopArtistKeys(sb, FOLLOW_BOARD_LIMIT)
@@ -578,7 +578,7 @@ async function followedBeatportArtists(
   return [...out.values()]
 }
 
-/** Página 1 de temas de los 140 primeros, más los fichados aparte (Dubaxface). El favorito pide la 2 y la 3 si hace falta. */
+/** Página 1 de temas de los 140 primeros, más los fichados aparte (Dubaxface, AceNoise). El favorito pide la 2 y la 3 si hace falta. */
 export async function top100ArtistTrackPageUrls(): Promise<string[]> {
   const sb = createServiceSupabase()
   const keys = await loadFollowKeys(sb)

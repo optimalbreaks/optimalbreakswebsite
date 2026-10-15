@@ -204,6 +204,7 @@ const ON_REQUEST = [
   { slug: 'kenny-beeper', id: 403456, name: 'Kenny Beeper' },
   { slug: 'cude', id: 838579, name: 'CUDE' },
   { slug: 'dubaxface', id: 227124, name: 'Dubaxface' },
+  { slug: 'acenoise', id: 1205597, name: 'AceNoise' },
 ]
 // Puestos 51–100 del tablero (7 oct 2026). Vazteria X: solo temas, sin ficha.
 // Koma y Bones en el tablero son el dúo Koma & Bones (un solo scrape).
