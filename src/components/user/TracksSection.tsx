@@ -1568,7 +1568,6 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                 key={t.key}
                 id={`mytracks-row-${t.key}`}
                 className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
-                style={showYtEmbed ? undefined : { contentVisibility: 'auto', containIntrinsicSize: 'auto 108px' }}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -1586,8 +1585,14 @@ export default function TracksSection({ lang, publicPayload, embedded = false, r
                       </span>
                     ) : null}
                     {t.artwork_url ? (
-                      <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                        <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" loading={i < 6 ? 'eager' : 'lazy'} priority={i < 4} />
+                      <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)]">
+                        {/* Ancho fijo, sin fill y sin content-visibility. Con
+                            sizes en px (sin vw) Next mete en el srcset hasta
+                            3840 y deja ese tamaño como src de reserva. Al
+                            final de Almas Gemelas Chrome, con la fila aún sin
+                            layout, se baja esas carátulas enormes y la pestaña
+                            muere (STATUS_BREAKPOINT). 64 y 128 bastan. */}
+                        <Image src={t.artwork_url} alt="" width={64} height={64} className="object-cover w-full h-full" loading={i < 6 ? 'eager' : 'lazy'} />
                       </div>
                     ) : null}
 
