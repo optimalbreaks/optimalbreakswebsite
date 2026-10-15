@@ -22,6 +22,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Atomic Force",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/atomic-force/16261580",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/eb114a1e-e5aa-431f-a1d0-65bc071df74e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/81b2ffc6-c11a-4885-83fe-074b234074f5.LOFI.mp3",
+      "bpm": 130,
+      "music_key": "E Minor",
+      "release_year": 2022,
+      "release_date": "2022-03-31",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 28
     }
   ]
 }

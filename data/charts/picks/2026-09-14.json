@@ -2350,6 +2350,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 102
+    },
+    {
+      "title": "Virgo",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/virgo/30182774",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/1df92c64-db5e-4851-b3c2-ec92460b5e0a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/f9aadb8b-d6c7-444a-9cb8-a66581eb39ce.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "Bb Minor",
+      "release_year": 2026,
+      "release_date": "2026-09-17",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 111
     }
   ]
 }

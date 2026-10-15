@@ -44,6 +44,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 2
+    },
+    {
+      "title": "Whon",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/whon/16358650",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/74dfd30c-96a4-4bab-814b-7849a31fbced.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/dc9b39dc-9f45-4dad-a664-c469bd0f5162.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "Ab Major",
+      "release_year": 2022,
+      "release_date": "2022-05-12",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 27
     }
   ]
 }

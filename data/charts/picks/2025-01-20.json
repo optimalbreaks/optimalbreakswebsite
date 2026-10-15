@@ -25,6 +25,33 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Time Of Gods",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/rhades/767534",
+          "name": "Rhades"
+        },
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Rough Division",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/time-of-gods/19910730",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8ceb2b92-4bd4-461b-b4dd-e6f180dbc65f.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ebc24f2b-7ce4-4bc6-8ac8-cd4ec8eb57c7.LOFI.mp3",
+      "bpm": 136,
+      "music_key": "D Major",
+      "release_year": 2025,
+      "release_date": "2025-01-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 37
     }
   ]
 }

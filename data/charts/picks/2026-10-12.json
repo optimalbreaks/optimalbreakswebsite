@@ -1382,6 +1382,29 @@
       "note_en": "Single shared on SoundCloud — not a DJ set. From CYBERFUNK 050.",
       "note_es": "Tema compartido en SoundCloud — no es una sesión de DJ. Del CYBERFUNK 050.",
       "sort_order": 57
+    },
+    {
+      "title": "Libra",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Cude"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/libra/30513379",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/db6ca3e4-4249-4f9f-b654-eaf8e048d26c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/d65ac701-f13e-437c-b116-6227f43cadfc.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-10-15",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 75,
+      "spotify_url": "https://open.spotify.com/track/4FD5M3AoP7bRDqxGXgQ7ds"
     }
   ]
 }

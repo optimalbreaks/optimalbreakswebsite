@@ -22,6 +22,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Tormenta Electrica",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Funktasty Crew Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/tormenta-electrica/15930168",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/fc51dc57-46b1-48f4-ad89-0e15008ab6af.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/9a242bf0-658a-4cf4-8758-d33e3649bdd5.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Db Minor",
+      "release_year": 2021,
+      "release_date": "2021-12-24",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 29
     }
   ]
 }

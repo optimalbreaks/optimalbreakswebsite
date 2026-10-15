@@ -22,6 +22,37 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Police",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        },
+        {
+          "url": "https://www.beatport.com/artist/noba020/1153374",
+          "name": "Noba020"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dream-big-es/2481622",
+          "name": "Dream Big (ES)"
+        }
+      ],
+      "label": "SPACE PIZZA Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/police/18113784",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8012e61d-4d2c-4033-8a72-f3320f17192c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/98daff0b-a881-4196-a4b6-ed8e65de7a39.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "G Minor",
+      "release_year": 2023,
+      "release_date": "2023-09-27",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 62
     }
   ]
 }

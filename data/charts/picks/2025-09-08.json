@@ -25,6 +25,37 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/1FJuwflrvoFT9Om3pBELnK",
       "tidal_url": "https://tidal.com/browse/track/458004686"
+    },
+    {
+      "title": "Trio Calavera",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dilos/1145235",
+          "name": "DILOS"
+        },
+        {
+          "url": "https://www.beatport.com/artist/dagan/1216037",
+          "name": "Dagan"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/trio-calavera/20967728",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/04a6c581-13b5-4552-b36a-e1916d42b78c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/b759c0f2-edda-4fc6-a877-987a994d7afc.LOFI.mp3",
+      "bpm": 138,
+      "music_key": "G Major",
+      "release_year": 2025,
+      "release_date": "2025-09-11",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 104
     }
   ]
 }

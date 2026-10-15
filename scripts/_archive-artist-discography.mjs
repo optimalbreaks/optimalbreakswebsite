@@ -15,7 +15,7 @@
  *   node scripts/_archive-artist-discography.mjs --full vazteria-x
  *   node scripts/_archive-artist-discography.mjs --nr-2026 --all-weeks evil-crew
  *
- * --full mete todo el catálogo hasta hoy (archivo + 2026 en su semana real).
+ * --full mete todo el catálogo, adelantos incluidos (archivo + 2026 en su semana real).
  * --all-weeks con --nr-2026 mete el 2026 aunque la semana ya tenga 20 temas.
  *
  * --nr-2026 mete releases de 2026 (1 ene → hoy) solo en las semanas de New
@@ -163,6 +163,7 @@ const ON_REQUEST = [
   { slug: 'pray-for-bass', id: 550087, name: 'Pray For Bass' },
   { slug: 'kid-kenobi', id: 24390, name: 'Kid Kenobi' },
   { slug: 'kenny-beeper', id: 403456, name: 'Kenny Beeper' },
+  { slug: 'cude', id: 838579, name: 'CUDE' },
 ]
 // Puestos 51–100 del tablero (7 oct 2026). Vazteria X: solo temas, sin ficha.
 // Koma y Bones en el tablero son el dúo Koma & Bones (un solo scrape).
@@ -243,7 +244,7 @@ const PROGRESS = join(
         ? 'scripts/_archive-top50-2026-oct-progress.txt'
         : 'scripts/_archive-top50-progress.txt',
 )
-const PUBLISH_FILTER = FULL ? `:${NR_UNTIL}` : NR2026 ? `${NR_FROM}:${NR_UNTIL}` : ':2025-12-31'
+const PUBLISH_FILTER = FULL ? '1970-01-01:' : NR2026 ? `${NR_FROM}:${NR_UNTIL}` : ':2025-12-31'
 const already = new Set()
 if (existsSync(PROGRESS)) {
   for (const line of readFileSync(PROGRESS, 'utf8').split('\n')) {
@@ -418,7 +419,7 @@ function toPick(raw) {
   const day = String(raw.publish_date || '').trim().slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null
   if (FULL) {
-    if (day > NR_UNTIL) return null
+    /* catálogo entero, adelantos incluidos */
   } else if (NR2026) {
     if (day < NR_FROM || day > NR_UNTIL) return null
   } else if (day >= CUTOFF) return null
@@ -482,7 +483,7 @@ if (TODO.length === 0) {
   console.log(already.size ? 'Top 50 ya importado (progreso completo).' : 'Nada que importar.')
   process.exit(0)
 }
-console.log(`Cola: ${TODO.length} artistas${already.size ? ` (${already.size} ya cerrados)` : ''}${FULL ? ` · catálogo completo hasta ${NR_UNTIL}` : NR2026 ? ` · New Releases ${NR_FROM} → ${NR_UNTIL}${ALL_WEEKS ? ' · todas las semanas' : ''}` : ''}`)
+console.log(`Cola: ${TODO.length} artistas${already.size ? ` (${already.size} ya cerrados)` : ''}${FULL ? ' · catálogo completo, adelantos incluidos' : NR2026 ? ` · New Releases ${NR_FROM} → ${NR_UNTIL}${ALL_WEEKS ? ' · todas las semanas' : ''}` : ''}`)
 
 const existingLinks = await loadAll(supabase, 'chart_featured_tracks', 'link_url, title, mix_name, artist_names_text')
 const existingIds = new Set(existingLinks.map((r) => beatportIdFromLink(r.link_url)).filter(Boolean))

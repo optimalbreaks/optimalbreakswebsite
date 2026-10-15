@@ -25,6 +25,29 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/7JjY69WrRWHtY09Wn9V1tv",
       "tidal_url": "https://tidal.com/browse/track/374264420"
+    },
+    {
+      "title": "Vida Loca",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/vida-loca/19185137",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/b21b2bd2-87de-4a67-a67f-0a3586d9ff25.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/07385a93-5ecb-4cc8-867a-788d726ae222.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "B Minor",
+      "release_year": 2024,
+      "release_date": "2024-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 78
     }
   ]
 }

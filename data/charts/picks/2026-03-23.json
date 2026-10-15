@@ -223,6 +223,33 @@
       "note_en": "",
       "note_es": "",
       "release_date": "2026-03-27"
+    },
+    {
+      "title": "Connection",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jn-cruz/1219887",
+          "name": "JN CRUZ"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/connection/24228858",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/f99bc5ac-5b1d-476d-9a89-dc7cdcabae45.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/1ab0e8d2-8747-4e1d-8216-61a9bea9d02c.LOFI.mp3",
+      "bpm": 140,
+      "music_key": "Eb Major",
+      "release_year": 2026,
+      "release_date": "2026-03-26",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 50
     }
   ]
 }

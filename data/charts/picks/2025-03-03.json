@@ -24,6 +24,33 @@
       "sort_order": 1,
       "spotify_url": "https://open.spotify.com/track/4zfgGrMsGjveZJbp5Id7qX",
       "tidal_url": "https://tidal.com/browse/track/418653992"
+    },
+    {
+      "title": "Got The Feeling",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-push/57581",
+          "name": "The Push"
+        },
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/got-the-feeling/20043503",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/afd077dc-9aff-4baf-abb4-fc002ffdff68.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/ad873cba-274f-414a-a407-183a7be22ea7.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "E Major",
+      "release_year": 2025,
+      "release_date": "2025-03-05",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 40
     }
   ]
 }

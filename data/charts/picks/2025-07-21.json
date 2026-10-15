@@ -22,6 +22,38 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 1
+    },
+    {
+      "title": "Celular",
+      "mix_name": "Cude Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/jottafrank/739636",
+          "name": "JottaFrank"
+        },
+        {
+          "url": "https://www.beatport.com/artist/cude/838579",
+          "name": "Cude"
+        }
+      ],
+      "label": "Banana Club",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/celular/20649539",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4a935a85-5f1b-475c-a86a-9ef56113846a.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/eecb247f-6435-42d0-9b57-030b7358a91b.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "F Major",
+      "release_year": 2025,
+      "release_date": "2025-07-25",
+      "note_en": "",
+      "note_es": "",
+      "sort_order": 43,
+      "tidal_url": "https://tidal.com/browse/track/451135992"
     }
   ]
 }
