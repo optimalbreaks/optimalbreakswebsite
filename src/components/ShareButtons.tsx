@@ -31,8 +31,8 @@ interface ShareButtonsProps {
   /** Path corto (p. ej. `/a/ctrl-z`) para redes que limitan la longitud del enlace (Instagram). */
   shortUrl?: string
   /**
-   * Valor `play=` de `/api/og/story` (p. ej. `mix:<slug>`). Solo admins ven los
-   * botones IG (Story), R (reel vertical) y F (vídeo horizontal para Facebook).
+   * Valor `play=` de `/api/og/story` (p. ej. `mix:<slug>`). Admins y artistas
+   * con ficha reclamada ven IG (Story), R (reel vertical) y F (vídeo horizontal).
    */
   storyPlay?: string
   /**
@@ -46,7 +46,8 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
   const [copied, setCopied] = useState(false)
   const [copiedShort, setCopiedShort] = useState(false)
   const [storyState, setStoryState] = useState<'idle' | 'busy' | 'done'>('idle')
-  const { isAdmin } = useAuth()
+  const { isAdmin, isClaimedArtist } = useAuth()
+  const canPromo = isAdmin || isClaimedArtist
   const es = lang === 'es'
   const fullUrl = buildAbsoluteShareUrl(url)
   const fullShortUrl = shortUrl ? buildAbsoluteShareUrl(shortUrl) : null
@@ -252,7 +253,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         {copied ? (es ? '✓ COPIADO' : '✓ COPIED') : (es ? '🔗 LINK' : '🔗 LINK')}
       </button>
 
-      {isAdmin && storyPlay && (
+      {canPromo && storyPlay && (
         <button
           type="button"
           onClick={shareStory}
@@ -281,7 +282,7 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         </button>
       )}
 
-      {isAdmin && (storyPlay || pageReel) && (
+      {((canPromo && storyPlay) || (isAdmin && pageReel)) && (
         <VideoShareButtons
           lang={lang}
           title={title}

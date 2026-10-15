@@ -54,8 +54,9 @@ en el catálogo y usuarios/promotores que montan fiestas. El artista **reclama s
 
 Tres niveles de cuenta (detalle del ranking en `docs/USER_ENGAGEMENT.md` → *Three account levels*):
 usuario normal → **marcado editorial** (no auto-voto en Top artistas, sin bookings) →
-**claim aprobado** (mismo skip + puede abrir `accepts_bookings`). El fichaje editorial
-**nunca** sustituye a un claim.
+**claim aprobado** (mismo skip + puede abrir `accepts_bookings` + ve **IG**, **R** y **F**
+en cada tema y en cada sesión). El fichaje editorial **nunca** sustituye a un claim
+y **no** abre esos botones.
 
 **No es:**
 

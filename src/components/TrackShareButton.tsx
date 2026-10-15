@@ -13,10 +13,11 @@
 //     Vinilos y chart/featured usan path en optimalbreaks.com vía `path`.
 //     Beatport Top también genera story IG (`play=beatport:<id>` + snapshot).
 //
-// Admins ven además «IG» (imagen de Story), «R» (reel vertical MP4 sin audio
-// para Instagram) y «F» (vídeo horizontal 16:9 sin audio para Facebook, solo
-// descarga). Ambos vídeos se renderizan en el navegador con
-// `src/lib/reel-renderer.ts`; el audio oficial se añade luego en la red social.
+// Admins y artistas con ficha reclamada ven además «IG» (imagen de Story),
+// «R» (reel vertical MP4 sin audio para Instagram) y «F» (vídeo horizontal
+// 16:9 sin audio para Facebook, solo descarga). Ambos vídeos se renderizan
+// en el navegador con `src/lib/reel-renderer.ts`; el audio oficial se añade
+// luego en la red social.
 // ============================================
 
 'use client'
@@ -126,11 +127,11 @@ export default function TrackShareButton(props: Props) {
   const [fbPct, setFbPct] = useState(0)
   // Un solo render a la vez (el renderer usa un lienzo por formato).
   const videoBusy = reelState === 'busy' || fbState === 'busy'
-  const { isAdmin } = useAuth()
+  const { isAdmin, isClaimedArtist } = useAuth()
   const es = props.lang === 'es'
   const fullUrl = resolveFullUrl(props)
-  // Botón IG (Story) solo para admins: herramienta de promo del equipo.
-  const storyPlay = isAdmin ? resolveStoryPlayParam(props) : null
+  // IG, R y F: admin o artista con ficha reclamada. El resto de la web no los ve.
+  const storyPlay = isAdmin || isClaimedArtist ? resolveStoryPlayParam(props) : null
 
   /** Query común de `/api/og/story` (Story PNG y datos del reel). */
   function storyParams(play: string): URLSearchParams {

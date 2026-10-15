@@ -1,5 +1,6 @@
 // ============================================
-// OPTIMAL BREAKS — Texto del post para los vídeos R/F (solo admins)
+// OPTIMAL BREAKS — Texto del post para los vídeos R/F
+// Admin: todos los tipos. Artista con ficha reclamada: solo tema y sesión.
 //
 // POST { kind, platform, lang, url, context } → { caption }
 //   kind: 'track' | 'set' | 'top100' | 'week' | 'blog'
@@ -15,7 +16,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdminOrClaimedArtist } from '@/lib/admin-auth'
 import { isGpt5Family, openAiChatCompletionsBody, resolveOpenAiModel } from '@/lib/openai-editorial'
 
 export const runtime = 'nodejs'
@@ -117,7 +118,7 @@ function cleanCaption(raw: string, kind: Kind, ctx: Record<string, unknown>, pla
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin(request)
+  const auth = await requireAdminOrClaimedArtist()
   if (!auth.ok) return auth.response
   const key = process.env.OPENAI_API_KEY?.trim()
   if (!key) return NextResponse.json({ error: 'Falta OPENAI_API_KEY' }, { status: 500 })
@@ -130,6 +131,9 @@ export async function POST(request: NextRequest) {
   }
   const kind = (['track', 'set', 'top100', 'week', 'blog'] as const).find((k) => k === body.kind)
   if (!kind) return NextResponse.json({ error: 'kind no válido' }, { status: 400 })
+  if (auth.role !== 'admin' && kind !== 'track' && kind !== 'set') {
+    return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+  }
   const platform: Platform = body.platform === 'facebook' ? 'facebook' : 'instagram'
   const es = body.lang !== 'en'
   const url = typeof body.url === 'string' ? body.url.slice(0, 300) : ''

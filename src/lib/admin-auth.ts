@@ -66,6 +66,38 @@ export function requireCatalogEditor(request: Request): Promise<AdminCheckResult
   return requireRoles(['admin', 'collaborator'])
 }
 
+/**
+ * Admin, o cuenta con al menos una ficha reclamada (`artists.claimed_by`).
+ * El reclamado no entra en el panel: solo desbloquea el material de redes
+ * (historia IG, reel y vídeo) y el texto del post de temas y sesiones.
+ */
+export async function requireAdminOrClaimedArtist(): Promise<AdminCheckResult> {
+  const auth = await getRouteUser()
+  if (!auth.ok) return auth
+
+  const { data: profile } = await auth.supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', auth.userId)
+    .single() as { data: { role: string } | null }
+
+  if (profile?.role === 'admin') {
+    return { ok: true, userId: auth.userId, role: 'admin' }
+  }
+
+  const { data: claimed } = await auth.supabase
+    .from('artists')
+    .select('id')
+    .eq('claimed_by', auth.userId)
+    .limit(1)
+
+  if (claimed && claimed.length > 0) {
+    return { ok: true, userId: auth.userId, role: 'user' }
+  }
+
+  return { ok: false, response: NextResponse.json({ error: 'Sin permisos' }, { status: 403 }) }
+}
+
 export type RouteUserResult =
   | { ok: true; userId: string; email: string | null; supabase: ReturnType<typeof createServerClient<Database>> }
   | { ok: false; response: NextResponse }

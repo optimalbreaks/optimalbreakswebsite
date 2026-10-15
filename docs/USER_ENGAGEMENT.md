@@ -296,7 +296,7 @@ Product decision (agosto 2026): with a small save base, an artist can put themse
 | --- | --- | --- | --- | --- | --- | --- |
 | **1. Normal user** | Sign-up | Yes | Yes | Counts | All their saves | No |
 | **2. Editorially marked** | Admin fichaje (`editorial_artist_marks`) | Yes | **Skip** when they are credited | **Skip** that credit name | **Skip** tracks where they are credited; other saves count | **No** (`claimed_by` untouched) |
-| **3. Claimed** | Approved `artist_claims` → `artists.claimed_by` | Yes | **Skip** (same as 2) | **Skip** (same as 2) | **Skip** (same as 2) | **Can** open (`accepts_bookings`, default **false** until they toggle) |
+| **3. Claimed** | Approved `artist_claims` → `artists.claimed_by` | Yes | **Skip** (same as 2) | **Skip** (same as 2) | **Skip** (same as 2) | **Can** open (`accepts_bookings`, default **false** until they toggle). Also sees **IG / R / F** on every track and set (15 Oct 2026). Top 100, New Releases week headers and blog stay admin-only. |
 
 **If you mark first and they later claim:** they already had 2; claim adds 3.  
 **If they claim with no prior mark:** approve → 2 + 3 in one step.  

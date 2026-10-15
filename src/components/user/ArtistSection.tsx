@@ -123,6 +123,11 @@ function VerifiedArtists({ lang, verified, onChange }: { lang: string; verified:
   return (
     <div className="mb-8 border-4 border-[var(--ink)] p-6">
       <h3 style={H3}>{es ? 'MIS FICHAS VERIFICADAS' : 'MY VERIFIED PROFILES'}</h3>
+      <p style={{ ...MONO, fontSize: '12px', lineHeight: 1.45, marginTop: 0, marginBottom: '14px' }}>
+        {es
+          ? 'En cada tema y en cada sesión verás IG (historia), R (reel) y F (vídeo). Desde ahí los compartes en Instagram o Facebook.'
+          : 'On every track and set you’ll see IG (story), R (reel) and F (video). Share them to Instagram or Facebook from there.'}
+      </p>
       <div className="space-y-3">
         {verified.map((a) => (
           <div key={a.id} className="flex items-center justify-between gap-4 border-b-2 border-[var(--ink)]/15 pb-3 last:border-0 last:pb-0">

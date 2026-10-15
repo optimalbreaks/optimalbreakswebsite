@@ -19,6 +19,8 @@ interface AuthContextType {
   isAdmin: boolean
   /** Admin o colaborador: chat editorial. El colaborador no entra en /administrator. */
   isCatalogEditor: boolean
+  /** Tiene al menos una ficha con `artists.claimed_by` = su usuario. Solo el booleano. */
+  isClaimedArtist: boolean
   signInWithGoogle: () => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<{ error: string | null }>
   signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: string | null }>
@@ -34,6 +36,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   isCatalogEditor: false,
+  isClaimedArtist: false,
   signInWithGoogle: async () => {},
   signInWithEmail: async () => ({ error: null }),
   signUpWithEmail: async () => ({ error: null }),
@@ -53,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isCatalogEditor, setIsCatalogEditor] = useState(false)
+  const [isClaimedArtist, setIsClaimedArtist] = useState(false)
   const supabase = createBrowserSupabase()
   const pathname = usePathname()
   const lang = getLangFromPath(pathname)
@@ -80,19 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user?.id) {
       setIsAdmin(false)
       setIsCatalogEditor(false)
+      setIsClaimedArtist(false)
       return
     }
     let cancelled = false
     ;(async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
+      const [{ data }, { data: claimed, error: claimedErr }] = await Promise.all([
+        supabase.from('profiles').select('role').eq('id', user.id).single(),
+        supabase.from('artists').select('id').eq('claimed_by', user.id).limit(1),
+      ])
       const role = (data as { role?: string } | null)?.role
       if (!cancelled) {
         setIsAdmin(role === 'admin')
         setIsCatalogEditor(role === 'admin' || role === 'collaborator')
+        setIsClaimedArtist(!claimedErr && (claimed?.length ?? 0) > 0)
       }
     })()
     return () => {
@@ -181,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         isAdmin,
         isCatalogEditor,
+        isClaimedArtist,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
