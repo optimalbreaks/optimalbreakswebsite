@@ -1,0 +1,60 @@
+Alta editorial — The Autobots (17 oct 2026)
+==========================================
+
+No había ficha. Beatport: the-autobots / 66218.
+Web oficial: https://theautobots.com/
+
+Identidad
+---------
+- Tom Francis y Jez Staples. Dúo de Huddersfield, Reino Unido.
+- Formados en 2001. country UK, category uk_legend, era 2001-present.
+- name / name_display: The Autobots / THE AUTOBOTS.
+  La firma estilizada The AutØbØts va en la bio, no en el título:
+  Beatport y la búsqueda usan The Autobots.
+- Rol: DJs, productores, remixers y fundadores de sello.
+- styles: Breakbeat, Nu Skool Breaks, Breaks, UK Bass.
+- Activos. La etapa 2003–2008 es la más continua. Después hay
+  material en 2013 y 2016, remixes en 2024 y sencillo en 2026.
+  No escribir «inactivos» ni «históricos».
+
+Sello
+-----
+Fundan Broke Records en 2004. En este catálogo el sello está como
+Broke Breaks (slug broke-breaks, brokebreaks.com). labels_founded:
+["Broke Breaks"] para que el chip enlace.
+Primer reference: BROKE001, The Spanish Tune / The Future, con Deep Impact.
+Breakspoll Breakthrough Label 2005. Finalista a Best Label en 2006.
+
+Discografía que entra en la ficha
+----------------------------------
+- Disappear, en 4 Vini — Forever Young (Botchit & Scarper), primer tema.
+- 2002 Chickers / Ex-press. 2003 Rocky / Shed Dub y The Chase / Blogger.
+  2004 Hardcore MF / The Formula y DMT / Chickers Remix.
+- Rocky: uno de los más reconocibles. El brief lo sitúa nº 2 del Top 10
+  de Beatport, detrás de Magic Carpet.
+- 2005–2008: Seconds Out, Bomba Latino, Shock Treatment, Bullet Time,
+  Six Million Ways, Ultrafunkula, Rockin' With The Best, This World,
+  Final Conflict, Flesh Eater, serie The Ends of the Earth.
+- 2006: The Autobots Present… Broke 'n' English. Afterdark / Broke. 19 temas.
+- 2011: Modestep — To The Stars (Break The Noize & The Autobots Remix).
+  La web del dúo afirma nº 1 del chart de vídeos musicales de YouTube UK
+  una semana, más de 12 millones de reproducciones en YouTube y más de
+  3,5 millones en Spotify. Se atribuye a su web.
+- 2013: Bring Back the Sound (Dead Audio & MC Spyda), Release the Beast
+  (Roisin Brophy). 2016: Waiting (Viper Recordings).
+- 2024: Dopamine — All The Way (The Autobots Remix), Toast & Jam.
+  Shade K & JS-BREAKS — Mortal (The Autobots Remix), SPACE PIZZA y luego LW.
+- Magic Carpet, Rough Division, marzo 2026. Primer sencillo suyo de 2026.
+  El brief lo da como nº 1 del Top 10 de Beatport.
+
+Directo
+-------
+25 abril 2026, La Caseta del Breakbeat, Pandora Sevilla
+(Autobots vs Duel Calibre, en un cartel con A.Skillz vs Krafty Kuts y otros).
+
+related_artists: Deep Impact, The Breakfastaz, Screwface, CTRL-Z,
+MC Navigator, Aquasky, Timmy Schumacher.
+Deep Impact, CTRL-Z y Aquasky tienen ficha. El resto, texto.
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+Sin retrato hasta poder leer el hero de Beatport (id 66218).
