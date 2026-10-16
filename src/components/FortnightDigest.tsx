@@ -161,13 +161,20 @@ function rowKeyOf(t: FortnightDigestTrack): string {
   return t.featured_id ? `fq-${t.featured_id}` : `fq-${t.artists}-${t.title}-${t.mix_name ?? ''}`
 }
 
-const PlayCtx = createContext<{ play: (rowKey: string) => void; current: string | null; playing: boolean }>({
+type Spot = 'rel' | 'played' | 'voted' | 'top'
+
+/** Id de la fila en el DOM: el mismo tema sale en varias secciones y el reproductor vuelve a la que se pulsó. */
+function spotId(spot: Spot, t: FortnightDigestTrack): string {
+  return `fd-${spot}-${rowKeyOf(t).replace(/[^a-zA-Z0-9_-]+/g, '-')}`
+}
+
+const PlayCtx = createContext<{ play: (rowKey: string, domId?: string) => void; current: string | null; playing: boolean }>({
   play: () => {},
   current: null,
   playing: false,
 })
 
-function PlayButton({ track, className = '' }: { track: FortnightDigestTrack; className?: string }) {
+function PlayButton({ track, spot, className = '' }: { track: FortnightDigestTrack; spot: Spot; className?: string }) {
   const { play, current, playing } = useContext(PlayCtx)
   if (!track.audio_src) return null
   const rowKey = rowKeyOf(track)
@@ -175,7 +182,7 @@ function PlayButton({ track, className = '' }: { track: FortnightDigestTrack; cl
   return (
     <button
       type="button"
-      onClick={() => play(rowKey)}
+      onClick={() => play(rowKey, spotId(spot, track))}
       aria-label={`${on ? 'Pause' : 'Play'} ${track.artists} — ${trackName(track)}`}
       className={`flex items-center justify-center border-[2px] border-[var(--ink)] font-black transition-colors ${on ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'} ${className}`}
       style={mono}
@@ -227,9 +234,10 @@ function Cover({ src, alt, sizes = '64px', frameClass = 'border-[2px] border-[va
 }
 
 function RankedTracks({
-  tracks, unit, lang, artistSlugMap, labelSlugMap,
+  tracks, spot, unit, lang, artistSlugMap, labelSlugMap,
 }: {
   tracks: FortnightDigestTrack[]
+  spot: Spot
   unit: string
   lang: Locale
   artistSlugMap?: Record<string, string>
@@ -250,6 +258,7 @@ function RankedTracks({
         return (
           <div
             key={`${t.title}-${i}`}
+            id={spotId(spot, t)}
             className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
           >
             <div className="flex flex-col gap-3">
@@ -278,6 +287,7 @@ function RankedTracks({
                 {t.audio_src ? (
                   <PlayButton
                     track={t}
+                    spot={spot}
                     className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
                   />
                 ) : null}
@@ -351,13 +361,19 @@ export default function FortnightDigest({
   const queue = useMemo((): PreviewTrack[] => {
     const seen = new Set<string>()
     const out: PreviewTrack[] = []
-    const all = [...(d.released ?? []), ...d.played, ...d.voted, ...d.top100.flatMap((a) => a.tracks)]
-    for (const t of all) {
+    const all: [Spot, FortnightDigestTrack][] = [
+      ...(d.released ?? []).map((t): [Spot, FortnightDigestTrack] => ['rel', t]),
+      ...d.played.map((t): [Spot, FortnightDigestTrack] => ['played', t]),
+      ...d.voted.map((t): [Spot, FortnightDigestTrack] => ['voted', t]),
+      ...d.top100.flatMap((a) => a.tracks.map((t): [Spot, FortnightDigestTrack] => ['top', t])),
+    ]
+    for (const [spot, t] of all) {
       const rowKey = rowKeyOf(t)
       if (!t.audio_src || seen.has(rowKey)) continue
       seen.add(rowKey)
       out.push({
         rowKey,
+        domId: spotId(spot, t),
         src: t.audio_src,
         title: t.title,
         mixName: t.mix_name,
@@ -373,13 +389,15 @@ export default function FortnightDigest({
   }, [d, pathname])
   const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
   const play = useCallback(
-    (rowKey: string) => {
+    (rowKey: string, domId?: string) => {
       if (current === rowKey) {
         togglePreview()
         return
       }
       const idx = queue.findIndex((q) => q.rowKey === rowKey)
-      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+      if (idx < 0) return
+      const q = domId ? queue.map((item, i) => (i === idx ? { ...item, domId } : item)) : queue
+      playPreviewQueue(q, idx, groupKey)
     },
     [current, queue, groupKey, playPreviewQueue, togglePreview],
   )
@@ -446,7 +464,7 @@ export default function FortnightDigest({
                 </div>
               )
               return (
-                <div key={i} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+                <div key={i} id={spotId('rel', r)} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
                   <div className="relative">
                     <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
                     {r.value > 1 && (
@@ -454,7 +472,7 @@ export default function FortnightDigest({
                         {r.value} {t.tracks}
                       </span>
                     )}
-                    <PlayButton track={r} className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
+                    <PlayButton track={r} spot="rel" className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
                     <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
                   </div>
                   {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{text}</Link> : text}
@@ -468,13 +486,13 @@ export default function FortnightDigest({
 
       {d.played.length > 0 && (
         <Section title={t.played} copy={copy.played}>
-          <RankedTracks tracks={d.played} unit={t.plays} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
+          <RankedTracks tracks={d.played} spot="played" unit={t.plays} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
         </Section>
       )}
 
       {d.voted.length > 0 && (
         <Section title={t.voted} copy={copy.voted}>
-          <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
+          <RankedTracks tracks={d.voted} spot="voted" unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
           <Cta
             text={user ? t.voteUser : t.voteGuest}
             label={user ? t.voteUserBtn : t.voteGuestBtn}
@@ -512,9 +530,9 @@ export default function FortnightDigest({
                       const img = <div className="w-10"><Cover src={tr.artwork_url} alt={tr.title} sizes="40px" /></div>
                       if (tr.audio_src) {
                         return (
-                          <span key={i} className="relative block" title={trackName(tr)}>
+                          <span key={i} id={spotId('top', tr)} className="relative block" title={trackName(tr)}>
                             {img}
-                            <PlayButton track={tr} className="absolute inset-0 !border-0 !bg-black/40 hover:!bg-[var(--red)] !text-white text-[13px]" />
+                            <PlayButton track={tr} spot="top" className="absolute inset-0 !border-0 !bg-black/40 hover:!bg-[var(--red)] !text-white text-[13px]" />
                           </span>
                         )
                       }
