@@ -725,6 +725,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 27
+    },
+    {
+      "sort_order": 28,
+      "title": "Freedom",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/freedom/5907046",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/a2679ab7-d07a-43a8-be22-d4a4d92caa67.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/62eea8f5-ba53-4b66-9dde-36eef6da90a0.LOFI.mp3",
+      "bpm": 133,
+      "music_key": "Gb Minor",
+      "release_year": 2014,
+      "release_date": "2014-10-27",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

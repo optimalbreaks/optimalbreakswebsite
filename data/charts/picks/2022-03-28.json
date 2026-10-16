@@ -68,6 +68,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 29
+    },
+    {
+      "sort_order": 30,
+      "title": "Out Of My Head",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/out-of-my-head/16324119",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/6a001796-3e29-4267-873b-12430de355c1.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/4ab36aa2-530a-4c6c-9e86-01169a44b999.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "C Minor",
+      "release_year": 2022,
+      "release_date": "2022-04-01",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

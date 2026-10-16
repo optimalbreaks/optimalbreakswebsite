@@ -121,6 +121,33 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 50
+    },
+    {
+      "sort_order": 31,
+      "title": "Libre",
+      "mix_name": "The Brainkiller Remix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/bowser/47029",
+          "name": "Bowser"
+        },
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Elektroshok Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/libre/19510967",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/8513e586-06f5-4967-9415-89c130e70cb5.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/60c94255-af84-428b-93f0-77030e9834a1.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "F Minor",
+      "release_year": 2024,
+      "release_date": "2024-10-23",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

@@ -524,6 +524,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 64
+    },
+    {
+      "sort_order": 69,
+      "title": "Constantine",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Musication Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/constantine/16141250",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/851a1cb1-305f-436d-9e13-711742379dfa.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/e8b57074-45b4-4b61-9df2-6bb714c5f663.LOFI.mp3",
+      "bpm": 132,
+      "music_key": "Eb Minor",
+      "release_year": 2022,
+      "release_date": "2022-02-04",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }

@@ -636,6 +636,29 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 27
+    },
+    {
+      "sort_order": 28,
+      "title": "Sunny",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "url": "https://www.beatport.com/artist/the-brainkiller/125530",
+          "name": "The Brainkiller"
+        }
+      ],
+      "label": "Distorsion Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/sunny/19592553",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/edbb994f-6881-43a8-8ae0-e224a626d1dc.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/5ae3f80a-dffd-4c1c-8993-a38a3e8560d2.LOFI.mp3",
+      "bpm": 134,
+      "music_key": "B Minor",
+      "release_year": 2024,
+      "release_date": "2024-11-12",
+      "note_en": "",
+      "note_es": ""
     }
   ]
 }
