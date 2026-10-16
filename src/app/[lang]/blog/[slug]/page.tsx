@@ -109,6 +109,25 @@ export default async function BlogPostPage({ params }: Props) {
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
+  const dayLabel = (iso: string) =>
+    new Date(`${iso}T12:00:00Z`).toLocaleDateString(safeLang === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  const fortnightRange = digest
+    ? safeLang === 'es'
+      ? `${dayLabel(digest.from)} al ${dayLabel(digest.until)}`
+      : `${dayLabel(digest.from)} to ${dayLabel(digest.until)}`
+    : ''
+  const fortnightWeeks = (() => {
+    if (!digest) return ''
+    const d = new Date(`${digest.from}T12:00:00Z`)
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
+    const out: string[] = []
+    for (; d.toISOString().slice(0, 10) <= digest.until; d.setUTCDate(d.getUTCDate() + 7)) {
+      out.push(dayLabel(d.toISOString().slice(0, 10)))
+    }
+    const and = safeLang === 'es' ? ' y ' : ' and '
+    const list = out.length > 1 ? `${out.slice(0, -1).join(', ')}${and}${out[out.length - 1]}` : out[0]
+    return (safeLang === 'es' ? 'semanas del ' : 'weeks of ') + list
+  })()
   const coverRaw = post.image_url || albumTracks[0]?.artwork_url || null
   const coverSrc = proxyCatalogArtworkForDisplay(coverRaw) || coverRaw
   const albumCover = albumTracks.length > 0
@@ -343,6 +362,13 @@ export default async function BlogPostPage({ params }: Props) {
 
       {albumTracks.length > 0 && (
         <div className={digest ? 'mt-12' : 'mb-10'}>
+          {digest && (
+            <p className="text-[14px] leading-snug mb-3" style={{ fontFamily: "'Courier Prime', monospace" }}>
+              {safeLang === 'es'
+                ? `Una playlist con lo mejor de la quincena: las exclusivas, lo más escuchado y lo más votado en la web, y los temas nuevos de las estrellas del Top 100. Solo temas salidos del ${fortnightRange}.`
+                : `A playlist with the best of the fortnight: exclusives, the most played and most voted on the site, and new tracks by Top 100 stars. Only tracks released ${fortnightRange}.`}
+            </p>
+          )}
           <BeatportTopTracks
             tracks={albumTracks}
             beatportUrl={post.beatport_release_url || null}
@@ -353,12 +379,36 @@ export default async function BlogPostPage({ params }: Props) {
             saveRefsByUrl={saveRefsByUrl}
             heading={
               post.tags?.includes('quincena')
-                ? safeLang === 'es' ? 'ESCUCHAR LA QUINCENA' : 'LISTEN TO THE FORTNIGHT'
+                ? safeLang === 'es'
+                  ? `LAS ${albumTracks.length} IMPRESCINDIBLES DE LA QUINCENA`
+                  : `THE FORTNIGHT'S ${albumTracks.length} ESSENTIALS`
                 : safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
             }
             defaultExpanded
             badgeVariant="index"
           />
+        </div>
+      )}
+
+      {digest && (
+        <div className="mt-8 border-4 border-[var(--ink)] bg-[var(--yellow)] p-5 sm:p-6 shadow-[6px_6px_0_var(--ink)]">
+          <p className="text-[22px] sm:text-[28px] leading-none uppercase" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900 }}>
+            {safeLang === 'es'
+              ? `¿Quieres los ${digest.totals.tracks} temas?`
+              : `Want all ${digest.totals.tracks} tracks?`}
+          </p>
+          <p className="text-[14px] leading-snug mt-2 mb-4" style={{ fontFamily: "'Courier Prime', monospace" }}>
+            {safeLang === 'es'
+              ? `Están todos en New Releases, en las ${fortnightWeeks}.`
+              : `They are all in New Releases, in the ${fortnightWeeks}.`}
+          </p>
+          <Link
+            href={`/${safeLang}/charts`}
+            className="inline-block bg-[var(--red)] text-white border-4 border-[var(--ink)] px-5 py-3 text-[15px] tracking-wider shadow-[4px_4px_0_var(--ink)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_var(--ink)] transition-transform"
+            style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}
+          >
+            {safeLang === 'es' ? '▶ ESCUCHAR LAS SEMANAS ENTERAS' : '▶ PLAY THE FULL WEEKS'}
+          </Link>
         </div>
       )}
 
