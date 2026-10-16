@@ -26,6 +26,9 @@ function shouldSkipWebpPath(pathname: string): boolean {
   if (lower.includes('favicon')) return true
   if (lower.includes('opengraph')) return true
   if (lower.includes('og-home') || lower.includes('og_home')) return true
+  // Carteles de compartir en JPEG a propósito (og-comic-es.jpg). Si se reescriben
+  // a .webp y ese archivo no existe, Facebook coge otra foto de la página.
+  if (/\/og-[^/]+\.(jpe?g|png)$/i.test(lower)) return true
   if (/\/icon-512\.png$/i.test(lower)) return true
   return false
 }
