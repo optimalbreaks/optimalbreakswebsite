@@ -14,11 +14,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
+import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import CardThumbnail from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
+import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
-import { buildTrackSharePath } from '@/lib/share-track'
+import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { buildTrackSharePath, formatTrackReleaseDisplay, isAdvanceRelease } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { FortnightDigest as Digest, FortnightDigestTrack } from '@/types/database'
 
@@ -149,6 +152,7 @@ function PlayButton({ track, className = '' }: { track: FortnightDigestTrack; cl
       onClick={() => play(rowKey)}
       aria-label={`${on ? 'Pause' : 'Play'} ${track.artists} — ${trackName(track)}`}
       className={`flex items-center justify-center border-[2px] border-[var(--ink)] font-black transition-colors ${on ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'} ${className}`}
+      style={mono}
     >
       {on ? '❚❚' : '▶'}
     </button>
@@ -167,52 +171,98 @@ function NameLink({ name, slug, base, lang }: { name: string; slug: string | nul
 function Section({ title, copy, children }: { title: string; copy?: string; children: ReactNode }) {
   return (
     <section className="mt-12">
-      <h2>{title}</h2>
-      {copy ? <p className="text-[16px] leading-[1.8] mb-5" style={{ fontFamily: "'Special Elite', monospace" }}>{copy}</p> : null}
+      {/* prose-ob solo en el texto: si envuelve la fila, pinta los botones de rojo. */}
+      <div className="prose-ob">
+        <h2>{title}</h2>
+        {copy ? <p className="text-[16px] leading-[1.8] mb-5" style={{ fontFamily: "'Special Elite', monospace" }}>{copy}</p> : null}
+      </div>
       {children}
     </section>
   )
 }
 
-function Cover({ src, alt, sizes = '64px' }: { src: string | null; alt: string; sizes?: string }) {
-  return <CardThumbnail src={src} alt={alt} aspectClass="aspect-square" frameClass="border-[2px] border-[var(--ink)]" sizes={sizes} />
+function Cover({ src, alt, sizes = '64px', frameClass = 'border-[2px] border-[var(--ink)]' }: { src: string | null; alt: string; sizes?: string; frameClass?: string }) {
+  return <CardThumbnail src={src} alt={alt} aspectClass="aspect-square" frameClass={frameClass} sizes={sizes} />
 }
 
-function RankedTracks({ tracks, unit, lang }: { tracks: FortnightDigestTrack[]; unit: string; lang: Locale }) {
+function RankedTracks({
+  tracks, unit, lang, artistSlugMap, labelSlugMap,
+}: {
+  tracks: FortnightDigestTrack[]
+  unit: string
+  lang: Locale
+  artistSlugMap?: Record<string, string>
+  labelSlugMap?: Record<string, string>
+}) {
   const max = Math.max(1, ...tracks.map((t) => t.value))
+  const { current, playing } = useContext(PlayCtx)
+  const chip = 'inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5'
   return (
-    <ol className="list-none !p-0 space-y-2">
+    <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
       {tracks.map((t, i) => {
+        const on = current === rowKeyOf(t) && playing
         const href = trackHref(t, lang)
-        const body = (
-          <div className="flex items-center gap-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] p-2 hover:bg-[#f7e733]/30 transition-colors">
-            <span className="w-10 shrink-0 whitespace-nowrap text-center text-[20px] font-black" style={display}>{i + 1}</span>
-            <div className="w-14 shrink-0"><Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="56px" /></div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[14px] font-bold uppercase" style={display}>{trackName(t)}</div>
-              <div className="truncate text-[12px] text-[var(--dim)]" style={mono}>{t.artists}{t.label ? ` · ${t.label}` : ''}</div>
-              <div className="mt-1 h-2 bg-[var(--ink)]/10">
-                <div className="h-2 bg-[var(--red)]" style={{ width: `${Math.max(6, (t.value / max) * 100)}%` }} />
+        const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
+        const release = formatTrackReleaseDisplay(t.release_date, null)
+        const advance = isAdvanceRelease(t.release_date)
+        const beatport = !!(t.external_url && /beatport\.com/i.test(t.external_url))
+        return (
+          <div
+            key={`${t.title}-${i}`}
+            className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="w-14 sm:w-16 shrink-0">
+                  <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="64px" frameClass="border-[3px] border-[var(--ink)]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="inline-block px-1.5 py-0.5 mb-0.5 text-[9px] font-black tracking-widest bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)]" style={mono}>
+                    #{i + 1}
+                  </span>
+                  <div className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={display}>
+                    {href ? (
+                      <Link href={href} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">{t.title}</Link>
+                    ) : t.title}
+                    {mix ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mix}</span> : null}
+                  </div>
+                  <div className="text-xs sm:text-sm mt-0.5 break-words" style={mono}>
+                    <ArtistNames artists={splitArtistDisplayLine(t.artists).map((name) => ({ name }))} mixName={t.mix_name} slugMap={artistSlugMap} lang={lang} />
+                    {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
+                    {release ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{release}</span></> : null}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="h-2 flex-1 bg-[var(--ink)]/10">
+                      <div className="h-2 bg-[var(--red)]" style={{ width: `${Math.max(6, (t.value / max) * 100)}%` }} />
+                    </div>
+                    <span className="shrink-0 text-[11px] whitespace-nowrap" style={mono}>
+                      <b className="text-[15px]" style={display}>{t.value}</b> {unit}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="track-action-bar">
+                {t.audio_src ? (
+                  <PlayButton
+                    track={t}
+                    className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 ${on ? '' : '!bg-transparent !text-[var(--ink)] hover:!bg-[var(--yellow)]'}`}
+                  />
+                ) : null}
+                {t.bpm != null && t.bpm > 0 ? <span className={`${chip} bg-[var(--uv)]`} style={mono}>{Math.round(t.bpm)}</span> : null}
+                {(t.music_key || '').trim() ? <span className={`${chip} bg-[var(--cyan)] whitespace-nowrap`} style={mono}>{(t.music_key || '').trim()}</span> : null}
+                <SaveButton track={t} lang={lang} />
+                {t.featured_id ? (
+                  <TrackShareButton source="featured" trackId={t.featured_id} weekDate={t.week_date || ''} lang={lang} shareTitle={`${t.title} — ${t.artists}`} />
+                ) : null}
+                {advance ? null : <SpotifyLinkButton url={t.spotify_url} title={t.title} artists={splitArtistDisplayLine(t.artists)} lang={lang} />}
+                {advance ? null : <TidalLinkButton url={t.tidal_url} lang={lang} />}
+                {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
               </div>
             </div>
-            <span className="shrink-0 text-right text-[12px]" style={mono}>
-              <b className="block text-[18px]" style={display}>{t.value}</b>{unit}
-            </span>
           </div>
         )
-        return (
-          <li key={`${t.title}-${i}`} className="!m-0 flex items-stretch gap-2">
-            {t.audio_src ? <PlayButton track={t} className="w-11 sm:w-12 shrink-0 border-[3px] text-[16px]" /> : null}
-            <div className="min-w-0 flex-1">
-              {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{body}</Link> : body}
-            </div>
-            <div className="shrink-0 self-center">
-              <SaveButton track={t} lang={lang} />
-            </div>
-          </li>
-        )
       })}
-    </ol>
+    </div>
   )
 }
 
@@ -235,7 +285,14 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
   )
 }
 
-export default function FortnightDigest({ digest: d, lang }: { digest: Digest; lang: Locale }) {
+export default function FortnightDigest({
+  digest: d, lang, artistSlugMap, labelSlugMap,
+}: {
+  digest: Digest
+  lang: Locale
+  artistSlugMap?: Record<string, string>
+  labelSlugMap?: Record<string, string>
+}) {
   const t = T[lang]
   const copy = d.copy[lang]
   const delta = d.totals.tracks - d.totals.prev_tracks
@@ -289,8 +346,7 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
 
   return (
     <PlayCtx.Provider value={playCtx}>
-    <div className="prose-ob">
-      <div className="ob-digest">
+    <div className="ob-digest">
       {/* Portada: mosaico de carátulas + cifras */}
       <div className="relative -mx-4 sm:mx-0 border-y-[3px] sm:border-[3px] border-[var(--ink)]">
         <div className="grid grid-cols-4 sm:grid-cols-6">
@@ -314,7 +370,9 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
       </div>
 
       {copy.intro ? (
-        <p className="mt-6 text-[17px] leading-[1.8]" style={{ fontFamily: "'Special Elite', monospace" }}>{copy.intro}</p>
+        <div className="prose-ob">
+          <p className="mt-6 text-[17px] leading-[1.8]" style={{ fontFamily: "'Special Elite', monospace" }}>{copy.intro}</p>
+        </div>
       ) : null}
 
       {d.released?.length > 0 && (
@@ -352,13 +410,13 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
 
       {d.played.length > 0 && (
         <Section title={t.played} copy={copy.played}>
-          <RankedTracks tracks={d.played} unit={t.plays} lang={lang} />
+          <RankedTracks tracks={d.played} unit={t.plays} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
         </Section>
       )}
 
       {d.voted.length > 0 && (
         <Section title={t.voted} copy={copy.voted}>
-          <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} />
+          <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
         </Section>
       )}
 
@@ -468,7 +526,6 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
         </Section>
       )}
 
-      </div>
     </div>
     </PlayCtx.Provider>
   )

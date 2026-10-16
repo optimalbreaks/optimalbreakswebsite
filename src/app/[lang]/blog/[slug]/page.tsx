@@ -28,6 +28,7 @@ import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
   filterArtistSlugMapForNames,
+  splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
@@ -150,6 +151,13 @@ export default async function BlogPostPage({ params }: Props) {
       if (labelName) trackLabelNames.add(labelName)
       const titleName = (t.title || '').trim()
       if (titleName) titles.add(titleName)
+    }
+    if (digest) {
+      for (const tr of [...(digest.released ?? []), ...digest.played, ...digest.voted]) {
+        for (const name of splitArtistDisplayLine(tr.artists)) trackArtistNames.add(name)
+        const labelName = (tr.label || '').trim()
+        if (labelName) trackLabelNames.add(labelName)
+      }
     }
 
     const titleList = Array.from(titles)
@@ -358,7 +366,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />}
 
       {albumTracks.length > 0 && (
         <div className={digest ? 'mt-12' : 'mb-10'}>

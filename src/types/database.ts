@@ -1133,6 +1133,10 @@ export interface FortnightDigestTrack {
   external_url: string | null
   /** Fuente del ▶ (preview proxificada, Bandcamp o tema completo). */
   audio_src?: string | null
+  bpm?: number | null
+  music_key?: string | null
+  spotify_url?: string | null
+  tidal_url?: string | null
 }
 
 export interface FortnightDigestName {

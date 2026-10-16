@@ -641,6 +641,10 @@ Devuelve SOLO este JSON:
     week_date: weekBy.get(f.chart_edition_id) || null,
     external_url: f.link_url || null,
     audio_src: audioSrc(f),
+    bpm: f.bpm ?? null,
+    music_key: f.music_key || null,
+    spotify_url: f.spotify_url ?? null,
+    tidal_url: f.tidal_url ?? null,
   })
   const slugOf = (n) => artistBy.get(normName(n))?.slug || null
 
@@ -677,6 +681,10 @@ Devuelve SOLO este JSON:
     week_date: v.primary?.source === 'featured' ? v.primary.week_date || null : null,
     external_url: v.external_url || v.youtube_url || null,
     audio_src: v.sample_url ? proxied(v.sample_url) : null,
+    bpm: v.bpm ?? null,
+    music_key: v.music_key || null,
+    spotify_url: v.spotify_url ?? null,
+    tidal_url: v.tidal_url ?? null,
   }))
 
   const digest = {
