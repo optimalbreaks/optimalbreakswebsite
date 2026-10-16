@@ -8,6 +8,7 @@
     "festivals": "Festivals",
     "scenes": "Scenes",
     "blog": "Blog",
+    "comic": "Comic",
     "mixes": "Mixes",
     "about": "About",
     "charts": "Tracks",
@@ -710,6 +711,10 @@
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",
       "description": "Your FAVORITE BREAKS SESSIONS page. All the best BREAKBEAT SESSIONS one click away. Classic mixes, video sessions and essential radio shows."
+    },
+    "comic": {
+      "title": "Comic: The adventures of the Pig and the Pickle",
+      "description": "Don’t be a suckling pig. The Optimal Breaks series: the story of the pig, Super Pig, the Breakbeat Pickle and the whole gang, with every episode on video."
     },
     "about": {
       "title": "About Optimal Breaks",

@@ -8,6 +8,7 @@
     "festivals": "Festivales",
     "scenes": "Escenas",
     "blog": "Blog",
+    "comic": "Cómic",
     "mixes": "Mixes",
     "about": "Sobre",
     "charts": "Tracks",
@@ -596,6 +597,10 @@
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",
       "description": "Tu PÁGINA DE SESIONES BREAKS favorita. Todas las mejores SESIONES de Breakbeat a un solo clic. Mixes clásicos, sesiones en vídeo y programas imprescindibles."
+    },
+    "comic": {
+      "title": "Cómic: Las aventuras del Lechón y el Pepino",
+      "description": "No seas lechón. La serie de Optimal Breaks: la historia del lechón, Super Lechón, el Pepino del breakbeat y toda la pandilla, con todos los episodios en vídeo."
     },
     "about": {
       "title": "Qué es Optimal Breaks",

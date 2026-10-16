@@ -1,0 +1,161 @@
+/* ============================================
+   OPTIMAL BREAKS — /comic (Las aventuras del Lechón y el Pepino)
+   Estilo fanzine de los vídeos: papel, tinta, rojo y amarillo.
+   Todo va bajo .cmc para no tocar el resto de la web.
+   ============================================ */
+
+.cmc {
+  --cmc-paper: #f3ead8;
+  --cmc-paper-2: #ebdfc6;
+  --cmc-white: #fffdf7;
+  --cmc-head: 'Unbounded', 'Arial Black', sans-serif;
+  --cmc-body: 'Courier Prime', 'Special Elite', ui-monospace, monospace;
+  --cmc-gut: clamp(16px, 4vw, 48px);
+  background: var(--cmc-paper);
+  color: var(--ink);
+  font: 400 18px/1.55 var(--cmc-body);
+  overflow-x: clip;
+}
+.cmc img, .cmc video { display: block; max-width: 100%; height: auto; }
+.cmc a { color: inherit; }
+.cmc :focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+.cmc h1, .cmc h2, .cmc h3 { font-family: var(--cmc-head); font-weight: 900; line-height: .98; letter-spacing: -.01em; }
+.cmc-wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--cmc-gut); }
+.cmc-inked { text-shadow: .06em .06em 0 var(--red); }
+.cmc-mark { background: var(--yellow); box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: 0 .15em; }
+.cmc-cue { font: 700 14px/1.3 var(--cmc-body); letter-spacing: .18em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; }
+.cmc-btn {
+  display: inline-flex; align-items: center; font: 900 15px/1.1 var(--cmc-head); text-decoration: none; padding: 16px 22px;
+  border: 3px solid var(--ink); background: var(--red); color: #fff !important; box-shadow: 6px 6px 0 var(--ink);
+  transition: transform .12s, box-shadow .12s; cursor: pointer;
+}
+.cmc-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--ink); }
+.cmc-btn:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--ink); }
+.cmc-btn.is-ghost { background: var(--cmc-white); color: var(--ink) !important; }
+
+/* ---------- portada ---------- */
+.cmc-hero { padding: clamp(40px, 7vw, 96px) 0 clamp(56px, 8vw, 110px); }
+.cmc-hero .cmc-wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(24px, 5vw, 64px); align-items: center; }
+.cmc-hero h1 { font-size: clamp(52px, 9vw, 132px); }
+.cmc-hero h1 .cmc-mark { display: inline-block; margin-top: .08em; }
+.cmc-hero-text { max-width: 34ch; margin: 28px 0 32px; font-size: 19px; }
+.cmc-ctas { display: flex; flex-wrap: wrap; gap: 18px; }
+.cmc-strip { position: relative; transform: rotate(1.6deg); margin: 0; }
+.cmc-strip img { width: 100%; border: 10px solid var(--cmc-white); box-shadow: 10px 12px 0 var(--ink); }
+.cmc-tape { position: absolute; width: 120px; height: 34px; background: rgba(247, 231, 51, .85); top: -16px; left: 40%; transform: rotate(-4deg); }
+.cmc-zas {
+  position: absolute; right: -14px; bottom: -26px; font: 900 clamp(26px, 4vw, 46px)/1 var(--cmc-head); background: var(--yellow);
+  border: 3px solid var(--ink); padding: 10px 16px; transform: rotate(-6deg); box-shadow: 5px 5px 0 var(--ink);
+}
+@media (max-width: 860px) {
+  .cmc-hero .cmc-wrap { grid-template-columns: 1fr; }
+  .cmc-strip { margin-top: 12px; }
+  .cmc-zas { right: 6px; }
+}
+
+/* ---------- historia ---------- */
+.cmc-story { background: var(--ink); color: var(--cmc-paper); padding: clamp(56px, 8vw, 110px) 0; }
+.cmc-story .cmc-wrap { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); align-items: start; }
+.cmc-story h2 { font-size: clamp(36px, 5.4vw, 72px); color: var(--cmc-paper); }
+.cmc-story h2 .cmc-mark { color: var(--ink); }
+.cmc-lead { font-size: 20px; max-width: 46ch; margin-top: 26px; }
+.cmc-story-text { max-width: 46ch; opacity: .85; margin-top: 18px; }
+.cmc-field {
+  background: var(--cmc-white); color: var(--ink); border: 3px solid var(--ink); padding: 28px 30px 34px; position: relative;
+  transform: rotate(-1.2deg); box-shadow: 10px 10px 0 var(--red);
+}
+.cmc-field-no { font: 700 13px/1 var(--cmc-body); letter-spacing: .2em; color: var(--red); }
+.cmc-field h3 { font-size: 30px; margin: 10px 0 4px; }
+.cmc-latin { font-style: italic; margin-bottom: 18px; }
+.cmc-field ul { list-style: none; }
+.cmc-field li { display: flex; gap: 14px; align-items: center; padding: 10px 0; border-top: 2px dashed #c9bfa8; font-weight: 700; }
+.cmc-field li i { flex: none; width: 26px; height: 26px; display: grid; place-items: center; font-style: normal; background: var(--ink); color: var(--cmc-paper); font-size: 16px; }
+.cmc-field li.is-no i { background: var(--red); }
+.cmc-stamp {
+  position: absolute; right: 20px; bottom: -22px; font: 900 34px/1 var(--cmc-head); color: var(--red); border: 5px double var(--red);
+  padding: 8px 16px; transform: rotate(-9deg); background: rgba(255, 253, 247, .9);
+}
+.cmc-steps { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: clamp(40px, 6vw, 72px); list-style: none; counter-reset: cmc-s; }
+.cmc-steps li { border: 3px solid var(--cmc-paper); padding: 22px 22px 26px; position: relative; }
+.cmc-steps li::before {
+  counter-increment: cmc-s; content: counter(cmc-s); position: absolute; top: -20px; left: 18px; width: 40px; height: 40px; display: grid; place-items: center;
+  font: 900 18px/1 var(--cmc-head); background: var(--yellow); color: var(--ink); border: 3px solid var(--ink);
+}
+.cmc-steps h3 { font-size: 24px; margin: 10px 0; color: var(--yellow); }
+.cmc-steps p { opacity: .9; }
+@media (max-width: 860px) {
+  .cmc-story .cmc-wrap { grid-template-columns: 1fr; }
+  .cmc-steps { grid-template-columns: 1fr; gap: 34px; }
+}
+
+/* ---------- personajes ---------- */
+.cmc-cast { padding: clamp(64px, 9vw, 120px) 0; }
+.cmc-sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 40px; margin-bottom: clamp(32px, 5vw, 56px); }
+.cmc-sec-head h2 { font-size: clamp(40px, 6vw, 84px); }
+.cmc-sec-head p { max-width: 40ch; }
+.cmc-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(22px, 3vw, 36px); }
+.cmc-card {
+  grid-column: span 4; background: var(--cmc-white); border: 3px solid var(--ink); padding: 12px 12px 18px; box-shadow: 7px 7px 0 var(--ink);
+  display: flex; flex-direction: column;
+}
+.cmc-card:nth-child(3n+1) { transform: rotate(-.8deg); }
+.cmc-card:nth-child(3n+2) { transform: rotate(.6deg); }
+.cmc-card:nth-child(3n) { transform: rotate(-.3deg); }
+.cmc-card.is-big { grid-column: span 6; }
+.cmc-card.is-yellow { background: var(--yellow); }
+.cmc-pic { aspect-ratio: 4 / 3; overflow: hidden; background: var(--cmc-paper); border: 2px solid var(--ink); }
+.cmc-card.is-yellow .cmc-pic { background: var(--cmc-white); }
+.cmc-pic img { width: 100%; height: 100%; object-fit: cover; }
+.cmc-pic.is-contain img { object-fit: contain; }
+.cmc-card h3 { font-size: 22px; margin: 16px 4px 4px; }
+.cmc-card p { margin: 0 4px; }
+.cmc-card .cmc-role { margin-bottom: 10px; font-weight: 700; color: var(--red); }
+.cmc-card q { display: block; margin: 14px 4px 0; font: 700 15px/1.35 var(--cmc-head); quotes: '«' '»'; }
+.cmc-card details { margin: 14px 4px 0; border-top: 2px dashed #c9bfa8; padding-top: 10px; }
+.cmc-card summary { cursor: pointer; font-weight: 700; list-style: none; }
+.cmc-card summary::-webkit-details-marker { display: none; }
+.cmc-card summary::before { content: '+ '; color: var(--red); font-weight: 900; }
+.cmc-card details[open] summary::before { content: '– '; }
+.cmc-card details ul { margin-top: 10px; padding-left: 18px; }
+.cmc-card details li { margin: 4px 0; }
+@media (max-width: 980px) { .cmc-card, .cmc-card.is-big { grid-column: span 6; } }
+@media (max-width: 620px) { .cmc-card, .cmc-card.is-big { grid-column: 1 / -1; transform: none !important; } }
+
+/* ---------- episodios ---------- */
+.cmc-eps { background: var(--cmc-paper-2); border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); padding: clamp(64px, 9vw, 120px) 0; }
+.cmc-theatre { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: clamp(24px, 3vw, 40px); align-items: start; }
+.cmc-screen { background: var(--ink); border: 3px solid var(--ink); box-shadow: 10px 10px 0 var(--red); display: flex; justify-content: center; }
+.cmc-screen video { width: 100%; aspect-ratio: 16 / 9; max-height: 78vh; background: #000; object-fit: contain; }
+.cmc-screen.is-v video { aspect-ratio: 9 / 16; width: auto; height: min(78vh, 880px); max-width: 100%; }
+.cmc-now { margin-top: 26px; }
+.cmc-now h3 { font-size: clamp(26px, 3.2vw, 40px); }
+.cmc-meta { margin: 10px 0 12px; font-weight: 700; }
+.cmc-now p { max-width: 62ch; }
+.cmc-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.cmc-seg { display: inline-flex; border: 3px solid var(--ink); background: var(--cmc-white); }
+.cmc-seg button { font: 700 14px/1 var(--cmc-body); border: 0; background: none; padding: 10px 14px; cursor: pointer; color: var(--ink); }
+.cmc-seg button + button { border-left: 3px solid var(--ink); }
+.cmc-seg button[aria-pressed='true'] { background: var(--ink); color: var(--yellow); }
+.cmc-list { display: flex; flex-direction: column; gap: 14px; }
+.cmc-ep {
+  display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: center; text-align: left; width: 100%; background: var(--cmc-white);
+  border: 3px solid var(--ink); padding: 8px; cursor: pointer; font: inherit; color: inherit; transition: transform .12s;
+}
+.cmc-ep:hover { transform: translateX(4px); }
+.cmc-ep img { width: 120px; aspect-ratio: 16 / 9; object-fit: cover; border: 2px solid var(--ink); }
+.cmc-ep b { display: block; font: 900 15px/1.1 var(--cmc-head); }
+.cmc-ep small { display: block; margin-top: 4px; font-size: 14px; }
+.cmc-ep[aria-current='true'] { background: var(--yellow); box-shadow: 6px 6px 0 var(--ink); }
+.cmc-soon { border: 3px dashed var(--ink); padding: 16px; font-size: 15px; }
+.cmc-soon b { font-family: var(--cmc-head); font-size: 14px; display: block; margin-bottom: 6px; }
+@media (max-width: 980px) { .cmc-theatre { grid-template-columns: 1fr; } }
+
+/* ---------- vota ---------- */
+.cmc-vote { background: var(--yellow); padding: clamp(56px, 8vw, 100px) 0; }
+.cmc-vote .cmc-wrap { display: flex; flex-wrap: wrap; gap: 28px 48px; align-items: center; justify-content: space-between; }
+.cmc-vote h2 { font-size: clamp(40px, 7vw, 104px); }
+.cmc-vote p { max-width: 40ch; margin-top: 16px; font-size: 19px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cmc-btn, .cmc-ep { transition: none; }
+}

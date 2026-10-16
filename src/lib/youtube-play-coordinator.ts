@@ -79,6 +79,8 @@ function ensureClaimChannel(): BroadcastChannel | null {
       // este se calla del todo (global + embed activo).
       stopGlobalPlaybackIfAny()
       stopYouTubeEmbedIfAny()
+      // El vídeo de /comic no está en el reproductor global: se entera por este aviso.
+      window.dispatchEvent(new CustomEvent('ob-audio-foreign'))
     }
   } catch {
     claimChannel = null

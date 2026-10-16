@@ -55,6 +55,7 @@ export function absoluteOgImage(url?: string | null, lang?: Locale): string {
 
 export type SeoStaticKey =
   | 'home'
+  | 'comic'
   | 'history'
   | 'artists'
   | 'labels'

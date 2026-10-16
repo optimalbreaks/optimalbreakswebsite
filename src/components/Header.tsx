@@ -244,6 +244,7 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'mixes', href: `/${lang}/mixes` },
     { key: 'scenes', href: `/${lang}/scenes` },
     { key: 'blog', href: `/${lang}/blog` },
+    { key: 'comic', href: `/${lang}/comic` },
     { key: 'about', href: `/${lang}/about` },
   ]
 

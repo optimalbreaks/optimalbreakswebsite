@@ -384,6 +384,7 @@ export type AudioClaimSource =
   | 'chart-playall'
   | 'beatport-top'
   | 'my-tracks'
+  | 'comic'
 
 export function claimAudio(source: AudioClaimSource) {
   // Avisa a otras pestañas/ventanas PWA (lockscreen, Safari + icono…) de que
@@ -2827,6 +2828,15 @@ export function DeckAudioProvider({
         // → parar preview
         if (previewQueue.length > 0) stopPreviewInternal()
         setMode((m) => (m === 'preview' ? 'idle' : m))
+        return
+      }
+      if (src === 'comic') {
+        if (previewQueue.length > 0) stopPreviewInternal()
+        setMode((m) => (m === 'preview' ? 'idle' : m))
+        if (playingA && audioRefA.current) { audioRefA.current.pause(); setPlayingA(false) }
+        if (playingB && audioRefB.current) { audioRefB.current.pause(); setPlayingB(false) }
+        if (currentMix) stopMixInternal()
+        setSessionActive(false)
         return
       }
       // Cualquier otra cosa la tratamos como "preview" (inclusive los alias legacy):
