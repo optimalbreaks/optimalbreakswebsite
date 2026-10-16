@@ -1134,7 +1134,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     d.voted[0] ? `MOST VOTED: ${d.voted[0].title.toUpperCase()}` : '',
     d.artists[0] ? `TOP RELEASER: ${d.artists[0].name.toUpperCase()}` : '',
     d.bpm ? `AVG ${Math.round(d.bpm)} BPM` : '',
-    `${d.debutTotal} DEBUTS`,
+    d.debutTotal ? `${d.debutTotal} NEW TO THE CATALOGUE` : '',
     '',
   ].filter((f, i, a) => f || i === a.length - 1).join(' · ')
   ctx.fillStyle = YELLOW
@@ -1302,7 +1302,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       }
     })
   } else {
-    fnHeader(ctx, L, lt, 'NEW NAMES', `${d.debutTotal} DEBUTS`, d.debut.slice(0, 4).join(' · '), ACID)
+    fnHeader(ctx, L, lt, 'OUT THIS FORTNIGHT', `${d.totals.releases} RELEASES`, `${d.totals.tracks} TRACKS · ${d.totals.artists} ARTISTS`, ACID)
     const cols = 4
     const gap = 14
     const cs = (S.w - gap * (cols - 1)) / cols

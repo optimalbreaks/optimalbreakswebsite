@@ -43,7 +43,7 @@ const T = {
     sound: 'Radiografía sonora',
     avgBpm: 'BPM MEDIO',
     keys: 'TONALIDADES',
-    debut: 'Debutantes',
+    debut: 'Nuevos en el catálogo',
     debutMore: (n: number) => `y ${n} más`,
   },
   en: {
@@ -67,7 +67,7 @@ const T = {
     sound: 'Sound check',
     avgBpm: 'AVERAGE BPM',
     keys: 'KEYS',
-    debut: 'Debut artists',
+    debut: 'New to the catalogue',
     debutMore: (n: number) => `and ${n} more`,
   },
 }
