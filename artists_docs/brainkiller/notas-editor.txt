@@ -1,0 +1,81 @@
+Revisión editorial — The Brainkiller (16 oct 2026)
+=================================================
+
+La ficha estaba contaminada con otro proyecto (Brainkiller / Brainkillers,
+Alemania, hardcore y jungle de los 90, Dance the Monkey, Lion MC, All You
+Ladies, directo de 1995, supuesto dúo). ESO NO ES este artista. Borrar
+el bloque entero. No rescatar nada.
+
+El artista ha escrito que se llama The Brainkiller, no Brainkiller.
+- slug: se queda brainkiller (la URL /artists/brainkiller no se rompe).
+- name: The Brainkiller
+- name_display: THE BRAINKILLER
+- El mapa de slugs ya indexa «The X» y «X». Los créditos de Beatport
+  ya dicen The Brainkiller. En related_artists de Paket el chip decía
+  «Brainkiller»: pasa a «The Brainkiller». En la bio de Khaine, el
+  mismo cambio en el cartel compartido.
+
+Identidad
+---------
+- real_name: Juan Luis Cruz. También Juanlu.
+  Beatport dice Juan Luis. Mixmag Spain lo identifica como Juan Luis Cruz,
+  «Juanlu, de origen malagueño». DJ Mag España usa Juanlu Cruz.
+- Origen: Málaga · Andalucía · España. country ES, category andalusian.
+  NO es alemán. El country «Germany» venía de la ficha equivocada y
+  countryNameFromCode lo enseñaba como Alemania.
+- DJ, productor y remixer. Agencia actual: BreakB (DJ set), desde la
+  costa malagueña.
+- Más de veinte años. En 2022 el Bandcamp oficial ya decía «making music
+  for two decades». Beatport habla de más de una década. No se fija un
+  año de inicio exacto. era: 2000s-present.
+- styles: Breakbeat, Breaks, UK Bass, Tearout.
+  Jungle y hardcore NO. Electro, drum & bass y dubstep son de etapa
+  (Musication nace con Breaks, Electro, Dubstep y Drum & Bass), no el
+  género de cabecera.
+
+Sellos
+------
+- Casa histórica: Musication Records (Málaga, 2013). Uno de sus artistas
+  principales. No se marca labels_founded: no consta que lo fundara.
+  La ficha de sello /labels/musication-records en esta web describe un
+  imprint británico de los 90. Es otra contaminación. No enlazarla
+  como si fuera su casa hasta reescribirla.
+- Funn Dark Records: la otra casa de ese tramo (Beatport, muchas
+  referencias). La ficha de sello de esta web también está en los 90
+  británicos. Mismo aviso. Bandsintown cita además FRESH & DARKNESS.
+- Elektroshok Records: tercera casa grande (In The Funk, Bliss, Pump It
+  Up y Wiger Toods con Destroyers, temas con Aggresivnes).
+
+Discografía que sí es suya
+--------------------------
+- Music & Science, Vol. 1 — Musication MSR018 — Beatport 17 mar 2014
+  (Spotify lista 31 mar 2014). Con Goodiva y Vertikal.
+- Music & Science, Vol. 2 — Musication MSR024 — Beatport 25 may 2015
+  (Spotify lista 8 jun 2015). Con V.Aparicio y Goodiva.
+- In The Funk — Elektroshok — diciembre 2015.
+- Afrodita EP — Musication — 6 jun 2016 — 4 temas.
+- Cunnilingus — Musication — 2019.
+- The Tearout Story — 2022 — 50 temas. Bandcamp oficial.
+- 2025: Bliss (Elektroshok), Chase The Sound (83; nº 1 de su Top 10
+  de Beatport), Shine (Sound Perfect), Crispy con DJ Tortu (Distorsion).
+
+Directo reciente
+----------------
+- Heat Closing Boiler XL 2025, con MC Dohiser, Lady Waks y Mutantbreakz.
+- Híbrida Fest 2026: Special Retro Tear Out Set, escenario Breakbeat Retro.
+- Raveart Winter Festival 2026.
+
+related_artists: DJ Tortu, José Rodríguez, Destroyers, Aggresivnes, Paket.
+Conservar retrato de Storage y sort_order 154. beatport_id 125530
+(https://www.beatport.com/artist/the-brainkiller/125530).
+
+Top 10
+------
+El que había en la ficha era del OTRO perfil de Beatport, id 51182
+(«Brainkiller», sin The): Electrolia, remix de un tema de Peter Paul,
+y Destroy The World en iBreaks Bass. Se ha vaciado. El 16 oct 2026
+Beatport contestó 403 «Just a moment…», así que no se ha rellenado el
+Top 10 del id 125530. Cuando la tienda responda, Chase The Sound debe
+salir el primero.
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+NO volver a meter Dance the Monkey, Lion MC ni 1995.
