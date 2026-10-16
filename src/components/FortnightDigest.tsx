@@ -116,7 +116,7 @@ function saveOf(t: FortnightDigestTrack): PreviewSaveData | undefined {
   }
 }
 
-function SaveButton({ track, lang }: { track: FortnightDigestTrack; lang: Locale }) {
+function SaveButton({ track, lang, className = '' }: { track: FortnightDigestTrack; lang: Locale; className?: string }) {
   const save = saveOf(track)
   if (!save || save.mode !== 'ref') return null
   return (
@@ -127,6 +127,7 @@ function SaveButton({ track, lang }: { track: FortnightDigestTrack; lang: Locale
       snapshot={save.snapshot ?? null}
       lang={lang}
       size="sm"
+      className={className}
     />
   )
 }
@@ -380,8 +381,15 @@ export default function FortnightDigest({
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
             {d.released.map((r, i) => {
               const href = trackHref(r, lang)
-              const card = (
-                <div className="h-full border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+              const text = (
+                <div className="p-1.5 sm:p-2">
+                  <div className="text-[10px] sm:text-[12px] font-black uppercase line-clamp-2" style={display}>{r.artists}</div>
+                  <div className="text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(r)}</div>
+                  {r.label ? <div className="text-[9px] sm:text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
+                </div>
+              )
+              return (
+                <div key={i} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
                   <div className="relative">
                     <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
                     {r.value > 1 && (
@@ -389,18 +397,10 @@ export default function FortnightDigest({
                         {r.value} {t.tracks}
                       </span>
                     )}
+                    <PlayButton track={r} className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
+                    <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
                   </div>
-                  <div className="p-1.5 sm:p-2">
-                    <div className="text-[10px] sm:text-[12px] font-black uppercase line-clamp-2" style={display}>{r.artists}</div>
-                    <div className="text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(r)}</div>
-                    {r.label ? <div className="text-[9px] sm:text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
-                  </div>
-                </div>
-              )
-              return (
-                <div key={i} className="relative">
-                  {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : card}
-                  <PlayButton track={r} className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
+                  {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{text}</Link> : text}
                 </div>
               )
             })}
