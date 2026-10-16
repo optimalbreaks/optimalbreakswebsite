@@ -76,16 +76,18 @@ function loadImg(src: string): Promise<Img | null> {
 /** Carátulas como imágenes listas para el canvas (null si no se pudo). */
 async function loadArtworks(urls: (string | null)[]): Promise<(Img | null)[]> {
   const pending = [...new Set(urls.filter((u): u is string => !!u && !imageCache.has(u)))]
-  if (pending.length) {
+  // La API corta a 16 URLs por petición (MAX_URLS en share-reel-images).
+  for (let start = 0; start < pending.length; start += 16) {
+    const batch = pending.slice(start, start + 16)
     const req = fetch('/api/admin/share-reel-images', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ urls: pending }),
+      body: JSON.stringify({ urls: batch }),
     })
       .then((r) => (r.ok ? r.json() : { images: [] }))
       .then((j: { images?: (string | null)[] }) => j.images || [])
       .catch(() => [] as (string | null)[])
-    pending.forEach((u, i) => {
+    batch.forEach((u, i) => {
       imageCache.set(
         u,
         req.then((list) => (list[i] ? loadImg(list[i] as string) : null)),
