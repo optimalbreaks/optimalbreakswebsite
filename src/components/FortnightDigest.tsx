@@ -232,14 +232,6 @@ function RankedTracks({
                     {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                     {release ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{release}</span></> : null}
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="h-2 flex-1 bg-[var(--ink)]/10">
-                      <div className="h-2 bg-[var(--red)]" style={{ width: `${Math.max(6, (t.value / max) * 100)}%` }} />
-                    </div>
-                    <span className="shrink-0 text-[11px] whitespace-nowrap" style={mono}>
-                      <b className="text-[15px]" style={display}>{t.value}</b> {unit}
-                    </span>
-                  </div>
                 </div>
               </div>
               <div className="track-action-bar">
@@ -259,6 +251,14 @@ function RankedTracks({
                 {advance ? null : <TidalLinkButton url={t.tidal_url} lang={lang} />}
                 {beatport && t.external_url ? <BeatportLinkButton url={t.external_url} lang={lang} /> : null}
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-3 flex-1 border-2 border-[var(--ink)] bg-[var(--paper-dark)]">
+                <div className="h-full bg-[var(--red)]" style={{ width: `${Math.max(3, (t.value / max) * 100)}%` }} />
+              </div>
+              <span className="shrink-0 min-w-[96px] text-right text-[11px] whitespace-nowrap" style={mono}>
+                <b className="text-[16px]" style={display}>{t.value}</b> {unit}
+              </span>
             </div>
           </div>
         )
