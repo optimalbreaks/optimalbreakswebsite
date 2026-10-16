@@ -10,13 +10,15 @@
  *   npm run db:blog:agent -- slug "Título" --save-json
  *   npm run db:blog:agent -- slug --from-json
  *   npm run db:blog:agent -- slug --from-json data/blog/slug.json
- *   npm run db:blog:agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--brief notas.txt]
+ *   npm run db:blog:agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar] [--brief notas.txt]
  *
- * --quincena: artículo de los 14 días que acaban ese día (por defecto, hoy en Madrid).
+ * --quincena: resumen de los 14 días que acaban ese día (por defecto, hoy en Madrid).
  * Lanzamientos, Top 100, escuchas, votos (misma regla que /top100, vía
  * /api/public/charts/community-monthly?since&until de producción), sonido,
- * debutantes, sesiones y adelantos. Se guarda como BORRADOR, categoría ranking,
- * con los temas destacados en beatport_tracks. --solo-datos imprime las notas y sale.
+ * debutantes, sesiones y adelantos. Los datos van a `blog_posts.digest` y la ficha
+ * los pinta con gráficos y carátulas (FortnightDigest); el modelo solo escribe
+ * frases cortas por bloque. Se publica al momento (--borrador para no publicar).
+ * No pisa una quincena publicada salvo con --forzar. --solo-datos imprime los datos y sale.
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
@@ -393,7 +395,7 @@ async function computeQuincena(until) {
   const sinceIso = `${addDaysYmd(from, -1)}T00:00:00Z`
 
   const [editions, featAll, artistRows, labelRows] = await Promise.all([
-    fetchAllRows(sb, 'chart_editions', 'id, is_published'),
+    fetchAllRows(sb, 'chart_editions', 'id, is_published, week_date'),
     fetchAllRows(
       sb,
       'chart_featured_tracks',
@@ -404,6 +406,7 @@ async function computeQuincena(until) {
     fetchAllRows(sb, 'labels', 'id, slug, name'),
   ])
   const unpublished = new Set(editions.filter((e) => e.is_published === false).map((e) => e.id))
+  const weekBy = new Map(editions.map((e) => [e.id, e.week_date]))
   const feat = featAll
     .filter((f) => !unpublished.has(f.chart_edition_id))
     .map((f) => ({ ...f, names: artistNames(f.artists) }))
@@ -526,11 +529,11 @@ async function computeQuincena(until) {
   const mixPlays = await fetchAllRows(sb, 'mix_play_events', 'id, mix_id, created_at', (q) => q.gte('created_at', sinceIso))
   const mixCount = new Map()
   for (const p of mixPlays) if (inWin(madridDay(p.created_at))) inc(mixCount, p.mix_id)
-  const newMixes = (await fetchAllRows(sb, 'mixes', 'id, slug, title, artist_name, download_url, created_at', (q) => q.gte('created_at', sinceIso)))
+  const newMixes = (await fetchAllRows(sb, 'mixes', 'id, slug, title, artist_name, download_url, image_url, created_at', (q) => q.gte('created_at', sinceIso)))
     .filter((m) => inWin(madridDay(m.created_at)) && !/^unknown$/i.test(String(m.artist_name || '').trim()))
   const mixIds = [...new Set([...mixCount.keys(), ...newMixes.map((m) => m.id)])]
   const mixRows = mixIds.length
-    ? (await sb.from('mixes').select('id, slug, title, artist_name, download_url').in('id', mixIds.slice(0, 200))).data || []
+    ? (await sb.from('mixes').select('id, slug, title, artist_name, download_url, image_url').in('id', mixIds.slice(0, 200))).data || []
     : []
   const mixById = new Map(mixRows.map((m) => [m.id, m]))
   const mixLine = (m) => `[${m.title}](/mixes/${m.slug})${m.download_url ? ' — descarga gratis en MP3' : ''}`
@@ -607,14 +610,127 @@ async function computeQuincena(until) {
   const brief = `ARTÍCULO QUINCENAL DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
 ${data}
 
-INSTRUCCIONES:
-- Artículo periódico tipo ranking: «qué ha pasado en el breakbeat en estos 14 días». Mismo contenido en ES y EN.
-- Estructura con ## por bloque, en este orden: panorama; artistas con más lanzamientos (explica que un álbum largo pesa más que un single); estrellas del Top 100 con temas nuevos (el bloque estrella, desarrolla 4–6 nombres); lo más escuchado; lo más votado; sellos y remixers; radiografía sonora; debutantes (destaca solo nombres conocidos con seguridad); sesiones y exclusivas; lo que se viene. Salta un bloque si no hay datos.
-- Escuchas y votos son de una comunidad pequeña: cuenta sobre todo puestos («el más escuchado», «segundo»), cifras solo cuando aporten.
-- Mantén los enlaces internos tal y como vienen ([Nombre](/artists/slug), [Sello](/labels/slug), [Sesión](/mixes/slug)). No inventes slugs. Cierra invitando a /charts, /top100 y /mixes.
-- Nada de suposiciones sobre estilo, biografía o país de un artista que no esté en los datos.
-- Al final del artículo se monta un reproductor con los temas destacados: puedes decir «escúchalos abajo».
-- category: "ranking". tags: incluye "quincena", "new releases", "breakbeat", "top 100" y 2–4 más. is_published: false.`
+QUÉ ESCRIBES: SOLO TEXTOS CORTOS
+La página ya pinta los datos con gráficos, carátulas, rankings y fotos. Tú pones la voz: frases de revista musical, con gancho, que digan lo que el gráfico no dice (quién destaca, qué sorprende, qué conviene escuchar).
+- Un texto por bloque: intro, top100, played, voted, artists, labels, sound, debut, sessions, upcoming.
+- intro: 2 frases como máximo. Los demás: 1–2 frases, 40 palabras como máximo cada uno.
+- No repitas listas ni cifras que ya enseña el gráfico; cita como mucho 1–3 nombres por bloque.
+- En «artists», di si el primero lo es por un álbum largo.
+- Escuchas y votos vienen de una comunidad pequeña: puestos, no cifras.
+- Texto plano: sin markdown, sin enlaces, sin comillas tipográficas dobles anidadas.
+- Nada que no esté en los datos (ni estilo, ni biografía, ni país). Si un bloque no tiene datos, cadena vacía.
+
+Devuelve SOLO este JSON:
+{
+  "title_es": "titular con gancho, menos de 70 caracteres, que nombre a 1–2 protagonistas y diga que es la quincena",
+  "title_en": "...",
+  "excerpt_es": "1 frase, 150–200 caracteres",
+  "excerpt_en": "...",
+  "tags": ["quincena", "new releases", "breakbeat", "top 100", "… 2–4 nombres propios"],
+  "copy_es": { "intro": "", "top100": "", "played": "", "voted": "", "artists": "", "labels": "", "sound": "", "debut": "", "sessions": "", "upcoming": "" },
+  "copy_en": { mismas claves, en inglés }
+}`
+
+  const toTrack = (f, value = 0) => ({
+    title: f.title,
+    mix_name: f.mix_name || null,
+    artists: f.names.join(', '),
+    artwork_url: f.artwork_url || null,
+    label: f.label || null,
+    release_date: f.release_date || null,
+    value,
+    featured_id: f.id,
+    week_date: weekBy.get(f.chart_edition_id) || null,
+    external_url: f.link_url || null,
+  })
+  const slugOf = (n) => artistBy.get(normName(n))?.slug || null
+
+  const coverSeen = new Set()
+  const covers = []
+  const pushCover = (u) => { if (u && !coverSeen.has(u) && covers.length < 12) { coverSeen.add(u); covers.push(u) } }
+  playedWin.forEach(([id]) => pushCover(featById.get(id)?.artwork_url))
+  exclusives.forEach((f) => pushCover(f.artwork_url))
+  for (const a of top100) for (const f of winByArtist.get(normName(a.name)) || []) pushCover(f.artwork_url)
+  win.forEach((f) => pushCover(f.artwork_url))
+
+  const voted = (votes.top_tracks || []).slice(0, 10).map((v) => ({
+    title: v.title,
+    mix_name: v.mix_name || null,
+    artists: v.artists,
+    artwork_url: v.artwork_url || null,
+    label: v.label || null,
+    release_date: v.release_date || null,
+    value: v.unique_users,
+    featured_id: v.primary?.source === 'featured' ? v.primary.id : null,
+    week_date: v.primary?.source === 'featured' ? v.primary.week_date || null : null,
+    external_url: v.external_url || v.youtube_url || null,
+  }))
+
+  const sessionRows = [
+    ...ranked(mixCount, 8).map(([id, c]) => ({ m: mixById.get(id), plays: c })),
+    ...newMixes.map((m) => ({ m: mixById.get(m.id) || m, plays: mixCount.get(m.id) || 0 })),
+  ]
+  const sessionSeen = new Set()
+  const sessions = []
+  for (const { m, plays } of sessionRows) {
+    if (!m || sessionSeen.has(m.id) || sessions.length >= 8 || /^unknown$/i.test(String(m.artist_name || '').trim())) continue
+    sessionSeen.add(m.id)
+    sessions.push({ title: m.title, artist: m.artist_name, slug: m.slug, image_url: m.image_url || null, download: !!m.download_url, plays })
+  }
+
+  const upcomingSeen = new Set()
+  const upcoming = []
+  for (const [id] of playedFuture) { const f = featById.get(id); upcomingSeen.add(f.id); upcoming.push(toTrack(f)) }
+  for (const a of top100) {
+    if (upcoming.length >= 8) break
+    const f = (futureByArtist.get(normName(a.name)) || []).sort((x, y) => x.release_date.localeCompare(y.release_date))[0]
+    if (f && !upcomingSeen.has(f.id)) { upcomingSeen.add(f.id); upcoming.push(toTrack(f)) }
+  }
+
+  const digest = {
+    from,
+    until,
+    totals: {
+      tracks: win.length,
+      artists: perArtistTracks.size,
+      labels: new Set(win.map((f) => f.label).filter(Boolean)).size,
+      releases: releases.size,
+      prev_tracks: prev.length,
+    },
+    covers,
+    copy: null,
+    top100: top100
+      .filter((a) => winByArtist.has(normName(a.name)))
+      .slice(0, 8)
+      .map((a) => ({
+        rank: a.rank,
+        name: a.name,
+        slug: a.slug || slugOf(a.name),
+        image_url: a.image_url || null,
+        tracks: winByArtist.get(normName(a.name)).slice(0, 6).map((f) => toTrack(f)),
+      })),
+    played: playedWin.map(([id, c]) => toTrack(featById.get(id), c)),
+    voted,
+    votes_total: votes.totals?.saves ?? 0,
+    voters_total: votes.totals?.unique_users ?? 0,
+    artists: topArtists.slice(0, 8).map((a) => ({ name: a.n, slug: slugOf(a.n), tracks: a.t, releases: a.r })),
+    labels: ranked(labels, 8).map(([n, c]) => ({ name: n, slug: labelBy.get(normName(n))?.slug || null, tracks: c })),
+    sound: {
+      avg_bpm: avg(bpms) == null ? null : Number(avg(bpms)),
+      prev_avg_bpm: avg(prevBpms) == null ? null : Number(avg(prevBpms)),
+      bands: [...bands.entries()]
+        .filter(([, c]) => c >= 2)
+        .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
+        .map(([band, count]) => ({ band, count })),
+      keys: ranked(keys, 6).map(([key, count]) => ({ key, count })),
+    },
+    debut: debutantes.slice(0, 24).map((n) => ({ name: n, slug: slugOf(n) })),
+    debut_total: debutantes.length,
+    exclusives: exclusives.map((f) => toTrack(f)),
+    sessions,
+    upcoming,
+    upcoming_total: future.length,
+  }
 
   return {
     from,
@@ -624,7 +740,37 @@ INSTRUCCIONES:
     brief,
     beatportTracks,
     votesReady,
+    digest,
   }
+}
+
+const QUINCENA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes los textos cortos del resumen quincenal. Tono: revista musical con criterio, directo, nada de relleno ni frases infladas, sin meta-comentarios sobre datos o fuentes. Devuelves UN objeto JSON válido y nada más.`
+
+const COPY_KEYS = ['intro', 'top100', 'played', 'voted', 'artists', 'labels', 'sound', 'debut', 'sessions', 'upcoming']
+
+function cleanCopy(obj) {
+  const out = {}
+  for (const k of COPY_KEYS) out[k] = String(obj?.[k] ?? '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
+  return out
+}
+
+/** HTML de respaldo (buscador, JSON-LD, RSS): la ficha pinta el digest. */
+function digestToHtml(digest, lang) {
+  const c = digest.copy[lang]
+  const h = (title, text) => (text ? `<h2>${escHtml(title)}</h2>\n<p>${escHtml(text)}</p>` : '')
+  const es = lang === 'es'
+  return [
+    c.intro ? `<p>${escHtml(c.intro)}</p>` : '',
+    h(es ? 'Estrellas del Top 100 con temas nuevos' : 'Top 100 stars with new music', c.top100),
+    h(es ? 'Lo más escuchado' : 'Most played', c.played),
+    h(es ? 'Lo más votado' : 'Most voted', c.voted),
+    h(es ? 'Quién más ha publicado' : 'Who released the most', c.artists),
+    h(es ? 'Sellos de la quincena' : 'Labels of the fortnight', c.labels),
+    h(es ? 'Radiografía sonora' : 'Sound check', c.sound),
+    h(es ? 'Debutantes' : 'Debut artists', c.debut),
+    h(es ? 'Sesiones' : 'Sessions', c.sessions),
+    h(es ? 'Lo que se viene' : 'Coming up', c.upcoming),
+  ].filter(Boolean).join('\n')
 }
 
 async function upsertBlogPost(row, { refusePublished = false } = {}) {
@@ -654,6 +800,7 @@ async function upsertBlogPost(row, { refusePublished = false } = {}) {
     beatport_tracks: Array.isArray(row.beatport_tracks) ? row.beatport_tracks : [],
     beatport_release_url: row.beatport_release_url || null,
   }
+  if (row.digest !== undefined) payload.digest = row.digest
 
   const { data: existing, error: findErr } = await sb
     .from('blog_posts')
@@ -704,6 +851,8 @@ function parseArgs(argv) {
       const next = argv[i + 1]
       out.quincena = next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now())
     } else if (a === '--solo-datos') out.soloDatos = true
+    else if (a === '--borrador') out.borrador = true
+    else if (a === '--forzar') out.forzar = true
     else if (a === '--featured') out.featured = true
     else if (a === '--no-search') out.noSearch = true
     else if (a === '--json-only') out.jsonOnly = true
@@ -755,23 +904,37 @@ async function mainQuincena(args) {
     return
   }
   if (!q.votesReady) throw new Error('Despliega antes de generar la quincena (los votos salen de producción).')
-  const user = buildUserPrompt({ slug: q.slug, titleHint: q.titleHint, brief, research: '', featured: false })
   console.log('[blog-agent] Redactando…')
-  const raw = await openAiJson({ system: loadSystemPrompt(), user })
-  const row = normalizePost(raw, q.slug, { featured: false })
-  row.slug = q.slug
-  row.is_published = false
-  row.category = 'ranking'
-  row.tags = uniqueTags(['quincena', ...row.tags])
-  row.beatport_tracks = q.beatportTracks
+  const raw = await openAiJson({ system: QUINCENA_SYSTEM, user: brief })
+  const digest = { ...q.digest, copy: { es: cleanCopy(raw.copy_es), en: cleanCopy(raw.copy_en) } }
+  const row = {
+    slug: q.slug,
+    title_es: String(raw.title_es || '').trim() || q.titleHint,
+    title_en: String(raw.title_en || '').trim() || q.titleHint,
+    excerpt_es: String(raw.excerpt_es || '').trim() || digest.copy.es.intro,
+    excerpt_en: String(raw.excerpt_en || '').trim() || digest.copy.en.intro,
+    content_es: digestToHtml(digest, 'es'),
+    content_en: digestToHtml(digest, 'en'),
+    category: 'ranking',
+    tags: uniqueTags(['quincena', ...(Array.isArray(raw.tags) ? raw.tags : [])]),
+    author: 'Optimal Breaks',
+    is_published: !args.borrador,
+    is_featured: false,
+    published_at: new Date().toISOString(),
+    image_url: q.digest.covers[0] || null,
+    og_image_url: null,
+    beatport_tracks: q.beatportTracks,
+    beatport_release_url: null,
+    digest,
+  }
   if (args.jsonOnly) {
-    console.log(JSON.stringify({ ...row, content_es: undefined, content_en: undefined }, null, 2))
+    console.log(JSON.stringify({ title_es: row.title_es, title_en: row.title_en, excerpt_es: row.excerpt_es, tags: row.tags, copy: digest.copy }, null, 2))
     console.log('[blog-agent] --json-only: sin BD')
     return
   }
-  const result = await upsertBlogPost(row, { refusePublished: true })
-  console.log(`[blog-agent] Borrador ${result.action} id=${result.id} — ${row.title_es}`)
-  console.log(`[blog-agent] Revísalo y publícalo en /es/administrator/blog/${result.id}`)
+  const result = await upsertBlogPost(row, { refusePublished: !args.forzar })
+  console.log(`[blog-agent] ${row.is_published ? 'Publicado' : 'Borrador'} (${result.action}) — ${row.title_es}`)
+  console.log(`[blog-agent] ${SITE_URL}/es/blog/${row.slug}`)
 }
 
 async function main() {

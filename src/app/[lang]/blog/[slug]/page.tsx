@@ -23,6 +23,7 @@ import ShareButtons from '@/components/ShareButtons'
 import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
+import FortnightDigest from '@/components/FortnightDigest'
 import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
@@ -104,6 +105,7 @@ export default async function BlogPostPage({ params }: Props) {
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
   const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
+  const digest = post.digest?.copy ? post.digest : null
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
@@ -288,21 +290,23 @@ export default async function BlogPostPage({ params }: Props) {
         />
       </div>
 
-      <div
-        className={`mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden ${
-          posterCover ? 'bg-[var(--paper-dark)]' : ''
-        }`}
-      >
-        <div className={posterCover ? 'mx-auto w-full max-w-[560px]' : undefined}>
-          <CardThumbnail
-            src={coverSrc}
-            alt={coverAlt}
-            aspectClass={posterCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[21/9]'}
-            fit={posterCover ? 'contain' : 'cover'}
-            frameClass="border-0"
-          />
+      {!digest && (
+        <div
+          className={`mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden ${
+            posterCover ? 'bg-[var(--paper-dark)]' : ''
+          }`}
+        >
+          <div className={posterCover ? 'mx-auto w-full max-w-[560px]' : undefined}>
+            <CardThumbnail
+              src={coverSrc}
+              alt={coverAlt}
+              aspectClass={posterCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[21/9]'}
+              fit={posterCover ? 'contain' : 'cover'}
+              frameClass="border-0"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {post.tags?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-8">
@@ -310,8 +314,10 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
+      {digest && <FortnightDigest digest={digest} lang={safeLang} />}
+
       {albumTracks.length > 0 && (
-        <div className="mb-10">
+        <div className={digest ? 'mt-12' : 'mb-10'}>
           <BeatportTopTracks
             tracks={albumTracks}
             beatportUrl={post.beatport_release_url || null}
@@ -331,7 +337,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />
+      {!digest && <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />}
 
       {/* Bottom share */}
       <div className="mt-12 pt-8 border-t-4 border-dashed border-[var(--ink)] flex flex-wrap items-center justify-between gap-4">

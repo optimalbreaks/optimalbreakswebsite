@@ -1115,6 +1115,67 @@ export interface BlogPost extends Record<string, unknown> {
   beatport_tracks?: BeatportTopTrack[] | null
   /** URL del release en Beatport cuando el artículo cubre un álbum o EP. */
   beatport_release_url?: string | null
+  /** Artículo quincenal: la ficha lo pinta con `FortnightDigest` en vez del cuerpo. */
+  digest?: FortnightDigest | null
+}
+
+export interface FortnightDigestTrack {
+  title: string
+  mix_name: string | null
+  artists: string
+  artwork_url: string | null
+  label: string | null
+  release_date: string | null
+  /** Escuchas o votos, según el bloque. */
+  value: number
+  featured_id: string | null
+  week_date: string | null
+  external_url: string | null
+}
+
+export interface FortnightDigestName {
+  name: string
+  slug: string | null
+}
+
+export interface FortnightDigestCopy {
+  intro: string
+  top100: string
+  played: string
+  voted: string
+  artists: string
+  labels: string
+  sound: string
+  debut: string
+  sessions: string
+  upcoming: string
+}
+
+export interface FortnightDigest {
+  from: string
+  until: string
+  totals: { tracks: number; artists: number; labels: number; releases: number; prev_tracks: number }
+  covers: string[]
+  copy: { es: FortnightDigestCopy; en: FortnightDigestCopy }
+  top100: { rank: number; name: string; slug: string | null; image_url: string | null; tracks: FortnightDigestTrack[] }[]
+  played: FortnightDigestTrack[]
+  voted: FortnightDigestTrack[]
+  votes_total: number
+  voters_total: number
+  artists: { name: string; slug: string | null; tracks: number; releases: number }[]
+  labels: { name: string; slug: string | null; tracks: number }[]
+  sound: {
+    avg_bpm: number | null
+    prev_avg_bpm: number | null
+    bands: { band: string; count: number }[]
+    keys: { key: string; count: number }[]
+  }
+  debut: FortnightDigestName[]
+  debut_total: number
+  exclusives: FortnightDigestTrack[]
+  sessions: { title: string; artist: string; slug: string; image_url: string | null; download: boolean; plays: number }[]
+  upcoming: FortnightDigestTrack[]
+  upcoming_total: number
 }
 
 export interface Scene extends Record<string, unknown> {
