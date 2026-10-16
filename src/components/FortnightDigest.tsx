@@ -13,7 +13,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, type MouseEvent, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { useAuth } from '@/components/AuthProvider'
 import CardThumbnail from '@/components/CardThumbnail'
@@ -22,7 +22,7 @@ import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
-import { buildTrackSharePath, formatTrackReleaseDisplay, isAdvanceRelease } from '@/lib/share-track'
+import { formatTrackReleaseDisplay, isAdvanceRelease } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { FortnightDigest as Digest, FortnightDigestTrack } from '@/types/database'
 
@@ -128,11 +128,6 @@ function shortDate(ymd: string | null, lang: Locale): string {
     .replace('.', '')
 }
 
-function trackHref(t: FortnightDigestTrack, lang: Locale): string | null {
-  if (t.featured_id) return buildTrackSharePath(lang, 'featured', t.featured_id, t.week_date)
-  return t.external_url
-}
-
 function trackName(t: FortnightDigestTrack): string {
   return t.mix_name && !/^original mix$/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title
 }
@@ -189,6 +184,14 @@ const PlayCtx = createContext<{ play: (rowKey: string, domId?: string) => void; 
   current: null,
   playing: false,
 })
+
+/** Clic en la tarjeta o la fila = ▶: dentro del artículo un tema nunca saca a /charts. Botones y enlaces van a lo suyo. */
+function cardPlayWith(play: (rowKey: string, domId?: string) => void) {
+  return (t: FortnightDigestTrack, spot: Spot) => (e: MouseEvent<HTMLElement>) => {
+    if (!t.audio_src || (e.target as HTMLElement).closest('button, a')) return
+    play(rowKeyOf(t), spotId(spot, t))
+  }
+}
 
 function PlayButton({ track, spot, className = '' }: { track: FortnightDigestTrack; spot: Spot; className?: string }) {
   const { play, current, playing } = useContext(PlayCtx)
@@ -260,13 +263,13 @@ function RankedTracks({
   labelSlugMap?: Record<string, string>
 }) {
   const max = Math.max(1, ...tracks.map((t) => t.value))
-  const { current, playing } = useContext(PlayCtx)
+  const { play, current, playing } = useContext(PlayCtx)
+  const cardPlay = cardPlayWith(play)
   const chip = 'inline-flex items-center justify-center h-[36px] px-2 text-[10px] font-bold tracking-wider text-white border-2 border-[var(--ink)] sm:h-auto sm:px-1.5 sm:py-0.5'
   return (
     <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
       {tracks.map((t, i) => {
         const on = current === rowKeyOf(t) && playing
-        const href = trackHref(t, lang)
         const mix = t.mix_name && !/^original mix$/i.test(t.mix_name) ? t.mix_name : ''
         const release = formatTrackReleaseDisplay(t.release_date, null)
         const advance = isAdvanceRelease(t.release_date)
@@ -275,7 +278,8 @@ function RankedTracks({
           <div
             key={`${t.title}-${i}`}
             id={spotId(spot, t)}
-            className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+            onClick={cardPlay(t, spot)}
+            className={`${t.audio_src ? 'cursor-pointer ' : ''}flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
           >
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-3 min-w-0">
@@ -287,9 +291,7 @@ function RankedTracks({
                     #{i + 1}
                   </span>
                   <div className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={display}>
-                    {href ? (
-                      <Link href={href} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">{t.title}</Link>
-                    ) : t.title}
+                    {t.title}
                     {mix ? <span className="font-normal text-xs text-[var(--ink)]/50 ml-1.5">{mix}</span> : null}
                   </div>
                   <div className="text-xs sm:text-sm mt-0.5 break-words" style={mono}>
@@ -420,6 +422,7 @@ export default function FortnightDigest({
     [current, queue, groupKey, playPreviewQueue, togglePreview],
   )
   const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+  const cardPlay = cardPlayWith(play)
   const { user } = useAuth()
   const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
@@ -499,7 +502,6 @@ export default function FortnightDigest({
         <Section title={t.released} copy={liveAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
             {d.released.map((r, i) => {
-              const href = trackHref(r, lang)
               const text = (
                 <div className="p-1.5 sm:p-2">
                   <div className="text-[10px] sm:text-[12px] font-black uppercase line-clamp-2" style={display}>{r.artists}</div>
@@ -508,13 +510,18 @@ export default function FortnightDigest({
                 </div>
               )
               return (
-                <div key={i} id={spotId('rel', r)} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+                <div
+                  key={i}
+                  id={spotId('rel', r)}
+                  onClick={cardPlay(r, 'rel')}
+                  className={`border-[3px] border-[var(--ink)] bg-[var(--paper)] ${r.audio_src ? 'cursor-pointer' : ''}`}
+                >
                   <div className="relative">
                     <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
                     <PlayButton track={r} spot="rel" className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
                     <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
                   </div>
-                  {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{text}</Link> : text}
+                  {text}
                 </div>
               )
             })}
@@ -567,7 +574,6 @@ export default function FortnightDigest({
                   </div>
                   <div className="flex gap-1 mt-2">
                     {a.tracks.slice(0, 3).map((tr, i) => {
-                      const href = trackHref(tr, lang)
                       const img = <div className="w-10"><Cover src={tr.artwork_url} alt={tr.title} sizes="40px" /></div>
                       if (tr.audio_src) {
                         return (
@@ -577,7 +583,7 @@ export default function FortnightDigest({
                           </span>
                         )
                       }
-                      return href ? <Link key={i} href={href} title={trackName(tr)}>{img}</Link> : <span key={i}>{img}</span>
+                      return <span key={i} title={trackName(tr)}>{img}</span>
                     })}
                   </div>
                   <div className="text-[11px] text-[var(--dim)] mt-1 line-clamp-2" style={mono}>
