@@ -15,7 +15,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
-import type { PreviewTrack } from '@/components/DeckAudioProvider'
+import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
+import SaveTrackButton from '@/components/SaveTrackButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { buildTrackSharePath } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
@@ -90,6 +91,41 @@ function trackHref(t: FortnightDigestTrack, lang: Locale): string | null {
 
 function trackName(t: FortnightDigestTrack): string {
   return t.mix_name && !/^original mix$/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title
+}
+
+function saveOf(t: FortnightDigestTrack): PreviewSaveData | undefined {
+  if (!t.featured_id) return undefined
+  return {
+    mode: 'ref',
+    source: 'featured',
+    trackId: t.featured_id,
+    canonicalUrl: t.external_url,
+    snapshot: {
+      title: t.title,
+      mix_name: t.mix_name,
+      artists: t.artists,
+      label: t.label,
+      release_date: t.release_date,
+      year: t.release_date ? Number(t.release_date.slice(0, 4)) : null,
+      artwork_url: t.artwork_url,
+      beatport_url: t.external_url && /beatport\.com/i.test(t.external_url) ? t.external_url : null,
+    },
+  }
+}
+
+function SaveButton({ track, lang }: { track: FortnightDigestTrack; lang: Locale }) {
+  const save = saveOf(track)
+  if (!save || save.mode !== 'ref') return null
+  return (
+    <SaveTrackButton
+      source={save.source}
+      trackId={save.trackId}
+      canonicalUrl={save.canonicalUrl ?? null}
+      snapshot={save.snapshot ?? null}
+      lang={lang}
+      size="sm"
+    />
+  )
 }
 
 function rowKeyOf(t: FortnightDigestTrack): string {
@@ -170,6 +206,9 @@ function RankedTracks({ tracks, unit, lang }: { tracks: FortnightDigestTrack[]; 
             <div className="min-w-0 flex-1">
               {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{body}</Link> : body}
             </div>
+            <div className="shrink-0 self-center">
+              <SaveButton track={t} lang={lang} />
+            </div>
           </li>
         )
       })}
@@ -229,6 +268,7 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
         album: t.label,
         originPath: pathname || undefined,
         share: t.featured_id ? { mode: 'chart', source: 'featured', trackId: t.featured_id, weekDate: t.week_date } : undefined,
+        save: saveOf(t),
       })
     }
     return out
