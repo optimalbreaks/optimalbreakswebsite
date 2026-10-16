@@ -126,7 +126,7 @@ function RankedTracks({ tracks, unit, lang }: { tracks: FortnightDigestTrack[]; 
         const href = trackHref(t, lang)
         const body = (
           <div className="flex items-center gap-3 border-[3px] border-[var(--ink)] bg-[var(--paper)] p-2 hover:bg-[#f7e733]/30 transition-colors">
-            <span className="w-8 shrink-0 text-center text-[22px] font-black" style={display}>{i + 1}</span>
+            <span className="w-10 shrink-0 whitespace-nowrap text-center text-[20px] font-black" style={display}>{i + 1}</span>
             <div className="w-14 shrink-0"><Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="56px" /></div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[14px] font-bold uppercase" style={display}>{trackName(t)}</div>
@@ -183,6 +183,7 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
 
   return (
     <div className="prose-ob">
+      <div className="ob-digest">
       {/* Portada: mosaico de carátulas + cifras */}
       <div className="relative -mx-4 sm:mx-0 border-y-[3px] sm:border-[3px] border-[var(--ink)]">
         <div className="grid grid-cols-4 sm:grid-cols-6">
@@ -272,10 +273,10 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
         <Section title={t.sound} copy={copy.sound}>
           <div className="grid sm:grid-cols-[180px_1fr] gap-4">
             <div className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] p-3 flex flex-col justify-center">
-              <div className="text-[44px] leading-none font-black" style={display}>{d.sound.avg_bpm ?? '—'}</div>
+              <div className="text-[44px] leading-none font-black" style={display}>{d.sound.avg_bpm != null ? Math.round(d.sound.avg_bpm) : '—'}</div>
               <div className="text-[11px] tracking-[2px] mt-1" style={mono}>{t.avgBpm}</div>
               {d.sound.prev_avg_bpm != null && (
-                <div className="text-[11px] mt-1" style={mono}>{t.prev}: {d.sound.prev_avg_bpm}</div>
+                <div className="text-[11px] mt-1" style={mono}>{t.prev}: {Math.round(d.sound.prev_avg_bpm)}</div>
               )}
             </div>
             <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)] p-3">
@@ -380,6 +381,7 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
           <p className="text-[12px] text-[var(--dim)] mt-2" style={mono}>{t.upcomingFoot(d.upcoming_total)}</p>
         </Section>
       )}
+      </div>
     </div>
   )
 }

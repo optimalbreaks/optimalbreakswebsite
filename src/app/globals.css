@@ -654,6 +654,11 @@ body::before {
   margin: 1.5em 0;
 }
 
+.prose-ob .ob-digest img {
+  border: 0;
+  margin: 0;
+}
+
 .prose-ob hr {
   border: none;
   border-top: 3px dashed var(--ink);
