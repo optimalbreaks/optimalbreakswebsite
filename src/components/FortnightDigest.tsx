@@ -15,6 +15,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
+import { useAuth } from '@/components/AuthProvider'
 import CardThumbnail from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
@@ -49,6 +50,18 @@ const T = {
     keys: 'TONALIDADES',
     debut: 'Nuevos en el catálogo',
     debutMore: (n: number) => `y ${n} más`,
+    playAll: (n: number) => `▶ ESCUCHAR LA QUINCENA · ${n} TEMAS`,
+    playAllHint: 'Suenan uno detrás de otro. Pulsa + en los que te gusten y quedan en Mis Tracks.',
+    weekCta: 'Cada semana tiene su lista completa en Tracks, con preview de todos los temas.',
+    weekBtn: 'VER LA ÚLTIMA SEMANA →',
+    voteGuest: 'Tu + es tu voto. Crea tu cuenta gratis: guardas los temas en Mis Tracks y cuentan para el Top 100.',
+    voteGuestBtn: 'CREAR CUENTA',
+    voteUser: 'Cada + que pones cuenta para el Top 100 del mes.',
+    voteUserBtn: 'MIS TRACKS →',
+    top100Cta: 'El ranking de artistas y temas que más guarda la comunidad.',
+    top100Btn: 'VER EL TOP 100 →',
+    debutCta: '¿Eres uno de ellos? Crea tu cuenta y reclama tu ficha de artista.',
+    debutBtn: 'RECLAMAR MI FICHA',
   },
   en: {
     fortnight: 'FORTNIGHT',
@@ -73,6 +86,18 @@ const T = {
     keys: 'KEYS',
     debut: 'New to the catalogue',
     debutMore: (n: number) => `and ${n} more`,
+    playAll: (n: number) => `▶ PLAY THE FORTNIGHT · ${n} TRACKS`,
+    playAllHint: 'They play back to back. Hit + on the ones you like and they land in My Tracks.',
+    weekCta: 'Every week has its full list on Tracks, with a preview of every track.',
+    weekBtn: 'SEE THE LATEST WEEK →',
+    voteGuest: 'Your + is your vote. Create a free account: tracks go to My Tracks and count towards the Top 100.',
+    voteGuestBtn: 'CREATE ACCOUNT',
+    voteUser: 'Every + you add counts towards the monthly Top 100.',
+    voteUserBtn: 'MY TRACKS →',
+    top100Cta: 'The artists and tracks the community saves the most.',
+    top100Btn: 'SEE THE TOP 100 →',
+    debutCta: 'Are you one of them? Create an account and claim your artist profile.',
+    debutBtn: 'CLAIM MY PROFILE',
   },
 }
 
@@ -179,6 +204,21 @@ function Section({ title, copy, children }: { title: string; copy?: string; chil
       </div>
       {children}
     </section>
+  )
+}
+
+function Cta({ text, label, href }: { text: string; label: string; href: string }) {
+  return (
+    <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)] p-3 sm:p-4 shadow-[4px_4px_0_var(--ink)]">
+      <p className="flex-1 text-[13px] leading-snug m-0" style={mono}>{text}</p>
+      <Link
+        href={href}
+        className="shrink-0 self-start sm:self-auto inline-block bg-[var(--red)] !text-white border-[3px] border-[var(--ink)] px-4 py-2 text-[12px] font-black tracking-wider !no-underline hover:bg-[var(--ink)] transition-colors"
+        style={display}
+      >
+        {label}
+      </Link>
+    </div>
   )
 }
 
@@ -344,6 +384,9 @@ export default function FortnightDigest({
     [current, queue, groupKey, playPreviewQueue, togglePreview],
   )
   const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+  const { user } = useAuth()
+  const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
+  const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
 
   return (
     <PlayCtx.Provider value={playCtx}>
@@ -376,6 +419,20 @@ export default function FortnightDigest({
         </div>
       ) : null}
 
+      {queue.length > 0 && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => (current ? togglePreview() : playPreviewQueue(queue, 0, groupKey))}
+            className="w-full bg-[var(--red)] text-white border-[3px] border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] px-4 py-3 text-[14px] sm:text-[16px] font-black tracking-wider hover:bg-[var(--ink)] transition-colors"
+            style={display}
+          >
+            {current && previewPlaying ? '❚❚' : t.playAll(queue.length)}
+          </button>
+          <p className="mt-2 text-[12px] text-[var(--dim)]" style={mono}>{t.playAllHint}</p>
+        </div>
+      )}
+
       {d.released?.length > 0 && (
         <Section title={t.released} copy={copy.released}>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -405,6 +462,7 @@ export default function FortnightDigest({
               )
             })}
           </div>
+          <Cta text={t.weekCta} label={t.weekBtn} href={lastWeek ? `/${lang}/charts?week=${lastWeek}` : `/${lang}/charts`} />
         </Section>
       )}
 
@@ -417,6 +475,11 @@ export default function FortnightDigest({
       {d.voted.length > 0 && (
         <Section title={t.voted} copy={copy.voted}>
           <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
+          <Cta
+            text={user ? t.voteUser : t.voteGuest}
+            label={user ? t.voteUserBtn : t.voteGuestBtn}
+            href={accountHref('/mi-cuenta/tracks')}
+          />
         </Section>
       )}
 
@@ -465,6 +528,7 @@ export default function FortnightDigest({
               </div>
             ))}
           </div>
+          <Cta text={t.top100Cta} label={t.top100Btn} href={`/${lang}/top100`} />
         </Section>
       )}
 
@@ -533,6 +597,7 @@ export default function FortnightDigest({
               <span className="text-[12px] text-[var(--dim)] self-center" style={mono}>{t.debutMore(d.debut_total - d.debut.length)}</span>
             )}
           </div>
+          <Cta text={t.debutCta} label={t.debutBtn} href={accountHref('/mi-cuenta/artista')} />
         </Section>
       )}
 
