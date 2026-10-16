@@ -13,6 +13,7 @@ import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import type { FortnightDigestTrack } from '@/types/database'
 
 const TOP_N = 10
+const RELEASED_N = 24
 
 type FeatRow = {
   id: string
@@ -36,6 +37,7 @@ type FeatRow = {
 type SaveRow = { id: string; user_id: string; track_source: string; track_id: string; canonical_url: string | null }
 
 export type FortnightLive = {
+  released: FortnightDigestTrack[]
   played: FortnightDigestTrack[]
   voted: FortnightDigestTrack[]
   votes_total: number
@@ -174,7 +176,19 @@ async function loadFortnightLive(from: string, until: string): Promise<Fortnight
     .slice(0, TOP_N)
     .map(([k, v]) => toTrack(byKey.get(k)!, v.users.size))
 
-  return { played, voted, votes_total: votesTotal, voters_total: voters.size, updated_at: new Date().toISOString() }
+  // «Lo que ha salido»: un tema por tarjeta (nunca un disco), lo más escuchado y votado primero.
+  const score = (k: string) => (plays.get(k) || 0) + 3 * (votes.get(k)?.users.size || 0)
+  const released = keys
+    .sort(
+      (a, b) =>
+        score(b) - score(a) ||
+        (byKey.get(b)!.release_date || '').localeCompare(byKey.get(a)!.release_date || '') ||
+        byKey.get(a)!.title.localeCompare(byKey.get(b)!.title),
+    )
+    .slice(0, RELEASED_N)
+    .map((k) => toTrack(byKey.get(k)!, 0))
+
+  return { released, played, voted, votes_total: votesTotal, voters_total: voters.size, updated_at: new Date().toISOString() }
 }
 
 /** null si la BD falla: la página cae al recuento guardado en el digest. */

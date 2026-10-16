@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: Props) {
   const storedDigest = post.digest?.copy ? post.digest : null
   const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until) : null
   const digest = storedDigest && live
-    ? { ...storedDigest, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
+    ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
     : storedDigest
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])

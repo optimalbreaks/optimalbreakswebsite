@@ -48,6 +48,7 @@ const T = {
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `«${title}», de ${artists}, va primero con ${n} ${unit}${rest ? `. Le siguen ${rest}` : ''}.`,
     and: ' y ',
+    releasedLine: (list: string) => `Un tema por carátula, primero los que más se escuchan y se votan. Abren la lista ${list}.`,
     artistsTitle: 'Quién más ha publicado',
     tracksShort: 'temas',
     releasesShort: 'discos',
@@ -91,6 +92,7 @@ const T = {
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `“${title}” by ${artists} leads with ${n} ${unit}${rest ? `, ahead of ${rest}` : ''}.`,
     and: ' and ',
+    releasedLine: (list: string) => `One track per cover, most played and voted first. Leading the list: ${list}.`,
     artistsTitle: 'Who released the most',
     tracksShort: 'tracks',
     releasesShort: 'releases',
@@ -437,12 +439,15 @@ export default function FortnightDigest({
   )
   const heading = (h: string, list: FortnightDigestTrack[]) =>
     liveAt && list[0] ? t.leads(h, list[0].title, list[0].artists) : h
+  const names = (list: FortnightDigestTrack[]) => {
+    const items = list.map((x) => (lang === 'es' ? `«${x.title}» (${x.artists})` : `“${x.title}” (${x.artists})`))
+    return items.length > 1 ? `${items.slice(0, -1).join(', ')}${t.and}${items[items.length - 1]}` : items[0] || ''
+  }
   const leadCopy = (list: FortnightDigestTrack[], one: string, many: string, stored: string) => {
     if (!liveAt) return stored
     const [first, ...others] = list
     if (!first) return ''
-    const rest = others.slice(0, 2).map((x) => (lang === 'es' ? `«${x.title}» (${x.artists})` : `“${x.title}” (${x.artists})`)).join(t.and)
-    return t.leadLine(first.title, first.artists, first.value, first.value === 1 ? one : many, rest)
+    return t.leadLine(first.title, first.artists, first.value, first.value === 1 ? one : many, names(others.slice(0, 2)))
   }
 
   return (
@@ -491,7 +496,7 @@ export default function FortnightDigest({
       )}
 
       {d.released?.length > 0 && (
-        <Section title={t.released} copy={copy.released}>
+        <Section title={t.released} copy={liveAt ? t.releasedLine(names(d.released.slice(0, 3))) : copy.released}>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
             {d.released.map((r, i) => {
               const href = trackHref(r, lang)
@@ -506,11 +511,6 @@ export default function FortnightDigest({
                 <div key={i} id={spotId('rel', r)} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
                   <div className="relative">
                     <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
-                    {r.value > 1 && (
-                      <span className="absolute bottom-1 left-1 bg-[var(--yellow)] border-[2px] border-[var(--ink)] px-1 text-[10px] sm:text-[11px] font-black" style={display}>
-                        {r.value} {t.tracks}
-                      </span>
-                    )}
                     <PlayButton track={r} spot="rel" className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
                     <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
                   </div>

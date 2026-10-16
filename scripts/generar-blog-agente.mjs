@@ -607,9 +607,8 @@ ${data}
 QUÉ ESCRIBES: SOLO TEXTOS CORTOS
 La página ya pinta los datos con gráficos, carátulas, rankings y fotos. Tú pones la voz: frases de revista musical, con gancho, que digan lo que el gráfico no dice (quién destaca, qué sorprende, qué conviene escuchar).
 - El artículo trata SOLO de los temas que han salido en estas dos semanas: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.
-- Un texto por bloque: intro, released, artists, top100, labels, sound, debut. played y voted van vacíos: la página los escribe sola con el recuento en directo.
+- Un texto por bloque: intro, artists, top100, labels, sound, debut. released, played y voted van vacíos: la página los escribe sola con el recuento en directo.
 - Escuchas y votos cambian cada día: ni en el intro ni en el excerpt digas quién va primero en escuchas o votos.
-- released: los discos que hay que escuchar de la quincena (2–3 nombres).
 - intro: 2 frases como máximo. Los demás: 1–2 frases, 40 palabras como máximo cada uno.
 - No repitas listas ni cifras que ya enseña el gráfico; cita como mucho 1–3 nombres por bloque.
 - En «artists», di si el primero lo es por un álbum largo.
@@ -668,18 +667,13 @@ Devuelve SOLO este JSON:
   for (const a of top100) for (const f of winByArtist.get(normName(a.name)) || []) pushCover(f.artwork_url)
   win.forEach((f) => pushCover(f.artwork_url))
 
-  // Discos de la quincena: primero los que más se han escuchado y votado.
+  // Temas de la quincena (uno por tarjeta, nunca un disco): primero los más escuchados y votados.
   const votesByKey = new Map((votes.top_tracks || []).map((t) => [t.canonical_key, t.unique_users || 0]))
-  const releaseScore = (tracks) =>
-    tracks.reduce((s, f) => s + (playCount.get(f.id) || 0) + 3 * (votesByKey.get(normUrl(f.link_url)) || 0), 0)
-  const released = [...releases.values()]
-    .map((tracks) => ({ tracks, score: releaseScore(tracks) }))
-    .sort((a, b) => b.score - a.score || b.tracks.length - a.tracks.length)
+  const trackScore = (f) => (playCount.get(f.id) || 0) + 3 * (votesByKey.get(normUrl(f.link_url)) || 0)
+  const released = [...win]
+    .sort((a, b) => trackScore(b) - trackScore(a) || String(b.release_date).localeCompare(String(a.release_date)))
     .slice(0, 24)
-    .map(({ tracks }) => {
-      const best = [...tracks].sort((a, b) => (playCount.get(b.id) || 0) - (playCount.get(a.id) || 0))[0]
-      return toTrack(best, tracks.length)
-    })
+    .map((f) => toTrack(f))
 
   const voted = votedWin.map((v) => featByKey.has(v.canonical_key) ? toTrack(featByKey.get(v.canonical_key), v.unique_users) : ({
     title: v.title,
@@ -925,7 +919,7 @@ async function mainQuincena(args) {
     console.log('[blog-agent] Redactando…')
     raw = await openAiJson({ system: QUINCENA_SYSTEM, user: brief })
   }
-  const live = (c) => ({ ...cleanCopy(c), played: '', voted: '' })
+  const live = (c) => ({ ...cleanCopy(c), released: '', played: '', voted: '' })
   const digest = { ...q.digest, copy: { es: live(raw.copy_es), en: live(raw.copy_en) } }
   const row = {
     slug: q.slug,
