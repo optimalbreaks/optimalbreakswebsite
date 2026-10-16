@@ -40,7 +40,7 @@ const T = {
     plays: 'escuchas',
     voted: 'Lo más votado',
     votes: 'votos',
-    votesFoot: (v: number, u: number) => `${v} votos de ${u} usuarios en la quincena, con las mismas reglas que el Top 100.`,
+    frozen: (from: string, until: string) => `Recuento del ${from} al ${until}, cerrado al publicar el artículo. En Tracks y en el Top 100 los números siguen vivos.`,
     artistsTitle: 'Quién más ha publicado',
     tracksShort: 'temas',
     releasesShort: 'discos',
@@ -76,7 +76,7 @@ const T = {
     plays: 'plays',
     voted: 'Most voted',
     votes: 'votes',
-    votesFoot: (v: number, u: number) => `${v} votes from ${u} users this fortnight, same rules as the Top 100.`,
+    frozen: (from: string, until: string) => `Count from ${from} to ${until}, closed when the article was published. On Tracks and the Top 100 the numbers stay live.`,
     artistsTitle: 'Who released the most',
     tracksShort: 'tracks',
     releasesShort: 'releases',
@@ -405,6 +405,11 @@ export default function FortnightDigest({
   const { user } = useAuth()
   const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
+  const frozenNote = (
+    <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>
+      {t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
+    </p>
+  )
 
   return (
     <PlayCtx.Provider value={playCtx}>
@@ -487,12 +492,14 @@ export default function FortnightDigest({
       {d.played.length > 0 && (
         <Section title={t.played} copy={copy.played}>
           <RankedTracks tracks={d.played} spot="played" unit={t.plays} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
+          {frozenNote}
         </Section>
       )}
 
       {d.voted.length > 0 && (
         <Section title={t.voted} copy={copy.voted}>
           <RankedTracks tracks={d.voted} spot="voted" unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
+          {frozenNote}
           <Cta
             text={user ? t.voteUser : t.voteGuest}
             label={user ? t.voteUserBtn : t.voteGuestBtn}
