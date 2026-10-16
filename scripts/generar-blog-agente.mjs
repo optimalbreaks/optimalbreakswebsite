@@ -278,8 +278,8 @@ function normalizePost(obj, expectedSlug, { featured }) {
       .replace(/[^a-z0-9-]/g, '')
       .replace(/^-|-$/g, '') || expectedSlug
 
-  const bodyMdEs = String(obj.body_md_es || obj.content_md_es || '').trim()
-  const bodyMdEn = String(obj.body_md_en || obj.content_md_en || '').trim()
+  const bodyMdEs = String(obj.body_md_es || obj.content_md_es || '').replace(/&amp;/g, '&').trim()
+  const bodyMdEn = String(obj.body_md_en || obj.content_md_en || '').replace(/&amp;/g, '&').trim()
   if (!bodyMdEs || !bodyMdEn) {
     throw new Error('Faltan body_md_es / body_md_en en la respuesta del modelo')
   }
