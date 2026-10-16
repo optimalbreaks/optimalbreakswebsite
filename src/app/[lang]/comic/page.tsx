@@ -14,8 +14,8 @@ import './comic.css'
 export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
   const { lang } = await params
   return staticPageMetadata(lang, '/comic', 'comic', {
-    ogImagePath: `${COMIC_IMG}/super_lechon_transformacion.jpg`,
-    ogImageAlt: COMIC_COPY[lang].heroAlt,
+    ogImagePath: `${COMIC_IMG}/og-comic-${lang}.jpg`,
+    ogImageAlt: COMIC_COPY[lang].ogAlt,
   })
 }
 

@@ -218,6 +218,7 @@ type Copy = {
   ctaEpisodes: string
   ctaCast: string
   heroAlt: string
+  ogAlt: string
   storyTitle: [string, string]
   storyLead: string
   storyText: string
@@ -255,6 +256,7 @@ export const COMIC_COPY: Record<Locale, Copy> = {
     heroTitle: ['No seas', 'lechón.'],
     heroText: 'Escucha todo gratis, se baja las sesiones, se sabe el cartel de memoria… y no vota nunca. Hasta que suena el temazo.',
     ctaEpisodes: 'Ver los episodios',
+    ogAlt: 'El Lechón y el Pepino del breakbeat sentados en un altavoz al amanecer, al terminar la fiesta. Las aventuras del Lechón y el Pepino: no seas lechón.',
     ctaCast: 'Conoce a la pandilla',
     heroAlt: 'El lechón con los brazos cruzados, le cae un rayo y se convierte en Super Lechón con traje amarillo y capa roja',
     storyTitle: ['Especie detectada:', 'el lechón'],
@@ -296,6 +298,7 @@ export const COMIC_COPY: Record<Locale, Copy> = {
     heroTitle: ['Don’t be a', 'suckling pig.'],
     heroText: 'Streams everything for free, downloads every set, knows the line-up by heart… and never votes. Until the banger drops.',
     ctaEpisodes: 'Watch the episodes',
+    ogAlt: 'The Pig and the Breakbeat Pickle sitting on a speaker at sunrise as the party ends. The adventures of the Pig and the Pickle: don’t be a suckling pig.',
     ctaCast: 'Meet the gang',
     heroAlt: 'The pig with his arms crossed is struck by lightning and turns into Super Pig in a yellow suit and red cape',
     storyTitle: ['Species spotted:', 'the suckling pig'],
