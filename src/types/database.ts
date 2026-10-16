@@ -1131,6 +1131,8 @@ export interface FortnightDigestTrack {
   featured_id: string | null
   week_date: string | null
   external_url: string | null
+  /** Fuente del ▶ (preview proxificada, Bandcamp o tema completo). */
+  audio_src?: string | null
 }
 
 export interface FortnightDigestName {

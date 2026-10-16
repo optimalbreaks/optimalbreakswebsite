@@ -5,11 +5,18 @@
 // mosaico de carátulas, cifras, rankings con carátula y barras, histograma
 // de BPM, debutantes, sesiones y adelantos. Los textos son cortos y vienen
 // en el propio digest; la estructura la pone este componente.
+// Cada tema con `audio_src` lleva ▶: suena en el reproductor global con
+// todos los temas del artículo en cola (mismo motor que /charts).
 // ============================================
 
+'use client'
+
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
+import type { PreviewTrack } from '@/components/DeckAudioProvider'
+import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { buildTrackSharePath } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { FortnightDigest as Digest, FortnightDigestTrack } from '@/types/database'
@@ -85,6 +92,33 @@ function trackName(t: FortnightDigestTrack): string {
   return t.mix_name && !/^original mix$/i.test(t.mix_name) ? `${t.title} (${t.mix_name})` : t.title
 }
 
+function rowKeyOf(t: FortnightDigestTrack): string {
+  return t.featured_id ? `fq-${t.featured_id}` : `fq-${t.artists}-${t.title}-${t.mix_name ?? ''}`
+}
+
+const PlayCtx = createContext<{ play: (rowKey: string) => void; current: string | null; playing: boolean }>({
+  play: () => {},
+  current: null,
+  playing: false,
+})
+
+function PlayButton({ track, className = '' }: { track: FortnightDigestTrack; className?: string }) {
+  const { play, current, playing } = useContext(PlayCtx)
+  if (!track.audio_src) return null
+  const rowKey = rowKeyOf(track)
+  const on = current === rowKey && playing
+  return (
+    <button
+      type="button"
+      onClick={() => play(rowKey)}
+      aria-label={`${on ? 'Pause' : 'Play'} ${track.artists} — ${trackName(track)}`}
+      className={`flex items-center justify-center border-[2px] border-[var(--ink)] font-black transition-colors ${on ? 'bg-[var(--yellow)] text-[var(--ink)]' : 'bg-[var(--red)] text-white hover:bg-[var(--ink)]'} ${className}`}
+    >
+      {on ? '❚❚' : '▶'}
+    </button>
+  )
+}
+
 function NameLink({ name, slug, base, lang }: { name: string; slug: string | null; base: 'artists' | 'labels'; lang: Locale }) {
   if (!slug) return <>{name}</>
   return (
@@ -131,8 +165,11 @@ function RankedTracks({ tracks, unit, lang }: { tracks: FortnightDigestTrack[]; 
           </div>
         )
         return (
-          <li key={`${t.title}-${i}`} className="!m-0">
-            {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{body}</Link> : body}
+          <li key={`${t.title}-${i}`} className="!m-0 flex items-stretch gap-2">
+            {t.audio_src ? <PlayButton track={t} className="w-11 sm:w-12 shrink-0 border-[3px] text-[16px]" /> : null}
+            <div className="min-w-0 flex-1">
+              {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{body}</Link> : body}
+            </div>
           </li>
         )
       })}
@@ -171,7 +208,47 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
   ]
   const bandMax = Math.max(1, ...d.sound.bands.map((b) => b.count))
 
+  const pathname = usePathname()
+  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
+  const groupKey = `blog-quincena:${d.from}:${d.until}`
+  const queue = useMemo((): PreviewTrack[] => {
+    const seen = new Set<string>()
+    const out: PreviewTrack[] = []
+    const all = [...(d.released ?? []), ...d.played, ...d.voted, ...d.top100.flatMap((a) => a.tracks)]
+    for (const t of all) {
+      const rowKey = rowKeyOf(t)
+      if (!t.audio_src || seen.has(rowKey)) continue
+      seen.add(rowKey)
+      out.push({
+        rowKey,
+        src: t.audio_src,
+        title: t.title,
+        mixName: t.mix_name,
+        artist: t.artists,
+        artworkUrl: t.artwork_url,
+        album: t.label,
+        originPath: pathname || undefined,
+        share: t.featured_id ? { mode: 'chart', source: 'featured', trackId: t.featured_id, weekDate: t.week_date } : undefined,
+      })
+    }
+    return out
+  }, [d, pathname])
+  const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const play = useCallback(
+    (rowKey: string) => {
+      if (current === rowKey) {
+        togglePreview()
+        return
+      }
+      const idx = queue.findIndex((q) => q.rowKey === rowKey)
+      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+    },
+    [current, queue, groupKey, playPreviewQueue, togglePreview],
+  )
+  const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+
   return (
+    <PlayCtx.Provider value={playCtx}>
     <div className="prose-ob">
       <div className="ob-digest">
       {/* Portada: mosaico de carátulas + cifras */}
@@ -222,7 +299,12 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
                   </div>
                 </div>
               )
-              return href ? <Link key={i} href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : <div key={i}>{card}</div>
+              return (
+                <div key={i} className="relative">
+                  {href ? <Link href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : card}
+                  <PlayButton track={r} className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
+                </div>
+              )
             })}
           </div>
         </Section>
@@ -267,6 +349,14 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
                     {a.tracks.slice(0, 3).map((tr, i) => {
                       const href = trackHref(tr, lang)
                       const img = <div className="w-10"><Cover src={tr.artwork_url} alt={tr.title} sizes="40px" /></div>
+                      if (tr.audio_src) {
+                        return (
+                          <span key={i} className="relative block" title={trackName(tr)}>
+                            {img}
+                            <PlayButton track={tr} className="absolute inset-0 !border-0 !bg-black/40 hover:!bg-[var(--red)] !text-white text-[13px]" />
+                          </span>
+                        )
+                      }
                       return href ? <Link key={i} href={href} title={trackName(tr)}>{img}</Link> : <span key={i}>{img}</span>
                     })}
                   </div>
@@ -340,5 +430,6 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
 
       </div>
     </div>
+    </PlayCtx.Provider>
   )
 }

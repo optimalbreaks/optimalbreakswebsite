@@ -19,7 +19,8 @@
  * adelantos). Los datos van a `blog_posts.digest` y la ficha
  * los pinta con gráficos y carátulas (FortnightDigest); el modelo solo escribe
  * frases cortas por bloque. Se publica al momento (--borrador para no publicar).
- * No pisa una quincena publicada salvo con --forzar. --solo-datos imprime los datos y sale.
+ * No pisa una quincena publicada salvo con --forzar. --mantener-textos (con --forzar)
+ * refresca los datos y conserva título y frases ya publicados. --solo-datos imprime los datos y sale.
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
@@ -400,7 +401,7 @@ async function computeQuincena(until) {
     fetchAllRows(
       sb,
       'chart_featured_tracks',
-      'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, release_year, link_url, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url',
+      'id, chart_edition_id, title, mix_name, artists, label, bpm, music_key, release_date, release_year, link_url, platform, artwork_url, sample_url, full_audio_url, spotify_url, tidal_url',
       (q) => q.not('release_date', 'is', null),
     ),
     fetchAllRows(sb, 'artists', 'id, slug, name, name_display, country'),
@@ -613,6 +614,21 @@ Devuelve SOLO este JSON:
   "copy_en": { mismas claves, en inglés }
 }`
 
+  // Audio del ▶ del artículo: mismo orden que buildFeaturedBundle de /charts.
+  const proxied = (u) => {
+    try {
+      const host = new URL(u).hostname.toLowerCase()
+      if (host === 'geo-samples.beatport.com' || host === 'geo-media.beatport.com') return `/api/audio-proxy?url=${encodeURIComponent(u)}`
+    } catch { /* url cruda */ }
+    return u
+  }
+  const audioSrc = (f) => {
+    if (f.platform === 'bandcamp' && f.link_url) return `/api/bandcamp-preview?track=${encodeURIComponent(f.link_url)}`
+    if (f.full_audio_url) return f.full_audio_url
+    if (f.sample_url && f.platform !== 'soundcloud') return proxied(f.sample_url)
+    return null
+  }
+
   const toTrack = (f, value = 0) => ({
     title: f.title,
     mix_name: f.mix_name || null,
@@ -624,6 +640,7 @@ Devuelve SOLO este JSON:
     featured_id: f.id,
     week_date: weekBy.get(f.chart_edition_id) || null,
     external_url: f.link_url || null,
+    audio_src: audioSrc(f),
   })
   const slugOf = (n) => artistBy.get(normName(n))?.slug || null
 
@@ -648,7 +665,7 @@ Devuelve SOLO este JSON:
       return toTrack(best, tracks.length)
     })
 
-  const voted = votedWin.map((v) => ({
+  const voted = votedWin.map((v) => featByKey.has(v.canonical_key) ? toTrack(featByKey.get(v.canonical_key), v.unique_users) : ({
     title: v.title,
     mix_name: v.mix_name || null,
     artists: v.artists,
@@ -659,6 +676,7 @@ Devuelve SOLO este JSON:
     featured_id: v.primary?.source === 'featured' ? v.primary.id : null,
     week_date: v.primary?.source === 'featured' ? v.primary.week_date || null : null,
     external_url: v.external_url || v.youtube_url || null,
+    audio_src: v.sample_url ? proxied(v.sample_url) : null,
   }))
 
   const digest = {
@@ -823,6 +841,7 @@ function parseArgs(argv) {
     } else if (a === '--solo-datos') out.soloDatos = true
     else if (a === '--borrador') out.borrador = true
     else if (a === '--forzar') out.forzar = true
+    else if (a === '--mantener-textos') out.mantenerTextos = true
     else if (a === '--featured') out.featured = true
     else if (a === '--no-search') out.noSearch = true
     else if (a === '--json-only') out.jsonOnly = true
@@ -874,8 +893,18 @@ async function mainQuincena(args) {
     return
   }
   if (!q.votesReady) throw new Error('Despliega antes de generar la quincena (los votos salen de producción).')
-  console.log('[blog-agent] Redactando…')
-  const raw = await openAiJson({ system: QUINCENA_SYSTEM, user: brief })
+  let raw
+  if (args.mantenerTextos) {
+    const creds = supabaseApiCredentials()
+    const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
+    const { data: old } = await sb.from('blog_posts').select('title_es, title_en, excerpt_es, excerpt_en, tags, digest').eq('slug', q.slug).maybeSingle()
+    if (!old?.digest?.copy) throw new Error(`--mantener-textos: ${q.slug} no tiene textos guardados`)
+    console.log('[blog-agent] Datos nuevos, mismos textos')
+    raw = { ...old, copy_es: old.digest.copy.es, copy_en: old.digest.copy.en }
+  } else {
+    console.log('[blog-agent] Redactando…')
+    raw = await openAiJson({ system: QUINCENA_SYSTEM, user: brief })
+  }
   const digest = { ...q.digest, copy: { es: cleanCopy(raw.copy_es), en: cleanCopy(raw.copy_en) } }
   const row = {
     slug: q.slug,
