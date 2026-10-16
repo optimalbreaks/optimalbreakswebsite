@@ -513,12 +513,22 @@ export default function FortnightDigest({
 
       {d.debut.length > 0 && (
         <Section title={`${t.debut} (${d.debut_total})`} copy={copy.debut}>
-          <div className="flex flex-wrap gap-2">
-            {d.debut.map((a) => (
-              <span key={a.name} className="cutout">
-                <NameLink name={a.name} slug={a.slug} base="artists" lang={lang} />
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {d.debut.map((a) =>
+              a.slug ? (
+                <Link
+                  key={a.name}
+                  href={`/${lang}/artists/${a.slug}`}
+                  className="cutout fill !m-0 !text-[11px] border-2 border-[var(--ink)] no-underline hover:!bg-[var(--red)] hover:!text-white"
+                >
+                  {a.name}
+                </Link>
+              ) : (
+                <span key={a.name} className="cutout outline !m-0 !text-[11px] bg-[var(--paper)] text-[var(--ink)]">
+                  {a.name}
+                </span>
+              ),
+            )}
             {d.debut_total > d.debut.length && (
               <span className="text-[12px] text-[var(--dim)] self-center" style={mono}>{t.debutMore(d.debut_total - d.debut.length)}</span>
             )}
