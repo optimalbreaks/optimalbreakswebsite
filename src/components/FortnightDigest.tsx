@@ -38,9 +38,16 @@ const T = {
     top100: 'Estrellas del Top 100 con temas nuevos',
     played: 'Lo más escuchado',
     plays: 'escuchas',
+    playOne: 'escucha',
     voted: 'Lo más votado',
     votes: 'votos',
+    voteOne: 'voto',
     frozen: (from: string, until: string) => `Recuento del ${from} al ${until}, cerrado al publicar el artículo. En Tracks y en el Top 100 los números siguen vivos.`,
+    live: (at: string) => `En directo: lo que ha recibido cada tema desde que salió. Actualizado ${at}.`,
+    leads: (h: string, title: string, artists: string) => `${h}: «${title}», de ${artists}`,
+    leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
+      `«${title}», de ${artists}, va primero con ${n} ${unit}${rest ? `. Le siguen ${rest}` : ''}.`,
+    and: ' y ',
     artistsTitle: 'Quién más ha publicado',
     tracksShort: 'temas',
     releasesShort: 'discos',
@@ -74,9 +81,16 @@ const T = {
     top100: 'Top 100 stars with new music',
     played: 'Most played',
     plays: 'plays',
+    playOne: 'play',
     voted: 'Most voted',
     votes: 'votes',
+    voteOne: 'vote',
     frozen: (from: string, until: string) => `Count from ${from} to ${until}, closed when the article was published. On Tracks and the Top 100 the numbers stay live.`,
+    live: (at: string) => `Live: what each track has received since release. Updated ${at}.`,
+    leads: (h: string, title: string, artists: string) => `${h}: “${title}” by ${artists}`,
+    leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
+      `“${title}” by ${artists} leads with ${n} ${unit}${rest ? `, ahead of ${rest}` : ''}.`,
+    and: ' and ',
     artistsTitle: 'Who released the most',
     tracksShort: 'tracks',
     releasesShort: 'releases',
@@ -337,12 +351,14 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
 }
 
 export default function FortnightDigest({
-  digest: d, lang, artistSlugMap, labelSlugMap,
+  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null,
 }: {
   digest: Digest
   lang: Locale
   artistSlugMap?: Record<string, string>
   labelSlugMap?: Record<string, string>
+  /** Rankings recalculados en el servidor (fortnight-live): títulos y textos salen de los datos. */
+  liveAt?: string | null
 }) {
   const t = T[lang]
   const copy = d.copy[lang]
@@ -405,11 +421,29 @@ export default function FortnightDigest({
   const { user } = useAuth()
   const lastWeek = (d.released ?? []).map((r) => r.week_date || '').sort().pop() || ''
   const accountHref = (path: string) => (user ? `/${lang}${path}` : `/${lang}/login`)
+  const liveLabel = (() => {
+    if (!liveAt) return ''
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+        .formatToParts(new Date(liveAt))
+        .map((x) => [x.type, x.value]),
+    )
+    return `${shortDate(`${p.year}-${p.month}-${p.day}`, lang)} · ${p.hour}:${p.minute}`
+  })()
   const frozenNote = (
     <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>
-      {t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
+      {liveAt ? t.live(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
     </p>
   )
+  const heading = (h: string, list: FortnightDigestTrack[]) =>
+    liveAt && list[0] ? t.leads(h, list[0].title, list[0].artists) : h
+  const leadCopy = (list: FortnightDigestTrack[], one: string, many: string, stored: string) => {
+    if (!liveAt) return stored
+    const [first, ...others] = list
+    if (!first) return ''
+    const rest = others.slice(0, 2).map((x) => (lang === 'es' ? `«${x.title}» (${x.artists})` : `“${x.title}” (${x.artists})`)).join(t.and)
+    return t.leadLine(first.title, first.artists, first.value, first.value === 1 ? one : many, rest)
+  }
 
   return (
     <PlayCtx.Provider value={playCtx}>
@@ -490,14 +524,14 @@ export default function FortnightDigest({
       )}
 
       {d.played.length > 0 && (
-        <Section title={t.played} copy={copy.played}>
+        <Section title={heading(t.played, d.played)} copy={leadCopy(d.played, t.playOne, t.plays, copy.played)}>
           <RankedTracks tracks={d.played} spot="played" unit={t.plays} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
           {frozenNote}
         </Section>
       )}
 
       {d.voted.length > 0 && (
-        <Section title={t.voted} copy={copy.voted}>
+        <Section title={heading(t.voted, d.voted)} copy={leadCopy(d.voted, t.voteOne, t.votes, copy.voted)}>
           <RankedTracks tracks={d.voted} spot="voted" unit={t.votes} lang={lang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />
           {frozenNote}
           <Cta

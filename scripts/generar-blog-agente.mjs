@@ -369,6 +369,19 @@ function fechaLarga(ymd, lang) {
   })
 }
 
+/** Título fijo: la página recalcula escuchas y votos en directo y los líderes cambian. */
+function tituloQuincena(from, until, lang) {
+  const sameYear = from.slice(0, 4) === until.slice(0, 4)
+  const sameMonth = sameYear && from.slice(5, 7) === until.slice(5, 7)
+  const d = (ymd, opts) =>
+    new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { ...opts, timeZone: 'UTC' })
+  const start = d(from, sameMonth ? { day: 'numeric' } : sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' })
+  const end = fechaLarga(until, lang)
+  return lang === 'es'
+    ? `Los mejores temas de breakbeat del ${start} al ${end}`
+    : `The best breakbeat tracks, ${start} to ${end}`
+}
+
 async function fetchAllRows(sb, table, select, apply = (q) => q) {
   const out = []
   for (let from = 0; ; from += 500) {
@@ -594,7 +607,8 @@ ${data}
 QUÉ ESCRIBES: SOLO TEXTOS CORTOS
 La página ya pinta los datos con gráficos, carátulas, rankings y fotos. Tú pones la voz: frases de revista musical, con gancho, que digan lo que el gráfico no dice (quién destaca, qué sorprende, qué conviene escuchar).
 - El artículo trata SOLO de los temas que han salido en estas dos semanas: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.
-- Un texto por bloque: intro, released, played, voted, artists, top100, labels, sound, debut.
+- Un texto por bloque: intro, released, artists, top100, labels, sound, debut. played y voted van vacíos: la página los escribe sola con el recuento en directo.
+- Escuchas y votos cambian cada día: ni en el intro ni en el excerpt digas quién va primero en escuchas o votos.
 - released: los discos que hay que escuchar de la quincena (2–3 nombres).
 - intro: 2 frases como máximo. Los demás: 1–2 frases, 40 palabras como máximo cada uno.
 - No repitas listas ni cifras que ya enseña el gráfico; cita como mucho 1–3 nombres por bloque.
@@ -605,8 +619,6 @@ La página ya pinta los datos con gráficos, carátulas, rankings y fotos. Tú p
 
 Devuelve SOLO este JSON:
 {
-  "title_es": "titular con gancho, menos de 70 caracteres, que nombre a 1–2 protagonistas y diga que es la quincena",
-  "title_en": "...",
   "excerpt_es": "1 frase, 150–200 caracteres",
   "excerpt_en": "...",
   "tags": ["quincena", "new releases", "breakbeat", "top 100", "… 2–4 nombres propios"],
@@ -913,11 +925,12 @@ async function mainQuincena(args) {
     console.log('[blog-agent] Redactando…')
     raw = await openAiJson({ system: QUINCENA_SYSTEM, user: brief })
   }
-  const digest = { ...q.digest, copy: { es: cleanCopy(raw.copy_es), en: cleanCopy(raw.copy_en) } }
+  const live = (c) => ({ ...cleanCopy(c), played: '', voted: '' })
+  const digest = { ...q.digest, copy: { es: live(raw.copy_es), en: live(raw.copy_en) } }
   const row = {
     slug: q.slug,
-    title_es: String(raw.title_es || '').trim() || q.titleHint,
-    title_en: String(raw.title_en || '').trim() || q.titleHint,
+    title_es: tituloQuincena(q.from, q.until, 'es'),
+    title_en: tituloQuincena(q.from, q.until, 'en'),
     excerpt_es: String(raw.excerpt_es || '').trim() || digest.copy.es.intro,
     excerpt_en: String(raw.excerpt_en || '').trim() || digest.copy.en.intro,
     content_es: digestToHtml(digest, 'es'),

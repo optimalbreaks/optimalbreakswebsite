@@ -24,6 +24,7 @@ import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
+import { getFortnightLive } from '@/lib/fortnight-live'
 import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
@@ -106,7 +107,11 @@ export default async function BlogPostPage({ params }: Props) {
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
   const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
-  const digest = post.digest?.copy ? post.digest : null
+  const storedDigest = post.digest?.copy ? post.digest : null
+  const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until) : null
+  const digest = storedDigest && live
+    ? { ...storedDigest, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
+    : storedDigest
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
@@ -366,7 +371,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} />}
 
       {albumTracks.length > 0 && (
         <div className={digest ? 'mt-12' : 'mb-10'}>
