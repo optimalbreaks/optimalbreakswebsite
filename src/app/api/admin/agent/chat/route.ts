@@ -24,6 +24,15 @@ import { executedOpsTrace } from '@/lib/collaborator-contributions'
 
 export const maxDuration = 300
 
+/** Un tema que ya estaba no es un fallo: sin ✗ ni «No se completó el guardado». */
+function confirmReply(results: Awaited<ReturnType<typeof executePendingOps>>): string {
+  const already = (r: (typeof results)[number]) => !r.ok && /ya est(?:á|aba)/i.test(r.summary)
+  const lines = results.map((r) => `${r.ok ? '✓' : already(r) ? '•' : '✗'} [${r.type}] ${r.summary}`)
+  if (results.some((r) => r.ok)) return `Hecho. Guardado en la BD:\n${lines.join('\n')}`
+  if (results.every(already)) return `Ya estaba en la web, no hace falta guardarlo:\n${lines.join('\n')}`
+  return `No se completó el guardado:\n${lines.join('\n')}`
+}
+
 /**
  * GET /api/admin/agent/chat
  * ?threads=1 → lista hilos
@@ -169,10 +178,7 @@ export async function POST(request: NextRequest) {
     if (Array.isArray(confirmOps) && confirmOps.length > 0) {
       const results = await executePendingOps(confirmOps, request, editorScope)
       const savedOk = results.some((r) => r.ok)
-      const lines = results.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
-      const reply = savedOk
-        ? `Hecho. Guardado en la BD:\n${lines.join('\n')}`
-        : `No se completó el guardado:\n${lines.join('\n')}`
+      const reply = confirmReply(results)
 
       let tid = threadId
       try {
@@ -290,10 +296,7 @@ export async function POST(request: NextRequest) {
       executedOps = agent.pending_ops
       execResults = await executePendingOps(executedOps, request, editorScope)
       savedOk = execResults.some((r) => r.ok)
-      const lines = execResults.map((r) => `${r.ok ? '✓' : '✗'} [${r.type}] ${r.summary}`)
-      reply = savedOk
-        ? `Hecho. Guardado en la BD:\n${lines.join('\n')}`
-        : `No se completó el guardado:\n${lines.join('\n')}`
+      reply = confirmReply(execResults)
       pendingOut = []
     }
 
