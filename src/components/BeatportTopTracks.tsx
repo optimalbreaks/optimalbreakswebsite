@@ -48,6 +48,8 @@ interface Props {
   badgeVariant?: 'rank' | 'index'
   /** Botones debajo del título (columna estrecha del blog, ~750 px). */
   stacked?: boolean
+  /** Compartir lleva a la fila de /charts (vía `saveRefsByUrl`) en vez de a esta página. Blog. */
+  shareToCharts?: boolean
   /**
    * Filas de charts/NR que son el mismo tema (otro ID de Beatport).
    * Clave = `beatport_url` del corte. El "+" del álbum queda verde si
@@ -176,6 +178,7 @@ export default function BeatportTopTracks({
   defaultExpanded = false,
   badgeVariant = 'rank',
   stacked = false,
+  shareToCharts = false,
   saveRefsByUrl,
   fallbackTrack,
 }: Props) {
@@ -226,6 +229,12 @@ export default function BeatportTopTracks({
   // la fila visible. El Top 10 no tiene fila propia en `chart_*_tracks`,
   // así que usamos modo URL + snapshot, exactamente igual que en el
   // <SaveTrackButton> de la lista expandida.
+  const chartRefFor = useCallback((t: BeatportTopTrack) => {
+    if (!shareToCharts) return null
+    const refs = saveRefsByUrl?.[(t.beatport_url || '').trim()] ?? []
+    return refs.find((r) => r.source === 'featured') ?? refs[0] ?? null
+  }, [shareToCharts, saveRefsByUrl])
+
   const buildQueue = useCallback((): PreviewTrack[] => {
     return playableTracks.map((t) => {
       const bpId = extractBeatportTrackId(t.beatport_url) ?? undefined
@@ -233,6 +242,7 @@ export default function BeatportTopTracks({
         ? buildBeatportSharePath(pathname, bpId)
         : null
       const storyMeta = storyMetaFromTop(t)
+      const chartRef = chartRefFor(t)
       return {
         rowKey: `bp-${t.position}`,
         src: proxyUrl(t.sample_url!),
@@ -245,14 +255,16 @@ export default function BeatportTopTracks({
         // sello) donde vive este Top 10. El hash #bp-row-N expande el panel.
         originPath: pathname || undefined,
         save: saveDataForTrack(t, origin, saveRefsByUrl),
-        share: sharePath
-          ? { mode: 'path' as const, path: sharePath, storyMeta }
-          : t.beatport_url
-            ? { mode: 'url' as const, externalUrl: t.beatport_url, storyMeta }
-            : undefined,
+        share: chartRef
+          ? { mode: 'chart' as const, source: chartRef.source, trackId: chartRef.id }
+          : sharePath
+            ? { mode: 'path' as const, path: sharePath, storyMeta }
+            : t.beatport_url
+              ? { mode: 'url' as const, externalUrl: t.beatport_url, storyMeta }
+              : undefined,
       }
     })
-  }, [playableTracks, origin, pathname, saveRefsByUrl])
+  }, [playableTracks, origin, pathname, saveRefsByUrl, chartRefFor])
 
   const playFromTrack = useCallback((t: BeatportTopTrack) => {
     // Si esta fila ya es la que suena, toggle pausa/reanudar (el icono ❚❚
@@ -354,6 +366,7 @@ export default function BeatportTopTracks({
           ? buildBeatportSharePath(pathname, bpId)
           : null
         const storyMeta = storyMetaFromTop(t)
+        const chartRef = chartRefFor(t)
         return {
           rowKey: `bp-${t.position}`,
           src: proxyUrl(t.sample_url!),
@@ -364,11 +377,13 @@ export default function BeatportTopTracks({
           domId: `bp-row-${t.position}`,
           originPath: pathname || undefined,
           save: saveDataForTrack(t, origin, saveRefsByUrl),
-          share: sharePath
-            ? { mode: 'path', path: sharePath, storyMeta }
-            : t.beatport_url
-              ? { mode: 'url', externalUrl: t.beatport_url, storyMeta }
-              : undefined,
+          share: chartRef
+            ? { mode: 'chart', source: chartRef.source, trackId: chartRef.id }
+            : sharePath
+              ? { mode: 'path', path: sharePath, storyMeta }
+              : t.beatport_url
+                ? { mode: 'url', externalUrl: t.beatport_url, storyMeta }
+                : undefined,
         }
       })
       const idx = queue.findIndex((q) => q.rowKey === `bp-${target.position}`)
@@ -402,7 +417,7 @@ export default function BeatportTopTracks({
       window.clearTimeout(timer)
       window.removeEventListener(SEARCH_NAV_EVENT, onSearch)
     }
-  }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl, fallbackTrack])
+  }, [tracks, playableTracks, groupKey, pathname, origin, saveRefsByUrl, fallbackTrack, chartRefFor])
 
   // Modal del enlace compartido: se renderiza también cuando la ficha no
   // tiene Top 10 vigente (solo fallback) — el enlace debe sonar igual.
@@ -579,6 +594,18 @@ export default function BeatportTopTracks({
                         )
                       })()}
                       {(() => {
+                        const chartRef = chartRefFor(t)
+                        if (chartRef) {
+                          return (
+                            <TrackShareButton
+                              source={chartRef.source}
+                              trackId={chartRef.id}
+                              weekDate=""
+                              lang={lang}
+                              shareTitle={`${t.title}${t.mix_name ? ` (${t.mix_name})` : ''} — ${t.artists.map((a) => a.name).filter(Boolean).join(', ')}`}
+                            />
+                          )
+                        }
                         const bpId = extractBeatportTrackId(t.beatport_url)
                         if (!bpId || !pathname) return null
                         return (
