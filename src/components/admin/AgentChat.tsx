@@ -133,7 +133,12 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
   const [pendingOps, setPendingOps] = useState<PendingOp[]>([])
   const [threadId, setThreadId] = useState<string | null>(null)
   const [vvOffset, setVvOffset] = useState(0)
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement>(null)
+  // scrollIntoView también desplaza en horizontal (y la página): con un enlace largo dejaba el texto cortado por la izquierda.
+  const scrollToBottom = useCallback(() => {
+    const el = messagesRef.current
+    if (el) el.scrollTo({ top: el.scrollHeight, left: 0, behavior: 'smooth' })
+  }, [])
   const galleryRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -205,8 +210,8 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
   }, [])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, loading, waitingHint])
+    scrollToBottom()
+  }, [messages, loading, waitingHint, scrollToBottom])
 
   const clearWaitingTimers = useCallback(() => {
     for (const t of waitingTimers.current) clearTimeout(t)
@@ -782,14 +787,15 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
         }
       >
         <div
-          className={`flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-3 ${
+          ref={messagesRef}
+          className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain space-y-3 ${
             compact ? 'ob-capture__messages px-3 py-3' : 'p-4'
           }`}
         >
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`max-w-[94%] border-[2px] border-[var(--ink)] px-3 py-2.5 text-[15px] leading-snug whitespace-pre-wrap ${
+              className={`max-w-[94%] border-[2px] border-[var(--ink)] px-3 py-2.5 text-[15px] leading-snug whitespace-pre-wrap break-words [overflow-wrap:anywhere] ${
                 m.role === 'user' ? 'ml-auto bg-[var(--uv)]/15' : 'mr-auto bg-white'
               }`}
               style={{ fontFamily: "'Special Elite', monospace" }}
@@ -833,7 +839,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
               </p>
               <ol className="text-[13px] space-y-1 list-decimal pl-4">
                 {pendingOps.map((op, i) => (
-                  <li key={`pend-${i}`}>{op.summary || op.kind}</li>
+                  <li key={`pend-${i}`} className="break-words [overflow-wrap:anywhere]">{op.summary || op.kind}</li>
                 ))}
               </ol>
               <div className="flex flex-wrap gap-2 pt-1">
@@ -874,7 +880,6 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
               </p>
             </div>
           ) : null}
-          <div ref={bottomRef} />
         </div>
 
         <div
@@ -957,7 +962,7 @@ function AgentChatCore({ lang, mode = 'embedded', shareQuery = null }: Props) {
               // Tras abrir teclado en PWA, asegurar que el composer queda visible
               window.setTimeout(() => {
                 textareaRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-                bottomRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
+                scrollToBottom()
               }, 320)
             }}
             onKeyDown={(e) => {
