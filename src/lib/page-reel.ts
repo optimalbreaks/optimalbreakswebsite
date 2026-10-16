@@ -11,7 +11,7 @@
 // que R y F seguidos no las descarguen dos veces).
 // ============================================
 
-import { animBlog, animTop, animWeek, blogHighlightFrom, DUR, type Img } from './page-reel-design'
+import { animBlog, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, FORTNIGHT_DUR, type Img } from './page-reel-design'
 import { encodeCanvasVideo, type ReelFormat, type ReelResult } from './reel-renderer'
 
 export type PageReelKind = 'top100' | 'week' | 'blog'
@@ -39,7 +39,28 @@ export type PageReelInput =
       artist: string
       label: string
       excerpt: string
+      /** Artículo quincenal: vídeo de datos (`animFortnight`) en vez del de artículo. */
+      fortnight?: FortnightReelInput
     }
+
+type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }
+export type FortnightReelInput = {
+  from: string
+  until: string
+  totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
+  covers: string[]
+  played: FortnightReelTrack[]
+  voted: FortnightReelTrack[]
+  artists: { name: string; tracks: number; releases: number }[]
+  stars: { rank: number; name: string; track: string; image: string | null }[]
+  labels: { name: string; tracks: number }[]
+  bpm: number | null
+  prevBpm: number | null
+  bands: { band: string; count: number }[]
+  key: string | null
+  debutTotal: number
+  debut: string[]
+}
 
 const imageCache = new Map<string, Promise<Img | null>>()
 
@@ -124,6 +145,26 @@ export async function renderPageReel(
     const tracks = uniq.map((t, i) => ({ title: t.title, artists: t.artists, label: t.label, img: imgs[i] }))
     const week = reelDateLabel(input.weekDate)
     draw = (c, t) => animWeek(c, W, H, { week, count: input.count, tracks }, t)
+  } else if (input.fortnight) {
+    const f = input.fortnight
+    const urls = [
+      ...f.covers,
+      ...f.played.map((r) => r.artwork),
+      ...f.voted.map((r) => r.artwork),
+      ...f.stars.map((s) => s.image),
+    ]
+    const imgs = await loadArtworks(urls)
+    let k = 0
+    const next = () => imgs[k++] ?? null
+    const covers = f.covers.map(next)
+    const track = (r: FortnightReelTrack) => ({ title: r.title, artists: r.artists, value: r.value, img: next() })
+    const played = f.played.map(track)
+    const voted = f.voted.map(track)
+    const stars = f.stars.map((s) => ({ rank: s.rank, name: s.name, track: s.track, img: next() }))
+    const short = (iso: string) => reelDateLabel(iso).replace(/ \d{4}$/, '').toUpperCase()
+    const data = { ...f, range: `${short(f.from)} — ${short(f.until)}`, covers, played, voted, stars }
+    const draw = (c: CanvasRenderingContext2D, t: number) => animFortnight(c, W, H, data, t)
+    return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress)
   } else {
     const [img] = await loadArtworks([input.artwork])
     const data = {

@@ -244,6 +244,31 @@ export default async function BlogPostPage({ params }: Props) {
     artist: firstTrack ? trackArtists(firstTrack) : '',
     label: firstTrack?.label || '',
     excerpt: excerpt || '',
+    fortnight: digest
+      ? {
+          // share-reel-images solo acepta https: los retratos de /images/... van absolutos.
+          ...(() => {
+            const abs = (u: string | null) => (u && u.startsWith('/') ? `${SITE_URL}${u}` : u)
+            return {
+              covers: digest.covers.slice(0, 12).map((u) => abs(u) as string),
+              played: digest.played.slice(0, 5).map((r) => ({ title: r.title, artists: r.artists, value: r.value, artwork: abs(r.artwork_url) })),
+              voted: digest.voted.slice(0, 5).map((r) => ({ title: r.title, artists: r.artists, value: r.value, artwork: abs(r.artwork_url) })),
+              stars: digest.top100.slice(0, 6).map((a) => ({ rank: a.rank, name: a.name, track: a.tracks[0]?.title || '', image: abs(a.image_url) })),
+            }
+          })(),
+          from: digest.from,
+          until: digest.until,
+          totals: { ...digest.totals, prev: digest.totals.prev_tracks },
+          artists: digest.artists.slice(0, 6).map((a) => ({ name: a.name, tracks: a.tracks, releases: a.releases })),
+          labels: digest.labels.slice(0, 6).map((l) => ({ name: l.name, tracks: l.tracks })),
+          bpm: digest.sound.avg_bpm,
+          prevBpm: digest.sound.prev_avg_bpm,
+          bands: digest.sound.bands,
+          key: digest.sound.keys[0]?.key ?? null,
+          debutTotal: digest.debut_total,
+          debut: digest.debut.slice(0, 6).map((n) => n.name),
+        }
+      : undefined,
   }
 
   // alt enriquecido para la portada del artículo.

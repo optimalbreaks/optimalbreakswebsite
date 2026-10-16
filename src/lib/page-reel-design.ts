@@ -886,3 +886,491 @@ export function animBlog(ctx: C, W: number, H: number, d: BlogAnim, t: number) {
   })
   ctx.restore()
 }
+
+// ===================== QUINCENA (blog con digest) =====================
+// Escenas cortas de datos, no el artículo: cada una dice quién lidera y lo
+// enseña con barras, carátulas o fotos. Rótulo de datos corriendo arriba y
+// barrido rojo entre escenas.
+export type FortnightTrackAnim = { title: string; artists: string; value: number; img: Img | null }
+export type FortnightAnim = {
+  range: string
+  totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
+  covers: (Img | null)[]
+  played: FortnightTrackAnim[]
+  voted: FortnightTrackAnim[]
+  artists: { name: string; tracks: number; releases: number }[]
+  stars: { rank: number; name: string; track: string; img: Img | null }[]
+  labels: { name: string; tracks: number }[]
+  bpm: number | null
+  prevBpm: number | null
+  bands: { band: string; count: number }[]
+  key: string | null
+  debutTotal: number
+  debut: string[]
+}
+export const FORTNIGHT_DUR = 28
+
+type FnScene = 'intro' | 'played' | 'voted' | 'artists' | 'stars' | 'labels' | 'sound' | 'outro'
+type Box = { x: number; y: number; w: number; h: number }
+type FnLayout = { V: boolean; hx: number; kY: number; hY: number; hW: number; S: Box; foot: Box }
+
+function fnScenes(d: FortnightAnim): { k: FnScene; a: number; b: number }[] {
+  const all: [FnScene, number, boolean][] = [
+    ['intro', 3.2, true],
+    ['played', 4.2, d.played.length > 0],
+    ['voted', 3.8, d.voted.length > 0],
+    ['artists', 3.8, d.artists.length > 0],
+    ['stars', 4, d.stars.length > 0],
+    ['labels', 2.8, d.labels.length > 0],
+    ['sound', 2.8, d.bands.length > 0],
+    ['outro', 3.4, true],
+  ]
+  const on = all.filter(([, , ok]) => ok)
+  const k = FORTNIGHT_DUR / on.reduce((s, [, w]) => s + w, 0)
+  let a = 0
+  return on.map(([key, w]) => {
+    const sc = { k: key, a, b: a + w * k }
+    a = sc.b
+    return sc
+  })
+}
+
+function fnHeader(ctx: C, L: FnLayout, lt: number, kicker: string, head: string, sub: string, color: string) {
+  slide(ctx, ph(lt, 0, 0.35), -90, 0, () => chip(ctx, L.hx, L.kY, kicker, color, '#fff', L.V ? 24 : 22))
+  let s = L.V ? 100 : 86
+  ctx.font = HEAD(s)
+  const forced = head.includes('\n')
+  const wrapHead = () => (forced ? head.toUpperCase().split('\n') : wrap(ctx, head.toUpperCase(), L.hW))
+  let lines = wrapHead()
+  while (forced && lines.some((l) => ctx.measureText(l).width > L.hW) && s > 48) {
+    s -= 4
+    ctx.font = HEAD(s)
+  }
+  while (lines.length > 2 && s > 48) {
+    s -= 4
+    ctx.font = HEAD(s)
+    lines = wrapHead()
+  }
+  if (lines.length > 2) lines = [lines[0], fit(ctx, lines.slice(1).join(' '), HEAD, L.hW, s, s)]
+  const lh = s * 1.08
+  lines.forEach((ln, i) => {
+    const y = L.hY + i * lh
+    slide(ctx, ph(lt, 0.1 + i * 0.12, 0.4), 0, 70, () => {
+      ctx.font = HEAD(s)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      if (i === lines.length - 1) {
+        ctx.fillStyle = YELLOW
+        ctx.fillRect(L.hx - 8, y - s * 0.78, (ctx.measureText(ln).width + 16) * ease(ph(lt, 0.45, 0.4)), s * 0.95)
+      }
+      ctx.fillStyle = INK
+      ctx.fillText(ln, L.hx, y)
+    })
+  })
+  if (!sub) return
+  const sy = L.hY + (lines.length - 1) * lh + (L.V ? 70 : 64)
+  slide(ctx, ph(lt, 0.4, 0.4), 0, 30, () => {
+    ctx.font = MONO(L.V ? 30 : 27)
+    ctx.fillStyle = RED
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    wrap(ctx, sub, L.hW).slice(0, 2).forEach((l, i) => ctx.fillText(l, L.hx, sy + i * (L.V ? 40 : 36)))
+  })
+}
+
+function fnRanking(ctx: C, S: Box, rows: FortnightTrackAnim[], lt: number, t: number, unit: string, accent: string) {
+  const n = Math.min(5, rows.length)
+  const gap = 16
+  const rh = (S.h - gap * (n - 1)) / 5
+  const max = Math.max(1, ...rows.slice(0, n).map((r) => r.value))
+  rows.slice(0, n).forEach((r, i) => {
+    const y = S.y + i * (rh + gap)
+    const at = 0.35 + (n - 1 - i) * 0.2
+    slide(ctx, ph(lt, at, 0.4), 180, 0, () => {
+      const top = i === 0
+      box(ctx, S.x, y, S.w, rh, top ? YELLOW : '#fff', INK, 8, 4)
+      ctx.fillStyle = top ? RED : INK
+      ctx.font = HEAD(rh * 0.36)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(String(i + 1), S.x + 52, y + rh / 2 + 2)
+      const cs = rh - 28
+      const cx = S.x + 100
+      ctx.save()
+      if (top) {
+        const s = 1 + 0.05 * beatPulse(t)
+        ctx.translate(cx + cs / 2, y + 14 + cs / 2)
+        ctx.scale(s, s)
+        ctx.translate(-(cx + cs / 2), -(y + 14 + cs / 2))
+      }
+      cover(ctx, r.img, cx, y + 14, cs, 3)
+      ctx.restore()
+      const tx = cx + cs + 24
+      const tw = S.w - (tx - S.x) - 170
+      const grow = ease(ph(lt, at + 0.25, 0.8))
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillStyle = INK
+      ctx.fillText(fit(ctx, r.title.toUpperCase(), HEAD, tw, rh * 0.19, 14), tx, y + rh * 0.36)
+      ctx.fillStyle = RED
+      ctx.fillText(fit(ctx, r.artists, (s) => MONO(s), tw, rh * 0.15, 12), tx, y + rh * 0.58)
+      const by = y + rh * 0.7
+      const bh = rh * 0.13
+      ctx.fillStyle = PAPER2
+      ctx.fillRect(tx, by, tw, bh)
+      ctx.fillStyle = accent
+      ctx.fillRect(tx, by, tw * (r.value / max) * grow, bh)
+      ctx.lineWidth = 2
+      ctx.strokeStyle = INK
+      ctx.strokeRect(tx, by, tw, bh)
+      ctx.textAlign = 'right'
+      ctx.fillStyle = INK
+      ctx.font = HEAD(rh * 0.3)
+      ctx.fillText(String(Math.round(r.value * grow)), S.x + S.w - 26, y + rh * 0.54)
+      ctx.font = MONO(rh * 0.11)
+      ctx.fillStyle = MUTED
+      ctx.fillText(unit, S.x + S.w - 26, y + rh * 0.78)
+    })
+  })
+}
+
+function fnBars(ctx: C, S: Box, rows: { name: string; value: number; note: string }[], lt: number, t: number, max6 = 6) {
+  const n = Math.min(max6, rows.length)
+  const gap = 20
+  const rh = (S.h - gap * (max6 - 1)) / max6
+  const max = Math.max(1, ...rows.slice(0, n).map((r) => r.value))
+  rows.slice(0, n).forEach((r, i) => {
+    const y = S.y + i * (rh + gap)
+    const at = 0.3 + i * 0.14
+    slide(ctx, ph(lt, at, 0.4), -160, 0, () => {
+      const grow = ease(ph(lt, at + 0.15, 0.9))
+      ctx.font = MONO(rh * 0.17)
+      const noteW = ctx.measureText(r.note).width
+      ctx.fillStyle = MUTED
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText(r.note, S.x + S.w, y + rh * 0.36)
+      ctx.textAlign = 'left'
+      ctx.fillStyle = INK
+      ctx.fillText(fit(ctx, r.name.toUpperCase(), HEAD, S.w - noteW - 28, rh * 0.32, 14), S.x, y + rh * 0.36)
+      const by = y + rh * 0.48
+      const bh = rh * 0.44
+      const bw = (S.w - 8) * (r.value / max) * grow
+      ctx.fillStyle = INK
+      ctx.fillRect(S.x + 6, by + 6, Math.max(bw, 10), bh)
+      ctx.fillStyle = i === 0 ? RED : i % 2 ? UV : INK
+      ctx.fillRect(S.x, by, Math.max(bw, 10), bh)
+      ctx.lineWidth = 3
+      ctx.strokeStyle = INK
+      ctx.strokeRect(S.x, by, Math.max(bw, 10), bh)
+      if (bw > 90) {
+        ctx.fillStyle = i === 0 ? YELLOW : '#fff'
+        ctx.font = HEAD(bh * 0.6)
+        ctx.textAlign = 'right'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(Math.round(r.value * grow)), S.x + bw - 14, by + bh / 2 + 2)
+      }
+    })
+    if (i === 0) {
+      const lx = S.x + S.w * 0.55
+      const ly = y + rh * 0.7
+      pop(ctx, ph(lt, at + 1, 0.4), lx, ly, () => {
+        ctx.save()
+        ctx.translate(lx, ly)
+        ctx.rotate(-0.14 + 0.03 * Math.sin(t * 3))
+        const s = 1 + 0.06 * beatPulse(t)
+        ctx.scale(s, s)
+        ctx.fillStyle = YELLOW
+        ctx.fillRect(-82, -26, 164, 52)
+        ctx.lineWidth = 4
+        ctx.strokeStyle = INK
+        ctx.strokeRect(-82, -26, 164, 52)
+        ctx.fillStyle = INK
+        ctx.font = HEAD(24)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('LEADER', 0, 2)
+        ctx.restore()
+      }, 0.4)
+    }
+  })
+}
+
+function fnCoverRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: number, cs: number, speed: number, t: number) {
+  const list = imgs.filter(Boolean) as Img[]
+  if (!list.length) return
+  const gap = 14
+  const span = list.length * (cs + gap)
+  const off = (((t * speed) % span) + span) % span
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x, y - 4, w, cs + 8)
+  ctx.clip()
+  for (let k = -1; k <= Math.ceil(w / span) + 1; k++) {
+    list.forEach((im, i) => {
+      const cx = x + k * span + i * (cs + gap) - off
+      if (cx > x - cs && cx < x + w) cover(ctx, im, cx, y, cs, 3)
+    })
+  }
+  ctx.restore()
+}
+
+export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t: number) {
+  const V = H > W
+  const L: FnLayout = V
+    ? { V, hx: 70, kY: 180, hY: 340, hW: 940, S: { x: 70, y: 590, w: 940, h: 980 }, foot: { x: 70, y: 1650, w: 940, h: 18 } }
+    : { V, hx: 90, kY: 160, hY: 310, hW: 760, S: { x: 940, y: 130, w: 890, h: 850 }, foot: { x: 90, y: 880, w: 760, h: 16 } }
+  const S = L.S
+  paper(ctx, W, H, '#ece2cf')
+
+  // rótulo de datos que corre arriba
+  const delta = d.totals.tracks - d.totals.prev
+  const facts = [
+    `FORTNIGHT ${d.range}`,
+    `${d.totals.tracks} TRACKS`,
+    `${d.totals.artists} ARTISTS`,
+    `${d.totals.labels} LABELS`,
+    d.played[0] ? `MOST PLAYED: ${d.played[0].title.toUpperCase()}` : '',
+    d.voted[0] ? `MOST VOTED: ${d.voted[0].title.toUpperCase()}` : '',
+    d.artists[0] ? `TOP RELEASER: ${d.artists[0].name.toUpperCase()}` : '',
+    d.bpm ? `AVG ${Math.round(d.bpm)} BPM` : '',
+    `${d.debutTotal} DEBUTS`,
+    '',
+  ].filter((f, i, a) => f || i === a.length - 1).join(' · ')
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(0, 0, W, 70)
+  ctx.fillStyle = INK
+  ctx.font = MONO(24)
+  ctx.textBaseline = 'middle'
+  const fw = spaced(ctx, facts, -1e5, -1000, 4) + 4
+  let fx = -((t * 160) % fw)
+  while (fx < W) {
+    spaced(ctx, facts, fx, 37, 4)
+    fx += fw
+  }
+  hazard(ctx, 70, 26, W)
+  if (V) hazard(ctx, H - 30, 30, W)
+
+  const scenes = fnScenes(d)
+  const found = scenes.findIndex((s) => t >= s.a && t < s.b)
+  const si = found === -1 ? scenes.length - 1 : found
+  const sc = scenes[si]
+  const lt = t - sc.a
+  const dur = sc.b - sc.a
+  const last = si === scenes.length - 1
+
+  ctx.save()
+  if (!last) {
+    const ex = ease(ph(lt, dur - 0.32, 0.32))
+    ctx.translate(-W * 0.35 * ex, 0)
+    ctx.globalAlpha = 1 - ex
+  }
+
+  if (sc.k === 'intro') {
+    fnHeader(ctx, L, lt, 'BREAKBEAT FORTNIGHT', d.range.replace(' — ', ' —\n'), `${d.totals.tracks} NEW TRACKS · ${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} VS PREVIOUS`, RED)
+    const gap = 22
+    const cw = (S.w - gap) / 2
+    const ch = V ? 250 : 220
+    const stats: [string, number, string][] = [
+      ['TRACKS', d.totals.tracks, RED],
+      ['ARTISTS', d.totals.artists, INK],
+      ['LABELS', d.totals.labels, UV],
+      ['RELEASES', d.totals.releases, INK],
+    ]
+    stats.forEach(([label, val, col], i) => {
+      const x = S.x + (i % 2) * (cw + gap)
+      const y = S.y + Math.floor(i / 2) * (ch + gap)
+      const at = 0.3 + i * 0.18
+      pop(ctx, ph(lt, at, 0.45), x + cw / 2, y + ch / 2, () => {
+        box(ctx, x, y, cw, ch, i === 0 ? YELLOW : '#fff', INK, 10, 5)
+        ctx.fillStyle = col
+        ctx.font = HEAD(ch * 0.5)
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(String(Math.round(val * ease(ph(lt, at, 1.1)))), x + 28, y + ch * 0.62)
+        ctx.fillStyle = INK
+        ctx.font = MONO(ch * 0.11)
+        spaced(ctx, label, x + 30, y + ch * 0.84, 5)
+      }, (hash(i, 5) - 0.5) * 0.4)
+    })
+    const ry = S.y + ch * 2 + gap + 50
+    const cs = V ? 200 : 170
+    slide(ctx, ph(lt, 1.2, 0.5), 0, 80, () => {
+      fnCoverRow(ctx, d.covers, S.x, ry, S.w, cs, 120, t)
+      fnCoverRow(ctx, [...d.covers].reverse(), S.x, ry + cs + 22, S.w, cs, -120, t)
+    })
+  } else if (sc.k === 'played' || sc.k === 'voted') {
+    const rows = sc.k === 'played' ? d.played : d.voted
+    const r0 = rows[0]
+    const unit = sc.k === 'played' ? 'PLAYS' : 'VOTES'
+    fnHeader(
+      ctx, L, lt,
+      sc.k === 'played' ? 'MOST PLAYED ON OPTIMAL BREAKS' : 'MOST VOTED BY THE COMMUNITY',
+      `${r0.artists.split(',')[0]} ${sc.k === 'played' ? 'LEADS' : 'ON TOP'}`,
+      `«${r0.title}» · ${r0.value} ${unit}`,
+      sc.k === 'played' ? RED : UV,
+    )
+    fnRanking(ctx, S, rows, lt, t, unit, sc.k === 'played' ? RED : UV)
+  } else if (sc.k === 'artists') {
+    const a0 = d.artists[0]
+    fnHeader(ctx, L, lt, 'WHO RELEASED THE MOST', `${a0.name} LEADS`, `${a0.tracks} TRACKS IN ${a0.releases} RELEASE${a0.releases === 1 ? '' : 'S'}`, INK)
+    fnBars(ctx, S, d.artists.map((a) => ({ name: a.name, value: a.tracks, note: `${a.tracks} TRACKS · ${a.releases} REL.` })), lt, t)
+  } else if (sc.k === 'stars') {
+    const s0 = d.stars[0]
+    fnHeader(ctx, L, lt, 'TOP 100 STARS · NEW MUSIC', `${d.stars.length} TOP 100 STARS DROPPED`, `#${s0.rank} ${s0.name.toUpperCase()} WITH «${s0.track}»`, ACID)
+    const cols = 3
+    const gap = 20
+    const cw = (S.w - gap * (cols - 1)) / cols
+    const cellH = cw + (V ? 130 : 110)
+    d.stars.slice(0, 6).forEach((s, i) => {
+      const x = S.x + (i % cols) * (cw + gap)
+      const y = S.y + Math.floor(i / cols) * (cellH + gap)
+      pop(ctx, ph(lt, 0.3 + i * 0.16, 0.45), x + cw / 2, y + cw / 2, () => {
+        box(ctx, x, y, cw, cellH, '#fff', INK, 8, 4)
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(x + 4, y + 4, cw - 8, cw - 8)
+        ctx.clip()
+        const z = 1 + 0.06 * ph(lt, 0.3 + i * 0.16, 3)
+        ctx.translate(x + cw / 2, y + cw / 2)
+        ctx.scale(z, z)
+        if (s.img) ctx.drawImage(s.img, -cw / 2, -cw / 2, cw, cw)
+        else {
+          ctx.fillStyle = INK
+          ctx.fillRect(-cw / 2, -cw / 2, cw, cw)
+        }
+        ctx.restore()
+        ctx.fillStyle = RED
+        ctx.fillRect(x + 12, y + 12, 84, 46)
+        ctx.lineWidth = 3
+        ctx.strokeStyle = INK
+        ctx.strokeRect(x + 12, y + 12, 84, 46)
+        ctx.fillStyle = '#fff'
+        ctx.font = HEAD(26)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(`#${s.rank}`, x + 54, y + 36)
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillStyle = INK
+        ctx.fillText(fit(ctx, s.name.toUpperCase(), HEAD, cw - 28, V ? 28 : 24, 13), x + 14, y + cw + (V ? 48 : 42))
+        ctx.fillStyle = RED
+        ctx.fillText(fit(ctx, `▶ ${s.track}`, (z2) => MONO(z2), cw - 28, V ? 24 : 21, 12), x + 14, y + cw + (V ? 92 : 80))
+      }, (hash(i, 9) - 0.5) * 0.5)
+    })
+  } else if (sc.k === 'labels') {
+    const l0 = d.labels[0]
+    fnHeader(ctx, L, lt, 'LABELS OF THE FORTNIGHT', l0.name, `TOP LABEL · ${l0.tracks} TRACKS`, UV)
+    fnBars(ctx, S, d.labels.map((l) => ({ name: l.name, value: l.tracks, note: `${l.tracks} TRACKS` })), lt, t)
+  } else if (sc.k === 'sound') {
+    const top = [...d.bands].sort((a, b) => b.count - a.count)[0]
+    fnHeader(ctx, L, lt, 'SOUND CHECK', `${top.band} BPM RULES`, [d.key ? `${d.key.toUpperCase()} IS THE TOP KEY` : '', d.prevBpm ? `PREVIOUS AVG ${Math.round(d.prevBpm)} BPM` : ''].filter(Boolean).join(' · '), RED)
+    const bh = S.h * 0.36
+    pop(ctx, ph(lt, 0.3, 0.5), S.x + S.w / 2, S.y + bh / 2, () => {
+      box(ctx, S.x, S.y, S.w, bh, YELLOW, INK, 12, 5)
+      ctx.fillStyle = INK
+      ctx.font = HEAD(bh * 0.55)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      const n = Math.round((d.bpm || 0) * ease(ph(lt, 0.3, 1)))
+      ctx.fillText(String(n), S.x + 36, S.y + bh * 0.7)
+      ctx.font = MONO(bh * 0.1)
+      spaced(ctx, 'AVERAGE BPM', S.x + 40, S.y + bh * 0.88, 5)
+      eq(ctx, S.x + S.w - 300, S.y + 40, 260, bh - 80, 10, t)
+    })
+    const hy = S.y + bh + 50
+    const hh = S.h - bh - 50
+    const bands = d.bands
+    const max = Math.max(1, ...bands.map((b) => b.count))
+    const bw = S.w / bands.length
+    slide(ctx, ph(lt, 0.6, 0.4), 0, 60, () => box(ctx, S.x, hy, S.w, hh, '#fff', INK, 10, 4))
+    bands.forEach((b, i) => {
+      const g = ease(ph(lt, 0.8 + i * 0.05, 0.6))
+      const h = (hh - 110) * (b.count / max) * g
+      const x = S.x + i * bw + 8
+      const isTop = b.band === top.band
+      ctx.fillStyle = isTop ? RED : INK
+      ctx.fillRect(x, hy + hh - 60 - h, bw - 16, h)
+      if (g > 0.5) {
+        ctx.fillStyle = INK
+        ctx.font = MONO(V ? 18 : 16)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'alphabetic'
+        ctx.fillText(String(b.count), x + (bw - 16) / 2, hy + hh - 68 - h)
+        ctx.font = MONO(V ? 14 : 13, 400)
+        ctx.fillText(b.band.split('–')[0], x + (bw - 16) / 2, hy + hh - 30)
+      }
+    })
+  } else {
+    fnHeader(ctx, L, lt, 'NEW NAMES', `${d.debutTotal} DEBUTS`, d.debut.slice(0, 4).join(' · '), ACID)
+    const cols = 4
+    const gap = 14
+    const cs = (S.w - gap * (cols - 1)) / cols
+    d.covers.filter(Boolean).slice(0, 12).forEach((im, i) => {
+      const x = S.x + (i % cols) * (cs + gap)
+      const y = S.y + Math.floor(i / cols) * (cs + gap)
+      pop(ctx, ph(lt, 0.2 + i * 0.07, 0.4), x + cs / 2, y + cs / 2, () => {
+        ctx.save()
+        const s = 1 + 0.03 * beatPulse(t + i * 0.1)
+        ctx.translate(x + cs / 2, y + cs / 2)
+        ctx.scale(s, s)
+        ctx.translate(-(x + cs / 2), -(y + cs / 2))
+        cover(ctx, im, x, y, cs, 3)
+        ctx.restore()
+      }, (hash(i, 4) - 0.5) * 0.7)
+    })
+    const by = S.y + 3 * (cs + gap) + 30
+    pop(ctx, ph(lt, 1.2, 0.5), S.x + S.w / 2, by + 60, () => {
+      const s = 1 + 0.05 * beatPulse(t)
+      ctx.save()
+      ctx.translate(S.x + S.w / 2, by + 60)
+      ctx.scale(s, s)
+      ctx.translate(-(S.x + S.w / 2), -(by + 60))
+      box(ctx, S.x, by, S.w, 120, RED, INK, 12, 5)
+      ctx.fillStyle = '#fff'
+      ctx.font = HEAD(V ? 40 : 34)
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(V ? 'PLAY THEM ALL · LINK IN BIO' : 'PLAY THEM ALL · LINK IN POST', S.x + S.w / 2, by + 62)
+      ctx.restore()
+    })
+  }
+  ctx.restore()
+
+  // barrido rojo entre escenas
+  for (const s of scenes.slice(0, -1)) {
+    const p = (t - (s.b - 0.3)) / 0.6
+    if (p <= 0 || p >= 1) continue
+    const x = -W * 0.6 + W * 2.2 * ease(p)
+    ctx.fillStyle = RED
+    ctx.beginPath()
+    ctx.moveTo(x, 96)
+    ctx.lineTo(x + W * 0.45, 96)
+    ctx.lineTo(x + W * 0.25, H)
+    ctx.lineTo(x - W * 0.2, H)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = INK
+    ctx.fillRect(x + W * 0.45 - 14, 96, 14, 10)
+  }
+
+  // progreso por escenas + marca
+  const F = L.foot
+  const sw = (F.w - 8 * (scenes.length - 1)) / scenes.length
+  scenes.forEach((s, i) => {
+    const x = F.x + i * (sw + 8)
+    ctx.fillStyle = PAPER2
+    ctx.fillRect(x, F.y, sw, F.h)
+    ctx.fillStyle = i < si ? INK : RED
+    ctx.fillRect(x, F.y, sw * (i < si ? 1 : i === si ? clamp((t - s.a) / (s.b - s.a)) : 0), F.h)
+    ctx.lineWidth = 2
+    ctx.strokeStyle = INK
+    ctx.strokeRect(x, F.y, sw, F.h)
+  })
+  obHeader(ctx, F.x, F.y + (V ? 110 : 80), V ? 46 : 38)
+  ctx.font = MONO(V ? 22 : 19)
+  ctx.fillStyle = MUTED
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  spaced(ctx, 'THE BREAKBEAT FORTNIGHT', F.x, F.y + (V ? 156 : 116), 4)
+}
