@@ -1140,15 +1140,14 @@ export interface FortnightDigestName {
 
 export interface FortnightDigestCopy {
   intro: string
-  top100: string
+  released: string
   played: string
   voted: string
   artists: string
+  top100: string
   labels: string
   sound: string
   debut: string
-  sessions: string
-  upcoming: string
 }
 
 export interface FortnightDigest {
@@ -1157,6 +1156,8 @@ export interface FortnightDigest {
   totals: { tracks: number; artists: number; labels: number; releases: number; prev_tracks: number }
   covers: string[]
   copy: { es: FortnightDigestCopy; en: FortnightDigestCopy }
+  /** Un tema por disco de la quincena; `value` = temas del disco. */
+  released: FortnightDigestTrack[]
   top100: { rank: number; name: string; slug: string | null; image_url: string | null; tracks: FortnightDigestTrack[] }[]
   played: FortnightDigestTrack[]
   voted: FortnightDigestTrack[]
@@ -1172,10 +1173,6 @@ export interface FortnightDigest {
   }
   debut: FortnightDigestName[]
   debut_total: number
-  exclusives: FortnightDigestTrack[]
-  sessions: { title: string; artist: string; slug: string; image_url: string | null; download: boolean; plays: number }[]
-  upcoming: FortnightDigestTrack[]
-  upcoming_total: number
 }
 
 export interface Scene extends Record<string, unknown> {

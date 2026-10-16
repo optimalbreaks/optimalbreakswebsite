@@ -22,6 +22,7 @@ const T = {
     labels: 'SELLOS',
     releases: 'DISCOS',
     prev: 'quincena anterior',
+    released: 'Lo que ha salido',
     top100: 'Estrellas del Top 100 con temas nuevos',
     played: 'Lo más escuchado',
     plays: 'escuchas',
@@ -37,12 +38,6 @@ const T = {
     keys: 'TONALIDADES',
     debut: 'Debutantes',
     debutMore: (n: number) => `y ${n} más`,
-    exclusive: 'EXCLUSIVA — ESCÚCHALO ENTERO GRATIS',
-    sessions: 'Sesiones',
-    mp3: 'MP3 GRATIS',
-    upcoming: 'Lo que se viene',
-    out: 'SALE',
-    upcomingFoot: (n: number) => `${n} adelantos ya están en /charts.`,
   },
   en: {
     fortnight: 'FORTNIGHT',
@@ -51,6 +46,7 @@ const T = {
     labels: 'LABELS',
     releases: 'RELEASES',
     prev: 'previous fortnight',
+    released: 'Out this fortnight',
     top100: 'Top 100 stars with new music',
     played: 'Most played',
     plays: 'plays',
@@ -66,12 +62,6 @@ const T = {
     keys: 'KEYS',
     debut: 'Debut artists',
     debutMore: (n: number) => `and ${n} more`,
-    exclusive: 'EXCLUSIVE — FULL TRACK, FREE',
-    sessions: 'Sessions',
-    mp3: 'FREE MP3',
-    upcoming: 'Coming up',
-    out: 'OUT',
-    upcomingFoot: (n: number) => `${n} upcoming releases are already on /charts.`,
   },
 }
 
@@ -210,6 +200,56 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
         <p className="mt-6 text-[17px] leading-[1.8]" style={{ fontFamily: "'Special Elite', monospace" }}>{copy.intro}</p>
       ) : null}
 
+      {d.released?.length > 0 && (
+        <Section title={t.released} copy={copy.released}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+            {d.released.map((r, i) => {
+              const href = trackHref(r, lang)
+              const card = (
+                <div className="h-full border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+                  <div className="relative">
+                    <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
+                    {r.value > 1 && (
+                      <span className="absolute bottom-1 left-1 bg-[var(--yellow)] border-[2px] border-[var(--ink)] px-1 text-[10px] sm:text-[11px] font-black" style={display}>
+                        {r.value} {t.tracks}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-1.5 sm:p-2">
+                    <div className="text-[10px] sm:text-[12px] font-black uppercase line-clamp-2" style={display}>{r.artists}</div>
+                    <div className="text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(r)}</div>
+                    {r.label ? <div className="text-[9px] sm:text-[10px] text-[var(--dim)] truncate" style={mono}>{r.label}</div> : null}
+                  </div>
+                </div>
+              )
+              return href ? <Link key={i} href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : <div key={i}>{card}</div>
+            })}
+          </div>
+        </Section>
+      )}
+
+      {d.played.length > 0 && (
+        <Section title={t.played} copy={copy.played}>
+          <RankedTracks tracks={d.played} unit={t.plays} lang={lang} />
+        </Section>
+      )}
+
+      {d.voted.length > 0 && (
+        <Section title={t.voted} copy={copy.voted}>
+          <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} />
+        </Section>
+      )}
+
+      {d.artists.length > 0 && (
+        <Section title={t.artistsTitle} copy={copy.artists}>
+          <Bars
+            base="artists"
+            lang={lang}
+            rows={d.artists.map((a) => ({ ...a, value: a.tracks, note: `${a.tracks} ${t.tracksShort} · ${a.releases} ${t.releasesShort}` }))}
+          />
+        </Section>
+      )}
+
       {d.top100.length > 0 && (
         <Section title={t.top100} copy={copy.top100}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -237,29 +277,6 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
               </div>
             ))}
           </div>
-        </Section>
-      )}
-
-      {d.played.length > 0 && (
-        <Section title={t.played} copy={copy.played}>
-          <RankedTracks tracks={d.played} unit={t.plays} lang={lang} />
-        </Section>
-      )}
-
-      {d.voted.length > 0 && (
-        <Section title={t.voted} copy={copy.voted}>
-          <RankedTracks tracks={d.voted} unit={t.votes} lang={lang} />
-          <p className="text-[12px] text-[var(--dim)] mt-2" style={mono}>{t.votesFoot(d.votes_total, d.voters_total)}</p>
-        </Section>
-      )}
-
-      {d.artists.length > 0 && (
-        <Section title={t.artistsTitle} copy={copy.artists}>
-          <Bars
-            base="artists"
-            lang={lang}
-            rows={d.artists.map((a) => ({ ...a, value: a.tracks, note: `${a.tracks} ${t.tracksShort} · ${a.releases} ${t.releasesShort}` }))}
-          />
         </Section>
       )}
 
@@ -321,66 +338,6 @@ export default function FortnightDigest({ digest: d, lang }: { digest: Digest; l
         </Section>
       )}
 
-      {(d.sessions.length > 0 || d.exclusives.length > 0) && (
-        <Section title={t.sessions} copy={copy.sessions}>
-          {d.exclusives.map((x) => {
-            const href = trackHref(x, lang)
-            const card = (
-              <div className="flex items-center gap-3 border-[3px] border-[var(--ink)] bg-[#f7e733]/40 p-2 mb-3">
-                <div className="w-20 shrink-0"><Cover src={x.artwork_url} alt={x.title} sizes="80px" /></div>
-                <div className="min-w-0">
-                  <div className="text-[10px] font-black text-[var(--red)]" style={display}>{t.exclusive}</div>
-                  <div className="text-[15px] font-black uppercase truncate" style={display}>{trackName(x)}</div>
-                  <div className="text-[12px]" style={mono}>{x.artists}{x.label ? ` · ${x.label}` : ''}</div>
-                </div>
-              </div>
-            )
-            return href ? <Link key={x.title} href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : <div key={x.title}>{card}</div>
-          })}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {d.sessions.map((s) => (
-              <Link key={s.slug} href={`/${lang}/mixes/${s.slug}`} className="!no-underline !text-[var(--ink)] border-[3px] border-[var(--ink)] bg-[var(--paper)] block">
-                <div className="relative">
-                  <CardThumbnail src={s.image_url} alt={s.title} aspectClass="aspect-video" sizes="(max-width: 640px) 50vw, 190px" />
-                  {s.download && (
-                    <span className="absolute top-1 right-1 bg-[var(--red)] text-white px-1 text-[10px] font-black border-[2px] border-[var(--ink)]" style={display}>⬇ {t.mp3}</span>
-                  )}
-                </div>
-                <div className="p-2">
-                  <div className="text-[12px] font-black uppercase line-clamp-2" style={display}>{s.artist}</div>
-                  <div className="text-[11px] text-[var(--dim)] line-clamp-2" style={mono}>{s.title}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {d.upcoming.length > 0 && (
-        <Section title={t.upcoming} copy={copy.upcoming}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {d.upcoming.map((u, i) => {
-              const href = trackHref(u, lang)
-              const card = (
-                <div className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
-                  <div className="relative">
-                    <CardThumbnail src={u.artwork_url} alt={u.title} aspectClass="aspect-square" sizes="(max-width: 640px) 50vw, 190px" />
-                    <span className="absolute bottom-1 left-1 bg-[var(--yellow)] border-[2px] border-[var(--ink)] px-1 text-[11px] font-black" style={display}>
-                      {t.out} {shortDate(u.release_date, lang)}
-                    </span>
-                  </div>
-                  <div className="p-2">
-                    <div className="text-[12px] font-black uppercase truncate" style={display}>{trackName(u)}</div>
-                    <div className="text-[11px] text-[var(--dim)] truncate" style={mono}>{u.artists}</div>
-                  </div>
-                </div>
-              )
-              return href ? <Link key={i} href={href} className="!no-underline !text-[var(--ink)]">{card}</Link> : <div key={i}>{card}</div>
-            })}
-          </div>
-          <p className="text-[12px] text-[var(--dim)] mt-2" style={mono}>{t.upcomingFoot(d.upcoming_total)}</p>
-        </Section>
-      )}
       </div>
     </div>
   )
