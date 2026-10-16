@@ -212,8 +212,8 @@ function RankedTracks({
             key={`${t.title}-${i}`}
             className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] last:border-b-0 transition-colors ${on ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-              <div className="flex items-start gap-3 min-w-0 flex-1">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3 min-w-0">
                 <div className="w-14 sm:w-16 shrink-0">
                   <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes="64px" frameClass="border-[3px] border-[var(--ink)]" />
                 </div>
@@ -234,7 +234,7 @@ function RankedTracks({
                   </div>
                 </div>
               </div>
-              <div className="track-action-bar">
+              <div className="track-action-bar sm:!justify-start sm:!self-start sm:pl-[76px]">
                 {t.audio_src ? (
                   <PlayButton
                     track={t}

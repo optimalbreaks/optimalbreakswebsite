@@ -46,6 +46,8 @@ interface Props {
    * todos iguales, para no parecer un Top 10.
    */
   badgeVariant?: 'rank' | 'index'
+  /** Botones debajo del título (columna estrecha del blog, ~750 px). */
+  stacked?: boolean
   /**
    * Filas de charts/NR que son el mismo tema (otro ID de Beatport).
    * Clave = `beatport_url` del corte. El "+" del álbum queda verde si
@@ -173,6 +175,7 @@ export default function BeatportTopTracks({
   heading,
   defaultExpanded = false,
   badgeVariant = 'rank',
+  stacked = false,
   saveRefsByUrl,
   fallbackTrack,
 }: Props) {
@@ -493,8 +496,8 @@ export default function BeatportTopTracks({
                   id={rowId}
                   className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors ${isActive ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className={`flex flex-col gap-3 ${stacked ? '' : 'sm:flex-row sm:items-start sm:gap-4'}`}>
+                    <div className={`flex items-start gap-3 min-w-0 ${stacked ? '' : 'flex-1'}`}>
                       <PositionBadge position={t.position} variant={badgeVariant} />
 
                       {t.artwork_url && (
@@ -519,7 +522,7 @@ export default function BeatportTopTracks({
                       </div>
                     </div>
 
-                    <div className="track-action-bar">
+                    <div className={`track-action-bar ${stacked ? `sm:!justify-start sm:!self-start ${t.artwork_url ? 'sm:pl-[128px]' : 'sm:pl-[52px]'}` : ''}`}>
                       {canPlay && (
                         <button
                           type="button"

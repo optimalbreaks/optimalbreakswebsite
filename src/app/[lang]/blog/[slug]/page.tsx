@@ -394,6 +394,7 @@ export default async function BlogPostPage({ params }: Props) {
             }
             defaultExpanded
             badgeVariant="index"
+            stacked
           />
         </div>
       )}
