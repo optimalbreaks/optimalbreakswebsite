@@ -327,21 +327,24 @@ async function openBrowserReader(): Promise<{
  * Lee pistas de una URL de Beatport. Primero el HTML (rápido). Si Cloudflare
  * responde 403, abre Chrome una sola vez y reutiliza el navegador.
  * El chat y el import de New Releases lo necesitan: el fetch pelado no pasa.
+ * `browser: false` se queda en el fetch: en Vercel el Chrome también recibe el challenge
+ * y la petición moría por tiempo («Load failed» en el chat, 16 oct 2026).
  */
-export function createBeatportPageLoader(): {
+export function createBeatportPageLoader(opts?: { browser?: boolean }): {
   load: (url: string) => Promise<BeatportPickInput[]>
   close: () => Promise<void>
 } {
   let session: Awaited<ReturnType<typeof openBrowserReader>> | null = null
+  const browser = opts?.browser !== false
   return {
     async load(url: string) {
       const target = canonicalBeatportCatalogUrl(url)
       try {
         const html = await fetchBeatportPageHtml(target)
         const tracks = resolveTracksFromBeatportHtml(html, target)
-        if (tracks.length) return tracks
+        if (tracks.length || !browser) return tracks
       } catch {
-        /* 403 u otro bloqueo: sigue el navegador */
+        if (!browser) return []
       }
       if (!session) session = await openBrowserReader()
       return session.readTracks(target)

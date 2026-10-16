@@ -5,8 +5,6 @@ import { festivalSeriesForEventName, seasonOfEvent } from '@/lib/event-series'
 import {
   chartEditionWeekMondayFromPublish,
   dedupeKeyForFeaturedLink,
-  fetchBeatportPageHtml,
-  resolveTracksFromBeatportHtml,
 } from '@/lib/beatport-next-data-tracks'
 import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
 import { vinylIdentityKey } from '@/lib/share-track'
@@ -1449,16 +1447,8 @@ type StorePages = { load: (url: string) => Promise<StoreHit[]>; close: () => Pro
  * Allí no se abre Chromium: un fetch rápido y, si no hay temas, la búsqueda web de OpenAI.
  */
 async function openStorePages(): Promise<StorePages> {
-  if (!process.env.VERCEL) {
-    const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
-    return createBeatportPageLoader()
-  }
-  return {
-    async load(url: string) {
-      return resolveTracksFromBeatportHtml(await fetchBeatportPageHtml(url), url)
-    },
-    async close() {},
-  }
+  const { createBeatportPageLoader } = await import('@/lib/beatport-genre-import')
+  return createBeatportPageLoader({ browser: !process.env.VERCEL })
 }
 
 async function lookupStore(
@@ -1835,6 +1825,12 @@ async function adminInternalPost(
   }
 }
 
+/** Una respuesta sin JSON (504 de Vercel, 500 en HTML) se quedaba en «falló el upsert» a secas. */
+function upsertFailure(status: number): string {
+  if (status === 504) return 'falló el upsert (HTTP 504: la ficha tardó demasiado en redactarse; vuelve a confirmar)'
+  return status ? `falló el upsert (HTTP ${status})` : 'falló el upsert'
+}
+
 async function upsertArtistAction(
   action: Extract<ChatAction, { type: 'artist' }>,
   originRequest: Request,
@@ -1852,7 +1848,7 @@ async function upsertArtistAction(
       summary: 'Opt-out: Vazteria X pidió no tener ficha. Las canciones sí; no se restaura el perfil.',
     }
   }
-  const { ok, json } = await adminInternalPost(originRequest, '/api/admin/agent', {
+  const { ok, status, json } = await adminInternalPost(originRequest, '/api/admin/agent', {
     slug,
     artistName: name,
     notes: action.notes || undefined,
@@ -1862,7 +1858,7 @@ async function upsertArtistAction(
     return {
       type: 'artist',
       ok: false,
-      summary: `Artista ${slug}: ${String(json.error || json.dbError || 'falló el upsert')}`,
+      summary: `Artista ${slug}: ${String(json.error || json.dbError || upsertFailure(status))}`,
       detail: json,
     }
   }
@@ -1907,7 +1903,7 @@ async function upsertLabelAction(
   if (!slug || !name) {
     return { type: 'label', ok: false, summary: 'Faltan slug o name del sello' }
   }
-  const { ok, json } = await adminInternalPost(originRequest, '/api/admin/agent/label', {
+  const { ok, status, json } = await adminInternalPost(originRequest, '/api/admin/agent/label', {
     slug,
     labelName: name,
     notes: action.notes || undefined,
@@ -1917,7 +1913,7 @@ async function upsertLabelAction(
     return {
       type: 'label',
       ok: false,
-      summary: `Sello ${slug}: ${String(json.error || json.dbError || 'falló el upsert')}`,
+      summary: `Sello ${slug}: ${String(json.error || json.dbError || upsertFailure(status))}`,
       detail: json,
     }
   }
@@ -2379,7 +2375,12 @@ async function importNewReleasesAction(
   action: Extract<ChatAction, { type: 'new_release' }>,
   originRequest: Request,
 ): Promise<ActionResult> {
-  const urls_text = String(action.urls_text || '').trim()
+  // Un SoundCloud colado aquí ya tiene su propia operación (soundcloud_track).
+  const urls_text = String(action.urls_text || '')
+    .split(/\r?\n/)
+    .filter((l) => /beatport\.com\//i.test(l))
+    .join('\n')
+    .trim()
   if (!urls_text) {
     return { type: 'new_release', ok: false, summary: 'Sin URLs Beatport' }
   }
@@ -2407,12 +2408,16 @@ async function importNewReleasesAction(
   const multi = summary?.saltadas_multi ?? 0
   const failedCount = summary?.fallidas ?? 0
   const line = `New Releases: ${inserted} insertadas, ${dupes} dupes, ${multi} multi, ${failedCount} fallidas${why ? ` (${why})` : ''}`
-  if (inserted > 0) {
-    return { type: 'new_release', ok: true, summary: line, detail: json }
+  const queued = Array.isArray(json.queued) ? (json.queued as { title?: string }[]) : []
+  const queuedNote = queued.length
+    ? ` · ${queued.map((q) => q.title).filter(Boolean).join(', ') || 'El tema'}: no te preocupes, que este tema ya está (pendiente de validar en Imports)`
+    : ''
+  if (inserted > 0 || queued.length > 0) {
+    return { type: 'new_release', ok: true, summary: line + queuedNote, detail: json }
   }
   const already =
     dupes > 0 && failedCount === 0
-      ? `New Releases: ya estaban en el catálogo (${dupes}).`
+      ? `New Releases: ya estaban en el catálogo (${dupes}). No te preocupes, que este tema ya está.`
       : line
   return { type: 'new_release', ok: false, summary: already, detail: json }
 }

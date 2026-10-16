@@ -2,6 +2,7 @@
 // Admin: importación de New Releases desde URLs Beatport (/release/ o /track/).
 // Un /release/ mete todos sus temas. Un /track/ mete solo ese. Si Cloudflare
 // tapa la ficha, la respuesta lista el fallo y el chat no lo da por guardado.
+// Antes de abrir nada se mira si ese id ya está en el catálogo o en la cola de Imports.
 // ============================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -98,6 +99,31 @@ async function loadEditionState(
       ? Math.max(...rows.map((r) => Number((r as { sort_order?: number }).sort_order || 0)))
       : 0
   return { editionId, keys, nextSort: maxSo + 1 }
+}
+
+function beatportTrackId(url: string): string {
+  return url.match(/\/track\/[^/]+\/(\d+)/i)?.[1] || ''
+}
+
+/**
+ * El mismo id de Beatport en cualquier semana (o ya en la cola de Imports) es el mismo tema.
+ * Se mira antes de abrir la ficha: desde Vercel Cloudflare la tapa y el chat fallaba
+ * con temas que ya estaban (Boogie, Not Human, Diagnostics, 15-16 oct 2026).
+ */
+async function knownBeatportTrack(
+  sb: ReturnType<typeof createServiceSupabase>,
+  id: string,
+): Promise<'catalog' | 'queue' | null> {
+  if (!id) return null
+  const { data: feat } = await sb.from('chart_featured_tracks').select('id').like('link_url', `%/${id}`).limit(1)
+  if (feat?.length) return 'catalog'
+  const { data: queued } = await sb
+    .from('chart_import_queue')
+    .select('status')
+    .eq('beatport_track_id', id)
+    .in('status', ['pending', 'approved'])
+    .limit(1)
+  return queued?.length ? 'queue' : null
 }
 
 /** Si el mismo tema ya está archivado como SoundCloud, se actualiza esa fila. */
@@ -236,7 +262,7 @@ export async function POST(request: NextRequest) {
   }
 
   const editionCache = new Map<string, EditionState>()
-  const pages = createBeatportPageLoader()
+  const pages = createBeatportPageLoader({ browser: !process.env.VERCEL })
   const getEditionState = async (weekDate: string) => {
     if (!isoWeekDate(weekDate)) {
       throw new Error(`week_date inválido: ${weekDate}`)
@@ -256,26 +282,42 @@ export async function POST(request: NextRequest) {
   }[] = []
   const skipped_multi: { url: string; count: number; titles: string[] }[] = []
   const skipped_dupe: { url: string; title?: string }[] = []
+  const queued: { url: string; title: string; link_url: string }[] = []
   const failed: { url: string; reason: string }[] = []
 
   for (let i = 0; i < beatportUrls.length; i++) {
     const { week_date_override, url } = beatportUrls[i]
     try {
       const normalized = canonicalBeatportCatalogUrl(url)
-      const tracks = await pages.load(normalized)
-      const wantedId = normalized.match(/\/track\/[^/]+\/(\d+)/i)?.[1] || ''
-      const picked = wantedId
-        ? tracks.filter((t) => /\/(\d+)$/.test(t.link_url) && t.link_url.endsWith(`/${wantedId}`))
-        : tracks
+      const wantedId = beatportTrackId(normalized)
+      const known = await knownBeatportTrack(sb, wantedId)
+      if (known === 'catalog') {
+        skipped_dupe.push({ url })
+        continue
+      }
+      if (known === 'queue') {
+        queued.push({ url, title: '', link_url: normalized })
+        continue
+      }
+      const pickFrom = (list: Awaited<ReturnType<typeof pages.load>>) =>
+        wantedId ? list.filter((t) => /\/(\d+)$/.test(t.link_url) && t.link_url.endsWith(`/${wantedId}`)) : list
+      const picked = pickFrom(await pages.load(normalized).catch(() => []))
       if (!picked.length) {
+        // La búsqueda web no sirve de respaldo: para el mismo enlace dio artistas distintos
+        // en cada intento (Boogie, Magic Carpet, 16 oct 2026).
         failed.push({
           url,
-          reason: wantedId
-            ? 'Ese tema no salió en la ficha de Beatport'
-            : 'Sin pistas (__NEXT_DATA__ vacío o no parseable)',
+          reason:
+            'Beatport no deja leer la ficha desde el servidor (Cloudflare). Si el tema está en YouTube o SoundCloud, pega ese enlace',
         })
-      } else {
+        continue
+      }
+      {
         for (const pick of picked) {
+          if (await knownBeatportTrack(sb, beatportTrackId(pick.link_url))) {
+            skipped_dupe.push({ url: pick.link_url, title: pick.title })
+            continue
+          }
           const key = dedupeKeyForFeaturedLink(pick.link_url)
           let targetWeek: string | null = week_date_override ? isoWeekDate(week_date_override) : null
           let weekSource: 'linea' | 'beatport' | 'respaldo' = 'linea'
@@ -379,11 +421,13 @@ export async function POST(request: NextRequest) {
       insertadas: added.length,
       saltadas_multi: skipped_multi.length,
       saltadas_duplicado: skipped_dupe.length,
+      en_cola: queued.length,
       fallidas: failed.length,
     },
     added,
     skipped_multi,
     skipped_dupe,
+    queued,
     failed,
   })
 }
