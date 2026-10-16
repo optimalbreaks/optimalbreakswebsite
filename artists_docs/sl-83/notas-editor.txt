@@ -1,22 +1,61 @@
-Revisión editorial — SL 83 (agosto 2026)
+Revisión editorial — SL 83 (16 oct 2026)
 =======================================
 
-Fuentes
--------
-- Brief del usuario.
-- Bio oficial Beatport artist 1303115: «SL 83 aka Sean»; 90s jungle/hardcore/hard dance; DJ desde el colegio; promoción de clubes; colectivo Schema (luego SKMA) desde mid-2000s; alias SL 83 en 2024; debut mayo 2025 en We Are DKR; luego Breakbeat Transmissions.
-- Beatport: WE ARE DKR, Vol. 6 — 8 may 2025 (DKRLP023) — First Contact.
-- Beatport / NR pick: Liquid Night — WE ARE DKR Vol 11 — 20 may 2026 — 132 BPM — Breaks / Breakbeat / UK Bass.
-- Beatport / NR pick: Falling + Falling (Contagion (UK) Remix) — DKR — 19 ago 2026.
-- Podcast: https://breakbeattransmissions.podbean.com/ — «Minimal chat and maximum music, covering all corners of the diverse and wonderful world of Breakbeat.»
-  Ep. 04: 11 oct 2025; 05: 28 oct 2025; 08: 16 abr 2026; 09: 15 may; 10: 26 jun (Falling Contagion Remix + End Of Days); 11: 29 jul 2026.
-- SKMA (independiente): Technique Recordings / Mixcloud / Juno — trío D&B de Jersey, Channel Islands, antes Schema (cuartet). El texto de Technique («Coming from a background of 90s jungle and hardcore…») es cercano al de Beatport. NO publicar Jersey/UK como procedencia de SL 83: Beatport no lo dice y el brief pide no inferir país. NO confundir con DJ SCHEMA (Spotify, hard techno).
+Fuente que manda: el texto que el propio Sean envió a Narciso.
+La bio de Beatport (id 1303115) queda en segundo plano.
 
-Decisiones
-----------
-- real_name: null. «Sean» solo en bio como formulación de Beatport; sin apellido.
-- country: vacío; category: current
-- era: 2025-present (catálogo SL 83). Historia Schema/SKMA y DJ escolar en bio, no como era del alias.
-- related_artists: vacío (selecciones de podcast ≠ colaboración; Vazteria X solo como nombre en tracklist, sin ficha)
-- website: Podbean del podcast
-- Foto: hero Beatport aunque el Top 10 se seque
+Identidad
+---------
+- SL 83 aka Sean. real_name: Sean. El apellido no consta.
+- Origen: no consta. country vacío, category current.
+  NO inferir Reino Unido por DIRTY KITCHEN RAVE ni por Contagion (UK).
+  La nota de agosto de 2026 ya descartó Jersey (texto de Technique
+  sobre SKMA). Sigue fuera.
+- Base musical: jungle, hardcore y hard dance de los 90, y afición
+  al underground, sobre todo a lo que lleve breakbeat.
+- Pausa de varios años. En 2024 empieza de cero con el alias SL 83.
+- era: 2024-present. El catálogo comercial arranca en mayo de 2025.
+- Rol: DJ, productor, selector y presentador del podcast.
+- styles (actuales): Breakbeat, Breaks, UK Bass.
+  Jungle, hardcore y hard dance NO van en styles: son la base anterior.
+
+Schema / SKMA
+-------------
+Beatport sigue hablando del colectivo Schema, luego SKMA, desde
+mediados de los 2000. Sean no lo menciona en el texto que quiere usar.
+Fuera de la ficha pública. No reconstruir esa discografía ni publicar
+Jersey. No confundir con DJ SCHEMA (hard techno).
+
+Catálogo
+--------
+- Debut: First Contact — WE ARE DKR Vol. 6 — DIRTY KITCHEN RAVE —
+  8 may 2025 (DKRLP023).
+- Liquid Night — WE ARE DKR Vol. 11 — 20 may 2026 — 132 BPM.
+- Falling — primer lanzamiento en solitario — 19 ago 2026 — DKR —
+  134 BPM, sol menor. Remix de Contagion (UK) el mismo día, 138 BPM.
+- Casa principal: DIRTY KITCHEN RAVE.
+- End Of Days y What? salen de esenciales. Circulaban en el podcast
+  (el 10, 26 jun 2026, lleva End Of Days y el remix de Falling) y
+  no están confirmados como disco de tienda. No pesan más que el debut.
+
+Charts de Falling
+-----------------
+Sean dice: nº 1 en Breaks de Beatport y nº 51 en el chart general.
+La ficha lo atribuye a él («según el propio SL 83»).
+BeatStats, en el historial del tema, enseña otro pico (#54 en Breaks):
+parece otro chart (release frente a ventas del track) u otra foto.
+Hasta que haya captura, no se escribe el nº 1 como hecho verificado
+aparte de su palabra, ni se le contradice en la bio.
+
+Podcast
+-------
+Breakbeat Transmissions. https://breakbeattransmissions.podbean.com/
+«Minimal chat and maximum music». Arranque unos meses después del debut.
+Episodios documentados: 04 el 11 oct 2025, 05 el 28 oct, 08 el 16 abr 2026,
+09 el 15 may, 10 el 26 jun, 11 el 29 jul 2026.
+Las selecciones no son colaboradores. No listar nombres en la bio
+(Vazteria X tampoco: opt-out de ficha).
+
+related_artists: Contagion (UK). Sin ficha (oct 2026).
+Conservar slug, retrato de Storage, sort_order 181, beatport_id 1303115.
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
