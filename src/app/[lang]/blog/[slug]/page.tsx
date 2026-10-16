@@ -320,7 +320,11 @@ export default async function BlogPostPage({ params }: Props) {
             artistSlugMap={artistSlugMap}
             labelSlugMap={labelSlugMap}
             saveRefsByUrl={saveRefsByUrl}
-            heading={safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'}
+            heading={
+              post.tags?.includes('quincena')
+                ? safeLang === 'es' ? 'ESCUCHAR LA QUINCENA' : 'LISTEN TO THE FORTNIGHT'
+                : safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
+            }
             defaultExpanded
             badgeVariant="index"
           />

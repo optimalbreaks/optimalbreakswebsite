@@ -9,9 +9,12 @@
 // estilo `beatport_top` con metadatos en snapshot) se agreguen como la
 // misma canción si comparten URL canónica.
 //
-// Uso: GET /api/public/charts/community-monthly[?limit=N][&view=artists][&cached=1]
+// Uso: GET /api/public/charts/community-monthly[?limit=N][&view=artists][&cached=1][&since=YYYY-MM-DD&until=YYYY-MM-DD]
 //
 //   - limit: opcional, 5–100 (default 40) — solo afecta top_tracks.
+//   - since/until: solo cuentan los «+» de esas fechas (Madrid, ambos días
+//     incluidos), con las mismas reglas. Lo usa el artículo quincenal del blog
+//     (`generar-blog-agente.mjs --quincena`). Sin ellos, all-time.
 //   - view=artists: solo el top 10 de artistas (home). Mismas reglas de crédito,
 //     pero no arma la lista de temas, ni plays, ni países, y pide columnas
 //     finas. Con cached=1 la CDN lo guarda 5 min.
@@ -405,6 +408,19 @@ export async function GET(request: NextRequest) {
   // de temas. `cached=1` lo guarda en CDN. El Top 100 no pasa ninguno de los dos.
   const artistsOnly = url.searchParams.get('view') === 'artists'
   const cdnCache = url.searchParams.get('cached') === '1'
+  const ymdParam = (name: string) => {
+    const v = (url.searchParams.get(name) || '').trim()
+    return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
+  }
+  const since = ymdParam('since')
+  const until = ymdParam('until')
+  const scope = since || until ? 'window' : 'all_time'
+  const inWindow = (createdAt: string | null) => {
+    if (scope === 'all_time') return true
+    if (!createdAt) return false
+    const day = new Date(createdAt).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' })
+    return (!since || day >= since) && (!until || day <= until)
+  }
   const respond = (body: unknown) =>
     NextResponse.json(
       body,
@@ -469,11 +485,11 @@ export async function GET(request: NextRequest) {
   const privateSet = new Set(
     ((privateProfiles as { id: string }[] | null) ?? []).map((p) => p.id),
   )
-  const saved = savedRaw.filter((s) => !privateSet.has(s.user_id))
+  const saved = savedRaw.filter((s) => !privateSet.has(s.user_id) && inWindow(s.created_at))
 
   if (saved.length === 0) {
     return respond({
-      scope: 'all_time',
+      scope,
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
       top_artists: [],
@@ -1014,7 +1030,7 @@ export async function GET(request: NextRequest) {
 
   if (artistsOnly) {
     return respond({
-      scope: 'all_time',
+      scope,
       totals: { saves: 0, unique_tracks: 0, unique_users: 0 },
       top_tracks: [],
       top_artists: top_artists.slice(0, 10),
@@ -1077,7 +1093,7 @@ export async function GET(request: NextRequest) {
   }
 
   return respond({
-    scope: 'all_time',
+    scope,
     totals,
     top_tracks,
     top_artists,

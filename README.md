@@ -45,6 +45,8 @@ The **Blog** is reserved for pieces that are more interpretive, essayistic, comp
 - Beatport, YouTube, Mixcloud and the people who kept the scene alive
 - first-person or scene-memory articles tied to travel, shops, radios or local experiences
 
+**Fortnight article (Oct 2026).** Every two weeks: `node scripts/generar-blog-agente.mjs --quincena [YYYY-MM-DD last day]` (`--solo-datos` prints the data and stops). It reads the 14 days of New Releases (by store release date), the `/top100` artist board, track and mix plays, debut artists, BPM/key, new sessions and upcoming releases, and writes a **draft** (`category = ranking`, tag `quincena`) with the highlighted tracks in `beatport_tracks` (heading «Escuchar la quincena»). Votes come from `GET /api/public/charts/community-monthly?since=…&until=…` on production, so they follow exactly the `/top100` rules; deploy before running it. It never overwrites a fortnight that is already published. The editor reviews and publishes it from `/administrator/blog`.
+
 ### Editorial rule of thumb
 
 If a topic answers **"what is this, who belongs here, where did it happen, when did it happen?"**, it should usually live in the structural sections.

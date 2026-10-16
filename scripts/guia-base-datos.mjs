@@ -89,7 +89,7 @@ const ACTIONS = [
     npm: 'npm run db:blog:agent -- …',
     creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI / OPENAI web_search',
     description:
-      'Redactor IA de artículos de blog (gpt-5.6-terra por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte.',
+      'Redactor IA de artículos de blog (gpt-5.6-terra por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte. Quincena: `run blog-agent -- --quincena [YYYY-MM-DD último día] [--solo-datos]` → borrador ranking con lanzamientos, Top 100, escuchas, votos (regla /top100), sonido, debutantes, sesiones y adelantos; reproductor con los temas destacados. No pisa una quincena ya publicada.',
   },
   {
     id: 'photo',
