@@ -30,6 +30,18 @@ function canUseAudio(): boolean {
   return typeof window !== 'undefined' && typeof Audio !== 'undefined'
 }
 
+/**
+ * Pausa los elementos compartidos al abandonar el documento (refresco, cierre).
+ * Sin esto el `<audio>` creado con `new Audio()` —no está en el DOM— puede
+ * seguir sonando en la página nueva, ya sin barra.
+ * No quita el `src`: quien restaura la sesión lo reutiliza si sigue siendo el mismo.
+ */
+export function pauseSharedPlayback(): void {
+  for (const el of [previewEl, mixEl, deckEls.A, deckEls.B]) {
+    try { el?.pause() } catch { /* no-op */ }
+  }
+}
+
 /** <audio> único del reproductor de previews (charts, Top 10, Mis Tracks…). */
 export function getSharedPreviewAudio(): HTMLAudioElement {
   if (!previewEl) {

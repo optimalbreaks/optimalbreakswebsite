@@ -17,7 +17,7 @@ import {
 } from 'react'
 import { DeckAudioContext, DeckAudioProgressContext } from '@/components/deck-audio-context'
 import { DECK_TRACKS, type DeckTrack } from '@/lib/deck-tracks'
-import { AUDIO_SESSION_KEY } from '@/lib/audio-engine-pending'
+import { AUDIO_SESSION_KEY, clearPreviewSession, readPreviewSession, writePreviewSession } from '@/lib/audio-engine-pending'
 import {
   assignAudioSrc,
   connectDeckAudio,
@@ -26,6 +26,7 @@ import {
   getSharedDeckAudio,
   getSharedMixAudio,
   getSharedPreviewAudio,
+  pauseSharedPlayback,
 } from '@/lib/audio-unlock'
 import { useViewportBottomOffset } from '@/hooks/useViewportBottomOffset'
 import type { Locale } from '@/lib/i18n-config'
@@ -1300,6 +1301,11 @@ export function DeckAudioProvider({
   // setTimeout(0)) y se quedaba colgada.
   const previewQueueRef = useRef<PreviewTrack[]>([])
   const previewIndexRef = useRef(0)
+  const previewGroupKeyRef = useRef<string | null>(null)
+  /** Segundos a los que volver tras un refresco. Solo se aplica si la pista arranca en 0. */
+  const pendingRestoreTimeRef = useRef(0)
+  /** La reanudación tras refresco no es una escucha nueva. */
+  const skipNextPlayLogRef = useRef(false)
   // Garantiza que `ended` + `error` + watchdog de fin no encadenen DOS
   // avances para la misma pista (idempotente por track). Se resetea en
   // cada `loadAndPlayPreviewAt`.
@@ -1313,6 +1319,8 @@ export function DeckAudioProvider({
   // Si está a false y el audio aparece pausado, fue el SO/navegador quien
   // lo paró (pérdida de foco, throttling) y podemos auto-reanudar.
   const previewUserPausedRef = useRef(false)
+  /** El documento se va (refresco). El reintento de `pause` no debe volver a arrancar el audio. */
+  const pageLeavingRef = useRef(false)
   // true cuando detectamos una pausa NO pedida por el usuario mientras la
   // página estaba oculta (pantalla bloqueada / app en background).
   const previewSystemPausedRef = useRef(false)
@@ -1933,6 +1941,7 @@ export function DeckAudioProvider({
     setPreviewProgress(0)
     setPreviewDuration(0)
     setPreviewGroupKey(null)
+    clearPreviewSession()
     clearNowPlaying()
     if ('mediaSession' in navigator) {
       navigator.mediaSession.setActionHandler('play', null)
@@ -2236,6 +2245,7 @@ export function DeckAudioProvider({
         // para no morir en la lockscreen por throttling del SO. Si ese
         // `play()` se rechaza, back-off.
         window.setTimeout(() => {
+          if (pageLeavingRef.current) return
           if (previewUserPausedRef.current || previewBlockedRef.current) return
           if (previewInterruptedRef.current) return
           if (getActiveYouTubePlayId()) return
@@ -2277,17 +2287,30 @@ export function DeckAudioProvider({
       try { audio.currentTime = 0 } catch { /* no-op */ }
     }
     if (Number.isFinite(audio.duration) && audio.duration > 0) setPreviewDuration(audio.duration)
+    const resumeAt = pendingRestoreTimeRef.current
+    pendingRestoreTimeRef.current = 0
+    if (resumeAt > 1 && audio.currentTime < 0.5 && (!Number.isFinite(audio.duration) || resumeAt < audio.duration - 0.3)) {
+      const applyResume = () => {
+        if (audio.currentTime < 0.5 && resumeAt < (audio.duration || Infinity) - 0.3) {
+          try { audio.currentTime = resumeAt } catch { /* metadata aún no lista */ }
+        }
+      }
+      if (audio.readyState >= 1) applyResume()
+      else audio.addEventListener('loadedmetadata', applyResume, { once: true })
+    }
     audio.play()
       .then(() => {
         setPreviewPlaying(true)
         setPreviewBlocked(false)
         const playKey = queue[idx].save ? canonicalKeyFromTrackPlaySave(queue[idx].save!) : null
-        if (playKey) logTrackPlay(playKey)
+        if (playKey && !skipNextPlayLogRef.current) logTrackPlay(playKey)
+        skipNextPlayLogRef.current = false
         // Con la pista ya sonando, calienta la caché con la siguiente para
         // que el auto-avance funcione aunque el SO tenga la red dormida.
         preloadNextPreview(queue, idx)
       })
       .catch((err: unknown) => {
+        skipNextPlayLogRef.current = false
         setPreviewPlaying(false)
         // NotAllowedError = política de autoplay del navegador (link compartido
         // abierto en pestaña nueva, sin gesto previo). Mantenemos la cola
@@ -2326,6 +2349,7 @@ export function DeckAudioProvider({
   // para que `advanceFromCurrentTrack` siempre lea valores frescos.
   useEffect(() => { previewQueueRef.current = previewQueue }, [previewQueue])
   useEffect(() => { previewIndexRef.current = previewIndex }, [previewIndex])
+  useEffect(() => { previewGroupKeyRef.current = previewGroupKey }, [previewGroupKey])
   useEffect(() => { previewDurationRef.current = previewDuration }, [previewDuration])
 
   // Mantén la lockscreen alineada con la pista actual (navegación Next.js
@@ -2400,6 +2424,80 @@ export function DeckAudioProvider({
     setPreviewDuration(0)
     loadAndPlayPreviewAt(items, clampedIdx)
   }, [playingA, playingB, currentMix, stopMixInternal, loadAndPlayPreviewAt, preloadNextPreview])
+
+  // La barra vive en estado de React: un refresco la borra y el <audio> de
+  // módulo puede seguir sonando sin controles. Guardamos la cola y, al montar
+  // el motor, la volvemos a pintar. `pagehide` (documento que se va, no bfcache)
+  // pausa el elemento para que no quede huérfano en la página nueva.
+  const previewRestoredRef = useRef(false)
+  useEffect(() => {
+    if (!previewRestoredRef.current) {
+      const saved = readPreviewSession()
+      if (saved && previewQueueRef.current.length === 0) {
+        const id = window.setTimeout(() => {
+          previewRestoredRef.current = true
+          if (saved.playing) {
+            pendingRestoreTimeRef.current = saved.currentTime
+            skipNextPlayLogRef.current = true
+            playPreviewQueue(saved.items, saved.index, saved.groupKey ?? undefined)
+            return
+          }
+          const idx = saved.index
+          previewQueueRef.current = saved.items
+          previewIndexRef.current = idx
+          previewGroupKeyRef.current = saved.groupKey
+          setPreviewQueue(saved.items)
+          setPreviewIndex(idx)
+          setPreviewGroupKey(saved.groupKey)
+          setMode('preview')
+          const item = saved.items[idx]
+          const audio = getSharedPreviewAudio()
+          previewAudioRef.current = audio
+          if (item?.src && !previewItemSoundCloudUrl(item) && !previewSrcEquals(audio, item.src)) {
+            audio.src = item.src
+          }
+          if (saved.currentTime > 1) {
+            try { audio.currentTime = saved.currentTime } catch { /* sin metadata */ }
+          }
+        }, 0)
+        return () => window.clearTimeout(id)
+      }
+      previewRestoredRef.current = true
+    }
+    if (previewQueue.length === 0) {
+      clearPreviewSession()
+      return
+    }
+    const audio = previewAudioRef.current
+    writePreviewSession({
+      items: previewQueue,
+      index: previewIndex,
+      groupKey: previewGroupKey,
+      currentTime: audio && Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+      playing: previewPlaying,
+    })
+  }, [previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue])
+
+  useEffect(() => {
+    const onPageHide = (e: PageTransitionEvent) => {
+      pageLeavingRef.current = !e.persisted
+      const q = previewQueueRef.current
+      const audio = getSharedPreviewAudio()
+      if (q.length > 0) {
+        writePreviewSession({
+          items: q,
+          index: previewIndexRef.current,
+          groupKey: previewGroupKeyRef.current,
+          currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+          playing: !audio.paused && !previewUserPausedRef.current,
+        })
+      }
+      if (e.persisted) return
+      pauseSharedPlayback()
+    }
+    window.addEventListener('pagehide', onPageHide)
+    return () => window.removeEventListener('pagehide', onPageHide)
+  }, [])
 
   // Ampliación de cola SIN tocar el <audio>. Caso: enlace compartido — el
   // receptor toca el emergente y suena el tema suelto; cuando ChartView baja la
