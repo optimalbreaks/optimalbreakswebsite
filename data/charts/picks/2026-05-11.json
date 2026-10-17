@@ -19,9 +19,10 @@
       "music_key": "D Minor",
       "release_year": 2026,
       "release_date": "2026-05-11",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 1
+      "note_en": "Exclusive full track — Kaos Beat shares the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kaos Beat nos cede el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 1,
+      "full_audio_url": "/api/audio/kaos-beat-adrenaline-spoken.mp3"
     },
     {
       "title": "Enter the Breakmode",

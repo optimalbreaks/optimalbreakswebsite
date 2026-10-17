@@ -132,9 +132,10 @@
       "music_key": "F Minor",
       "release_year": 2026,
       "release_date": "2026-08-31",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 6
+      "note_en": "Exclusive full track — Kritycal System and BrainBass share the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System y BrainBass nos ceden el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 6,
+      "full_audio_url": "/api/audio/kritycal-system-brainbass-control.mp3"
     },
     {
       "title": "Clean",

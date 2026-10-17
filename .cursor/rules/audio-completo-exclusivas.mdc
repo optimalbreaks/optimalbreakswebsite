@@ -12,6 +12,14 @@ Contexto (sep 2026): Kritycal System cedió temas enteros para streaming gratuit
 | **Take My Home** | `2026-09-14` | `private/music/kritycal-system-take-my-home.mp3` | Primer caso. |
 | **Bandido & Maleante** | `2026-09-28` | `private/music/kritycal-system-bandido-maleante.mp3` | El primer WAV era una demo de **1:25**. El máster (28 sep) dura **3:58**, igual que Spotify. Se reencodó el **mismo** MP3; `full_audio_url` no cambió. Beatport `/track/bandido-maleante/29540534`. TIDAL sin match fiable. |
 | **Caught Up** | `2026-10-12` | `private/music/kritycal-system-caught-up.mp3` | Máster **4:23** (FL Studio), 192 kbps. Ya estaba en Beatport (`/track/caught-up/29550498`); se rellenó `full_audio_url` en la misma fila. |
+| **Show Me** | `2026-03-02` | `private/music/kaos-beat-show-me.mp3` | Kaos Beat. Máster 4:02. Beatport `/track/show-me/23725284`. |
+| **Make Way** | `2026-04-13` | `private/music/brainbass-make-way.mp3` | BrainBass. Máster 4:03. Drum & Bass, Beatport lo lista a 87 BPM. `/track/make-way/24134800`. |
+| **Adrenaline Spoken** | `2026-05-11` | `private/music/kaos-beat-adrenaline-spoken.mp3` | Kaos Beat. Máster 4:23. Ya estaba en Beatport (`/track/adrenaline-spoken/26832848`). |
+| **Quimic Due** | `2026-06-08` | `private/music/kritycal-system-quimic-due.mp3` | Kritycal System. Máster 4:23. Ya estaba (`/track/quimic-due/26886111`). |
+| **She Go** | `2026-07-20` | `private/music/kritycal-system-kaos-beat-she-go.mp3` | Kritycal System y Kaos Beat. Máster 4:23. Ya estaba (`/track/she-go/28568720`). |
+| **Lost In Desire** | `2026-08-03` | `private/music/kritycal-system-lost-in-desire.mp3` | Kritycal System. Máster 4:52. Ya estaba (`/track/lost-in-desire/28568728`). |
+| **Updating** | `2026-08-17` | `private/music/brainbass-updating.mp3` | BrainBass. Máster 4:29. Drum & Bass, Beatport lo lista a 88 BPM. `/track/updating/28597008`. |
+| **Control** | `2026-08-31` | `private/music/kritycal-system-brainbass-control.mp3` | Kritycal System y BrainBass. Máster 4:09. Ya estaba (`/track/control/30177482`). |
 
 ## Arquitectura (no negociable)
 

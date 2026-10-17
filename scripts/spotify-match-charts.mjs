@@ -330,6 +330,9 @@ function artistMatches(ourName, candArtists) {
   if (!our) return false
   return candArtists.some((c) => {
     const cn = norm(c)
+    // Un nombre que se queda vacío (título o artista solo en otro alfabeto)
+    // hacía verdadero `includes('')` y guardaba un enlace de otra canción.
+    if (!cn) return false
     return cn === our || cn.includes(our) || our.includes(cn)
   })
 }
@@ -346,8 +349,12 @@ function scoreCandidate(row, cand) {
   const candBase = norm(String(cand.name).split(/\s+[-–—]\s+/)[0])
   const candArtists = cand.artists || []
 
-  const titleExact = candName === ourTitle || candBase === ourTitle
-  const titleContained = !titleExact && (candName.includes(ourTitle) || ourTitle.includes(candBase))
+  if (!ourTitle || !candName) return 0
+  const titleExact = candName === ourTitle || (candBase && candBase === ourTitle)
+  const titleContained =
+    !titleExact &&
+    !!candBase &&
+    (candName.includes(ourTitle) || ourTitle.includes(candBase))
   if (!titleExact && !titleContained) return 0
 
   const ourArtists = (Array.isArray(row.artists) ? row.artists : [])

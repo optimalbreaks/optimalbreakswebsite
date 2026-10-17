@@ -145,9 +145,10 @@
       "music_key": "B Minor",
       "release_year": 2026,
       "release_date": "2026-08-03",
-      "note_en": "",
-      "note_es": "",
+      "note_en": "Exclusive full track — Kritycal System shares the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kritycal System nos cede el tema entero. Dale al play y escúchalo aquí mismo.",
       "sort_order": 6,
+      "full_audio_url": "/api/audio/kritycal-system-lost-in-desire.mp3",
       "spotify_url": "https://open.spotify.com/track/2XoQirWvXO4VETJsPPYE3B",
       "tidal_url": "https://tidal.com/browse/track/517166516"
     },

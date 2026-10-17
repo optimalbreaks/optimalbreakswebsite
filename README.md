@@ -985,10 +985,18 @@ The home deck has its own sticky mini-bar inside `DeckAudioProvider` (different 
 
 Sometimes an artist gifts the community the **full track** for free streaming on the site. These are regular New Releases picks with `chart_featured_tracks.full_audio_url` filled in (migration `078`; the column is **optional** in `ChartFeaturedTrack` / `SavedChartTrackSnapshot`).
 
-Cases (Kritycal System, Sep 2026):
+Cases (Kritycal System, Kaos Beat and BrainBass; the 17 Oct 2026 batch attaches each master to the Beatport release week):
 
 | Track | Week | MP3 | What happened |
 |---|---|---|---|
+| *Show Me* | 2 Mar | `kaos-beat-show-me.mp3` | Kaos Beat. 4:02 master. Beatport `/track/show-me/23725284`. |
+| *Make Way* | 13 Apr | `brainbass-make-way.mp3` | BrainBass. 4:03 master. Drum & Bass; Beatport lists it at 87 BPM. `/track/make-way/24134800`. |
+| *Adrenaline Spoken* | 11 May | `kaos-beat-adrenaline-spoken.mp3` | Kaos Beat. 4:23 master. Already on Beatport (`/track/adrenaline-spoken/26832848`). |
+| *Quimic Due* | 8 Jun | `kritycal-system-quimic-due.mp3` | Kritycal System. 4:23 master. Already listed (`/track/quimic-due/26886111`). |
+| *She Go* | 20 Jul | `kritycal-system-kaos-beat-she-go.mp3` | Kritycal System and Kaos Beat. 4:23 master. Already listed (`/track/she-go/28568720`). |
+| *Lost In Desire* | 3 Aug | `kritycal-system-lost-in-desire.mp3` | Kritycal System. 4:52 master. Already listed (`/track/lost-in-desire/28568728`). |
+| *Updating* | 17 Aug | `brainbass-updating.mp3` | BrainBass. 4:29 master. Drum & Bass; Beatport lists it at 88 BPM. `/track/updating/28597008`. |
+| *Control* | 31 Aug | `kritycal-system-brainbass-control.mp3` | Kritycal System and BrainBass. 4:09 master. Already listed (`/track/control/30177482`). |
 | *Take My Home* | 14 Sep | `kritycal-system-take-my-home.mp3` | First exclusive. |
 | *Bandido & Maleante* | 28 Sep | `kritycal-system-bandido-maleante.mp3` | The first file was a 1:25 demo. The master is 3:58 (same length as Spotify and Beatport `/track/bandido-maleante/29540534`). The same MP3 was replaced; the public URL did not change. |
 | *Caught Up* | 12 Oct | `kritycal-system-caught-up.mp3` | 4:23 master. Already on Beatport (`/track/caught-up/29550498`); full audio was attached to that same row. |

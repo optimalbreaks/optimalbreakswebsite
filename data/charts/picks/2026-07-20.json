@@ -138,9 +138,10 @@
       "music_key": "A Minor",
       "release_year": 2026,
       "release_date": "2026-07-20",
-      "note_en": "",
-      "note_es": "",
-      "sort_order": 6
+      "note_en": "Exclusive full track — Kaos Beat and Kritycal System share the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kaos Beat y Kritycal System nos ceden el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 6,
+      "full_audio_url": "/api/audio/kritycal-system-kaos-beat-she-go.mp3"
     },
     {
       "title": "Viking",

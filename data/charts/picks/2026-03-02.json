@@ -213,6 +213,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 69
+    },
+    {
+      "title": "Show Me",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "Kaos Beat"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/show-me/23725284",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/0e56db11-a81f-4f5e-84b3-1d769418cb4c.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/6ae7b4eb-ebe2-4216-a3f7-9b23182ce52c.LOFI.mp3",
+      "bpm": 135,
+      "music_key": "D Minor",
+      "release_year": 2026,
+      "release_date": "2026-03-02",
+      "note_en": "Exclusive full track — Kaos Beat shares the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — Kaos Beat nos cede el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 72,
+      "full_audio_url": "/api/audio/kaos-beat-show-me.mp3",
+      "spotify_url": "https://open.spotify.com/track/5wFN3ywXzdgdsiI8UeOBvr",
+      "tidal_url": "https://tidal.com/browse/track/491971162"
     }
   ]
 }

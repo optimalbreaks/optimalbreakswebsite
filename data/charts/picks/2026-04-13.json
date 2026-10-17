@@ -2162,6 +2162,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 101
+    },
+    {
+      "title": "Make Way",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "BrainBass"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/make-way/24134800",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/4140b9c0-cd88-44aa-8e6b-7f48afb42fbf.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/abf9c750-f40c-4778-9b66-fc8e5bcbccbb.LOFI.mp3",
+      "bpm": 87,
+      "music_key": "F Minor",
+      "release_year": 2026,
+      "release_date": "2026-04-13",
+      "note_en": "Exclusive full track — BrainBass shares the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — BrainBass nos cede el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 103,
+      "full_audio_url": "/api/audio/brainbass-make-way.mp3",
+      "spotify_url": "https://open.spotify.com/track/25P1Usn2m8giFMA9FhomML",
+      "tidal_url": "https://tidal.com/browse/track/498228388"
     }
   ]
 }

@@ -2812,6 +2812,31 @@
       "note_en": "",
       "note_es": "",
       "sort_order": 117
+    },
+    {
+      "title": "Updating",
+      "mix_name": "Original Mix",
+      "artists": [
+        {
+          "name": "BrainBass"
+        }
+      ],
+      "label": "Creative Sound Records",
+      "platform": "beatport",
+      "link_url": "https://www.beatport.com/track/updating/28597008",
+      "link_label": "",
+      "artwork_url": "https://geo-media.beatport.com/image_size/250x250/79dab7e8-8992-411b-a4b6-afcc0968cf3e.jpg",
+      "sample_url": "https://geo-samples.beatport.com/track/c5c3a2d3-9af3-428f-8efc-edba0476f881.LOFI.mp3",
+      "bpm": 88,
+      "music_key": "E Minor",
+      "release_year": 2026,
+      "release_date": "2026-08-17",
+      "note_en": "Exclusive full track — BrainBass shares the full audio with Optimal Breaks. Hit play and enjoy it right here.",
+      "note_es": "Exclusiva en Optimal Breaks — BrainBass nos cede el tema entero. Dale al play y escúchalo aquí mismo.",
+      "sort_order": 126,
+      "full_audio_url": "/api/audio/brainbass-updating.mp3",
+      "spotify_url": "https://open.spotify.com/track/4DcR9Y8U5bz35LtdHGN9oO",
+      "tidal_url": "https://tidal.com/browse/track/517732982"
     }
   ]
 }

@@ -891,10 +891,18 @@ Detalle técnico y tabla de archivos en [README.md — Global audio system](./RE
 
 A veces un artista cede el **tema entero** para streaming gratuito en la web. Son picks normales de New Releases con `chart_featured_tracks.full_audio_url` relleno (migración `078`).
 
-Casos (Kritycal System, sep 2026):
+Casos (Kritycal System, Kaos Beat y BrainBass; el lote del 17 oct 2026 engancha el máster a la semana del release en Beatport):
 
 | Tema | Semana | MP3 | Qué pasó |
 |---|---|---|---|
+| *Show Me* | 2 mar | `kaos-beat-show-me.mp3` | Kaos Beat. Máster 4:02. Beatport `/track/show-me/23725284`. |
+| *Make Way* | 13 abr | `brainbass-make-way.mp3` | BrainBass. Máster 4:03. Drum & Bass; Beatport lo lista a 87 BPM. `/track/make-way/24134800`. |
+| *Adrenaline Spoken* | 11 may | `kaos-beat-adrenaline-spoken.mp3` | Kaos Beat. Máster 4:23. Ya estaba en Beatport (`/track/adrenaline-spoken/26832848`). |
+| *Quimic Due* | 8 jun | `kritycal-system-quimic-due.mp3` | Kritycal System. Máster 4:23. Ya estaba (`/track/quimic-due/26886111`). |
+| *She Go* | 20 jul | `kritycal-system-kaos-beat-she-go.mp3` | Kritycal System y Kaos Beat. Máster 4:23. Ya estaba (`/track/she-go/28568720`). |
+| *Lost In Desire* | 3 ago | `kritycal-system-lost-in-desire.mp3` | Kritycal System. Máster 4:52. Ya estaba (`/track/lost-in-desire/28568728`). |
+| *Updating* | 17 ago | `brainbass-updating.mp3` | BrainBass. Máster 4:29. Drum & Bass; Beatport lo lista a 88 BPM. `/track/updating/28597008`. |
+| *Control* | 31 ago | `kritycal-system-brainbass-control.mp3` | Kritycal System y BrainBass. Máster 4:09. Ya estaba (`/track/control/30177482`). |
 | *Take My Home* | 14 sep | `kritycal-system-take-my-home.mp3` | Primera exclusiva. |
 | *Bandido & Maleante* | 28 sep | `kritycal-system-bandido-maleante.mp3` | El primer archivo era una demo de 1:25. El máster dura 3:58 (igual que Spotify y Beatport `/track/bandido-maleante/29540534`). Se sustituyó el mismo MP3; el enlace de la web no cambió. |
 | *Caught Up* | 12 oct | `kritycal-system-caught-up.mp3` | Máster de 4:23. Ya estaba en Beatport (`/track/caught-up/29550498`); el audio completo se enganchó a esa misma fila. |
