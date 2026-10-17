@@ -33,11 +33,11 @@ import {
   filterArtistSlugMapForNames,
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
-import { visibleDigestCovers } from '@/lib/digest-cover-pick'
+import { digestCoverUrls, isBlogPosterCover } from '@/lib/blog-spotlight'
+import { digestCoverFocuses } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
-import { isBlogPosterCover } from '@/lib/blog-spotlight'
 
 type Props = { params: Promise<{ lang: Locale; slug: string }> }
 type BlogSeoRow = Pick<
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     data.image_url ||
     (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
     null
-  const coverPick = await visibleDigestCovers(data.covers)
+  const coverPick = digestCoverUrls(data.covers)
   const thirdsOg = publicOgThirdsUrl(coverPick)
   // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
   // Quincena y trimestre: las tres primeras carátulas en tercios.
@@ -122,7 +122,8 @@ export default async function BlogPostPage({ params }: Props) {
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
     : storedDigest
-  const heroCovers = await visibleDigestCovers(digest?.covers)
+  const heroCovers = digestCoverUrls(digest?.covers)
+  const heroFocus = await digestCoverFocuses(digest?.covers)
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
@@ -407,7 +408,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroCovers={heroCovers} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroFocus={heroFocus} />}
 
       {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 

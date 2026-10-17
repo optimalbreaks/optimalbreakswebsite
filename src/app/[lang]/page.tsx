@@ -12,14 +12,14 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { digestCoverUrls, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
-import { visibleDigestCovers } from '@/lib/digest-cover-pick'
+import { digestCoverFocuses, type CoverFocus } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
@@ -323,10 +323,15 @@ export default async function HomePage({
         }))
 
   const { posts: featuredBlogPosts } = await fetchBlogSpotlight(supabase)
-  const blogThirds = new Map<string, string[]>()
+  const blogThirds = new Map<string, { urls: string[]; focus: CoverFocus[] }>()
   await Promise.all(featuredBlogPosts.map(async (p) => {
-    const urls = await visibleDigestCovers(p.covers)
-    if (urls.length >= 2) blogThirds.set(p.slug, urls.map((u) => proxyCatalogArtworkForDisplay(u) || u))
+    const urls = digestCoverUrls(p.covers)
+    if (urls.length < 2) return
+    const focus = await digestCoverFocuses(p.covers)
+    blogThirds.set(p.slug, {
+      urls: urls.map((u) => proxyCatalogArtworkForDisplay(u) || u),
+      focus,
+    })
   }))
 
   const sectionBlog =
@@ -650,7 +655,7 @@ export default async function HomePage({
               const title = lang === 'es' ? p.title_es : p.title_en
               const excerpt = lang === 'es' ? p.excerpt_es : p.excerpt_en
               const dateStr = formatBlogPublishedAt(p.published_at, lang)
-              const thirds = blogThirds.get(p.slug) ?? []
+              const thirds = blogThirds.get(p.slug)
               return (
                 <Link
                   key={p.slug}
@@ -658,9 +663,10 @@ export default async function HomePage({
                   className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
                 >
                   {/* Mismo marco apaisado para todas: los carteles ya no alargan su tarjeta */}
-                  {thirds.length >= 2 ? (
+                  {thirds && thirds.urls.length >= 2 ? (
                     <CoverThirds
-                      srcs={thirds}
+                      srcs={thirds.urls}
+                      focus={thirds.focus}
                       alt={title}
                       aspectClass="aspect-[3/2] w-full"
                       frameClass="border-b-[3px] border-[var(--ink)]"

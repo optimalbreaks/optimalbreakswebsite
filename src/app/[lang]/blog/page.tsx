@@ -12,8 +12,8 @@ import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
-import { BLOG_LIST_SELECT, fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
-import { visibleDigestCovers } from '@/lib/digest-cover-pick'
+import { BLOG_LIST_SELECT, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { digestCoverFocuses, type CoverFocus } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 
 // Paginación por ?page=: render por petición; los datos van por Data Cache
@@ -177,7 +177,7 @@ function BlogPagination({
   )
 }
 
-function BlogIndexRow({ p, lang, thirds }: { p: BlogListRow; lang: Locale; thirds: string[] }) {
+function BlogIndexRow({ p, lang, thirds, focus }: { p: BlogListRow; lang: Locale; thirds: string[]; focus: CoverFocus[] }) {
   const title = lang === 'es' ? p.title_es : p.title_en
   const dateStr = formatBlogListDate(p.published_at, lang)
   const coverSrc = proxyCatalogArtworkForDisplay(p.image_url) || p.image_url
@@ -190,7 +190,7 @@ function BlogIndexRow({ p, lang, thirds }: { p: BlogListRow; lang: Locale; third
     >
       <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">
         {thirds.length >= 2 ? (
-          <CoverThirds srcs={thirds} alt={title} aspectClass="aspect-[3/2]" frameClass="border-0" sizes="(max-width: 640px) 100vw, 240px" />
+          <CoverThirds srcs={thirds} focus={focus} alt={title} aspectClass="aspect-[3/2]" frameClass="border-0" sizes="(max-width: 640px) 100vw, 240px" />
         ) : (
           <CardThumbnail
             src={coverSrc}
@@ -329,12 +329,15 @@ export default async function BlogPage({
     .order('published_at', { ascending: false })
     .range(restOffset, restOffset + BLOG_PAGE_SIZE - 1)
   const restPage = (rest || []) as BlogListRow[]
-  const thirdsBySlug = new Map<string, string[]>()
+  const thirdsBySlug = new Map<string, { urls: string[]; focus: CoverFocus[] }>()
   await Promise.all([...featured, ...restPage].map(async (p) => {
-    const urls = await visibleDigestCovers(p.covers)
-    if (urls.length >= 2) {
-      thirdsBySlug.set(p.slug, urls.map((u) => proxyCatalogArtworkForDisplay(u) || u))
-    }
+    const urls = digestCoverUrls(p.covers)
+    if (urls.length < 2) return
+    const focus = await digestCoverFocuses(p.covers)
+    thirdsBySlug.set(p.slug, {
+      urls: urls.map((u) => proxyCatalogArtworkForDisplay(u) || u),
+      focus,
+    })
   }))
 
   const hasAnyPost = (publishedCount ?? 0) > 0
@@ -356,7 +359,7 @@ export default async function BlogPage({
                 </h2>
                 <div className="space-y-0 border-4 border-[var(--ink)]">
                   {featured.map((p) => (
-                    <BlogIndexRow key={p.slug} p={p} lang={lang} thirds={thirdsBySlug.get(p.slug) ?? []} />
+                    <BlogIndexRow key={p.slug} p={p} lang={lang} thirds={thirdsBySlug.get(p.slug)?.urls ?? []} focus={thirdsBySlug.get(p.slug)?.focus ?? []} />
                   ))}
                 </div>
               </div>
@@ -368,7 +371,7 @@ export default async function BlogPage({
                 ) : null}
                 <div className="space-y-0 border-4 border-[var(--ink)]">
                   {restPage.map((p) => (
-                    <BlogIndexRow key={p.slug} p={p} lang={lang} thirds={thirdsBySlug.get(p.slug) ?? []} />
+                    <BlogIndexRow key={p.slug} p={p} lang={lang} thirds={thirdsBySlug.get(p.slug)?.urls ?? []} focus={thirdsBySlug.get(p.slug)?.focus ?? []} />
                   ))}
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
+import { coverFocusFromBuffer, coverWindow } from '@/lib/digest-cover-pick'
 
 /**
  * Sirve carátulas Beatport/Discogs/YouTube bajo nuestro dominio para `og:image`
@@ -78,8 +79,15 @@ async function jpegThirds(images: ArrayBuffer[]): Promise<Buffer> {
   const panelW = Math.floor(width / n)
   const panels = await Promise.all(images.map(async (buf, i) => {
     const w = i === n - 1 ? width - panelW * (n - 1) : panelW
-    const input = await sharp(Buffer.from(buf))
-      .resize(w, height, { fit: 'cover', position: 'centre' })
+    const oriented = await sharp(Buffer.from(buf)).rotate().toBuffer()
+    const meta = await sharp(oriented).metadata()
+    const imgW = meta.width || w
+    const imgH = meta.height || height
+    const focus = await coverFocusFromBuffer(oriented)
+    const crop = coverWindow(imgW, imgH, w, height, focus)
+    const input = await sharp(oriented)
+      .extract(crop)
+      .resize(w, height, { fit: 'fill' })
       .jpeg({ quality: 82 })
       .toBuffer()
     return { input, left: i * panelW, top: 0 }
