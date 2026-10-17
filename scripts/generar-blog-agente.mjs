@@ -18,6 +18,8 @@
  * --trimestre: el mismo artículo para tres meses (primer mes: 01, 04, 07 o 10). Slug
  * `trimestre-breakbeat-<desde>-<hasta>`, título por estación («del verano de 2026»),
  * rankings de 20 y escuchas sin filtro de fecha (se registran desde el 6 oct 2026).
+ * La fecha de publicación no es el día del script: 4 días después si cierra el 30 jun
+ * (4 jul) y 5 días en los otros cierres (el verano, el 5 oct), a las 10:00 en Madrid.
  * Lanzamientos, Top 100, escuchas, votos (misma regla que /top100, vía
  * /api/public/charts/community-monthly?since&until de producción), sonido,
  * debutantes; solo de temas que salieron en esos 14 días (sin sesiones ni
@@ -346,6 +348,12 @@ function addDaysYmd(ymd, days) {
   const dt = new Date(`${ymd}T12:00:00Z`)
   dt.setUTCDate(dt.getUTCDate() + days)
   return dt.toISOString().slice(0, 10)
+}
+
+/** Trimestre: la fecha del artículo es unos días después de cerrar el periodo, a las 10:00 en Madrid. */
+function fechaPublicacionTrimestre(until) {
+  const days = until.slice(5) === '06-30' ? 4 : 5
+  return `${addDaysYmd(until, days)}T08:00:00.000Z`
 }
 
 const normName = (s) =>
@@ -859,7 +867,7 @@ async function upsertBlogPost(row, { refusePublished = false } = {}) {
     // Conservar portada y fecha original si ya existía
     if (existing.image_url && !payload.image_url) payload.image_url = existing.image_url
     if (existing.og_image_url && !payload.og_image_url) payload.og_image_url = existing.og_image_url
-    if (existing.published_at) payload.published_at = existing.published_at
+    if (existing.published_at && row.digest?.kind !== 'trimestre') payload.published_at = existing.published_at
     const { error } = await sb.from('blog_posts').update(payload).eq('id', existing.id)
     if (error) throw new Error(`UPDATE blog_posts: ${error.message}`)
     await pingPublicRevalidate({ blogSlug: row.slug })
@@ -976,7 +984,7 @@ async function mainQuincena(args) {
     author: 'Optimal Breaks',
     is_published: !args.borrador,
     is_featured: false,
-    published_at: new Date().toISOString(),
+    published_at: q.kind === 'trimestre' ? fechaPublicacionTrimestre(q.until) : new Date().toISOString(),
     image_url: q.digest.covers[0] || null,
     og_image_url: null,
     beatport_tracks: q.beatportTracks,
