@@ -33,7 +33,7 @@ import {
   filterArtistSlugMapForNames,
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
-import { digestCoverUrls } from '@/lib/blog-spotlight'
+import { visibleDigestCovers } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
@@ -74,7 +74,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     data.image_url ||
     (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
     null
-  const thirdsOg = publicOgThirdsUrl(digestCoverUrls(data.covers))
+  const coverPick = await visibleDigestCovers(data.covers)
+  const thirdsOg = publicOgThirdsUrl(coverPick)
   // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
   // Quincena y trimestre: las tres primeras carátulas en tercios.
   // Política de indexación: la versión de un idioma sin traducir (vacía o copia del otro) → noindex.
@@ -86,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       'article',
-      (digestCoverUrls(data.covers).length >= 2 ? thirdsOg : null) || publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
+      (coverPick.length >= 2 ? thirdsOg : null) || publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
     ),
     safeLang,
     `/blog/${safeSlug}`,
@@ -121,6 +122,7 @@ export default async function BlogPostPage({ params }: Props) {
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
     : storedDigest
+  const heroCovers = await visibleDigestCovers(digest?.covers)
   const albumTracks = Array.isArray(post.beatport_tracks)
     ? (post.beatport_tracks as BeatportTopTrack[])
     : []
@@ -246,7 +248,7 @@ export default async function BlogPostPage({ params }: Props) {
       // dateModified hasta tener un campo dedicado en la BD.
       dateModified: post.published_at,
       authorName: post.author || null,
-      imageUrl: (digestCoverUrls(digest?.covers).length >= 2 ? publicOgThirdsUrl(digestCoverUrls(digest?.covers)) : null) || publicOgArtworkUrl(coverRaw) || coverSrc || post.og_image_url || null,
+      imageUrl: (heroCovers.length >= 2 ? publicOgThirdsUrl(heroCovers) : null) || publicOgArtworkUrl(coverRaw) || coverSrc || post.og_image_url || null,
       category: post.category || null,
       tags: post.tags ?? [],
       inLanguage: safeLang,
@@ -405,7 +407,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroCovers={heroCovers} />}
 
       {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 

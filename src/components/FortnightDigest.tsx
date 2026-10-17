@@ -379,7 +379,7 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
 }
 
 export default function FortnightDigest({
-  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null,
+  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, heroCovers,
 }: {
   digest: Digest
   lang: Locale
@@ -387,6 +387,8 @@ export default function FortnightDigest({
   labelSlugMap?: Record<string, string>
   /** Rankings recalculados en el servidor (fortnight-live): títulos y textos salen de los datos. */
   liveAt?: string | null
+  /** Tres carátulas ya filtradas (sin las que salen blancas en el tercio). */
+  heroCovers?: string[]
 }) {
   const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : T[lang]
   const copy = d.copy[lang]
@@ -484,7 +486,7 @@ export default function FortnightDigest({
       {/* Portada: mosaico de carátulas + cifras */}
       <div className="relative -mx-4 sm:mx-0 border-y-[3px] sm:border-[3px] border-[var(--ink)]">
         <CoverThirds
-          srcs={digestCoverUrls(d.covers).map((u) => proxyCatalogArtworkForDisplay(u) || u)}
+          srcs={(heroCovers && heroCovers.length >= 2 ? heroCovers : digestCoverUrls(d.covers)).map((u) => proxyCatalogArtworkForDisplay(u) || u)}
           alt=""
           aspectClass="aspect-[3/1]"
           frameClass="border-0"

@@ -19,7 +19,7 @@ import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
-import { digestCoverUrls } from '@/lib/blog-spotlight'
+import { visibleDigestCovers } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
@@ -323,6 +323,11 @@ export default async function HomePage({
         }))
 
   const { posts: featuredBlogPosts } = await fetchBlogSpotlight(supabase)
+  const blogThirds = new Map<string, string[]>()
+  await Promise.all(featuredBlogPosts.map(async (p) => {
+    const urls = await visibleDigestCovers(p.covers)
+    if (urls.length >= 2) blogThirds.set(p.slug, urls.map((u) => proxyCatalogArtworkForDisplay(u) || u))
+  }))
 
   const sectionBlog =
     'section_blog' in h
@@ -645,7 +650,7 @@ export default async function HomePage({
               const title = lang === 'es' ? p.title_es : p.title_en
               const excerpt = lang === 'es' ? p.excerpt_es : p.excerpt_en
               const dateStr = formatBlogPublishedAt(p.published_at, lang)
-              const thirds = digestCoverUrls(p.covers).map((u) => proxyCatalogArtworkForDisplay(u) || u)
+              const thirds = blogThirds.get(p.slug) ?? []
               return (
                 <Link
                   key={p.slug}
