@@ -13,8 +13,8 @@ import { normalizePlace, provinceAt, provinceFromText } from '@/lib/spain-map'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { eventLineupNames, eventNoticeKind, type Database } from '@/types/database'
 
-/** Mismo corte que el tablero de artistas de /top100. */
-const TOP_ARTISTS = 50
+/** Top 100 del tablero de artistas (la página /top100 enseña los 50 primeros). */
+const TOP_ARTISTS = 100
 
 export type AgendaStar = { rank: number; name: string; slug: string | null; image: string | null }
 

@@ -1162,7 +1162,7 @@ async function agendaCoverImage(events) {
   const key = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim()
   const rank = new Map()
   try {
-    const res = await fetch(`${SITE_URL}/api/public/charts/community-monthly?limit=100`)
+    const res = await fetch(`${SITE_URL}/api/public/charts/community-monthly?limit=100&artists=100`)
     const json = res.ok ? await res.json() : null
     for (const a of json?.top_artists || []) rank.set(key(a.name), a.rank)
   } catch (err) {

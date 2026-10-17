@@ -407,6 +407,11 @@ export async function GET(request: NextRequest) {
   // `view=artists` (Top 10 de la home): mismo ranking de créditos, sin la lista
   // de temas. `cached=1` lo guarda en CDN. El Top 100 no pasa ninguno de los dos.
   const artistsOnly = url.searchParams.get('view') === 'artists'
+  // `artists=100`: el generador de la agenda cruza carteles con el Top 100 de artistas.
+  const artistsLimit = Math.min(
+    150,
+    Math.max(TOP_ARTISTS_LIMIT, Number(url.searchParams.get('artists')) || TOP_ARTISTS_LIMIT),
+  )
   const cdnCache = url.searchParams.get('cached') === '1'
   const ymdParam = (name: string) => {
     const v = (url.searchParams.get(name) || '').trim()
@@ -965,7 +970,7 @@ export async function GET(request: NextRequest) {
         b.unique_tracks - a.unique_tracks ||
         a.name.localeCompare(b.name),
     )
-    .slice(0, TOP_ARTISTS_LIMIT)
+    .slice(0, artistsLimit)
 
   const now = new Date()
   const thisMonday = isoMondayUtc(now)
