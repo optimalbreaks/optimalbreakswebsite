@@ -1150,6 +1150,8 @@ export interface AgendaDigest {
   from: string
   until: string
   copy: { es: AgendaDigestCopy; en: AgendaDigestCopy }
+  /** Ciudad|país → coordenadas, geocodificadas por el generador para el mapa (events.coords suele ir vacío). */
+  places?: Record<string, { lat: number; lng: number }>
 }
 
 export interface FortnightDigestTrack {

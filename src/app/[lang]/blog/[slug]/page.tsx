@@ -116,7 +116,7 @@ export default async function BlogPostPage({ params }: Props) {
   const rawDigest = post.digest?.copy ? post.digest : null
   const agendaStored: AgendaDigestData | null = rawDigest?.kind === 'agenda' ? rawDigest : null
   const storedDigest: FortnightDigestData | null = rawDigest && rawDigest.kind !== 'agenda' ? rawDigest : null
-  const agendaNights = agendaStored ? await loadAgendaNights(supabase, agendaStored.from, agendaStored.until) : []
+  const agendaNights = agendaStored ? await loadAgendaNights(supabase, agendaStored.from, agendaStored.until, agendaStored.places) : []
   const quarter = storedDigest?.kind === 'trimestre'
   const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10) : null
   const digest = storedDigest && live

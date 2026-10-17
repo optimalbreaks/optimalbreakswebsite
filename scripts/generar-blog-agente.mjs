@@ -11,7 +11,7 @@
  *   npm run db:blog:agent -- slug --from-json
  *   npm run db:blog:agent -- slug --from-json data/blog/slug.json
  *   npm run db:blog:agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar] [--brief notas.txt]
- *   npm run db:blog:agent -- --agenda [YYYY-MM-DD primer día] [--solo-datos] [--borrador] [--forzar]
+ *   npm run db:blog:agent -- --agenda [YYYY-MM-DD primer día] [--solo-datos] [--borrador] [--forzar [--mantener-textos]]
  *
  *   npm run db:blog:agent -- --trimestre 2026-07 [mismas opciones]
  *
@@ -31,9 +31,11 @@
  * refresca los datos y conserva título y frases ya publicados. --solo-datos imprime los datos y sale.
  *
  * --agenda: las citas de los 14 días que empiezan ese día (por defecto, hoy en Madrid).
- * Slug `agenda-breakbeat-<desde>-<hasta>`. El digest solo guarda el texto; la ficha
- * lee los eventos en vivo (AgendaDigest) y el vídeo R/F es el reel de carteles.
- * No pisa una agenda publicada salvo con --forzar.
+ * Slug `agenda-breakbeat-<desde>-<hasta>`. El digest guarda el texto y las coordenadas
+ * de cada ciudad (Nominatim; events.coords no se toca) para el mapa por provincias; la
+ * ficha lee los eventos en vivo (AgendaDigest) y el vídeo R/F es el reel de carteles.
+ * No pisa una agenda publicada salvo con --forzar. --forzar --mantener-textos refresca
+ * los lugares y conserva textos y fecha.
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
@@ -1120,7 +1122,7 @@ async function loadAgendaRows(from, until) {
   const creds = supabaseApiCredentials()
   if (!creds) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)')
   const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
-  const select = 'id,slug,name,date_start,date_end,city,venue,country,location,lineup,stages,image_url,tags'
+  const select = 'id,slug,name,date_start,date_end,city,venue,country,location,lineup,stages,image_url,tags,coords'
   const next = addDaysYmd(until, 1)
   const starting = await fetchAllRows(sb, 'events', select, (q) => q.gte('date_start', from).lt('date_start', next))
   const running = await fetchAllRows(sb, 'events', select, (q) => q.lt('date_start', from).gte('date_end', from))
@@ -1145,10 +1147,44 @@ async function loadAgendaRows(from, until) {
       lineup: eventLineup(row),
       postponed: eventPostponed(row.tags),
       image: row.image_url || null,
+      hasCoords: Number.isFinite(Number(row.coords?.lat)) && Number.isFinite(Number(row.coords?.lng)) && !!(row.coords?.lat || row.coords?.lng),
     })
   }
   events.sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name, 'es'))
   return events
+}
+
+/** Igual que `agendaPlaceKey` (src/lib/agenda-nights.ts). */
+function agendaPlaceKey(city, country) {
+  const n = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+  return `${n(city)}|${n(country)}`
+}
+
+/** Coordenadas de cada ciudad sin `events.coords` (Nominatim, 1 petición/s). Solo para el mapa del artículo. */
+async function geocodeAgendaPlaces(events, previous = {}) {
+  const places = {}
+  for (const e of events) {
+    if (e.hasCoords || !e.city) continue
+    const key = agendaPlaceKey(e.city, e.country)
+    if (places[key]) continue
+    if (previous[key]) {
+      places[key] = previous[key]
+      continue
+    }
+    const q = [e.city, e.country].filter(Boolean).join(', ')
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`, {
+        headers: { 'User-Agent': 'OptimalBreaks/1.0 (contacto@eskaladigital.com)', 'Accept-Language': 'es' },
+      })
+      const hit = res.ok ? (await res.json())[0] : null
+      if (hit) places[key] = { lat: Math.round(Number(hit.lat) * 1e4) / 1e4, lng: Math.round(Number(hit.lon) * 1e4) / 1e4 }
+      else console.warn(`[blog-agent] Sin coordenadas para «${q}»`)
+    } catch (err) {
+      console.warn(`[blog-agent] Geocodificación fallida para «${q}»: ${err.message}`)
+    }
+    await new Promise((r) => setTimeout(r, 1100))
+  }
+  return places
 }
 
 async function mainAgenda(args) {
@@ -1170,13 +1206,25 @@ async function mainAgenda(args) {
     console.log(brief)
     return
   }
+  const slug = `agenda-breakbeat-${from}-${until}`
+  const creds = supabaseApiCredentials()
+  const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
+  const { data: old } = await sb.from('blog_posts').select('excerpt_es, excerpt_en, digest, published_at').eq('slug', slug).maybeSingle()
+  console.log('[blog-agent] Geocodificando ciudades para el mapa…')
+  const places = await geocodeAgendaPlaces(events, old?.digest?.places || {})
   const fallback = agendaTemplate(events)
   let raw = fallback
-  try {
-    console.log('[blog-agent] Redactando…')
-    raw = await openAiJson({ system: AGENDA_SYSTEM, user: brief })
-  } catch (e) {
-    console.warn(`[blog-agent] Sin texto del modelo, uso la plantilla: ${e.message}`)
+  if (args.mantenerTextos) {
+    if (!old?.digest?.copy) throw new Error(`--mantener-textos: ${slug} no tiene textos guardados`)
+    console.log('[blog-agent] Datos nuevos, mismos textos')
+    raw = { excerpt_es: old.excerpt_es, excerpt_en: old.excerpt_en, copy_es: old.digest.copy.es, copy_en: old.digest.copy.en }
+  } else {
+    try {
+      console.log('[blog-agent] Redactando…')
+      raw = await openAiJson({ system: AGENDA_SYSTEM, user: brief })
+    } catch (e) {
+      console.warn(`[blog-agent] Sin texto del modelo, uso la plantilla: ${e.message}`)
+    }
   }
   const copy = {
     es: cleanAgendaSide(raw.copy_es) ,
@@ -1184,9 +1232,9 @@ async function mainAgenda(args) {
   }
   if (!copy.es.intro) copy.es = fallback.copy_es
   if (!copy.en.intro) copy.en = fallback.copy_en
-  const digest = { kind: 'agenda', from, until, copy }
+  const digest = { kind: 'agenda', from, until, copy, places }
   const row = {
-    slug: `agenda-breakbeat-${from}-${until}`,
+    slug,
     title_es: tituloAgenda(from, until, 'es'),
     title_en: tituloAgenda(from, until, 'en'),
     excerpt_es: String(raw.excerpt_es || '').trim() || copy.es.intro,
@@ -1198,7 +1246,7 @@ async function mainAgenda(args) {
     author: 'Optimal Breaks',
     is_published: !args.borrador,
     is_featured: false,
-    published_at: new Date().toISOString(),
+    published_at: (args.mantenerTextos && old?.published_at) || new Date().toISOString(),
     image_url: events.find((e) => e.image)?.image || null,
     og_image_url: null,
     beatport_tracks: [],
