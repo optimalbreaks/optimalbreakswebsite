@@ -2,9 +2,10 @@
 // OPTIMAL BREAKS — Carátulas para los vídeos R/F de página (solo admins)
 //
 // POST { urls: string[] } → { images: (string | null)[] } en el mismo orden.
-// Cada carátula se descarga en el servidor y vuelve recortada a cuadrado
-// (500 px, JPEG) como data URL, para que el canvas del navegador pueda
-// dibujarla sin problemas de CORS (Beatport, Discogs, Supabase…).
+// Cada carátula se descarga en el servidor y vuelve como data URL, para que
+// el canvas del navegador pueda dibujarla sin CORS. `mode: 'cover'` recorta
+// a cuadrado (500 px). `mode: 'poster'` conserva la proporción del cartel
+// (cabe en 900×1400) para que se lea el lineup del flyer.
 // Ver `src/lib/page-reel.ts`.
 // ============================================
 
@@ -37,7 +38,7 @@ function safeUrl(raw: unknown): string | null {
   }
 }
 
-async function toDataUrl(url: string): Promise<string | null> {
+async function toDataUrl(url: string, mode: 'cover' | 'poster'): Promise<string | null> {
   try {
     const res = await fetch(url, {
       cache: 'force-cache',
@@ -58,9 +59,12 @@ async function toDataUrl(url: string): Promise<string | null> {
     const sharp =
       (sharpMod as { default?: typeof import('sharp') }).default ??
       (sharpMod as unknown as typeof import('sharp'))
-    const jpg = await sharp(buf)
-      .resize({ width: SIZE, height: SIZE, fit: 'cover' })
-      .jpeg({ quality: 84, mozjpeg: true })
+    const pipeline = sharp(buf).rotate()
+    const jpg = await (mode === 'poster'
+      ? pipeline.resize({ width: 900, height: 1400, fit: 'inside', withoutEnlargement: true })
+      : pipeline.resize({ width: SIZE, height: SIZE, fit: 'cover' })
+    )
+      .jpeg({ quality: mode === 'poster' ? 82 : 84, mozjpeg: true })
       .toBuffer()
     return `data:image/jpeg;base64,${jpg.toString('base64')}`
   } catch {
@@ -71,16 +75,17 @@ async function toDataUrl(url: string): Promise<string | null> {
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request)
   if (!auth.ok) return auth.response
-  let body: { urls?: unknown }
+  let body: { urls?: unknown; mode?: unknown }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
   }
   const urls = Array.isArray(body.urls) ? body.urls.slice(0, MAX_URLS) : []
+  const mode = body.mode === 'poster' ? 'poster' : 'cover'
   const images = await Promise.all(urls.map((u) => {
     const safe = safeUrl(u)
-    return safe ? toDataUrl(safe) : Promise.resolve(null)
+    return safe ? toDataUrl(safe, mode) : Promise.resolve(null)
   }))
   return NextResponse.json({ images }, { headers: { 'Cache-Control': 'no-store' } })
 }

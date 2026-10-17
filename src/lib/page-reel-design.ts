@@ -7,7 +7,8 @@
 // `encodeCanvasVideo` (reel-renderer.ts). Estética de la web: papel, tinta,
 // rojo, amarillo, UV. Cada página tiene su color dominante para que en el muro
 // de Instagram no parezcan el mismo reel: Top 100 = negro/morado,
-// New Releases = rojo, Blog = amarillo. Sin audio (la música se pone en la red).
+// New Releases = rojo, Blog = amarillo. La agenda de eventos usa el mismo
+// amarillo del blog (cartel en vez de carátula). Sin audio (la música se pone en la red).
 // ============================================
 
 export type Img = HTMLImageElement | ImageBitmap
@@ -1376,4 +1377,376 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   spaced(ctx, `THE BREAKBEAT ${P}`, F.x, F.y + (V ? 156 : 116), 4)
+}
+
+// ===================== EVENTOS (próximos 14 días) =====================
+// Misma gramática que la quincena del blog: papel, cinta, titular con barra
+// amarilla, barrido rojo. Intro con el gancho, luego 5 s por evento (cartel
+// con su proporción real + lineup) y un cierre con la agenda.
+export const EVENTS_INTRO = 4.2
+export const EVENTS_CARD = 5
+export const EVENTS_OUTRO = 4.2
+
+export function eventsReelDuration(n: number) {
+  return EVENTS_INTRO + Math.max(0, n) * EVENTS_CARD + EVENTS_OUTRO
+}
+
+export type EventCardAnim = {
+  name: string
+  when: string
+  place: string
+  lineup: string[]
+  postponed: boolean
+  img: Img | null
+}
+export type EventsAnim = {
+  es: boolean
+  range: string
+  /** Noches que no caben en el vídeo (siguen en la web). */
+  extra: number
+  ticker: string
+  cards: EventCardAnim[]
+}
+
+type EvScene = { k: 'intro' | 'card' | 'outro'; i: number; a: number; b: number }
+
+function evScenes(n: number): EvScene[] {
+  const out: EvScene[] = [{ k: 'intro', i: -1, a: 0, b: EVENTS_INTRO }]
+  for (let i = 0; i < n; i++) {
+    const a = EVENTS_INTRO + i * EVENTS_CARD
+    out.push({ k: 'card', i, a, b: a + EVENTS_CARD })
+  }
+  const a = EVENTS_INTRO + n * EVENTS_CARD
+  out.push({ k: 'outro', i: -1, a, b: a + EVENTS_OUTRO })
+  return out
+}
+
+function bitmapSize(img: Img) {
+  const n = img as HTMLImageElement
+  return { w: n.naturalWidth || img.width || 1, h: n.naturalHeight || img.height || 1 }
+}
+
+/** Cartel dentro de la caja, sin recortar: el lineup del flyer se tiene que leer. */
+function evPoster(ctx: C, img: Img | null, area: Box, lt: number, t: number, stamp: string) {
+  const pad = 22
+  const innerW = Math.max(40, area.w - pad * 2)
+  const innerH = Math.max(40, area.h - pad * 2)
+  let w = innerW
+  let h = innerH * 0.92
+  if (img) {
+    const s = bitmapSize(img)
+    const sc = Math.min(innerW / s.w, innerH / s.h)
+    w = s.w * sc
+    h = s.h * sc
+  }
+  const x = area.x + (area.w - w) / 2
+  const y = area.y + (area.h - h) / 2
+  const cx = x + w / 2
+  const cy = y + h / 2
+  pop(ctx, ph(lt, 0.15, 0.55), cx, cy, () => {
+    ctx.save()
+    const pulse = 1 + 0.015 * beatPulse(t)
+    ctx.translate(cx, cy)
+    ctx.rotate(-0.02)
+    ctx.scale(pulse, pulse)
+    ctx.translate(-cx, -cy)
+    box(ctx, x - 16, y - 16, w + 32, h + 32, '#fff', INK, 14, 5)
+    if (img) ctx.drawImage(img, x, y, w, h)
+    else {
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(x, y, w, h)
+      ctx.clip()
+      hazard(ctx, y, h, ctx.canvas.width)
+      ctx.restore()
+    }
+    ctx.lineWidth = 4
+    ctx.strokeStyle = INK
+    ctx.strokeRect(x, y, w, h)
+    ctx.restore()
+    if (stamp) {
+      ctx.save()
+      ctx.translate(x + 28, y + h - 8)
+      ctx.rotate(-0.08)
+      const s = 1 + 0.05 * beatPulse(t)
+      ctx.scale(s, s)
+      ctx.font = HEAD(26)
+      const tw = ctx.measureText(stamp).width + 28
+      ctx.fillStyle = RED
+      ctx.fillRect(0, -32, tw, 48)
+      ctx.lineWidth = 4
+      ctx.strokeStyle = INK
+      ctx.strokeRect(0, -32, tw, 48)
+      ctx.fillStyle = '#fff'
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(stamp, 14, -6)
+      ctx.restore()
+    }
+  }, 0.15)
+}
+
+function evLineup(ctx: C, area: Box, names: string[], lt: number, es: boolean) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(area.x, area.y, area.w, area.h)
+  ctx.clip()
+  ctx.font = MONO(18)
+  ctx.fillStyle = RED
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  spaced(ctx, 'LINE-UP', area.x, area.y + 22, 4)
+  const top = area.y + 36
+  const room = area.h - 40
+  if (!names.length || room < 40) {
+    ctx.restore()
+    return
+  }
+  let n = Math.min(names.length, 8)
+  const gap = 8
+  while (n > 1 && (room - gap * (n - 1)) / n < 40) n -= 1
+  const hidden = names.length - n
+  const labels =
+    hidden > 0 && n > 1
+      ? [...names.slice(0, n - 1), es ? `+ ${hidden + 1} MÁS` : `+ ${hidden + 1} MORE`]
+      : names.slice(0, n)
+  const rh = (room - gap * (labels.length - 1)) / labels.length
+  const paint = (label: string, i: number, accent: boolean) => {
+    const y = top + i * (rh + gap)
+    slide(ctx, ph(lt, 0.45 + i * 0.14, 0.35), 80, 0, () => {
+      box(ctx, area.x, y, area.w, rh, accent ? YELLOW : '#fff', INK, 6, 3)
+      ctx.fillStyle = accent ? RED : INK
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(fit(ctx, label.toUpperCase(), (s) => HEAD(s), area.w - 36, rh * 0.46, 14), area.x + 16, y + rh / 2 + 1)
+    })
+  }
+  labels.forEach((name, i) => paint(name, i, i === 0 && !name.startsWith('+')))
+  ctx.restore()
+}
+
+/** Fila de carteles que se desplaza, cada uno con su proporción (no se estiran a cuadrado). */
+function evPosterRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: number, h: number, speed: number, t: number) {
+  const cells = imgs.flatMap((im) => {
+    if (!im) return []
+    const s = bitmapSize(im)
+    const sc = h / s.h
+    return [{ im, w: Math.min(w * 0.78, Math.max(h * 0.45, s.w * sc)) }]
+  })
+  if (!cells.length) return
+  const gap = 18
+  const span = cells.reduce((a, c) => a + c.w + gap, 0)
+  const off = (((t * speed) % span) + span) % span
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x, y, w, h + 20)
+  ctx.clip()
+  for (let k = -1; k <= Math.ceil(w / span) + 1; k++) {
+    let cx = x + k * span - off
+    for (const cell of cells) {
+      if (cx < x + w && cx + cell.w > x) {
+        ctx.fillStyle = INK
+        ctx.fillRect(cx + 8, y + 10, cell.w, h)
+        ctx.drawImage(cell.im, cx, y, cell.w, h)
+        ctx.lineWidth = 4
+        ctx.strokeStyle = INK
+        ctx.strokeRect(cx, y, cell.w, h)
+      }
+      cx += cell.w + gap
+    }
+  }
+  ctx.restore()
+}
+
+export function animEvents(ctx: C, W: number, H: number, d: EventsAnim, t: number) {
+  const V = H > W
+  const n = d.cards.length
+  const totalDur = eventsReelDuration(n)
+  const L: FnLayout = V
+    ? { V, hx: 70, kY: 155, hY: 310, hW: 940, S: { x: 70, y: 620, w: 940, h: 1040 }, foot: { x: 70, y: 1710, w: 940, h: 16 } }
+    : { V, hx: 72, kY: 128, hY: 268, hW: 860, S: { x: 1000, y: 118, w: 848, h: 760 }, foot: { x: 72, y: 978, w: 1776, h: 14 } }
+  const es = d.es
+  paper(ctx, W, H, '#ece2cf')
+  ctx.fillStyle = YELLOW
+  ctx.fillRect(0, 0, W, V ? 68 : 54)
+  ctx.fillStyle = INK
+  ctx.font = MONO(V ? 24 : 22)
+  ctx.textBaseline = 'middle'
+  const facts = d.ticker || (es ? 'EVENTOS' : 'EVENTS')
+  const fw = spaced(ctx, facts, -1e5, -1000, 4) + 70
+  let fx = -((t * 150) % Math.max(fw, 1))
+  while (fx < W) {
+    spaced(ctx, facts, fx, V ? 35 : 28, 4)
+    fx += fw
+  }
+  hazard(ctx, V ? 68 : 54, 24, W)
+  if (V) hazard(ctx, H - 28, 28, W)
+
+  const scenes = evScenes(n)
+  const found = scenes.findIndex((s) => t >= s.a && t < s.b)
+  const si = found === -1 ? scenes.length - 1 : found
+  const sc = scenes[si]
+  const lt = t - sc.a
+  const dur = sc.b - sc.a
+  const last = si === scenes.length - 1
+
+  ctx.save()
+  if (!last) {
+    const ex = ease(ph(lt, dur - 0.32, 0.32))
+    ctx.translate(-W * 0.35 * ex, 0)
+    ctx.globalAlpha = 1 - ex
+  }
+
+  if (sc.k === 'intro') {
+    fnHeader(
+      ctx, L, lt,
+      es ? 'PRÓXIMOS 14 DÍAS' : 'NEXT 14 DAYS',
+      es ? 'TE LOS VAS\nA PERDER' : "YOU'RE GONNA\nMISS THEM",
+      es ? `${n} CITAS · ${d.range}` : `${n} NIGHTS · ${d.range}`,
+      RED,
+    )
+    const S = L.S
+    const countH = 280
+    const bw = V ? S.w : Math.min(520, L.hW)
+    const bx = V ? S.x : L.hx
+    const by = V ? S.y : 530
+    const bh = V ? countH : 220
+    pop(ctx, ph(lt, 0.35, 0.5), bx + bw / 2, by + bh / 2, () => {
+      box(ctx, bx, by, bw, bh, YELLOW, INK, 12, 5)
+      ctx.fillStyle = INK
+      ctx.font = HEAD(bh * 0.48)
+      ctx.textAlign = 'left'
+      ctx.textBaseline = 'alphabetic'
+      ctx.fillText(String(Math.round(n * ease(ph(lt, 0.35, 1)))), bx + 28, by + bh * 0.62)
+      ctx.font = MONO(bh * 0.09)
+      spaced(ctx, es ? 'EN 14 DÍAS' : 'IN 14 DAYS', bx + 32, by + bh * 0.84, 4)
+      eq(ctx, bx + bw - (V ? 280 : 200), by + 36, V ? 240 : 160, bh * 0.42, 8, t)
+    }, 0.2)
+    if (V) {
+      const ry = S.y + countH + 28
+      const cs = Math.max(180, S.h - countH - 48)
+      slide(ctx, ph(lt, 1.1, 0.45), 0, 70, () => {
+        evPosterRow(ctx, d.cards.map((c) => c.img), S.x, ry, S.w, cs, 80, t)
+      })
+    } else {
+      const imgs = d.cards.map((c) => c.img).slice(0, 4)
+      const gap = 16
+      const cols = 2
+      const cw = (S.w - gap) / cols
+      const ch = (S.h - gap) / 2
+      imgs.forEach((im, i) => {
+        const x = S.x + (i % cols) * (cw + gap)
+        const y = S.y + Math.floor(i / cols) * (ch + gap)
+        evPoster(ctx, im, { x, y, w: cw, h: ch }, lt + 0.4 + i * 0.08, t, '')
+      })
+    }
+  } else if (sc.k === 'card') {
+    const card = d.cards[sc.i]
+    if (card) {
+    const kicker = card.postponed ? (es ? `APLAZADO · ${card.when}` : `POSTPONED · ${card.when}`) : card.when
+    fnHeader(ctx, L, lt, kicker, card.name, card.place, card.postponed ? UV : RED)
+    ctx.save()
+    ctx.font = HEAD(V ? 42 : 36)
+    ctx.fillStyle = INK
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'alphabetic'
+    const num = String(sc.i + 1).padStart(2, '0')
+    const tot = String(n).padStart(2, '0')
+    ctx.fillText(num, (V ? W - 70 : 960), L.kY + 36)
+    ctx.font = MONO(18)
+    ctx.fillStyle = MUTED
+    ctx.fillText(`/${tot}`, (V ? W - 70 : 960), L.kY + 62)
+    ctx.restore()
+    const split = V
+      ? (() => {
+          const listH = card.lineup.length ? Math.min(L.S.h * 0.4, 48 + Math.min(card.lineup.length, 8) * 54) : 0
+          return {
+            poster: { x: L.S.x, y: L.S.y, w: L.S.w, h: listH ? L.S.h - listH - 16 : L.S.h },
+            list: listH ? { x: L.S.x, y: L.S.y + L.S.h - listH, w: L.S.w, h: listH } : null,
+          }
+        })()
+      : {
+          poster: L.S,
+          list: card.lineup.length ? { x: L.hx, y: 520, w: L.hW, h: 430 } : null,
+        }
+    evPoster(ctx, card.img, split.poster, lt, t, card.postponed ? (es ? 'APLAZADO' : 'POSTPONED') : '')
+    if (split.list) evLineup(ctx, split.list, card.lineup, lt, es)
+    }
+  } else {
+    fnHeader(
+      ctx, L, lt,
+      'OPTIMAL BREAKS',
+      es ? 'NO TE LOS\nPIERDAS' : "DON'T MISS\nTHEM",
+      [d.range, d.extra > 0 ? (es ? `Y ${d.extra} MÁS EN LA WEB` : `AND ${d.extra} MORE ON THE SITE`) : '']
+        .filter(Boolean)
+        .join(' · '),
+      ACID,
+    )
+    const S = L.S
+    const cols = V ? 3 : 2
+    const rows = 2
+    const gap = 14
+    const ctaBlock = 120
+    const areaH = V ? S.h - ctaBlock : S.h
+    const csW = (S.w - gap * (cols - 1)) / cols
+    const csH = (areaH - gap * (rows - 1)) / rows
+    const mosaic = d.cards.filter((c) => c.img).slice(0, cols * rows)
+    mosaic.forEach((c, i) => {
+      const x = S.x + (i % cols) * (csW + gap)
+      const y = S.y + Math.floor(i / cols) * (csH + gap)
+      evPoster(ctx, c.img, { x, y, w: csW, h: csH }, lt + i * 0.05, t, '')
+    })
+    const by = V ? S.y + rows * (csH + gap) + 8 : 540
+    const bw = V ? S.w : L.hW
+    const bx = V ? S.x : L.hx
+    if (by + 100 < L.foot.y) {
+      pop(ctx, ph(lt, 1.05, 0.45), bx + bw / 2, by + 48, () => {
+        const s = 1 + 0.045 * beatPulse(t)
+        ctx.save()
+        ctx.translate(bx + bw / 2, by + 48)
+        ctx.scale(s, s)
+        ctx.translate(-(bx + bw / 2), -(by + 48))
+        box(ctx, bx, by, bw, 96, RED, INK, 10, 5)
+        ctx.fillStyle = '#fff'
+        ctx.font = HEAD(V ? 32 : 28)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        const cta = V
+          ? es ? 'VER EVENTOS · ENLACE EN LA BIO' : 'SEE EVENTS · LINK IN BIO'
+          : es ? 'VER EVENTOS · ENLACE EN EL POST' : 'SEE EVENTS · LINK IN POST'
+        ctx.fillText(fit(ctx, cta, HEAD, bw - 40, V ? 32 : 28, 16), bx + bw / 2, by + 50)
+        ctx.restore()
+      })
+    }
+  }
+  ctx.restore()
+
+  for (const s of scenes.slice(0, -1)) {
+    const p = (t - (s.b - 0.3)) / 0.6
+    if (p <= 0 || p >= 1) continue
+    const x = -W * 0.6 + W * 2.2 * ease(p)
+    ctx.fillStyle = RED
+    ctx.beginPath()
+    ctx.moveTo(x, V ? 100 : 86)
+    ctx.lineTo(x + W * 0.45, V ? 100 : 86)
+    ctx.lineTo(x + W * 0.25, H)
+    ctx.lineTo(x - W * 0.2, H)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  const F = L.foot
+  ctx.fillStyle = PAPER2
+  ctx.fillRect(F.x, F.y, F.w, F.h)
+  ctx.fillStyle = RED
+  ctx.fillRect(F.x, F.y, F.w * clamp(t / totalDur), F.h)
+  ctx.lineWidth = 3
+  ctx.strokeStyle = INK
+  ctx.strokeRect(F.x + 1.5, F.y + 1.5, F.w - 3, F.h - 3)
+  obHeader(ctx, F.x, F.y + (V ? 78 : 52), V ? 40 : 30)
+  ctx.font = MONO(V ? 20 : 16)
+  ctx.fillStyle = MUTED
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  spaced(ctx, es ? 'LOS PRÓXIMOS 14 DÍAS' : 'THE NEXT 14 DAYS', F.x, F.y + (V ? 118 : 84), 3)
 }

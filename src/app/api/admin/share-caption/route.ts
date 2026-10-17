@@ -3,7 +3,7 @@
 // Admin: todos los tipos. Artista con ficha reclamada: solo tema y sesión.
 //
 // POST { kind, platform, lang, url, context } → { caption }
-//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog'
+//   kind: 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
 //   platform: 'instagram' (enlace en la bio) | 'facebook' (URL en el texto)
 //
 // Lo escribe GPT‑5.6 (OPENAI_SHARE_CAPTION_MODEL u OPENAI_MODEL) con un tono
@@ -22,7 +22,7 @@ import { isGpt5Family, openAiChatCompletionsBody, resolveOpenAiModel } from '@/l
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog'
+type Kind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
 type Platform = 'instagram' | 'facebook'
 
 const KIND_ES: Record<Kind, string> = {
@@ -36,6 +36,8 @@ const KIND_ES: Record<Kind, string> = {
     'Los nuevos lanzamientos (New Releases) de breakbeat de la semana seleccionados por Optimal Breaks. Destaca el volumen y algunos nombres, e invita a descubrir la selección.',
   blog:
     'Un artículo del blog de Optimal Breaks. Da ganas de leerlo con un gancho sobre el tema del artículo, sin contarlo todo.',
+  events:
+    'La agenda de breakbeat de los próximos 14 días. El vídeo abre con «te los vas a perder» y luego enseña el cartel, la fecha, la ciudad y el lineup de cada evento, cinco segundos por cita. Nombra varias con ciudad y día. Invita a decir a cuál van.',
 }
 const KIND_EN: Record<Kind, string> = {
   track: 'One specific track we recommend (reel with its animated artwork). Sell why it is worth a listen: energy, style, when it works in a set.',
@@ -43,6 +45,8 @@ const KIND_EN: Record<Kind, string> = {
   top100: 'The Optimal Breaks community Top 100: the tracks users saved the most (the video counts down from 10 to 1). Highlight the #1 and spark debate about the ranking.',
   week: "This week's new breakbeat releases (New Releases) curated by Optimal Breaks. Highlight the volume and a few names, and invite people to dig into the selection.",
   blog: 'An Optimal Breaks blog article. Make people want to read it with a hook about the topic, without giving everything away.',
+  events:
+    "The next 14 days of breakbeat events. The video opens with “you're gonna miss them”, then shows each night's poster, date, city and lineup, five seconds each. Name a few with city and day. Ask which one people are going to.",
 }
 
 const DEFAULT_TAGS: Record<Kind, string[]> = {
@@ -51,6 +55,7 @@ const DEFAULT_TAGS: Record<Kind, string[]> = {
   top100: ['#breakbeat', '#breaks', '#top100', '#electronicmusic', '#dj'],
   week: ['#breakbeat', '#newmusic', '#newreleases', '#breaks', '#electronicmusic'],
   blog: ['#breakbeat', '#breaks', '#electronicmusic', '#musicnews', '#dj'],
+  events: ['#breakbeat', '#rave', '#electronicmusic', '#festival', '#dj'],
 }
 
 function norm(s: string): string {
@@ -73,12 +78,16 @@ function bannedNames(ctx: Record<string, unknown>): string[] {
     } else if (Array.isArray(v)) v.forEach(add)
     else if (v && typeof v === 'object') {
       const o = v as Record<string, unknown>
+      add(o.name)
+      add(o.place)
+      add(o.city)
+      add(o.lineup)
       add(o.artists)
       add(o.artist)
       add(o.label)
     }
   }
-  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights']) add(ctx[k])
+  for (const k of ['artists', 'artist', 'label', 'labels', 'festival', 'edition', 'eventName', 'tracks', 'rows', 'highlights', 'events', 'lineup', 'place', 'names']) add(ctx[k])
   return [...out]
 }
 
@@ -129,7 +138,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
   }
-  const kind = (['track', 'set', 'top100', 'week', 'blog'] as const).find((k) => k === body.kind)
+  const kind = (['track', 'set', 'top100', 'week', 'blog', 'events'] as const).find((k) => k === body.kind)
   if (!kind) return NextResponse.json({ error: 'kind no válido' }, { status: 400 })
   if (auth.role !== 'admin' && kind !== 'track' && kind !== 'set') {
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })

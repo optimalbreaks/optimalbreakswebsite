@@ -10,6 +10,11 @@ import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind } from '@/types/database'
 import FavoriteButton from '@/components/FavoriteButton'
 import { EventCancelledStamp } from '@/components/EventPosterLightbox'
+import { useAuth } from '@/components/AuthProvider'
+import VideoShareButtons from '@/components/VideoShareButtons'
+import { buildAbsoluteShareUrl } from '@/lib/share-track'
+import { aiShareCaption, buildPageVideoCaption, type SharePlatform } from '@/lib/share-caption'
+import type { ReelFormat } from '@/lib/reel-renderer'
 
 type DateWhen = 'all' | 'upcoming' | 'past' | 'undated'
 type YearGroupKey = number | 'undated'
@@ -196,6 +201,71 @@ function lineupPreviewText(e: BreakEvent, max: number): string | null {
   if (names.length === 0) return null
   if (names.length <= max) return names.join(', ')
   return `${names.slice(0, max).join(', ')}…`
+}
+
+/** Tope del reel: 5 s por noche. Si hay más, el cierre dice cuántas siguen en la web. */
+const EVENTS_REEL_MAX = 24
+const EVENTS_REEL_DAYS = 14
+
+function addLocalDays(t: number, days: number) {
+  const d = new Date(t)
+  d.setDate(d.getDate() + days)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+function ymdFromLocal(t: number) {
+  const d = new Date(t)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function eventLineupNames(e: BreakEvent): string[] {
+  const names: string[] = []
+  const seen = new Set<string>()
+  const push = (raw: string) => {
+    const t = raw.trim()
+    if (!t || seen.has(t.toLowerCase())) return
+    seen.add(t.toLowerCase())
+    names.push(t)
+  }
+  for (const n of e.lineup ?? []) push(String(n))
+  for (const st of e.stages ?? []) {
+    for (const n of st.lineup ?? []) push(String(n))
+  }
+  return names
+}
+
+/** Hoy inclusive y los 13 días siguientes (14 días). Sin cancelados. El más cercano, primero. */
+function eventsForReel(events: BreakEvent[]) {
+  const today = startOfLocalToday()
+  const until = addLocalDays(today, EVENTS_REEL_DAYS - 1)
+  const list = events
+    .filter((e) => {
+      if (eventNoticeKind(e) === 'cancelled') return false
+      const start = parseLocalDayStart(e.date_start)
+      if (start == null) return false
+      const end = parseLocalDayStart(e.date_end) ?? start
+      return end >= today && start <= until
+    })
+    .sort((a, b) => {
+      const ds = (parseLocalDayStart(a.date_start) ?? 0) - (parseLocalDayStart(b.date_start) ?? 0)
+      if (ds !== 0) return ds
+      return a.name.localeCompare(b.name, 'es')
+    })
+  return {
+    from: ymdFromLocal(today),
+    until: ymdFromLocal(until),
+    extra: Math.max(0, list.length - EVENTS_REEL_MAX),
+    events: list.slice(0, EVENTS_REEL_MAX).map((e) => ({
+      name: e.name,
+      date: String(e.date_start).slice(0, 10),
+      dateEnd: e.date_end ? String(e.date_end).slice(0, 10) : null,
+      place: eventLocationBrief(e),
+      lineup: eventLineupNames(e).slice(0, 12),
+      postponed: eventNoticeKind(e) === 'postponed',
+      image: e.image_url,
+    })),
+  }
 }
 
 function descriptionExcerpt(e: BreakEvent, lang: string, maxLen: number): string {
@@ -421,6 +491,7 @@ function groupByYearOrdered(items: BreakEvent[]): { key: YearGroupKey; items: Br
 const EVENTS_PAGE = 100
 
 export default function EventsExplorer({ events, dict, lang }: Props) {
+  const { isAdmin } = useAuth()
   const [view, setView] = useState<ViewMode>('compact')
   const [when, setWhen] = useState<DateWhen>('all')
   const [country, setCountry] = useState<string | 'all'>('all')
@@ -513,6 +584,7 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
   }, [events, when, country])
 
   const yearGroups = useMemo(() => groupByYearOrdered(filtered), [filtered])
+  const reel = useMemo(() => eventsForReel(events), [events])
 
   const chipBase =
     'cursor-pointer border-[3px] border-[var(--ink)] px-2.5 py-1 transition-colors text-[9px] sm:text-[10px] font-bold uppercase tracking-wider'
@@ -523,6 +595,80 @@ export default function EventsExplorer({ events, dict, lang }: Props) {
   return (
     <>
     <div>
+      {isAdmin && reel.events.length > 0 ? (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-3 shadow-[5px_5px_0_var(--ink)]">
+          <div className="min-w-0">
+            <div
+              className="uppercase"
+              style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '15px', letterSpacing: '-0.03em', lineHeight: 1.1 }}
+            >
+              {lang === 'es' ? 'Próximos 14 días' : 'Next 14 days'}
+            </div>
+            <div style={{ fontFamily: "'Courier Prime', monospace", fontSize: '11px', letterSpacing: '0.5px', marginTop: '2px' }}>
+              {lang === 'es'
+                ? `${reel.events.length} eventos · te los vas a perder`
+                : `${reel.events.length} events · you're gonna miss them`}
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-2">
+            <VideoShareButtons
+              lang={lang}
+              title={lang === 'es' ? 'Eventos de los próximos 14 días | Optimal Breaks' : 'Events for the next 14 days | Optimal Breaks'}
+              fileBase="events-14d"
+              what={{ es: 'de los próximos 14 días', en: 'of the next 14 days' }}
+              tone="light"
+              makeVideo={(format: ReelFormat, onProgress: (r: number) => void) =>
+                import('@/lib/page-reel').then(({ renderEventsReel }) =>
+                  renderEventsReel(
+                    {
+                      es: lang === 'es',
+                      from: reel.from,
+                      until: reel.until,
+                      extra: reel.extra,
+                      events: reel.events,
+                    },
+                    format,
+                    onProgress,
+                  ),
+                )
+              }
+              makeCaption={(platform: SharePlatform) => {
+                const url = buildAbsoluteShareUrl(`/${lang}/events`)
+                return aiShareCaption({
+                  kind: 'events',
+                  platform,
+                  lang,
+                  url,
+                  fallback: buildPageVideoCaption(
+                    'events',
+                    {
+                      count: reel.events.length,
+                      weekLabel: `${reel.from} — ${reel.until}`,
+                      first: reel.events[0]?.name,
+                    },
+                    { lang, url, platform },
+                  ),
+                  context: {
+                    hook: lang === 'es'
+                      ? 'Eventos de los próximos 14 días, te los vas a perder'
+                      : "Events for the next 14 days — you're gonna miss them",
+                    from: reel.from,
+                    until: reel.until,
+                    count: reel.events.length,
+                    extra: reel.extra,
+                    events: reel.events.slice(0, 18).map((e) => ({
+                      name: e.name,
+                      date: e.date,
+                      place: e.place,
+                      lineup: e.lineup.slice(0, 6),
+                    })),
+                  },
+                })
+              }}
+            />
+          </span>
+        </div>
+      ) : null}
       {df ? (
         <div className="mb-6 space-y-4 border-b-[3px] border-[var(--ink)] pb-6">
           <div className="flex flex-wrap items-center gap-2 gap-y-3">

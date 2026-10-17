@@ -1,5 +1,5 @@
 // ============================================
-// OPTIMAL BREAKS — Vídeos R/F de página (Top 100, New Releases, artículo del blog)
+// OPTIMAL BREAKS — Vídeos R/F de página (Top 100, New Releases, artículo del blog, agenda)
 //
 // Solo admins. Mismo motor que los reels de temas (`encodeCanvasVideo` en
 // `reel-renderer.ts`): Canvas 2D + WebCodecs, todo en el navegador, sin audio.
@@ -8,10 +8,11 @@
 // Las carátulas llegan como URL de origen (Beatport, Supabase…) y el canvas no
 // puede leerlas sin CORS, así que se piden ya recortadas como data URL a
 // `/api/admin/share-reel-images` (una sola llamada por vídeo, con caché para
-// que R y F seguidos no las descarguen dos veces).
+// que R y F seguidos no las descarguen dos veces). Los carteles de eventos
+// piden `mode: 'poster'` para no recortar el flyer.
 // ============================================
 
-import { animBlog, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, FORTNIGHT_DUR, type Img } from './page-reel-design'
+import { animBlog, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
 import { encodeCanvasVideo, type ReelFormat, type ReelResult } from './reel-renderer'
 
 export type PageReelKind = 'top100' | 'week' | 'blog'
@@ -74,28 +75,29 @@ function loadImg(src: string): Promise<Img | null> {
   })
 }
 
-/** Carátulas como imágenes listas para el canvas (null si no se pudo). */
-async function loadArtworks(urls: (string | null)[]): Promise<(Img | null)[]> {
-  const pending = [...new Set(urls.filter((u): u is string => !!u && !imageCache.has(u)))]
+/** Carátulas como imágenes listas para el canvas (null si no se pudo). `poster` no recorta. */
+async function loadArtworks(urls: (string | null)[], mode: 'cover' | 'poster' = 'cover'): Promise<(Img | null)[]> {
+  const cacheKey = (u: string) => (mode === 'poster' ? `poster:${u}` : u)
+  const pending = [...new Set(urls.filter((u): u is string => !!u && !imageCache.has(cacheKey(u))))]
   // La API corta a 16 URLs por petición (MAX_URLS en share-reel-images).
   for (let start = 0; start < pending.length; start += 16) {
     const batch = pending.slice(start, start + 16)
     const req = fetch('/api/admin/share-reel-images', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ urls: batch }),
+      body: JSON.stringify(mode === 'poster' ? { urls: batch, mode: 'poster' } : { urls: batch }),
     })
       .then((r) => (r.ok ? r.json() : { images: [] }))
       .then((j: { images?: (string | null)[] }) => j.images || [])
       .catch(() => [] as (string | null)[])
     batch.forEach((u, i) => {
       imageCache.set(
-        u,
+        cacheKey(u),
         req.then((list) => (list[i] ? loadImg(list[i] as string) : null)),
       )
     })
   }
-  return Promise.all(urls.map((u) => (u ? imageCache.get(u) || Promise.resolve(null) : Promise.resolve(null))))
+  return Promise.all(urls.map((u) => (u ? imageCache.get(cacheKey(u)) || Promise.resolve(null) : Promise.resolve(null))))
 }
 
 async function loadFonts() {
@@ -185,4 +187,96 @@ export async function renderPageReel(
   }
 
   return encodeCanvasVideo(W, H, DUR, 30, draw, onProgress)
+}
+
+const MON_ES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
+const MON_EN = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+const WD_ES = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']
+const WD_EN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+function ymdParts(iso: string | null | undefined) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '')
+  if (!m) return null
+  const y = Number(m[1])
+  const mo = Number(m[2])
+  const d = Number(m[3])
+  const wd = new Date(y, mo - 1, d).getDay()
+  return { y, mo, d, wd }
+}
+
+function shortDay(iso: string, es: boolean) {
+  const p = ymdParts(iso)
+  if (!p) return ''
+  return `${p.d} ${(es ? MON_ES : MON_EN)[p.mo - 1]}`
+}
+
+function whenLabel(start: string, end: string | null, es: boolean) {
+  const a = ymdParts(start)
+  if (!a) return ''
+  const wd = (es ? WD_ES : WD_EN)[a.wd]
+  const mon = (es ? MON_ES : MON_EN)[a.mo - 1]
+  const b = end && end.slice(0, 10) !== start.slice(0, 10) ? ymdParts(end) : null
+  if (!b) return `${wd} ${a.d} ${mon}`
+  const wdB = (es ? WD_ES : WD_EN)[b.wd]
+  const monB = (es ? MON_ES : MON_EN)[b.mo - 1]
+  if (a.mo === b.mo) return `${wd} ${a.d} — ${wdB} ${b.d} ${mon}`
+  return `${wd} ${a.d} ${mon} — ${wdB} ${b.d} ${monB}`
+}
+
+export type EventsReelEvent = {
+  name: string
+  /** YYYY-MM-DD */
+  date: string
+  dateEnd: string | null
+  place: string
+  lineup: string[]
+  postponed: boolean
+  image: string | null
+}
+
+export type EventsReelInput = {
+  es: boolean
+  from: string
+  until: string
+  extra: number
+  events: EventsReelEvent[]
+}
+
+/** Reel de la agenda: intro + 5 s por evento + cierre. Carteles sin recortar. */
+export async function renderEventsReel(
+  input: EventsReelInput,
+  format: ReelFormat,
+  onProgress?: (ratio: number) => void,
+): Promise<ReelResult> {
+  const W = format === 'horizontal' ? 1920 : 1080
+  const H = format === 'horizontal' ? 1080 : 1920
+  await loadFonts()
+  const events = input.events.filter((e) => e.name.trim())
+  const imgs = await loadArtworks(events.map((e) => e.image), 'poster')
+  const es = input.es
+  const range = `${shortDay(input.from, es)} — ${shortDay(input.until, es)}`
+  const ticker = [
+    es ? 'EVENTOS' : 'EVENTS',
+    es ? 'PRÓXIMOS 14 DÍAS' : 'NEXT 14 DAYS',
+    range,
+    es ? `${events.length} CITAS` : `${events.length} NIGHTS`,
+    es ? 'TE LOS VAS A PERDER' : "YOU'RE GONNA MISS THEM",
+    ...events.map((e) => e.name.toUpperCase()),
+    '',
+  ].join(' · ')
+  const data: EventsAnim = {
+    es,
+    range,
+    extra: input.extra,
+    ticker,
+    cards: events.map((e, i) => ({
+      name: e.name,
+      when: whenLabel(e.date, e.dateEnd, es),
+      place: e.place.toUpperCase(),
+      lineup: e.lineup,
+      postponed: e.postponed,
+      img: imgs[i] ?? null,
+    })),
+  }
+  return encodeCanvasVideo(W, H, eventsReelDuration(events.length), 30, (c, t) => animEvents(c, W, H, data, t), onProgress)
 }

@@ -10,7 +10,7 @@
 
 import type { Locale } from '@/lib/i18n-config'
 
-export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog'
+export type ShareCaptionKind = 'track' | 'set' | 'top100' | 'week' | 'blog' | 'events'
 export type SharePlatform = 'instagram' | 'facebook'
 
 export async function aiShareCaption(opts: {
@@ -44,7 +44,7 @@ export async function aiShareCaption(opts: {
 
 /** Plantilla (sin IA) de los vídeos de página. Máx. 5 hashtags genéricos. */
 export function buildPageVideoCaption(
-  kind: 'top100' | 'week' | 'blog',
+  kind: 'top100' | 'week' | 'blog' | 'events',
   d: { title?: string; count?: number; weekLabel?: string; first?: string; excerpt?: string },
   opts: { lang: Locale | string; url: string; platform: SharePlatform },
 ): string {
@@ -77,6 +77,24 @@ export function buildPageVideoCaption(
       '',
       '#breakbeat #newmusic #newreleases #breaks #electronicmusic',
     ].join('\n')
+  }
+  if (kind === 'events') {
+    return [
+      es
+        ? '🎉 Eventos de los próximos 14 días. Te los vas a perder.'
+        : "🎉 The next 14 days of events. You're gonna miss them.",
+      es
+        ? `${d.count ?? ''} citas de breakbeat${d.weekLabel ? ` (${d.weekLabel})` : ''}.`
+        : `${d.count ?? ''} breakbeat nights${d.weekLabel ? ` (${d.weekLabel})` : ''}.`,
+      d.first ? (es ? `Abre ${d.first}.` : `It opens with ${d.first}.`) : '',
+      es ? '¿A cuál vas? Etiqueta a quien te acompaña 👇' : 'Which one are you hitting? Tag who you are taking 👇',
+      '',
+      link,
+      '',
+      '#breakbeat #rave #electronicmusic #festival #dj',
+    ]
+      .filter((l, i, a) => !(l === '' && a[i - 1] === ''))
+      .join('\n')
   }
   return [
     `📰 ${d.title || ''}`,
