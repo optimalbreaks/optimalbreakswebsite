@@ -464,7 +464,10 @@ export default async function EventDetailPage({ params, searchParams }: Props) {
   }
 
   const stages = (event.stages ?? []) as EventStage[]
-  const visibleStages = stages.filter(stageHasVisibleContent)
+  const visibleStages =
+    stages.some((s) => (s.lineup?.length ?? 0) > 0) || !(event.lineup?.length ?? 0)
+      ? stages.filter(stageHasVisibleContent)
+      : []
   const schedule = (event.schedule ?? []) as EventScheduleSlot[]
   const publicSocials = eventPublicSocials(event.socials as Record<string, string> | null)
   const scheduleImageUrl = eventScheduleImageUrl(event.socials as Record<string, string> | null)
