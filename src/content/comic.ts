@@ -257,20 +257,22 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
     },
   },
   {
-    img: 'pm_p.jpg', fit: 'cover',
+    img: 'pm_p_v2.jpg', fit: 'cover',
     name: { es: 'P', en: 'P' },
     role: { es: 'El colega loco', en: 'The crazy mate' },
     text: {
-      es: 'El colega que te encuentras en todos los festivales. A todo dice que sí: ¿otra? «¡Venga, sí!» ¿Escalar después de la fiesta? «¡Me apunto!» Va dejando todo blanco de magnesio: sus manos, su cara y la espalda de cualquiera al que abrace. Parece hippie, pero todo el mundo sabe que tiene cuartos: solo hay que ver su camper.',
-      en: 'The mate you bump into at every festival. He says yes to everything: another one? “Sure, why not!” Climbing after the party? “I’m in!” He leaves everything white with chalk: his hands, his face and the back of anyone he hugs. He looks like a hippie, but everyone knows he’s loaded: just look at his camper.',
+      es: 'El colega que te encuentras en todos los festivales. A todo dice que sí: ¿otra? «¡Venga, sí!» ¿Escalar después de la fiesta? «¡Me apunto!» Breakbeatero de los de toda la vida: lleva veinte años yendo a las fiestas con el mismo chaleco reflectante de obra, firmado a la espalda por todos los DJs que se ha cruzado. Escalador, va dejando todo blanco de magnesio. Con esa pinta nadie lo diría, pero todo el mundo sabe que tiene cuartos: solo hay que ver su camper.',
+      en: 'The mate you bump into at every festival. He says yes to everything: another one? “Sure, why not!” Climbing after the party? “I’m in!” An old-school breakbeat head: for twenty years he’s worn the same hi-vis work vest to every party, its back signed by every DJ he’s ever met. A climber, he leaves everything white with chalk. You’d never guess it, but everyone knows he’s loaded: just look at his camper.',
     },
-    alt: { es: 'P, una cabra con gorro de pescador, con los pulgares arriba y las manos blancas de magnesio', en: 'P, a goat in a bucket hat, giving two thumbs up with chalk-white hands' },
+    alt: { es: 'P, una cabra con chaleco reflectante amarillo firmado, con los pulgares arriba y las manos blancas de magnesio', en: 'P, a goat in a signed yellow hi-vis vest, giving two thumbs up with chalk-white hands' },
     quote: { es: '¡Venga, sí!', en: 'Sure, why not!' },
     more: {
       label: { es: 'Más sobre él', en: 'More about him' },
       items: {
-        es: ['Está como una cabra. Literalmente.', 'Le dejó la camper al Super Lechón la noche que conoció a Mar IA. Sin hacer preguntas.', 'Si te da un abrazo, sales con una mano blanca en la espalda.', 'Tiene muchísimo potencial. Nadie sabe todavía para qué.'],
-        en: ['He’s as mad as a goat. Literally.', 'He lent Super Pig the camper the night he met Mar IA. No questions asked.', 'If he hugs you, you walk off with a white handprint on your back.', 'He has huge potential. Nobody knows for what yet.'],
+        es: ['Está como una cabra. Literalmente.', 'Le dejó la camper al Super Lechón la noche que conoció a Mar IA. Sin hacer preguntas.', 'Su chaleco reflectante tiene más firmas que el libro de visitas de una cabina.',
+          'Si te da un abrazo, sales con una mano blanca en la espalda.', 'Tiene muchísimo potencial. Nadie sabe todavía para qué.'],
+        en: ['He’s as mad as a goat. Literally.', 'He lent Super Pig the camper the night he met Mar IA. No questions asked.', 'His hi-vis vest has more signatures than a DJ booth guestbook.',
+          'If he hugs you, you walk off with a white handprint on your back.', 'He has huge potential. Nobody knows for what yet.'],
       },
     },
   },
