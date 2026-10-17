@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import sharp from 'sharp'
 
 /**
  * Sirve carátulas Beatport/Discogs/YouTube bajo nuestro dominio para `og:image`
@@ -28,12 +29,85 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
 }
 
+const IMAGE_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  // OJO: sin `image/webp`. El CDN de Beatport (sep 2026) negocia formato
+  // por Accept y devuelve WebP si lo anuncias — y WhatsApp/Facebook NO
+  // renderizan previews og:image en WebP (el link se comparte sin foto).
+  // Pidiendo solo JPEG/PNG, Beatport sirve la JPEG original.
+  Accept: 'image/jpeg,image/png;q=0.9,*/*;q=0.5',
+} as const
+
+function imageResponse(body: BodyInit, contentType: string) {
+  return new NextResponse(body, {
+    status: 200,
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+      ...CORS_HEADERS,
+    },
+  })
+}
+
+async function fetchAllowedImage(raw: string): Promise<ArrayBuffer | null> {
+  let parsed: URL
+  try {
+    parsed = new URL(raw)
+  } catch {
+    return null
+  }
+  if (parsed.protocol !== 'https:' || !ALLOWED_HOSTS.has(parsed.hostname)) return null
+  const upstream = await fetch(parsed.toString(), {
+    headers: IMAGE_HEADERS,
+    next: { revalidate: 86400 },
+  })
+  if (!upstream.ok) return null
+  const ct = upstream.headers.get('content-type') || ''
+  if (!/^image\//i.test(ct)) return null
+  const buf = await upstream.arrayBuffer()
+  if (buf.byteLength > MAX_IMAGE_BYTES) return null
+  return buf
+}
+
+/** Tres (o dos) carátulas en columnas iguales, JPEG 1200×630. */
+async function jpegThirds(images: ArrayBuffer[]): Promise<Buffer> {
+  const width = 1200
+  const height = 630
+  const n = images.length
+  const panelW = Math.floor(width / n)
+  const panels = await Promise.all(images.map(async (buf, i) => {
+    const w = i === n - 1 ? width - panelW * (n - 1) : panelW
+    const input = await sharp(Buffer.from(buf))
+      .resize(w, height, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 82 })
+      .toBuffer()
+    return { input, left: i * panelW, top: 0 }
+  }))
+  return sharp({
+    create: { width, height, channels: 3, background: { r: 26, g: 26, b: 26 } },
+  }).composite(panels).jpeg({ quality: 82 }).toBuffer()
+}
+
 export async function GET(request: NextRequest) {
-  const raw = request.nextUrl.searchParams.get('src')
-  if (!raw?.trim()) {
+  const srcs = request.nextUrl.searchParams.getAll('src').map((s) => s.trim()).filter(Boolean).slice(0, 3)
+  if (srcs.length === 0) {
     return NextResponse.json({ error: 'Missing src param' }, { status: 400 })
   }
 
+  if (srcs.length >= 2) {
+    try {
+      const fetched = (await Promise.all(srcs.map((s) => fetchAllowedImage(s)))).filter((b): b is ArrayBuffer => !!b)
+      if (fetched.length === 0) return new NextResponse(null, { status: 502 })
+      if (fetched.length === 1) return imageResponse(fetched[0], 'image/jpeg')
+      const jpeg = await jpegThirds(fetched)
+      return imageResponse(new Uint8Array(jpeg), 'image/jpeg')
+    } catch {
+      return new NextResponse(null, { status: 502 })
+    }
+  }
+
+  const raw = srcs[0]
   let parsed: URL
   try {
     parsed = new URL(raw)
@@ -47,15 +121,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const upstream = await fetch(parsed.toString(), {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        // OJO: sin `image/webp`. El CDN de Beatport (sep 2026) negocia formato
-        // por Accept y devuelve WebP si lo anuncias — y WhatsApp/Facebook NO
-        // renderizan previews og:image en WebP (el link se comparte sin foto).
-        // Pidiendo solo JPEG/PNG, Beatport sirve la JPEG original.
-        Accept: 'image/jpeg,image/png;q=0.9,*/*;q=0.5',
-      },
+      headers: IMAGE_HEADERS,
       next: { revalidate: 86400 },
     })
 

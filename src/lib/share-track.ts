@@ -311,6 +311,25 @@ export function publicOgArtworkUrl(rawUrl: string | null | undefined): string | 
   return u
 }
 
+/**
+ * Portada de quincena/trimestre: las tres primeras carátulas en tercios,
+ * un solo JPEG (Facebook/WhatsApp no pintan un collage en CSS).
+ */
+export function publicOgThirdsUrl(rawUrls: Array<string | null | undefined>): string | null {
+  const urls: string[] = []
+  for (const raw of rawUrls) {
+    const u = upscaleTrackArtworkForOg(raw)?.trim()
+    if (!u || urls.includes(u)) continue
+    urls.push(u)
+    if (urls.length >= 3) break
+  }
+  if (urls.length === 0) return null
+  if (urls.length === 1) return publicOgArtworkUrl(urls[0])
+  const params = new URLSearchParams()
+  for (const u of urls) params.append('src', u)
+  return `${SITE_URL}/api/og/image-proxy?${params}`
+}
+
 /** Clave normalizada para emparejar nombres de sello/artista en mapas de BD. */
 export function normalizeCatalogNameKey(raw: string): string {
   return (raw || '')

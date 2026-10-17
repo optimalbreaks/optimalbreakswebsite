@@ -31,7 +31,8 @@ import {
   filterArtistSlugMapForNames,
   splitArtistDisplayLine,
 } from '@/lib/artist-slug-map'
-import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl } from '@/lib/share-track'
+import { digestCoverUrls } from '@/lib/blog-spotlight'
+import { proxyCatalogArtworkForDisplay, publicOgArtworkUrl, publicOgThirdsUrl } from '@/lib/share-track'
 import { fetchAllArtistLinkRows } from '@/lib/artist-entity-match'
 import { collectSaveRefsByBeatportUrl } from '@/lib/track-canonical-key'
 import { isBlogPosterCover } from '@/lib/blog-spotlight'
@@ -48,7 +49,7 @@ type BlogSeoRow = Pick<
   | 'beatport_tracks'
   | 'content_es'
   | 'content_en'
->
+> & { covers?: unknown }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: raw } = await supabase
     .from('blog_posts')
-    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en')
+    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en, covers:digest->covers')
     .eq('slug', safeSlug)
     .eq('is_published', true)
     .single()
@@ -71,7 +72,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     data.image_url ||
     (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
     null
+  const thirdsOg = publicOgThirdsUrl(digestCoverUrls(data.covers))
   // OG / Twitter: misma portada que en la ficha (CardThumbnail). og_image_url es plantilla 1200×630 aparte; no sustituye la carátula editorial.
+  // Quincena y trimestre: las tres primeras carátulas en tercios.
   // Política de indexación: la versión de un idioma sin traducir (vacía o copia del otro) → noindex.
   return applyIndexPolicy(
     detailPageMetadata(
@@ -81,7 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       'article',
-      publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
+      (digestCoverUrls(data.covers).length >= 2 ? thirdsOg : null) || publicOgArtworkUrl(albumArt) || albumArt || data.og_image_url,
     ),
     safeLang,
     `/blog/${safeSlug}`,
@@ -238,7 +241,7 @@ export default async function BlogPostPage({ params }: Props) {
       // dateModified hasta tener un campo dedicado en la BD.
       dateModified: post.published_at,
       authorName: post.author || null,
-      imageUrl: publicOgArtworkUrl(coverRaw) || coverSrc || post.og_image_url || null,
+      imageUrl: (digestCoverUrls(digest?.covers).length >= 2 ? publicOgThirdsUrl(digestCoverUrls(digest?.covers)) : null) || publicOgArtworkUrl(coverRaw) || coverSrc || post.og_image_url || null,
       category: post.category || null,
       tags: post.tags ?? [],
       inLanguage: safeLang,

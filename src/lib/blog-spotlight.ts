@@ -4,7 +4,21 @@ import type { BlogPost, Database } from '@/types/database'
 export const BLOG_SPOTLIGHT_LIMIT = 3
 
 export const BLOG_LIST_SELECT =
-  'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured, view_count' as const
+  'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured, view_count, covers:digest->covers' as const
+
+/** Primeras carátulas distintas de un digest (quincena / trimestre). */
+export function digestCoverUrls(covers: unknown, n = 3): string[] {
+  if (!Array.isArray(covers)) return []
+  const out: string[] = []
+  for (const c of covers) {
+    if (typeof c !== 'string') continue
+    const s = c.trim()
+    if (!s || out.includes(s)) continue
+    out.push(s)
+    if (out.length >= n) break
+  }
+  return out
+}
 
 export type BlogSpotlightRow = Pick<
   BlogPost,
@@ -19,7 +33,10 @@ export type BlogSpotlightRow = Pick<
   | 'is_featured'
   | 'view_count'
 > &
-  Pick<BlogPost, 'tags' | 'author'>
+  Pick<BlogPost, 'tags' | 'author'> & {
+    /** `digest.covers` cuando el artículo es quincena o trimestre. */
+    covers?: unknown
+  }
 
 /** Cartel/flyer (no paisaje IA 16:9): mostrar entero, sin recorte 21:9. */
 export function isBlogPosterCover(

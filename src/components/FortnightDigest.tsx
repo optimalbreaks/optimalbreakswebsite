@@ -16,13 +16,14 @@ import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, type MouseEvent, type ReactNode } from 'react'
 import { ArtistNames, LabelName } from '@/components/ArtistNames'
 import { useAuth } from '@/components/AuthProvider'
-import CardThumbnail from '@/components/CardThumbnail'
+import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
 import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvider'
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
-import { formatTrackReleaseDisplay, isAdvanceRelease } from '@/lib/share-track'
+import { digestCoverUrls } from '@/lib/blog-spotlight'
+import { formatTrackReleaseDisplay, isAdvanceRelease, proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
 import type { FortnightDigest as Digest, FortnightDigestTrack } from '@/types/database'
 
@@ -482,11 +483,13 @@ export default function FortnightDigest({
     <div className="ob-digest">
       {/* Portada: mosaico de carátulas + cifras */}
       <div className="relative -mx-4 sm:mx-0 border-y-[3px] sm:border-[3px] border-[var(--ink)]">
-        <div className="grid grid-cols-4 sm:grid-cols-6">
-          {d.covers.slice(0, 12).map((src, i) => (
-            <CardThumbnail key={`${src}-${i}`} src={src} alt="" aspectClass="aspect-square" frameClass="border-0" sizes="(max-width: 640px) 25vw, 134px" preload={i < 6} />
-          ))}
-        </div>
+        <CoverThirds
+          srcs={digestCoverUrls(d.covers).map((u) => proxyCatalogArtworkForDisplay(u) || u)}
+          alt=""
+          aspectClass="aspect-[3/1]"
+          frameClass="border-0"
+          sizes="(max-width: 640px) 34vw, 270px"
+        />
         <div className="absolute left-3 bottom-3 bg-[var(--yellow)] border-[3px] border-[var(--ink)] px-3 py-1 text-[13px] sm:text-[15px] font-black" style={display}>
           {t.fortnight} {shortDate(d.from, lang)} — {shortDate(d.until, lang)}
         </div>

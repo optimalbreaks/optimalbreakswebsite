@@ -11,8 +11,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
-import CardThumbnail from '@/components/CardThumbnail'
-import { BLOG_LIST_SELECT, fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
+import { BLOG_LIST_SELECT, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 
 // Paginación por ?page=: render por petición; los datos van por Data Cache
@@ -180,21 +180,26 @@ function BlogIndexRow({ p, lang }: { p: BlogListRow; lang: Locale }) {
   const title = lang === 'es' ? p.title_es : p.title_en
   const dateStr = formatBlogListDate(p.published_at, lang)
   const coverSrc = proxyCatalogArtworkForDisplay(p.image_url) || p.image_url
+  const thirds = digestCoverUrls(p.covers).map((u) => proxyCatalogArtworkForDisplay(u) || u)
   const albumCover = /geo-media\.beatport\.com|\/api\/og\/image-proxy/i.test(coverSrc || '')
-  const posterCover = isBlogPosterCover(p.image_url, { album: albumCover, slug: p.slug })
+  const posterCover = thirds.length < 2 && isBlogPosterCover(p.image_url, { album: albumCover, slug: p.slug })
   return (
     <Link
       href={`/${lang}/blog/${p.slug}`}
       className="group flex flex-col sm:flex-row border-b-[3px] border-[var(--ink)] last:border-b-0 transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden"
     >
       <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">
-        <CardThumbnail
-          src={coverSrc}
-          alt={title}
-          aspectClass={posterCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[4/3]'}
-          fit={posterCover ? 'contain' : 'cover'}
-          frameClass="border-0"
-        />
+        {thirds.length >= 2 ? (
+          <CoverThirds srcs={thirds} alt={title} aspectClass="aspect-[3/2]" frameClass="border-0" sizes="(max-width: 640px) 100vw, 240px" />
+        ) : (
+          <CardThumbnail
+            src={coverSrc}
+            alt={title}
+            aspectClass={posterCover ? 'aspect-square' : 'aspect-[16/9] sm:aspect-[4/3]'}
+            fit={posterCover ? 'contain' : 'cover'}
+            frameClass="border-0"
+          />
+        )}
       </div>
       <div className="flex flex-col justify-center p-6 sm:p-8 sm:pl-10 flex-grow min-w-0 transition-[padding] duration-150 sm:group-hover:pl-12">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">

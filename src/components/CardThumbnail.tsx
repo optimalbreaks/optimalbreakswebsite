@@ -61,6 +61,44 @@ interface CardThumbnailProps {
   preload?: boolean
 }
 
+/** Quincena / trimestre: las tres primeras carátulas, en columnas iguales. */
+export function CoverThirds({
+  srcs,
+  alt,
+  aspectClass = 'aspect-[3/2]',
+  frameClass = 'border-0',
+  sizes = DEFAULT_SIZES,
+}: {
+  srcs: string[]
+  alt: string
+  aspectClass?: string
+  frameClass?: string
+  sizes?: string
+}) {
+  const urls = srcs.map((s) => displayImageUrl(s)?.trim()).filter((s): s is string => !!s).slice(0, 3)
+  if (urls.length < 2) {
+    return (
+      <CardThumbnail src={urls[0] ?? null} alt={alt} aspectClass={aspectClass} frameClass={frameClass} sizes={sizes} />
+    )
+  }
+  return (
+    <div className={`relative grid w-full grid-cols-3 overflow-hidden bg-[var(--paper-dark)] ${frameClass} ${aspectClass}`}>
+      {urls.map((src, i) => (
+        <div key={`${src}-${i}`} className="relative h-full min-h-0 min-w-0 overflow-hidden border-r-[3px] border-[var(--ink)] last:border-r-0">
+          <CardThumbnailRemoteImage
+            src={src}
+            alt={i === 0 ? alt : ''}
+            fit="cover"
+            imgFit="object-cover object-center"
+            sizes={sizes}
+            preload={i === 0}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function CardThumbnail({
   src,
   alt,

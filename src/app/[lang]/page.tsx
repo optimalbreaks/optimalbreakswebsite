@@ -18,7 +18,8 @@ import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import CardThumbnail from '@/components/CardThumbnail'
+import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
+import { digestCoverUrls } from '@/lib/blog-spotlight'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import Marquee from '@/components/Marquee'
 import Timeline from '@/components/Timeline'
@@ -644,6 +645,7 @@ export default async function HomePage({
               const title = lang === 'es' ? p.title_es : p.title_en
               const excerpt = lang === 'es' ? p.excerpt_es : p.excerpt_en
               const dateStr = formatBlogPublishedAt(p.published_at, lang)
+              const thirds = digestCoverUrls(p.covers).map((u) => proxyCatalogArtworkForDisplay(u) || u)
               return (
                 <Link
                   key={p.slug}
@@ -651,14 +653,24 @@ export default async function HomePage({
                   className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
                 >
                   {/* Mismo marco apaisado para todas: los carteles ya no alargan su tarjeta */}
-                  <CardThumbnail
-                    src={proxyCatalogArtworkForDisplay(p.image_url) || p.image_url}
-                    alt={title}
-                    aspectClass="aspect-[16/10] w-full"
-                    fit="cover"
-                    frameClass="border-b-[3px] border-[var(--ink)]"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 460px"
-                  />
+                  {thirds.length >= 2 ? (
+                    <CoverThirds
+                      srcs={thirds}
+                      alt={title}
+                      aspectClass="aspect-[3/2] w-full"
+                      frameClass="border-b-[3px] border-[var(--ink)]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 460px"
+                    />
+                  ) : (
+                    <CardThumbnail
+                      src={proxyCatalogArtworkForDisplay(p.image_url) || p.image_url}
+                      alt={title}
+                      aspectClass="aspect-[16/10] w-full"
+                      fit="cover"
+                      frameClass="border-b-[3px] border-[var(--ink)]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 460px"
+                    />
+                  )}
                   <div className="flex flex-col flex-grow p-4 sm:p-5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="cutout red" style={{ margin: 0 }}>
