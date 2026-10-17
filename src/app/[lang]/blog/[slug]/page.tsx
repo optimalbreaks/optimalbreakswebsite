@@ -15,7 +15,6 @@ import {
 import { applyIndexPolicy, blogIndexability } from '@/lib/index-policy'
 import { sanitizeHtml, sanitizeSlug, validateLocale } from '@/lib/security'
 import type { Locale } from '@/lib/i18n-config'
-import type { BeatportTopTrack, BlogPost } from '@/types/database'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -24,7 +23,10 @@ import BlogViewTracker from '@/components/BlogViewTracker'
 import CardThumbnail from '@/components/CardThumbnail'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
+import AgendaDigestView from '@/components/AgendaDigest'
 import { getFortnightLive } from '@/lib/fortnight-live'
+import { loadAgendaNights } from '@/lib/agenda-nights'
+import type { AgendaDigest as AgendaDigestData, BeatportTopTrack, BlogPost, FortnightDigest as FortnightDigestData } from '@/types/database'
 import {
   buildFullArtistSlugMap,
   buildFullLabelSlugMap,
@@ -110,7 +112,10 @@ export default async function BlogPostPage({ params }: Props) {
   const rawContent = safeLang === 'es' ? post.content_es : post.content_en
   const content = sanitizeHtml(rawContent || '')
   const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
-  const storedDigest = post.digest?.copy ? post.digest : null
+  const rawDigest = post.digest?.copy ? post.digest : null
+  const agendaStored: AgendaDigestData | null = rawDigest?.kind === 'agenda' ? rawDigest : null
+  const storedDigest: FortnightDigestData | null = rawDigest && rawDigest.kind !== 'agenda' ? rawDigest : null
+  const agendaNights = agendaStored ? await loadAgendaNights(supabase, agendaStored.from, agendaStored.until) : []
   const quarter = storedDigest?.kind === 'trimestre'
   const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10) : null
   const digest = storedDigest && live
@@ -313,6 +318,23 @@ export default async function BlogPostPage({ params }: Props) {
           debut: digest.debut.slice(0, 6).map((n) => n.name),
         }
       : undefined,
+    agenda: agendaStored && agendaNights.length > 0
+      ? {
+          es: safeLang === 'es',
+          from: agendaStored.from,
+          until: agendaStored.until,
+          extra: Math.max(0, agendaNights.length - 24),
+          events: agendaNights.slice(0, 24).map((n) => ({
+            name: n.name,
+            date: n.date,
+            dateEnd: n.dateEnd,
+            place: n.place,
+            lineup: n.lineup.slice(0, 12),
+            postponed: n.postponed,
+            image: n.image && n.image.startsWith('/') ? `${SITE_URL}${n.image}` : n.image,
+          })),
+        }
+      : undefined,
   }
 
   // alt enriquecido para la portada del artículo.
@@ -355,11 +377,11 @@ export default async function BlogPostPage({ params }: Props) {
           url={`/${safeLang}/blog/${safeSlug}`}
           title={`${title} | Optimal Breaks`}
           lang={safeLang}
-          pageReel={blogReel}
+          pageReel={!agendaStored || agendaNights.length > 0 ? blogReel : undefined}
         />
       </div>
 
-      {!digest && (
+      {!digest && !agendaStored && (
         <div
           className={`mb-8 -mx-4 sm:mx-0 border-y-[3px] border-[var(--ink)] overflow-hidden ${
             posterCover ? 'bg-[var(--paper-dark)]' : ''
@@ -384,6 +406,8 @@ export default async function BlogPostPage({ params }: Props) {
       )}
 
       {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} />}
+
+      {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 
       {albumTracks.length > 0 && (
         <div className={digest ? 'mt-12' : 'mb-10'}>
@@ -439,7 +463,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {!digest && <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />}
+      {!digest && !agendaStored && <article className="prose-ob prose-ob-blog" dangerouslySetInnerHTML={{ __html: content }} />}
 
       {/* Bottom share */}
       <div className="mt-12 pt-8 border-t-4 border-dashed border-[var(--ink)] flex flex-wrap items-center justify-between gap-4">

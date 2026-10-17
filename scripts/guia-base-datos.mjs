@@ -89,7 +89,7 @@ const ACTIONS = [
     npm: 'npm run db:blog:agent -- …',
     creds: 'OPENAI_API_KEY + API Supabase (service role); opcional SERPAPI / OPENAI web_search',
     description:
-      'Redactor IA de artículos de blog (gpt-5.6-terra por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte. Quincena: `run blog-agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar]` → publica un ranking visual (blog_posts.digest + FortnightDigest: carátulas, gráficos, frases cortas) con lanzamientos, Top 100, escuchas, votos (regla /top100), sonido, debutantes, sesiones y adelantos; reproductor con los temas destacados. No pisa una quincena publicada salvo --forzar.',
+      'Redactor IA de artículos de blog (gpt-5.6-terra por defecto vía OPENAI_BLOG_MODEL/OPENAI_MODEL): prompts/blog-agente-system.txt → UPSERT blog_posts. --featured para home; --save-json copia data/blog/<slug>.json. Portada: blog:refresh-images aparte. Quincena: `run blog-agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar]` → publica un ranking visual (blog_posts.digest + FortnightDigest: carátulas, gráficos, frases cortas) con lanzamientos, Top 100, escuchas, votos (regla /top100), sonido, debutantes, sesiones y adelantos; reproductor con los temas destacados. No pisa una quincena publicada salvo --forzar. Agenda: `run blog-agent -- --agenda [YYYY-MM-DD primer día]` → artículo de los eventos de los 14 días que empiezan ese día (digest.kind agenda + AgendaDigest; las citas se leen en vivo; el vídeo R/F es el reel de carteles). No pisa una agenda publicada salvo --forzar.',
   },
   {
     id: 'photo',

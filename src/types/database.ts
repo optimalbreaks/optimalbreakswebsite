@@ -1091,6 +1091,26 @@ export function eventNoticeKind(event: { tags?: string[] | null } | null | undef
   return null
 }
 
+/** Créditos del cartel: `lineup` y, si hay escenarios, el de cada uno. Sin duplicar. */
+export function eventLineupNames(event: {
+  lineup?: string[] | null
+  stages?: { lineup?: string[] | null }[] | null
+} | null | undefined): string[] {
+  const names: string[] = []
+  const seen = new Set<string>()
+  const push = (raw: unknown) => {
+    const t = String(raw ?? '').trim()
+    if (!t || seen.has(t.toLowerCase())) return
+    seen.add(t.toLowerCase())
+    names.push(t)
+  }
+  for (const n of event?.lineup ?? []) push(n)
+  for (const st of event?.stages ?? []) {
+    for (const n of st?.lineup ?? []) push(n)
+  }
+  return names
+}
+
 export interface BlogPost extends Record<string, unknown> {
   id: string
   created_at: string
@@ -1115,8 +1135,21 @@ export interface BlogPost extends Record<string, unknown> {
   beatport_tracks?: BeatportTopTrack[] | null
   /** URL del release en Beatport cuando el artículo cubre un álbum o EP. */
   beatport_release_url?: string | null
-  /** Artículo quincenal: la ficha lo pinta con `FortnightDigest` en vez del cuerpo. */
-  digest?: FortnightDigest | null
+  /** Quincena, trimestre o agenda: la ficha lo pinta en vez del cuerpo. */
+  digest?: FortnightDigest | AgendaDigest | null
+}
+
+export interface AgendaDigestCopy {
+  intro: string
+  nights: string
+}
+
+/** Artículo de las próximas dos semanas de eventos. Las citas se leen en vivo. */
+export interface AgendaDigest {
+  kind: 'agenda'
+  from: string
+  until: string
+  copy: { es: AgendaDigestCopy; en: AgendaDigestCopy }
 }
 
 export interface FortnightDigestTrack {

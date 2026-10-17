@@ -150,6 +150,37 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
   }
 
   const makeCaption = async (platform: SharePlatform) => {
+    if (pageReel?.agenda) {
+      const a = pageReel.agenda
+      const shown = a.events.length + a.extra
+      return aiShareCaption({
+        kind: 'events',
+        platform,
+        lang,
+        url: fullUrl,
+        fallback: buildPageVideoCaption(
+          'events',
+          { count: shown, weekLabel: `${a.from} — ${a.until}`, first: a.events[0]?.name },
+          { lang, url: fullUrl, platform },
+        ),
+        context: {
+          hook: a.es
+            ? 'Eventos de los próximos 14 días, te los vas a perder'
+            : "Events for the next 14 days — you're gonna miss them",
+          title: pageReel.title,
+          from: a.from,
+          until: a.until,
+          count: shown,
+          extra: a.extra,
+          events: a.events.slice(0, 18).map((e) => ({
+            name: e.name,
+            date: e.date,
+            place: e.place,
+            lineup: e.lineup.slice(0, 6),
+          })),
+        },
+      })
+    }
     if (pageReel) {
       return aiShareCaption({
         kind: 'blog',
@@ -286,8 +317,14 @@ export default function ShareButtons({ url, title, lang, shortUrl, storyPlay, pa
         <VideoShareButtons
           lang={lang}
           title={title}
-          fileBase={pageReel ? 'blog' : 'set'}
-          what={pageReel ? { es: 'del artículo', en: 'of this article' } : { es: 'de la sesión', en: 'of this set' }}
+          fileBase={pageReel?.agenda ? 'agenda' : pageReel ? 'blog' : 'set'}
+          what={
+            pageReel?.agenda
+              ? { es: 'de la agenda', en: 'of the agenda' }
+              : pageReel
+                ? { es: 'del artículo', en: 'of this article' }
+                : { es: 'de la sesión', en: 'of this set' }
+          }
           makeVideo={makeVideo}
           makeCaption={makeCaption}
         />

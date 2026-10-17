@@ -13,6 +13,25 @@
 // ============================================
 
 import { animBlog, animEvents, animFortnight, animTop, animWeek, blogHighlightFrom, DUR, eventsReelDuration, FORTNIGHT_DUR, type EventsAnim, type Img } from './page-reel-design'
+
+export type EventsReelEvent = {
+  name: string
+  /** YYYY-MM-DD */
+  date: string
+  dateEnd: string | null
+  place: string
+  lineup: string[]
+  postponed: boolean
+  image: string | null
+}
+
+export type EventsReelInput = {
+  es: boolean
+  from: string
+  until: string
+  extra: number
+  events: EventsReelEvent[]
+}
 import { encodeCanvasVideo, type ReelFormat, type ReelResult } from './reel-renderer'
 
 export type PageReelKind = 'top100' | 'week' | 'blog'
@@ -42,6 +61,8 @@ export type PageReelInput =
       excerpt: string
       /** Artículo quincenal: vídeo de datos (`animFortnight`) en vez del de artículo. */
       fortnight?: FortnightReelInput
+      /** Artículo de agenda: reel de carteles (`animEvents`). */
+      agenda?: EventsReelInput
     }
 
 type FortnightReelTrack = { title: string; artists: string; value: number; artwork: string | null }
@@ -170,6 +191,8 @@ export async function renderPageReel(
     const data = { ...f, range: `${short(f.from)} — ${short(f.until)}`, covers, played, voted, stars }
     const draw = (c: CanvasRenderingContext2D, t: number) => animFortnight(c, W, H, data, t)
     return encodeCanvasVideo(W, H, FORTNIGHT_DUR, 30, draw, onProgress)
+  } else if (input.agenda) {
+    return renderEventsReel(input.agenda, format, onProgress)
   } else {
     const [img] = await loadArtworks([input.artwork])
     const data = {
@@ -221,25 +244,6 @@ function whenLabel(start: string, end: string | null, es: boolean) {
   const monB = (es ? MON_ES : MON_EN)[b.mo - 1]
   if (a.mo === b.mo) return `${wd} ${a.d} — ${wdB} ${b.d} ${mon}`
   return `${wd} ${a.d} ${mon} — ${wdB} ${b.d} ${monB}`
-}
-
-export type EventsReelEvent = {
-  name: string
-  /** YYYY-MM-DD */
-  date: string
-  dateEnd: string | null
-  place: string
-  lineup: string[]
-  postponed: boolean
-  image: string | null
-}
-
-export type EventsReelInput = {
-  es: boolean
-  from: string
-  until: string
-  extra: number
-  events: EventsReelEvent[]
 }
 
 /** Reel de la agenda: intro + 5 s por evento + cierre. Carteles sin recortar. */

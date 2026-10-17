@@ -11,6 +11,7 @@
  *   npm run db:blog:agent -- slug --from-json
  *   npm run db:blog:agent -- slug --from-json data/blog/slug.json
  *   npm run db:blog:agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar] [--brief notas.txt]
+ *   npm run db:blog:agent -- --agenda [YYYY-MM-DD primer día] [--solo-datos] [--borrador] [--forzar]
  *
  *   npm run db:blog:agent -- --trimestre 2026-07 [mismas opciones]
  *
@@ -28,6 +29,11 @@
  * frases cortas por bloque. Se publica al momento (--borrador para no publicar).
  * No pisa una quincena publicada salvo con --forzar. --mantener-textos (con --forzar)
  * refresca los datos y conserva título y frases ya publicados. --solo-datos imprime los datos y sale.
+ *
+ * --agenda: las citas de los 14 días que empiezan ese día (por defecto, hoy en Madrid).
+ * Slug `agenda-breakbeat-<desde>-<hasta>`. El digest solo guarda el texto; la ficha
+ * lee los eventos en vivo (AgendaDigest) y el vídeo R/F es el reel de carteles.
+ * No pisa una agenda publicada salvo con --forzar.
  *
  * Modelo por defecto: gpt-5.6-terra (override: OPENAI_BLOG_MODEL o OPENAI_MODEL).
  * Búsqueda web: OpenAI web_search; SerpAPI solo como respaldo.
@@ -893,6 +899,7 @@ function parseArgs(argv) {
     stdout: false,
     fromJson: null,
     quincena: null,
+    agenda: null,
     soloDatos: false,
   }
   const pos = []
@@ -902,6 +909,10 @@ function parseArgs(argv) {
       const next = argv[i + 1]
       out.quincena = next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now())
     } else if (a === '--trimestre') out.trimestre = argv[++i] || ''
+    else if (a === '--agenda') {
+      const next = argv[i + 1]
+      out.agenda = next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now())
+    }
     else if (a === '--solo-datos') out.soloDatos = true
     else if (a === '--borrador') out.borrador = true
     else if (a === '--forzar') out.forzar = true
@@ -1001,8 +1012,213 @@ async function mainQuincena(args) {
   console.log(`[blog-agent] ${SITE_URL}/es/blog/${row.slug}`)
 }
 
+const AGENDA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes el texto corto del artículo de agenda: las citas de breakbeat de los próximos 14 días. Tono: revista musical, directo, con gancho, cerca de «te los vas a perder» sin usar esa frase como título. No cites el número exacto de eventos (la ficha lo calcula en vivo y cambia). No inventes citas, ciudades ni lineups: solo lo que viene en la lista. Devuelves UN objeto JSON válido y nada más, con esta forma:
+{"excerpt_es":"","excerpt_en":"","copy_es":{"intro":"","nights":""},"copy_en":{"intro":"","nights":""}}
+excerpt: una frase para la tarjeta del blog. intro: dos o tres frases. nights: un párrafo que nombre dos o tres citas de la lista, con su ciudad.`
+
+function ymdOf(iso) {
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(iso || ''))
+  return m ? m[1] : null
+}
+
+function tagNorm(tag) {
+  return String(tag || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
+
+function eventCancelled(tags) {
+  return (tags || []).some((tag) => {
+    const n = tagNorm(tag)
+    return n === 'cancelado' || n === 'cancelled' || n === 'canceled'
+  })
+}
+
+function eventPostponed(tags) {
+  return (tags || []).some((tag) => {
+    const n = tagNorm(tag)
+    return n === 'aplazado' || n === 'postponed' || n === 'rescheduled' || n === 'reprogramado'
+  })
+}
+
+function eventLineup(row) {
+  const names = []
+  const seen = new Set()
+  const push = (raw) => {
+    const t = String(raw || '').trim()
+    if (!t || seen.has(t.toLowerCase())) return
+    seen.add(t.toLowerCase())
+    names.push(t)
+  }
+  for (const n of row.lineup || []) push(n)
+  for (const st of row.stages || []) for (const n of st?.lineup || []) push(n)
+  return names
+}
+
+function eventPlace(row) {
+  const parts = [row.venue, row.city, row.country].map((s) => String(s || '').trim()).filter(Boolean)
+  const out = []
+  const seen = new Set()
+  for (const p of parts) {
+    const k = p.toLowerCase()
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(p)
+  }
+  return out.join(' · ') || String(row.location || '').trim()
+}
+
+function tituloAgenda(from, until, lang) {
+  const sameYear = from.slice(0, 4) === until.slice(0, 4)
+  const sameMonth = sameYear && from.slice(5, 7) === until.slice(5, 7)
+  const d = (ymd, opts) =>
+    new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { ...opts, timeZone: 'UTC' })
+  const start = d(from, sameMonth ? { day: 'numeric' } : sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' })
+  const end = fechaLarga(until, lang)
+  return lang === 'es'
+    ? `Los eventos de breakbeat del ${start} al ${end}`
+    : `Breakbeat events, ${start} to ${end}`
+}
+
+function agendaTemplate(events) {
+  const named = events.slice(0, 3).map((e) => `${e.name}${e.city ? ` (${e.city})` : ''}`).join(', ')
+  return {
+    excerpt_es: 'Los eventos de breakbeat de las próximas dos semanas. Te los vas a perder.',
+    excerpt_en: "The breakbeat events of the next two weeks. You're gonna miss them.",
+    copy_es: {
+      intro: 'Las próximas dos semanas de breakbeat, en la agenda. Te los vas a perder.',
+      nights: named ? `Entre las citas: ${named}.` : 'Esta quincena la agenda está vacía.',
+    },
+    copy_en: {
+      intro: "The next two weeks of breakbeat, on the agenda. You're gonna miss them.",
+      nights: named ? `Among the nights: ${named}.` : 'The agenda is empty this fortnight.',
+    },
+  }
+}
+
+function cleanAgendaSide(obj) {
+  return {
+    intro: String(obj?.intro ?? '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim(),
+    nights: String(obj?.nights ?? '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim(),
+  }
+}
+
+function agendaToHtml(copy, events, lang) {
+  const es = lang === 'es'
+  const items = events.map((e) => {
+    const who = e.lineup.slice(0, 8).join(', ')
+    const mark = e.postponed ? (es ? ' (aplazado)' : ' (postponed)') : ''
+    return `<li><strong>${escHtml(e.date)} — ${escHtml(e.name)}</strong>${mark}${e.place ? ` (${escHtml(e.place)})` : ''}${who ? `: ${escHtml(who)}` : ''}</li>`
+  }).join('\n')
+  return [
+    copy.intro ? `<p>${escHtml(copy.intro)}</p>` : '',
+    `<h2>${es ? 'Las citas' : 'The nights'}</h2>`,
+    copy.nights ? `<p>${escHtml(copy.nights)}</p>` : '',
+    items ? `<ul>\n${items}\n</ul>` : `<p>${es ? 'Esta quincena la agenda está vacía.' : 'The agenda is empty this fortnight.'}</p>`,
+  ].filter(Boolean).join('\n')
+}
+
+async function loadAgendaRows(from, until) {
+  const creds = supabaseApiCredentials()
+  if (!creds) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (o SUPABASE_SECRET_KEY)')
+  const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
+  const select = 'id,slug,name,date_start,date_end,city,venue,country,location,lineup,stages,image_url,tags'
+  const next = addDaysYmd(until, 1)
+  const starting = await fetchAllRows(sb, 'events', select, (q) => q.gte('date_start', from).lt('date_start', next))
+  const running = await fetchAllRows(sb, 'events', select, (q) => q.lt('date_start', from).gte('date_end', from))
+  const byId = new Map()
+  for (const row of [...starting, ...running]) byId.set(row.id, row)
+  const events = []
+  for (const row of byId.values()) {
+    if (eventCancelled(row.tags)) continue
+    const date = ymdOf(row.date_start)
+    if (!date || !row.slug || !row.name) continue
+    const dateEnd = ymdOf(row.date_end)
+    const end = dateEnd || date
+    if (end < from || date > until) continue
+    events.push({
+      slug: row.slug,
+      name: row.name,
+      date,
+      dateEnd: dateEnd && dateEnd !== date ? dateEnd : null,
+      place: eventPlace(row),
+      city: String(row.city || '').trim(),
+      country: String(row.country || '').trim(),
+      lineup: eventLineup(row),
+      postponed: eventPostponed(row.tags),
+      image: row.image_url || null,
+    })
+  }
+  events.sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name, 'es'))
+  return events
+}
+
+async function mainAgenda(args) {
+  const from = args.agenda
+  const until = addDaysYmd(from, 13)
+  console.log(`[blog-agent] Agenda del ${from} al ${until}: leyendo eventos…`)
+  const events = await loadAgendaRows(from, until)
+  const lines = events.map((e) => {
+    const who = e.lineup.slice(0, 8).join(', ')
+    return `- ${e.date}${e.dateEnd ? `→${e.dateEnd}` : ''} | ${e.name} | ${e.city || e.place || '—'} | ${who || 'sin lineup'}${e.postponed ? ' | APLAZADO' : ''}`
+  })
+  const brief = [
+    `AGENDA ${from} — ${until}`,
+    `${events.length} citas (no cites este número en el texto).`,
+    lines.join('\n') || '(ninguna cita en estas dos semanas)',
+    loadBrief(args.briefPaths),
+  ].filter(Boolean).join('\n\n')
+  if (args.soloDatos) {
+    console.log(brief)
+    return
+  }
+  const fallback = agendaTemplate(events)
+  let raw = fallback
+  try {
+    console.log('[blog-agent] Redactando…')
+    raw = await openAiJson({ system: AGENDA_SYSTEM, user: brief })
+  } catch (e) {
+    console.warn(`[blog-agent] Sin texto del modelo, uso la plantilla: ${e.message}`)
+  }
+  const copy = {
+    es: cleanAgendaSide(raw.copy_es) ,
+    en: cleanAgendaSide(raw.copy_en),
+  }
+  if (!copy.es.intro) copy.es = fallback.copy_es
+  if (!copy.en.intro) copy.en = fallback.copy_en
+  const digest = { kind: 'agenda', from, until, copy }
+  const row = {
+    slug: `agenda-breakbeat-${from}-${until}`,
+    title_es: tituloAgenda(from, until, 'es'),
+    title_en: tituloAgenda(from, until, 'en'),
+    excerpt_es: String(raw.excerpt_es || '').trim() || copy.es.intro,
+    excerpt_en: String(raw.excerpt_en || '').trim() || copy.en.intro,
+    content_es: agendaToHtml(copy.es, events, 'es'),
+    content_en: agendaToHtml(copy.en, events, 'en'),
+    category: 'article',
+    tags: uniqueTags(['agenda', 'eventos', 'breakbeat']),
+    author: 'Optimal Breaks',
+    is_published: !args.borrador,
+    is_featured: false,
+    published_at: new Date().toISOString(),
+    image_url: events.find((e) => e.image)?.image || null,
+    og_image_url: null,
+    beatport_tracks: [],
+    beatport_release_url: null,
+    digest,
+  }
+  if (args.jsonOnly) {
+    console.log(JSON.stringify({ title_es: row.title_es, title_en: row.title_en, excerpt_es: row.excerpt_es, slug: row.slug, nights: events.length, copy }, null, 2))
+    console.log('[blog-agent] --json-only: sin BD')
+    return
+  }
+  const result = await upsertBlogPost(row, { refusePublished: !args.forzar })
+  console.log(`[blog-agent] ${row.is_published ? 'Publicado' : 'Borrador'} (${result.action}) — ${row.title_es}`)
+  console.log(`[blog-agent] ${events.length} citas`)
+  console.log(`[blog-agent] ${SITE_URL}/es/blog/${row.slug}`)
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+  if (args.agenda) return mainAgenda(args)
   if (args.quincena || args.trimestre) return mainQuincena(args)
   if (!args.slug || (!args.titleHint && !args.fromJson)) {
     console.error(
