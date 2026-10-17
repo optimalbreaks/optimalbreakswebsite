@@ -25,7 +25,7 @@ import BeatportTopTracks from '@/components/BeatportTopTracks'
 import FortnightDigest from '@/components/FortnightDigest'
 import AgendaDigestView from '@/components/AgendaDigest'
 import { getFortnightLive } from '@/lib/fortnight-live'
-import { loadAgendaNights } from '@/lib/agenda-nights'
+import { agendaCoverImage, loadAgendaNights } from '@/lib/agenda-nights'
 import type { AgendaDigest as AgendaDigestData, BeatportTopTrack, BlogPost, FortnightDigest as FortnightDigestData } from '@/types/database'
 import {
   buildFullArtistSlugMap,
@@ -51,7 +51,13 @@ type BlogSeoRow = Pick<
   | 'beatport_tracks'
   | 'content_es'
   | 'content_en'
-> & { covers?: unknown }
+> & {
+  covers?: unknown
+  agenda_kind?: string | null
+  agenda_from?: string | null
+  agenda_until?: string | null
+  agenda_places?: Record<string, { lat: number; lng: number }> | null
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params
@@ -61,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = createCachedSupabase(300, [PUBLIC_CATALOG_CACHE_TAG])
   const { data: raw } = await supabase
     .from('blog_posts')
-    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en, covers:digest->covers')
+    .select('title_en, title_es, excerpt_en, excerpt_es, image_url, og_image_url, beatport_tracks, content_es, content_en, covers:digest->covers, agenda_kind:digest->>kind, agenda_from:digest->>from, agenda_until:digest->>until, agenda_places:digest->places')
     .eq('slug', safeSlug)
     .eq('is_published', true)
     .single()
@@ -70,7 +76,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = safeLang === 'es' ? data.title_es : data.title_en
   const description = safeLang === 'es' ? data.excerpt_es : data.excerpt_en
   const siteName = await siteNameForLang(safeLang)
+  const agendaCover =
+    data.agenda_kind === 'agenda' && data.agenda_from && data.agenda_until
+      ? agendaCoverImage(await loadAgendaNights(supabase, data.agenda_from, data.agenda_until, data.agenda_places ?? {}))
+      : null
   const albumArt =
+    agendaCover ||
     data.image_url ||
     (Array.isArray(data.beatport_tracks) ? data.beatport_tracks[0]?.artwork_url : null) ||
     null
@@ -153,7 +164,7 @@ export default async function BlogPostPage({ params }: Props) {
     const list = out.length > 1 ? `${out.slice(0, -1).join(', ')}${and}${out[out.length - 1]}` : out[0]
     return (safeLang === 'es' ? 'semanas del ' : 'weeks of ') + list
   })()
-  const coverRaw = post.image_url || albumTracks[0]?.artwork_url || null
+  const coverRaw = agendaCoverImage(agendaNights) || post.image_url || albumTracks[0]?.artwork_url || null
   const coverSrc = proxyCatalogArtworkForDisplay(coverRaw) || coverRaw
   const albumCover = albumTracks.length > 0
   const posterCover = isBlogPosterCover(coverRaw, { album: albumCover, slug: safeSlug })

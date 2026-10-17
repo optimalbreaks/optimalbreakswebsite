@@ -180,6 +180,21 @@ export async function loadAgendaNights(
   return nights
 }
 
+/** Orden de los destacados: más artistas del Top 100, mejor puesto, cartel más largo. */
+export function compareAgendaHighlights(a: AgendaNight, b: AgendaNight): number {
+  return (
+    b.stars.length - a.stars.length ||
+    (a.stars[0]?.rank ?? 999) - (b.stars[0]?.rank ?? 999) ||
+    b.lineup.length - a.lineup.length ||
+    a.date.localeCompare(b.date)
+  )
+}
+
+/** Cartel de portada / OG del artículo: el de la noche destacada nº 1. */
+export function agendaCoverImage(nights: AgendaNight[]): string | null {
+  return [...nights].sort(compareAgendaHighlights).find((n) => n.image)?.image ?? null
+}
+
 type ArtistRow = { slug: string; name: string | null; name_display: string | null; image_url: string | null }
 
 /** Puesto en el tablero de artistas de /top100 (mismos saltos de auto-voto). */

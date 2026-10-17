@@ -1154,6 +1154,35 @@ async function loadAgendaRows(from, until) {
   return events
 }
 
+/**
+ * Cartel de portada: más artistas del Top 100 de artistas en el cartel, mejor puesto,
+ * cartel más largo (mismo orden que `compareAgendaHighlights` en src/lib/agenda-nights.ts).
+ */
+async function agendaCoverImage(events) {
+  const key = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim()
+  const rank = new Map()
+  try {
+    const res = await fetch(`${SITE_URL}/api/public/charts/community-monthly?limit=100`)
+    const json = res.ok ? await res.json() : null
+    for (const a of json?.top_artists || []) rank.set(key(a.name), a.rank)
+  } catch (err) {
+    console.warn(`[blog-agent] Sin tablero de artistas para la portada: ${err.message}`)
+  }
+  const scored = events.filter((e) => e.image).map((e) => {
+    const ranks = new Set()
+    for (const entry of e.lineup) {
+      const clean = entry.replace(/\[[^\]]*\]|\([^)]*\)/g, ' ')
+      for (const part of [clean, ...clean.split(/\s+(?:vs\.?|b2b|&|x|and|y|ft\.?|feat\.?|featuring)\s+|,|\//i)]) {
+        const r = rank.get(key(part))
+        if (r) ranks.add(r)
+      }
+    }
+    return { e, stars: ranks.size, best: ranks.size ? Math.min(...ranks) : 999 }
+  })
+  scored.sort((a, b) => b.stars - a.stars || a.best - b.best || b.e.lineup.length - a.e.lineup.length || a.e.date.localeCompare(b.e.date))
+  return scored[0]?.e.image || null
+}
+
 /** Igual que `agendaPlaceKey` (src/lib/agenda-nights.ts). */
 function agendaPlaceKey(city, country) {
   const n = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
@@ -1247,7 +1276,7 @@ async function mainAgenda(args) {
     is_published: !args.borrador,
     is_featured: false,
     published_at: (args.mantenerTextos && old?.published_at) || new Date().toISOString(),
-    image_url: events.find((e) => e.image)?.image || null,
+    image_url: await agendaCoverImage(events),
     og_image_url: null,
     beatport_tracks: [],
     beatport_release_url: null,

@@ -7,7 +7,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import CardThumbnail from '@/components/CardThumbnail'
-import type { AgendaNight, AgendaStar } from '@/lib/agenda-nights'
+import { compareAgendaHighlights, type AgendaNight, type AgendaStar } from '@/lib/agenda-nights'
 import { buildAgendaMap, CANARY_PROVINCES, normalizePlace, PROVINCE_REGION } from '@/lib/spain-map'
 import type { AgendaDigest as AgendaDigestData } from '@/types/database'
 import type { Locale } from '@/lib/i18n-config'
@@ -105,12 +105,7 @@ export default function AgendaDigest({
   const cityShort = (n: AgendaNight) => (n.city || n.place).split(',')[0].trim()
   const range = `${fmt(digest.from, lang, { day: 'numeric', month: 'short' })} — ${fmt(digest.until, lang, { day: 'numeric', month: 'short' })}`.replace(/\./g, '').toUpperCase()
 
-  const byScore = [...nights].sort(
-    (a, b) =>
-      b.stars.length - a.stars.length ||
-      (a.stars[0]?.rank ?? 999) - (b.stars[0]?.rank ?? 999) ||
-      a.date.localeCompare(b.date),
-  )
+  const byScore = [...nights].sort(compareAgendaHighlights)
   const posters = byScore.map((n) => n.image).filter((u): u is string => !!u).slice(0, 4)
   const musts = byScore.filter((n) => n.stars.length > 0)
 
