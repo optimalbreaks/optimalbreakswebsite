@@ -296,6 +296,37 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
     },
     alt: { es: 'El Pepino con un candelabro, mirando a otro lado y silbando', en: 'The Pickle holding a candelabra, looking away and whistling' },
   },
+  {
+    img: 'pm_colectivo.jpg', fit: 'cover', big: true,
+    name: { es: 'El Colectivo Optimal Breaks', en: 'The Optimal Breaks Collective' },
+    role: { es: 'Los que eligen la música', en: 'The ones who pick the music' },
+    text: {
+      es: 'Cada semana escuchan cientos de lanzamientos y eligen de oído el breakbeat de verdad. Son las máquinas de la música… pero no abren la boca: siempre al fondo, en fila, sin mover un músculo. Cuando el lechón hace spoiler del set, ellos ya lo sabían hace tres semanas.',
+      en: 'Every week they listen to hundreds of releases and pick the real breakbeat by ear. They are music machines… but they never say a word: always at the back, in a row, not moving a muscle. When the pig spoils the set, they knew it three weeks ago.',
+    },
+    alt: { es: 'El Colectivo Optimal Breaks: seis expertos trajeados con gafas de sol y pinganillo, en formación', en: 'The Optimal Breaks Collective: six suited experts with sunglasses and earpieces, in formation' },
+    more: {
+      label: { es: 'Lo poco que se sabe de ellos', en: 'The little we know about them' },
+      items: {
+        es: [
+          'No hablan. Se tocan el pinganillo y asienten.',
+          'Cuando cae el drop, cabecean todos a la vez. Una sola vez. Es lo más cerca que han estado de bailar.',
+          'Los canis los confunden con seguratas.',
+          'El lechón no los ha visto nunca. Mar IA, sí.',
+          'El chaleco de P tiene la firma de todos los DJs… menos la del Capitán.',
+          'El Novato es el único al que, a veces, se le escapa una sonrisa.',
+        ],
+        en: [
+          'They don’t talk. They touch their earpiece and nod.',
+          'When the drop hits, they all nod at once. Just once. It’s the closest they’ve ever come to dancing.',
+          'The canis mistake them for bouncers.',
+          'The pig has never noticed them. Mar IA has.',
+          'P’s vest has every DJ’s signature… except the Captain’s.',
+          'The Rookie is the only one who sometimes lets a smile slip.',
+        ],
+      },
+    },
+  },
 ]
 
 type Copy = {
