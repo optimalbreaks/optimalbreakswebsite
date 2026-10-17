@@ -117,6 +117,29 @@ const T = {
   },
 }
 
+const QUARTER = {
+  es: {
+    fortnight: 'TRIMESTRE',
+    prev: 'trimestre anterior',
+    labelsTitle: 'Sellos del trimestre',
+    playAll: (n: number) => `▶ ESCUCHAR EL TRIMESTRE · ${n} TEMAS`,
+  },
+  en: {
+    fortnight: 'QUARTER',
+    prev: 'previous quarter',
+    released: 'Out this quarter',
+    labelsTitle: 'Labels of the quarter',
+    playAll: (n: number) => `▶ PLAY THE QUARTER · ${n} TRACKS`,
+  },
+}
+
+/** Primer día con escuchas registradas (`track_plays`). */
+const PLAYS_SINCE = '2026-10-06'
+const PLAYS_SINCE_NOTE = {
+  es: 'Las escuchas se cuentan desde el 6 OCT 2026; los votos, desde siempre.',
+  en: 'Plays are counted from 6 OCT 2026; votes, from the start.',
+}
+
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const display = { fontFamily: "'Unbounded', sans-serif" } as const
 
@@ -364,7 +387,7 @@ export default function FortnightDigest({
   /** Rankings recalculados en el servidor (fortnight-live): títulos y textos salen de los datos. */
   liveAt?: string | null
 }) {
-  const t = T[lang]
+  const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : T[lang]
   const copy = d.copy[lang]
   const delta = d.totals.tracks - d.totals.prev_tracks
   const stats: [string, number, string?][] = [
@@ -438,6 +461,7 @@ export default function FortnightDigest({
   const frozenNote = (
     <p className="mt-2 text-[11px] text-[var(--dim)]" style={mono}>
       {liveAt ? t.live(liveLabel) : t.frozen(shortDate(d.from, lang), shortDate(d.until, lang))}
+      {liveAt && d.from < PLAYS_SINCE ? ` ${PLAYS_SINCE_NOTE[lang]}` : null}
     </p>
   )
   const heading = (h: string, list: FortnightDigestTrack[]) =>

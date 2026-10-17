@@ -894,6 +894,8 @@ export function animBlog(ctx: C, W: number, H: number, d: BlogAnim, t: number) {
 export type FortnightTrackAnim = { title: string; artists: string; value: number; img: Img | null }
 export type FortnightAnim = {
   range: string
+  /** Ausente = FORTNIGHT. */
+  period?: 'FORTNIGHT' | 'QUARTER'
   totals: { tracks: number; artists: number; labels: number; releases: number; prev: number }
   covers: (Img | null)[]
   played: FortnightTrackAnim[]
@@ -1117,6 +1119,7 @@ function fnCoverRow(ctx: C, imgs: (Img | null)[], x: number, y: number, w: numbe
 
 export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t: number) {
   const V = H > W
+  const P = d.period ?? 'FORTNIGHT'
   const L: FnLayout = V
     ? { V, hx: 70, kY: 180, hY: 340, hW: 940, S: { x: 70, y: 590, w: 940, h: 980 }, foot: { x: 70, y: 1650, w: 940, h: 18 } }
     : { V, hx: 90, kY: 160, hY: 310, hW: 760, S: { x: 940, y: 130, w: 890, h: 850 }, foot: { x: 90, y: 880, w: 760, h: 16 } }
@@ -1126,7 +1129,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   // rótulo de datos que corre arriba
   const delta = d.totals.tracks - d.totals.prev
   const facts = [
-    `FORTNIGHT ${d.range}`,
+    `${P} ${d.range}`,
     `${d.totals.tracks} TRACKS`,
     `${d.totals.artists} ARTISTS`,
     `${d.totals.labels} LABELS`,
@@ -1167,7 +1170,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   }
 
   if (sc.k === 'intro') {
-    fnHeader(ctx, L, lt, 'BREAKBEAT FORTNIGHT', d.range.replace(' — ', ' —\n'), `${d.totals.tracks} NEW TRACKS · ${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} VS PREVIOUS`, RED)
+    fnHeader(ctx, L, lt, `BREAKBEAT ${P}`, d.range.replace(' — ', ' —\n'), `${d.totals.tracks} NEW TRACKS · ${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} VS PREVIOUS`, RED)
     const gap = 22
     const cw = (S.w - gap) / 2
     const ch = V ? 250 : 220
@@ -1260,7 +1263,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
     })
   } else if (sc.k === 'labels') {
     const l0 = d.labels[0]
-    fnHeader(ctx, L, lt, 'LABELS OF THE FORTNIGHT', l0.name, `TOP LABEL · ${l0.tracks} TRACKS`, UV)
+    fnHeader(ctx, L, lt, `LABELS OF THE ${P}`, l0.name, `TOP LABEL · ${l0.tracks} TRACKS`, UV)
     fnBars(ctx, S, d.labels.map((l) => ({ name: l.name, value: l.tracks, note: `${l.tracks} TRACKS` })), lt, t)
   } else if (sc.k === 'sound') {
     const top = [...d.bands].sort((a, b) => b.count - a.count)[0]
@@ -1302,7 +1305,7 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
       }
     })
   } else {
-    fnHeader(ctx, L, lt, 'OUT THIS FORTNIGHT', `${d.totals.releases} RELEASES`, `${d.totals.tracks} TRACKS · ${d.totals.artists} ARTISTS`, ACID)
+    fnHeader(ctx, L, lt, `OUT THIS ${P}`, `${d.totals.releases} RELEASES`, `${d.totals.tracks} TRACKS · ${d.totals.artists} ARTISTS`, ACID)
     const cols = 4
     const gap = 14
     const cs = (S.w - gap * (cols - 1)) / cols
@@ -1372,5 +1375,5 @@ export function animFortnight(ctx: C, W: number, H: number, d: FortnightAnim, t:
   ctx.fillStyle = MUTED
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  spaced(ctx, 'THE BREAKBEAT FORTNIGHT', F.x, F.y + (V ? 156 : 116), 4)
+  spaced(ctx, `THE BREAKBEAT ${P}`, F.x, F.y + (V ? 156 : 116), 4)
 }

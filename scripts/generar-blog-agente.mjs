@@ -12,7 +12,12 @@
  *   npm run db:blog:agent -- slug --from-json data/blog/slug.json
  *   npm run db:blog:agent -- --quincena [YYYY-MM-DD último día] [--solo-datos] [--borrador] [--forzar] [--brief notas.txt]
  *
+ *   npm run db:blog:agent -- --trimestre 2026-07 [mismas opciones]
+ *
  * --quincena: resumen de los 14 días que acaban ese día (por defecto, hoy en Madrid).
+ * --trimestre: el mismo artículo para tres meses (primer mes: 01, 04, 07 o 10). Slug
+ * `trimestre-breakbeat-<desde>-<hasta>`, título por estación («del verano de 2026»),
+ * rankings de 20 y escuchas sin filtro de fecha (se registran desde el 6 oct 2026).
  * Lanzamientos, Top 100, escuchas, votos (misma regla que /top100, vía
  * /api/public/charts/community-monthly?since&until de producción), sonido,
  * debutantes; solo de temas que salieron en esos 14 días (sin sesiones ni
@@ -369,8 +374,31 @@ function fechaLarga(ymd, lang) {
   })
 }
 
+const SEASONS = {
+  '01': { es: 'del invierno', en: 'winter' },
+  '04': { es: 'de la primavera', en: 'spring' },
+  '07': { es: 'del verano', en: 'summer' },
+  '10': { es: 'del otoño', en: 'autumn' },
+}
+
+/** `--trimestre 2026-07` → del 1 de julio al 30 de septiembre; el anterior, abril–junio. */
+function trimestreDe(ym) {
+  const m = /^(\d{4})-(01|04|07|10)$/.exec(ym || '')
+  if (!m) throw new Error('--trimestre espera el primer mes del trimestre: 2026-01, 2026-04, 2026-07 o 2026-10')
+  const from = `${ym}-01`
+  const next = new Date(Date.UTC(Number(m[1]), Number(m[2]) + 2, 1))
+  const prev = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 4, 1))
+  return { from, until: addDaysYmd(next.toISOString().slice(0, 10), -1), prevFrom: prev.toISOString().slice(0, 10) }
+}
+
 /** Título fijo: la página recalcula escuchas y votos en directo y los líderes cambian. */
-function tituloQuincena(from, until, lang) {
+function tituloQuincena(from, until, lang, kind = 'quincena') {
+  if (kind === 'trimestre') {
+    const s = SEASONS[from.slice(5, 7)]
+    return lang === 'es'
+      ? `Los mejores temas de breakbeat ${s.es} de ${from.slice(0, 4)}`
+      : `The best breakbeat tracks of ${s.en} ${from.slice(0, 4)}`
+  }
   const sameYear = from.slice(0, 4) === until.slice(0, 4)
   const sameMonth = sameYear && from.slice(5, 7) === until.slice(5, 7)
   const d = (ymd, opts) =>
@@ -399,13 +427,21 @@ async function fetchCommunityTop(params) {
   return res.json()
 }
 
-async function computeQuincena(until) {
+async function computeQuincena(untilArg, trimestre = null) {
   const creds = supabaseApiCredentials()
   if (!creds) throw new Error('Faltan NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY')
   const sb = createClient(creds.url, creds.key, { auth: { persistSession: false } })
 
-  const from = addDaysYmd(until, -13)
-  const prevFrom = addDaysYmd(from, -14)
+  const kind = trimestre ? 'trimestre' : 'quincena'
+  const period = trimestre ? trimestreDe(trimestre) : null
+  const until = period ? period.until : untilArg
+  const from = period ? period.from : addDaysYmd(until, -13)
+  const prevFrom = period ? period.prevFrom : addDaysYmd(from, -14)
+  const TOP = trimestre ? 20 : 10
+  // Gramática del brief: la quincena / el trimestre.
+  const G = trimestre
+    ? { del: 'del trimestre', en: 'en el trimestre', esta: 'este trimestre', ant: 'Trimestre anterior', ant_l: 'trimestre anterior', NOM: 'TRIMESTRE' }
+    : { del: 'de la quincena', en: 'en la quincena', esta: 'esta quincena', ant: 'Quincena anterior', ant_l: 'quincena anterior', NOM: 'QUINCENA' }
   const inWin = (d) => d >= from && d <= until
   const sinceIso = `${addDaysYmd(from, -1)}T00:00:00Z`
 
@@ -519,7 +555,8 @@ async function computeQuincena(until) {
 
   // Escuchas de la quincena (previews y temas completos en la web).
   const plays = await fetchAllRows(sb, 'track_play_events', 'id, canonical_key, created_at', (q) => q.gte('created_at', sinceIso))
-  const playsWin = plays.filter((p) => inWin(madridDay(p.created_at)))
+  // Las escuchas se registran desde el 6 oct 2026: un trimestre anterior cuenta todas, no las de sus días.
+  const playsWin = trimestre ? plays : plays.filter((p) => inWin(madridDay(p.created_at)))
   const featByKey = new Map(feat.filter((f) => f.link_url).map((f) => [normUrl(f.link_url), f]))
   const playCount = new Map()
   for (const p of playsWin) {
@@ -527,7 +564,7 @@ async function computeQuincena(until) {
     if (f) inc(playCount, f.id)
   }
   const featById = new Map(feat.map((f) => [f.id, f]))
-  const playedWin = ranked(new Map([...playCount].filter(([id]) => inWin(featById.get(id).release_date))), 10)
+  const playedWin = ranked(new Map([...playCount].filter(([id]) => inWin(featById.get(id).release_date))), TOP)
 
   // Votos de la quincena, solo de temas que salieron en la quincena.
   const votedWin = (votes.top_tracks || [])
@@ -535,7 +572,7 @@ async function computeQuincena(until) {
       const f = featByKey.get(t.canonical_key)
       return inWin(f ? f.release_date : t.release_date)
     })
-    .slice(0, 10)
+    .slice(0, TOP)
 
   const exclusives = win.filter((f) => f.full_audio_url)
 
@@ -573,23 +610,24 @@ async function computeQuincena(until) {
     L.push(`\n### ${title}`)
     for (const l of lines) L.push(`- ${l}`)
   }
-  L.push(`QUINCENA: del ${from} al ${until} (ambos incluidos). Quincena anterior: del ${prevFrom} al ${addDaysYmd(from, -1)}.`)
+  L.push(`${G.NOM}: del ${from} al ${until} (ambos incluidos). ${G.ant}: del ${prevFrom} al ${addDaysYmd(from, -1)}.`)
+  if (trimestre) L.push(`Temporada: ${SEASONS[from.slice(5, 7)].es.replace(/^de la |^del /, '')} de ${from.slice(0, 4)}.`)
   sec('Panorama de lanzamientos (New Releases de /charts, fecha de salida en tienda)', [
     `${win.length} temas, ${perArtistTracks.size} artistas acreditados (remixers incluidos), ${new Set(win.map((f) => f.label).filter(Boolean)).size} sellos, ${releases.size} discos/lanzamientos.`,
-    `Quincena anterior: ${prev.length} temas.`,
+    `${G.ant}: ${prev.length} temas.`,
   ])
   sec('Artistas con más temas (t = temas, r = discos)', topArtists.map((a) => `${artistLink(a.n)}: ${a.t} temas en ${a.r} lanzamiento(s)`))
-  sec('Discos largos de la quincena (6 temas o más: son álbumes, no ráfagas de singles)', albums.slice(0, 6))
+  sec(`Discos largos ${G.del} (6 temas o más: son álbumes, no ráfagas de singles)`, albums.slice(0, 6))
   sec('Estrellas del Top 100 de artistas (tablero de /top100, puesto actual) con temas nuevos', top100Releases.slice(0, 20))
   sec('Sellos con más temas (sin agregadores tipo DistroKid)', ranked(labels, 8).map(([n, c]) => `${labelLink(n)}: ${c}`))
-  sec('Remixers de la quincena', ranked(remixers, 6).filter(([, c]) => c >= 1).map(([n, c]) => `${artistLink(n)}: ${c} remix(es)`))
-  sec('Lo más escuchado en la web de lo que salió esta quincena (puesto; reproducciones)', playedWin.map(([id, c], i) => `${i + 1}. ${trackLine(featById.get(id))} — ${c}`))
+  sec(`Remixers ${G.del}`, ranked(remixers, 6).filter(([, c]) => c >= 1).map(([n, c]) => `${artistLink(n)}: ${c} remix(es)`))
+  sec(`Lo más escuchado en la web de lo que salió ${G.esta} (puesto; reproducciones)`, playedWin.map(([id, c], i) => `${i + 1}. ${trackLine(featById.get(id))} — ${c}`))
   sec(
-    'Lo más votado («+» en Mis Tracks) en la quincena de lo que salió en la quincena, mismas reglas que el Top 100',
+    `Lo más votado («+» en Mis Tracks) ${G.en} de lo que salió ${G.en}, mismas reglas que el Top 100`,
     votedWin.map((t, i) => `${i + 1}. ${t.artists} — «${t.title}»${t.mix_name && !/^original mix$/i.test(t.mix_name) ? ` (${t.mix_name})` : ''} — ${t.unique_users} usuario(s)`),
   )
   sec('Radiografía sonora', [
-    `BPM medio ${avg(bpms) ?? '—'} (quincena anterior ${avg(prevBpms) ?? '—'}), sobre ${bpms.length} temas con BPM.`,
+    `BPM medio ${avg(bpms) ?? '—'} (${G.ant_l} ${avg(prevBpms) ?? '—'}), sobre ${bpms.length} temas con BPM.`,
     `Tramos: ${ranked(bands, 5).map(([b, c]) => `${b} BPM: ${c}`).join('; ')}.`,
     `Tonalidades más repetidas: ${ranked(keys, 5).map(([k, c]) => `${k} (${c})`).join(', ')}.`,
   ])
@@ -601,12 +639,12 @@ async function computeQuincena(until) {
   sec('Exclusivas: tema completo cedido por el artista, se escucha entero gratis en la web', exclusives.map(trackLine))
 
   const data = L.join('\n')
-  const brief = `ARTÍCULO QUINCENAL DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
+  const brief = `ARTÍCULO ${trimestre ? 'TRIMESTRAL' : 'QUINCENAL'} DE OPTIMAL BREAKS — DATOS DE LA WEB (fuente única; no inventes ni redondees cifras)
 ${data}
 
 QUÉ ESCRIBES: SOLO TEXTOS CORTOS
 La página ya pinta los datos con gráficos, carátulas, rankings y fotos. Tú pones la voz: frases de revista musical, con gancho, que digan lo que el gráfico no dice (quién destaca, qué sorprende, qué conviene escuchar).
-- El artículo trata SOLO de los temas que han salido en estas dos semanas: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.
+- El artículo trata SOLO de los temas que han salido en ${trimestre ? `estos tres meses (${SEASONS[from.slice(5, 7)].es.replace(/^de la |^del /, '')})` : 'estas dos semanas'}: qué ha salido, quién lo firma, qué se ha escuchado y votado. Nada de sesiones, ni de adelantos, ni de lo que saldrá.
 - Un texto por bloque: intro, artists, top100, labels, sound, debut. released, played y voted van vacíos: la página los escribe sola con el recuento en directo.
 - Escuchas y votos cambian cada día: ni en el intro ni en el excerpt digas quién va primero en escuchas o votos.
 - intro: 2 frases como máximo. Los demás: 1–2 frases, 40 palabras como máximo cada uno.
@@ -620,7 +658,7 @@ Devuelve SOLO este JSON:
 {
   "excerpt_es": "1 frase, 150–200 caracteres",
   "excerpt_en": "...",
-  "tags": ["quincena", "new releases", "breakbeat", "top 100", "… 2–4 nombres propios"],
+  "tags": ["${kind}", "new releases", "breakbeat", "top 100", "… 2–4 nombres propios"],
   "copy_es": { "intro": "", "released": "", "played": "", "voted": "", "artists": "", "top100": "", "labels": "", "sound": "", "debut": "" },
   "copy_en": { mismas claves, en inglés }
 }`
@@ -694,6 +732,7 @@ Devuelve SOLO este JSON:
   }))
 
   const digest = {
+    ...(trimestre ? { kind } : {}),
     from,
     until,
     totals: {
@@ -736,10 +775,11 @@ Devuelve SOLO este JSON:
   }
 
   return {
+    kind,
     from,
     until,
-    slug: `quincena-breakbeat-${from}-${until}`,
-    titleHint: `Breakbeat: la quincena del ${fechaLarga(from, 'es')} al ${fechaLarga(until, 'es')}`,
+    slug: `${kind}-breakbeat-${from}-${until}`,
+    titleHint: tituloQuincena(from, until, 'es', kind),
     brief,
     beatportTracks,
     votesReady,
@@ -747,7 +787,7 @@ Devuelve SOLO este JSON:
   }
 }
 
-const QUINCENA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes los textos cortos del resumen quincenal. Tono: revista musical con criterio, directo, nada de relleno ni frases infladas, sin meta-comentarios sobre datos o fuentes. Devuelves UN objeto JSON válido y nada más.`
+const QUINCENA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes los textos cortos del resumen quincenal o trimestral. Tono: revista musical con criterio, directo, nada de relleno ni frases infladas, sin meta-comentarios sobre datos o fuentes. Devuelves UN objeto JSON válido y nada más.`
 
 const COPY_KEYS = ['intro', 'released', 'played', 'voted', 'artists', 'top100', 'labels', 'sound', 'debut']
 
@@ -762,14 +802,15 @@ function digestToHtml(digest, lang) {
   const c = digest.copy[lang]
   const h = (title, text) => (text ? `<h2>${escHtml(title)}</h2>\n<p>${escHtml(text)}</p>` : '')
   const es = lang === 'es'
+  const q = digest.kind === 'trimestre'
   return [
     c.intro ? `<p>${escHtml(c.intro)}</p>` : '',
-    h(es ? 'Lo que ha salido' : 'Out this fortnight', c.released),
+    h(es ? 'Lo que ha salido' : q ? 'Out this quarter' : 'Out this fortnight', c.released),
     h(es ? 'Lo más escuchado' : 'Most played', c.played),
     h(es ? 'Lo más votado' : 'Most voted', c.voted),
     h(es ? 'Quién más ha publicado' : 'Who released the most', c.artists),
     h(es ? 'Estrellas del Top 100 con temas nuevos' : 'Top 100 stars with new music', c.top100),
-    h(es ? 'Sellos de la quincena' : 'Labels of the fortnight', c.labels),
+    h(es ? (q ? 'Sellos del trimestre' : 'Sellos de la quincena') : q ? 'Labels of the quarter' : 'Labels of the fortnight', c.labels),
     h(es ? 'Radiografía sonora' : 'Sound check', c.sound),
     h(es ? 'Debutantes' : 'Debut artists', c.debut),
   ].filter(Boolean).join('\n')
@@ -852,7 +893,8 @@ function parseArgs(argv) {
     if (a === '--quincena') {
       const next = argv[i + 1]
       out.quincena = next && /^\d{4}-\d{2}-\d{2}$/.test(next) ? argv[++i] : madridDay(Date.now())
-    } else if (a === '--solo-datos') out.soloDatos = true
+    } else if (a === '--trimestre') out.trimestre = argv[++i] || ''
+    else if (a === '--solo-datos') out.soloDatos = true
     else if (a === '--borrador') out.borrador = true
     else if (a === '--forzar') out.forzar = true
     else if (a === '--mantener-textos') out.mantenerTextos = true
@@ -895,8 +937,8 @@ function loadBrief(paths) {
 }
 
 async function mainQuincena(args) {
-  console.log(`[blog-agent] Quincena que acaba el ${args.quincena}: leyendo datos…`)
-  const q = await computeQuincena(args.quincena)
+  console.log(args.trimestre ? `[blog-agent] Trimestre ${args.trimestre}: leyendo datos…` : `[blog-agent] Quincena que acaba el ${args.quincena}: leyendo datos…`)
+  const q = await computeQuincena(args.quincena, args.trimestre || null)
   const brief = [q.brief, loadBrief(args.briefPaths)].filter(Boolean).join('\n\n---\n\nNOTAS DEL EDITOR:\n')
   if (!q.votesReady) {
     console.warn(`[blog-agent] ${SITE_URL} aún no filtra el Top 100 por fechas: falta desplegar. Sin bloque de votos.`)
@@ -923,14 +965,14 @@ async function mainQuincena(args) {
   const digest = { ...q.digest, copy: { es: live(raw.copy_es), en: live(raw.copy_en) } }
   const row = {
     slug: q.slug,
-    title_es: tituloQuincena(q.from, q.until, 'es'),
-    title_en: tituloQuincena(q.from, q.until, 'en'),
+    title_es: tituloQuincena(q.from, q.until, 'es', q.kind),
+    title_en: tituloQuincena(q.from, q.until, 'en', q.kind),
     excerpt_es: String(raw.excerpt_es || '').trim() || digest.copy.es.intro,
     excerpt_en: String(raw.excerpt_en || '').trim() || digest.copy.en.intro,
     content_es: digestToHtml(digest, 'es'),
     content_en: digestToHtml(digest, 'en'),
     category: 'ranking',
-    tags: uniqueTags(['quincena', ...(Array.isArray(raw.tags) ? raw.tags : [])]),
+    tags: uniqueTags([q.kind, ...(Array.isArray(raw.tags) ? raw.tags : [])]),
     author: 'Optimal Breaks',
     is_published: !args.borrador,
     is_featured: false,
@@ -953,7 +995,7 @@ async function mainQuincena(args) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
-  if (args.quincena) return mainQuincena(args)
+  if (args.quincena || args.trimestre) return mainQuincena(args)
   if (!args.slug || (!args.titleHint && !args.fromJson)) {
     console.error(
       'Uso: node scripts/generar-blog-agente.mjs <slug> "Título ES" [--featured] [--brief archivo.txt] [--no-search] [--json-only] [--save-json] [--from-json [ruta]]',

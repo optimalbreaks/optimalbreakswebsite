@@ -1157,6 +1157,8 @@ export interface FortnightDigestCopy {
 }
 
 export interface FortnightDigest {
+  /** Ausente = quincena. */
+  kind?: 'quincena' | 'trimestre'
   from: string
   until: string
   totals: { tracks: number; artists: number; labels: number; releases: number; prev_tracks: number }

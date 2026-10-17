@@ -12,7 +12,6 @@ import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import type { FortnightDigestTrack } from '@/types/database'
 
-const TOP_N = 10
 const RELEASED_N = 24
 
 type FeatRow = {
@@ -68,7 +67,7 @@ function audioSrc(f: FeatRow): string | null {
   return f.sample_url
 }
 
-async function loadFortnightLive(from: string, until: string): Promise<FortnightLive> {
+async function loadFortnightLive(from: string, until: string, topN: number): Promise<FortnightLive> {
   const sb = createServiceSupabase()
 
   const featAll = await fetchAllPages<FeatRow>((a, b) =>
@@ -162,7 +161,7 @@ async function loadFortnightLive(from: string, until: string): Promise<Fortnight
   const played = [...plays.entries()]
     .filter(([k, n]) => n > 0 && byKey.has(k))
     .sort((a, b) => b[1] - a[1] || (votes.get(b[0])?.users.size || 0) - (votes.get(a[0])?.users.size || 0))
-    .slice(0, TOP_N)
+    .slice(0, topN)
     .map(([k, n]) => toTrack(byKey.get(k)!, n))
 
   const voted = [...votes.entries()]
@@ -173,7 +172,7 @@ async function loadFortnightLive(from: string, until: string): Promise<Fortnight
         (plays.get(b[0]) || 0) - (plays.get(a[0]) || 0) ||
         byKey.get(a[0])!.title.localeCompare(byKey.get(b[0])!.title),
     )
-    .slice(0, TOP_N)
+    .slice(0, topN)
     .map(([k, v]) => toTrack(byKey.get(k)!, v.users.size))
 
   // «Lo que ha salido»: un tema por tarjeta (nunca un disco), lo más escuchado y votado primero.
@@ -192,9 +191,9 @@ async function loadFortnightLive(from: string, until: string): Promise<Fortnight
 }
 
 /** null si la BD falla: la página cae al recuento guardado en el digest. */
-export async function getFortnightLive(from: string, until: string): Promise<FortnightLive | null> {
+export async function getFortnightLive(from: string, until: string, topN = 10): Promise<FortnightLive | null> {
   try {
-    return await unstable_cache(() => loadFortnightLive(from, until), ['fortnight-live', from, until], {
+    return await unstable_cache(() => loadFortnightLive(from, until, topN), ['fortnight-live', from, until, String(topN)], {
       revalidate: 300,
       tags: [PUBLIC_CATALOG_CACHE_TAG],
     })()

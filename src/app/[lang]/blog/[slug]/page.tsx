@@ -108,7 +108,8 @@ export default async function BlogPostPage({ params }: Props) {
   const content = sanitizeHtml(rawContent || '')
   const excerpt = (safeLang === 'es' ? post.excerpt_es : post.excerpt_en) || null
   const storedDigest = post.digest?.copy ? post.digest : null
-  const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until) : null
+  const quarter = storedDigest?.kind === 'trimestre'
+  const live = storedDigest ? await getFortnightLive(storedDigest.from, storedDigest.until, quarter ? 20 : 10) : null
   const digest = storedDigest && live
     ? { ...storedDigest, released: live.released, played: live.played, voted: live.voted, votes_total: live.votes_total, voters_total: live.voters_total }
     : storedDigest
@@ -124,6 +125,13 @@ export default async function BlogPostPage({ params }: Props) {
     : ''
   const fortnightWeeks = (() => {
     if (!digest) return ''
+    if (quarter) {
+      const month = (iso: string) =>
+        new Date(`${iso}T12:00:00Z`).toLocaleDateString(safeLang === 'es' ? 'es-ES' : 'en-GB', { month: 'long', timeZone: 'UTC' })
+      return safeLang === 'es'
+        ? `semanas de ${month(digest.from)} a ${month(digest.until)}`
+        : `weeks from ${month(digest.from)} to ${month(digest.until)}`
+    }
     const d = new Date(`${digest.from}T12:00:00Z`)
     d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
     const out: string[] = []
@@ -288,6 +296,7 @@ export default async function BlogPostPage({ params }: Props) {
               stars: digest.top100.slice(0, 6).map((a) => ({ rank: a.rank, name: a.name, track: a.tracks[0]?.title || '', image: abs(a.image_url) })),
             }
           })(),
+          period: quarter ? ('QUARTER' as const) : undefined,
           from: digest.from,
           until: digest.until,
           totals: { ...digest.totals, prev: digest.totals.prev_tracks },
@@ -378,8 +387,8 @@ export default async function BlogPostPage({ params }: Props) {
           {digest && (
             <p className="text-[14px] leading-snug mb-3" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {safeLang === 'es'
-                ? `Una playlist con lo mejor de la quincena: las exclusivas, lo más escuchado y lo más votado en la web, y los temas nuevos de las estrellas del Top 100. Solo temas salidos del ${fortnightRange}.`
-                : `A playlist with the best of the fortnight: exclusives, the most played and most voted on the site, and new tracks by Top 100 stars. Only tracks released ${fortnightRange}.`}
+                ? `Una playlist con lo mejor ${quarter ? 'del trimestre' : 'de la quincena'}: las exclusivas, lo más escuchado y lo más votado en la web, y los temas nuevos de las estrellas del Top 100. Solo temas salidos del ${fortnightRange}.`
+                : `A playlist with the best of the ${quarter ? 'quarter' : 'fortnight'}: exclusives, the most played and most voted on the site, and new tracks by Top 100 stars. Only tracks released ${fortnightRange}.`}
             </p>
           )}
           <BeatportTopTracks
@@ -391,10 +400,10 @@ export default async function BlogPostPage({ params }: Props) {
             labelSlugMap={labelSlugMap}
             saveRefsByUrl={saveRefsByUrl}
             heading={
-              post.tags?.includes('quincena')
+              digest
                 ? safeLang === 'es'
-                  ? `LAS ${albumTracks.length} IMPRESCINDIBLES DE LA QUINCENA`
-                  : `THE FORTNIGHT'S ${albumTracks.length} ESSENTIALS`
+                  ? `LAS ${albumTracks.length} IMPRESCINDIBLES ${quarter ? 'DEL TRIMESTRE' : 'DE LA QUINCENA'}`
+                  : `THE ${quarter ? "QUARTER'S" : "FORTNIGHT'S"} ${albumTracks.length} ESSENTIALS`
                 : safeLang === 'es' ? 'ESCUCHAR EL ÁLBUM' : 'LISTEN TO THE ALBUM'
             }
             defaultExpanded
