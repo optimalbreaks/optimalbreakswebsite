@@ -1,0 +1,36 @@
+Alta editorial — JimmyP UB8 (18 oct 2026)
+=========================================
+
+No había ficha. El texto que pasa Narciso es la fuente.
+No hay nombre civil, ciudad ni país. country vacío, category current.
+era: 2025-present (el único lanzamiento documentado es de octubre 2025).
+
+Identidad
+---------
+- name / name_display: JimmyP UB8 / JIMMYP UB8
+- DJ y productor. Identidad en plataformas: UB8 Music.
+  No es un sello fundado: labels_founded vacío.
+- styles: Breakbeat, Breaks, UK Bass.
+- Sin beatport_id. La búsqueda no da una ficha /artist/ de JimmyP UB8.
+  Jimmy P (153053) es otra persona. No enlazarla.
+  El tema sí está en Beatport: /track/play-with-fire/20887867
+
+Play With Fire
+--------------
+- Con Afghan Headspin y Zenmonkey.
+- Break Beat Connection. Catálogo BBC037.
+- 15 octubre 2025. 140 BPM. Fa mayor. 3:53.
+  Clasificado Breaks / Breakbeat / UK Bass.
+- Episodio 5 de Breakbeat Transmissions, 28 octubre 2025, presenta SL 83.
+  Eso es una selección, no una colaboración: SL 83 no va a related.
+- Sesión de Miss Mants ligada a Stanton Sessions 2025. Tampoco es related.
+- También en The Best New Breaks October 2025 y en listados de
+  novedades de breaks de noviembre de 2025.
+
+related_artists: Afghan Headspin, Zenmonkey.
+Zenmonkey no tiene ficha (oct 2026).
+
+Sin retrato. Sin URLs de SoundCloud o YouTube: el texto las nombra
+y no hay una dirección verificada.
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
