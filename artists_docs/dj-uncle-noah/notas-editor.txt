@@ -1,0 +1,54 @@
+Alta editorial — DJ Uncle Noah (18 oct 2026)
+=============================================
+
+No había ficha. Beatport: dj-uncle-noah / 957912.
+El alta llega de un formulario de artista. El teléfono de ese formulario
+no se publica. El correo tampoco.
+
+Identidad
+---------
+- name / name_display: DJ Uncle Noah / DJ UNCLE NOAH
+- Santa Ana, California. Lo dice su Bandcamp (djunclenoah.bandcamp.com).
+  country US, category us_artist.
+- Desde los años ochenta, según su propio texto: funk, soul, rare groove
+  y electrónica. era: 1980s-present.
+- Programas en KDVS 90.3 FM (Davis) y KUCI 88.9 FM (Irvine).
+- styles de cabecera: Breakbeat, Electro, Funk.
+  Soul y rare groove van en el texto, como la base que él nombra,
+  no como etiquetas del catálogo reciente.
+- Nombre civil: no consta.
+
+Abduction Productions
+---------------------
+Su sello de publicación. California. El texto del proyecto:
+«Keeping West coast breaks alive since 1995».
+No se marca labels_founded: no consta que él lo fundara.
+Web del sello: https://abductionproductions1.bandcamp.com/
+SoundCloud e Instagram que él pasa son los del proyecto, no un perfil personal.
+
+Discografía comprobada
+----------------------
+- Suburban Shift — 31 dic 2020 — Abduction Productions, APCD001.
+  Ocho cortes. Dreams of Peace lleva a DJ Shortee (Bandcamp: feat. DJ Shortee;
+  Beatport acredita Shortee).
+- I and Me — 16 jun 2022 — Abduction — 125 BPM, mi mayor. Breaks.
+- Yes Yes — 14 sep 2023 — Abduction — 132 BPM, si menor.
+  También Yes Yes (Silver Bullet Edit). Silver Bullet no se trata como colaborador.
+- MIDI Music — 7 jun 2024 — con The Harem King — Abduction, APDO004.
+  136 BPM, la menor. En Beatport está como electro.
+- Dirty Kitchen Rave — con Javo Scratch — DIRTY KITCHEN RAVE.
+  WE ARE DKR Vol. 8, 15 ago 2025, 135 BPM.
+  El mismo tema reaparece en UNIVERSAL BREAKS Vol. 12, 2 dic 2025.
+
+related_artists: DJ Shortee, The Harem King, Javo Scratch.
+Ninguno de los tres tenía ficha con ese nombre exacto al darlo de alta
+(Javo Scratch puede existir con otra grafía: comprobar el chip).
+
+Enlaces que él pasa:
+- https://www.youtube.com/@dj_uncle_noah
+- https://soundcloud.com/abduction-productions
+- https://www.instagram.com/abduction__productions/
+- Beatport id 957912
+
+NO mencionar Optimal Breaks ni 40 Breaks Vitales.
+Sin retrato hasta poder leer el hero de Beatport.
