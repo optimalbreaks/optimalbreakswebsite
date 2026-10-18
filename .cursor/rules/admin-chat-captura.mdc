@@ -41,7 +41,7 @@ La identidad del vinilo al confirmar es `vinylIdentityKey` (`src/lib/share-track
 
 Un YouTube de **tema** no se archiva a ciegas (11 oct 2026): el servidor mira catálogo y Beatport (`routeYouTubeTracks`). Ya está → no se añade. Hay ficha → New Releases / archivo de tienda. Sin tienda → vinilo. Una sesión de más de 15 minutos sigue siendo mix.
 
-**Fecha (14 oct 2026):** un mix de YouTube sin `year` ni `published_at` sale en la ficha como «—». El servidor copia las dos de `publishDate` del vídeo y la duración de `lengthSeconds`. Si YouTube no responde, no se escribe `year: null` (eso borraba un año ya puesto). SoundCloud sigue usando su `created_at`.
+**Fecha (14 oct 2026):** un mix de YouTube sin `year` ni `published_at` sale en la ficha como «—». El servidor copia las dos de `publishDate` del vídeo y la duración de `lengthSeconds`. Si YouTube no responde, usa el día escrito en el título («18 October 2026», «23.04.25») y no escribe `year: null` ni `duration_minutes: null` (eso borraba lo ya puesto). SoundCloud sigue usando su `created_at`.
 
 **Duración (12 oct 2026):** un enlace de SoundCloud o YouTube de **15 minutos o menos nunca es un mix**, aunque el título diga set o sesión. Primero se mira si ya está en la web. Si no está, se mira la cola de lanzamientos del día (`chart_import_queue`): un pendiente de validación se contesta con «No te preocupes, que este tema ya está» y no entra en la aportación del colaborador. Lo cura el editor. Si no está en la cola, se busca en Beatport: si hay ficha, esa es la vía. SoundCloud o YouTube solo si la tienda no lo tiene.
 

@@ -623,6 +623,58 @@ async function youtubeWatchMeta(videoId: string): Promise<{
   }
 }
 
+const MIX_TITLE_MONTHS: Record<string, number> = {
+  january: 1,
+  febrero: 2,
+  february: 2,
+  march: 3,
+  marzo: 3,
+  april: 4,
+  abril: 4,
+  may: 5,
+  mayo: 5,
+  june: 6,
+  junio: 6,
+  july: 7,
+  julio: 7,
+  august: 8,
+  agosto: 8,
+  september: 9,
+  septiembre: 9,
+  setiembre: 9,
+  october: 10,
+  octubre: 10,
+  november: 11,
+  noviembre: 11,
+  december: 12,
+  diciembre: 12,
+  enero: 1,
+}
+
+function mixTitleUtcNoon(year: number, month: number, day: number): string | null {
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) return null
+  const d = new Date(Date.UTC(year, month - 1, day, 12))
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return null
+  return d.toISOString()
+}
+
+/** Si YouTube no devuelve el día, «18 October 2026» o «23.04.25» en el título sí cuentan. */
+function dateFromMixTitle(title: string): { year: number; publishedAt: string } | null {
+  const named = title.match(/\b(\d{1,2})(?:\s+de)?\s+([a-záéíóúñ]+)\s+(?:de\s+)?(\d{4})\b/i)
+  if (named) {
+    const month = MIX_TITLE_MONTHS[named[2].toLowerCase()]
+    const year = Number(named[3])
+    const publishedAt = month ? mixTitleUtcNoon(year, month, Number(named[1])) : null
+    if (publishedAt) return { year, publishedAt }
+  }
+  const numeric = title.match(/\b(\d{1,2})[./](\d{1,2})[./](\d{2,4})\b/)
+  if (!numeric) return null
+  let year = Number(numeric[3])
+  if (year < 100) year += 2000
+  const publishedAt = mixTitleUtcNoon(year, Number(numeric[2]), Number(numeric[1]))
+  return publishedAt ? { year, publishedAt } : null
+}
+
 /**
  * Título y artista de cada enlace de YouTube del mensaje, vía oEmbed
  * (el mismo dato que ve un reproductor). El canal «Artist - Topic» es el artista.
@@ -2329,6 +2381,14 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     if (fact?.createdAt && !publishedAt) publishedAt = fact.createdAt
   }
 
+  if (!publishedAt) {
+    const fromTitle = dateFromMixTitle(title)
+    if (fromTitle) {
+      publishedAt = fromTitle.publishedAt
+      if (year == null) year = fromTitle.year
+    }
+  }
+
   if (!PLATFORMS.has(platform)) platform = 'other'
   if (!MIX_TYPES.has(mix_type)) mix_type = platform === 'youtube' ? 'youtube_session' : 'classic_set'
 
@@ -2341,7 +2401,7 @@ async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Pr
     mix_type,
     platform,
     ...(year != null ? { year } : {}),
-    duration_minutes: durationMinutes,
+    ...(durationMinutes != null ? { duration_minutes: durationMinutes } : {}),
     video_url,
     embed_url,
     image_url,
