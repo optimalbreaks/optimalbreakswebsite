@@ -592,6 +592,71 @@ async function youtubeWatchMeta(videoId: string): Promise<{
   publishDate: string | null
   durationSeconds: number | null
 }> {
+  const player = await youtubePlayerMeta(videoId)
+  if (player.publishDate && player.durationSeconds) return player
+  const html = await youtubeHtmlMeta(videoId)
+  return {
+    year: player.year ?? html.year,
+    publishDate: player.publishDate ?? html.publishDate,
+    durationSeconds: player.durationSeconds ?? html.durationSeconds,
+  }
+}
+
+function youtubeMetaFromParts(rawDate: string | null, rawSeconds: number | null): {
+  year: number | null
+  publishDate: string | null
+  durationSeconds: number | null
+} {
+  const parsed = rawDate ? new Date(rawDate) : null
+  const publishDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null
+  const year = publishDate ? Number(publishDate.slice(0, 4)) : null
+  return {
+    year: year != null && year >= 1900 && year <= 2100 ? year : null,
+    publishDate,
+    durationSeconds:
+      rawSeconds != null && rawSeconds > 0 && rawSeconds < 12 * 60 * 60 ? rawSeconds : null,
+  }
+}
+
+/** JSON corto del reproductor. La página del vídeo pesa más de 1 MB y en Vercel a menudo llega sin el día. */
+async function youtubePlayerMeta(videoId: string): Promise<{
+  year: number | null
+  publishDate: string | null
+  durationSeconds: number | null
+}> {
+  const empty = { year: null, publishDate: null, durationSeconds: null }
+  try {
+    const res = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0',
+        'Accept-Language': 'en',
+      },
+      body: JSON.stringify({
+        videoId,
+        context: { client: { clientName: 'WEB', clientVersion: '2.20241018.01.00', hl: 'en', gl: 'US' } },
+      }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) return empty
+    const json = (await res.json()) as {
+      videoDetails?: { lengthSeconds?: string }
+      microformat?: { playerMicroformatRenderer?: { publishDate?: string; uploadDate?: string } }
+    }
+    const micro = json.microformat?.playerMicroformatRenderer
+    const seconds = Number(json.videoDetails?.lengthSeconds)
+    return youtubeMetaFromParts(micro?.publishDate || micro?.uploadDate || null, Number.isFinite(seconds) ? seconds : null)
+  } catch {
+    return empty
+  }
+}
+
+async function youtubeHtmlMeta(videoId: string): Promise<{
+  year: number | null
+  publishDate: string | null
+  durationSeconds: number | null
+}> {
   const empty = { year: null, publishDate: null, durationSeconds: null }
   try {
     const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
@@ -605,19 +670,8 @@ async function youtubeWatchMeta(videoId: string): Promise<{
     if (!res.ok) return empty
     const html = await res.text()
     const dateM = html.match(/"publishDate":"(\d{4}-\d{2}-\d{2}T[^"]+)"/)
-    const parsed = dateM ? new Date(dateM[1]) : null
-    const publishDate = parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null
-    const year = publishDate ? Number(publishDate.slice(0, 4)) : null
     const durM = html.match(/"lengthSeconds":"(\d+)"/)
-    const durationSeconds = durM ? Number(durM[1]) : null
-    return {
-      year: year != null && year >= 1900 && year <= 2100 ? year : null,
-      publishDate,
-      durationSeconds:
-        durationSeconds != null && durationSeconds > 0 && durationSeconds < 12 * 60 * 60
-          ? durationSeconds
-          : null,
-    }
+    return youtubeMetaFromParts(dateM?.[1] ?? null, durM ? Number(durM[1]) : null)
   } catch {
     return empty
   }
