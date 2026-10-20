@@ -62,7 +62,7 @@ export default async function CookiesPage({ params }: { params: Promise<{ lang: 
     },
     {
       t: '9. Contacto',
-      p: 'Para cualquier consulta sobre cookies o protección de datos, contacta con nosotros en info@optimalbreaks.com.',
+      p: 'El responsable de las cookies propias de este sitio es ESTUDIO TLBDECORADORES, S.L. (NIF B73825648), titular de la marca Optimal Breaks. Para cualquier consulta sobre cookies o protección de datos, contacta con nosotros en info@optimalbreaks.com.',
     },
   ] : [
     {
@@ -110,7 +110,7 @@ export default async function CookiesPage({ params }: { params: Promise<{ lang: 
     },
     {
       t: '9. Contact',
-      p: 'For any cookie or data protection inquiries, contact us at info@optimalbreaks.com.',
+      p: 'The party responsible for this site\'s own cookies is ESTUDIO TLBDECORADORES, S.L. (NIF B73825648), owner of the Optimal Breaks brand. For any cookie or data protection inquiries, contact us at info@optimalbreaks.com.',
     },
   ]
 

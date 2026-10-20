@@ -278,7 +278,7 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
             className="text-center text-xs font-medium text-[var(--text-muted)] sm:text-left"
             style={{ fontFamily: "'Courier Prime', monospace", letterSpacing: '0.06em' }}
           >
-            © {new Date().getFullYear()} Optimal Breaks
+            © {new Date().getFullYear()} Optimal Breaks · ESTUDIO TLBDECORADORES, S.L.
           </p>
         </div>
       </div>

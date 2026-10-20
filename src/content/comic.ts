@@ -127,6 +127,24 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
     },
   },
   {
+    img: 'pm_chato_murciano.jpg', fit: 'cover', big: true,
+    name: { es: 'El Chato Murciano', en: 'The Murcian Black Pig' },
+    role: { es: 'El Lechón, desde que volvió del Caribe', en: 'The Pig, ever since he got back from the Caribbean' },
+    text: {
+      es: 'Se fue al Caribe con Mar IA, se tumbó en la hamaca con su cóctel y dijo: «¿Crema? ¿Pa qué? Yo ya estoy morenito». Se durmió. Se despertó negro como el carbón, con el antifaz de las gafas y la marca de la riñonera. Desde entonces es un chato murciano de pura raza: el cerdo negro de Murcia. Y así se queda. Él dice que es «bronceado de festival».',
+      en: 'He went to the Caribbean with Mar IA, lay down on the hammock with his cocktail and said: “Sun cream? What for? I’m already tanned.” He fell asleep. He woke up black as coal, with a pink sunglasses mask and a bum-bag strap line. Since then he’s a pure-bred chato murciano, the black pig of Murcia. And that’s how he’s staying. He calls it a “festival tan”.',
+    },
+    alt: { es: 'El lechón quemado y negro en una playa del Caribe, con gafas en la mano, cascos, riñonera y un cóctel', en: 'The pig burnt black on a Caribbean beach, holding his sunglasses, with headphones, bum bag and a cocktail' },
+    quote: { es: '¿Crema? ¿Pa qué?', en: 'Sun cream? What for?' },
+    more: {
+      label: { es: 'Más sobre él', en: 'More about him' },
+      items: {
+        es: ['Cuando se quita las gafas, se le ve el antifaz rosa. No le hace gracia.', 'Ahora se pone de negro también el Super Lechón: negro con traje amarillo. «Combina».', 'En Murcia le paran por la calle para hacerse fotos. Él cree que es por famoso.'],
+        en: ['When he takes his sunglasses off you can see the pink mask. He doesn’t find it funny.', 'Super Pig is black now too: black with the yellow suit. “It matches.”', 'In Murcia people stop him in the street for photos. He thinks it’s because he’s famous.'],
+      },
+    },
+  },
+  {
     img: 'pm_super_lechon.jpg', fit: 'cover', big: true, tone: 'yellow',
     name: { es: 'Super Lechón', en: 'Super Pig' },
     role: { es: 'Cuando se suelta', en: 'When he lets go' },
@@ -297,18 +315,20 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
     alt: { es: 'El Pepino con un candelabro, mirando a otro lado y silbando', en: 'The Pickle holding a candelabra, looking away and whistling' },
   },
   {
-    img: 'pm_colectivo.jpg', fit: 'cover', big: true,
+    img: 'pm_colectivo_v2.jpg', fit: 'cover', big: true,
     name: { es: 'El Colectivo Optimal Breaks', en: 'The Optimal Breaks Collective' },
     role: { es: 'Los que eligen la música', en: 'The ones who pick the music' },
     text: {
-      es: 'Cada semana escuchan cientos de lanzamientos y eligen de oído el breakbeat de verdad. Son las máquinas de la música… pero no abren la boca: siempre al fondo, en fila, sin mover un músculo. Cuando el lechón hace spoiler del set, ellos ya lo sabían hace tres semanas.',
-      en: 'Every week they listen to hundreds of releases and pick the real breakbeat by ear. They are music machines… but they never say a word: always at the back, in a row, not moving a muscle. When the pig spoils the set, they knew it three weeks ago.',
+      es: 'De día, uno es asesor fiscal, otro mecánico, otro reponedor del súper… Al caer la noche se ponen las gafas de sol, suena un «clic» en el pinganillo y se convierten en las máquinas de la música: escuchan cientos de lanzamientos cada semana y eligen de oído el breakbeat de verdad. Siempre al fondo, en fila, sin abrir la boca. Cuando el lechón hace spoiler del set, ellos ya lo sabían hace tres semanas.',
+      en: 'By day, one is a tax adviser, another a mechanic, another works the supermarket till… When night falls they put on their sunglasses, there’s a «click» in the earpiece and they become music machines: they listen to hundreds of releases every week and pick the real breakbeat by ear. Always at the back, in a row, never saying a word. When the pig spoils the set, they knew it three weeks ago.',
     },
-    alt: { es: 'El Colectivo Optimal Breaks: seis expertos trajeados con gafas de sol y pinganillo, en formación', en: 'The Optimal Breaks Collective: six suited experts with sunglasses and earpieces, in formation' },
+    alt: { es: 'El Colectivo Optimal Breaks: cinco hombres y una mujer trajeados, con gafas de sol y pinganillo, en formación', en: 'The Optimal Breaks Collective: five men and one woman in suits, with sunglasses and earpieces, in formation' },
     more: {
       label: { es: 'Lo poco que se sabe de ellos', en: 'The little we know about them' },
       items: {
         es: [
+          'El Capitán es asesor fiscal; el Técnico, mecánico; la Archivista (la única chica), bibliotecaria; el de la Agenda conduce el autobús; el del Top 100 da clase de mates; el Novato trabaja en el súper.',
+          'El lechón le compra las patatas al Novato, le lleva el coche al Técnico y el Capitán le hace la renta… y no sabe que son ellos.',
           'No hablan. Se tocan el pinganillo y asienten.',
           'Cuando cae el drop, cabecean todos a la vez. Una sola vez. Es lo más cerca que han estado de bailar.',
           'Los canis los confunden con seguratas.',
@@ -317,6 +337,8 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
           'El Novato es el único al que, a veces, se le escapa una sonrisa.',
         ],
         en: [
+          'The Captain is a tax adviser; the Technician, a mechanic; the Archivist (the only woman), a librarian; the Agenda guy drives a city bus; the Top 100 guy teaches maths; the Rookie works at the supermarket.',
+          'The pig buys his crisps from the Rookie, takes his car to the Technician and gets his taxes done by the Captain… and has no idea it’s them.',
           'They don’t talk. They touch their earpiece and nod.',
           'When the drop hits, they all nod at once. Just once. It’s the closest they’ve ever come to dancing.',
           'The canis mistake them for bouncers.',
