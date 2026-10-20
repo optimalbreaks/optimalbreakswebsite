@@ -22,6 +22,10 @@ import {
   describeSoundCloudRoutes,
   soundCloudTrackAction,
   soundCloudUrlMatches,
+  assignCatalogSessionArtists,
+  loadArtistCreditRows,
+  resolveSessionArtistName,
+  stripAkaClauses,
   type ActionResult,
   type YouTubeTrackRoute,
   type ChatAction,
@@ -848,7 +852,18 @@ async function runTool(
     const parsed = normalizeChatActions([{ type: 'mix', ...args }])
     const action = parsed[0]
     if (!action || action.type !== 'mix') return { ok: false, detail: { error: 'mix inválido' } }
-    return stageChat(action, `Upsert mix «${action.title}» (${action.slug})`)
+    const rows = await loadArtistCreditRows()
+    const dj =
+      resolveSessionArtistName({ title: action.title, channel: action.artist_name, artists: rows }) ||
+      stripAkaClauses(action.artist_name)
+    if (dj && dj !== action.artist_name) {
+      const previous = action.artist_name
+      action.artist_name = dj
+      if (/aka/i.test(action.slug) || action.slug === toSlug(`${previous} ${action.title}`)) {
+        action.slug = toSlug(`${dj} ${action.title}`).slice(0, 80)
+      }
+    }
+    return stageChat(action, `Upsert mix «${action.title}» (${action.artist_name})`)
   }
 
   if (name === 'stage_new_releases') {
@@ -1515,8 +1530,9 @@ export async function runAdminChatAgent(opts: {
     system += `\nImágenes de este turno (Storage):\n${opts.attachedPublicUrls.map((u, i) => `${i + 1}. ${u}`).join('\n')}\n`
   }
   const youtubeFacts = await resolveYouTubeLinks(opts.message)
-  const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
   const soundCloudFacts = await resolveSoundCloudLinks(opts.message)
+  await assignCatalogSessionArtists(youtubeFacts, soundCloudFacts)
+  const youtubeRoutes = youtubeFacts.length ? await routeYouTubeTracks(youtubeFacts) : []
   const soundCloudRoutes = soundCloudFacts.length ? await routeSoundCloudTracks(soundCloudFacts) : []
   const vinylWeek = madridIsoWeekMonday()
   if (youtubeFacts.length) {

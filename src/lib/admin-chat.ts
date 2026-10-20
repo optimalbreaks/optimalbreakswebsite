@@ -8,6 +8,7 @@ import {
 } from '@/lib/beatport-next-data-tracks'
 import { collectBeatportArtistCredits } from '@/lib/remixer-credits'
 import { vinylIdentityKey } from '@/lib/share-track'
+import { normalizeArtistKey } from '@/lib/artist-slug-map'
 import { trackDisplayIdentityKey } from '@/lib/track-canonical-key'
 import { readFileSync, existsSync } from 'fs'
 import path from 'path'
@@ -567,6 +568,155 @@ function artistFromYouTubeChannel(channel: string): { artist: string; topic: boo
   return { artist: t, topic: false }
 }
 
+/** «Jan-B AKA Janbalik» → «Jan-B». El alias no es otro DJ. */
+export function stripAkaClauses(raw: string): string {
+  return raw
+    .replace(
+      /\s+a\.?\s*k\.?\s*a\.?\s+[^—–\-]+?(?=\s+[-—–]\s+|\s+(?:vs\.?|versus|b2b|feat\.?|ft\.?|featuring|x)\s+|$)/gi,
+      ' ',
+    )
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
+}
+
+const SESSION_WORD_STOP = new Set([
+  'live', 'set', 'sets', 'session', 'sessions', 'mix', 'mixes', 'podcast', 'radio',
+  'official', 'video', 'youtube', 'full', 'free', 'download', 'premiere', 'hd',
+  'audio', 'stream', 'livestream', 'dj', 'mc',
+])
+
+export type SessionArtistCredit = { name: string | null; name_display?: string | null }
+
+function sessionWords(raw: string): string[] {
+  return normalizeArtistKey(stripAkaClauses(raw)).split(/\s+/).filter(Boolean)
+}
+
+/** Trozo del título donde puede ir el DJ: el primero, o uno con vs / b2b / ft. */
+function sessionBillingMask(title: string, words: string[]): boolean[] {
+  const mask = words.map(() => false)
+  const clean = stripAkaClauses(title)
+  const parts = clean
+    .split(/\s+[—–]\s+|\s+-\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const mark = (chunk: string) => {
+    const chunkWords = sessionWords(chunk)
+    if (!chunkWords.length) return
+    for (let i = 0; i <= words.length - chunkWords.length; i++) {
+      if (chunkWords.every((w, k) => words[i + k] === w)) {
+        for (let k = 0; k < chunkWords.length; k++) mask[i + k] = true
+      }
+    }
+  }
+  // Sin guion, el título entero no es un cartel: «Love» no puede ganar a un set.
+  if (parts.length > 1 && parts[0]) mark(parts[0])
+  for (const part of parts.slice(1)) {
+    if (/\b(?:vs\.?|versus|b2b|feat\.?|ft\.?|featuring)\b/i.test(part) || /\s&\s/.test(part)) mark(part)
+  }
+  return mask
+}
+
+function sessionConnector(gap: string[]): string {
+  const g = ` ${gap.join(' ')} `
+  if (/\sb2b\s/.test(g)) return 'b2b'
+  if (/\svs\s|\sversus\s/.test(g)) return 'vs'
+  if (/\sfeat\s|\sfeaturing\s|\sft\s/.test(g)) return 'ft.'
+  if (/\sand\s|\sx\s/.test(g)) return '&'
+  return 'vs'
+}
+
+/**
+ * El DJ de una sesión es quien del catálogo aparece en el título.
+ * No el canal de YouTube y no el «AKA».
+ * Un nombre de una sola palabra solo cuenta en el cartel (antes del guion, o en un vs/b2b/ft).
+ * «Jan-B» y «Mr. Fli» cuentan en todo el título.
+ */
+export function resolveSessionArtistName(input: {
+  title: string
+  channel?: string | null
+  artists: SessionArtistCredit[]
+}): string {
+  const title = input.title.trim()
+  const words = sessionWords(title)
+  type Cand = { words: string[]; display: string }
+  const cands: Cand[] = []
+  const seenCand = new Set<string>()
+  for (const row of input.artists) {
+    const display = (row.name || '').trim()
+    if (!display) continue
+    for (const variant of [row.name, row.name_display]) {
+      const w = sessionWords(variant || '')
+      if (!w.length) continue
+      const joined = w.join(' ')
+      if (joined.length < 3) continue
+      if (w.length === 1 && SESSION_WORD_STOP.has(w[0]!)) continue
+      const key = `${joined}\0${display}`
+      if (seenCand.has(key)) continue
+      seenCand.add(key)
+      cands.push({ words: w, display })
+    }
+  }
+  cands.sort((a, b) => b.words.length - a.words.length || b.words.join(' ').length - a.words.join(' ').length)
+
+  const mask = words.length ? sessionBillingMask(title, words) : []
+  const hits: { index: number; end: number; display: string }[] = []
+  const used = new Set<number>()
+  const seenDisplay = new Set<string>()
+  for (let i = 0; i < words.length; i++) {
+    if (used.has(i)) continue
+    let best: Cand | null = null
+    for (const cand of cands) {
+      if (i + cand.words.length > words.length) continue
+      if (cand.words.length < 2 && !mask[i]) continue
+      let ok = true
+      for (let k = 0; k < cand.words.length; k++) {
+        if (used.has(i + k) || words[i + k] !== cand.words[k]) {
+          ok = false
+          break
+        }
+      }
+      if (!ok) continue
+      best = cand
+      break
+    }
+    if (!best) continue
+    for (let k = 0; k < best.words.length; k++) used.add(i + k)
+    const displayKey = normalizeArtistKey(best.display)
+    if (seenDisplay.has(displayKey)) continue
+    seenDisplay.add(displayKey)
+    hits.push({ index: i, end: i + best.words.length, display: best.display })
+  }
+  hits.sort((a, b) => a.index - b.index)
+  if (hits.length) {
+    const parts = [hits[0]!.display]
+    for (let n = 1; n < hits.length; n++) {
+      parts.push(sessionConnector(words.slice(hits[n - 1]!.end, hits[n]!.index)), hits[n]!.display)
+    }
+    return parts.join(' ')
+  }
+
+  const channel = stripAkaClauses(input.channel || '')
+  if (channel) {
+    const channelWords = sessionWords(channel)
+    const channelKey = channelWords.join(' ')
+    for (const cand of cands) {
+      if (cand.words.join(' ') === channelKey) return cand.display
+    }
+  }
+
+  const head = stripAkaClauses(title.split(/\s+[—–]\s+|\s+-\s+/)[0] || title)
+  return head && head.length <= 80 ? head : channel
+}
+
+export async function loadArtistCreditRows(): Promise<SessionArtistCredit[]> {
+  const sb = createServiceSupabase()
+  const { data, error } = await fetchAllRows<SessionArtistCredit>((from, to) =>
+    sb.from('artists').select('name, name_display').order('slug', { ascending: true }).range(from, to),
+  )
+  if (error) return []
+  return data
+}
+
 async function youtubeOembed(videoId: string): Promise<{
   title?: string
   author_name?: string
@@ -747,10 +897,10 @@ export async function resolveYouTubeLinks(text: string): Promise<YouTubeLinkFact
       const headed = rawTitle.match(/^(.{2,60}?)\s+[-–—]\s+(.+)$/)
       let title = ''
       let mixName = ''
-      let artist = channelArtist || channel
+      let artist = stripAkaClauses(channelArtist || channel)
       let label = ''
       if (headed && !topic) {
-        artist = headed[1].trim()
+        artist = stripAkaClauses(headed[1].trim()) || artist
         const song = splitYouTubeTitle(stripCatalogCode(headed[2]))
         title = song.title
         mixName = song.mixName
@@ -811,7 +961,7 @@ Estos datos son del enlace. PROHIBIDO decir que no puedes leer YouTube, que no p
 Un canal que acaba en « - Topic» es el artista (YouTube Music), no un DJ: es un tema, no una sesión.
 Si la duración es de 15 minutos o menos, es un tema aunque el título diga set, live o sesión. PROHIBIDO stage_upsert_mix.
 - tipo=tema: stage_vinyl_picks EN ESTE TURNO. week_date=${weekDate} (contenedor; el año público es el campo year). items con title, mix_name, artists:[{name}], youtube_url, artwork_url y year si no es desconocido.
-- tipo=sesión: stage_upsert_mix EN ESTE TURNO con title, artist_name y video_url de aquí.
+- tipo=sesión: stage_upsert_mix EN ESTE TURNO con title, artist_name y video_url de aquí. artist_name es el DJ del campo «artista» (quien del catálogo coincide con el título). PROHIBIDO el nombre del canal. PROHIBIDO «AKA» y cualquier alias.
 No conviertas un tema en mix.
 
 ${lines.join('\n')}
@@ -991,7 +1141,7 @@ export async function resolveSoundCloudLinks(text: string): Promise<SoundCloudLi
           mixName: parsed.mixName,
           artist:
             kind === 'session'
-              ? author || parsed.artists[0]?.name || 'Unknown'
+              ? stripAkaClauses(parsed.artists[0]?.name || author || 'Unknown')
               : parsed.artists[0]?.name || author || 'Unknown',
           artists: parsed.artists,
           label: parsed.label,
@@ -1057,7 +1207,7 @@ export function soundCloudFactsPrompt(facts: SoundCloudLinkFact[]): string {
 Un audio de 15 minutos o menos es un tema, nunca un mix, aunque el título diga set o sesión.
 Orden: primero si ya está en la web (cualquier vía). Si ya está, no se añade. Si no está, se busca en Beatport. SoundCloud solo si Beatport no lo tiene.
 - tipo=tema: no llames a stage_upsert_mix.
-- tipo=sesión: stage_upsert_mix con embed_url de aquí, platform soundcloud.
+- tipo=sesión: stage_upsert_mix con embed_url de aquí, platform soundcloud. artist_name es el DJ que coincide con el catálogo en el título. PROHIBIDO el nombre de la cuenta y PROHIBIDO «AKA».
 
 ${lines.join('\n')}
 `
@@ -2345,10 +2495,36 @@ async function upsertEventAction(
   }
 }
 
+/** Sesión: el artista del pending es el DJ del catálogo, no el canal ni el AKA. */
+export async function assignCatalogSessionArtists(
+  youtube: YouTubeLinkFact[],
+  soundcloud: SoundCloudLinkFact[],
+): Promise<void> {
+  const needs = youtube.some((f) => f.kind === 'session') || soundcloud.some((f) => f.kind === 'session')
+  if (!needs) return
+  const rows = await loadArtistCreditRows()
+  const apply = (title: string, channel: string, current: string) =>
+    (rows.length
+      ? resolveSessionArtistName({ title, channel, artists: rows })
+      : '') || stripAkaClauses(current)
+  for (const fact of youtube) {
+    if (fact.kind !== 'session') continue
+    fact.artist = apply(fact.rawTitle || fact.title, fact.channel, fact.artist)
+  }
+  for (const fact of soundcloud) {
+    if (fact.kind !== 'session') continue
+    fact.artist = apply(fact.rawTitle || fact.title, fact.artist, fact.artist)
+  }
+}
+
 async function upsertMixAction(action: Extract<ChatAction, { type: 'mix' }>): Promise<ActionResult> {
   const slug = toSlug(action.slug || action.title)
   const title = String(action.title || '').trim()
-  const artist_name = String(action.artist_name || '').trim()
+  const suppliedArtist = String(action.artist_name || '').trim()
+  const catalogArtists = await loadArtistCreditRows()
+  const artist_name =
+    resolveSessionArtistName({ title, channel: suppliedArtist, artists: catalogArtists }) ||
+    stripAkaClauses(suppliedArtist)
   if (!slug || !title) {
     return { type: 'mix', ok: false, summary: 'Faltan slug o title' }
   }
