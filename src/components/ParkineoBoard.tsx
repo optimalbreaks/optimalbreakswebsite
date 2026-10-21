@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import ParkineoPlayer, { type ParkineoPlayable } from '@/components/ParkineoPlayer'
@@ -16,6 +16,26 @@ export type ParkineoListItem = ParkineoPlayable & {
 }
 
 const MONO = { fontFamily: "'Courier Prime', monospace" } as const
+const DISPLAY = { fontFamily: "'Unbounded', sans-serif", fontWeight: 900, textTransform: 'uppercase' } as const
+const BTN =
+  'inline-block border-[3px] border-[var(--ink)] px-5 py-3 no-underline shadow-[4px_4px_0_var(--ink)] transition-transform hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-[6px_6px_0_var(--ink)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_var(--ink)]'
+
+const PLATFORMS = [
+  { id: 'soundcloud', label: 'SoundCloud', re: /^(www\.|m\.|on\.)?soundcloud\.com$/i, bg: '#ff5500' },
+  { id: 'youtube', label: 'YouTube', re: /^((www\.|m\.|music\.)?youtube\.com|youtu\.be)$/i, bg: '#d62828' },
+  { id: 'mixcloud', label: 'Mixcloud', re: /^(www\.)?mixcloud\.com$/i, bg: '#5000ff' },
+] as const
+
+function detectPlatform(raw: string) {
+  const v = raw.trim()
+  if (!v) return null
+  try {
+    const host = new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`).hostname
+    return PLATFORMS.find((p) => p.re.test(host)) ?? 'other'
+  } catch {
+    return 'other'
+  }
+}
 
 export default function ParkineoBoard({
   lang,
@@ -35,6 +55,7 @@ export default function ParkineoBoard({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasPending, setHasPending] = useState(false)
+  const [justSent, setJustSent] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -77,6 +98,7 @@ export default function ParkineoBoard({
         return
       }
       setHasPending(true)
+      setJustSent(true)
       setTitle('')
       setUrl('')
       setConfirm(false)
@@ -88,121 +110,214 @@ export default function ParkineoBoard({
   }
 
   const shown = sessions.slice(0, visible)
-  const loginHref = `/${lang}/login?next=${encodeURIComponent(`/${lang}/parkineo`)}`
+  const loginHref = `/${lang}/login?next=${encodeURIComponent(`/${lang}/parkineo#mandar`)}`
   const artistHref = user ? `/${lang}/mi-cuenta/artista` : `/${lang}/login?next=${encodeURIComponent(`/${lang}/mi-cuenta/artista`)}`
+  const platform = detectPlatform(url)
+  const ready = djName.trim() && city.trim() && title.trim() && url.trim() && confirm && platform !== 'other'
+
+  const steps = es
+    ? [
+        { n: '01', t: 'Cuélgala', d: 'En SoundCloud, YouTube o Mixcloud. Puede estar oculta: el archivo no se sube aquí.' },
+        { n: '02', t: 'Pega el enlace', d: 'Con tu cuenta, la misma de guardar temas. De 15 minutos a 3 horas: un tema suelto no es una sesión.' },
+        { n: '03', t: 'La escuchamos', d: 'Si entra, sale en la lista con tu nombre de DJ. El estado lo ves en tu cuenta.' },
+      ]
+    : [
+        { n: '01', t: 'Upload it', d: 'To SoundCloud, YouTube or Mixcloud. It can be hidden: the file is never uploaded here.' },
+        { n: '02', t: 'Paste the link', d: 'With your account, the same one you use to save tracks. 15 minutes to 3 hours: a single track is not a session.' },
+        { n: '03', t: 'We listen', d: 'If it goes in, it shows up in the list under your DJ name. You can check its status in your account.' },
+      ]
 
   return (
     <div>
-      <section id="mandar" className="px-4 sm:px-6 py-10 sm:py-12 border-b-[5px] border-[var(--ink)]">
-        <div className="max-w-[760px]">
-          {loading ? null : user ? (
-            hasPending ? (
-              <p className="m-0 border-4 border-[var(--ink)] bg-[var(--yellow)] p-4" style={{ ...MONO, fontSize: '14px', lineHeight: 1.6 }}>
-                {es
-                  ? 'Tienes una sesión en cola. Cuando la escuchemos podrás mandar otra.'
-                  : 'You have a session in the queue. You can send another once we have listened.'}{' '}
-                <Link href={`/${lang}/mi-cuenta/parkineo`} className="text-[var(--red)]">
-                  {es ? 'Ver la tuya' : 'See yours'}
-                </Link>
-              </p>
-            ) : (
-              <form
-                className="border-4 border-[var(--ink)] bg-[var(--paper)] p-4 sm:p-6 shadow-[6px_6px_0_var(--ink)]"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (!busy) void submit()
-                }}
-              >
-                <h2 className="m-0 mb-4" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '22px', textTransform: 'uppercase' }}>
-                  {es ? 'Manda tu sesión' : 'Send your session'}
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label={es ? 'Nombre de DJ' : 'DJ name'} value={djName} onChange={setDjName} maxLength={60} />
-                  <Field label={es ? 'Ciudad' : 'City'} value={city} onChange={setCity} maxLength={60} />
-                </div>
-                <div className="mt-3">
-                  <Field label={es ? 'Título de la sesión' : 'Session title'} value={title} onChange={setTitle} maxLength={120} />
-                </div>
-                <div className="mt-3">
-                  <Field label={es ? 'Enlace de SoundCloud, YouTube o Mixcloud' : 'SoundCloud, YouTube or Mixcloud link'} value={url} onChange={setUrl} maxLength={500} />
-                </div>
-                <label className="mt-4 flex items-start gap-3 cursor-pointer" style={{ ...MONO, fontSize: '13px', lineHeight: 1.5 }}>
-                  <input
-                    type="checkbox"
-                    checked={confirm}
-                    onChange={(e) => setConfirm(e.target.checked)}
-                    className="mt-1 h-4 w-4 accent-[var(--red)]"
-                  />
-                  <span>
-                    {es
-                      ? 'Esta sesión la he pinchado yo. Optimal Breaks puede no publicarla o quitarla.'
-                      : 'I mixed this session. Optimal Breaks may choose not to publish it, or take it down.'}
+      <section id="mandar" className="scroll-mt-24 px-4 sm:px-6 py-12 sm:py-16 border-b-[5px] border-[var(--ink)] bg-[var(--ink)]">
+        <div className="mx-auto max-w-[1280px] grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
+          <div>
+            <h2 className="m-0 text-[var(--yellow)]" style={{ ...DISPLAY, fontSize: 'clamp(26px, 4vw, 44px)', lineHeight: 1, letterSpacing: '-1px' }}>
+              {es ? 'Cómo se manda' : 'How to send it'}
+            </h2>
+            <ol className="mt-8 mb-0 p-0 list-none grid gap-4">
+              {steps.map((s) => (
+                <li key={s.n} className="flex gap-4 border-[3px] border-[var(--paper)] bg-[var(--ink)] p-4">
+                  <span className="shrink-0 text-[var(--red)]" style={{ ...DISPLAY, fontSize: '30px', lineHeight: 1 }}>
+                    {s.n}
                   </span>
-                </label>
-                {error ? (
-                  <p className="mt-3 mb-0 p-3 bg-[var(--red)] text-white" style={{ ...MONO, fontSize: '13px' }}>{error}</p>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="mt-4 border-[3px] border-[var(--ink)] bg-[var(--red)] px-4 py-3 text-white cursor-pointer disabled:opacity-60"
-                  style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase' }}
+                  <span>
+                    <span className="block text-[var(--paper)]" style={{ ...DISPLAY, fontSize: '17px', lineHeight: 1.2 }}>
+                      {s.t}
+                    </span>
+                    <span className="mt-1 block text-[var(--paper)] opacity-80" style={{ ...MONO, fontSize: '14px', lineHeight: 1.55 }}>
+                      {s.d}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <ul className="mt-5 mb-0 p-0 list-none flex flex-wrap gap-2" aria-label={es ? 'Plataformas admitidas' : 'Supported platforms'}>
+              {PLATFORMS.map((p) => (
+                <li key={p.id} className="border-2 border-[var(--paper)] px-2 py-1 text-white" style={{ ...MONO, fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', background: p.bg }}>
+                  {p.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            {loading ? (
+              <div className="h-[320px] border-4 border-[var(--paper)] opacity-30" aria-hidden="true" />
+            ) : user ? (
+              hasPending ? (
+                <div className="border-4 border-[var(--ink)] bg-[var(--yellow)] p-5 sm:p-6 shadow-[8px_8px_0_var(--red)]">
+                  <p className="m-0" style={{ ...DISPLAY, fontSize: '20px', lineHeight: 1.15 }}>
+                    {justSent ? (es ? '¡Recibida!' : 'Got it!') : es ? 'Tienes una en cola' : 'You have one in the queue'}
+                  </p>
+                  <p className="mt-3 mb-0" style={{ ...MONO, fontSize: '15px', lineHeight: 1.6 }}>
+                    {es
+                      ? 'Cuando la escuchemos podrás mandar otra. El estado lo ves en tu cuenta.'
+                      : 'You can send another once we have listened. You can check its status in your account.'}
+                  </p>
+                  <Link href={`/${lang}/mi-cuenta/parkineo`} className={`${BTN} mt-5 bg-[var(--ink)] text-[var(--yellow)]`} style={{ ...DISPLAY, fontSize: '13px', letterSpacing: '1px' }}>
+                    {es ? 'Ver la mía →' : 'See mine →'}
+                  </Link>
+                </div>
+              ) : (
+                <form
+                  className="border-4 border-[var(--ink)] bg-[var(--paper)] p-5 sm:p-7 shadow-[8px_8px_0_var(--red)]"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (!busy && ready) void submit()
+                  }}
                 >
-                  {busy ? (es ? 'Leyendo el enlace…' : 'Reading the link…') : es ? 'Mandar sesión' : 'Send session'}
-                </button>
-              </form>
-            )
-          ) : (
-            <div className="border-4 border-[var(--ink)] bg-[var(--yellow)] p-5 shadow-[6px_6px_0_var(--ink)]">
-              <p className="m-0" style={{ ...MONO, fontSize: '15px', lineHeight: 1.6 }}>
-                {es
-                  ? 'Para mandarla tienes que entrar. La lista se ve igual sin cuenta. No hace falta ser artista.'
-                  : 'Sending one means signing in. The list is there either way. You do not need to be an artist on the site.'}
-              </p>
-              <Link
-                href={loginHref}
-                className="mt-4 inline-block border-[3px] border-[var(--ink)] bg-[var(--red)] px-4 py-3 text-white no-underline"
-                style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase' }}
-              >
-                {es ? 'Entrar y mandar' : 'Sign in and send'}
+                  <h3 className="m-0 mb-5" style={{ ...DISPLAY, fontSize: '22px', lineHeight: 1.1 }}>
+                    {es ? 'Manda tu sesión' : 'Send your session'}
+                  </h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label={es ? 'Nombre de DJ' : 'DJ name'} value={djName} onChange={setDjName} maxLength={60} placeholder={es ? 'DJ Lechón' : 'DJ Piglet'} autoComplete="nickname" />
+                    <Field label={es ? 'Ciudad' : 'City'} value={city} onChange={setCity} maxLength={60} placeholder={es ? 'Murcia' : 'Bristol'} autoComplete="address-level2" />
+                  </div>
+                  <div className="mt-4">
+                    <Field label={es ? 'Título de la sesión' : 'Session title'} value={title} onChange={setTitle} maxLength={120} placeholder={es ? 'Sesión de parking, octubre' : 'Car park session, October'} />
+                  </div>
+                  <div className="mt-4">
+                    <Field
+                      label={es ? 'Enlace de SoundCloud, YouTube o Mixcloud' : 'SoundCloud, YouTube or Mixcloud link'}
+                      value={url}
+                      onChange={setUrl}
+                      maxLength={500}
+                      placeholder="https://soundcloud.com/…"
+                      inputMode="url"
+                      hint={
+                        platform === null ? null : platform === 'other' ? (
+                          <span className="text-[var(--red)]">{es ? 'Ese enlace no es de SoundCloud, YouTube ni Mixcloud.' : 'That link is not SoundCloud, YouTube or Mixcloud.'}</span>
+                        ) : (
+                          <span>✓ {platform.label}</span>
+                        )
+                      }
+                    />
+                  </div>
+                  <label className="mt-5 flex items-start gap-3 cursor-pointer" style={{ ...MONO, fontSize: '13px', lineHeight: 1.5 }}>
+                    <input
+                      type="checkbox"
+                      checked={confirm}
+                      onChange={(e) => setConfirm(e.target.checked)}
+                      className="mt-[2px] h-5 w-5 shrink-0 accent-[var(--red)]"
+                    />
+                    <span>
+                      {es
+                        ? 'Esta sesión la he pinchado yo. Optimal Breaks puede no publicarla o quitarla.'
+                        : 'I mixed this session. Optimal Breaks may choose not to publish it, or take it down.'}
+                    </span>
+                  </label>
+                  {error ? (
+                    <p role="alert" className="mt-4 mb-0 p-3 bg-[var(--red)] text-white" style={{ ...MONO, fontSize: '13px' }}>{error}</p>
+                  ) : null}
+                  <button
+                    type="submit"
+                    disabled={busy || !ready}
+                    className={`${BTN} mt-5 w-full sm:w-auto bg-[var(--red)] text-white cursor-pointer`}
+                    style={{ ...DISPLAY, letterSpacing: '1px' }}
+                  >
+                    {busy ? (es ? 'Leyendo el enlace…' : 'Reading the link…') : es ? 'Mandar sesión' : 'Send session'}
+                  </button>
+                  {!ready && !busy ? (
+                    <p className="mt-3 mb-0 opacity-70" style={{ ...MONO, fontSize: '12px' }}>
+                      {es ? 'Rellena los cuatro campos y marca la casilla.' : 'Fill in the four fields and tick the box.'}
+                    </p>
+                  ) : null}
+                </form>
+              )
+            ) : (
+              <div className="border-4 border-[var(--ink)] bg-[var(--yellow)] p-5 sm:p-7 shadow-[8px_8px_0_var(--red)]">
+                <p className="m-0" style={{ ...DISPLAY, fontSize: 'clamp(20px, 2.6vw, 26px)', lineHeight: 1.1 }}>
+                  {es ? 'Entra y manda la tuya' : 'Sign in and send yours'}
+                </p>
+                <p className="mt-3 mb-0" style={{ ...MONO, fontSize: '15px', lineHeight: 1.6 }}>
+                  {es
+                    ? 'Con la misma cuenta de guardar temas. No hace falta ser artista. Para escuchar no necesitas cuenta.'
+                    : 'With the same account you use to save tracks. You do not need to be an artist. Listening needs no account.'}
+                </p>
+                <Link href={loginHref} className={`${BTN} mt-5 bg-[var(--red)] text-white`} style={{ ...DISPLAY, letterSpacing: '1px' }}>
+                  {es ? 'Entrar y mandar →' : 'Sign in and send →'}
+                </Link>
+              </div>
+            )}
+            <p className="mt-6 mb-0 text-[var(--paper)] opacity-75" style={{ ...MONO, fontSize: '13px', lineHeight: 1.7 }}>
+              {es
+                ? 'Esto no es una ficha de artista ni abre bookings. Si ya sacas temas y quieres estar en Artistas, eso se pide aparte.'
+                : 'This is not an artist profile and it does not open bookings. If you already release tracks and want an Artists page, ask for that separately.'}{' '}
+              <Link href={artistHref} className="text-[var(--yellow)]">
+                {es ? 'Solicitar ficha →' : 'Request a profile →'}
               </Link>
-            </div>
-          )}
-          <p className="mt-6 mb-0" style={{ ...MONO, fontSize: '13px', lineHeight: 1.7, color: 'var(--dim)' }}>
-            {es
-              ? 'Esto no es una ficha de artista ni abre bookings. Si ya sacas temas y quieres estar en Artistas, eso se pide aparte desde tu cuenta.'
-              : 'This is not an artist profile and it does not open bookings. If you already release tracks and want an Artists page, ask for that separately from your account.'}{' '}
-            <Link href={artistHref} className="text-[var(--red)]">
-              {es ? 'Solicitar ficha' : 'Request a profile'}
-            </Link>
-          </p>
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 py-10 sm:py-12">
-        {sessions.length === 0 ? (
-          <p className="m-0 max-w-[640px]" style={{ ...MONO, fontSize: '16px', lineHeight: 1.7 }}>
-            {es ? 'Aún no hay sesiones. La primera puede ser la tuya.' : 'No sessions yet. The first one can be yours.'}
-          </p>
-        ) : (
-          <>
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {shown.map((session) => (
-                <ParkineoCard key={session.id} session={session} lang={lang} />
-              ))}
-            </div>
-            {visible < sessions.length ? (
-              <button
-                type="button"
-                onClick={() => setVisible((n) => n + PAGE)}
-                className="mt-8 border-[3px] border-[var(--ink)] bg-[var(--paper)] px-4 py-3 cursor-pointer"
-                style={{ ...MONO, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}
-              >
-                {es ? 'Ver más' : 'Show more'}
-              </button>
+      <section id="sesiones" className="scroll-mt-24 px-4 sm:px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-[1280px]">
+          <div className="mb-8 flex flex-wrap items-end gap-4">
+            <h2 className="m-0" style={{ ...DISPLAY, fontSize: 'clamp(26px, 4vw, 44px)', lineHeight: 1, letterSpacing: '-1px' }}>
+              {es ? 'Las sesiones' : 'The sessions'}
+            </h2>
+            {sessions.length > 0 ? (
+              <span className="border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-2 py-1" style={{ ...MONO, fontSize: '13px', fontWeight: 700 }}>
+                {sessions.length}
+              </span>
             ) : null}
-          </>
-        )}
+          </div>
+          {sessions.length === 0 ? (
+            <div className="border-4 border-dashed border-[var(--ink)] bg-[var(--paper)] px-5 py-10 sm:px-10 sm:py-14 text-center">
+              <p className="m-0" style={{ ...DISPLAY, fontSize: 'clamp(22px, 3.2vw, 34px)', lineHeight: 1.1 }}>
+                {es ? 'El parking está vacío' : 'The car park is empty'}
+              </p>
+              <p className="mx-auto mt-3 mb-0 max-w-[520px]" style={{ ...MONO, fontSize: '15px', lineHeight: 1.6 }}>
+                {es ? 'Todavía no hay sesiones publicadas. La primera que suene aquí puede ser la tuya.' : 'No sessions published yet. The first one to play here can be yours.'}
+              </p>
+              <a href="#mandar" className={`${BTN} mt-6 bg-[var(--red)] text-white`} style={{ ...DISPLAY, fontSize: '14px', letterSpacing: '1px' }}>
+                {es ? 'Mandar la primera ↑' : 'Send the first one ↑'}
+              </a>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {shown.map((session) => (
+                  <ParkineoCard key={session.id} session={session} lang={lang} />
+                ))}
+              </div>
+              {visible < sessions.length ? (
+                <div className="mt-10 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisible((n) => n + PAGE)}
+                    className={`${BTN} bg-[var(--paper)] text-[var(--ink)] cursor-pointer`}
+                    style={{ ...MONO, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}
+                  >
+                    {es ? `Ver más (${sessions.length - visible})` : `Show more (${sessions.length - visible})`}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
       </section>
     </div>
   )
@@ -213,25 +328,29 @@ function ParkineoCard({ session, lang }: { session: ParkineoListItem; lang: stri
   const href = parkineoOpenHref(session)
   const platform = session.platform.toUpperCase()
   return (
-    <article id={`parkineo-${session.id}`} className="border-4 border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)] overflow-hidden">
+    <article
+      id={`parkineo-${session.id}`}
+      className="flex flex-col border-4 border-[var(--ink)] bg-[var(--paper)] shadow-[6px_6px_0_var(--ink)] overflow-hidden transition-transform hover:-translate-y-1"
+    >
       <ParkineoPlayer session={session} />
-      <div className="p-3 sm:p-4">
+      <div className="flex flex-1 flex-col p-4">
         <h3 className="m-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: '18px', lineHeight: 1.15, textTransform: 'uppercase' }}>
           <Link href={`/${lang}/parkineo/${session.slug}`} className="text-inherit no-underline hover:text-[var(--red)]">
             {session.title}
           </Link>
         </h3>
-        <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '12px', letterSpacing: '0.5px', lineHeight: 1.5 }}>
-          {session.dj_name} · {session.city} · {session.duration_minutes} min · {platform}
-          {href ? (
-            <>
-              {' · '}
-              <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--red)]">
-                {es ? 'Abrir' : 'Open'} ↗
-              </a>
-            </>
-          ) : null}
+        <p className="mt-2 mb-0" style={{ ...MONO, fontSize: '14px', fontWeight: 700 }}>
+          {session.dj_name} <span className="font-normal opacity-70">· {session.city}</span>
         </p>
+        <div className="mt-auto pt-4 flex flex-wrap items-center gap-2" style={{ ...MONO, fontSize: '11px', fontWeight: 700, letterSpacing: '1px' }}>
+          <span className="border-2 border-[var(--ink)] bg-[var(--yellow)] px-2 py-[2px]">{session.duration_minutes} MIN</span>
+          <span className="border-2 border-[var(--ink)] px-2 py-[2px]">{platform}</span>
+          {href ? (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="ml-auto text-[var(--red)]">
+              {es ? 'Abrir' : 'Open'} ↗
+            </a>
+          ) : null}
+        </div>
       </div>
     </article>
   )
@@ -242,11 +361,19 @@ function Field({
   value,
   onChange,
   maxLength,
+  placeholder,
+  autoComplete,
+  inputMode,
+  hint,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   maxLength: number
+  placeholder?: string
+  autoComplete?: string
+  inputMode?: 'url' | 'text'
+  hint?: ReactNode
 }) {
   return (
     <label className="block">
@@ -254,10 +381,19 @@ function Field({
       <input
         value={value}
         maxLength={maxLength}
+        required
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        inputMode={inputMode}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full border-[3px] border-[var(--ink)] bg-[var(--paper)] px-3 py-2 outline-none focus:border-[var(--red)]"
-        style={{ ...MONO, fontSize: '14px' }}
+        className="mt-1 w-full border-[3px] border-[var(--ink)] bg-white px-3 py-3 outline-none placeholder:text-[#9a9384] focus:border-[var(--red)] focus:shadow-[3px_3px_0_var(--ink)]"
+        style={{ ...MONO, fontSize: '16px' }}
       />
+      {hint ? (
+        <span className="mt-1 block" style={{ ...MONO, fontSize: '12px', fontWeight: 700 }}>
+          {hint}
+        </span>
+      ) : null}
     </label>
   )
 }
