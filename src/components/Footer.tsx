@@ -148,7 +148,7 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
               </Link>
               <Link
                 href={`/${lang}/top100`}
-                className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-white bg-[var(--red)] px-4 text-white no-underline shadow-[4px_4px_0_var(--yellow)] hover:bg-white hover:text-[var(--red)] sm:flex-none sm:px-6"
+                className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-white bg-[var(--orange)] px-4 text-white no-underline shadow-[4px_4px_0_var(--yellow)] hover:bg-white hover:text-[var(--orange)] sm:flex-none sm:px-6"
                 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
               >
                 {topLabel}

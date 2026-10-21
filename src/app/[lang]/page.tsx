@@ -124,7 +124,7 @@ function DoorButtons({ lang, tracks, top, onRed = false }: { lang: Locale; track
       </Link>
       <Link
         href={`/${lang}/top100`}
-        className={`${DOOR_BTN} ${onRed ? 'bg-white text-[var(--red)]' : 'bg-[var(--red)] text-white'}`}
+        className={`${DOOR_BTN} ${onRed ? 'bg-white text-[var(--red)]' : 'bg-[var(--orange)] text-white'}`}
         style={DOOR_BTN_STYLE}
       >
         {top}

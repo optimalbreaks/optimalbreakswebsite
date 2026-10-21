@@ -257,14 +257,16 @@ export default function Header({ dict, lang }: HeaderProps) {
   const navActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
   const navLinkStyle = (key: string, href: string) => {
     const on = navActive(href)
+    // Tracks en amarillo y Top 100 en naranja para destacarlos. El rojo es
+    // solo la página en la que estás: si el Top 100 nace en rojo, parece abierto.
     let color = on ? 'white' : 'var(--ink)'
     let background = on ? 'var(--red)' : 'transparent'
     if (key === 'charts') {
       color = on ? 'white' : 'var(--ink)'
       background = on ? 'var(--red)' : 'var(--yellow)'
     } else if (key === 'top100') {
-      color = on ? 'var(--ink)' : 'white'
-      background = on ? 'var(--yellow)' : 'var(--red)'
+      color = 'white'
+      background = on ? 'var(--red)' : 'var(--orange)'
     }
     return {
       fontFamily: "'Courier Prime', monospace",
@@ -528,21 +530,24 @@ function MobileNavPanel({
         <div className="mt-3 grid grid-cols-2 gap-3">
           {doorsItems.map((item) => {
             const on = active(item.href)
-            const yellow = item.key === 'charts'
+            const charts = item.key === 'charts'
+            const resting = charts
+              ? 'bg-[var(--yellow)] text-[var(--ink)] shadow-[6px_6px_0_var(--yellow)] active:shadow-[3px_3px_0_var(--yellow)]'
+              : 'bg-[var(--orange)] text-white shadow-[6px_6px_0_var(--orange)] active:shadow-[3px_3px_0_var(--orange)]'
             return (
               <Link
                 key={item.key}
                 href={item.href}
                 onClick={onClose}
                 className={`flex min-h-[4.75rem] flex-col justify-between border-[3px] border-[var(--ink)] px-3 py-2 no-underline active:translate-x-[2px] active:translate-y-[2px] ${
-                  yellow
-                    ? 'bg-[var(--yellow)] text-[var(--ink)] shadow-[6px_6px_0_var(--yellow)] active:shadow-[3px_3px_0_var(--yellow)]'
-                    : 'bg-[var(--red)] text-white shadow-[6px_6px_0_var(--red)] active:shadow-[3px_3px_0_var(--red)]'
+                  on
+                    ? 'bg-[var(--red)] text-white shadow-[6px_6px_0_var(--red)] active:shadow-[3px_3px_0_var(--red)]'
+                    : resting
                 }`}
                 style={MENU_FACE}
               >
                 <span style={{ ...MENU_META, fontSize: '9px', opacity: 0.8 }}>
-                  {on ? here : yellow ? '01' : '02'}
+                  {on ? here : charts ? '01' : '02'}
                 </span>
                 <span style={{ fontSize: '15px', letterSpacing: '0.4px', lineHeight: 1 }}>{dict.nav[item.key]}</span>
               </Link>
@@ -596,14 +601,14 @@ function ListenStrip({ lang, dict, pathname }: { lang: Locale; dict: any; pathna
         <div className="flex shrink-0 gap-2">
           <Link
             href={`/${lang}/charts`}
-            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--ink)] px-3 text-[var(--yellow)] no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
+            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 text-[var(--ink)] no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
             style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
           >
             {tracks}
           </Link>
           <Link
             href={`/${lang}/top100`}
-            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--red)] px-3 text-white no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--yellow)]"
+            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--orange)] px-3 text-white no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
             style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
           >
             {top}
