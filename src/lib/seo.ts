@@ -671,6 +671,8 @@ export type BlogPostingJsonLdInput = {
   inLanguage: Locale
   /** Recuento aproximado de palabras del artículo, si se conoce. */
   wordCount?: number | null
+  /** Quincena y trimestre canónicas en /topreleases/<slug>. */
+  section?: 'blog' | 'topreleases'
 }
 
 /** JSON-LD `BlogPosting` para artículos del blog.
@@ -680,7 +682,7 @@ export type BlogPostingJsonLdInput = {
  *  - `author` (Person) y `publisher` (Organization con `logo.ImageObject`)
  *  - `mainEntityOfPage` apuntando a la canónica del propio artículo. */
 export function blogPostingJsonLd(input: BlogPostingJsonLdInput, lang: Locale): Record<string, unknown> {
-  const url = `${SITE_URL}/${lang}/blog/${input.slug}`
+  const url = `${SITE_URL}/${lang}/${input.section === 'topreleases' ? 'topreleases' : 'blog'}/${input.slug}`
   const image = input.imageUrl ? absoluteOgImage(input.imageUrl, lang) : null
 
   const author: Record<string, unknown> = {

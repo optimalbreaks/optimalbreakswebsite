@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { sectionOgImageAlt, sectionOgImagePath } from '@/lib/og-section-images'
 import { staticPageMetadata } from '@/lib/seo'
 import CardThumbnail, { CoverThirds } from '@/components/CardThumbnail'
-import { BLOG_LIST_SELECT, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { BLOG_LIST_SELECT, digestCoverUrls, fetchBlogSpotlight, isBlogPosterCover, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import { digestCoverFocuses, type CoverFocus } from '@/lib/digest-cover-pick'
 import { proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 
@@ -185,7 +185,7 @@ function BlogIndexRow({ p, lang, thirds, focus }: { p: BlogListRow; lang: Locale
   const posterCover = thirds.length < 2 && isBlogPosterCover(p.image_url, { album: albumCover, slug: p.slug })
   return (
     <Link
-      href={`/${lang}/blog/${p.slug}`}
+      href={publicArticlePath(lang, p.slug)}
       className="group flex flex-col sm:flex-row border-b-[3px] border-[var(--ink)] last:border-b-0 transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden"
     >
       <div className="w-full shrink-0 sm:w-[min(240px,32vw)] sm:max-w-[260px] border-b-[3px] sm:border-b-0 sm:border-r-[3px] border-[var(--ink)]">

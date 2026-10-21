@@ -9,6 +9,7 @@ import { createCachedSupabase } from '@/lib/supabase-server'
 import { displayArtistImageUrl } from '@/lib/artist-public-portrait'
 import { extractBeatportTrackId } from '@/lib/share-track'
 import { isGenericVersionMixName } from '@/lib/track-canonical-key'
+import { publicArticlePath } from '@/lib/blog-spotlight'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -865,7 +866,7 @@ export async function GET(request: NextRequest) {
       title: title as string,
       subtitle: parts.join(' — '),
       image_url: (p.image_url as string | null) ?? null,
-      href: base(`/blog/${p.slug}`),
+      href: publicArticlePath(lang, p.slug),
     })
   }
 

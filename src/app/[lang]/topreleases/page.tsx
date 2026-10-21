@@ -172,7 +172,7 @@ export default async function TopReleasesPage({
                     </div>
                     <div className="p-3 sm:p-4">
                       <h2 className="text-xl sm:text-2xl font-black leading-tight mb-2" style={display}>
-                        <Link href={`/${lang}/blog/${post.slug}`} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">
+                        <Link href={`/${lang}/topreleases/${post.slug}`} className="text-[var(--ink)] no-underline hover:text-[var(--red)]">
                           {title}
                         </Link>
                       </h2>
@@ -189,7 +189,7 @@ export default async function TopReleasesPage({
                         <ol className="list-none m-0 p-0 grid grid-cols-4 sm:grid-cols-8 gap-1.5 sm:gap-2">
                           {shown.map((track, n) => (
                             <li key={`${post.slug}-${track.featured_id || n}`}>
-                              <Link href={`/${lang}/blog/${post.slug}`} className="block no-underline text-[var(--ink)]" title={`${track.artists} — ${trackName(track)}`}>
+                              <Link href={`/${lang}/topreleases/${post.slug}`} className="block no-underline text-[var(--ink)]" title={`${track.artists} — ${trackName(track)}`}>
                                 <CardThumbnail
                                   src={track.artwork_url}
                                   alt={`${track.artists} — ${track.title}`}
@@ -206,7 +206,7 @@ export default async function TopReleasesPage({
                         </ol>
                       ) : null}
                       <Link
-                        href={`/${lang}/blog/${post.slug}`}
+                        href={`/${lang}/topreleases/${post.slug}`}
                         className="inline-flex mt-4 min-h-[40px] items-center px-3 text-[11px] font-black tracking-wider border-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] no-underline hover:bg-[var(--red)] hover:text-white"
                         style={mono}
                       >

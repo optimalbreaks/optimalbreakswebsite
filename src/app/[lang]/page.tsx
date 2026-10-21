@@ -12,7 +12,7 @@ import {
   staticPageMetadata,
 } from '@/lib/seo'
 import { createCachedSupabase } from '@/lib/supabase-server'
-import { digestCoverUrls, fetchBlogSpotlight, type BlogSpotlightRow } from '@/lib/blog-spotlight'
+import { digestCoverUrls, fetchBlogSpotlight, publicArticlePath, type BlogSpotlightRow } from '@/lib/blog-spotlight'
 import type { BreakEvent } from '@/types/database'
 import { eventNoticeKind, isEventCancelled } from '@/types/database'
 import type { Metadata } from 'next'
@@ -666,7 +666,7 @@ export default async function HomePage({
               return (
                 <Link
                   key={p.slug}
-                  href={`/${lang}/blog/${p.slug}`}
+                  href={publicArticlePath(lang, p.slug)}
                   className="group flex flex-col border-[3px] border-[var(--ink)] transition-all duration-150 hover:bg-[var(--yellow)] no-underline text-[var(--ink)] overflow-hidden h-full min-w-0"
                 >
                   {/* Mismo marco apaisado para todas: los carteles ya no alargan su tarjeta */}

@@ -3,6 +3,26 @@ import type { BlogPost, Database } from '@/types/database'
 
 export const BLOG_SPOTLIGHT_LIMIT = 3
 
+/** Quincena y trimestre: la ficha pública es /topreleases/<slug>, no /blog/<slug>. */
+export function isReleaseRoundupSlug(slug: string): boolean {
+  return slug.startsWith('quincena-breakbeat-') || slug.startsWith('trimestre-breakbeat-')
+}
+
+/**
+ * Quincena o trimestre. `kind` ausente en un digest antiguo sigue siendo quincena
+ * si el slug es `quincena-breakbeat-` / `trimestre-breakbeat-`. Agenda no entra.
+ */
+export function isReleaseRoundup(slug: string, kind?: string | null): boolean {
+  if (kind === 'quincena' || kind === 'trimestre') return true
+  if (kind === 'agenda') return false
+  return isReleaseRoundupSlug(slug)
+}
+
+/** Ruta pública del artículo. */
+export function publicArticlePath(lang: string, slug: string, kind?: string | null): string {
+  return `/${lang}/${isReleaseRoundup(slug, kind) ? 'topreleases' : 'blog'}/${slug}`
+}
+
 export const BLOG_LIST_SELECT =
   'slug, title_en, title_es, excerpt_en, excerpt_es, category, published_at, tags, author, image_url, is_featured, view_count, covers:digest->covers' as const
 

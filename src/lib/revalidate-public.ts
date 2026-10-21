@@ -1,4 +1,5 @@
 import { revalidatePath, revalidateTag } from 'next/cache'
+import { isReleaseRoundup } from '@/lib/blog-spotlight'
 
 /** Data Cache tag para lecturas de `/charts` (New Releases + 40 Breaks + vinyl). */
 export const PUBLIC_CHARTS_CACHE_TAG = 'public-charts'
@@ -51,6 +52,10 @@ export function revalidateBlogSlug(slug: string): string[] {
   for (const lang of PUBLIC_LANGS) {
     paths.push(`/${lang}/blog/${clean}`)
     paths.push(`/${lang}/blog`)
+    if (isReleaseRoundup(clean)) {
+      paths.push(`/${lang}/topreleases/${clean}`)
+      paths.push(`/${lang}/topreleases`)
+    }
     paths.push(`/${lang}`)
   }
   for (const p of paths) {

@@ -17,6 +17,7 @@ import {
 } from '@/lib/index-policy'
 import { isEventCancelled } from '@/types/database'
 import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
+import { isReleaseRoundup } from '@/lib/blog-spotlight'
 
 const BASE_URL = 'https://www.optimalbreaks.com'
 
@@ -176,7 +177,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const row of blogPosts) {
     if (!row.slug || row.slug === REDIRECTED_BLOG_SLUG) continue
-    pushPages(entries, `/blog/${row.slug}`, 0.8, 'weekly', blogIndexability(row))
+    pushPages(
+      entries,
+      `/${isReleaseRoundup(row.slug) ? 'topreleases' : 'blog'}/${row.slug}`,
+      0.8,
+      'weekly',
+      blogIndexability(row),
+    )
   }
   for (const row of eventRows) {
     if (!row.slug) continue
