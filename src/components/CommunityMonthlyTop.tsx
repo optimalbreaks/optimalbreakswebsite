@@ -247,8 +247,8 @@ function LaurelBranch({ mirrored = false, className = '' }: { mirrored?: boolean
 }
 
 function RankOrderBadge({ rank }: { rank: number }) {
-  // Columna izquierda del Top 100 de temas. Más grande que `SaveCountBadge`
-  // (48px en caliente / 44px si no) para que el puesto mande sobre los saves.
+  // Columna izquierda del Top 100 de temas. El recuento de saves va en texto
+  // bajo el título, como en el tablero de artistas.
   const triple = rank >= 100
   return (
     <span
@@ -261,23 +261,6 @@ function RankOrderBadge({ rank }: { rank: number }) {
       aria-label={`#${rank}`}
     >
       {rank}
-    </span>
-  )
-}
-
-function SaveCountBadge({ count, label }: { count: number; label: string }) {
-  // Badge similar a `PositionBadge` del chart pero con el número de saves.
-  const isHot = count >= 5
-  return (
-    <span
-      className={`inline-flex flex-col items-center justify-center shrink-0 font-black border-[3px] border-[var(--ink)]
-        ${isHot ? 'w-12 h-12 bg-[var(--red)] text-white' : 'w-11 h-11 bg-[var(--ink)] text-[var(--paper)]'}
-      `}
-      title={label}
-      style={{ fontFamily: "'Unbounded', sans-serif" }}
-    >
-      <span className="text-base sm:text-lg leading-none">{count}</span>
-      <span className="text-[7px] tracking-[1px] mt-0.5 opacity-80">SAVES</span>
     </span>
   )
 }
@@ -1060,7 +1043,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <RankOrderBadge rank={t.rank} />
-                      <SaveCountBadge count={t.unique_users} label={cm.saves_tooltip || 'Personas que han guardado este tema'} />
 
                       {t.artwork_url ? (
                         <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
@@ -1069,11 +1051,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       ) : null}
 
                       <div className="flex-1 min-w-0">
-                        {t.save_count > t.unique_users && (
-                          <p className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider mb-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                            {(cm.repeats || '{n} saves').replace('{n}', String(t.save_count))}
-                          </p>
-                        )}
                         <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
                           {internalHref ? (
                             <Link href={internalHref} className="hover:text-[var(--red)] transition-colors no-underline">
@@ -1091,6 +1068,15 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           />
                           {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
+                        </p>
+                        <p
+                          className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
+                          style={{ fontFamily: "'Courier Prime', monospace" }}
+                          title={cm.saves_tooltip || 'Personas que han guardado este tema'}
+                        >
+                          {t.save_count} {cm.artists_saves || 'saves'}
+                          {' · '}
+                          {t.unique_users} {cm.artists_fans || 'fans'}
                         </p>
                       </div>
                     </div>
