@@ -59,6 +59,7 @@ Una sesión de una hora en vídeo pesa cientos de MB o 1–2 GB. No entra en Git
 - **`ChartView.tsx`** (`FeaturedPickRow`): fila con **fondo amarillo** `bg-[#f7e733]/30` (Tailwind 3 no soporta modificador de opacidad sobre `var(--yellow)` → hex directo), **banner rojo** a sangre arriba («EXCLUSIVE FULL TRACK — ESCÚCHALO ENTERO GRATIS») y botón **▶ PLAY FULL** rojo. `buildFeaturedBundle` prefiere `full_audio_url` sobre `sample_url`.
 - **Mis Tracks**: `/api/public/user-tracks` y `TracksSection.tsx` propagan `full_audio_url` (selects enumerados — al añadir columnas hay que ampliarlos, regla `charts-enlaces-streaming` §5) y el snapshot del save la captura.
 - Textos editoriales en `note_en` / `note_es` del pick.
+- **Toda superficie con ▶ prefiere `full_audio_url` sobre `sample_url` (22 oct 2026).** Hasta ese día la ficha del artista («En Optimal Breaks»), su Top 10 de Beatport y el Top 100 tiraban del preview de Beatport (~2 min): Narciso oyó Kritycal a 2:00. Ficha: `artist-related-content.ts` selecciona la columna y `ArtistFeaturedTracks` la usa (botón «▶ FULL»). Top 10 Beatport / roster del sello: el JSONB no la trae; la página la cruza con `attachOnSiteFullAudio` (`track-canonical-key.ts`, id de Beatport o identidad) y `BeatportTopTracks` / `ArtistShowcase` la prefieren. Top 100: `community-monthly` la propaga a `CommunityMonthlyTop`. Una pantalla nueva con preview debe hacer lo mismo.
 
 ## Prohibido
 

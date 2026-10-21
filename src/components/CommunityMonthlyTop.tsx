@@ -83,6 +83,7 @@ interface CommunityTopTrack {
   spotify_url: string | null
   tidal_url: string | null
   sample_url: string | null
+  full_audio_url?: string | null
   playback_kind: PlaybackKind
   save_count: number
   unique_users: number
@@ -157,6 +158,7 @@ function snapshotForBeatportTop(t: CommunityTopTrack): SavedChartTrackSnapshot {
     artwork_url: t.artwork_url,
     beatport_url: t.external_url,
     sample_url: t.sample_url,
+    full_audio_url: t.full_audio_url ?? null,
   }
   if (t.beatport_share_origin) {
     snap.origin = {
@@ -441,8 +443,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
     const out: PreviewTrack[] = []
     if (!data) return out
     for (const t of data.top_tracks) {
-      const src =
-        t.playback_kind === 'bandcamp' && t.external_url
+      const src = t.full_audio_url
+        ? t.full_audio_url
+        : t.playback_kind === 'bandcamp' && t.external_url
           ? previewAudioSrc('', t.playback_kind, t.external_url)
           : t.sample_url
             ? previewAudioSrc(t.sample_url, t.playback_kind, t.external_url)

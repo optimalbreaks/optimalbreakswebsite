@@ -14,7 +14,7 @@ import {
 } from '@/lib/artist-entity-match'
 import { buildFullArtistSlugMap, buildFullLabelSlugMap, filterArtistSlugMapForNames } from '@/lib/artist-slug-map'
 import { fetchLabelOnSitePicks, fetchOnSiteSaveCounts, onSitePickTrackIds } from '@/lib/artist-related-content'
-import { collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
+import { attachOnSiteFullAudio, collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
 import CountryBadge from '@/components/CountryBadge'
 import {
   breadcrumbJsonLd,
@@ -243,9 +243,12 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
       country: row?.country ?? null,
       fans: 0,
       href: row ? `/${lang}/artists/${row.slug}` : null,
-      tracks: ((row?.beatport_top_tracks ?? []) as BeatportTopTrack[])
-        .filter((t) => t?.sample_url)
-        .slice(0, 10),
+      tracks: attachOnSiteFullAudio(
+        ((row?.beatport_top_tracks ?? []) as BeatportTopTrack[])
+          .filter((t) => t?.sample_url)
+          .slice(0, 10),
+        onSitePicks,
+      ),
     })
   }
   const trackArtistNames = new Set<string>()
@@ -338,7 +341,10 @@ export default async function LabelDetailPage({ params, searchParams }: Props) {
     fontSize: '12px',
     color: 'rgba(232,220,200,0.6)',
   } as const
-  const beatportTopTracks = (label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+  const beatportTopTracks = attachOnSiteFullAudio(
+    (label.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? [],
+    onSitePicks,
+  )
   const beatportSaveRefs = collectSaveRefsFromOnSitePicks(
     beatportPlayFallback ? [...beatportTopTracks, beatportPlayFallback] : beatportTopTracks,
     onSitePicks,

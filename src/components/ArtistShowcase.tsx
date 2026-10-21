@@ -54,6 +54,7 @@ function buildSnapshot(
     music_key: t.key || null,
     artwork_url: t.artwork_url || null,
     sample_url: t.sample_url || null,
+    full_audio_url: t.full_audio_url ?? null,
     beatport_url: t.beatport_url || null,
     origin,
   }
@@ -174,7 +175,7 @@ export default function ArtistShowcase({
       })
       return {
         rowKey: `${a.slug}-${i}`,
-        src: proxyUrl(t.sample_url!),
+        src: t.full_audio_url || proxyUrl(t.sample_url!),
         title: t.title,
         artist: t.artists.map((x) => x.name).join(', '),
         artworkUrl: t.artwork_url || null,

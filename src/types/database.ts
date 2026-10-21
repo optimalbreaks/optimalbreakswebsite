@@ -916,6 +916,8 @@ export interface BeatportTopTrack {
   spotify_url?: string | null
   /** Enlace verificado al track en TIDAL (matching batch); el botón solo sale con match. */
   tidal_url?: string | null
+  /** Exclusiva cedida (`chart_featured_tracks.full_audio_url`), la pone la ficha al pintar; no vive en el JSONB. */
+  full_audio_url?: string | null
 }
 
 export interface Artist extends Record<string, unknown> {

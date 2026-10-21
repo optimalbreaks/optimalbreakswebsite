@@ -317,6 +317,7 @@ type FeatRow = {
   spotify_url: string | null
   tidal_url: string | null
   sample_url: string | null
+  full_audio_url?: string | null
 }
 type VinylRow = {
   id: string
@@ -374,6 +375,7 @@ interface Aggregate {
   tidal_url: string | null
   playback_kind: PlaybackKind
   sample_url: string | null
+  full_audio_url: string | null
   save_count: number
   unique_users: number
   first_saved_at: string | null
@@ -516,7 +518,7 @@ export async function GET(request: NextRequest) {
     : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, beatport_url, spotify_url, tidal_url, sample_url'
   const featCols = artistsOnly
     ? 'id, mix_name, artists, label, link_url'
-    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url'
+    : 'id, chart_edition_id, title, mix_name, artists, label, release_year, release_date, bpm, music_key, artwork_url, link_url, link_label, platform, spotify_url, tidal_url, sample_url, full_audio_url'
   const vinylCols = artistsOnly
     ? 'id, mix_name, artists, label, discogs_url, youtube_url'
     : 'id, title, mix_name, artists, label, year, artwork_url, discogs_url, youtube_url'
@@ -636,6 +638,7 @@ export async function GET(request: NextRequest) {
     spotify_url: string | null
     tidal_url: string | null
     sample_url: string | null
+    full_audio_url: string | null
     playback_kind: PlaybackKind
     canonical_key: string
     source: ChartTrackSource
@@ -661,6 +664,7 @@ export async function GET(request: NextRequest) {
       spotify_url: c.spotify_url ?? null,
       tidal_url: c.tidal_url ?? null,
       sample_url: c.sample_url,
+      full_audio_url: null,
       playback_kind: 'beatport',
       canonical_key,
       source: 'chart',
@@ -686,6 +690,7 @@ export async function GET(request: NextRequest) {
       spotify_url: f.spotify_url ?? null,
       tidal_url: f.tidal_url ?? null,
       sample_url: f.sample_url,
+      full_audio_url: f.full_audio_url ?? null,
       playback_kind: kind,
       canonical_key,
       source: 'featured',
@@ -710,6 +715,7 @@ export async function GET(request: NextRequest) {
       spotify_url: null,
       tidal_url: null,
       sample_url: null,
+      full_audio_url: null,
       playback_kind: 'youtube',
       canonical_key,
       source: 'vinyl',
@@ -751,6 +757,7 @@ export async function GET(request: NextRequest) {
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
+      full_audio_url: (snap.full_audio_url as string | null) ?? null,
       playback_kind: kind,
       canonical_key,
       source: s.track_source,
@@ -785,6 +792,7 @@ export async function GET(request: NextRequest) {
       spotify_url: (snap.spotify_url as string | null) ?? null,
       tidal_url: (snap.tidal_url as string | null) ?? null,
       sample_url: (snap.sample_url as string | null) ?? null,
+      full_audio_url: null,
       playback_kind: 'beatport',
       canonical_key,
       source: 'beatport_top',
@@ -833,6 +841,7 @@ export async function GET(request: NextRequest) {
         spotify_url: meta.spotify_url,
         tidal_url: meta.tidal_url,
         sample_url: meta.sample_url,
+        full_audio_url: meta.full_audio_url,
         playback_kind: meta.playback_kind,
         save_count: 1,
         unique_users: 0,
@@ -868,6 +877,7 @@ export async function GET(request: NextRequest) {
       const hasRd = (v: string | null) => !!(v && /^\d{4}-\d{2}-\d{2}$/.test(v.trim().slice(0, 10)))
       if (!hasRd(existing.release_date) && hasRd(meta.release_date)) existing.release_date = meta.release_date
       if (!existing.sample_url && meta.sample_url) existing.sample_url = meta.sample_url
+      if (!existing.full_audio_url && meta.full_audio_url) existing.full_audio_url = meta.full_audio_url
       if (
         (existing.primary.source === 'beatport_top' && meta.source !== 'beatport_top') ||
         (existing.playback_kind === 'youtube' && meta.playback_kind !== 'youtube')
@@ -943,6 +953,7 @@ export async function GET(request: NextRequest) {
     spotify_url: a.spotify_url,
     tidal_url: a.tidal_url,
     sample_url: a.sample_url,
+    full_audio_url: a.full_audio_url,
     playback_kind: a.playback_kind,
     save_count: a.save_count,
     unique_users: a.unique_users,

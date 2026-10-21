@@ -82,6 +82,7 @@ function buildSnapshot(
     music_key: t.key || null,
     artwork_url: t.artwork_url || null,
     sample_url: t.sample_url || null,
+    full_audio_url: t.full_audio_url ?? null,
     beatport_url: t.beatport_url || null,
     spotify_url: t.spotify_url ?? null,
     tidal_url: t.tidal_url ?? null,
@@ -245,7 +246,7 @@ export default function BeatportTopTracks({
       const chartRef = chartRefFor(t)
       return {
         rowKey: `bp-${t.position}`,
-        src: proxyUrl(t.sample_url!),
+        src: t.full_audio_url || proxyUrl(t.sample_url!),
         title: t.title,
         artist: t.artists.map(a => a.name).join(', '),
         artworkUrl: t.artwork_url || null,
@@ -336,7 +337,7 @@ export default function BeatportTopTracks({
         const fbRowKey = `bp-fallback-${parsed.id}`
         const fbQueue: PreviewTrack[] = [{
           rowKey: fbRowKey,
-          src: proxyUrl(fb.sample_url),
+          src: fb.full_audio_url || proxyUrl(fb.sample_url),
           title: fb.title,
           artist: fb.artists.map((a) => a.name).filter(Boolean).join(', '),
           artworkUrl: fb.artwork_url || null,
@@ -369,7 +370,7 @@ export default function BeatportTopTracks({
         const chartRef = chartRefFor(t)
         return {
           rowKey: `bp-${t.position}`,
-          src: proxyUrl(t.sample_url!),
+          src: t.full_audio_url || proxyUrl(t.sample_url!),
           title: t.title,
           artist: t.artists.map((a) => a.name).join(', '),
           artworkUrl: t.artwork_url || null,

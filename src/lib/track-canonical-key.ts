@@ -249,6 +249,29 @@ export function collectSaveRefsFromOnSitePicks(
   return out
 }
 
+/**
+ * El Top 10 de Beatport es una copia de la tienda (preview de 2 min). Si el
+ * mismo tema tiene exclusiva cedida en New Releases (`full_audio_url`), el ▶
+ * del Top 10 también debe sonar entero.
+ */
+export function attachOnSiteFullAudio<
+  T extends { beatport_url?: string | null; title: string; mix_name?: string | null; artists?: unknown; full_audio_url?: string | null },
+>(topTracks: T[], picks: Array<OnSitePickForTopSave & { full_audio_url?: string | null }>): T[] {
+  const withFull = picks.filter((p) => p.chartKind !== 'vinyl' && p.full_audio_url)
+  if (!withFull.length) return topTracks
+  return topTracks.map((t) => {
+    if (t.full_audio_url) return t
+    const bpId = beatportNumericId(t.beatport_url)
+    const strict = trackSaveIdentityKey(t.title, t.mix_name, t.artists)
+    const hit = withFull.find(
+      (p) =>
+        (!!bpId && beatportNumericId(p.link_url) === bpId) ||
+        (!!strict && trackSaveIdentityKey(p.title, p.mix_name, p.artists) === strict),
+    )
+    return hit ? { ...t, full_audio_url: hit.full_audio_url } : t
+  })
+}
+
 function nameFallbackKey(
   title: string | null | undefined,
   mixName: string | null | undefined,

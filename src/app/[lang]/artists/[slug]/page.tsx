@@ -50,7 +50,7 @@ import {
   onSitePickTrackIds,
   resolveRecommendedMixHref,
 } from '@/lib/artist-related-content'
-import { collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
+import { attachOnSiteFullAudio, collectSaveRefsFromOnSitePicks } from '@/lib/track-canonical-key'
 import { communityCountsForArtist, getCommunityArtistBoard } from '@/lib/community-top-artists'
 
 type Props = {
@@ -332,7 +332,10 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const beatportInSocials = Object.keys(artist.socials || {}).some(
     (k) => k.toLowerCase() === 'beatport',
   )
-  const beatportTopTracks = (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? []
+  const beatportTopTracks = attachOnSiteFullAudio(
+    (artist.beatport_top_tracks as BeatportTopTrack[] | undefined) ?? [],
+    featuredPicks,
+  )
   const beatportSaveRefs = collectSaveRefsFromOnSitePicks(
     beatportPlayFallback ? [...beatportTopTracks, beatportPlayFallback] : beatportTopTracks,
     featuredPicks,

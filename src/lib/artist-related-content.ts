@@ -658,6 +658,7 @@ function mergeOnSitePickPair(a: ArtistFeaturedPick, b: ArtistFeaturedPick): Arti
     spotify_url: winner.spotify_url || loser.spotify_url,
     tidal_url: winner.tidal_url || loser.tidal_url,
     sample_url: winner.sample_url || loser.sample_url,
+    full_audio_url: winner.full_audio_url || loser.full_audio_url || null,
     artwork_url: winner.artwork_url || loser.artwork_url,
     link_url: winner.link_url || loser.link_url,
     note_en: winner.note_en || loser.note_en,
@@ -734,7 +735,7 @@ export async function fetchArtistFeaturedPicks(
     chartRowMatchesArtist(r, matchKeys, artist.slug, slugByNormalizedName)
 
   const featuredSelect =
-    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, full_audio_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
   const vinylSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 
@@ -833,7 +834,7 @@ export async function fetchLabelOnSitePicks(
   const labelKey = normalizeForEntityMatch(label.name)
 
   const featuredSelect =
-    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
+    'id, chart_edition_id, sort_order, title, mix_name, label, artists, platform, link_url, link_label, artwork_url, sample_url, full_audio_url, bpm, music_key, release_year, release_date, spotify_url, tidal_url, note_en, note_es, chart_editions!inner(week_date)'
   const vinylSelect =
     'id, chart_edition_id, sort_order, title, mix_name, label, artists, year, format, catalog_number, discogs_url, youtube_url, artwork_url, note_en, note_es, chart_editions(week_date)'
 

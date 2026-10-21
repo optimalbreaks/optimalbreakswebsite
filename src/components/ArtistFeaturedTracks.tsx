@@ -73,12 +73,14 @@ function buildSnapshot(
     music_key: pick.music_key || null,
     artwork_url: pick.artwork_url || null,
     sample_url: pick.sample_url || null,
+    full_audio_url: pick.full_audio_url || null,
     beatport_url: pick.link_url || null,
     origin,
   }
 }
 
 function previewAudioSrc(pick: ArtistFeaturedPick): string | null {
+  if (pick.full_audio_url) return pick.full_audio_url
   if (pick.platform === 'bandcamp' && pick.link_url) {
     return `/api/bandcamp-preview?track=${encodeURIComponent(pick.link_url)}`
   }
@@ -94,6 +96,7 @@ function previewAudioSrc(pick: ArtistFeaturedPick): string | null {
 
 function pickHasPreview(pick: ArtistFeaturedPick): boolean {
   return !!(
+    pick.full_audio_url ||
     pick.sample_url ||
     (pick.platform === 'bandcamp' && pick.link_url) ||
     (pick.platform === 'soundcloud' &&
@@ -570,9 +573,9 @@ export default function ArtistFeaturedTracks({
                           className={`h-[36px] px-2.5 text-[10px] sm:h-auto sm:px-2 sm:py-1 sm:text-[10px] font-black tracking-wider border-2 border-[var(--ink)] transition-all cursor-pointer touch-manipulation
                             ${isActive ? 'bg-[var(--red)] text-white' : 'bg-transparent text-[var(--ink)] hover:bg-[var(--yellow)] active:bg-[var(--yellow)]'}`}
                           style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
+                          title={isActive && !isPausedHere ? (lang === 'es' ? 'Pausar' : 'Pause') : pick.full_audio_url ? (lang === 'es' ? 'Escuchar el tema entero' : 'Play full track') : (lang === 'es' ? 'Escuchar preview' : 'Play preview')}
                         >
-                          {isActive && !isPausedHere ? '❚❚' : '▶'}
+                          {isActive && !isPausedHere ? '❚❚' : pick.full_audio_url ? '▶ FULL' : '▶'}
                         </button>
                       )}
                       {ytId && !canPlay && (
