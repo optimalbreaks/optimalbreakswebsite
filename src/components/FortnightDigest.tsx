@@ -205,7 +205,7 @@ function rowKeyOf(t: FortnightDigestTrack): string {
   return t.featured_id ? `fq-${t.featured_id}` : `fq-${t.artists}-${t.title}-${t.mix_name ?? ''}`
 }
 
-type Spot = 'rel' | 'played' | 'voted' | 'top'
+type Spot = 'rel' | 'played' | 'voted' | 'top' | (string & {})
 
 /** Id de la fila en el DOM: el mismo tema sale en varias secciones y el reproductor vuelve a la que se pulsó. */
 function spotId(spot: Spot, t: FortnightDigestTrack): string {
@@ -387,6 +387,117 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
   )
 }
 
+function queueItem(t: FortnightDigestTrack, spot: Spot, pathname: string | null): PreviewTrack {
+  return {
+    rowKey: rowKeyOf(t),
+    domId: spotId(spot, t),
+    src: t.audio_src!,
+    title: t.title,
+    mixName: t.mix_name,
+    artist: t.artists,
+    artworkUrl: t.artwork_url,
+    album: t.label,
+    originPath: pathname || undefined,
+    share: t.featured_id ? { mode: 'chart', source: 'featured', trackId: t.featured_id, weekDate: t.week_date } : undefined,
+    save: saveOf(t),
+  }
+}
+
+/**
+ * Carátulas de un periodo en /topreleases: suenan ahí mismo, con todo el periodo en cola.
+ * `spot` distingue la misma canción en dos tarjetas de la página (quincena y su temporada).
+ */
+export function DigestTrackStrip({
+  tracks, spot, groupKey, units, show = 8, playAll, large = false,
+}: {
+  tracks: FortnightDigestTrack[]
+  spot: string
+  groupKey: string
+  /** [singular, plural] del valor de cada tema (escuchas o votos). */
+  units: readonly [string, string]
+  show?: number
+  /** Texto del botón; `{n}` = temas en cola. */
+  playAll?: string
+  large?: boolean
+}) {
+  const pathname = usePathname()
+  const { previewQueue, previewIndex, previewGroupKey, previewPlaying, playPreviewQueue, togglePreview } = usePreviewAudioGated()
+  const queue = useMemo(() => {
+    const seen = new Set<string>()
+    const out: PreviewTrack[] = []
+    for (const t of tracks) {
+      const key = rowKeyOf(t)
+      if (!t.audio_src || seen.has(key)) continue
+      seen.add(key)
+      out.push(queueItem(t, spot, pathname))
+    }
+    return out
+  }, [tracks, spot, pathname])
+  const current = previewGroupKey === groupKey ? previewQueue[previewIndex]?.rowKey ?? null : null
+  const play = useCallback(
+    (rowKey: string) => {
+      if (current === rowKey) {
+        togglePreview()
+        return
+      }
+      const idx = queue.findIndex((q) => q.rowKey === rowKey)
+      if (idx >= 0) playPreviewQueue(queue, idx, groupKey)
+    },
+    [current, queue, groupKey, playPreviewQueue, togglePreview],
+  )
+  const playCtx = useMemo(() => ({ play, current, playing: previewPlaying }), [play, current, previewPlaying])
+  const cardPlay = cardPlayWith(play)
+  const shown = tracks.slice(0, show)
+  if (shown.length === 0) return null
+
+  return (
+    <PlayCtx.Provider value={playCtx}>
+      {playAll && queue.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => (current ? togglePreview() : playPreviewQueue(queue, 0, groupKey))}
+          className={`w-full mb-3 bg-[var(--red)] text-white border-[3px] border-[var(--ink)] font-black tracking-wider hover:bg-[var(--ink)] transition-colors ${large ? 'shadow-[4px_4px_0_var(--ink)] px-4 py-3 text-[14px] sm:text-[16px]' : 'px-3 py-2 text-[11px] sm:text-[12px]'}`}
+          style={display}
+        >
+          {current && previewPlaying ? '❚❚' : playAll.replace('{n}', String(queue.length))}
+        </button>
+      ) : null}
+      <ol className={`list-none m-0 p-0 grid gap-1.5 sm:gap-2 ${large ? 'grid-cols-4' : 'grid-cols-4 sm:grid-cols-8'}`}>
+        {shown.map((t, n) => {
+          const on = current === rowKeyOf(t) && previewPlaying
+          return (
+            <li
+              key={`${spot}-${rowKeyOf(t)}`}
+              id={spotId(spot, t)}
+              onClick={cardPlay(t, spot)}
+              className={t.audio_src ? 'cursor-pointer' : ''}
+              title={`${t.artists} — ${trackName(t)}`}
+            >
+              <div className={`relative ${on ? 'outline outline-[3px] outline-[var(--red)]' : ''}`}>
+                <Cover src={t.artwork_url} alt={`${t.artists} — ${t.title}`} sizes={large ? '(max-width: 640px) 25vw, 200px' : '80px'} />
+                <PlayButton
+                  track={t}
+                  spot={spot}
+                  className={`absolute rounded-full shadow-[2px_2px_0_var(--ink)] ${large ? 'top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 text-[14px]' : 'top-1 right-1 h-7 w-7 text-[11px]'}`}
+                />
+              </div>
+              <span className={`mt-1 block font-black truncate ${large ? 'text-[10px] sm:text-[12px]' : 'text-[9px]'}`} style={mono}>
+                #{n + 1} {t.artists}
+              </span>
+              {large ? (
+                <>
+                  <span className="block text-[10px] sm:text-[11px] truncate" style={mono}>{trackName(t)}</span>
+                  <span className="block text-[9px] sm:text-[10px] text-[var(--dim)]" style={mono}>{t.value} {t.value === 1 ? units[0] : units[1]}</span>
+                </>
+              ) : null}
+            </li>
+          )
+        })}
+      </ol>
+    </PlayCtx.Provider>
+  )
+}
+
 export default function FortnightDigest({
   digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, heroFocus, playedArtists = [],
 }: {
@@ -428,19 +539,7 @@ export default function FortnightDigest({
       const rowKey = rowKeyOf(t)
       if (!t.audio_src || seen.has(rowKey)) continue
       seen.add(rowKey)
-      out.push({
-        rowKey,
-        domId: spotId(spot, t),
-        src: t.audio_src,
-        title: t.title,
-        mixName: t.mix_name,
-        artist: t.artists,
-        artworkUrl: t.artwork_url,
-        album: t.label,
-        originPath: pathname || undefined,
-        share: t.featured_id ? { mode: 'chart', source: 'featured', trackId: t.featured_id, weekDate: t.week_date } : undefined,
-        save: saveOf(t),
-      })
+      out.push(queueItem(t, spot, pathname))
     }
     return out
   }, [d, pathname])
