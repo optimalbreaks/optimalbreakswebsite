@@ -518,6 +518,8 @@ A list that is ~60% one artist **and** has a real rest (other names, not a copy 
 | `antonioosuna32@hotmail.com` | 4/12 credit Devis Hard inside a three-minute mixed binge (29 Sep). Surname Osuna matches the composer credit above. | Not marked. |
 | `pablocp82@gmail.com`, `deiv80@gmail.com`, `pedromilono@hotmail.com` | PabloCP has a long mixed list. Deiv and Pedro each saved one Devis/Paket track inside a varied list. | Organic. |
 
+**Load it up, 21 Oct 2026.** The song is public **#1** with **11** votes. Devis Hard, Paqui and Suprime are already out of that 11. Narciso looked at the closest of the 11, Mario (`mariopisote@hotmail.com`): 14 of 22 credit Devis Hard, the Devis saves land a few seconds apart, and the other 8 are other artists. **Leave.** That rest is enough; he is not a family mark. With Mario unmarked, nobody else on this song is a mark. Antonio (`antonioosuna32@hotmail.com`) only shares the surname Osuna; the composer credit on file is **David Carrillo Osuna**, and the ficha `real_name` is still null. Rocío Osuna, Irina, Pedro, PabloCP, Isaías, Ricky B Mixin, Karmic Waves, Optimal Breaks and Mestas stay unmarked. Do not reopen these 11 for *Load it up* unless one library becomes a Devis-only list or a copy of Paqui's.
+
 ### Artist board — weekly movement (not daily)
 
 Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`): **NUEVO** / **▲ N** / **▼ N** / **═**, plus a weeks label. The ranking itself stays **all-time**.
@@ -552,7 +554,7 @@ Same visual language as **40 Breaks Vitales** (`ChartView` `MovementIndicator`):
 User-facing affinity tool inspired by FilmAffinity's *Almas Gemelas*: the user's saved tracks are crossed against everyone else's to surface the people whose lists overlap the most, plus the tracks those people have that the user is missing.
 
 - **Page:** `/[lang]/mi-cuenta/almas-gemelas` → `src/app/[lang]/mi-cuenta/almas-gemelas/page.tsx` mounting `SoulmatesSection` inside `UserSectionShell`.
-- **Component:** `src/components/user/SoulmatesSection.tsx` — top 10 cards with avatar, % Jaccard, common-count, sample of common tracks and CTA to the public list (`/u/<id>/tracks`); plus a "What you're missing" list with up to 25 recommended tracks.
+- **Component:** `src/components/user/SoulmatesSection.tsx` — top 10 cards with avatar, % Jaccard, common-count, sample of common tracks and CTA to the public list (`/u/<id>/tracks`); plus a "What you're missing" list with up to 25 recommended tracks. If that account has an **approved claim** (`artists.claimed_by`), a check sits next to the name and links to the artist page (`Artista verificado`). An editorial mark or a family mark does **not** get the check.
 - **Endpoint:** `GET /api/breakbeat/soulmates` (authenticated). Builds, per public user, the set of canonical keys they have saved and computes Jaccard against the requester's set. Thresholds: requester ≥ 5 saves, candidate ≥ 3 saves, intersection ≥ 2 tracks. Recommendations require ≥ 2 soulmates having the track.
 - **Self-credits (closed 26 Aug 2026):** a **marked** or **claimed** account does **not** put tracks where **they** are credited into their Jaccard set (catalogue dump would make them everyone’s soulmate). Those «+» stay in My Tracks and the track Top 100. Saves of other artists still count. Same helper as the artist board (`isArtistSelfCreditSave`). Do **not** hide the account (`is_tracks_public`) or drop their whole list.
 - **Privacy contract:**

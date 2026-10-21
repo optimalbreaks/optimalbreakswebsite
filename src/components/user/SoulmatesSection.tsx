@@ -30,12 +30,19 @@ const FETCH_TIMEOUT_MS = 30_000
 const MONO = "'Courier Prime', monospace"
 const DISPLAY = "'Unbounded', sans-serif"
 
+interface VerifiedArtist {
+  name: string
+  slug: string
+}
+
 interface SoulmateUser {
   id: string
   username: string | null
   display_name: string | null
   avatar_url: string | null
   country: string | null
+  /** Fichas con claim aprobado. Vacío si solo hay fichaje editorial. */
+  verified_artists?: VerifiedArtist[]
 }
 
 interface CommonTrack {
@@ -123,6 +130,27 @@ function userLabel(u: SoulmateUser, es: boolean) {
 function avatarInitial(u: SoulmateUser) {
   const name = (u.display_name || u.username || '').trim()
   return (name[0] || 'B').toUpperCase()
+}
+
+function VerifiedArtistMarks({ lang, es, artists }: { lang: string; es: boolean; artists: VerifiedArtist[] }) {
+  if (!artists.length) return null
+  return (
+    <>
+      {artists.map((a) => (
+        <Link
+          key={a.slug}
+          href={`/${lang}/artists/${a.slug}`}
+          title={es ? `Artista verificado: ${a.name}` : `Verified artist: ${a.name}`}
+          aria-label={es ? `Artista verificado: ${a.name}. Ver ficha` : `Verified artist: ${a.name}. View profile`}
+          className="inline-flex items-center justify-center w-4 h-4 shrink-0 rounded-full bg-[var(--ink)] text-[var(--yellow)] no-underline"
+        >
+          <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
+            <path d="M3.2 8.2 6.4 11.4 12.8 4.6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />
+          </svg>
+        </Link>
+      ))}
+    </>
+  )
 }
 
 function isHttpUrl(u: string | null | undefined): u is string {
@@ -615,8 +643,9 @@ export default function SoulmatesSection({ lang }: Props) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-black truncate" style={{ fontFamily: DISPLAY, fontSize: '14px', textTransform: 'uppercase' }}>
-                          {userLabel(sm.user, es)}
+                        <h4 className="font-black flex items-center gap-1.5 min-w-0" style={{ fontFamily: DISPLAY, fontSize: '14px', textTransform: 'uppercase' }}>
+                          <span className="truncate">{userLabel(sm.user, es)}</span>
+                          <VerifiedArtistMarks lang={lang} es={es} artists={sm.user.verified_artists || []} />
                         </h4>
                         <p className="text-[11px] text-[var(--ink)]/60 truncate" style={{ fontFamily: MONO }}>
                           {sm.user.username ? `@${sm.user.username}` : ''}

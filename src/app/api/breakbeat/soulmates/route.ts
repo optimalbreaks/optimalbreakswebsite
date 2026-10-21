@@ -538,6 +538,37 @@ async function computeSoulmates() {
 
   const top = affinities.slice(0, 10)
 
+  // Claim aprobado (artists.claimed_by). Un fichaje editorial no es verificación:
+  // el check de Almas Gemelas solo sale si la cuenta reclamó la ficha.
+  const verifiedByUser = new Map<string, { name: string; slug: string }[]>()
+  const topIds = top.map((a) => a.user.id)
+  if (topIds.length > 0) {
+    const { data: claimedRows, error: claimedErr } = await sb
+      .from('artists')
+      .select('claimed_by, name, name_display, slug')
+      .in('claimed_by', topIds)
+    if (claimedErr) {
+      console.error('[OB] soulmates verified:', claimedErr.message)
+    } else {
+      for (const row of (claimedRows || []) as {
+        claimed_by: string | null
+        name: string | null
+        name_display: string | null
+        slug: string | null
+      }[]) {
+        if (!row.claimed_by || !row.slug) continue
+        const name = (row.name_display || row.name || '').trim()
+        if (!name) continue
+        const list = verifiedByUser.get(row.claimed_by) || []
+        list.push({ name, slug: row.slug })
+        verifiedByUser.set(row.claimed_by, list)
+      }
+      for (const list of verifiedByUser.values()) {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'es'))
+      }
+    }
+  }
+
   // 5) Recomendaciones: para cada alma gemela del top, contamos sus tracks
   // que el usuario aún no tiene. Ordenamos por número de almas gemelas que
   // las han guardado (popularidad dentro del subgrupo afín).
@@ -604,6 +635,7 @@ async function computeSoulmates() {
         display_name: a.user.display_name,
         avatar_url: a.user.avatar_url,
         country: a.user.country,
+        verified_artists: verifiedByUser.get(a.user.id) || [],
       },
       common_count: a.common_count,
       other_count: a.other_count,
