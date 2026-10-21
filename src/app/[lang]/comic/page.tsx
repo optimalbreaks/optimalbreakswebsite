@@ -89,7 +89,11 @@ export default async function ComicPage({ params }: { params: Promise<{ lang: Lo
           </div>
           <div className="cmc-grid">
             {COMIC_CHARACTERS.map((ch) => (
-              <article key={ch.img} className={`cmc-card${ch.big ? ' is-big' : ''}${ch.tone === 'yellow' ? ' is-yellow' : ''}`}>
+              <article
+                key={ch.img}
+                id={ch.img === 'pm_canis.jpg' ? 'canis' : undefined}
+                className={`cmc-card${ch.img === 'pm_canis.jpg' ? ' scroll-mt-24' : ''}${ch.big ? ' is-big' : ''}${ch.tone === 'yellow' ? ' is-yellow' : ''}`}
+              >
                 <div className={`cmc-pic${ch.fit === 'contain' ? ' is-contain' : ''}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`${COMIC_IMG}/${ch.img}`} alt={ch.alt[lang]} loading="lazy" />

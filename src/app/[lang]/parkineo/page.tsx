@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
 import { createCachedSupabase } from '@/lib/supabase-server'
 import { fetchAllPages } from '@/lib/supabase-paginate'
@@ -100,6 +101,9 @@ export default async function ParkineoPage({ params }: { params: Promise<{ lang:
             </div>
             <figcaption className="mt-4 text-center" style={{ ...MONO, fontSize: '13px', color: 'var(--ink)' }}>
               {es ? 'Los del parking ya tienen el radiocasete listo.' : 'The car park crew already has the boombox ready.'}
+              <Link href={`/${lang}/comic#canis`} className="mt-2 block font-bold text-[var(--red)] no-underline hover:underline">
+                {es ? 'Saber más de los canis del parking →' : 'More about the car park canis →'}
+              </Link>
             </figcaption>
           </figure>
         </div>
