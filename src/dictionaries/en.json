@@ -101,7 +101,7 @@
         {
           "year": "1992—2002",
           "title": "ANDALUSIA, GOLDEN AGE",
-          "desc": "Mass-market breakbeat: Canal Sur Radio, mega-parties and weekend culture. The Martín Carpena night in Málaga (2002) as a turning point; memory kept alive in films like Break Nation (2023)."
+          "desc": "Mass-market breakbeat: radio, the road, macro-parties. The Martín Carpena night in Málaga (2 March 2002, two deaths) is a turning point, not the moment the genre switched off."
         },
         {
           "year": "1995—2000",
@@ -119,9 +119,9 @@
           "desc": "Breakfest in Perth as a long-running anchor; Pendulum from Australia to the world stage. A solid scene outside the UK spotlight — breaks as infrastructure, not a footnote."
         },
         {
-          "year": "2005—2019",
-          "title": "DECLINE & LATENCY",
-          "desc": "The genre leaves the mainstream centre; Breakspoll and the circuit move to smaller rooms. Krafty Kuts, Lady Waks and others keep booths, radio and online communities alive — present but less visible."
+          "year": "2006—2014",
+          "title": "FRAGMENTATION",
+          "desc": "Breaks loses a single centre and does not disappear: tech-funk, dubstep, bassline, psybreaks and regional scenes. It is not a thirteen-year silence."
         },
         {
           "year": "2015—NOW",
@@ -266,7 +266,7 @@
   },
   "history": {
     "title": "History",
-    "subtitle": "From the Bronx to dancefloors worldwide: origins, national scenes, crisis, resilience and the digital life of breakbeat.",
+    "subtitle": "Fifteen chapters, from funk to 2026. Breakbeat did not die when it lost a single centre: it fragmented, became regional and kept playing.",
     "break_note": {
       "tag": "BREAK NOTE",
       "title": "When the break became body",
@@ -292,6 +292,26 @@
         {
           "term": "Broken Rhythm",
           "text": "It does not mean shapeless chaos: it means syncopation, interruption, displacement and the play between space and impact. Electronic breakbeat inherits exactly that tension."
+        },
+        {
+          "term": "Breakbeat",
+          "text": "First a rhythmic principle: the broken hit. Later, the wide family of musics that use it. It is not one genre."
+        },
+        {
+          "term": "Breakbeat hardcore",
+          "text": "A specific branch of British rave, from the late 1980s to the mid-1990s. Fast, sampled, unstable. Not a synonym for the whole tree."
+        },
+        {
+          "term": "Breaks",
+          "text": "A floor name, above all from the late 1990s and the 2000s. Nu skool and what followed: often 125–140 BPM, club bass and tracks built to mix."
+        },
+        {
+          "term": "Broken beat",
+          "text": "Another tradition, mostly west London in the late 1990s: jazz, house, limping drums. Sharing the word “broken” does not make it breaks."
+        },
+        {
+          "term": "UK bass",
+          "text": "A younger and much wider market tag. On Beatport it sits inside “Breaks / Breakbeat / UK Bass”. It helps you find records. It does not describe one scene."
         }
       ],
       "footer": "Seen this way, the break is not just a musical device: it is a way of organising movement, the dancefloor and listening itself. First it was a cut inside funk and hip hop; then a bodily culture; later, a whole grammar for electronic music."
@@ -330,7 +350,7 @@
         "paragraphs": [
           "In Andalusia breakbeat was not just another scene: from roughly 1992 to 2002 it swelled into a highly visible social and generational wave — radio, mega-parties, promoters, weekend identity. Documentaries and cultural journalism have framed it as unusual in southern Europe for a genre that elsewhere often lived as a niche.",
           "The film \"Break Nation: The electronics that danced Andalusia\" (2023, David Pareja) traces that cycle of euphoria and fracture; it is a solid editorial anchor for treating Andalusia as its own chapter in global breakbeat history.",
-          "The turning point often cited is the night at the Martín Carpena arena in Málaga (2 March 2002): overcrowding, crushing and, most seriously, fatalities reported in the press in connection with substance use. Afterward the sound and scene were heavily stigmatised; events were cancelled and many institutions turned away from that culture.",
+          "On 2 March 2002, at the Martín Carpena arena in Málaga, Mundo Evassion’s fifth anniversary overflowed the room. In the hours that followed, two young people, aged 19 and 20, died after taking ecstasy. Overcrowding and organisational failure were separate problems that coincided that night. Media alarm, cancellations and heavy stigmatisation came after. It was a turning point for the era of hegemony, not the moment breakbeat switched off: Raveart and other circuits continued.",
           "It is vital to nuance: it was not a total blackout. The scene went latent — DJs, producers, memories, smaller circuits — until the symbolic \"resurrection\" headlines and works like the film above can describe today.",
           "In parallel, breakbeat’s fall as the club’s \"headline\" genre was global: in Andalusia a brutal local shock coincided with a wider shift toward other bass and electronic sounds.",
           "From the mid-2010s the south regains its own footprint: festivals, labels and promoters tying 1990s memory to current bass and breaks. Raveart (Seville, recorded in this project’s organizations table since 2002) anchors Summer and Winter, Retro Halloween, club tours with British guests and Raveart Records; events link to the promoter in the database. Andalusian artists documented here — Cerbero, Bubu, Javy Groove, Yo Speed, Fran Break and others — keep booths and studios; Break Nation (2023) helps tell the generational arc alongside digital platforms."
@@ -677,8 +697,8 @@
       "description": "Breakbeat: the bilingual reference. History from the Bronx to UK bass, nu skool breaks, jungle and big beat. Timeline, artists, scenes (UK, Andalusia, US), labels, events, mixes and blog at Optimal Breaks."
     },
     "history": {
-      "title": "Breakbeat history — origins, UK, Andalusia and the digital era",
-      "description": "Full timeline: funk and Kool Herc, UK rave and hardcore, US breaks, the Andalusian wave, Australia, decline and resilience, Beatport and DJ culture."
+      "title": "Breakbeat history — from funk to a scene without a single capital",
+      "description": "Fifteen chapters: funk, the Bronx, electro, Florida, UK rave, Andalusia, big beat, nu skool, fragmentation and the 2026 network. Crises included — Martín Carpena among them — not only the peaks."
     },
     "artists": {
       "title": "Breakbeat artists and key figures",

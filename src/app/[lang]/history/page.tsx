@@ -40,6 +40,10 @@ type RenderEntry = {
   content: string
 }
 
+function localizeHistoryHtml(html: string, lang: string) {
+  return html.replace(/href="\/(?!(?:en|es)\/)/g, `href="/${lang}/`)
+}
+
 const SECTION_RANGES: Record<string, string> = {
   origins: '1973 — 1986',
   uk_breakbeat: '1988 — 2004',
@@ -89,7 +93,7 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
           `<p><a href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a></p>`,
       ),
     ].join(''),
-  }))
+  })).map((entry) => ({ ...entry, content: localizeHistoryHtml(entry.content, lang) }))
 
   const renderEntries: RenderEntry[] =
     list.length > 0
@@ -101,9 +105,13 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
               ? `${entry.year_start} — ${entry.year_end}`
               : `${entry.year_start} — ${lang === 'es' ? 'hoy' : 'today'}`,
           title: lang === 'es' ? entry.title_es : entry.title_en,
-          content: lang === 'es' ? entry.content_es : entry.content_en,
+          content: localizeHistoryHtml(lang === 'es' ? entry.content_es : entry.content_en, lang),
         }))
       : fallbackEntries
+
+  const noteSlug = renderEntries.some((entry) => entry.slug === 'bronx-the-break')
+    ? 'bronx-the-break'
+    : renderEntries.find((entry) => entry.section === 'origins')?.slug
 
   return (
     <div className="min-h-screen">
@@ -112,6 +120,22 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
         <div className="sec-tag">HISTORY</div>
         <h1 className="sec-title">{dict.history.title}<br /><span className="hl">BREAKBEAT</span></h1>
         <p style={{ fontFamily: "'Special Elite', monospace", fontSize: '17px', lineHeight: 1.8, maxWidth: '700px', color: 'var(--dim)' }}>{dict.history.subtitle}</p>
+        <nav className="mt-8 max-w-[900px] grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1" aria-label={lang === 'es' ? 'Capítulos' : 'Chapters'}>
+          {renderEntries.map((entry, index) => (
+            <a
+              key={entry.slug}
+              href={`#${entry.slug}`}
+              className="no-underline hover:underline"
+              style={{ fontFamily: "'Courier Prime', monospace", fontSize: '13px', lineHeight: 1.45, color: 'var(--ink)' }}
+            >
+              <span style={{ color: 'var(--red)', fontWeight: 700 }}>{String(index + 1).padStart(2, '0')}</span>
+              {' '}
+              {entry.yearLabel}
+              {' — '}
+              {entry.title}
+            </a>
+          ))}
+        </nav>
       </section>
 
       {renderEntries.map((entry, i) => {
@@ -121,7 +145,8 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
         return (
           <Fragment key={entry.slug}>
             <section
-              className={`px-4 sm:px-6 py-12 sm:py-16 ${isDark ? 'bg-[var(--ink)] text-[var(--paper)]' : 'lined'}`}
+              id={entry.slug}
+              className={`scroll-mt-24 px-4 sm:px-6 py-12 sm:py-16 ${isDark ? 'bg-[var(--ink)] text-[var(--paper)]' : 'lined'}`}
               style={isDark ? { borderTop: `6px solid ${color}`, borderBottom: `6px solid ${color}` } : {}}
             >
               <div className="max-w-[800px] mx-auto">
@@ -132,22 +157,6 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
                 <h2 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(22px, 4vw, 36px)', textTransform: 'uppercase', letterSpacing: '-1px', marginBottom: '20px' }}>
                   {entry.title}
                 </h2>
-
-                <span
-                  className="inline-block mb-6"
-                  style={{
-                    fontFamily: "'Courier Prime', monospace",
-                    fontWeight: 700,
-                    fontSize: '9px',
-                    letterSpacing: '2px',
-                    textTransform: 'uppercase',
-                    padding: '3px 10px',
-                    background: color,
-                    color: (color === 'var(--yellow)' || color === 'var(--acid)') ? 'var(--ink)' : (isDark ? 'var(--ink)' : 'white'),
-                  }}
-                >
-                  {entry.section.replace(/_/g, ' ')}
-                </span>
 
                 <div
                   className="prose-ob"
@@ -162,11 +171,67 @@ export default async function HistoryPage({ params }: { params: Promise<{ lang: 
               </div>
             </section>
 
-            {entry.section === 'origins' && <BreakNoteBlock note={breakNote} />}
+            {entry.slug === noteSlug && <BreakNoteBlock note={breakNote} />}
           </Fragment>
         )
       })}
+      <HistoryTree lang={lang} />
     </div>
+  )
+}
+
+const TREE = {
+  es: {
+    kicker: 'ÁRBOL',
+    title: 'Dos líneas, no una escalera',
+    leftTitle: 'Del funk al jungle',
+    left: ['Funk / soul', 'Breaks de hip hop', 'Electro', 'Breakbeat hardcore', 'Jungle / drum & bass'],
+    rightTitle: 'En paralelo, no después',
+    right: ['Florida breaks', 'Acid / progressive breaks', 'Big beat', 'Nu skool breaks', 'Tech-funk / electro breaks', 'Breaks actual / UK bass / bassline'],
+    close: 'Cada flecha es una rama. Compartir abuelo no las convierte en etapas de una sola pista.',
+  },
+  en: {
+    kicker: 'TREE',
+    title: 'Two lines, not a ladder',
+    leftTitle: 'From funk to jungle',
+    left: ['Funk / soul', 'Hip-hop breaks', 'Electro', 'Breakbeat hardcore', 'Jungle / drum & bass'],
+    rightTitle: 'Alongside, not after',
+    right: ['Florida breaks', 'Acid / progressive breaks', 'Big beat', 'Nu skool breaks', 'Tech-funk / electro breaks', 'Current breaks / UK bass / bassline'],
+    close: 'Each arrow is a branch. Sharing a grandparent does not make them stages of one floor.',
+  },
+} as const
+
+function HistoryTree({ lang }: { lang: 'es' | 'en' }) {
+  const copy = TREE[lang]
+  const column = (title: string, items: readonly string[], accent: string) => (
+    <div className="border-[3px] border-[var(--ink)] p-4 sm:p-5" style={{ background: 'var(--paper)' }}>
+      <div style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: accent, marginBottom: '12px' }}>
+        {title}
+      </div>
+      <ol className="list-none p-0 m-0">
+        {items.map((item, index) => (
+          <li key={item} style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 800, fontSize: 'clamp(14px, 2vw, 18px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.25, marginTop: index === 0 ? 0 : '10px' }}>
+            {index > 0 && <span style={{ color: accent, marginRight: '8px' }}>↓</span>}
+            {item}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+  return (
+    <section className="px-4 sm:px-6 py-12 sm:py-16 border-t-[5px] border-[var(--ink)] bg-[var(--paper)]">
+      <div className="max-w-[900px] mx-auto">
+        <div className="sec-tag">{copy.kicker}</div>
+        <h2 className="sec-title" style={{ fontSize: 'clamp(28px, 5vw, 48px)' }}>{copy.title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          {column(copy.leftTitle, copy.left, 'var(--red)')}
+          {column(copy.rightTitle, copy.right, 'var(--blue)')}
+        </div>
+        <p className="mt-6" style={{ fontFamily: "'Special Elite', monospace", fontSize: '16px', lineHeight: 1.8, maxWidth: '680px' }}>
+          {copy.close}
+        </p>
+      </div>
+    </section>
   )
 }
 
