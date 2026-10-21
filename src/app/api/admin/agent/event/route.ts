@@ -47,6 +47,59 @@ function isEmpty(val: unknown): boolean {
   return false
 }
 
+function creditKey(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function artistInLineup(artist: string, lineupKeys: string[]): boolean {
+  const a = creditKey(artist)
+  if (a.length < 2) return false
+  return lineupKeys.some(
+    (n) => n === a || (a.length >= 4 && n.includes(a)) || (n.length >= 4 && a.includes(n)),
+  )
+}
+
+/**
+ * El chat ya dejó el cartel en `lineup`. El enriquecimiento rellena escenarios y horario
+ * vacíos: si inventa otros nombres (Electrolunch, 20 oct 2026: Stanton Warriors), no se guardan.
+ */
+function dropArtistsOutsideLineup(
+  current: Record<string, unknown>,
+  patch: Record<string, unknown>,
+): void {
+  const lineup = Array.isArray(current.lineup)
+    ? (current.lineup as unknown[]).map((s) => creditKey(String(s))).filter(Boolean)
+    : []
+  if (!lineup.length) return
+
+  if (Array.isArray(patch.stages)) {
+    const stages = (patch.stages as { lineup?: unknown[] }[])
+      .map((stage) => {
+        const names = Array.isArray(stage.lineup) ? stage.lineup.map((s) => String(s)) : []
+        if (!names.length) return stage
+        const kept = names.filter((name) => artistInLineup(name, lineup))
+        if (!kept.length) return null
+        return { ...stage, lineup: kept }
+      })
+      .filter((stage) => stage != null)
+    if (!stages.length) delete patch.stages
+    else patch.stages = stages
+  }
+
+  if (Array.isArray(patch.schedule)) {
+    const slots = (patch.schedule as { artist?: unknown }[]).filter((slot) =>
+      artistInLineup(String(slot.artist || ''), lineup),
+    )
+    if (!slots.length) delete patch.schedule
+    else patch.schedule = slots
+  }
+}
+
 function mergeEnrichment(
   current: Record<string, unknown>,
   enriched: Record<string, unknown>,
@@ -214,6 +267,7 @@ Prioridades para este enriquecimiento:
 - Respeta los valores existentes si ya son plausibles y el contexto no los contradice.
 - Si no hay día exacto confirmado, deja date_start/date_end en null.
 - Si no hay evidencia suficientemente clara para un campo, devuélvelo vacío en lugar de inferirlo.
+- Si lineup ya tiene nombres, stages y schedule solo pueden usar esos nombres. No añadas artistas que no estén en lineup. Si no hay horas en la ficha ni en el cartel, deja schedule vacío.
 - Las descripciones EN/ES deben contar la misma historia y no introducir hechos nuevos.
 
 Los campos que ya tienen valor correcto, repítelos tal cual.`
@@ -266,6 +320,7 @@ Los campos que ya tienen valor correcto, repítelos tal cual.`
   }
 
   const patch = normalizePatch(mergeEnrichment(event, enriched, !!force))
+  if (!force) dropArtistsOutsideLineup(event, patch)
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({

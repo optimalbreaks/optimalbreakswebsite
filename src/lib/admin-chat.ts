@@ -2241,9 +2241,23 @@ type ExistingEventRow = {
   gallery_urls?: string[] | null
 }
 
+/** Otro día del calendario, con el año puesto en el cartel: otra edición, no un duplicado. */
+function isDifferentCalendarDay(
+  existingDate: string | null | undefined,
+  dateStart: string | null | undefined,
+  yearGuessed: boolean,
+): boolean {
+  if (yearGuessed) return false
+  const oldDay = (existingDate || '').slice(0, 10)
+  const newDay = (dateStart || '').slice(0, 10)
+  return Boolean(oldDay && newDay && oldDay !== newDay)
+}
+
 /**
  * Busca un evento ya existente que sea el mismo que el nuevo:
- * mismo slug, o nombre normalizado igual/contenido (y año compatible si ambos tienen fecha).
+ * mismo slug y mismo día, o nombre normalizado igual/contenido en la misma fecha.
+ * Un nombre más corto dentro de otro («Electrolunch XXL» dentro de «Electrolunch XXL · Picnic 76»)
+ * no basta si el día es distinto (21 oct 2026: el cartel del 24 oct pisó el Picnic 76 del 9 may).
  */
 function findDuplicateEvent(
   all: ExistingEventRow[],
@@ -2254,8 +2268,13 @@ function findDuplicateEvent(
 ): ExistingEventRow | null {
   const newYear = (dateStart || '').slice(0, 4)
   const bySlug = all.find((e) => e.slug === slug)
-  // Mismo slug pero otro año = otra edición (Olibass Open Air 2025 pisó la de 2026, 29 sep 2026)
-  if (bySlug && (yearGuessed || !newYear || !bySlug.date_start || bySlug.date_start.startsWith(newYear))) {
+  // Mismo slug pero otro año = otra edición (Olibass Open Air 2025 pisó la de 2026, 29 sep 2026).
+  // Mismo slug y otro día del mismo año también: Electrolunch se repite y el slug corto coincidiría.
+  if (
+    bySlug &&
+    !isDifferentCalendarDay(bySlug.date_start, dateStart, yearGuessed) &&
+    (yearGuessed || !newYear || !bySlug.date_start || bySlug.date_start.startsWith(newYear))
+  ) {
     return bySlug
   }
 
@@ -2285,9 +2304,11 @@ function findDuplicateEvent(
       (normOld.length >= 8 && normNew.includes(normOld)) ||
       (normNew.length >= 8 && normOld.includes(normNew))
     if (!sameName) continue
-    // Ediciones anuales: si ambos tienen año y difiere, NO es duplicado
+    // Ediciones anuales: si ambos tienen año y difiere, NO es duplicado.
+    // Mismo año y otro día tampoco: el nombre corto de una serie cabe dentro del largo.
     const oldYear = (e.date_start || '').slice(0, 4)
     if (newYear && oldYear && newYear !== oldYear) continue
+    if (isDifferentCalendarDay(e.date_start, dateStart, yearGuessed)) continue
     return e
   }
   return null

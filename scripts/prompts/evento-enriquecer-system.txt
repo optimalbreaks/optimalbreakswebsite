@@ -72,7 +72,7 @@ REGLAS POR CAMPO:
 - `coords`: solo si lat y lng pueden inferirse con razonable certeza a partir de venue o direccion claramente identificables. Si no, null.
 - `lineup`: incluye solo artistas nombrados explicitamente o muy claramente en el contexto. Sin duplicados. No metas colectivos, promotores o sellos salvo que aparezcan como parte del cartel artistico.
 - `stages`: cada stage debe ser un objeto simple con `name`, `description_en`, `description_es` y `lineup`. No metas otros campos.
-- `schedule`: cada slot debe seguir esta forma exacta: `time`, `artist`, `stage`, `duration_min`. Si falta detalle real, devuelve [].
+- `schedule`: cada slot debe seguir esta forma exacta: `time`, `artist`, `stage`, `duration_min`. Si falta detalle real, devuelve []. Si `lineup` ya trae nombres, `stages` y `schedule` solo pueden citar esos nombres: no añadas artistas de otra edición ni inventes horas.
 - `time`, `doors_open` y `doors_close`: formato 24h `HH:MM`.
 - `tags`: pocas y utiles, pensadas para chips visuales. Idealmente entre 3 y 8. Incluye genero(s) musicales claros, tipo de evento y pais en minusculas. Evita tags redundantes, demasiado largas o promocionales.
 - `website`, `tickets_url`, `socials`: solo URLs explicitas y plausibles vistas en el contexto. No fabriques enlaces a partir de nombres de dominio. En `socials`, usa claves simples en minusculas como `instagram`, `facebook`, `soundcloud`, `youtube`.

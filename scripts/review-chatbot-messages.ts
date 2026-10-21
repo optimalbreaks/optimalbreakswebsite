@@ -7,6 +7,8 @@
  *  - ✗ en la confirmación (la BD no guardó).
  *  - Propuestas (pending_ops) que nadie confirmó: «Load failed», abandono o mal routing.
  *  - El colaborador repite el mismo enlace o pregunta «¿dónde está?».
+ *  - Un «hecho» que escribió en otra ficha: slug preparado distinto del slug guardado
+ *    (Electrolunch, 20 oct 2026: el cartel del 24 oct pisó el Picnic 76 del 9 may).
  * Agrupa por causa, busca en src/ la línea que genera el error y pide al modelo
  * diagnóstico + arreglo concreto. No escribe en la BD.
  *
@@ -34,12 +36,13 @@ type Msg = {
   role: 'user' | 'assistant' | 'system'
   content: string
   pending_ops: { type?: string; summary?: string; label?: string }[] | null
+  tool_trace: { name?: string; detail?: string }[] | null
   attached_urls: string[] | null
   created_at: string
 }
 
 type Incident = {
-  kind: 'fallo' | 'sin_confirmar' | 'repite' | 'confuso'
+  kind: 'fallo' | 'sin_confirmar' | 'repite' | 'confuso' | 'pisa'
   when: string
   who: string
   thread: string
@@ -118,6 +121,32 @@ function detect(msgs: Msg[], who: Record<string, string>): { incidents: Incident
             assistant_text: short(m.content, 400),
             cause: `[${hit[1]}] ${causeOf(hit[2])}`,
           })
+        }
+        const landed = m.content.match(/Ya existía «([^»]+)» \(([^)]+)\); actualizado sin duplicar/)
+        if (landed) {
+          const trace = Array.isArray(m.tool_trace) ? m.tool_trace : []
+          const executed = trace.find((t) => t.name === 'executed')
+          let prepared: { slug?: string; name?: string; date_start?: string | null } | null = null
+          try {
+            const detail = JSON.parse(executed?.detail || '')
+            prepared = detail?.ops?.[0]?.action ?? null
+          } catch {
+            prepared = null
+          }
+          if (prepared?.slug && prepared.slug !== landed[2]) {
+            incidents.push({
+              kind: 'pisa',
+              when: m.created_at,
+              who: author,
+              thread,
+              user_text: prevUser ? userText(prevUser) : '',
+              assistant_text: short(
+                `preparó «${prepared.name || '?'}» (${prepared.slug}, ${prepared.date_start || 'sin fecha'}) y escribió en «${landed[1]}» (${landed[2]})`,
+                400,
+              ),
+              cause: '[event] actualizado sin duplicar en otra ficha (slug distinto al preparado)',
+            })
+          }
         }
         if (m.pending_ops?.length) {
           const resolved = list
@@ -321,7 +350,7 @@ async function main() {
   for (let i = 0; i < ids.length; i += 100) {
     const { data, error } = await sb
       .from('admin_chat_messages')
-      .select('thread_id, role, content, pending_ops, attached_urls, created_at')
+      .select('thread_id, role, content, pending_ops, tool_trace, attached_urls, created_at')
       .in('thread_id', ids.slice(i, i + 100))
       .gte('created_at', since)
       .order('created_at', { ascending: true })
@@ -377,7 +406,7 @@ async function main() {
   for (const [i, [cause, samples]] of ordered.entries()) {
     process.stdout.write(`[${i + 1}/${ordered.length}] ${samples.length}× ${cause.slice(0, 90)} `)
     const kind = samples[0].kind
-    const code = kind === 'fallo' ? codeFor(samples[0].cause) : ''
+    const code = kind === 'fallo' || kind === 'pisa' ? codeFor(samples[0].cause) : ''
     // «repite» y «confuso» son síntomas: la causa sale en los fallos o en las propuestas sin confirmar.
     const lastIso = samples[samples.length - 1].when
     const opType = samples[0].cause.match(/^\[([a-z_]+)\]/)?.[1]
@@ -391,7 +420,7 @@ async function main() {
       ? `Después del último fallo hay ${okAfter} guardados correctos de tipo [${opType}]: probablemente ya está arreglado.`
       : ''
     const review =
-      llm && (kind === 'fallo' || kind === 'sin_confirmar')
+      llm && (kind === 'fallo' || kind === 'sin_confirmar' || kind === 'pisa')
         ? await reviewCause(cause, samples, code, after ? `${after}\n${commits}` : commits)
         : null
     console.log(review ? `→ ${review.prioridad}` : '')

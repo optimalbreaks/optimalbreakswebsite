@@ -51,7 +51,7 @@ Un YouTube de **tema** no se archiva a ciegas (11 oct 2026): el servidor mira ca
 
 **Enlaces de Beatport pegados en el chat (17 oct 2026):** del 15 al 16 oct fallaron los ocho intentos, de admin e Isaías, con «Beatport no devolvió la ficha». Cuatro de esos cinco temas ya estaban en la web: Boogie, Not Human, Diagnostics y el disco The Cyberfunk Vault. `featured-import` mira **antes** de abrir Beatport si ese id ya está en `chart_featured_tracks` (cualquier semana) o en `chart_import_queue`. Si está, la respuesta es «No te preocupes, que este tema ya está». En Vercel no se abre Chrome (`createBeatportPageLoader({ browser: false })`): el Chrome también recibía el challenge y alargaba la petición hasta el «Load failed» del móvil. Un tema nuevo que Cloudflare tapa falla rápido y pide el YouTube o el SoundCloud. **Prohibido** rellenar la ficha con la búsqueda web: para el mismo enlace dio artistas distintos en cada intento (Boogie salió como «Chinonegro»; Magic Carpet, una vez Epicentre y otra Kamilo Sanclemente). La salida buena sigue siendo la API oficial de Beatport.
 
-**Revisor del chat (17 oct 2026):** `npx tsx scripts/review-chatbot-messages.ts [--days=7 | --since=YYYY-MM-DD] [--no-llm]`. Lee `admin_chat_messages` y detecta tres cosas: los ✗ al confirmar, las propuestas que nadie confirmó y los enlaces que el colaborador vuelve a pegar. Agrupa por causa, busca en `src/` la línea que da el error y le pide al modelo diagnóstico y arreglo, con el mapa real del flujo y el `git log` del periodo. Una causa con guardados correctos del mismo tipo después del último fallo sale como «probablemente ya está arreglado». El informe va a `docs/chatbot/INFORME-REVISION-CHAT.md` (gitignorado: lleva textos de colaboradores). No escribe en la BD. Si Narciso pide revisar el chat: se lanza y lo que salga en prioridad alta se arregla en el mismo turno.
+**Revisor del chat (17 oct 2026):** `npx tsx scripts/review-chatbot-messages.ts [--days=7 | --since=YYYY-MM-DD] [--no-llm]`. Lee `admin_chat_messages` y detecta los ✗ al confirmar, las propuestas que nadie confirmó, los enlaces que el colaborador vuelve a pegar y los «hecho» que escribieron en otra ficha (slug preparado distinto del guardado; Electrolunch, 21 oct 2026). Agrupa por causa, busca en `src/` la línea que da el error y le pide al modelo diagnóstico y arreglo, con el mapa real del flujo y el `git log` del periodo. Una causa con guardados correctos del mismo tipo después del último fallo sale como «probablemente ya está arreglado». El informe va a `docs/chatbot/INFORME-REVISION-CHAT.md` (gitignorado: lleva textos de colaboradores). No escribe en la BD. Si Narciso pide revisar el chat: se lanza y lo que salga en prioridad alta se arregla en el mismo turno.
 
 CRUD admin: `db_list`, `db_get`, `stage_db_insert|update|delete`.
 
@@ -59,7 +59,7 @@ SQL: `db_sql_read` / `stage_db_sql_write` (requiere `DATABASE_URL` o password Po
 
 ## Evento / artista / sello desde captura
 
-Tras confirmar `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true`). Cartel = **visión/OCR**.
+Tras confirmar `stage_upsert_event`: UPSERT + dedupe; enrich/cartel en `waitUntil` (`light: true`). Cartel = **visión/OCR**. Otro día del calendario no reutiliza la ficha de una edición anterior aunque el nombre corto quepa en el largo. El enriquecimiento no añade a `stages` ni a `schedule` artistas que no estén en el `lineup` que ya guardó el chat.
 
 **Opt-out de ficha:** no `stage_upsert_artist` para **Vazteria X**. Regla **`artistas-opt-out-perfil`**.
 
