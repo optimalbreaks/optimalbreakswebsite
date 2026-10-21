@@ -246,6 +246,25 @@ function LaurelBranch({ mirrored = false, className = '' }: { mirrored?: boolean
   )
 }
 
+function RankOrderBadge({ rank }: { rank: number }) {
+  // Columna izquierda del Top 100 de temas. Más grande que `SaveCountBadge`
+  // (48px en caliente / 44px si no) para que el puesto mande sobre los saves.
+  const triple = rank >= 100
+  return (
+    <span
+      className={`inline-flex items-center justify-center shrink-0 font-black leading-none border-4 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)]
+        w-[4.5rem] h-[4.5rem] sm:w-24 sm:h-24
+        ${triple ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}
+      `}
+      style={{ fontFamily: "'Unbounded', sans-serif" }}
+      title={`#${rank}`}
+      aria-label={`#${rank}`}
+    >
+      {rank}
+    </span>
+  )
+}
+
 function SaveCountBadge({ count, label }: { count: number; label: string }) {
   // Badge similar a `PositionBadge` del chart pero con el número de saves.
   const isHot = count >= 5
@@ -1039,7 +1058,8 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                     ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <RankOrderBadge rank={t.rank} />
                       <SaveCountBadge count={t.unique_users} label={cm.saves_tooltip || 'Personas que han guardado este tema'} />
 
                       {t.artwork_url ? (
@@ -1049,19 +1069,11 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                       ) : null}
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span
-                            className="inline-block px-1.5 py-0.5 text-[9px] font-black tracking-widest bg-[var(--ink)] text-[var(--paper)] border-2 border-[var(--ink)]"
-                            style={{ fontFamily: "'Courier Prime', monospace" }}
-                          >
-                            #{t.rank}
-                          </span>
-                          {t.save_count > t.unique_users && (
-                            <span className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider" style={{ fontFamily: "'Courier Prime', monospace" }}>
-                              {(cm.repeats || '{n} saves').replace('{n}', String(t.save_count))}
-                            </span>
-                          )}
-                        </div>
+                        {t.save_count > t.unique_users && (
+                          <p className="text-[10px] text-[var(--ink)]/40 font-bold tracking-wider mb-0.5" style={{ fontFamily: "'Courier Prime', monospace" }}>
+                            {(cm.repeats || '{n} saves').replace('{n}', String(t.save_count))}
+                          </p>
+                        )}
                         <h3 className="text-sm sm:text-base font-black leading-snug sm:leading-tight sm:truncate" style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}>
                           {internalHref ? (
                             <Link href={internalHref} className="hover:text-[var(--red)] transition-colors no-underline">
