@@ -10,6 +10,7 @@
     "blog": "Blog",
     "comic": "Comic",
     "mixes": "Mixes",
+    "parkineo": "Parkineo",
     "about": "About",
     "charts": "Tracks",
     "topreleases": "Releases",
@@ -44,6 +45,7 @@
     "quick_labels": "Labels",
     "quick_events": "Events",
     "quick_mixes": "Mixes",
+    "quick_parkineo": "Parkineo",
     "quick_scenes": "Scenes",
     "quick_charts": "Tracks",
     "quick_blog": "Blog"
@@ -741,6 +743,10 @@
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",
       "description": "Your FAVORITE BREAKS SESSIONS page. All the best BREAKBEAT SESSIONS one click away. Classic mixes, video sessions and essential radio shows."
+    },
+    "parkineo": {
+      "title": "Parkineo — sessions from people starting out in breaks",
+      "description": "Sessions from DJs who do not have a profile on Optimal Breaks yet. Listen here. To send yours, sign in and paste a SoundCloud, YouTube or Mixcloud link."
     },
     "comic": {
       "title": "Comic: The adventures of the Pig and the Pickle",

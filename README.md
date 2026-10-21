@@ -746,6 +746,7 @@ Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to 
 | Scenes | `/[lang]/scenes` | Breakbeat by territory; **three listing views** |
 | Blog | `/[lang]/blog` | Editorial layer: essays, comparisons, retrospectives |
 | Mixes | `/[lang]/mixes` | Essential mixes, classic sets, radio shows; **three listing views**; year / platform / search filters; **lazy embeds** (see *Directory listing views* → Mixes) |
+| Parkineo | `/[lang]/parkineo` | Sessions from DJs who are **not** artist profiles. Public list; sending requires login (SoundCloud, YouTube or Mixcloud link, 15 min–3 h). Nothing goes live until an admin publishes it at `/[lang]/administrator/parkineo`. Not mixed into `/mixes`, no artist row, no file upload. Account: `/[lang]/mi-cuenta/parkineo`. |
 | Charts | `/[lang]/charts` | *New Releases* (2026, by release week) and *Archive Picks* (by year); teaser card linking to **Community Top**. 40 Breaks is not listed. |
 | Community Top 100 | `/[lang]/topalltimes` | All-time ranking of **"+" saves** (My Tracks): artist board (10 visible, load more to 50, weekly ▲/▼/NUEVO; remixer names count) + top 100 tracks. API `GET /api/public/charts/community-monthly` (chunked `.in()` so every hydratable save counts) |
 | Admin Awards | `/[lang]/administrator/awards` | Admin-only BreaksPoll desk over the same «+». Default cut = current release year, public lists — **not** the home Saved Tracks total. `GET /api/admin/awards` |
@@ -1106,6 +1107,7 @@ Files under `supabase/migrations/` (apply in lexical order). **Many migrations e
 | `070_editorial_artist_marks.sql` | **Editorial artist mark (phase 2):** table **`editorial_artist_marks`** (`user_id` + normalized credit name). Service-role only. Those saves stay in My Tracks; they do **not** credit that artist name on `/topalltimes` artists and do **not** raise that song on the public track chart (6 Oct 2026; same for an approved claim and a family mark). An approved claim (`claimed_by`) applies the same skip and unlocks bookings. Admin: `/administrator/users/[id]`. |
 | `071_editorial_label_marks.sql` | **Editorial label mark:** table **`editorial_label_marks`** (`user_id` + normalized label name as on tracks). Service-role only. Saves of that label by that account still count on the track Top 100 / My Tracks; they do **not** credit **anyone** on `/topalltimes` artists. Not an ownership claim. Admin: `/administrator/users/[id]` → Marcar sello. |
 | `082_growth_indexes.sql` | Indexes for lists that grow without a cap: featured `release_year` / `release_date`, vinyl `year`, published editions by week, `events.date_start`, `mixes (year, created_at)`, `saved_chart_tracks (user_id, created_at)`. Idempotent. Applied 28 Sep 2026. |
+| `092_parkineo_sessions.sql` | **Parkineo:** `parkineo_sessions`. Public read of `published` rows only. One pending row per user. Live `source_key` unique. Writes via service role. |
 
 ---
 

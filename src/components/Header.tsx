@@ -243,6 +243,7 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'festivals', href: `/${lang}/festivals` },
     { key: 'labels', href: `/${lang}/labels` },
     { key: 'mixes', href: `/${lang}/mixes` },
+    { key: 'parkineo', href: `/${lang}/parkineo` },
     { key: 'scenes', href: `/${lang}/scenes` },
     { key: 'blog', href: `/${lang}/blog` },
     { key: 'comic', href: `/${lang}/comic` },

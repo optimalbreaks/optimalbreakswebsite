@@ -10,6 +10,7 @@
     "blog": "Blog",
     "comic": "Cómic",
     "mixes": "Mixes",
+    "parkineo": "Parkineo",
     "about": "Sobre",
     "charts": "Tracks",
     "topreleases": "Novedades",
@@ -44,6 +45,7 @@
     "quick_labels": "Sellos",
     "quick_events": "Eventos",
     "quick_mixes": "Mixes",
+    "quick_parkineo": "Parkineo",
     "quick_scenes": "Escenas",
     "quick_charts": "Tracks",
     "quick_blog": "Blog"
@@ -623,6 +625,10 @@
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",
       "description": "Tu PÁGINA DE SESIONES BREAKS favorita. Todas las mejores SESIONES de Breakbeat a un solo clic. Mixes clásicos, sesiones en vídeo y programas imprescindibles."
+    },
+    "parkineo": {
+      "title": "Parkineo — sesiones de quien empieza en el break",
+      "description": "Sesiones de DJs que aún no tienen ficha en Optimal Breaks. Se escuchan aquí. Para mandar la tuya entras con tu cuenta y pegas el enlace de SoundCloud, YouTube o Mixcloud."
     },
     "comic": {
       "title": "Cómic: Las aventuras del Lechón y el Pepino",

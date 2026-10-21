@@ -266,6 +266,24 @@ export interface Database {
         Update: Partial<Omit<Mix, 'id' | 'created_at'>>
         Relationships: DbRelationship[]
       }
+      parkineo_sessions: {
+        Row: ParkineoSession
+        Insert: Omit<
+          ParkineoSession,
+          'id' | 'created_at' | 'updated_at' | 'reject_reason' | 'published_at' | 'decided_at' | 'decided_by' | 'status'
+        > & {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          status?: ParkineoStatus
+          reject_reason?: string | null
+          published_at?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+        }
+        Update: Partial<Omit<ParkineoSession, 'id' | 'created_at'>>
+        Relationships: DbRelationship[]
+      }
       history_entries: {
         Row: HistoryEntry
         Insert: Omit<HistoryEntry, 'id' | 'created_at'>
@@ -1262,6 +1280,33 @@ export interface Mix extends Record<string, unknown> {
   event_id?: string | null
   /** MP3 descargable cedido por el artista o la promotora (migración 084). Botón en /mixes/<slug>. */
   download_url?: string | null
+}
+
+export type ParkineoPlatform = 'soundcloud' | 'youtube' | 'mixcloud'
+export type ParkineoStatus = 'pending' | 'published' | 'rejected'
+
+/** Sesión de un DJ sin ficha. `user_id` no se lee en la página pública. */
+export interface ParkineoSession extends Record<string, unknown> {
+  id: string
+  created_at: string
+  updated_at: string
+  user_id: string
+  dj_name: string
+  city: string
+  title: string
+  source_url: string
+  source_key: string
+  platform: ParkineoPlatform
+  embed_url: string | null
+  video_url: string | null
+  image_url: string | null
+  duration_minutes: number
+  slug: string
+  status: ParkineoStatus
+  reject_reason: string | null
+  published_at: string | null
+  decided_at: string | null
+  decided_by: string | null
 }
 
 export interface HistoryEntry extends Record<string, unknown> {

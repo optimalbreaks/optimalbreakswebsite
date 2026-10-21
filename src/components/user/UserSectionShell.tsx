@@ -18,6 +18,7 @@ export type UserSectionKey =
   | 'events'
   | 'reviews'
   | 'mixes'
+  | 'parkineo'
   | 'tracks'
   | 'soulmates'
   | 'artist'
@@ -79,6 +80,15 @@ function IconMixes({ className }: { className?: string }) {
   )
 }
 
+function IconParkineo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="4" y="3" width="16" height="18" rx="1" />
+      <path d="M9 17V7h4.2a3 3 0 0 1 0 6H9" />
+    </svg>
+  )
+}
+
 function IconTracks({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -135,6 +145,7 @@ const NAV: Array<{
   { key: 'events',    href: (l) => `/${l}/mi-cuenta/eventos`,        Icon: IconEvents,    label_en: 'EVENTS',        label_es: 'EVENTOS',         short_en: 'EVENTS', short_es: 'EVENTOS' },
   { key: 'reviews',   href: (l) => `/${l}/mi-cuenta/resenas`,        Icon: IconReviews,   label_en: 'REVIEWS',       label_es: 'RESEÑAS',         short_en: 'REVIEWS',short_es: 'RESEÑAS' },
   { key: 'mixes',     href: (l) => `/${l}/mi-cuenta/mixes`,          Icon: IconMixes,     label_en: 'SAVED MIXES',   label_es: 'MIXES GUARDADOS', short_en: 'MIXES',  short_es: 'MIXES' },
+  { key: 'parkineo',  href: (l) => `/${l}/mi-cuenta/parkineo`,       Icon: IconParkineo,  label_en: 'PARKINEO',      label_es: 'PARKINEO',        short_en: 'PARK',   short_es: 'PARK' },
   { key: 'tracks',    href: (l) => `/${l}/mi-cuenta/tracks`,         Icon: IconTracks,    label_en: 'MY TRACKS',     label_es: 'MIS TRACKS',      short_en: 'TRACKS', short_es: 'TRACKS' },
   { key: 'soulmates', href: (l) => `/${l}/mi-cuenta/almas-gemelas`,  Icon: IconSoulmates, label_en: 'SOULMATES',     label_es: 'ALMAS GEMELAS',   short_en: 'SOUL',   short_es: 'ALMAS' },
   { key: 'artist',    href: (l) => `/${l}/mi-cuenta/artista`,        Icon: IconArtist,    label_en: 'ARTIST',        label_es: 'ARTISTA',         short_en: 'ARTIST', short_es: 'ARTISTA' },

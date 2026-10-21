@@ -16,6 +16,7 @@ import {
   type LangIndexability,
 } from '@/lib/index-policy'
 import { isEventCancelled } from '@/types/database'
+import { PUBLIC_PARKINEO_CACHE_TAG } from '@/lib/revalidate-public'
 
 const BASE_URL = 'https://www.optimalbreaks.com'
 
@@ -91,6 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/topreleases',
     '/topalltimes',
     '/mixes',
+    '/parkineo',
     '/breakbeat',
     '/festivals',
     '/agenda',
@@ -191,6 +193,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const row of mixRows) {
     if (!row.slug) continue
     pushPages(entries, `/mixes/${row.slug}`, row.event_id ? 0.7 : 0.6, 'monthly')
+  }
+
+  const parkineoRows = await fetchAllPages<{ slug: string }>((from, to) =>
+    createCachedSupabase(300, [PUBLIC_PARKINEO_CACHE_TAG])
+      .from('parkineo_sessions')
+      .select('slug')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to),
+  ).catch(() => [] as { slug: string }[])
+  for (const row of parkineoRows) {
+    if (!row.slug) continue
+    pushPages(entries, `/parkineo/${row.slug}`, 0.55, 'weekly')
   }
 
   const openEvents = agendaEvents.filter((e) => !isEventCancelled(e))

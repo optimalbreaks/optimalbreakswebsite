@@ -8,8 +8,9 @@ import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { isSafeAppPath, normalizeRelativeNext, appPathOnly } from '@/lib/auth-callback'
 
-export default function LoginForm({ lang }: { lang: string }) {
+export default function LoginForm({ lang, nextPath = null }: { lang: string; nextPath?: string | null }) {
   const { signInWithEmail, signUpWithEmail, resetPasswordForEmail, user, loading } = useAuth()
   const router = useRouter()
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login')
@@ -21,10 +22,11 @@ export default function LoginForm({ lang }: { lang: string }) {
   const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const es = lang === 'es'
+  const afterLogin = safeNext(lang, nextPath)
 
   // Redirect if already logged in
   if (!loading && user) {
-    router.push(`/${lang}/dashboard`)
+    router.push(afterLogin)
     return null
   }
 
@@ -46,7 +48,7 @@ export default function LoginForm({ lang }: { lang: string }) {
     } else if (mode === 'login') {
       const { error: err } = await signInWithEmail(email, password)
       if (err) setError(err)
-      else router.push(`/${lang}/dashboard`)
+      else router.push(afterLogin)
     } else {
       if (password.length < 6) {
         setError(es ? 'La contraseña debe tener al menos 6 caracteres' : 'Password must be at least 6 characters')
@@ -216,4 +218,11 @@ export default function LoginForm({ lang }: { lang: string }) {
       </div>
     </div>
   )
+}
+
+function safeNext(lang: string, nextPath: string | null | undefined): string {
+  const n = normalizeRelativeNext(nextPath ?? null)
+  if (!n) return `/${lang}/dashboard`
+  const path = appPathOnly(n)
+  return isSafeAppPath(path) ? path : `/${lang}/dashboard`
 }

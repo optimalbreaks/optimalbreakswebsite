@@ -1,0 +1,17 @@
+# Parkineo — sesiones de quien aún no tiene ficha
+
+Página pública `/parkineo`. No es `/mixes` y no es un alta de artista.
+
+## Invariantes
+
+1. **La lista pública solo enseña lo publicado** (`status = published`). Mandar exige cuenta. Nada se publica solo: la cola está en `/administrator/parkineo`.
+2. **Un enlace, no un archivo.** SoundCloud, YouTube o Mixcloud. Prohibido aceptar MP3/WAV o meter la sesión en `private/music`, `/api/audio` o `mixes.download_url`.
+3. **Duración.** 15 minutos o menos es un tema y se rechaza al enviar. Más de 3 horas también. El servidor lee la duración del enlace; si no puede, no entra en la cola.
+4. **Una en cola por cuenta.** Puede haber varias publicadas o descartadas. El mismo enlace no se repite mientras esté en cola o publicado.
+5. **No es artista.** No se crea fila en `artists`, no se escribe `claimed_by`, no se abren bookings, no cuenta en el Top de artistas ni en `/mixes`. El nombre de la tarjeta es el que escribió, sin enlace a `/artists`.
+6. **`user_id` no se selecciona** en la página pública. La ficha de cada sesión es `/parkineo/<slug>`.
+7. **Reproductor.** Portada + play. El iframe solo al clic, por el coordinador de audio (YouTube, SoundCloud y Mixcloud). Misma regla que las tarjetas de `/mixes`.
+
+Quien ya saca temas y quiere ficha sigue por Mi cuenta → Artista (`request_new`). Esa solicitud no mete la sesión en Parkineo.
+
+Lectura pública: `createCachedSupabase` con el tag `public-parkineo` (`revalidateParkineo` al publicar o al quitar una publicada).
