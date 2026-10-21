@@ -247,8 +247,7 @@ function LaurelBranch({ mirrored = false, className = '' }: { mirrored?: boolean
 }
 
 function RankOrderBadge({ rank }: { rank: number }) {
-  // Columna izquierda del Top 100 de temas. El recuento de saves va en texto
-  // bajo el título, como en el tablero de artistas.
+  // Columna izquierda del Top 100 de temas. La fila no enseña el recuento.
   const triple = rank >= 100
   return (
     <span
@@ -1068,15 +1067,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                           />
                           {t.label ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><LabelName name={t.label} slugMap={labelSlugMap} lang={lang} /></> : null}
                           {releaseDisp ? <><span className="mx-1.5 text-[var(--ink)]/30">|</span><span className="text-[var(--ink)]/45 font-bold tabular-nums whitespace-nowrap">{releaseDisp}</span></> : null}
-                        </p>
-                        <p
-                          className="text-[10px] sm:text-[11px] text-[var(--ink)]/50 font-bold tabular-nums mt-0.5"
-                          style={{ fontFamily: "'Courier Prime', monospace" }}
-                          title={cm.saves_tooltip || 'Personas que han guardado este tema'}
-                        >
-                          {t.save_count} {cm.artists_saves || 'saves'}
-                          {' · '}
-                          {t.unique_users} {cm.artists_fans || 'fans'}
                         </p>
                       </div>
                     </div>
