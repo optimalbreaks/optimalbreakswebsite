@@ -33,6 +33,8 @@ const COPY = {
     title: 'Top novedades',
     subtitle:
       'Lo más escuchado de cada quincena, agrupado por temporada. Desde el 6 de octubre de 2026 el puesto sale de las escuchas; antes, de los votos.',
+    shout:
+      '¡Esto es lo que la gente escucha en Optimal Breaks! Solo cuentan las reproducciones de esta web. No tomamos como referencia los datos de ninguna otra plataforma.',
     empty: 'Todavía no hay quincenas publicadas.',
     read: 'VER EL ARTÍCULO →',
     plays: 'escuchas',
@@ -59,6 +61,8 @@ const COPY = {
     title: 'Top releases',
     subtitle:
       'The most played tracks of each fortnight, grouped by season. From 6 October 2026 rank comes from plays; before that, from votes.',
+    shout:
+      'This is what people listen to on Optimal Breaks! Only plays on this site count. We do not use figures from any other platform as a reference.',
     empty: 'No fortnights published yet.',
     read: 'READ THE ARTICLE →',
     plays: 'plays',
@@ -287,8 +291,11 @@ export default async function TopReleasesPage({
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3" style={{ ...display, color: 'var(--ink)' }}>
             {t.title}
           </h1>
-          <p className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl" style={mono}>
+          <p className="text-sm sm:text-base text-[var(--ink)]/60 max-w-2xl mb-3" style={mono}>
             {t.subtitle}
+          </p>
+          <p className="text-sm sm:text-base font-bold text-[var(--ink)] max-w-2xl" style={mono}>
+            {t.shout}
           </p>
           {years.length > 1 ? (
             <nav className="flex flex-wrap items-center gap-2 mt-4" aria-label={t.years}>
