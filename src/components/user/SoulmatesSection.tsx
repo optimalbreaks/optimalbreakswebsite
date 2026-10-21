@@ -530,6 +530,7 @@ export default function SoulmatesSection({ lang }: Props) {
                     ? 'Canciones únicas que has guardado en Mis Tracks. Es la base con la que te comparamos.'
                     : 'Unique tracks you saved in My Tracks. The basis we compare you against.',
                   bg: 'bg-[var(--paper)]',
+                  hero: false,
                 },
                 {
                   n: data.soulmates.length,
@@ -539,15 +540,17 @@ export default function SoulmatesSection({ lang }: Props) {
                     : 'Users whose taste overlaps yours the most. We show the Top 10 at most (below).',
                   bg: 'bg-[var(--yellow)]',
                   to: data.soulmates.length > 0 ? 'soulmates-top' : null,
+                  hero: false,
                 },
                 {
                   n: visibleRecos.length,
                   l: es ? 'PARA DESCUBRIR' : 'TO DISCOVER',
                   d: es
-                    ? 'Temas que 2 o más de tus almas gemelas tienen guardados y tú aún no. Es la lista «Lo que te estás perdiendo» (abajo).'
-                    : 'Tracks that 2+ of your soulmates saved and you haven’t yet. That’s the “What you’re missing” list (below).',
+                    ? 'Estas son las sugerencias: temas que tus almas gemelas tienen guardados y tú aún no.'
+                    : 'These are the suggestions: tracks your soulmates saved and you haven’t yet.',
                   bg: 'bg-[var(--acid)]',
                   to: visibleRecos.length > 0 ? 'soulmates-recos' : null,
+                  hero: true,
                 },
               ].map((s) => {
                 const clickable = !!s.to
@@ -555,23 +558,31 @@ export default function SoulmatesSection({ lang }: Props) {
                   if (!s.to) return
                   document.getElementById(s.to)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
+                const numStyle = { fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }
                 const inner = (
                   <>
-                    <div className="font-black leading-none tabular-nums shrink-0" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
+                    <div className="font-black leading-none tabular-nums shrink-0" style={numStyle}>
                       {s.n}
                     </div>
-                    <div className="sm:mt-2 text-left">
-                      <div className="text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase flex items-center gap-1" style={{ fontFamily: MONO }}>
-                        {s.l}
-                        {clickable && <span aria-hidden className="text-[var(--ink)]/50">↓</span>}
+                    <div className={s.hero ? 'mt-1 text-left' : 'sm:mt-2 text-left'}>
+                      <div
+                        className={s.hero
+                          ? 'font-black uppercase leading-[0.9]'
+                          : 'text-[11px] sm:text-xs tracking-[1.5px] font-black uppercase flex items-center gap-1'}
+                        style={s.hero ? numStyle : { fontFamily: MONO }}
+                      >
+                        {s.hero ? <span className="bg-[var(--yellow)] box-decoration-clone px-1">{s.l}</span> : s.l}
+                        {clickable && (
+                          <span aria-hidden className="text-[var(--ink)]/50" style={s.hero ? { fontSize: '16px' } : undefined}> ↓</span>
+                        )}
                       </div>
-                      <div className="mt-0.5 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
+                      <div className="mt-1 text-[10px] sm:text-[11px] leading-snug text-[var(--ink)]/70" style={{ fontFamily: MONO }}>
                         {s.d}
                       </div>
                     </div>
                   </>
                 )
-                const cls = `border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} flex items-center gap-3 sm:block w-full`
+                const cls = `border-[3px] border-[var(--ink)] p-3 sm:p-4 ${s.bg} ${s.hero ? 'block' : 'flex items-center gap-3 sm:block'} w-full`
                 return clickable ? (
                   <button
                     key={s.l}
@@ -720,13 +731,13 @@ export default function SoulmatesSection({ lang }: Props) {
             enlaces a Spotify/TIDAL/Beatport, más el vídeo de los vinilos. */}
         {ready && recoPayload && (
           <section id="soulmates-recos" className="scroll-mt-24">
-            <h3 className="font-black mb-2" style={{ fontFamily: DISPLAY, fontSize: '16px', textTransform: 'uppercase' }}>
-              {es ? 'Lo que te estás perdiendo' : 'What you’re missing'}
+            <h3 className="font-black mb-2 leading-[0.9] uppercase" style={{ fontFamily: DISPLAY, fontSize: 'clamp(30px, 7vw, 40px)' }}>
+              <span className="bg-[var(--yellow)] box-decoration-clone px-1">{es ? 'Para descubrir' : 'To discover'}</span>
             </h3>
             <p className="text-sm text-[var(--ink)]/60 mb-4 max-w-2xl" style={{ fontFamily: MONO }}>
               {es
-                ? 'Canciones que 2 o más de tus almas gemelas tienen guardadas y tú aún no. El recuadro verde indica cuántas almas gemelas la tienen: si alguna tiene 3, 4 o más, sube arriba. Puedes escucharlas, guardarlas (+) y abrirlas en Beatport/Spotify/TIDAL, igual que en Mis Tracks.'
-                : 'Tracks that 2+ of your soulmates have saved and you don’t yet. The green badge shows how many soulmates saved it: if a track has 3, 4 or more, it rises to the top. You can play, save (+) and open them on Beatport/Spotify/TIDAL, just like in My Tracks.'}
+                ? 'Estas son las sugerencias. Canciones que 2 o más de tus almas gemelas tienen guardadas y tú aún no. El recuadro verde indica cuántas almas gemelas la tienen: si alguna tiene 3, 4 o más, sube arriba. Puedes escucharlas, guardarlas (+) y abrirlas en Beatport/Spotify/TIDAL, igual que en Mis Tracks.'
+                : 'These are the suggestions. Tracks that 2+ of your soulmates have saved and you don’t yet. The green badge shows how many soulmates saved it: if a track has 3, 4 or more, it rises to the top. You can play, save (+) and open them on Beatport/Spotify/TIDAL, just like in My Tracks.'}
             </p>
             <TracksSection
               lang={lang}
