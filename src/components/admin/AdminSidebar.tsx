@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: '◉', path: '' },
   { key: 'stats', label: 'Estadísticas', icon: '▤', path: '/stats' },
   { key: 'awards', label: 'Awards', icon: '★', path: '/awards' },
+  { key: 'escuchas', label: 'Escuchas', icon: '▶', path: '/escuchas' },
   { key: 'users', label: 'Usuarios', icon: '☻', path: '/users' },
   { key: 'collaborators', label: 'Colaboradores', icon: '☺', path: '/colaboradores' },
   { key: 'claims', label: 'Verificaciones', icon: '✔', path: '/claims' },

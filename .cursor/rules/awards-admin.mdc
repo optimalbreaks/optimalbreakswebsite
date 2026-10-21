@@ -34,6 +34,8 @@ El tablero va en cinco bloques, en este orden: **Internacional** (los del año),
 
 Fase 1 nada más. No añadir DJ, álbum, radio, club night, gran evento, mix ni tema gratis.
 
+**Escuchas** (`/administrator/escuchas`) es otra página: mismas categorías, recuento de `track_play_events`. No mezclar las dos urnas.
+
 ## Reproductor
 
 Tap explícito. Prioridad: `/api/audio/` completo, luego sample (Beatport por `/api/audio-proxy`), luego Bandcamp, luego un solo YouTube bajo la fila pulsada. `playSlotId` = slot de la fila (`cat:…` o `year:…`), no la clave canónica. Estos plays no llevan `save` y no se registran como reproducción de tema.

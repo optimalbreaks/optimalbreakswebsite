@@ -1,0 +1,38 @@
+---
+description: Escuchas admin — la reproducción es la urna, no el «+»
+globs: src/lib/awards-board.ts,src/app/**/escuchas/**,src/app/api/admin/escuchas/**
+alwaysApply: false
+---
+
+# Escuchas admin
+
+Spec: `docs/USER_ENGAGEMENT.md` (*Admin Escuchas*). Panel: `/administrator/escuchas`. API: `GET /api/admin/escuchas`. Solo `requireAdmin`.
+
+## El número (no negociable)
+
+Una fila de `track_play_events` es una escucha. El registro empieza el **6 oct 2026**. No es un «+» de `saved_chart_tracks`. Awards sigue siendo la urna de votos.
+
+- Orden de **temas**: escuchas, luego oyentes con sesión.
+- El anónimo (`user_id` null) suma escuchas y no entra en «Quién escucha».
+- Sin clave que resuelva al catálogo no compite (`orphan` → chip **Sin tema**).
+- `is_tracks_public` no quita una escucha. No es una lista.
+
+## Dos universos
+
+Igual que Awards, sobre escuchas:
+
+- **Temas:** la escucha del propio artista cuenta.
+- **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores no compiten como sello.
+- `raw` quita esos skips. Auditoría, no nominación.
+
+Eje `save` = año UTC de `created_at` de la escucha (en la UI, **Año de la escucha**).
+
+## Reproductor
+
+El mismo que Awards. El preview de esta página no lleva `save` y no escribe otra fila en `track_play_events`.
+
+## Prohibido
+
+- Ordenar esta página por votos, o Awards por escuchas.
+- Quitar la auto-escucha del total del tema.
+- Una ruta pública de escuchas.

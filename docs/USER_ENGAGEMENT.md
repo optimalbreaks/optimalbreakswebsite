@@ -668,6 +668,28 @@ The page does not add its own horizontal padding: `.admin-content` already pads 
 - Apply the artist/label skip to the **track** totals, or drop self-votes from Tema del año.
 - Point Awards at `/api/admin/tracks` (that route is the raw all-users dashboard, different rules).
 - Refactor `community-monthly` to “share” this aggregator. Awards copies the helpers; the public Top 100 stays as it is.
+- Point **Escuchas** at this ballot. That page counts `track_play_events`, not «+».
+
+---
+
+## Admin Escuchas
+
+Admin-only twin of Awards. **A listen is a row in `track_play_events`** (logged since **6 Oct 2026** when a preview or inline YouTube actually starts). It is not a «+». There is no public listens chart.
+
+**Where:** `/[lang]/administrator/escuchas` (sidebar «Escuchas», card on the admin home). **API:** `GET /api/admin/escuchas?year=2026|all&axis=release|save&mode=public|raw`. Same engine as Awards (`loadListensBoard` → `loadAwardsBoard` with `metric: 'plays'`). `requireAdmin` only.
+
+Same five blocks and the same phase-1 categories. The number on each row is listens (then distinct logged-in listeners). Anonymous plays (`user_id` null) raise the listen total and do not invent a listener. A play whose canonical key does not resolve to the catalogue is coverage (**Sin tema**), not a nominee.
+
+**Filters.** Edition and axis work as on Awards. Axis `save` is the UTC year of `track_play_events.created_at` (the UI says **Año de la escucha**). **Como en público** skips a marked / claimed / family account’s own credit and a label-mark dump on artists, labels, countries and Revelación. The track still counts that listen. **Crudo** drops those skips. Plays are not a public list: `is_tracks_public` does not remove a listen.
+
+**Playback** is the same tap-to-play queue as Awards and does not write a new `track_play_events` row (the preview item has no `save`).
+
+### Do not
+
+- Rank Escuchas by «+», or Awards by plays.
+- Drop self-listens from the **track** totals.
+- Hide anonymous plays, or treat every anonymous play as one shared user.
+- Add a public `/escuchas` route.
 
 ---
 
@@ -714,7 +736,8 @@ The page does not add its own horizontal padding: `.admin-content` already pads 
 - `src/app/[lang]/top100/page.tsx` — public Community Top 100 page.
 - `src/lib/awards-board.ts` — admin Awards engine (same «+», edition cut ≠ home Saved Tracks count). Spec: *Admin Awards* above.
 - `src/app/api/admin/awards/route.ts` — `GET` admin-only, `year` / `axis` / `mode`.
-- `src/app/[lang]/administrator/awards/page.tsx` — Awards dashboard (playback + layout).
+- `src/app/[lang]/administrator/awards/page.tsx` — Awards dashboard (playback + layout). `RankBoardView` is shared with Escuchas.
+- `src/app/[lang]/administrator/escuchas/page.tsx` — same board, metric = plays. `GET /api/admin/escuchas`. Spec: *Admin Escuchas* above.
 - `src/app/api/public/charts/community-monthly/route.ts` — Community Top (public, all-time; slug preserved; **chunked `.in()`**; artist movement rebuilt from `created_at` vs ISO Monday UTC; **self-credits skipped** via `artist-self-credit.ts`; **remixer names** from `mix_name` via `remixer-credits.ts`).
 - `src/lib/remixer-credits.ts` — parse remixer names from `mix_name`; merge Beatport `remixers[]` into `artists[]` (scripts copy: `scripts/lib/remixer-credits.mjs`).
 - `src/lib/artist-related-content.ts` — artist/label chart links + New Releases accordion (`fetchArtistFeaturedPicks` matches `artist_names_text` **or** remixer in `mix_name`).

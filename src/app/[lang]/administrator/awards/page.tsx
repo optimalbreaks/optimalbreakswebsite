@@ -8,10 +8,83 @@ import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import type { PreviewTrack } from '@/components/DeckAudioProvider'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
 import { releaseYouTubePlay, requestYouTubePlay, subscribeYouTubePlay } from '@/lib/youtube-play-coordinator'
-import type { AwardCategory, AwardEntry, AwardPlayback, AwardSection, AwardsAxis, AwardsBoard, AwardsMode } from '@/lib/awards-board'
+import type { AwardCategory, AwardEntry, AwardPlayback, AwardSection, AwardsAxis, AwardsBoard, AwardsMetric, AwardsMode } from '@/lib/awards-board'
 
 const mono = { fontFamily: "'Courier Prime', monospace" } as const
 const display = { fontFamily: "'Unbounded', sans-serif" } as const
+
+const COPY: Record<
+  AwardsMetric,
+  {
+    api: string
+    slug: string
+    kicker: string
+    title: string
+    lead: string
+    axisEvent: string
+    raw: string
+    loading: string
+    kpiMain: string
+    kpiMainSub: string
+    kpiWho: string
+    kpiWhoSub: string
+    mark: string
+    fan: string
+    fans: string
+    yearCol: string
+    orphan: string
+    creditHead: string
+    listenerHead: string
+    labelsEmpty: string
+  }
+> = {
+  votes: {
+    api: '/api/admin/awards',
+    slug: 'awards',
+    kicker: 'BreaksPoll · solo admin',
+    title: 'Awards',
+    lead: 'Cada «+» de Mis Tracks es un voto. Primero los del año (internacional), luego España, Reino Unido, Estados Unidos y el resto del mundo.',
+    axisEvent: 'Año del voto',
+    raw: 'Crudo: entran las listas privadas y el auto-voto. Sirve para auditar, no para nominar.',
+    loading: 'Calculando nominados…',
+    kpiMain: 'Votos',
+    kpiMainSub: '«+» de este corte',
+    kpiWho: 'Quién vota',
+    kpiWhoSub: 'Cuentas con un «+»',
+    mark: '+',
+    fan: 'fan',
+    fans: 'fans',
+    yearCol: 'El más votado',
+    orphan: 'Sin ficha',
+    creditHead: 'Créditos',
+    listenerHead: 'Fans',
+    labelsEmpty: 'Todos los sellos votados tienen ficha.',
+  },
+  plays: {
+    api: '/api/admin/escuchas',
+    slug: 'escuchas',
+    kicker: 'Reproducciones · solo admin',
+    title: 'Escuchas',
+    lead: 'Cada reproducción en la web cuenta. Primero los del año (internacional), luego España, Reino Unido, Estados Unidos y el resto del mundo. El registro empieza el 6 oct 2026.',
+    axisEvent: 'Año de la escucha',
+    raw: 'Crudo: la escucha del propio artista también le acredita. Sirve para auditar, no para nominar.',
+    loading: 'Calculando escuchas…',
+    kpiMain: 'Escuchas',
+    kpiMainSub: 'reproducciones de este corte',
+    kpiWho: 'Quién escucha',
+    kpiWhoSub: 'Cuentas con sesión. El anónimo suma en escuchas.',
+    mark: '▶',
+    fan: 'oyente',
+    fans: 'oyentes',
+    yearCol: 'El más escuchado',
+    orphan: 'Sin tema',
+    creditHead: 'Escuchas',
+    listenerHead: 'Oyentes',
+    labelsEmpty: 'Todos los sellos escuchados tienen ficha.',
+  },
+}
+
+type BoardCopy = (typeof COPY)[AwardsMetric]
 
 const SECTIONS: { id: AwardSection; title: string; line: string; accent: string }[] = [
   { id: 'international', title: 'Internacional', line: 'Los del año. No miran el país.', accent: 'var(--red)' },
@@ -26,6 +99,11 @@ function num(n: number): string {
 }
 
 export default function AdminAwardsPage() {
+  return <RankBoardView metric="votes" />
+}
+
+export function RankBoardView({ metric }: { metric: AwardsMetric }) {
+  const copy = COPY[metric]
   const { lang } = useParams<{ lang: string }>()
   const [year, setYear] = useState(String(new Date().getFullYear()))
   const [axis, setAxis] = useState<AwardsAxis>('release')
@@ -36,14 +114,14 @@ export default function AdminAwardsPage() {
   const [openYt, setOpenYt] = useState<string | null>(null)
   const [embedSlot, setEmbedSlot] = useState<string | null>(null)
   const preview = usePreviewAudioGated()
-  const groupKey = `awards-${year}-${axis}-${mode}`
+  const groupKey = `${copy.slug}-${year}-${axis}-${mode}`
 
   useEffect(() => {
     const ac = new AbortController()
     setLoading(true)
     setErr(null)
     const q = new URLSearchParams({ year, axis, mode })
-    fetch(`/api/admin/awards?${q}`, { signal: ac.signal })
+    fetch(`${copy.api}?${q}`, { signal: ac.signal })
       .then(async (r) => {
         const j = await r.json().catch(() => ({}))
         if (!r.ok) throw new Error((j as { error?: string }).error || r.statusText)
@@ -60,7 +138,7 @@ export default function AdminAwardsPage() {
         if (!ac.signal.aborted) setLoading(false)
       })
     return () => ac.abort()
-  }, [year, axis, mode])
+  }, [year, axis, mode, copy.api])
 
   useEffect(() => {
     setOpenYt(null)
@@ -77,13 +155,14 @@ export default function AdminAwardsPage() {
     if (!openYt) setEmbedSlot(null)
   }, [openYt])
 
-  const audioQueue = useMemo(() => collectAudioQueue(board, lang), [board, lang])
+  const audioQueue = useMemo(() => collectAudioQueue(board, lang, copy.slug), [board, lang, copy.slug])
 
   const playingKey = useMemo(() => {
     if (preview.previewGroupKey !== groupKey || !preview.previewPlaying) return null
     const rowKey = preview.previewQueue[preview.previewIndex]?.rowKey || ''
-    return rowKey.startsWith('awards:') ? rowKey.slice('awards:'.length) : null
-  }, [preview.previewGroupKey, preview.previewPlaying, preview.previewQueue, preview.previewIndex, groupKey])
+    const prefix = `${copy.slug}:`
+    return rowKey.startsWith(prefix) ? rowKey.slice(prefix.length) : null
+  }, [preview.previewGroupKey, preview.previewPlaying, preview.previewQueue, preview.previewIndex, groupKey, copy.slug])
 
   const onPlay = useCallback((play: AwardPlayback, slot: string) => {
     if (play.src) {
@@ -92,7 +171,7 @@ export default function AdminAwardsPage() {
         if (prev) releaseYouTubePlay(prev)
         return null
       })
-      const rowKey = `awards:${play.key}`
+      const rowKey = `${copy.slug}:${play.key}`
       if (
         preview.previewGroupKey === groupKey &&
         preview.previewQueue[preview.previewIndex]?.rowKey === rowKey
@@ -114,7 +193,7 @@ export default function AdminAwardsPage() {
     setEmbedSlot(slot)
     setOpenYt(slot)
     requestYouTubePlay(slot)
-  }, [audioQueue, groupKey, openYt, preview])
+  }, [audioQueue, groupKey, openYt, preview, copy.slug])
 
   const years = board?.years?.length ? board.years : [Number(year) || new Date().getFullYear()]
   const edition = board?.edition
@@ -129,14 +208,13 @@ export default function AdminAwardsPage() {
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--red)]" style={mono}>
-            BreaksPoll · solo admin
+            {copy.kicker}
           </p>
           <h1 className="mt-1 text-3xl font-black leading-none sm:text-4xl" style={display}>
-            Awards
+            {copy.title}
           </h1>
           <p className="mt-2 max-w-xl text-[11px] font-bold leading-relaxed text-[var(--ink)]/55" style={mono}>
-            Cada «+» de Mis Tracks es un voto. Primero los del año (internacional), luego España, Reino Unido,
-            Estados Unidos y el resto del mundo.
+            {copy.lead}
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-2 xl:w-auto xl:flex-row xl:flex-wrap xl:items-center xl:justify-end">
@@ -161,7 +239,7 @@ export default function AdminAwardsPage() {
             onChange={setAxis}
             options={[
               { id: 'release', label: 'Lanzamiento' },
-              { id: 'save', label: 'Año del voto' },
+              { id: 'save', label: copy.axisEvent },
             ]}
           />
           <Toggle
@@ -177,7 +255,7 @@ export default function AdminAwardsPage() {
 
       {mode === 'raw' && (
         <p className="text-[11px] font-bold border-[3px] border-[var(--ink)] bg-[var(--yellow)] px-3 py-2" style={mono}>
-          Crudo: entran las listas privadas y el auto-voto. Sirve para auditar, no para nominar.
+          {copy.raw}
         </p>
       )}
 
@@ -189,16 +267,16 @@ export default function AdminAwardsPage() {
 
       {loading && !board && (
         <p className="text-[12px] font-bold" style={mono}>
-          Calculando nominados…
+          {copy.loading}
         </p>
       )}
 
       {board && edition && coverage && (
         <div className={`min-w-0 space-y-5 ${loading ? 'pointer-events-none opacity-60' : ''}`}>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Kpi label="Votos" value={num(edition.saves)} sub="«+» de este corte" accent="var(--red)" />
+            <Kpi label={copy.kpiMain} value={num(edition.saves)} sub={copy.kpiMainSub} accent="var(--red)" />
             <Kpi label="Temas" value={num(edition.tracks)} sub="Una canción, una vez" accent="var(--yellow)" />
-            <Kpi label="Quién vota" value={num(edition.users)} sub="Cuentas con un «+»" accent="var(--uv)" />
+            <Kpi label={copy.kpiWho} value={num(edition.users)} sub={copy.kpiWhoSub} accent="var(--uv)" />
             <Kpi label="Con país" value={`${countryPct}%`} sub="Sin país no entra en una escena" accent="var(--cyan)" />
           </div>
 
@@ -207,7 +285,7 @@ export default function AdminAwardsPage() {
               <button
                 key={sec.id}
                 type="button"
-                onClick={() => document.getElementById(`awards-${sec.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                onClick={() => document.getElementById(`board-${sec.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 className="inline-flex min-h-11 shrink-0 items-center border-[3px] border-[var(--ink)] bg-[#fffef6] px-3 text-[11px] font-black uppercase"
                 style={{ ...mono, borderLeftWidth: 8, borderLeftColor: sec.accent }}
               >
@@ -221,7 +299,7 @@ export default function AdminAwardsPage() {
               const cats = edition.categories.filter((c) => c.section === sec.id)
               if (!cats.length) return null
               return (
-                <section key={sec.id} id={`awards-${sec.id}`} className="min-w-0 scroll-mt-4">
+                <section key={sec.id} id={`board-${sec.id}`} className="min-w-0 scroll-mt-4">
                   <div
                     className="mb-3 border-[3px] border-[var(--ink)] bg-[#fffef6] px-3 py-3 sm:px-4"
                     style={{ borderLeftWidth: 8, borderLeftColor: sec.accent, boxShadow: '4px 4px 0 var(--ink)' }}
@@ -243,6 +321,7 @@ export default function AdminAwardsPage() {
                         openYt={openYt}
                         embedSlot={embedSlot}
                         onPlay={onPlay}
+                        copy={copy}
                       />
                     ))}
                   </div>
@@ -263,9 +342,9 @@ export default function AdminAwardsPage() {
                       <li key={c.iso} className="flex items-baseline justify-between gap-3 py-2.5">
                         <span className="min-w-0 break-words text-[13px] font-black" style={display}>{c.name}</span>
                         <span className="shrink-0 text-right text-[10px] font-bold leading-snug" style={mono}>
-                          {num(c.save_count)} +
+                          {num(c.save_count)} {copy.mark}
                           <br />
-                          {num(c.artist_count)} art. · {num(c.unique_users)} fans
+                          {num(c.artist_count)} art. · {num(c.unique_users)} {copy.listenerHead.toLowerCase()}
                         </span>
                       </li>
                     ))}
@@ -274,7 +353,7 @@ export default function AdminAwardsPage() {
                     <table className="min-w-full text-left" style={mono}>
                       <thead className="bg-[var(--ink)] text-[var(--paper)]">
                         <tr>
-                          {['País', 'Créditos', 'Artistas', 'Fans'].map((h, i) => (
+                          {['País', copy.creditHead, 'Artistas', copy.listenerHead].map((h, i) => (
                             <th key={h} className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider ${i ? 'text-right' : ''}`}>
                               {h}
                             </th>
@@ -304,7 +383,7 @@ export default function AdminAwardsPage() {
               <div className="hidden xl:block">
                 <HorizontalRankBars
                   rows={board.release_years.slice(0, 12).map((r) => ({ name: r.label, value: r.save_count }))}
-                  valueLabel="+"
+                  valueLabel={copy.mark}
                   color="var(--red)"
                 />
               </div>
@@ -318,7 +397,7 @@ export default function AdminAwardsPage() {
                         <div className="flex items-baseline justify-between gap-3">
                           <span className="text-[13px] font-black" style={display}>{r.label}</span>
                           <span className="shrink-0 text-[10px] font-bold" style={mono}>
-                            {num(r.save_count)} + · {num(r.unique_tracks)} temas
+                            {num(r.save_count)} {copy.mark} · {num(r.unique_tracks)} temas
                           </span>
                         </div>
                         <div className="mt-2 flex min-w-0 items-center gap-2">
@@ -337,7 +416,7 @@ export default function AdminAwardsPage() {
                   <table className="min-w-full text-left" style={mono}>
                     <thead className="bg-[var(--ink)] text-[var(--paper)]">
                       <tr>
-                        {['Año', '+', 'Temas', 'El más votado'].map((h, i) => (
+                        {['Año', copy.mark, 'Temas', copy.yearCol].map((h, i) => (
                           <th key={h} className={`px-3 py-2 text-[10px] font-black uppercase tracking-wider ${i === 1 || i === 2 ? 'text-right' : ''}`}>
                             {h}
                           </th>
@@ -375,12 +454,12 @@ export default function AdminAwardsPage() {
             <Head title="Cobertura" hint="El premio español solo ve fichas con país. Lo de abajo es lo que falta." />
             <div className="grid grid-cols-3 gap-2 p-3 sm:p-4">
               <MiniStat label="Sin año" value={num(coverage.tracks_without_year)} />
-              <MiniStat label="Sin ficha" value={num(coverage.orphan_saves)} />
+              <MiniStat label={copy.orphan} value={num(coverage.orphan_saves)} />
               <MiniStat label="Agregador" value={num(coverage.aggregator_saves)} />
             </div>
             <div className="grid grid-cols-1 gap-4 px-3 pb-4 sm:px-4 lg:grid-cols-2">
               <GapList title="Artistas sin país" rows={coverage.missing_country} empty="Todos los créditos que cuentan tienen país." />
-              <GapList title="Sellos sin ficha" rows={coverage.unmatched_labels} empty="Todos los sellos votados tienen ficha." />
+              <GapList title="Sellos sin ficha" rows={coverage.unmatched_labels} empty={copy.labelsEmpty} />
             </div>
           </section>
         </div>
@@ -453,6 +532,7 @@ function CategoryCard({
   openYt,
   embedSlot,
   onPlay,
+  copy,
 }: {
   cat: AwardCategory
   lang: string
@@ -460,6 +540,7 @@ function CategoryCard({
   openYt: string | null
   embedSlot: string | null
   onPlay: (play: AwardPlayback, slot: string) => void
+  copy: BoardCopy
 }) {
   const winner = cat.entries[0]
   const rest = cat.entries.slice(1)
@@ -488,6 +569,7 @@ function CategoryCard({
                 openYt={openYt}
                 onPlay={onPlay}
                 showVideo={embedSlot === `cat:${cat.id}:${winner.rank}`}
+                copy={copy}
               />
             </div>
             {rest.length > 0 && (
@@ -502,6 +584,7 @@ function CategoryCard({
                       openYt={openYt}
                       onPlay={onPlay}
                       showVideo={embedSlot === `cat:${cat.id}:${e.rank}`}
+                      copy={copy}
                     />
                   </li>
                 ))}
@@ -523,6 +606,7 @@ function NomineeRow({
   openYt,
   onPlay,
   showVideo = false,
+  copy,
 }: {
   entry: AwardEntry
   lang: string
@@ -532,6 +616,7 @@ function NomineeRow({
   openYt: string | null
   onPlay: (play: AwardPlayback, slot: string) => void
   showVideo?: boolean
+  copy: BoardCopy
 }) {
   const href =
     entry.slug && entry.kind === 'artist'
@@ -566,9 +651,9 @@ function NomineeRow({
             </p>
           )}
           <p className="mt-1 text-[10px] font-black uppercase leading-snug tracking-wide" style={mono}>
-            {num(entry.save_count)} +
+            {num(entry.save_count)} {copy.mark}
             {' · '}
-            {num(entry.unique_users)} {entry.unique_users === 1 ? 'fan' : 'fans'}
+            {num(entry.unique_users)} {entry.unique_users === 1 ? copy.fan : copy.fans}
             {entry.unique_tracks != null ? ` · ${num(entry.unique_tracks)} temas` : ''}
           </p>
         </div>
@@ -665,7 +750,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function collectAudioQueue(board: AwardsBoard | null, lang: string): PreviewTrack[] {
+function collectAudioQueue(board: AwardsBoard | null, lang: string, slug: string): PreviewTrack[] {
   if (!board) return []
   const seen = new Set<string>()
   const out: PreviewTrack[] = []
@@ -673,14 +758,14 @@ function collectAudioQueue(board: AwardsBoard | null, lang: string): PreviewTrac
     if (!play?.src || seen.has(play.key)) return
     seen.add(play.key)
     out.push({
-      rowKey: `awards:${play.key}`,
+      rowKey: `${slug}:${play.key}`,
       src: play.src,
       title: play.title,
       artist: play.artist,
       artworkUrl: play.artwork_url,
       mixName: play.mix_name,
       album: play.label,
-      originPath: `/${lang}/administrator/awards`,
+      originPath: `/${lang}/administrator/${slug}`,
     })
   }
   for (const cat of board.edition.categories) {

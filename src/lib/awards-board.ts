@@ -25,9 +25,12 @@ import {
 import { extractRemixerNames } from '@/lib/remixer-credits'
 import { countryIsoCodesFromCode, countryNameFromCode } from '@/lib/seo'
 import { createServiceSupabase, fetchAllRows, selectByIds } from '@/lib/supabase-admin'
+import type { BeatportTopTrack } from '@/types/database'
 
 export type AwardsAxis = 'release' | 'save'
 export type AwardsMode = 'public' | 'raw'
+/** `votes` = «+» de Mis Tracks. `plays` = filas de `track_play_events`. */
+export type AwardsMetric = 'votes' | 'plays'
 
 /** Lo justo para sonar en el reproductor global o en un embed de YouTube. */
 export type AwardPlayback = {
@@ -94,6 +97,7 @@ export type AwardsBoard = {
   year: number | null
   axis: AwardsAxis
   mode: AwardsMode
+  metric: AwardsMetric
   years: number[]
   edition: {
     saves: number
@@ -144,6 +148,29 @@ type SavedRow = {
   canonical_url: string | null
   snapshot: Record<string, unknown> | null
   created_at: string | null
+}
+
+type PlayEventRow = {
+  canonical_key: string
+  user_id: string | null
+  created_at: string | null
+}
+
+type CatalogArtistRow = {
+  slug: string
+  name: string | null
+  name_display: string | null
+  country: string | null
+  image_url: string | null
+  beatport_top_tracks?: BeatportTopTrack[] | null
+}
+
+type CatalogLabelRow = {
+  slug: string
+  name: string | null
+  country: string | null
+  image_url: string | null
+  beatport_top_tracks?: BeatportTopTrack[] | null
 }
 
 type PlayKind = 'beatport' | 'bandcamp' | 'youtube'
@@ -461,14 +488,17 @@ function inEdition(fact: SaveFact, year: number | null, axis: AwardsAxis): boole
   return fact.saveYear === year
 }
 
-function sortTracks(rows: TrackAgg[]): TrackAgg[] {
-  return rows.sort(
-    (a, b) =>
-      b.users.size - a.users.size ||
-      b.save_count - a.save_count ||
+function sortTracks(rows: TrackAgg[], metric: AwardsMetric): TrackAgg[] {
+  return rows.sort((a, b) => {
+    const byCount = b.save_count - a.save_count
+    const byUsers = b.users.size - a.users.size
+    const primary = metric === 'plays' ? byCount || byUsers : byUsers || byCount
+    return (
+      primary ||
       (b.last || '').localeCompare(a.last || '') ||
-      (a.title || '').localeCompare(b.title || '', 'es'),
-  )
+      (a.title || '').localeCompare(b.title || '', 'es')
+    )
+  })
 }
 
 function sortPeople(rows: PersonAgg[]): PersonAgg[] {
@@ -481,7 +511,7 @@ function sortPeople(rows: PersonAgg[]): PersonAgg[] {
   )
 }
 
-function tracksOf(facts: SaveFact[]): TrackAgg[] {
+function tracksOf(facts: SaveFact[], metric: AwardsMetric): TrackAgg[] {
   const map = new Map<string, TrackAgg>()
   for (const f of facts) {
     let row = map.get(f.canonicalKey)
@@ -506,7 +536,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
       map.set(f.canonicalKey, row)
     }
     row.save_count += 1
-    row.users.add(f.userId)
+    if (f.userId) row.users.add(f.userId)
     if (f.savedAt && f.savedAt > row.last) row.last = f.savedAt
     if (!row.mixName && f.mixName) row.mixName = f.mixName
     if (!row.label && f.label) row.label = f.label
@@ -519,7 +549,7 @@ function tracksOf(facts: SaveFact[]): TrackAgg[] {
     if (f.isRest) row.isRest = true
     row.play = fillPlay(row.play, f.play)
   }
-  return sortTracks(Array.from(map.values()))
+  return sortTracks(Array.from(map.values()), metric)
 }
 
 function peopleOf(facts: SaveFact[], pick: (f: SaveFact) => { key: string; name: string }[]): PersonAgg[] {
@@ -532,7 +562,7 @@ function peopleOf(facts: SaveFact[], pick: (f: SaveFact) => { key: string; name:
         map.set(c.key, row)
       }
       row.save_count += 1
-      row.users.add(f.userId)
+      if (f.userId) row.users.add(f.userId)
       row.tracks.add(f.canonicalKey)
       if (c.name.length > row.name.length) row.name = c.name
     }
@@ -607,46 +637,58 @@ function labelKeyFor(name: string, slugMap: Record<string, string>, bySlug: Map<
 
 export async function loadAwardsBoard(
   sb: ServiceClient,
-  opts: { year: number | null; axis: AwardsAxis; mode: AwardsMode },
+  opts: { year: number | null; axis: AwardsAxis; mode: AwardsMode; metric?: AwardsMetric },
 ): Promise<AwardsBoard> {
   const { year, axis, mode } = opts
+  const metric: AwardsMetric = opts.metric === 'plays' ? 'plays' : 'votes'
 
-  const [savedRes, privateRes, selfSkip, labelSkip, artistRes, labelRes] = await Promise.all([
-    fetchAllRows<SavedRow>((from, to) =>
-      sb
-        .from('saved_chart_tracks')
-        .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
-        .order('id', { ascending: true })
-        .range(from, to),
-    ),
-    fetchAllRows<{ id: string }>((from, to) =>
-      sb
-        .from('profiles')
-        .select('id')
-        .eq('is_tracks_public', false)
-        .order('id', { ascending: true })
-        .range(from, to),
-    ),
+  const artistCols =
+    metric === 'plays'
+      ? 'slug, name, name_display, country, image_url, beatport_top_tracks'
+      : 'slug, name, name_display, country, image_url'
+  const labelCols =
+    metric === 'plays' ? 'slug, name, country, image_url, beatport_top_tracks' : 'slug, name, country, image_url'
+
+  const [savedRes, privateRes, selfSkip, labelSkip, artistRes, labelRes, playRes] = await Promise.all([
+    metric === 'votes'
+      ? fetchAllRows<SavedRow>((from, to) =>
+          sb
+            .from('saved_chart_tracks')
+            .select('user_id, track_source, track_id, canonical_url, snapshot, created_at')
+            .order('id', { ascending: true })
+            .range(from, to),
+        )
+      : Promise.resolve({ data: [] as SavedRow[], error: null }),
+    metric === 'votes'
+      ? fetchAllRows<{ id: string }>((from, to) =>
+          sb
+            .from('profiles')
+            .select('id')
+            .eq('is_tracks_public', false)
+            .order('id', { ascending: true })
+            .range(from, to),
+        )
+      : Promise.resolve({ data: [] as { id: string }[], error: null }),
     loadSelfCreditSkipMap(sb),
     loadLabelCreditSkipMap(sb),
-    fetchAllRows<{ slug: string; name: string | null; name_display: string | null; country: string | null; image_url: string | null }>(
-      (from, to) =>
-        sb
-          .from('artists')
-          .select('slug, name, name_display, country, image_url')
-          .order('id', { ascending: true })
-          .range(from, to),
+    fetchAllRows<CatalogArtistRow>((from, to) =>
+      sb.from('artists').select(artistCols).order('id', { ascending: true }).range(from, to),
     ),
-    fetchAllRows<{ slug: string; name: string | null; country: string | null; image_url: string | null }>((from, to) =>
-      sb
-        .from('labels')
-        .select('slug, name, country, image_url')
-        .order('id', { ascending: true })
-        .range(from, to),
+    fetchAllRows<CatalogLabelRow>((from, to) =>
+      sb.from('labels').select(labelCols).order('id', { ascending: true }).range(from, to),
     ),
+    metric === 'plays'
+      ? fetchAllRows<PlayEventRow>((from, to) =>
+          sb
+            .from('track_play_events')
+            .select('canonical_key, user_id, created_at')
+            .order('id', { ascending: true })
+            .range(from, to),
+        )
+      : Promise.resolve({ data: [] as PlayEventRow[], error: null }),
   ])
 
-  const err = savedRes.error || privateRes.error || artistRes.error || labelRes.error
+  const err = savedRes.error || privateRes.error || artistRes.error || labelRes.error || playRes.error
   if (err) throw new Error(err.message)
 
   const privateIds = new Set((privateRes.data || []).map((p) => p.id))
@@ -677,7 +719,7 @@ export async function loadAwardsBoard(
     })
   }
 
-  const facts = await hydrateFacts(sb, saved, {
+  const hydrateCtx = {
     mode,
     selfSkip,
     labelSkip,
@@ -685,7 +727,13 @@ export async function loadAwardsBoard(
     labelSlugMap,
     artistBySlug,
     labelBySlug,
-  })
+  }
+  const plays = playRes.data || []
+  const facts =
+    metric === 'plays'
+      ? await hydratePlayFacts(sb, plays, artistRows, labelRows, hydrateCtx)
+      : await hydrateFacts(sb, saved, hydrateCtx)
+  const ballotCount = metric === 'plays' ? plays.length : saved.length
 
   const years = new Set<number>()
   const now = new Date().getUTCFullYear()
@@ -699,7 +747,7 @@ export async function loadAwardsBoard(
   const prevFacts =
     year == null ? [] : facts.filter((f) => inEdition(f, year - 1, axis))
 
-  const editionTracks = tracksOf(editionFacts)
+  const editionTracks = tracksOf(editionFacts, metric)
   const editionArtists = peopleOf(editionFacts, (f) =>
     f.credits.map((c) => ({ key: artistKeyFor(c.name, artistSlugMap, artistBySlug), name: c.name })),
   )
@@ -737,14 +785,18 @@ export async function loadAwardsBoard(
     : editionArtists.filter((a) => a.save_count >= BREAKTHROUGH_MIN && (prevByKey.get(a.key) || 0) === 0)
 
   const yearLabel = year == null ? 'todos los años' : String(year)
-  const axisLabel = axis === 'release' ? 'año de lanzamiento' : 'año del «+»'
+  const axisLabel =
+    axis === 'release' ? 'año de lanzamiento' : metric === 'plays' ? 'año de la escucha' : 'año del «+»'
 
   const categories: AwardCategory[] = [
     {
       id: 'track',
       section: 'international',
-      title: year == null ? 'Tema más votado' : 'Tema del año',
-      hint: `Orden del Top 100 de canciones (usuarios únicos, luego «+»). ${yearLabel}, ${axisLabel}. El auto-voto cuenta.`,
+        title: year == null ? (metric === 'plays' ? 'Tema más escuchado' : 'Tema más votado') : 'Tema del año',
+        hint:
+          metric === 'plays'
+            ? `Orden por escuchas, y a igual número por oyentes con sesión. ${yearLabel}, ${axisLabel}. La escucha del propio artista cuenta en el tema.`
+            : `Orden del Top 100 de canciones (usuarios únicos, luego «+»). ${yearLabel}, ${axisLabel}. El auto-voto cuenta.`,
       entries: trackEntries(editionTracks),
     },
     {
@@ -758,14 +810,20 @@ export async function loadAwardsBoard(
       id: 'producer',
       section: 'international',
       title: 'Mejor productor',
-      hint: 'Créditos del tablero de artistas, remixer incluido. En público no suma el auto-voto ni el volcado de un sello fichado.',
+        hint:
+          metric === 'plays'
+            ? 'Cada escucha acredita a quien sale en el tema, remixer incluido. En público no suma si quien escuchó es ese artista fichado, ni el volcado de un sello fichado.'
+            : 'Créditos del tablero de artistas, remixer incluido. En público no suma el auto-voto ni el volcado de un sello fichado.',
       entries: personEntries(editionArtists, artistBySlug, 'artist'),
     },
     {
       id: 'label',
       section: 'international',
       title: 'Mejor sello',
-      hint: 'Un «+» acredita al sello del tema. DistroKid, TuneCore y agregadores no compiten.',
+        hint:
+          metric === 'plays'
+            ? 'Una escucha acredita al sello del tema. DistroKid, TuneCore y agregadores no compiten.'
+            : 'Un «+» acredita al sello del tema. DistroKid, TuneCore y agregadores no compiten.',
       entries: personEntries(editionLabels, labelBySlug, 'label'),
     },
     {
@@ -838,26 +896,31 @@ export async function loadAwardsBoard(
       id: 'breakthrough',
       section: 'international',
       title: 'Revelación',
-      hint: `Al menos ${BREAKTHROUGH_MIN} créditos en ${year} y cero en ${year - 1}. Mismo eje (${axisLabel}) y las mismas exclusiones.`,
+      hint: `Al menos ${BREAKTHROUGH_MIN} ${metric === 'plays' ? 'escuchas acreditadas' : 'créditos'} en ${year} y cero en ${year - 1}. Mismo eje (${axisLabel}) y las mismas exclusiones.`,
       entries: personEntries(breakthrough, artistBySlug, 'artist'),
     })
   }
 
   const countries = countriesOf(editionArtists, artistBySlug)
   const editionUsers = new Set<string>()
-  for (const f of editionFacts) editionUsers.add(f.userId)
+  for (const f of editionFacts) if (f.userId) editionUsers.add(f.userId)
 
   const histogramFacts =
     axis === 'save' && year != null ? facts.filter((f) => f.saveYear === year) : facts
   const releaseYearsHint =
     axis === 'save' && year != null
-      ? `De los «+» hechos en ${year}, de qué año es el tema.`
-      : 'Todos los «+» de este modo, agrupados por año de lanzamiento. No cambia al elegir un año de edición con el eje de lanzamiento.'
+      ? metric === 'plays'
+        ? `De las escuchas de ${year}, de qué año es el tema.`
+        : `De los «+» hechos en ${year}, de qué año es el tema.`
+      : metric === 'plays'
+        ? 'Todas las escuchas de este modo, agrupadas por año de lanzamiento. No cambia al elegir un año de edición con el eje de lanzamiento.'
+        : 'Todos los «+» de este modo, agrupados por año de lanzamiento. No cambia al elegir un año de edición con el eje de lanzamiento.'
 
   return {
     year,
     axis,
     mode,
+    metric,
     years: Array.from(years).sort((a, b) => b - a),
     edition: {
       saves: editionFacts.length,
@@ -866,9 +929,9 @@ export async function loadAwardsBoard(
       categories,
       countries,
     },
-    release_years: releaseYearRows(histogramFacts),
+    release_years: releaseYearRows(histogramFacts, metric),
     release_years_hint: releaseYearsHint,
-    coverage: coverageOf(facts, saved.length, artistSlugMap, artistBySlug, labelSlugMap, labelBySlug),
+    coverage: coverageOf(facts, ballotCount, artistSlugMap, artistBySlug, labelSlugMap, labelBySlug),
   }
 }
 
@@ -905,7 +968,7 @@ function countriesOf(artists: PersonAgg[], artistBySlug: Map<string, CatalogHit>
     )
 }
 
-function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
+function releaseYearRows(facts: SaveFact[], metric: AwardsMetric): AwardReleaseYear[] {
   type YearTrack = {
     key: string
     title: string
@@ -941,7 +1004,7 @@ function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
       row.tracks.set(f.canonicalKey, track)
     }
     track.saves += 1
-    track.users.add(f.userId)
+    if (f.userId) track.users.add(f.userId)
     track.play = fillPlay(track.play, f.play)
     if (!track.artist && f.artists) track.artist = f.artists
   }
@@ -949,13 +1012,11 @@ function releaseYearRows(facts: SaveFact[]): AwardReleaseYear[] {
     .map(([year, b]) => {
       let top: YearTrack | null = null
       for (const t of b.tracks.values()) {
-        if (
-          !top ||
-          t.users.size > top.users.size ||
-          (t.users.size === top.users.size && t.saves > top.saves)
-        ) {
-          top = t
-        }
+        const ahead =
+          metric === 'plays'
+            ? !top || t.saves > top.saves || (t.saves === top.saves && t.users.size > top.users.size)
+            : !top || t.users.size > top.users.size || (t.users.size === top.users.size && t.saves > top.saves)
+        if (ahead) top = t
       }
       return {
         year,
@@ -1178,65 +1239,324 @@ async function hydrateFacts(
           play: fillPlay(live.play, snap?.play),
         }
     if (!meta || !meta.canonical_key) continue
+    facts.push(factFromMeta(s.user_id, s.created_at, meta, ctx))
+  }
+  return facts
+}
 
-    const names = creditNames(meta.artists, meta.mix_name)
-    const skipLabel = ctx.mode === 'public' && shouldSkipLabelSave(ctx.labelSkip, s.user_id, meta.label)
-    const credits = skipLabel
-      ? []
-      : names.filter((n) => ctx.mode === 'raw' || !shouldSkipArtistSelfCredit(ctx.selfSkip, s.user_id, n.name))
+function factFromMeta(
+  userId: string,
+  createdAt: string | null,
+  meta: SourceMeta,
+  ctx: {
+    mode: AwardsMode
+    selfSkip: SelfCreditSkipMap
+    labelSkip: LabelCreditSkipMap
+    artistSlugMap: Record<string, string>
+    labelSlugMap: Record<string, string>
+    artistBySlug: Map<string, CatalogHit>
+    labelBySlug: Map<string, CatalogHit>
+  },
+): SaveFact {
+  const names = creditNames(meta.artists, meta.mix_name)
+  const skipLabel = ctx.mode === 'public' && !!userId && shouldSkipLabelSave(ctx.labelSkip, userId, meta.label)
+  const credits = skipLabel
+    ? []
+    : names.filter((n) => ctx.mode === 'raw' || !userId || !shouldSkipArtistSelfCredit(ctx.selfSkip, userId, n.name))
 
-    const spanishArtist = names.some((n) => {
-      const slug = resolveSlug(n.name, ctx.artistSlugMap)
-      return isSpain(slug ? ctx.artistBySlug.get(slug)?.country : null)
-    })
-    const labelSlug = meta.label ? resolveSlug(meta.label, ctx.labelSlugMap, true) : null
-    const spanishLabel = isSpain(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
-    const britishArtist = names.some((n) => {
-      const slug = resolveSlug(n.name, ctx.artistSlugMap)
-      return isUk(slug ? ctx.artistBySlug.get(slug)?.country : null)
-    })
-    const britishLabel = isUk(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
-    const usArtist = names.some((n) => {
-      const slug = resolveSlug(n.name, ctx.artistSlugMap)
-      return isUs(slug ? ctx.artistBySlug.get(slug)?.country : null)
-    })
-    const usLabel = isUs(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
-    const restArtist = names.some((n) => {
-      const slug = resolveSlug(n.name, ctx.artistSlugMap)
-      return isRestOfWorld(slug ? ctx.artistBySlug.get(slug)?.country : null)
-    })
-    const restLabel = isRestOfWorld(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
-    const spanish = spanishArtist || spanishLabel
-    const british = britishArtist || britishLabel
-    const unitedStates = usArtist || usLabel
-    const aggregator = !!(meta.label && isAggregator(meta.label))
+  const spanishArtist = names.some((n) => {
+    const slug = resolveSlug(n.name, ctx.artistSlugMap)
+    return isSpain(slug ? ctx.artistBySlug.get(slug)?.country : null)
+  })
+  const labelSlug = meta.label ? resolveSlug(meta.label, ctx.labelSlugMap, true) : null
+  const spanishLabel = isSpain(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+  const britishArtist = names.some((n) => {
+    const slug = resolveSlug(n.name, ctx.artistSlugMap)
+    return isUk(slug ? ctx.artistBySlug.get(slug)?.country : null)
+  })
+  const britishLabel = isUk(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+  const usArtist = names.some((n) => {
+    const slug = resolveSlug(n.name, ctx.artistSlugMap)
+    return isUs(slug ? ctx.artistBySlug.get(slug)?.country : null)
+  })
+  const usLabel = isUs(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+  const restArtist = names.some((n) => {
+    const slug = resolveSlug(n.name, ctx.artistSlugMap)
+    return isRestOfWorld(slug ? ctx.artistBySlug.get(slug)?.country : null)
+  })
+  const restLabel = isRestOfWorld(labelSlug ? ctx.labelBySlug.get(labelSlug)?.country : null)
+  const spanish = spanishArtist || spanishLabel
+  const british = britishArtist || britishLabel
+  const unitedStates = usArtist || usLabel
+  const aggregator = !!(meta.label && isAggregator(meta.label))
 
-    let labelCredit: SaveFact['labelCredit'] = null
-    if (meta.label && !aggregator && !skipLabel) {
-      const key = labelSlug && ctx.labelBySlug.has(labelSlug) ? `slug:${labelSlug}` : `name:${normalizeArtistKey(meta.label)}`
-      if (key !== 'name:') labelCredit = { key, raw: meta.label }
-    }
+  let labelCredit: SaveFact['labelCredit'] = null
+  if (meta.label && !aggregator && !skipLabel) {
+    const key = labelSlug && ctx.labelBySlug.has(labelSlug) ? `slug:${labelSlug}` : `name:${normalizeArtistKey(meta.label)}`
+    if (key !== 'name:') labelCredit = { key, raw: meta.label }
+  }
 
-    facts.push({
-      userId: s.user_id,
-      canonicalKey: meta.canonical_key,
-      title: meta.title,
-      mixName: meta.mix_name,
-      artists: meta.artists,
-      label: meta.label,
-      releaseYear: meta.release_year,
-      saveYear: saveYearOf(s.created_at),
-      savedAt: s.created_at,
-      isRemix: extractRemixerNames(meta.mix_name).length > 0,
-      isSpanish: spanish,
-      isUk: british,
-      isUs: unitedStates,
-      isRest: !spanish && !british && !unitedStates && (restArtist || restLabel),
-      credits,
-      labelCredit,
-      aggregator,
-      play: meta.play,
-    })
+  return {
+    userId,
+    canonicalKey: meta.canonical_key,
+    title: meta.title,
+    mixName: meta.mix_name,
+    artists: meta.artists,
+    label: meta.label,
+    releaseYear: meta.release_year,
+    saveYear: saveYearOf(createdAt),
+    savedAt: createdAt,
+    isRemix: extractRemixerNames(meta.mix_name).length > 0,
+    isSpanish: spanish,
+    isUk: british,
+    isUs: unitedStates,
+    isRest: !spanish && !british && !unitedStates && (restArtist || restLabel),
+    credits,
+    labelCredit,
+    aggregator,
+    play: meta.play,
+  }
+}
+
+export function loadListensBoard(
+  sb: ServiceClient,
+  opts: { year: number | null; axis: AwardsAxis; mode: AwardsMode },
+): Promise<AwardsBoard> {
+  return loadAwardsBoard(sb, { ...opts, metric: 'plays' })
+}
+
+function beatportIdFromKey(key: string): string | null {
+  const s = key.trim().toLowerCase()
+  if (!s) return null
+  const withScheme = s.includes('://') ? s : `https://${s}`
+  const m = withScheme.match(/beatport\.com\/(?:[a-z]{2}\/)?track\/[^/]+\/(\d+)/i)
+  return m ? m[1] : null
+}
+
+function mergeCatalogMeta(prev: SourceMeta, extra: SourceMeta): SourceMeta {
+  const extraWins = playRank(extra.play) > playRank(prev.play)
+  const winner = extraWins ? extra : prev
+  const loser = extraWins ? prev : extra
+  return {
+    title: winner.title || loser.title,
+    mix_name: winner.mix_name || loser.mix_name,
+    artists: winner.artists || loser.artists,
+    label: winner.label || loser.label,
+    release_year: winner.release_year ?? loser.release_year,
+    canonical_key: winner.canonical_key || loser.canonical_key,
+    play: fillPlay(prev.play, extra.play),
+  }
+}
+
+function rememberCatalogMeta(map: Map<string, SourceMeta>, meta: SourceMeta, aliases: string[]) {
+  const keys = new Set<string>()
+  const add = (raw: string) => {
+    const n = raw.trim().toLowerCase().replace(/\/+$/, '')
+    if (n) keys.add(n)
+  }
+  add(meta.canonical_key)
+  for (const alias of aliases) add(alias)
+  const bp = beatportIdFromKey(meta.canonical_key) || beatportIdFromKey(meta.play.external_url || '')
+  if (bp) keys.add(`bp:${bp}`)
+  const yt = youtubeIdOf(meta.play.youtube_url)
+  if (yt) keys.add(`yt:${yt}`)
+  for (const key of keys) {
+    const prev = map.get(key)
+    map.set(key, prev ? mergeCatalogMeta(prev, meta) : meta)
+  }
+}
+
+function lookupPlayMeta(map: Map<string, SourceMeta>, raw: string): SourceMeta | null {
+  const k = raw.trim().toLowerCase().replace(/\/+$/, '')
+  if (!k) return null
+  const direct = map.get(k)
+  if (direct) return direct
+  const bp = beatportIdFromKey(k)
+  if (bp) return map.get(`bp:${bp}`) || null
+  return null
+}
+
+function metaFromBeatportTop(track: BeatportTopTrack): SourceMeta | null {
+  const title = (track.title || '').trim()
+  const url = (track.beatport_url || '').trim()
+  const canonical_key = normalizeUrl(url)
+  if (!title || !canonical_key) return null
+  return {
+    title,
+    mix_name: strOrNull(track.mix_name),
+    artists: artistsLine(track.artists),
+    label: strOrNull(track.label),
+    release_year: releaseYearOf(track.release_year, track.release_date),
+    canonical_key,
+    play: {
+      artwork_url: strOrNull(track.artwork_url),
+      sample_url: strOrNull(track.sample_url),
+      full_audio_url: null,
+      external_url: url,
+      youtube_url: null,
+      kind: 'beatport',
+    },
+  }
+}
+
+async function hydratePlayFacts(
+  sb: ServiceClient,
+  plays: PlayEventRow[],
+  artists: CatalogArtistRow[],
+  labels: CatalogLabelRow[],
+  ctx: {
+    mode: AwardsMode
+    selfSkip: SelfCreditSkipMap
+    labelSkip: LabelCreditSkipMap
+    artistSlugMap: Record<string, string>
+    labelSlugMap: Record<string, string>
+    artistBySlug: Map<string, CatalogHit>
+    labelBySlug: Map<string, CatalogHit>
+  },
+): Promise<SaveFact[]> {
+  if (!plays.length) return []
+
+  const [featRes, chartRes, vinylRes] = await Promise.all([
+    fetchAllRows<{
+      id: string
+      title: string
+      mix_name: string | null
+      artists: unknown
+      label: string | null
+      release_year: number | null
+      release_date: string | null
+      link_url: string | null
+      platform: string | null
+      artwork_url: string | null
+      sample_url: string | null
+      full_audio_url: string | null
+    }>((from, to) =>
+      sb
+        .from('chart_featured_tracks')
+        .select('id, title, mix_name, artists, label, release_year, release_date, link_url, platform, artwork_url, sample_url, full_audio_url')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{
+      id: string
+      title: string
+      mix_name: string | null
+      artists: unknown
+      label: string | null
+      release_year: number | null
+      release_date: string | null
+      beatport_url: string | null
+      artwork_url: string | null
+      sample_url: string | null
+    }>((from, to) =>
+      sb
+        .from('chart_tracks')
+        .select('id, title, mix_name, artists, label, release_year, release_date, beatport_url, artwork_url, sample_url')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{
+      id: string
+      title: string
+      mix_name: string | null
+      artists: unknown
+      label: string | null
+      year: number | null
+      youtube_url: string | null
+      artwork_url: string | null
+    }>((from, to) =>
+      sb
+        .from('chart_vinyl_tracks')
+        .select('id, title, mix_name, artists, label, year, youtube_url, artwork_url')
+        .order('id', { ascending: true })
+        .range(from, to),
+    ),
+  ])
+  const lookupErr = featRes.error || chartRes.error || vinylRes.error
+  if (lookupErr) throw new Error(lookupErr.message)
+
+  const byKey = new Map<string, SourceMeta>()
+  for (const f of featRes.data || []) {
+    const bandcamp = f.platform === 'bandcamp' || /bandcamp\.com/i.test(f.link_url || '')
+    rememberCatalogMeta(
+      byKey,
+      {
+        title: f.title,
+        mix_name: f.mix_name,
+        artists: artistsLine(f.artists),
+        label: f.label,
+        release_year: releaseYearOf(f.release_year, f.release_date),
+        canonical_key: normalizeUrl(f.link_url) || `t:featured:${f.id}`,
+        play: {
+          artwork_url: f.artwork_url,
+          sample_url: f.sample_url,
+          full_audio_url: f.full_audio_url,
+          external_url: f.link_url,
+          youtube_url: null,
+          kind: bandcamp ? 'bandcamp' : 'beatport',
+        },
+      },
+      [`t:featured:${f.id}`],
+    )
+  }
+  for (const c of chartRes.data || []) {
+    rememberCatalogMeta(
+      byKey,
+      {
+        title: c.title,
+        mix_name: c.mix_name,
+        artists: artistsLine(c.artists),
+        label: c.label,
+        release_year: releaseYearOf(c.release_year, c.release_date),
+        canonical_key: normalizeUrl(c.beatport_url) || `t:chart:${c.id}`,
+        play: {
+          artwork_url: c.artwork_url,
+          sample_url: c.sample_url,
+          full_audio_url: null,
+          external_url: c.beatport_url,
+          youtube_url: null,
+          kind: 'beatport',
+        },
+      },
+      [`t:chart:${c.id}`],
+    )
+  }
+  for (const v of vinylRes.data || []) {
+    rememberCatalogMeta(
+      byKey,
+      {
+        title: v.title,
+        mix_name: v.mix_name,
+        artists: artistsLine(v.artists),
+        label: v.label,
+        release_year: releaseYearOf(v.year, null),
+        canonical_key: normalizeUrl(v.youtube_url) || `t:vinyl:${v.id}`,
+        play: {
+          artwork_url: v.artwork_url,
+          sample_url: null,
+          full_audio_url: null,
+          external_url: v.youtube_url,
+          youtube_url: v.youtube_url,
+          kind: 'youtube',
+        },
+      },
+      [`t:vinyl:${v.id}`],
+    )
+  }
+  const tops = [
+    ...artists.flatMap((a) => (Array.isArray(a.beatport_top_tracks) ? a.beatport_top_tracks : [])),
+    ...labels.flatMap((l) => (Array.isArray(l.beatport_top_tracks) ? l.beatport_top_tracks : [])),
+  ]
+  for (const track of tops) {
+    const meta = metaFromBeatportTop(track)
+    if (meta) rememberCatalogMeta(byKey, meta, [])
+  }
+
+  const facts: SaveFact[] = []
+  for (const play of plays) {
+    const meta = lookupPlayMeta(byKey, play.canonical_key || '')
+    if (!meta?.canonical_key) continue
+    facts.push(factFromMeta(play.user_id || '', play.created_at, meta, ctx))
   }
   return facts
 }

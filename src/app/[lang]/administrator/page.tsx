@@ -112,6 +112,12 @@ export default function AdminDashboard() {
           >
             Awards
           </Link>
+          <Link
+            href={`${base}/escuchas`}
+            className="admin-btn no-underline"
+          >
+            Escuchas
+          </Link>
           <Link href={`${base}/artists/new`} className="admin-btn no-underline">
             + Artista
           </Link>
@@ -300,6 +306,32 @@ export default function AdminDashboard() {
                 style={{ fontFamily: "'Courier Prime', monospace" }}
               >
                 Nominados a partir de los «+». Solo admin.
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href={`${base}/escuchas`}
+            className="flex items-center gap-4 p-4 mt-2 no-underline border-2 border-[var(--ink)]/30
+              bg-[#fffef6] hover:bg-[var(--red)]/10 hover:border-[var(--ink)] transition-all"
+          >
+            <span
+              className="flex items-center justify-center w-12 h-12 text-xl border-[3px] border-[var(--ink)] bg-[var(--red)] text-white"
+            >
+              ▶
+            </span>
+            <div>
+              <div
+                className="font-black uppercase text-[var(--ink)] text-sm"
+                style={{ fontFamily: "'Unbounded', sans-serif" }}
+              >
+                Escuchas
+              </div>
+              <p
+                className="text-xs text-[var(--ink)]/50 !mt-1 !mb-0"
+                style={{ fontFamily: "'Courier Prime', monospace" }}
+              >
+                El mismo tablero, contado por reproducciones. Solo admin.
               </p>
             </div>
           </Link>
