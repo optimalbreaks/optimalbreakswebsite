@@ -237,6 +237,7 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'charts', href: `/${lang}/charts` },
     { key: 'topreleases', href: `/${lang}/topreleases` },
     { key: 'top100', href: `/${lang}/topalltimes` },
+    { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
     { key: 'events', href: `/${lang}/events` },
     { key: 'festivals', href: `/${lang}/festivals` },
