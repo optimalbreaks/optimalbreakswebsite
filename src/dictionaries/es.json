@@ -12,11 +12,12 @@
     "mixes": "Mixes",
     "about": "Sobre",
     "charts": "Tracks",
-    "top100": "Top 100"
+    "topreleases": "Novedades",
+    "top100": "Top histórico"
   },
   "doors": {
     "kicker": "La chicha",
-    "line": "Tracks y Top 100. Ahí está la música."
+    "line": "Novedades y el top histórico. Ahí está la música."
   },
   "search": {
     "button_short": "Buscar",
@@ -107,7 +108,7 @@
       "title_1": "TOP 10",
       "title_2": "ARTISTAS",
       "subtitle": "Los artistas que más guarda la comunidad en Mis Tracks. Sin votos ni encuestas: solo saves reales, y se mueve cada semana.",
-      "see_all": "VER TOP 100",
+      "see_all": "VER TOP HISTÓRICO",
       "saves": "saves",
       "fans": "fans",
       "new_entry": "NUEVO",
@@ -125,7 +126,8 @@
         { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
         { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
-        { "href": "/top100", "label": "Top 100", "hint": "Lo que más guarda la escena" },
+        { "href": "/topreleases", "label": "Top novedades", "hint": "Lo más escuchado de cada quincena y temporada" },
+        { "href": "/topalltimes", "label": "Top histórico", "hint": "Lo que más guarda la escena desde el día uno" },
         { "href": "/scenes", "label": "Escenas", "hint": "Territorios y contexto local" },
         { "href": "/blog", "label": "Blog", "hint": "Ensayos y memoria de escena" },
         { "href": "/breakbeat", "label": "Qué es el breakbeat", "hint": "Guía del género" },
@@ -481,8 +483,8 @@
     "vinyl_format_label": "Formato",
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
-      "kicker": "TOP 100 DE LA COMUNIDAD",
-      "title": "Top 100 de la comunidad",
+      "kicker": "TOP HISTÓRICO",
+      "title": "Top histórico",
       "subtitle": "Las canciones más añadidas a \"Mis Tracks\" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.",
       "scope_label": "Histórico",
       "all_time": "Todo el tiempo",
@@ -496,7 +498,7 @@
       "play_shuffle_title": "Reproducir previews en orden aleatorio",
       "artists_kicker": "TOP 10 ARTISTAS",
       "artists_title": "Top 10 artistas más guardados",
-      "artists_subtitle": "Los artistas que más salen en las canciones que guardáis en Mis Tracks. El puesto cambia en vivo con cada save; las flechas (sube, baja o nuevo) comparan con el puesto que tenía hace 7 días. «X sem.» es el tiempo seguido en la lista — ranking aparte del Top 100 de temas.",
+      "artists_subtitle": "Los artistas que más salen en las canciones que guardáis en Mis Tracks. El puesto cambia en vivo con cada save; las flechas (sube, baja o nuevo) comparan con el puesto que tenía hace 7 días. «X sem.» es el tiempo seguido en la lista — ranking aparte del top histórico de temas.",
       "artists_saves": "saves",
       "artists_fans": "fans",
       "artists_tracks": "temas",
@@ -611,8 +613,12 @@
       "description": "Más de 22.000 canciones de breakbeat a un clic: charts semanales, nuevos lanzamientos y archivo desde los años 70. Escucha, explora y guarda."
     },
     "top100": {
-      "title": "Top 100 de la Comunidad — los breaks más guardados por la escena",
-      "description": "Ranking acumulado de los 100 temas de breakbeat más añadidos a Mis Tracks por la comunidad Optimal Breaks. Sin votos ni encuestas: solo saves reales."
+      "title": "Top histórico — los breaks más guardados por la escena",
+      "description": "Ranking acumulado de los temas de breakbeat más añadidos a Mis Tracks por la comunidad Optimal Breaks. Sin votos ni encuestas: solo saves reales, desde el día uno."
+    },
+    "topreleases": {
+      "title": "Top novedades — lo más escuchado de cada quincena y temporada",
+      "description": "Los lanzamientos de breakbeat que más se han escuchado en Optimal Breaks, quincena a quincena y temporada a temporada. El puesto sale de las escuchas."
     },
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",

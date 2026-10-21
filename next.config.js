@@ -71,6 +71,12 @@ const nextConfig = {
         destination: 'https://www.optimalbreaks.com/:path*',
         permanent: true,
       },
+      /** Top histórico: la URL pública pasó de /top100 a /topalltimes. */
+      {
+        source: '/:lang(es|en)/top100',
+        destination: '/:lang/topalltimes',
+        permanent: true,
+      },
       /** Slug antiguo del perfil Masterblaster (rebrand a nombre real Aquasky Vs Masterblaster) */
       {
         source: '/:lang/artists/master-blaster',

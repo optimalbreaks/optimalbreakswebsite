@@ -65,6 +65,7 @@ export type SeoStaticKey =
   | 'mixes'
   | 'charts'
   | 'top100'
+  | 'topreleases'
   | 'about'
   | 'privacy'
   | 'terms'

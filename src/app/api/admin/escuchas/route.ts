@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     year = n
   }
 
-  const axis: AwardsAxis = url.searchParams.get('axis') === 'save' ? 'save' : 'release'
+  const axis: AwardsAxis = url.searchParams.get('axis') === 'release' ? 'release' : 'save'
   const mode: AwardsMode = url.searchParams.get('mode') === 'raw' ? 'raw' : 'public'
 
   try {

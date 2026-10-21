@@ -6,13 +6,15 @@
  */
 import { unstable_cache } from 'next/cache'
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/revalidate-public'
+import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
 import { normalizeTrackCanonicalUrl } from '@/lib/track-canonical-key'
 import { isArtistSelfCreditSave, loadSelfCreditSkipMap } from '@/lib/artist-self-credit'
 import { fetchAllPages } from '@/lib/supabase-paginate'
 import { createServiceSupabase, selectByIds } from '@/lib/supabase-admin'
 import type { FortnightDigestTrack } from '@/types/database'
 
-const RELEASED_N = 24
+/** Cabecera del artículo: los temas más escuchados. Sin mezclar votos. */
+const RELEASED_N = 20
 
 type FeatRow = {
   id: string
@@ -35,10 +37,13 @@ type FeatRow = {
 
 type SaveRow = { id: string; user_id: string; track_source: string; track_id: string; canonical_url: string | null }
 
+export type FortnightPlayedArtist = { name: string; plays: number; tracks: number }
+
 export type FortnightLive = {
   released: FortnightDigestTrack[]
   played: FortnightDigestTrack[]
   voted: FortnightDigestTrack[]
+  played_artists: FortnightPlayedArtist[]
   votes_total: number
   voters_total: number
   updated_at: string
@@ -160,9 +165,25 @@ async function loadFortnightLive(from: string, until: string, topN: number): Pro
 
   const played = [...plays.entries()]
     .filter(([k, n]) => n > 0 && byKey.has(k))
-    .sort((a, b) => b[1] - a[1] || (votes.get(b[0])?.users.size || 0) - (votes.get(a[0])?.users.size || 0))
+    .sort((a, b) => b[1] - a[1] || byKey.get(a[0])!.title.localeCompare(byKey.get(b[0])!.title))
     .slice(0, topN)
     .map(([k, n]) => toTrack(byKey.get(k)!, n))
+
+  const artistPlays = new Map<string, { plays: number; tracks: number }>()
+  for (const [k, n] of plays) {
+    if (n <= 0 || !byKey.has(k)) continue
+    const names = [...new Set(splitArtistDisplayLine(artistsLine(byKey.get(k)!.artists)))]
+    for (const name of names) {
+      const row = artistPlays.get(name) ?? { plays: 0, tracks: 0 }
+      row.plays += n
+      row.tracks += 1
+      artistPlays.set(name, row)
+    }
+  }
+  const playedArtists = [...artistPlays.entries()]
+    .sort((a, b) => b[1].plays - a[1].plays || b[1].tracks - a[1].tracks || a[0].localeCompare(b[0], 'es'))
+    .slice(0, 8)
+    .map(([name, v]) => ({ name, plays: v.plays, tracks: v.tracks }))
 
   const voted = [...votes.entries()]
     .sort(
@@ -175,19 +196,27 @@ async function loadFortnightLive(from: string, until: string, topN: number): Pro
     .slice(0, topN)
     .map(([k, v]) => toTrack(byKey.get(k)!, v.users.size))
 
-  // «Lo que ha salido»: un tema por tarjeta (nunca un disco), lo más escuchado y votado primero.
-  const score = (k: string) => (plays.get(k) || 0) + 3 * (votes.get(k)?.users.size || 0)
-  const released = keys
+  // Cabecera: un tema por tarjeta, solo por escuchas. Los votos van en su lista, más abajo.
+  const released = [...plays.entries()]
+    .filter(([k, n]) => n > 0 && byKey.has(k))
     .sort(
       (a, b) =>
-        score(b) - score(a) ||
-        (byKey.get(b)!.release_date || '').localeCompare(byKey.get(a)!.release_date || '') ||
-        byKey.get(a)!.title.localeCompare(byKey.get(b)!.title),
+        b[1] - a[1] ||
+        (byKey.get(b[0])!.release_date || '').localeCompare(byKey.get(a[0])!.release_date || '') ||
+        byKey.get(a[0])!.title.localeCompare(byKey.get(b[0])!.title),
     )
     .slice(0, RELEASED_N)
-    .map((k) => toTrack(byKey.get(k)!, 0))
+    .map(([k]) => toTrack(byKey.get(k)!, plays.get(k) || 0))
 
-  return { released, played, voted, votes_total: votesTotal, voters_total: voters.size, updated_at: new Date().toISOString() }
+  return {
+    released,
+    played,
+    voted,
+    played_artists: playedArtists,
+    votes_total: votesTotal,
+    voters_total: voters.size,
+    updated_at: new Date().toISOString(),
+  }
 }
 
 /** null si la BD falla: la página cae al recuento guardado en el digest. */

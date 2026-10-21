@@ -1878,16 +1878,16 @@ export default function ChartView({
       {/* ================================================================ */}
       {(() => {
         const es = lang === 'es'
-        const kicker = es ? 'TOP 100 DE LA COMUNIDAD' : 'COMMUNITY TOP 100'
-        const title = es ? 'Top 100 de la comunidad' : 'Community Top 100'
+        const kicker = es ? 'TOP HISTÓRICO' : 'ALL-TIME TOP'
+        const title = es ? 'Top histórico' : 'All-time top'
         const subtitle = es
           ? 'Las canciones más añadidas a "Mis Tracks" por toda la comunidad Optimal Breaks. Ranking acumulado desde el día uno — sin votos, sin encuestas, solo saves reales.'
           : 'The most-saved tracks across the whole Optimal Breaks community. All-time ranking — no polls, no votes, just real saves.'
-        const cta = es ? 'VER TOP 100 →' : 'OPEN TOP 100 →'
+        const cta = es ? 'VER TOP HISTÓRICO →' : 'OPEN ALL-TIME TOP →'
         return (
           <section id="community-top" className="mb-12 sm:mb-16 scroll-mt-24 px-2 sm:px-0">
             <Link
-              href={`/${lang}/top100`}
+              href={`/${lang}/topalltimes`}
               className="block group border-[3px] border-[var(--ink)] bg-[var(--paper)] hover:bg-[var(--yellow)]/15 transition-colors no-underline"
             >
               <div className="px-4 sm:px-6 py-5 sm:py-7">

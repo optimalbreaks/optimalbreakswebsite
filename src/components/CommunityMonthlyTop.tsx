@@ -459,7 +459,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         // Vuelta al origen desde el mini reproductor: el Top 100 público.
         // Las filas se montan al terminar el fetch; el reproductor reintenta
         // el scroll hasta encontrarlas.
-        originPath: `/${lang}/top100`,
+        originPath: `/${lang}/topalltimes`,
         save: t.primary.source === 'beatport_top' && t.external_url
           ? {
               mode: 'url',
@@ -884,13 +884,13 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
           className="inline-block px-2 py-1 text-[10px] font-black tracking-[4px] bg-[var(--acid)] text-[var(--ink)] border-2 border-[var(--ink)] mb-3"
           style={{ fontFamily: "'Courier Prime', monospace" }}
         >
-          {cm.kicker || 'TOP 100 DE LA COMUNIDAD'}
+          {cm.kicker || 'TOP HISTÓRICO'}
         </span>
         <h2
           className="text-3xl sm:text-5xl lg:text-6xl font-black leading-[0.95] mb-3"
           style={{ fontFamily: "'Unbounded', sans-serif", color: 'var(--ink)' }}
         >
-          {cm.title || 'Top 100 de la comunidad'}
+          {cm.title || 'Top histórico'}
         </h2>
         <p
           className="text-sm sm:text-base text-[var(--ink)]/60"
@@ -959,9 +959,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             <span className="inline-flex items-center gap-2">
               <VideoShareButtons
                 lang={lang}
-                title={lang === 'es' ? 'Top 100 de la comunidad | Optimal Breaks' : 'Community Top 100 | Optimal Breaks'}
+                title={lang === 'es' ? 'Top histórico | Optimal Breaks' : 'All-time top | Optimal Breaks'}
                 fileBase="top100"
-                what={{ es: 'del Top 100 (cuenta atrás del 10 al 1)', en: 'of the Top 100 (countdown 10 to 1)' }}
+                what={{ es: 'del top histórico (cuenta atrás del 10 al 1)', en: 'of the all-time top (countdown 10 to 1)' }}
                 tone="light"
                 makeVideo={(format: ReelFormat, onProgress: (r: number) => void) => top100Video(data.top_tracks, format, onProgress)}
                 makeCaption={(platform: SharePlatform) => top100Caption(data.top_tracks, lang, platform)}
@@ -973,7 +973,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         {loading && (
           <LoadingBreaks
             es={lang === 'es'}
-            title={lang === 'es' ? 'Cargando el Top 100' : 'Loading the Top 100'}
+            title={lang === 'es' ? 'Cargando el top histórico' : 'Loading the all-time top'}
             subtitle={lang === 'es' ? 'Contando los saves de toda la comunidad' : 'Counting saves across the community'}
           />
         )}
@@ -1263,7 +1263,7 @@ async function top100Video(tracks: CommunityTopTrack[], format: ReelFormat, onPr
 }
 
 function top100Caption(tracks: CommunityTopTrack[], lang: Locale, platform: SharePlatform) {
-  const url = buildAbsoluteShareUrl(`/${lang}/top100`)
+  const url = buildAbsoluteShareUrl(`/${lang}/topalltimes`)
   const top = tracks.slice(0, 10)
   const first = top[0] ? `${topReelTitle(top[0])} — ${top[0].artists}` : ''
   return aiShareCaption({

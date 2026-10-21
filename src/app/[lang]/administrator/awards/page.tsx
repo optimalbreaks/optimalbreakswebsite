@@ -106,7 +106,8 @@ export function RankBoardView({ metric }: { metric: AwardsMetric }) {
   const copy = COPY[metric]
   const { lang } = useParams<{ lang: string }>()
   const [year, setYear] = useState(String(new Date().getFullYear()))
-  const [axis, setAxis] = useState<AwardsAxis>('release')
+  // Awards abre en el año del lanzamiento. Escuchas abre en el año de la reproducción.
+  const [axis, setAxis] = useState<AwardsAxis>(metric === 'plays' ? 'save' : 'release')
   const [mode, setMode] = useState<AwardsMode>('public')
   const [board, setBoard] = useState<AwardsBoard | null>(null)
   const [err, setErr] = useState<string | null>(null)

@@ -77,6 +77,16 @@ export const COMIC_EPISODES: ComicEpisode[] = [
       en: 'That night, at a massive breakbeat festival, the pig rolled in like a boss and became Super Pig at the first banger. Even the canis gathered round. Then she arrived: “I don’t know this track.” — “It’s on Optimal Breaks.” He pulled her on stage, they closed the party… and what happens in P’s camper stays in the camper.',
     },
   },
+  {
+    file: { es: 'futuro_del_breakbeat_v2_ES', en: 'future_of_breakbeat_v2_EN' },
+    title: { es: 'La llegada del Futuro del Breakbeat', en: 'The arrival of the Future of Breakbeat' },
+    duration: '64 s',
+    music: 'Ondamike – Let’s Get Filthy',
+    text: {
+      es: 'En su planeta la música la hace un algoritmo y todo suena igual. Hasta que su nave capta una señal rara: 135 BPM. Baja a la Tierra y la sigue por Reino Unido, Florida, Australia y Andalucía. Se estudia 22.000 temas en una noche y descubre que su nave pilla los temas un mes antes de que salgan. Su planeta le dice que vuelva. Ella: «No. Estoy enganchada.»',
+      en: 'On her planet music is made by an algorithm and everything sounds the same. Until her ship picks up a strange signal: 135 BPM. She lands on Earth and follows it through the UK, Florida, Australia and Andalusia. She studies 22,000 tracks in one night and finds out her ship catches the tunes a month before they come out. Her planet tells her to come home. She says: “No. I’m hooked.”',
+    },
+  },
 ]
 
 export type ComicCharacter = {
@@ -202,6 +212,24 @@ export const COMIC_CHARACTERS: ComicCharacter[] = [
       items: {
         es: ['A veces le acompaña al festi solo para cortarle el rollo en cuanto empieza a brillar.', 'Su gesto: dos dedos a los ojos. Te estoy vigilando.', 'Al Pepino no lo traga. Ni con candelabro.', 'Dice que en casa manda ella. El lechón dice que también. Gana ella.'],
         en: ['Sometimes she goes to the festival just to kill the vibe the moment he starts to shine.', 'Her move: two fingers to her eyes. I’m watching you.', 'She can’t stand the Pickle. Not even with the candelabra.', 'She says she’s the boss at home. The pig says so too. She wins.'],
+      },
+    },
+  },
+  {
+    img: 'pm_futuro_del_breakbeat.jpg', fit: 'cover',
+    name: { es: 'El Futuro del Breakbeat', en: 'The Future of Breakbeat' },
+    role: { es: 'La IA que viene del futuro (de un mes)', en: 'The AI from the future (one month ahead)' },
+    text: {
+      es: 'Llegó de un planeta donde la música la hace un algoritmo y se quedó enganchada al breakbeat. Su nave capta los temas un mes antes de que salgan, así que siempre te pone algo que nadie ha escuchado todavía. Dulce, educada y un pelín repelente: lo sabe todo antes que nadie y no lo puede evitar.',
+      en: 'She came from a planet where music is made by an algorithm and got hooked on breakbeat. Her ship picks up the tunes a month before they come out, so she always plays you something nobody has heard yet. Sweet, polite and a tiny bit smug: she knows it all before anyone else and can’t help it.',
+    },
+    alt: { es: 'La robot del futuro guiñando un ojo y sacándose un vinilo que brilla del pecho', en: 'The robot from the future winking and pulling a glowing vinyl out of her chest' },
+    quote: { es: '¡Toma, tema del futuro!', en: 'Here you go: a tune from the future!' },
+    more: {
+      label: { es: 'Cosas del futuro', en: 'Future stuff' },
+      items: {
+        es: ['Su máquina del tiempo solo da para un mes. «Era la oferta.»', 'Solo hace spoilers de música. De la vida, nunca.', 'Cuando suelta un tema del futuro en mitad de la pista, la onda expansiva tira a todos para atrás.', 'Mar IA se pica: es la única que la ha pillado en un tema que no conocía.', 'Al amanecer, con la batería al 3 %: «Hoy ya es mañana.»'],
+        en: ['Her time machine only goes one month ahead. “It was on offer.”', 'She only does music spoilers. Never life spoilers.', 'When she drops a tune from the future on the dancefloor, the shockwave knocks everyone back.', 'Mar IA is jealous: she’s the only one who ever caught her out with a track she didn’t know.', 'At sunrise, battery at 3%: “Today is already tomorrow.”'],
       },
     },
   },

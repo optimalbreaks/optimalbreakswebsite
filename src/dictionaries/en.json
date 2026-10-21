@@ -12,11 +12,12 @@
     "mixes": "Mixes",
     "about": "About",
     "charts": "Tracks",
-    "top100": "Top 100"
+    "topreleases": "Releases",
+    "top100": "All-time"
   },
   "doors": {
     "kicker": "The good stuff",
-    "line": "Tracks and Top 100. That's the music."
+    "line": "New releases and the all-time top. That's the music."
   },
   "search": {
     "button_short": "Search",
@@ -152,7 +153,7 @@
       "title_1": "TOP 10",
       "title_2": "ARTISTS",
       "subtitle": "The artists the community saves most to My Tracks. No votes, no polls: just real saves, and it moves every week.",
-      "see_all": "SEE TOP 100",
+      "see_all": "SEE ALL-TIME TOP",
       "saves": "saves",
       "fans": "fans",
       "new_entry": "NEW",
@@ -195,9 +196,14 @@
           "hint": "New Releases and archive"
         },
         {
-          "href": "/top100",
-          "label": "Top 100",
-          "hint": "What the scene saves the most"
+          "href": "/topreleases",
+          "label": "Top releases",
+          "hint": "The most played of each fortnight and season"
+        },
+        {
+          "href": "/topalltimes",
+          "label": "All-time top",
+          "hint": "What the scene has saved since day one"
         },
         {
           "href": "/scenes",
@@ -595,8 +601,8 @@
     "vinyl_format_label": "Format",
     "vinyl_catalog_label": "Cat.",
     "community_monthly": {
-      "kicker": "COMMUNITY TOP 100",
-      "title": "Community Top 100",
+      "kicker": "ALL-TIME TOP",
+      "title": "All-time top",
       "subtitle": "The most-saved tracks across the whole Optimal Breaks community. All-time ranking — no polls, no votes, just real saves.",
       "scope_label": "Scope",
       "all_time": "All time",
@@ -610,7 +616,7 @@
       "play_shuffle_title": "Play previews in random order",
       "artists_kicker": "TOP 10 SAVED ARTISTS",
       "artists_title": "Top 10 most-saved artists",
-      "artists_subtitle": "The artists who show up most on the tracks you save to My Tracks. Rank moves live with each save; the arrows (up, down or new) compare against the rank 7 days ago. “X wk.” is consecutive time on the board — a separate ranking from the Top 100 tracks.",
+      "artists_subtitle": "The artists who show up most on the tracks you save to My Tracks. Rank moves live with each save; the arrows (up, down or new) compare against the rank 7 days ago. “X wk.” is consecutive time on the board — a separate ranking from the all-time track top.",
       "artists_saves": "saves",
       "artists_fans": "fans",
       "artists_tracks": "tracks",
@@ -721,8 +727,12 @@
       "description": "Editorial pieces on breakbeat, rankings, interviews and scene memory from Optimal Breaks."
     },
     "top100": {
-      "title": "Community Top 100 — the breaks the scene saves the most",
-      "description": "All-time ranking of the 100 breakbeat tracks most-saved to My Tracks by the Optimal Breaks community. No polls, no votes — just real saves."
+      "title": "All-time top — the breaks the scene saves the most",
+      "description": "All-time ranking of the breakbeat tracks most-saved to My Tracks by the Optimal Breaks community. No polls, no votes — just real saves, since day one."
+    },
+    "topreleases": {
+      "title": "Top releases — the most played of each fortnight and season",
+      "description": "The breakbeat releases played the most on Optimal Breaks, fortnight by fortnight and season by season. Rank comes from plays."
     },
     "charts": {
       "title": "22,000+ breakbeat tracks — your favorite break radio",

@@ -62,13 +62,13 @@ function pushPages(
 
 function staticPriority(page: string): number {
   if (page === '') return 1
-  if (page === '/artists' || page === '/charts' || page === '/top100' || page === '/breakbeat') return 0.9
+  if (page === '/artists' || page === '/charts' || page === '/topalltimes' || page === '/topreleases' || page === '/breakbeat') return 0.9
   if (page === '/festivals' || page === '/agenda') return 0.8
   return 0.7
 }
 
 function staticFrequency(page: string): ChangeFreq {
-  if (page === '' || page === '/blog' || page === '/charts' || page === '/top100') return 'daily'
+  if (page === '' || page === '/blog' || page === '/charts' || page === '/topalltimes' || page === '/topreleases') return 'daily'
   return 'weekly'
 }
 
@@ -88,7 +88,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/scenes',
     '/blog',
     '/charts',
-    '/top100',
+    '/topreleases',
+    '/topalltimes',
     '/mixes',
     '/breakbeat',
     '/festivals',

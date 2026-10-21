@@ -27,6 +27,7 @@ interface FooterProps {
 
 const SITE_KEYS = [
   'charts',
+  'topreleases',
   'top100',
   'home',
   'history',
@@ -121,7 +122,8 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
 
   const doors = dict.doors
   const tracksLabel = dict.nav.charts || 'Tracks'
-  const topLabel = dict.nav.top100 || 'Top 100'
+  const dropsLabel = dict.nav.topreleases || 'Novedades'
+  const topLabel = dict.nav.top100 || 'Top histórico'
 
   return (
     <footer className="relative z-[1] border-t-4 border-[var(--ink)] bg-[var(--paper)]">
@@ -147,7 +149,14 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
                 {tracksLabel}
               </Link>
               <Link
-                href={`/${lang}/top100`}
+                href={`/${lang}/topreleases`}
+                className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-[var(--acid)] bg-[var(--acid)] px-4 text-[var(--ink)] no-underline shadow-[4px_4px_0_var(--yellow)] hover:bg-[var(--paper)] sm:flex-none sm:px-6"
+                style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+              >
+                {dropsLabel}
+              </Link>
+              <Link
+                href={`/${lang}/topalltimes`}
                 className="inline-flex min-h-12 flex-1 items-center justify-center border-[3px] border-white bg-[var(--orange)] px-4 text-white no-underline shadow-[4px_4px_0_var(--yellow)] hover:bg-white hover:text-[var(--orange)] sm:flex-none sm:px-6"
                 style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '14px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
               >
@@ -186,7 +195,7 @@ export default function Footer({ dict, lang = 'en' }: FooterProps) {
               {SITE_KEYS.map((key) => (
                 <li key={key}>
                   <Link
-                    href={key === 'home' ? `/${lang}` : `/${lang}/${key}`}
+                    href={key === 'home' ? `/${lang}` : `/${lang}/${key === 'top100' ? 'topalltimes' : key}`}
                     className={linkClass}
                   >
                     {dict.nav[key]}

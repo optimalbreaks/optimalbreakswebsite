@@ -407,7 +407,7 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
                       : 'Same numbers as the artist board: tracks saved to My Tracks'
                   }
                 >
-                  <Link href={`/${lang}/top100`} className="hover:text-[var(--ink)]">
+                  <Link href={`/${lang}/topalltimes`} className="hover:text-[var(--ink)]">
                     {communityStats.saves} saves
                     {' · '}
                     {communityStats.fans} {communityStats.fans === 1 ? 'fan' : 'fans'}

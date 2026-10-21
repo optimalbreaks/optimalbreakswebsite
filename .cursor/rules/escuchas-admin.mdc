@@ -25,7 +25,7 @@ Igual que Awards, sobre escuchas:
 - **Artistas, sellos, países, Revelación:** en `public`, skip de fichaje, claim, familiar y marca de sello. Agregadores no compiten como sello.
 - `raw` quita esos skips. Auditoría, no nominación.
 
-Eje `save` = año UTC de `created_at` de la escucha (en la UI, **Año de la escucha**).
+Al abrir, el eje es **`save`**: año UTC de `created_at` de la escucha (en la UI, **Año de la escucha**). El selector de arriba a la derecha puede pasarlo a **Lanzamiento**. Awards abre al revés: lanzamiento, y se puede pasar a año del voto.
 
 ## Reproductor
 

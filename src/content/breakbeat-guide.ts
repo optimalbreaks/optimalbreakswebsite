@@ -114,7 +114,7 @@ const es: BreakbeatGuide = {
       id: 'escuchar',
       title: 'Por dónde empezar a escuchar',
       paragraphs: [
-        'Si partes de cero: una selección de [artistas esenciales del breakbeat](/blog/artistas-esenciales-del-breakbeat-que-hay-que-conocer), los [sellos que construyeron el género](/blog/los-sellos-discograficos-que-construyeron-el-breakbeat), el [Top 100 de la comunidad](/top100) con lo que más guarda la gente, los [lanzamientos de cada semana](/charts) y [sesiones completas](/mixes).',
+        'Si partes de cero: una selección de [artistas esenciales del breakbeat](/blog/artistas-esenciales-del-breakbeat-que-hay-que-conocer), los [sellos que construyeron el género](/blog/los-sellos-discograficos-que-construyeron-el-breakbeat), el [top histórico](/topalltimes) con lo que más guarda la gente, las [novedades más escuchadas](/topreleases), los [lanzamientos de cada semana](/charts) y [sesiones completas](/mixes).',
         'Y para vivirlo en directo: la [agenda breakbeat por ciudad y mes](/agenda) y los [festivales](/festivals).',
       ],
     },
@@ -242,7 +242,7 @@ const en: BreakbeatGuide = {
       id: 'listen',
       title: 'Where to start listening',
       paragraphs: [
-        'Starting from zero: the [essential breakbeat artists](/blog/artistas-esenciales-del-breakbeat-que-hay-que-conocer), the [labels that built the genre](/blog/los-sellos-discograficos-que-construyeron-el-breakbeat), the [community Top 100](/top100), [new releases every week](/charts) and [full DJ sets](/mixes).',
+        'Starting from zero: the [essential breakbeat artists](/blog/artistas-esenciales-del-breakbeat-que-hay-que-conocer), the [labels that built the genre](/blog/los-sellos-discograficos-que-construyeron-el-breakbeat), the [all-time top](/topalltimes), the [most played new releases](/topreleases), [new releases every week](/charts) and [full DJ sets](/mixes).',
         'To experience it live: [breakbeat listings by city and month](/agenda) and the [festivals](/festivals).',
       ],
     },

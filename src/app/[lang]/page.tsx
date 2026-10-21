@@ -115,15 +115,18 @@ const DOOR_BTN_STYLE = {
   textTransform: 'uppercase' as const,
 }
 
-/** Tracks (/charts) y Top 100, el mismo par del hero y de los banners. */
-function DoorButtons({ lang, tracks, top, onRed = false }: { lang: Locale; tracks: string; top: string; onRed?: boolean }) {
+/** Tracks, Top novedades y Top histórico: el trío del hero y de los banners. */
+function DoorButtons({ lang, tracks, drops, top, onRed = false }: { lang: Locale; tracks: string; drops: string; top: string; onRed?: boolean }) {
   return (
-    <div className="flex flex-row items-stretch gap-3 w-full sm:w-auto">
+    <div className="flex flex-row flex-wrap items-stretch gap-3 w-full sm:w-auto">
       <Link href={`/${lang}/charts`} className={`${DOOR_BTN} bg-[var(--yellow)] text-[var(--ink)]`} style={DOOR_BTN_STYLE}>
         {tracks}
       </Link>
+      <Link href={`/${lang}/topreleases`} className={`${DOOR_BTN} bg-[var(--acid)] text-[var(--ink)]`} style={DOOR_BTN_STYLE}>
+        {drops}
+      </Link>
       <Link
-        href={`/${lang}/top100`}
+        href={`/${lang}/topalltimes`}
         className={`${DOOR_BTN} ${onRed ? 'bg-white text-[var(--red)]' : 'bg-[var(--orange)] text-white'}`}
         style={DOOR_BTN_STYLE}
       >
@@ -136,6 +139,7 @@ function DoorButtons({ lang, tracks, top, onRed = false }: { lang: Locale; track
 function HomeDoorBanner({
   lang,
   tracks,
+  drops,
   top,
   kicker,
   line,
@@ -143,6 +147,7 @@ function HomeDoorBanner({
 }: {
   lang: Locale
   tracks: string
+  drops: string
   top: string
   kicker: string
   line: string
@@ -166,7 +171,7 @@ function HomeDoorBanner({
             {line}
           </p>
         </div>
-        <DoorButtons lang={lang} tracks={tracks} top={top} />
+        <DoorButtons lang={lang} tracks={tracks} drops={drops} top={top} />
       </div>
     </aside>
   )
@@ -472,7 +477,7 @@ export default async function HomePage({
         </div>
 
         <div className="mt-6 sm:mt-8 flex justify-center max-w-[960px] mx-auto">
-          <DoorButtons lang={lang} tracks={dict.nav.charts} top={dict.nav.top100} />
+          <DoorButtons lang={lang} tracks={dict.nav.charts} drops={dict.nav.topreleases} top={dict.nav.top100} />
         </div>
 
         {/* Genre tags */}
@@ -572,6 +577,7 @@ export default async function HomePage({
       <HomeDoorBanner
         lang={lang}
         tracks={dict.nav.charts}
+        drops={dict.nav.topreleases}
         top={dict.nav.top100}
         kicker={h.door_listen_kicker}
         line={h.door_listen_line}
@@ -634,6 +640,7 @@ export default async function HomePage({
       <HomeDoorBanner
         lang={lang}
         tracks={dict.nav.charts}
+        drops={dict.nav.topreleases}
         top={dict.nav.top100}
         kicker={h.door_rank_kicker}
         line={h.door_rank_line}
@@ -780,7 +787,7 @@ export default async function HomePage({
           </p>
         ) : null}
         <div className="mt-6 sm:mt-8 flex justify-center px-2">
-          <DoorButtons lang={lang} tracks={dict.nav.charts} top={dict.nav.top100} onRed />
+          <DoorButtons lang={lang} tracks={dict.nav.charts} drops={dict.nav.topreleases} top={dict.nav.top100} onRed />
         </div>
         <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
           <Link

@@ -21,7 +21,8 @@ import type { PreviewSaveData, PreviewTrack } from '@/components/DeckAudioProvid
 import SaveTrackButton from '@/components/SaveTrackButton'
 import TrackShareButton, { BeatportLinkButton, SpotifyLinkButton, TidalLinkButton } from '@/components/TrackShareButton'
 import { usePreviewAudioGated } from '@/hooks/useGatedDeckAudio'
-import { splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import { findArtistSlug, splitArtistDisplayLine } from '@/lib/artist-slug-map'
+import type { FortnightPlayedArtist } from '@/lib/fortnight-live'
 import { digestCoverUrls } from '@/lib/blog-spotlight'
 import { formatTrackReleaseDisplay, isAdvanceRelease, proxyCatalogArtworkForDisplay } from '@/lib/share-track'
 import type { Locale } from '@/lib/i18n-config'
@@ -35,21 +36,23 @@ const T = {
     labels: 'SELLOS',
     releases: 'DISCOS',
     prev: 'quincena anterior',
-    released: 'Lo que ha salido',
-    top100: 'Estrellas del Top 100 con temas nuevos',
-    played: 'Lo más escuchado',
+    released: 'Los más escuchados',
+    heardArtists: 'Artistas más escuchados',
+    top100: 'Estrellas del top histórico con temas nuevos',
+    played: 'Canciones más escuchadas',
     plays: 'escuchas',
     playOne: 'escucha',
     voted: 'Lo más votado',
     votes: 'votos',
     voteOne: 'voto',
-    frozen: (from: string, until: string) => `Recuento del ${from} al ${until}, cerrado al publicar el artículo. En Tracks y en el Top 100 los números siguen vivos.`,
+    frozen: (from: string, until: string) => `Recuento del ${from} al ${until}, cerrado al publicar el artículo. En Tracks y en el top histórico los números siguen vivos.`,
     live: (at: string) => `En directo: lo que ha recibido cada tema desde que salió. Actualizado ${at}.`,
     leads: (h: string, title: string, artists: string) => `${h}: «${title}», de ${artists}`,
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `«${title}», de ${artists}, va primero con ${n} ${unit}${rest ? `. Le siguen ${rest}` : ''}.`,
     and: ' y ',
-    releasedLine: (list: string) => `Un tema por carátula, primero los que más se escuchan y se votan. Abren la lista ${list}.`,
+    releasedLine: (list: string) => `Un tema por carátula, solo por escuchas. Abren la lista ${list}.`,
+    heardArtistsLine: (name: string, n: number, unit: string) => `${name} es quien más se ha escuchado, con ${n} ${unit}.`,
     artistsTitle: 'Quién más ha publicado',
     tracksShort: 'temas',
     releasesShort: 'discos',
@@ -63,12 +66,14 @@ const T = {
     playAllHint: 'Suenan uno detrás de otro. Pulsa + en los que te gusten y quedan en Mis Tracks.',
     weekCta: 'Cada semana tiene su lista completa en Tracks, con preview de todos los temas.',
     weekBtn: 'VER LA ÚLTIMA SEMANA →',
-    voteGuest: 'Tu + es tu voto. Crea tu cuenta gratis: guardas los temas en Mis Tracks y cuentan para el Top 100.',
+    releasesCta: 'Cada quincena y cada temporada están en Top novedades, aparte del top histórico.',
+    releasesBtn: 'VER TOP NOVEDADES →',
+    voteGuest: 'Tu + es tu voto. Crea tu cuenta gratis: guardas los temas en Mis Tracks y cuentan para el top histórico.',
     voteGuestBtn: 'CREAR CUENTA',
-    voteUser: 'Cada + que pones cuenta para el Top 100 del mes.',
+    voteUser: 'Cada + que pones cuenta para el top histórico.',
     voteUserBtn: 'MIS TRACKS →',
-    top100Cta: 'El ranking de artistas y temas que más guarda la comunidad.',
-    top100Btn: 'VER EL TOP 100 →',
+    top100Cta: 'El ranking de todo lo que la comunidad ha guardado desde el día uno.',
+    top100Btn: 'VER EL TOP HISTÓRICO →',
     debutCta: '¿Eres uno de ellos? Crea tu cuenta y reclama tu ficha de artista.',
     debutBtn: 'RECLAMAR MI FICHA',
   },
@@ -79,21 +84,23 @@ const T = {
     labels: 'LABELS',
     releases: 'RELEASES',
     prev: 'previous fortnight',
-    released: 'Out this fortnight',
-    top100: 'Top 100 stars with new music',
-    played: 'Most played',
+    released: 'Most played',
+    heardArtists: 'Most played artists',
+    top100: 'All-time top stars with new music',
+    played: 'Most played tracks',
     plays: 'plays',
     playOne: 'play',
     voted: 'Most voted',
     votes: 'votes',
     voteOne: 'vote',
-    frozen: (from: string, until: string) => `Count from ${from} to ${until}, closed when the article was published. On Tracks and the Top 100 the numbers stay live.`,
+    frozen: (from: string, until: string) => `Count from ${from} to ${until}, closed when the article was published. On Tracks and the all-time top the numbers stay live.`,
     live: (at: string) => `Live: what each track has received since release. Updated ${at}.`,
     leads: (h: string, title: string, artists: string) => `${h}: “${title}” by ${artists}`,
     leadLine: (title: string, artists: string, n: number, unit: string, rest: string) =>
       `“${title}” by ${artists} leads with ${n} ${unit}${rest ? `, ahead of ${rest}` : ''}.`,
     and: ' and ',
-    releasedLine: (list: string) => `One track per cover, most played and voted first. Leading the list: ${list}.`,
+    releasedLine: (list: string) => `One track per cover, ranked by plays alone. Leading the list: ${list}.`,
+    heardArtistsLine: (name: string, n: number, unit: string) => `${name} is the most played, with ${n} ${unit}.`,
     artistsTitle: 'Who released the most',
     tracksShort: 'tracks',
     releasesShort: 'releases',
@@ -107,12 +114,14 @@ const T = {
     playAllHint: 'They play back to back. Hit + on the ones you like and they land in My Tracks.',
     weekCta: 'Every week has its full list on Tracks, with a preview of every track.',
     weekBtn: 'SEE THE LATEST WEEK →',
-    voteGuest: 'Your + is your vote. Create a free account: tracks go to My Tracks and count towards the Top 100.',
+    releasesCta: 'Every fortnight and every season lives on Top releases, apart from the all-time top.',
+    releasesBtn: 'SEE TOP RELEASES →',
+    voteGuest: 'Your + is your vote. Create a free account: tracks go to My Tracks and count towards the all-time top.',
     voteGuestBtn: 'CREATE ACCOUNT',
-    voteUser: 'Every + you add counts towards the monthly Top 100.',
+    voteUser: 'Every + you add counts towards the all-time top.',
     voteUserBtn: 'MY TRACKS →',
-    top100Cta: 'The artists and tracks the community saves the most.',
-    top100Btn: 'SEE THE TOP 100 →',
+    top100Cta: 'The ranking of everything the community has saved since day one.',
+    top100Btn: 'SEE THE ALL-TIME TOP →',
     debutCta: 'Are you one of them? Create an account and claim your artist profile.',
     debutBtn: 'CLAIM MY PROFILE',
   },
@@ -128,7 +137,7 @@ const QUARTER = {
   en: {
     fortnight: 'QUARTER',
     prev: 'previous quarter',
-    released: 'Out this quarter',
+    released: 'Most played this quarter',
     labelsTitle: 'Labels of the quarter',
     playAll: (n: number) => `▶ PLAY THE QUARTER · ${n} TRACKS`,
   },
@@ -379,7 +388,7 @@ function Bars({ rows, lang, base }: { rows: { name: string; slug: string | null;
 }
 
 export default function FortnightDigest({
-  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, heroFocus,
+  digest: d, lang, artistSlugMap, labelSlugMap, liveAt = null, heroFocus, playedArtists = [],
 }: {
   digest: Digest
   lang: Locale
@@ -389,6 +398,8 @@ export default function FortnightDigest({
   liveAt?: string | null
   /** `object-position` de cada tercio. El motivo de una carátula blanca cae en su lado. */
   heroFocus?: { x: number; y: number }[]
+  /** Artistas ordenados por escuchas de los temas del periodo. */
+  playedArtists?: FortnightPlayedArtist[]
 }) {
   const t = d.kind === 'trimestre' ? { ...T[lang], ...QUARTER[lang] } : T[lang]
   const copy = d.copy[lang]
@@ -557,6 +568,26 @@ export default function FortnightDigest({
             })}
           </div>
           <Cta text={t.weekCta} label={t.weekBtn} href={lastWeek ? `/${lang}/charts?week=${lastWeek}` : `/${lang}/charts`} />
+          <Cta text={t.releasesCta} label={t.releasesBtn} href={`/${lang}/topreleases`} />
+        </Section>
+      )}
+
+      {playedArtists.length > 0 && (
+        <Section
+          title={t.heardArtists}
+          copy={t.heardArtistsLine(playedArtists[0].name, playedArtists[0].plays, playedArtists[0].plays === 1 ? t.playOne : t.plays)}
+        >
+          <Bars
+            base="artists"
+            lang={lang}
+            rows={playedArtists.map((a) => ({
+              name: a.name,
+              slug: findArtistSlug(a.name, artistSlugMap),
+              value: a.plays,
+              note: `${a.plays} ${a.plays === 1 ? t.playOne : t.plays} · ${a.tracks} ${t.tracksShort}`,
+            }))}
+          />
+          {frozenNote}
         </Section>
       )}
 
@@ -623,7 +654,7 @@ export default function FortnightDigest({
               </div>
             ))}
           </div>
-          <Cta text={t.top100Cta} label={t.top100Btn} href={`/${lang}/top100`} />
+          <Cta text={t.top100Cta} label={t.top100Btn} href={`/${lang}/topalltimes`} />
         </Section>
       )}
 

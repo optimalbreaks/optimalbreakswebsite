@@ -235,7 +235,8 @@ export default function Header({ dict, lang }: HeaderProps) {
 
   const navItems = [
     { key: 'charts', href: `/${lang}/charts` },
-    { key: 'top100', href: `/${lang}/top100` },
+    { key: 'topreleases', href: `/${lang}/topreleases` },
+    { key: 'top100', href: `/${lang}/topalltimes` },
     { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
     { key: 'events', href: `/${lang}/events` },
@@ -264,6 +265,9 @@ export default function Header({ dict, lang }: HeaderProps) {
     if (key === 'charts') {
       color = on ? 'white' : 'var(--ink)'
       background = on ? 'var(--red)' : 'var(--yellow)'
+    } else if (key === 'topreleases') {
+      color = on ? 'white' : 'var(--ink)'
+      background = on ? 'var(--red)' : 'var(--acid)'
     } else if (key === 'top100') {
       color = 'white'
       background = on ? 'var(--red)' : 'var(--orange)'
@@ -503,8 +507,8 @@ function MobileNavPanel({
   const doors = dict?.doors as { kicker?: string; line?: string } | undefined
   const here = lang === 'es' ? 'Estás aquí' : "You're here"
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
-  const doorsItems = items.filter((item) => item.key === 'charts' || item.key === 'top100')
-  const rest = items.filter((item) => item.key !== 'charts' && item.key !== 'top100')
+  const doorsItems = items.filter((item) => item.key === 'charts' || item.key === 'topreleases' || item.key === 'top100')
+  const rest = items.filter((item) => item.key !== 'charts' && item.key !== 'topreleases' && item.key !== 'top100')
 
   return (
     <div
@@ -527,13 +531,16 @@ function MobileNavPanel({
             {doors.line}
           </p>
         ) : null}
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-3 gap-2">
           {doorsItems.map((item) => {
             const on = active(item.href)
             const charts = item.key === 'charts'
+            const releases = item.key === 'topreleases'
             const resting = charts
               ? 'bg-[var(--yellow)] text-[var(--ink)] shadow-[6px_6px_0_var(--yellow)] active:shadow-[3px_3px_0_var(--yellow)]'
-              : 'bg-[var(--orange)] text-white shadow-[6px_6px_0_var(--orange)] active:shadow-[3px_3px_0_var(--orange)]'
+              : releases
+                ? 'bg-[var(--acid)] text-[var(--ink)] shadow-[6px_6px_0_var(--acid)] active:shadow-[3px_3px_0_var(--acid)]'
+                : 'bg-[var(--orange)] text-white shadow-[6px_6px_0_var(--orange)] active:shadow-[3px_3px_0_var(--orange)]'
             return (
               <Link
                 key={item.key}
@@ -547,9 +554,9 @@ function MobileNavPanel({
                 style={MENU_FACE}
               >
                 <span style={{ ...MENU_META, fontSize: '9px', opacity: 0.8 }}>
-                  {on ? here : charts ? '01' : '02'}
+                  {on ? here : charts ? '01' : releases ? '02' : '03'}
                 </span>
-                <span style={{ fontSize: '15px', letterSpacing: '0.4px', lineHeight: 1 }}>{dict.nav[item.key]}</span>
+                <span style={{ fontSize: '13px', letterSpacing: '0.2px', lineHeight: 1.05 }}>{dict.nav[item.key]}</span>
               </Link>
             )
           })}
@@ -584,13 +591,16 @@ function ListenStrip({ lang, dict, pathname }: { lang: Locale; dict: any; pathna
   const onMusic =
     pathname === `/${lang}/charts` ||
     pathname.startsWith(`/${lang}/charts/`) ||
-    pathname === `/${lang}/top100` ||
-    pathname.startsWith(`/${lang}/top100/`)
+    pathname === `/${lang}/topalltimes` ||
+    pathname.startsWith(`/${lang}/topalltimes/`) ||
+    pathname === `/${lang}/topreleases` ||
+    pathname.startsWith(`/${lang}/topreleases/`)
   const onAdmin = pathname.includes('/administrator')
   const doors = dict?.doors as { kicker?: string; line?: string } | undefined
   if (onHome || onMusic || onAdmin || !doors?.line) return null
   const tracks = dict?.nav?.charts || 'Tracks'
-  const top = dict?.nav?.top100 || 'Top 100'
+  const drops = dict?.nav?.topreleases || 'Novedades'
+  const top = dict?.nav?.top100 || 'Top histórico'
   return (
     <div className="border-b-4 border-[var(--ink)] bg-[var(--yellow)]">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
@@ -607,7 +617,14 @@ function ListenStrip({ lang, dict, pathname }: { lang: Locale; dict: any; pathna
             {tracks}
           </Link>
           <Link
-            href={`/${lang}/top100`}
+            href={`/${lang}/topreleases`}
+            className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--acid)] px-3 text-[var(--ink)] no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
+            style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
+          >
+            {drops}
+          </Link>
+          <Link
+            href={`/${lang}/topalltimes`}
             className="inline-flex min-h-11 items-center justify-center border-[3px] border-[var(--ink)] bg-[var(--orange)] px-3 text-white no-underline shadow-[3px_3px_0_var(--ink)] hover:bg-[var(--red)] hover:text-white"
             style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}
           >

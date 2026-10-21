@@ -101,8 +101,8 @@ const ALTS: Record<SectionOgKey, { es: string; en: string }> = {
     en: 'Optimal Breaks — more than 22,000 breakbeat tracks',
   },
   top100: {
-    es: 'Optimal Breaks — Top 100: las mejores canciones de breakbeat de la historia',
-    en: 'Optimal Breaks — Top 100: the best breakbeat tracks in history',
+    es: 'Optimal Breaks — Top histórico: las canciones de breakbeat más guardadas',
+    en: 'Optimal Breaks — All-time top: the most-saved breakbeat tracks',
   },
   about: {
     es: 'Optimal Breaks — Sobre el proyecto',

@@ -177,7 +177,7 @@ export default function HomeCommunityTop10({ lang, t }: Props) {
             </p>
           </div>
           <Link
-            href={`/${lang}/top100`}
+            href={`/${lang}/topalltimes`}
             className="shrink-0 inline-block no-underline border-[3px] border-[var(--ink)] px-4 py-2 bg-[var(--paper)] text-[var(--ink)] hover:bg-[var(--red)] hover:text-white hover:border-[var(--red)] transition-colors"
             style={{ fontFamily: MONO, fontWeight: 700, fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase' }}
           >

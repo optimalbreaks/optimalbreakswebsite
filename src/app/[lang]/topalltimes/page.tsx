@@ -1,10 +1,8 @@
 // ============================================
-// OPTIMAL BREAKS — Top 100 de la Comunidad (página propia)
+// OPTIMAL BREAKS — Top histórico (página propia)
 // ----------------------------------------------
-// Ranking público «all-time» de las canciones más añadidas a Mis Tracks por
-// toda la comunidad. Antes vivía como sección 4 dentro de `/[lang]/charts`;
-// se sacó a su propia URL para darle entidad y SEO propios. El componente
-// `CommunityMonthlyTop` (slug histórico) se reutiliza tal cual.
+// Ranking público de las canciones más añadidas a Mis Tracks desde el día uno.
+// La URL es /topalltimes. /top100 redirige aquí (next.config.js).
 // ============================================
 
 import Link from 'next/link'
@@ -17,13 +15,13 @@ import CommunityMonthlyTop from '@/components/CommunityMonthlyTop'
 
 const TOP100_KEYWORDS: Record<Locale, string[]> = {
   es: [
-    'top 100 breakbeat',
+    'top histórico breakbeat',
     'ranking breakbeat comunidad',
     'tracks favoritos breakbeat',
     'optimal breaks comunidad',
   ],
   en: [
-    'breakbeat top 100',
+    'breakbeat all-time top',
     'community breakbeat ranking',
     'favorite breakbeat tracks',
     'optimal breaks community',
@@ -36,14 +34,14 @@ export async function generateMetadata({
   params: Promise<{ lang: Locale }>
 }): Promise<Metadata> {
   const { lang } = await params
-  return staticPageMetadata(lang, '/top100', 'top100', {
+  return staticPageMetadata(lang, '/topalltimes', 'top100', {
     ogImagePath: sectionOgImagePath('top100', lang),
     ogImageAlt: sectionOgImageAlt('top100', lang),
     extraKeywords: TOP100_KEYWORDS[lang],
   })
 }
 
-export default async function Top100Page({
+export default async function TopAllTimesPage({
   params,
 }: {
   params: Promise<{ lang: Locale }>

@@ -721,13 +721,12 @@ Devuelve SOLO este JSON:
   for (const a of top100) for (const f of winByArtist.get(normName(a.name)) || []) pushCover(f.artwork_url)
   win.forEach((f) => pushCover(f.artwork_url))
 
-  // Temas de la quincena (uno por tarjeta, nunca un disco): primero los más escuchados y votados.
-  const votesByKey = new Map((votes.top_tracks || []).map((t) => [t.canonical_key, t.unique_users || 0]))
-  const trackScore = (f) => (playCount.get(f.id) || 0) + 3 * (votesByKey.get(normUrl(f.link_url)) || 0)
+  // Cabecera: un tema por tarjeta, solo por escuchas. Los votos tienen su lista más abajo.
   const released = [...win]
-    .sort((a, b) => trackScore(b) - trackScore(a) || String(b.release_date).localeCompare(String(a.release_date)))
-    .slice(0, 24)
-    .map((f) => toTrack(f))
+    .filter((f) => (playCount.get(f.id) || 0) > 0)
+    .sort((a, b) => (playCount.get(b.id) || 0) - (playCount.get(a.id) || 0) || String(b.release_date).localeCompare(String(a.release_date)))
+    .slice(0, 20)
+    .map((f) => toTrack(f, playCount.get(f.id) || 0))
 
   const voted = votedWin.map((v) => featByKey.has(v.canonical_key) ? toTrack(featByKey.get(v.canonical_key), v.unique_users) : ({
     title: v.title,

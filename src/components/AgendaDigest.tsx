@@ -322,7 +322,7 @@ export default function AgendaDigest({
               <span key={i}>
                 {chunk}
                 {i < arr.length - 1 ? (
-                  <Link href={`/${lang}/top100`} className="underline">Top 100</Link>
+                  <Link href={`/${lang}/topalltimes`} className="underline">Top 100</Link>
                 ) : null}
               </span>
             ))}

@@ -193,6 +193,7 @@ export default async function BlogPostPage({ params }: Props) {
         const labelName = (tr.label || '').trim()
         if (labelName) trackLabelNames.add(labelName)
       }
+      for (const a of live?.played_artists ?? []) trackArtistNames.add(a.name)
     }
 
     const titleList = Array.from(titles)
@@ -419,7 +420,7 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
       )}
 
-      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroFocus={heroFocus} />}
+      {digest && <FortnightDigest digest={digest} lang={safeLang} artistSlugMap={artistSlugMap} labelSlugMap={labelSlugMap} liveAt={live?.updated_at ?? null} heroFocus={heroFocus} playedArtists={live?.played_artists} />}
 
       {agendaStored && <AgendaDigestView digest={agendaStored} nights={agendaNights} lang={safeLang} />}
 
@@ -428,8 +429,8 @@ export default async function BlogPostPage({ params }: Props) {
           {digest && (
             <p className="text-[14px] leading-snug mb-3" style={{ fontFamily: "'Courier Prime', monospace" }}>
               {safeLang === 'es'
-                ? `Una playlist con lo mejor ${quarter ? 'del trimestre' : 'de la quincena'}: las exclusivas, lo más escuchado y lo más votado en la web, y los temas nuevos de las estrellas del Top 100. Solo temas salidos del ${fortnightRange}.`
-                : `A playlist with the best of the ${quarter ? 'quarter' : 'fortnight'}: exclusives, the most played and most voted on the site, and new tracks by Top 100 stars. Only tracks released ${fortnightRange}.`}
+                ? `Una playlist con lo mejor ${quarter ? 'del trimestre' : 'de la quincena'}: las exclusivas, lo más escuchado en la web y, después, lo más votado y los temas nuevos de las estrellas del top histórico. Solo temas salidos del ${fortnightRange}.`
+                : `A playlist with the best of the ${quarter ? 'quarter' : 'fortnight'}: exclusives, the most played on the site, then the most voted and new tracks by all-time top stars. Only tracks released ${fortnightRange}.`}
             </p>
           )}
           <BeatportTopTracks
