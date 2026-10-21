@@ -225,7 +225,13 @@ export default async function TopReleasesPage({
   const mono = { fontFamily: "'Courier Prime', monospace" } as const
   const display = { fontFamily: "'Unbounded', sans-serif" } as const
   const unitsFor = (rank: Rank) => (rank === 'votes' ? ([t.voteOne, t.votes] as const) : ([t.playOne, t.plays] as const))
-  const titleOf = (p: Post) => (lang === 'es' ? p.title_es : p.title_en)
+  const titleOf = (p: Post) => {
+    const raw = lang === 'es' ? p.title_es : p.title_en
+    const es = p.rank === 'votes' ? 'Los más votados' : 'Los más escuchados'
+    const en = p.rank === 'votes' ? 'The most voted tracks' : 'The most played tracks'
+    if (lang === 'es') return raw.replace(/^Los mejores temas de breakbeat\b/i, es)
+    return raw.replace(/^The best breakbeat tracks\b/i, en)
+  }
   const introOf = (p: Post) => (lang === 'es' ? p.intro_es || p.excerpt_es : p.intro_en || p.excerpt_en) || ''
   const href = (p: Post) => `/${lang}/topreleases/${p.slug}`
 

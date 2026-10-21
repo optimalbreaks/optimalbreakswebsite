@@ -407,13 +407,14 @@ function trimestreDe(ym) {
   return { from, until: addDaysYmd(next.toISOString().slice(0, 10), -1), prevFrom: prev.toISOString().slice(0, 10) }
 }
 
-/** Título fijo: la página recalcula escuchas y votos en directo y los líderes cambian. */
+/** Título fijo: la página recalcula escuchas y votos en directo y los líderes cambian. «Mejores» no: suena a premio. Antes del 6 oct 2026 no hay escuchas, así que el título dice votados. */
+const PLAYS_SINCE = '2026-10-06'
 function tituloQuincena(from, until, lang, kind = 'quincena') {
+  const heard = until >= PLAYS_SINCE
   if (kind === 'trimestre') {
     const s = SEASONS[from.slice(5, 7)]
-    return lang === 'es'
-      ? `Los mejores temas de breakbeat ${s.es} de ${from.slice(0, 4)}`
-      : `The best breakbeat tracks of ${s.en} ${from.slice(0, 4)}`
+    if (lang === 'es') return `${heard ? 'Los más escuchados' : 'Los más votados'} ${s.es} de ${from.slice(0, 4)}`
+    return `The most ${heard ? 'played' : 'voted'} tracks of ${s.en} ${from.slice(0, 4)}`
   }
   const sameYear = from.slice(0, 4) === until.slice(0, 4)
   const sameMonth = sameYear && from.slice(5, 7) === until.slice(5, 7)
@@ -421,9 +422,8 @@ function tituloQuincena(from, until, lang, kind = 'quincena') {
     new Date(`${ymd}T12:00:00Z`).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { ...opts, timeZone: 'UTC' })
   const start = d(from, sameMonth ? { day: 'numeric' } : sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' })
   const end = fechaLarga(until, lang)
-  return lang === 'es'
-    ? `Los mejores temas de breakbeat del ${start} al ${end}`
-    : `The best breakbeat tracks, ${start} to ${end}`
+  if (lang === 'es') return `${heard ? 'Los más escuchados' : 'Los más votados'} del ${start} al ${end}`
+  return `The most ${heard ? 'played' : 'voted'} tracks, ${start} to ${end}`
 }
 
 async function fetchAllRows(sb, table, select, apply = (q) => q) {
