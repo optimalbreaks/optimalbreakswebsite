@@ -247,13 +247,13 @@ function LaurelBranch({ mirrored = false, className = '' }: { mirrored?: boolean
 }
 
 function RankOrderBadge({ rank }: { rank: number }) {
-  // Columna izquierda del Top 100 de temas. La fila no enseña el recuento.
+  // Mismo sello en el top de artistas y en el de temas. La fila de temas no enseña el recuento.
   const triple = rank >= 100
   return (
     <span
-      className={`inline-flex items-center justify-center shrink-0 font-black leading-none border-4 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)]
-        w-[4.5rem] h-[4.5rem] sm:w-24 sm:h-24
-        ${triple ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}
+      className={`inline-flex items-center justify-center shrink-0 font-black leading-none border-[3px] border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)]
+        w-14 h-14 sm:w-20 sm:h-20
+        ${triple ? 'text-lg sm:text-2xl' : 'text-2xl sm:text-4xl'}
       `}
       style={{ fontFamily: "'Unbounded', sans-serif" }}
       title={`#${rank}`}
@@ -587,7 +587,6 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
               </span>
             )
             const isLeader = a.rank === 1
-            const isHot = isLeader || a.save_count >= 10
             const weeksAt1 = a.weeks_at_1 ?? 0
             const weeksIn = a.weeks_in_top10 ?? 1
             const weekLabel = isLeader && weeksAt1 > 1
@@ -596,7 +595,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 ? (c.weeks_in_chart || '{n} sem.').replace('{n}', String(weeksIn))
                 : null
             const portrait = (
-              <div className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden border-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
+              <div className="h-14 w-14 sm:h-20 sm:w-20 shrink-0 overflow-hidden border-[3px] border-[var(--ink)] bg-[var(--paper-dark)]">
                 <CardThumbnail
                   src={a.image_url}
                   alt={a.name}
@@ -608,17 +607,9 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
             return (
               <li
                 key={`${a.rank}-${a.name}`}
-                className="flex items-center gap-3 sm:gap-4 px-3 py-2.5 sm:px-4 sm:py-3"
+                className="flex items-center gap-3 sm:gap-4 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-[var(--yellow)]/10 transition-colors"
               >
-                <span
-                  className={`inline-flex flex-col items-center justify-center shrink-0 font-black border-[3px] border-[var(--ink)]
-                    ${isHot ? 'w-11 h-11 bg-[var(--red)] text-white' : 'w-10 h-10 bg-[var(--ink)] text-[var(--paper)]'}
-                  `}
-                  style={{ fontFamily: "'Unbounded', sans-serif" }}
-                  title={`#${a.rank}`}
-                >
-                  <span className="text-sm sm:text-base leading-none">{a.rank}</span>
-                </span>
+                <RankOrderBadge rank={a.rank} />
                 {a.slug ? (
                   <Link
                     href={`/${lang}/artists/${a.slug}`}
@@ -991,7 +982,7 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
         )}
 
         {!loading && !error && data && data.top_tracks.length > 0 && (
-          <div>
+          <div className="divide-y-2 divide-[var(--ink)]">
             {data.top_tracks.map((t) => {
               const rowKey = `community-top-${t.canonical_key}`
               const isActive = activeRowKey === rowKey
@@ -1036,16 +1027,16 @@ export default function CommunityMonthlyTop({ lang, dict }: Props) {
                 <div
                   key={t.canonical_key}
                   id={rowKey}
-                  className={`flex flex-col gap-3 py-3 sm:py-4 px-3 sm:px-5 border-b-[3px] transition-colors
-                    ${rowHighlighted ? 'bg-[var(--red)]/15 border-[var(--red)]/30' : 'border-[var(--ink)]/10 hover:bg-[var(--yellow)]/10'}`}
+                  className={`flex flex-col gap-3 py-2.5 sm:py-3 px-3 sm:px-4 transition-colors
+                    ${rowHighlighted ? 'bg-[var(--red)]/15' : 'hover:bg-[var(--yellow)]/10'}`}
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                       <RankOrderBadge rank={t.rank} />
 
                       {t.artwork_url ? (
-                        <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
-                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 64px" unoptimized={false} />
+                        <div className="shrink-0 w-14 h-14 sm:w-20 sm:h-20 border-[3px] border-[var(--ink)] overflow-hidden bg-[var(--paper-dark)] relative">
+                          <Image src={t.artwork_url} alt="" fill className="object-cover" sizes="(max-width: 640px) 56px, 80px" unoptimized={false} />
                         </div>
                       ) : null}
 
