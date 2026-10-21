@@ -237,17 +237,14 @@ export default function Header({ dict, lang }: HeaderProps) {
     { key: 'charts', href: `/${lang}/charts` },
     { key: 'topreleases', href: `/${lang}/topreleases` },
     { key: 'top100', href: `/${lang}/topalltimes` },
-    { key: 'history', href: `/${lang}/history` },
     { key: 'artists', href: `/${lang}/artists` },
     { key: 'events', href: `/${lang}/events` },
     { key: 'festivals', href: `/${lang}/festivals` },
     { key: 'labels', href: `/${lang}/labels` },
     { key: 'mixes', href: `/${lang}/mixes` },
     { key: 'parkineo', href: `/${lang}/parkineo` },
-    { key: 'scenes', href: `/${lang}/scenes` },
     { key: 'blog', href: `/${lang}/blog` },
     { key: 'comic', href: `/${lang}/comic` },
-    { key: 'about', href: `/${lang}/about` },
   ]
 
   const paletteDict = (dict?.search || {}) as Parameters<typeof CommandPalette>[0]['dict']
@@ -566,15 +563,12 @@ function MobileNavPanel({
       <div className="grid grid-cols-2 gap-2 p-3">
         {rest.map((item) => {
           const on = active(item.href)
-          const wide = item.key === 'about'
           return (
             <Link
               key={item.key}
               href={item.href}
               onClick={onClose}
-              className={`flex min-h-12 items-center justify-between gap-2 border-[3px] border-[var(--ink)] px-3 no-underline ${
-                wide ? 'col-span-2' : ''
-              } ${on ? 'bg-[var(--ink)] text-[var(--yellow)]' : 'bg-white text-[var(--ink)]'}`}
+              className={`flex min-h-12 items-center justify-between gap-2 border-[3px] border-[var(--ink)] px-3 no-underline ${on ? 'bg-[var(--ink)] text-[var(--yellow)]' : 'bg-white text-[var(--ink)]'}`}
               style={{ ...MENU_FACE, fontSize: '12px', letterSpacing: '0.3px' }}
             >
               <span>{dict.nav[item.key]}</span>
