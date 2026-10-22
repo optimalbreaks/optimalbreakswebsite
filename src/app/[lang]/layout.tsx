@@ -19,6 +19,7 @@ import ChartsPromoModal from '@/components/ChartsPromoModal'
 import CookieBanner from '@/components/CookieBanner'
 import DeferredFonts from '@/components/DeferredFonts'
 import BackToTop from '@/components/BackToTop'
+import SectionGuideBar from '@/components/SectionGuide'
 import AdminCaptureFab from '@/components/AdminCaptureFab'
 import ArtistNetworkFab from '@/components/ArtistNetworkFab'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
@@ -183,6 +184,7 @@ export default async function LangLayout({
           <Header dict={dict} lang={lang} />
           <LazyDeckAudioProvider lang={lang} dict={deckDict}>
             <div className="danger-bar" />
+            <SectionGuideBar lang={lang} />
             <main className="relative z-[1] min-w-0 w-full max-w-full">{children}</main>
             <div className="danger-bar" />
             <Footer dict={dict} lang={lang} />

@@ -386,6 +386,7 @@ export type AudioClaimSource =
   | 'beatport-top'
   | 'my-tracks'
   | 'comic'
+  | 'guide'
 
 export function claimAudio(source: AudioClaimSource) {
   // Avisa a otras pestañas/ventanas PWA (lockscreen, Safari + icono…) de que
@@ -2928,7 +2929,7 @@ export function DeckAudioProvider({
         setMode((m) => (m === 'preview' ? 'idle' : m))
         return
       }
-      if (src === 'comic') {
+      if (src === 'comic' || src === 'guide') {
         if (previewQueue.length > 0) stopPreviewInternal()
         setMode((m) => (m === 'preview' ? 'idle' : m))
         if (playingA && audioRefA.current) { audioRefA.current.pause(); setPlayingA(false) }

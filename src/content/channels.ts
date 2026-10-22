@@ -59,12 +59,6 @@ export type ChannelUpload = {
   short: boolean
 }
 
-export type ChannelGuide = {
-  href: string
-  label: Copy
-  youtubeId: string | null
-}
-
 export const CHANNEL_ACCOUNTS: ChannelAccount[] = [
   {
     id: 'spotify',
@@ -205,20 +199,3 @@ async function isYouTubeShort(id: string): Promise<boolean> {
     return false
   }
 }
-
-/** Un vídeo por sección, cuando esté grabado. El enlace de la ficha ya funciona. */
-export const CHANNEL_GUIDES: ChannelGuide[] = [
-  { href: '/charts', label: { es: 'Tracks', en: 'Tracks' }, youtubeId: null },
-  { href: '/topreleases', label: { es: 'Novedades', en: 'Releases' }, youtubeId: null },
-  { href: '/topalltimes', label: { es: 'Top histórico', en: 'All-time top' }, youtubeId: null },
-  { href: '/artists', label: { es: 'Artistas', en: 'Artists' }, youtubeId: null },
-  { href: '/labels', label: { es: 'Sellos', en: 'Labels' }, youtubeId: null },
-  { href: '/events', label: { es: 'Eventos', en: 'Events' }, youtubeId: null },
-  { href: '/festivals', label: { es: 'Festivales', en: 'Festivals' }, youtubeId: null },
-  { href: '/scenes', label: { es: 'Escenas', en: 'Scenes' }, youtubeId: null },
-  { href: '/mixes', label: { es: 'Mixes', en: 'Mixes' }, youtubeId: null },
-  { href: '/parkineo', label: { es: 'Parkineo', en: 'Parkineo' }, youtubeId: null },
-  { href: '/history', label: { es: 'Historia', en: 'History' }, youtubeId: null },
-  { href: '/blog', label: { es: 'Blog', en: 'Blog' }, youtubeId: null },
-  { href: '/comic', label: { es: 'Cómic', en: 'Comic' }, youtubeId: null },
-]

@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import {
   CHANNEL_ACCOUNTS,
-  CHANNEL_GUIDES,
   CHANNEL_PLAYLISTS,
   CHANNEL_SERIES,
   loadYouTubeChannelUploads,
@@ -14,6 +13,8 @@ import {
 } from '@/content/channels'
 import type { Locale } from '@/lib/i18n-config'
 import { staticPageMetadata } from '@/lib/seo'
+import { GuideList } from '@/components/SectionGuide'
+import { SECTION_GUIDES } from '@/content/section-guides'
 
 export const revalidate = 300
 
@@ -249,7 +250,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
         </div>
       </section>
 
-      <section className="px-4 sm:px-6 py-10 sm:py-14">
+      <section id="secciones" className="px-4 sm:px-6 py-10 sm:py-14 scroll-mt-24">
         <div className="mx-auto max-w-[1100px]">
           <div className="sec-tag">{es ? 'Cómo funciona' : 'How it works'}</div>
           <h2 className="m-0 mb-4 text-3xl sm:text-5xl font-black leading-[0.95] uppercase" style={DISPLAY}>
@@ -259,40 +260,10 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
           </h2>
           <p className="m-0 mb-6 max-w-[640px] text-[15px] leading-relaxed" style={MONO}>
             {es
-              ? 'Cada parte de la web tendrá su vídeo en el canal: qué es y cómo se usa. Cuando esté grabado, se ve en su fila.'
-              : 'Each part of the site gets a video on the channel: what it is and how to use it. Once it is recorded, it plays in its row.'}
+              ? 'Cada parte de la web tiene su vídeo: un personaje del cómic te cuenta qué es y cómo se usa, con la página en pantalla. También sale arriba en cada sección. En el móvil en vertical se ve en vertical.'
+              : 'Each part of the site has its video: a character from the comic tells you what it is and how to use it, with the page on screen. It also shows at the top of each section. On a phone held upright it plays vertical.'}
           </p>
-          <ol className="m-0 p-0 list-none border-[3px] border-[var(--ink)]">
-            {CHANNEL_GUIDES.map((guide) => (
-              <li key={guide.href} className="border-b-[3px] border-[var(--ink)] last:border-b-0 bg-[var(--paper)]">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
-                  <h3 className="m-0 text-[16px] sm:text-[18px] font-black" style={DISPLAY}>
-                    {guide.label[lang]}
-                  </h3>
-                  <Link
-                    href={`/${lang}${guide.href}`}
-                    className="text-[12px] font-black tracking-[1px] text-[var(--ink)] no-underline hover:text-[var(--red)]"
-                    style={MONO}
-                  >
-                    {es ? 'IR A LA SECCIÓN →' : 'GO TO THE SECTION →'}
-                  </Link>
-                </div>
-                {guide.youtubeId ? (
-                  <div className="border-t-[3px] border-[var(--ink)]">
-                    <LazyYouTubeEmbed
-                      videoId={guide.youtubeId}
-                      title={guide.label[lang]}
-                      playSlotId={`channel-guide-${guide.href}`}
-                    />
-                  </div>
-                ) : (
-                  <p className="m-0 border-t-[3px] border-[var(--ink)]/20 px-3 py-2 text-[12px] text-[var(--ink)]/60" style={MONO}>
-                    {es ? 'El vídeo de esta sección se verá aquí.' : 'This section’s video will play here.'}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ol>
+          <GuideList lang={lang} guides={SECTION_GUIDES} />
         </div>
       </section>
     </div>
