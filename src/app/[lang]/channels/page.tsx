@@ -159,7 +159,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             {seriesBlocks.map(({ series, videos }) => {
-              const preview = series.id === 'lechon' ? videos.slice(0, 3) : videos
+              const preview = series.id === 'lechon' ? videos.slice(0, 2) : videos
               const moreOnComic = series.id === 'lechon' && videos.length > preview.length
               return (
               <article key={series.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">

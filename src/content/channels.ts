@@ -11,7 +11,7 @@ import type { Locale } from '@/lib/i18n-config'
 
 export const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@OptimalBreakswebsite'
 export const YOUTUBE_CHANNEL_HANDLE = '@OptimalBreakswebsite'
-/** El mismo canal que @OptimalBreakswebsite. El feed público lista los 15 últimos. */
+/** El mismo canal que @OptimalBreakswebsite. La lista de subidas trae vídeo y Short a la vez. */
 export const YOUTUBE_CHANNEL_ID = 'UCYKQPLahCkM_0yZfLGCR0SQ'
 /** Avatar del canal (vinilo). Se pide por `/api/og/image-proxy`, no en caliente a Google. */
 export const YOUTUBE_CHANNEL_AVATAR =
@@ -140,11 +140,12 @@ function fold(value: string) {
   return value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 }
 
-/** Los 15 últimos del canal. Vacío si YouTube no responde. */
+/** Los 15 últimos del canal, vídeos y Shorts. Vacío si YouTube no responde. */
 export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
   try {
+    const uploadsPlaylistId = `UU${YOUTUBE_CHANNEL_ID.slice(2)}`
     const response = await fetch(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`,
+      `https://www.youtube.com/feeds/videos.xml?playlist_id=${uploadsPlaylistId}`,
       process.env.NODE_ENV === 'development' ? { cache: 'no-store' } : { next: { revalidate: 300 } },
     )
     if (!response.ok) return []
