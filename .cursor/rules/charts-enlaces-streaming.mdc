@@ -5,7 +5,11 @@ alwaysApply: true
 
 # Charts — enlaces de streaming (Spotify / TIDAL)
 
-Columnas **`spotify_url`** y **`tidal_url`** en `chart_tracks` + `chart_featured_tracks` (migraciones 066/067). Las rellena **`scripts/spotify-match-charts.mjs`** (`npm run db:chart:spotify` / `db:chart:tidal`, guía: `run chart-spotify`) buscando en la API de cada servicio con *client credentials* (`SPOTIFY_CLIENT_ID/SECRET`, `TIDAL_CLIENT_ID/SECRET` en `.env.local`). Contexto (agosto 2026): alojar audio completo está descartado por derechos, y el OAuth por usuario de Spotify también (Development Mode = máx. 5 usuarios; Extended Quota = ≥250k MAU).
+Columnas **`spotify_url`** y **`tidal_url`** en `chart_tracks` + `chart_featured_tracks` (migraciones 066/067). Las rellena **`scripts/spotify-match-charts.mjs`** (`npm run db:chart:spotify` / `db:chart:tidal`, guía: `run chart-spotify`) buscando en la API de cada servicio con *client credentials* (`SPOTIFY_CLIENT_ID/SECRET`, `TIDAL_CLIENT_ID/SECRET` en `.env.local`). Contexto (agosto 2026): alojar audio completo está descartado por derechos, y un botón para que cada visitante escriba en su Spotify también (Development Mode = máx. 5 usuarios; Extended Quota = ≥250k MAU).
+
+## Lista editorial «Temazos 2026» (22 oct 2026)
+
+Una sola cuenta, la de Narciso. `scripts/spotify-temazos.mjs` (`npm run db:spotify:temazos`, guía `run spotify-temazos`) lee los artículos publicados de `/topreleases` y **añade** a esa lista el mismo corte que la página, en directo: votos si el periodo cierra antes del 6 oct 2026 (20 en temporada, 10 en quincena), escuchas si no (los 20 más oídos). No repite un tema ni borra lo que ya hay. Solo entra un `open.spotify.com/track/…`. La primera vez hace falta `--auth` (redirect `http://127.0.0.1:8888/callback` en la app; el refresh token queda en `.env.local`, no se versiona). Al publicar quincena o trimestre, `generar-blog-agente.mjs` lo lanza solo. La lista se enseña en `/channels`. Esto no abre OAuth a los visitantes.
 
 ## Invariantes (no negociables)
 

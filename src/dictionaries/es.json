@@ -10,6 +10,7 @@
     "blog": "Blog",
     "comic": "Cómic",
     "mixes": "Mixes",
+    "channels": "Canales",
     "parkineo": "Parkineo",
     "about": "Sobre",
     "charts": "Tracks",
@@ -45,6 +46,7 @@
     "quick_labels": "Sellos",
     "quick_events": "Eventos",
     "quick_mixes": "Mixes",
+    "quick_channels": "Canales",
     "quick_parkineo": "Parkineo",
     "quick_scenes": "Escenas",
     "quick_charts": "Tracks",
@@ -127,6 +129,7 @@
         { "href": "/events", "label": "Eventos", "hint": "Agenda y archivo" },
         { "href": "/labels", "label": "Sellos", "hint": "Infraestructura sonora" },
         { "href": "/mixes", "label": "Mixes", "hint": "Sets y continuidad sonora" },
+        { "href": "/channels", "label": "Canales", "hint": "Spotify, listas y vídeos de YouTube" },
         { "href": "/charts", "label": "Tracks", "hint": "New Releases y archivo" },
         { "href": "/topreleases", "label": "Top novedades", "hint": "Lo más escuchado de cada quincena y temporada" },
         { "href": "/topalltimes", "label": "Top histórico", "hint": "Lo que más guarda la escena desde el día uno" },
@@ -621,6 +624,10 @@
     "topreleases": {
       "title": "Top novedades — lo más escuchado de cada quincena y temporada",
       "description": "Los lanzamientos de breakbeat que más se han escuchado en Optimal Breaks, quincena a quincena y temporada a temporada. Solo cuentan las reproducciones de esta web, no las de otras plataformas."
+    },
+    "channels": {
+      "title": "Canales — Spotify, listas y YouTube de Optimal Breaks",
+      "description": "La cuenta de Spotify, la lista Temazos 2026 y los canales de YouTube: vídeos de la escena y uno por cada sección de la web."
     },
     "mixes": {
       "title": "Tu Página de Sesiones Breaks Favorita — mixes, sets y radio shows",

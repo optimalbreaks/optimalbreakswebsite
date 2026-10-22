@@ -697,6 +697,14 @@ const ACTIONS = [
       'Rellena spotify_url (o tidal_url con --service=tidal) en chart_tracks + chart_featured_tracks vía búsqueda en la API del servicio (client credentials). Matching conservador (título + artista; mejor NULL que enlace erróneo). UI: botón SPOTIFY siempre (fallback búsqueda); botón TIDAL solo con match verificado. Migraciones previas: 066_charts_spotify_url.sql + 067_charts_tidal_url.sql. TLS Acttax: node --use-system-ca. OJO Spotify: Development Mode tiene cuota diaria por cuenta (~1.300 búsquedas); al agotarse (429 QUOTA_EXCEEDED) el script corta con resumen y se reanuda otro día donde quedó (solo procesa filas NULL).',
   },
   {
+    id: 'spotify-temazos',
+    run: 'node scripts/guia-base-datos.mjs run spotify-temazos [--dry-run] [--auth]',
+    npm: 'npm run db:spotify:temazos -- [--dry-run|--auth]',
+    creds: 'SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET + SPOTIFY_REFRESH_TOKEN (lo deja --auth) + NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+    description:
+      'Añade a la lista de Spotify «Temazos 2026» el mismo corte que /topreleases, en directo (votos si el periodo cierra antes del 6 oct 2026; los 20 más escuchados si no). No repite ni borra. La primera vez: --auth, con http://127.0.0.1:8888/callback en las Redirect URIs de la app, sesión en la cuenta dueña de la lista. El redactor de quincena/trimestre lo lanza al publicar.',
+  },
+  {
     id: 'purge-featured-week-dates',
     run: 'node scripts/guia-base-datos.mjs run purge-featured-week-dates YYYY-MM-DD […] [--dry-run] [--keep-empty-editions]',
     npm: '—',
@@ -1449,6 +1457,15 @@ function main() {
         process.exit(1)
       }
       runNode('actualizar-mixes.mjs', [p])
+      break
+    }
+    case 'spotify-temazos': {
+      const r = spawnSync(process.execPath, ['--import', 'tsx', join(SCRIPTS, 'spotify-temazos.mjs'), ...rest], {
+        cwd: ROOT,
+        stdio: 'inherit',
+        env: process.env,
+      })
+      process.exit(r.status === null ? 1 : r.status)
       break
     }
     case 'chart-propose':

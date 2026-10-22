@@ -72,7 +72,8 @@ function audioSrc(f: FeatRow): string | null {
   return f.sample_url
 }
 
-async function loadFortnightLive(from: string, until: string, topN: number): Promise<FortnightLive> {
+/** Sin caché: lo usa el script de la lista Temazos 2026 (fuera de Next). */
+export async function loadFortnightLive(from: string, until: string, topN: number): Promise<FortnightLive> {
   const sb = createServiceSupabase()
 
   const featAll = await fetchAllPages<FeatRow>((a, b) =>

@@ -10,6 +10,7 @@
     "blog": "Blog",
     "comic": "Comic",
     "mixes": "Mixes",
+    "channels": "Channels",
     "parkineo": "Parkineo",
     "about": "About",
     "charts": "Tracks",
@@ -45,6 +46,7 @@
     "quick_labels": "Labels",
     "quick_events": "Events",
     "quick_mixes": "Mixes",
+    "quick_channels": "Channels",
     "quick_parkineo": "Parkineo",
     "quick_scenes": "Scenes",
     "quick_charts": "Tracks",
@@ -191,6 +193,11 @@
           "href": "/mixes",
           "label": "Mixes",
           "hint": "Sets and sonic continuity"
+        },
+        {
+          "href": "/channels",
+          "label": "Channels",
+          "hint": "Spotify, playlists and YouTube videos"
         },
         {
           "href": "/charts",
@@ -739,6 +746,10 @@
     "charts": {
       "title": "22,000+ breakbeat tracks — your favorite break radio",
       "description": "More than 22,000 breakbeat tracks, one click away: weekly charts, new releases and an archive back to the 1970s. Listen, explore and save."
+    },
+    "channels": {
+      "title": "Channels — Spotify, playlists and YouTube from Optimal Breaks",
+      "description": "The Spotify account, the Temazos 2026 playlist and the YouTube channels: scene videos and one walkthrough for each part of the site."
     },
     "mixes": {
       "title": "Your Favorite Breaks Sessions Page — mixes, sets & radio shows",

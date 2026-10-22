@@ -27,6 +27,8 @@
  * adelantos). Los datos van a `blog_posts.digest` y la ficha
  * los pinta con gráficos y carátulas (FortnightDigest); el modelo solo escribe
  * frases cortas por bloque. Se publica al momento (--borrador para no publicar).
+ * Al publicar, los temas del ranking se añaden a la lista de Spotify «Temazos 2026»
+ * (`scripts/spotify-temazos.mjs`). Sin token guardado, avisa y sigue.
  * No pisa una quincena publicada salvo con --forzar. --mantener-textos (con --forzar)
  * refresca los datos y conserva título y frases ya publicados. --solo-datos imprime los datos y sale.
  *
@@ -42,6 +44,7 @@
  * Requiere OPENAI_API_KEY. Para BD: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
  */
 
+import { spawnSync } from 'child_process'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs'
 import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -61,6 +64,17 @@ const SYSTEM_PROMPT_PATH = join(__dirname, 'prompts', 'blog-agente-system.txt')
 const VALID_CATEGORIES = ['article', 'ranking', 'retrospective', 'interview', 'review', 'opinion']
 
 loadEnvLocal()
+
+/** Los temas del artículo (quincena o trimestre) entran en la lista «Temazos 2026». */
+function syncTemazosPlaylist() {
+  const script = join(__dirname, 'spotify-temazos.mjs')
+  const r = spawnSync(process.execPath, ['--import', 'tsx', script], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    env: { ...process.env, OB_TEMAZOS_OPTIONAL: '1' },
+  })
+  if (r.status) console.warn(`[blog-agent] La lista Temazos 2026 no se actualizó (código ${r.status}).`)
+}
 
 function loadSystemPrompt() {
   if (!existsSync(SYSTEM_PROMPT_PATH)) {
@@ -1011,6 +1025,7 @@ async function mainQuincena(args) {
   const result = await upsertBlogPost(row, { refusePublished: !args.forzar })
   console.log(`[blog-agent] ${row.is_published ? 'Publicado' : 'Borrador'} (${result.action}) — ${row.title_es}`)
   console.log(`[blog-agent] ${SITE_URL}/es/blog/${row.slug}`)
+  if (row.is_published) syncTemazosPlaylist()
 }
 
 const AGENDA_SYSTEM = `Eres el editor de Optimal Breaks (revista y archivo de breakbeat, bilingüe ES/EN). Escribes el texto corto del artículo de agenda: las citas de breakbeat de los próximos 14 días. Tono: revista musical, directo, con gancho, cerca de «te los vas a perder» sin usar esa frase como título. No cites el número exacto de eventos (la ficha lo calcula en vivo y cambia). No inventes citas, ciudades ni lineups: solo lo que viene en la lista. Devuelves UN objeto JSON válido y nada más, con esta forma:

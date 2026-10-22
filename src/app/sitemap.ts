@@ -93,6 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/topreleases',
     '/topalltimes',
     '/mixes',
+    '/channels',
     '/parkineo',
     '/breakbeat',
     '/festivals',
