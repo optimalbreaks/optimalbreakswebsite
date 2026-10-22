@@ -399,6 +399,7 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 | `djruler@gmail.com` | Ruler | `ruler` | `ruler` | `86c3c29e-2c0a-42c7-9efe-db8003454719` |
 | `filisoporte@gmail.com` | The Legends | `the legends` | `the-legends` | `75a6ca14-c30e-4269-8c4a-6619c10ed9ff` |
 | `alkimista1974@gmail.com` | MacGroove | `macgroove` | `macgroove` | `2940e39a-bfea-4db1-966d-a46f68d938eb` |
+| `djbrownie@gmail.com` | DJ Brownie | `dj brownie` | `dj-brownie` | `424a70e8-4db6-49b8-9c0a-92bf58d46f8e` |
 
 **Family marks** (25 Sep 2026; song chart 6 Oct 2026). The account is not the artist. Mark it against the credit name of someone already marked or claimed. Those «+» do not bump *that* name on the artist board and do not raise that song on the track Top 100. Other credits on the same track still count on the artist board. My Tracks stays. No `claimed_by`, no bookings. List column **Familiar** = Marcado; **Artista** stays `—`.
 
@@ -474,6 +475,8 @@ Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 **Audit — The Legends (6 Oct 2026).** `filisoporte@gmail.com` signed up 5 Oct 18:36 UTC (`display_name` sergio — do not match by that name). Catalog ficha `/artists/the-legends` already existed. Credit on tracks is **The Legends** (e.g. *M.D.A* / 83, with Guau). `claimed_by` left null, `accepts_bookings` left false. Zero saves at mark time. No `artist_claims` row. Fase 2 only: no claim, no bookings, no label mark. Future «+» that credit The Legends skip *that* name on the artist board and do not raise that song (6 Oct 2026); collabs (Guau, etc.) still count on the artist board. My Tracks stays.
 
 **Audit — MacGroove (9 Oct 2026).** `alkimista1974@gmail.com` (display MacGroove; do not guess the email from the name). Catalog ficha `/artists/macgroove` already existed (`claimed_by` left null, `accepts_bookings` left false). On 26 Aug he saved **4/4** of his own titles in two minutes, all on Br8kn: *FM Chaos*, *Fracture (PhoenixRising Remix)*, *Kali Rage*, *Void*. Fase 2 only: no claim, no bookings, no label mark. Those 4 no longer bump MacGroove on the artist board and do not raise those songs. My Tracks keeps them. Collabs on a future save still count on the artist board.
+
+**Audit — DJ Brownie (22 Oct 2026).** `djbrownie@gmail.com` (display name empty; do not guess another email). Signed up the same day, 15:51 UTC. Catalog ficha `/artists/dj-brownie` already existed. Fase 2 only: `claimed_by` left null, `accepts_bookings` left false. His 19 saves all credit DJ Brownie. Those 19 stay in My Tracks and no longer bump DJ Brownie or raise those songs. A collab name on the same track still counts on the artist board.
 
 ### Periodic cheat-vote audit
 
