@@ -39,6 +39,7 @@ import FanCounter from '@/components/FanCounter'
 import FavoriteButton from '@/components/FavoriteButton'
 import SeenLiveButton from '@/components/SeenLiveButton'
 import CardThumbnail from '@/components/CardThumbnail'
+import CatalogCollaboratorBadge from '@/components/CatalogCollaboratorBadge'
 import BeatportTopTracks from '@/components/BeatportTopTracks'
 import ArtistFeaturedTracks from '@/components/ArtistFeaturedTracks'
 import BookingRequestButton from '@/components/BookingRequestButton'
@@ -244,12 +245,16 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
   const allArtistLinkRows = await fetchAllArtistLinkRows(supabase)
   const artistSlugByName = buildArtistSlugLookup(allArtistLinkRows)
 
-  const [{ data: labelRows }, relatedContent, featuredPicks, communityBoard] = await Promise.all([
+  const [{ data: labelRows }, relatedContent, featuredPicks, communityBoard, claimedProfile] = await Promise.all([
     supabase.from('labels').select('name, slug'),
     fetchArtistRelatedContent(supabase, artist, lang, artistSlugByName),
     fetchArtistFeaturedPicks(supabase, artist, artistSlugByName),
     getCommunityArtistBoard(),
+    artist.claimed_by
+      ? supabase.from('profiles').select('role').eq('id', artist.claimed_by).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
+  const catalogCollaborator = claimedProfile.data?.role === 'collaborator'
   const communityStats = communityCountsForArtist(communityBoard, artist)
   const onSiteSaveCounts = await fetchOnSiteSaveCounts(onSitePickTrackIds(featuredPicks))
 
@@ -387,6 +392,11 @@ export default async function ArtistDetailPage({ params, searchParams }: Props) 
               <h1 className="sec-title mt-2 md:mt-3">
                 <span className="hl">{artist.name_display || artist.name}</span>
               </h1>
+              {catalogCollaborator ? (
+                <div className="mt-3">
+                  <CatalogCollaboratorBadge lang={lang} />
+                </div>
+              ) : null}
               {artist.real_name && (
                 <p
                   className="mt-1"

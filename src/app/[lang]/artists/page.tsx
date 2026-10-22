@@ -88,21 +88,29 @@ export default async function ArtistsPage({ params }: { params: Promise<{ lang: 
   //   para saber si tenían Top 10.
   type ArtistListRow = Pick<
     Artist,
-    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url'
+    'id' | 'slug' | 'name' | 'name_display' | 'country' | 'category' | 'styles' | 'era' | 'is_featured' | 'sort_order' | 'image_url' | 'claimed_by'
   > & { bp_first: unknown }
-  const list = await fetchAllPages<ArtistListRow>((from, to) =>
+  const [list, collaboratorIds] = await Promise.all([
+    fetchAllPages<ArtistListRow>((from, to) =>
+      supabase
+        .from('artists')
+        .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, claimed_by, bp_first:beatport_top_tracks->0')
+        .order('name_display', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
+    ).catch(() => [] as ArtistListRow[]),
     supabase
-      .from('artists')
-      .select('id, slug, name, name_display, country, category, styles, era, is_featured, sort_order, image_url, bp_first:beatport_top_tracks->0')
-      .order('name_display', { ascending: true })
-      .order('id', { ascending: true })
-      .range(from, to),
-  ).catch(() => [] as ArtistListRow[])
+      .from('profiles')
+      .select('id')
+      .eq('role', 'collaborator')
+      .then(({ data }) => new Set((data ?? []).map((row) => row.id))),
+  ])
 
-  const listForUi = list.map(({ bp_first, ...a }) => ({
+  const listForUi = list.map(({ bp_first, claimed_by, ...a }) => ({
     ...a,
     image_url: displayArtistImageUrl(a.slug, a.image_url) ?? null,
     has_beatport_top: bp_first != null,
+    catalog_collaborator: Boolean(claimed_by && collaboratorIds.has(claimed_by)),
   }))
   return (
     <div className="lined min-h-screen">

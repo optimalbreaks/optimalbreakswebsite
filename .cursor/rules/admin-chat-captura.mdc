@@ -17,6 +17,7 @@ Documentación completa: **`docs/ADMIN_CHAT_CAPTURA.md`**.
 - Prompt: `scripts/prompts/admin-chat-system.txt`
 - Hilos: `062_admin_chat_threads.sql` (`admin_chat_threads` / `admin_chat_messages`)
 - Aportación: `/administrator/colaboradores` (`src/lib/collaborator-contributions.ts`). Solo admin. Cuenta lo que el colaborador confirmó y **sigue** en el catálogo (tema, mix, evento creado, ficha). Lo que ya estaba, lo que falló o lo que luego se borró no suma. Cada confirmación deja un trazo `executed` en el mensaje.
+- **Etiqueta pública (22 oct 2026):** ficha reclamada (`claimed_by`) cuya cuenta es `collaborator` → sello «Artista colaborador de Optimal Breaks» en `/artists/[slug]` y en las cards de `/artists` (`CatalogCollaboratorBadge`). El admin reclamado no lo lleva. Al cliente solo el booleano; no pasar `claimed_by`.
 - Beatport en el chat: un `/release/` mete **todos** los temas de ese disco; un `/track/` solo ese. Si no se inserta ninguna fila, la respuesta es «No se completó el guardado», no «Hecho».
 
 ## Modelo conversacional (obligatorio)

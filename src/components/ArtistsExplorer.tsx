@@ -6,6 +6,7 @@ import CardThumbnail from '@/components/CardThumbnail'
 import ViewToggle, { type ViewMode } from '@/components/ViewToggle'
 import FavoriteButton from '@/components/FavoriteButton'
 import CountryBadge from '@/components/CountryBadge'
+import CatalogCollaboratorBadge from '@/components/CatalogCollaboratorBadge'
 
 interface ArtistRow {
   id: string
@@ -20,6 +21,8 @@ interface ArtistRow {
   sort_order: number
   image_url: string | null
   has_beatport_top?: boolean
+  /** Cuenta reclamada (`claimed_by`) con `profiles.role = collaborator`. Solo el booleano. */
+  catalog_collaborator?: boolean
 }
 
 /* ─── Beatport Top 10 Badge ─── */
@@ -367,6 +370,11 @@ function LargeGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
               <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(16px, 3vw, 20px)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
                 {a.name_display || a.name}
               </div>
+              {a.catalog_collaborator ? (
+                <div className="mt-2">
+                  <CatalogCollaboratorBadge lang={lang} />
+                </div>
+              ) : null}
               <div className="flex flex-wrap gap-1 mt-[6px]">
                 {a.styles?.map((s, si) => (
                   <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '9px', letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px' }}>
@@ -404,6 +412,11 @@ function CompactGrid({ artists, lang }: { artists: ArtistRow[]; lang: string }) 
               <div className="mt-0" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(11px, 2vw, 14px)', textTransform: 'uppercase', letterSpacing: '-0.3px', lineHeight: 1.2 }}>
                 {a.name_display || a.name}
               </div>
+              {a.catalog_collaborator ? (
+                <div className="mt-1">
+                  <CatalogCollaboratorBadge lang={lang} compact />
+                </div>
+              ) : null}
               <div className="flex flex-wrap gap-[2px] mt-1">
                 {a.styles?.slice(0, 2).map((s, si) => (
                   <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '7px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 4px' }}>
@@ -444,6 +457,11 @@ function ListView({ artists, lang }: { artists: ArtistRow[]; lang: string }) {
               <div className="truncate" style={{ fontFamily: "'Unbounded', sans-serif", fontWeight: 900, fontSize: 'clamp(12px, 2.5vw, 16px)', textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
                 {a.name_display || a.name}
               </div>
+              {a.catalog_collaborator ? (
+                <div className="mt-1">
+                  <CatalogCollaboratorBadge lang={lang} compact />
+                </div>
+              ) : null}
               <div className="mt-[2px] flex flex-wrap gap-[3px]">
                 {a.styles?.slice(0, 3).map((s, si) => (
                   <span key={si} className="bg-[var(--ink)] text-[var(--paper)] group-hover:bg-[var(--red)] group-hover:text-white" style={{ fontFamily: "'Courier Prime', monospace", fontWeight: 700, fontSize: '8px', letterSpacing: '0.5px', textTransform: 'uppercase', padding: '1px 5px' }}>

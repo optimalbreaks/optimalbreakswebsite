@@ -52,6 +52,8 @@ Mensaje / captura
 
 `/[lang]/administrator/colaboradores` (solo admin, sidebar «Colaboradores»). Lee los hilos de las cuentas con `profiles.role = collaborator` y cruza cada «Hecho» con el catálogo.
 
+Si esa cuenta **además** tiene una ficha reclamada (`artists.claimed_by`), la ficha pública y las cards de `/artists` enseñan la etiqueta **Artista colaborador de Optimal Breaks** (`CatalogCollaboratorBadge`). El rol admin no lleva esa etiqueta. `claimed_by` no se manda al cliente: solo un booleano calculado en el servidor.
+
 Cuenta como aportación lo que **sigue publicado**: tema nuevo, mix nuevo, evento creado, ficha de artista o sello nueva. Un evento que ya existía y se reescribió va aparte («ya estaba»). Un confirmado que falló, o un tema que luego se borró, no suma. La misma ficha tocada varias veces cuenta una.
 
 Cada confirmación guarda en el mensaje un trazo `executed` (`ops` + resultado) para que el recuento no dependa solo del texto. Los hilos anteriores se reconstruyen con el último `pending_ops` y las líneas `✓/✗`.
