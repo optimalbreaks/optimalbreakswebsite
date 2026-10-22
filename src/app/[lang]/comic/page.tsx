@@ -8,6 +8,8 @@ import Link from 'next/link'
 import type { Locale } from '@/lib/i18n-config'
 import { staticPageMetadata } from '@/lib/seo'
 import { COMIC_CHARACTERS, COMIC_COPY, COMIC_IMG } from '@/content/comic'
+import { CHANNEL_SERIES, loadYouTubeChannelUploads, videosForSeries } from '@/content/channels'
+import { LazyYouTubeEmbed } from '@/components/YouTubeEmbed'
 import ComicPlayer from '@/components/comic/ComicPlayer'
 import './comic.css'
 
@@ -22,6 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
 export default async function ComicPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
   const c = COMIC_COPY[lang]
+  const uploads = await loadYouTubeChannelUploads()
+  const lechon = CHANNEL_SERIES.find((series) => series.id === 'lechon')
+  const pigVideos = lechon ? videosForSeries(lechon, uploads) : []
 
   return (
     <div className="cmc">
@@ -116,12 +121,32 @@ export default async function ComicPage({ params }: { params: Promise<{ lang: Lo
         </div>
       </section>
 
-      <section className="cmc-eps" id="episodios">
+      <section className="cmc-eps scroll-mt-24" id="episodios">
         <div className="cmc-wrap">
           <div className="cmc-sec-head">
             <h2 className="cmc-inked">{c.epsTitle}</h2>
             <p>{c.epsText}</p>
           </div>
+          {pigVideos.length > 0 ? (
+            <div className="mb-10 grid gap-4 sm:grid-cols-2">
+              {pigVideos.map((video) => (
+                <article key={video.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)]">
+                  <LazyYouTubeEmbed
+                    videoId={video.id}
+                    title={video.title}
+                    playSlotId={`comic-${video.id}`}
+                    vertical={video.short}
+                  />
+                  <p
+                    className="m-0 border-t-[3px] border-[var(--ink)] px-3 py-2 text-[13px] leading-snug"
+                    style={{ fontFamily: "'Courier Prime', monospace" }}
+                  >
+                    {video.title}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : null}
           <ComicPlayer lang={lang} />
         </div>
       </section>

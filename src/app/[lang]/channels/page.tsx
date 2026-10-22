@@ -158,10 +158,13 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
             <span className="hl">{es ? 'LA ESCENA' : 'THE SCENE'}</span>
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            {seriesBlocks.map(({ series, videos }) => (
+            {seriesBlocks.map(({ series, videos }) => {
+              const preview = series.id === 'lechon' ? videos.slice(0, 3) : videos
+              const moreOnComic = series.id === 'lechon' && videos.length > preview.length
+              return (
               <article key={series.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">
-                {videos.length > 0 ? (
-                  videos.map((video) => (
+                {preview.length > 0 ? (
+                  preview.map((video) => (
                     <div key={video.id} className="border-b-[3px] border-[var(--ink)]">
                       <LazyYouTubeEmbed
                         videoId={video.id}
@@ -169,7 +172,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                         playSlotId={`channel-${video.id}`}
                         vertical={video.short}
                       />
-                      {videos.length > 1 ? (
+                      {preview.length > 1 ? (
                         <p className="m-0 px-3 py-2 text-[12px] leading-snug" style={MONO}>
                           {video.title}
                         </p>
@@ -193,7 +196,7 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                   <p className="mt-2 mb-0 text-[13px] leading-relaxed" style={MONO}>
                     {series.text[lang]}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <a
                       href={YOUTUBE_CHANNEL_URL}
                       target="_blank"
@@ -203,7 +206,15 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                     >
                       {YOUTUBE_CHANNEL_HANDLE}
                     </a>
-                    {series.href ? (
+                    {moreOnComic ? (
+                      <Link
+                        href={`/${lang}/comic#episodios`}
+                        className="inline-flex min-h-[44px] items-center border-[3px] border-[var(--ink)] bg-[var(--ink)] px-3 text-[var(--paper)] no-underline shadow-[4px_4px_0_var(--red)] hover:bg-[var(--red)] hover:text-white"
+                        style={{ ...DISPLAY, fontWeight: 900, fontSize: '12px', letterSpacing: '0.4px', textTransform: 'uppercase' }}
+                      >
+                        {es ? 'Más vídeos en el cómic' : 'More videos in the comic'}
+                      </Link>
+                    ) : series.href ? (
                       <Link href={`/${lang}${series.href}`} className="text-[12px] font-black text-[var(--red)] no-underline hover:underline" style={MONO}>
                         {es ? 'Ver en la web' : 'See on the site'}
                       </Link>
@@ -211,7 +222,8 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                   </div>
                 </div>
               </article>
-            ))}
+              )
+            })}
             {loose.map((video) => (
               <article key={video.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] shadow-[4px_4px_0_var(--ink)]">
                 <div className="border-b-[3px] border-[var(--ink)]">
