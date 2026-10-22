@@ -660,6 +660,11 @@ export default function FortnightDigest({
                     <CardThumbnail src={r.artwork_url} alt={`${r.artists} — ${r.title}`} aspectClass="aspect-square" sizes="(max-width: 640px) 33vw, 190px" />
                     <PlayButton track={r} spot="rel" className="absolute top-1.5 right-1.5 h-9 w-9 sm:h-10 sm:w-10 rounded-full text-[14px] shadow-[2px_2px_0_var(--ink)]" />
                     <SaveButton track={r} lang={lang} className="absolute top-12 right-1.5 sm:top-14 !h-9 !w-9 sm:!h-10 sm:!w-10 shadow-[2px_2px_0_var(--ink)]" />
+                    {isAdvanceRelease(r.release_date) ? null : (
+                      <span className="absolute bottom-1.5 left-1.5 shadow-[2px_2px_0_var(--ink)] rounded-full">
+                        <SpotifyLinkButton url={r.spotify_url} title={r.title} artists={splitArtistDisplayLine(r.artists)} lang={lang} />
+                      </span>
+                    )}
                   </div>
                   {text}
                 </div>
