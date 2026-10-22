@@ -383,6 +383,8 @@ Identity is **never** guessed from display name or email. Look the row up in Usu
 
 Marks live in BD (25 Aug 2026). Add a row here when you fichas someone new.
 
+**Direct link (22 Oct 2026).** Narciso linked `afghanheadspin@gmail.com` to `/artists/afghan-headspin` (`artists.claimed_by`) without a claim form, and set `profiles.role = collaborator`. The artist mark and the DIRTY KITCHEN RAVE label mark stay. `accepts_bookings` stays `false`. Same public stamp as any claimed collaborator (Godino). Do not repeat a direct `claimed_by` write unless he asks.
+
 | Email | Credit name | `artist_key` | Slug | `user_id` |
 | --- | --- | --- | --- | --- |
 | `afghanheadspin@gmail.com` | Afghan Headspin | `afghan headspin` | `afghan-headspin` | `4df84b27-8162-493e-8bbd-67284b277513` |

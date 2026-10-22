@@ -30,6 +30,8 @@ El tablero de artistas se ordena por **canciones guardadas** (créditos), no por
 
 Panel: `/administrator/users/[id]` → «Marcar artista (fase 2)» con el **nombre de crédito** (p. ej. `Devis Hard`). **No** escribir `claimed_by`. No inferir el email: buscar la fila en Usuarios.
 
+Excepción (22 oct 2026, pedido de Narciso): `afghanheadspin@gmail.com` se vinculó directo a `/artists/afghan-headspin` (`claimed_by`) y pasó a `collaborator`, sin formulario de claim. El fichaje de artista y el de sello DKR se quedan. `accepts_bookings` sigue en `false`. No repetir esto con otra cuenta si no lo pide.
+
 Sello: misma ficha → «Marcar sello» con el **nombre tal como sale en el track** (p. ej. `DIRTY KITCHEN RAVE`). No hace falta que sea el dueño: vale un artista del roster o una cuenta con dumping errático. Independiente del fichaje de artista.
 
 Trampas de email (agosto 2026): `afghanheadspin@gmail.com` (no `afgan…`); `gruv42@me.com` (no `gruv42ruv42@…`); `aranniadj@gmail.com` (no `ranniadj@…`). Devis Hard = `davisoto@hotmail.com`. Maxuka = `jsrcortegana@hotmail.com`. D-Fast Beats = `dfastbeats@gmail.com` (sep 2026). Kritycal System = `kritycalsystem@gmail.com` (sep 2026). Kaos Beat = `kaosbeatproducer2@gmail.com` (sep 2026). Ro73 = `djro73@gmail.com` (sep 2026). Ruler = `djruler@gmail.com` (oct 2026). The Legends = `filisoporte@gmail.com` (oct 2026; `display_name` sergio, no inferir). MacGroove = `alkimista1974@gmail.com` (oct 2026). Tabla viva + IDs: `docs/USER_ENGAGEMENT.md` (*Editorial marks in production*).
