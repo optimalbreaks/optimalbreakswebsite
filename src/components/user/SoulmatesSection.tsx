@@ -132,24 +132,75 @@ function avatarInitial(u: SoulmateUser) {
   return (name[0] || 'B').toUpperCase()
 }
 
-function VerifiedArtistMarks({ lang, es, artists }: { lang: string; es: boolean; artists: VerifiedArtist[] }) {
+/** Mismo nombre, ignorando mayúsculas, tildes y guiones. «D-Fast Beats» = «dfastbeats». */
+function samePersonName(profile: string, artist: string) {
+  const norm = (s: string) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '')
+  const a = norm(profile)
+  const b = norm(artist)
+  return a.length > 0 && a === b
+}
+
+/**
+ * Cinta roja a sangre en la tarjeta. El check de 16px en negro no se veía
+ * (y en la nº 1, amarillo sobre amarillo tampoco). Si el perfil no es el
+ * nombre artístico (Juan Antonio Guerrero → D-Fast Beats), ese nombre va
+ * en amarillo.
+ */
+function VerifiedArtistMarks({
+  lang,
+  es,
+  artists,
+  profileName,
+}: {
+  lang: string
+  es: boolean
+  artists: VerifiedArtist[]
+  profileName: string
+}) {
   if (!artists.length) return null
   return (
-    <>
-      {artists.map((a) => (
-        <Link
-          key={a.slug}
-          href={`/${lang}/artists/${a.slug}`}
-          title={es ? `Artista verificado: ${a.name}` : `Verified artist: ${a.name}`}
-          aria-label={es ? `Artista verificado: ${a.name}. Ver ficha` : `Verified artist: ${a.name}. View profile`}
-          className="inline-flex items-center justify-center w-4 h-4 shrink-0 rounded-full bg-[var(--ink)] text-[var(--yellow)] no-underline"
-        >
-          <svg viewBox="0 0 16 16" width="10" height="10" aria-hidden="true">
-            <path d="M3.2 8.2 6.4 11.4 12.8 4.6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />
-          </svg>
-        </Link>
-      ))}
-    </>
+    <div className="-mx-4 -mt-4 mb-3">
+      {artists.map((a) => {
+        const showName = !samePersonName(profileName, a.name)
+        return (
+          <Link
+            key={a.slug}
+            href={`/${lang}/artists/${a.slug}`}
+            title={es ? `Artista verificado: ${a.name}` : `Verified artist: ${a.name}`}
+            aria-label={es ? `Artista verificado: ${a.name}. Ver ficha` : `Verified artist: ${a.name}. View profile`}
+            className="group flex items-center gap-2.5 border-b-[3px] border-[var(--ink)] bg-[var(--red)] px-3 py-2.5 no-underline text-white hover:bg-[var(--ink)]"
+          >
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center border-2 border-[var(--ink)] bg-[var(--yellow)] text-[var(--ink)]">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M3.2 8.2 6.4 11.4 12.8 4.6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span
+                className={`block font-black uppercase leading-none ${showName ? 'text-[9px] tracking-[1.2px]' : 'text-[13px] tracking-[0.6px]'}`}
+                style={{ fontFamily: showName ? MONO : DISPLAY }}
+              >
+                {showName
+                  ? (es ? 'Es el artista' : 'Is the artist')
+                  : (es ? 'Artista verificado' : 'Verified artist')}
+              </span>
+              {showName && (
+                <span
+                  className="mt-0.5 block break-words font-black uppercase leading-[0.95] text-[var(--yellow)]"
+                  style={{ fontFamily: DISPLAY, fontSize: '18px' }}
+                >
+                  {a.name}
+                </span>
+              )}
+            </span>
+            <span className="shrink-0 text-[9px] font-black tracking-[1px]" style={{ fontFamily: MONO }}>
+              {es ? 'VER FICHA' : 'VIEW'}
+            </span>
+          </Link>
+        )
+      })}
+    </div>
   )
 }
 
@@ -630,6 +681,8 @@ export default function SoulmatesSection({ lang }: Props) {
                 const common = (sm.sample_common_tracks || []).filter((t): t is CommonTrack => !!t && !!t.title)
                 const rel = topJaccard > 0 ? Math.max(6, Math.round(((sm.jaccard || 0) / topJaccard) * 100)) : 0
                 const isFirst = i === 0
+                const verified = sm.user.verified_artists || []
+                const profileName = (sm.user.display_name || sm.user.username || '').trim()
                 return (
                   <article
                     key={sm.user.id}
@@ -637,6 +690,7 @@ export default function SoulmatesSection({ lang }: Props) {
                       isFirst ? 'bg-[var(--yellow)]/40 hover:bg-[var(--yellow)]/60' : 'bg-[var(--paper)] hover:bg-[var(--yellow)]/10'
                     }`}
                   >
+                    <VerifiedArtistMarks lang={lang} es={es} artists={verified} profileName={profileName} />
                     <div className="flex items-start gap-3 mb-3">
                       <span
                         className={`inline-flex items-center justify-center w-10 h-10 shrink-0 font-black border-[3px] border-[var(--ink)] ${
@@ -654,9 +708,8 @@ export default function SoulmatesSection({ lang }: Props) {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-black flex items-center gap-1.5 min-w-0" style={{ fontFamily: DISPLAY, fontSize: '14px', textTransform: 'uppercase' }}>
-                          <span className="truncate">{userLabel(sm.user, es)}</span>
-                          <VerifiedArtistMarks lang={lang} es={es} artists={sm.user.verified_artists || []} />
+                        <h4 className="font-black leading-tight break-words" style={{ fontFamily: DISPLAY, fontSize: '14px', textTransform: 'uppercase' }}>
+                          {userLabel(sm.user, es)}
                         </h4>
                         <p className="text-[11px] text-[var(--ink)]/60 truncate" style={{ fontFamily: MONO }}>
                           {sm.user.username ? `@${sm.user.username}` : ''}
