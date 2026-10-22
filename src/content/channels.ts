@@ -22,9 +22,12 @@ export type ChannelAccount = {
 
 export type ChannelPlaylist = {
   id: string
+  /** Id de la lista en Spotify (`open.spotify.com/playlist/<id>`). */
+  spotifyId: string
   name: string
   text: Copy
-  href: string | null
+  href: string
+  embed: string
 }
 
 export type ChannelSeries = {
@@ -71,12 +74,14 @@ export const CHANNEL_ACCOUNTS: ChannelAccount[] = [
 export const CHANNEL_PLAYLISTS: ChannelPlaylist[] = [
   {
     id: 'temazos-2026',
-    name: 'Temazos 2026',
+    spotifyId: '1IeXy1JkoPIRpX9TPCuPYI',
+    name: 'TEMAZOS 2026',
     text: {
       es: 'Los temas que destacan en Top novedades: la primavera, el verano y cada quincena. Se van sumando. No se quita lo que ya está.',
       en: 'The tracks Top releases highlights: spring, summer and each fortnight. They keep being added. Nothing already there comes off.',
     },
-    href: null,
+    href: 'https://open.spotify.com/playlist/1IeXy1JkoPIRpX9TPCuPYI',
+    embed: 'https://open.spotify.com/embed/playlist/1IeXy1JkoPIRpX9TPCuPYI?utm_source=generator&theme=0',
   },
 ]
 

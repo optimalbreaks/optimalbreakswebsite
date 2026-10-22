@@ -31,7 +31,9 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
-const PLAYLIST_NAME = 'Temazos 2026'
+const PLAYLIST_NAME = 'TEMAZOS 2026'
+/** Mismo id que `CHANNEL_PLAYLISTS` en src/content/channels.ts. */
+const PLAYLIST_ID = '1IeXy1JkoPIRpX9TPCuPYI'
 const PLAYS_SINCE = '2026-10-06'
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback'
 const SCOPES = 'playlist-read-private playlist-modify-public playlist-modify-private'
@@ -297,6 +299,12 @@ async function api(token, path, options = {}) {
 }
 
 async function findPlaylist(token) {
+  try {
+    const known = await api(token, `/playlists/${PLAYLIST_ID}`)
+    if (known?.id) return known
+  } catch {
+    /* si el id no responde, se busca por nombre */
+  }
   const me = await api(token, '/me')
   let url = '/me/playlists?limit=50'
   const similar = []
@@ -305,7 +313,7 @@ async function findPlaylist(token) {
     for (const p of page.items || []) {
       const name = String(p.name || '').trim()
       if (name.toLowerCase().includes('temazo')) similar.push(`${name}${p.owner?.id === me.id ? '' : ' (de otra cuenta)'}`)
-      if (name === PLAYLIST_NAME && p.owner?.id === me.id) return p
+      if (name.toLowerCase() === PLAYLIST_NAME.toLowerCase() && p.owner?.id === me.id) return p
     }
     url = page.next
   }

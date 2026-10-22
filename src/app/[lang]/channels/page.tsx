@@ -82,14 +82,26 @@ export default async function ChannelsPage({ params }: { params: Promise<{ lang:
                 {spotify ? (
                   <ul className="mt-5 mb-0 p-0 list-none grid gap-3">
                     {CHANNEL_PLAYLISTS.map((list) => (
-                      <li key={list.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] p-3">
-                        <h3 className="m-0 text-[18px] font-black" style={DISPLAY}>
-                          {list.name}
-                        </h3>
-                        <p className="mt-2 mb-0 text-[13px] leading-relaxed" style={MONO}>
-                          {list.text[lang]}
-                        </p>
-                        {list.href ? <div className="mt-3">{outbound(list.href, es ? 'Abrir la lista' : 'Open the playlist')}</div> : null}
+                      <li key={list.id} className="border-[3px] border-[var(--ink)] bg-[var(--paper)] overflow-hidden">
+                        <div className="p-3">
+                          <h3 className="m-0 text-[18px] font-black" style={DISPLAY}>
+                            {list.name}
+                          </h3>
+                          <p className="mt-2 mb-0 text-[13px] leading-relaxed" style={MONO}>
+                            {list.text[lang]}
+                          </p>
+                          <div className="mt-3">{outbound(list.href, es ? 'Abrir la lista' : 'Open the playlist')}</div>
+                        </div>
+                        <iframe
+                          title={list.name}
+                          src={list.embed}
+                          width="100%"
+                          height={352}
+                          style={{ border: 0, display: 'block' }}
+                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                          allowFullScreen
+                          loading="lazy"
+                        />
                       </li>
                     ))}
                   </ul>
