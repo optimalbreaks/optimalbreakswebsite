@@ -44,6 +44,8 @@ export type ChannelSeries = {
   text: Copy
   /** Si el título del vídeo contiene alguna, entra en esta serie. */
   keywords: string[]
+  /** Ids que van aquí aunque el título mencione otra serie. */
+  pinIds?: string[]
   /** Respaldo si el feed del canal no responde. */
   youtubeId: string | null
   /** Ficha de la web, si la serie ya vive en otra sección. */
@@ -121,6 +123,7 @@ export const CHANNEL_SERIES: ChannelSeries[] = [
       en: 'Afghan’s videos. They show up here once they are on the channel.',
     },
     keywords: ['afghan'],
+    pinIds: ['fuhAUOml-5w'],
     youtubeId: null,
   },
   {
@@ -173,10 +176,16 @@ export async function loadYouTubeChannelUploads(): Promise<ChannelUpload[]> {
   }
 }
 
-/** Vídeos del feed que encajan en la serie. Si el feed falla, el id de respaldo. */
+/** Vídeos del feed que encajan en la serie. Un id clavado no sale en otra. */
 export function videosForSeries(series: ChannelSeries, uploads: ChannelUpload[]): ChannelUpload[] {
+  const pinnedIds = new Set(CHANNEL_SERIES.flatMap((item) => item.pinIds ?? []))
+  const mine = new Set(series.pinIds ?? [])
   const keys = series.keywords.map(fold)
-  const matched = uploads.filter((video) => keys.some((key) => fold(video.title).includes(key)))
+  const matched = uploads.filter((video) => {
+    if (mine.has(video.id)) return true
+    if (pinnedIds.has(video.id)) return false
+    return keys.some((key) => fold(video.title).includes(key))
+  })
   if (matched.length > 0) return matched
   if (uploads.length === 0 && series.youtubeId) return [{ id: series.youtubeId, title: series.title.es, short: false }]
   return []
